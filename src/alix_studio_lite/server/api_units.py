@@ -8,6 +8,8 @@
     POST units/<KEY>/active | name            which recording is used; the operator's file name
     GET  units/<KEY>/track                    joint data for the plot
     GET  units/<KEY>/timeline                 the execution in 3D: pole, hand, move to start, trajectory
+    POST units/<KEY>/timeline                 the same from a start state {which, start} (a sequence step)
+    POST sequence                             the full sequence's schedule {steps, source} (sequence.py)
     POST units/<KEY>/settings | undo | redo   tuning settings, one undo step per change
     POST units/<KEY>/optimise                 a job: the tuned candidate, with every limit checked
     POST units/<KEY>/keep                     keep the candidate as the version to upload
@@ -29,7 +31,7 @@ import threading
 import time
 from pathlib import Path
 
-from . import fixtures, staging, workers
+from . import fixtures, sequence, staging, workers
 from .api_v2 import session
 from .app import MODE_TEXT, MODES, route
 from .jobs import UserError
@@ -335,25 +337,55 @@ def get_track(app, q, body, m):
     return workers.track_arrays(str(_track_path(units, key, q)))
 
 
+def _timeline(app, units, key: str, which: str, start=None) -> dict:
+    from .routes_robot import _mesh_links, _payload
+
+    from ..motion import track
+    from ..motion.limits import load_limits
+
+    u = _unit(units, key)
+    info = identity(units, key, which)
+    md = track.read_md(info["path"])
+    p = _payload(app)
+    return staging.execution_timeline(u["arm"], md, info["stage"],
+                                      home=staging.start_values(u["arm"], dict(p["home"]), start),
+                                      links=staging.staged_links(u["arm"], _mesh_links(p)),
+                                      rating_deg_s=load_limits(u["arm"]).rating_deg_s)
+
+
 @route("GET", U + "/timeline")
 def get_timeline(app, q, body, m):
     """The execution as the 3D view shows it (``which``: raw, candidate or version): the pole to
     the stage height, the hand to the stage pose, the arm to the first line, then the trajectory,
     every link the pole moves posed by ALIX's FK. Refused for a file of the other arm or with no
     stage, exactly as a run would be."""
-    from .routes_robot import _mesh_links, _payload
+    units = units_of(app, m.group(1))
+    return _timeline(app, units, m.group(2), (q.get("which") or ["raw"])[0])
 
-    from ..motion import track
+
+@route("POST", U + "/timeline")
+def post_timeline(app, q, body, m):
+    """The same execution from a start state ({which, start: {pole_mm, hand, q_deg}}): a step of
+    the full sequence, starting where the arm's previous step left it."""
+    units = units_of(app, m.group(1))
+    return _timeline(app, units, m.group(2), str(body.get("which") or "raw"), sequence.check_start(body.get("start")))
+
+
+@route("POST", P + "/sequence")
+def post_sequence(app, q, body, m):
+    """The full sequence's schedule for the page's included flow rows ({steps, source}): each arm
+    step's file, start state and times, with what blocks it (sequence.plan)."""
     from ..motion.limits import load_limits
+    from .routes_robot import _payload
 
-    units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
-    info = identity(units, key, (q.get("which") or ["raw"])[0])
-    md = track.read_md(info["path"])
+    units = units_of(app, m.group(1))
+    steps = body.get("steps")
+    if not isinstance(steps, list) or not steps or len(steps) > 200:
+        raise UserError("Include at least one step in the sequence.")
     p = _payload(app)
-    return staging.execution_timeline(u["arm"], md, info["stage"], home=dict(p["home"]),
-                                      links=staging.staged_links(u["arm"], _mesh_links(p)),
-                                      rating_deg_s=load_limits(u["arm"]).rating_deg_s)
+    return sequence.plan(units, [s for s in steps if isinstance(s, dict)], source=str(body.get("source") or "version"),
+                         home=dict(p["home"]), rating={s: load_limits(s).rating_deg_s for s in ARMS},
+                         identity=identity)
 
 
 # ── tuning

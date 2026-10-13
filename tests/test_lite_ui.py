@@ -46,7 +46,7 @@ def test_no_remote_resources():
     page = (WEB / "index.html").read_text(encoding="utf-8")
     assert not re.search(r"""(src|href)=["']https?://""", page)
     for f in [*bridge_files(), *(WEB / "lite").glob("*.css")]:
-        text = f.read_text(encoding="utf-8")
+        text = f.read_text(encoding="utf-8").replace("http://www.w3.org/2000/svg", "")   # a name, never fetched
         assert "http://" not in text and "https://" not in text, f
 
 

@@ -7,6 +7,7 @@
 
 import { installAdvanced } from './advanced.js';
 import { installAuth } from './auth.js';
+import { installBrand } from './brand.js';
 import { installFixes } from './fixes.js';
 import { installLayout } from './layout.js';
 import { installPrepare } from './prepare.js';
@@ -14,6 +15,7 @@ import { installProjects } from './projects.js';
 import { installRealTest } from './realtest.js';
 import { installRobotPanel } from './robotpanel.js';
 import { installSafety } from './safety.js';
+import { installSequence } from './sequence.js';
 import { installSim } from './sim.js';
 import { installStatus } from './status.js';
 import { installTasks } from './tasks.js';
@@ -23,6 +25,7 @@ import { installViewer } from './viewer.js';
 
 installSafety();          // first: STOP must reach the robot before and without a log-in
 installLayout();          // ...and stay on the screen (the page's top bar needs 1,610 px)
+installBrand();           // ALIX's brand mark, as ALIX Studio draws it
 installFixes();
 installProjects();
 installAuth();
@@ -36,4 +39,5 @@ installTune();            // tuning with the optimiser, limits, target time (D24
 installRealTest();
 installAdvanced();
 installViewer();          // taught .txt files: upload, check, replay in 3D
+installSequence();        // Merge + Full Sequence: the full simulation in 3D, each arm step staged
 document.documentElement.dataset.lite = 'ready';

@@ -66,7 +66,7 @@ class Stage:
 
     def as_dict(self) -> dict:
         return {"pole_mm": self.pole_mm, "hand": list(self.hand), "source": self.source,
-                "text": describe(self)}
+                "text": describe(self), "hand_text": hand_words(self.hand)}
 
 
 def parse_hand(value) -> tuple:
@@ -171,11 +171,42 @@ def joint_values(side: str, pole_mm: float | None = None, hand=None) -> dict:
 
 
 def home_stage(side: str, home: dict) -> tuple[float, list]:
-    """The pole (mm) and hand counts of the standing pose: where every simulation starts."""
+    """The pole (mm) and hand counts of a pose (the standing pose, unless an earlier execution
+    moved them: see start_values)."""
     hu = hand_units()
     pole = 1000.0 * float(home.get(f"{SIDE_PREFIX[side]}_sliding_plate_joint", 0.3))
-    hand = [hu.rad_to_hw(float(home.get(hu.joint_name(side, ch), 0.0)), ch) for ch in range(6)]
+    hand = [int(round(hu.rad_to_hw(float(home.get(hu.joint_name(side, ch), 0.0)), ch))) for ch in range(6)]
     return pole, hand
+
+
+def start_values(side: str, home: dict, start: dict | None = None) -> dict:
+    """The joint values an execution starts from: the standing pose, with this arm's pole, hand
+    and joints where an earlier execution left them (``start``: {pole_mm, hand, q_deg}, as an
+    execution's ``end``). A sequence chains its steps this way."""
+    out = dict(home)
+    if start:
+        out.update(joint_values(side, start.get("pole_mm"), start.get("hand")))
+        if start.get("q_deg") is not None:
+            names = [f"{SIDE_PREFIX[side]}_joint{i}" for i in range(1, 8)]
+            out.update(zip(names, np.radians(np.asarray(start["q_deg"], dtype=float)).tolist()))
+    return out
+
+
+def execution_times(side: str, q_deg: np.ndarray, stage: Stage, home: dict, rating_deg_s) -> dict:
+    """The clock of an execution from ``home`` (its start values): the pole to the stage height,
+    the hand to the stage pose, the joint move to the first line, then (N - 1) x 5 ms."""
+    s = SIDE_PREFIX[side]
+    pole0, hand0 = home_stage(side, home)
+    hand1 = [c0 if c is None else int(c) for c0, c in zip(hand0, stage.hand)]
+    arm0 = np.degrees([float(home.get(f"{s}_joint{i}", 0.0)) for i in range(1, 8)])
+    t_pole = pole_travel_s(pole0, stage.pole_mm)
+    t_hand = hand_move_s(hand0, hand1)
+    rating = np.asarray(rating_deg_s, dtype=float)
+    t_move = max(1.0, float(np.max(np.abs(q_deg[0] - arm0) / (TRANSIT_FRACTION * rating))) + 0.5)
+    traj_t0 = t_pole + t_hand + t_move
+    return dict(pole0=pole0, hand0=hand0, hand1=hand1, arm0=arm0, t_pole=t_pole, t_hand=t_hand, t_move=t_move,
+                traj_t0=traj_t0, traj_s=(q_deg.shape[0] - 1) * CYCLE_S,
+                end=dict(pole_mm=float(stage.pole_mm), hand=hand1, q_deg=[round(float(v), 4) for v in q_deg[-1]]))
 
 
 def staged_links(side: str, links) -> list[str]:
@@ -198,10 +229,12 @@ def staged_links(side: str, links) -> list[str]:
 def execution_timeline(side: str, md: np.ndarray, stage: Stage, *, home: dict, links,
                        rating_deg_s, every: int = 4, step_s: float = 0.05,
                        max_frames: int = 5000) -> dict:
-    """What an execution does, as 3D frames on one clock: from the standing pose, the pole moves
-    to the stage height, then the hand to the stage pose, then the arm moves joint-linearly to
-    the trajectory's first line (at TRANSIT_FRACTION of each joint's rating), then the trajectory
-    plays at 5 ms per line. Frames hold the transform of every link the pole moves."""
+    """What an execution does, as 3D frames on one clock: from ``home`` (the standing pose, or
+    where an earlier execution left the arm: start_values), the pole moves to the stage height,
+    then the hand to the stage pose, then the arm moves joint-linearly to the trajectory's first
+    line (at TRANSIT_FRACTION of each joint's rating), then the trajectory plays at 5 ms per
+    line. Frames hold the transform of every link the pole moves; ``end`` is where it leaves the
+    arm (pole, hand counts, last line)."""
     from . import robot_model
 
     model = robot_model.fk_model()
@@ -209,13 +242,9 @@ def execution_timeline(side: str, md: np.ndarray, stage: Stage, *, home: dict, l
     arm_names = [f"{s}_joint{i}" for i in range(1, 8)]
     q = np.asarray(md, dtype=float) / 1000.0                              # degrees
     n = q.shape[0]
-    pole0, hand0 = home_stage(side, home)
-    hand1 = [c0 if c is None else c for c0, c in zip(hand0, stage.hand)]
-    arm0 = np.degrees([float(home.get(j, 0.0)) for j in arm_names])
-    t_pole = pole_travel_s(pole0, stage.pole_mm)
-    t_hand = hand_move_s(hand0, hand1)
-    rating = np.asarray(rating_deg_s, dtype=float)
-    t_move = max(1.0, float(np.max(np.abs(q[0] - arm0) / (TRANSIT_FRACTION * rating))) + 0.5)
+    clock = execution_times(side, q, stage, home, rating_deg_s)
+    pole0, hand0, hand1, arm0 = clock["pole0"], clock["hand0"], clock["hand1"], clock["arm0"]
+    t_pole, t_hand, t_move = clock["t_pole"], clock["t_hand"], clock["t_move"]
     every = max(int(every), math.ceil(n / max(1, max_frames - int((t_pole + t_hand + t_move) / step_s) - 4)))
 
     samples = []                                                           # (t, pole_mm, hand, arm_deg)
@@ -256,7 +285,7 @@ def execution_timeline(side: str, md: np.ndarray, stage: Stage, *, home: dict, l
         side=side, links=list(links), times=[round(x[0], 4) for x in samples],
         frames=base64.b64encode(frames.tobytes()).decode("ascii"),
         traj_t0=round(traj_t0, 4), total_s=round(traj_t0 + (n - 1) * CYCLE_S, 4), lines=n,
-        stage=stage.as_dict(),
+        stage=stage.as_dict(), end=clock["end"],
         phases=[
             dict(name="pole", t0=0.0, t1=round(t_pole, 3),
                  text=f"Pole {pole0:.0f} → {stage.pole_mm:g} mm" if t_pole else f"Pole already at {stage.pole_mm:g} mm"),

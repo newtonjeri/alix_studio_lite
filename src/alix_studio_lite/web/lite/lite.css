@@ -204,3 +204,39 @@ html[data-theme="dark"] .topbar .mode-pill[data-lite="estop"] { color: var(--lit
 html[data-theme="dark"] .lite-limit.ok, html[data-theme="dark"] .lite-ok, html[data-theme="dark"] .lite-file-stage.ok { color: var(--lite-d-green); }
 html[data-theme="dark"] .lite-limit.bad, html[data-theme="dark"] .lite-bad, html[data-theme="dark"] .lite-file-stage.bad { color: var(--lite-d-red); }
 html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
+
+/* Merge + Full Sequence: the full simulation in 3D (sequence.js) */
+.lite-seq-scene .full-sim-reference-image, .lite-seq-scene .full-sim-image-caption { display: none !important; }
+.lite-seq-scene { background: var(--lite-viewport-bg); }
+.lite-seq-status { flex: 1 1 100%; text-align: center; font-size: 13px; font-weight: 700; color: var(--ink); }
+.lite-seq-status.warn { color: var(--orange); }
+.lite-seq-status.ok { color: var(--green); }
+.lite-seq-slider { flex: 1 1 100%; display: flex; }
+.lite-seq-slider input { flex: 1; }
+.lite-seq-source select { min-height: 36px; margin-left: 4px; }
+/* the page laid its overlays over a picture; over a live robot they get rows of their own */
+#fullSequenceSimModal.lite-seq .full-sim-viewport { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px;
+  grid-template-rows: auto auto minmax(0, 1fr) auto; grid-template-areas: "progress" "arms" "scene" "controls"; place-items: stretch; }
+#fullSequenceSimModal.lite-seq .full-sim-progress,
+#fullSequenceSimModal.lite-seq .full-sim-arm-status-grid,
+#fullSequenceSimModal.lite-seq .full-sim-overlay-controls { position: static !important; transform: none; width: auto; inset: auto; }
+#fullSequenceSimModal.lite-seq .full-sim-progress { grid-area: progress; padding: 6px 10px; }
+#fullSequenceSimModal.lite-seq .full-sim-arm-status-grid { grid-area: arms; }
+#fullSequenceSimModal.lite-seq .full-sim-arm-status { padding: 6px 10px; gap: 2px; box-shadow: none; }
+#fullSequenceSimModal.lite-seq .full-sim-scene { grid-area: scene; position: relative !important; inset: auto !important; border-radius: 12px; min-height: 200px; }
+#fullSequenceSimModal.lite-seq .dual-interlock { grid-area: scene; position: static; transform: none; align-self: start; justify-self: center;
+  margin-top: 8px; width: min(92%, 860px); }
+#fullSequenceSimModal.lite-seq .full-sim-overlay-controls { grid-area: controls; padding: 8px; gap: 6px; }
+#fullSequenceSimModal.lite-seq .full-sim-overlay-controls .btn { min-height: 40px; padding: 6px 14px; }
+.lite-seq-plan { grid-area: scene; align-self: start; justify-self: end; z-index: 6; margin: 52px 8px 8px 0; width: min(460px, 46%);
+  max-height: calc(100% - 64px); overflow: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 8px 10px; box-shadow: var(--shadow); }
+.lite-seq-plan summary { cursor: pointer; font-weight: 800; font-size: 13px; }
+.lite-seq-row { border-top: 1px solid var(--line); padding: 6px 0; display: grid; gap: 2px; font-size: 12px; }
+.lite-seq-row small { color: var(--muted); }
+
+/* ALIX's brand mark in place of the page's "AX" tiles (brand.js), bare as ALIX Studio shows it */
+.lite-brand { background: none !important; box-shadow: none !important; padding: 0; }
+.lite-brand .lite-brand-mark { width: 100%; height: 100%; display: block; }
+.topbar .brand .logo.lite-brand { width: 38px; height: 38px; }
+.login-brand-mark.lite-brand { width: 60px; height: 60px; }

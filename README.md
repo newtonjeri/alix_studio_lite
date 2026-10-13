@@ -112,6 +112,8 @@ The tests check that:
 - the Lite UI's region loop over HTTP: the task queue as the deck has it, an existing recording used by default, tuning with every limit checked, keeping a version, upload with a replace confirmation, Hardware sim and Real runs, PASS only after a completed run, the E-stop interlock, and the optimiser's cuts and recorded-pace mode;
 - the gates on every execution: a file of the other arm is refused everywhere, a file without its pole and hand never runs, every run stages the pole and then the hand with read-back, and a pole or hand that fails to arrive ends the job before the arm moves;
 - staging and L3: the times follow ALIX's pole and hand models, the 3D frames match ALIX's FK at the stage, and L3 equals ALIX's band-limited reading;
+- the full sequence: each rule's timing, each arm continuing from where its previous step left it, what blocks a row and what is skipped, and a step's 3D frames from a start state;
+- the Lite UI's dark theme is generated from the page's own stylesheet and is current;
 - Legacy Lite keeps the ALIX theme: ALIX's tokens unchanged, no colour literals outside them, nothing loaded from the network.
 
 ## Refresh the vendored copy
