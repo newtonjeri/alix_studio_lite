@@ -1,0 +1,1211 @@
+# ALIX Studio LITE Edition
+## Developer Handoff / Functional Specification
+
+**Reference frontend:** `ALIX_Studio_LITE_Edition_V19_Project_Manager.html`  
+**Document purpose:** This file explains the current HTML prototype, intended operator workflow, state model, backend integration points, and recommended next-development architecture.
+
+> **Important:** The current HTML is a functional frontend prototype. Some features are real browser-side behavior, while robot control, trajectory recording, trajectory processing, simulation execution, controller upload/run, telemetry, and hardware safety must be connected to the Python/RealMan backend before production use.
+
+---
+
+## 1. Product Goal
+
+ALIX Studio LITE Edition is intended to let a **non-technical operator** teach and validate a complete dual-arm toilet-cleaning workflow with clear step-by-step guidance.
+
+The operator should not need to understand RealMan APIs, trajectory file formats, inverse kinematics, robot program upload commands, or low-level controller details.
+
+The software should guide the operator through:
+
+1. Physical setup and safety checks.
+2. Choosing one arm and one cleaning region.
+3. Drag & Teach recording.
+4. Saving and reviewing the trajectory.
+5. Tuning and simulation.
+6. Real robot validation.
+7. Repeating for all required regions.
+8. Building the complete LEFT / RIGHT cleaning sequence.
+9. Running the complete sequence in simulation.
+10. Running the final sequence on the physical dual-arm robot.
+11. Stopping at any point and resuming later from a saved project.
+
+---
+
+## 2. Intended User Types
+
+### Cleaning Operator
+Primary user.
+
+The operator should see the simplified guided workflow and should normally stay inside:
+
+- Setup & Safety
+- Region Teaching
+- Merge + Full Sequence
+- Project Summary
+- Project Manager
+
+### Engineer / Service User
+Advanced user.
+
+The **Advanced Robot Controls** window is separated from the normal operator workflow and currently has its own numeric PIN gate.
+
+Current template credentials:
+
+- **Operator login PIN:** `1234`
+- **Advanced Robot Controls PIN:** `1234`
+
+These PINs are currently implemented in frontend JavaScript and therefore **must not be considered secure**. Production authentication must be moved to Python/backend storage.
+
+---
+
+## 3. Main Application Navigation
+
+The current top-level workflow is:
+
+| No. | Section | Purpose |
+|---|---|---|
+| 01 | Setup & Safety | Physical preparation, robot positioning, start poses, preparation checklist |
+| 02 | Region Teaching | Teach and validate individual LEFT / RIGHT cleaning tasks |
+| 03 | Merge + Full Sequence | Define, merge, simulate, and validate the complete dual-arm flow |
+| 04 | Project Summary | Review overall completion and approved task information |
+
+There is also a separate **Project Manager** screen after login.
+
+---
+
+## 4. Login and First-Time Tour
+
+After operator login, the software opens the **Project Manager**.
+
+For a first-time browser/user, a guided tour is available and currently covers:
+
+- Welcome
+- Setup & Safety
+- Arm selection
+- Drag & Teach
+- Tune + Simulation
+- Merge + Full Sequence
+- Project Summary
+
+The tour includes:
+
+- Previous
+- Next
+- Finish
+- Skip Tour
+- Restart Tour
+
+The frontend currently remembers tour completion using browser `localStorage`.
+
+Current key:
+
+```text
+alixLiteTourCompleted_v1
+```
+
+---
+
+# 5. Project Manager
+
+The operator is not expected to complete all 22 tasks in a single session.
+
+The Project Manager therefore allows the operator to stop anywhere and later continue from the same task, arm, and workflow stage.
+
+## 5.1 Main Project Actions
+
+The current UI provides:
+
+- **Continue Last Project**
+- **New Project**
+- **Open / Manage Projects**
+- **Load Project File**
+- Rename
+- Duplicate
+- Archive
+- Unarchive
+- Delete
+- Save Project File
+- Manual Save
+- Auto Save
+
+The top bar shows:
+
+- Current project name
+- Saved / Unsaved state
+- Manual Save button
+- Projects button
+
+Example resume text:
+
+```text
+Resume: TASK 5A · RIGHT ARM · Tune + Simulation
+```
+
+## 5.2 Current Browser Storage Keys
+
+```text
+alixLiteProjects_v1
+alixLiteLastProjectId_v1
+alixLiteTourCompleted_v1
+```
+
+Other legacy/current frontend state keys are also used by the HTML for task completion and sequence state.
+
+## 5.3 Current Project Schema Name
+
+```text
+alix_studio_lite_project_v1
+```
+
+## 5.4 Project State Currently Captured
+
+The HTML currently attempts to save/resume:
+
+- Current top-level page
+- Current task index
+- Selected arm
+- Current Region Teaching stage
+- LEFT / RIGHT approval state
+- Arm-selection lock state
+- Completed tasks
+- Per-task records
+- Setup checklist
+- Target teaching time
+- Pole height
+- Hand preset
+- Six hand values
+- LEFT start pose
+- RIGHT start pose
+- Program ID
+- Trajectory filename
+- Active trajectory source
+- Active trajectory display name
+- Trajectory row count
+- Manual scale regions
+- Manual trim regions
+- Full sequence configuration
+- Merge selections
+- Engineering sequence steps
+- Overall sequence speed
+- Waiting-arm confirmation
+- Full-sequence visual confirmation
+- Full-simulation approval
+- Elapsed Drag & Teach time
+- Saved timestamp
+
+### Important backend limitation
+
+The browser project currently saves **state and file metadata**, but it should not be relied on to persist the actual trajectory file bytes.
+
+For production, a project must own the real files on disk.
+
+Recommended project layout:
+
+```text
+projects/
+  <project_id>/
+    project.json
+    trajectories/
+      left/
+      right/
+    merged/
+      left/
+      right/
+    sequence/
+      full_sequence.json
+    simulation/
+      reports/
+      logs/
+    controller_exports/
+    telemetry/
+```
+
+A production `.alixproj` export should ideally be a ZIP-compatible package containing `project.json` plus all required trajectory and sequence files.
+
+---
+
+# 6. Setup & Safety
+
+The Setup & Safety stage is intended to be completed before Region Teaching is unlocked.
+
+The UI guidance includes:
+
+- Power ON robot
+- Move ALIX robot close to the toilet
+- Approximate robot-to-toilet positioning guidance: **250 mm**
+- Manual preparation checks
+- Move LEFT and RIGHT arms to selected start poses
+- Pole and hand setup
+- Preparation confirmation
+
+The Region Teaching page is intentionally blocked if required preparation is not confirmed.
+
+---
+
+# 7. Region Teaching Workflow
+
+The Region Teaching pipeline contains five stages:
+
+```text
+1. Prepare
+2. Drag & Teach
+3. Save & Review
+4. Tune + Simulation
+5. Real Test
+```
+
+The **Merge + Full Sequence** workflow is intentionally separate and is not treated as a sixth per-region stage.
+
+---
+
+## 7.1 Stage 1 — Prepare
+
+In Prepare:
+
+- Operator chooses either LEFT or RIGHT arm.
+- LEFT and RIGHT region cards show separate visual references.
+- Each arm card has a zoom icon.
+- The chosen arm becomes the active teaching arm.
+- Operator can select / apply start pose.
+- Operator can set pole state.
+- Operator can set hand state.
+- The opposite arm remains available only until Drag & Teach begins.
+
+### Arm-lock rule
+
+Once Drag & Teach starts:
+
+> The selected arm remains locked through Save & Review, Tune + Simulation, and Real Test.
+
+The operator cannot accidentally switch to the opposite arm halfway through the workflow.
+
+After the selected arm passes Real Test, the opposite arm becomes available for the same task.
+
+After both arms pass, the software advances to the next task automatically.
+
+---
+
+## 7.2 Stage 2 — Drag & Teach
+
+Main behavior:
+
+- Editable target time, default **30 seconds**
+- English spoken timer
+- START DRAG + RECORD
+- STOP DRAG
+- Reset timer
+- Elapsed-time display
+- Progress bar
+- Current selected-arm region image is copied into the Drag & Teach section
+- Current region name is displayed near the copied reference
+
+The current concept is:
+
+```text
+START
+→ follow highlighted region
+→ finish near target time
+→ STOP
+```
+
+After STOP, the intended operator flow supports:
+
+```text
+Redo Again
+or
+Proceed to Save & Review
+```
+
+When Redo is selected, the workflow should let the operator move back to a selected start pose before recording again.
+
+---
+
+## 7.3 Stage 3 — Save & Review
+
+The current design supports:
+
+- Trajectory filename
+- Save TXT
+- Move to recorded start
+- Playback
+- Record Again
+- Browse an older / previous trajectory from the computer
+
+The design intentionally distinguishes:
+
+- **New Recording**
+- **Loaded Previous File**
+
+Loading an old trajectory should not silently overwrite the current recording.
+
+### Backend requirement
+
+The HTML cannot create a valid RealMan controller trajectory by itself.
+
+The backend must provide:
+
+- Receive drag-record samples
+- Save exact controller-compatible TXT format
+- Validate format
+- Return duration / row count / metadata
+- Load previous TXT
+- Move to recorded start
+- Playback trajectory
+
+---
+
+## 7.4 Stage 4 — Tune + Simulation
+
+The current tuning concept uses explicit processing stages rather than hiding everything in advanced dropdowns.
+
+Planned / represented processing controls:
+
+- Trim idle-region removal
+- Mean Smooth
+- Scale selected-region resampling
+
+Manual region editor includes:
+
+- Start row
+- End row
+- Scale %
+- Meaning
+- Delete
+- Clear regions
+
+Example:
+
+```text
+Rows 1–500     = 100%   unchanged
+Rows 501–1000  = 50%    50% shorter
+```
+
+### Plot interaction
+
+The intended plot behavior is:
+
+- Operator click-drags over a trajectory range.
+- Selected range becomes highlighted.
+- Selected Start Row / End Row are populated.
+- Operator can tune only the selected range.
+- Apply scale / smoothing / trim to the selected range.
+- Re-run simulation after tuning.
+
+### Simulation behavior
+
+The simulation area currently includes:
+
+- Start
+- Stop
+- Reset
+- Expanded 90% view
+- Timer
+- Plot playhead
+- Current simulation image/reference
+
+When simulation starts:
+
+> The timer and the vertical plot playhead should advance together from zero to the end.
+
+Re-run Simulation should scroll the operator back to the simulation view.
+
+### Backend requirement
+
+Production backend should:
+
+1. Parse trajectory samples.
+2. Perform real trim/smoothing/resampling.
+3. Return processed data.
+4. Return original and optimized duration.
+5. Return joint-speed/acceleration statistics.
+6. Run the processed trajectory in PyBullet or the chosen simulator.
+7. Stream simulation state/progress back to the HTML.
+
+---
+
+## 7.5 Stage 5 — Real Test
+
+The current Real Test workflow includes:
+
+- Controller Program ID
+- Program ID range: **1–100**
+- Upload trajectory
+- Move to trajectory start
+- Run Real Test
+- PASS
+- Needs Tuning
+- Record Again
+
+Behavior:
+
+- `Needs Tuning` returns to Tune + Simulation.
+- `Record Again` returns to Drag & Teach.
+- PASS approves the current arm for the current task.
+- After one arm passes, Prepare opens for the opposite arm.
+- After both arms pass, the task becomes complete and the next task is opened automatically.
+
+For the last task, the intended workflow proceeds to the standalone Merge + Full Sequence stage.
+
+---
+
+# 8. Cleaning Task List
+
+The current HTML defines **22 tasks**.
+
+| # | Source Task | LEFT Arm | RIGHT Arm | Type | Note |
+|---:|---|---|---|---|---|
+| 1 | TASK 1A | L-R01 BASE LEFT | R-R01 LID TOP PART 01 | clean | — |
+| 2 | TASK 2A | L-R02 SIDE EXTERIOR LEFT | R-R01 LID TOP PART 02 | clean | — |
+| 3 | TASK 1C | L-R03 PEDESTAL UPPER LEFT | R-R02 RIGHT HINGE | clean | — |
+| 4 | TASK 2 | LEFT HINGE | SIDE EXTERIOR RIGHT | clean | — |
+| 5 | TASK 3 | OPEN LID + SEAT (MASTER) | OPEN LID + SEAT (SUPPORT) | action | — |
+| 6 | TASK 4 | CLOSE SEAT ONLY (MASTER) | CLOSE SEAT ONLY SUPPORT | action | — |
+| 7 | TASK 5A | SEAT TOP PART 1 | LID UNDERSIDE RIGHT HALF | clean | — |
+| 8 | TASK 5B | SEAT TOP PART 2 | PEDESTAL UPPER RIGHT | clean | — |
+| 9 | TASK 6 | LID UNDERSIDE LEFT HALF | BASE RIGHT | clean | — |
+| 10 | TASK 7 | L-T03 OPEN SEAT (MASTER) | R-T03 OPEN SEAT (SUPPORT) | action | — |
+| 11 | TASK 8A | RIM TOP PART 1 | SEAT UNDERSIDE RIGHT HALF | clean | — |
+| 12 | TASK 8B | RIM TOP PART 2 | FLOOR SPILLAGE PART 1 | clean | — |
+| 13 | TASK 9 | FLOOR SPILLAGE PART 2 | SEAT UNDERSIDE LEFT HALF | clean | — |
+| 14 | TASK 10A | FL-R09 INNER RIM PART 1 | R-T04 PICK DRAIN BRUSH | mixed | — |
+| 15 | TASK 10B | FL-R09 INNER RIM PART 2 | R-T04 PICK DRAIN BRUSH | mixed | — |
+| 16 | TASK 11A | L-R10 BOWL INSIDE PART 1 | HOLD BRUSH OUTSIDE | mixed | — |
+| 17 | TASK 11B | L-R10 BOWL INSIDE PART 2 | HOLD BRUSH OUTSIDE | mixed | — |
+| 18 | TASK 12A | L-R11 FLOOR SPILLAGE LEFT PART 1 | R-T05 CLEAN DRAIN HOLE PART1 | clean | — |
+| 19 | TASK 12B | L-R11 FLOOR SPILLAGE LEFT PART 2 | R-T05 CLEAN DRAIN HOLE PART 2 | clean | — |
+| 20 | TASK 13 | DROP GLOVE | R-T06 RETURN DRAIN BRUSH AND DROP GLOVE | procedure | Procedure to be added later |
+| 21 | TASK 14 | L-T04 LEFT GLOVE CHANGE | R-T07 RIGHT GLOVE CHANGE | procedure | Procedure to be added later |
+| 22 | TASK 15 | L-T05 CLOSE SEAT + LID (MASTER) | R-T09 CLOSE SEAT + LID (SUPPORT) | action | — |
+
+---
+
+# 9. Visual Reference System
+
+The UI includes visual references for operator guidance.
+
+Current behavior includes:
+
+- LEFT / RIGHT task-specific reference cards
+- Arm-specific image zoom
+- Drag & Teach copied current-region reference
+- Visual toilet reference slideshow
+- Automatic visual-reference rotation every **5 seconds**
+- State labels presented as UI text rather than being permanently baked into the latest reference images
+
+The developer should preserve:
+
+```text
+object-fit: contain
+```
+
+for operator reference images so the entire region remains visible.
+
+Zoom dialogs must fit inside the browser viewport and keep the Close button visible.
+
+---
+
+# 10. Merge + Full Sequence
+
+This is a standalone project-level workflow.
+
+Its purpose is to combine all approved regional trajectories into a complete dual-arm cleaning cycle.
+
+Main flow:
+
+```text
+Define Sequence
+→ Visual Confirm
+→ Full Simulation
+→ Operator Confirm
+→ Real Machine
+```
+
+## 10.1 Editable LEFT / RIGHT Flow
+
+The full flow table is intended to be editable.
+
+Fields include:
+
+- Source Task name
+- LEFT Program ID
+- LEFT Arm Flow
+- RIGHT Program ID
+- RIGHT Arm Flow
+- Execution Rule
+- Checkpoint / Wait
+- Include / Exclude
+
+Execution rules represented by the frontend include:
+
+```text
+TOGETHER
+LEFT RUN FIRST
+RIGHT RUN FIRST
+ONE BY ONE
+PROCEDURE
+```
+
+## 10.2 Merge Trajectory
+
+LEFT and RIGHT merges are independent.
+
+Intended per-arm process:
+
+```text
+Choose files
+→ reorder files
+→ Merge
+→ test merged LEFT or RIGHT arm alone in simulation
+→ optional real-arm test
+```
+
+Merge tools should support:
+
+- Multiple custom trajectory files
+- Explicit order
+- Move ↑ / ↓
+- Merge LEFT
+- Merge RIGHT
+- Merge BOTH where required
+- Merge-only
+- Merge + Simulation
+- Merge + Real Test
+
+### Backend requirement
+
+Actual merge must happen in Python.
+
+The backend must handle:
+
+- TXT parsing
+- Continuity between file boundaries
+- Start/end pose comparison
+- Optional bridge generation
+- Timing
+- Validation
+- Final merged trajectory creation
+
+---
+
+# 11. Full Sequence Simulation
+
+The full-sequence simulation opens in a large simulation view.
+
+Controls represented in the current UI:
+
+- Start
+- Pause
+- Stop
+- Reset
+- Overall Speed %
+- Exit
+
+Live display includes:
+
+- Current LEFT status
+- Current LEFT task
+- LEFT Program ID
+- Current RIGHT status
+- Current RIGHT task
+- RIGHT Program ID
+- Current sequence step
+- Elapsed simulation time
+
+The Real full-sequence run remains locked until the full simulation is completed and confirmed.
+
+---
+
+# 12. Dual-Arm Safety Interlock
+
+A key requirement is:
+
+> A serious fault on either arm must immediately stop both arms.
+
+The frontend includes a conceptual **Dual Safety Interlock**.
+
+Fault examples:
+
+- Collision detected
+- Controller fault
+- Power failure
+- Communication loss
+- Emergency stop
+- Sequence execution failure
+
+Expected behavior:
+
+```text
+LEFT fault
+→ latch fault
+→ STOP LEFT
+→ STOP RIGHT immediately
+→ cancel full-sequence approval
+→ prevent restart
+→ require reset / acknowledgement
+```
+
+and the same applies when RIGHT is the source of the fault.
+
+### Critical production note
+
+This must **not rely on browser JavaScript**.
+
+The Python/backend/controller layer must own the real interlock.
+
+Recommended implementation:
+
+```text
+robot status monitor thread / callback
+        ↓
+shared dual-arm safety state
+        ↓
+any critical fault
+        ↓
+send stop command to BOTH controllers
+        ↓
+latch FAULT state
+        ↓
+WebSocket event to frontend
+```
+
+Hardware/controller safety and physical E-stop remain the final safety layer.
+
+---
+
+# 13. Project Summary
+
+The Project Summary shows:
+
+- Current task
+- Number of approved tasks
+- Target-time information
+- Complete task sequence
+- Task status
+- LEFT / RIGHT task names
+
+For approved tasks the intended stored setup includes:
+
+### LEFT
+- Pole height
+- Hand preset/state
+- Six hand-channel values
+- Start pose
+- Program ID
+
+### RIGHT
+- Pole height
+- Hand preset/state
+- Six hand-channel values
+- Start pose
+- Program ID
+
+The six hand values are:
+
+```text
+Little
+Ring
+Middle
+Index
+Thumb Bend
+Thumb Rotate
+```
+
+---
+
+# 14. Advanced Robot Controls
+
+The engineering window is intentionally separated from the normal guided workflow.
+
+Current controller addresses represented in the HTML:
+
+```text
+LEFT RM75:  192.168.1.10
+RIGHT RM75: 192.168.1.103
+```
+
+The current frontend shows independent LEFT and RIGHT tabs for:
+
+- RUN
+- GLOBAL POINTS
+- DRAG TEACH
+- HAND / POLE
+- TELEMETRY
+
+## 14.1 RUN
+
+Per-arm concepts include:
+
+- SIM
+- REAL
+- CHECK
+- SLOW STOP
+- Trajectory file
+- Program ID / Upload Slot
+- Upload Only
+- Upload + Run
+- Run Only
+- Multi Upload
+- Run Stored
+- Multi Run
+- Load Sequence
+- Refresh controller program list
+
+## 14.2 Global Points
+
+Intended actions:
+
+- Refresh saved points
+- Search/select point
+- MoveJ
+- MoveL
+- Speed %
+- Wait after arrival
+- Add to point sequence
+- Run point sequence
+
+## 14.3 Drag Teach
+
+Intended actions:
+
+- Start Drag + Record
+- Stop Drag
+- Save Local
+- Move to Start + Playback
+
+The guided single-arm lock must continue to take priority over engineering commands while an operator region-teaching session is active.
+
+## 14.4 Hand / Pole
+
+Hand:
+
+```text
+6 channels
+range: 0–1000
+```
+
+Pole:
+
+```text
+range: 0–315 mm
+```
+
+The UI includes numeric entry + slider behavior.
+
+## 14.5 Telemetry
+
+There are independent LEFT and RIGHT telemetry areas.
+
+Production telemetry should ideally stream through WebSocket/SSE rather than periodic page polling.
+
+---
+
+# 15. Existing Python / RealMan Integration Direction
+
+The HTML contains references to the existing Python/RealMan ecosystem including:
+
+```text
+rm_upload.py
+```
+
+and an SDK path reference under:
+
+```text
+/home/alai-labs/alix_ws/src/alix/external/butterfli-realman-alix/Python
+```
+
+The recommended approach is to **reuse the proven Python robot-control layer** rather than reimplement low-level RealMan control in JavaScript.
+
+---
+
+# 16. Recommended Desktop Architecture
+
+The current HTML should remain the operator frontend.
+
+A practical architecture is:
+
+```text
+HTML / CSS / JavaScript UI
+        │
+        │ local API + WebSocket
+        ▼
+Python ALIX backend
+        │
+        ├── Project Manager service
+        ├── Trajectory recorder
+        ├── Trajectory parser / processor
+        ├── Merge / bridge generator
+        ├── PyBullet simulation manager
+        ├── Dual sequence scheduler
+        ├── Safety interlock manager
+        ├── Robot telemetry manager
+        └── RealMan SDK / existing rm_upload logic
+                  │
+                  ├── LEFT  192.168.1.10
+                  └── RIGHT 192.168.1.103
+```
+
+For a Windows/Linux desktop application, a local Python-hosted web UI is suitable.
+
+Possible packaging approaches:
+
+- **PyWebView + Python backend** — recommended for a lightweight desktop application.
+- Local FastAPI/Flask server + browser window.
+- Electron only if the team specifically wants a heavier JS desktop shell.
+
+The backend should be the authority for:
+
+- robot state
+- project files
+- authentication
+- trajectory files
+- simulation state
+- safety state
+- upload/run commands
+
+---
+
+# 17. Recommended Backend API Boundary
+
+This is a suggested contract for the next development phase.
+
+## Project API
+
+```text
+GET    /api/projects
+POST   /api/projects
+GET    /api/projects/{id}
+PUT    /api/projects/{id}
+DELETE /api/projects/{id}
+
+POST   /api/projects/{id}/export
+POST   /api/projects/import
+```
+
+## Robot API
+
+```text
+GET  /api/robots/status
+POST /api/robots/{left|right}/mode
+POST /api/robots/{left|right}/stop
+POST /api/robots/stop-both
+
+POST /api/robots/{arm}/move-start
+POST /api/robots/{arm}/movej
+POST /api/robots/{arm}/movel
+```
+
+## Drag Teach / Trajectory API
+
+```text
+POST /api/drag/{arm}/start
+POST /api/drag/{arm}/stop
+POST /api/drag/{arm}/save
+
+POST /api/trajectory/load
+POST /api/trajectory/process
+POST /api/trajectory/playback
+
+POST /api/trajectory/{arm}/upload
+POST /api/trajectory/{arm}/run
+```
+
+## Merge API
+
+```text
+POST /api/merge/{arm}
+POST /api/merge/{arm}/simulate
+POST /api/merge/{arm}/real-test
+```
+
+## Sequence API
+
+```text
+POST /api/sequence/validate
+POST /api/sequence/simulate
+POST /api/sequence/run
+POST /api/sequence/stop
+```
+
+## Streaming
+
+```text
+WS /ws/telemetry
+WS /ws/simulation
+WS /ws/sequence
+WS /ws/safety
+```
+
+These endpoint names are recommendations, not existing APIs.
+
+---
+
+# 18. Frontend-to-Backend Events
+
+A useful backend event model would include:
+
+```json
+{
+  "type": "robot_status",
+  "arm": "left",
+  "state": "RUNNING",
+  "program_id": 71
+}
+```
+
+```json
+{
+  "type": "trajectory_progress",
+  "arm": "left",
+  "elapsed_s": 3.2,
+  "duration_s": 8.0,
+  "row": 4120
+}
+```
+
+```json
+{
+  "type": "safety_fault",
+  "source_arm": "right",
+  "reason": "communication_loss",
+  "dual_stop": true,
+  "latched": true
+}
+```
+
+```json
+{
+  "type": "sequence_step",
+  "step": 8,
+  "left_task": "RIM TOP PART 1",
+  "right_task": "SEAT UNDERSIDE RIGHT HALF",
+  "rule": "TOGETHER"
+}
+```
+
+---
+
+# 19. Security Notes
+
+The current HTML prototype contains frontend PIN values.
+
+Do not use that model in production.
+
+Production should:
+
+- validate users in Python/backend
+- store hashed credentials
+- define Operator vs Engineer permissions
+- prevent operator access to engineering endpoints
+- require real-hardware confirmation server-side
+- log real robot commands
+- log stop/fault events
+- not trust client-side button-disabled states for safety
+
+---
+
+# 20. Browser Storage vs Production Storage
+
+Current HTML uses `localStorage` so the prototype can demonstrate:
+
+- project creation
+- autosave
+- resume
+- sequence persistence
+- tour completion
+- theme/preferences
+
+This is suitable for UI prototyping only.
+
+Production should use filesystem/database persistence managed by Python.
+
+Recommended minimum project record:
+
+```json
+{
+  "id": "project_uuid",
+  "name": "Toilet 01 Training",
+  "created_at": "ISO-8601",
+  "updated_at": "ISO-8601",
+  "current_task": 6,
+  "current_arm": "right",
+  "current_stage": "optimize",
+  "task_records": {},
+  "sequence": {},
+  "files": {},
+  "safety_log": []
+}
+```
+
+---
+
+# 21. Important UI Rules to Preserve
+
+The following behavior is intentional and should not be removed accidentally during backend work:
+
+1. **One arm at a time** during Region Teaching.
+2. Arm can only be chosen in Prepare.
+3. Once Drag & Teach starts, that arm stays locked until Real Test completes.
+4. Both task images may be visible, but only the active arm is emphasized.
+5. Current region image is repeated inside Drag & Teach.
+6. Real Test requires a valid Program ID before upload.
+7. After one arm passes, the opposite arm becomes available.
+8. After both arms pass, move automatically to the next task.
+9. Merge + Full Sequence remains a separate project-level section.
+10. Full real sequence remains locked until simulation is approved.
+11. Any critical single-arm fault must result in a dual-arm stop.
+12. Operator can stop the project at any time and resume later.
+13. Auto Save should never block robot STOP.
+14. STOP controls must remain visually prominent.
+15. Reference images should use `contain`, not cropped fill.
+
+---
+
+# 22. Current Template-Only / Placeholder Areas
+
+The developer should assume the following still require real implementation:
+
+- Real controller connection
+- Controller authentication / mode switching
+- Drag recording from RM75
+- Real TXT trajectory generation
+- Real playback
+- Program upload
+- Program run
+- Program-list refresh
+- Live program completion detection
+- Global Point fetch/run
+- Hand control
+- Pole control
+- Real telemetry
+- PyBullet simulation
+- Plot from real trajectory data
+- Real smoothing/resampling
+- Merge and bridge generation
+- Runtime calculation
+- Collision detection integration
+- Communication-failure detection
+- Dual-arm hardware interlock
+- Real sequence scheduler
+- Real project file management
+- Secure operator / engineering authentication
+
+---
+
+# 23. Suggested Development Order
+
+A safe implementation order is:
+
+### Phase 1 — Application shell and project persistence
+- Convert browser project storage to Python project folders.
+- Implement project CRUD.
+- Implement `.alixproj` import/export.
+- Move login/PIN validation to backend.
+
+### Phase 2 — Read-only robot integration
+- Connect both controllers.
+- Read mode/state.
+- Stream telemetry.
+- Read program lists.
+- Read Global Points.
+
+### Phase 3 — Single-arm commands
+- Move to start pose.
+- Hand control.
+- Pole control.
+- Global Point MoveJ/MoveL.
+- Stop.
+
+### Phase 4 — Drag & Teach
+- Start drag.
+- Record.
+- Stop.
+- Save TXT.
+- Playback.
+
+### Phase 5 — Trajectory processing
+- Parse trajectory.
+- Plot.
+- Manual row selection.
+- Trim.
+- Smooth.
+- Scale/resample.
+- Save optimized trajectory.
+
+### Phase 6 — Simulation
+- Integrate dual RM75 + hand + pole + toilet scene.
+- Run one-arm simulation.
+- Run full-sequence simulation.
+- Stream progress.
+
+### Phase 7 — Real Test
+- Upload Program ID 1–100.
+- Move to start.
+- Run.
+- Detect completion/fault.
+- PASS/Tune/Redo flow.
+
+### Phase 8 — Merge + full sequence
+- Merge/bridge trajectories.
+- Validate continuity.
+- Full dual-arm sequence scheduler.
+- Checkpoints and execution rules.
+
+### Phase 9 — Safety hardening
+- Dual-stop interlock.
+- Fault monitoring.
+- Communication timeout.
+- Collision event handling.
+- Recovery/reset state machine.
+- Logging.
+
+---
+
+# 24. Acceptance Checklist for Developer
+
+Before calling the application production-ready, verify:
+
+- [ ] Project can be stopped and resumed after application restart.
+- [ ] Real trajectory files are stored inside the project.
+- [ ] Project import/export transfers all required files.
+- [ ] LEFT and RIGHT robot telemetry is live.
+- [ ] Stop Both works independently of UI page/state.
+- [ ] A LEFT critical fault stops RIGHT.
+- [ ] A RIGHT critical fault stops LEFT.
+- [ ] Arm-selection lock cannot be bypassed by page navigation.
+- [ ] Drag Teach saves a controller-compatible trajectory.
+- [ ] Previous trajectory can be loaded without overwriting new recording.
+- [ ] Plot uses real trajectory samples.
+- [ ] Selected plot region maps exactly to sample/row numbers.
+- [ ] Optimized trajectory can be simulated before hardware test.
+- [ ] Program ID validation is enforced backend-side.
+- [ ] Real Test reports actual completion/failure.
+- [ ] Both-arm PASS advances to next task correctly.
+- [ ] Full-sequence simulation is required before full real run.
+- [ ] Project Summary shows approved hand/pole/start-pose/program information.
+- [ ] Operator and Engineer permissions are enforced server-side.
+- [ ] Project autosave never delays emergency stop.
+
+---
+
+# 25. Files to Share With Developer
+
+Primary files:
+
+```text
+ALIX_Studio_LITE_Edition_V19_Project_Manager.html
+ALIX_Studio_LITE_Edition_V19_Developer_Handoff.md
+```
+
+The HTML contains embedded frontend assets and represents the current UI/UX prototype.
+
+The Markdown file should be treated as the functional/technical handoff document explaining how the frontend is expected to behave when connected to the real backend.
+
+---
+
+## Final Development Principle
+
+The intended product separation is:
+
+> **HTML = guided operator experience**  
+> **Python/backend = authority for robots, files, projects, simulation, processing, authentication and safety**
+
+Keep the normal operator path simple. Engineering capabilities can remain available behind Advanced Robot Controls, but they should not complicate the main teaching workflow.

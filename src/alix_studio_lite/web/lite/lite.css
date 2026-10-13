@@ -1,0 +1,35 @@
+/* ALIX Studio Lite additions to the designer's page. Colours come from the page's own
+   variables (:root in web/index.html), so light and dark themes both apply. */
+
+.topbar .mode-pill[data-lite] { transition: background .2s, color .2s, border-color .2s; }
+.topbar .mode-pill[data-lite="visual"] { background: var(--blue2); border-color: var(--blue); color: var(--blue); }
+.topbar .mode-pill[data-lite="visual"] .dot { background: var(--blue); }
+.topbar .mode-pill[data-lite="hwsim"] { background: var(--orange2); border-color: var(--orange); color: var(--orange); }
+.topbar .mode-pill[data-lite="hwsim"] .dot { background: var(--orange); }
+.topbar .mode-pill[data-lite="real"],
+.topbar .mode-pill[data-lite="estop"] { background: var(--red2); border-color: var(--red); color: var(--red); }
+.topbar .mode-pill[data-lite="real"] .dot,
+.topbar .mode-pill[data-lite="estop"] .dot { background: var(--red); }
+.topbar .mode-pill[data-lite="offline"] .dot { background: var(--muted); }
+
+.rc-backend-state[data-lite="visual"] .dot,
+.rc-backend-state[data-lite="hwsim"] .dot { background: var(--green); }
+
+/* The page's top bar needs about 1,610 px; below that STOP BOTH left the screen. Labels collapse
+   to their icons step by step, so STOP BOTH and the status stay visible down to 900 px. */
+.topbar .emstop, .topbar .mode-pill { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 1700px) {
+  .topbar { gap: 10px; padding: 0 14px; }
+  .topbar .brand { min-width: 0; }
+  .topbar .brand small, .topbar .mode-pill .lite-label, .topbar .robot-control-toggle .lite-long { display: none; }
+}
+@media (max-width: 1460px) {
+  .topbar .journey-toggle .journey-label, .topbar .project-save-btn .lite-label,
+  .topbar .project-manager-btn .lite-label, .topbar .top-tour-btn .lite-label,
+  .topbar .top-lock-btn .lite-label { display: none; }
+  .topbar .current-project-chip { min-width: 150px; max-width: 190px; }
+  .topbar .journey-toggle { min-width: 0; }
+}
+@media (max-width: 1200px) {
+  .topbar .brand > div:not(.logo) { display: none; }
+}

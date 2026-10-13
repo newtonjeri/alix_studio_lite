@@ -4,6 +4,8 @@ Last updated: 13 October 2026.
 
 **Order of work (decision D27):** UI/UX first. The backend is on hold at the checkpoint below.
 
+**Front ends (13 October, later):** the designer's *ALIX Studio LITE Edition V19* page is now the primary UI (the **Lite UI**, at `/`), and the backend is built around it. The earlier UI is **Legacy Lite**: it is kept working at `/legacy/`, and git tag `legacy-lite-0.1` marks it. What the V19 page needs, what is connected, the defects and gaps found, and the open decisions are in [`UI_V19_CONTRACT.md`](UI_V19_CONTRACT.md).
+
 ## Install and start Lite
 
 Install once, on any platform. This builds `.venv` in the Lite folder from `requirements.txt`, then runs a check (see the README):
@@ -17,19 +19,36 @@ Then Lite starts the same way as ALIX Studio. The launcher uses `.venv` by itsel
 
 ```bash
 cd alix_studio_lite/tools
-./run_lite.sh                  # opens a browser tab at http://127.0.0.1:8766/   (Ctrl+C to stop)
-./run_lite.sh --no-browser     # or --port 8800, --data DIR, --fixture commode_b
+./run_lite.sh                  # the Lite UI at http://127.0.0.1:8766/   (Ctrl+C to stop)
+./run_lite.sh --ui legacy      # Legacy Lite at http://127.0.0.1:8766/legacy/
+./run_lite.sh --no-browser     # or --port 8800, --data DIR, --fixture commode_b (Legacy Lite)
+./run_lite.sh --set-pin engineer   # change the operator or engineer PIN
 ```
 
 - Port 8766 is used, so Lite can run beside ALIX Studio (8765).
-- Project data lives in `~/ALIX-Lite/` (outside the repository).
-- The first start creates the **Commode C (demo)** project. It holds the commode C test recordings, assigned to 8 left-arm regions.
-- The robot is a **stand-in** until robot I/O is built: every robot screen works and nothing moves. A grey line under the top bar says so.
-- The engineer PIN is `0000`; it is stored in `~/ALIX-Lite/settings.json`.
+- Data lives in `~/ALIX-Lite/` (outside the repository):
+  - the Lite UI's projects in `projects/<id>/`;
+  - Legacy Lite's projects in `legacy/projects/<fixture>/`. The first start of this version moves them there from `projects/`.
+- The operator PIN (log-in) and the engineer PIN (Advanced Robot Controls, and Legacy Lite's engineer role) are both `1234` until changed. They are stored hashed in `~/ALIX-Lite/auth.json`.
+- Legacy Lite's first start creates the **Commode C (demo)** project. It holds the commode C test recordings, assigned to 8 left-arm regions.
+- The robot is a **stand-in** until robot I/O is built: every robot screen works and nothing moves. The Lite UI's status pill and Legacy Lite's grey line under the top bar say so.
 
-## UI/UX (in progress, second iteration working)
+## Lite UI (V19), first step done
 
-The front end is in `src/alix_studio_lite/web/` (no build step). The local server is in `src/alix_studio_lite/server/`. It is built on ALIX Studio's design tokens, brand mark, Plotly 2.35.2 and three.js r128, all vendored.
+- The designer's page is served unchanged from `src/alix_studio_lite/web/index.html`. Lite's bridge is `web/lite/` (no build step), and its API is `/api/*` (`server/api_v2.py`).
+- **Connected:**
+  - log-in and the engineer PIN, checked server-side (hashed, lock-out after five wrong tries);
+  - projects as folders, with duplicate, trash, and `.alixproj` ZIP export and import;
+  - auto save to the server;
+  - STOP BOTH and SLOW STOP (no log-in needed);
+  - the live status pill.
+- **Fixed in the bridge:** four defects of the page (contract, D1–D4). The most serious was STOP BOTH leaving the screen below 1,610 px wide.
+- **Checked:** in headless Chrome at 1920, 1600, 1440, 1366, 1280, 1024 and 900 px: STOP BOTH visible, no sideways scroll, no console errors.
+- **Next:** the region loop against the stand-in (teach, save and review, tune with the Default optimiser and real plots, the 3D robot in the simulation pane, real test). See the contract's last section.
+
+## Legacy Lite (UI iteration 2, kept at /legacy/)
+
+The front end is in `src/alix_studio_lite/web_legacy/` (no build step). The local server is in `src/alix_studio_lite/server/`. It is built on ALIX Studio's design tokens, brand mark, Plotly 2.35.2 and three.js r128, all vendored.
 
 The second iteration answers the first review (13 Oct). It was checked with headless-Chrome screenshots at 1024, 1280, 1366 and 1920 px wide, in light and dark themes. No screen shows a console error, and nothing scrolls sideways at any of those widths.
 
@@ -50,10 +69,7 @@ UI tests:
 - `tests/test_robot_model.py` covers the robot model.
 - `tests/test_ui_theme.py` keeps the ALIX theme rules.
 
-Next for the UI:
-1. Review this iteration with the team, then a pilot with operators (NFR-UX).
-2. The Program screen for Release 2: Page 02 sequences with TOGETHER / RUN FIRST / WAIT OTHER.
-3. Both arms playing together in the 3D view, for TOGETHER pairs.
+Legacy Lite is no longer developed; its working parts (3D robot, plots, optimiser screens) are being carried into the Lite UI.
 
 ## Done (backend)
 

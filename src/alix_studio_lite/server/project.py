@@ -259,12 +259,30 @@ def library(fixture: str) -> dict:
     return {"folder": str(folder), "files": files}
 
 
+def migrate_legacy_store(data_dir: Path) -> list[str]:
+    """Legacy Lite kept its fixture projects in ``<data>/projects/<fixture>``; the Lite UI's
+    projects live there now, so Legacy Lite's move to ``<data>/legacy/projects/`` once (moved,
+    never deleted). Returns the folders moved."""
+    import shutil
+
+    old, new = Path(data_dir) / "projects", Path(data_dir) / "legacy" / "projects"
+    moved = []
+    if old.is_dir():
+        for d in sorted(old.iterdir()):
+            if d.is_dir() and (d / "project.json").is_file() and (d / "units").is_dir() and not (new / d.name).exists():
+                new.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(d), str(new / d.name))
+                moved.append(d.name)
+    return moved
+
+
 def open_project(data_dir: Path, fixture: str = "commode_c") -> Project:
-    """Open the fixture's project, creating it on first start. A new project uses the existing
-    taught recordings of the fixture's library for the regions they are mapped to (decision D31)."""
+    """Open the fixture's Legacy Lite project, creating it on first start. A new project uses the
+    existing taught recordings of the fixture's library for the regions they are mapped to (D31)."""
     from . import fixtures
 
-    root = Path(data_dir) / "projects" / fixture
+    migrate_legacy_store(data_dir)
+    root = Path(data_dir) / "legacy" / "projects" / fixture
     new = not (root / "project.json").is_file()
     root.mkdir(parents=True, exist_ok=True)
     if new:

@@ -121,6 +121,7 @@ class Jobs:
 class UserError(Exception):
     """A refusal the operator should read: what happened, and what to do."""
 
-    def __init__(self, message: str, hint: str | None = None):
+    def __init__(self, message: str, hint: str | None = None, code: str | None = None):
         super().__init__(message)
         self.hint = hint
+        self.code = code            # for the page to act on, e.g. "login" when the session has ended

@@ -96,7 +96,7 @@ def test_region_through_every_step(server):
     assert call(server, f"unit/{key}")["status"] == "uploaded"
 
     # an E-stop on either arm blocks motion on both; STOP is never refused
-    call(server, "role", {"role": "engineer", "pin": "0000"})
+    call(server, "role", {"role": "engineer", "pin": "1234"})
     call(server, "robot/estop-test", {"arm": "right", "pressed": True})
     r = call(server, f"unit/{key}/run", {})
     assert "E-stop" in r["error"]
@@ -115,12 +115,16 @@ def test_region_through_every_step(server):
 
 def test_static_files(server):
     root = server.replace("/api/lite/", "/")
-    for path in ("", "js/app.js", "css/tokens.css", "vendor/plotly.min.js", "deck/s07-T1C-L.jpg",
-                 "mesh/commode_c/body.stl", "mesh/cubicle/1400.stl"):
+    for path in ("", "lite/main.js", "lite/lite.css", "legacy/", "legacy/js/app.js", "legacy/css/tokens.css",
+                 "vendor/plotly.min.js", "deck/s07-T1C-L.jpg", "mesh/commode_c/body.stl", "mesh/cubicle/1400.stl"):
         with urllib.request.urlopen(root + path, timeout=30) as r:
             assert r.status == 200, path
     with pytest.raises(urllib.error.HTTPError):
         urllib.request.urlopen(root + "../vendor/MANIFEST.json", timeout=10)
+    with pytest.raises(urllib.error.HTTPError):
+        urllib.request.urlopen(root + "legacy/../../server/app.py", timeout=10)
+    with urllib.request.urlopen(root + "legacy", timeout=10) as r:             # redirected to legacy/
+        assert r.url.endswith("/legacy/") and b"Legacy" in r.read()
 
 
 def test_fixture_pool_and_existing_recordings(server, tmp_path):

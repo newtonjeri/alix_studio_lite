@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """Launch ALIX Studio Lite, the same way ALIX Studio is launched, on Linux, Windows or macOS.
 
-    python3 tools/run_lite.py                 # opens a browser tab at http://127.0.0.1:8766/
+    python3 tools/run_lite.py                 # opens the Lite UI at http://127.0.0.1:8766/
+    python3 tools/run_lite.py --ui legacy     # opens Legacy Lite at http://127.0.0.1:8766/legacy/
     python3 tools/run_lite.py --no-browser
     python3 tools/run_lite.py --port 8800
-    python3 tools/run_lite.py --fixture commode_b      # commode_a | commode_b | commode_c | urinal_a | washtub_a
+    python3 tools/run_lite.py --fixture commode_b      # Legacy Lite: commode_a | commode_b | commode_c | urinal_a | washtub_a
+    python3 tools/run_lite.py --set-pin operator       # change the operator (or engineer) PIN, then exit
 
 Install once with ``python3 tools/setup_lite.py`` (Windows: ``py tools\\setup_lite.py``). This
 launcher then runs inside that environment (``.venv`` in this folder) by itself: no activation.
 
-Lite uses port 8766, so it can run beside ALIX Studio (8765). Project data lives in
-``~/ALIX-Lite`` (``--data``), outside this folder, one project per fixture (commode C by default).
-Until the robot I/O backend is built (docs/STATUS.md), the robot is a stand-in: every robot screen
-works and nothing moves.
+Lite uses port 8766, so it can run beside ALIX Studio (8765). Data lives in ``~/ALIX-Lite``
+(``--data``), outside this folder: the Lite UI's projects in ``projects/``, Legacy Lite's in
+``legacy/projects/``. Until the robot I/O backend is built (docs/STATUS.md), the robot is a
+stand-in: every robot screen works and nothing moves.
 """
 from __future__ import annotations
 
@@ -62,10 +64,11 @@ def main(argv=None) -> int:
     for i, a in enumerate(argv):
         if a in ("-p", "--port") and i + 1 < len(argv):
             port = int(argv[i + 1])
-    print(f"ALIX Studio Lite  ->  http://127.0.0.1:{port}/", flush=True)
-    print("Robot: stand-in (no hardware) -- the robot screens work, nothing moves.", flush=True)
-    if "--no-browser" not in argv:
-        print("Opening a browser tab...", flush=True)
+    if "--set-pin" not in argv:
+        print(f"ALIX Studio Lite  ->  http://127.0.0.1:{port}/", flush=True)
+        print("Robot: stand-in (no hardware) -- the robot screens work, nothing moves.", flush=True)
+        if "--no-browser" not in argv:
+            print("Opening a browser tab...", flush=True)
     from alix_studio_lite import server
 
     return server.main(argv) or 0

@@ -1,4 +1,10 @@
-"""ALIX Studio Lite web server: the page, its static files and the ``/api/lite/*`` JSON API.
+"""ALIX Studio Lite web server: the pages, their static files and the JSON API.
+
+Two front ends share one backend:
+
+- ``/``: the Lite UI, the designer's page (``web/index.html``) plus Lite's bridge
+  (``web/lite/``), talking to ``/api/*`` (``api_v2.py``);
+- ``/legacy/``: Legacy Lite (``web_legacy/``), kept working, talking to ``/api/lite/*`` (below).
 
 A stdlib ``ThreadingHTTPServer`` bound to 127.0.0.1, as ALIX Studio does. Refusals are HTTP 200
 ``{"error": ..., "hint": ...}`` (the Studio convention), so the page always gets a sentence to
@@ -18,11 +24,14 @@ from urllib.parse import parse_qs, urlparse
 
 from .. import __version__, vendor_paths
 from . import workers
+from .auth import Auth
 from .jobs import Jobs, UserError
 from .project import Project
 from .robot_standin import ARMS, StandInRobot
+from .store import ProjectStore
 
-WEB = Path(__file__).resolve().parents[1] / "web"
+WEB = Path(__file__).resolve().parents[1] / "web"                  # the Lite UI
+WEB_LEGACY = Path(__file__).resolve().parents[1] / "web_legacy"    # Legacy Lite, at /legacy/
 STUDIO_VENDOR = vendor_paths.ALIX / "core/python/alix_taskgen/src/alix_taskgen/web_editor/vendor"
 VENDOR_FILES = {"plotly.min.js", "three.min.js", "OrbitControls.js"}
 DECK = vendor_paths.ASSETS / "regions/deck"
@@ -47,20 +56,23 @@ class LiteApp:
         self.data_dir = Path(data_dir)
         self.jobs = Jobs()
         self.robot = StandInRobot(self.data_dir, self.jobs)
+        self.auth = Auth(self.data_dir)                       # both PINs, hashed (handoff section 19)
+        self.store = ProjectStore(self.data_dir / "projects")  # the Lite UI's projects
         self.settings_path = self.data_dir / "settings.json"
         self.ui = {"mode": "visual", "role": "operator", "cubicle_mm": 1400, "theme": "light",
-                   "engineer_pin": "0000", "fixture": project.fixture}
+                   "fixture": project.fixture}
         try:
             self.ui.update(json.loads(self.settings_path.read_text(encoding="utf-8")))
         except (OSError, ValueError):
             pass
+        self.ui.pop("engineer_pin", None)                     # the PINs now live in auth.json
         self.ui["mode"] = "visual"              # Lite always starts in Visual sim (NFR-UX f)
         self.ui["role"] = "operator"
         self._toppra = None
 
     def save_ui(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        keep = {k: v for k, v in self.ui.items() if k in ("cubicle_mm", "theme", "engineer_pin", "fixture")}
+        keep = {k: v for k, v in self.ui.items() if k in ("cubicle_mm", "theme", "fixture")}
         self.settings_path.write_text(json.dumps(keep, indent=1), encoding="utf-8")
 
     def toppra(self) -> bool:
@@ -99,6 +111,17 @@ class LiteApp:
 # ───────────────────────────────────────────────────────────── routing
 
 ROUTES: list[tuple[str, re.Pattern, callable]] = []
+
+#: the request being handled on this thread (ThreadingHTTPServer: one thread per request);
+#: routes that need headers (the Lite UI's session token) read ``REQUEST.headers``
+REQUEST = threading.local()
+
+
+class RawResponse:
+    """A route's non-JSON answer, e.g. a project file download."""
+
+    def __init__(self, data: bytes, ctype: str, filename: str | None = None):
+        self.data, self.ctype, self.filename = data, ctype, filename
 
 
 def route(method: str, pattern: str):
@@ -346,7 +369,7 @@ def post_mode(app, q, body, m):
 @route("POST", "/api/lite/role")
 def post_role(app, q, body, m):
     role = body.get("role")
-    if role == "engineer" and str(body.get("pin", "")) != str(app.ui.get("engineer_pin", "0000")):
+    if role == "engineer" and not app.auth.check("engineer", str(body.get("pin", ""))):
         raise UserError("That PIN is not right.", "Ask an engineer.")
     if role not in ("operator", "engineer"):
         raise UserError("Unknown role.")
@@ -602,9 +625,26 @@ class Handler(BaseHTTPRequestHandler):
         origin = self.headers.get("Origin")
         return origin is None or re.match(r"^http://(127\.0\.0\.1|localhost)(:\d+)?$", origin) is not None
 
+    def _redirect(self, location: str):
+        self.send_response(302)
+        self.send_header("Location", location)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def _static(self, path: str):
+        if path == "/legacy":
+            return self._redirect("/legacy/")
+        if path == "/favicon.ico":                      # neither page has one
+            self.send_response(204)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         if path in ("/", "/index.html"):
             f = WEB / "index.html"
+        elif path.startswith("/legacy/"):
+            f = (WEB_LEGACY / (path[len("/legacy/"):] or "index.html")).resolve()
+            if not f.is_relative_to(WEB_LEGACY.resolve()):
+                return self._send(404, b"not found", "text/plain")
         elif path.startswith("/vendor/") and path[8:] in VENDOR_FILES:
             f = STUDIO_VENDOR / path[8:]
         elif path.startswith("/deck/"):
@@ -632,6 +672,20 @@ class Handler(BaseHTTPRequestHandler):
         cache = path.startswith(("/vendor/", "/deck/", "/mesh/"))
         self._send(200, f.read_bytes(), ctype, cache)
 
+    def _send_raw(self, out: RawResponse):
+        self.send_response(200)
+        self.send_header("Content-Type", out.ctype)
+        self.send_header("Content-Length", str(len(out.data)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        if out.filename:
+            self.send_header("Content-Disposition", f'attachment; filename="{out.filename}"')
+        self.end_headers()
+        self.wfile.write(out.data)
+
+    MAX_JSON = 8 * 1024 * 1024
+    MAX_RAW = 256 * 1024 * 1024           # a project file (zip) with all its trajectories
+
     def _dispatch(self, method: str):
         if not self._host_ok():
             return self._send(403, b"forbidden", "text/plain")
@@ -641,22 +695,37 @@ class Handler(BaseHTTPRequestHandler):
                 return self._static(url.path)
             return self._send(405, b"method not allowed", "text/plain")
         body = {}
-        if method == "POST":
+        if method in ("POST", "PUT"):
             n = int(self.headers.get("Content-Length") or 0)
-            if n > 8 * 1024 * 1024:
-                return self._json({"error": "Request too large."})
-            try:
-                body = json.loads(self.rfile.read(n) or b"{}")
-            except ValueError:
-                return self._json({"error": "The request was not valid JSON."})
+            ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+            if ctype in ("application/zip", "application/octet-stream"):
+                if n > self.MAX_RAW:
+                    return self._json({"error": "The file is too large."})
+                body = {"_raw": self.rfile.read(n)}
+            else:
+                if n > self.MAX_JSON:
+                    return self._json({"error": "Request too large."})
+                try:
+                    body = json.loads(self.rfile.read(n) or b"{}")
+                except ValueError:
+                    return self._json({"error": "The request was not valid JSON."})
+                if not isinstance(body, dict):
+                    return self._json({"error": "The request must be a JSON object."})
         q = parse_qs(url.query)
+        REQUEST.headers = self.headers
         for meth, pat, fn in ROUTES:
             mm = pat.match(url.path)
             if mm and meth == method:
                 try:
-                    return self._json(fn(self.app, q, body, mm))
+                    out = fn(self.app, q, body, mm)
+                    if isinstance(out, RawResponse):
+                        return self._send_raw(out)
+                    return self._json(out)
                 except UserError as exc:
-                    return self._json({"error": str(exc), "hint": exc.hint})
+                    out = {"error": str(exc), "hint": exc.hint}
+                    if exc.code:
+                        out["code"] = exc.code
+                    return self._json(out)
                 except KeyError as exc:
                     return self._json({"error": str(exc).strip("'\"")})
                 except Exception as exc:                            # noqa: BLE001
@@ -671,6 +740,12 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         self._dispatch("POST")
 
+    def do_PUT(self):
+        self._dispatch("PUT")
+
+    def do_DELETE(self):
+        self._dispatch("DELETE")
+
 
 def make_server(app: LiteApp, port: int) -> ThreadingHTTPServer:
     Handler.app = app
@@ -680,4 +755,4 @@ def make_server(app: LiteApp, port: int) -> ThreadingHTTPServer:
 
 
 # Routes kept in their own modules register themselves on import (after ROUTES exists).
-from . import routes_robot  # noqa: E402,F401
+from . import api_v2, routes_robot  # noqa: E402,F401

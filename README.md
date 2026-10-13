@@ -1,8 +1,12 @@
 # ALIX Studio Lite
 
 A guided application for **non-technical operators** to teach, optimise, check and run drag-taught
-cleaning trajectories on the dual-arm RealMan RM75 robot (commode C). It keeps the ALIX Studio look,
-reuses ALIX's proven code, and drives the robot through the existing control-program runner.
+cleaning trajectories on the dual-arm RealMan RM75 robot (commode C). It reuses ALIX's proven code
+and drives the robot through the existing control-program runner.
+
+It has two front ends on one backend:
+- the **Lite UI**, at `/`: the designer's *ALIX Studio LITE Edition V19* page, connected to the backend (see [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md));
+- **Legacy Lite**, at `/legacy/`: the earlier ALIX-themed UI, kept working (git tag `legacy-lite-0.1`).
 
 **This repository is self-contained.** Everything Lite needs is inside this folder; nothing is read
 from an ALIX checkout or from the surrounding workspace at run time.
@@ -10,6 +14,7 @@ from an ALIX checkout or from the surrounding workspace at run time.
 - Requirements: [`docs/ALIX_Studio_Lite_Requirements_Revised.md`](docs/ALIX_Studio_Lite_Requirements_Revised.md) (final, v1.5)
 - Implementation plan: [`docs/ALIX_Studio_Lite_Implementation_Plan.md`](docs/ALIX_Studio_Lite_Implementation_Plan.md) (v1.5)
 - Build status: [`docs/STATUS.md`](docs/STATUS.md)
+- Lite UI contract (V19 page ↔ backend): [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md); the designer's files are in `docs/reference/ui_v19/`
 - Region catalogue for sign-off: [`docs/region_catalogue_commode_c.csv`](docs/region_catalogue_commode_c.csv)
 
 ## Install (one command, any platform)
@@ -37,18 +42,22 @@ Lite starts the same way as ALIX Studio:
 
 ```bash
 cd alix_studio_lite/tools
-./run_lite.sh                  # opens a browser tab at http://127.0.0.1:8766/   (Ctrl+C to stop)
-./run_lite.sh --no-browser     # also: --port 8800, --data DIR, --fixture commode_b
+./run_lite.sh                  # opens the Lite UI at http://127.0.0.1:8766/   (Ctrl+C to stop)
+./run_lite.sh --ui legacy      # opens Legacy Lite at http://127.0.0.1:8766/legacy/ instead
+./run_lite.sh --no-browser     # also: --port 8800, --data DIR, --fixture commode_b (Legacy Lite)
+./run_lite.sh --set-pin operator   # change a PIN (operator or engineer); asks twice, then exits
 ```
 
 On Windows: `py tools\run_lite.py`, or double-click `tools\run_lite.bat`.
 
 - The launcher runs inside `.venv` by itself, so there is no activation step, and it clears `PYTHONPATH` so a sourced ROS workspace cannot interfere. Its first lines name the Python in use.
 - Port 8766 lets Lite run beside ALIX Studio (8765).
-- Project data lives in `~/ALIX-Lite/`, outside this folder, with one project per fixture. Commode C is the default. Choose another fixture by clicking its name under the title.
-- A new project uses the existing taught recordings for its regions (`assets/recordings/<fixture>.yaml`).
-- Until the robot I/O backend is built, the robot is a **stand-in**: every robot screen works and nothing moves. The screen says so.
-- The engineer PIN is `0000`.
+- Data lives in `~/ALIX-Lite/`, outside this folder:
+  - the Lite UI's projects in `projects/<id>/`, one folder per project in the layout the handoff recommends;
+  - Legacy Lite's projects in `legacy/projects/<fixture>/` (moved there once from `projects/`, nothing deleted).
+- Log in to the Lite UI with the operator PIN; Advanced Robot Controls ask for the engineer PIN. Both are `1234` until changed. They are stored hashed in `~/ALIX-Lite/auth.json`, and Legacy Lite's engineer role uses the same engineer PIN.
+- Until the robot I/O backend is built, the robot is a **stand-in**: every robot screen works and nothing moves. The status pill in the top bar says so.
+- STOP BOTH works without a log-in.
 
 What works, and what comes next, is in [`docs/STATUS.md`](docs/STATUS.md).
 
@@ -56,7 +65,7 @@ What works, and what comes next, is in [`docs/STATUS.md`](docs/STATUS.md).
 
 | Folder | What it holds |
 |---|---|
-| `src/alix_studio_lite/` | Lite's own code:<br>• `motion/` (tracks, the 5 ms clock, limits, checks);<br>• `optimise/` (the two optimisers);<br>• `server/` (the local web server, projects, the robot stand-in);<br>• `web/` (the UI).<br>`vendor_paths.py` makes the vendored code run from this folder. |
+| `src/alix_studio_lite/` | Lite's own code:<br>• `motion/` (tracks, the 5 ms clock, limits, checks);<br>• `optimise/` (the two optimisers);<br>• `server/` (the local web server, projects, log-in, the robot stand-in);<br>• `web/` (the Lite UI: the designer's page and `lite/`, its bridge to the backend);<br>• `web_legacy/` (Legacy Lite).<br>`vendor_paths.py` makes the vendored code run from this folder. |
 | `vendor/alix/` | The parts of the ALIX repository Lite reuses, in ALIX's own folder layout. See the table below. |
 | `vendor/control_app/` | The upload-channel control program: runner v14, `hand.py`, `pole.py`, `usage.py`. The v53 UI is under `reference/`. |
 | `vendor/MANIFEST.json` | Every vendored file with its source path, sha256 and the ALIX commit it came from. |
@@ -97,7 +106,9 @@ The tests check that:
 - the commode C collision world builds with each cubicle;
 - ALIX's TOPP-RA chain reproduces the reference result (commode C lid top: 3839 lines, 19.19 s);
 - the web API takes one region through every step against the robot stand-in, including the E-stop interlock and the confirmations;
-- the UI keeps the ALIX theme: ALIX's tokens unchanged, no colour literals outside them, nothing loaded from the network.
+- the Lite UI page is the designer's file plus one marked block, every page function the bridge replaces still exists, and nothing loads from the network;
+- the Lite UI's API: PINs hashed and locked out after five wrong tries, projects as folders (duplicate, trash, ZIP round trip, unsafe ZIPs refused), STOP without a log-in;
+- Legacy Lite keeps the ALIX theme: ALIX's tokens unchanged, no colour literals outside them, nothing loaded from the network.
 
 ## Refresh the vendored copy
 

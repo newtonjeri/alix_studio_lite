@@ -4,3 +4,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
+
+# drop folder for incoming designer files (the kept copies are in docs/reference/)
+incoming_ui/

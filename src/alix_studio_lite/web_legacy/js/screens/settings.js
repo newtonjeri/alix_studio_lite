@@ -43,7 +43,7 @@ export async function render(main) {
     <dt>Time base</dt><dd>5 ms per line (the controller cycle)</dd>
     <dt>Time-optimal optimiser</dt><dd>${s.toppra ? chip('ok', '✓', 'available') : chip('warn', '△', 'not installed')}</dd>
     <dt>Project</dt><dd>${esc(s.project?.name || '')}</dd>
-    <dt>Engineer PIN</dt><dd>Default 0000. Change it in the data folder's settings.json.</dd></dl></div>`;
+    <dt>Engineer PIN</dt><dd>The same PIN as the Lite UI's Advanced Robot Controls (default 1234). Change it with <code>run_lite.sh --set-pin engineer</code>.</dd></dl></div>`;
 
   grid.append(robot, cell, ver);
   page.append(grid);

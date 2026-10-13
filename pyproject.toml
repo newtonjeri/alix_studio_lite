@@ -31,7 +31,8 @@ dev = ["pytest>=8"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-alix_studio_lite = ["web/*.html", "web/css/*.css", "web/js/*.js", "web/js/screens/*.js"]
+alix_studio_lite = ["web/*.html", "web/lite/*.js", "web/lite/*.css",
+                    "web_legacy/*.html", "web_legacy/css/*.css", "web_legacy/js/*.js", "web_legacy/js/screens/*.js"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

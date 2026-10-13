@@ -25,14 +25,39 @@ def _running_lite(port: int) -> dict | None:
         return None
 
 
+def _set_pin(data: Path, role: str) -> int:
+    import getpass
+
+    from .auth import Auth, valid_pin
+
+    pin = getpass.getpass(f"New {role} PIN (4 to 6 digits): ")
+    if not valid_pin(pin):
+        print("A PIN is 4 to 6 digits.", file=sys.stderr)
+        return 2
+    if getpass.getpass("Again: ") != pin:
+        print("The two PINs differ; nothing changed.", file=sys.stderr)
+        return 2
+    Auth(data).set_pin(role, pin)
+    print(f"The {role} PIN is changed ({data / 'auth.json'}).")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="alix_studio_lite.server", description="Run ALIX Studio Lite.")
     ap.add_argument("-p", "--port", type=int, default=DEFAULT_PORT, help=f"default {DEFAULT_PORT}")
     ap.add_argument("--no-browser", action="store_true", help="do not open a browser tab")
     ap.add_argument("--data", type=Path, default=DEFAULT_DATA, help=f"project data folder (default {DEFAULT_DATA})")
     ap.add_argument("--fixture", default=None,
-                    help="commode_a | commode_b | commode_c | urinal_a | washtub_a (default: the last used, else commode_c)")
+                    help="Legacy Lite's fixture: commode_a | commode_b | commode_c | urinal_a | washtub_a "
+                         "(default: the last used, else commode_c)")
+    ap.add_argument("--ui", choices=("lite", "legacy"), default="lite",
+                    help="the page to open: the Lite UI (default) or Legacy Lite (/legacy/)")
+    ap.add_argument("--set-pin", choices=("operator", "engineer"), metavar="ROLE",
+                    help="change the operator or engineer PIN (asks for it twice), then exit")
     a = ap.parse_args(argv)
+
+    if a.set_pin:
+        return _set_pin(a.data, a.set_pin)
 
     from .. import vendor_paths
 
@@ -58,7 +83,8 @@ def main(argv=None) -> int:
         fixture = fixtures.DEFAULT
     project = open_project(a.data, fixture)
     app = LiteApp(project, a.data)
-    url = f"http://127.0.0.1:{a.port}/"
+    root = f"http://127.0.0.1:{a.port}/"
+    url = root + ("legacy/" if a.ui == "legacy" else "")
     try:
         srv = make_server(app, a.port)
     except OSError as exc:
@@ -83,8 +109,9 @@ def main(argv=None) -> int:
     signal.signal(signal.SIGTERM, _terminate)
     if not a.no_browser:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
-    print(f"ALIX Studio Lite running at {url}  (Ctrl+C to stop)", flush=True)
-    print(f"Project: {project.meta.get('name')}  ->  {project.root}", flush=True)
+    print(f"ALIX Studio Lite running at {root}  (Ctrl+C to stop)", flush=True)
+    print(f"Legacy Lite:  {root}legacy/", flush=True)
+    print(f"Data folder:  {a.data}", flush=True)
     print(f"Python:  {sys.executable}", flush=True)
     try:
         srv.serve_forever(poll_interval=0.25)

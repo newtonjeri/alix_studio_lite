@@ -1,4 +1,4 @@
-"""NFR-THEME guards for the web UI:
+"""NFR-THEME guards for Legacy Lite's web UI (``web_legacy/``, served at ``/legacy/``):
 
 - the ALIX token blocks in tokens.css are ALIX's design/_tokens.css, unchanged;
 - no colour literal appears in the UI's CSS or JS outside tokens.css;
@@ -9,7 +9,7 @@ from pathlib import Path
 
 from alix_studio_lite import vendor_paths
 
-WEB = vendor_paths.LITE_ROOT / "src/alix_studio_lite/web"
+WEB = vendor_paths.LITE_ROOT / "src/alix_studio_lite/web_legacy"
 LITERAL = re.compile(r"(?<![\w&])#[0-9a-fA-F]{3,8}\b|\brgba?\(|\b0x[0-9a-fA-F]{6}\b")
 
 
