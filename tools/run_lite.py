@@ -60,18 +60,27 @@ def main(argv=None) -> int:
         print("note: Lite's environment is not installed yet. Run once:  python3 tools/setup_lite.py\n"
               "      (starting with this Python for now)", flush=True)
     sys.path.insert(0, str(ROOT / "src"))
+    import argparse
+
+    peek = argparse.ArgumentParser(add_help=False)
+    peek.add_argument("-p", "--port", type=int, default=8766)
+    peek.add_argument("--robot", default="standin")
+    peek.add_argument("--data")
+    peek.add_argument("--set-pin")
+    peek.add_argument("--no-browser", action="store_true")
+    known, _ = peek.parse_known_args(argv)
+    if known.data:                        # a relative --data is relative to where Lite was started
+        data = str(Path(known.data).expanduser().resolve())
+        argv = [x for x in argv if x != known.data and not x.startswith("--data=")]
+        argv = [x for x in argv if x != "--data"] + ["--data", data]
     os.chdir(tempfile.gettempdir())       # as run_studio.py does: never import from the source tree's cwd
-    port = 8766
-    for i, a in enumerate(argv):
-        if a in ("-p", "--port") and i + 1 < len(argv):
-            port = int(argv[i + 1])
-    if "--set-pin" not in argv:
-        print(f"ALIX Studio Lite  ->  http://127.0.0.1:{port}/", flush=True)
-        robot = argv[argv.index("--robot") + 1] if "--robot" in argv[:-1] else "standin"
+    if not known.set_pin:
+        print(f"ALIX Studio Lite  ->  http://127.0.0.1:{known.port}/", flush=True)
+        robot = known.robot
         print({"realman": "Robot: live read-only link to the real arms -- Lite reads them, commands nothing.",
                "emulated": "Robot: live read-only link to ALIX's emulated arms -- no hardware."}.get(
             robot, "Robot: stand-in (no hardware) -- the robot screens work, nothing moves."), flush=True)
-        if "--no-browser" not in argv:
+        if not known.no_browser:
             print("Opening a browser tab...", flush=True)
     from alix_studio_lite import server
 

@@ -10,7 +10,7 @@
 
 import { get, post, say } from './api.js';
 import { ctx, el, fmtS, loadUnit, step, tell, unitUrl, watchJob } from './ctx.js';
-import { invalidate, sim, showFile } from './sim.js';
+import { elsewhere, invalidate, release, sim, showFile, unload } from './sim.js';
 
 let unit = null;               // the server's view of the arm step on screen
 let syncing = false;           // writing the server's settings into the page's controls
@@ -253,10 +253,11 @@ async function drawPlot() {
 async function loadSimulation() {
   const host = $('simulationViewport');
   if (!host || !unit || !unit.active) return;
+  if (elsewhere()) { invalidate(); return; }              // the Viewer or the full sequence has the 3D: later
   const which = unit.candidate ? 'candidate' : 'raw';
   const progress = unit.candidate_extra && unit.candidate_extra.progress;
   try {
-    await showFile(host, unit, which, progress);
+    if (!(await showFile(host, unit, which, progress))) return;     // another file was asked for meanwhile
     window.resetSimulationPlayback(false);
     $('simStatus').textContent = (which === 'candidate'
       ? `Tuned trajectory loaded: ${fmtS(sim.lines ? (sim.lines - 1) * 0.005 : 0)}.`
@@ -274,17 +275,25 @@ export async function retune() {
   if (!unit) return null;
   if (tuning) return tuning;
   const status = $('simStatus');
+  const key = unit.key;
+  // Nothing plays until the new tuning is in: not the step's earlier file, nor the page's stand-in timer.
+  const refused = (err) => {
+    if (sim.key === key || !sim.tl) unload(Object.assign(err, { key }));
+    if (status && step()?.key === key) { status.textContent = `Nothing plays: ${say(err)}`; status.className = 'statusbar warn'; }
+    tell(err);
+    return false;
+  };
   tuning = (async () => {
     try {
-      const job = await post(unitUrl(unit.key, 'optimise'), {});
+      const job = await post(unitUrl(key, 'optimise'), {});
       const done = await watchJob(job, (j) => { showResults(j); if (status) status.textContent = `Tuning: ${j.stage}…`; });
-      unit = await loadUnit(unit.key);
+      unit = await loadUnit(key);
       showResults();
-      if (done.state !== 'done') { if (status) status.textContent = done.error || 'Tuning stopped.'; tell(Object.assign(new Error(done.error || 'Tuning stopped.'), { hint: done.hint })); return false; }
+      if (done.state !== 'done') return refused(Object.assign(new Error(done.error || 'Tuning stopped.'), { hint: done.hint }));
       invalidate();
       await loadSimulation();
       return true;
-    } catch (err) { tell(err); return false; } finally { tuning = null; }
+    } catch (err) { return refused(err); } finally { tuning = null; }
   })();
   return tuning;
 }
@@ -293,10 +302,12 @@ async function enter() {
   const s = step();
   if (!s || !ctx.pid) return;
   addControls();
+  if (sim.key !== s.key) unload();                      // another step's file never plays here
   try { unit = await loadUnit(s.key); } catch (err) { tell(err); return; }
   writeControls(settingsOf(unit));
   showResults();
   if (!unit.active) {
+    unload();
     $('simStatus').textContent = 'No recording yet: go back to Drag & Teach or Save & Review.';
     return;
   }
@@ -312,7 +323,9 @@ export function installTune() {
       const ok = await keep();
       if (!ok) return;
     }
+    const was = currentStage;
     pageSetStage(s, scroll);
+    if (currentStage !== was) release(false);           // the simulation or the preview stops with its stage
     if (currentStage === 'optimize' && (s === 'optimize' || s === 'simulate')) enter();
     document.dispatchEvent(new CustomEvent('lite:stage', { detail: currentStage }));
   };

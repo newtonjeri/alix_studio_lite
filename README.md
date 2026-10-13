@@ -6,7 +6,7 @@ its kinematics and 3D robot, its optimisers, its robot I/O library and its contr
 
 It runs in a web browser on the operator's computer. It has two front ends on one backend:
 - the **Lite UI**, at `/`: the designer's *ALIX Studio LITE Edition V19* page, connected to the backend;
-- **Legacy Lite**, at `/legacy/`: the earlier ALIX-themed UI, kept working.
+- **Legacy Lite**, at `/legacy/`: the earlier ALIX-themed UI, kept working. It asks for the same operator PIN.
 
 **The repository is self-contained.** Everything Lite needs is in this folder: no ALIX checkout and
 no ROS.
@@ -15,8 +15,9 @@ no ROS.
 
 ## Get it running (one command)
 
-You need **Python 3.11 or newer** and **git**. The installer says how to get either if one is
-missing. The repository is **private**, so sign in to GitHub once first. Any one of these works:
+You need **Python 3.12, 3.13 or 3.14** and **git**. If another Python runs the installer, it finds
+one of these by itself; if there is none, it says how to get one. The repository is **private**, so
+sign in to GitHub once first. Any one of these works:
 
 - GitHub CLI: `gh auth login`
 - an SSH key on your GitHub account
@@ -41,19 +42,21 @@ own. It clones the repository into `~/alix_studio_lite`, or into `--dir`, and in
 
 **What the installer does.** The first run takes about 5 minutes, most of it downloading packages.
 1. It checks Python (with `venv`) and git.
-2. It clones the code, or updates an existing copy. It never pulls over changes you made.
+2. It clones the code, or updates the branch an existing copy is on. It never updates over changes or commits you made; when it does not update, it says *NOT updated* and why.
 3. It builds a private environment, `.venv`, inside the copy, and installs the pinned packages. Nothing is installed system-wide.
-4. It checks that everything works by running the test suite, which takes about 2 minutes. Use `--no-tests` to skip this.
+4. It checks that everything works by running the test suite, which takes about 3 minutes. Use `--no-tests` to skip this.
 
 | Option | What it does |
 |---|---|
 | `--dir PATH` | Installs somewhere else (default: the copy it sits in, else `~/alix_studio_lite`). |
-| `--shortcut` | Adds an "ALIX Studio Lite" launcher to the desktop and the applications menu. |
+| `--shortcut` | Adds an "ALIX Studio Lite" launcher: on Linux to the desktop and the applications menu; on Windows and macOS to the desktop. |
 | `--start` | Starts Lite when it is installed. |
 | `--no-tests` | Skips the test suite at the end. |
 | `--no-optional` | Skips the optional packages (toppra, meshoptimizer). |
+| `--branch NAME` | Uses another branch. A new copy gets `lite-ui`; an existing copy stays on its own branch unless this is given. |
 
-**To update later,** run the installer again: `python3 install_lite.py` inside the copy.
+**To update later,** run the installer again: `python3 install_lite.py` inside the copy (Windows:
+`py install_lite.py`). It prints this command, with the full path, when it finishes.
 
 ---
 
@@ -66,8 +69,9 @@ alix_studio_lite/tools/run_lite.sh                # Windows: py alix_studio_lite
 A browser tab opens at **http://127.0.0.1:8766/**.
 - Log in with the operator PIN. Advanced Robot Controls ask for the engineer PIN.
 - Both PINs are **`1234`** until changed: `tools/run_lite.sh --set-pin operator`, or `--set-pin engineer`.
-- STOP BOTH always works, with or without a log-in.
+- STOP BOTH always works, with or without a log-in. When a window covers the top bar (the log-in screen, the Project Manager, a dialog), a second STOP BOTH stays at the bottom left.
 - Projects and settings live in `~/ALIX-Lite/`, outside the code, so updating never touches them.
+- A project file (`.alixproj`) from another computer brings its recordings and settings, but not its kept versions or test results: tune and keep again here before running on this robot.
 
 Other options:
 
@@ -103,7 +107,10 @@ the three devices on each side, refreshed about five times a second:
 
 The connection is **read-only**: Lite commands nothing on the robot yet.
 - **Robot actions stay with the stand-in.** That covers runs, moves, the pole and the hand. **Real robot** is not available, so use the control program for real runs meanwhile.
-- **The live E-stop still guards Lite.** While either arm's E-stop is not clear, every robot action in Lite is refused on both arms.
+- **Lite's STOP BOTH does not stop the real arms** while they are only linked: it stops Lite's own (stand-in) work. Use the red E-stop buttons on the robot.
+- **The live E-stop still guards Lite.** While either arm's E-stop is not clear, every robot action in Lite is refused on both arms. After a press, motion stays blocked until **Recover**.
+- **The one setting Lite writes** is the hand port's Modbus mode, which reading the hand needs; the control program and ALIX set it the same way. Lite never writes the arm, the pole or the hand.
+- **The link needs Linux** (x86-64 or ARM): the RealMan SDK ships only for Linux. Elsewhere, Connect says so.
 
 If an arm cannot be reached, Lite says so, with its address. Check that the controller is on, the
 cable, and that this computer has a 192.168.1.x address (`ip addr`).
@@ -132,10 +139,13 @@ only after tuning has passed every limit. [`docs/UI_V19_CONTRACT.md`](docs/UI_V1
 
 | Message or symptom | What to do |
 |---|---|
+| `Lite needs Python 3.12 to 3.14` | Install one (Windows: `py install 3.14`, or Python 3.14 from python.org; Ubuntu 22.04: `sudo add-apt-repository ppa:deadsnakes/ppa`, then `sudo apt install python3.12 python3.12-venv`; macOS: `brew install python@3.14`). Then run the installer again. |
 | `this Python has no venv module` | Ubuntu or Debian: `sudo apt install python3.12-venv` (use your Python version). Then run the installer again. |
+| `NOT updated: could not reach GitHub (sign-in or network)` | Lite is installed as it was. Check the internet connection and the GitHub sign-in, then run the installer again. |
 | `the repository could not be cloned` | Sign in first (see above), then run the installer again. |
-| `Cannot use port 8766` | Lite is probably already running: open http://127.0.0.1:8766/. Or start it with `--port 8800`. |
+| `Cannot use port 8766` | Another program uses that port: start Lite with `--port 8800`. (If Lite itself is already running there, starting it again just opens it.) |
 | `Lite cannot reach the LEFT arm's controller` | Check the power, the cable, the address in Robot & mode, and that the computer is on 192.168.1.x. |
+| `The RealMan SDK does not load on this computer` | The robot link needs Linux. Run Lite on the Linux computer that runs the control program. |
 | E-stop chip reads *not configured* | IO3 is not in the controller's E-stop mode. An engineer sets it at the pendant; Lite never writes IO modes. |
 | Time-optimal optimiser missing | `toppra` has no ready-made package for this computer. The Default optimiser still works. |
 | A ROS workspace is sourced | Nothing to do: Lite clears `PYTHONPATH` and uses its own environment. |
@@ -148,7 +158,7 @@ only after tuning has passed every limit. [`docs/UI_V19_CONTRACT.md`](docs/UI_V1
 
 ```bash
 cd alix_studio_lite
-.venv/bin/python -m pytest -q          # Windows: .venv\Scripts\python -m pytest -q   (about 2 minutes; no robot, no network)
+.venv/bin/python -m pytest -q          # Windows: .venv\Scripts\python -m pytest -q   (about 3 minutes; no robot, no network)
 ```
 
 The tests cover:
@@ -162,7 +172,8 @@ The tests cover:
 - the Trajectory Viewer;
 - the full sequence;
 - the dark theme;
-- the read-only robot link, against ALIX's emulated arms.
+- the read-only robot link, against ALIX's emulated arms;
+- the fixes from the final review: sessions, the E-stop latch, kept versions used only as kept, imports, stopped tunes, the dark-theme tool.
 
 ### Where things are
 

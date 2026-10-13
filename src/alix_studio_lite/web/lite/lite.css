@@ -111,15 +111,20 @@
 .lite-mode-btn small { font-size: 12px; color: var(--muted); line-height: 1.4; }
 .lite-mode-btn.active { border-color: var(--blue); background: var(--blue2); }
 .lite-mode-btn[data-mode="real"].active { border-color: var(--red); background: var(--red2); }
+.lite-mode-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .lite-arm-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
 .lite-arm-row { display: grid; grid-template-columns: 1.1fr 1fr 1.3fr auto; gap: 10px; align-items: center;
   padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
 .lite-arm-state { display: flex; align-items: center; gap: 6px; font-size: 14px; }
 .lite-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; }
 .lite-dot.on { background: var(--green); }
+/* STOP BOTH on top of everything while an overlay covers the top bar's (safety.js) */
+.lite-stop-fixed { display: none; position: fixed; left: 16px; bottom: 16px; z-index: 2147483000; }
+body:has(.modal.show, .project-manager-screen.show, .operator-login-screen:not(.hidden)) .lite-stop-fixed,
+body.simulation-expanded .lite-stop-fixed { display: block; }
 .lite-estop { font-size: 13px; font-weight: 800; border-radius: 999px; padding: 5px 10px; border: 1px solid var(--line); color: var(--muted); }
 .lite-estop.CLEAR { color: var(--green); border-color: var(--green); background: var(--green2); }
-.lite-estop.ENGAGED, .lite-estop.UNKNOWN { color: var(--red); border-color: var(--red); background: var(--red2); }
+.lite-estop.ENGAGED, .lite-estop.UNKNOWN, .lite-estop.NOT_CONFIGURED { color: var(--red); border-color: var(--red); background: var(--red2); }
 .lite-estop.RECOVERING { color: var(--orange); border-color: var(--orange); background: var(--orange2); }
 @media (max-width: 900px) { .lite-mode-choice, .lite-arm-row { grid-template-columns: 1fr; } }
 

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "alix_studio_lite"
 version = "0.1.0"
 description = "ALIX Studio Lite: teach, optimise, check and run taught dual-arm cleaning trajectories"
-requires-python = ">=3.11"
+requires-python = ">=3.12,<3.15"
 # The exact, tested versions are pinned in requirements.txt; tools/setup_lite.py installs them
 # into .venv in this folder. The ranges here only say what Lite needs.
 dependencies = [

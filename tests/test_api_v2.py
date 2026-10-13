@@ -53,7 +53,7 @@ def test_login_needs_the_operator_pin(lite):
 def test_pins_are_hashed_and_lock_out(lite):
     auth = lite["app"].auth
     stored = json.loads((lite["data"] / "auth.json").read_text()) if (lite["data"] / "auth.json").is_file() else auth._pins
-    assert "1234" not in json.dumps(stored)
+    assert all(v != "1234" for rec in stored.values() for v in rec.values())   # the PIN itself is never stored
     from alix_studio_lite.server.auth import Auth
     from alix_studio_lite.server.jobs import UserError
 
@@ -80,10 +80,17 @@ def test_engineer_pin_raises_the_session(lite):
 
 
 def test_legacy_engineer_pin_is_the_same_pin(lite):
+    """Legacy Lite needs the log-in too, and its engineer level belongs to the session that
+    entered the PIN, not to the server."""
     base = "/api/lite/role"
-    assert "not right" in req(lite, "POST", base, {"role": "engineer", "pin": "0000"})["error"]
-    assert req(lite, "POST", base, {"role": "engineer", "pin": "1234"})["role"] == "engineer"
-    req(lite, "POST", base, {"role": "operator"})
+    assert req(lite, "POST", base, {"role": "engineer", "pin": "1234"})["code"] == "login"
+    tok = req(lite, "POST", "/api/auth/login", {"pin": "1234"})["token"]
+    other = req(lite, "POST", "/api/auth/login", {"pin": "1234"})["token"]
+    assert "Incorrect PIN" in req(lite, "POST", base, {"role": "engineer", "pin": "0000"}, tok)["error"]
+    assert req(lite, "POST", base, {"role": "engineer", "pin": "1234"}, tok)["role"] == "engineer"
+    assert req(lite, "GET", "/api/lite/state", token=other)["role"] == "operator"     # not every client
+    assert req(lite, "POST", "/api/lite/robot/estop-test", {"arm": "left", "pressed": True}, other)["code"] == "engineer"
+    req(lite, "POST", base, {"role": "operator"}, tok)
 
 
 def test_stop_needs_no_session(lite):

@@ -6,23 +6,26 @@
 // LEFT/RIGHT RUN FIRST, ONE BY ONE, PROCEDURE) and checkpoint wait. The server makes the schedule
 // and refuses any arm step of the other arm or without its stage (server/sequence.py); the 3D
 // frames of each step are fetched as the clock reaches it. Only a run of kept versions with every
-// row ready can approve the sequence.
+// row ready, played from the start without skipping, can approve the sequence.
 
 import { post, say } from './api.js';
 import { ctx, el, fmtS, tell, unitUrl } from './ctx.js';
-import { ensure3D, invalidate, scene } from './sim.js';
+import { ensure3D, release, scene } from './sim.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
 const SOURCES = [['version', 'Kept versions · what the robot runs'], ['recording', 'Recordings as taught · preview']];
+// clean: the run started at 0 and nothing was skipped (no slider move, no step that could not be shown)
 const seq = { plan: null, source: 'version', acts: { left: [], right: [] }, cache: new Map(), shown: { left: null, right: null },
-  phase: null, loading: false, token: 0, ui: null };
+  phase: null, loading: false, token: 0, ui: null, clean: false };
 
 // ── the plan
 
 async function loadPlan() {
   const token = ++seq.token;
   seq.plan = null;
+  seq.acts = { left: [], right: [] };                         // nothing of the previous plan is shown meanwhile
+  seq.clean = false;
   seq.cache.clear();
   seq.shown = { left: null, right: null };
   showPlan(null, 'Working out the sequence…');
@@ -133,6 +136,7 @@ function prune(g) {
 // Shows sequence time g. Resolves true when shown, false while a step's 3D frames are still on
 // their way, or the server's refusal (an Error) for a step that cannot be shown.
 async function show(g) {
+  if (!seq.plan) return false;
   const { robot, viewer } = await ensure3D();
   let ready = true;
   for (const side of ARMS) {
@@ -216,6 +220,7 @@ function build() {
     SOURCES.map(([v, n]) => el('option', { value: v, text: n, selected: v === seq.source })));
   const slider = el('input', { type: 'range', min: '0', max: '0', step: '5', value: '0', 'aria-label': 'Sequence time',
     oninput: (e) => {
+      seq.clean = false;                                    // a run that skipped part of the sequence never approves it
       if (fullSimOverlayRunning) window.fullSequenceSimulationControl('pause', false);
       fullSimOverlayElapsed = Number(e.target.value) / 1000;
       if ($('fullSimOverlayTimer')) $('fullSimOverlayTimer').textContent = fmt(fullSimOverlayElapsed);
@@ -237,7 +242,7 @@ export function installSequence() {
     if (!$('fullSequenceSimModal')?.classList.contains('show')) return;    // the page refused
     if (!seq.ui) seq.ui = build();
     if (!seq.ui) return;
-    invalidate();                                         // the region's simulation reloads after this
+    release();                                            // the region's simulation stops; it reloads after this
     try {
       const { viewer, robot } = await ensure3D();
       await viewer.attach(seq.ui.host);
@@ -263,10 +268,11 @@ export function installSequence() {
     const total = seq.plan.total_s;
     const g = Math.min(total, ((performance.now() - fullSimOverlayStart) / 1000) * (fullSimSpeedPct / 100));
     waiting = true;
-    const ready = await show(g);
-    waiting = false;
+    let ready;
+    try { ready = await show(g); } catch (err) { ready = err instanceof Error ? err : new Error(String(err)); } finally { waiting = false; }
     if (!fullSimOverlayRunning) return;
     if (ready instanceof Error) {
+      seq.clean = false;
       pageControl('stop', false);
       setStatus(`Stopped: ${say(ready)}`, 'warn');
       return;
@@ -290,17 +296,18 @@ export function installSequence() {
   function finish() {
     fullSimOverlayRunning = false;
     fullSimOverlayPaused = false;
-    const approve = seq.source === 'version' && seq.plan.ready;
+    const approve = seq.source === 'version' && seq.plan.ready && seq.clean;
     fullSimCompleted = approve;
     const c = $('fullSimulationApproved');
     if (c) c.disabled = !approve;
     if ($('fullSimCurrentStep')) $('fullSimCurrentStep').textContent = 'COMPLETE ✓';
     window.setFullSimStateBadge('left', 'COMPLETE');
     window.setFullSimStateBadge('right', 'COMPLETE');
-    setStatus(approve ? 'Full sequence simulation complete ✓ · Review the result and confirm below.'
-      : 'Preview complete. The full simulation that approves the sequence runs the kept versions.', approve ? 'ok' : 'warn');
+    const why = seq.source !== 'version' ? 'Preview complete. The full simulation that approves the sequence runs the kept versions.'
+      : 'Run complete, but not played from the start without skipping: press ↺ Reset, then ▶ Start to approve the sequence.';
+    setStatus(approve ? 'Full sequence simulation complete ✓ · Review the result and confirm below.' : why, approve ? 'ok' : 'warn');
     window.updateSequenceGate();
-    window.toast(approve ? 'Full sequence simulation complete.' : 'Preview complete: it does not approve the sequence.');
+    window.toast(approve ? 'Full sequence simulation complete.' : 'This run does not approve the sequence.');
   }
 
   window.fullSequenceSimulationControl = function fullSequenceSimulationControl(action, announce = true) {
@@ -309,6 +316,8 @@ export function installSequence() {
       window.toast(seq.plan ? 'Not ready: the steps marked ✕ need a kept version (or exclude their rows).' : 'The sequence is still loading.');
       return;
     }
+    // a run from 0 (or again after the end) can approve; a resumed run keeps what it was
+    if (action === 'start' && !fullSimOverlayRunning && (fullSimOverlayElapsed <= 0 || fullSimOverlayElapsed >= seq.plan.total_s)) seq.clean = true;
     pageControl(action, announce);
     if (action === 'reset') {
       fullSimOverlayElapsed = 0;

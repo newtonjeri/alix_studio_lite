@@ -13,14 +13,14 @@ DEFAULT_DATA = Path(os.environ.get("ALIX_LITE_DATA", Path.home() / "ALIX-Lite"))
 
 
 def _running_lite(port: int) -> dict | None:
-    """The state of a Lite already serving on ``port``, or None if something else is there."""
+    """What a Lite already serving on ``port`` says about itself, or None if something else is there."""
     import json
     import urllib.request
 
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/lite/state", timeout=2) as r:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/lite/hello", timeout=2) as r:
             d = json.loads(r.read().decode("utf-8"))
-        return d if isinstance(d, dict) and "version" in d and "arms" in d else None
+        return d if isinstance(d, dict) and d.get("app") == "ALIX Studio Lite" else None
     except Exception:                                                      # noqa: BLE001
         return None
 
@@ -90,7 +90,11 @@ def main(argv=None) -> int:
 
         alix_emulator.install()
     project = open_project(a.data, fixture)
-    app = LiteApp(project, a.data, robot_link=None if a.robot == "standin" else a.robot)
+    try:
+        app = LiteApp(project, a.data, robot_link=None if a.robot == "standin" else a.robot)
+    except RuntimeError as exc:                     # e.g. a damaged auth.json: never guess the PINs
+        print(f"Lite cannot start: {exc}", file=sys.stderr, flush=True)
+        return 2
     root = f"http://127.0.0.1:{a.port}/"
     url = root + ("legacy/" if a.ui == "legacy" else "")
     try:
@@ -100,7 +104,7 @@ def main(argv=None) -> int:
         if running is not None:
             # Lite is already running there: open it rather than fail
             print(f"ALIX Studio Lite is already running at {url}", flush=True)
-            print(f"   project {running.get('project', {}).get('name', '?')}, data folder {running.get('data_dir', '?')}", flush=True)
+            print(f"   version {running.get('version', '?')}, data folder {running.get('data_dir', '?')}", flush=True)
             if not a.no_browser:
                 webbrowser.open(url)
                 print("   opened a browser tab to it", flush=True)
@@ -127,6 +131,7 @@ def main(argv=None) -> int:
         print("\nShutting down.", flush=True)
     finally:
         app.robot.stop("all")
+        app.robot.close()                           # the live links, if any
         srv.server_close()
         workers.shutdown()
     return 0

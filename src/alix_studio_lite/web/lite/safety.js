@@ -1,6 +1,8 @@
 // STOP: every stop button of the page reaches the backend first, before any page work, and
 // needs no login (handoff sections 21.13, 21.14 and 24). The page's own stop functions still
-// run afterwards for their screen updates.
+// run afterwards for their screen updates. While anything covers the top bar's STOP BOTH (the
+// log-in screen, the Project Manager, a dialog, the Trajectory Viewer), a second one, in the
+// page's own STOP style, stays on top of everything (lite.css).
 
 let nested = 0;               // inside a STOP BOTH: the page's per-arm stops send nothing more
 
@@ -21,6 +23,14 @@ function report(promise, done) {
 }
 
 export function installSafety() {
+  const fixed = document.createElement('button');
+  fixed.type = 'button';
+  fixed.className = 'emstop lite-stop-fixed';
+  fixed.textContent = 'STOP BOTH';
+  fixed.setAttribute('aria-label', 'STOP BOTH arms');
+  fixed.addEventListener('click', () => window.demoStop());
+  document.body.append(fixed);
+
   const pageStop = window.demoStop;
   window.demoStop = function demoStop() {               // top bar: STOP BOTH
     const sent = stopBoth();

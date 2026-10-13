@@ -1,6 +1,6 @@
 # Build status
 
-Last updated: 13 October 2026.
+Last updated: 14 October 2026.
 
 **Order of work (decision D27):** UI/UX first. The backend is on hold at the checkpoint below.
 
@@ -12,7 +12,7 @@ Install once, on any platform. This builds `.venv` in the Lite folder from `requ
 
 ```bash
 cd alix_studio_lite
-python3 tools/setup_lite.py         # Windows: py tools\setup_lite.py
+python3 tools/setup_lite.py         # Python 3.12 to 3.14. Windows: py tools\setup_lite.py (py -3.14 if a newer Python is the default)
 ```
 
 Then Lite starts the same way as ALIX Studio. The launcher uses `.venv` by itself:
@@ -29,7 +29,7 @@ cd alix_studio_lite/tools
 - Data lives in `~/ALIX-Lite/` (outside the repository):
   - the Lite UI's projects in `projects/<id>/`;
   - Legacy Lite's projects in `legacy/projects/<fixture>/`. The first start of this version moves them there from `projects/`.
-- The operator PIN (log-in) and the engineer PIN (Advanced Robot Controls, and Legacy Lite's engineer role) are both `1234` until changed. They are stored hashed in `~/ALIX-Lite/auth.json`.
+- The operator PIN (log-in) and the engineer PIN (Advanced Robot Controls, and Legacy Lite's engineer role) are both `1234` until changed. They are stored hashed in `~/ALIX-Lite/auth.json`. Legacy Lite asks for the same operator PIN: every request but STOP needs the session, in both UIs.
 - Legacy Lite's first start creates the **Commode C (demo)** project. It holds the commode C test recordings, assigned to 8 left-arm regions.
 - The robot is a **stand-in** until robot I/O is built: every robot screen works and nothing moves. The Lite UI's status pill and Legacy Lite's grey line under the top bar say so.
 
@@ -50,9 +50,9 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
   - The status pill opens Robot & mode (D30). It covers Visual sim, Hardware sim and Real, connecting each arm, and each arm's E-stop with Recover.
 - **Task queue (D35).** V19's 22 tasks are tied to the region catalogue: codes, TASK 9 as the deck has it, each step's status. The 8 steps outside Release 1 are LATER and cannot be chosen.
 - **Region loop**, against the robot stand-in:
-  - Prepare: each region's setup (pole height and hand pose); Apply stages it on the robot, the pole and then the hand, each read back.
-  - Drag & Teach: the existing recording is offered first (D31); drag teaching is in Hardware sim or Real, and starts only with the arm in the region's setup.
-  - Save & Review: every recording is listed with its arm and stage, one is active, and a loaded file never replaces the new one. A loaded file needs its arm and its pole and hand; a file of the other arm is refused. Playback runs in 3D or on the robot, staging first.
+  - Prepare: each region's setup (pole height and hand pose); Apply stages the hand shown (the preset, or the six channels with Custom), the pole and then the hand: read back in Real, emulated in Hardware sim. Move BOTH asks one confirmation in Real and reports each arm.
+  - Drag & Teach: the existing recording is offered first (D31); drag teaching needs Real, starts only with the arm in the region's setup, and saves the take in the region it started in.
+  - Save & Review: every recording is listed with its arm and stage, one is active, and a loaded file never replaces the new one. A loaded file needs its arm and its pole and hand; a file of the other arm is refused. Playback runs in 3D, or as a dry run in Hardware sim, staging first.
   - Tune + Simulation:
     - V19's Trim, Mean Smooth (41 by default, R11) and Scale regions are the region's server-side settings, with undo.
     - Rows marked with Trim Selected are cut, and the gap is crossed by a short joint move that is then smoothed.
@@ -61,7 +61,7 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
     - The real recording is on the plot. ▶ Start stages the pole and the hand in 3D, moves the arm to the start, then plays the trajectory on the 5 ms clock, with V19's playhead on the recording's rows.
   - Real Test:
     - The kept version uploads to a Program ID 1–100, checked by the server; replacing a program needs a confirmation.
-    - It runs in Hardware sim or, after a confirmation, in Real, after the pole and the hand are staged and read back; if either fails, nothing else runs and the reason is shown.
+    - It runs in Hardware sim (the pole and the hand emulated) or, after a confirmation, in Real (the pole and the hand staged and read back); if either fails, nothing else runs and the reason is shown. Upload and run use the kept version only while its bytes are the ones kept and pass L1–L4 again.
     - PASS needs a completed run of the current version. After one arm passes, V19 opens the other arm.
   - Advanced Robot Controls: SIM, REAL and CHECK; hand; pole; the program list.
 - **Merge + Full Sequence: the full simulation in 3D** (in place of the page's picture):
@@ -70,7 +70,7 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
   - Start is refused until every included arm step has a kept version, each listed with what it needs; a preview with the recordings as taught plays what exists and never approves the sequence;
   - play, pause, speed and a time slider; the arm panels say what each arm is doing (staging, waiting, running).
 - **ALIX's brand mark**, as ALIX Studio draws it, in place of the page's "AX" tiles, in both themes and as the tab's icon.
-- **A live, read-only link to the arms** (`tools/run_lite.sh --robot realman`, `server/robot_link.py`): it connects each controller through ALIX's own robot I/O code and shows, about five times a second, the arm (joints, error codes, run mode), the pole, the hand and the E-stop input IO3. The live E-stop drives the motion interlock. Lite commands nothing through it, so Real robot is refused while linked. Checked against ALIX's emulated arms (`--robot emulated`); not yet on the robot itself.
+- **A live, read-only link to the arms** (`tools/run_lite.sh --robot realman`, `server/robot_link.py`): it connects each controller through ALIX's own robot I/O code and shows, about five times a second, the arm (joints, error codes, run mode), the pole, the hand and the E-stop input IO3. The live E-stop drives the motion interlock. Lite commands nothing through it, so Real robot is refused while linked; the one setting it writes is the end port's Modbus mode, which reading the hand needs (as the control program and ALIX set it). **Lite's STOP BOTH does not reach the linked controllers:** the red E-stop buttons stop the arms. Linux only (the RealMan SDK ships for Linux). Checked against ALIX's emulated arms (`--robot emulated`); not yet on the robot itself.
 - **Hardware sim moves nothing physically** (D30 as clarified on 13 Oct): programs run in the controllers' SIM mode, and the pole and the hand are emulated. Drag teaching therefore needs Real, and a recording as taught never plays back on the real arms.
 - **One-command install:** `install_lite.py` clones (or updates) the private repository and runs the setup; see the README.
 - **Trajectory Viewer** (in the Operator Journey, on Home, and in Save & Review):
@@ -84,13 +84,15 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
   - its pole height and hand pose are staged first and read back, and nothing runs if either fails;
   - a run needs a version that passes L1–L6, with L3 read as ALIX reads it (20 Hz band-limited);
   - the robot's own rules (mode, confirmation, E-stop on either arm).
-- **Fixed in the bridge:** six defects of the page (contract, D1–D6). The most serious was STOP BOTH leaving the screen below 1,610 px wide; the widest was the dark theme, which covered only part of the page; and the full simulation was a picture with a clock that could approve the real full run.
+- **Final review (13–14 October):** five reviews (robot rules, security, the 3D views, the operator flows, the installer and docs), each finding reproduced, then fixed and tested (`tests/test_review_fixes.py`, `tests/test_gates_fixes.py`, `tests/test_make_dark_css.py`). Among them: an E-stop stays latched until Recover and ends motion on both arms; no mode change while anything moves; Legacy Lite needs the log-in and the engineer level is per session; an imported project brings no versions or results from the other computer; a cancelled tune never leaves a candidate with another recording's stage; the simulations play only the step on screen's own file, and only a full sequence run from the start without skipping approves it; STOP BOTH stays reachable above every overlay, the log-in screen included.
+- **Fixed in the bridge:** seven defects of the page (contract, D1–D7). The most serious was STOP BOTH leaving the screen below 1,610 px wide; the widest was the dark theme, which covered only part of the page; and the full simulation was a picture with a clock that could approve the real full run.
 
 **Checked:**
 - Tests: `tests/test_lite_ui.py` (the page is the designer's file plus one block), `tests/test_api_v2.py`, `tests/test_lite_region_loop.py` (one arm step through the whole loop over HTTP, the gates, staging failures, the E-stop interlock, cuts and the recorded-pace mode), `tests/test_library.py` (the Trajectory Viewer's files), `tests/test_staging.py` (staging times and FK, L3 against ALIX's own reading), `tests/test_sequence.py` (the full sequence's schedule and chained steps), `tests/test_robot_link.py` (the live link against ALIX's emulated arms).
 - Headless Chrome:
   - the whole loop, in light and dark themes, with no console errors;
-  - STOP BOTH visible from 900 to 1920 px wide.
+  - STOP BOTH visible from 900 to 1920 px wide, and above the log-in screen, the Project Manager, dialogs and the Trajectory Viewer;
+  - after the final review: the hand preset and channels, Move BOTH, the Tune simulation stopping for the Viewer and reloading after it, Start refused with the reason, a scrubbed full-sequence run not approving and a clean one approving, Lock, and Legacy Lite's log-in.
 
 **Not yet:**
 - Merge + Full Sequence: the custom merge with joins, the single-arm merged simulation (Simulate LEFT / RIGHT) and the real full run are still the template.
@@ -129,7 +131,7 @@ Legacy Lite is no longer developed; its working parts (3D robot, plots, optimise
 
 | Area | State |
 |---|---|
-| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 125 tests pass in about two minutes, with no ALIX checkout. |
+| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 148 tests pass in about three minutes, with no ALIX checkout. |
 | Cubicle walls | Done. The 1400 mm cubicle (default) and the 800 mm cubicle are in `assets/scene/cubicles/`. |
 | Motion basics (`src/alix_studio_lite/motion/`) | Implemented and smoke-tested. It covers track read/write, the 5 ms clock, the limit set from the URDF, and the hard limits L1–L6 plus checks C1–C4 on the integer bytes. L3 reads acceleration as ALIX does (20 Hz band-limited, F99c; ALIX accepts at 1.00 of 600 °/s², Lite at 1.02). |
 | Optimiser engine (`src/alix_studio_lite/optimise/`) | Implemented, smoke-tested and connected to the Lite UI's Tune + Simulation. Golden tests still to write. |
@@ -179,10 +181,9 @@ All times are true time: a file of N lines lasts (N − 1) × 5 ms. Every hard l
 
 ```bash
 cd alix_studio_lite
-export PYTHONPATH=src
-python3 -m alix_studio_lite.optimise tests/data/recordings/commode_c_taught_paths/FILE_10.1.txt \
-    --side left --optimiser toppra --target 3.0
-python3 -m pytest -q
+.venv/bin/python -m alix_studio_lite.optimise tests/data/recordings/commode_c_taught_paths/FILE_10.1.txt \
+    --side left --optimiser toppra --target 3.0      # toppra: the optional package (requirements-optional.txt)
+.venv/bin/python -m pytest -q
 ```
 
 Start with the golden tests (item 1), then the 3D check (item 2).

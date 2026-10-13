@@ -3,10 +3,12 @@
 // Run go to the robot: in Hardware sim nothing moves (the controller runs the program in its SIM
 // mode, the pole and the hand are emulated), in Real the arm, the pole and the hand move after a
 // confirmation, and in Visual sim nothing is sent. The run's real outcome is
-// shown, and PASS is accepted only after a completed run (tasks.js).
+// shown, and PASS is accepted only after a completed run (tasks.js). Until Lite's robot commands
+// exist the robot is the stand-in, and the screens say that nothing reached a controller.
 
 import { get } from './api.js';
 import { ctx, el, fmtS, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
+import { standIn } from './status.js';
 import { gateChips } from './tune.js';
 
 const $ = (id) => document.getElementById(id);
@@ -24,7 +26,14 @@ async function refresh() {
   try { u = await loadUnit(s.key); } catch (err) { tell(err); return; }
   const st = await get('/api/robots/status').catch(() => null);
   const note = $('stage-real').querySelector('.notice');
-  if (note && st) { const [cls, text] = MODE_NOTE[st.mode]; note.className = cls; note.textContent = text; }
+  if (note && st) {
+    const [cls, text] = MODE_NOTE[st.mode];
+    const linked = Object.values(st.arms || {}).some((a) => a.link);
+    note.className = cls;
+    note.textContent = st.mode === 'visual' || st.backend !== 'stand-in' ? text
+      : `${text} ${linked ? 'The arms are linked read only: Upload, Move to Start and Run go to the stand-in robot, and nothing is sent to the controllers.'
+        : 'The robot is the stand-in: nothing is sent to a controller.'}`;
+  }
   const v = u.versions[u.versions.length - 1];
   $('realTaskLabel').textContent = `${TASKS[currentTask].label} · ${s.display}`;
   const pid = u.settings_view.settings.program_id;
@@ -50,7 +59,9 @@ export function installRealTest() {
       const out = await robotCall(unitUrl(s.key, 'upload'), { program_id: pid }, { what: 'Upload' });
       if (out.unchanged) { status.textContent = `Program ${pid} already holds this version ✓`; return; }
       const done = await watchJob(out, (j) => { status.textContent = jobLine(j); });
-      status.textContent = done.state === 'done' ? `Uploaded to Program ID ${pid} ✓ (name and size read back)` : (done.error || 'Upload stopped.');
+      status.textContent = done.state !== 'done' ? (done.error || 'Upload stopped.')
+        : standIn() ? `Uploaded to Program ID ${pid} on the stand-in robot ✓ (nothing reached a controller)`
+          : `Uploaded to Program ID ${pid} ✓ (name and size read back)`;
       if (done.state === 'done') {                          // the page's own record of the Program ID
         const rec = window.captureCurrentTaskRecord();
         rec.programId = pid;
@@ -70,8 +81,9 @@ export function installRealTest() {
       const job = await robotCall(unitUrl(s.key, 'run'), {}, { what: 'Running the test' });
       status.className = 'mini-note';
       const done = await watchJob(job, (j) => { status.textContent = jobLine(j); });
+      const how = `${done.result && done.result.dry_run ? 'Hardware sim' : 'real robot'}${standIn() ? ', stand-in robot: nothing reached a controller' : ''}`;
       status.textContent = done.state === 'done'
-        ? `Test complete ✓ (${done.result && done.result.dry_run ? 'Hardware sim' : 'real robot'}) — choose PASS, Needs Tuning or Record Again.`
+        ? `Test complete ✓ (${how}) — choose PASS, Needs Tuning or Record Again.`
         : `Stopped: ${done.error || 'the run did not finish.'} ${done.hint || ''}`;
       status.className = done.state === 'done' ? 'mini-note lite-ok' : 'mini-note lite-bad';
     } catch (err) { status.textContent = err.message; status.className = 'mini-note lite-bad'; tell(err); }

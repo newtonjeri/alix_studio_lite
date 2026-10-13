@@ -6,6 +6,18 @@ import { get, session } from './api.js';
 
 const MODE = { visual: 'VISUAL SIM', hwsim: 'HARDWARE SIM', real: 'REAL ROBOT' };
 let timer = null;
+let last = null;                                     // the last /api/robots/status
+
+// The mode the server runs region steps in (visual | hwsim | real), read now when not known yet;
+// null when the server cannot be reached. The pill's data-lite also shows E-stop and offline.
+export async function liteMode() {
+  if (!last) await poll();
+  return last ? last.mode : null;
+}
+// Whether robot actions go to the stand-in (until Lite's robot commands exist), and whether an
+// arm has the live read-only link: then nothing is sent to its controller.
+export const standIn = () => !last || last.backend === 'stand-in';
+export const linked = () => !!last && Object.values(last.arms || {}).some((a) => a.link);
 
 function pillText(st) {
   if (st.motion_block) return { state: 'estop', head: 'E-STOP', text: st.motion_block };
@@ -37,9 +49,11 @@ async function poll() {
   if (!session.token) return;
   try {
     const st = await get('/api/robots/status');
+    last = st;
     const p = pillText(st);
     show(p.state, p.head, p.text, st.mode_text);
   } catch (err) {
+    last = null;
     if (err.code === 'offline') show('offline', 'NO SERVER', 'restart ALIX Studio Lite');
   }
 }

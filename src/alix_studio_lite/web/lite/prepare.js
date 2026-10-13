@@ -2,27 +2,39 @@
 // hand pose it is taught with (from its existing recording's record or the region catalogue).
 // Prepare shows it; Apply Pole / Apply Hand keep the page's values as the setup and stage them:
 // in Real on the robot (pole, then hand, each read back, after a confirmation); in Hardware sim
-// emulated, as nothing moves there.
+// emulated, as nothing moves there. The hand sent is the one on screen: the preset, or with Custom
+// the six channels, where an empty channel is held (left where it is).
 // Drag teaching starts only with the arm in that setup, so every recording knows its true stage,
 // and every execution stages that stage first (staging.py). The start-pose moves wait for the arm.
 
-import { ctx, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
+import { say } from './api.js';
+import { REAL_CHECKS, confirmDialog, ctx, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
+import { liteMode } from './status.js';
 
 const $ = (id) => document.getElementById(id);
 const GRIP = [0, 0, 0, 0, 150, 1000], OPEN = [1000, 1000, 1000, 1000, 1000, 1000];
+const PRESETS = { 'Grip / Cleaning': GRIP, 'All Open': OPEN };
 let lastKey = null;
+let lastMoveError = null;
+
+const handInputs = () => [...document.querySelectorAll('#handFields input')];
 
 function handFromPage() {
-  return [...document.querySelectorAll('#handFields input')].map(x => (x.value === '' ? null : Number(x.value)));
+  const preset = PRESETS[$('handPreset')?.value];
+  return preset ? preset.slice() : handInputs().map(x => (x.value === '' ? null : Number(x.value)));
+}
+
+function fillHand(hand) {
+  handInputs().forEach((x, i) => { x.value = hand[i] == null ? '' : hand[i]; x.placeholder = hand[i] == null ? 'held' : ''; });
 }
 
 function showSetup(setup) {
   if (!setup) return;
   if ($('poleHeight')) $('poleHeight').value = setup.pole_mm;
-  const hand = setup.hand.map((c, i) => (c == null ? (i < 4 ? 1000 : [150, 1000][i - 4]) : c));
-  [...document.querySelectorAll('#handFields input')].forEach((x, i) => { x.value = hand[i]; });
+  fillHand(setup.hand);
   const preset = $('handPreset');
-  if (preset) preset.value = JSON.stringify(hand) === JSON.stringify(GRIP) ? 'Grip / Cleaning' : JSON.stringify(hand) === JSON.stringify(OPEN) ? 'All Open' : 'Custom';
+  const k = JSON.stringify(setup.hand);
+  if (preset) preset.value = Object.keys(PRESETS).find(n => JSON.stringify(PRESETS[n]) === k) || 'Custom';
   let note = $('liteSetupNote');
   if (!note) {
     note = Object.assign(document.createElement('div'), { id: 'liteSetupNote', className: 'mini-note lite-setup-note' });
@@ -41,7 +53,7 @@ async function refresh() {
 async function applySetup(kind) {
   const s = step();
   if (!s || !ctx.pid) return;
-  const mode = document.querySelector('.topbar .mode-pill')?.dataset.lite;
+  const mode = await liteMode();
   const body = { pole_mm: Number($('poleHeight').value), hand: handFromPage(), apply: mode === 'hwsim' || mode === 'real' };
   try {
     const out = await robotCall(unitUrl(s.key, 'setup'), body, { what: `Moving the ${s.arm.toUpperCase()} pole and hand` });
@@ -59,7 +71,7 @@ async function applySetup(kind) {
     $('liteSetupNote').classList.remove('lite-bad');
     window.toast(`${s.arm.toUpperCase()} staged: ${out.unit.setup.text} `
       + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).'));
-    window.demoApplyToRobotControl(kind);              // the Advanced panel shows the same values
+    window.rcSyncGuidedValues();                       // the Advanced panel shows the same values (nothing is sent)
   } catch (err) { tell(err); }
 }
 
@@ -71,27 +83,46 @@ async function move(url, body, what, statusEl) {
 }
 
 export function installPrepare() {
-  const pageApply = window.demoApply;
   window.demoApply = function demoApply(kind) {
-    if (!ctx.pid) { pageApply(kind); return; }
+    if (!ctx.pid) { window.toast('Open a project first: Apply keeps the setup of its region.'); return; }
     applySetup(kind);
   };
 
+  // Move to the selected start pose. BOTH asks one confirmation in Real, then sends both arms, and
+  // says what each arm did: one arm refused or stopped never hides that the other one moved.
   window.demoMove = async function demoMove(which) {
     if (!isSetupReady()) { window.toast('Complete all physical preparation checks first.'); return false; }
     const arms = which === 'BOTH' ? ['left', 'right'] : [String(which).toLowerCase()];
-    try {
-      await Promise.all(arms.map((arm) => {
-        const name = $(`${arm}PoseSelect`)?.value || 'Default Start Pose';
-        return move(`/api/robots/${arm}/move-pose`, { name }, `Moving the ${arm.toUpperCase()} arm to its start pose`, $(`${arm}PoseStatus`))
-          .then(() => {
-            const e = $(`${arm}PoseStatus`);
-            const real = document.querySelector('.topbar .mode-pill')?.dataset.lite === 'real';
-            if (e) e.textContent = `${arm.toUpperCase()} at “${name}” ` + (real ? '(joints read back).' : '(dry run: nothing moved).');
-          });
-      }));
-      return true;
-    } catch (err) { tell(err); return false; }
+    const mode = await liteMode();
+    let extra = {};
+    if (arms.length > 1 && mode === 'real') {
+      const yes = await confirmDialog({ title: 'Real robot: both arms will move', ok: 'Yes, move both arms', list: REAL_CHECKS,
+        body: 'The LEFT and the RIGHT arm move to their selected start poses on the real robot.' });
+      if (!yes) { window.toast('Cancelled: nothing was sent to the robot.'); return false; }
+      extra = { confirmed: true };
+    }
+    lastMoveError = null;
+    const results = await Promise.allSettled(arms.map((arm) => {
+      const name = $(`${arm}PoseSelect`)?.value || 'Default Start Pose';
+      return move(`/api/robots/${arm}/move-pose`, { name, ...extra }, `Moving the ${arm.toUpperCase()} arm to its start pose`, $(`${arm}PoseStatus`))
+        .then(() => {
+          const e = $(`${arm}PoseStatus`);
+          if (e) e.textContent = `${arm.toUpperCase()} at “${name}” ` + (mode === 'real' ? '(joints read back).' : '(dry run: nothing moved).');
+        });
+    }));
+    results.forEach((r, i) => {
+      if (r.status !== 'rejected') return;
+      const e = $(`${arms[i]}PoseStatus`);
+      if (e) e.textContent = `${arms[i].toUpperCase()}: ${say(r.reason)}`;
+      lastMoveError = lastMoveError || r.reason;
+    });
+    if (lastMoveError) {
+      const moved = arms.filter((a, i) => results[i].status === 'fulfilled');
+      if (moved.length) window.toast(`${say(lastMoveError)} The ${moved.map(a => a.toUpperCase()).join(' and ')} arm did reach its start pose.`);
+      else tell(lastMoveError);
+      return false;
+    }
+    return true;
   };
 
   window.moveRedoToStart = async function moveRedoToStart() {
@@ -100,10 +131,16 @@ export function installPrepare() {
     $('redoPoseStatus').textContent = `Moving the ${selectedArm.toUpperCase()} arm to “${dest?.value || 'its start pose'}”…`;
     const ok = await window.demoMove(selectedArm.toUpperCase());
     redoPoseMoved = ok;
-    $('redoPoseStatus').textContent = ok ? `${selectedArm.toUpperCase()} arm at its start pose · ready to record again.`
-      : 'The arm did not move. Choose Hardware sim or Real robot and connect the arm, then try again.';
+    const real = (await liteMode()) === 'real';
+    $('redoPoseStatus').textContent = ok
+      ? `${selectedArm.toUpperCase()} arm at its start pose${real ? '' : ' (dry run: nothing moved)'} · ready to record again.`
+      : `The arm is not at its start pose: ${lastMoveError ? say(lastMoveError) : 'the move did not finish.'}`;
     $('redoReturnBtn').disabled = !ok;
   };
+
+  // The hand preset and the six channels always agree: a preset fills them, editing one makes it Custom.
+  $('handPreset')?.addEventListener('change', (e) => { if (PRESETS[e.target.value]) fillHand(PRESETS[e.target.value]); });
+  $('handFields')?.addEventListener('input', () => { if ($('handPreset')) $('handPreset').value = 'Custom'; });
 
   document.addEventListener('lite:step', refresh);
   document.addEventListener('lite:stage', (e) => { if (e.detail === 'prepare') refresh(); });

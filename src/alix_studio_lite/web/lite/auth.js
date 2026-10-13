@@ -1,7 +1,7 @@
 // Log-in and the engineer PIN, checked by the backend (handoff section 19) instead of the
 // template PINs in the page. What the page does after a correct PIN is kept as it was.
 
-import { post, say, session } from './api.js';
+import { call, post, say, session } from './api.js';
 import { flush, loadProjects } from './projects.js';
 
 let engineerLock = Promise.resolve();
@@ -52,6 +52,7 @@ export function installAuth() {
 
   const pageLock = window.lockOperatorSession;
   window.lockOperatorSession = async function lockOperatorSession() {
+    const mine = session.token;                  // ends this session only, even if a log-in comes first
     pageLock();                                  // saves the project and shows the log-in screen
     // Fix (page defect 2): the next log-in opens the Project Manager, which saved the open project
     // again with the view the log-in had just set (Home), so "Resume" lost the task and stage.
@@ -59,8 +60,8 @@ export function installAuth() {
     currentProjectId = null;
     window.updateCurrentProjectHeader();
     await flush();
-    await post('/api/auth/logout').catch(() => {});
-    session.set(null);
+    await call('POST', '/api/auth/logout', {}, { as: mine }).catch(() => {});
+    if (session.token === mine) session.set(null);
   };
 
   window.submitRobotPin = async function submitRobotPin() {

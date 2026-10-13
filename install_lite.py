@@ -7,14 +7,17 @@
     python3 install_lite.py --shortcut       # also add an "ALIX Studio Lite" launcher to the desktop / menu
     python3 install_lite.py --start          # start Lite when it is installed
 
-Run it from anywhere, with Python 3.11 or newer; it uses only Python's standard library. Inside a
-copy of the code it installs that copy instead of cloning. Run it again at any time to update:
-it pulls the latest code (never over changes you made) and updates the installation in place.
+Run it from anywhere; it uses only Python's standard library. Lite needs Python 3.12 to 3.14 (the
+ALIX code it reuses needs 3.12; its packages do not exist for 3.15 yet): run with any other Python,
+it looks for one of those on this computer and runs itself again with it. Inside a copy of the
+code it installs that copy instead of cloning. Run it again at any time to update: it brings the
+branch the copy is on up to GitHub's (never over changes or commits of yours: it says plainly when
+it did not update) and updates the installation in place.
 
 WHAT IT DOES
-    1. checks Python (3.11+, with venv) and git, and says how to get what is missing
+    1. checks Python (3.12 to 3.14, with venv) and git, and says how to get what is missing
     2. clones the repository (GitHub CLI if signed in, else git over HTTPS, else SSH), or updates
-       an existing copy with a fast-forward pull
+       an existing copy: a fast-forward of the branch it is on (--branch moves it to another)
     3. runs tools/setup_lite.py: a virtual environment in the copy (.venv), the pinned packages,
        Lite itself, then a check (the test suite)
     4. optionally adds a launcher, and prints how to start Lite
@@ -29,14 +32,15 @@ from __future__ import annotations
 import argparse
 import os
 import platform
+import shlex
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 REPO = "newtonjeri/alix_studio_lite"
-BRANCH = "lite-ui"
-MIN_PY = (3, 11)
+BRANCH = "lite-ui"                                  # a new clone's branch; an existing copy keeps its own
+MIN_PY, MAX_PY = (3, 12), (3, 14)                   # vendored ALIX code needs 3.12; the pins have no 3.15 build
 SYSTEM = platform.system()                          # Linux, Windows, Darwin
 
 
@@ -62,20 +66,62 @@ def run(cmd: list, *, cwd: Path | None = None, check: bool = True, quiet: bool =
 def output(cmd: list, cwd: Path | None = None) -> str:
     try:
         return subprocess.run([str(c) for c in cmd], cwd=str(cwd) if cwd else None, capture_output=True,
-                              text=True, timeout=60).stdout.strip()
+                              text=True, errors="replace", timeout=60).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return ""
 
 
+def q(path) -> str:
+    """A path to paste into a terminal: quoted when it needs it (always, on Windows)."""
+    return f'"{path}"' if SYSTEM == "Windows" else shlex.quote(str(path))
+
+
 # ── 1. what this computer needs
 
-def check_python() -> None:
+def supported_python() -> list | None:
+    """The command that starts another Python Lite supports, the newest first: on Windows the py
+    launcher (py -3.14 down to py -3.12), elsewhere python3.14 down to python3.12 on PATH."""
+    for minor in range(MAX_PY[1], MIN_PY[1] - 1, -1):
+        cmd = ["py", f"-3.{minor}"] if SYSTEM == "Windows" else [f"python3.{minor}"]
+        probe = f"import sys; sys.exit(sys.version_info[:2] != (3, {minor}))"
+        try:                                        # the exit status only: no output to decode
+            if subprocess.call(cmd + ["-c", probe], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL, timeout=60) == 0:
+                return cmd
+        except (OSError, subprocess.SubprocessError):
+            pass
+    return None
+
+
+def this_script() -> Path | None:
+    """This file, unless it was piped in (python3 - < install_lite.py)."""
+    try:
+        f = Path(__file__)
+    except NameError:
+        return None
+    return f.resolve() if f.is_file() else None
+
+
+def check_python(argv: list) -> None:
     say(f"Python {platform.python_version()} ({sys.executable}, {SYSTEM} {platform.machine()})")
-    if sys.version_info < MIN_PY:
-        hint = {"Linux": "Ubuntu 22.04: sudo apt install python3.11 python3.11-venv, then run this with python3.11",
-                "Windows": "install Python 3.12 from https://www.python.org/downloads/ (tick \"Add python.exe to PATH\")",
-                "Darwin": "brew install python@3.12, or https://www.python.org/downloads/"}.get(SYSTEM, "")
-        fail(f"Lite needs Python {MIN_PY[0]}.{MIN_PY[1]} or newer. {hint}")
+    if not MIN_PY <= sys.version_info[:2] <= MAX_PY:
+        need = f"Lite needs Python {MIN_PY[0]}.{MIN_PY[1]} to {MAX_PY[0]}.{MAX_PY[1]}"
+        if sys.version_info[:2] > MAX_PY:
+            need += f" (its packages do not exist for Python {sys.version_info[0]}.{sys.version_info[1]} yet)"
+        other, script = supported_python(), this_script()
+        if other and script:
+            print(f"   {need}. Found {' '.join(other)} on this computer: the installer runs again with it.", flush=True)
+            sys.exit(run(other + [script, *argv], check=False))
+        if other:
+            fail(f"{need}. Run this script with {' '.join(other)} instead.")
+        v = f"{MAX_PY[0]}.{MAX_PY[1]}"
+        hint = {"Linux": "Install one, for example on Ubuntu 22.04: sudo add-apt-repository ppa:deadsnakes/ppa, "
+                         "then sudo apt install python3.12 python3.12-venv",
+                "Windows": f"Install Python {v}: type  py install {v}  or use its installer from "
+                           "https://www.python.org/downloads/windows/",
+                "Darwin": f"Install one: brew install python@{v}, or https://www.python.org/downloads/macos/",
+                }.get(SYSTEM, "Install one from https://www.python.org/downloads/")
+        fail(f"{need}, and this computer has none of those.\n   {hint}\n   Then run this script again.")
     try:
         import ensurepip  # noqa: F401
         import venv  # noqa: F401
@@ -129,17 +175,37 @@ def clone(target: Path, branch: str, repo_url: str | None) -> None:
          "   then run this script again.")
 
 
-def update(copy: Path, branch: str) -> None:
-    say(f"Updating the copy in {copy}")
-    if output(["git", "status", "--porcelain"], cwd=copy):
-        print("   it has changes of its own, so it is installed as it is (no pull). To update: commit or stash, then run again.")
-        return
-    run(["git", "fetch", "--prune", "origin"], cwd=copy, check=False)
+def update(copy: Path, branch: str | None) -> str:
+    """Fast-forwards the copy to GitHub: the branch it is on, or `branch` when one is given.
+    Returns why it was NOT updated, or "" when it was. One fetch, so git asks for a password once."""
     current = output(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=copy)
-    if current != branch:
+    branch = branch or current
+    say(f"Updating the copy in {copy} ({branch})")
+    if not current:
+        return not_updated("git cannot read it", f"To see why, run  git status  in {q(copy)}.")
+    if output(["git", "status", "--porcelain"], cwd=copy):
+        return not_updated("it has changes of its own", "To update it, commit or stash them, then run this again.")
+    if branch == "HEAD":
+        return not_updated("it is not on a branch", f"To update it, run this again with --branch {BRANCH}.")
+    if run(["git", "fetch", "--prune", "origin"], cwd=copy, check=False) != 0:
+        return not_updated("could not reach GitHub (sign-in or network)",
+                           "Check the internet connection and the GitHub sign-in (README.md), then run this again.")
+    if not output(["git", "rev-parse", "--verify", "--quiet", f"origin/{branch}"], cwd=copy):
+        return not_updated(f"GitHub has no branch {branch}",
+                           f"For Lite's own branch, run this again with --branch {BRANCH}.")
+    if branch != current:
         run(["git", "checkout", branch], cwd=copy)
-    if run(["git", "pull", "--ff-only", "origin", branch], cwd=copy, check=False) != 0:
-        print("   ** it could not fast-forward (the copy has commits of its own); it is installed as it is.")
+    if run(["git", "merge", "--ff-only", f"origin/{branch}"], cwd=copy, check=False) == 0:
+        return ""
+    if output(["git", "rev-list", f"origin/{branch}..HEAD"], cwd=copy):
+        return not_updated("it has commits of its own that GitHub does not have",
+                           "A developer can rebase or push them.")
+    return not_updated("git could not update it", "Fix the message above, then run this again.")
+
+
+def not_updated(why: str, todo: str) -> str:
+    print(f"   ** {why}: NOT updated, it is installed as it is. {todo}", flush=True)
+    return why
 
 
 # ── 3. install, 4. launch
@@ -170,12 +236,21 @@ def shortcut(copy: Path) -> None:
         for f in made:
             f.write_text(entry, encoding="utf-8")
             f.chmod(0o755)
-            run(["gio", "set", f, "metadata::trusted", "true"], check=False, quiet=True)
+            if shutil.which("gio"):
+                run(["gio", "set", f, "metadata::trusted", "true"], check=False, quiet=True)
         print("   " + "\n   ".join(str(f) for f in made))
     elif SYSTEM == "Windows":
-        desktop = Path(os.environ.get("USERPROFILE", Path.home())) / "Desktop"
+        desktop = windows_desktop()
+        if desktop is None:
+            print("   ** no Desktop folder was found, so no launcher was made. Start Lite with the command below.")
+            return
         f = desktop / "ALIX Studio Lite.bat"
-        f.write_text(f'@echo off\r\ncd /d "{copy}"\r\ncall "{copy / "tools/run_lite.bat"}"\r\n', encoding="utf-8")
+        # UTF-8, which chcp 65001 makes cmd.exe read (so a folder name with accents works), and the
+        # environment's own Python, so no other Python on the computer is involved
+        bat = ("@echo off\r\nchcp 65001 >nul\r\n"
+               f'"{copy / ".venv/Scripts/python.exe"}" "{copy / "tools/run_lite.py"}"\r\n'
+               "if errorlevel 1 pause\r\n")
+        f.write_bytes(bat.replace("%", "%%").encode("utf-8"))
         print(f"   {f}")
     elif SYSTEM == "Darwin":
         f = Path.home() / "Desktop/ALIX Studio Lite.command"
@@ -184,11 +259,28 @@ def shortcut(copy: Path) -> None:
         print(f"   {f}")
 
 
+def windows_desktop() -> Path | None:
+    """The Desktop folder Windows really uses: OneDrive often moves it out of %USERPROFILE%."""
+    places = []
+    try:
+        import winreg
+
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                            r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders") as key:
+            places.append(Path(os.path.expandvars(winreg.QueryValueEx(key, "Desktop")[0])))
+    except (ImportError, OSError):
+        pass
+    places.append(Path.home() / "Desktop")
+    return next((p for p in places if p.is_dir()), None)
+
+
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else list(argv)
     ap = argparse.ArgumentParser(description="Clone (or update) ALIX Studio Lite and install it.",
                                  formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     ap.add_argument("--dir", type=Path, help="where the code goes (default: this copy, else ~/alix_studio_lite)")
-    ap.add_argument("--branch", default=BRANCH, help=f"the branch to use (default {BRANCH})")
+    ap.add_argument("--branch", help=f"the branch to use (default: {BRANCH} for a new clone; "
+                                     "an existing copy stays on its own)")
     ap.add_argument("--repo", help="clone from this URL or path instead of GitHub")
     ap.add_argument("--no-tests", action="store_true", help="skip the test suite at the end")
     ap.add_argument("--no-optional", action="store_true", help="skip the optional packages (toppra, meshoptimizer)")
@@ -196,27 +288,37 @@ def main(argv=None) -> int:
     ap.add_argument("--start", action="store_true", help="start Lite when installed")
     a = ap.parse_args(argv)
 
-    check_python()
+    check_python(argv)
     check_git()
     copy = a.dir.expanduser().resolve() if a.dir else (own_checkout() or Path.home() / "alix_studio_lite")
+    stale = ""                                      # why the copy was NOT updated
     if (copy / ".git").is_dir():
-        update(copy, a.branch)
+        stale = update(copy, a.branch)
     elif (copy / "tools/setup_lite.py").is_file():
         say(f"Using the copy in {copy} (not a git clone, so it is not updated)")
+        stale = "it is not a git clone"
     elif copy.exists() and any(copy.iterdir()):
         fail(f"{copy} exists and is not a copy of Lite. Choose another place with --dir.")
     else:
-        clone(copy, a.branch, a.repo)
+        clone(copy, a.branch or BRANCH, a.repo)
     install(copy, tests=not a.no_tests, optional=not a.no_optional)
     if a.shortcut:
-        shortcut(copy)
+        try:
+            shortcut(copy)
+        except Exception as exc:                    # noqa: BLE001 - never worth failing the install for
+            print(f"   ** no launcher was made ({exc}). Start Lite with the command below.", flush=True)
 
-    start = f"py {copy / 'tools/run_lite.py'}" if SYSTEM == "Windows" else str(copy / "tools/run_lite.sh")
-    say("ALIX Studio Lite is installed")
+    if SYSTEM == "Windows":                         # PowerShell cannot start a command with a quoted path
+        py = "py" if shutil.which("py") else "python"
+        start = f"{py} {q(copy / 'tools/run_lite.py')}"
+    else:
+        py, start = q(sys.executable), q(copy / "tools/run_lite.sh")
+    again = f"{py} {q(copy / 'install_lite.py')}" + (f" --branch {a.branch}" if a.branch else "")
+    say("ALIX Studio Lite is installed" + (f", but NOT updated: {stale}" if stale else ""))
     print(f"   Start it:      {start}")
     print("   It opens:      http://127.0.0.1:8766/   (log in with the operator PIN, 1234 until changed)")
     print(f"   Change a PIN:  {start} --set-pin operator      (or engineer)")
-    print(f"   Update later:  {sys.executable} {copy / 'install_lite.py'}")
+    print(f"   Update later:  {again}")
     print(f"   Read first:    {copy / 'README.md'}")
     if a.start:
         say("Starting Lite (Ctrl+C to stop)")

@@ -12,9 +12,9 @@ export const session = {
   onLost(fn) { onLoginLost = fn; },
 };
 
-export async function call(method, path, body, { raw = false, keepalive = false } = {}) {
+export async function call(method, path, body, { raw = false, keepalive = false, as = token } = {}) {
   const headers = { Accept: raw ? '*/*' : 'application/json' };
-  if (token) headers['X-Lite-Token'] = token;
+  if (as) headers['X-Lite-Token'] = as;                    // `as`: another session's token (the one a Lock ends)
   let payload;
   if (body instanceof Blob || body instanceof ArrayBuffer) {
     headers['Content-Type'] = 'application/octet-stream';

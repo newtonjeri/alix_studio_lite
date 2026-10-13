@@ -27,6 +27,7 @@ class Job:
         self.error: str | None = None
         self.hint: str | None = None
         self.events: list[dict] = []
+        self.reason: tuple[str, str | None] | None = None   # why it was stopped, when not by STOP (an E-stop)
         self._cancel = threading.Event()
         self._lock = threading.Lock()
 
@@ -40,7 +41,12 @@ class Job:
             self.events.append(dict(seq=len(self.events), t=round(time.time() - self.started, 2),
                                     text=text, level=level))
 
-    def cancel(self) -> None:
+    def cancel(self, reason: str | None = None, hint: str | None = None) -> None:
+        """Stop the job at its next check. With ``reason`` (an E-stop), it ends as failed with that
+        text, never as a plain "Stopped."; the first reason given is the one kept."""
+        with self._lock:
+            if reason and self.reason is None:
+                self.reason = (reason, hint)
         self._cancel.set()
 
     @property
@@ -86,8 +92,12 @@ class Jobs:
                 job.result = res if isinstance(res, dict) else {"value": res}
                 job.state = "done"
             except Cancelled:
-                job.state = "cancelled"
-                job.log("Stopped.", "warn")
+                if job.reason:
+                    job.state, (job.error, job.hint) = "failed", job.reason
+                    job.log(job.error, "error")
+                else:
+                    job.state = "cancelled"
+                    job.log("Stopped.", "warn")
             except UserError as exc:
                 job.state, job.error, job.hint = "failed", str(exc), exc.hint
                 job.log(str(exc), "error")
@@ -109,11 +119,14 @@ class Jobs:
         return [j for j in list(self._jobs.values()) if j.state == "running"
                 and (arm is None or j.arm in (arm, "both")) and (kind is None or j.kind == kind)]
 
-    def cancel_arm(self, arm: str) -> int:
+    def cancel_arm(self, arm: str, reason: str | None = None, hint: str | None = None,
+                   kinds: tuple | None = None) -> int:
+        """Stop the running jobs of ``arm`` ("all" and "both" mean every arm), optionally only
+        those of ``kinds``."""
         n = 0
         for j in self.running():
-            if arm == "all" or j.arm in (arm, "both"):
-                j.cancel()
+            if (arm in ("all", "both") or j.arm in (arm, "both")) and (kinds is None or j.kind in kinds):
+                j.cancel(reason, hint)
                 n += 1
         return n
 

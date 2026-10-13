@@ -61,11 +61,15 @@ def error_codes(err) -> list[int]:
 
 
 class ArmLink:
-    """One controller: connected once, read by one thread."""
+    """One controller: connected once, read by one thread, which also owns the SDK handle (it
+    closes it when it stops, so nothing uses a deleted handle). ``on_read`` is called after every
+    reading, so an E-stop press reaches the robot's jobs without waiting for a page to poll."""
 
-    def __init__(self, side: str, ip: str, port: int = 8080, *, period_s: float = 0.2, estop_active: int = 1):
+    def __init__(self, side: str, ip: str, port: int = 8080, *, period_s: float = 0.2, estop_active: int = 1,
+                 on_read=None):
         self.side, self.ip, self.port = side, ip, int(port)
         self.period_s, self.estop_active = period_s, estop_active
+        self.on_read = on_read
         self.handle = None
         self.emulated = False
         self.feedback: dict = {}
@@ -78,32 +82,46 @@ class ArmLink:
     def open(self) -> "ArmLink":
         from alix_dispatch import connect
 
+        try:                                     # open_arm reports a missing SDK as an unreachable arm
+            import Robotic_Arm.rm_robot_interface  # noqa: F401
+        except Exception:                                                # noqa: BLE001
+            raise UserError("The RealMan SDK does not load on this computer, so Lite cannot connect to the arms.",
+                            "The robot link needs Linux (x86-64 or ARM), like the control program.") from None
         h = connect.open_arm(self.side, ip=self.ip, port=self.port)
         if h is None:
             raise UserError(f"Lite cannot reach the {self.side.upper()} arm's controller at {self.ip}:{self.port}.",
                             "Check that the controller is on, the cable, and the address in Robot & mode.")
         self.handle = h
         self.emulated = connect.sdk_provenance(h.robot) == "emulated"
-        self.read_once()
+        try:
+            self.read_once()
+        except Exception:
+            connect.close_arm(h)
+            self.handle = None
+            raise
         self._thread = threading.Thread(target=self._loop, name=f"lite-link-{self.side}", daemon=True)
         self._thread.start()
         return self
 
     def close(self) -> None:
-        from alix_dispatch import connect
-
+        """Stop reading. The thread closes the controller connection itself once its last read is
+        done, so a slow controller cannot have its handle deleted under a running call."""
         self._stop.set()
         if self._thread:
             self._thread.join(timeout=2.0)
-        connect.close_arm(self.handle)
-        self.handle = None
 
     def _loop(self) -> None:
-        while not self._stop.wait(self.period_s):
-            try:
-                self.read_once()
-            except Exception:                                            # noqa: BLE001 - keep reading
-                pass
+        from alix_dispatch import connect
+
+        try:
+            while not self._stop.wait(self.period_s):
+                try:
+                    self.read_once()
+                except Exception:                                        # noqa: BLE001 - keep reading
+                    pass
+        finally:
+            connect.close_arm(self.handle)
+            self.handle = None
 
     def _read_hand(self, robot):
         from alix_dispatch import peripherals
@@ -145,6 +163,8 @@ class ArmLink:
             fb["estop"], fb["io3"] = "UNKNOWN", {}
         with self._lock:
             self.feedback = fb
+        if self.on_read is not None:
+            self.on_read()
         return fb
 
     def view(self) -> dict:

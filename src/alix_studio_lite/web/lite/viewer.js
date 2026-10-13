@@ -10,11 +10,12 @@
 
 import { del, get, post, say } from './api.js';
 import { ctx, el, fmtS, stageDialog, step, tell } from './ctx.js';
-import { ensure3D, invalidate, scene } from './sim.js';
+import { ensure3D, release, scene } from './sim.js';
 
 const CYCLE = 0.005;
 const ARMS = ['left', 'right'];
 const slots = { left: null, right: null };          // {meta, r (timeline as sent), tl, track, checks}
+const asked = { left: 0, right: 0 };                 // the newest ▶ View per arm: an older answer is dropped
 let box = null, lib = null, phase = 'lid_closed';
 let t = 0, playing = false, speed = 1, raf = 0, last = 0, said = '';   // t: the run clock, 0 = both arms standing
 let plotP = null;
@@ -154,6 +155,7 @@ async function remove(f) {
 async function view(f) {
   if (!f.ready) { await setStage(f); return; }
   const side = f.arm;
+  const tok = ++asked[side];
   status(`Loading ${f.name} on the ${side.toUpperCase()} arm…`);
   try {
     const { viewer, robot } = await ensure3D();
@@ -163,6 +165,7 @@ async function view(f) {
       get(`/api/library/${f.id}/timeline?side=${side}`),       // refused unless the file is this arm's, with its stage
       get(`/api/library/${f.id}/track`),
       get(`/api/library/${f.id}/checks`)]);
+    if (tok !== asked[side]) return;
     slots[side] = { meta: f, r, tl: robot.loadTimeline(side, r), track, checks };
     pause();
     t = 0; said = '';
@@ -172,11 +175,12 @@ async function view(f) {
     status(`${f.name} on the ${side.toUpperCase()} arm: staged first (${slots[side].tl.stage.text}), `
       + `then ${fmtS(trajS(side))} of trajectory. Press ▶ Play.`, 'ok');
   } catch (err) {
-    status(`${f.name} is not shown: ${say(err)}`, 'warn');
+    if (tok === asked[side]) status(`${f.name} is not shown: ${say(err)}`, 'warn');
   }
 }
 
 async function clearSlot(side) {
+  asked[side]++;                                      // a ▶ View still loading for this arm is dropped
   const { robot, viewer } = await ensure3D();
   robot.clearTrack(side);
   viewer.dirty = true;
@@ -397,7 +401,7 @@ export async function openViewer() {
   if (!box) build();
   box.classList.add('show');
   document.body.style.overflow = 'hidden';
-  invalidate();                                       // the region's simulation reloads after this
+  release();                                          // the region's simulation stops; it reloads after this
   renderSlots(); renderChecks();
   refreshList();
   const { viewer, robot } = await ensure3D();

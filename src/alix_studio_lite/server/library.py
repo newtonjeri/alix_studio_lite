@@ -216,6 +216,13 @@ class TaughtLibrary:
         with self._lock:
             for m in self.uploads():                     # the same file again: keep one copy
                 if m.get("sha256") == sha:
+                    said = arm or detect_arm(path or name)
+                    if (said and said != m.get("arm")) or (stage and not staging.same_stage(stage, m.get("stage"))):
+                        was = (f"{m['arm'].upper()} arm" if m.get("arm") else "no arm stated") + ", " + (
+                            (m.get("stage") or {}).get("text") or "no pole and hand stated")
+                        raise UserError(f"{name} is already in the library as {m['name']} ({was}): loading it "
+                                        "again does not change its arm, pole or hand.",
+                                        "Change them on that file in the list instead.")
                     return m
             fid = "u_" + uuid.uuid4().hex[:12]
             self.root.mkdir(parents=True, exist_ok=True)

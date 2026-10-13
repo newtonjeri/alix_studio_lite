@@ -127,13 +127,23 @@ export function installTasks() {
     refreshTasks().catch(() => {});
   };
 
+  // Opens a project once the server has its task list (the newest Open wins). The project being
+  // left is saved first, with its own task list, which this one's then replaces.
   const pageOpen = window.openProjectById;
+  let opening = 0;
   window.openProjectById = async function openProjectById(id) {
-    try {
-      ctx.pid = id;
-      applyTasks(await get(`/api/projects/${id}/tasks`));
-    } catch (err) { tell(err); return; }
+    const mine = ++opening;
+    let d;
+    try { d = await get(`/api/projects/${id}/tasks`); } catch (err) { tell(err); return; }
+    if (mine !== opening) return;
+    if (currentProjectId && currentProjectId !== id) {
+      window.saveCurrentProjectNow('Switched project');
+      currentProjectId = null;                          // saved: the page does not save it again
+    }
+    ctx.pid = id;
+    applyTasks(d);
     pageOpen(id);
+    if (currentProjectId !== id) { ctx.pid = null; return; }       // the page did not open it
     relabel();
     document.dispatchEvent(new CustomEvent('lite:step'));
   };

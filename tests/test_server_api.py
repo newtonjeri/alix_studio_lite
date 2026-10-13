@@ -24,16 +24,24 @@ def server(tmp_path_factory):
     srv = make_server(app, 0)
     port = srv.server_address[1]
     threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.1}, daemon=True).start()
-    yield f"http://127.0.0.1:{port}/api/lite/"
+    base = f"http://127.0.0.1:{port}/api/lite/"
+    TOKEN["t"] = None
+    TOKEN["t"] = call(f"http://127.0.0.1:{port}/api/auth/", "login", {"pin": "1234"})["token"]   # Legacy needs the log-in too
+    yield base
     srv.shutdown()
     srv.server_close()
     workers.shutdown()
 
 
-def call(base, path, body=None):
-    if body is None:
-        return json.load(urllib.request.urlopen(base + path, timeout=60))
-    req = urllib.request.Request(base + path, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+TOKEN = {"t": None}
+
+
+def call(base, path, body=None, token=True):
+    headers = {"Content-Type": "application/json"}
+    if token and TOKEN["t"]:
+        headers["X-Lite-Token"] = TOKEN["t"]
+    req = urllib.request.Request(base + path, headers=headers,
+                                 data=None if body is None else json.dumps(body).encode())
     return json.load(urllib.request.urlopen(req, timeout=60))
 
 

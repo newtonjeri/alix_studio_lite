@@ -70,7 +70,7 @@ export function confirmDialog({ title, body, ok = 'Continue', danger = true, lis
   });
 }
 
-const REAL_CHECKS = ['The work area around the arm is clear of people.', 'The red E-stop buttons are within reach.'];
+export const REAL_CHECKS = ['The work area around the arm is clear of people.', 'The red E-stop buttons are within reach.'];
 
 // A robot request. The server answers code "confirm" (Real needs a yes), "replace" (a program
 // slot holds another file) or "mode" (Visual sim uses no robot); this asks and retries once.
@@ -108,7 +108,8 @@ const HAND_CHOICES = [
 ];
 
 // Asks what a file was taught with: its arm (when not known) and its stage, the pole height and
-// hand pose. Prefilled with `setup` ({pole_mm, hand}). Resolves {arm, pole_mm, hand} or null.
+// hand pose. Prefilled with `setup` ({pole_mm, hand}): a hand that is none of the presets is offered
+// with its exact values; with no setup, nothing is preselected. Resolves {arm, pole_mm, hand} or null.
 export function stageDialog({ title, body, arm = null, setup = null, askArm = false }) {
   return new Promise((resolve) => {
     const armSel = el('select', { 'aria-label': 'Arm' },
@@ -122,10 +123,13 @@ export function stageDialog({ title, body, arm = null, setup = null, askArm = fa
       if (k === JSON.stringify([1000, 1000, 1000, 1000, 1000, 1000])) return 'OPEN';
       if (k === JSON.stringify([1000, 1000, 1000, 1000, null, null])) return '100% open';
       if (k === JSON.stringify([500, 500, 500, 500, null, null])) return '50% open';
-      return 'GRIP';
+      return null;
     };
-    const hand = el('select', { 'aria-label': 'Hand' }, HAND_CHOICES.map(([v, n]) => el('option', { value: v, text: n })));
-    if (setup) hand.value = preset(setup.hand);
+    const exact = setup && Array.isArray(setup.hand) && !preset(setup.hand) ? setup.hand : null;
+    const hand = el('select', { 'aria-label': 'Hand' }, el('option', { value: '', text: 'Choose…' }),
+      exact ? el('option', { value: 'SETUP', text: `As set up (${exact.map(c => (c == null ? 'held' : c)).join(', ')})` }) : null,
+      HAND_CHOICES.map(([v, n]) => el('option', { value: v, text: n })));
+    hand.value = exact ? 'SETUP' : (setup && preset(setup.hand)) || '';
     const cancel = el('button', { class: 'btn outline', text: 'Cancel' });
     const ok = el('button', { class: 'btn green', text: 'Use these values' });
     const msg = el('div', { class: 'mini-note' });
@@ -143,7 +147,8 @@ export function stageDialog({ title, body, arm = null, setup = null, askArm = fa
       const p = Number(pole.value);
       if (askArm && !armSel.value) { msg.textContent = 'Choose the arm it was taught on.'; return; }
       if (pole.value === '' || !(p >= 0 && p <= 315)) { msg.textContent = 'The pole height is 0 to 315 mm.'; return; }
-      done({ arm: askArm ? armSel.value : arm, pole_mm: p, hand: hand.value });
+      if (!hand.value) { msg.textContent = 'Choose the hand pose it was taught with.'; return; }
+      done({ arm: askArm ? armSel.value : arm, pole_mm: p, hand: hand.value === 'SETUP' ? exact : hand.value });
     };
     document.body.append(box);
     pole.focus();

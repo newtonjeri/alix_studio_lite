@@ -1,7 +1,22 @@
 // The shell: app bar (fixture, mode, arms, STOP, role, theme), the tab bar (current region + tabs,
 // as ALIX Studio's ribbon tabs), banners and the router.
-import { api, store, refreshState, icon, esc, ARM, unitCode, h, PIPE_ORDER } from './core.js';
+import { api, asks, store, refreshState, icon, esc, ARM, unitCode, h, PIPE_ORDER } from './core.js';
 import { setStatus, toast, showError, confirmMotion, askPin, modal } from './ui.js';
+
+// What core.api asks: the operator PIN for Lite's session, and a yes before a real move.
+asks.pin = async (message = '') => {
+  const body = document.createElement('div');
+  body.className = 'stack';
+  body.innerHTML = `<p>Log in with the operator PIN. STOP works without it.</p>${message ? `<p class="muted small">${esc(message)}</p>` : ''}
+    <label class="field">Operator PIN<input type="password" inputmode="numeric" autocomplete="off" id="loginPinInput"></label>`;
+  setTimeout(() => body.querySelector('#loginPinInput')?.focus(), 30);
+  body.addEventListener('keydown', (e) => { if (e.key === 'Enter') body.closest('.modal')?.querySelector('footer .primary')?.click(); });
+  const ok = await modal({ title: 'ALIX Studio Lite', body, actions: [
+    { label: 'Cancel', value: false }, { label: 'Log in', value: true, kind: 'primary' }] });
+  return ok ? body.querySelector('#loginPinInput').value : null;
+};
+asks.confirm = (message) => confirmMotion({ title: 'Real robot: the arm will move', facts: [['What', esc(message)]],
+  checklist: ['Nobody is inside the cell.', 'I can reach an E-stop button.'], action: 'Move' });
 
 const SCREENS = {
   regions: () => import('./screens/home.js'),

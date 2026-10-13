@@ -77,6 +77,8 @@ def parse_hand(value) -> tuple:
             return tuple(PRESETS[v])
         m = re.fullmatch(r"(\d{1,3})\s*%\s*OPEN(\s*\(FIRST 4 FINGERS\))?", v)
         if m:
+            if int(m.group(1)) > 100:                                     # ALIX's helper would exit the server thread
+                raise UserError(f"The hand cannot be {m.group(1)} % open.", "Use 0 to 100 % open, Open or Grip.")
             _alix()                                                       # the vendored path first
             import taught_tracks as tt                                    # noqa: PLC0415
 
@@ -86,12 +88,14 @@ def parse_hand(value) -> tuple:
         raise UserError("The hand needs six values: little, ring, middle, index, thumb bend, thumb rotate.")
     out = []
     for c in value:
+        if isinstance(c, float) and not math.isfinite(c):
+            raise UserError("Hand values are whole numbers from 0 to 1000.")
         if c is None or (isinstance(c, (int, float)) and c < 0):
             out.append(None)                                           # hold, as the SDK's -1
             continue
         try:
             c = int(round(float(c)))
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             raise UserError("Hand values are whole numbers from 0 to 1000.") from None
         if not 0 <= c <= 1000:
             raise UserError("Hand values are 0 to 1000 (1000 = open, 0 = closed).")
@@ -104,7 +108,7 @@ def parse_hand(value) -> tuple:
 def make_stage(pole_mm, hand, source: str = "") -> Stage:
     try:
         pole = float(pole_mm)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         raise UserError("The pole height is a number of millimetres (0 to 315).") from None
     if not math.isfinite(pole) or not 0.0 <= pole <= POLE_MAX_MM:
         raise UserError("The pole height must be 0 to 315 mm.")
@@ -119,6 +123,13 @@ def stage_from(d) -> Stage | None:
         return make_stage(d["pole_mm"], d["hand"], d.get("source", ""))
     except UserError:
         return None
+
+
+def same_stage(a, b) -> bool:
+    """Whether two stages (a Stage or its dict) are the same pole height and hand pose; an
+    unknown stage is never the same as anything."""
+    sa, sb = (s if isinstance(s, Stage) else stage_from(s) for s in (a, b))
+    return sa is not None and sb is not None and (sa.pole_mm, sa.hand) == (sb.pole_mm, sb.hand)
 
 
 def hand_words(hand) -> str:

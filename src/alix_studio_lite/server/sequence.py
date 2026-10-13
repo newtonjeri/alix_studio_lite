@@ -68,24 +68,26 @@ def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, ide
     rows, blocking = [], []
     T = 0.0
     for i, s in enumerate(steps):
-        try:
-            n = int(s.get("step") or i + 1)
-        except (TypeError, ValueError):
-            n = i + 1
-        rule = str(s.get("rule") or "TOGETHER").upper()
-        if rule not in RULES:
-            rule = "TOGETHER"
+        try:                                              # no step given: the row's place in the table
+            n = i + 1 if s.get("step") in (None, "") else int(str(s.get("step")).strip())
+        except ValueError:
+            n = None
+        rule = str(s.get("rule") or "TOGETHER").strip().upper()[:40]
         try:
             wait = min(3600.0, max(0.0, float(s.get("checkpointWait") or 0)))
         except (TypeError, ValueError):
             wait = 0.0
-        task = tasks[n - 1] if 1 <= n <= len(tasks) else None
-        label = str(s.get("label") or (task or {}).get("label") or f"Step {n}")[:60]
+        task = tasks[n - 1] if n is not None and 1 <= n <= len(tasks) else None
+        label = str(s.get("label") or (task or {}).get("label") or f"Step {n or i + 1}")[:60]
         row = dict(index=i, step=n, label=label, rule=rule, wait_s=wait, arms={}, t0=round(T, 4))
-        if task is None:
-            row["note"] = f"Task {n} is not in this project's task list."
-            blocking.append(f"{label}: {row['note']}")
-        if rule == "PROCEDURE" or task is None:
+        why = (f"“{str(s.get('step'))[:20]}” is not a task number: give the task's number in the flow table."
+               if n is None else f"Task {n} is not in this project's task list." if task is None
+               else f"“{rule}” is not a rule: choose {', '.join(RULES[:-1])} or {RULES[-1]}." if rule not in RULES
+               else None)                                 # never guessed: the row blocks, its arms stand still
+        if why:
+            row["note"] = why
+            blocking.append(f"{label}: {why}")
+        if rule == "PROCEDURE" or why:
             row.update(t1=round(T, 4), note=row.get("note") or "Operator procedure: no robot motion.")
             T += wait
             rows.append(row)
@@ -116,7 +118,8 @@ def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, ide
         T = end + wait
         rows.append(row)
     runs = any(a.get("ready") for r in rows for a in r["arms"].values())
-    return dict(source=source, rows=rows, total_s=round(T, 4), ready=not blocking and runs, playable=runs,
+    return dict(source=source, rows=rows, total_s=round(T, 4), playable=runs,
+                ready=source == "version" and not blocking and runs,        # a preview never approves
                 blocking=blocking)
 
 
@@ -152,8 +155,9 @@ def check_start(start) -> dict | None:
         pole = float(start["pole_mm"])
         hand = [None if c is None else int(c) for c in start["hand"]]
         q = [float(v) for v in start["q_deg"]]
-    except (KeyError, TypeError, ValueError):
+    except (KeyError, TypeError, ValueError, OverflowError):
         raise UserError("A start state is {pole_mm, hand: 6 counts, q_deg: 7 joints}.") from None
-    if not 0 <= pole <= staging.POLE_MAX_MM or len(hand) != 6 or len(q) != 7 or not all(np.isfinite(q)):
+    if (not 0 <= pole <= staging.POLE_MAX_MM or len(hand) != 6 or len(q) != 7 or not all(np.isfinite(q))
+            or any(c is not None and not 0 <= c <= 1000 for c in hand)):
         raise UserError("That start state is out of range.")
     return dict(pole_mm=pole, hand=hand, q_deg=q)

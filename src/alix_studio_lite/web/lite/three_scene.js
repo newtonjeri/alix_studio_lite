@@ -16,15 +16,20 @@ function loadScript(src) {
   });
 }
 export function ensureThree() {
-  if (!ready) ready = (window.THREE ? Promise.resolve() : loadScript('/vendor/three.min.js'))
-    .then(() => (window.THREE.OrbitControls ? null : loadScript('/vendor/OrbitControls.js')));
+  if (!ready) {
+    ready = (window.THREE ? Promise.resolve() : loadScript('/vendor/three.min.js'))
+      .then(() => (window.THREE.OrbitControls ? null : loadScript('/vendor/OrbitControls.js')));
+    ready.catch(() => { ready = null; });              // a failed load is tried again next time
+  }
   return ready;
 }
 
 const meshCache = new Map();
 function loadSTL(url) {
   if (!meshCache.has(url)) {
-    meshCache.set(url, fetch(url).then(r => { if (!r.ok) throw new Error(url); return r.arrayBuffer(); }).then(parseSTL));
+    const p = fetch(url).then(r => { if (!r.ok) throw new Error(url); return r.arrayBuffer(); }).then(parseSTL);
+    p.catch(() => meshCache.delete(url));              // a failed download is tried again next time
+    meshCache.set(url, p);
   }
   return meshCache.get(url);
 }
@@ -77,7 +82,7 @@ async function buildFixture(spec, phase) {
 export function createViewer() {
   const v = { dirty: true, animating: false, host: null, ready: null };
   let renderer = null, scene = null, cam = null, controls = null, ro = null, wall = null, fixture = null;
-  let wallKey = '', fixtureKey = '';
+  let wallKey = '', fixtureKey = '', wallGen = 0, fixtureGen = 0;
 
   v.ready = ensureThree().then(() => {
     const THREE = window.THREE;
@@ -145,14 +150,16 @@ export function createViewer() {
     await v.ready;
     const THREE = window.THREE;
     const col = (n) => new THREE.Color(css(n));
+    // Changes can overlap (a slider dragged across states): only the newest one is put in the scene.
     if (wallKey !== String(cubicleMm)) {
-      if (wall) scene.remove(wall);
-      wall = null;
+      const gen = ++wallGen;
       wallKey = String(cubicleMm);
       try {
         const g = await loadSTL(`/mesh/cubicle/${cubicleMm}.stl`);
+        if (gen !== wallGen) return;
         const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: col('--vp-wall'), transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
         const edges = new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), new THREE.LineBasicMaterial({ color: col('--vp-wall-edge') }));
+        if (wall) scene.remove(wall);
         wall = new THREE.Group(); wall.add(m, edges);
         wall.position.set(...CUBICLE_POSE.pos); wall.rotation.z = CUBICLE_POSE.yawDeg * D2R;
         scene.add(wall);
@@ -160,10 +167,14 @@ export function createViewer() {
     }
     const key = `${fixtureId}:${phase}`;
     if (fixtureSpec && fixtureKey !== key) {
-      if (fixture) scene.remove(fixture);
-      fixture = null;
+      const gen = ++fixtureGen;
       fixtureKey = key;
-      try { fixture = await buildFixture(fixtureSpec, phase); scene.add(fixture); } catch (e) { /* nor without the fixture */ }
+      let built = null;
+      try { built = await buildFixture(fixtureSpec, phase); } catch (e) { /* the view works without the fixture */ }
+      if (gen !== fixtureGen) return;
+      if (fixture) scene.remove(fixture);
+      fixture = built;
+      if (fixture) scene.add(fixture);
     }
     v.dirty = true;
   };

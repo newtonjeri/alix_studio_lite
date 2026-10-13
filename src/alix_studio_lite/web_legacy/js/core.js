@@ -1,18 +1,60 @@
 // Core helpers: API calls, shared state, formatting, small DOM helpers and icons.
 
-export async function api(path, body) {
-  const opt = body === undefined ? {} : {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+// Lite's session: every request but STOP carries it. When the server asks for a log-in (code
+// "login") Legacy Lite asks for the operator PIN, once for every request waiting, and keeps the
+// session for this browser tab. A real move the server wants confirmed (code "confirm") is asked
+// here too, then sent again with the yes. app.js provides both questions (ui.js).
+export const asks = { pin: null, confirm: null };
+const TOKEN_KEY = 'alix-lite-legacy-session';
+let token = null;
+try { token = sessionStorage.getItem(TOKEN_KEY); } catch (e) { /* no storage: log in after a reload */ }
+let loggingIn = null;
+
+async function send(path, body) {
+  const headers = {};
+  if (token) headers['X-Lite-Token'] = token;
+  const opt = body === undefined ? { headers } : {
+    method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   };
   let res;
   try {
-    res = await fetch('/api/lite/' + path, opt);
+    res = await fetch(path, opt);
   } catch (e) {
     throw new LiteError('Lost contact with Lite.', 'Check that Lite is still running in its terminal.');
   }
-  let data;
-  try { data = await res.json(); } catch (e) { throw new LiteError('Lite sent an unreadable reply.', 'Try again.'); }
-  if (data && data.error) throw new LiteError(data.error, data.hint);
+  try { return await res.json(); } catch (e) { throw new LiteError('Lite sent an unreadable reply.', 'Try again.'); }
+}
+
+function logIn() {
+  if (!loggingIn) {
+    loggingIn = (async () => {
+      let said = '';
+      for (;;) {
+        const pin = asks.pin ? await asks.pin(said) : null;
+        if (pin === null) throw new LiteError('Not logged in.', 'Lite needs the operator PIN: reload the page to log in.');
+        const r = await send('/api/auth/login', { pin });
+        if (r && r.token) {
+          token = r.token;
+          try { sessionStorage.setItem(TOKEN_KEY, token); } catch (e) { /* kept for this page only */ }
+          return;
+        }
+        said = (r && r.error) || 'Lite did not accept the PIN.';
+      }
+    })().finally(() => { loggingIn = null; });
+  }
+  return loggingIn;
+}
+
+export async function api(path, body, again = 2) {
+  const data = await send('/api/lite/' + path, body);
+  if (data && data.error) {
+    if (data.code === 'login' && again > 0) { await logIn(); return api(path, body, again - 1); }
+    if (data.code === 'confirm' && body !== undefined && !body.confirmed && asks.confirm) {
+      if (!(await asks.confirm(data.error))) throw new LiteError('Cancelled: nothing was sent to the robot.');
+      return api(path, { ...body, confirmed: true }, again);
+    }
+    throw Object.assign(new LiteError(data.error, data.hint), { code: data.code });
+  }
   return data;
 }
 

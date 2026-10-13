@@ -6,26 +6,30 @@ long solve never blocks a STOP.
 from __future__ import annotations
 
 import multiprocessing as mp
+import threading
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
 
 _POOL: ProcessPoolExecutor | None = None
+_POOL_LOCK = threading.Lock()          # two first tunes at once still make one pool, one worker
 
 
 def pool() -> ProcessPoolExecutor:
     global _POOL
-    if _POOL is None:
-        _POOL = ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context("spawn"))
-    return _POOL
+    with _POOL_LOCK:
+        if _POOL is None:
+            _POOL = ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context("spawn"))
+        return _POOL
 
 
 def shutdown() -> None:
     global _POOL
-    if _POOL is not None:
-        _POOL.shutdown(wait=False, cancel_futures=True)
-        _POOL = None
+    with _POOL_LOCK:
+        if _POOL is not None:
+            _POOL.shutdown(wait=False, cancel_futures=True)
+            _POOL = None
 
 
 def _maxpool(u: np.ndarray, buckets: int = 1500) -> list[float]:

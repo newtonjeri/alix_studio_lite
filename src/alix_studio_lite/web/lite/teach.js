@@ -10,11 +10,12 @@
 
 import { post, say } from './api.js';
 import { armFromName, ctx, el, fmtS, jobLine, loadUnit, robotCall, stageDialog, step, tell, unitUrl, watchJob } from './ctx.js';
-import { preRoll, showFile, showLine, sim } from './sim.js';
+import { playOnce, showFile, sim } from './sim.js';
+import { liteMode } from './status.js';
 import { SOURCE } from './tasks.js';
 
 const $ = (id) => document.getElementById(id);
-let teaching = false;
+let teaching = null;           // the drag teaching running: {pid, key, arm}, where its take is saved
 
 async function current() {
   const s = step();
@@ -96,7 +97,7 @@ async function refreshReview() {
 }
 
 async function stateStage(u, rec) {
-  const v = await stageDialog({ title: `How was ${rec.name} taught?`, setup: u.setup, arm: rec.taught_arm || u.arm,
+  const v = await stageDialog({ title: `How was ${rec.name} taught?`, setup: u.setup, arm: rec.taught_arm || null,
     askArm: !rec.taught_arm,
     body: 'Its joints only mean something at the pole height and hand pose it was taught with: every run stages them first.' });
   if (!v) return;
@@ -120,32 +121,47 @@ export function installTeach() {
       try {
         await robotCall(unitUrl(s.key, 'teach/start'), {}, { what: 'Drag teaching' });
       } catch (err) { $('timerResult').textContent = say(err); tell(err); return; }
-      teaching = true;
+      teaching = { pid: ctx.pid, key: s.key, arm: s.arm };
     }
     pageStart();
   };
 
+  // STOP DRAG saves the take in the region it was started in, whatever is on screen by then. When
+  // the robot refuses (teaching had already ended), nothing was recorded: the page's "Redo or
+  // Continue" closes, as there is no take to accept.
   const pageStop = window.stopTeach;
   window.stopTeach = async function stopTeach() {
     pageStop();
-    const s = step();
-    if (!teaching || !s || !ctx.pid) return;
-    teaching = false;
+    const t = teaching;
+    if (!t) return;
+    teaching = null;
+    const here = () => ctx.pid === t.pid && step()?.key === t.key;
     try {
-      const r = await post(unitUrl(s.key, 'teach/stop'), { name: $('fileName')?.value });
-      ctx.units[s.key] = r.unit;
-      syncActive(r.unit);
-      $('savedFileMeta').textContent = `Recorded and saved: ${(activeRec(r.unit) || {}).lines?.toLocaleString() || ''} rows · ${r.stage.text}`;
-      if (r.take) window.toast(`Robot stand-in: the take is ${r.take}, a ${s.arm.toUpperCase()}-arm recording (${r.stage.text}).`);
-    } catch (err) { tell(err); }
+      const r = await post(`/api/projects/${t.pid}/units/${t.key}/teach/stop`, { name: $('fileName')?.value });
+      if (ctx.pid === t.pid) ctx.units[t.key] = r.unit;
+      if (here()) {
+        syncActive(r.unit);
+        $('savedFileMeta').textContent = `Recorded and saved: ${(activeRec(r.unit) || {}).lines?.toLocaleString() || ''} rows · ${r.stage.text}`;
+      }
+      if (r.take) window.toast(`Robot stand-in: the take is ${r.take}, a ${t.arm.toUpperCase()}-arm recording (${r.stage.text}).`);
+    } catch (err) {
+      $('postDragModal')?.classList.remove('show');
+      if ($('timerResult')) $('timerResult').textContent = `Nothing was recorded: ${say(err)}`;
+      tell(err);
+      if (here()) {
+        const u = await loadUnit(t.key).catch(() => null);
+        if (activeRec(u)) syncActive(u);
+        $('savedFileMeta').textContent = activeRec(u) ? 'Nothing new was recorded: the earlier recording stays active.' : 'Nothing was recorded.';
+      }
+    }
   };
 
   const pageReset = window.resetTimer;
   window.resetTimer = function resetTimer() {
-    const s = step();
-    if (teaching && s && ctx.pid) {
-      teaching = false;
-      post(unitUrl(s.key, 'teach/cancel'), {}).catch(() => {});
+    const t = teaching;
+    if (t) {
+      teaching = null;
+      post(`/api/projects/${t.pid}/units/${t.key}/teach/cancel`, {}).catch(() => {});
     }
     pageReset();
   };
@@ -192,9 +208,10 @@ export function installTeach() {
   window.demoPlayback = async function demoPlayback() {
     const s = step();
     if (!s || !ctx.pid) return;
-    const u = await current();
+    let u;
+    try { u = await current(); } catch (err) { tell(err); return; }
     if (!u || !u.active) { window.toast('There is no recording to play back yet.'); return; }
-    const mode = document.querySelector('.topbar .mode-pill')?.dataset.lite;
+    const mode = await liteMode();
     if (mode === 'real') window.toast('A recording as taught never runs on the real arms: the 3D preview plays it. Real Test runs the tuned version.');
     if (mode === 'hwsim') {
       try {
@@ -207,10 +224,12 @@ export function installTeach() {
       } catch (err) { tell(err); }
       return;
     }
+    // the 3D preview executes the recording once at 1x: the pole and hand staging and the move to the
+    // start first, then the recording on its own clock ((N - 1) x 5 ms)
     const preview = $('stage-review').querySelector('.playback-preview');
     try {
-      await showFile(preview, u, 'raw');
-      playPreview();
+      if (!(await showFile(preview, u, 'raw'))) return;
+      if (await playOnce((text) => window.toast(text))) window.toast('Playback preview finished.');
     } catch (err) { tell(err); preview.classList.remove('lite-3d'); }
   };
 
@@ -222,7 +241,8 @@ export function installTeach() {
     try {
       const job = await robotCall(unitUrl(s.key, 'move-start'), { which }, { what: 'Moving the arm to its start' });
       const done = await watchJob(job);
-      window.toast(done.state === 'done' ? `${s.arm.toUpperCase()} arm at the start.`
+      const real = (await liteMode()) === 'real';
+      window.toast(done.state === 'done' ? `${s.arm.toUpperCase()} arm at the start${real ? '' : ' (dry run: nothing moved)'}.`
         : `Stopped: ${done.error || 'the move did not finish.'} ${done.hint || ''}`);
     } catch (err) { tell(err); }
   };
@@ -235,21 +255,4 @@ export function installTeach() {
     if (currentStage === 'teach') refreshTeach();
     if (currentStage === 'review') refreshReview();
   });
-}
-
-// The 3D preview executes the recording once at 1x: the pole and hand staging and the move to the
-// start first, then the recording on its own clock ((N - 1) x 5 ms).
-let previewRaf = 0;
-async function playPreview() {
-  cancelAnimationFrame(previewRaf);
-  const ok = await preRoll((text) => window.toast(text));
-  if (!ok) return;
-  const t0 = performance.now(), total = Math.max(0, sim.lines - 1) * 0.005;
-  const tick = () => {
-    const t = Math.min(total, (performance.now() - t0) / 1000);
-    showLine(Math.round(t / 0.005));
-    if (t < total) previewRaf = requestAnimationFrame(tick);
-    else window.toast('Playback preview finished.');
-  };
-  tick();
 }

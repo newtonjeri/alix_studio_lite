@@ -51,22 +51,45 @@ class Auth:
         self._lock = threading.Lock()
         self._sessions: dict[str, dict] = {}
         self._fails = {r: [0, 0.0] for r in ROLES}          # wrong PINs in a row, locked until
-        self._pins = self._load()
+        self._mtime = None
+        self._pins = self._load(strict=True)
 
-    def _load(self) -> dict:
+    def _load(self, strict: bool = False) -> dict:
+        """The PINs from auth.json, or the template PINs when there is no file yet. A damaged
+        file never silently becomes 1234: at start-up Lite refuses to run, later it keeps the
+        PINs it had."""
+        if not self.path.exists():
+            self._mtime = None
+            return {r: _record(DEFAULT_PIN, default=True) for r in ROLES}
         try:
+            mtime = self.path.stat().st_mtime
             d = json.loads(self.path.read_text(encoding="utf-8"))
             if all(isinstance(d.get(r), dict) and "hash" in d[r] for r in ROLES):
+                self._mtime = mtime
                 return d
         except (OSError, ValueError):
             pass
-        return {r: _record(DEFAULT_PIN, default=True) for r in ROLES}
+        if strict:
+            raise RuntimeError(f"{self.path} is damaged, so Lite will not guess the PINs. Restore it from a "
+                               "backup, or delete it to reset both PINs to the template 1234 (then change them "
+                               "with --set-pin).")
+        return self._pins
+
+    def _fresh(self) -> None:
+        """Pick up PINs changed by `run_lite --set-pin` while Lite runs."""
+        try:
+            mtime = self.path.stat().st_mtime if self.path.exists() else None
+        except OSError:
+            return
+        if mtime != self._mtime:
+            self._pins = self._load()
 
     def _save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self.path.with_name(self.path.name + ".tmp")
+        tmp = self.path.with_name(f"{self.path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
         tmp.write_text(json.dumps(self._pins, indent=1), encoding="utf-8")
         os.replace(tmp, self.path)
+        self._mtime = self.path.stat().st_mtime
 
     # ── PINs
 
@@ -80,12 +103,14 @@ class Auth:
             self._save()
 
     def is_default(self, role: str) -> bool:
+        self._fresh()
         return bool(self._pins[role].get("default"))
 
     def check(self, role: str, pin) -> bool:
         """Whether ``pin`` is the role's PIN; refuses while the role is locked out."""
         now = time.monotonic()
         with self._lock:
+            self._fresh()
             fails = self._fails[role]
             if fails[1] > now:
                 raise UserError(f"Too many wrong PINs. Try again in {fails[1] - now:.0f} s.")

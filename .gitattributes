@@ -1,0 +1,4 @@
+# Every file is checked out byte for byte, on every platform. Git for Windows otherwise changes
+# line endings to CRLF (core.autocrlf), and the tests compare raw bytes: the vendored ALIX files
+# against vendor/MANIFEST.json, and the Lite UI page against the designer's file in docs/reference/.
+* -text

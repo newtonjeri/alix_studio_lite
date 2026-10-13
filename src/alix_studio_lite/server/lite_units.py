@@ -133,13 +133,17 @@ class LiteUnits(Project):
         _atomic_write(meta, json.dumps(d, indent=1))
 
     def set_recording_stage(self, key: str, file: str, stage: staging.Stage, taught_arm: str | None = None) -> None:
-        """State the stage (and arm) of a recording that has none recorded. A known stage is the
-        recording's own record and is never overwritten."""
+        """State the stage (and arm) of a recording that has none recorded, or only one that is not
+        valid (identity() asks for it then). A known stage is the recording's own record and is
+        never overwritten."""
         rec = next((r for r in self.recordings(key) if r["file"] == file), None)
         if rec is None:
             raise KeyError(f"no recording {file!r} for {key}")
-        if rec["stage"] is not None:
-            raise UserError(f"{rec['name']} already records its stage ({rec['stage']['text']}); it cannot change.")
+        known = staging.stage_from(rec["stage"])
+        if known is not None:
+            raise UserError(f"{rec['name']} already records its stage ({staging.describe(known)}); it cannot change.",
+                            "If it is wrong, load the file again with the right pole and hand: that is a new "
+                            "recording, tuned and kept on its own.")
         arm = rec["taught_arm"] or taught_arm
         if arm != self.units[key]["arm"]:
             raise UserError(f"{rec['name']} must have been taught on the {self.units[key]['arm'].upper()} arm to "
@@ -191,6 +195,8 @@ class LiteUnits(Project):
         name = Path(str(name)).name.strip()[:120]
         if not name:
             raise ValueError("a file name is needed")
+        if file not in {r["file"] for r in self.recordings(key)}:     # one of this region's files, nothing else
+            raise KeyError(f"no recording {file!r} for {key}")
         side = self.unit_dir(key) / "raw" / file
         meta = side.with_suffix(".source.json")
         if not side.is_file():

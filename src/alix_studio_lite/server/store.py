@@ -50,7 +50,7 @@ def _now() -> str:
 
 def _write_json(path: Path, obj) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(path.name + ".tmp")
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")   # one per writer
     tmp.write_text(json.dumps(obj, indent=1, ensure_ascii=False), encoding="utf-8")
     os.replace(tmp, path)
 
@@ -108,7 +108,8 @@ class ProjectStore:
 
     def set_last(self, pid: str) -> None:
         self.folder(pid)
-        _write_json(self.root / "last.json", {"id": pid})
+        with self._lock:
+            _write_json(self.root / "last.json", {"id": pid})
 
     # ── write
 
@@ -236,6 +237,13 @@ class ProjectStore:
             if folder_from is not None:
                 shutil.copytree(folder_from, folder)
                 (folder / "project.json").unlink(missing_ok=True)
+                # evidence made on another computer is not trusted here: the tuned versions, the
+                # work in progress and the robot results go; the recordings and settings stay, and
+                # each region is tuned (and so checked against every limit) again on this computer
+                for unit in (u for u in (folder / "trajectories").glob("*/*") if u.is_dir()):
+                    for made in ("versions", "work"):
+                        shutil.rmtree(unit / made, ignore_errors=True)
+                    (unit / "results.json").unlink(missing_ok=True)
             fixture = ((incoming.get("lite") or {}).get("fixture")) or self.default_fixture
             rec = {k: v for k, v in incoming.items() if k != "lite"}
             rec.update(id=nid, name=name, updatedAt=_now(), archived=False)

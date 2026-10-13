@@ -7,15 +7,11 @@
 //
 // Copied from Legacy Lite (web_legacy/js/robot3d.js). Changes: its two imports are local, and
 // loadFrames() shows frames the server computed for a whole file (GET …/units/<KEY>/frames).
+import { call } from './api.js';
 import { css, ensureThree } from './three_scene.js';
 
-async function api(path, body) {                     // Legacy Lite's robot routes, shared by both UIs
-  const opt = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
-  const r = await fetch('/api/lite/' + path, opt);
-  const d = await r.json();
-  if (d && d.error) throw new Error(d.error);
-  return d;
-}
+// Legacy Lite's robot routes, shared by both UIs; through api.js, so they carry the session.
+const api = (path, body) => (body === undefined ? call('GET', '/api/lite/' + path) : call('POST', '/api/lite/' + path, body));
 
 const D2R = Math.PI / 180;
 const MOVABLE = new Set(['revolute', 'continuous', 'prismatic']);

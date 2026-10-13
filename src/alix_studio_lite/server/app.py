@@ -20,7 +20,7 @@ import time
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 from .. import __version__, vendor_paths
 from . import workers
@@ -46,6 +46,8 @@ MESHES = {
 #: decision D30: Visual sim (the 3D robot moves, no hardware) / Hardware sim (the controller's own SIM
 #: mode, rm_set_arm_run_mode(0): programs run, the arms stay still) / Real (the arms move)
 MODES = ("visual", "hwsim", "real")
+#: the only /api/ requests without the session: logging in and out, and STOP (never refused)
+OPEN_ROUTES = re.compile(r"^/api/(auth/login|auth/logout|robots/stop-both|robots/(left|right)/stop|lite/robot/stop|lite/hello)$")
 READ_ONLY_REAL = ("Lite reads the real arms but does not command them yet, so Real robot is not available.",
                   "Run on the real arms with the control program meanwhile; Visual sim and Hardware sim work as usual.")
 MODE_TEXT = {"visual": "Visual sim: the 3D robot moves, no hardware",
@@ -76,9 +78,11 @@ class LiteApp:
 
     def set_mode(self, mode: str) -> None:
         """Visual sim, Hardware sim or Real (D30). The robot backend follows it: in Hardware sim it
-        moves nothing (the controllers' SIM mode, the pole and the hand emulated)."""
-        self.ui["mode"] = mode
-        self.robot.mode = mode
+        moves nothing (the controllers' SIM mode, the pole and the hand emulated). Under the robot's
+        lock, so a job never starts while the two differ."""
+        with self.robot.lock:
+            self.ui["mode"] = mode
+            self.robot.mode = mode
 
     def save_ui(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -97,7 +101,7 @@ class LiteApp:
 
     def state(self) -> dict:
         return dict(version=__version__, data_dir=str(self.data_dir), mode=self.ui["mode"], mode_text=MODE_TEXT[self.ui["mode"]],
-                    role=self.ui["role"], cubicle_mm=self.ui["cubicle_mm"], theme=self.ui["theme"],
+                    role="engineer" if _is_engineer(self) else "operator", cubicle_mm=self.ui["cubicle_mm"], theme=self.ui["theme"],
                     project=self.project.meta, fixture=self.project.fixture, arms=self.robot.view(), robot_backend=self.robot.backend,
                     robot_label=self.robot.label, motion_block=self.robot.motion_block(),
                     toppra=self.toppra(), jobs=[j.view() for j in self.jobs.running()],
@@ -157,6 +161,12 @@ def _unit(app: LiteApp, key: str) -> dict:
     u["candidate_util"] = json.loads(ut.read_text(encoding="utf-8")) if (u["candidate"] and ut.is_file()) else None
     u["results"] = p.results(key)["events"][-20:]
     return u
+
+
+@route("GET", "/api/lite/hello")
+def get_hello(app, q, body, m):
+    """Who serves this port, with no log-in: how a second start finds the Lite already running."""
+    return {"app": "ALIX Studio Lite", "version": __version__, "data_dir": str(app.data_dir)}
 
 
 @route("GET", "/api/lite/state")
@@ -364,28 +374,56 @@ def post_mode(app, q, body, m):
     mode = body.get("mode")
     if mode not in MODES:
         raise UserError("Unknown mode.")
-    if mode != "visual":
-        if not any(a["connected"] for a in app.robot.view().values()):
-            raise UserError("Connect at least one arm first.", "Use Connect in the bar at the top.")
-        why = app.robot.motion_block()
-        if why and mode == "real":
-            raise UserError(why, "Release the E-stop and press Recover.")
-        if mode == "real" and app.robot.read_only:
-            raise UserError(READ_ONLY_REAL[0], READ_ONLY_REAL[1])
-        if mode == "real" and not body.get("confirmed"):
-            raise UserError("Switching to the real robot needs your confirmation.")
-    app.set_mode(mode)
+    with app.robot.lock:                          # the robot starts no motion between this check and the switch
+        moving = app.robot.busy()
+        if moving and mode != app.ui["mode"]:
+            raise UserError(f"Something is running on the robot: {moving}.",
+                            "Let it finish, or press STOP, before changing the mode.", code="busy")
+        if mode != "visual":
+            if not any(a["connected"] for a in app.robot.view().values()):
+                raise UserError("Connect at least one arm first.", "Use Connect in the bar at the top.")
+            why = app.robot.motion_block()
+            if why and mode == "real":
+                raise UserError(why, "Release the E-stop and press Recover.")
+            if mode == "real" and app.robot.read_only:
+                raise UserError(READ_ONLY_REAL[0], READ_ONLY_REAL[1], code="mode")
+            if mode == "real" and not body.get("confirmed"):
+                raise UserError("Switching to the real robot needs your confirmation.", code="confirm")
+        app.set_mode(mode)
     return app.state()
+
+
+def _token():
+    headers = getattr(REQUEST, "headers", None)
+    return headers.get("X-Lite-Token") if headers is not None else None
+
+
+def _is_engineer(app) -> bool:
+    """The engineer level belongs to the session that entered the PIN, never to the server."""
+    s = app.auth.session(_token())
+    return bool(s and s.get("engineer"))
+
+
+def _require_engineer(app, what: str) -> None:
+    if not _is_engineer(app):
+        raise UserError(f"Only an engineer can {what}.", "Enter the engineer PIN.", code="engineer")
+
+
+def _require_confirmed(app, body, what: str, mode: str | None = None) -> None:
+    if (mode or app.ui["mode"]) == "real" and not body.get("confirmed"):
+        raise UserError(f"{what} on the real robot needs your confirmation.", code="confirm")
 
 
 @route("POST", "/api/lite/role")
 def post_role(app, q, body, m):
+    """The engineer level for this session (the engineer PIN), or back to operator."""
     role = body.get("role")
-    if role == "engineer" and not app.auth.check("engineer", str(body.get("pin", ""))):
-        raise UserError("That PIN is not right.", "Ask an engineer.")
     if role not in ("operator", "engineer"):
         raise UserError("Unknown role.")
-    app.ui["role"] = role
+    if role == "engineer":
+        app.auth.elevate(_token(), str(body.get("pin", "")))
+    else:
+        app.auth.drop_engineer(_token())
     return app.state()
 
 
@@ -434,8 +472,7 @@ def post_stop(app, q, body, m):
 
 @route("POST", "/api/lite/robot/estop-test")
 def post_estop_test(app, q, body, m):
-    if app.ui["role"] != "engineer":
-        raise UserError("Only an engineer can simulate the E-stop.")
+    _require_engineer(app, "simulate the E-stop")
     out = app.robot.press_estop(_arm_arg(body), bool(body.get("pressed")))
     if out["estop"] != "CLEAR" and app.ui["mode"] == "real":
         app.set_mode("hwsim")
@@ -455,36 +492,59 @@ def get_programs(app, q, body, m):
 
 @route("POST", "/api/lite/robot/pole")
 def post_pole(app, q, body, m):
-    _require_robot_mode(app)
+    mode = _require_robot_mode(app)
+    _require_confirmed(app, body, "Moving the pole", mode)
     side = _arm_arg(body)
-    return app.robot.move_pole(side, float(body.get("mm", 0)), f"Pole {side.upper()} to {body.get('mm')} mm").view()
+    return app.robot.move_pole(side, float(body.get("mm", 0)), f"Pole {side.upper()} to {body.get('mm')} mm",
+                               mode=mode).view()
 
 
 @route("POST", "/api/lite/robot/hand")
 def post_hand(app, q, body, m):
-    _require_robot_mode(app)
+    mode = _require_robot_mode(app)
+    _require_confirmed(app, body, "Moving the hand", mode)
     side = _arm_arg(body)
-    return app.robot.set_hand(side, body.get("counts") or [], f"Hand {side.upper()}").view()
+    return app.robot.set_hand(side, body.get("counts") or [], f"Hand {side.upper()}", mode=mode).view()
 
 
 @route("POST", "/api/lite/robot/run-program")
 def post_run_program(app, q, body, m):
-    """Engineer: run a stored program by number (both arms together with arm='both')."""
-    _require_robot_mode(app)
-    if app.ui["role"] != "engineer":
-        raise UserError("Only an engineer can run programs by number.")
-    dry = app.ui["mode"] != "real"
-    if not dry and not body.get("confirmed"):
-        raise UserError("A real run needs your confirmation.")
+    """Engineer: run a stored program by number (both arms together with arm='both'), staged with
+    the pole and hand recorded when it was uploaded; nothing starts unless every arm can."""
+    from . import staging
+
+    mode = _require_robot_mode(app)
+    _require_engineer(app, "run programs by number")
+    dry = mode != "real"
+    _require_confirmed(app, body, "A run", mode)
     side = _arm_arg(body, allow_all=True)
+    if side == "all":
+        raise UserError("Say which arm: left, right or both.")
     if side == "both":
         ids = body.get("program_ids") or {}
-        for s in ARMS:
-            app.robot.require_motion(s)
-        return {"jobs": [app.robot.run(s, int(ids[s]), dry_run=dry, title=f"Program {ids[s]} ({s.upper()}, together)").view()
-                         for s in ARMS]}
-    return {"jobs": [app.robot.run(side, int(body.get("program_id")), dry_run=dry,
-                                   title=f"Program {body.get('program_id')} ({side.upper()})").view()]}
+    else:
+        ids = {side: body.get("program_id")}
+    plan = {}
+    for s, pid in ids.items():                      # every arm checked before any arm starts
+        if s not in ARMS:
+            raise UserError("Say which arm: left or right.")
+        try:
+            pid = int(pid)
+        except (TypeError, ValueError):
+            raise UserError(f"Give the {s.upper()} arm's program number.") from None
+        prog = app.robot.arm(s).programs.get(pid)
+        if not prog:
+            raise UserError(f"Program {pid} is empty on the {s.upper()} arm.")
+        stage = staging.stage_from(prog.get("stage"))
+        if stage is None:
+            raise UserError(f"Program {pid} has no recorded pole height and hand pose, so it cannot run.",
+                            "Send it again from its region: Lite records the stage with the upload.", code="stage")
+        app.robot.require_motion(s)
+        plan[s] = (pid, stage)
+    together = " together" if len(plan) > 1 else ""
+    return {"jobs": [app.robot.run(s, pid, dry_run=dry, title=f"Program {pid} ({s.upper()}{together})", stage=st,
+                                   mode=mode).view()
+                     for s, (pid, st) in plan.items()]}
 
 
 @route("GET", "/api/lite/robot/log")
@@ -499,20 +559,26 @@ def get_robot_log(app, q, body, m):
     return {"arm": side, "lines": lines}
 
 
-def _require_robot_mode(app):
-    if app.ui["mode"] == "visual":
+def _require_robot_mode(app) -> str:
+    """The mode a robot request is decided in (Hardware sim or Real); its job runs only in that mode."""
+    mode = app.ui["mode"]
+    if mode == "visual":
         raise UserError("Lite is in Visual sim, so it does not use the robot hardware.",
                         "Switch to Hardware sim or Real robot in the bar at the top.")
+    return mode
 
 
 @route("POST", r"/api/lite/unit/([A-Za-z0-9_\-]+)/prepare")
 def post_prepare(app, q, body, m):
     key = m.group(1)
-    _require_robot_mode(app)
+    mode = _require_robot_mode(app)
+    _require_confirmed(app, body, "Moving the pole and the hand", mode)
     u = app.project.units[key]
-    hand = u.get("hand_counts") or app.project.catalogue["hand_presets"]["GRIP"]
-    job = app.robot.prepare(u["arm"], u.get("pole_mm") or 0, hand, f"Prepare {key}")
-    return job.view()
+    stage = _legacy_stage(u)
+    if stage is None:
+        raise UserError("This region has no pole height and hand pose in its catalogue, so Lite will not guess them.",
+                        "Use the Lite UI's Prepare to set them.", code="stage")
+    return app.robot.stage(u["arm"], stage, f"Prepare {key}", mode=mode).view()
 
 
 @route("POST", r"/api/lite/unit/([A-Za-z0-9_\-]+)/teach/(start|stop|cancel)")
@@ -521,8 +587,9 @@ def post_teach(app, q, body, m):
     u = app.project.units[key]
     side = u["arm"]
     if verb == "start":
-        _require_robot_mode(app)
-        return app.robot.teach_start(side, _legacy_stage(u))
+        mode = _require_robot_mode(app)
+        _require_confirmed(app, body, "Drag teaching", mode)
+        return app.robot.teach_start(side, _legacy_stage(u), mode=mode)
     if verb == "cancel":
         app.robot.arm(side).teaching = False
         return app.robot.arm(side).view()
@@ -540,10 +607,15 @@ def post_teach(app, q, body, m):
 def post_upload(app, q, body, m):
     key = m.group(1)
     _require_robot_mode(app)
+    from .api_units import checked_version
+
     p = app.project
-    ver = p.current_version(key)
-    if not ver:
+    if not p.current_version(key):
         raise UserError("There is no saved version to send.", "Optimise and keep a version first.")
+    stage = _legacy_stage(p.units[key])
+    if stage is None:
+        raise UserError("This region has no pole height and hand pose in the catalogue, so it cannot run.")
+    ver = checked_version(p, key, p.units[key]["arm"])
     s = p.settings(key)
     pid = body.get("program_id") or s.get("program_id")
     if not pid:
@@ -551,7 +623,7 @@ def post_upload(app, q, body, m):
     side = p.units[key]["arm"]
     name = f"{key}_{ver['version']}"[:32]
     job = app.robot.upload(side, int(pid), Path(ver["path"]), name, ver["sha256"], bool(body.get("replace")),
-                           f"Send {key} to program {pid}")
+                           f"Send {key} to program {pid}", stage=stage.as_dict())
     if job is None:
         p.add_result(key, "uploaded", ver["sha256"], True, {"program_id": int(pid), "unchanged": True})
         return {"unchanged": True, "program_id": int(pid)}
@@ -567,17 +639,21 @@ def post_upload(app, q, body, m):
 @route("POST", r"/api/lite/unit/([A-Za-z0-9_\-]+)/run")
 def post_run(app, q, body, m):
     key = m.group(1)
+    from .api_units import checked_version
+
     p = app.project
-    dry = app.ui["mode"] != "real"
-    _require_robot_mode(app)
-    if not dry and not body.get("confirmed"):
-        raise UserError("A real run needs your confirmation.")
-    ver = p.current_version(key)
+    mode = _require_robot_mode(app)
+    dry = mode != "real"
+    _require_confirmed(app, body, "A run", mode)
     s = p.settings(key)
     side = p.units[key]["arm"]
     pid = s.get("program_id")
-    if not ver or not pid:
+    if not p.current_version(key) or not pid:
         raise UserError("Send this region to the robot first.")
+    ver = checked_version(p, key, side)
+    prog = app.robot.arm(side).programs.get(int(pid))
+    if not prog or prog.get("sha256") != ver["sha256"]:
+        raise UserError(f"Program {pid} does not hold this region's current version.", "Send it to the robot again.")
 
     def done(out):
         p.add_result(key, "dryrun_ok" if dry else "real_ok", ver["sha256"], True, out)
@@ -586,7 +662,7 @@ def post_run(app, q, body, m):
     if stage is None:
         raise UserError("This region has no pole height and hand pose in the catalogue, so it cannot run.")
     job = app.robot.run(side, int(pid), dry_run=dry, title=("Dry run " if dry else "Run ") + key, on_done=done,
-                        stage=stage)
+                        stage=stage, mode=mode)
     return job.view()
 
 
@@ -644,11 +720,16 @@ class Handler(BaseHTTPRequestHandler):
         self._send(code, json.dumps(obj, default=str).encode("utf-8"), "application/json; charset=utf-8")
 
     def _host_ok(self) -> bool:
+        """This computer only (no DNS rebinding), and a browser page only from Lite itself: an
+        Origin on another port is another program's page."""
         host = (self.headers.get("Host") or "").split(":")[0]
         if host not in ("127.0.0.1", "localhost"):
             return False
         origin = self.headers.get("Origin")
-        return origin is None or re.match(r"^http://(127\.0\.0\.1|localhost)(:\d+)?$", origin) is not None
+        if origin is None:
+            return True
+        m = re.match(r"^http://(127\.0\.0\.1|localhost)(?::(\d+))?$", origin)
+        return m is not None and int(m.group(2) or 80) == self.server.server_address[1]
 
     def _redirect(self, location: str):
         self.send_response(302)
@@ -698,13 +779,15 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, f.read_bytes(), ctype, cache)
 
     def _send_raw(self, out: RawResponse):
+        headers = [("Content-Type", out.ctype), ("Content-Length", str(len(out.data))),
+                   ("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff")]
+        if out.filename:                       # an ASCII name, plus the exact one (RFC 6266 / 5987)
+            ascii_name = re.sub(r"[^A-Za-z0-9._ -]", "_", out.filename).strip() or "download"
+            headers.append(("Content-Disposition",
+                            f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(out.filename)}"))
         self.send_response(200)
-        self.send_header("Content-Type", out.ctype)
-        self.send_header("Content-Length", str(len(out.data)))
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        if out.filename:
-            self.send_header("Content-Disposition", f'attachment; filename="{out.filename}"')
+        for k, v in headers:
+            self.send_header(k, v)
         self.end_headers()
         self.wfile.write(out.data)
 
@@ -721,7 +804,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(405, b"method not allowed", "text/plain")
         body = {}
         if method in ("POST", "PUT"):
-            n = int(self.headers.get("Content-Length") or 0)
+            raw_n = (self.headers.get("Content-Length") or "0").strip()
+            if not raw_n.isdigit():
+                return self._send(400, b"bad Content-Length", "text/plain")
+            n = int(raw_n)
             ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
             if ctype in ("application/zip", "application/octet-stream"):
                 if n > self.MAX_RAW:
@@ -738,14 +824,18 @@ class Handler(BaseHTTPRequestHandler):
                     return self._json({"error": "The request must be a JSON object."})
         q = parse_qs(url.query)
         REQUEST.headers = self.headers
+        if not OPEN_ROUTES.match(url.path):              # everything but log-in and STOP needs the session
+            from .api_v2 import session
+
+            try:
+                session(self.app)
+            except UserError as exc:
+                return self._json({"error": str(exc), "hint": exc.hint, "code": exc.code})
         for meth, pat, fn in ROUTES:
             mm = pat.match(url.path)
             if mm and meth == method:
                 try:
                     out = fn(self.app, q, body, mm)
-                    if isinstance(out, RawResponse):
-                        return self._send_raw(out)
-                    return self._json(out)
                 except UserError as exc:
                     out = {"error": str(exc), "hint": exc.hint}
                     if exc.code:
@@ -753,10 +843,13 @@ class Handler(BaseHTTPRequestHandler):
                     return self._json(out)
                 except KeyError as exc:
                     return self._json({"error": str(exc).strip("'\"")})
-                except Exception as exc:                            # noqa: BLE001
+                except Exception:                                   # noqa: BLE001
                     traceback.print_exc()
                     return self._json({"error": "Something went wrong on the server.",
-                                       "hint": "Details are in the terminal.", "detail": repr(exc)})
+                                       "hint": "Details are in the terminal."})
+                if isinstance(out, RawResponse):        # once sending starts, no second reply on this socket
+                    return self._send_raw(out)
+                return self._json(out)
         return self._json({"error": f"Unknown request {url.path}."}, 404)
 
     def do_GET(self):

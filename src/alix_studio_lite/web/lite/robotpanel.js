@@ -12,7 +12,8 @@ const MODES = [
   ['hwsim', 'Hardware sim', 'Nothing moves. The controllers run programs in their SIM mode (the arms stay still); the pole and the hand are emulated.'],
   ['real', 'Real robot', 'The arms, the pole and the hand move. Keep the area clear and the E-stop buttons within reach.'],
 ];
-const ESTOP = { CLEAR: 'Clear', ENGAGED: 'E-STOP PRESSED', RECOVERING: 'Released: press Recover', UNKNOWN: 'Unknown: motion blocked', NOT_CONNECTED: 'Not connected' };
+const ESTOP = { CLEAR: 'Clear', ENGAGED: 'E-STOP PRESSED', RECOVERING: 'Released: press Recover', UNKNOWN: 'Unknown: motion blocked',
+  NOT_CONFIGURED: 'IO3 not in E-stop mode: motion blocked', NOT_CONNECTED: 'Not connected' };
 
 let box = null, timer = null;
 
@@ -30,11 +31,15 @@ function liveRows(link) {
 async function render() {
   const st = await get('/api/robots/status');
   const body = box.querySelector('.lite-robot-body');
+  const linked = Object.values(st.arms).some((a) => a.link);
   const modes = el('div', { class: 'lite-mode-choice', role: 'radiogroup', 'aria-label': 'Run mode' },
-    MODES.map(([id, name, help]) => el('button', {
-      class: `lite-mode-btn${st.mode === id ? ' active' : ''}`, 'data-mode': id, role: 'radio', 'aria-checked': String(st.mode === id),
-      onclick: () => setMode(id),
-    }, el('b', { text: name }), el('small', { text: help }))));
+    MODES.map(([id, name, help]) => {
+      const off = linked && id === 'real';            // the server refuses it too (read-only link)
+      return el('button', {
+        class: `lite-mode-btn${st.mode === id ? ' active' : ''}`, 'data-mode': id, role: 'radio', 'aria-checked': String(st.mode === id),
+        disabled: off, onclick: () => setMode(id),
+      }, el('b', { text: name }), el('small', { text: off ? 'Not available while the arms are linked read only: Lite sends nothing to the controllers yet.' : help }));
+    }));
   const arms = el('div', { class: 'lite-arm-rows' }, ['left', 'right'].map((side) => {
     const a = st.arms[side];
     const ip = a.connected ? el('small', { text: ` ${a.ip}` })
@@ -53,14 +58,13 @@ async function render() {
             { ip: e.target.closest('.lite-arm-row').querySelector('.lite-ip')?.value.trim() || undefined }) })),
       a.link ? liveRows(a.link) : null);
   }));
-  const linked = Object.values(st.arms).some((a) => a.link);
   const note = el('div', { class: `statusbar ${st.motion_block ? 'warn' : 'ok'}` },
     st.motion_block || `${st.label}.` + (linked ? ' Robot actions stay with the stand-in: Real robot is not available yet.'
       : ' The robot I/O backend is not built yet: nothing moves.'));
   body.replaceChildren(modes, arms, note);
   if (robotControlUnlocked) {
     body.append(el('details', { class: 'advanced' }, el('summary', { text: 'Engineer: E-stop test (stand-in robot)' }),
-      el('div', { class: 'advanced-body cta-row' }, ['left', 'right'].flatMap(side => [
+      el('div', { class: 'advanced-body cta-row' }, ['left', 'right'].filter(side => !st.arms[side].link).flatMap(side => [
         el('button', { class: 'btn outline', text: `Press ${side.toUpperCase()} E-stop`, onclick: () => act(`/api/robots/${side}/estop-test`, { pressed: true }) }),
         el('button', { class: 'btn outline', text: `Release ${side.toUpperCase()}`, onclick: () => act(`/api/robots/${side}/estop-test`, { pressed: false }) }),
       ]))));

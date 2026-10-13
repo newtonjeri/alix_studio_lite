@@ -1,0 +1,354 @@
+"""Regression tests for the execution gates' fixes: a stopped tune never becomes the candidate,
+a restated stage is a new recording and a new version, every robot step keeps the mode it was
+asked in, a region's MAX DEV reaches L5, the gates show the stage a run uses, a library file
+keeps its arm and stage, and the smaller refusals (sequence rows, hand text, previews, setup,
+stated stages, the worker pool).
+
+The optimiser is replaced by a fake single-worker pool (the tuned file is the recording's bytes),
+so the tests are about the files, the gates and the robot rules, not the optimiser."""
+import hashlib
+import json
+import shutil
+import threading
+import time
+import urllib.request
+from concurrent.futures import Future
+from pathlib import Path
+
+import pytest
+
+from alix_studio_lite import vendor_paths
+
+vendor_paths.activate()
+
+TAUGHT = vendor_paths.LITE_ROOT / "tests/data/recordings/commode_c_taught_paths"
+
+
+class FakePool:
+    """One worker, like workers.pool(): the tune "result" is the recording's bytes, written the
+    way the optimiser writes (the file, then its record). ``gate`` holds a worker until set."""
+
+    def __init__(self):
+        self.gate = threading.Event()
+        self.gate.set()
+        self.calls, self.threads = [], []
+
+    def submit(self, fn, raw_path, out_path, side, settings):
+        self.calls.append(dict(raw=raw_path, out=out_path, side=side, settings=dict(settings)))
+        fut = Future()
+        fut.set_running_or_notify_cancel()             # already running: a cancel cannot stop it
+
+        def work():
+            self.gate.wait(30)
+            out = Path(out_path)
+            shutil.copyfile(raw_path, out)
+            sha = hashlib.sha256(out.read_bytes()).hexdigest()
+            out.with_name(out.stem + ".lite.json").write_text(json.dumps(dict(
+                track_sha256=sha, recipe=dict(origin=str(raw_path)),
+                result=dict(uploadable=True, optimiser="default", lines=2, achieved_s=0.005))))
+            fut.set_result(dict(summary=dict(message="fake tune", uploadable=True), checks={}, recipe={},
+                                util=None, progress=None))
+
+        t = threading.Thread(target=work, daemon=True)
+        t.start()
+        self.threads.append(t)
+        return fut
+
+    def idle(self):
+        for t in self.threads:
+            t.join(30)
+
+
+@pytest.fixture
+def lite(tmp_path, monkeypatch, request):
+    from alix_studio_lite.server import workers
+    from alix_studio_lite.server.app import LiteApp, make_server
+    from alix_studio_lite.server.project import open_project
+
+    pool = FakePool()
+    monkeypatch.setattr(workers, "pool", lambda: pool)
+    app = LiteApp(open_project(tmp_path, "commode_c"), tmp_path)
+    srv = make_server(app, 0)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    pid = "alix_fix_" + request.node.name[5:30].replace("[", "_").replace("]", "")
+    ctx = {"base": f"http://127.0.0.1:{srv.server_address[1]}", "app": app, "pool": pool, "pid": pid,
+           "data": tmp_path}
+    ctx["tok"] = call(ctx, "POST", "/api/auth/login", {"pin": "1234"})["token"]
+    call(ctx, "PUT", f"/api/projects/{pid}", {"id": pid, "name": "Fixes", "archived": False, "state": {}})
+    yield ctx
+    srv.shutdown()
+
+
+def call(ctx, method, path, body=None):
+    headers = {"Content-Type": "application/json", "X-Lite-Token": ctx.get("tok") or ""}
+    r = urllib.request.Request(ctx["base"] + path, method=method, headers=headers,
+                               data=None if body is None else json.dumps(body).encode())
+    with urllib.request.urlopen(r, timeout=60) as resp:
+        return json.loads(resp.read())
+
+
+def unit(ctx, key, verb="", body=None):
+    path = f"/api/projects/{ctx['pid']}/units/{key}" + (f"/{verb}" if verb else "")
+    return call(ctx, "POST" if verb else "GET", path, body if verb else None)
+
+
+def wait(ctx, job, timeout=60):
+    t0 = time.time()
+    while True:
+        j = call(ctx, "GET", f"/api/jobs/{job['id']}")
+        if j["state"] != "running":
+            return j
+        assert time.time() - t0 < timeout, j
+        time.sleep(0.05)
+
+
+def work_dir(ctx, key, arm="left"):
+    return ctx["data"] / "projects" / ctx["pid"] / "trajectories" / arm / key / "work"
+
+
+def load(ctx, key, file, name, pole_mm, hand, lines=None):
+    """A taught file as a region's new recording (its first ``lines`` only: short uploads and runs)."""
+    text = "".join((TAUGHT / file).read_text().splitlines(keepends=True)[:lines])
+    body = {"source": "upload", "name": name, "content": text, "pole_mm": pole_mm, "hand": hand}
+    return unit(ctx, key, "recordings", body)["unit"]
+
+
+def gate(u, gid):
+    return next(g for g in u["gates"] if g["id"] == gid)
+
+
+def robot_ready(ctx, mode="hwsim"):
+    for arm in ("left", "right"):
+        call(ctx, "POST", f"/api/robots/{arm}/connect", {})
+    assert call(ctx, "POST", "/api/robots/mode", {"mode": mode, "confirmed": True})["mode"] == mode
+
+
+# ── #1: a stopped tune never replaces the candidate; one tune per region at a time
+
+def test_a_stopped_tune_never_becomes_the_candidate(lite):
+    key = "L-T01"                                              # FILE_10.1, pole 200, 50 % open
+    r1 = unit(lite, key)["active"]
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
+    work = work_dir(lite, key)
+    first = (work / "candidate.txt").read_bytes()
+    load(lite, key, "FILE_04.txt", "L_rim.txt", 140, "100% open")       # another recording, another stage
+
+    lite["pool"].gate.clear()                                   # its worker holds until released
+    job = unit(lite, key, "optimise", {})
+    assert unit(lite, key, "optimise", {})["code"] == "busy"   # never two tunes of one region
+    call(lite, "POST", f"/api/jobs/{job['id']}/cancel", {})
+    assert wait(lite, job)["state"] == "cancelled"
+    lite["pool"].gate.set()                                     # the stopped tune's worker still writes ...
+    lite["pool"].idle()
+    assert (work / "candidate.txt").read_bytes() == first       # ... but never over the candidate
+    assert not list(work.glob("candidate.optimise-*"))          # and its own files are gone
+
+    assert unit(lite, key)["fresh"] is False                    # the active recording is not the tuned one
+    assert unit(lite, key, "active", {"file": r1})["fresh"] is True
+    v = unit(lite, key, "keep", {})["versions"][-1]
+    assert v["stage"]["pole_mm"] == 200 and v["taught_arm"] == "left"
+    vfile = work.parent / "versions" / f"{v['version']}.txt"
+    assert vfile.read_bytes() == first == (TAUGHT / "FILE_10.1.txt").read_bytes()
+
+
+# ── #2 and #5: the same bytes with another stage are a new recording, a new version, and the
+#    gates show the stage the robot steps use
+
+def test_a_restated_stage_is_a_new_version_and_the_gates_show_it(lite, monkeypatch):
+    from alix_studio_lite.server import api_units
+
+    key = "L-R01"
+    u = load(lite, key, "FILE_09.txt", "L_hinge.txt", 140, "100% open", lines=400)
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
+    assert [v["stage"]["pole_mm"] for v in unit(lite, key, "keep", {})["versions"]] == [140]
+    assert "cannot change" in unit(lite, key, f"recordings/{u['active']}/stage", {"pole_mm": 200, "hand": "GRIP"})["error"]
+
+    u = load(lite, key, "FILE_09.txt", "L_hinge.txt", 200, "50% open", lines=400)   # the correction: loaded again
+    assert u["fresh"] is False                                  # the old candidate is the old stage's
+    assert gate(u, "stage")["text"] == "Staged first (v001): pole 140 mm, fingers 100 % open, thumb held"
+    assert "changed" in unit(lite, key, "keep", {})["error"]
+
+    monkeypatch.setattr(api_units, "checked_version", lambda units, k, arm: units.current_version(k))
+    robot_ready(lite)
+    assert wait(lite, unit(lite, key, "upload", {"program_id": 9}))["state"] == "done"   # v001, pole 140
+    time.sleep(0.3)
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"                # the same bytes again
+    k = unit(lite, key, "keep", {})                             # not "already kept": another stage
+    assert [(v["version"], v["stage"]["pole_mm"]) for v in k["versions"]] == [("v001", 140), ("v002", 200)]
+    assert gate(k, "stage")["text"] == "Staged first (v002): pole 200 mm, fingers 50 % open, thumb held"
+    assert unit(lite, key, "upload", {"program_id": 9})["unchanged"]       # same bytes: the stage follows
+    assert lite["app"].robot.arm("left").programs[9]["stage"]["pole_mm"] == 200
+    j = wait(lite, unit(lite, key, "run", {}))
+    assert j["state"] == "done" and "Pole at 200 mm (emulated" in " | ".join(e["text"] for e in j["events"])
+
+
+# ── #3: every robot step keeps the mode it was asked (and confirmed) in
+
+def test_a_run_never_starts_after_the_mode_changed(lite, monkeypatch):
+    from alix_studio_lite.server import api_units
+
+    key = "L-R01"
+    load(lite, key, "FILE_10.1.txt", "L_lid.txt", 200, "50% open", lines=400)
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
+    unit(lite, key, "keep", {})
+    passthrough = lambda units, k, arm: units.current_version(k)                       # noqa: E731
+    monkeypatch.setattr(api_units, "checked_version", passthrough)
+    robot_ready(lite, "real")
+    assert wait(lite, unit(lite, key, "upload", {"program_id": 4}))["state"] == "done"
+    time.sleep(0.3)
+
+    def switch_meanwhile(units, k, arm):                        # the mode changes while the request works
+        lite["app"].set_mode("hwsim")
+        return passthrough(units, k, arm)
+
+    monkeypatch.setattr(api_units, "checked_version", switch_meanwhile)
+    r = unit(lite, key, "run", {"confirmed": True})
+    assert r["code"] == "mode" and "nothing was staged or moved" in r["error"]
+    assert call(lite, "GET", "/api/robots/status")["jobs"] == [] and unit(lite, key)["last_run"] is None
+
+    real_identity = api_units.identity
+
+    def flip_identity(units, k, which):
+        lite["app"].set_mode("real")
+        return real_identity(units, k, which)
+
+    monkeypatch.setattr(api_units, "identity", flip_identity)  # Hardware sim asked, Real meanwhile
+    assert unit(lite, key, "move-start", {"which": "version"})["code"] == "mode"
+
+
+def test_staging_and_programs_check_the_mode_again(tmp_path):
+    from alix_studio_lite.server import staging
+    from alix_studio_lite.server.jobs import Jobs, UserError
+    from alix_studio_lite.server.robot_standin import StandInRobot
+
+    robot = StandInRobot(tmp_path, Jobs())
+    for s in ("left", "right"):
+        robot.connect(s)
+    robot.mode = "hwsim"
+    st = staging.make_stage(290, "OPEN")                        # a short pole move, nothing for the hand
+    robot.arms["left"].programs[1] = dict(name="p", lines=400, bytes=1, sha256="x", stage=st.as_dict())
+    with pytest.raises(UserError, match="mode changed"):        # a Real run asked, Hardware sim now
+        robot.run("left", 1, dry_run=False, title="Real run", stage=st)
+    job = robot.run("left", 1, dry_run=True, title="Hardware sim run", stage=st, mode="hwsim")
+    time.sleep(0.4)
+    robot.mode = "real"                                         # a switch that skipped the busy check
+    t0 = time.time()
+    while job.state == "running" and time.time() - t0 < 20:
+        time.sleep(0.05)
+    assert job.state == "failed" and "the program did not start" in job.error
+    assert robot.arms["left"].controller_mode == "SIM"
+
+
+# ── #4: the taught set's MAX DEV tightens L5
+
+def test_the_taught_sets_max_dev_reaches_the_optimiser(lite):
+    wait(lite, unit(lite, "L-T01", "optimise", {}))             # FILE_10.1: MAX DEV 5 mm in its record
+    assert lite["pool"].calls[-1]["settings"]["max_dev_mm"] == 5
+    load(lite, "L-R01", "FILE_09.txt", "L_hinge.txt", 200, "50% open")
+    wait(lite, unit(lite, "L-R01", "optimise", {}))             # no MAX DEV recorded: the 10 mm default
+    assert lite["pool"].calls[-1]["settings"]["max_dev_mm"] is None
+
+
+# ── #6: a library file keeps its arm and stage
+
+def test_loading_a_library_file_again_never_changes_it_silently(tmp_path):
+    from alix_studio_lite.server.jobs import UserError
+    from alix_studio_lite.server.library import TaughtLibrary
+
+    lib = TaughtLibrary(tmp_path)
+    txt = (TAUGHT / "FILE_09.txt").read_text()
+    a = lib.add("spill.txt", txt, arm="left", pole_mm=140, hand="100% open")
+    for kw in (dict(arm="right"), dict(pole_mm=50, hand="GRIP"), dict(path="RIGHT/R_spill.txt")):
+        with pytest.raises(UserError, match="already in the library"):
+            lib.add("spill.txt", txt, **kw)
+    assert lib.add("copy.txt", txt)["id"] == a["id"]            # nothing new said: the same record
+    assert lib.add("spill.txt", txt, arm="left", pole_mm=140, hand="100% open")["id"] == a["id"]
+    m = lib.get(a["id"])
+    assert m["arm"] == "left" and m["stage"]["pole_mm"] == 140
+
+
+# ── the smaller ones: #7 and #10 sequence rows, #8 setup, #9 hand text, #11 pool, #12 stated stage
+
+def test_sequence_rows_never_guess_and_a_preview_never_approves(tmp_path):
+    from alix_studio_lite.motion.limits import load_limits
+    from alix_studio_lite.server import sequence, staging
+    from alix_studio_lite.server.lite_units import LiteUnits, task_list
+
+    units = LiteUnits(tmp_path / "p", "commode_c")
+    n = next(i for i, t in enumerate(task_list(units), 1) if t["left"] and t["left"]["key"] == "L-T01")
+
+    def identity(units, key, which):
+        return dict(path=TAUGHT / "FILE_10.1.txt", name=key, taught_arm="left" if key.startswith("L") else "right",
+                    stage=staging.make_stage(200, "50% open"))
+
+    def plan(rows, source="version"):
+        return sequence.plan(units, rows, source=source, home={}, identity=identity,
+                             rating={s: load_limits(s).rating_deg_s for s in ("left", "right")})
+
+    for row, why in (({"step": n, "rule": "RUN FIRST"}, "is not a rule"), ({"step": "3A"}, "is not a task number")):
+        p = plan([row])
+        assert not p["ready"] and p["rows"][0]["arms"] == {} and why in p["rows"][0]["note"] and p["blocking"]
+    assert plan([{"step": n, "rule": "left run first"}])["ready"]
+    p = plan([{"step": n}], source="recording")
+    assert p["playable"] and not p["ready"]
+
+
+def test_setup_is_kept_only_once_the_robot_accepts_it(lite):
+    key = "R-R01_PART1"
+    robot_ready(lite, "real")
+    before = unit(lite, key)["setup"]
+    assert unit(lite, key, "setup", {"pole_mm": 260, "hand": "OPEN", "apply": True})["code"] == "confirm"
+    assert unit(lite, key)["setup"] == before
+    out = unit(lite, key, "setup", {"pole_mm": 260, "hand": "OPEN", "apply": True, "confirmed": True})
+    assert out["unit"]["setup"]["pole_mm"] == 260 and wait(lite, out["job"])["state"] == "done"
+
+
+def test_hand_text_and_counts_are_refused_plainly(lite):
+    from alix_studio_lite.server import sequence, staging
+    from alix_studio_lite.server.jobs import UserError
+
+    for hand in ("150% open", [float("inf"), 0, 0, 0, 0, 0], ["1e999", 0, 0, 0, 0, 0]):
+        with pytest.raises(UserError):
+            staging.parse_hand(hand)
+    assert staging.stage_from({"pole_mm": 100, "hand": "150% open"}) is None
+    r = unit(lite, "L-R01", "setup", {"pole_mm": 150, "hand": "150% open"})
+    assert "cannot be 150 % open" in r["error"]
+    with pytest.raises(UserError):
+        sequence.check_start({"pole_mm": 100, "hand": [5000] * 6, "q_deg": [0] * 7})
+
+
+def test_two_first_tunes_make_one_pool(monkeypatch):
+    from alix_studio_lite.server import workers
+
+    made = []
+
+    class Slow:
+        def __init__(self, *a, **k):
+            time.sleep(0.2)
+            made.append(self)
+
+    monkeypatch.setattr(workers, "ProcessPoolExecutor", Slow)
+    monkeypatch.setattr(workers, "_POOL", None)
+    got = []
+    ts = [threading.Thread(target=lambda: got.append(workers.pool())) for _ in range(6)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert len(made) == 1 and len({id(p) for p in got}) == 1
+    monkeypatch.setattr(workers, "_POOL", None)
+
+
+def test_a_stage_that_is_not_valid_can_be_stated(tmp_path):
+    from alix_studio_lite.server import staging
+    from alix_studio_lite.server.jobs import UserError
+    from alix_studio_lite.server.lite_units import LiteUnits
+
+    units = LiteUnits(tmp_path / "p", "commode_c")
+    dst = units.add_recording("L-R01", TAUGHT / "FILE_09.txt", source="upload", name="L_x.txt", taught_arm="left",
+                              stage=staging.make_stage(140, "GRIP"))
+    meta = json.loads(dst.with_suffix(".source.json").read_text())
+    meta["stage"] = {"pole_mm": 400, "hand": [0, 0, 0, 0, 150, 1000]}       # e.g. an edited project file
+    dst.with_suffix(".source.json").write_text(json.dumps(meta))
+    units.set_recording_stage("L-R01", dst.name, staging.make_stage(150, "GRIP"))
+    assert next(r for r in units.recordings("L-R01") if r["file"] == dst.name)["stage"]["pole_mm"] == 150
+    with pytest.raises(UserError, match="cannot change"):
+        units.set_recording_stage("L-R01", dst.name, staging.make_stage(50, "GRIP"))
