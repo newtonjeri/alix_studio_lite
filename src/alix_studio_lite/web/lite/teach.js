@@ -5,7 +5,8 @@
 // STOP go to the robot (the stand-in until robot I/O exists), and a stopped recording is saved in
 // the project with the page's file name. Save & Review: every recording of the region is listed and
 // one is active; a file loaded from this computer is added and never replaces the new recording.
-// Playback runs in the 3D preview in Visual sim, or on the robot in Hardware sim and Real.
+// Playback runs in the 3D preview in Visual sim, as a dry run in Hardware sim (nothing moves), and
+// never on the real arms: in Real the 3D preview plays, because Lite runs only tuned versions there.
 
 import { post, say } from './api.js';
 import { armFromName, ctx, el, fmtS, jobLine, loadUnit, robotCall, stageDialog, step, tell, unitUrl, watchJob } from './ctx.js';
@@ -194,7 +195,8 @@ export function installTeach() {
     const u = await current();
     if (!u || !u.active) { window.toast('There is no recording to play back yet.'); return; }
     const mode = document.querySelector('.topbar .mode-pill')?.dataset.lite;
-    if (mode === 'hwsim' || mode === 'real') {
+    if (mode === 'real') window.toast('A recording as taught never runs on the real arms: the 3D preview plays it. Real Test runs the tuned version.');
+    if (mode === 'hwsim') {
       try {
         const job = await robotCall(unitUrl(s.key, 'playback'), {}, { what: 'Playback' });
         window.toast(`Playback on the ${u.arm.toUpperCase()} arm started.`);

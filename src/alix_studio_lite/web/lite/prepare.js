@@ -1,7 +1,8 @@
 // Prepare and Setup & Safety (R7, R4). Each arm step has a SETUP on the server: the pole height and
 // hand pose it is taught with (from its existing recording's record or the region catalogue).
-// Prepare shows it; Apply Pole / Apply Hand keep the page's values as the setup and, in Hardware
-// sim and Real, stage them on the robot (pole, then hand, each read back; a confirmation in Real).
+// Prepare shows it; Apply Pole / Apply Hand keep the page's values as the setup and stage them:
+// in Real on the robot (pole, then hand, each read back, after a confirmation); in Hardware sim
+// emulated, as nothing moves there.
 // Drag teaching starts only with the arm in that setup, so every recording knows its true stage,
 // and every execution stages that stage first (staging.py). The start-pose moves wait for the arm.
 
@@ -56,7 +57,8 @@ async function applySetup(kind) {
       return;
     }
     $('liteSetupNote').classList.remove('lite-bad');
-    window.toast(`${s.arm.toUpperCase()} staged: ${out.unit.setup.text} (read back).`);
+    window.toast(`${s.arm.toUpperCase()} staged: ${out.unit.setup.text} `
+      + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).'));
     window.demoApplyToRobotControl(kind);              // the Advanced panel shows the same values
   } catch (err) { tell(err); }
 }
@@ -82,7 +84,11 @@ export function installPrepare() {
       await Promise.all(arms.map((arm) => {
         const name = $(`${arm}PoseSelect`)?.value || 'Default Start Pose';
         return move(`/api/robots/${arm}/move-pose`, { name }, `Moving the ${arm.toUpperCase()} arm to its start pose`, $(`${arm}PoseStatus`))
-          .then(() => { const e = $(`${arm}PoseStatus`); if (e) e.textContent = `${arm.toUpperCase()} at “${name}” (joints read back).`; });
+          .then(() => {
+            const e = $(`${arm}PoseStatus`);
+            const real = document.querySelector('.topbar .mode-pill')?.dataset.lite === 'real';
+            if (e) e.textContent = `${arm.toUpperCase()} at “${name}” ` + (real ? '(joints read back).' : '(dry run: nothing moved).');
+          });
       }));
       return true;
     } catch (err) { tell(err); return false; }

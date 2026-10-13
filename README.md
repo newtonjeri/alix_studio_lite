@@ -1,138 +1,202 @@
 # ALIX Studio Lite
 
-A guided application for **non-technical operators** to teach, optimise, check and run drag-taught
-cleaning trajectories on the dual-arm RealMan RM75 robot (commode C). It reuses ALIX's proven code
-and drives the robot through the existing control-program runner.
+A guided application for **non-technical operators** to teach, tune, check and run drag-taught
+cleaning trajectories on the dual-arm RealMan RM75 robot (commode C). It reuses ALIX's proven code:
+its kinematics and 3D robot, its optimisers, its robot I/O library and its control program.
 
-It has two front ends on one backend:
-- the **Lite UI**, at `/`: the designer's *ALIX Studio LITE Edition V19* page, connected to the backend (see [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md));
-- **Legacy Lite**, at `/legacy/`: the earlier ALIX-themed UI, kept working (git tag `legacy-lite-0.1`).
+It runs in a web browser on the operator's computer. It has two front ends on one backend:
+- the **Lite UI**, at `/`: the designer's *ALIX Studio LITE Edition V19* page, connected to the backend;
+- **Legacy Lite**, at `/legacy/`: the earlier ALIX-themed UI, kept working.
 
-**This repository is self-contained.** Everything Lite needs is inside this folder; nothing is read
-from an ALIX checkout or from the surrounding workspace at run time.
+**The repository is self-contained.** Everything Lite needs is in this folder: no ALIX checkout and
+no ROS.
 
-- Requirements: [`docs/ALIX_Studio_Lite_Requirements_Revised.md`](docs/ALIX_Studio_Lite_Requirements_Revised.md) (final, v1.6)
-- Implementation plan: [`docs/ALIX_Studio_Lite_Implementation_Plan.md`](docs/ALIX_Studio_Lite_Implementation_Plan.md) (v1.6)
-- Build status: [`docs/STATUS.md`](docs/STATUS.md)
-- Lite UI contract (V19 page ↔ backend): [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md); the designer's files are in `docs/reference/ui_v19/`
-- Region catalogue for sign-off: [`docs/region_catalogue_commode_c.csv`](docs/region_catalogue_commode_c.csv)
+---
 
-## Install (one command, any platform)
+## Get it running (one command)
+
+You need **Python 3.11 or newer** and **git**. The installer says how to get either if one is
+missing. The repository is **private**, so sign in to GitHub once first. Any one of these works:
+
+- GitHub CLI: `gh auth login`
+- an SSH key on your GitHub account
+- a personal access token, typed as the password when git asks
+
+Then, on Linux or macOS:
 
 ```bash
-cd alix_studio_lite
-python3 tools/setup_lite.py          # Windows: py tools\setup_lite.py   (or tools/setup_lite.sh, tools\setup_lite.bat)
+git clone -b lite-ui https://github.com/newtonjeri/alix_studio_lite.git
+python3 alix_studio_lite/install_lite.py
 ```
 
-This takes a few minutes the first time. It:
-- builds a virtual environment, `.venv`, inside this folder;
-- installs the pinned packages of [`requirements.txt`](requirements.txt), which all have ready-made wheels for Linux x86-64 and aarch64 (Jetson), Windows and macOS, so nothing compiles;
-- tries the optional packages of [`requirements-optional.txt`](requirements-optional.txt), and says if one cannot be installed;
-- installs Lite itself, then checks that it works (imports, then the test suite).
+On Windows (PowerShell):
 
-You need Python 3.11 or newer with its `venv` module (on Ubuntu: `sudo apt install python3-venv`) and internet access for the first install. No ROS and no ALIX checkout. Re-running setup updates the environment in place, and `--check` only checks it.
+```powershell
+git clone -b lite-ui https://github.com/newtonjeri/alix_studio_lite.git
+py alix_studio_lite\install_lite.py
+```
 
-The optional packages are:
-- **toppra**, for the Time-optimal optimiser. PyPI has a wheel for Linux x86-64 only; elsewhere setup builds it from its git tag, which needs git and a C compiler. Without it Lite offers the Default optimiser only.
-- **meshoptimizer** and **rtree**, only for re-baking the robot's 3D overlay (`tools/bake_robot_overlay.py`) when the robot model changes. The bake itself is kept in `assets/robot/`.
+Have only the file [`install_lite.py`](install_lite.py), for example from a USB stick? Run it on its
+own. It clones the repository into `~/alix_studio_lite`, or into `--dir`, and installs it.
+
+**What the installer does.** The first run takes about 5 minutes, most of it downloading packages.
+1. It checks Python (with `venv`) and git.
+2. It clones the code, or updates an existing copy. It never pulls over changes you made.
+3. It builds a private environment, `.venv`, inside the copy, and installs the pinned packages. Nothing is installed system-wide.
+4. It checks that everything works by running the test suite, which takes about 2 minutes. Use `--no-tests` to skip this.
+
+| Option | What it does |
+|---|---|
+| `--dir PATH` | Installs somewhere else (default: the copy it sits in, else `~/alix_studio_lite`). |
+| `--shortcut` | Adds an "ALIX Studio Lite" launcher to the desktop and the applications menu. |
+| `--start` | Starts Lite when it is installed. |
+| `--no-tests` | Skips the test suite at the end. |
+| `--no-optional` | Skips the optional packages (toppra, meshoptimizer). |
+
+**To update later,** run the installer again: `python3 install_lite.py` inside the copy.
+
+---
 
 ## Start Lite
 
-Lite starts the same way as ALIX Studio:
-
 ```bash
-cd alix_studio_lite/tools
-./run_lite.sh                  # opens the Lite UI at http://127.0.0.1:8766/   (Ctrl+C to stop)
-./run_lite.sh --ui legacy      # opens Legacy Lite at http://127.0.0.1:8766/legacy/ instead
-./run_lite.sh --no-browser     # also: --port 8800, --data DIR, --fixture commode_b (Legacy Lite)
-./run_lite.sh --set-pin operator   # change a PIN (operator or engineer); asks twice, then exits
+alix_studio_lite/tools/run_lite.sh                # Windows: py alix_studio_lite\tools\run_lite.py
 ```
 
-On Windows: `py tools\run_lite.py`, or double-click `tools\run_lite.bat`.
+A browser tab opens at **http://127.0.0.1:8766/**.
+- Log in with the operator PIN. Advanced Robot Controls ask for the engineer PIN.
+- Both PINs are **`1234`** until changed: `tools/run_lite.sh --set-pin operator`, or `--set-pin engineer`.
+- STOP BOTH always works, with or without a log-in.
+- Projects and settings live in `~/ALIX-Lite/`, outside the code, so updating never touches them.
 
-- The launcher runs inside `.venv` by itself, so there is no activation step, and it clears `PYTHONPATH` so a sourced ROS workspace cannot interfere. Its first lines name the Python in use.
-- Port 8766 lets Lite run beside ALIX Studio (8765).
-- Data lives in `~/ALIX-Lite/`, outside this folder:
-  - the Lite UI's projects in `projects/<id>/`, one folder per project in the layout the handoff recommends;
-  - Legacy Lite's projects in `legacy/projects/<fixture>/` (moved there once from `projects/`, nothing deleted).
-- Log in to the Lite UI with the operator PIN; Advanced Robot Controls ask for the engineer PIN. Both are `1234` until changed. They are stored hashed in `~/ALIX-Lite/auth.json`, and Legacy Lite's engineer role uses the same engineer PIN.
-- Until the robot I/O backend is built, the robot is a **stand-in**: every robot screen works and nothing moves. The status pill in the top bar says so.
-- STOP BOTH works without a log-in.
+Other options:
 
-What works, and what comes next, is in [`docs/STATUS.md`](docs/STATUS.md).
-
-## Layout
-
-| Folder | What it holds |
+| Option | What it does |
 |---|---|
-| `src/alix_studio_lite/` | Lite's own code:<br>• `motion/` (tracks, the 5 ms clock, limits, checks);<br>• `optimise/` (the two optimisers);<br>• `server/` (the local web server, projects, log-in, the robot stand-in);<br>• `web/` (the Lite UI: the designer's page and `lite/`, its bridge to the backend);<br>• `web_legacy/` (Legacy Lite).<br>`vendor_paths.py` makes the vendored code run from this folder. |
-| `vendor/alix/` | The parts of the ALIX repository Lite reuses, in ALIX's own folder layout. See the table below. |
-| `vendor/control_app/` | The upload-channel control program: runner v14, `hand.py`, `pole.py`, `usage.py`. The v53 UI is under `reference/`. |
-| `vendor/MANIFEST.json` | Every vendored file with its source path, sha256 and the ALIX commit it came from. |
-| `vendor/PATCHES.md` | The patches applied to vendored files, and the runtime adjustments. |
-| `assets/scene/cubicles/` | The cubicle wall models: **1400 mm (default)**, built by `tools/make_cubicle.py`, and 800 mm (ALIX's standalone cubicle). |
-| `assets/regions/` | The regions deck `Toilet_regions_V1.pptx` (commode C), its pictures (`deck/`), and `commode_c_catalogue.json` (built from the sign-off CSV by `tools/build_catalogue.py`). |
-| `assets/package.xml` | Names the asset folder `alix_studio_lite`, so `package://alix_studio_lite/...` URIs resolve. |
-| `docs/` | Requirements, plan, the region catalogue, `reference/` inputs and `analysis/` evidence notes. |
-| `tests/` | Tests, plus `tests/data/` (taught recordings, the legacy V6 package). |
-| `tools/` | `setup_lite.py` (install, one command), `run_lite.sh` / `run_lite.py` (start Lite), `bake_robot_overlay.py` (ALIX's overlay bake), `vendor_from_alix.py` (refresh the vendored copy), `make_cubicle.py` (build a cubicle model) and `build_catalogue.py` (CSV to catalogue JSON). |
+| `--no-browser` | Does not open a browser tab. |
+| `--port 8800` | Uses another port. The default 8766 runs beside ALIX Studio (8765). |
+| `--data DIR` | Keeps the projects and settings somewhere other than `~/ALIX-Lite/`. |
+| `--ui legacy` | Opens Legacy Lite instead. |
+| `--robot realman` | Connects to the real arms: see below. |
 
-**What `vendor/alix/` contains:**
+---
 
-| Area | What was copied |
+## Connect to the robot
+
+```bash
+alix_studio_lite/tools/run_lite.sh --robot realman
+```
+
+1. Put the computer on the arms' network, **192.168.1.x**. The arms are **192.168.1.10** (LEFT) and **192.168.1.103** (RIGHT), on port 8080.
+2. In Lite, click the status pill at the top. It opens **Robot & mode**.
+3. Check each arm's address; it can be edited before connecting. Then press **Connect**.
+
+Lite connects through ALIX's own robot code (`alix_dispatch`). It then shows the live feedback of
+the three devices on each side, refreshed about five times a second:
+
+| Device | What Lite reads |
 |---|---|
-| Kinematics and collision | `alix_workspace` (the copy loads the excluded reachability module only on demand) and the light `alix_taskgen` modules (`body_collision`, `scene_pose`, …) |
-| Robot I/O | `alix_dispatch`, the emulator and the RealMan SDK (`Robotic_Arm`, Linux x86-64 and aarch64 libraries) |
-| Taught-track tools | `taught_tracks`, `plan_min_time`, `dual_arm_verdicts`, `cleaning_tracks`, and the exp01 TOPP-RA chain (`local_speed`, `emit_toppra_rung`) |
-| Robot model | The URDF, every mesh it references, the SRDF and joint configs |
-| Scene | The commode C scene with its body, lid and seat meshes |
-| Studio web sources | `web_editor/`, kept as reference for the Lite UI |
-| Design | The ALIX design tokens |
+| **Arm** (RM75) | Its seven joints, its error codes, and the controller's run mode (SIM or REAL). |
+| **Pole** (lift) | Its height in mm. |
+| **Hand** (Inspire RH56) | Where its six fingers actually are (0–1000, 1000 = open). |
+| **E-stop** (IO3) | Clear, pressed, unknown, or *not configured*. IO3 must be in the controller's E-stop mode (5); RealMan's demo maps it to "continue program". |
 
-## Run the tests
+The connection is **read-only**: Lite commands nothing on the robot yet.
+- **Robot actions stay with the stand-in.** That covers runs, moves, the pole and the hand. **Real robot** is not available, so use the control program for real runs meanwhile.
+- **The live E-stop still guards Lite.** While either arm's E-stop is not clear, every robot action in Lite is refused on both arms.
+
+If an arm cannot be reached, Lite says so, with its address. Check that the controller is on, the
+cable, and that this computer has a 192.168.1.x address (`ip addr`).
+
+**No robot at hand?** `tools/run_lite.sh --robot emulated` connects to ALIX's emulated arms instead.
+Without `--robot`, Lite uses a stand-in, so every robot screen works and nothing is connected.
+
+### The three modes
+
+The status pill at the top chooses where the region steps run. Lite always starts in Visual sim.
+
+| Mode | What moves |
+|---|---|
+| **Visual sim** | Only the 3D robot on screen. Nothing is sent to the robot. |
+| **Hardware sim** | **Nothing physical.** The controllers run programs in their own SIM mode, so the arms stay still. The pole and the hand are **emulated**: Lite takes their measured times, but sends them nothing. |
+| **Real robot** | The arms, the pole and the hand. Every move asks for confirmation first. Not available yet (see above). |
+
+Whatever the mode, every execution stages the file's own pole height and hand pose first. If
+either does not arrive, nothing else runs. A trajectory runs only on the arm it was taught on, and
+only after tuning has passed every limit. [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md),
+"The gates on every execution", explains each gate.
+
+---
+
+## When something goes wrong
+
+| Message or symptom | What to do |
+|---|---|
+| `this Python has no venv module` | Ubuntu or Debian: `sudo apt install python3.12-venv` (use your Python version). Then run the installer again. |
+| `the repository could not be cloned` | Sign in first (see above), then run the installer again. |
+| `Cannot use port 8766` | Lite is probably already running: open http://127.0.0.1:8766/. Or start it with `--port 8800`. |
+| `Lite cannot reach the LEFT arm's controller` | Check the power, the cable, the address in Robot & mode, and that the computer is on 192.168.1.x. |
+| E-stop chip reads *not configured* | IO3 is not in the controller's E-stop mode. An engineer sets it at the pendant; Lite never writes IO modes. |
+| Time-optimal optimiser missing | `toppra` has no ready-made package for this computer. The Default optimiser still works. |
+| A ROS workspace is sourced | Nothing to do: Lite clears `PYTHONPATH` and uses its own environment. |
+
+---
+
+## For developers
+
+### Run the tests
 
 ```bash
 cd alix_studio_lite
-.venv/bin/python -m pytest -q        # Windows: .venv\Scripts\python -m pytest -q   (about 2 minutes; no robot, no network)
+.venv/bin/python -m pytest -q          # Windows: .venv\Scripts\python -m pytest -q   (about 2 minutes; no robot, no network)
 ```
 
-ROS 2's own pytest plugins are blocked in `pyproject.toml`, so the tests also run with a ROS workspace sourced.
+The tests cover:
+- the vendored ALIX code and its manifest;
+- the cubicles and the robot model;
+- ALIX's TOPP-RA chain against its reference result;
+- the Lite UI page;
+- the API;
+- the region loop against the stand-in, including the gates on every execution;
+- staging, and L3 against ALIX's own reading;
+- the Trajectory Viewer;
+- the full sequence;
+- the dark theme;
+- the read-only robot link, against ALIX's emulated arms.
 
-The tests check that:
-- the vendored code imports from `vendor/` only;
-- the files match the manifest;
-- the cubicles have the intended geometry;
-- every robot mesh resolves inside this folder;
-- the commode C collision world builds with each cubicle;
-- ALIX's TOPP-RA chain reproduces the reference result (commode C lid top: 3839 lines, 19.19 s);
-- the web API takes one region through every step against the robot stand-in, including the E-stop interlock and the confirmations;
-- the Lite UI page is the designer's file plus one marked block, every page function the bridge replaces still exists, and nothing loads from the network;
-- the Lite UI's API: PINs hashed and locked out after five wrong tries, projects as folders (duplicate, trash, ZIP round trip, unsafe ZIPs refused), STOP without a log-in;
-- the Trajectory Viewer's library: arm from names and folders, uploads checked and kept once, the built-in sets with their stages, the replay timeline (the arm base at the stage height), the limits as taught, and using a file only for a region of its own arm;
-- the Lite UI's region loop over HTTP: the task queue as the deck has it, an existing recording used by default, tuning with every limit checked, keeping a version, upload with a replace confirmation, Hardware sim and Real runs, PASS only after a completed run, the E-stop interlock, and the optimiser's cuts and recorded-pace mode;
-- the gates on every execution: a file of the other arm is refused everywhere, a file without its pole and hand never runs, every run stages the pole and then the hand with read-back, and a pole or hand that fails to arrive ends the job before the arm moves;
-- staging and L3: the times follow ALIX's pole and hand models, the 3D frames match ALIX's FK at the stage, and L3 equals ALIX's band-limited reading;
-- the full sequence: each rule's timing, each arm continuing from where its previous step left it, what blocks a row and what is skipped, and a step's 3D frames from a start state;
-- the Lite UI's dark theme is generated from the page's own stylesheet and is current;
-- Legacy Lite keeps the ALIX theme: ALIX's tokens unchanged, no colour literals outside them, nothing loaded from the network.
+### Where things are
 
-## Refresh the vendored copy
+| Folder | What it holds |
+|---|---|
+| `src/alix_studio_lite/` | Lite's code. See the rows below. |
+| `src/alix_studio_lite/motion/` | Tracks, the 5 ms clock, limits and checks. |
+| `src/alix_studio_lite/optimise/` | The Default and Time-optimal optimisers. |
+| `src/alix_studio_lite/server/` | The local web server: projects, log-in, the robot stand-in and the read-only robot link (`robot_link.py`). |
+| `src/alix_studio_lite/web/` | The Lite UI: the designer's page plus `lite/`, its bridge to the backend. |
+| `src/alix_studio_lite/web_legacy/` | Legacy Lite. |
+| `vendor/alix/` | The parts of ALIX that Lite reuses, in ALIX's own layout. `vendor/MANIFEST.json` lists every file with its sha256. |
+| `vendor/control_app/` | The control program: runner v14, `hand.py`, `pole.py`. |
+| `assets/` | Cubicle walls, the regions deck and catalogue, the robot overlay, ALIX's brand mark. |
+| `docs/` | Requirements, plan, build status, the UI contract, analysis. |
+| `tests/` | The tests and their data (taught recordings, the legacy V6 package). |
+| `tools/` | Setup, the launcher and the maintenance tools below. |
+| `install_lite.py` | The clone-and-install script. |
 
-```bash
-python3 tools/vendor_from_alix.py --alix ~/alix_ws/src/alix          # add --dry-run to preview
-```
+The maintenance tools in `tools/`:
 
-The script overwrites `vendor/`, rewrites `vendor/MANIFEST.json` with the new ALIX commit, and re-applies the patches in `vendor/PATCHES.md`. Run the tests afterwards.
+| Tool | What it does |
+|---|---|
+| `setup_lite.py` | Installs the environment; `install_lite.py` calls it. |
+| `run_lite.sh` / `run_lite.py` | Starts Lite. |
+| `vendor_from_alix.py` | Refreshes `vendor/` from an ALIX checkout: `python3 tools/vendor_from_alix.py --alix ~/alix_ws/src/alix`. |
+| `make_dark_css.py` | Regenerates the Lite UI's dark theme when the designer's page changes. |
+| `make_cubicle.py` | Builds a cubicle wall model, for example `python3 tools/make_cubicle.py 1400`. |
+| `build_catalogue.py` | Turns the region sign-off CSV into the catalogue. |
+| `bake_robot_overlay.py` | Re-bakes the 3D robot overlay. It needs the optional packages. |
 
-## Cubicle models
+### Read more
 
-```bash
-python3 tools/make_cubicle.py 1400      # writes assets/scene/cubicles/cubicle_1400mm.{stl,yaml}
-```
-
-The rule matches ALIX's standalone planning-scene cubicles:
-- a back wall and two side walls, each 0.1 m thick and 2 m high;
-- side walls about 1.98 m deep;
-- the back wall's inner face 1.215 m in front of `base_link` (yaw 180°).
-
-The tests check that the rule reproduces ALIX's 1000 mm cubicle exactly.
+- [`docs/STATUS.md`](docs/STATUS.md): what works and what comes next.
+- [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md): each screen, what it does, and the gates on every execution.
+- [`docs/ALIX_Studio_Lite_Requirements_Revised.md`](docs/ALIX_Studio_Lite_Requirements_Revised.md): the requirements (final, v1.6).
+- [`docs/ALIX_Studio_Lite_Implementation_Plan.md`](docs/ALIX_Studio_Lite_Implementation_Plan.md): the implementation plan.

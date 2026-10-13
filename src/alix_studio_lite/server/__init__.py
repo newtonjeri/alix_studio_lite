@@ -54,6 +54,10 @@ def main(argv=None) -> int:
                     help="the page to open: the Lite UI (default) or Legacy Lite (/legacy/)")
     ap.add_argument("--set-pin", choices=("operator", "engineer"), metavar="ROLE",
                     help="change the operator or engineer PIN (asks for it twice), then exit")
+    ap.add_argument("--robot", choices=("standin", "realman", "emulated"), default="standin",
+                    help="standin (default): no hardware. realman: a live read-only link to the real arms "
+                         "(feedback of arm, pole and hand; Lite commands nothing). emulated: the same link to "
+                         "ALIX's emulated arms")
     a = ap.parse_args(argv)
 
     if a.set_pin:
@@ -81,8 +85,12 @@ def main(argv=None) -> int:
             print(f"Unknown fixture {a.fixture!r}; choose one of {', '.join(fixtures.FIXTURES)}.", file=sys.stderr)
             return 2
         fixture = fixtures.DEFAULT
+    if a.robot == "emulated":                       # ALIX's controller emulator, before the SDK is imported
+        import alix_emulator
+
+        alix_emulator.install()
     project = open_project(a.data, fixture)
-    app = LiteApp(project, a.data)
+    app = LiteApp(project, a.data, robot_link=None if a.robot == "standin" else a.robot)
     root = f"http://127.0.0.1:{a.port}/"
     url = root + ("legacy/" if a.ui == "legacy" else "")
     try:

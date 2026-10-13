@@ -138,11 +138,11 @@ def test_one_arm_step_through_the_loop(lite):
     assert wait(lite, unit(lite, key, "upload", {"program_id": 7, "replace": True}))["state"] == "done"
     time.sleep(0.4)
 
-    # Hardware sim run: the pole and then the hand first, each read back; then PASS
+    # Hardware sim run: the pole and then the hand first, emulated (nothing moves); then PASS
     j = wait(lite, unit(lite, key, "run", {}))
     assert j["state"] == "done", j
     text = log_text(j)
-    assert text.index("Pole at 200 mm (read back") < text.index("Hand in pose (read back)") < text.index("Finished")
+    assert text.index("Pole at 200 mm (emulated") < text.index("Hand in pose (emulated") < text.index("Finished")
     assert call(lite, "GET", "/api/robots/status")["arms"]["left"]["pole_mm"] == 200
     time.sleep(0.4)
     u = unit(lite, key)
@@ -180,11 +180,11 @@ def test_staging_failure_means_nothing_runs(lite):
     assert wait(lite, call(lite, "POST", "/api/robots/left/hand", {"counts": [0, 0, 0, 0, 150, 1000]}))["state"] == "done"
     j = wait(lite, unit(lite, key, "run", {}))
     assert j["state"] == "failed" and "LEFT hand did not reach its pose" in j["error"]
-    assert "Pole at 200 mm (read back" in log_text(j) and "Finished" not in log_text(j)
+    assert "Pole at 200 mm (emulated" in log_text(j) and "Finished" not in log_text(j)
 
     call(lite, "POST", "/api/robots/left/fault", {"hand": False})
     j = wait(lite, unit(lite, key, "run", {}))
-    assert j["state"] == "done" and "Hand in pose (read back)" in log_text(j)
+    assert j["state"] == "done" and "Hand in pose (emulated" in log_text(j)
     call(lite, "POST", "/api/auth/engineer/lock", {})
 
 
@@ -260,22 +260,30 @@ def test_a_recording_without_its_stage_never_runs(lite):
     assert call(lite, "GET", f"/api/projects/alix_loop/units/{key}/timeline?which=raw")["stage"]["pole_mm"] == 150
 
 
-def test_teaching_needs_the_setup_and_keeps_the_arm(lite):
-    """Drag teaching starts only with the arm in the region's setup, and the stand-in's take is a
-    recording of the SAME arm: a LEFT trajectory never becomes a RIGHT region's recording."""
+def test_teaching_needs_real_the_setup_and_keeps_the_arm(lite):
+    """Drag teaching needs Real (in Hardware sim the pole and the hand are only emulated, so a
+    recording's stage could not be true), starts only with the arm in the region's setup, read
+    back, and the stand-in's take is a recording of the SAME arm: a LEFT trajectory never becomes a
+    RIGHT region's recording."""
     key = "R-R01_PART1"
     u = unit(lite, key)
     assert u["setup"]["text"] == "pole 150 mm, hand grip" and u["arm"] == "right"
     for arm in ("left", "right"):
         call(lite, "POST", f"/api/robots/{arm}/connect", {})
     assert call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})["mode"] == "hwsim"
-    assert wait(lite, call(lite, "POST", "/api/robots/right/pole", {"mm": 260}))["state"] == "done"
     r = unit(lite, key, "teach/start", {})
+    assert r["code"] == "mode" and "needs Real robot" in r["error"]
+    j = wait(lite, call(lite, "POST", "/api/robots/right/pole", {"mm": 260}))
+    assert j["state"] == "done" and "emulated" in log_text(j)                          # nothing moved
+    assert call(lite, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})["mode"] == "real"
+    assert unit(lite, key, "teach/start", {})["code"] == "confirm"
+    r = unit(lite, key, "teach/start", {"confirmed": True})
     assert r["code"] == "stage" and "not in this region's setup" in r["error"]
-    out = unit(lite, key, "setup", {"pole_mm": 150, "hand": "GRIP", "apply": True})
+    assert unit(lite, key, "setup", {"pole_mm": 150, "hand": "GRIP", "apply": True})["code"] == "confirm"
+    out = unit(lite, key, "setup", {"pole_mm": 150, "hand": "GRIP", "apply": True, "confirmed": True})
     j = wait(lite, out["job"])
     assert j["state"] == "done" and "Pole at 150 mm (read back" in log_text(j)
-    assert unit(lite, key, "teach/start", {})["arm"]["teaching"]
+    assert unit(lite, key, "teach/start", {"confirmed": True})["arm"]["teaching"]
     time.sleep(0.3)
     out = unit(lite, key, "teach/stop", {})
     rec = out["unit"]["recordings"][-1]
@@ -284,6 +292,8 @@ def test_teaching_needs_the_setup_and_keeps_the_arm(lite):
     from alix_studio_lite.server.library import builtin_by_name
 
     assert builtin_by_name(out["take"])["arm"] == "right"
+    assert unit(lite, key, "playback", {})["code"] == "mode"                          # never as taught on the arms
+    call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})
 
 
 def test_later_steps_cannot_be_taught(lite):

@@ -33,7 +33,7 @@ from pathlib import Path
 
 from . import fixtures, sequence, staging, workers
 from .api_v2 import session
-from .app import MODE_TEXT, MODES, route
+from .app import MODE_TEXT, MODES, READ_ONLY_REAL, route
 from .jobs import UserError
 from .lite_units import TIME_MODES, LiteUnits, open_units, task_list
 from .robot_standin import ARMS
@@ -570,7 +570,10 @@ def post_playback(app, q, body, m):
     units, key = units_of(app, m.group(1)), m.group(2)
     u = _unit(units, key)
     mode = require_robot_mode(app)
-    require_confirmed(app, body, "Playback")
+    if mode == "real":
+        raise UserError("A recording as taught never runs on the real arms.",
+                        "Tune it and keep the version: Real Test runs that. In Hardware sim, Playback is a "
+                        "dry run in which nothing moves.", code="mode")
     info = identity(units, key, "raw")
     lines = sum(1 for ln in info["path"].read_bytes().split(b"\n") if ln.strip())
     return app.robot.playback(u["arm"], lines, dry_run=mode != "real", title=f"Playback {key}",
@@ -695,9 +698,11 @@ def post_mode(app, q, body, m):
         why = app.robot.motion_block()
         if why and mode == "real":
             raise UserError(why, "Release the E-stop and press Recover.")
+        if mode == "real" and app.robot.read_only:
+            raise UserError(READ_ONLY_REAL[0], READ_ONLY_REAL[1], code="mode")
         if mode == "real" and not body.get("confirmed"):
             raise UserError("Switching to the real robot needs your confirmation.", code="confirm")
-    app.ui["mode"] = mode
+    app.set_mode(mode)
     return {"mode": mode, "mode_text": MODE_TEXT[mode]}
 
 
@@ -710,7 +715,7 @@ def post_connect(app, q, body, m):
         return app.robot.connect(side, ip)
     out = app.robot.disconnect(side)
     if not any(a["connected"] for a in app.robot.view().values()):
-        app.ui["mode"] = "visual"
+        app.set_mode("visual")
     return out
 
 
@@ -779,7 +784,7 @@ def post_estop_test(app, q, body, m):
     session(app, engineer=True)
     out = app.robot.press_estop(side, bool(body.get("pressed")))
     if out["estop"] != "CLEAR" and app.ui["mode"] == "real":
-        app.ui["mode"] = "hwsim"
+        app.set_mode("hwsim")
     return out
 
 

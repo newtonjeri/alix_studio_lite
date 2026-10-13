@@ -46,17 +46,19 @@ MESHES = {
 #: decision D30: Visual sim (the 3D robot moves, no hardware) / Hardware sim (the controller's own SIM
 #: mode, rm_set_arm_run_mode(0): programs run, the arms stay still) / Real (the arms move)
 MODES = ("visual", "hwsim", "real")
+READ_ONLY_REAL = ("Lite reads the real arms but does not command them yet, so Real robot is not available.",
+                  "Run on the real arms with the control program meanwhile; Visual sim and Hardware sim work as usual.")
 MODE_TEXT = {"visual": "Visual sim: the 3D robot moves, no hardware",
-             "hwsim": "Hardware sim: the controller runs programs in SIM mode, the arms stay still",
-             "real": "Real robot: the arms move"}
+             "hwsim": "Hardware sim: nothing moves (the controllers' SIM mode; pole and hand emulated)",
+             "real": "Real robot: the arms, the pole and the hand move"}
 
 
 class LiteApp:
-    def __init__(self, project: Project, data_dir: Path):
+    def __init__(self, project: Project, data_dir: Path, robot_link: str | None = None):
         self.project = project
         self.data_dir = Path(data_dir)
         self.jobs = Jobs()
-        self.robot = StandInRobot(self.data_dir, self.jobs)
+        self.robot = StandInRobot(self.data_dir, self.jobs, link=robot_link)
         self.auth = Auth(self.data_dir)                       # both PINs, hashed (handoff section 19)
         self.store = ProjectStore(self.data_dir / "projects")  # the Lite UI's projects
         self.library = TaughtLibrary(self.data_dir)            # the Trajectory Viewer's files
@@ -71,6 +73,12 @@ class LiteApp:
         self.ui["mode"] = "visual"              # Lite always starts in Visual sim (NFR-UX f)
         self.ui["role"] = "operator"
         self._toppra = None
+
+    def set_mode(self, mode: str) -> None:
+        """Visual sim, Hardware sim or Real (D30). The robot backend follows it: in Hardware sim it
+        moves nothing (the controllers' SIM mode, the pole and the hand emulated)."""
+        self.ui["mode"] = mode
+        self.robot.mode = mode
 
     def save_ui(self) -> None:
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -362,9 +370,11 @@ def post_mode(app, q, body, m):
         why = app.robot.motion_block()
         if why and mode == "real":
             raise UserError(why, "Release the E-stop and press Recover.")
+        if mode == "real" and app.robot.read_only:
+            raise UserError(READ_ONLY_REAL[0], READ_ONLY_REAL[1])
         if mode == "real" and not body.get("confirmed"):
             raise UserError("Switching to the real robot needs your confirmation.")
-    app.ui["mode"] = mode
+    app.set_mode(mode)
     return app.state()
 
 
@@ -413,7 +423,7 @@ def post_connect(app, q, body, m):
 def post_disconnect(app, q, body, m):
     out = app.robot.disconnect(_arm_arg(body))
     if not any(a["connected"] for a in app.robot.view().values()):
-        app.ui["mode"] = "visual"
+        app.set_mode("visual")
     return out
 
 
@@ -428,7 +438,7 @@ def post_estop_test(app, q, body, m):
         raise UserError("Only an engineer can simulate the E-stop.")
     out = app.robot.press_estop(_arm_arg(body), bool(body.get("pressed")))
     if out["estop"] != "CLEAR" and app.ui["mode"] == "real":
-        app.ui["mode"] = "hwsim"
+        app.set_mode("hwsim")
     return out
 
 

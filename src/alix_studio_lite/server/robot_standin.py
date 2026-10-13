@@ -1,5 +1,6 @@
-"""A stand-in for the two arms, so every robot screen works before the robot I/O backend exists
-(decision D27: UI/UX first). Nothing here talks to hardware, and every reply says so.
+"""A stand-in for the two arms, so every robot screen works without hardware (``run_lite``'s
+default; ``--robot realman`` drives the real controllers through robot_realman.py). Nothing here
+talks to hardware, and every reply says so.
 
 It follows the real rules the backend must keep:
 
@@ -8,10 +9,14 @@ It follows the real rules the backend must keep:
 - STOP is never refused and never queued;
 - a run of N lines takes (N - 1) x 5 ms; an E-stop during a run ends it as INTERRUPTED, never complete;
 - program IDs 1-100; replacing a stored program needs the caller's confirmation;
-- every run, playback and move to a start stages the pole and then the hand first, each read back
-  (pole within 5 mm, every set hand channel within 30 counts); when either does not arrive, the job
-  ends there and the arm never moves (``staging.py``). Times follow ALIX's measured pole and hand
-  models. An engineer can make the pole or the hand fail on purpose to test this.
+- every run, playback and move to a start stages the pole and then the hand first (pole within
+  5 mm, every set hand channel within 30 counts); when either does not arrive, the job ends there
+  and the arm never moves (``staging.py``). Times follow ALIX's measured pole and hand models.
+  An engineer can make the pole or the hand fail on purpose to test this;
+- HARDWARE SIM MOVES NOTHING (D30, R4 (b)): the controllers run programs in their own SIM mode, so
+  the arms stay still, and the pole and the hand are EMULATED: their state and their times are
+  kept, nothing is sent (``emulated_stage``). Only Real moves them and reads them back. So drag
+  teaching, which needs the real pole and hand, needs Real.
 """
 from __future__ import annotations
 
@@ -29,6 +34,7 @@ UPLOAD_BYTES_S = 45_000            # the controller's measured transfer rate
 POLE_MM_S = 25.0
 MOTION_KINDS = ("run", "prepare", "teach", "move", "playback", "pole", "hand", "stage")   # one at a time per arm
 ESTOP_TEXT = {
+    "NOT_CONFIGURED": "IO3 not in E-stop mode: motion blocked",
     "CLEAR": "E-stop released",
     "ENGAGED": "E-STOP PRESSED",
     "RECOVERING": "Recovering",
@@ -68,19 +74,110 @@ class StandInArm:
                     teach_s=round(time.time() - self.teach_started, 1) if self.teaching else None)
 
 
-class StandInRobot:
-    backend = "stand-in"
-    label = "Stand-in robot (no hardware)"
+def emulated_stage(job, side: str, a, stage: "staging.Stage", faults=(), *, emulated: bool = True,
+                   step: int = 1, steps: int = 1) -> None:
+    """The pole to the stage height, then the hand to the stage pose, on ALIX's measured times,
+    on arm state ``a`` (pole_mm, hand, estop). ``emulated``: Hardware sim, which sends nothing
+    (D30, R4 (b)); otherwise the stand-in acting as the real arm. Raises, and nothing else runs,
+    when either does not arrive (``faults``: an engineer's test) or the E-stop is pressed."""
+    how = "emulated: Hardware sim moves nothing" if emulated else "read back"
+    start, goal = a.pole_mm, float(stage.pole_mm)
+    dur = staging.pole_travel_s(start, goal)
+    end = start + (0.6 if "pole" in faults else 1.0) * (goal - start)
+    t0 = time.time()
+    while dur and (el := time.time() - t0) < dur:
+        if a.estop != "CLEAR":
+            raise UserError("INTERRUPTED — E-STOP while the pole was moving. The arm did not move.",
+                            "Release the E-stop and follow Recover.")
+        a.pole_mm = start + min(1.0, el / dur) * (end - start)
+        job.progress(f"Pole {start:.0f} → {goal:g} mm" + (" (emulated)" if emulated else ""), step, steps)
+        job.sleep(0.1)
+    a.pole_mm = end if dur else a.pole_mm
+    if abs(a.pole_mm - goal) > staging.POLE_TOL_MM:
+        raise UserError(f"The {side.upper()} pole did not reach {goal:g} mm ({how.split(':')[0]} {a.pole_mm:.0f} mm). "
+                        "Nothing else ran.", "Check the pole and try again.")
+    job.log(f"Pole at {a.pole_mm:.0f} mm ({how}).")
+    target = [h if t is None else int(t) for h, t in zip(a.hand, stage.hand)]
+    dur = staging.hand_move_s(a.hand, target)
+    if "hand" in faults:
+        target = [h + (t - h) // 2 for h, t in zip(a.hand, target)]
+    if dur:
+        job.progress(f"Hand to {staging.hand_words(stage.hand)}" + (" (emulated)" if emulated else ""), step, steps)
+        job.sleep(dur)
+        if a.estop != "CLEAR":
+            raise UserError("INTERRUPTED — E-STOP while the hand was moving. The arm did not move.",
+                            "Release the E-stop and follow Recover.")
+    a.hand = target
+    if not staging.same_hand(a.hand, stage.hand):
+        raise UserError(f"The {side.upper()} hand did not reach its pose ({how.split(':')[0]} "
+                        f"{', '.join(map(str, a.hand))}). Nothing else ran.", "Check the hand and try again.")
+    job.log(f"Hand in pose ({how}): " + ", ".join(map(str, a.hand)))
 
-    def __init__(self, data_dir: Path, jobs: Jobs):
+
+class StandInRobot:
+    """The stand-in, optionally with a live read-only link to the arms (``link``: "realman" for the
+    real controllers, "emulated" for ALIX's emulator; robot_link.py). Linked, Connect reaches the
+    controller and the panel shows its feedback (arm, pole, hand, IO3); the real E-stop input
+    drives the motion interlock; actions stay the stand-in's, so Real robot is refused."""
+    backend = "stand-in"
+
+    def __init__(self, data_dir: Path, jobs: Jobs, link: str | None = None):
         self.jobs = jobs
+        self.mode = "visual"                            # visual | hwsim | real, set by LiteApp.set_mode
+        self.link_kind = link
+        self.links: dict = {}                           # side -> robot_link.ArmLink while connected
+        self.test_estop: dict = {}                      # an engineer's E-stop test on emulated arms
         self.lock = threading.RLock()
         self.arms = {s: StandInArm(s, Path(data_dir) / "standin" / f"{s}_programs.json") for s in ARMS}
         self.faults = {s: set() for s in ARMS}         # engineer test: {"pole", "hand"} fail to arrive
 
+    @property
+    def read_only(self) -> bool:
+        """Linked to the arms, Lite reads them but commands nothing: no Real robot."""
+        return self.link_kind is not None
+
+    @property
+    def label(self) -> str:
+        if self.link_kind == "realman":
+            return "Live link to the real arms, read only: Lite reads them and commands nothing yet"
+        if self.link_kind == "emulated":
+            return "Live link to ALIX's emulated arms, read only (no hardware)"
+        return "Stand-in robot (no hardware)"
+
+    def _sync(self, side: str) -> None:
+        """The arm's E-stop chip from the live IO3 reading (fails closed). Released after a press,
+        it reads RECOVERING until Recover, as the button's manual reset needs."""
+        link = self.links.get(side)
+        if link is None:
+            return
+        a = self.arms[side]
+        live = link.view()["feedback"].get("estop", "UNKNOWN")
+        if link.emulated and self.test_estop.get(side):
+            live = "ENGAGED"
+        if live == "ENGAGED":
+            if a.estop != "ENGAGED":
+                a.teaching = False
+                for j in self.jobs.running(arm=side):
+                    if j.kind in MOTION_KINDS:
+                        j.log(f"E-stop pressed on the {side.upper()} arm.", "error")
+                        j.cancel()
+            a.estop = "ENGAGED"
+        elif live in ("UNKNOWN", "NOT_CONFIGURED"):
+            a.estop = live
+        elif a.estop == "ENGAGED":
+            a.estop = "RECOVERING"
+        elif a.estop in ("UNKNOWN", "NOT_CONFIGURED", "NOT_CONNECTED"):
+            a.estop = "CLEAR"
+
     # ── state
     def view(self) -> dict:
-        return {s: a.view() | {"faults": sorted(self.faults[s])} for s, a in self.arms.items()}
+        out = {}
+        for s, a in self.arms.items():
+            self._sync(s)
+            out[s] = a.view() | {"faults": sorted(self.faults[s])}
+            if s in self.links:
+                out[s]["link"] = self.links[s].view()
+        return out
 
     def arm(self, side: str) -> StandInArm:
         if side not in self.arms:
@@ -89,6 +186,8 @@ class StandInRobot:
 
     def motion_block(self) -> str | None:
         """Why motion is refused right now, in plain words (None = allowed)."""
+        for s in self.links:
+            self._sync(s)
         for s, a in self.arms.items():
             if a.connected and a.estop != "CLEAR":
                 return (f"The {s.upper()} arm's E-stop is {ESTOP_TEXT[a.estop].lower()}. "
@@ -112,6 +211,14 @@ class StandInRobot:
         a = self.arm(side)
         if ip:
             a.ip = ip
+        if self.link_kind:
+            from .robot_link import ArmLink
+
+            if side in self.links:
+                self.links.pop(side).close()
+            self.links[side] = ArmLink(side, a.ip).open()      # refuses, saying why, when unreachable
+            a.connected, a.estop = True, "UNKNOWN"
+            return self.view()[side]
         time.sleep(0.4)
         a.connected, a.estop = True, "CLEAR"
         return a.view()
@@ -119,6 +226,8 @@ class StandInRobot:
     def disconnect(self, side: str) -> dict:
         self.jobs.cancel_arm(side)
         a = self.arm(side)
+        if side in self.links:
+            self.links.pop(side).close()
         a.connected, a.estop, a.teaching = False, "NOT_CONNECTED", False
         return a.view()
 
@@ -136,6 +245,14 @@ class StandInRobot:
         a = self.arm(side)
         if not a.connected:
             raise UserError(f"The {side.upper()} arm is not connected.")
+        link = self.links.get(side)
+        if link is not None and not link.emulated:
+            raise UserError("These are the real arms: test the E-stop with the red button itself.",
+                            "Lite reads IO3 and shows the press within a fraction of a second.")
+        if link is not None:                            # emulated arms: ALIX's emulator has no IO
+            self.test_estop[side] = bool(pressed)
+            self._sync(side)
+            return a.view()
         if pressed:
             a.estop = "ENGAGED"
             a.teaching = False
@@ -149,6 +266,10 @@ class StandInRobot:
 
     def recover(self, side: str) -> dict:
         a = self.arm(side)
+        self._sync(side)
+        if a.estop in ("UNKNOWN", "NOT_CONFIGURED"):
+            raise UserError(f"The {side.upper()} arm's E-stop input reads {a.estop.replace('_', ' ').lower()}.",
+                            "Lite needs IO3 readable and in the controller's E-stop mode (5) before motion.")
         if a.estop == "ENGAGED":
             raise UserError("The E-stop button is still pressed.", "Make the cell safe, then release the button.")
         a.estop = "CLEAR"
@@ -171,38 +292,10 @@ class StandInRobot:
         return dict(side=side, faults=sorted(f))
 
     def _stage(self, job, side: str, stage: "staging.Stage", step: int = 1, steps: int = 1) -> None:
-        a = self.arm(side)
-        start, goal = a.pole_mm, float(stage.pole_mm)
-        dur = staging.pole_travel_s(start, goal)
-        end = start + (0.6 if "pole" in self.faults[side] else 1.0) * (goal - start)
-        t0 = time.time()
-        while dur and (el := time.time() - t0) < dur:
-            if a.estop != "CLEAR":
-                raise UserError("INTERRUPTED — E-STOP while the pole was moving. The arm did not move.",
-                                "Release the E-stop and follow Recover.")
-            a.pole_mm = start + min(1.0, el / dur) * (end - start)
-            job.progress(f"Pole {start:.0f} → {goal:g} mm", step, steps)
-            job.sleep(0.1)
-        a.pole_mm = end if dur else a.pole_mm
-        if abs(a.pole_mm - goal) > staging.POLE_TOL_MM:
-            raise UserError(f"The {side.upper()} pole did not reach {goal:g} mm (read back {a.pole_mm:.0f} mm). "
-                            "Nothing else ran.", "Check the pole and try again.")
-        job.log(f"Pole at {a.pole_mm:.0f} mm (read back, within 5 mm of {goal:g}).")
-        target = [h if t is None else int(t) for h, t in zip(a.hand, stage.hand)]
-        dur = staging.hand_move_s(a.hand, target)
-        if "hand" in self.faults[side]:
-            target = [h + (t - h) // 2 for h, t in zip(a.hand, target)]
-        if dur:
-            job.progress(f"Hand to {staging.hand_words(stage.hand)}", step, steps)
-            job.sleep(dur)
-            if a.estop != "CLEAR":
-                raise UserError("INTERRUPTED — E-STOP while the hand was moving. The arm did not move.",
-                                "Release the E-stop and follow Recover.")
-        a.hand = target
-        if not staging.same_hand(a.hand, stage.hand):
-            raise UserError(f"The {side.upper()} hand did not reach its pose (read back "
-                            f"{', '.join(map(str, a.hand))}). Nothing else ran.", "Check the hand and try again.")
-        job.log("Hand in pose (read back): " + ", ".join(map(str, a.hand)))
+        """The pole, then the hand: moved and read back in Real, emulated otherwise (the stand-in
+        only takes the time either way; the real backend sends the commands in Real)."""
+        emulated_stage(job, side, self.arm(side), stage, self.faults[side], emulated=self.mode != "real",
+                       step=step, steps=steps)
 
     def stage(self, side: str, stage: "staging.Stage", title: str):
         """Stage the pole and the hand only (Prepare's Apply)."""
@@ -234,11 +327,11 @@ class StandInRobot:
                 if f >= 1.0:
                     break
                 job.sleep(0.1)
-            job.log(f"Pole at {goal:.0f} mm (read back).")
+            job.log(f"Pole at {goal:.0f} mm ({self._how()}).")
             job.progress("Setting the hand", 2, 2)
             job.sleep(1.0)
             a.hand = [int(v) for v in hand]
-            job.log("Hand set (read back).")
+            job.log(f"Hand set ({self._how()}).")
             return dict(pole_mm=goal, hand=a.hand)
 
         return self.jobs.start("prepare", title, work, arm=side)
@@ -258,7 +351,7 @@ class StandInRobot:
                 job.progress(f"Moving the pole to {goal:.0f} mm", 1, 1)
                 job.sleep(0.1)
             a.pole_mm = goal
-            job.log(f"Pole at {goal:.0f} mm (read back).")
+            job.log(f"Pole at {goal:.0f} mm ({self._how()}).")
             return dict(pole_mm=goal)
 
         return self.jobs.start("pole", title, work, arm=side)
@@ -274,14 +367,23 @@ class StandInRobot:
             job.progress("Setting the hand", 1, 1)
             job.sleep(0.8)
             a.hand = vals
-            job.log("Hand set (read back): " + ", ".join(map(str, vals)))
+            job.log(f"Hand set ({self._how()}): " + ", ".join(map(str, vals)))
             return dict(hand=vals)
 
         return self.jobs.start("hand", title, work, arm=side)
 
+    def _how(self) -> str:
+        return "read back" if self.mode == "real" else "emulated: Hardware sim moves nothing"
+
     def teach_start(self, side: str, setup: "staging.Stage | None") -> dict:
-        """Drag teaching starts only with the arm in the region's setup (read back), so the
-        recording's stage is what the robot really held."""
+        """Drag teaching starts only in Real, with the arm in the region's setup (read back), so
+        the recording's stage is what the robot really held. In Hardware sim the pole and the
+        hand are only emulated, so a recording's stage could not be known."""
+        if self.mode != "real":
+            raise UserError("Drag teaching uses the real arm, pole and hand, so it needs Real robot.",
+                            "In Hardware sim nothing moves: the pole and the hand are only emulated, so the "
+                            "recording would not know its true stage. Choose Real robot in the status pill.",
+                            code="mode")
         self.require_motion(side)
         a = self.arm(side)
         if setup is None:
@@ -319,7 +421,8 @@ class StandInRobot:
                                     "Release the E-stop and follow Recover.")
                 job.progress(f"Moving to {what}", int(100 * el / seconds), 100)
                 job.sleep(0.1)
-            job.log(f"At {what} (joints read back).")
+            job.log(f"At {what} (joints read back)." if self.mode == "real"
+                    else f"At {what} (dry run: the controller's SIM mode, the arm did not move).")
             return dict(at=what)
 
         return self.jobs.start("move", title, work, arm=side)

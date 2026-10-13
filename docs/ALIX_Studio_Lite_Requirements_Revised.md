@@ -2425,7 +2425,7 @@ The implementation plan (section 11) keeps the full decision log, D1–D27. Each
 | D27 | Order: UI/UX first; backend on hold at its checkpoint. |
 | D28 | Dual-arm timing margin: kept. Arms running together never finish in perfect step, so dual-arm clearance checks keep the run-to-run timing spread measured by ALIX. |
 | D29 | Fixture pool: commodes A, B and C, urinal A and wash basin A, commode C by default. Commode C uses the deck catalogue; the others start with a provisional one from ALIX's regions.yaml. |
-| D30 | Three modes: Visual sim (the 3D robot moves, no hardware), Hardware sim (the controller's SIM mode, arms still), Real (arms move, after a confirmation). |
+| D30 | Three modes: Visual sim (the 3D robot moves, no hardware), Hardware sim (the controller's SIM mode, arms still), Real (arms move, after a confirmation). **Clarified 13 Oct (owner): in Hardware sim nothing moves physically**: programs run in the controllers' SIM mode, and the pole and the hand are emulated, never commanded (as R4 (b) states). Drag teaching therefore needs Real, and a recording as taught never plays back on the real arms. |
 | D31 | An existing taught recording for a region is used by default; re-teaching live is an option, and a recording can be picked from the library or uploaded. |
 | D32 | Tabs at the top, as in ALIX Studio (Regions, Teach, Optimise, 3D view, Run; Robot and Settings for engineers; Help); every screen reflows with the window size. |
 | — | Safety stop: the IO-wired E-stop buttons are primary, and the software STOP will be tested. |

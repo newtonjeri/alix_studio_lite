@@ -70,6 +70,9 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
   - Start is refused until every included arm step has a kept version, each listed with what it needs; a preview with the recordings as taught plays what exists and never approves the sequence;
   - play, pause, speed and a time slider; the arm panels say what each arm is doing (staging, waiting, running).
 - **ALIX's brand mark**, as ALIX Studio draws it, in place of the page's "AX" tiles, in both themes and as the tab's icon.
+- **A live, read-only link to the arms** (`tools/run_lite.sh --robot realman`, `server/robot_link.py`): it connects each controller through ALIX's own robot I/O code and shows, about five times a second, the arm (joints, error codes, run mode), the pole, the hand and the E-stop input IO3. The live E-stop drives the motion interlock. Lite commands nothing through it, so Real robot is refused while linked. Checked against ALIX's emulated arms (`--robot emulated`); not yet on the robot itself.
+- **Hardware sim moves nothing physically** (D30 as clarified on 13 Oct): programs run in the controllers' SIM mode, and the pole and the hand are emulated. Drag teaching therefore needs Real, and a recording as taught never plays back on the real arms.
+- **One-command install:** `install_lite.py` clones (or updates) the private repository and runs the setup; see the README.
 - **Trajectory Viewer** (in the Operator Journey, on Home, and in Save & Review):
   - Taught `.txt` files are uploaded one by one or as a folder. Each is checked line by line and kept in `~/ALIX-Lite/library/`, beside the built-in sets: the commode C taught set and the legacy V6 package.
   - The arm comes from the name or folder (`L_`, `LEFT/`, `R_`, `RIGHT/`), else the operator chooses it. The operator states the pole height and hand pose each upload was taught with; the built-in files carry their record's.
@@ -84,13 +87,14 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
 - **Fixed in the bridge:** six defects of the page (contract, D1–D6). The most serious was STOP BOTH leaving the screen below 1,610 px wide; the widest was the dark theme, which covered only part of the page; and the full simulation was a picture with a clock that could approve the real full run.
 
 **Checked:**
-- Tests: `tests/test_lite_ui.py` (the page is the designer's file plus one block), `tests/test_api_v2.py`, `tests/test_lite_region_loop.py` (one arm step through the whole loop over HTTP, the gates, staging failures, the E-stop interlock, cuts and the recorded-pace mode), `tests/test_library.py` (the Trajectory Viewer's files), `tests/test_staging.py` (staging times and FK, L3 against ALIX's own reading), `tests/test_sequence.py` (the full sequence's schedule and chained steps).
+- Tests: `tests/test_lite_ui.py` (the page is the designer's file plus one block), `tests/test_api_v2.py`, `tests/test_lite_region_loop.py` (one arm step through the whole loop over HTTP, the gates, staging failures, the E-stop interlock, cuts and the recorded-pace mode), `tests/test_library.py` (the Trajectory Viewer's files), `tests/test_staging.py` (staging times and FK, L3 against ALIX's own reading), `tests/test_sequence.py` (the full sequence's schedule and chained steps), `tests/test_robot_link.py` (the live link against ALIX's emulated arms).
 - Headless Chrome:
   - the whole loop, in light and dark themes, with no console errors;
   - STOP BOTH visible from 900 to 1920 px wide.
 
 **Not yet:**
 - Merge + Full Sequence: the custom merge with joins, the single-arm merged simulation (Simulate LEFT / RIGHT) and the real full run are still the template.
+- Robot commands: uploading, running, the pole, the hand and drag teaching on the real arms. Lite reads the arms (the live link) but commands nothing yet.
 - The rest of Advanced Robot Controls: uploading any file, stored and multi runs, Global Points, the arm's own drag teach.
 - Stored start poses.
 - The 3D collision check.
@@ -125,7 +129,7 @@ Legacy Lite is no longer developed; its working parts (3D robot, plots, optimise
 
 | Area | State |
 |---|---|
-| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 120 tests pass in about two minutes, with no ALIX checkout. |
+| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 125 tests pass in about two minutes, with no ALIX checkout. |
 | Cubicle walls | Done. The 1400 mm cubicle (default) and the 800 mm cubicle are in `assets/scene/cubicles/`. |
 | Motion basics (`src/alix_studio_lite/motion/`) | Implemented and smoke-tested. It covers track read/write, the 5 ms clock, the limit set from the URDF, and the hard limits L1–L6 plus checks C1–C4 on the integer bytes. L3 reads acceleration as ALIX does (20 Hz band-limited, F99c; ALIX accepts at 1.00 of 600 °/s², Lite at 1.02). |
 | Optimiser engine (`src/alix_studio_lite/optimise/`) | Implemented, smoke-tested and connected to the Lite UI's Tune + Simulation. Golden tests still to write. |

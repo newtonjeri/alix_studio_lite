@@ -1,7 +1,8 @@
 // Real Test (R4, R13; decision D30). Upload sends the kept tuned version to the Program ID (1–100,
 // checked by the server; a slot holding another program needs a confirmation). Move to Start and
-// Run go to the robot: in Hardware sim the controller runs the program with the arms still, in Real
-// the arm moves after a confirmation, and in Visual sim nothing is sent. The run's real outcome is
+// Run go to the robot: in Hardware sim nothing moves (the controller runs the program in its SIM
+// mode, the pole and the hand are emulated), in Real the arm, the pole and the hand move after a
+// confirmation, and in Visual sim nothing is sent. The run's real outcome is
 // shown, and PASS is accepted only after a completed run (tasks.js).
 
 import { get } from './api.js';
@@ -12,8 +13,8 @@ const $ = (id) => document.getElementById(id);
 
 const MODE_NOTE = {
   visual: ['notice', 'Visual sim: nothing is sent to the robot. Choose Hardware sim or Real robot in the status pill at the top to test on the controller.'],
-  hwsim: ['notice', 'Hardware sim: the controller runs the program in its SIM mode. The arm stays still; the pole and hand still move.'],
-  real: ['notice warn', 'REAL ROBOT: the arm moves. Keep the area clear and the red E-stop buttons within reach. Each move asks for confirmation.'],
+  hwsim: ['notice', 'Hardware sim: nothing moves. The controller runs the program in its SIM mode (the arm stays still); the pole and the hand are emulated.'],
+  real: ['notice warn', 'REAL ROBOT: the arm, the pole and the hand move. Keep the area clear and the red E-stop buttons within reach. Each move asks for confirmation.'],
 };
 
 async function refresh() {
@@ -33,7 +34,7 @@ async function refresh() {
   if (!box) { box = el('div', { id: 'liteVersion', class: 'lite-version mini-note' }); $('stage-real').querySelector('.real-program-row')?.after(box); }
   box.replaceChildren(gateChips(u), el('div', { text: v
     ? `Tuned version ${v.version}: ${fmtS(v.achieved_s)}, ${Number(v.lines).toLocaleString()} rows, every limit passed.`
-      + (v.stage ? ` Every run stages ${v.stage.text} first, read back; if either fails, nothing runs.` : '')
+      + (v.stage ? ` Every run stages ${v.stage.text} first (read back in Real, emulated in Hardware sim); if either fails, nothing runs.` : '')
       + (u.last_run ? ` Last run: ${u.last_run.ok ? 'completed ✓' : 'did not finish'} (${u.last_run.at}).` : ' Not run yet.')
     : 'No tuned version yet: finish Tune + Simulation first.' }));
 }

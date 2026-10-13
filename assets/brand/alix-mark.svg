@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- ALIX's brand mark, as ALIX Studio draws it (alix_taskgen/web_editor/template.html), in its light-theme brand blues -->
+  <g stroke="#12558F" stroke-width="0.55" stroke-linejoin="round">
+    <path fill="#2F96EE" d="M0.60 1.31 L1.52 0.60 L2.60 0.75 L15.45 11.23 L15.63 12.18 L2.20 22.96 L1.12 22.96 L0.60 22.44 Z"/>
+    <path fill="#2F96EE" d="M31.40 22.44 L30.88 22.96 L29.80 22.96 L16.37 12.18 L16.55 11.23 L29.40 0.75 L30.48 0.60 L31.40 1.31 Z"/>
+    <path fill="#1B7FD4" d="M2.02 24.35 L15.69 13.17 L10.95 31.25 L10.36 31.40 Z"/>
+    <path fill="#1B7FD4" d="M21.64 31.40 L21.05 31.25 L16.31 13.17 L29.98 24.35 Z"/>
+  </g>
+</svg>
