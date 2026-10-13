@@ -342,6 +342,10 @@ export function installTune() {
     if (labels[id]) queuePush(labels[id]);
   });
 
+  document.addEventListener('lite:viewer-closed', () => {   // the 3D view is back from the Trajectory Viewer
+    if (currentStage === 'optimize' && unit) loadSimulation();
+  });
+
   const pageTheme = window.toggleTheme;
   window.toggleTheme = function toggleTheme() {
     pageTheme();

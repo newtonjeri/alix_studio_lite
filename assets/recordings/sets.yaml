@@ -1,0 +1,17 @@
+# Built-in sets of taught trajectory files, shown in the Lite UI's Trajectory Viewer next to the
+# files the operator uploads (~/ALIX-Lite/library/). Paths are relative to the Lite folder.
+# A set takes its files from a fixture's recording library (library: <fixture>) or from
+# folders per arm (folders: {left: ..., right: ...}).
+sets:
+  - id: commode_c_taught
+    name: Commode C taught set (ALIX)
+    note: Raw drag-teach recordings of commode C regions on the LEFT arm, 5 ms per point.
+    library: commode_c
+  - id: v6_legacy
+    name: V6 dual-arm package (legacy)
+    note: >-
+      Merged, time-stretched programs 71-83 with joint-space bridges, for reference only. Several
+      files exceed the arms' joint-speed ratings, and the bridges were never collision-checked.
+    folders:
+      left: tests/data/legacy_v6/LEFT
+      right: tests/data/legacy_v6/RIGHT

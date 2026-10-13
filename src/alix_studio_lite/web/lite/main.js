@@ -19,6 +19,7 @@ import { installStatus } from './status.js';
 import { installTasks } from './tasks.js';
 import { installTeach } from './teach.js';
 import { installTune } from './tune.js';
+import { installViewer } from './viewer.js';
 
 installSafety();          // first: STOP must reach the robot before and without a log-in
 installLayout();          // ...and stay on the screen (the page's top bar needs 1,610 px)
@@ -34,4 +35,5 @@ installSim();             // the 3D robot in the simulation pane, on the 5 ms cl
 installTune();            // tuning with the optimiser, limits, target time (D24, D36)
 installRealTest();
 installAdvanced();
+installViewer();          // taught .txt files: upload, check, replay in 3D
 document.documentElement.dataset.lite = 'ready';

@@ -22,10 +22,17 @@ async function ensure() {
   return robotP;
 }
 
-async function scene(phase) {
-  if (!scenes.has(ctx.fixture)) scenes.set(ctx.fixture, get(`/api/fixtures/${ctx.fixture}/scene`));
-  const d = await scenes.get(ctx.fixture);
-  await viewer.setScene({ cubicleMm: d.cubicle_mm, fixtureSpec: d.spec, fixtureId: ctx.fixture, phase: phase || 'lid_closed' });
+// The one 3D view and robot of the page, shared with the Trajectory Viewer (viewer.js).
+export async function ensure3D() {
+  await ensure();
+  return { viewer, robot };
+}
+
+// The fixture (the open project's, else commode C) in `phase`, inside the cubicle.
+export async function scene(phase, fixture = ctx.fixture || 'commode_c') {
+  if (!scenes.has(fixture)) scenes.set(fixture, get(`/api/fixtures/${fixture}/scene`));
+  const d = await scenes.get(fixture);
+  await viewer.setScene({ cubicleMm: d.cubicle_mm, fixtureSpec: d.spec, fixtureId: fixture, phase: phase || 'lid_closed' });
 }
 
 // Shows unit `key`'s file (`which`: raw | candidate | version) in `host`, at its first line.

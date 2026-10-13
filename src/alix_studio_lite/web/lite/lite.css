@@ -127,3 +127,49 @@
 .lite-confirm-list { margin: 8px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.6; }
 .lite-fixture-badge { margin: 4px 0; }
 .lite-version { margin-top: 10px; }
+
+/* Trajectory Viewer */
+.lite-viewer { z-index: 19000; padding: 2vh 2vw; }
+.lite-viewer-card { width: min(1560px, 96vw); height: 94vh; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; }
+.lite-viewer-card > .section-head { margin-bottom: 10px; }
+.lite-viewer-card h3 { margin: 4px 0 2px; font-size: 22px; }
+.lite-inline-field { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; }
+.lite-inline-field select { min-height: 44px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); }
+.lite-viewer-body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 14px; }
+.lite-viewer-side { min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.lite-viewer-files { flex: 1; min-height: 0; overflow: auto; padding-right: 4px; }
+.lite-file-group { border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; background: var(--card); }
+.lite-file-group h4, .lite-file-group summary { margin: 0 0 8px; font-size: 14px; cursor: pointer; }
+.lite-file-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center;
+  padding: 8px; border-radius: 10px; border: 1px solid transparent; }
+.lite-file-row + .lite-file-row { border-top: 1px solid var(--line); border-radius: 0; }
+.lite-file-row.on { background: var(--blue2); border-color: var(--blue); border-radius: 10px; }
+.lite-file-name { min-width: 0; display: flex; flex-direction: column; }
+.lite-file-name b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lite-file-name small { font-size: 12px; color: var(--muted); }
+.lite-file-actions { display: flex; gap: 6px; }
+.lite-file-actions .btn, .lite-arm-pick .btn { min-height: 38px !important; padding: 6px 10px; font-size: 13px; }
+.lite-arm-pick { display: flex; align-items: center; gap: 4px; }
+.lite-arm-pick small { font-size: 11px; color: var(--orange); font-weight: 800; }
+.lite-viewer-main { min-height: 0; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
+.lite-viewer-slots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lite-slot { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 12px; min-height: 48px; }
+.lite-slot b { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; }
+.lite-slot .btn { min-height: 36px !important; padding: 4px 10px; }
+.lite-viewer-3d { flex: 1 0 320px; min-height: 320px; border-radius: 14px; overflow: hidden; background: var(--lite-viewport-bg); }
+.lite-viewer-transport { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lite-viewer-transport select { min-height: 48px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); }
+.lite-viewer-transport input[type=range] { flex: 1; min-width: 160px; }
+.lite-viewer-time { font-variant-numeric: tabular-nums; font-weight: 800; min-width: 130px; text-align: right; }
+.lite-viewer-plot-wrap { position: relative; height: 220px; flex: 0 0 220px; border: 1px solid var(--line); border-radius: 12px; }
+.lite-viewer-plot { position: absolute; inset: 0; }
+.lite-viewer-plot .plot-container, .lite-viewer-plot .svg-container { height: 100% !important; }
+.lite-viewer-playhead { position: absolute; width: 2px; background: var(--ink); pointer-events: none; display: none; }
+.lite-viewer-checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px; }
+.lite-viewer-check { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.lite-viewer-check small { color: var(--muted); }
+.lite-viewer-link { margin-top: 10px; }
+@media (max-width: 1100px) {
+  .lite-viewer-body { grid-template-columns: 1fr; overflow: auto; }
+  .lite-viewer-files { max-height: 260px; }
+}

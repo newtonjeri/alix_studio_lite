@@ -64,10 +64,16 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
     - It runs in Hardware sim or, after a confirmation, in Real, and the real outcome is shown.
     - PASS needs a completed run of the current version. After one arm passes, V19 opens the other arm.
   - Advanced Robot Controls: SIM, REAL and CHECK; hand; pole; the program list.
+- **Trajectory Viewer** (in the Operator Journey, on Home, and in Save & Review):
+  - Taught `.txt` files are uploaded one by one or as a folder. Each is checked line by line and kept in `~/ALIX-Lite/library/`, beside the built-in sets: the commode C taught set and the legacy V6 package.
+  - The arm comes from the name or folder (`L_`, `LEFT/`, `R_`, `RIGHT/`), else the operator chooses it.
+  - A LEFT and a RIGHT file replay together in 3D on the 5 ms clock, with play, pause, speed, a time slider and the toilet state. The joints run on a plot with a playhead.
+  - Each file is checked against L1–L4 as taught. For example, V6's `L_P01P02` reaches 3,032 °/s² on joint 6, against the 600 °/s² limit.
+  - "Use for <task> · <region>" makes a file the region's active recording, ready for Save & Review and tuning.
 - **Fixed in the bridge:** four defects of the page (contract, D1–D4). The most serious was STOP BOTH leaving the screen below 1,610 px wide.
 
 **Checked:**
-- Tests: `tests/test_lite_ui.py` (the page is the designer's file plus one block), `tests/test_api_v2.py`, `tests/test_lite_region_loop.py` (one arm step through the whole loop over HTTP, the E-stop interlock, cuts and the recorded-pace mode).
+- Tests: `tests/test_lite_ui.py` (the page is the designer's file plus one block), `tests/test_api_v2.py`, `tests/test_lite_region_loop.py` (one arm step through the whole loop over HTTP, the E-stop interlock, cuts and the recorded-pace mode), `tests/test_library.py` (the Trajectory Viewer's files).
 - Headless Chrome:
   - the whole loop, in light and dark themes, with no console errors;
   - STOP BOTH visible from 900 to 1920 px wide.
@@ -108,7 +114,7 @@ Legacy Lite is no longer developed; its working parts (3D robot, plots, optimise
 
 | Area | State |
 |---|---|
-| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 101 tests pass in about a minute, with no ALIX checkout. |
+| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 106 tests pass in about a minute, with no ALIX checkout. |
 | Cubicle walls | Done. The 1400 mm cubicle (default) and the 800 mm cubicle are in `assets/scene/cubicles/`. |
 | Motion basics (`src/alix_studio_lite/motion/`) | Implemented and smoke-tested. It covers track read/write, the 5 ms clock, the limit set from the URDF, and the hard limits L1–L6 plus checks C1–C4 on the integer bytes. |
 | Optimiser engine (`src/alix_studio_lite/optimise/`) | Implemented, smoke-tested and connected to the Lite UI's Tune + Simulation. Golden tests still to write. |

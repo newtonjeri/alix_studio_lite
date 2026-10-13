@@ -180,7 +180,20 @@ class CheckReport:
         return next((c for c in self.checks if c.id == cid), None)
 
     def to_dict(self) -> dict:
-        return {"passed": self.passed, "checks": [asdict(c) for c in self.checks],
+        def plain(c: Check) -> dict:                       # JSON-safe: no numpy scalars
+            d = asdict(c)
+            d["passed"] = None if c.passed is None else bool(c.passed)
+            for k in ("value", "limit"):
+                if d[k] is not None:
+                    d[k] = float(d[k])
+            for k in ("joint", "line"):
+                if d[k] is not None:
+                    d[k] = int(d[k])
+            if d["speed_fixes"] is not None:
+                d["speed_fixes"] = bool(d["speed_fixes"])
+            return d
+
+        return {"passed": bool(self.passed), "checks": [plain(c) for c in self.checks],
                 "notes": list(self.notes)}
 
 
@@ -316,7 +329,7 @@ def check_bytes(md: np.ndarray, limits: LimitSet, *, raw_md: np.ndarray | None =
     jerk = np.abs(np.diff(qf, n=3, axis=0)) / dt ** 3 if q.shape[0] > 3 else np.zeros((1, 7))
     jref = np.degrees(limits.jerk_ref_rad_s3)
     jp = float(jerk.max()) if jerk.size else 0.0
-    rep.checks.append(Check("C2", "Jerk", False, jp <= jref, _fmt(jp / jref, 2), 1.0, "x reference",
+    rep.checks.append(Check("C2", "Jerk", False, bool(jp <= jref), _fmt(jp / jref, 2), 1.0, "x reference",
                             f"peak {jp:.0f} deg/s^3 against the {limits.jerk_ref_rad_s3:g} rad/s^3 "
                             "reference (reported only)"))
 

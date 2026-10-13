@@ -142,6 +142,9 @@ export async function loadRobot() {
   // Tracks: the server poses the moving links for every k-th line in one request; showing a line
   // then applies the nearest frame at once. A recording's 7 values (degrees, joint1..7) are the
   // URDF's joint1..7 as they are: ALIX feeds the controller's joint array to its FK the same way.
+  // One track per arm (L, R), so a LEFT and a RIGHT file can play together; `track` is the last
+  // one loaded, for callers that show a single arm.
+  const tracks = { L: null, R: null };
   let track = null;
   const armNames = (s) => [1, 2, 3, 4, 5, 6, 7].map(i => `${s}_joint${i}`);
   const sideOf = (side) => {
@@ -150,15 +153,15 @@ export async function loadRobot() {
     return s;
   };
   const restOf = (s) => { const o = siState(); for (const n of armNames(s)) delete o[n]; return o; };
-  const sameRest = () => {                                     // frames are only right for the rest as it was
-    const now = restOf(track.side);
-    return Object.keys(now).every(k => now[k] === track.rest[k]);
+  const sameRest = (t = track) => {                            // frames are only right for the rest as it was
+    const now = restOf(t.side);
+    return Object.keys(now).every(k => now[k] === t.rest[k]);
   };
   const lineKey = (q) => q.map(v => Number(v).toFixed(3)).join(',');
-  function applyFrame(f) {
-    const L = track.links.length, a = track.frames;
+  function applyFrame(f, t = track) {
+    const L = t.links.length, a = t.frames;
     for (let k = 0; k < L; k++) {
-      const g = track.links[k];
+      const g = t.links[k];
       if (!g) continue;
       const o = (f * L + k) * 16;
       M.set(a[o], a[o + 1], a[o + 2], a[o + 3], a[o + 4], a[o + 5], a[o + 6], a[o + 7],
@@ -175,33 +178,43 @@ export async function loadRobot() {
       side: s === 'L' ? 'left' : 'right', joints_deg: jointsDeg7xN, every: Math.max(1, Math.round(everyLines)), joints: rest,
     });
     const byKey = new Map(r.lines.map((line, f) => [lineKey(jointsDeg7xN.map(q => q[line])), f]));
-    track = { side: s, names: armNames(s), q: jointsDeg7xN, lines: r.lines, every: r.every, rest, byKey,
-      links: r.links.map(l => linkObj[l] || null), frames: new Float32Array(decode(r.frames).buffer) };
+    track = tracks[s] = { side: s, names: armNames(s), q: jointsDeg7xN, lines: r.lines, every: r.every, rest, byKey,
+      linkNames: r.links, links: r.links.map(l => linkObj[l] || null), frames: new Float32Array(decode(r.frames).buffer) };
     return { frames: r.lines.length, lines: jointsDeg7xN[0].length, every: r.every };
   }
   // Frames the server computed for a whole file (same shape as robot-track-frames, plus
   // total_lines), for the robot as it stands now. Resolves to {frames, lines, every}.
   function loadFrames(side, r) {
     const s = sideOf(side);
-    track = { side: s, names: armNames(s), q: null, lines: r.lines, every: r.every, rest: restOf(s), byKey: new Map(),
-      links: r.links.map(l => linkObj[l] || null), frames: new Float32Array(decode(r.frames).buffer), total: r.total_lines };
+    track = tracks[s] = { side: s, names: armNames(s), q: null, lines: r.lines, every: r.every, rest: restOf(s), byKey: new Map(),
+      linkNames: r.links, links: r.links.map(l => linkObj[l] || null), frames: new Float32Array(decode(r.frames).buffer), total: r.total_lines };
     return { frames: r.lines.length, lines: r.total_lines, every: r.every };
   }
   // Shows line i of the prepared track: the nearest frame, at once. If the rest of the robot moved
   // since prepareTrack, the server poses the line instead (the returned promise resolves then).
-  function showTrackLine(i) {
-    if (!track) return Promise.resolve(false);
-    const n = track.q ? track.q[0].length : track.total;
+  function showTrackLine(i, side = null) {
+    const t = side ? tracks[sideOf(side)] : track;
+    if (!t) return Promise.resolve(false);
+    const n = t.q ? t.q[0].length : t.total;
     const line = Math.min(n - 1, Math.max(0, Math.round(Number(i) || 0)));
-    if (track.q) track.names.forEach((name, j) => { values[name] = clampTo(spec.get(name), track.q[j][line]); });
-    else if (!sameRest()) return Promise.resolve(false);
-    if (!sameRest()) return changed(false);
-    const last = track.lines.length - 1;
-    let f = Math.min(last, Math.round(line / track.every));
-    if (Math.abs(track.lines[last] - line) < Math.abs(track.lines[f] - line)) f = last;
-    applyFrame(f);
+    if (t.q) t.names.forEach((name, j) => { values[name] = clampTo(spec.get(name), t.q[j][line]); });
+    else if (!sameRest(t)) return Promise.resolve(false);
+    if (!sameRest(t)) return changed(false);
+    const last = t.lines.length - 1;
+    let f = Math.min(last, Math.round(line / t.every));
+    if (Math.abs(t.lines[last] - line) < Math.abs(t.lines[f] - line)) f = last;
+    applyFrame(f, t);
     shownHere();
     return Promise.resolve(true);
+  }
+  // Forgets an arm's track and puts that arm back in its standing pose.
+  function clearTrack(side) {
+    const s = sideOf(side), t = tracks[s];
+    if (!t) return;
+    for (const name of t.linkNames || []) if (d.homePose[name]) applyRobotPose(M, linkObj, { [name]: d.homePose[name] });
+    tracks[s] = null;
+    if (track === t) track = tracks.L || tracks.R;
+    shownHere();
   }
   // Sets an arm from a recording's 7 values (degrees). A line of the prepared track shows at once;
   // any other values are posed by the server.
@@ -228,7 +241,7 @@ export async function loadRobot() {
   home();
   return {
     group, joints, groups: d.groups, setJoint, setJoints, getJoints, home, linkWorldMatrix,
-    setArmFromTrack, prepareTrack, loadFrames, showTrackLine, dispose, stats: d.stats,
+    setArmFromTrack, prepareTrack, loadFrames, showTrackLine, clearTrack, dispose, stats: d.stats,
   };
 }
 

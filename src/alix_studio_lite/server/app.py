@@ -26,6 +26,7 @@ from .. import __version__, vendor_paths
 from . import workers
 from .auth import Auth
 from .jobs import Jobs, UserError
+from .library import TaughtLibrary
 from .project import Project
 from .robot_standin import ARMS, StandInRobot
 from .store import ProjectStore
@@ -58,6 +59,7 @@ class LiteApp:
         self.robot = StandInRobot(self.data_dir, self.jobs)
         self.auth = Auth(self.data_dir)                       # both PINs, hashed (handoff section 19)
         self.store = ProjectStore(self.data_dir / "projects")  # the Lite UI's projects
+        self.library = TaughtLibrary(self.data_dir)            # the Trajectory Viewer's files
         self.settings_path = self.data_dir / "settings.json"
         self.ui = {"mode": "visual", "role": "operator", "cubicle_mm": 1400, "theme": "light",
                    "fixture": project.fixture}
@@ -755,4 +757,4 @@ def make_server(app: LiteApp, port: int) -> ThreadingHTTPServer:
 
 
 # Routes kept in their own modules register themselves on import (after ROUTES exists).
-from . import api_units, api_v2, routes_robot  # noqa: E402,F401
+from . import api_library, api_units, api_v2, routes_robot  # noqa: E402,F401

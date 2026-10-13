@@ -32,6 +32,7 @@ This file states, screen by screen, what the page needs from the backend, what i
 | `tune.js` | `setStage`, `rerunSimulationAndFocus`, `renderManualScaleRegions`, `trimSelectedPlotRegion`, `applySelectedPlotRegion`, `toggleTheme` | `…/units/<KEY>/settings`, `/undo`, `/redo`, `/optimise`, `/keep`, `/track` (D24, D36) |
 | `realtest.js` | `simulateUpload`, `simulateRealRun`, `syncRealTestTask` | `…/units/<KEY>/upload`, `/run` |
 | `advanced.js` | `rcSetMode`, `rcCheckMode`, `rcApplyHand`, `rcApplyPole`, `rcRefreshPrograms` | `POST /api/robots/<arm>/controller-mode`, `/hand`, `/pole`, `GET /api/robots/<arm>/programs` |
+| `viewer.js` | — (added: the Trajectory Viewer) | `/api/library…` (`server/api_library.py`, `server/library.py`) |
 
 ## Screen by screen
 
@@ -59,6 +60,7 @@ State legend:
 | Real Test: Program ID, Upload, Move to start, Run, PASS / Needs Tuning / Record Again | Program 1–100 checked server-side, upload, run, completion | **Stand-in**: the kept version uploads (replace needs a confirmation), runs in Hardware sim or Real (confirmed), the real outcome is shown; PASS needs a completed run | R4, R13 |
 | **03 Merge + Full Sequence**: flow table, rules, waits, include, sequence JSON, custom merge per arm, step editor, visual confirm, full simulation, interlock test, real full run | Merge with joins, sequence scheduler, full simulation, dual-arm interlock | Template | R8, R10, NFR-SAFETY |
 | **04 Project Summary**, task export | From the project record | **Live** (page state, saved on the server) | R1 |
+| **Trajectory Viewer** (added; Operator Journey, Home, Save & Review) | Upload taught .txt files (or a folder), replay them in 3D, check them | **Live**: files kept in `~/ALIX-Lite/library/` beside the built-in sets (commode C taught set, V6 package); the arm from the name or folder, else chosen; a LEFT and a RIGHT file in 3D together on the 5 ms clock, with play, pause, speed, a time slider and the toilet state; the joints on a plot with a playhead; L1–L4 on each file as taught; "Use for <task> · <region>" makes a file the region's recording | R1, R3, R6 |
 | **Advanced Robot Controls** (engineer PIN) | Engineer level server-side | **Live** (PIN). SLOW STOP and Stop Both are **live**. | Handoff §14, §19 |
 | Advanced: RUN (SIM/REAL/CHECK, upload, run, multi, stored programs) | Runner v14: modes, upload, run, program list | **Stand-in** for SIM/REAL/CHECK and the program list; uploading any file, stored and multi runs: template | R4, R13, D30 |
 | Advanced: GLOBAL POINTS, DRAG TEACH, HAND/POLE, TELEMETRY | Runner v14 points, drag teach, `hand.py`/`pole.py`, telemetry stream | **Stand-in** for HAND/POLE; the rest template | R4, R7 |
