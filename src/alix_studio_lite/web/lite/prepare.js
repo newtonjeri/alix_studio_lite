@@ -1,25 +1,64 @@
-// Prepare and Setup & Safety (R7, R4). Each arm step starts from its region's own pole height and
-// hand values in the catalogue (D35) instead of one value for every region. Apply Pole, Apply Hand
-// and the start-pose moves go to the robot in Hardware sim and Real (with a confirmation in Real);
-// Redo's "Ready → Record Again" opens only once the arm has really reached its start pose.
+// Prepare and Setup & Safety (R7, R4). Each arm step has a SETUP on the server: the pole height and
+// hand pose it is taught with (from its existing recording's record or the region catalogue).
+// Prepare shows it; Apply Pole / Apply Hand keep the page's values as the setup and, in Hardware
+// sim and Real, stage them on the robot (pole, then hand, each read back; a confirmation in Real).
+// Drag teaching starts only with the arm in that setup, so every recording knows its true stage,
+// and every execution stages that stage first (staging.py). The start-pose moves wait for the arm.
 
-import { ctx, jobLine, robotCall, step, tell, watchJob } from './ctx.js';
+import { ctx, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
 
 const $ = (id) => document.getElementById(id);
 const GRIP = [0, 0, 0, 0, 150, 1000], OPEN = [1000, 1000, 1000, 1000, 1000, 1000];
 let lastKey = null;
 
-function defaults() {
-  const s = step();
-  if (!s || s.key === lastKey) return;
-  lastKey = s.key;
-  if (s.pole_mm != null && $('poleHeight')) $('poleHeight').value = s.pole_mm;
-  const hand = s.hand_counts || (s.hand_preset === 'OPEN' ? OPEN : null);
-  if (hand) {
-    [...document.querySelectorAll('#handFields input')].forEach((x, i) => { x.value = hand[i] ?? x.value; });
-    const preset = $('handPreset');
-    if (preset) preset.value = JSON.stringify(hand) === JSON.stringify(GRIP) ? 'Grip / Cleaning' : JSON.stringify(hand) === JSON.stringify(OPEN) ? 'All Open' : 'Custom';
+function handFromPage() {
+  return [...document.querySelectorAll('#handFields input')].map(x => (x.value === '' ? null : Number(x.value)));
+}
+
+function showSetup(setup) {
+  if (!setup) return;
+  if ($('poleHeight')) $('poleHeight').value = setup.pole_mm;
+  const hand = setup.hand.map((c, i) => (c == null ? (i < 4 ? 1000 : [150, 1000][i - 4]) : c));
+  [...document.querySelectorAll('#handFields input')].forEach((x, i) => { x.value = hand[i]; });
+  const preset = $('handPreset');
+  if (preset) preset.value = JSON.stringify(hand) === JSON.stringify(GRIP) ? 'Grip / Cleaning' : JSON.stringify(hand) === JSON.stringify(OPEN) ? 'All Open' : 'Custom';
+  let note = $('liteSetupNote');
+  if (!note) {
+    note = Object.assign(document.createElement('div'), { id: 'liteSetupNote', className: 'mini-note lite-setup-note' });
+    $('stage-prepare')?.querySelector('.grid')?.after(note);
   }
+  note.textContent = `Region setup: ${setup.text} (from ${setup.source}). Every run stages its recording's own pole and hand first; drag teaching starts only with the arm in this setup.`;
+}
+
+async function refresh() {
+  const s = step();
+  if (!s || !ctx.pid || s.later) return;
+  if (s.key !== lastKey) { lastKey = s.key; showSetup(s.setup); }
+  try { const u = await loadUnit(s.key); showSetup(u.setup); } catch (_) { /* the page still works */ }
+}
+
+async function applySetup(kind) {
+  const s = step();
+  if (!s || !ctx.pid) return;
+  const mode = document.querySelector('.topbar .mode-pill')?.dataset.lite;
+  const body = { pole_mm: Number($('poleHeight').value), hand: handFromPage(), apply: mode === 'hwsim' || mode === 'real' };
+  try {
+    const out = await robotCall(unitUrl(s.key, 'setup'), body, { what: `Moving the ${s.arm.toUpperCase()} pole and hand` });
+    showSetup(out.unit.setup);
+    if (!out.job) { window.toast(`Setup kept for ${s.display}: ${out.unit.setup.text}. In Visual sim nothing moves.`); return; }
+    const done = await watchJob(out.job, (j) => { const n = $('liteSetupNote'); if (n) n.textContent = jobLine(j); });
+    showSetup(out.unit.setup);
+    if (done.state !== 'done') {                       // the arm is NOT in its setup: say so where it shows
+      const said = `Not staged: ${done.error || 'staging stopped.'} ${done.hint || ''}`;
+      $('liteSetupNote').textContent = said;
+      $('liteSetupNote').classList.add('lite-bad');
+      window.toast(said);
+      return;
+    }
+    $('liteSetupNote').classList.remove('lite-bad');
+    window.toast(`${s.arm.toUpperCase()} staged: ${out.unit.setup.text} (read back).`);
+    window.demoApplyToRobotControl(kind);              // the Advanced panel shows the same values
+  } catch (err) { tell(err); }
 }
 
 async function move(url, body, what, statusEl) {
@@ -31,21 +70,9 @@ async function move(url, body, what, statusEl) {
 
 export function installPrepare() {
   const pageApply = window.demoApply;
-  window.demoApply = async function demoApply(kind) {
+  window.demoApply = function demoApply(kind) {
     if (!ctx.pid) { pageApply(kind); return; }
-    const arm = selectedArm;
-    try {
-      if (kind === 'Pole') {
-        const mm = Number($('poleHeight').value);
-        await move(`/api/robots/${arm}/pole`, { mm }, 'Moving the pole');
-        window.toast(`${arm.toUpperCase()} pole at ${mm} mm (read back).`);
-      } else {
-        const counts = Object.values(window.readHandValues());
-        await move(`/api/robots/${arm}/hand`, { counts }, 'Moving the hand');
-        window.toast(`${arm.toUpperCase()} hand set: ${counts.join(', ')}.`);
-      }
-      window.demoApplyToRobotControl(kind);              // the Advanced panel shows the same values
-    } catch (err) { tell(err); }
+    applySetup(kind);
   };
 
   window.demoMove = async function demoMove(which) {
@@ -72,5 +99,7 @@ export function installPrepare() {
     $('redoReturnBtn').disabled = !ok;
   };
 
-  document.addEventListener('lite:step', defaults);
+  document.addEventListener('lite:step', refresh);
+  document.addEventListener('lite:stage', (e) => { if (e.detail === 'prepare') refresh(); });
 }
+

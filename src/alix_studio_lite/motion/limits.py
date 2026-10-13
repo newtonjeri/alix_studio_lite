@@ -31,8 +31,7 @@ class LimitSet:
     acc_deg_s2: float = 600.0                   # hardware limit (D23)
     rate_bar: float = 0.97                      # L2: 20 Hz band-limited speed <= 0.97 x rating
     rate_design: float = 0.95                   # TOPP-RA designs at 0.95 x rating
-    acc_tol: float = 0.02                       # L3: 50 ms windowed mean <= 600 x 1.02
-    acc_window_s: float = 0.050
+    acc_tol: float = 0.02                       # L3: 20 Hz band-limited acceleration <= 600 x 1.02
     step_deg: float = 10.0                      # L4
     max_dev_mm: float = 10.0                    # L5: path change from the recording
     ends_tol_deg: float = 0.05                  # L6: first and last line vs the recording

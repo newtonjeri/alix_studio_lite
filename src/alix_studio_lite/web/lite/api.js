@@ -1,5 +1,7 @@
 // The Lite UI's link to the backend (/api/*): the session token, JSON calls and refusals.
 // A refusal comes back as {error, hint, code}; call() throws it as an Error with those fields.
+// A job's view ({id, state, error, hint, …}) is a result even when the job failed: it is returned,
+// so whoever watches the job reads its state and says why it stopped.
 
 let token = null;
 let onLoginLost = null;
@@ -30,7 +32,7 @@ export async function call(method, path, body, { raw = false, keepalive = false 
   const type = r.headers.get('Content-Type') || '';
   if (raw && !type.startsWith('application/json')) return r.blob();
   const d = await r.json().catch(() => ({ error: 'The server sent an answer Lite cannot read.' }));
-  if (d && d.error) {
+  if (d && d.error && !(d.id && d.state)) {
     if (d.code === 'login' && onLoginLost) onLoginLost();
     throw Object.assign(new Error(d.error), { hint: d.hint, code: d.code });
   }

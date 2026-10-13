@@ -6,6 +6,7 @@
 
 import { get } from './api.js';
 import { ctx, el, fmtS, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
+import { gateChips } from './tune.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -30,10 +31,11 @@ async function refresh() {
   window.validateProgramId();
   let box = $('liteVersion');
   if (!box) { box = el('div', { id: 'liteVersion', class: 'lite-version mini-note' }); $('stage-real').querySelector('.real-program-row')?.after(box); }
-  box.textContent = v
+  box.replaceChildren(gateChips(u), el('div', { text: v
     ? `Tuned version ${v.version}: ${fmtS(v.achieved_s)}, ${Number(v.lines).toLocaleString()} rows, every limit passed.`
+      + (v.stage ? ` Every run stages ${v.stage.text} first, read back; if either fails, nothing runs.` : '')
       + (u.last_run ? ` Last run: ${u.last_run.ok ? 'completed ✓' : 'did not finish'} (${u.last_run.at}).` : ' Not run yet.')
-    : 'No tuned version yet: finish Tune + Simulation first.';
+    : 'No tuned version yet: finish Tune + Simulation first.' }));
 }
 
 export function installRealTest() {
@@ -65,11 +67,13 @@ export function installRealTest() {
     const status = $('realRunStatus');
     try {
       const job = await robotCall(unitUrl(s.key, 'run'), {}, { what: 'Running the test' });
+      status.className = 'mini-note';
       const done = await watchJob(job, (j) => { status.textContent = jobLine(j); });
       status.textContent = done.state === 'done'
         ? `Test complete ✓ (${done.result && done.result.dry_run ? 'Hardware sim' : 'real robot'}) — choose PASS, Needs Tuning or Record Again.`
-        : `${done.error || 'The run stopped.'} ${done.hint || ''}`;
-    } catch (err) { status.textContent = err.message; tell(err); }
+        : `Stopped: ${done.error || 'the run did not finish.'} ${done.hint || ''}`;
+      status.className = done.state === 'done' ? 'mini-note lite-ok' : 'mini-note lite-bad';
+    } catch (err) { status.textContent = err.message; status.className = 'mini-note lite-bad'; tell(err); }
     refresh();
   };
 

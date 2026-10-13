@@ -33,7 +33,8 @@ export const el = (tag, attrs = {}, ...kids) => {
   return e;
 };
 
-export const fmtS = (s) => (s == null ? '—' : `${Number(s).toFixed(2)} s`);
+// Seconds to the hundredth, rounded half up (48.175 s is 48.18 s; toFixed alone gives 48.17).
+export const fmtS = (s) => (s == null ? '—' : `${(Math.round(Number(s) * 100 + 1e-6) / 100).toFixed(2)} s`);
 
 // Polls a job until it ends; onProgress(view) on every poll. Resolves to the final view.
 export async function watchJob(job, onProgress = null) {
@@ -97,4 +98,66 @@ export function tell(err) {
   if (err && err.code === 'cancelled') { window.toast(err.message); return; }
   window.toast(say(err));
   if (err && (err.code === 'mode' || err.code === 'connect')) document.dispatchEvent(new CustomEvent('lite:open-robot-panel'));
+}
+
+const HAND_CHOICES = [
+  ['GRIP', 'Grip (0, 0, 0, 0, 150, 1000)'],
+  ['OPEN', 'All open (1000 × 6)'],
+  ['100% open', 'Fingers 100 % open, thumb held'],
+  ['50% open', 'Fingers 50 % open, thumb held'],
+];
+
+// Asks what a file was taught with: its arm (when not known) and its stage, the pole height and
+// hand pose. Prefilled with `setup` ({pole_mm, hand}). Resolves {arm, pole_mm, hand} or null.
+export function stageDialog({ title, body, arm = null, setup = null, askArm = false }) {
+  return new Promise((resolve) => {
+    const armSel = el('select', { 'aria-label': 'Arm' },
+      el('option', { value: '', text: 'Choose…' }), el('option', { value: 'left', text: 'LEFT arm' }),
+      el('option', { value: 'right', text: 'RIGHT arm' }));
+    if (arm) armSel.value = arm;
+    const pole = el('input', { type: 'number', min: '0', max: '315', step: '1', value: setup ? setup.pole_mm : '' });
+    const preset = (h) => {
+      const k = JSON.stringify(h);
+      if (k === JSON.stringify([0, 0, 0, 0, 150, 1000])) return 'GRIP';
+      if (k === JSON.stringify([1000, 1000, 1000, 1000, 1000, 1000])) return 'OPEN';
+      if (k === JSON.stringify([1000, 1000, 1000, 1000, null, null])) return '100% open';
+      if (k === JSON.stringify([500, 500, 500, 500, null, null])) return '50% open';
+      return 'GRIP';
+    };
+    const hand = el('select', { 'aria-label': 'Hand' }, HAND_CHOICES.map(([v, n]) => el('option', { value: v, text: n })));
+    if (setup) hand.value = preset(setup.hand);
+    const cancel = el('button', { class: 'btn outline', text: 'Cancel' });
+    const ok = el('button', { class: 'btn green', text: 'Use these values' });
+    const msg = el('div', { class: 'mini-note' });
+    const card = el('div', { class: 'modal-card accessible-modal', role: 'dialog', 'aria-modal': 'true' },
+      el('h3', { text: title }), el('p', { text: body }),
+      el('div', { class: 'lite-stage-form' },
+        askArm ? el('div', { class: 'field' }, el('label', { text: 'Taught on' }), armSel) : null,
+        el('div', { class: 'field' }, el('label', { text: 'Pole height it was taught at (mm, 0 to 315)' }), pole),
+        el('div', { class: 'field' }, el('label', { text: 'Hand pose it was taught with' }), hand)),
+      msg, el('div', { class: 'modal-actions' }, cancel, ok));
+    const box = el('div', { class: 'modal show lite-confirm' }, card);
+    const done = (v) => { box.remove(); resolve(v); };
+    cancel.onclick = () => done(null);
+    ok.onclick = () => {
+      const p = Number(pole.value);
+      if (askArm && !armSel.value) { msg.textContent = 'Choose the arm it was taught on.'; return; }
+      if (pole.value === '' || !(p >= 0 && p <= 315)) { msg.textContent = 'The pole height is 0 to 315 mm.'; return; }
+      done({ arm: askArm ? armSel.value : arm, pole_mm: p, hand: hand.value });
+    };
+    document.body.append(box);
+    pole.focus();
+  });
+}
+
+// LEFT / RIGHT from a file's name or folder, as the server reads it (R15_... is a region, not RIGHT).
+export function armFromName(name) {
+  const parts = String(name || '').split(/[\\/]/).filter(Boolean).reverse();
+  for (const p of parts) {
+    const u = p.toUpperCase();
+    if (/^(L[_-]|LEFT\b|LEFT[_-])/.test(u) || u === 'LEFT' || u === 'L') return 'left';
+    if (/^(R[_-]|RIGHT\b|RIGHT[_-])/.test(u) || u === 'RIGHT' || u === 'R') return 'right';
+  }
+  for (const p of parts) { const u = p.toUpperCase(); if (u.includes('LEFT')) return 'left'; if (u.includes('RIGHT')) return 'right'; }
+  return null;
 }

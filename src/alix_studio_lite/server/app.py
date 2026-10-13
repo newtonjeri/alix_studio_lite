@@ -512,18 +512,17 @@ def post_teach(app, q, body, m):
     side = u["arm"]
     if verb == "start":
         _require_robot_mode(app)
-        return app.robot.teach_start(side)
+        return app.robot.teach_start(side, _legacy_stage(u))
     if verb == "cancel":
         app.robot.arm(side).teaching = False
         return app.robot.arm(side).view()
     secs = app.robot.teach_stop(side)
-    # stand-in: the "recording" is the region's library recording, else any library file of the arm
-    from .project import library
+    # stand-in: a real recording of the SAME arm (never the other arm's)
+    from .library import standin_take
 
-    files = list(library("commode_c")["files"].values())
-    pick = next((f for f in files if f.get("unit") == key), None) or next((f for f in files if f.get("arm") == side), None)
-    src = Path(pick["path"]) if pick else vendor_paths.LITE_ROOT / "tests/data/recordings/commode_c_taught_paths/FILE_09.txt"
-    path = app.project.add_recording(key, src, note=f"stand-in recording ({secs:.0f} s of teaching)", source="teach")
+    take = standin_take(side, key, app.project.fixture)
+    path = app.project.add_recording(key, Path(take["path"]), note=f"stand-in recording ({secs:.0f} s of teaching)",
+                                     source="teach")
     return {"saved": path.name, "seconds": round(secs, 1), "unit": _unit(app, key)}
 
 
@@ -573,8 +572,22 @@ def post_run(app, q, body, m):
     def done(out):
         p.add_result(key, "dryrun_ok" if dry else "real_ok", ver["sha256"], True, out)
 
-    job = app.robot.run(side, int(pid), dry_run=dry, title=("Dry run " if dry else "Run ") + key, on_done=done)
+    stage = _legacy_stage(p.units[key])
+    if stage is None:
+        raise UserError("This region has no pole height and hand pose in the catalogue, so it cannot run.")
+    job = app.robot.run(side, int(pid), dry_run=dry, title=("Dry run " if dry else "Run ") + key, on_done=done,
+                        stage=stage)
     return job.view()
+
+
+def _legacy_stage(u: dict):
+    """Legacy Lite's regions are staged with their catalogue pole and hand."""
+    from . import staging
+
+    hand = u.get("hand_counts") or u.get("hand_preset")
+    if u.get("pole_mm") is None or not hand:
+        return None
+    return staging.make_stage(u["pole_mm"], hand, "the region catalogue")
 
 
 @route("POST", r"/api/lite/unit/([A-Za-z0-9_\-]+)/verdict")

@@ -173,7 +173,7 @@ def _finish(s: _Solved, n: int, n_target: int | None, *, n_min_shared: int | Non
         max_dev_mm=req.max_dev_mm,
         limits=dict(rating_deg_s=list(limits.rating_deg_s), rate_bar=limits.rate_bar,
                     rate_design=limits.rate_design, acc_deg_s2=limits.acc_deg_s2, acc_tol=limits.acc_tol,
-                    acc_window_s=limits.acc_window_s, step_deg=limits.step_deg,
+                    acc_reading="20 Hz band-limited (ALIX F99c)", step_deg=limits.step_deg,
                     max_dev_mm=limits.max_dev_mm, ends_tol_deg=limits.ends_tol_deg,
                     dt_gate_s=limits.dt_gate, execution_model=limits.model.get("fitted")),
         plan=s.plan.recipe(), lines=lines, lines_min=lines_min,

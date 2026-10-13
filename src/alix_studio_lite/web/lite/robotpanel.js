@@ -1,6 +1,8 @@
 // Robot & mode (decision D30), opened from the status pill in the top bar: Visual sim / Hardware
-// sim / Real robot, the connection of each arm, and each arm's E-stop (IO3) with Recover (R4).
-// Lite always starts in Visual sim; Real needs a confirmation; an E-stop blocks motion on both arms.
+// sim / Real robot, the connection of each arm, each arm's E-stop (IO3) with Recover (R4), and
+// its pole and hand as read back. Lite always starts in Visual sim; Real needs a confirmation; an
+// E-stop blocks motion on both arms. An engineer can make the stand-in's pole or hand fail to
+// arrive, to see that nothing runs when staging fails.
 
 import { get, post } from './api.js';
 import { confirmDialog, el, tell } from './ctx.js';
@@ -29,6 +31,8 @@ async function render() {
         el('small', { text: ` ${a.ip}` })),
       el('div', { class: 'lite-arm-state' }, el('span', { class: `lite-dot ${a.connected ? 'on' : ''}` }), a.connected ? 'Connected' : 'Not connected'),
       el('div', { class: `lite-estop ${a.estop}`, title: 'E-stop input IO3' }, `E-stop: ${ESTOP[a.estop] || a.estop}`),
+      a.connected ? el('small', { class: 'lite-arm-readback', text: `Pole ${a.pole_mm} mm · hand ${a.hand.join(', ')}`
+        + (a.faults && a.faults.length ? ` · test fault: ${a.faults.join(' and ')} will not arrive` : '') }) : null,
       el('div', { class: 'cta-row' },
         a.estop === 'RECOVERING' ? el('button', { class: 'btn orange', text: 'Recover', onclick: () => act(`/api/robots/${side}/recover`) }) : null,
         a.connected
@@ -44,6 +48,18 @@ async function render() {
         el('button', { class: 'btn outline', text: `Press ${side.toUpperCase()} E-stop`, onclick: () => act(`/api/robots/${side}/estop-test`, { pressed: true }) }),
         el('button', { class: 'btn outline', text: `Release ${side.toUpperCase()}`, onclick: () => act(`/api/robots/${side}/estop-test`, { pressed: false }) }),
       ]))));
+    if (st.backend === 'stand-in') {
+      body.append(el('details', { class: 'advanced' }, el('summary', { text: 'Engineer: staging failure test (stand-in robot)' }),
+        el('div', { class: 'advanced-body' },
+          el('p', { class: 'mini-note', text: 'A failing pole stops short; a failing hand closes only half way. Every run, playback '
+            + 'and move to a start then ends at the read-back, before the arm moves.' }),
+          el('div', { class: 'lite-fault-grid' }, ['left', 'right'].flatMap(side => ['pole', 'hand'].map(part => {
+            const on = (st.arms[side].faults || []).includes(part);
+            return el('label', { class: 'checkrow' },
+              el('input', { type: 'checkbox', checked: on, onchange: (e) => act(`/api/robots/${side}/fault`, { [part]: e.target.checked }) }),
+              el('span', { text: `${side.toUpperCase()} ${part} fails to arrive` }));
+          }))))));
+    }
   }
 }
 

@@ -93,7 +93,7 @@ What works, and what comes next, is in [`docs/STATUS.md`](docs/STATUS.md).
 
 ```bash
 cd alix_studio_lite
-.venv/bin/python -m pytest -q        # Windows: .venv\Scripts\python -m pytest -q   (about 25 s; no robot, no network)
+.venv/bin/python -m pytest -q        # Windows: .venv\Scripts\python -m pytest -q   (about 2 minutes; no robot, no network)
 ```
 
 ROS 2's own pytest plugins are blocked in `pyproject.toml`, so the tests also run with a ROS workspace sourced.
@@ -108,8 +108,10 @@ The tests check that:
 - the web API takes one region through every step against the robot stand-in, including the E-stop interlock and the confirmations;
 - the Lite UI page is the designer's file plus one marked block, every page function the bridge replaces still exists, and nothing loads from the network;
 - the Lite UI's API: PINs hashed and locked out after five wrong tries, projects as folders (duplicate, trash, ZIP round trip, unsafe ZIPs refused), STOP without a log-in;
-- the Trajectory Viewer's library: arm from names and folders, uploads checked and kept once, the built-in sets, 3D frames, the limits as taught, and using a file for a region;
+- the Trajectory Viewer's library: arm from names and folders, uploads checked and kept once, the built-in sets with their stages, the replay timeline (the arm base at the stage height), the limits as taught, and using a file only for a region of its own arm;
 - the Lite UI's region loop over HTTP: the task queue as the deck has it, an existing recording used by default, tuning with every limit checked, keeping a version, upload with a replace confirmation, Hardware sim and Real runs, PASS only after a completed run, the E-stop interlock, and the optimiser's cuts and recorded-pace mode;
+- the gates on every execution: a file of the other arm is refused everywhere, a file without its pole and hand never runs, every run stages the pole and then the hand with read-back, and a pole or hand that fails to arrive ends the job before the arm moves;
+- staging and L3: the times follow ALIX's pole and hand models, the 3D frames match ALIX's FK at the stage, and L3 equals ALIX's band-limited reading;
 - Legacy Lite keeps the ALIX theme: ALIX's tokens unchanged, no colour literals outside them, nothing loaded from the network.
 
 ## Refresh the vendored copy

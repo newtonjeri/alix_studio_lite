@@ -173,3 +173,24 @@
   .lite-viewer-body { grid-template-columns: 1fr; overflow: auto; }
   .lite-viewer-files { max-height: 260px; }
 }
+
+/* gates and stages */
+.lite-gates { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.lite-setup-note { margin-top: 10px; }
+.lite-stage-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; }
+.lite-stage-form select, .lite-stage-form input { min-height: 46px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card); color: var(--ink); width: 100%; }
+.lite-recordings .checkrow .btn { margin-top: 6px; min-height: 40px !important; }
+.lite-recordings .lite-ok, .lite-recordings .lite-bad { font-weight: 700; }
+.lite-file-stage { font-size: 12px; font-weight: 700; }
+.lite-file-stage.ok { color: var(--green); }
+.lite-file-stage.bad { color: var(--red); }
+.lite-slot-file { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lite-slot-file small { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lite-viewer-check .lite-gates { margin: 8px 0 6px; }
+.lite-arm-readback { grid-column: 1 / -1; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lite-fault-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+/* a file that still needs its arm or its stage: the name on its own line, the choices under it */
+.lite-file-row.todo { grid-template-columns: auto minmax(0, 1fr); }
+.lite-file-row.todo .lite-file-name { grid-column: 1 / -1; order: -1; }
+.lite-file-row.todo .lite-file-actions { justify-content: flex-end; }

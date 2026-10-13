@@ -207,6 +207,31 @@ export async function loadRobot() {
     shownHere();
     return Promise.resolve(true);
   }
+  // An execution timeline from the server (staging.execution_timeline): frames of every link the
+  // pole moves (sliding plate, arm base, arm, hand) at the given times, through the pole move, the
+  // hand move, the move to the start and the trajectory. Resolves to its phases and clock.
+  function loadTimeline(side, r) {
+    const s = sideOf(side);
+    track = tracks[s] = { side: s, names: armNames(s), q: null, times: r.times, rest: restOf(s), byKey: new Map(),
+      linkNames: r.links, links: r.links.map(l => linkObj[l] || null), frames: new Float32Array(decode(r.frames).buffer),
+      lines: null, every: 1, total: r.times.length };
+    return { phases: r.phases, traj_t0: r.traj_t0, total_s: r.total_s, lines: r.lines, stage: r.stage };
+  }
+  // Shows the timeline of `side` at time t (seconds from its start): the latest frame at or before t.
+  function showTime(t, side = null) {
+    const tr = side ? tracks[sideOf(side)] : track;
+    if (!tr || !tr.times) return false;
+    const ts = tr.times;
+    let lo = 0, hi = ts.length - 1;
+    if (t <= ts[0]) hi = 0;
+    else if (t >= ts[hi]) lo = hi;
+    else {
+      while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (ts[mid] <= t) lo = mid; else hi = mid; }
+    }
+    applyFrame(t <= ts[0] ? 0 : lo, tr);
+    shownHere();
+    return true;
+  }
   // Forgets an arm's track and puts that arm back in its standing pose.
   function clearTrack(side) {
     const s = sideOf(side), t = tracks[s];
@@ -241,7 +266,7 @@ export async function loadRobot() {
   home();
   return {
     group, joints, groups: d.groups, setJoint, setJoints, getJoints, home, linkWorldMatrix,
-    setArmFromTrack, prepareTrack, loadFrames, showTrackLine, clearTrack, dispose, stats: d.stats,
+    setArmFromTrack, prepareTrack, loadFrames, loadTimeline, showTime, showTrackLine, clearTrack, dispose, stats: d.stats,
   };
 }
 

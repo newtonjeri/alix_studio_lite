@@ -1,7 +1,11 @@
 """The Lite UI's region loop over HTTP, against the robot stand-in: the task queue (D35), an
 existing recording used by default (D31), tuning with every limit checked, keeping a version,
 upload with replace confirmation, Hardware sim and Real runs (D30), the verdict, the E-stop
-interlock, and the optimiser's cuts and recorded-pace mode."""
+interlock, and the optimiser's cuts and recorded-pace mode.
+
+And the gates on every execution: a trajectory runs only on the arm it was taught on, only with
+its stage (pole height, hand pose) known, and only after the pole and then the hand are staged
+and read back; when either fails, nothing else runs."""
 import json
 import threading
 import time
@@ -47,6 +51,14 @@ def unit(ctx, key, verb="", body=None, method=None):
     return call(ctx, method or ("POST" if verb else "GET"), path, body if verb else None)
 
 
+def log_text(job):
+    return " | ".join(e["text"] for e in job["events"])
+
+
+def gate(u, gid):
+    return next(g for g in u["gates"] if g["id"] == gid)
+
+
 def wait(ctx, job, timeout=120):
     t0 = time.time()
     while True:
@@ -84,13 +96,19 @@ def test_one_arm_step_through_the_loop(lite):
     s = u["settings_view"]["settings"]
     assert (s["trim"], s["smooth"], s["smooth_window"], s["scale"], s["time_mode"]) == (True, True, 41, True, "natural")
     assert "no tuned" in unit(lite, key, "keep", {})["error"]
+    rec = u["recordings"][0]                        # the existing recording keeps its arm and stage
+    assert rec["taught_arm"] == "left" and rec["stage"]["text"] == "pole 200 mm, fingers 50 % open, thumb held"
+    assert u["setup"]["pole_mm"] == 200
+    assert gate(u, "arm")["ok"] and gate(u, "stage")["ok"] and "pole 200 mm" in gate(u, "stage")["text"]
+    assert not gate(u, "limits")["ok"] and not gate(u, "robot")["ok"]
 
     # tune: the candidate passes every limit, then is kept
     j = wait(lite, unit(lite, key, "optimise", {}))
     assert j["state"] == "done", j
     u = unit(lite, key)
     assert u["fresh"] and u["candidate"]["result"]["uploadable"] and u["candidate_extra"]["progress"]
-    assert unit(lite, key, "keep", {})["versions"][-1]["version"] == "v001"
+    v = unit(lite, key, "keep", {})["versions"][-1]
+    assert v["version"] == "v001" and v["taught_arm"] == "left" and v["stage"]["pole_mm"] == 200
 
     # a settings change makes the candidate stale until re-run; undo brings it back
     u = unit(lite, key, "settings", {"changes": {"segments": [{"start": 1, "end": 500, "pct": 80}]}, "label": "Scale"})
@@ -120,11 +138,16 @@ def test_one_arm_step_through_the_loop(lite):
     assert wait(lite, unit(lite, key, "upload", {"program_id": 7, "replace": True}))["state"] == "done"
     time.sleep(0.4)
 
-    # Hardware sim run, then PASS
-    assert wait(lite, unit(lite, key, "run", {}))["state"] == "done"
+    # Hardware sim run: the pole and then the hand first, each read back; then PASS
+    j = wait(lite, unit(lite, key, "run", {}))
+    assert j["state"] == "done", j
+    text = log_text(j)
+    assert text.index("Pole at 200 mm (read back") < text.index("Hand in pose (read back)") < text.index("Finished")
+    assert call(lite, "GET", "/api/robots/status")["arms"]["left"]["pole_mm"] == 200
     time.sleep(0.4)
     u = unit(lite, key)
     assert u["last_run"]["kind"] == "dryrun_ok" and u["status"] == "dryrun_ok"
+    assert gate(u, "limits")["ok"] and gate(u, "robot")["ok"]
     assert unit(lite, key, "verdict", {"verdict": "pass"})["results"][-1]["detail"]["verdict"] == "pass"
 
     # Real needs confirmation for the mode and for every motion
@@ -133,6 +156,36 @@ def test_one_arm_step_through_the_loop(lite):
     assert unit(lite, key, "run", {})["code"] == "confirm"
     assert call(lite, "POST", "/api/robots/left/pole", {"mm": 120})["code"] == "confirm"
     call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})
+
+
+def test_staging_failure_means_nothing_runs(lite):
+    """The pole or the hand not arriving ends the job before the arm moves, in every execution."""
+    key = "L-T01"                                    # v002 is on program 7 of the LEFT arm (above)
+    assert call(lite, "POST", "/api/robots/left/fault", {"pole": True})["code"] == "engineer"
+    call(lite, "POST", "/api/auth/engineer", {"pin": "1234"})
+    before = len(unit(lite, key)["results"])
+
+    assert wait(lite, call(lite, "POST", "/api/robots/left/pole", {"mm": 100}))["state"] == "done"
+    assert call(lite, "POST", "/api/robots/left/fault", {"pole": True})["faults"] == ["pole"]
+    j = wait(lite, unit(lite, key, "run", {}))
+    assert j["state"] == "failed" and "LEFT pole did not reach 200 mm" in j["error"] and "Nothing else ran" in j["error"]
+    assert "Hand" not in log_text(j) and "Running program" not in (j["stage"] or "")
+    time.sleep(0.4)
+    u = unit(lite, key)
+    assert u["results"][-1]["kind"] == "run_failed" and len(u["results"]) == before + 1
+    assert "pole did not reach" in wait(lite, unit(lite, key, "move-start", {"which": "version"}))["error"]
+    assert "pole did not reach" in wait(lite, unit(lite, key, "playback", {}))["error"]
+
+    call(lite, "POST", "/api/robots/left/fault", {"pole": False, "hand": True})
+    assert wait(lite, call(lite, "POST", "/api/robots/left/hand", {"counts": [0, 0, 0, 0, 150, 1000]}))["state"] == "done"
+    j = wait(lite, unit(lite, key, "run", {}))
+    assert j["state"] == "failed" and "LEFT hand did not reach its pose" in j["error"]
+    assert "Pole at 200 mm (read back" in log_text(j) and "Finished" not in log_text(j)
+
+    call(lite, "POST", "/api/robots/left/fault", {"hand": False})
+    j = wait(lite, unit(lite, key, "run", {}))
+    assert j["state"] == "done" and "Hand in pose (read back)" in log_text(j)
+    call(lite, "POST", "/api/auth/engineer/lock", {})
 
 
 def test_estop_blocks_both_arms_and_stop_always_works(lite):
@@ -157,17 +210,80 @@ def test_loaded_file_never_replaces_the_recording(lite):
     from alix_studio_lite import vendor_paths
 
     txt = (vendor_paths.LITE_ROOT / "tests/data/recordings/commode_c_taught_paths/FILE_09.txt").read_text()
-    u = unit(lite, key, "recordings", {"source": "upload", "name": "old_base_left.txt", "content": txt})["unit"]
+    stage = {"pole_mm": 140, "hand": "100% open"}
+    r = unit(lite, key, "recordings", {"source": "upload", "name": "old_base_left.txt", "content": txt})
+    assert r["code"] == "stage"                                         # the stage it was taught with first
+    r = unit(lite, key, "recordings", {"source": "upload", "name": "older.txt", "content": txt} | stage)
+    assert r["code"] == "arm" and "Which arm" in r["error"]            # the name does not say the arm
+    for bad in ({"name": "R_spillage.txt"}, {"name": "spill.txt", "arm": "right"}, {"name": "L_x.txt", "arm": "right"}):
+        r = unit(lite, key, "recordings", {"source": "upload", "content": txt} | stage | bad)
+        assert r["code"] == "arm", bad                                  # a RIGHT file never reaches a LEFT region
+    u = unit(lite, key, "recordings", {"source": "upload", "name": "old_base_left.txt", "content": txt} | stage)["unit"]
     first = u["active"]
-    u = unit(lite, key, "recordings", {"source": "upload", "name": "older.txt", "content": txt})["unit"]
+    u = unit(lite, key, "recordings", {"source": "upload", "name": "older.txt", "content": txt, "arm": "left",
+                                       "pole_mm": 50, "hand": "GRIP"})["unit"]
     assert len(u["recordings"]) == 2 and u["active"] != first
+    assert [r["stage"]["text"] for r in u["recordings"]] == ["pole 140 mm, fingers 100 % open, thumb held",
+                                                             "pole 50 mm, hand grip"]
     assert unit(lite, key, "active", {"file": first})["active"] == first
     u = unit(lite, key, "name", {"name": "L_TASK_1A_trajectory.txt"})
     assert [r["name"] for r in u["recordings"] if r["file"] == first] == ["L_TASK_1A_trajectory.txt"]
     tr = call(lite, "GET", f"/api/projects/alix_loop/units/{key}/track?which=raw")
     assert tr["lines"] > 1000 and len(tr["joints"]) == 7
-    fr = call(lite, "GET", f"/api/projects/alix_loop/units/{key}/frames?which=raw&every=40")
-    assert fr["side"] == "left" and fr["total_lines"] == tr["lines"] and fr["lines"][-1] == tr["lines"] - 1
+    tl = call(lite, "GET", f"/api/projects/alix_loop/units/{key}/timeline?which=raw")
+    assert tl["side"] == "left" and tl["lines"] == tr["lines"] and tl["stage"]["pole_mm"] == 140
+    assert [p["name"] for p in tl["phases"]] == ["pole", "hand", "move", "trajectory"]
+    assert tl["phases"][0]["text"] == "Pole 300 → 140 mm"
+
+
+def test_a_recording_without_its_stage_never_runs(lite):
+    """A recording kept before stages were recorded is shown with its stage unknown: it is not
+    simulated, tuned or run until the operator states it (once; a recorded stage never changes)."""
+    key = "L-R08"
+    from alix_studio_lite import vendor_paths
+
+    txt = (vendor_paths.LITE_ROOT / "tests/data/legacy_v6/LEFT/L_P06P07.txt").read_text()
+    u = unit(lite, key, "recordings", {"source": "upload", "name": "L_P06P07.txt", "content": txt,
+                                       "pole_mm": 150, "hand": "GRIP"})["unit"]
+    file = u["active"]
+    src = lite["data"] / "projects/alix_loop/trajectories/left" / key / "raw" / file
+    meta = json.loads(src.with_suffix(".source.json").read_text())
+    meta.pop("stage")
+    src.with_suffix(".source.json").write_text(json.dumps(meta))
+    u = unit(lite, key)
+    assert u["recordings"][-1]["stage"] is None and not gate(u, "stage")["ok"]
+    assert call(lite, "GET", f"/api/projects/alix_loop/units/{key}/timeline?which=raw")["code"] == "stage"
+    assert unit(lite, key, "optimise", {})["code"] == "stage"
+    u = unit(lite, key, f"recordings/{file}/stage", {"pole_mm": 150, "hand": "GRIP"})
+    assert u["recordings"][-1]["stage"]["text"] == "pole 150 mm, hand grip" and gate(u, "stage")["ok"]
+    assert "cannot change" in unit(lite, key, f"recordings/{file}/stage", {"pole_mm": 50, "hand": "GRIP"})["error"]
+    assert call(lite, "GET", f"/api/projects/alix_loop/units/{key}/timeline?which=raw")["stage"]["pole_mm"] == 150
+
+
+def test_teaching_needs_the_setup_and_keeps_the_arm(lite):
+    """Drag teaching starts only with the arm in the region's setup, and the stand-in's take is a
+    recording of the SAME arm: a LEFT trajectory never becomes a RIGHT region's recording."""
+    key = "R-R01_PART1"
+    u = unit(lite, key)
+    assert u["setup"]["text"] == "pole 150 mm, hand grip" and u["arm"] == "right"
+    for arm in ("left", "right"):
+        call(lite, "POST", f"/api/robots/{arm}/connect", {})
+    assert call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})["mode"] == "hwsim"
+    assert wait(lite, call(lite, "POST", "/api/robots/right/pole", {"mm": 260}))["state"] == "done"
+    r = unit(lite, key, "teach/start", {})
+    assert r["code"] == "stage" and "not in this region's setup" in r["error"]
+    out = unit(lite, key, "setup", {"pole_mm": 150, "hand": "GRIP", "apply": True})
+    j = wait(lite, out["job"])
+    assert j["state"] == "done" and "Pole at 150 mm (read back" in log_text(j)
+    assert unit(lite, key, "teach/start", {})["arm"]["teaching"]
+    time.sleep(0.3)
+    out = unit(lite, key, "teach/stop", {})
+    rec = out["unit"]["recordings"][-1]
+    assert rec["taught_arm"] == "right" and out["take"].startswith(("R", "M3")) and rec["stage"]["pole_mm"] in (50, 150)
+    assert gate(out["unit"], "arm")["ok"] and gate(out["unit"], "stage")["ok"]
+    from alix_studio_lite.server.library import builtin_by_name
+
+    assert builtin_by_name(out["take"])["arm"] == "right"
 
 
 def test_later_steps_cannot_be_taught(lite):

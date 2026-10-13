@@ -1,10 +1,13 @@
 """The Lite UI's region loop: ``/api/projects/<id>/…`` for one project's tasks and arm steps.
 
     GET  tasks                                the task queue (decision D35)
-    GET  units/<KEY>                          one arm step: settings, recordings, tuning, versions, results
+    GET  units/<KEY>                          one arm step: setup, recordings, tuning, versions, gates
+    POST units/<KEY>/setup                    the region's pole and hand (Prepare), staged on the robot
     POST units/<KEY>/recordings               add a recording: existing (library) or a loaded .txt
+    POST units/<KEY>/recordings/<FILE>/stage  state the pole and hand of a recording that has none
     POST units/<KEY>/active | name            which recording is used; the operator's file name
-    GET  units/<KEY>/track | frames           joint data for the plot; 3D frames for the simulation
+    GET  units/<KEY>/track                    joint data for the plot
+    GET  units/<KEY>/timeline                 the execution in 3D: pole, hand, move to start, trajectory
     POST units/<KEY>/settings | undo | redo   tuning settings, one undo step per change
     POST units/<KEY>/optimise                 a job: the tuned candidate, with every limit checked
     POST units/<KEY>/keep                     keep the candidate as the version to upload
@@ -12,19 +15,21 @@
     POST units/<KEY>/move-start | playback    robot moves, in Hardware sim or Real only
     POST units/<KEY>/upload | run | verdict   Real Test
 
-Robot steps need Hardware sim or Real (decision D30), and a Real move needs ``confirmed``. The
-E-stop rules are the stand-in's (``robot_standin.py``): motion on either arm is refused while
-either E-stop is not clear; STOP always works.
+THE GATES, checked here on every execution (simulation, Hardware sim and Real), never only on
+the page: the trajectory was taught on THIS arm (a LEFT trajectory never reaches a RIGHT-arm
+region); its stage (pole height and hand pose) is known and is staged first, read back, before
+the arm moves (``staging.py``); a run needs a kept version that passed every limit; and the
+robot's own rules hold (Hardware sim or Real, a Real move ``confirmed``, motion refused on both
+arms while either E-stop is not clear; STOP always works).
 """
 from __future__ import annotations
 
 import json
-import math
 import threading
 import time
 from pathlib import Path
 
-from . import fixtures, workers
+from . import fixtures, staging, workers
 from .api_v2 import session
 from .app import MODE_TEXT, MODES, route
 from .jobs import UserError
@@ -81,6 +86,71 @@ def _fresh(units: LiteUnits, key: str, extra: dict | None) -> bool:
     return extra.get("settings") == tuning and extra.get("raw_sha256") == src.get("sha256")
 
 
+def identity(units: LiteUnits, key: str, which: str) -> dict:
+    """The file a step would execute (``raw``: the active recording; ``candidate``; ``version``)
+    with the arm it was taught on and its stage. Refuses, saying why, when the file is of the
+    other arm, or its arm or stage is not known: then it is never shown moving nor run."""
+    u = _unit(units, key)
+    if which == "raw":
+        rec = next((r for r in units.recordings(key) if r["file"] == (units.current_recording(key) or Path("")).name), None)
+        if rec is None:
+            raise UserError("This region has no recording yet.", "Record it, or use an existing or loaded file.")
+        info = dict(path=Path(rec["path"]), name=rec["name"], taught_arm=rec["taught_arm"], stage=rec["stage"])
+    elif which == "candidate":
+        cand, _, extra_path = _candidate_files(units, key)
+        extra = _read(extra_path) or {}
+        if not cand.is_file():
+            raise UserError("There is no tuned trajectory yet.", "Run the simulation to make one.")
+        info = dict(path=cand, name="the tuned trajectory", taught_arm=extra.get("taught_arm"), stage=extra.get("stage"))
+    elif which == "version":
+        ver = units.current_version(key)
+        if not ver:
+            raise UserError("There is no tuned version yet.", "Finish Tune + Simulation first.")
+        info = dict(path=Path(ver["path"]), name=f"version {ver['version']}", taught_arm=ver.get("taught_arm"),
+                    stage=ver.get("stage"))
+    else:
+        raise UserError("which must be raw, candidate or version.")
+    if info["taught_arm"] != u["arm"]:
+        if info["taught_arm"] in ("left", "right"):
+            raise UserError(f"{info['name']} was taught on the {info['taught_arm'].upper()} arm: it never runs on "
+                            f"the {u['arm'].upper()} arm.", code="arm")
+        raise UserError(f"It is not known which arm {info['name']} was taught on, so it cannot run.",
+                        "Load it again and say the arm and the pole and hand it was taught with.", code="arm")
+    st = staging.stage_from(info["stage"])
+    if st is None:
+        raise UserError(f"The pole height and hand pose {info['name']} was taught with are not known, so it cannot "
+                        "run: its motion would not be where the robot puts it.",
+                        "State them on Save & Review.", code="stage")
+    info["stage"] = st
+    return info
+
+
+def gates(app, units: LiteUnits, key: str, view: dict) -> list[dict]:
+    """What stands between this step and an execution, each with a plain verdict."""
+    u = units.units[key]
+    out = []
+    rec = next((r for r in view["recordings"] if r["file"] == view["active"]), None)
+    if rec is None:
+        out.append(dict(id="recording", ok=False, text="No recording yet"))
+    else:
+        arm_ok = rec["taught_arm"] == u["arm"]
+        out.append(dict(id="arm", ok=arm_ok, text=(f"Taught on the {u['arm'].upper()} arm" if arm_ok else
+                                                   f"Taught on the {str(rec['taught_arm'] or '?').upper()} arm: "
+                                                   f"never runs on the {u['arm'].upper()} arm")))
+        st = staging.stage_from(rec["stage"])
+        out.append(dict(id="stage", ok=st is not None,
+                        text=(f"Staged first: {st.as_dict()['text']}" if st else "Pole and hand not known: state them")))
+    ver = view["versions"][-1] if view["versions"] else None
+    out.append(dict(id="limits", ok=bool(ver and ver.get("uploadable")),
+                    text=(f"Version {ver['version']} passes every limit" if ver and ver.get("uploadable")
+                          else "No kept version yet (Tune: Simulation Looks Good)")))
+    block = app.robot.motion_block()
+    mode = app.ui["mode"]
+    out.append(dict(id="robot", ok=mode != "visual" and not block,
+                    text=(block or ("Visual sim: the 3D only" if mode == "visual" else MODE_TEXT[mode]))))
+    return out
+
+
 def unit_view(app, units: LiteUnits, key: str) -> dict:
     _unit(units, key)
     u = units.step_view(key)
@@ -98,6 +168,7 @@ def unit_view(app, units: LiteUnits, key: str) -> dict:
     u["last_run"] = units.last_run(key, ver.get("sha256")) if ver else None
     u["results"] = units.results(key)["events"][-20:]
     u["toppra"] = app.toppra()
+    u["gates"] = gates(app, units, key, u)
     return u
 
 
@@ -132,12 +203,16 @@ def get_unit(app, q, body, m):
 
 @route("POST", U + "/recordings")
 def add_recording(app, q, body, m):
-    """``{source: "library"}``: the region's existing taught recording (D31).
-    ``{source: "upload", name, content}``: a .txt from this computer, checked line by line.
+    """``{source: "library"}``: the region's existing taught recording (D31), with the arm and the
+    pole and hand its record gives.
+    ``{source: "upload", name, content, arm, pole_mm, hand}``: a .txt from this computer, checked
+    line by line. Its arm comes from its name (L_, R_, LEFT, RIGHT) or ``arm``, and must be this
+    region's arm; ``pole_mm`` and ``hand`` are the stage it was taught with, and are required.
     Either becomes the active recording; nothing earlier is replaced."""
     import tempfile
 
     from ..motion import track
+    from .library import detect_arm
 
     units, key = units_of(app, m.group(1)), m.group(2)
     u = _unit(units, key)
@@ -146,7 +221,8 @@ def add_recording(app, q, body, m):
         if not f:
             raise UserError("This region has no existing recording.", "Teach it, or load a file from this computer.")
         path = units.add_recording(key, Path(f["path"]), note=f"existing recording {f['file']}: {f.get('task', '')}",
-                                   source="library", name=f["file"])
+                                   source="library", name=f["file"], taught_arm=f.get("arm"),
+                                   stage=staging.make_stage(f.get("pole_mm"), f.get("hand"), "the taught set's record"))
     elif body.get("source") == "upload":
         content = body.get("content")
         if not isinstance(content, str) or not content.strip():
@@ -164,10 +240,52 @@ def add_recording(app, q, body, m):
                                 "A trajectory has one line per 5 ms: {\"point\":[7 whole numbers]}.")
             if md.shape[0] < 2:
                 raise UserError("This file has fewer than two lines.")
-            path = units.add_recording(key, tmp, note=f"loaded file {name}", source="upload", name=name)
+            named = detect_arm(str(body.get("path") or name))
+            said = body.get("arm") or None
+            if said not in (None, "left", "right"):
+                raise UserError("The arm is left or right.")
+            if named and said and named != said:
+                raise UserError(f"{name}'s name says the {named.upper()} arm, but the {said.upper()} arm was given.",
+                                code="arm")
+            arm = said or named
+            if arm is None:
+                raise UserError(f"Which arm was {name} taught on?", "Its name does not say (L_ or R_).", code="arm")
+            if body.get("pole_mm") is None or body.get("hand") is None:
+                raise UserError(f"Say the pole height and hand pose {name} was taught with.", code="stage")
+            stage = staging.make_stage(body["pole_mm"], body["hand"], "stated when it was loaded")
+            path = units.add_recording(key, tmp, note=f"loaded file {name}", source="upload", name=name,
+                                       taught_arm=arm, stage=stage)
     else:
         raise UserError("Say where the recording comes from: library or upload.")
     return {"saved": path.name, "arm": u["arm"], "unit": unit_view(app, units, key)}
+
+
+@route("POST", U + r"/recordings/([A-Za-z0-9_.\-]+)/stage")
+def state_recording_stage(app, q, body, m):
+    """The pole and hand of a recording that has none recorded (kept before stages were)."""
+    units, key, file = units_of(app, m.group(1)), m.group(2), m.group(3)
+    _unit(units, key)
+    stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "stated for this recording")
+    try:
+        units.set_recording_stage(key, file, stage, body.get("arm"))
+    except KeyError:
+        raise UserError("That recording is not in this region.") from None
+    return unit_view(app, units, key)
+
+
+@route("POST", U + "/setup")
+def set_setup(app, q, body, m):
+    """The region's pole and hand (Prepare): kept for teaching it, and in Hardware sim or Real
+    also staged on the robot (pole, then hand, read back). ``{pole_mm, hand, apply}``."""
+    units, key = units_of(app, m.group(1)), m.group(2)
+    u = _unit(units, key)
+    stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "set in Prepare")
+    units.set_setup(key, stage)
+    out = {"unit": unit_view(app, units, key)}
+    if body.get("apply") and app.ui["mode"] != "visual":
+        require_confirmed(app, body, "Moving the pole and the hand")
+        out["job"] = app.robot.stage(u["arm"], stage, f"Stage {key}: {staging.describe(stage)}").view()
+    return out
 
 
 @route("POST", U + "/active")
@@ -217,25 +335,25 @@ def get_track(app, q, body, m):
     return workers.track_arrays(str(_track_path(units, key, q)))
 
 
-@route("GET", U + "/frames")
-def get_frames(app, q, body, m):
-    """The 3D frames of the arm's links for a whole file (``which`` as for ``track``): every
-    ``every``-th line and the last; ``every`` is chosen to stay within the frame limit."""
-    from . import robot_model
+@route("GET", U + "/timeline")
+def get_timeline(app, q, body, m):
+    """The execution as the 3D view shows it (``which``: raw, candidate or version): the pole to
+    the stage height, the hand to the stage pose, the arm to the first line, then the trajectory,
+    every link the pole moves posed by ALIX's FK. Refused for a file of the other arm or with no
+    stage, exactly as a run would be."""
     from .routes_robot import _mesh_links, _payload
 
     from ..motion import track
+    from ..motion.limits import load_limits
 
     units, key = units_of(app, m.group(1)), m.group(2)
     u = _unit(units, key)
-    md = track.read_md(_track_path(units, key, q))
-    n = md.shape[0]
-    every = max(int((q.get("every") or ["4"])[0]), math.ceil(n / (robot_model.MAX_TRACK_FRAMES - 1)))
+    info = identity(units, key, (q.get("which") or ["raw"])[0])
+    md = track.read_md(info["path"])
     p = _payload(app)
-    links = robot_model.moving_links(u["arm"], _mesh_links(p))
-    out = robot_model.track_frames(u["arm"], (md.T / 1000.0).tolist(), every, dict(p["home"]), links)
-    out["total_lines"] = int(n)
-    return out
+    return staging.execution_timeline(u["arm"], md, info["stage"], home=dict(p["home"]),
+                                      links=staging.staged_links(u["arm"], _mesh_links(p)),
+                                      rating_deg_s=load_limits(u["arm"]).rating_deg_s)
 
 
 # ── tuning
@@ -307,9 +425,8 @@ def post_undo(app, q, body, m):
 def post_optimise(app, q, body, m):
     units, key = units_of(app, m.group(1)), m.group(2)
     u = _unit(units, key)
-    raw = units.current_recording(key)
-    if raw is None:
-        raise UserError("This region has no recording yet.", "Record it, or use an existing or loaded file.")
+    info = identity(units, key, "raw")            # this arm's recording, with a known stage
+    raw = info["path"]
     settings = units.settings(key)
     tuning = {k: v for k, v in settings.items() if k != "program_id"}
     if u.get("max_dev_mm") and not settings.get("max_dev_mm"):
@@ -330,7 +447,8 @@ def post_optimise(app, q, body, m):
         job.progress("Checked against the limits", 2, 2)
         job.log(res["summary"]["message"])
         extra = dict(util=res.get("util"), progress=res.get("progress"), settings=tuning,
-                     raw_file=raw.name, raw_sha256=src.get("sha256"), made=time.strftime("%Y-%m-%d %H:%M:%S"))
+                     raw_file=raw.name, raw_sha256=src.get("sha256"), made=time.strftime("%Y-%m-%d %H:%M:%S"),
+                     taught_arm=info["taught_arm"], stage=info["stage"].as_dict())
         extra_path.write_text(json.dumps(extra), encoding="utf-8")
         return dict(summary=res["summary"], checks=res["checks"], cut=res["recipe"].get("cut"))
 
@@ -348,6 +466,7 @@ def post_keep(app, q, body, m):
         raise UserError("There is no tuned trajectory yet.", "Run the simulation to make one.")
     if not _fresh(units, key, _read(extra_path)):
         raise UserError("The settings changed after the last tuning.", "Re-run the simulation first.")
+    identity(units, key, "candidate")             # the tuned file's arm and stage are known and right
     result = (_read(rec) or {}).get("result") or {}
     if not result.get("uploadable"):
         raise UserError("This trajectory does not pass every limit, so it cannot go to the robot.",
@@ -383,22 +502,23 @@ def post_teach(app, q, body, m):
     if verb == "start":
         require_robot_mode(app)
         require_confirmed(app, body, "Drag teaching")
-        return {"arm": app.robot.teach_start(side)}
+        setup = staging.stage_from(units.setup(key))
+        return {"arm": app.robot.teach_start(side, setup)}
     if verb == "cancel":
         app.robot.arm(side).teaching = False
         return {"arm": app.robot.arm(side).view()}
     secs = app.robot.teach_stop(side)
-    # stand-in: the "recording" is the region's existing one, else any of the same arm
-    from .project import library
+    # stand-in: a real recording of the SAME arm, saved with the stage it was taught with
+    from .library import standin_take
 
-    files = list(library(units.fixture)["files"].values()) or list(library("commode_c")["files"].values())
-    pick = next((f for f in files if f.get("unit") == key), None) or next((f for f in files if f.get("arm") == side), None)
-    from .. import vendor_paths
-
-    src = Path(pick["path"]) if pick else vendor_paths.LITE_ROOT / "tests/data/recordings/commode_c_taught_paths/FILE_09.txt"
+    take = standin_take(side, key, units.fixture)
     name = str(body.get("name") or f"{key}_taught.txt")
-    path = units.add_recording(key, src, note=f"stand-in recording ({secs:.0f} s of teaching)", source="teach", name=name)
-    return {"saved": path.name, "seconds": round(secs, 1), "unit": unit_view(app, units, key)}
+    path = units.add_recording(key, Path(take["path"]), source="teach", name=name, taught_arm=take["arm"],
+                               stage=take["stage"],
+                               note=f"stand-in recording ({secs:.0f} s of teaching): {take['name']}, "
+                                    f"taught at {take['stage']['text']}")
+    return {"saved": path.name, "seconds": round(secs, 1), "take": take["name"], "stage": take["stage"],
+            "unit": unit_view(app, units, key)}
 
 
 @route("POST", U + "/move-start")
@@ -408,12 +528,9 @@ def post_move_start(app, q, body, m):
     require_robot_mode(app)
     require_confirmed(app, body, "Moving the arm")
     which = body.get("which") or "raw"
-    if which == "version" and not units.current_version(key):
-        raise UserError("There is no tuned version yet.", "Finish Tune + Simulation first.")
-    if which == "raw" and units.current_recording(key) is None:
-        raise UserError("There is no recording yet.")
+    info = identity(units, key, "version" if which == "version" else "raw")
     what = "the tuned trajectory's start" if which == "version" else "the recorded start"
-    return app.robot.move_to(u["arm"], what, f"{u['arm'].upper()} to {what} ({key})").view()
+    return app.robot.move_to(u["arm"], what, f"{u['arm'].upper()} to {what} ({key})", stage=info["stage"]).view()
 
 
 @route("POST", U + "/playback")
@@ -422,11 +539,10 @@ def post_playback(app, q, body, m):
     u = _unit(units, key)
     mode = require_robot_mode(app)
     require_confirmed(app, body, "Playback")
-    raw = units.current_recording(key)
-    if raw is None:
-        raise UserError("There is no recording to play back.")
-    lines = sum(1 for ln in raw.read_bytes().split(b"\n") if ln.strip())
-    return app.robot.playback(u["arm"], lines, dry_run=mode != "real", title=f"Playback {key}").view()
+    info = identity(units, key, "raw")
+    lines = sum(1 for ln in info["path"].read_bytes().split(b"\n") if ln.strip())
+    return app.robot.playback(u["arm"], lines, dry_run=mode != "real", title=f"Playback {key}",
+                              stage=info["stage"]).view()
 
 
 def _program_check(pid) -> int:
@@ -450,6 +566,7 @@ def post_upload(app, q, body, m):
     ver = units.current_version(key)
     if not ver:
         raise UserError("There is no tuned version to upload.", "Finish Tune + Simulation (Simulation Looks Good).")
+    identity(units, key, "version")                # never send another arm's trajectory to this arm
     if units.settings(key).get("program_id") != pid:
         units.update_settings(key, {"program_id": pid}, f"Program ID {pid}")
     cur = app.robot.arm(u["arm"]).programs.get(pid)
@@ -482,6 +599,7 @@ def post_run(app, q, body, m):
     pid = units.settings(key).get("program_id")
     if not ver or not pid:
         raise UserError("Upload the trajectory first.")
+    info = identity(units, key, "version")         # this arm's trajectory, with its stage
     prog = app.robot.arm(u["arm"]).programs.get(int(pid))
     if not prog or prog.get("sha256") != ver["sha256"]:
         raise UserError(f"Program {pid} does not hold this region's current version.", "Upload it again.")
@@ -491,7 +609,7 @@ def post_run(app, q, body, m):
         units.add_result(key, "dryrun_ok" if dry else "real_ok", ver["sha256"], True, out)
 
     job = app.robot.run(u["arm"], int(pid), dry_run=dry, title=("Hardware sim run " if dry else "Real run ") + key,
-                        on_done=done)
+                        on_done=done, stage=info["stage"])
 
     def watch():
         while job.state == "running":
@@ -610,6 +728,17 @@ def post_controller_mode(app, q, body, m):
     if mode == "REAL" and not body.get("confirmed"):
         raise UserError("Switching the controller to REAL needs your confirmation.", code="confirm")
     return app.robot.set_controller_mode(side, mode)
+
+
+@route("POST", r"/api/robots/(left|right)/fault")
+def post_fault(app, q, body, m):
+    """Engineer, stand-in only: make the pole or the hand fail to arrive, to test that nothing
+    runs when staging fails. ``{pole: true|false, hand: true|false}``."""
+    side = _arm(m)
+    session(app, engineer=True)
+    if app.robot.backend != "stand-in":
+        raise UserError("Faults can only be simulated on the robot stand-in.")
+    return app.robot.set_fault(side, pole=body.get("pole"), hand=body.get("hand"))
 
 
 @route("POST", r"/api/robots/(left|right)/estop-test")

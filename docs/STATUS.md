@@ -50,30 +50,35 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
   - The status pill opens Robot & mode (D30). It covers Visual sim, Hardware sim and Real, connecting each arm, and each arm's E-stop with Recover.
 - **Task queue (D35).** V19's 22 tasks are tied to the region catalogue: codes, TASK 9 as the deck has it, each step's status. The 8 steps outside Release 1 are LATER and cannot be chosen.
 - **Region loop**, against the robot stand-in:
-  - Prepare: each region's pole and hand values; Apply goes to the robot.
-  - Drag & Teach: the existing recording is offered first (D31); drag teaching is in Hardware sim or Real.
-  - Save & Review: every recording is listed, one is active, and a loaded file never replaces the new one. Playback runs in 3D or on the robot.
+  - Prepare: each region's setup (pole height and hand pose); Apply stages it on the robot, the pole and then the hand, each read back.
+  - Drag & Teach: the existing recording is offered first (D31); drag teaching is in Hardware sim or Real, and starts only with the arm in the region's setup.
+  - Save & Review: every recording is listed with its arm and stage, one is active, and a loaded file never replaces the new one. A loaded file needs its arm and its pole and hand; a file of the other arm is refused. Playback runs in 3D or on the robot, staging first.
   - Tune + Simulation:
     - V19's Trim, Mean Smooth (41 by default, R11) and Scale regions are the region's server-side settings, with undo.
     - Rows marked with Trim Selected are cut, and the gap is crossed by a short joint move that is then smoothed.
     - Optimiser: Default or Time-optimal (D24). Total time: the recorded pace, a target, or as fast as safe.
-    - A result strip shows L1–L6.
-    - The real recording is on the plot. The robot plays in 3D on the 5 ms clock, with V19's playhead on the recording's rows.
+    - A result strip shows the gates (arm, stage, limits, robot) and L1–L6.
+    - The real recording is on the plot. ▶ Start stages the pole and the hand in 3D, moves the arm to the start, then plays the trajectory on the 5 ms clock, with V19's playhead on the recording's rows.
   - Real Test:
     - The kept version uploads to a Program ID 1–100, checked by the server; replacing a program needs a confirmation.
-    - It runs in Hardware sim or, after a confirmation, in Real, and the real outcome is shown.
+    - It runs in Hardware sim or, after a confirmation, in Real, after the pole and the hand are staged and read back; if either fails, nothing else runs and the reason is shown.
     - PASS needs a completed run of the current version. After one arm passes, V19 opens the other arm.
   - Advanced Robot Controls: SIM, REAL and CHECK; hand; pole; the program list.
 - **Trajectory Viewer** (in the Operator Journey, on Home, and in Save & Review):
   - Taught `.txt` files are uploaded one by one or as a folder. Each is checked line by line and kept in `~/ALIX-Lite/library/`, beside the built-in sets: the commode C taught set and the legacy V6 package.
-  - The arm comes from the name or folder (`L_`, `LEFT/`, `R_`, `RIGHT/`), else the operator chooses it.
-  - A LEFT and a RIGHT file replay together in 3D on the 5 ms clock, with play, pause, speed, a time slider and the toilet state. The joints run on a plot with a playhead.
-  - Each file is checked against L1–L4 as taught. For example, V6's `L_P01P02` reaches 3,032 °/s² on joint 6, against the 600 °/s² limit.
-  - "Use for <task> · <region>" makes a file the region's active recording, ready for Save & Review and tuning.
+  - The arm comes from the name or folder (`L_`, `LEFT/`, `R_`, `RIGHT/`), else the operator chooses it. The operator states the pole height and hand pose each upload was taught with; the built-in files carry their record's.
+  - A LEFT and a RIGHT file replay as the robot runs them: each arm stages its pole and hand, then moves to its start, and both trajectories start together on the 5 ms clock. Play, pause, speed, a time slider and the toilet state; the joints on a plot with a playhead.
+  - Each file is checked against L1–L4 as taught. For example, V6's `L_P01P02` reaches 1,543 °/s² on joint 6 (20 Hz band-limited), against the 600 °/s² limit.
+  - "Use for <task> · <region>" makes a file the active recording of a region of its own arm, ready for Save & Review and tuning.
+- **The gates on every execution** (contract, "The gates on every execution"), checked by the server in the 3D simulation, Hardware sim and Real:
+  - a trajectory runs only on the arm it was taught on;
+  - its pole height and hand pose are staged first and read back, and nothing runs if either fails;
+  - a run needs a version that passes L1–L6, with L3 read as ALIX reads it (20 Hz band-limited);
+  - the robot's own rules (mode, confirmation, E-stop on either arm).
 - **Fixed in the bridge:** four defects of the page (contract, D1–D4). The most serious was STOP BOTH leaving the screen below 1,610 px wide.
 
 **Checked:**
-- Tests: `tests/test_lite_ui.py` (the page is the designer's file plus one block), `tests/test_api_v2.py`, `tests/test_lite_region_loop.py` (one arm step through the whole loop over HTTP, the E-stop interlock, cuts and the recorded-pace mode), `tests/test_library.py` (the Trajectory Viewer's files).
+- Tests: `tests/test_lite_ui.py` (the page is the designer's file plus one block), `tests/test_api_v2.py`, `tests/test_lite_region_loop.py` (one arm step through the whole loop over HTTP, the gates, staging failures, the E-stop interlock, cuts and the recorded-pace mode), `tests/test_library.py` (the Trajectory Viewer's files), `tests/test_staging.py` (staging times and FK, L3 against ALIX's own reading).
 - Headless Chrome:
   - the whole loop, in light and dark themes, with no console errors;
   - STOP BOTH visible from 900 to 1920 px wide.
@@ -114,9 +119,9 @@ Legacy Lite is no longer developed; its working parts (3D robot, plots, optimise
 
 | Area | State |
 |---|---|
-| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 106 tests pass in about a minute, with no ALIX checkout. |
+| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 114 tests pass in about two minutes, with no ALIX checkout. |
 | Cubicle walls | Done. The 1400 mm cubicle (default) and the 800 mm cubicle are in `assets/scene/cubicles/`. |
-| Motion basics (`src/alix_studio_lite/motion/`) | Implemented and smoke-tested. It covers track read/write, the 5 ms clock, the limit set from the URDF, and the hard limits L1–L6 plus checks C1–C4 on the integer bytes. |
+| Motion basics (`src/alix_studio_lite/motion/`) | Implemented and smoke-tested. It covers track read/write, the 5 ms clock, the limit set from the URDF, and the hard limits L1–L6 plus checks C1–C4 on the integer bytes. L3 reads acceleration as ALIX does (20 Hz band-limited, F99c; ALIX accepts at 1.00 of 600 °/s², Lite at 1.02). |
 | Optimiser engine (`src/alix_studio_lite/optimise/`) | Implemented, smoke-tested and connected to the Lite UI's Tune + Simulation. Golden tests still to write. |
 
 The optimiser engine covers:
@@ -130,17 +135,17 @@ The optimiser engine covers:
 - for the Lite UI (13 Oct):
   - **cuts**: rows removed before tuning, with each gap crossed by a straight joint move at 20 °/s and then smoothed, so the slowdown stays local. The cut recording is the reference for L5 and L6.
   - **the recorded pace**: no target, the recording's own timing with the Scale regions. The engine's default is still "as fast as safe".
-  - A FILE_08 example: recorded 41.72 s; the recorded pace with smoothing 41 gives 38.79 s; as fast as safe, 26.82 s; with smoothing off, the fastest safe is 118 s, because recorder ripple binds the acceleration.
+  - A FILE_08 example: recorded 41.72 s; the recorded pace with smoothing 41 gives 38.79 s; as fast as safe, 27.16 s. With smoothing off, the fastest safe is 276 s: the recorder's ripple (on joint 6, every third or fourth line is a double step) is above 20 Hz at the recorded pace, but a slowed file brings it into the band, where it is real commanded vibration.
 
 ### Smoke results
 
-All times are true time: a file of N lines lasts (N − 1) × 5 ms. Every hard limit passed on these runs.
+All times are true time: a file of N lines lasts (N − 1) × 5 ms. Every hard limit passed on these runs. Re-measured on 13 October with L3 read band-limited, as ALIX reads it; the earlier windowed reading let short peaks through, which made some times shorter.
 
 | Recording | Optimiser | Result |
 |---|---|---|
-| FILE_10.1 (lid seat open) | Time-optimal | Fastest safe time 4.275 s (856 lines). The 3.0 s target is refused. Limited mostly by joint 6 acceleration, 39 % of the time. The research measured 4.26 s and 38 %. |
-| FILE_10.1 | Default | Fastest safe time 7.73 s. |
-| FILE_01.1 (lid top) | Default | A 60 s target is met exactly (12,001 lines). The fastest safe time is 38.05 s; the research measured 38.30 s. |
+| FILE_10.1 (lid seat open) | Time-optimal | Fastest safe time 4.61 s (923 lines). The 3.0 s target is refused. Limited by joint 3 acceleration around 2.4 s. (Windowed reading: 4.275 s; the research measured 4.26 s.) |
+| FILE_10.1 | Default | Fastest safe time 8.03 s, limited by joint 6 acceleration. |
+| FILE_01.1 (lid top) | Default | A 60 s target is met exactly (12,001 lines). The fastest safe time is 37.90 s; the research measured 38.30 s. |
 
 ## Not done yet (backend, on hold)
 

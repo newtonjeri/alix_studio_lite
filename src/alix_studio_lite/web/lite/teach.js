@@ -8,8 +8,8 @@
 // Playback runs in the 3D preview in Visual sim, or on the robot in Hardware sim and Real.
 
 import { post, say } from './api.js';
-import { ctx, el, fmtS, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
-import { showFile, showLine, sim } from './sim.js';
+import { armFromName, ctx, el, fmtS, jobLine, loadUnit, robotCall, stageDialog, step, tell, unitUrl, watchJob } from './ctx.js';
+import { preRoll, showFile, showLine, sim } from './sim.js';
 import { SOURCE } from './tasks.js';
 
 const $ = (id) => document.getElementById(id);
@@ -83,9 +83,24 @@ async function refreshReview() {
   ...u.recordings.slice().reverse().map(rec => el('label', { class: 'checkrow' },
     el('input', { type: 'radio', name: 'liteRecording', checked: rec.file === u.active, onchange: () => choose(u.key, rec.file) }),
     el('span', {}, el('strong', { text: rec.name }),
-      el('span', { text: `${SOURCE[rec.source] || rec.source} · ${rec.lines.toLocaleString()} rows · ${fmtS(rec.seconds)} · ${rec.taken || ''}` })))));
+      el('span', { text: `${SOURCE[rec.source] || rec.source} · ${rec.lines.toLocaleString()} rows · ${fmtS(rec.seconds)} · ${rec.taken || ''}` }),
+      el('span', { class: rec.stage && rec.taught_arm === u.arm ? 'lite-ok' : 'lite-bad',
+        text: rec.taught_arm && rec.taught_arm !== u.arm ? `✕ taught on the ${rec.taught_arm.toUpperCase()} arm: never runs on the ${u.arm.toUpperCase()} arm`
+          : rec.stage ? `✓ ${rec.taught_arm.toUpperCase()} arm · staged first: ${rec.stage.text}` : '✕ pole and hand not known: it cannot run' }),
+      !rec.stage && (!rec.taught_arm || rec.taught_arm === u.arm)
+        ? el('button', { class: 'btn light', type: 'button', text: 'State pole & hand…', onclick: (e) => { e.preventDefault(); stateStage(u, rec); } })
+        : null))));
   const preview = $('stage-review').querySelector('.playback-preview');
   if (preview && sim.key !== u.key) preview.classList.remove('lite-3d');
+}
+
+async function stateStage(u, rec) {
+  const v = await stageDialog({ title: `How was ${rec.name} taught?`, setup: u.setup, arm: rec.taught_arm || u.arm,
+    askArm: !rec.taught_arm,
+    body: 'Its joints only mean something at the pole height and hand pose it was taught with: every run stages them first.' });
+  if (!v) return;
+  try { ctx.units[u.key] = await post(`${unitUrl(u.key, 'recordings')}/${rec.file}/stage`, v); } catch (err) { tell(err); }
+  refreshReview();
 }
 
 async function choose(key, file) {
@@ -119,7 +134,8 @@ export function installTeach() {
       const r = await post(unitUrl(s.key, 'teach/stop'), { name: $('fileName')?.value });
       ctx.units[s.key] = r.unit;
       syncActive(r.unit);
-      $('savedFileMeta').textContent = `Recorded and saved: ${(activeRec(r.unit) || {}).lines?.toLocaleString() || ''} rows`;
+      $('savedFileMeta').textContent = `Recorded and saved: ${(activeRec(r.unit) || {}).lines?.toLocaleString() || ''} rows · ${r.stage.text}`;
+      if (r.take) window.toast(`Robot stand-in: the take is ${r.take}, a ${s.arm.toUpperCase()}-arm recording (${r.stage.text}).`);
     } catch (err) { tell(err); }
   };
 
@@ -146,9 +162,20 @@ export function installTeach() {
     const s = step();
     const st = $('previousTrajectoryStatus');
     if (!file || !s || !ctx.pid) return;
+    const named = armFromName(file.name);
+    if (named && named !== s.arm) {
+      st.textContent = `${file.name} is named for the ${named.toUpperCase()} arm: it can never be used on this ${s.arm.toUpperCase()}-arm region.`;
+      st.className = 'statusbar warn';
+      event.target.value = '';
+      return;
+    }
+    const v = await stageDialog({ title: `How was ${file.name} taught?`, setup: (ctx.units[s.key] || s).setup,
+      arm: named || null, askArm: !named,
+      body: `It becomes the active recording of ${s.display} (${s.arm.toUpperCase()} arm). Say the arm and the pole and hand it was taught with: they are staged before every run.` });
+    if (!v) { event.target.value = ''; return; }
     st.textContent = `Checking ${file.name}…`;
     try {
-      const r = await post(unitUrl(s.key, 'recordings'), { source: 'upload', name: file.name, content: await file.text() });
+      const r = await post(unitUrl(s.key, 'recordings'), { source: 'upload', name: file.name, content: await file.text(), ...v });
       ctx.units[s.key] = r.unit;
       const rec = activeRec(r.unit);
       st.textContent = `Loaded ${file.name} · ${rec.lines.toLocaleString()} rows · ${fmtS(rec.seconds)}. The new recording is kept too.`;
@@ -172,7 +199,9 @@ export function installTeach() {
         const job = await robotCall(unitUrl(s.key, 'playback'), {}, { what: 'Playback' });
         window.toast(`Playback on the ${u.arm.toUpperCase()} arm started.`);
         const done = await watchJob(job, (j) => { $('timerResult') && ($('timerResult').textContent = jobLine(j)); });
-        window.toast(done.state === 'done' ? 'Playback finished.' : (done.error || 'Playback stopped.'));
+        const said = done.state === 'done' ? 'Playback finished.' : `Stopped: ${done.error || 'the playback did not finish.'} ${done.hint || ''}`;
+        if ($('timerResult')) $('timerResult').textContent = said;
+        window.toast(said);
       } catch (err) { tell(err); }
       return;
     }
@@ -180,7 +209,7 @@ export function installTeach() {
     try {
       await showFile(preview, u, 'raw');
       playPreview();
-    } catch (err) { tell(err); }
+    } catch (err) { tell(err); preview.classList.remove('lite-3d'); }
   };
 
   const pageAction = window.demoAction;
@@ -191,7 +220,8 @@ export function installTeach() {
     try {
       const job = await robotCall(unitUrl(s.key, 'move-start'), { which }, { what: 'Moving the arm to its start' });
       const done = await watchJob(job);
-      window.toast(done.state === 'done' ? `${s.arm.toUpperCase()} arm at the start.` : (done.error || 'The move stopped.'));
+      window.toast(done.state === 'done' ? `${s.arm.toUpperCase()} arm at the start.`
+        : `Stopped: ${done.error || 'the move did not finish.'} ${done.hint || ''}`);
     } catch (err) { tell(err); }
   };
 
@@ -205,10 +235,13 @@ export function installTeach() {
   });
 }
 
-// The 3D preview plays the recording once at 1x (its own clock: (N - 1) x 5 ms).
+// The 3D preview executes the recording once at 1x: the pole and hand staging and the move to the
+// start first, then the recording on its own clock ((N - 1) x 5 ms).
 let previewRaf = 0;
-function playPreview() {
+async function playPreview() {
   cancelAnimationFrame(previewRaf);
+  const ok = await preRoll((text) => window.toast(text));
+  if (!ok) return;
   const t0 = performance.now(), total = Math.max(0, sim.lines - 1) * 0.005;
   const tick = () => {
     const t = Math.min(total, (performance.now() - t0) / 1000);

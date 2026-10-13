@@ -7,7 +7,10 @@ Hard limits (a file that fails one cannot be uploaded):
   at every turn the overshoot ALIX's execution model predicts, max(floor, tau x arrival speed),
   still leaves 0.5 deg (arrival speeds read at the 5 ms cycle);
 - L2 speed: the 20 Hz band-limited joint speed stays within 0.97 x the joint's rating;
-- L3 acceleration: the 50 ms windowed mean acceleration stays within 600 deg/s^2 x 1.02;
+- L3 acceleration: the 20 Hz band-limited joint acceleration stays within 600 deg/s^2 x 1.02
+  (ALIX's reading, ``plan_min_time.band_limited_util``: raw finite differences of a point list are
+  meaningless — one LSB at 5 ms is 2.26 rad/s^2, and a recorder's skipped sample, which doubles one
+  step, reads as over 1000 deg/s^2 on recordings that run cleanly);
 - L4 step: at most 10 deg between two lines;
 - L5 path accuracy (ALIX's G4): the contact pad stays within 10 mm (or the region's MAX DEV)
   of the taught path, measured both ways against the raw recording;
@@ -54,16 +57,14 @@ def speed_deg_s(q: np.ndarray, dt: float) -> np.ndarray:
     return np.abs(np.diff(bandlimit(q, dt), axis=0)) / float(dt)
 
 
-def acc_windowed_deg_s2(q: np.ndarray, dt: float, window_s: float) -> np.ndarray:
-    """(N-1-w, 7) mean acceleration over each ``window_s`` window: (v(t+w) - v(t)) / w, with v
-    the per-line speed of the bytes. It cannot overshoot a true bound and is immune to LSB
-    jitter (about 8 deg/s^2 at 50 ms)."""
+def acc_deg_s2(q: np.ndarray, dt: float) -> np.ndarray:
+    """(N-2, 7) band-limited joint acceleration magnitudes, as ALIX reads them
+    (``plan_min_time.band_limited_util``, finding F99c): the 20 Hz zero-phase low-pass first,
+    then the second difference at the 5 ms clock. Row i is centred on line i + 2 (1-based)."""
     q = np.asarray(q, dtype=float)
-    v = np.diff(q, axis=0) / float(dt)
-    w = max(1, int(round(float(window_s) / float(dt))))
-    if v.shape[0] <= w:
-        return np.zeros((0, q.shape[1]))
-    return np.abs(v[w:] - v[:-w]) / (w * float(dt))
+    if q.shape[0] < 3:
+        return np.zeros((0, q.shape[1] if q.ndim == 2 else 7))
+    return np.abs(np.diff(bandlimit(q, dt), n=2, axis=0)) / float(dt) ** 2
 
 
 def commanded_margin_deg(q: np.ndarray, limits: LimitSet) -> np.ndarray:
@@ -108,7 +109,7 @@ def motion_ok(md: np.ndarray, limits: LimitSet) -> bool:
     rating = np.asarray(limits.rating_deg_s, dtype=float)
     if (speed_deg_s(q, dt) > limits.rate_bar * rating).any():
         return False
-    if (acc_windowed_deg_s2(q, dt, limits.acc_window_s) > limits.acc_bar_deg_s2).any():
+    if (acc_deg_s2(q, dt) > limits.acc_bar_deg_s2).any():
         return False
     return all(t["util"] <= 1.0 for t in joint_turns(q, limits) if not t["geometry"])
 
@@ -123,9 +124,8 @@ def util_series(md: np.ndarray, limits: LimitSet) -> dict[str, np.ndarray]:
     rating = np.asarray(limits.rating_deg_s, dtype=float)
     out: dict[str, np.ndarray] = {}
     sp = speed_deg_s(q, dt) / (limits.rate_bar * rating)            # interval i -> line i+1
-    acc = acc_windowed_deg_s2(q, dt, limits.acc_window_s) / limits.acc_bar_deg_s2
-    w = max(1, int(round(limits.acc_window_s / dt)))
-    a0 = 1 + w // 2                                                  # window centre, in lines
+    acc = acc_deg_s2(q, dt) / limits.acc_bar_deg_s2
+    a0 = 1                                                           # row i is centred on line i + 1 (0-based)
     turns = joint_turns(q, limits)
     for j in range(7):
         s = np.zeros(n)
@@ -263,21 +263,20 @@ def check_bytes(md: np.ndarray, limits: LimitSet, *, raw_md: np.ndarray | None =
         joint=int(k[1]) + 1, line=int(k[0]) + 2, speed_fixes=True if peak > 1.0 else None))
 
     # L3 acceleration
-    acc = acc_windowed_deg_s2(q, dt, limits.acc_window_s)
+    acc = acc_deg_s2(q, dt)
     if acc.size:
         k = np.unravel_index(int(np.argmax(acc)), acc.shape)
         a_peak = float(acc[k])
-        w = max(1, int(round(limits.acc_window_s / dt)))
         rep.checks.append(Check(
             "L3", "Joint acceleration", True, a_peak <= limits.acc_bar_deg_s2, _fmt(a_peak, 1),
             _fmt(limits.acc_bar_deg_s2, 1), "deg/s^2",
-            f"highest: joint {k[1] + 1} at {a_peak:.0f} deg/s^2 around line {k[0] + 1 + w // 2} "
+            f"highest: joint {k[1] + 1} at {a_peak:.0f} deg/s^2 (20 Hz band-limited) around line {k[0] + 2} "
             f"(hardware limit {limits.acc_deg_s2:.0f} deg/s^2)",
-            joint=int(k[1]) + 1, line=int(k[0]) + 1 + w // 2,
+            joint=int(k[1]) + 1, line=int(k[0]) + 2,
             speed_fixes=True if a_peak > limits.acc_bar_deg_s2 else None))
     else:
         rep.checks.append(Check("L3", "Joint acceleration", True, True, 0.0,
-                                _fmt(limits.acc_bar_deg_s2, 1), "deg/s^2", "file shorter than 50 ms"))
+                                _fmt(limits.acc_bar_deg_s2, 1), "deg/s^2", "file shorter than three lines"))
 
     # L4 step
     d = np.abs(np.diff(q, axis=0))

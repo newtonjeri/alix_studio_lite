@@ -14,6 +14,12 @@ This reuses Legacy Lite's unit store (``project.Project``) with the folder moved
 page adds: its processing switches, a time mode, the active recording (a loaded file never
 replaces a new recording) and the operator's name for a file.
 
+Every recording also carries what it takes to execute it correctly (``staging.py``): the ARM it
+was taught on (a recording of the other arm is refused, so a LEFT trajectory can never reach a
+RIGHT-arm region) and its STAGE, the pole height and hand pose it was taught with. Tuned files
+and kept versions inherit both from their recording. A region also has a SETUP: the pole and hand
+it is taught with, from the catalogue or the existing recording, changed in Prepare.
+
 The task queue (decision D35) pairs the catalogue's LEFT and RIGHT units the way the page
 does: commode C by deck task (the same 22 tasks as the page, TASK 9 as the deck has it), other
 fixtures by catalogue step. Arm steps outside Release 1 are marked ``later``.
@@ -25,6 +31,8 @@ import re
 import time
 from pathlib import Path
 
+from . import staging
+from .jobs import UserError
 from .project import DEFAULT_SETTINGS, Project, _atomic_write, _read_json, library
 
 #: the page's processing switches and the time mode; smoothing 41 lines is R11's Standard
@@ -58,7 +66,24 @@ class LiteUnits(Project):
             src = _read_json(Path(r["path"]).with_suffix(".source.json"), {})
             r["name"] = src.get("name") or r.get("original") or r["file"]
             r["seconds"] = round(0.005 * max(int(r.get("lines") or 1) - 1, 0), 3)
+            r["taught_arm"], r["stage"] = self._identity(src)
         return out
+
+    def _identity(self, src: dict) -> tuple[str | None, dict | None]:
+        """The arm a recording was taught on and its stage. A recording kept before they were
+        recorded with the file gets them back only when its bytes are a built-in file's (its
+        record says both); an upload's arm can still come from its name, its stage cannot."""
+        from .library import builtin_by_sha, detect_arm
+
+        arm, stage = src.get("taught_arm"), src.get("stage")
+        if arm is None or stage is None:
+            known = builtin_by_sha(src.get("sha256"))
+            if known:
+                arm = arm or known.get("arm")
+                stage = stage or known.get("stage")
+            elif arm is None and src.get("source") == "upload":
+                arm = detect_arm(src.get("original") or src.get("name") or "")
+        return arm, stage
 
     def current_recording(self, key: str) -> Path | None:
         recs = self.recordings(key)
@@ -77,15 +102,90 @@ class LiteUnits(Project):
             self._write_state(key, st)
 
     def add_recording(self, key: str, src_path: Path, note: str = "", source: str = "teach",
-                      name: str | None = None) -> Path:
+                      name: str | None = None, *, taught_arm: str | None = None, stage=None) -> Path:
+        """Keep a recording for a region and make it the active one. ``taught_arm`` must be the
+        region's arm (a trajectory never runs on the other arm), and ``stage`` (a staging.Stage or
+        its dict) is the pole and hand it was taught with: without both, nothing is kept."""
+        arm = self.units[key]["arm"]
+        label = name or Path(src_path).name
+        if taught_arm not in ("left", "right"):
+            raise UserError(f"Say which arm {label} was taught on.", code="arm")
+        if taught_arm != arm:
+            raise UserError(f"{label} was taught on the {taught_arm.upper()} arm; {key} is a {arm.upper()}-arm "
+                            f"region. A trajectory never runs on the other arm.", code="arm")
+        st = stage if isinstance(stage, staging.Stage) else staging.stage_from(stage)
+        if st is None:
+            raise UserError(f"Say the pole height and hand pose {label} was taught with.", code="stage")
         with self.lock:
             dst = super().add_recording(key, src_path, note=note, source=source)
+            self._update_source(dst, taught_arm=taught_arm, stage=st.as_dict())
             if name:
                 self.rename_recording(key, dst.name, name)
-            st = self._unit_state(key)
-            st["active"] = dst.name
-            self._write_state(key, st)
+            state = self._unit_state(key)
+            state["active"] = dst.name
+            self._write_state(key, state)
             return dst
+
+    def _update_source(self, path: Path, **fields) -> None:
+        meta = path.with_suffix(".source.json")
+        d = _read_json(meta, {})
+        d.update(fields)
+        _atomic_write(meta, json.dumps(d, indent=1))
+
+    def set_recording_stage(self, key: str, file: str, stage: staging.Stage, taught_arm: str | None = None) -> None:
+        """State the stage (and arm) of a recording that has none recorded. A known stage is the
+        recording's own record and is never overwritten."""
+        rec = next((r for r in self.recordings(key) if r["file"] == file), None)
+        if rec is None:
+            raise KeyError(f"no recording {file!r} for {key}")
+        if rec["stage"] is not None:
+            raise UserError(f"{rec['name']} already records its stage ({rec['stage']['text']}); it cannot change.")
+        arm = rec["taught_arm"] or taught_arm
+        if arm != self.units[key]["arm"]:
+            raise UserError(f"{rec['name']} must have been taught on the {self.units[key]['arm'].upper()} arm to "
+                            f"belong to {key}.", code="arm")
+        self._update_source(self.unit_dir(key) / "raw" / file, taught_arm=arm, stage=stage.as_dict())
+
+    # ── the region's setup: the pole and hand it is taught with
+
+    def setup(self, key: str) -> dict | None:
+        st = self._unit_state(key).get("setup")
+        if st:
+            return st
+        lib = self.library_file(key)
+        if lib and lib.get("pole_mm") is not None and lib.get("hand") is not None:
+            return staging.make_stage(lib["pole_mm"], lib["hand"], "the existing recording's record").as_dict()
+        u = self.units[key]
+        hand = u.get("hand_counts") or u.get("hand_preset")
+        if u.get("pole_mm") is not None and hand:
+            return staging.make_stage(u["pole_mm"], hand, "the region catalogue").as_dict()
+        return None
+
+    def set_setup(self, key: str, stage: staging.Stage) -> dict:
+        with self.lock:
+            state = self._unit_state(key)
+            state["setup"] = stage.as_dict()
+            self._write_state(key, state)
+            return state["setup"]
+
+    # ── kept versions carry their recording's arm and stage
+
+    def save_candidate(self, key: str) -> dict:
+        import shutil
+
+        with self.lock:
+            ver = super().save_candidate(key)
+            extra = self.candidate_path(key).with_name("candidate.extra.json")
+            if extra.is_file():
+                shutil.copyfile(extra, Path(ver["path"]).with_name(Path(ver["path"]).stem + ".extra.json"))
+            return self.current_version(key)
+
+    def versions(self, key: str) -> list[dict]:
+        out = super().versions(key)
+        for v in out:
+            extra = _read_json(Path(v["path"]).with_name(Path(v["path"]).stem + ".extra.json"), {})
+            v["taught_arm"], v["stage"] = extra.get("taught_arm"), extra.get("stage")
+        return out
 
     def rename_recording(self, key: str, file: str, name: str) -> None:
         name = Path(str(name)).name.strip()[:120]
@@ -100,13 +200,15 @@ class LiteUnits(Project):
         _atomic_write(meta, json.dumps(d, indent=1))
 
     def import_library(self) -> list[str]:
-        """Existing taught recordings of the fixture for the units they are mapped to (D31)."""
+        """Existing taught recordings of the fixture for the units they are mapped to (D31), each
+        with the arm and the pole and hand its record gives."""
         done = []
         for name, meta in library(self.fixture)["files"].items():
             key = meta.get("unit")
             if key and key in self.units and self.units[key]["arm"] == meta.get("arm") and not self.recordings(key):
                 self.add_recording(key, Path(meta["path"]), note=f"existing recording {name}: {meta.get('task', '')}",
-                                   source="library", name=name)
+                                   source="library", name=name, taught_arm=meta["arm"],
+                                   stage=staging.make_stage(meta["pole_mm"], meta["hand"], "the taught set's record"))
                 done.append(key)
         return done
 
@@ -126,12 +228,13 @@ class LiteUnits(Project):
     def step_view(self, key: str) -> dict:
         u = self.units[key]
         st = self.status(key)
+        setup = self.setup(key)
         return dict(key=key, code=u["code"], part=u.get("part"), name=u["name"], display=display_name(u),
                     arm=u["arm"], later=not u.get("first_release", True), type=u.get("type"), kind=u.get("kind"),
-                    phase=u.get("phase"), pole_mm=u.get("pole_mm"), hand_preset=u.get("hand_preset"),
-                    hand_counts=u.get("hand_counts"), target_s=u.get("target_s"), picture=u.get("picture"),
-                    status=st["status"], status_label=st["label"], recordings=st["recordings"],
-                    version=st["version"], library=self.library_file(key) is not None)
+                    phase=u.get("phase"), pole_mm=setup and setup["pole_mm"], hand_preset=u.get("hand_preset"),
+                    hand_counts=setup and setup["hand"], setup=setup, target_s=u.get("target_s"),
+                    picture=u.get("picture"), status=st["status"], status_label=st["label"],
+                    recordings=st["recordings"], version=st["version"], library=self.library_file(key) is not None)
 
 
 def display_name(u: dict) -> str:

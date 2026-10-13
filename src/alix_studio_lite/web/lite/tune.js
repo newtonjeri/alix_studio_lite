@@ -145,6 +145,13 @@ function fmtCheck(c) {
   return `${v}${c.unit ? ' ' + c.unit : ''}${c.limit != null ? ` (limit ${c.limit}${c.unit ? ' ' + c.unit : ''})` : ''}`;
 }
 
+// The gates between this step and any execution, as the server judges them (arm, stage, limits, robot).
+export function gateChips(u) {
+  return el('div', { class: 'lite-gates' }, (u.gates || []).map(g =>
+    el('span', { class: `lite-limit ${g.ok ? 'ok' : g.id === 'robot' || g.id === 'limits' ? 'na' : 'bad'}`, title: g.id },
+      `${g.ok ? '✓' : '✕'} ${g.text}`)));
+}
+
 function showResults(job = null) {
   const box = $('liteResults');
   if (!box || !unit) return;
@@ -158,7 +165,7 @@ function showResults(job = null) {
   }
   if (!r) {
     head.append(el('b', { text: raw ? ' Not tuned yet: press ▶ Re-run Simulation.' : ' No recording yet: record the region or load a file.' }));
-    box.replaceChildren(head);
+    box.replaceChildren(head, gateChips(unit));
     return;
   }
   const ready = r.uploadable && unit.fresh;
@@ -188,7 +195,7 @@ function showResults(job = null) {
   const bridges = cut && cut.bridges && cut.bridges.length
     ? el('p', { class: 'mini-note', text: `Trim removed ${cut.removed_lines.toLocaleString()} rows; ${cut.bridges.map(b => `the gap after row ${b.after_line} is crossed in ${b.seconds.toFixed(2)} s`).join('; ')}. Check it in the simulation.` })
     : null;
-  box.replaceChildren(head, grid, chips, msg, hints || '', bridges || '');
+  box.replaceChildren(head, gateChips(unit), grid, chips, msg, hints || '', bridges || '');
 }
 
 function useTime(s) {
@@ -251,10 +258,16 @@ async function loadSimulation() {
   try {
     await showFile(host, unit, which, progress);
     window.resetSimulationPlayback(false);
-    $('simStatus').textContent = which === 'candidate'
-      ? `Tuned trajectory loaded: ${fmtS(sim.lines ? (sim.lines - 1) * 0.005 : 0)}. Press ▶ Start.`
-      : 'The recording before tuning. Press ▶ Re-run Simulation to tune it.';
-  } catch (err) { $('simStatus').textContent = `The 3D view could not load: ${say(err)}`; }
+    $('simStatus').textContent = (which === 'candidate'
+      ? `Tuned trajectory loaded: ${fmtS(sim.lines ? (sim.lines - 1) * 0.005 : 0)}.`
+      : 'The recording before tuning: press ▶ Re-run Simulation to tune it.')
+      + ` ▶ Start stages ${sim.tl.stage.text} first, then moves to the start.`;
+    $('simStatus').className = 'statusbar ok';
+  } catch (err) {
+    $('simStatus').textContent = `Nothing plays: ${say(err)}`;
+    $('simStatus').className = 'statusbar warn';
+    host.dataset.lite3d = 'blocked';
+  }
 }
 
 export async function retune() {

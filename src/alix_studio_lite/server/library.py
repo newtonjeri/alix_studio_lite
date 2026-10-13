@@ -1,12 +1,19 @@
 """Taught trajectory files for the Lite UI's Trajectory Viewer.
 
-The operator's uploads are kept in ``<data>/library/`` (``u_<id>.txt`` with ``u_<id>.json``:
-name, arm, folder, size, sha256, when), shared by every project. Beside them the viewer lists the
-built-in sets of ``assets/recordings/sets.yaml`` (read-only). Every file is checked line by line
-on upload: one line per 5 ms, ``{"point":[7 whole millidegrees]}``.
+The operator's uploads are kept in ``<data>/library/`` (``u_<id>.txt`` with ``u_<id>.json``),
+shared by every project. Beside them the viewer lists the built-in sets of
+``assets/recordings/sets.yaml`` (read-only). Every file is checked line by line on upload: one
+line per 5 ms, ``{"point":[7 whole millidegrees]}``.
 
-A file does not say which arm it was taught on, so the arm comes from its name or folder (``L_``,
-``LEFT``, ``R_``, ``RIGHT``), else the operator sets it.
+Every file carries what it takes to run it correctly (``staging.py``):
+
+- the ARM it was taught on. A file does not say, so it comes from the set's records, or from its
+  name or folder (``L_``, ``LEFT``, ``R_``, ``RIGHT``), else the operator states it. A file is
+  only ever shown or used on that arm.
+- its STAGE: the pole height and hand pose it was taught (or ran) with. Built-in files take it
+  from their records (the taught set's pole and hand) or their workflow (the V6 package's pole
+  and hand steps); an upload's stage is stated by the operator. A file without one is listed but
+  cannot be replayed or used.
 """
 from __future__ import annotations
 
@@ -22,6 +29,7 @@ import uuid
 from pathlib import Path
 
 from .. import vendor_paths
+from . import staging
 from .jobs import UserError
 
 SETS_FILE = vendor_paths.ASSETS / "recordings" / "sets.yaml"
@@ -30,7 +38,8 @@ MAX_BYTES = 20_000_000
 
 
 def detect_arm(path_or_name: str) -> str | None:
-    """LEFT / RIGHT from a file's name or its folders, the way the files are named in practice."""
+    """LEFT / RIGHT from a file's name or its folders, the way the files are named in practice.
+    ``R15_…`` is a region number, not the right arm, so only ``R_``/``R-``/``RIGHT`` count."""
     parts = [p for p in re.split(r"[\\/]", str(path_or_name)) if p]
     for p in reversed(parts):
         u = p.upper()
@@ -47,13 +56,111 @@ def detect_arm(path_or_name: str) -> str | None:
     return None
 
 
-def _lines(path: Path) -> int:
-    return sum(1 for ln in path.read_bytes().split(b"\n") if ln.strip())
+def _lines_and_sha(path: Path) -> tuple[int, str]:
+    data = path.read_bytes()
+    return sum(1 for ln in data.split(b"\n") if ln.strip()), hashlib.sha256(data).hexdigest()
 
 
-def _meta_view(meta: dict) -> dict:
+def _stage_dict(pole_mm, hand, source: str) -> dict | None:
+    if pole_mm is None or hand is None:
+        return None
+    try:
+        return staging.make_stage(pole_mm, hand, source).as_dict()
+    except UserError:
+        return None
+
+
+def _workflow_stages(path: Path) -> dict:
+    """Program name -> stage: the last pole and hand steps before each program step."""
+    try:
+        d = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    pole = hand = None
+    out = {}
+    for st in d.get("steps") or []:
+        if st.get("type") == "pole":
+            pole = st.get("mm")
+        elif st.get("type") == "hand":
+            hand = st.get("values")
+        elif st.get("type") == "program" and st.get("name"):
+            out[st["name"]] = _stage_dict(pole, hand, f"its workflow ({path.name})")
+    return out
+
+
+_SETS: tuple[float, list] | None = None
+_SETS_LOCK = threading.Lock()
+
+
+def builtin_sets() -> list[dict]:
+    """The built-in sets with their files (id, name, arm, stage, path, …), cached per edit."""
+    import yaml
+
+    from .project import library
+
+    global _SETS
+    try:
+        mtime = SETS_FILE.stat().st_mtime
+    except OSError:
+        return []
+    with _SETS_LOCK:
+        if _SETS and _SETS[0] == mtime:
+            return _SETS[1]
+        d = yaml.safe_load(SETS_FILE.read_text(encoding="utf-8")) or {}
+        out = []
+        for s in d.get("sets") or []:
+            files = []
+            if s.get("library"):
+                for name, meta in library(s["library"])["files"].items():
+                    files.append(dict(name=name, arm=meta.get("arm"), path=meta["path"], task=meta.get("task"),
+                                      unit=meta.get("unit"),
+                                      stage=_stage_dict(meta.get("pole_mm"), meta.get("hand"), "the taught set's record")))
+            stages = {}
+            for arm, wf in (s.get("workflows") or {}).items():
+                stages[arm] = _workflow_stages(vendor_paths.LITE_ROOT / wf)
+            for arm, folder in (s.get("folders") or {}).items():
+                base = vendor_paths.LITE_ROOT / folder
+                for f in sorted(base.glob("*.txt")) if base.is_dir() else []:
+                    files.append(dict(name=f.name, arm=arm, path=str(f), task=None, unit=None,
+                                      stage=(stages.get(arm) or {}).get(f.name)))
+            rows = []
+            for f in files:
+                rel = os.path.relpath(f["path"], vendor_paths.LITE_ROOT)
+                fid = "s_" + hashlib.sha1(rel.encode("utf-8")).hexdigest()[:12]
+                lines, sha = _lines_and_sha(Path(f["path"]))
+                rows.append(dict(id=fid, name=f["name"], arm=f["arm"], stage=f["stage"], folder=str(Path(rel).parent),
+                                 task=f["task"], unit=f["unit"], lines=lines, sha256=sha, source="set",
+                                 set=s["id"], path=f["path"]))
+            out.append(dict(id=s["id"], name=s["name"], note=s.get("note", ""), files=rows))
+        _SETS = (mtime, out)
+        return out
+
+
+def builtin_by_name(name: str) -> dict | None:
+    """A built-in file by its file name."""
+    for s in builtin_sets():
+        for f in s["files"]:
+            if f["name"] == name:
+                return f
+    return None
+
+
+def builtin_by_sha(sha256: str | None) -> dict | None:
+    """The built-in file with exactly these bytes. A name proves nothing (an operator can teach a
+    new file of the same name at another pole height); the bytes do."""
+    if not sha256:
+        return None
+    for s in builtin_sets():
+        for f in s["files"]:
+            if f["sha256"] == sha256:
+                return f
+    return None
+
+
+def view(meta: dict) -> dict:
     out = {k: v for k, v in meta.items() if k != "path"}
     out["seconds"] = round(0.005 * max(int(meta.get("lines") or 1) - 1, 0), 3)
+    out["ready"] = bool(meta.get("arm") and meta.get("stage"))
     return out
 
 
@@ -61,7 +168,6 @@ class TaughtLibrary:
     def __init__(self, data_dir: Path):
         self.root = Path(data_dir) / "library"
         self._lock = threading.Lock()
-        self._sets_cache: tuple[float, list] | None = None
 
     # ── the operator's uploads
 
@@ -81,7 +187,8 @@ class TaughtLibrary:
         out.sort(key=lambda m: m.get("uploaded", ""), reverse=True)
         return out
 
-    def add(self, name: str, content: str, *, arm: str | None = None, path: str | None = None) -> dict:
+    def add(self, name: str, content: str, *, arm: str | None = None, path: str | None = None,
+            pole_mm=None, hand=None) -> dict:
         """Check and keep an uploaded file; returns its record."""
         from ..motion import track
 
@@ -92,6 +199,9 @@ class TaughtLibrary:
             raise UserError(f"{name} is too large for a trajectory (over 20 MB).")
         if arm not in (None, "", "left", "right"):
             raise UserError("The arm is left or right.")
+        stage = None
+        if pole_mm is not None or hand is not None:
+            stage = staging.make_stage(pole_mm, hand, "stated when it was uploaded").as_dict()
         with tempfile.TemporaryDirectory() as td:
             tmp = Path(td) / name
             tmp.write_text(content, encoding="utf-8")
@@ -110,8 +220,9 @@ class TaughtLibrary:
             fid = "u_" + uuid.uuid4().hex[:12]
             self.root.mkdir(parents=True, exist_ok=True)
             (self.root / f"{fid}.txt").write_bytes(data)
-            meta = dict(id=fid, name=name, folder=str(Path(path).parent) if path and Path(path).parent != Path(".") else "",
-                        arm=arm or detect_arm(path or name), lines=int(md.shape[0]), bytes=len(data), sha256=sha,
+            folder = str(Path(path).parent) if path and Path(path).parent != Path(".") else ""
+            meta = dict(id=fid, name=name, folder=folder, arm=arm or detect_arm(path or name), stage=stage,
+                        lines=int(md.shape[0]), bytes=len(data), sha256=sha,
                         uploaded=time.strftime("%Y-%m-%d %H:%M"), source="upload")
             self._write_meta(meta)
             return meta
@@ -121,7 +232,7 @@ class TaughtLibrary:
         tmp.write_text(json.dumps(meta, indent=1), encoding="utf-8")
         os.replace(tmp, self._meta_path(meta["id"]))
 
-    def update(self, fid: str, *, arm: str | None = None, name: str | None = None) -> dict:
+    def update(self, fid: str, *, arm: str | None = None, name: str | None = None, pole_mm=None, hand=None) -> dict:
         meta = self.get(fid)
         if meta.get("source") != "upload":
             raise UserError("Built-in files cannot be changed.")
@@ -131,6 +242,8 @@ class TaughtLibrary:
             meta["arm"] = arm
         if name:
             meta["name"] = Path(str(name)).name.strip()[:120] or meta["name"]
+        if pole_mm is not None or hand is not None:
+            meta["stage"] = staging.make_stage(pole_mm, hand, "stated for this file").as_dict()
         with self._lock:
             self._write_meta({k: v for k, v in meta.items() if k != "path"})
         return self.get(fid)
@@ -148,41 +261,6 @@ class TaughtLibrary:
                 if f.is_file():
                     shutil.move(str(f), str(trash / f"{fid}-{stamp}{suffix}"))
 
-    # ── built-in sets
-
-    def sets(self) -> list[dict]:
-        import yaml
-
-        from .project import library
-
-        try:
-            mtime = SETS_FILE.stat().st_mtime
-        except OSError:
-            return []
-        if self._sets_cache and self._sets_cache[0] == mtime:
-            return self._sets_cache[1]
-        d = yaml.safe_load(SETS_FILE.read_text(encoding="utf-8")) or {}
-        out = []
-        for s in d.get("sets") or []:
-            files = []
-            if s.get("library"):
-                for name, meta in library(s["library"])["files"].items():
-                    files.append(dict(name=name, arm=meta.get("arm"), path=meta["path"], task=meta.get("task"),
-                                      unit=meta.get("unit")))
-            for arm, folder in (s.get("folders") or {}).items():
-                base = vendor_paths.LITE_ROOT / folder
-                for f in sorted(base.glob("*.txt")) if base.is_dir() else []:
-                    files.append(dict(name=f.name, arm=arm, path=str(f), task=None, unit=None))
-            rows = []
-            for f in files:
-                rel = os.path.relpath(f["path"], vendor_paths.LITE_ROOT)
-                fid = "s_" + hashlib.sha1(rel.encode("utf-8")).hexdigest()[:12]
-                rows.append(dict(id=fid, name=f["name"], arm=f["arm"], folder=str(Path(rel).parent), task=f["task"],
-                                 unit=f["unit"], lines=_lines(Path(f["path"])), source="set", set=s["id"], path=f["path"]))
-            out.append(dict(id=s["id"], name=s["name"], note=s.get("note", ""), files=rows))
-        self._sets_cache = (mtime, out)
-        return out
-
     # ── one file, wherever it is
 
     def get(self, fid: str) -> dict:
@@ -195,26 +273,43 @@ class TaughtLibrary:
                 raise UserError("That file is not in the library any more.") from None
             meta["path"] = str(self.root / f"{fid}.txt")
             return meta
-        for s in self.sets():
+        for s in builtin_sets():
             for f in s["files"]:
                 if f["id"] == fid:
                     return dict(f)
         raise UserError("That file is not in the library any more.")
 
     def listing(self) -> dict:
-        return {"files": [_meta_view(m) for m in self.uploads()],
-                "sets": [dict(s, files=[_meta_view(f) for f in s["files"]]) for s in self.sets()],
+        return {"files": [view(m) for m in self.uploads()],
+                "sets": [dict(s, files=[view(f) for f in s["files"]]) for s in builtin_sets()],
                 "folder": str(self.root)}
 
-    def checks(self, fid: str, side: str) -> dict:
-        """Every limit on the file as taught (L5 and L6 compare a tuned file with its recording,
-        so they do not apply). Cached per file and arm."""
+    def require_ready(self, fid: str, side: str | None = None) -> dict:
+        """The file's record when it can be replayed or used: its arm and its stage are known,
+        and ``side`` (when given) is its arm. Refuses otherwise, saying what is missing."""
+        meta = self.get(fid)
+        if meta.get("arm") not in ("left", "right"):
+            raise UserError(f"Say which arm {meta['name']} was taught on first.", code="arm")
+        if side is not None and side != meta["arm"]:
+            raise UserError(f"{meta['name']} was taught on the {meta['arm'].upper()} arm: it is never shown "
+                            f"or run on the {side.upper()} arm.", code="arm")
+        if staging.stage_from(meta.get("stage")) is None:
+            raise UserError(f"Say the pole height and hand pose {meta['name']} was taught with first: "
+                            "without them its motion is not where the robot would put it.", code="stage")
+        return meta
+
+    def checks(self, fid: str) -> dict:
+        """Every limit on the file as taught, on its own arm (L5 and L6 compare a tuned file with
+        its recording, so they do not apply). Cached per file."""
         from ..motion import track
         from ..motion.checks import check_bytes
         from ..motion.limits import load_limits
 
         meta = self.get(fid)
-        key = hashlib.sha1(f"{meta['path']}:{side}".encode()).hexdigest()[:16]
+        side = meta.get("arm")
+        if side not in ("left", "right"):
+            raise UserError(f"Say which arm {meta['name']} was taught on first.", code="arm")
+        key = hashlib.sha1(f"{meta['path']}:{side}:band-limited".encode()).hexdigest()[:16]
         cache = self.root / "cache" / f"checks_{key}.json"
         path = Path(meta["path"])
         stamp = path.stat().st_mtime
@@ -230,3 +325,23 @@ class TaughtLibrary:
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_text(json.dumps(dict(mtime=stamp, report=out), default=float), encoding="utf-8")
         return out
+
+
+def standin_take(arm: str, unit: str | None = None, fixture: str | None = None) -> dict:
+    """What the robot stand-in saves as a "taught" recording: a real file of the SAME arm with a
+    known stage, never one of the other arm. The region's own existing recording first, else the
+    first built-in file of that arm. Refuses when there is none."""
+    from .project import library
+
+    if unit and fixture:
+        for name, meta in library(fixture)["files"].items():
+            if meta.get("unit") == unit and meta.get("arm") == arm:
+                st = _stage_dict(meta.get("pole_mm"), meta.get("hand"), "the taught set's record")
+                if st:
+                    return dict(path=meta["path"], name=name, arm=arm, stage=st)
+    for s in builtin_sets():
+        for f in s["files"]:
+            if f["arm"] == arm and f.get("stage"):
+                return dict(path=f["path"], name=f["name"], arm=arm, stage=f["stage"])
+    raise UserError(f"The robot stand-in has no {arm.upper()}-arm recording to stand in for drag teaching.",
+                    "Load a recording taught on this arm instead (Save & Review).")
