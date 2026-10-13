@@ -141,6 +141,16 @@ class ProjectStore:
             _write_json(folder / "project.json", rec)
             return rec
 
+    def set_lite(self, pid: str, **fields) -> dict:
+        """Update the server's own fields of a project (never written by the page)."""
+        with self._lock:
+            rec = self.get(pid)
+            lite = dict(rec.get("lite") or {})
+            lite.update(fields)
+            rec["lite"] = lite
+            _write_json(self._record_path(pid), rec)
+            return rec
+
     def delete(self, pid: str) -> str:
         """Move the project's folder to the trash; returns where it went."""
         with self._lock:

@@ -57,6 +57,8 @@ def _read_json(path: Path, default):
 
 
 class Project:
+    DEFAULTS = DEFAULT_SETTINGS           # a unit's settings before any change (the Lite UI adds its own)
+
     def __init__(self, root: Path, fixture: str = "commode_c"):
         from . import fixtures
 
@@ -76,7 +78,7 @@ class Project:
     # ── settings and history
     def settings(self, key: str) -> dict:
         st = _read_json(self.unit_dir(key) / "unit.json", {})
-        s = dict(DEFAULT_SETTINGS)
+        s = copy.deepcopy(self.DEFAULTS)
         s.update(st.get("settings") or {})
         if s.get("target_s") is None and self.units[key].get("target_s"):
             s["target_s"] = self.units[key]["target_s"]
@@ -95,7 +97,7 @@ class Project:
             st = self._state(key)
             cur = self.settings(key)
             new = dict(cur)
-            new.update({k: v for k, v in changes.items() if k in DEFAULT_SETTINGS})
+            new.update({k: v for k, v in changes.items() if k in self.DEFAULTS})
             if new == cur:
                 return self.history_view(key)
             hist = st["history"][: st["cursor"] + 1] if st["history"] else [dict(label="Start", settings=cur)]
@@ -147,6 +149,10 @@ class Project:
         md = track.read_md(src_path)
         stamp = time.strftime("%Y%m%d_%H%M%S")
         dst = self.unit_dir(key) / "raw" / f"{stamp}_{key}.txt"
+        n = 2
+        while dst.exists():                                    # two in the same second
+            dst = dst.with_name(f"{stamp}_{key}_{n}.txt")
+            n += 1
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src_path, dst)
         os.chmod(dst, 0o444)                                    # raw recordings are never edited

@@ -1,5 +1,7 @@
 /* ALIX Studio Lite additions to the designer's page. Colours come from the page's own
-   variables (:root in web/index.html), so light and dark themes both apply. */
+   variables (:root in web/index.html), so light and dark themes both apply; the 3D view's
+   palette is in tokens.css. */
+@import url("tokens.css");
 
 .topbar .mode-pill[data-lite] { transition: background .2s, color .2s, border-color .2s; }
 .topbar .mode-pill[data-lite="visual"] { background: var(--blue2); border-color: var(--blue); color: var(--blue); }
@@ -33,3 +35,95 @@
 @media (max-width: 1200px) {
   .topbar .brand > div:not(.logo) { display: none; }
 }
+
+/* Status pill: it opens Robot & mode */
+.topbar .mode-pill { cursor: pointer; }
+.topbar .mode-pill:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+/* Arm cards: steps outside Release 1, and each step's status */
+.choice.lite-later { opacity: .55; cursor: not-allowed; }
+.choice.lite-later .choice-state { color: var(--muted); }
+.lite-step-status { font-size: 13px; color: var(--muted); margin: 2px 0 4px; }
+
+/* Drag & Teach: an existing recording is offered first (D31) */
+.lite-existing { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px; margin: 10px 0 14px; border: 1px solid var(--green); border-radius: 12px; background: var(--green2); }
+.lite-existing-copy { font-size: 15px; line-height: 1.5; }
+.lite-existing-copy span:last-child { color: var(--muted); }
+
+/* Save & Review: the region's recordings */
+.lite-recordings { margin: 14px 0; }
+.lite-recordings-head { margin-bottom: 8px; }
+.lite-recordings .checkrow { margin-bottom: 6px; }
+
+/* Tune + Simulation: optimiser and total time, undo/redo */
+.lite-opt-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 12px; align-items: end;
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.lite-opt-row .field { margin: 0; }
+.lite-history { display: flex; gap: 8px; }
+@media (max-width: 1100px) { .lite-opt-row { grid-template-columns: 1fr 1fr; } }
+
+/* rows removed by Trim */
+.lite-cut-list { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 13px; }
+.lite-chip-x { border: 0; background: none; min-height: 0 !important; padding: 0 2px; color: var(--muted); cursor: pointer; }
+
+/* the result of tuning, with the limits */
+.lite-results { margin: 14px 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+.lite-results-head { display: flex; align-items: center; gap: 8px; font-size: 15px; margin-bottom: 10px; }
+.lite-ok { color: var(--green); }
+.lite-bad { color: var(--red); }
+.lite-results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 10px; }
+.lite-results-grid > div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.lite-results-grid span { font-size: 12px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.lite-results-grid b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.lite-results-grid small { font-size: 12px; color: var(--muted); }
+.lite-limits { display: flex; flex-wrap: wrap; gap: 6px; }
+.lite-limit { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 5px 10px; border: 1px solid var(--line); }
+.lite-limit.ok { background: var(--green2); color: var(--green); border-color: var(--green); }
+.lite-limit.bad { background: var(--red2); color: var(--red); border-color: var(--red); }
+.lite-limit.warn { background: var(--orange2); color: var(--orange); border-color: var(--orange); }
+.lite-limit.na { color: var(--muted); }
+.lite-hints { margin: 6px 0 0; padding-left: 18px; font-size: 14px; }
+
+/* the plot: the real recording under the page's selection and playhead */
+.lite-plotted { position: relative; }
+.lite-plot { position: absolute; inset: 0; z-index: 0; }
+/* the page sizes every svg in its plot box to 100 %: Plotly's containers need a height to fill */
+.lite-plot .plot-container, .lite-plot .svg-container { height: 100% !important; }
+.lite-plotted > svg { position: relative; z-index: 1; }            /* the page's own svg, not Plotly's */
+.lite-plotted > svg > g, .lite-plotted > svg > polyline, .lite-plotted > svg > circle { display: none; }
+
+/* the 3D view in the simulation pane and the review preview */
+.lite-3d { position: relative; }
+.lite-3d > .lite-3d-canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; z-index: 1; display: block; }
+.lite-3d[data-lite3d="ready"] .simulation-reference-image { display: none; }
+.simulation-placeholder.lite-3d[data-lite3d="ready"] { border-style: solid; }
+.simulation-placeholder.lite-3d .simulation-caption { z-index: 3; }
+.playback-preview.lite-3d { min-height: 360px !important; background: var(--lite-viewport-bg); overflow: hidden; }
+.playback-preview.lite-3d[data-lite3d="ready"] > div:not(.lite-3d-canvas) { display: none; }
+
+/* Robot & mode */
+.lite-mode-choice { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.lite-mode-btn { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; text-align: left; padding: 12px;
+  border: 2px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); }
+.lite-mode-btn b { font-size: 15px; }
+.lite-mode-btn small { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.lite-mode-btn.active { border-color: var(--blue); background: var(--blue2); }
+.lite-mode-btn[data-mode="real"].active { border-color: var(--red); background: var(--red2); }
+.lite-arm-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.lite-arm-row { display: grid; grid-template-columns: 1.1fr 1fr 1.3fr auto; gap: 10px; align-items: center;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.lite-arm-state { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.lite-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.lite-dot.on { background: var(--green); }
+.lite-estop { font-size: 13px; font-weight: 800; border-radius: 999px; padding: 5px 10px; border: 1px solid var(--line); color: var(--muted); }
+.lite-estop.CLEAR { color: var(--green); border-color: var(--green); background: var(--green2); }
+.lite-estop.ENGAGED, .lite-estop.UNKNOWN { color: var(--red); border-color: var(--red); background: var(--red2); }
+.lite-estop.RECOVERING { color: var(--orange); border-color: var(--orange); background: var(--orange2); }
+@media (max-width: 900px) { .lite-mode-choice, .lite-arm-row { grid-template-columns: 1fr; } }
+
+/* confirmations, the fixture of a project, the kept version */
+.lite-confirm { z-index: 20000; }
+.lite-confirm-list { margin: 8px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.6; }
+.lite-fixture-badge { margin: 4px 0; }
+.lite-version { margin-top: 10px; }

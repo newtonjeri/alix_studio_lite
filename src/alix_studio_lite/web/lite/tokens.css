@@ -1,0 +1,8 @@
+/* The 3D view's colours: ALIX's viewport palette, as in Legacy Lite (the canvas stays dark in
+   both themes). The only colour values in web/lite/; everything else uses the page's variables. */
+:root {
+  --lite-viewport-bg:#1B2733; --vp-text:#C9D1D9;
+  --vp-grid:#56677A; --vp-grid-minor:#2E3B48; --vp-wall:#8FA3B8; --vp-wall-edge:#9FB4C8;
+  --vp-porcelain:#E9EDF2; --vp-seat:#D8DDE3; --vp-sky:#FFFFFF; --vp-ground:#334455;
+}
+html[data-theme="dark"] { --lite-viewport-bg:#0D1117; }

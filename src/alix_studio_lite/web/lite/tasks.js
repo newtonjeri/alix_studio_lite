@@ -1,0 +1,176 @@
+// The task queue (decision D35) and the fixture (D29).
+//
+// The page's 22 tasks stay as designed (order, pictures, kinds); each arm step is tied to its unit
+// of the project's region catalogue: its code and name (TASK 9 as the deck has it), its status,
+// and whether it is in Release 1. Arm steps outside Release 1 show as LATER and count as done, so
+// the other arm's PASS completes the task. A project of another fixture gets that fixture's task
+// list. PASS is recorded on the server, which accepts it only after a completed test run.
+
+import { get, post, say } from './api.js';
+import { ctx, el, step, tell, unitUrl } from './ctx.js';
+import { flush, setNextFixture } from './projects.js';
+
+const ORIGINAL = JSON.parse(JSON.stringify(TASKS));       // the designer's list, restored per project
+let quiet = false;
+let fixtures = null;
+
+const SOURCE = { library: 'existing recording', upload: 'loaded file', teach: 'taught' };
+
+export function applyTasks(d) {
+  Object.assign(ctx, { fixture: d.fixture, fixtureName: d.fixture_name || d.fixture, hasDeck: d.has_deck });
+  if (d.has_deck) {
+    const byLabel = new Map(d.tasks.map(t => [t.label, t]));
+    TASKS.splice(0, TASKS.length, ...ORIGINAL.map(t => ({ ...t })));
+    for (const t of TASKS) {
+      const s = byLabel.get(t.label);
+      t.lite = s ? { left: s.left, right: s.right } : { left: null, right: null };
+      if (!s) continue;
+      t.left = s.left ? s.left.display : '—';
+      t.right = s.right ? s.right.display : '—';
+      if (s.note && t.kind !== 'procedure') t.note = s.note;
+    }
+  } else {
+    TASKS.splice(0, TASKS.length, ...d.tasks.map(s => ({
+      label: s.label, slide: null, kind: s.kind, note: s.note,
+      left: s.left ? s.left.display : '—', right: s.right ? s.right.display : '—',
+      lite: { left: s.left, right: s.right },
+    })));
+  }
+}
+
+export async function refreshTasks() {
+  if (!ctx.pid) return;
+  applyTasks(await get(`/api/projects/${ctx.pid}/tasks`));
+  window.renderTaskList();
+  relabel();
+}
+
+const later = (t, arm) => !t || !t.lite || !t.lite[arm] || t.lite[arm].later;
+const bothLater = (t) => later(t, 'left') && later(t, 'right');
+
+// The arm cards: LATER / NOT USED, and each step's status under its name.
+function relabel() {
+  const t = TASKS[currentTask];
+  if (!t || !t.lite) return;
+  for (const arm of ['left', 'right']) {
+    const card = document.getElementById(arm === 'left' ? 'choiceLeft' : 'choiceRight');
+    const state = document.getElementById(`${arm}State`);
+    const name = document.getElementById(`${arm}TaskName`);
+    const s = t.lite[arm];
+    const isLater = later(t, arm) && !bothLater(t);
+    card?.classList.toggle('lite-later', isLater);
+    if (isLater && state) state.textContent = s ? 'LATER · NOT IN RELEASE 1' : 'NOT USED';
+    let line = document.getElementById(`lite${arm}Status`);
+    if (!line && name) { line = el('div', { id: `lite${arm}Status`, class: 'lite-step-status' }); name.after(line); }
+    if (line) {
+      line.textContent = !s ? '' : s.later ? 'Not in Release 1: added later.'
+        : [s.status_label, s.recordings ? `${s.recordings} recording${s.recordings > 1 ? 's' : ''}` : 'no recording yet',
+          s.version ? `tuned ${s.version}` : ''].filter(Boolean).join(' · ');
+    }
+  }
+}
+
+function markLater() {
+  const t = TASKS[currentTask];
+  if (!t || !t.lite || bothLater(t)) { relabel(); return; }
+  for (const arm of ['left', 'right']) if (later(t, arm)) armDone[arm] = true;
+  if (later(t, selectedArm)) window.selectArm(selectedArm === 'left' ? 'right' : 'left');
+  relabel();
+}
+
+async function fixtureChoices() {
+  if (!fixtures) fixtures = (await get('/api/fixtures')).fixtures;
+  return fixtures;
+}
+
+async function addFixtureField() {
+  const row = document.querySelector('#newProjectPanel .new-project-row');
+  if (!row || document.getElementById('liteNewProjectFixture')) return;
+  const sel = el('select', { id: 'liteNewProjectFixture', 'aria-label': 'Fixture' });
+  row.querySelector('.field')?.after(el('div', { class: 'field lite-fixture-field' }, el('label', { text: 'Fixture' }), sel));
+  try {
+    for (const f of await fixtureChoices()) {
+      sel.append(el('option', { value: f.id, text: f.has_deck ? f.name : `${f.name} (provisional regions)`, selected: f.default }));
+    }
+  } catch (err) { tell(err); }
+}
+
+export function installTasks() {
+  const pageLoadTask = window.loadTask;
+  window.loadTask = function loadTask(i) {
+    quiet = true;
+    try { pageLoadTask(i); } finally { quiet = false; }
+    markLater();
+    document.dispatchEvent(new CustomEvent('lite:step'));
+  };
+
+  const pageSelectArm = window.selectArm;
+  window.selectArm = function selectArm(a) {
+    const t = TASKS[currentTask];
+    if (t && t.lite && later(t, a) && !bothLater(t)) {
+      if (!quiet) window.toast(t.lite[a] ? `${t.lite[a].display} is not in Release 1: it will be added later.` : `This task does not use the ${a.toUpperCase()} arm.`);
+      return;
+    }
+    pageSelectArm(a);
+    relabel();
+    if (!quiet) document.dispatchEvent(new CustomEvent('lite:step'));
+  };
+
+  const pageDecision = window.decision;
+  window.decision = async function decision(d) {
+    const s = step();
+    if (s && !s.later && ctx.pid) {
+      try { await post(unitUrl(s.key, 'verdict'), { verdict: d }); }
+      catch (err) { tell(err); return; }
+    }
+    pageDecision(d);
+    refreshTasks().catch(() => {});
+  };
+
+  const pageOpen = window.openProjectById;
+  window.openProjectById = async function openProjectById(id) {
+    try {
+      ctx.pid = id;
+      applyTasks(await get(`/api/projects/${id}/tasks`));
+    } catch (err) { tell(err); return; }
+    pageOpen(id);
+    relabel();
+    document.dispatchEvent(new CustomEvent('lite:step'));
+  };
+
+  const pageCreate = window.createProject;
+  window.createProject = async function createProject(name) {
+    const fixture = document.getElementById('liteNewProjectFixture')?.value || 'commode_c';
+    try { applyTasks(await get(`/api/fixtures/${fixture}/tasks`)); } catch (err) { tell(err); return null; }
+    setNextFixture(fixture);
+    const id = pageCreate(name);
+    ctx.pid = id;
+    await flush();                                        // the project now exists on the server
+    try { await refreshTasks(); } catch (err) { window.toast(say(err)); }
+    document.dispatchEvent(new CustomEvent('lite:step'));
+    return id;
+  };
+
+  const pageShowNew = window.showNewProjectPanel;
+  window.showNewProjectPanel = function showNewProjectPanel() {
+    pageShowNew();
+    addFixtureField();
+  };
+
+  // the fixture of each project in the Project Library
+  const pageRender = window.renderProjectManager;
+  window.renderProjectManager = function renderProjectManager() {
+    pageRender();
+    const db = window.loadProjectDatabase();
+    document.querySelectorAll('#projectList .project-row').forEach((row) => {
+      const id = (row.querySelector('button[onclick^="openProjectById"]')?.getAttribute('onclick') || '').match(/'([^']+)'/)?.[1];
+      const fx = db[id]?.lite?.fixture;
+      const name = (fixtures || []).find(f => f.id === fx)?.name || fx;
+      const where = row.querySelector('.project-row-name > span');
+      if (fx && where && !row.querySelector('.lite-fixture-badge')) where.before(el('span', { class: 'badge lite-fixture-badge', text: name }));
+    });
+  };
+  document.addEventListener('lite:logged-in', () => fixtureChoices().catch(() => {}));
+}
+
+export { SOURCE };

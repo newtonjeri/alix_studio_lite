@@ -33,18 +33,51 @@ cd alix_studio_lite/tools
 - Legacy Lite's first start creates the **Commode C (demo)** project. It holds the commode C test recordings, assigned to 8 left-arm regions.
 - The robot is a **stand-in** until robot I/O is built: every robot screen works and nothing moves. The Lite UI's status pill and Legacy Lite's grey line under the top bar say so.
 
-## Lite UI (V19), first step done
+## Lite UI (V19): shell and region loop working
 
-- The designer's page is served unchanged from `src/alix_studio_lite/web/index.html`. Lite's bridge is `web/lite/` (no build step), and its API is `/api/*` (`server/api_v2.py`).
-- **Connected:**
-  - log-in and the engineer PIN, checked server-side (hashed, lock-out after five wrong tries);
-  - projects as folders, with duplicate, trash, and `.alixproj` ZIP export and import;
-  - auto save to the server;
-  - STOP BOTH and SLOW STOP (no log-in needed);
-  - the live status pill.
+The designer's page is served unchanged from `src/alix_studio_lite/web/index.html`. Lite's bridge is `web/lite/` (no build step). The API is `/api/*`:
+- `server/api_v2.py`: log-in, projects, robots;
+- `server/api_units.py`: tasks and arm steps;
+- `server/lite_units.py`: each arm step's files in the project.
+
+What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRACT.md).
+
+**Working:**
+- **Shell.**
+  - Log-in and the engineer PIN are checked server-side: hashed, with a lock-out after five wrong tries.
+  - Projects are folders, with duplicate, trash, and `.alixproj` export and import, and auto save to the server. A project has a fixture (D29).
+  - STOP BOTH and SLOW STOP need no log-in.
+  - The status pill opens Robot & mode (D30). It covers Visual sim, Hardware sim and Real, connecting each arm, and each arm's E-stop with Recover.
+- **Task queue (D35).** V19's 22 tasks are tied to the region catalogue: codes, TASK 9 as the deck has it, each step's status. The 8 steps outside Release 1 are LATER and cannot be chosen.
+- **Region loop**, against the robot stand-in:
+  - Prepare: each region's pole and hand values; Apply goes to the robot.
+  - Drag & Teach: the existing recording is offered first (D31); drag teaching is in Hardware sim or Real.
+  - Save & Review: every recording is listed, one is active, and a loaded file never replaces the new one. Playback runs in 3D or on the robot.
+  - Tune + Simulation:
+    - V19's Trim, Mean Smooth (41 by default, R11) and Scale regions are the region's server-side settings, with undo.
+    - Rows marked with Trim Selected are cut, and the gap is crossed by a short joint move that is then smoothed.
+    - Optimiser: Default or Time-optimal (D24). Total time: the recorded pace, a target, or as fast as safe.
+    - A result strip shows L1–L6.
+    - The real recording is on the plot. The robot plays in 3D on the 5 ms clock, with V19's playhead on the recording's rows.
+  - Real Test:
+    - The kept version uploads to a Program ID 1–100, checked by the server; replacing a program needs a confirmation.
+    - It runs in Hardware sim or, after a confirmation, in Real, and the real outcome is shown.
+    - PASS needs a completed run of the current version. After one arm passes, V19 opens the other arm.
+  - Advanced Robot Controls: SIM, REAL and CHECK; hand; pole; the program list.
 - **Fixed in the bridge:** four defects of the page (contract, D1–D4). The most serious was STOP BOTH leaving the screen below 1,610 px wide.
-- **Checked:** in headless Chrome at 1920, 1600, 1440, 1366, 1280, 1024 and 900 px: STOP BOTH visible, no sideways scroll, no console errors.
-- **Next:** the region loop against the stand-in (teach, save and review, tune with the Default optimiser and real plots, the 3D robot in the simulation pane, real test). See the contract's last section.
+
+**Checked:**
+- Tests: `tests/test_lite_ui.py` (the page is the designer's file plus one block), `tests/test_api_v2.py`, `tests/test_lite_region_loop.py` (one arm step through the whole loop over HTTP, the E-stop interlock, cuts and the recorded-pace mode).
+- Headless Chrome:
+  - the whole loop, in light and dark themes, with no console errors;
+  - STOP BOTH visible from 900 to 1920 px wide.
+
+**Not yet:**
+- Merge + Full Sequence: template.
+- The rest of Advanced Robot Controls: uploading any file, stored and multi runs, Global Points, the arm's own drag teach.
+- Stored start poses.
+- The 3D collision check.
+- Everything that needs the real robot I/O.
 
 ## Legacy Lite (UI iteration 2, kept at /legacy/)
 
@@ -75,10 +108,10 @@ Legacy Lite is no longer developed; its working parts (3D robot, plots, optimise
 
 | Area | State |
 |---|---|
-| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 52 tests pass in about 5 s, with no ALIX checkout. |
+| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 101 tests pass in about a minute, with no ALIX checkout. |
 | Cubicle walls | Done. The 1400 mm cubicle (default) and the 800 mm cubicle are in `assets/scene/cubicles/`. |
 | Motion basics (`src/alix_studio_lite/motion/`) | Implemented and smoke-tested. It covers track read/write, the 5 ms clock, the limit set from the URDF, and the hard limits L1–L6 plus checks C1–C4 on the integer bytes. |
-| Optimiser engine (`src/alix_studio_lite/optimise/`) | Implemented and smoke-tested. **On hold.** |
+| Optimiser engine (`src/alix_studio_lite/optimise/`) | Implemented, smoke-tested and connected to the Lite UI's Tune + Simulation. Golden tests still to write. |
 
 The optimiser engine covers:
 
@@ -87,7 +120,11 @@ The optimiser engine covers:
 - the shared target-time search with the binding-limit report;
 - TOGETHER pairs;
 - the `.lite.json` record;
-- a command line: `python3 -m alix_studio_lite.optimise`.
+- a command line: `python3 -m alix_studio_lite.optimise`;
+- for the Lite UI (13 Oct):
+  - **cuts**: rows removed before tuning, with each gap crossed by a straight joint move at 20 °/s and then smoothed, so the slowdown stays local. The cut recording is the reference for L5 and L6.
+  - **the recorded pace**: no target, the recording's own timing with the Scale regions. The engine's default is still "as fast as safe".
+  - A FILE_08 example: recorded 41.72 s; the recorded pace with smoothing 41 gives 38.79 s; as fast as safe, 26.82 s; with smoothing off, the fastest safe is 118 s, because recorder ripple binds the acceleration.
 
 ### Smoke results
 
@@ -107,7 +144,9 @@ All times are true time: a file of N lines lasts (N − 1) × 5 ms. Every hard l
    - runner v14 wrapper and upload to any ID 1–100;
    - the IO3 E-stop monitor (mode 5);
    - STOP, pole and hand.
-4. The local server and API that the UI will call.
+
+   The robot stand-in already follows these rules behind the Lite UI's API, so the real backend replaces it there.
+4. ~~The local server and API that the UI will call.~~ Done: `/api/*` for the Lite UI, `/api/lite/*` for Legacy Lite.
 
 ## Findings to carry forward
 

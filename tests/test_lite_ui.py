@@ -51,8 +51,9 @@ def test_no_remote_resources():
 
 
 def test_bridge_uses_the_pages_colours():
+    """Colour values live in the page's variables, and the 3D view's palette in lite/tokens.css."""
     bad = []
-    for f in [*bridge_files(), *sorted((WEB / "lite").glob("*.css"))]:
+    for f in [*bridge_files(), *sorted(p for p in (WEB / "lite").glob("*.css") if p.name != "tokens.css")]:
         for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
             if LITERAL.search(line):
                 bad.append(f"{f.name}:{i}: {line.strip()[:90]}")

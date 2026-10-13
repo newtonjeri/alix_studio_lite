@@ -11,8 +11,8 @@ It has two front ends on one backend:
 **This repository is self-contained.** Everything Lite needs is inside this folder; nothing is read
 from an ALIX checkout or from the surrounding workspace at run time.
 
-- Requirements: [`docs/ALIX_Studio_Lite_Requirements_Revised.md`](docs/ALIX_Studio_Lite_Requirements_Revised.md) (final, v1.5)
-- Implementation plan: [`docs/ALIX_Studio_Lite_Implementation_Plan.md`](docs/ALIX_Studio_Lite_Implementation_Plan.md) (v1.5)
+- Requirements: [`docs/ALIX_Studio_Lite_Requirements_Revised.md`](docs/ALIX_Studio_Lite_Requirements_Revised.md) (final, v1.6)
+- Implementation plan: [`docs/ALIX_Studio_Lite_Implementation_Plan.md`](docs/ALIX_Studio_Lite_Implementation_Plan.md) (v1.6)
 - Build status: [`docs/STATUS.md`](docs/STATUS.md)
 - Lite UI contract (V19 page ↔ backend): [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md); the designer's files are in `docs/reference/ui_v19/`
 - Region catalogue for sign-off: [`docs/region_catalogue_commode_c.csv`](docs/region_catalogue_commode_c.csv)
@@ -108,6 +108,7 @@ The tests check that:
 - the web API takes one region through every step against the robot stand-in, including the E-stop interlock and the confirmations;
 - the Lite UI page is the designer's file plus one marked block, every page function the bridge replaces still exists, and nothing loads from the network;
 - the Lite UI's API: PINs hashed and locked out after five wrong tries, projects as folders (duplicate, trash, ZIP round trip, unsafe ZIPs refused), STOP without a log-in;
+- the Lite UI's region loop over HTTP: the task queue as the deck has it, an existing recording used by default, tuning with every limit checked, keeping a version, upload with a replace confirmation, Hardware sim and Real runs, PASS only after a completed run, the E-stop interlock, and the optimiser's cuts and recorded-pace mode;
 - Legacy Lite keeps the ALIX theme: ALIX's tokens unchanged, no colour literals outside them, nothing loaded from the network.
 
 ## Refresh the vendored copy

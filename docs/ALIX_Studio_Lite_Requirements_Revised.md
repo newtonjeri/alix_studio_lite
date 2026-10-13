@@ -1,12 +1,12 @@
 # ALIX Studio Lite — Requirements (Revised)
 
-**Status: FINAL — version 1.5, 13 October 2026.** This is the requirements document of record for ALIX Studio Lite; it supersedes all earlier drafts.
+**Status: FINAL — version 1.6, 13 October 2026.** This is the requirements document of record for ALIX Studio Lite; it supersedes all earlier drafts, including v1.5.
 
 **Revision of the requirement inputs, with findings, a borrow-from-ALIX-Studio verdict and a recommended approach for every requirement**
 
 | | |
 |---|---|
-| Version | 1.5 (final) — revised with the decisions of 13 October 2026 (section 1) |
+| Version | 1.6 (final) — revised with the decisions of 13 October 2026 (section 1), including the Lite UI decisions (D33–D36) |
 | Date | 13 October 2026 |
 | Revises | [`reference/ALIX_Studio_Lite_requirement_inputs.txt`](reference/ALIX_Studio_Lite_requirement_inputs.txt) (14 requirements + scope notes) |
 | Companion document | `ALIX_Studio_Lite_Implementation_Plan.md` in this folder (architecture, schedule, tests, safety) |
@@ -77,6 +77,10 @@ An independent reviewer re-checked each finding against the code. This version (
 | Program IDs | Like the control program: upload to any ID 1–100, replacing an existing program after a confirmation | R13 and INT-CTRL |
 | Location | Code in `alix_studio_lite/`, documents in `alix_studio_lite/docs/`. Everything Lite needs lives inside that folder. | The reused ALIX code and data are vendored into `alix_studio_lite/vendor/` with a manifest; no ALIX checkout at run time (X1/X2, deployment, plan) |
 | Delivery | Implemented with Claude (agent-driven). Order: UI/UX first; the backend is on hold at its checkpoint (D27) | Requirements show relative size only; the plan carries the schedule and the order |
+| Front end (D33) | The designer's *ALIX Studio LITE Edition V19* page is the primary UI, the **Lite UI**; the backend is built around it. The earlier UI is kept working as **Legacy Lite** (`/legacy/`). | The UI requirements are met through V19's screens; `UI_V19_CONTRACT.md` maps each screen to the backend and to these requirements |
+| Theme (D34) | The Lite UI keeps V19's own look, light and dark. The ALIX Studio theme stays in Legacy Lite. | NFR-THEME applies to Legacy Lite only |
+| Task list (D35) | V19's 22-task queue, with each arm step tied to its catalogue unit (code, pictures, pole and hand defaults, existing recordings). TASK 9 is corrected from the deck. The eight arm steps outside Release 1 show as LATER. | R1, Appendix A |
+| Settled decisions in V19 (D36) | D24, D29, D30 and D31, the target time with the closest safe time, the limit results, the E-stop state per arm and the confirmations before motion are added to V19 as small additions in its own style | R1–R4, R7, NFR-SAFETY, NFR-UX |
 
 ### Bottom line
 
@@ -1804,6 +1808,8 @@ This comes from the project brief, not the inputs file. The closest text in the 
 ---
 
 ### NFR-THEME — Keep the ALIX Studio theme and formatting
+
+> **Scope (D34, 13 October 2026):** this requirement applies to Legacy Lite. The Lite UI keeps the designer's V19 look.
 
 **Original (inputs):**
 > the lite version should also maintain the theme and formatting used in the Alix studio

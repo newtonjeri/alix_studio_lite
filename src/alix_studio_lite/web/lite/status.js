@@ -49,4 +49,5 @@ export function installStatus() {
   if (timer) clearInterval(timer);
   timer = setInterval(poll, 1500);
   poll();
+  document.addEventListener('lite:mode', poll);
 }

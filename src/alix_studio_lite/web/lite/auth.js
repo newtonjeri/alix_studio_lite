@@ -33,6 +33,7 @@ export function installAuth() {
       if (input) { input.value = ''; input.focus(); }
       return;
     }
+    document.dispatchEvent(new CustomEvent('lite:logged-in'));
     // the page's own steps after a correct PIN (V19 submitOperatorLogin)
     operatorLoggedIn = true;
     loginMessage('Login successful', 'ok');

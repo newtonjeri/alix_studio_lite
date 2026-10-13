@@ -68,6 +68,9 @@ class OptRequest:
     toppra: ToppraOptions = field(default_factory=ToppraOptions)
     origin: str | None = None             # recording path, for the record
     origin_sha256: str | None = None
+    cuts: tuple = ()                      # (start, end) 1-based recording lines to remove first
+    natural: bool = False                 # no target: keep the recorded pace (with the segment %)
+                                          # instead of the fastest the limits allow
 
 
 @dataclass

@@ -22,6 +22,7 @@ ARMS = ("left", "right")
 DEFAULT_IP = {"left": "192.168.1.10", "right": "192.168.1.103"}
 UPLOAD_BYTES_S = 45_000            # the controller's measured transfer rate
 POLE_MM_S = 25.0
+MOTION_KINDS = ("run", "prepare", "teach", "move", "playback", "pole", "hand")   # one at a time per arm
 ESTOP_TEXT = {
     "CLEAR": "E-stop released",
     "ENGAGED": "E-STOP PRESSED",
@@ -95,7 +96,7 @@ class StandInRobot:
         why = self.motion_block()
         if why:
             raise UserError(why, "Release the E-stop button, then press Recover.")
-        busy = [j for s in sides for j in self.jobs.running(arm=s) if j.kind in ("run", "prepare", "teach")]
+        busy = [j for s in sides for j in self.jobs.running(arm=s) if j.kind in MOTION_KINDS]
         if busy:
             raise UserError(f"The {busy[0].arm.upper()} arm is busy: {busy[0].title}.", "Wait, or press STOP.")
 
@@ -132,7 +133,7 @@ class StandInRobot:
             a.estop = "ENGAGED"
             a.teaching = False
             for j in self.jobs.running():
-                if j.kind in ("run", "prepare", "teach"):
+                if j.kind in MOTION_KINDS:
                     j.log(f"E-stop pressed on the {side.upper()} arm.", "error")
                     j.cancel()
         elif a.estop == "ENGAGED":
@@ -225,6 +226,49 @@ class StandInRobot:
             raise UserError("Teaching is not running on this arm.")
         a.teaching = False
         return time.time() - (a.teach_started or time.time())
+
+    def move_to(self, side: str, what: str, title: str, seconds: float = 2.5):
+        """Move the arm to a pose (a start pose, a file's first line). The real backend sweeps the
+        joint-space line for collisions first (R4); the stand-in only takes the time."""
+        self.require_motion(side)
+        a = self.arm(side)
+
+        def work(job):
+            t0 = time.time()
+            while (el := time.time() - t0) < seconds:
+                if a.estop != "CLEAR":
+                    raise UserError("INTERRUPTED — E-STOP. The arm did not reach the pose.",
+                                    "Release the E-stop and follow Recover.")
+                job.progress(f"Moving to {what}", int(100 * el / seconds), 100)
+                job.sleep(0.1)
+            job.log(f"At {what} (joints read back).")
+            return dict(at=what)
+
+        return self.jobs.start("move", title, work, arm=side)
+
+    def playback(self, side: str, lines: int, *, dry_run: bool, title: str):
+        """Move to a recording's start, then replay it: (lines - 1) x 5 ms."""
+        self.require_motion(side)
+        a = self.arm(side)
+        want = "SIM" if dry_run else "REAL"
+
+        def work(job):
+            a.controller_mode = want
+            job.progress("Moving to the recorded start", 0, lines)
+            job.sleep(1.5)
+            dur = max(int(lines) - 1, 0) * 0.005
+            t0 = time.time()
+            while (el := time.time() - t0) < dur:
+                if a.estop != "CLEAR":
+                    raise UserError("INTERRUPTED — E-STOP. The playback did not finish.",
+                                    "Release the E-stop and follow Recover.")
+                job.progress("Playing back the recording" + (" (dry run: arms stay still)" if dry_run else ""),
+                             int(lines * el / dur), lines)
+                job.sleep(0.1)
+            job.log("Playback finished.")
+            return dict(seconds=round(dur, 1), dry_run=dry_run)
+
+        return self.jobs.start("playback", title, work, arm=side)
 
     # ── programs
     def programs(self, side: str) -> list[dict]:

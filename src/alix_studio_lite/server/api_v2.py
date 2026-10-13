@@ -88,9 +88,13 @@ def get_project(app, q, body, m):
 
 @route("PUT", r"/api/projects/([A-Za-z0-9_\-]+)")
 def put_project(app, q, body, m):
+    """Create or update a project; ``?fixture=`` sets a new project's fixture (D29)."""
     session(app)
     pid = m.group(1)
-    out = app.store.put(pid, body.get("project") if isinstance(body.get("project"), dict) else body)
+    fixture = (q.get("fixture") or [None])[0]
+    if fixture is not None and fixture not in fixtures.FIXTURES:
+        raise UserError(f"Unknown fixture {fixture!r}.")
+    out = app.store.put(pid, body.get("project") if isinstance(body.get("project"), dict) else body, fixture=fixture)
     if body.get("last", True):
         app.store.set_last(pid)
     return out

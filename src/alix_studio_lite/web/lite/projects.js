@@ -9,6 +9,9 @@ import { del, get, post, put, say } from './api.js';
 let cache = {};                       // id -> the project record as the server has it
 let chain = Promise.resolve();        // writes go out one after the other
 let failed = false;
+let nextFixture = null;               // the fixture of the next new project (New Project panel)
+
+export function setNextFixture(f) { nextFixture = f; }
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
@@ -56,9 +59,12 @@ export function installProjects() {
     }
     for (const [id, rec] of Object.entries(db)) {
       if (JSON.stringify(cache[id]) === JSON.stringify(rec)) continue;
+      const isNew = !(id in cache);
       cache[id] = clone(rec);
       const body = clone(rec);
-      queue(() => put(`/api/projects/${id}`, body, { keepalive: true }).then((saved) => {
+      const url = isNew && nextFixture ? `/api/projects/${id}?fixture=${encodeURIComponent(nextFixture)}` : `/api/projects/${id}`;
+      if (isNew) nextFixture = null;
+      queue(() => put(url, body, { keepalive: true }).then((saved) => {
         if (cache[id]) cache[id].lite = saved.lite;
         if (failed) { failed = false; window.updateCurrentProjectHeader(); }
       }));

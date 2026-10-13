@@ -1,10 +1,12 @@
 # ALIX Studio Lite — Implementation Plan and Approach
 
-**Status: Version 1.5, 13 October 2026 (current).**
+**Status: Version 1.6, 13 October 2026 (current).**
+
+> **Update (D33–D36, 13 October 2026):** the designer's V19 page is now the primary UI (the Lite UI) and the backend is built around it, in the order of its handoff (`UI_V19_CONTRACT.md`, last section). The earlier UI is kept as Legacy Lite. Where this plan describes screens, read them as the matching V19 screens.
 
 | | |
 |---|---|
-| Version | 1.5 — draft for review, revised to the team's decisions of 13 October 2026 (F1–F8, D3, D15, D21, D23–D27) |
+| Version | 1.6 — revised to the team's decisions of 13 October 2026 (F1–F8, D3, D15, D21, D23–D27, D33–D36) |
 | Date | 13 October 2026 |
 | Readers | The engineers who will build Lite; the author of the requirement inputs; the ALIX owner |
 | Location | Final version in `LITE/alix_studio_lite/docs/`, beside the code in `LITE/alix_studio_lite/` (F7) |
