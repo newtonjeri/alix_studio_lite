@@ -1,0 +1,38 @@
+# ALIX Studio Lite copy of ALIX's washroom_800mm_wide_scene.yaml (the standalone 800 mm cubicle).
+# Only the mesh URI changed: it points into Lite's asset package `alix_studio_lite`
+# (assets/package.xml). Selectable in Settings; the default is 1400 mm (decision D21).
+# =============================================================================
+# 800MM WASHROOM SCENE — ARTICULATED COMMODE C CONFIGURATION
+# =============================================================================
+# This config uses separate meshes for commode body, lid, and seat with
+# joint origins and axes so that lid/seat poses are computed from joint
+# angles at runtime.  This replaces the pre-baked whole-commode meshes
+# used in washroom_scene.yaml.
+#
+# The ArticulatedSceneBuilder reads this file.  Joint angles map fixture
+# states to specific lid/seat poses:
+#   CLOSED        → lid 0°, seat 0°
+#   LID_OPEN      → lid at lid.angles_deg.open, seat 0°
+#   LID_SEAT_OPEN → lid at lid.angles_deg.open, seat at seat.angles_deg.open
+#
+# Mechanism nodes update the planning scene by calling
+# ArticulatedSceneBuilder::computePartPose() after physical motion.
+#
+# POSE REFERENCE FRAMES:
+#   - "base_link" : Position in the robot's base frame (default).
+#   - "washroom"  : Position relative to the washroom structure origin.
+# =============================================================================
+
+washroom_scene:
+  reference_frame: "base_link"
+
+  # ---------------------------------------------------------------------------
+  # WASHROOM STRUCTURE
+  # ---------------------------------------------------------------------------
+  washroom_structure:
+    enabled: true
+    pose:
+      position: [1.215, 0.0, 0.0]
+      orientation_rpy_deg: [0.0, 0.0, 180.0]
+    mesh: "package://alix_studio_lite/scene/cubicles/cubicle_800mm.stl"
+    scale: [1.0, 1.0, 1.0]

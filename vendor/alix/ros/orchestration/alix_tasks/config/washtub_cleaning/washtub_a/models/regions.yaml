@@ -1,0 +1,27 @@
+# MACHINE-GENERATED initial region manifest (F75) — refine in ALIX Studio
+# Paint mode (repaint groups, then Save re-syncs this file and the
+# orchestrator CSV). Labeling rules recorded in default_regions.obj's header.
+labeled_meshes:
+  default: default_regions.obj
+regions:
+  basin_interior:
+    region_id: 0
+    component: default
+    groups:
+    - basin_interior
+    arm_coverage: RL_paired
+    surface_type: concave_interior
+    description: Basin wash surface (bowl interior + rim, open-from-above)
+  front_face:
+    region_id: 1
+    component: default
+    groups:
+    - front_face
+    arm_coverage: RL_paired
+    description: Front lip exterior
+  basin_siide:
+    region_id: 2
+    component: default
+    groups:
+    - basin_siide
+    arm_coverage: RL_paired

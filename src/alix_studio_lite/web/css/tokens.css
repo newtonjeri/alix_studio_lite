@@ -1,0 +1,89 @@
+/* ALIX Studio Lite theme tokens.
+   The first two blocks are ALIX's design/_tokens.css, copied verbatim (vendor/alix/design/_tokens.css).
+   Do not edit them here; change ALIX's file and re-vendor. Lite's own tokens follow. */
+:root {
+  /* brand — selection and primary action ONLY, never decoration */
+  --brand:#2F96EE; --brand-strong:#1B7FD4; --brand-tint:#97CBF7;
+  --brand-wash:rgba(47,150,238,.10);
+  /* neutrals — the 90% */
+  --bg:#FFFFFF; --panel:#FFFFFF; --panel-raised:#FAFBFC;
+  --surface-inset:#F4F6F8; --surface-ribbon-2:#F4F6F8;
+  --surface-overlay:rgba(255,255,255,.97); --surface-scrim:rgba(16,24,40,.28);
+  --border:#EEEEEE; --border-strong:#DCDFE3;
+  --text:#14181D; --muted:#6B7480;
+  --viewport-bg:#1B2733;            /* canvas stays dark under light chrome */
+  /* state — the only saturated colours on screen */
+  --ok:#2E9E5B; --warning:#C77700; --danger:#D93A34;
+  --ok-wash:rgba(46,158,91,.14); --warn-wash:rgba(199,119,0,.14); --danger-wash:rgba(217,58,52,.12);
+  /* type — 11px floor, density from grouping not from shrinking */
+  --fs-xs:14px; --fs-sm:16px; --fs-md:17px; --fs-lg:19px; --fs-xl:22px;
+  --font:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* space / shape / elevation */
+  --s1:2px; --s2:4px; --s3:6px; --s4:8px; --s5:12px; --s6:16px; --s7:24px;
+  --radius:4px; --radius-sm:2px; --radius-pill:999px;
+  --shadow-sm:0 0 0 1px rgba(16,24,40,.04);
+  --shadow-md:0 2px 4px rgba(16,24,40,.05);
+  --shadow-lg:0 4px 4px rgba(16,24,40,.05);
+  /* structural — the fixed decisions */
+  --cmdbar-max:210px;               /* auto-height, max 2 rows, never scrolls */
+  --browser-w:300px; --props-w:330px;
+  --target-min:24px;                /* WCAG 2.5.8 */
+  --target-primary:44px;            /* high-frequency controls */
+}
+:root[data-theme="dark"] {
+  --brand:#2F96EE; --brand-strong:#57A9F0; --brand-tint:#1B4E7A;
+  --brand-wash:rgba(47,150,238,.16);
+  /* --panel is translucent on purpose and --panel-raised is not: panels float
+     over the dark 3-D canvas, and the raised variant is the opaque one. An
+     earlier transcription of this file collapsed the two to the same hex and
+     dropped the alpha, which is why they differed only in letter case. */
+  --bg:#121821; --panel:rgba(22,27,34,.86); --panel-raised:#161b22;
+  --surface-inset:rgba(1,4,9,.30); --surface-ribbon-2:rgba(13,17,23,.40);
+  --surface-overlay:rgba(10,14,20,.97); --surface-scrim:rgba(1,4,9,.55);
+  --border:rgba(139,148,158,.24); --border-strong:#30363d;
+  --text:#e6edf3; --muted:#8b949e; --viewport-bg:#0D1117;
+  --ok:#3fb950; --warning:#ffcc66; --danger:#ff7b72;
+  --ok-wash:rgba(63,185,80,.16); --warn-wash:rgba(255,204,102,.16); --danger-wash:rgba(255,123,114,.16);
+  --shadow-sm:0 0 0 1px rgba(1,4,9,.30);
+  --shadow-md:0 2px 4px rgba(1,4,9,.30);
+  --shadow-lg:0 4px 4px rgba(1,4,9,.40);
+}
+
+/* ── Tokens ALIX Studio defines in editor.css only (same values) ─────────── */
+:root {
+  --brand-seam:#12558F; --accent:var(--brand); --accent-soft:var(--brand-wash);
+  --surface-bar:rgba(255,255,255,.92);
+}
+:root[data-theme="dark"] {
+  --brand-seam:#0B3A63; --surface-bar:rgba(18,24,33,.92);
+}
+
+/* ── Lite additions (documented; ALIX values above are untouched) ─────────
+   - accessible fills/texts where a shared token fails WCAG AA on white
+     (white on --brand is 3.13:1; --ok and --warning as text are ~3.4:1);
+   - arm identity colours, kept apart from brand blue (selection) and the
+     state colours, and ALWAYS shown with the words LEFT / RIGHT;
+   - a seven-colour joint palette avoiding brand blue, red, green and amber. */
+:root {
+  --primary-fill:#1A75C4; --primary-fill-hover:#155F9F; --on-primary:#FFFFFF;
+  --ok-text:#1F7A45; --warning-text:#9A5A00; --danger-text:#B42318;
+  --danger-fill:#C62828; --danger-fill-hover:#A61F1F; --on-danger:#FFFFFF;
+  --arm-left:#5A54C8; --arm-left-wash:rgba(90,84,200,.12);
+  --arm-right:#E0702E; --arm-right-wash:rgba(224,112,46,.13);
+  --j1:#7C5CFF; --j2:#00A3A3; --j3:#D6409F; --j4:#8D6E63; --j5:#3F51B5; --j6:#9E9D24; --j7:#546E7A;
+  --appbar-h:60px; --rail-w:232px;
+  --picture-bg:#FFFFFF;             /* deck pictures are drawn on white */
+  --vp-text:#C9D1D9; --vp-note-bg:rgba(0,0,0,.35);   /* text over the dark 3D canvas */
+  /* 3D scene: the canvas stays dark in both themes (ALIX rule) */
+  --vp-grid:#56677A; --vp-grid-minor:#2E3B48; --vp-wall:#8FA3B8; --vp-wall-edge:#9FB4C8;
+  --vp-porcelain:#E9EDF2; --vp-seat:#D8DDE3; --vp-sky:#FFFFFF; --vp-ground:#334455;
+}
+:root[data-theme="dark"] {
+  --primary-fill:#2F86D6; --primary-fill-hover:#4A9BE3;
+  --ok-text:#56D364; --warning-text:#FFCC66; --danger-text:#FF8E86;
+  --danger-fill:#D93A34; --danger-fill-hover:#E5534B;
+  --arm-left:#8C87F0; --arm-left-wash:rgba(140,135,240,.16);
+  --arm-right:#F29A62; --arm-right-wash:rgba(242,154,98,.16);
+  --j1:#A58BFF; --j2:#2CC5C5; --j3:#F06AB8; --j4:#B39188; --j5:#7986CB; --j6:#C0CA33; --j7:#90A4AE;
+}

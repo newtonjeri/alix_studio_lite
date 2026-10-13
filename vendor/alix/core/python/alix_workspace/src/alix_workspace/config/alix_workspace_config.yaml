@@ -1,0 +1,167 @@
+# =============================================================================
+# WORKSPACE ANALYSIS CONFIGURATION  (generalised, ROS-independent)
+# =============================================================================
+# This file drives a robot-agnostic workspace analysis. The reachability core
+# reads kinematics from a URDF, so adapting to a new robot means pointing the
+# `chains` at its URDF + links — no code changes.
+#
+# The lower sections (fixtures / sensor_model / safety / coverage) are an
+# EXAMPLE DOMAIN (the Butterfli ALIX washroom robot). They are optional: delete
+# or replace them for a different application.
+# =============================================================================
+
+
+# =============================================================================
+# Reachability  (URDF-driven, any serial chain)
+# =============================================================================
+reachability:
+  voxel_resolution_m: 0.04          # envelope grid resolution
+  workspace_radius_m: 1.4            # half-extent in X and Y about base_link
+  workspace_height_min_m: -0.2
+  workspace_height_max_m: 1.8
+  # Dense sweep: the FK is vectorised (numpy) and the result is computed offline
+  # once and committed, so we can afford a high-fidelity envelope. N^dof FK calls.
+  samples_per_joint: 7
+  # The reach envelope is the volume containing the reachable points: close +
+  # fill the (sparsely sampled) voxel occupancy into a solid region so any point
+  # inside counts as reachable (not just voxels an FK sample landed in).
+  fill_envelope: true
+  fill_closing_iter: 2
+
+  # The voxel grid is built in the chains' shared root frame. We use the FULL
+  # robot URDF and root every chain at `base_link`, so FK is computed in
+  # base_link and AGREES EXACTLY with alix_taskgen's frames (verified:
+  # base_link->alix_ref_frame == alix_taskgen's constant).
+  #
+  # Each chain is a full 8-DOF arm: the prismatic sliding-plate (pole, travel
+  # 0.0-0.315 m) + 7 revolute joints. The pole IS swept (joint_samples below) so
+  # the envelope/manipulability reflect the TOTAL 8-DOF workspace (union over all
+  # pole heights), not just the home pole position. `urdf` is resolved relative
+  # to THIS config file. Raise the plate sample count for a denser pole sweep.
+  chains:
+    left:
+      urdf: ../urdf/alix.urdf
+      base_link: base_link
+      tip_link: L_glove_frame_2
+      joint_samples: {L_sliding_plate_joint: 5}
+    right:
+      urdf: ../urdf/alix.urdf
+      base_link: base_link
+      tip_link: R_glove_frame_2
+      joint_samples: {R_sliding_plate_joint: 5}
+
+  # Pairs whose shared workspace (intersection) should also be computed.
+  overlaps:
+    - [left, right]
+
+
+# =============================================================================
+# IK / MTC feasibility
+# =============================================================================
+ik_solver:
+  default: trac_ik          # preferred; falls back to kdl, then reachability proxy
+  fallback: kdl
+  timeout_ms: 50
+
+mtc:
+  nominal_ee_speed_m_s: 0.10       # nominal Cartesian speed for time estimates
+  max_blend_dir_change_deg: 30.0   # blended turn beyond this = C2 violation
+
+
+# =============================================================================
+# Frames
+# =============================================================================
+# The reachability grid is built in base_link (chains root at base_link with no
+# root transform) — points are queried directly in base_link. The former
+# `frames.base_link_to_ugv_body_xyz` offset knob was REMOVED: it was zero in
+# every config, its docstrings wrongly claimed a UGV_body grid frame, and
+# "correcting" it to the real base_link->UGV_body Z offset (0.195 m) would have
+# silently shifted every reachability lookup.
+
+
+# =============================================================================
+# EXAMPLE DOMAIN — Butterfli ALIX washroom (optional; safe to remove)
+# =============================================================================
+
+# --- Fixture definitions -----------------------------------------------------
+fixtures:
+  toilet:
+    primitive: box
+    dimensions: [0.45, 0.40, 0.50]
+    mounting_height_m: 0.40
+    position_base_link: [1.005, 0.0, 0.40]
+    approach_vectors: [[0, 0, -1], [0, 1, 0]]
+    clearance_envelope_m: 0.10
+    preferred_arm: right
+  urinal:
+    primitive: cylinder
+    dimensions: [0.15, 0.60]
+    position_base_link: [0.8, -0.45, 0.65]
+    approach_vectors: [[0, 1, 0], [-1, 0, 0]]
+    clearance_envelope_m: 0.08
+    preferred_arm: left
+  sink:
+    primitive: box
+    dimensions: [0.50, 0.45, 0.25]
+    position_base_link: [0.7, 0.0, 0.85]
+    approach_vectors: [[0, 0, -1], [0, 1, 0]]
+    clearance_envelope_m: 0.10
+    preferred_arm: dual
+  mirror:
+    primitive: box
+    dimensions: [0.80, 0.02, 0.60]
+    position_base_link: [0.6, 0.0, 1.2]
+    approach_vectors: [[0, 1, 0]]
+    clearance_envelope_m: 0.05
+    preferred_arm: right
+    reflective: true
+  floor:
+    primitive: plane
+    dimensions: [2.0, 2.0]
+    position_base_link: [0.0, 0.0, 0.0]
+    approach_vectors: [[0, 0, -1]]
+    clearance_envelope_m: 0.0
+    preferred_arm: dual
+  wall:
+    primitive: plane
+    dimensions: [1.5, 2.0]
+    position_base_link: [0.9, 0.0, 1.0]
+    approach_vectors: [[0, 1, 0]]
+    clearance_envelope_m: 0.0
+    preferred_arm: dual
+
+
+# --- RealSense D435i wet-environment degradation model ------------------------
+sensor_model:
+  base_depth_noise_m: 0.002
+  fog_noise_per_unit_m: 0.050
+  reflective_depth_dropout_prob: 0.35
+  min_confidence_for_autonomy: 0.45
+  noise_zero_confidence_m: 0.06
+
+
+# --- Human-intrusion safety zones --------------------------------------------
+safety:
+  base_exclusion_radius_m: 1.5
+  human_retract_radius_m: 1.5
+  caution_radius_m: 2.0
+  arm_swept_buffer_m: 0.20
+  stall_entry_radius_m: 0.8
+  hygiene_hold_time_s: 30
+
+
+# --- Cleaning-path coverage thresholds ---------------------------------------
+coverage:
+  min_coverage_pct:
+    toilet: 90.0
+    urinal: 85.0
+    sink: 90.0
+    mirror: 95.0
+    floor: 80.0
+    wall: 75.0
+  max_redundancy: 1.5
+  blind_spot_radius_mm: 15
+  # Accuracy controls for the (sampling-based) coverage estimate. The glove
+  # cleaning AREA + contact axis live in alix_taskgen/config/glove_frames.yaml.
+  surface_samples: 6000      # surface sample density (higher = tighter estimate)
+  seed: 0                    # fixed seed -> reproducible coverage numbers

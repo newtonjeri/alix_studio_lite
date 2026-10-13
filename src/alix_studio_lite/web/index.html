@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ALIX Studio Lite</title>
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/robot.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-bar">
+      <div class="brand">
+        <!-- The butterfli mark, copied from ALIX Studio (web_editor/template.html). -->
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <g stroke="var(--brand-seam)" stroke-width="0.55" stroke-linejoin="round">
+            <path fill="var(--brand)" d="M0.60 1.31 L1.52 0.60 L2.60 0.75 L15.45 11.23 L15.63 12.18 L2.20 22.96 L1.12 22.96 L0.60 22.44 Z"/>
+            <path fill="var(--brand)" d="M31.40 22.44 L30.88 22.96 L29.80 22.96 L16.37 12.18 L16.55 11.23 L29.40 0.75 L30.48 0.60 L31.40 1.31 Z"/>
+            <path fill="var(--brand-strong)" d="M2.02 24.35 L15.69 13.17 L10.95 31.25 L10.36 31.40 Z"/>
+            <path fill="var(--brand-strong)" d="M21.64 31.40 L21.05 31.25 L16.31 13.17 L29.98 24.35 Z"/>
+          </g>
+        </svg>
+        <div>
+          <h1>ALIX Studio Lite</h1>
+          <button class="fixture-btn" id="fixtureBtn" title="Change the fixture (commode, urinal, wash basin)">&nbsp;</button>
+        </div>
+      </div>
+
+      <div class="segmented" id="modeSwitch" role="radiogroup" aria-label="Where motions go">
+        <button data-mode="visual" role="radio" title="Visual sim: the robot moves in the 3D view. No hardware is used."><span class="long">Visual sim</span><span class="short">Visual</span></button>
+        <button data-mode="hwsim" role="radio" title="Hardware sim: the controller runs programs in its SIM mode. The arms stay still."><span class="long">Hardware sim</span><span class="short">HW sim</span></button>
+        <button data-mode="real" role="radio" title="Real robot: the arms move. Needs your confirmation."><span class="long">Real robot</span><span class="short">Real</span></button>
+      </div>
+
+      <div class="bar-group" id="armChips"></div>
+      <div class="bar-spacer"></div>
+      <div class="stop-group" id="stopGroup" hidden
+           title="Software STOP: slows the arm to a stop. The hardware E-stop buttons are the safety stop.">
+        <button class="btn-stop" data-stop="left">STOP L</button>
+        <button class="btn-stop" data-stop="right">STOP R</button>
+        <button class="btn-stop all" data-stop="all">STOP ALL</button>
+      </div>
+      <button class="role-chip" id="roleChip" title="Operator or engineer">Operator</button>
+      <button class="icon-btn" id="themeBtn" title="Light or dark theme" aria-label="Theme"></button>
+    </header>
+
+    <nav class="tabbar" id="tabbar" aria-label="Screens"></nav>
+    <div class="banners" id="banners"></div>
+    <main id="main" tabindex="-1"></main>
+
+    <footer class="status-bar">
+      <span id="statusSpin" class="spinner" hidden></span>
+      <span class="grow" id="statusText">Starting…</span>
+      <span id="statusJobs"></span>
+      <span id="statusVersion" class="mono"></span>
+    </footer>
+  </div>
+  <div id="modalRoot"></div>
+  <div class="toasts" id="toastRoot" aria-live="polite"></div>
+  <script src="/vendor/plotly.min.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

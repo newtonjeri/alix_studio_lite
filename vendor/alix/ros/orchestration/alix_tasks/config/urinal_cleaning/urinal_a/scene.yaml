@@ -1,0 +1,23 @@
+# =============================================================================
+# FIXTURE MODEL: urinal_a  (SG Urinal — single static mesh)
+# =============================================================================
+
+fixture:
+  display_name: "Urinal A (SG)"
+  type: "urinal"
+  articulated: false
+
+  # AUTO-DERIVED bring-up pose (alix-studio placement standard):
+  # x = UGV half-length (0.225 m) + 250 mm UGV-front->fixture-front-tip
+  #     + front-tip extent from the mesh; front tip at x=0.475 (UGV half 0.225 m + 250 mm standoff), y centred at -0.0067, z=0.280 from venue slot (mounting height is venue knowledge).
+  # Calibrate in place like commode_c (this is the uncalibrated value).
+  pose:
+    relative_to: "base_link"
+    position: [0.7849, -0.0067, 0.28]
+    orientation_rpy_deg: [0.0, 0.0, 0.0]
+    default_ugv_standoff_m: 0.25
+
+  meshes:
+    default: "package://alix_tasks/config/urinal_cleaning/urinal_a/models/urinal.stl"
+
+  scale: [1.0, 1.0, 1.0]

@@ -1,0 +1,1118 @@
+# =============================================================================
+# MESH-LEVEL REGION ANNOTATIONS (commode_c) — SINGLE SOURCE OF TRUTH
+# =============================================================================
+# This manifest is the authoritative registry for region metadata. The
+# orchestrator's regions_commode.csv is DERIVED from it (the studio server
+# syncs it on save); edit regions here, not in the CSV.
+#
+# Labeled mesh convention:
+#   - One OBJ per component, same local frame and units (metres) as the
+#     component STL (body.stl / lid.stl / seat.stl).
+#   - One OBJ object per region group:  `o <group_name>`  (Blender: split by
+#     selection, name the objects; numeric suffixes like `.001` are stripped).
+#   - Authored once, revisable any time in Blender/MeshLab or with the web
+#     editor's Paint mode (export from the Region Labels panel).
+#
+# Region entries:
+#   groups              ordered list of labeled groups; >1 group = compound
+#                       region (planned per group, chained into one task).
+#                       Each entry is a bare group name (lives in this
+#                       region's `component` OBJ) or {component, name} for a
+#                       group in a NEIGHBOURING component's OBJ — one region
+#                       may span multiple components (e.g. body + seat).
+#   component           primary component (default body); per-group override
+#                       via the {component, name} group form
+#   arm_coverage        R | L | RL_paired | RL_compound
+#   region_id           stable orchestrator id (schedules reference these);
+#                       assigned automatically by the studio when omitted
+#   articulation_state  static | open | closed — articulated-component pose
+#                       the region is cleaned in (default: closed for
+#                       lid/seat, static for body)
+#   lid_state/seat_state  open | closed — explicit full-fixture articulation
+#                       while this region is cleaned, editable from the studio
+#                       Generate tab. Overrides the component-derived guess and
+#                       drives commode_fixture_type (closed / lid_open /
+#                       lid_seat_open). Use for regions whose required state
+#                       the components can't express, e.g. a hinge region
+#                       spanning seat+lid cleaned with the lid open and the
+#                       seat down, or a body region needing the lid open.
+#                       Reality logic is enforced: seat_state open forces
+#                       lid_state open (the seat swings up against the lid).
+#   requires_lid/seat   optional overrides; default: derived from components
+#                       plus any explicit open lid_state/seat_state
+#   ugv_standoff_m      authoring default UGV standoff (METRES, e.g. 0.38) the
+#                       region's tasks are generated at; absent = fleet default
+#                       0.25. Stamped into each generated config's
+#                       task_parameters.ugv_standoff_m (the executable record
+#                       the runtime scene + orchestrator repositioning read).
+#                       Changing it does NOT retroactively update existing
+#                       configs/plans — regenerate them.
+#   surface_type        optional planner override (planar | near_planar |
+#                       single_curved | double_curved | concave_interior | annular)
+#   spacing_m           optional row-spacing override
+#   generate            false = NO task config for this region (Newton,
+#                       2026-08-18 — G50 corpus ruling): its coverage belongs
+#                       to a covering task (deep -> bowl tasks; lidsides_back
+#                       -> hinge_area; the side/front strips -> lid_side /
+#                       lid_seat_front). The mesh group stays referenceable
+#                       by the covering task's `groups:`.
+#   path_topology       "ring" = the surface is an annulus (seat_ring, bowl
+#                       rim/ring families). The path is generated as arc
+#                       strokes around the ring — NO segment may chord the
+#                       central void; every segment lies ON the part
+#                       (Newton, 2026-08-18 — G50).
+#   extra_collisions    declared residual-contact pairs ([link, object] lists)
+#                       for this region (Newton, 2026-08-18 — G40): where the
+#                       region's geometry forces an OFF-SET hand link to brush
+#                       the surface being pressed (curved/rim/interior
+#                       families wrapping the hand), the pair is declared HERE
+#                       and the generator emits it into the config's
+#                       allow/forbid `collisions:` lists (the per-task C++
+#                       escape hatch). Declare both arms' pairs; each config
+#                       takes only its own side's. Licensed for BRUSHING only:
+#                       the reach gate measures every declared pair's
+#                       penetration at the accepted poses and fails the config
+#                       beyond the 20 mm pad compliance. Pairs are MEASURED
+#                       (audit: depth envelope per blocking pair, G40), never
+#                       curated, and never a way to re-widen the global
+#                       contact_links.yaml sets.
+#
+# Mechanism pseudo-regions (lid_open, seat_open, lid_close) are not mesh
+# regions; they live only in the orchestrator CSV.
+# =============================================================================
+
+labeled_meshes:
+  body: body_regions.obj
+  lid: lid_regions.obj
+  seat: seat_regions.obj
+
+regions:
+  # --- body ---
+  front:
+    region_id: 11
+    component: body
+    groups:
+    - front
+    arm_coverage: RL_paired
+    description: Front exterior surface
+    # Newton, 2026-08-18: front-face cleaning runs at 380 mm UGV standoff
+    # (the seat_ring_sides_front precedent) — the extra 130 mm opens the
+    # bin-to-fixture gap the approach needs.
+    ugv_standoff_m: 0.38
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_little_1, commode_body]   # 0.2 mm (G50 archive audit r3)
+    - [ILH_left_ring_1, commode_body]   # 1.1 mm (G50 archive audit r3)
+    - [ILH_left_index_1, commode_body]   # 1.6 mm (G50 archive audit r3)
+    - [ILH_left_middle_1, commode_body]   # 0.2 mm (G50 archive audit r3)
+    - [ILH_left_thumb_4, commode_body]   # 0.5 mm (G50 archive audit r3)
+    - [ILH_left_thumb_tip, commode_body]   # 0.6 mm (G50 archive audit r3)
+    - [IRH_right_little_1, commode_body]   # 0.6 mm (G50 archive audit r3)
+    - [IRH_right_ring_1, commode_body]   # 1.2 mm (G50 archive audit r3)
+    - [IRH_right_index_1, commode_body]   # ~1 mm (G50 archive audit r3)
+    - [IRH_right_middle_1, commode_body]   # ~1 mm (G50 archive audit r3)
+    - [IRH_right_thumb_4, commode_body]   # ~1 mm (G50 archive audit r3)
+    - [IRH_right_thumb_tip, commode_body]   # ~1 mm (G50 archive audit r3)
+    - [ILH_left_thumb_1, commode_body]   # max 7.5 mm, x58
+    - [ILH_palm_rubber_1, commode_body]   # max 1.3 mm, x38
+    - [ILH_plam, commode_body]   # max 16.0 mm, x136
+    - [IRH_plam, commode_body]   # max 13.9 mm, x144
+    - [IRH_right_thumb_1, commode_body]   # max 7.6 mm, x104
+    - [ILH_plam, commode_seat]   # max 2.4 mm, x11 (G40 pass 2)
+    - [IRH_palm_rubber_1, commode_body]   # max 6.7 mm, x33 (G40 pass 2)
+    - [IRH_right_index_1, commode_body]   # max 0.7 mm, x8 (G40 pass 2)
+    - [IRH_right_thumb_4, commode_body]   # max 3.5 mm, x9 (G40 pass 2)
+    - [IRH_right_thumb_tip, commode_body]   # max 2.6 mm, x9 (G40 pass 2)
+  side:
+    region_id: 1
+    component: body
+    groups: [sides]
+    arm_coverage: RL_paired
+    description: Side surface
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [IRH_right_middle_1, commode_seat]   # <=20 mm walk audit (G50 r5)
+    - [IRH_right_ring_1, commode_seat]   # 1.3 mm, x1 (G50 archive audit r4)
+    - [ILH_left_ring_1, commode_seat]   # mirror of the right pair (G50)
+    - [IRH_right_little_1, commode_seat]   # 0.6 mm, x1 (G50 archive audit r3)
+    - [IRH_right_index_1, commode_body]   # 1.6 mm, x1 (G50 archive audit r3)
+    - [ILH_left_little_1, commode_seat]   # mirror of the right pair (G50)
+    - [ILH_left_index_1, commode_body]   # mirror of the right pair (G50)
+    - [IRH_right_middle_1, commode_body]   # 0.5 mm, x1 (G50 archive audit r2)
+    - [ILH_left_little_1, commode_body]   # 0.5-0.7 mm, x2 (G50 archive audit)
+    - [IRH_right_little_1, commode_body]   # 0.9 mm, x1 (G50 archive audit)
+    - [IRH_right_ring_1, commode_body]   # 0.2 mm, x1 (G50 archive audit)
+    - [ILH_left_index_pad, commode_body]   # max 7.9 mm, x42
+    - [ILH_left_index_tip, commode_body]   # max 6.2 mm, x42
+    - [ILH_left_middle_pad, commode_body]   # max 5.3 mm, x49
+    - [ILH_left_middle_tip, commode_body]   # max 5.5 mm, x49
+    - [ILH_left_thumb_1, commode_lid]   # max 8.4 mm, x42
+    - [ILH_left_thumb_2, commode_lid]   # max 23.6 mm, x50 (marginal)
+    - [ILH_left_thumb_2, commode_seat]   # max 15.5 mm, x49
+    - [ILH_left_thumb_3, commode_body]   # max 8.9 mm, x56
+    - [ILH_palm_rubber_1, commode_lid]   # max 15.5 mm, x64
+    - [ILH_palm_rubber_1, commode_seat]   # max 14.3 mm, x71
+    - [ILH_plam, commode_lid]   # max 17.9 mm, x71
+    - [ILH_plam, commode_seat]   # max 17.4 mm, x71
+    - [IRH_palm_rubber_1, commode_body]   # max 11.3 mm, x14
+    - [IRH_palm_rubber_1, commode_seat]   # max 12.4 mm, x14
+    - [IRH_plam, commode_lid]   # max 20.7 mm, x14 (marginal)
+    - [IRH_plam, commode_seat]   # max 9.4 mm, x14
+    - [IRH_right_little_pad, commode_body]   # max 1.3 mm, x14
+    - [IRH_right_little_tip, commode_body]   # max 1.2 mm, x14
+    - [IRH_right_thumb_2, commode_body]   # max 7.2 mm, x21
+    - [IRH_right_thumb_2, commode_seat]   # max 7.1 mm, x14
+    - [IRH_right_thumb_3, commode_body]   # max 7.6 mm, x21
+    - [ILH_left_index_pad, commode_lid]   # max 7.4 mm, x7 (G40 pass 2)
+    - [ILH_left_index_pad, commode_seat]   # max 6.7 mm, x7 (G40 pass 2)
+    - [ILH_left_index_tip, commode_lid]   # max 5.7 mm, x7 (G40 pass 2)
+    - [ILH_left_little_pad, commode_body]   # max 4.1 mm, x21 (G40 pass 2)
+    - [ILH_left_little_pad, commode_lid]   # max 1.6 mm, x7 (G40 pass 2)
+    - [ILH_left_little_tip, commode_body]   # max 4.6 mm, x21 (G40 pass 2)
+    - [ILH_left_little_tip, commode_lid]   # max 1.5 mm, x7 (G40 pass 2)
+    - [ILH_left_middle_pad, commode_seat]   # max 4.5 mm, x28 (G40 pass 2)
+    - [ILH_left_middle_tip, commode_seat]   # max 4.2 mm, x28 (G40 pass 2)
+    - [ILH_left_ring_pad, commode_body]   # max 5.1 mm, x21 (G40 pass 2)
+    - [ILH_left_ring_pad, commode_lid]   # max 6.1 mm, x21 (G40 pass 2)
+    - [ILH_left_ring_pad, commode_seat]   # max 4.9 mm, x21 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_body]   # max 5.4 mm, x21 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_lid]   # max 5.6 mm, x21 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_seat]   # max 5.2 mm, x21 (G40 pass 2)
+    - [ILH_left_thumb_1, commode_seat]   # max 6.1 mm, x7 (G40 pass 2)
+    - [ILH_left_thumb_2, commode_body]   # max 21.7 mm, x35 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_lid]   # max 8.2 mm, x22 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_seat]   # max 11.5 mm, x22 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_body]   # max 17.8 mm, x42 (G40 pass 2)
+    - [ILH_plam, commode_body]   # max 15.4 mm, x42 (G40 pass 2)
+    - [IRH_palm_rubber_1, commode_lid]   # max 4.7 mm, x7 (G40 pass 2)
+    - [IRH_plam, commode_body]   # max 11.2 mm, x7 (G40 pass 2)
+    - [IRH_right_index_pad, commode_body]   # max 5.0 mm, x14 (G40 pass 2)
+    - [IRH_right_index_tip, commode_body]   # max 4.9 mm, x14 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_body]   # max 5.9 mm, x14 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_body]   # max 4.8 mm, x14 (G40 pass 2)
+    - [IRH_right_thumb_1, commode_lid]   # max 7.6 mm, x7 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_lid]   # max 11.0 mm, x7 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_seat]   # max 4.0 mm, x7 (G40 pass 2)
+    - [ILH_left_index_tip, commode_seat]   # max 9.0 mm, x15 (G40 pass 3)
+    - [ILH_left_little_pad, commode_seat]   # max 3.7 mm, x14 (G40 pass 3)
+    - [ILH_left_little_tip, commode_seat]   # max 3.6 mm, x15 (G40 pass 3)
+    - [ILH_left_middle_pad, commode_lid]   # max 5.6 mm, x11 (G40 pass 3)
+    - [ILH_left_middle_tip, commode_lid]   # max 6.0 mm, x11 (G40 pass 3)
+    - [IRH_right_ring_pad, commode_body]   # max 4.0 mm, x4 (G40 pass 3)
+    - [IRH_right_ring_tip, commode_body]   # max 3.3 mm, x3 (G40 pass 3)
+  top:
+    region_id: 6
+    component: body
+    groups:
+    - top
+    arm_coverage: RL_paired
+    path_topology: ring   # bowl-rim annulus — arc strokes, no chords (G50)
+    # Measured reachable-coverage ceiling (G50): with the ring planner the
+    # rim reach-solves FULLY (45/45 R, 27/27 L — historically its transit
+    # fraction was the corpus's worst) but the rim's outer/inner roll-off
+    # caps swept coverage at ~89-94% per arm. Same principle as the crease
+    # families' 90 (Newton, 2026-08-17). FLAGGED for Newton's review.
+    coverage_pass_pct: 90
+    # Schedule row 8 cleans the bowl rim AFTER seat_open — lid AND seat up
+    # (archived corpus: commode_fixture_type lid_seat_open). Undeclared, the
+    # authoring world typed this region 'closed' and judged rim poses
+    # against a lid+seat lying shut over it — the G49 bug class (G50).
+    lid_state: open
+    seat_state: open
+    description: Top of commode bowl rim
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [IRH_right_thumb_3, commode_body]   # 0.8-3.8 mm, x4 (G50 archive audit)
+    - [ILH_left_index_pad, commode_lid]   # max 9.6 mm, x252
+    - [ILH_left_index_pad, commode_seat]   # max 7.8 mm, x224
+    - [ILH_left_index_tip, commode_lid]   # max 9.1 mm, x252
+    - [ILH_left_index_tip, commode_seat]   # max 7.4 mm, x224
+    - [ILH_left_middle_pad, commode_lid]   # max 7.0 mm, x217
+    - [ILH_left_middle_pad, commode_seat]   # max 8.5 mm, x217
+    - [ILH_left_middle_tip, commode_lid]   # max 9.2 mm, x217
+    - [ILH_left_middle_tip, commode_seat]   # max 8.2 mm, x217
+    - [ILH_left_thumb_3, commode_lid]   # max 11.6 mm, x288
+    - [ILH_palm_rubber_1, commode_lid]   # max 20.1 mm, x288 (marginal)
+    - [ILH_plam, commode_lid]   # max 24.4 mm, x288 (marginal)
+    - [ILH_plam, commode_seat]   # max 8.1 mm, x260
+    - [IRH_palm_rubber_1, commode_lid]   # max 23.3 mm, x294 (marginal)
+    - [IRH_plam, commode_lid]   # max 26.8 mm, x294 (marginal)
+    - [IRH_plam, commode_seat]   # max 12.1 mm, x252
+    - [IRH_right_index_pad, commode_lid]   # max 6.8 mm, x217
+    - [IRH_right_index_pad, commode_seat]   # max 8.5 mm, x196
+    - [IRH_right_index_tip, commode_lid]   # max 7.8 mm, x217
+    - [IRH_right_index_tip, commode_seat]   # max 8.1 mm, x196
+    - [IRH_right_middle_pad, commode_lid]   # max 9.5 mm, x182
+    - [IRH_right_middle_pad, commode_seat]   # max 8.6 mm, x203
+    - [IRH_right_middle_tip, commode_seat]   # max 5.8 mm, x203
+    - [IRH_right_thumb_3, commode_lid]   # max 12.6 mm, x273
+    - [IRH_right_thumb_3, commode_seat]   # max 12.0 mm, x203
+    - [ILH_left_little_pad, commode_body]   # max 4.4 mm, x35 (G40 pass 2)
+    - [ILH_left_little_pad, commode_lid]   # max 8.0 mm, x98 (G40 pass 2)
+    - [ILH_left_little_pad, commode_seat]   # max 7.3 mm, x189 (G40 pass 2)
+    - [ILH_left_little_tip, commode_body]   # max 4.3 mm, x35 (G40 pass 2)
+    - [ILH_left_little_tip, commode_lid]   # max 7.0 mm, x98 (G40 pass 2)
+    - [ILH_left_little_tip, commode_seat]   # max 7.3 mm, x189 (G40 pass 2)
+    - [ILH_left_ring_pad, commode_body]   # max 2.0 mm, x14 (G40 pass 2)
+    - [ILH_left_ring_pad, commode_lid]   # max 8.2 mm, x189 (G40 pass 2)
+    - [ILH_left_ring_pad, commode_seat]   # max 6.9 mm, x210 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_body]   # max 1.8 mm, x14 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_lid]   # max 8.6 mm, x189 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_seat]   # max 8.3 mm, x210 (G40 pass 2)
+    - [ILH_left_thumb_2, commode_lid]   # max 8.8 mm, x168 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_seat]   # max 10.1 mm, x211 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_seat]   # max 5.9 mm, x91 (G40 pass 2)
+    - [IRH_palm_rubber_1, commode_seat]   # max 10.7 mm, x80 (G40 pass 2)
+    - [IRH_right_little_pad, commode_body]   # max 4.5 mm, x16 (G40 pass 2)
+    - [IRH_right_little_pad, commode_lid]   # max 6.1 mm, x104 (G40 pass 2)
+    - [IRH_right_little_pad, commode_seat]   # max 4.7 mm, x152 (G40 pass 2)
+    - [IRH_right_little_tip, commode_body]   # max 4.3 mm, x16 (G40 pass 2)
+    - [IRH_right_little_tip, commode_lid]   # max 6.8 mm, x104 (G40 pass 2)
+    - [IRH_right_little_tip, commode_seat]   # max 6.2 mm, x152 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_body]   # max 1.8 mm, x8 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_body]   # max 1.4 mm, x8 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_lid]   # max 9.1 mm, x228 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_body]   # max 4.2 mm, x8 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_lid]   # max 5.8 mm, x158 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_seat]   # max 7.1 mm, x212 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_body]   # max 3.9 mm, x8 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_lid]   # max 6.9 mm, x158 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_seat]   # max 7.5 mm, x205 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_lid]   # max 7.9 mm, x157 (G40 pass 2)
+  hinge_area:
+    region_id: 13
+    component: body
+    # MERGED task (Newton, 2026-08-18 — G50, matching the archived corpus):
+    # hinge_area combines the lid's back-side strip (former lidsides_back,
+    # cleaned first) with the body hinge area — the archived
+    # hinge_area_*_cleaning_points.yaml is exactly this merge (27 points,
+    # merge math in its header). lidsides_back generates nothing on its own.
+    groups:
+    - hinge_area
+    - component: lid
+      name: lidsides_back
+    arm_coverage: RL_paired
+    # Overlap into the other half (2026-08-18, G48): the hinge
+    # strips are NARROW bands across the midline; under
+    # paired_strict_half each arm's waypoints stop at Y=0 while
+    # coverage is measured against the WHOLE region, capping the
+    # per-arm score at ~50-80% (measured) regardless of reach.
+    # Both arms physically reach past this strip's middle.
+    arm_overlap: true
+    description: Hinge area (body)
+    # Crease region (lid-body hinge line). Newton, 2026-08-17: "do not be too
+    # strict" — 90% coverage is the pass target here; the last strip lives in
+    # the crease the glove cannot enter.
+    coverage_pass_pct: 90
+    # Declared residual contact (G50 depth audit on the MERGED task): the
+    # back-strip portion wraps the hand under the closed lid's rear edge and
+    # off-set links BRUSH it — every depth within the 20 mm pad compliance
+    # (comment = min/max penetration over attempted branches, hits).
+    extra_collisions:
+    - [IRH_right_thumb_tip, commode_lid]   # 0.0-0.9 mm, x9 (G50)
+    - [IRH_right_thumb_4, commode_lid]   # 0.1-2.6 mm, x8 (G50)
+    - [ILH_left_little_1, commode_lid]   # 0.6-12.2 mm, x7 (G50)
+    - [ILH_left_little_1, commode_body]   # 8.0 mm, x1 (G50)
+    - [ILH_left_little_1, commode_seat]   # 8.0 mm, x1 (G50)
+    - [ILH_left_ring_rubber_1, commode_lid]   # 1.1 mm, x1 (G50)
+    - [ILH_plam, commode_lid]   # 5.5 mm, x1 (G50)
+    - [ILH_plam, commode_seat]   # 3.4 mm, x1 (G50)
+  # Bowl-interior regions are cleaned through the seat opening with BOTH the
+  # lid and the seat raised (fixture type lid_seat_open).
+  bowl_inside_front:
+    region_id: 7
+    component: body
+    groups: [bowl_inside_front]
+    arm_coverage: R
+    description: Bowl interior front section
+    lid_state: open
+    seat_state: open
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [IRH_palm_rubber_1, commode_body]   # max 13.6 mm, x66
+    - [IRH_plam, commode_body]   # max 11.1 mm, x74
+    - [IRH_right_index_pad, commode_body]   # max 4.1 mm, x157
+    - [IRH_right_index_tip, commode_body]   # max 4.7 mm, x157
+    - [IRH_right_little_pad, commode_body]   # max 3.3 mm, x48
+    - [IRH_right_little_tip, commode_body]   # max 3.6 mm, x48
+    - [IRH_right_middle_pad, commode_body]   # max 3.8 mm, x103
+    - [IRH_right_middle_tip, commode_body]   # max 3.8 mm, x103
+    - [IRH_right_ring_pad, commode_body]   # max 2.7 mm, x113
+    - [IRH_right_ring_tip, commode_body]   # max 2.2 mm, x105
+    - [IRH_right_thumb_2, commode_body]   # max 31.6 mm, x138 (marginal)
+    - [IRH_right_thumb_3, commode_body]   # max 9.9 mm, x280
+  bowl_inside_back:
+    region_id: 8
+    component: body
+    groups:
+    - bowl_inside_back
+    arm_coverage: L
+    description: Bowl interior back section
+    lid_state: open
+    seat_state: open
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_index_pad, commode_body]   # max 3.2 mm, x46
+    - [ILH_left_index_tip, commode_body]   # max 3.1 mm, x46
+    - [ILH_left_little_pad, commode_body]   # max 5.5 mm, x56
+    - [ILH_left_little_tip, commode_body]   # max 4.2 mm, x56
+    - [ILH_left_thumb_2, commode_body]   # max 15.7 mm, x72
+    - [ILH_left_thumb_3, commode_body]   # max 7.9 mm, x127
+    - [ILH_palm_rubber_1, commode_body]   # max 12.9 mm, x115
+    - [ILH_plam, commode_body]   # max 18.8 mm, x140
+    - [ILH_left_middle_pad, commode_body]   # max 3.3 mm, x24 (G40 pass 2)
+    - [ILH_left_middle_tip, commode_body]   # max 2.5 mm, x24 (G40 pass 2)
+    - [ILH_left_ring_pad, commode_body]   # max 4.8 mm, x37 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_body]   # max 4.4 mm, x37 (G40 pass 2)
+  bowl_inside_ring:
+    region_id: 9
+    component: body
+    groups: [bowl_inside_ring]
+    arm_coverage: RL_paired
+    path_topology: ring   # interior ring band — arc strokes, no chords (G50)
+    description: Bowl interior ring section
+    lid_state: open
+    seat_state: open
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_little_1, commode_body]   # 0.3-9.0 mm, x19 (G50 archive audit)
+    - [ILH_left_thumb_4, commode_body]   # 0.0-4.3 mm, x14 (G50 archive audit)
+    - [ILH_left_thumb_tip, commode_body]   # 0.8-4.3 mm, x9 (G50 archive audit)
+    - [ILH_left_ring_1, commode_body]   # 1.8 mm, x2 (G50 archive audit)
+    - [ILH_left_ring_rubber_1, commode_body]   # 0.3 mm, x2 (G50 archive audit)
+    - [ILH_left_index_1, commode_body]   # 1.0 mm, x2 (G50 archive audit)
+    - [IRH_right_little_1, commode_body]   # 0.3-6.8 mm, x15 (G50 archive audit)
+    - [IRH_right_thumb_4, commode_body]   # 0.1-3.7 mm, x13 (G50 archive audit)
+    - [IRH_right_thumb_tip, commode_body]   # 0.1-3.7 mm, x11 (G50 archive audit)
+    - [IRH_right_ring_1, commode_body]   # 1.3 mm, x2 (G50 archive audit)
+    - [IRH_right_index_1, commode_body]   # 1.2 mm, x2 (G50 archive audit)
+    - [ILH_left_little_pad, commode_body]   # max 1.1 mm, x8
+    - [ILH_left_little_tip, commode_body]   # max 1.4 mm, x8
+    - [ILH_left_middle_pad, commode_body]   # max 3.7 mm, x25
+    - [ILH_left_middle_tip, commode_body]   # max 2.8 mm, x25
+    - [ILH_left_ring_pad, commode_body]   # max 4.8 mm, x35
+    - [ILH_left_ring_tip, commode_body]   # max 4.1 mm, x35
+    - [ILH_left_thumb_3, commode_body]   # max 4.1 mm, x18
+    - [IRH_plam, commode_body]   # max 1.0 mm, x8
+    - [IRH_right_little_pad, commode_body]   # max 3.0 mm, x24
+    - [IRH_right_little_tip, commode_body]   # max 3.4 mm, x24
+    - [IRH_right_middle_pad, commode_body]   # max 2.7 mm, x26
+    - [IRH_right_middle_tip, commode_body]   # max 2.9 mm, x26
+    - [IRH_right_ring_pad, commode_body]   # max 4.6 mm, x35
+    - [IRH_right_ring_tip, commode_body]   # max 5.9 mm, x34
+  bowl_inside_rim:
+    region_id: 15
+    component: body
+    groups: [bowl_inside_rim]
+    arm_coverage: RL_paired
+    path_topology: ring   # interior rim band — arc strokes, no chords (G50)
+    description: Bowl interior rim
+    # Reality logic (Newton, 2026-08-18): the bowl interior is cleaned through
+    # the seat opening — lid AND seat open at full angle, like every other
+    # bowl_inside_* region. This entry said closed/closed, so the generated
+    # task pressed the rim THROUGH the closed lid+seat meshes and
+    # contact_surface:all silently forgave it (G38).
+    lid_state: open
+    seat_state: open
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_index_pad, commode_body]   # max 8.2 mm, x161
+    - [ILH_left_index_tip, commode_body]   # max 7.8 mm, x161
+    - [ILH_left_little_pad, commode_body]   # max 5.4 mm, x125
+    - [ILH_left_little_tip, commode_body]   # max 7.6 mm, x125
+    - [ILH_left_middle_pad, commode_body]   # max 7.3 mm, x153
+    - [ILH_left_middle_tip, commode_body]   # max 9.4 mm, x153
+    - [ILH_left_ring_pad, commode_body]   # max 9.4 mm, x181
+    - [ILH_left_ring_tip, commode_body]   # max 9.4 mm, x181
+    - [ILH_left_thumb_2, commode_body]   # max 32.0 mm, x73 (marginal)
+    - [ILH_left_thumb_3, commode_body]   # max 11.4 mm, x159
+    - [ILH_palm_rubber_1, commode_body]   # max 18.5 mm, x243
+    - [ILH_plam, commode_body]   # max 19.7 mm, x239
+    - [IRH_palm_rubber_1, commode_body]   # max 19.7 mm, x253
+    - [IRH_plam, commode_body]   # max 21.5 mm, x246 (marginal)
+    - [IRH_right_index_pad, commode_body]   # max 8.0 mm, x183
+    - [IRH_right_index_tip, commode_body]   # max 7.3 mm, x183
+    - [IRH_right_little_pad, commode_body]   # max 6.6 mm, x106
+    - [IRH_right_little_tip, commode_body]   # max 7.4 mm, x106
+    - [IRH_right_middle_pad, commode_body]   # max 10.1 mm, x169
+    - [IRH_right_middle_tip, commode_body]   # max 9.7 mm, x169
+    - [IRH_right_ring_pad, commode_body]   # max 5.7 mm, x113
+    - [IRH_right_ring_tip, commode_body]   # max 6.6 mm, x113
+    - [IRH_right_thumb_2, commode_body]   # max 23.7 mm, x120 (marginal)
+    - [IRH_right_thumb_3, commode_body]   # max 10.2 mm, x218
+    - [IRH_plam, commode_lid]   # max 3.5 mm, x2 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_seat]   # max 5.1 mm, x9 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_lid]   # max 4.3 mm, x10 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_seat]   # max 3.1 mm, x9 (G40 pass 2)
+    - [IRH_plam, commode_seat]   # max 2.6 mm, x2 (G40 pass 3)
+    - [IRH_right_thumb_2, commode_lid]   # max 3.4 mm, x1 (G40 pass 3)
+    - [IRH_palm_rubber_1, commode_lid]   # max 8.6 mm, x1 (G40 pass 4)
+    - [IRH_palm_rubber_1, commode_seat]   # max 3.7 mm, x1 (G40 pass 4)
+  deep:
+    region_id: 20
+    # NOT GENERATED (Newton, 2026-08-18 — G50): the bowl interior is covered
+    # by the bowl_inside_* tasks; deep was their pre-split merged ancestor.
+    generate: false
+    component: body
+    groups: [bowl_inside_ring, bowl_inside_back]   # execution order: ring first, then back wall
+    arm_coverage: RL_paired
+    description: Deep bowl cleaning (ring + back wall)
+    surface_type: concave_interior
+    lid_state: open
+    seat_state: open
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_little_pad, commode_body]   # max 3.2 mm, x65
+    - [ILH_left_little_tip, commode_body]   # max 3.5 mm, x65
+    - [ILH_left_middle_pad, commode_body]   # max 3.0 mm, x48
+    - [ILH_left_middle_tip, commode_body]   # max 4.9 mm, x49
+    - [ILH_left_ring_pad, commode_body]   # max 4.4 mm, x101
+    - [ILH_left_ring_tip, commode_body]   # max 5.0 mm, x100
+    - [ILH_left_thumb_3, commode_body]   # max 7.2 mm, x66
+    - [ILH_plam, commode_body]   # max 13.0 mm, x57
+    - [IRH_palm_rubber_1, commode_body]   # max 15.3 mm, x64
+    - [IRH_plam, commode_body]   # max 15.7 mm, x84
+    - [IRH_right_little_pad, commode_body]   # max 3.3 mm, x57
+    - [IRH_right_little_tip, commode_body]   # max 4.4 mm, x57
+    - [IRH_right_middle_pad, commode_body]   # max 3.8 mm, x42
+    - [IRH_right_middle_tip, commode_body]   # max 2.3 mm, x42
+    - [IRH_right_ring_pad, commode_body]   # max 3.6 mm, x51
+    - [IRH_right_ring_tip, commode_body]   # max 4.7 mm, x51
+    - [IRH_right_thumb_2, commode_body]   # max 1.0 mm, x8
+    - [IRH_right_thumb_3, commode_body]   # max 8.8 mm, x72
+    - [ILH_left_index_pad, commode_body]   # max 1.3 mm, x19 (G40 pass 2)
+    - [ILH_left_index_tip, commode_body]   # max 1.3 mm, x19 (G40 pass 2)
+    - [ILH_left_thumb_2, commode_body]   # max 12.3 mm, x16 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_body]   # max 11.0 mm, x33 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_lid]   # max 9.2 mm, x8 (G40 pass 2)
+    - [ILH_plam, commode_lid]   # max 17.5 mm, x8 (G40 pass 2)
+    - [ILH_plam, commode_seat]   # max 14.8 mm, x8 (G40 pass 2)
+  # --- lid ---
+  toplid:
+    region_id: 0
+    component: lid
+    groups: [toplid]
+    arm_coverage: RL_paired
+    # Measured reach ceiling (G50): the corner poses the reachability
+    # pre-prune drops (~15 of 72 per arm, no branch solves them at any
+    # candidate) cap per-arm coverage at ~90%. The G49 live-verified
+    # toplid_right ran at exactly 90.0. Same principle as the crease
+    # families' 90 (Newton, 2026-08-17). FLAGGED for Newton's review.
+    coverage_pass_pct: 90
+    description: Top lid surface
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_little_pad, commode_lid]   # max 4.6 mm, x33
+    - [ILH_left_little_tip, commode_lid]   # max 3.5 mm, x34
+    - [ILH_left_ring_pad, commode_lid]   # max 4.1 mm, x32
+    - [ILH_left_ring_tip, commode_lid]   # max 6.0 mm, x32
+    - [IRH_right_index_pad, commode_lid]   # max 2.7 mm, x72
+    - [IRH_right_index_tip, commode_lid]   # max 2.9 mm, x80
+    - [IRH_right_thumb_3, commode_lid]   # max 8.5 mm, x239
+    - [ILH_left_little_pad, commode_seat]   # max 1.2 mm, x8 (G40 pass 2)
+    - [ILH_left_little_tip, commode_seat]   # max 1.1 mm, x8 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_lid]   # max 0.8 mm, x10 (G40 pass 2)
+    - [IRH_plam, commode_lid]   # max 0.5 mm, x4 (G40 pass 2)
+    - [IRH_right_little_pad, commode_lid]   # max 1.8 mm, x9 (G40 pass 2)
+    - [IRH_right_little_tip, commode_lid]   # max 1.9 mm, x9 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_lid]   # max 0.6 mm, x17 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_lid]   # max 0.5 mm, x25 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_lid]   # max 0.7 mm, x8 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_lid]   # max 0.3 mm, x8 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_seat]   # max 2.4 mm, x17 (G40 pass 2)
+    - [ILH_left_middle_pad, commode_lid]   # max 2.4 mm, x3 (G40 pass 3)
+    - [ILH_left_middle_tip, commode_lid]   # max 2.2 mm, x3 (G40 pass 3)
+    - [ILH_left_index_pad, commode_lid]   # max 1.0 mm, x2 (G40 pass 4)
+    - [ILH_left_index_tip, commode_lid]   # max 1.1 mm, x2 (G40 pass 5)
+  bottomlid:
+    region_id: 10
+    component: lid
+    groups: [bottomlid]
+    arm_coverage: RL_paired
+    articulation_state: open
+    description: Bottom of lid surface
+    lid_state: open
+    seat_state: closed
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_middle_pad, commode_seat]   # 0.4-3.6 mm, x6 (G50 archive audit r2)
+    - [ILH_left_middle_tip, commode_seat]   # 0.4-3.5 mm, x6 (G50 archive audit r2)
+    - [ILH_left_index_pad, commode_seat]   # 1.0-1.2 mm, x5 (G50 archive audit r2)
+    - [ILH_left_index_tip, commode_seat]   # 0.8-1.1 mm, x5 (G50 archive audit r2)
+    - [ILH_left_thumb_3, commode_seat]   # 4.5 mm, x3 (G50 archive audit r2)
+    - [ILH_left_little_1, commode_body]   # 0.3-2.3 mm, x3 (G50 archive audit r2)
+    - [ILH_left_little_2, commode_body]   # 1.1 mm, x2 (G50 archive audit r2)
+    - [IRH_right_little_2, commode_body]   # 0.6 mm, x1 (G50 archive audit r2)
+    - [ILH_left_little_pad, commode_body]   # max 4.2 mm, x52
+    - [ILH_left_little_pad, commode_seat]   # max 3.9 mm, x101
+    - [ILH_left_little_tip, commode_seat]   # max 4.4 mm, x101
+    - [ILH_left_ring_pad, commode_lid]   # max 3.0 mm, x53
+    - [ILH_left_ring_pad, commode_seat]   # max 4.1 mm, x84
+    - [ILH_left_ring_tip, commode_lid]   # max 3.0 mm, x53
+    - [ILH_left_ring_tip, commode_seat]   # max 3.9 mm, x84
+    - [ILH_palm_rubber_1, commode_body]   # max 16.7 mm, x100
+    - [ILH_palm_rubber_1, commode_seat]   # max 16.9 mm, x109
+    - [ILH_plam, commode_body]   # max 16.0 mm, x108
+    - [ILH_plam, commode_lid]   # max 9.0 mm, x296
+    - [ILH_plam, commode_seat]   # max 19.9 mm, x121
+    - [IRH_palm_rubber_1, commode_seat]   # max 9.4 mm, x72
+    - [IRH_plam, commode_seat]   # max 12.9 mm, x72
+    - [IRH_right_little_pad, commode_lid]   # max 5.0 mm, x89
+    - [IRH_right_little_tip, commode_lid]   # max 3.7 mm, x89
+    - [IRH_right_middle_pad, commode_body]   # max 5.5 mm, x64
+    - [IRH_right_middle_tip, commode_body]   # max 4.8 mm, x64
+    - [IRH_right_ring_pad, commode_lid]   # max 6.5 mm, x116
+    - [IRH_right_ring_tip, commode_lid]   # max 6.3 mm, x81
+    - [IRH_right_thumb_1, commode_seat]   # max 8.3 mm, x58
+    - [IRH_right_thumb_2, commode_body]   # max 20.0 mm, x72
+    - [IRH_right_thumb_2, commode_seat]   # max 18.8 mm, x77
+    - [IRH_right_thumb_3, commode_lid]   # max 8.7 mm, x59
+    - [ILH_left_little_pad, commode_lid]   # max 2.4 mm, x5 (G40 pass 2)
+    - [ILH_left_little_tip, commode_body]   # max 5.0 mm, x53 (G40 pass 2)
+    - [ILH_left_little_tip, commode_lid]   # max 2.5 mm, x5 (G40 pass 2)
+    - [IRH_plam, commode_lid]   # max 6.6 mm, x19 (G40 pass 2)
+    - [IRH_right_index_pad, commode_body]   # max 3.6 mm, x41 (G40 pass 2)
+    - [IRH_right_index_pad, commode_lid]   # max 1.8 mm, x28 (G40 pass 2)
+    - [IRH_right_index_tip, commode_body]   # max 3.6 mm, x41 (G40 pass 2)
+    - [IRH_right_index_tip, commode_lid]   # max 1.7 mm, x28 (G40 pass 2)
+    - [IRH_right_little_pad, commode_seat]   # max 4.0 mm, x47 (G40 pass 2)
+    - [IRH_right_little_tip, commode_seat]   # max 4.1 mm, x47 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_lid]   # max 2.8 mm, x32 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_seat]   # max 4.9 mm, x54 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_lid]   # max 2.3 mm, x29 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_seat]   # max 4.5 mm, x54 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_body]   # max 2.3 mm, x28 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_seat]   # max 7.9 mm, x54 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_body]   # max 2.0 mm, x28 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_seat]   # max 8.6 mm, x54 (G40 pass 2)
+    - [IRH_right_thumb_1, commode_body]   # max 0.3 mm, x8 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_body]   # max 10.9 mm, x54 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_seat]   # max 6.9 mm, x13 (G40 pass 2)
+    - [IRH_right_index_pad, commode_seat]   # max 6.2 mm, x13 (G40 pass 3)
+    - [IRH_right_index_tip, commode_seat]   # max 7.3 mm, x13 (G40 pass 3)
+    - [IRH_palm_rubber_1, commode_lid]   # max 2.5 mm, x3 (G40 pass 4)
+  lid_side:
+    region_id: 21
+    component: lid
+    # MERGED task (Newton, 2026-08-18 — G50): with the lid CLOSED the lid
+    # edge and the seat edge form one stacked band; lid_side covers BOTH
+    # (lid sides + seat sides). seat_ring_sides generates nothing on its
+    # own. This resolves the G40 flag on seat_ring_sides: the seat sides
+    # are cleaned lid-closed, as part of this task.
+    groups:
+    - lidsides
+    - component: seat
+      name: seat_ring_sides
+    arm_coverage: RL_paired
+    description: Lid + seat side edges (closed stack)
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [IRH_right_ring_1, commode_body]   # 0.2 mm, x1 (G50 archive audit)
+    - [IRH_right_little_1, commode_body]   # 0.9 mm, x3 (G50 archive audit)
+    - [ILH_left_index_pad, commode_lid]   # max 5.3 mm, x64
+    - [ILH_left_index_pad, commode_seat]   # max 6.1 mm, x80
+    - [ILH_left_index_tip, commode_lid]   # max 5.5 mm, x64
+    - [ILH_left_index_tip, commode_seat]   # max 5.5 mm, x80
+    - [ILH_left_middle_pad, commode_lid]   # max 4.8 mm, x80
+    - [ILH_left_middle_tip, commode_lid]   # max 4.6 mm, x80
+    - [ILH_left_thumb_2, commode_lid]   # max 29.0 mm, x80 (marginal)
+    - [ILH_left_thumb_2, commode_seat]   # max 22.6 mm, x72 (marginal)
+    - [ILH_left_thumb_3, commode_body]   # max 8.8 mm, x72
+    - [ILH_left_thumb_3, commode_seat]   # max 10.1 mm, x64
+    - [ILH_palm_rubber_1, commode_lid]   # max 17.3 mm, x80
+    - [ILH_plam, commode_lid]   # max 17.2 mm, x80
+    - [IRH_palm_rubber_1, commode_lid]   # max 12.8 mm, x56
+    - [IRH_palm_rubber_1, commode_seat]   # max 17.7 mm, x56
+    - [IRH_plam, commode_lid]   # max 20.5 mm, x56 (marginal)
+    - [IRH_plam, commode_seat]   # max 9.3 mm, x56
+    - [IRH_right_index_pad, commode_seat]   # max 5.9 mm, x56
+    - [IRH_right_index_tip, commode_seat]   # max 5.7 mm, x56
+    - [IRH_right_middle_pad, commode_lid]   # max 5.8 mm, x56
+    - [IRH_right_middle_pad, commode_seat]   # max 3.5 mm, x49
+    - [IRH_right_middle_tip, commode_lid]   # max 4.6 mm, x56
+    - [IRH_right_thumb_2, commode_seat]   # max 25.2 mm, x56 (marginal)
+    - [IRH_right_thumb_3, commode_body]   # max 10.1 mm, x56
+    - [ILH_left_index_pad, commode_body]   # max 4.0 mm, x24 (G40 pass 2)
+    - [ILH_left_index_tip, commode_body]   # max 2.2 mm, x24 (G40 pass 2)
+    - [ILH_left_middle_pad, commode_seat]   # max 3.3 mm, x56 (G40 pass 2)
+    - [ILH_left_middle_tip, commode_seat]   # max 3.0 mm, x56 (G40 pass 2)
+    - [ILH_left_ring_pad, commode_lid]   # max 1.8 mm, x24 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_lid]   # max 1.7 mm, x24 (G40 pass 2)
+    - [ILH_left_thumb_1, commode_lid]   # max 2.7 mm, x16 (G40 pass 2)
+    - [ILH_left_thumb_2, commode_body]   # max 10.3 mm, x16 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_lid]   # max 9.7 mm, x43 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_body]   # max 4.6 mm, x16 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_seat]   # max 13.1 mm, x48 (G40 pass 2)
+    - [ILH_plam, commode_body]   # max 6.6 mm, x16 (G40 pass 2)
+    - [ILH_plam, commode_seat]   # max 14.2 mm, x56 (G40 pass 2)
+    - [IRH_palm_rubber_1, commode_body]   # max 3.9 mm, x7 (G40 pass 2)
+    - [IRH_plam, commode_body]   # max 1.9 mm, x7 (G40 pass 2)
+    - [IRH_right_index_pad, commode_body]   # max 4.3 mm, x21 (G40 pass 2)
+    - [IRH_right_index_pad, commode_lid]   # max 2.9 mm, x35 (G40 pass 2)
+    - [IRH_right_index_tip, commode_body]   # max 4.4 mm, x21 (G40 pass 2)
+    - [IRH_right_index_tip, commode_lid]   # max 3.5 mm, x35 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_seat]   # max 3.6 mm, x49 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_lid]   # max 2.1 mm, x21 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_lid]   # max 1.4 mm, x21 (G40 pass 2)
+    - [IRH_right_thumb_1, commode_lid]   # max 0.2 mm, x7 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_body]   # max 6.2 mm, x7 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_seat]   # max 6.2 mm, x49 (G40 pass 2)
+  lidsides_back:
+    region_id: 22
+    # NOT GENERATED (Newton, 2026-08-18 — G50): covered by the merged
+    # hinge_area task (its first portion), matching the archived corpus.
+    generate: false
+    component: lid
+    groups:
+    - lidsides_back
+    arm_coverage: RL_paired
+    description: Lid sides back
+    # Crease-family region (behind the lid, toward the hinge). Newton,
+    # 2026-08-17: 90% coverage pass target.
+    coverage_pass_pct: 90
+  lidsides_front:
+    region_id: 23
+    # NOT GENERATED (Newton, 2026-08-18 — G50): covered by the merged
+    # lid_seat_front task (lid + seat front edges, closed stack, 0.38 m).
+    generate: false
+    component: lid
+    groups:
+    - lidsides_front
+    arm_coverage: RL_paired
+    # Newton, 2026-08-18: handled like `front` — 380 mm UGV standoff. At the
+    # 250 mm default this family read 0% with I*H_plam<->bin_link on every
+    # branch of both palm frames (G37); the verdict was conditional on the
+    # wrong standoff, not on the bin.
+    ugv_standoff_m: 0.38
+    # Declared residual contact (Newton, 2026-08-18 — G40 pass 2):
+    extra_collisions:
+    - [IRH_right_index_pad, commode_body]   # max 3.5 mm, x28 (G40 pass 2)
+    - [IRH_right_index_tip, commode_body]   # max 3.6 mm, x28 (G40 pass 2)
+    - [IRH_right_little_pad, commode_body]   # max 4.4 mm, x14 (G40 pass 2)
+    - [IRH_right_little_tip, commode_body]   # max 2.3 mm, x14 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_body]   # max 4.0 mm, x21 (G40 pass 2)
+  seat_ring:
+    region_id: 3
+    component: seat
+    groups: [seat_ring]
+    arm_coverage: RL_paired
+    # Annulus (Newton, 2026-08-18 — G50): the path follows the ring as arc
+    # strokes; no segment may chord the central opening.
+    path_topology: ring
+    description: Seat ring upper surface
+    # Reality logic (Newton, 2026-08-18): seat TOP cleaning requires the lid
+    # OPEN at full angle — the closed lid lies ON this very surface. With no
+    # states declared this region defaulted to closed and the task pressed
+    # the seat top through the closed lid (G38). Seat stays down (it is the
+    # surface being cleaned).
+    lid_state: open
+    seat_state: closed
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_index_pad, commode_seat]   # max 5.4 mm, x40
+    - [ILH_left_index_tip, commode_seat]   # max 3.8 mm, x40
+    - [ILH_left_little_pad, commode_seat]   # max 6.0 mm, x62
+    - [ILH_left_little_tip, commode_seat]   # max 5.7 mm, x62
+    - [ILH_left_middle_pad, commode_seat]   # max 4.9 mm, x48
+    - [ILH_left_middle_tip, commode_seat]   # max 4.9 mm, x48
+    - [ILH_left_ring_pad, commode_seat]   # max 4.8 mm, x49
+    - [ILH_left_ring_tip, commode_seat]   # max 5.0 mm, x49
+    - [ILH_left_thumb_3, commode_seat]   # max 7.9 mm, x44
+    - [IRH_plam, commode_seat]   # max 4.2 mm, x51
+    - [IRH_right_little_tip, commode_seat]   # max 2.6 mm, x10 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_lid]   # max 4.4 mm, x6 (G40 pass 2)
+  seat_ring_bottom:
+    region_id: 4
+    component: seat
+    groups: [seat_ring_bottom]
+    arm_coverage: RL_paired
+    path_topology: ring   # annulus — arc strokes, no chords (G50)
+    articulation_state: open
+    description: Seat ring underside
+    lid_state: open
+    seat_state: open
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_index_pad, commode_seat]   # max 0.9 mm, x8
+    - [ILH_left_index_tip, commode_seat]   # max 0.9 mm, x8
+    - [ILH_left_thumb_2, commode_body]   # max 21.0 mm, x79 (marginal)
+    - [ILH_left_thumb_3, commode_body]   # max 10.0 mm, x126
+    - [ILH_left_thumb_3, commode_seat]   # max 6.7 mm, x144
+    - [ILH_palm_rubber_1, commode_body]   # max 6.5 mm, x8
+    - [ILH_plam, commode_body]   # max 4.1 mm, x16
+    - [ILH_plam, commode_seat]   # max 7.8 mm, x381
+    - [IRH_palm_rubber_1, commode_seat]   # max 4.3 mm, x24
+    - [IRH_plam, commode_seat]   # max 8.4 mm, x201
+    - [IRH_right_index_pad, commode_seat]   # max 4.6 mm, x85
+    - [IRH_right_index_tip, commode_seat]   # max 4.4 mm, x84
+    - [IRH_right_thumb_3, commode_lid]   # max 1.8 mm, x12
+    - [IRH_right_thumb_3, commode_seat]   # max 7.4 mm, x154
+    - [IRH_right_middle_pad, commode_seat]   # max 0.5 mm, x1 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_seat]   # max 0.3 mm, x1 (G40 pass 2)
+  seat_ring_sides:
+    region_id: 18
+    # NOT GENERATED (Newton, 2026-08-18 — G50): covered by the merged
+    # lid_side task (lid + seat side edges, closed stack).
+    generate: false
+    component: seat
+    groups:
+    - seat_ring_sides
+    arm_coverage: RL_paired
+    # Reality (2026-08-18, G40): follows the seat_ring FAMILY articulation —
+    # lid OPEN, seat down (schedule rows 3/4 clean the seat with the lid up,
+    # and the reach gate maps this region's cleaning_family to seat_ring's
+    # reality). Flagged for Newton: if the seat SIDES are meant to be cleaned
+    # lid-closed as a separate pass, the family→reality mapping needs a
+    # region-level override instead.
+    lid_state: open
+    seat_state: closed
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_index_pad, commode_lid]   # max 7.2 mm, x15
+    - [ILH_left_index_tip, commode_lid]   # max 7.0 mm, x15
+    - [ILH_left_middle_pad, commode_lid]   # max 4.3 mm, x15
+    - [ILH_left_middle_tip, commode_lid]   # max 3.9 mm, x15
+    - [ILH_left_thumb_3, commode_lid]   # max 7.8 mm, x15
+    - [ILH_plam, commode_lid]   # max 7.2 mm, x15
+    - [IRH_palm_rubber_1, commode_body]   # max 16.3 mm, x42
+    - [IRH_palm_rubber_1, commode_lid]   # max 15.6 mm, x42
+    - [IRH_palm_rubber_1, commode_seat]   # max 13.7 mm, x42
+    - [IRH_plam, commode_body]   # max 15.0 mm, x42
+    - [IRH_plam, commode_lid]   # max 19.5 mm, x42
+    - [IRH_plam, commode_seat]   # max 17.7 mm, x42
+    - [IRH_right_index_pad, commode_body]   # max 4.4 mm, x42
+    - [IRH_right_index_tip, commode_body]   # max 4.3 mm, x42
+    - [IRH_right_middle_pad, commode_seat]   # max 4.1 mm, x42
+    - [IRH_right_middle_tip, commode_seat]   # max 4.2 mm, x42
+    - [IRH_right_ring_pad, commode_lid]   # max 3.9 mm, x42
+    - [IRH_right_ring_tip, commode_lid]   # max 3.7 mm, x42
+    - [ILH_left_ring_pad, commode_lid]   # max 1.8 mm, x6 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_lid]   # max 1.8 mm, x6 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_lid]   # max 0.8 mm, x3 (G40 pass 2)
+    - [IRH_right_index_pad, commode_seat]   # max 3.0 mm, x14 (G40 pass 2)
+    - [IRH_right_index_tip, commode_seat]   # max 2.7 mm, x14 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_body]   # max 2.2 mm, x28 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_lid]   # max 2.5 mm, x21 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_body]   # max 2.6 mm, x28 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_lid]   # max 2.2 mm, x21 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_seat]   # max 2.2 mm, x14 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_seat]   # max 3.0 mm, x14 (G40 pass 2)
+    - [IRH_right_thumb_1, commode_lid]   # max 10.8 mm, x35 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_body]   # max 17.8 mm, x42 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_lid]   # max 33.6 mm, x14 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_seat]   # max 22.9 mm, x42 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_body]   # max 6.9 mm, x42 (G40 pass 2)
+    - [ILH_left_little_pad, commode_lid]   # max 2.1 mm, x1 (G40 pass 3)
+    - [ILH_left_little_tip, commode_lid]   # max 1.7 mm, x1 (G40 pass 3)
+    - [ILH_left_ring_pad, commode_seat]   # max 0.6 mm, x4 (G40 pass 3)
+    - [ILH_left_ring_tip, commode_seat]   # max 0.9 mm, x4 (G40 pass 3)
+    - [IRH_right_index_pad, commode_lid]   # max 3.4 mm, x15 (G40 pass 3)
+    - [IRH_right_index_tip, commode_lid]   # max 3.1 mm, x15 (G40 pass 3)
+    - [IRH_right_thumb_3, commode_lid]   # max 7.9 mm, x15 (G40 pass 3)
+    - [IRH_right_thumb_3, commode_seat]   # max 2.8 mm, x15 (G40 pass 3)
+    - [ILH_left_little_pad, commode_seat]   # max 0.4 mm, x1 (G40 pass 4)
+    - [ILH_left_little_tip, commode_seat]   # max 0.4 mm, x1 (G40 pass 4)
+    - [ILH_plam, commode_seat]   # max 3.4 mm, x3 (G40 pass 4)
+  seat_ring_sides_front:
+    region_id: 19
+    # NOT GENERATED (Newton, 2026-08-18 — G50): covered by the merged
+    # lid_seat_front task (lid + seat front edges, closed stack, 0.38 m).
+    generate: false
+    component: seat
+    groups:
+    - seat_ring_sides_front
+    arm_coverage: RL_paired
+    # A FRONT cleaning task: the UGV parks further back and works the front of
+    # the seat ring. At the 0.25 m fleet default the right arm reached 0 of 13
+    # points here while the left reached 14/14 (FINDINGS F49) — that was the
+    # standoff, not the region declaration.
+    ugv_standoff_m: 0.38
+    # Reality (2026-08-18, G40): follows the seat_ring FAMILY articulation —
+    # lid OPEN, seat down (same rule and same Newton flag as seat_ring_sides).
+    lid_state: open
+    seat_state: closed
+    # Declared residual contact (Newton, 2026-08-18 — G40 pass 2):
+    extra_collisions:
+    - [ILH_left_index_pad, commode_body]   # max 6.1 mm, x21 (G40 pass 2)
+    - [ILH_left_index_tip, commode_body]   # max 5.9 mm, x21 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_body]   # max 8.4 mm, x21 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_lid]   # max 3.3 mm, x14 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_seat]   # max 1.6 mm, x14 (G40 pass 2)
+    - [ILH_plam, commode_body]   # max 5.5 mm, x28 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_body]   # max 0.5 mm, x14 (G40 pass 2)
+    - [ILH_left_middle_pad, commode_body]   # max 2.5 mm, x7 (G40 pass 3)
+    - [ILH_left_middle_tip, commode_body]   # max 2.3 mm, x7 (G40 pass 3)
+  lid_seat_front:
+    # 34, not 26: regions_commode.csv already carries 26 (`rim`) — and 27-33
+    # (boundary, toplid_zone, hinge_top, lid_top, commode_top/side/front,
+    # lid_seat_sides) with no manifest entry behind them. 34 is the first id
+    # no orphan squats on. NOTE for Newton: that CSV also carries a
+    # PRE-EXISTING duplicate — 28 is both `toplid_zone` and `lid_top` — which
+    # this session did not touch (last-row-wins decides its meaning today).
+    region_id: 34
+    # NEW merged task (Newton, 2026-08-18 — G50): with the lid CLOSED the
+    # lid and seat front edges form one stacked band; one task covers both,
+    # at the 0.38 m front standoff (the archived `front` precedent). It
+    # absorbs lidsides_front and seat_ring_sides_front, which generate
+    # nothing on their own.
+    component: lid
+    groups:
+    - lidsides_front
+    - component: seat
+      name: seat_ring_sides_front
+    # RIGHT-ARM ONLY — measured, 2026-08-19 (Phase 3). NEEDS NEWTON'S REVIEW.
+    # The fixture sits ~124 mm off the robot's sagittal plane, so the paired
+    # split (threshold = robot y=0) hands the LEFT arm only 8 of 54 samples —
+    # 7 cm² of this 54 cm² band — and the left cannot work even that sliver at
+    # the 0.38 front standoff. Eight configurations were measured, all failing
+    # the gate, and the two least-bad ones fail it by CONTACT that Newton's
+    # standing lesson forbids declaring (arm links vs the washroom wall; hand
+    # vs bin/lid_opening_cover2 — an allowance mirrors INTENDED contact only):
+    #   pole quarter (default)      87.5 %  4x L_Link3/4/5/6 <-> washroom_structure
+    #   pole half_length            30.0 %  + L_Link5/6 <-> UGV_body
+    #   pole full_length             0.0 %
+    #   arm_overlap: true           40.0 %  segF 4
+    #   ik_frame L_glove_frame_1    40.0 %  segF 4
+    #   ik_frame L_glove_frame_3    87.5 %  ILH_plam <-> lid_opening_cover2, bin_link
+    #   ik_frame L_glove_frame_4    70.0 %  ILH_plam <-> lid_opening_cover2, bin_link
+    # The RIGHT arm reaches essentially the whole band on its own: 50 of 54
+    # samples under overlap, gate 100 %, segF 2, ZERO collision pairs. So the
+    # band is cleaned right-handed, like bowl_inside_front (region 7), rather
+    # than carrying a left task that cannot pass C11 validation.
+    # C4 lever order was followed (direction/frame/standoff/pole) before the
+    # declaration changed — the standoff itself is fixed at 0.38 by Newton.
+    arm_coverage: R
+    description: Lid + seat front edges (closed stack)
+    # Explicit, because the schedule depends on it (Newton, 2026-08-19): the
+    # 380 mm front block runs FIRST, with the lid still closed, so the UGV
+    # makes one 0.25 -> 0.38 -> 0.25 excursion for the whole activity.
+    lid_state: closed
+    seat_state: closed
+    ugv_standoff_m: 0.38
+    # Deeper approach standoff (G50): the default 35 mm retreat lerps the
+    # little-finger pads through the body on the rest->pre transit; 60 mm
+    # clears the closed stack front face.
+    pre_start_retract_m: 0.06
+    # Declared residual contact: the union of the two absorbed strips'
+    # measured sets (lidsides_front + seat_ring_sides_front, both
+    # audited at the 0.38 standoff — G40 pass 2/3).
+    extra_collisions:
+    - [ILH_left_index_pad, commode_body]   # inherited from the absorbed strip (G50)
+    - [ILH_left_index_tip, commode_body]   # inherited from the absorbed strip (G50)
+    - [ILH_left_middle_pad, commode_body]   # inherited from the absorbed strip (G50)
+    - [ILH_left_middle_tip, commode_body]   # inherited from the absorbed strip (G50)
+    - [ILH_left_thumb_3, commode_body]   # inherited from the absorbed strip (G50)
+    - [ILH_left_thumb_3, commode_lid]   # inherited from the absorbed strip (G50)
+    - [ILH_left_thumb_3, commode_seat]   # inherited from the absorbed strip (G50)
+    - [ILH_plam, commode_body]   # inherited from the absorbed strip (G50)
+    - [IRH_right_index_pad, commode_body]   # inherited from the absorbed strip (G50)
+    - [IRH_right_index_tip, commode_body]   # inherited from the absorbed strip (G50)
+    - [IRH_right_little_pad, commode_body]   # inherited from the absorbed strip (G50)
+    - [IRH_right_little_tip, commode_body]   # inherited from the absorbed strip (G50)
+    - [IRH_right_thumb_3, commode_body]   # inherited from the absorbed strip (G50)
+  lid_seat_hinge_area:
+    region_id: 24
+    # Crease-family region (lid-seat hinge line). Newton, 2026-08-17: 90%
+    # coverage pass target.
+    coverage_pass_pct: 90
+    component: lid
+    groups:
+    - lid_seat_hinge_area
+    - component: seat
+      name: lid_seat_hinge_area
+    arm_coverage: RL_paired
+    # Overlap into the other half (2026-08-18, G48): the hinge
+    # strips are NARROW bands across the midline; under
+    # paired_strict_half each arm's waypoints stop at Y=0 while
+    # coverage is measured against the WHOLE region, capping the
+    # per-arm score at ~50-80% (measured) regardless of reach.
+    # Both arms physically reach past this strip's middle.
+    arm_overlap: true
+    lid_state: open
+    seat_state: closed
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_thumb_3, commode_seat]   # 0.1-2.5 mm, x4 (G50 archive audit)
+    - [IRH_palm_rubber_1, commode_lid]   # max 19.5 mm, x84
+    - [IRH_palm_rubber_1, commode_seat]   # max 6.0 mm, x35
+    - [IRH_plam, commode_lid]   # max 18.2 mm, x140
+    - [IRH_plam, commode_seat]   # max 8.4 mm, x49
+    - [IRH_right_index_pad, commode_seat]   # max 6.5 mm, x56
+    - [IRH_right_index_tip, commode_seat]   # max 6.5 mm, x56
+    - [IRH_right_little_pad, commode_lid]   # max 4.4 mm, x56
+    - [IRH_right_little_tip, commode_lid]   # max 5.2 mm, x56
+    - [IRH_right_middle_pad, commode_seat]   # max 3.5 mm, x28
+    - [IRH_right_thumb_2, commode_seat]   # max 9.8 mm, x42
+    - [IRH_right_thumb_3, commode_body]   # max 6.6 mm, x42
+    - [IRH_right_thumb_3, commode_seat]   # max 10.5 mm, x147
+    - [IRH_right_middle_pad, commode_lid]   # max 3.2 mm, x18 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_lid]   # max 3.1 mm, x18 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_seat]   # max 3.4 mm, x36 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_lid]   # max 4.1 mm, x26 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_seat]   # max 3.2 mm, x17 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_lid]   # max 3.3 mm, x26 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_seat]   # max 2.5 mm, x17 (G40 pass 2)
+  seat_body_hinge_area:
+    region_id: 25
+    # Crease-family region — 90 % pass target, same as its two siblings
+    # (hinge_area, lid_seat_hinge_area). Added 2026-08-19: it was the only
+    # crease region declaring NO floor, so it was silently gated at the
+    # tool default 95 while both siblings sat at 90 (contract C6: 90 is the
+    # minimum acceptable, >95 the desirable target).
+    coverage_pass_pct: 90
+    component: body
+    groups:
+    - seat_body_hinge_area
+    - component: lid
+      name: seat_body_hinge_area
+    - component: seat
+      name: seat_body_hinge_area
+    arm_coverage: RL_paired
+    # Overlap into the other half (2026-08-18, G48): the hinge
+    # strips are NARROW bands across the midline; under
+    # paired_strict_half each arm's waypoints stop at Y=0 while
+    # coverage is measured against the WHOLE region, capping the
+    # per-arm score at ~50-80% (measured) regardless of reach.
+    # Both arms physically reach past this strip's middle.
+    arm_overlap: true
+    lid_state: open
+    seat_state: open
+    # Declared residual contact (Newton, 2026-08-18 — G40): pairs the
+    # region's geometry forces to BRUSH, measured by the depth audit
+    # (comment = max penetration over every attempted branch, hits).
+    # Licensed within the 20 mm pad compliance only — the gate
+    # certifies depth at accepted poses; deeper branches stay blocked.
+    extra_collisions:
+    - [ILH_left_index_pad, commode_seat]   # max 6.0 mm, x104
+    - [ILH_left_index_tip, commode_seat]   # max 7.1 mm, x104
+    - [ILH_left_little_pad, commode_seat]   # max 6.4 mm, x198
+    - [ILH_left_little_tip, commode_seat]   # max 7.0 mm, x197
+    - [ILH_left_middle_pad, commode_seat]   # max 7.6 mm, x128
+    - [ILH_left_middle_tip, commode_seat]   # max 5.6 mm, x128
+    - [ILH_left_ring_pad, commode_lid]   # max 5.7 mm, x88
+    - [ILH_left_ring_pad, commode_seat]   # max 5.9 mm, x153
+    - [ILH_left_ring_tip, commode_seat]   # max 6.3 mm, x153
+    - [ILH_left_thumb_3, commode_seat]   # max 7.1 mm, x89
+    - [ILH_plam, commode_body]   # max 18.6 mm, x121
+    - [ILH_plam, commode_seat]   # max 19.4 mm, x151
+    - [IRH_palm_rubber_1, commode_lid]   # max 16.5 mm, x56
+    - [IRH_palm_rubber_1, commode_seat]   # max 14.6 mm, x141
+    - [IRH_plam, commode_lid]   # max 25.1 mm, x170 (marginal)
+    - [IRH_plam, commode_seat]   # max 20.9 mm, x272 (marginal)
+    - [IRH_right_index_pad, commode_lid]   # max 7.0 mm, x92
+    - [IRH_right_index_tip, commode_lid]   # max 7.5 mm, x85
+    - [IRH_right_little_pad, commode_body]   # max 6.2 mm, x128
+    - [IRH_right_little_tip, commode_body]   # max 6.9 mm, x128
+    - [IRH_right_ring_pad, commode_body]   # max 6.1 mm, x85
+    - [IRH_right_ring_tip, commode_body]   # max 6.1 mm, x85
+    - [IRH_right_thumb_3, commode_lid]   # max 10.5 mm, x149
+    - [IRH_right_thumb_3, commode_seat]   # max 12.1 mm, x188
+    - [ILH_left_index_pad, commode_body]   # max 4.5 mm, x15 (G40 pass 2)
+    - [ILH_left_index_pad, commode_lid]   # max 4.5 mm, x24 (G40 pass 2)
+    - [ILH_left_index_tip, commode_body]   # max 5.0 mm, x15 (G40 pass 2)
+    - [ILH_left_index_tip, commode_lid]   # max 3.6 mm, x24 (G40 pass 2)
+    - [ILH_left_little_pad, commode_body]   # max 2.3 mm, x7 (G40 pass 2)
+    - [ILH_left_little_pad, commode_lid]   # max 6.8 mm, x91 (G40 pass 2)
+    - [ILH_left_little_tip, commode_body]   # max 1.4 mm, x7 (G40 pass 2)
+    - [ILH_left_little_tip, commode_lid]   # max 6.4 mm, x91 (G40 pass 2)
+    - [ILH_left_middle_pad, commode_body]   # max 5.0 mm, x27 (G40 pass 2)
+    - [ILH_left_middle_pad, commode_lid]   # max 4.4 mm, x81 (G40 pass 2)
+    - [ILH_left_middle_tip, commode_body]   # max 4.6 mm, x27 (G40 pass 2)
+    - [ILH_left_middle_tip, commode_lid]   # max 3.5 mm, x81 (G40 pass 2)
+    - [ILH_left_ring_pad, commode_body]   # max 4.2 mm, x15 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_body]   # max 5.2 mm, x15 (G40 pass 2)
+    - [ILH_left_ring_tip, commode_lid]   # max 5.8 mm, x92 (G40 pass 2)
+    - [ILH_left_thumb_2, commode_body]   # max 5.9 mm, x8 (G40 pass 2)
+    - [ILH_left_thumb_2, commode_lid]   # max 1.0 mm, x8 (G40 pass 2)
+    - [ILH_left_thumb_2, commode_seat]   # max 15.3 mm, x24 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_body]   # max 9.4 mm, x32 (G40 pass 2)
+    - [ILH_left_thumb_3, commode_lid]   # max 4.6 mm, x41 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_body]   # max 16.9 mm, x8 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_lid]   # max 14.6 mm, x56 (G40 pass 2)
+    - [ILH_palm_rubber_1, commode_seat]   # max 15.3 mm, x88 (G40 pass 2)
+    - [ILH_plam, commode_lid]   # max 18.4 mm, x80 (G40 pass 2)
+    - [IRH_palm_rubber_1, commode_body]   # max 13.2 mm, x40 (G40 pass 2)
+    - [IRH_plam, commode_body]   # max 21.3 mm, x69 (G40 pass 2)
+    - [IRH_right_index_pad, commode_body]   # max 4.2 mm, x32 (G40 pass 2)
+    - [IRH_right_index_pad, commode_seat]   # max 6.1 mm, x37 (G40 pass 2)
+    - [IRH_right_index_tip, commode_body]   # max 4.6 mm, x32 (G40 pass 2)
+    - [IRH_right_index_tip, commode_seat]   # max 4.7 mm, x37 (G40 pass 2)
+    - [IRH_right_little_pad, commode_lid]   # max 6.1 mm, x8 (G40 pass 2)
+    - [IRH_right_little_pad, commode_seat]   # max 3.4 mm, x25 (G40 pass 2)
+    - [IRH_right_little_tip, commode_lid]   # max 6.1 mm, x8 (G40 pass 2)
+    - [IRH_right_little_tip, commode_seat]   # max 3.3 mm, x25 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_body]   # max 4.5 mm, x69 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_lid]   # max 7.2 mm, x32 (G40 pass 2)
+    - [IRH_right_middle_pad, commode_seat]   # max 3.0 mm, x16 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_body]   # max 3.7 mm, x69 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_lid]   # max 6.3 mm, x32 (G40 pass 2)
+    - [IRH_right_middle_tip, commode_seat]   # max 3.4 mm, x16 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_lid]   # max 3.6 mm, x8 (G40 pass 2)
+    - [IRH_right_ring_pad, commode_seat]   # max 3.7 mm, x8 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_lid]   # max 4.1 mm, x8 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_body]   # max 24.2 mm, x16 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_lid]   # max 13.4 mm, x40 (G40 pass 2)
+    - [IRH_right_thumb_2, commode_seat]   # max 19.2 mm, x72 (G40 pass 2)
+    - [IRH_right_thumb_3, commode_body]   # max 7.1 mm, x32 (G40 pass 2)
+    - [IRH_right_ring_tip, commode_seat]   # max 3.9 mm, x8 (G40 pass 3)
+    - [IRH_right_thumb_1, commode_seat]   # max 0.7 mm, x1 (G40 pass 3)

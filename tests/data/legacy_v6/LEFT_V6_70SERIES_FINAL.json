@@ -1,0 +1,99 @@
+{
+  "format": "realman_workflow_sequence_v1",
+  "side": "left",
+  "workflow_note": "The 2-second WAIT is intentionally retained for manual lid-cover opening.",
+  "steps": [
+    {
+      "type": "pole",
+      "mm": 200.0
+    },
+    {
+      "type": "hand",
+      "values": [
+        0,
+        0,
+        0,
+        0,
+        150,
+        1000
+      ]
+    },
+    {
+      "type": "pole",
+      "mm": 150.0
+    },
+    {
+      "type": "program",
+      "id": 71,
+      "name": "L_P01P02.txt",
+      "speed": 100,
+      "transit_speed": 30,
+      "dual_rule": "TOGETHER"
+    },
+    {
+      "type": "pole",
+      "mm": 50.0
+    },
+    {
+      "type": "program",
+      "id": 73,
+      "name": "L_P03P05.txt",
+      "speed": 100,
+      "transit_speed": 30,
+      "dual_rule": "TOGETHER"
+    },
+    {
+      "type": "pole",
+      "mm": 150.0
+    },
+    {
+      "type": "wait",
+      "seconds": 2.0,
+      "note": "MANUAL LID COVER OPEN"
+    },
+    {
+      "type": "program",
+      "id": 76,
+      "name": "L_P06P07.txt",
+      "speed": 100,
+      "transit_speed": 30,
+      "dual_rule": "TOGETHER"
+    },
+    {
+      "type": "program",
+      "id": 78,
+      "name": "M3_OPNST01.txt",
+      "speed": 100,
+      "transit_speed": 30,
+      "dual_rule": "RUN FIRST"
+    },
+    {
+      "type": "program",
+      "id": 79,
+      "name": "M3_OPNST02.txt",
+      "speed": 100,
+      "transit_speed": 30,
+      "dual_rule": "RUN FIRST"
+    },
+    {
+      "type": "program",
+      "id": 80,
+      "name": "L_P10P12.txt",
+      "speed": 100,
+      "transit_speed": 30,
+      "dual_rule": "TOGETHER"
+    },
+    {
+      "type": "pole",
+      "mm": 50.0
+    },
+    {
+      "type": "program",
+      "id": 83,
+      "name": "R15_BUPFUL.txt",
+      "speed": 100,
+      "transit_speed": 30,
+      "dual_rule": "TOGETHER"
+    }
+  ]
+}

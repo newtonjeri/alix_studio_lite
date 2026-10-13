@@ -1,0 +1,249 @@
+# =============================================================================
+# SRDF GROUP STATES — ARM+POLE  (SOURCE OF TRUTH)
+# =============================================================================
+# Combined arm_pole_{right,left} states (pole slider + 7-DOF RM75 as ONE
+# group), so a single move_to_state plans the pole height and arm posture
+# together as one collision-checked trajectory.
+# The plain alix.srdf is ASSEMBLED from these fragment files by
+#   python3 Resource/scripts/sync_srdf_group_states.py
+# (the test suite runs it in check mode — edit HERE, never in the .srdf).
+#
+# Values are BORROWED from arms_group_states.yaml / poles_group_states.yaml —
+# keep them in sync when recalibrating there. Each state names the pole_right
+# height it is paired with, so the combined entry and the standalone
+# arm + pole stages always agree:
+#   glove-wear waypoints -> arm state + pole full_length / three_quarter_length
+#   glove_remove         -> arm glove_remove      + pole quarter_length
+#   inspection poses     -> arm inspection_pose_1/4 + pole half_length (the twin's ONE
+#                           height; the inspection node runs at ANY principal height)
+# =============================================================================
+
+group_states:
+  arm_pole_right:
+    # =======================================================================
+    # GLOVE WEAR — HAND-TAUGHT WAYPOINTS (combined-group twins)
+    # =======================================================================
+    # Arm values copied verbatim from rm75_arm_right (see the taught block in
+    # arms_group_states.yaml for provenance, tip poses and clearances); the pole
+    # is the NAMED pole_right height the pose was taught at, so the standalone
+    # arm stage and the standalone pole stage agree with this combined state.
+    #
+    # The glove-wear TASK drives these through the SEPARATE rm75_arm_right and
+    # pole_right groups. These entries exist only so the combined group stays
+    # coherent for anything that plans arm+pole as one.
+    # =======================================================================
+
+    # pole full_length | -10, -92, -84, 85, -10, 105, 3
+    glove_wear_entry_via:
+      R_sliding_plate_joint: 0.3
+      R_joint1: -0.1702
+      R_joint2: -1.6048
+      R_joint3: -1.4624
+      R_joint4: 1.4769
+      R_joint5: -0.1786
+      R_joint6: 1.8291
+      R_joint7: 0.0483
+
+    # pole full_length | -23, -24, -119, 47, -34, 114, 18
+    glove_wear_prestart_via:
+      R_sliding_plate_joint: 0.3
+      R_joint1: -0.3943
+      R_joint2: -0.4169
+      R_joint3: -2.0812
+      R_joint4: 0.8209
+      R_joint5: -0.5912
+      R_joint6: 1.997
+      R_joint7: 0.3109
+
+    # Used TWICE (into and out of the dispensing block); the midpoint of the two
+    # captures that were collapsed — see the arms fragment for the reasoning.
+    # pole three_quarter_length | -32.17, -9.29, -128.59, 62.95, -13.20, 111.19, 17.49
+    glove_dispense_standoff:
+      R_sliding_plate_joint: 0.225
+      R_joint1: -0.5614
+      R_joint2: -0.1622
+      R_joint3: -2.2444
+      R_joint4: 1.0987
+      R_joint5: -0.2304
+      R_joint6: 1.9406
+      R_joint7: 0.3052
+
+    # pole three_quarter_length | -32, -10, -129, 94, -14, 86, 20
+    dispense_glove_surface1:
+      R_sliding_plate_joint: 0.225
+      R_joint1: -0.5651
+      R_joint2: -0.1813
+      R_joint3: -2.2582
+      R_joint4: 1.6409
+      R_joint5: -0.2456
+      R_joint6: 1.5063
+      R_joint7: 0.3473
+
+    # pole three_quarter_length | -33, -8, -131, 91, -13, 86, 17
+    dispense_glove_surface2:
+      R_sliding_plate_joint: 0.225
+      R_joint1: -0.5707
+      R_joint2: -0.1439
+      R_joint3: -2.2794
+      R_joint4: 1.5921
+      R_joint5: -0.2216
+      R_joint6: 1.5079
+      R_joint7: 0.3049
+
+    # pole three_quarter_length | -32, -10, -130, 94, -14, 88, 198
+    dispense_glove_surface3:
+      R_sliding_plate_joint: 0.225
+      R_joint1: -0.5668
+      R_joint2: -0.1814
+      R_joint3: -2.2644
+      R_joint4: 1.6401
+      R_joint5: -0.2445
+      R_joint6: 1.5378
+      R_joint7: 3.4559
+
+    # pole three_quarter_length | -9, -80, -102, 94, 6, 98, -4
+    glove_wear_park_via:
+      R_sliding_plate_joint: 0.225
+      R_joint1: -0.1549
+      R_joint2: -1.3973
+      R_joint3: -1.7804
+      R_joint4: 1.6352
+      R_joint5: 0.0999
+      R_joint6: 1.717
+      R_joint7: -0.068
+
+    # ---- Glove removal ------------------------------------------------------
+    # Arm values copied from rm75_arm_right; the pole is the NAMED
+    # pole_right/quarter_length height so the removal task can command it as a
+    # standalone pole stage. Used by glove_remove_right.yaml.
+    # pole quarter_length | -2, -98, 42, 100, 12, 90, 40
+    glove_remove:
+      R_sliding_plate_joint: 0.075
+      R_joint1: -0.0347
+      R_joint2: -1.7088
+      R_joint3: 0.7304
+      R_joint4: 1.7399
+      R_joint5: 0.2041
+      R_joint6: 1.5668
+      R_joint7: 0.6985
+
+
+    # ---- Inspection pose 1: the colour viewpoint (re-taught 2026-10-08, see
+    # arms_group_states.yaml); the twin pairs it with half_length. Poses 2 and 3
+    # were retired that day. -------------------------------------------------
+    inspection_pose_1:
+      R_sliding_plate_joint: 0.15
+      R_joint1: 0.0873
+      R_joint2: -1.693
+      R_joint3: -0.0349
+      R_joint4: 1.5184
+      R_joint5: 0.0
+      R_joint6: 1.1868
+      R_joint7: -1.693
+
+    # -------------------------------------------------------------------------
+    # LIFT CHECK VIEWPOINT (P20, Newton 2026-10-05; his RViz goal state, pole at
+    # quarter_length 0.075, paired here as ONE group): the right wrist camera frames the lid / seat front
+    # edge while the LEFT arm lifts the part to -30 deg. lid_open.yaml and
+    # seat_open.yaml move here BEFORE the lift (stage move_to_inspect) and the
+    # check_fixture_state pre_action is answered from this viewpoint. Right arm
+    # only: the camera rides the right wrist, so there is no left twin.
+    # Degrees as taught: j1 32, j2 -96, j3 10, j4 112, j5 -25, j6 60, j7 -14.
+    # -------------------------------------------------------------------------
+    inspection_pose_4:
+      R_sliding_plate_joint: 0.15
+      R_joint1: 0.5585
+      R_joint2: -1.6755
+      R_joint3: 0.1745
+      R_joint4: 1.9548
+      R_joint5: -0.4363
+      R_joint6: 1.0472
+      R_joint7: -0.2443
+
+  # arm_pole_left: mirrored from arm_pole_right by
+  # alix_moveit_config/scripts/mirror_group_states.py — the RIGHT side is
+  # the taught source; re-teach there and re-run rather than editing here.
+  arm_pole_left:
+
+    glove_remove:
+      L_sliding_plate_joint: 0.075
+      L_joint1: 0.0347
+      L_joint2: -1.7088
+      L_joint3: -0.7304
+      L_joint4: 1.7399
+      L_joint5: -0.2041
+      L_joint6: 1.5668
+      L_joint7: 2.4431
+
+    # inspection_pose_1..3 of the left side were retired on 2026-10-08 (the camera
+    # rides the right wrist; no left twin, as pose 4 never had).
+
+    dispense_glove_surface1:
+      L_sliding_plate_joint: 0.225
+      L_joint1: 0.5651
+      L_joint2: -0.1813
+      L_joint3: 2.2582
+      L_joint4: 1.6409
+      L_joint5: 0.2456
+      L_joint6: 1.5063
+      L_joint7: 2.7943
+
+    dispense_glove_surface2:
+      L_sliding_plate_joint: 0.225
+      L_joint1: 0.5707
+      L_joint2: -0.1439
+      L_joint3: 2.2794
+      L_joint4: 1.5921
+      L_joint5: 0.2216
+      L_joint6: 1.5079
+      L_joint7: 2.8367
+
+    dispense_glove_surface3:
+      L_sliding_plate_joint: 0.225
+      L_joint1: 0.5668
+      L_joint2: -0.1814
+      L_joint3: 2.2644
+      L_joint4: 1.6401
+      L_joint5: 0.2445
+      L_joint6: 1.5378
+      L_joint7: -0.3143
+
+    glove_wear_entry_via:
+      L_sliding_plate_joint: 0.3
+      L_joint1: 0.1702
+      L_joint2: -1.6048
+      L_joint3: 1.4624
+      L_joint4: 1.4769
+      L_joint5: 0.1786
+      L_joint6: 1.8291
+      L_joint7: 3.0933
+
+    glove_wear_prestart_via:
+      L_sliding_plate_joint: 0.3
+      L_joint1: 0.3943
+      L_joint2: -0.4169
+      L_joint3: 2.0812
+      L_joint4: 0.8209
+      L_joint5: 0.5912
+      L_joint6: 1.997
+      L_joint7: 2.8307
+
+    glove_dispense_standoff:
+      L_sliding_plate_joint: 0.225
+      L_joint1: 0.5614
+      L_joint2: -0.1622
+      L_joint3: 2.2444
+      L_joint4: 1.0987
+      L_joint5: 0.2304
+      L_joint6: 1.9406
+      L_joint7: 2.8364
+
+    glove_wear_park_via:
+      L_sliding_plate_joint: 0.225
+      L_joint1: 0.1549
+      L_joint2: -1.3973
+      L_joint3: 1.7804
+      L_joint4: 1.6352
+      L_joint5: -0.0999
+      L_joint6: 1.717
+      L_joint7: 3.2096

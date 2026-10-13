@@ -1,0 +1,9 @@
+# Initial positions for UGV joints
+UGV_front_left_suspension_joint: 0.0
+UGV_front_right_suspension_joint: 0.0
+UGV_rear_left_suspension_joint: 0.0
+UGV_rear_right_suspension_joint: 0.0
+UGV_front_left_wheel_joint: 0.0
+UGV_front_right_wheel_joint: 0.0
+UGV_rear_left_wheel_joint: 0.0
+UGV_rear_right_wheel_joint: 0.0

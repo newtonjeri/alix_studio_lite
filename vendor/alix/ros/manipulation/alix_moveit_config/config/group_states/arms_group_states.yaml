@@ -1,0 +1,638 @@
+# =============================================================================
+# SRDF GROUP STATES — ARMS  (SOURCE OF TRUTH)
+# =============================================================================
+# Per-arm rm75 states (rest/ready/zero/inspection poses).
+# The plain alix.srdf is ASSEMBLED from these fragment files by
+#   python3 Resource/scripts/sync_srdf_group_states.py
+# (the test suite runs it in check mode — edit HERE, never in the .srdf).
+# bin_rail / glove_arm states are NOT here: peripheral_joints.yaml owns them.
+# =============================================================================
+
+group_states:
+  rm75_arm_right:
+    zero_pose:
+      R_joint1: 0.0
+      R_joint2: 0.0
+      R_joint3: 0.0
+      R_joint4: 0.0
+      R_joint5: 0.0
+      R_joint6: 0.0
+      R_joint7: 0.0
+    # <joint name="R_joint1" value="-2.478"/> <joint name="R_joint2" value="1.850"/> <joint name="R_joint3" value="-0.105"/> <joint name="R_joint4" value="-1.692"/> <joint name="R_joint5" value="-0.593"/> <joint name="R_joint6" value="-1.256"/> <joint name="R_joint7" value="2.827"/>
+    # 0, -82, -26, 98, 6, 62, 69
+    rest_pose:
+      R_joint1: 0.0
+      R_joint2: -1.431
+      R_joint3: -0.4538
+      R_joint4: 1.7103
+      R_joint5: 0.1047
+      R_joint6: 1.0821
+      R_joint7: 1.2043
+    # Previous values: <joint name="R_joint1" value="-3.054"/> <joint name="R_joint2" value="2.072"/> <joint name="R_joint3" value="0.0"/> <joint name="R_joint4" value="-1.91986"/> <joint name="R_joint5" value="0.0"/> <joint name="R_joint6" value="-1.34"/> <joint name="R_joint7" value="3.142"/>
+    # Right: 0, -108, 0, 103, 0, 79, 0 (degrees)
+    ready:
+      R_joint1: 0.0
+      R_joint2: -1.885
+      R_joint3: 0.0
+      R_joint4: 1.798
+      R_joint5: 0.0
+      R_joint6: 1.379
+      R_joint7: 0.0
+
+    # =========================================================================
+    # GLOVE WEAR — HAND-TAUGHT WAYPOINTS  (the set the task actually uses)
+    # =========================================================================
+    # Captured on the robot in teach mode with
+    #   python3 Resource/scripts/capture_joint_state.py --side right --name <n>
+    # and staged in config/group_states/candidate_poses.yaml before adoption.
+    # Named in the order they appear in the wear sequence.
+    #
+    # These REPLACED an earlier searched set (glove_pose_1/2/3, glove_entry_via,
+    # glove_prestart_via, glove_dispense_via, glove_dispense_entry,
+    # glove_exit_via, dispense_glove1..3), now retired — see git history.
+    # The taught set wins because it is a straight retreat line out of the glove
+    # unit: tip X/Y hold to +/-18 mm while Z steps 0.780 -> 0.713 -> 0.561,
+    # orientation stays within 11 deg of pre_start throughout, and no leg is
+    # longer than 118 mm. A swept-volume search cannot find that — it optimises
+    # each leg in isolation and has no notion of "come straight out".
+    #
+    # POLE PAIRING is not recorded by the capture (arm-only snapshots), so it is
+    # stated per pose below and is load-bearing: tip Z moves 1:1 with the pole.
+    # For the three dispensing poses it was recovered from the taught targets —
+    # against the previously taught dispense poses the Z residuals are
+    # -10/+18/-3 mm at three_quarter_length (same scatter as the pole-independent
+    # X/Y residuals) but a systematic +55/+83/+62 mm at full_length, i.e. exactly
+    # the 65 mm pole delta. So the dispensing block is three_quarter_length.
+    #
+    # Clearance below is link CENTRELINE -> washroom mesh: a comparable margin
+    # index, not centimetres of air. It is pole-INVARIANT for every pose here
+    # (the binding surface is a vertical wall), so the pole stage never trades
+    # clearance.
+    # =========================================================================
+
+    # -- 1. entry: first waypoint out of ready/rest_pose -----------------------
+    # NULL-SPACE SEPARATED (2026-07-28) for SYNCHRONIZED dual wear: tip poses
+    # unchanged; the elbows are pushed outboard so both arms can run the
+    # approach simultaneously (cross-arm centreline 0.161->0.248 m here,
+    # 0.168->0.230 m at prestart_via — the observed L_Link4~R_Link3 crossing
+    # was a runtime IK branch with inboard elbows; these states pin the
+    # outboard branch, which also seeds the pre_start/start IK).
+    # pole: full_length (0.30 now; taught at 0.29, captured at 0.2895) | -10, -92, -84, 85, -10, 105, 3
+    # tip [+0.2502 -0.1519 +0.3175] | clearance 0.104 m | limit margin 18.1%
+    glove_wear_entry_via:
+      R_joint1: 0.0135
+      R_joint2: -1.0538
+      R_joint3: -2.3144
+      R_joint4: 1.4769
+      R_joint5: 0.3018
+      R_joint6: 1.875
+      R_joint7: -0.6907
+
+    # -- 2. pre_start standoff, used TWICE (inbound and outbound) --------------
+    # 69.8 mm from cartesian_poses.pre_start_pose, 7.40 deg off its orientation.
+    # pole: full_length (0.30 now; taught at 0.29) | -23, -24, -119, 47, -34, 114, 18
+    # tip [+0.2273 +0.0089 +0.7126] | clearance 0.217 m | limit margin 10.6%
+    glove_wear_prestart_via:
+      R_joint1: -0.0725
+      R_joint2: -0.3166
+      R_joint3: -2.7798
+      R_joint4: 0.8209
+      R_joint5: -0.2766
+      R_joint6: 1.919
+      R_joint7: 0.1295
+
+    # -- 3. dispensing standoff, used TWICE (into and out of the block) --------
+    # Sits ~0.10 m in +X from the three dispensing poses at the same height, so
+    # it is both the approach point for the block and the withdrawal point.
+    #
+    # COLLAPSED from two captures of the SAME intended standoff: dispense_via
+    # (taught on the way in) and final1 (taught on the way out), whose tips were
+    # 15.5 mm apart with no joint differing by more than 4.3 deg. This state is
+    # their joint-space MIDPOINT — the mean of two noisy observations of one
+    # pose is the better estimate of what was taught than either observation.
+    #
+    # The measurement could not separate them, which is why provenance decided
+    # it. Over 8 planning repeats on each of the four legs this pose serves
+    # (prestart_via -> X, X -> surface1, surface3 -> X, X -> park_via) all three
+    # candidates planned 8/8 with ZERO variance — the straight line is
+    # collision-free, so the planner returns it and total path length was a tie
+    # (10.12 / 10.12 / 10.08 rad for in / out / midpoint). The remaining
+    # difference was a trade the midpoint splits: the inbound capture had the
+    # better wall clearance (0.212 m) and the outbound one the better
+    # joint-limit margin (14.8%).
+    #
+    # pole: three_quarter_length (0.225) | -32.17, -9.29, -128.59, 62.95, -13.20, 111.19, 17.49
+    # tip [+0.2178 -0.0032 +0.5645] | clearance 0.208 m | limit margin 13.1%
+    glove_dispense_standoff:
+      R_joint1: -0.5614
+      R_joint2: -0.1622
+      R_joint3: -2.2444
+      R_joint4: 1.0987
+      R_joint5: -0.2304
+      R_joint6: 1.9406
+      R_joint7: 0.3052
+
+    # -- 4/5/6. the gloved contact under dispensing holes 1/2/3 ----------------
+    # 25.5 mm and 23.4 mm apart — the block is three small steps, not three
+    # separate reaches. Clearance 0.098-0.111 m across the three, against
+    # 0.061-0.112 m for the searched set they replace.
+    # pole: three_quarter_length (0.225) | -32, -10, -129, 94, -14, 86, 20
+    # tip [+0.1079 +0.0070 +0.5348] | clearance 0.098 m | limit margin 27.2%
+    dispense_glove_surface1:
+      R_joint1: -0.5651
+      R_joint2: -0.1813
+      R_joint3: -2.2582
+      R_joint4: 1.6409
+      R_joint5: -0.2456
+      R_joint6: 1.5063
+      R_joint7: 0.3473
+
+    # pole: three_quarter_length (0.225) | -33, -8, -131, 91, -13, 86, 17
+    # tip [+0.1210 +0.0028 +0.5563] | clearance 0.111 m | limit margin 26.5%
+    dispense_glove_surface2:
+      R_joint1: -0.5707
+      R_joint2: -0.1439
+      R_joint3: -2.2794
+      R_joint4: 1.5921
+      R_joint5: -0.2216
+      R_joint6: 1.5079
+      R_joint7: 0.3049
+
+    # Keeps the taught ~180 deg wrist flip (joint7) — it presents the other face
+    # of the glove to the nozzle and is part of the taught target, not slack.
+    # pole: three_quarter_length (0.225) | -32, -10, -130, 94, -14, 88, 198
+    # tip [+0.1081 +0.0220 +0.5528] | clearance 0.098 m | limit margin 27.0%
+    dispense_glove_surface3:
+      R_joint1: -0.5668
+      R_joint2: -0.1814
+      R_joint3: -2.2644
+      R_joint4: 1.6401
+      R_joint5: -0.2445
+      R_joint6: 1.5378
+      R_joint7: 3.4559
+
+    # -- 7. exit from the dispensing block -------------------------------------
+    # There is no separate state here: the block is left on the SAME
+    # glove_dispense_standoff it was entered on (see note 3 above, which records
+    # the two captures that were collapsed into it).
+
+    # -- 8. last waypoint before parking at ready/rest_pose ---------------------
+    # Tucks the arm back beside the body (the counterpart of what
+    # glove_wear_entry_via does on the way out), so the tail into ready/rest is a
+    # short local move rather than a swing across the washroom.
+    # Was `final2` — renamed for what it does.
+    # pole: three_quarter_length (0.225) | -9, -80, -102, 94, 6, 98, -4
+    # tip [+0.2894 -0.1383 +0.2166] | clearance 0.101 m | limit margin 23.1%
+    glove_wear_park_via:
+      R_joint1: -0.1549
+      R_joint2: -1.3973
+      R_joint3: -1.7804
+      R_joint4: 1.6352
+      R_joint5: 0.0999
+      R_joint6: 1.717
+      R_joint7: -0.068
+
+    # =========================================================================
+    # BIN CARRY — HAND-TAUGHT GRIPS on the bin handle
+    # RE-DERIVED 2026-07-28 (v3, pitched constant-orientation chain):
+    #   * grasp orientation pitched +12 deg about ref +Y at the SAME taught
+    #     handle positions — doubles the glove-unit clearance at the STOWED
+    #     grasp (0.026 -> 0.052 m centreline; the taught grasp was in slight
+    #     mesh contact with the unit) and relieves the fingers against the
+    #     handle per operator direction.
+    #   * ONE constant orientation through the whole carry (rigid-carry ideal
+    #     — the hand must not rotate relative to a held rigid bin), so the
+    #     old 8.5 deg orientation ramps are gone.
+    #   * standoffs wall-checked against the 800 mm room: pre_stowed offset
+    #     [-0.020,-0.050,0] (wall 0.058 m), post_lowered [0,-0.055,0]
+    #     (wall 0.062 m — the previous 90 mm outboard PENETRATED the wall).
+    #   * cost: 4.3-4.5%% joint-limit margins at extended/lowered (planners
+    #     handle it; the dual planner has a DLS continuation fallback).
+    # =========================================================================
+    # Captured on the robot in teach mode (see the "Bin Motion Poses" block in
+    # candidate_poses.yaml for the raw captures), then adopted here.
+    #
+    # These joints are PASSIVE: nothing drives the bin, the two arms drag it by
+    # its handles. So these are not "poses near the bin" — they are the grip the
+    # hand must hold THROUGHOUT the carry, and the arm motion between them IS
+    # the bin motion.
+    #
+    # POLE: taught at 0.2955, paired here with pole_right/full_length
+    # (0.30 since 2026-08-30; it was 0.29 when this pairing was made).
+    # The 5.5 mm difference lowers the grip by 5.5 mm, comfortably inside the
+    # hand's closing compliance. NOTE the previously-written bin task commanded
+    # pole quarter_length (0.075), which would have put the hand 220 mm BELOW
+    # the taught grip — the task configs were built against placeholder poses.
+    #
+    # VERIFIED against the bin's own kinematics: the taught stowed -> lowered
+    # hand travel is [+0.1985, +0.0153, -0.4513] m against the bin's actual
+    # rail+drop travel of [+0.200, 0, -0.450] (0.3 mm / 1.8 mm at
+    # R_glove_frame_2, the contact patch). The hand tracks the bin, and this is
+    # a third independent confirmation that the drop is 0.450 and not 0.400.
+    #
+    # The names match the `dual_arms` group states the joint-space bin task
+    # already expects, so the SRDF assembler composes dual_arms/bin_grip_* from
+    # these plus their mirrors automatically — no hand-authored dual states.
+    # =========================================================================
+
+    # Approach standoff: bin_grip_stowed translated a flat 90 mm outboard (-Y),
+    # orientation LOCKED — so approach and release are strictly straight lines,
+    # a pure translation on and off the handle with no re-orientation.
+    # DERIVED, not taught. The taught capture carried a ~14 deg wrist roll over
+    # the same 89 mm, which is not a straight line; re-solving it as a pure
+    # translation also opened the glove-unit clearance 0.043 -> 0.053 m.
+    # Residual 0.0000 mm / 0.00000 deg; bin_grip_post_lowered is the same
+    # construction off bin_grip_lowered.
+    # pole: full_length (0.30 now; taught at 0.29) | 13, -85, -136, 68, 3, 102, -47
+    bin_grip_pre_stowed:
+      R_joint1: 0.2227
+      R_joint2: -1.4797
+      R_joint3: -2.375
+      R_joint4: 1.1789
+      R_joint5: 0.054
+      R_joint6: 1.7718
+      R_joint7: -0.8175
+
+    # Grip closed on the handle, bin STOWED. This is the anchor of the carry:
+    # every Cartesian waypoint of the "7" motion is measured from here.
+    # pole: full_length (0.30 now; taught at 0.29) | 3, -78, -137, 80, 1, 101, -50
+    bin_grip_stowed:
+      R_joint1: 0.0542
+      R_joint2: -1.3665
+      R_joint3: -2.3906
+      R_joint4: 1.3949
+      R_joint5: 0.0137
+      R_joint6: 1.7543
+      R_joint7: -0.87
+
+    # DERIVED, not taught — the only grip in this set that was not captured.
+    # The bin is rigid and the hand holds a fixed handle, so between STOWED and
+    # EXTENDED the hand undergoes exactly the rail travel: a pure +0.200 m X
+    # translation with the orientation unchanged. Solved by damped least squares
+    # seeded from bin_grip_stowed (residual 0.0006 mm / 0.00001 deg) so it is
+    # the natural continuation of the taught arm configuration, not a distant
+    # IK branch.
+    # Cross-checks against the taught grips: stowed -> here is [+0.200, 0, 0]
+    # by construction, and here -> bin_grip_lowered comes out [-0.0015, +0.0153,
+    # -0.4513] against an expected pure drop of [0, 0, -0.450].
+    # Re-derive with scripts rather than editing by hand if the grip is retaught.
+    # pole: full_length (0.30 now; taught at 0.29) | -2, -48, -126, 77, 26, 122, -30
+    bin_grip_extended:
+      R_joint1: -0.0278
+      R_joint2: -0.8434
+      R_joint3: -2.1927
+      R_joint4: 1.3517
+      R_joint5: 0.4547
+      R_joint6: 2.1372
+      R_joint7: -0.5316
+
+    # Grip still closed, bin fully LOWERED (rail out AND dropped).
+    #
+    # SPLIT-DESCENT VALUES (2026-07-28), paired with pole quarter_length: the
+    # drop is pole leg (0.30 -> 0.075 = 0.225 m, arm joints FROZEN — the pole
+    # translates the whole arm, so this segment is a guaranteed straight
+    # vertical line with no IK at all) THEN an arm-only leg for the remaining
+    # 0.231 m. Derived by marching the extended-branch grip down that leg; the
+    # TIP equals the taught lowered handle pose to 0.0000 mm, so the physical
+    # grip point is unchanged — only the arm's branch differs (joint1 15 deg vs
+    # the taught 77 deg, which assumed pole full_length).
+    #
+    # WHY: a single-leg straight-line descent at pole full_length is IK-
+    # infeasible — seeded continuation dead-ends from both ends (58% down /
+    # 78% up), and half_length leaves the arm riding a joint limit (0.4%
+    # margin) vs 3.4% here. The taught full-pole values are in git history.
+    # pole: minimum_length (0.01) | -9, -21, -112, 120, 45, 100, -42
+    bin_grip_lowered:
+      R_joint1: -0.1514
+      R_joint2: -0.3633
+      R_joint3: -1.9598
+      R_joint4: 2.0864
+      R_joint5: 0.7856
+      R_joint6: 1.7488
+      R_joint7: -0.7384
+
+    # Release standoff: bin_grip_lowered translated the same flat 90 mm outboard,
+    # orientation locked — the hand leaves the handle exactly the way it arrived.
+    # DERIVED (see bin_grip_pre_stowed). Glove-unit clearance 0.232 m.
+    # pole: minimum_length (0.01) | 9, -31, -116, 108, 45, 91, -33
+    bin_grip_post_lowered:
+      R_joint1: 0.1601
+      R_joint2: -0.5395
+      R_joint3: -2.0307
+      R_joint4: 1.8884
+      R_joint5: 0.7922
+      R_joint6: 1.5839
+      R_joint7: -0.5724
+
+
+    # -- tail tuck: between the release standoffs and rest ---------------------
+    # DERIVED (blend t=0.75 post_lowered->rest, validated at BOTH pole heights):
+    # the big arm reconfiguration out of the release standoff happens here, at
+    # 0.105 m wall clearance and 25% margins, so the final approach to rest is a
+    # short local move (1.44 rad) instead of a 5.8 rad swing from low beside the
+    # bin. Pole-agnostic: used by the extend tail (pole minimum) and the raise
+    # tail (pole full) alike. Cross-arm 0.248 m — dual-safe.
+    # pole: any | 2, -69, -49, 101, 16, 69, 44
+    bin_tuck_via:
+      R_joint1: 0.04
+      R_joint2: -1.2081
+      R_joint3: -0.848
+      R_joint4: 1.7548
+      R_joint5: 0.2766
+      R_joint6: 1.2076
+      R_joint7: 0.7601
+
+
+    
+    # Joint Name	Value (Degrees)	Value (Radians)
+    # R_joint1	2°	0.0349
+    # R_joint2	-80°	-1.3963
+    # R_joint3	-127°	-2.2166
+    # R_joint4	78°	1.3614
+    # R_joint5	-1°	-0.0175
+    # R_joint6	100°	1.7453
+    # R_joint7	-42°	-0.7330
+    bin_grasp_pose:
+      R_joint1: 0.0349
+      R_joint2: -1.3963
+      R_joint3: -2.2166
+      R_joint4: 1.3614
+      R_joint5: -0.0175
+      R_joint6: 1.7453
+      R_joint7: -0.7330
+
+
+    # -------------------------------------------------------------------------
+    # GLOVE REMOVAL — ARM-ONLY twin of the arm_pole_right state, so the removal
+    # task can drive the arm and the pole as SEPARATE stages instead of one
+    # combined group. Joint values are IDENTICAL to arm_poles_group_states.yaml;
+    # the pole height is named so the paired pole stage is unambiguous.
+    #
+    # Used by cleaning_tasks/config/glove_tasks/glove_remove_right.yaml.
+    #
+    # NOTE: the searched glove-WEAR waypoints that used to sit here
+    # (glove_pose_1/2/3, glove_entry_via, glove_prestart_via, glove_dispense_via,
+    # glove_dispense_entry, glove_exit_via, dispense_glove1..3) were retired once
+    # the sequence was hand-taught — see the taught block above. They are in git
+    # history if a saved plan from before the change ever needs reading.
+    # -------------------------------------------------------------------------
+
+    # pole: quarter_length (0.075, taught at 0.0102) | -2, -98, 42, 100, 12, 90, 40
+    glove_remove:
+      R_joint1: -0.0347
+      R_joint2: -1.7088
+      R_joint3: 0.7304
+      R_joint4: 1.7399
+      R_joint5: 0.2041
+      R_joint6: 1.5668
+      R_joint7: 0.6985
+
+
+    # -------------------------------------------------------------------------
+    # INSPECTION POSE 1 (Newton, 2026-10-08; his RViz goal state): the COLOUR
+    # inspection viewpoint. Looks forward and down, 32 deg off vertical, image
+    # rolled -87 deg; the WHOLE fixture is in frame at every pole height (FK
+    # through the region cells: closed 94-100 %, open 85-100 %, range 0.3-1.2 m).
+    # The pole height is NOT part of the pose: an inspection runs at any of the
+    # five principal heights (poles_group_states.yaml, minimum_length ..
+    # full_length), chosen per run by the inspection node's
+    # `inspection_pole_height`. Right arm only: the camera rides the right wrist.
+    # Degrees as taught: j1 5, j2 -97, j3 -2, j4 87, j5 0, j6 68, j7 -97.
+    # Written by tools/set_inspection_pose.py --pose 1.
+    #
+    # RETIRED 2026-10-08 (Newton: "only 2 inspection poses"): the old pose 1
+    # (-2.85, 1.605, 0.227, -1.448, -0.209, -1.43, 1.815) and poses 2 and 3.
+    # Two poses, 1 and 4, serve every inspection; no hardware run visits the
+    # retired ones again. The 2026-10-07 captures taken there keep their frames
+    # under `pose: inspection_pose_N_retired_2026-10-07`.
+    # -------------------------------------------------------------------------
+    inspection_pose_1:
+      R_joint1: 0.0873
+      R_joint2: -1.693
+      R_joint3: -0.0349
+      R_joint4: 1.5184
+      R_joint5: 0.0
+      R_joint6: 1.1868
+      R_joint7: -1.693
+
+    # -------------------------------------------------------------------------
+    # LIFT CHECK VIEWPOINT (P20, Newton 2026-10-05; his RViz goal state, pole at
+    # quarter_length 0.075): the right wrist camera frames the lid / seat front
+    # edge while the LEFT arm lifts the part to -30 deg. lid_open.yaml and
+    # seat_open.yaml move here BEFORE the lift (stage move_to_inspect) and the
+    # check_fixture_state pre_action is answered from this viewpoint. Right arm
+    # only: the camera rides the right wrist, so there is no left twin.
+    # Degrees as taught: j1 32, j2 -96, j3 10, j4 112, j5 -25, j6 60, j7 -14.
+    # -------------------------------------------------------------------------
+    inspection_pose_4:
+      R_joint1: 0.5585
+      R_joint2: -1.6755
+      R_joint3: 0.1745
+      R_joint4: 1.9548
+      R_joint5: -0.4363
+      R_joint6: 1.0472
+      R_joint7: -0.2443
+
+    # -------------------------------------------------------------------------
+    # FLUSH PRESS (mechanism_tasks/commode_c/flush_press.yaml) — right-arm
+    # inspect pose: camera_link at base_link [0.75, -0.25, 1.05], body +X axis
+    # aimed at the flush button [1.105, 0.0, 0.95] from 0.45 m (searched over
+    # a placement grid for joint-limit margin: 55.1%). Pole at full_length.
+    # -------------------------------------------------------------------------
+    flush_inspect:
+      R_joint1: 0.8414
+      R_joint2: -0.8493
+      R_joint3: -0.6785
+      R_joint4: 0.8536
+      R_joint5: 1.1585
+      R_joint6: 1.0015
+      R_joint7: -1.7684
+
+  rm75_arm_left:
+    zero_pose:
+      L_joint1: 0.0
+      L_joint2: 0.0
+      L_joint3: 0.0
+      L_joint4: 0.0
+      L_joint5: 0.0
+      L_joint6: 0.0
+      L_joint7: 3.1416
+    # <joint name="L_joint1" value="-0.663"/> <joint name="L_joint2" value="-1.850"/> <joint name="L_joint3" value="0.105"/> <joint name="L_joint4" value="1.692"/> <joint name="L_joint5" value="0.593"/> <joint name="L_joint6" value="1.256"/> <joint name="L_joint7" value="2.827"/>
+    # 0, -84, 26, 96, -3, 63, 122 (degrees)
+    # rest_pose:
+    #   L_joint1: 0.0
+    #   L_joint2: -1.466
+    #   L_joint3: 0.4538
+    #   L_joint4: 1.6755
+    #   L_joint5: -0.0524
+    #   L_joint6: 1.0996
+    #   L_joint7: 2.1362
+    rest_pose:
+      L_joint1: 0.0
+      L_joint2: -1.431
+      L_joint3: 0.4538
+      L_joint4: 1.7103
+      L_joint5: -0.1047
+      L_joint6: 1.0821
+      L_joint7: 1.9373
+
+    # Previous values: <joint name="L_joint1" value="0.0"/> <joint name="L_joint2" value="-2.072"/> <joint name="L_joint3" value="0.0"/> <joint name="L_joint4" value="1.91986"/> <joint name="L_joint5" value="0.0"/> <joint name="L_joint6" value="1.34"/> <joint name="L_joint7" value="3.142"/>
+    # Left: 0, -108, 0, 103, 0, 79, 176 (degrees)
+    ready:
+      L_joint1: 0.0
+      L_joint2: -1.885
+      L_joint3: 0.0
+      L_joint4: 1.798
+      L_joint5: 0.0
+      L_joint6: 1.379
+      L_joint7: 3.1416
+
+    glove_remove:
+      L_joint1: 0.0347
+      L_joint2: -1.7088
+      L_joint3: -0.7304
+      L_joint4: 1.7399
+      L_joint5: -0.2041
+      L_joint6: 1.5668
+      L_joint7: 2.4431
+
+    # inspection_pose_1..3 of the left arm were retired on 2026-10-08: the
+    # camera rides the RIGHT wrist, an inspection pose has no left twin (as pose 4
+    # never had).
+
+    dispense_glove_surface1:
+      L_joint1: 0.5651
+      L_joint2: -0.1813
+      L_joint3: 2.2582
+      L_joint4: 1.6409
+      L_joint5: 0.2456
+      L_joint6: 1.5063
+      L_joint7: 2.7943
+
+    dispense_glove_surface2:
+      L_joint1: 0.5707
+      L_joint2: -0.1439
+      L_joint3: 2.2794
+      L_joint4: 1.5921
+      L_joint5: 0.2216
+      L_joint6: 1.5079
+      L_joint7: 2.8367
+
+    dispense_glove_surface3:
+      L_joint1: 0.5668
+      L_joint2: -0.1814
+      L_joint3: 2.2644
+      L_joint4: 1.6401
+      L_joint5: 0.2445
+      L_joint6: 1.5378
+      L_joint7: -0.3143
+
+    glove_wear_entry_via:
+      L_joint1: -0.0135
+      L_joint2: -1.0538
+      L_joint3: 2.3144
+      L_joint4: 1.4769
+      L_joint5: -0.3018
+      L_joint6: 1.875
+      L_joint7: 3.8323
+
+    glove_wear_prestart_via:
+      L_joint1: 0.0725
+      L_joint2: -0.3166
+      L_joint3: 2.7798
+      L_joint4: 0.8209
+      L_joint5: 0.2766
+      L_joint6: 1.919
+      L_joint7: 3.0121
+
+    glove_dispense_standoff:
+      L_joint1: 0.5614
+      L_joint2: -0.1622
+      L_joint3: 2.2444
+      L_joint4: 1.0987
+      L_joint5: 0.2304
+      L_joint6: 1.9406
+      L_joint7: 2.8364
+
+    glove_wear_park_via:
+      L_joint1: 0.1549
+      L_joint2: -1.3973
+      L_joint3: 1.7804
+      L_joint4: 1.6352
+      L_joint5: -0.0999
+      L_joint6: 1.717
+      L_joint7: 3.2096
+
+    bin_grip_extended:
+      L_joint1: 0.0278
+      L_joint2: -0.8434
+      L_joint3: 2.1927
+      L_joint4: 1.3517
+      L_joint5: -0.4547
+      L_joint6: 2.1372
+      L_joint7: 3.6732
+
+    bin_grip_lowered:
+      L_joint1: 0.1514
+      L_joint2: -0.3633
+      L_joint3: 1.9598
+      L_joint4: 2.0864
+      L_joint5: -0.7856
+      L_joint6: 1.7488
+      L_joint7: 3.88
+
+    bin_grip_post_lowered:
+      L_joint1: -0.1601
+      L_joint2: -0.5395
+      L_joint3: 2.0307
+      L_joint4: 1.8884
+      L_joint5: -0.7922
+      L_joint6: 1.5839
+      L_joint7: 3.714
+
+    bin_grip_pre_stowed:
+      L_joint1: -0.2227
+      L_joint2: -1.4797
+      L_joint3: 2.375
+      L_joint4: 1.1789
+      L_joint5: -0.054
+      L_joint6: 1.7718
+      L_joint7: 3.9591
+
+    bin_grip_stowed:
+      L_joint1: -0.0542
+      L_joint2: -1.3665
+      L_joint3: 2.3906
+      L_joint4: 1.3949
+      L_joint5: -0.0137
+      L_joint6: 1.7543
+      L_joint7: 4.0116
+
+    bin_tuck_via:
+      L_joint1: -0.04
+      L_joint2: -1.2081
+      L_joint3: 0.848
+      L_joint4: 1.7548
+      L_joint5: -0.2766
+      L_joint6: 1.2076
+      L_joint7: 2.3815
+
+    # -------------------------------------------------------------------------
+    # FLUSH PRESS (mechanism_tasks/commode_c/flush_press.yaml) — left-arm
+    # prestart: L_index_tip_frame (FIXED frame at the fully-open index tip,
+    # ik_frames.xacro) at base_link [0.955, 0, 0.95] (button -5 cm X), finger
+    # axis (frame +Z) exactly along base +X, hand at `pointing`, pole at
+    # full_length. This state PINS THE BRANCH: without it the stack's
+    # stochastic IK reached the same tip pose with L_joint3 at its 3.1 limit
+    # (limit-riding branch) and the withdraw leg could not converge in sim.
+    # Margins along the derived chain improve toward the press: 28.7% here,
+    # 37.8% at start, 42.4% at press end (DLS + nullspace, 2026-07-28).
+    # -------------------------------------------------------------------------
+    flush_prestart:
+      L_joint1: -1.0759
+      L_joint2: 1.1558
+      L_joint3: 0.4271
+      L_joint4: -1.6786
+      L_joint5: 0.6580
+      L_joint6: 0.6686
+      L_joint7: -0.3374

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>inspire_left_hand_description</name>
+  <version>1.0.0</version>
+  <description>
+    <p>URDF Description package for RH56DFX_L_8_19</p>
+    <p>This package contains configuration data, 3D models and launch files for RH56DFX_L_8_19 urdf</p>
+  </description>
+  <author>TODO</author>
+  <maintainer email="newtonkaris45@gmail.com">Newton Kariuki</maintainer>
+  <maintainer email="newton.njeri@alai-labs.com">newtonjeri</maintainer>
+  <license>TODO: License declaration</license>
+
+  <!-- Build tool dependency for ROS 2 -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Runtime dependencies -->
+  <depend>robot_state_publisher</depend>
+  <depend>rviz2</depend>
+  <depend>joint_state_publisher</depend>
+
+  <!-- Export section -->
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+
+  <export>
+    <architecture_independent />
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

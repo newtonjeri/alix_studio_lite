@@ -1,0 +1,6 @@
+# Lite's own virtual environment (tools/setup_lite.py makes it) and Python caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/

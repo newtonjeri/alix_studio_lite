@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""ONE COMMAND TO INSTALL ALIX STUDIO LITE, on Linux, Windows or macOS.
+
+It builds a virtual environment inside this folder (``.venv``), installs the pinned packages of
+``requirements.txt``, tries each optional package of ``requirements-optional.txt``, installs Lite
+itself (editable, so code changes need no reinstall), and finishes with a check that proves it
+works (the test suite).
+
+    python3 tools/setup_lite.py                 # make .venv, install, check
+    python3 tools/setup_lite.py --check         # only check what is there
+    python3 tools/setup_lite.py --no-optional   # skip toppra and meshoptimizer
+    python3 tools/setup_lite.py --no-tests      # skip the test suite at the end
+    python3 tools/setup_lite.py --venv DIR      # somewhere else
+
+On Windows, use ``py tools\\setup_lite.py``. Afterwards ``tools/run_lite.sh`` (Windows:
+``py tools\\run_lite.py``) starts Lite with this environment by itself: no activation step.
+
+NON-PYTHON REQUIREMENTS
+    Python 3.11 or newer with the venv module   (Ubuntu: sudo apt install python3-venv)
+    internet access for the first install       (pip downloads the packages)
+    a C/C++ compiler and git: only for the optional packages where no wheel exists
+        (toppra off Linux x86-64; meshoptimizer everywhere). Lite works without them.
+
+Like ALIX's own setup scripts, the environment is built with PYTHONPATH cleared: a sourced ROS
+workspace puts its own site-packages on PYTHONPATH, ahead of the venv, and its numpy would
+shadow the venv's. Lite needs no ROS.
+"""
+from __future__ import annotations
+
+import argparse
+import os
+import platform
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+REQ = ROOT / "requirements.txt"
+OPT = ROOT / "requirements-optional.txt"
+MIN_PY = (3, 11)
+#: the toppra release Lite is tested with, as a git tag, for platforms without a wheel
+TOPPRA_GIT = "toppra @ git+https://github.com/hungpham2511/toppra@0.6.10"
+
+
+def say(text: str) -> None:
+    print(f"\n== {text}", flush=True)
+
+
+def venv_python(venv: Path) -> Path:
+    return venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+
+
+def clean_env() -> dict:
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+    env["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
+    return env
+
+
+def run(cmd: list, *, quiet: bool = False, check: bool = True, label: str | None = None) -> int:
+    print("   $ " + (label or " ".join(str(c) for c in cmd)), flush=True)
+    out = subprocess.DEVNULL if quiet else None
+    rc = subprocess.call([str(c) for c in cmd], env=clean_env(), cwd=str(ROOT), stdout=out)
+    if check and rc != 0:
+        sys.exit(f"** that step failed (exit {rc}). Fix the message above and run setup again; it resumes.")
+    return rc
+
+
+def requirement_lines(path: Path) -> list[str]:
+    return [ln.strip() for ln in path.read_text(encoding="utf-8").splitlines()
+            if ln.strip() and not ln.strip().startswith("#")]
+
+
+def make_venv(venv: Path) -> Path:
+    say(f"Python and the virtual environment ({venv})")
+    if sys.version_info < MIN_PY:
+        sys.exit(f"** Python {platform.python_version()} is too old: Lite needs {'.'.join(map(str, MIN_PY))} or newer.")
+    print(f"   Python {platform.python_version()} at {sys.executable} ({platform.system()} {platform.machine()})")
+    vpy = venv_python(venv)
+    if vpy.is_file():
+        print("   the environment exists; it is updated in place")
+        return vpy
+    try:
+        import venv as venv_mod
+
+        venv_mod.EnvBuilder(with_pip=True, upgrade_deps=False).create(str(venv))
+    except Exception as exc:                                              # noqa: BLE001
+        hint = " On Ubuntu: sudo apt install python3-venv" if platform.system() == "Linux" else ""
+        sys.exit(f"** could not create the virtual environment: {exc}.{hint}")
+    return vpy
+
+
+def install(vpy: Path, optional: bool) -> dict:
+    say("Packages (requirements.txt)")
+    run([vpy, "-m", "pip", "install", "--upgrade", "pip"], quiet=True)
+    run([vpy, "-m", "pip", "install", "-r", REQ])
+    results = {}
+    if optional:
+        say("Optional packages (requirements-optional.txt)")
+        for req in requirement_lines(OPT):
+            name = req.split("==")[0].split(" ")[0]
+            ok = run([vpy, "-m", "pip", "install", req], check=False) == 0
+            if not ok and name == "toppra":
+                print("   no toppra wheel for this computer: building it from its git tag (needs git and a C compiler)")
+                ok = run([vpy, "-m", "pip", "install", "cython", TOPPRA_GIT], check=False) == 0
+            results[name] = ok
+            print(f"   {name}: {'installed' if ok else 'NOT installed (Lite works without it)'}")
+    say("Lite itself (editable)")
+    run([vpy, "-m", "pip", "install", "--no-deps", "-e", ROOT], quiet=True)
+    return results
+
+
+def check(vpy: Path, tests: bool) -> bool:
+    say("Check")
+    probe = ("import importlib.util as u, sys\n"
+             "from alix_studio_lite import vendor_paths, __version__\n"
+             "vendor_paths.activate()\n"
+             "import numpy, scipy, trimesh, fcl, yaml, taught_tracks\n"
+             "bad = vendor_paths.assert_independent()\n"
+             "print(f'   Lite {__version__}; numpy {numpy.__version__}, scipy {scipy.__version__}, trimesh {trimesh.__version__}')\n"
+             "print('   vendored ALIX code imports from this folder only' if not bad else f'** outside: {bad}')\n"
+             "for m, what in (('toppra', 'Time-optimal optimiser'), ('meshoptimizer', 're-baking the robot overlay')):\n"
+             "    print(f\"   {what}: {'available' if u.find_spec(m) else 'not installed'}\")\n"
+             "sys.exit(1 if bad else 0)\n")
+    ok = run([vpy, "-c", probe], check=False, label=f"{vpy.name} -c <import check>") == 0
+    if ok and tests:
+        t0 = time.time()
+        ok = run([vpy, "-m", "pytest", "-q", "-p", "no:cacheprovider"], check=False) == 0
+        print(f"   tests {'passed' if ok else 'FAILED'} in {time.time() - t0:.0f} s")
+    return ok
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description="Install ALIX Studio Lite into a virtual environment.",
+                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
+    ap.add_argument("--venv", type=Path, default=ROOT / ".venv", help="where the environment goes (default .venv here)")
+    ap.add_argument("--check", action="store_true", help="only check the existing environment")
+    ap.add_argument("--no-optional", action="store_true", help="skip toppra and meshoptimizer")
+    ap.add_argument("--no-tests", action="store_true", help="skip the test suite at the end")
+    a = ap.parse_args(argv)
+    venv = a.venv.resolve()
+    if a.check:
+        vpy = venv_python(venv)
+        if not vpy.is_file():
+            sys.exit(f"** no environment at {venv}: run  python3 tools/setup_lite.py")
+    else:
+        vpy = make_venv(venv)
+        install(vpy, optional=not a.no_optional)
+    ok = check(vpy, tests=not a.no_tests)
+    say("Done" if ok else "Installed, but the check failed (see above)")
+    start = "py tools\\run_lite.py" if os.name == "nt" else "tools/run_lite.sh"
+    print(f"   Start Lite:  {start}      (it uses {venv} by itself)")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+  Not a ROS package. This file names Lite's asset folder `alix_studio_lite` so that
+  `package://alix_studio_lite/...` URIs (for example the cubicle wall meshes in
+  scene/cubicles/) resolve through the same package lookup ALIX code uses.
+  Registered at start-up by src/alix_studio_lite/vendor_paths.py.
+-->
+<package format="3">
+  <name>alix_studio_lite</name>
+  <version>0.1.0</version>
+  <description>ALIX Studio Lite assets: cubicle wall models, regions deck, design tokens.</description>
+  <maintainer email="newtonkaris45@gmail.com">ALIX Studio Lite</maintainer>
+  <license>Proprietary</license>
+</package>

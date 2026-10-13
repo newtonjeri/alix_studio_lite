@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alix_studio_lite"
+version = "0.1.0"
+description = "ALIX Studio Lite: teach, optimise, check and run taught dual-arm cleaning trajectories"
+requires-python = ">=3.11"
+# The exact, tested versions are pinned in requirements.txt; tools/setup_lite.py installs them
+# into .venv in this folder. The ranges here only say what Lite needs.
+dependencies = [
+    "numpy>=2.0",
+    "scipy",
+    "pyyaml",
+    "trimesh",       # meshes, collision managers
+    "python-fcl",    # FCL backend for trimesh.collision (no fallback)
+    "pycollada",     # .dae robot meshes
+    "networkx",      # trimesh face adjacency
+]
+
+[project.optional-dependencies]
+# The time-optimal optimiser. PyPI has wheels for Linux x86-64 only: elsewhere it is built from
+# its git tag. Without it Lite still runs and offers the default optimiser only.
+toppra = ["toppra==0.6.10"]
+# Re-baking the robot overlay with ALIX's own tool (source build: needs a C++ compiler).
+bake = ["meshoptimizer==0.2.30a0", "rtree==1.4.1"]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+alix_studio_lite = ["web/*.html", "web/css/*.css", "web/js/*.js", "web/js/screens/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# ROS 2's own pytest plugins load from a sourced workspace's PYTHONPATH and fail inside Lite's
+# venv; Lite needs no ROS, so they are blocked (blocking a plugin that is not installed is a no-op).
+addopts = "-ra -p no:launch_testing -p no:launch_ros -p no:launch_pytest -p no:ament_copyright -p no:ament_flake8 -p no:ament_lint -p no:ament_xmllint -p no:ament_pep257"
+markers = [
+    "slow: builds robot meshes or collision worlds (seconds, no hardware)",
+]

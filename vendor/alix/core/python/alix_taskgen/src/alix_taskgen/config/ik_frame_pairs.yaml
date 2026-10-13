@@ -1,0 +1,81 @@
+# =============================================================================
+# IK-FRAME PAIRS — which tool frames may co-occur within ONE task
+# =============================================================================
+# A task may switch tool frame between stages, but ONLY between the two members
+# of one pair. It may not use frames from two different pairs.
+#
+# Newton, 2026-08-16: "these are the pairs of the ik_frames that can be used on
+# the same task ... 1. frame1 and 2   2. frame3 and 4"
+#
+# WHY THIS FILE EXISTS SEPARATELY
+# ------------------------------
+# The constraint is physical, not geometric, so it cannot be derived from
+# glove_frames.yaml or the URDF — both of which describe each frame in
+# isolation and say nothing about which can be presented in the same grip.
+# Keeping it here means adding or removing a pair is a one-line edit with no
+# code change, which is the point.
+#
+# Add a pair: append to `pairs`. Remove one: delete the entry — once the
+# consumers below exist, nothing else needs touching.
+#
+# THE OBSERVABLE PATTERN (inference — confirm before relying on it)
+# -----------------------------------------------------------------
+# The pairs line up with two properties in glove_frames.yaml, which is
+# suggestive but is NOT the authority — this file is:
+#
+#   pair          footprint      hand_state           press
+#   frames 1,2    35 x 80 mm     open_tenth / grasp   +/-x , z
+#   frames 3,4    20 x 80 mm     half_ / quarter_grasp  +/-x , +/-x
+#
+# So a within-pair switch is a change of presented face at a similar grip; a
+# cross-pair switch would be a different pad AND a large hand re-pose, which is
+# where a gripped cloth gets dropped. Stated as the likely reason, not as fact.
+#
+# CONSUMERS (2026-08-17 — both planned uses are now LIVE):
+# ------------------------------------------------------------------------
+#   - task_schema.validate_ik_frames: a config naming frames from two pairs is
+#     an error (task-level + every per-stage ik_frame).
+#   - frame_bands.pair_partner: the multi-band generator (G28/G31) moves a
+#     waypoint ONLY to its pair partner, never to a cross-pair frame. The
+#     member is selected by REACH (per-frame shells + IK arbitration), not by
+#     contact fraction f — measured: the pose generator locks the press axis
+#     to the surface normal, so f = 1 for every frame on every surface and
+#     cannot discriminate (GENERATION_FINDINGS G28).
+#
+# NOTE ON SIDES: pairs are declared per side because the frame names are
+# side-prefixed. L and R must stay mirror images of each other — a task is
+# single-sided, so a pair never mixes L and R.
+# =============================================================================
+
+version: 1
+
+pairs:
+  - id: palm_pads
+    description: >-
+      Wide 35x80 pads. frame_1 presses laterally (+x right / -x left, mirrored),
+      frame_2 presses axially (+z both). The lateral press is what reaches into
+      cavities without the shank crossing them.
+    left:  [L_glove_frame_1, L_glove_frame_2]
+    right: [R_glove_frame_1, R_glove_frame_2]
+
+  - id: finger_pads
+    description: >-
+      Narrow 20x80 pads, both LATERAL press, mirrored per hand (+x on the
+      right, -x on the left) — the same presented face frame_1 uses to reach
+      into cavities, not the axial press of frame_2. frame_3 is aligned to the
+      middle fingertip. Use where the wide pad cannot conform or cannot fit.
+    left:  [L_glove_frame_3, L_glove_frame_4]
+    right: [R_glove_frame_3, R_glove_frame_4]
+
+# Frames deliberately NOT in any pair — usable alone, never alongside another.
+# *_tip_frame and *_index_tip_frame are point contacts for pressing, not wiping;
+# they carry no cleaning footprint and appear in no glove_frames.yaml entry.
+#
+# NOTE: flush_press is inconsistent about which of the two it uses — its header
+# says L_index_tip_frame, its ik_frame says L_tip_frame. Pre-existing; resolve
+# it when that task is regenerated (plan/P11).
+unpaired:
+  - L_tip_frame
+  - R_tip_frame
+  - L_index_tip_frame
+  - R_index_tip_frame

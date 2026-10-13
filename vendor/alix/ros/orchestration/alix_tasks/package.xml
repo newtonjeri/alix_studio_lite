@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>alix_tasks</name>
+  <version>0.1.0</version>
+  <description>
+    The task layer for alix: the MoveIt Task Constructor executors, scene
+    builders and config reader, plus the task DATA they run on — fixture
+    scenes and meshes, cleaning-point configs, mechanism/glove/bin task
+    definitions, and task parameter defaults.
+
+    Ported from butterfli `cleaning_tasks` on 2026-08-16 (plan/P13). The
+    config tree landed first and the C++ followed; this manifest grew back
+    with it, as the data-only note here said it would.
+
+    MoveIt2 and MoveIt Task Constructor come from the ROS 2 Jazzy debians,
+    declared below and resolved by rosdep — not vendored and not built from
+    source. See plan/P13.3: the binaries are the same releases the two
+    out-of-tree home-directory builds carried.
+
+    Consumed by `alix_taskgen` (which resolves this package via ALIX_TASKS_PKG
+    or a repo-marker search) and by the Gazebo worlds, whose
+    `model://alix_tasks/...` URIs resolve through GZ_SIM_RESOURCE_PATH.
+  </description>
+  <maintainer email="newtonkaris45@gmail.com">newtonjeri</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>control_msgs</depend>
+  <depend>moveit_task_constructor_core</depend>
+  <depend>moveit_task_constructor_msgs</depend>
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>moveit_ros_planning</depend>
+  <depend>moveit_core</depend>
+  <depend>moveit_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>yaml-cpp</depend>
+  <depend>ament_index_cpp</depend>
+  <depend>ruckig</depend>
+  <depend>alix_interfaces</depend>
+  <!-- header-only: alix_hw/conversions.hpp (hand scale + channel order) for the
+       track artefact's pre_stroke hand counts; taken by include path, never linked -->
+  <build_depend>alix_hw</build_depend>
+
+  <exec_depend>alix_description</exec_depend>
+  <exec_depend>alix_moveit_config</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>srdfdom</test_depend>
+  <test_depend>urdf</test_depend>
+
+  <exec_depend>alix_bringup</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

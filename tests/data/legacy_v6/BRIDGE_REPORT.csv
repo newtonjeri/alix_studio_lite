@@ -1,0 +1,12 @@
+transition,duration_s,inserted_points,max_joint_gap_deg,estimated_peak_joint_speed_deg_s,test_file
+L1->L2,1.25,250,16.671,25.01,L_P01_to_P02_BRIDGE_1.250s.txt
+R1->R2,1.25,250,0.438,0.66,R_P01_to_P02_BRIDGE_1.250s.txt
+R2->R3,1.38,276,0.238,0.32,R_P02_to_P03_BRIDGE_1.380s.txt
+L3->L4,1.38,276,0.862,1.17,L_P03_to_P04_BRIDGE_1.380s.txt
+L4->L5,1.38,276,3.924,5.33,L_P04_to_P05_BRIDGE_1.380s.txt
+L6->L7,1.6,320,0.006,0.01,L_P06_to_P07_BRIDGE_1.600s.txt
+R6->R7,1.6,320,39.08,45.8,R_P06_to_P07_BRIDGE_1.600s.txt
+L10->L11,0.25,50,1.074,8.05,L_P10_to_P11_BRIDGE_0.250s.txt
+R10->R11,0.25,50,0.085,0.64,R_P10_to_P11_BRIDGE_0.250s.txt
+L11->L12,0.2,40,0.673,6.31,L_P11_to_P12_BRIDGE_0.200s.txt
+R11->R12,0.2,40,0.078,0.73,R_P11_to_P12_BRIDGE_0.200s.txt

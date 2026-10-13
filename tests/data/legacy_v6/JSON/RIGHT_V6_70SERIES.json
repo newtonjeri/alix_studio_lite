@@ -1,0 +1,103 @@
+{
+  "format": "realman_workflow_sequence_v1",
+  "side": "right",
+  "steps": [
+    {
+      "type": "pole",
+      "mm": 200.0
+    },
+    {
+      "type": "hand",
+      "values": [
+        0,
+        0,
+        0,
+        0,
+        150,
+        1000
+      ]
+    },
+    {
+      "type": "pole",
+      "mm": 50.0
+    },
+    {
+      "type": "program",
+      "id": 71,
+      "name": "R_P01P03.txt",
+      "speed": 100,
+      "transit_speed": 30
+    },
+    {
+      "type": "pole",
+      "mm": 150.0
+    },
+    {
+      "type": "program",
+      "id": 74,
+      "name": "R2_LIDTOP.txt",
+      "speed": 100,
+      "transit_speed": 30
+    },
+    {
+      "type": "pole",
+      "mm": 50.0
+    },
+    {
+      "type": "program",
+      "id": 75,
+      "name": "R10_HNGR.txt",
+      "speed": 100,
+      "transit_speed": 30
+    },
+    {
+      "type": "pole",
+      "mm": 150.0
+    },
+    {
+      "type": "wait",
+      "seconds": 2.0
+    },
+    {
+      "type": "program",
+      "id": 76,
+      "name": "R_P06P07.txt",
+      "speed": 100,
+      "transit_speed": 30
+    },
+    {
+      "type": "program",
+      "id": 78,
+      "name": "M3_ASOPN01.txt",
+      "speed": 100,
+      "transit_speed": 30,
+      "dual_rule": "WAIT OTHER"
+    },
+    {
+      "type": "program",
+      "id": 79,
+      "name": "M3_ASOPN02.txt",
+      "speed": 100,
+      "transit_speed": 30,
+      "dual_rule": "WAIT OTHER"
+    },
+    {
+      "type": "program",
+      "id": 80,
+      "name": "R_P10P12.txt",
+      "speed": 100,
+      "transit_speed": 30
+    },
+    {
+      "type": "pole",
+      "mm": 50.0
+    },
+    {
+      "type": "program",
+      "id": 83,
+      "name": "R_SPILLAGE.txt",
+      "speed": 50,
+      "transit_speed": 30
+    }
+  ]
+}

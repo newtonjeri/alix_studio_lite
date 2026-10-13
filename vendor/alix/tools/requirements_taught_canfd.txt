@@ -1,0 +1,33 @@
+# THE TAUGHT CANFD LANE — every Python package it needs, and nothing else.
+#
+# What it covers: a drag-taught .txt recording -> the optimised, certified slot
+# (tools/taught_pipeline.py) -> the run on the arm (tools/taught_tracks.py flow)
+# -> the check (tools/motion_analysis/plot_runs.py). Install it with
+#     ./tools/setup_taught_canfd.sh
+# which makes a virtual environment, installs this file into it, and proves the
+# lane runs. Nothing else from this repository has to be installed: every
+# in-repo module the lane uses (alix_dispatch, alix_workspace's URDF
+# kinematics, the exp01 emitter, the RealMan SDK submodule) is put on the path
+# by the tools themselves.
+#
+# TESTED on Ubuntu 24.04 / Python 3.12.3 (2026-09-23) with two sets: the one
+# this host has run the arm with (the version after each package below), and
+# the one a fresh `setup_taught_canfd.sh` installed that day — numpy 2.5.3,
+# scipy 1.18.1, toppra 0.6.10, PyYAML 6.0.3, matplotlib 3.11.2, tornado 6.5.10.
+# The floor is the oldest release whose API the code uses; a newer one is
+# expected to work, and `setup_taught_canfd.sh --check` proves it does.
+#
+# ROS is NOT needed. Nothing here talks to ROS, and no ROS workspace has to be
+# sourced.
+
+numpy>=1.26                 # tested 2.4.6  — every stage, and the FK
+scipy>=1.11                 # tested 1.17.1 — Butterworth filters (signal), nearest point (spatial.cKDTree), rotations (spatial.transform)
+toppra>=0.6                 # tested 0.6.9  — stage 4, the time-optimal re-timing
+PyYAML>=6.0                 # tested 6.0.1  — the task manifests the certify/flow verbs read
+matplotlib>=3.8             # tested 3.10.9 — the analysis figures (plot_runs.py, compare_tracks.py)
+tornado>=6.3                # tested 6.4    — matplotlib's WebAgg server, which IS the default view
+# pip pulls in what these need (pillow, contourpy, cycler, fonttools, kiwisolver, packaging,
+# pyparsing, python-dateutil for matplotlib; nothing to add by hand).
+
+# To run the test suites as well (not needed to use the lane):
+#     pip install "pytest>=7" pytest-xdist

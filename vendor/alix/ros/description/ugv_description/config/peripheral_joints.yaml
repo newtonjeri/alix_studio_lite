@@ -1,0 +1,93 @@
+# =============================================================================
+# PERIPHERAL JOINTS — SINGLE SOURCE OF TRUTH
+# =============================================================================
+# Canonical registry for every articulated joint OUTSIDE MoveIt 2 / ros2_control
+# (manual or externally actuated peripherals whose state is published by a
+# dedicated node instead of a controller).
+#
+# Edit values HERE. They are consumed as follows:
+#   * ugv_description/urdf/bin.xacro           — reads this file via xacro
+#     load_yaml at URDF build time (joint <limit>s follow automatically).
+#   * bin_state_publisher.py (orchestrator)    — loads states + transitions at
+#     startup (the runtime joint-state source for these joints).
+#   * butterfli_moveit_config/.../alix.srdf — the <PREFIX><STATE>
+#     group_states are a DERIVED mirror (planning-side Python reads the SRDF).
+#     After editing, run:
+#         python3 Resource/scripts/sync_peripheral_srdf.py
+#     (--check mode is run by the cleaning_path_gen test suite, so drift fails
+#     loudly instead of silently disagreeing with the planning scene.)
+#
+# Schema per peripheral:
+#   description   what/where the mechanism is
+#   joints        {joint_name: {limit_lower, limit_upper}}
+#                 (metres for prismatic joints, radians for revolute)
+#   states        {STATE: {joint_name: value}}    discrete states of the mechanism
+#   transitions   {STATE: [reachable states]}     physically allowed moves
+#   srdf_group    SRDF group whose group_states mirror `states` (optional)
+#   srdf_state_prefix  prefix for the mirrored SRDF group_state names
+#
+# Future peripherals are added as new entries with the same shape — the sync
+# script, the drift test, and the state publishers pick them up from here.
+# =============================================================================
+
+peripherals:
+  bin:
+    description: >
+      Bin slide rail bolted to UGV_body ("7" motion: slide out +X, then lower
+      -Z). Manual mechanism — no ros2_control hardware; bin_state_publisher is
+      the sole joint-state source. Retraction is strictly reverse order,
+      enforced by the transitions below.
+    joints:
+      bin_rail_joint: {limit_lower: 0.0, limit_upper: 0.200}
+      bin_drop_joint: {limit_lower: 0.0, limit_upper: 0.450}
+    states:
+      STOWED:   {bin_rail_joint: 0.0,   bin_drop_joint: 0.0}
+      EXTENDED: {bin_rail_joint: 0.200, bin_drop_joint: 0.0}
+      LOWERED:  {bin_rail_joint: 0.200, bin_drop_joint: 0.450}
+    transitions:
+      STOWED:   [EXTENDED]
+      EXTENDED: [STOWED, LOWERED]
+      LOWERED:  [EXTENDED]
+    srdf_group: bin_rail
+    srdf_state_prefix: BIN_
+    # Limit switches — SIX in THREE pairs, one switch per rail. Because the
+    # joints are PASSIVE (the arms drag the bin by its handles) these are the
+    # only evidence that a bin motion actually finished; without them every
+    # state is dead reckoning.
+    #
+    # Two switches per position rather than one so a cocked carriage is
+    # detectable: both closed = arrived square, one closed = skew fault.
+    #
+    # The EXTENDED pair sits at the end of the top rails, which is also where
+    # the drop travel STARTS — so it asserts only while the bin is railed out
+    # AND still raised, and releases the moment the bin descends. That dual
+    # duty is why six switches observe all three states positively, with no
+    # separate "bin raised" sensor.
+    limit_switches:
+      pair_fields: [left, right]        # BinSwitches.msg field suffixes
+      pairs:
+        STOWED:
+          asserts: {bin_rail_joint: 0.0}
+          mounted: start of the top rails, on the UGV top surface
+        EXTENDED:
+          asserts: {bin_rail_joint: 0.200, bin_drop_joint: 0.0}
+          mounted: end of the top rails / start of the drop travel
+        LOWERED:
+          asserts: {bin_drop_joint: 0.450}
+          mounted: lower end of the lowering travel
+
+  glove_wearing_unit:
+    description: >
+      Glove-wearing lever arm on the UGV body. Not MoveIt-commanded, no
+      ros2_control hardware; glove_arm_state_publisher is the sole joint-state
+      source (SetGloveArmState service drives transitions).
+    joints:
+      glove_wearing_unit_arm_joint: {limit_lower: 0.0, limit_upper: 1.57}   # radians
+    states:
+      STOWED: {glove_wearing_unit_arm_joint: 0.0}
+      RAISED: {glove_wearing_unit_arm_joint: 1.57}
+    transitions:
+      STOWED: [RAISED]
+      RAISED: [STOWED]
+    srdf_group: glove_arm
+    srdf_state_prefix: GLOVE_ARM_

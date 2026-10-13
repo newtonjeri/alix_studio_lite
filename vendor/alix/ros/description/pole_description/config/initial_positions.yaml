@@ -1,0 +1,10 @@
+# Initial joint positions for pole mechanisms
+# These values will be used as the starting configuration in simulation
+
+# Left pole joints
+# L_sliding_plate_joint: 0.295/
+L_sliding_plate_joint: 0.3
+
+# Right pole joints
+# R_sliding_plate_joint: 0.295
+R_sliding_plate_joint: 0.3

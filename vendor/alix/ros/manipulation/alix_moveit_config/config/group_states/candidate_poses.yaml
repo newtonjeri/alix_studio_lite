@@ -1,0 +1,305 @@
+# =============================================================================
+# CANDIDATE POSES — SCRATCH PAD, **NOT** PART OF THE SRDF
+# =============================================================================
+# Poses under review. Edit this file freely, then look at them:
+#
+#   python3 alix_moveit_config/scripts/preview_joint_states.py            # all of them
+#   python3 alix_moveit_config/scripts/preview_joint_states.py --cycle 3  # step through
+#   python3 .../preview_joint_states.py --candidate glove_approach_1           # just one
+#
+# In RViz:  Add -> RobotState,  Robot State Topic = /preview_robot_state
+# (set Robot Alpha ~0.6 to see the candidate against the live robot).
+# Nothing here is published to /joint_states, so the running robot is untouched.
+#
+# WHY THIS FILE IS SAFE
+# ---------------------
+# It is deliberately NOT named *_group_states.yaml, so the two tools that
+# assemble the robot description skip it by construction:
+#   Resource/scripts/sync_srdf_group_states.py      (SRDF assembler)
+#   alix_moveit_config/scripts/mirror_group_states.py  (L<->R mirror)
+# The assembler also names it in an explicit ignore-list, so the exclusion is
+# documented rather than accidental. A pose only reaches the robot when you
+# copy it into a real *_group_states.yaml fragment and re-run the assembler.
+#
+# FORMAT
+# ------
+#   <pose name>:
+#     group: <planning group>        # so the validity check knows what to test
+#     <joint>: <radians>             # every joint of that group
+#
+# Values are RADIANS. Degrees are in the trailing comment for readability.
+# =============================================================================
+
+candidate_poses:
+    # -10, -92, -84, 85, -10, 105, 3
+    glove_wear_entry_via:
+      group: rm75_arm_right
+      R_joint1: -0.1702
+      R_joint2: -1.6048
+      R_joint3: -1.4624
+      R_joint4: 1.4769
+      R_joint5: -0.1786
+      R_joint6: 1.8291
+      R_joint7: 0.0483 
+      
+    # -23, -24, -119, 47, -34, 114, 18
+    glove_wear_prestart_via:
+      group: rm75_arm_right
+      R_joint1: -0.3943
+      R_joint2: -0.4169
+      R_joint3: -2.0812
+      R_joint4: 0.8209
+      R_joint5: -0.5912
+      R_joint6: 1.997
+      R_joint7: 0.3109
+    
+    # After the wearing motion
+    # -32, -10, -127, 61, -14, 113, 18
+    dispense_via:
+      group: rm75_arm_right
+      R_joint1: -0.5522
+      R_joint2: -0.1816
+      R_joint3: -2.21
+      R_joint4: 1.0617
+      R_joint5: -0.2431
+      R_joint6: 1.9781
+      R_joint7: 0.3061
+
+    # -32, -10, -129, 94, -14, 86, 20
+    dispense_glove_surface1:
+      group: rm75_arm_right
+      R_joint1: -0.5651
+      R_joint2: -0.1813
+      R_joint3: -2.2582
+      R_joint4: 1.6409
+      R_joint5: -0.2456
+      R_joint6: 1.5063
+      R_joint7: 0.3473
+          
+    # -33, -8, -131, 91, -13, 86, 17
+    dispense_glove_surface2:
+      group: rm75_arm_right
+      R_joint1: -0.5707
+      R_joint2: -0.1439
+      R_joint3: -2.2794
+      R_joint4: 1.5921
+      R_joint5: -0.2216
+      R_joint6: 1.5079
+      R_joint7: 0.3049
+
+
+    # -32, -10, -130, 94, -14, 88, 198
+    dispense_glove_surface3:
+      group: rm75_arm_right
+      R_joint1: -0.5668
+      R_joint2: -0.1814
+      R_joint3: -2.2644
+      R_joint4: 1.6401
+      R_joint5: -0.2445
+      R_joint6: 1.5378
+      R_joint7: 3.4559
+
+    # After Any of the Dispense (or after Dispense_Via)
+    # -33, -8, -131, 65, -12, 109, 17
+    final1:
+      group: rm75_arm_right
+      R_joint1: -0.5707
+      R_joint2: -0.1429
+      R_joint3: -2.2789
+      R_joint4: 1.1357
+      R_joint5: -0.2178
+      R_joint6: 1.903
+      R_joint7: 0.3043
+
+    # from final1, after this pose we move to ready/rest pose
+    # -9, -80, -102, 94, 6, 98, -4
+    final2:
+      group: rm75_arm_right
+      R_joint1: -0.1549
+      R_joint2: -1.3973
+      R_joint3: -1.7804
+      R_joint4: 1.6352
+      R_joint5: 0.0999
+      R_joint6: 1.717
+      R_joint7: -0.068
+
+
+
+
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --pole --name glove_wear_entry_via
+#     # -10, -92, -84, 85, -10, 105, 3
+#     glove_wear_entry_via:
+#       R_sliding_plate_joint: 0.2895
+#       R_joint1: -0.1702
+#       R_joint2: -1.6048
+#       R_joint3: -1.4624
+#       R_joint4: 1.4769
+#       R_joint5: -0.1786
+#       R_joint6: 1.8291
+#       R_joint7: 0.0483
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --name glove_wear_prestart_via
+#     # -23, -24, -119, 47, -34, 114, 18
+#     glove_wear_prestart_via:
+#       R_joint1: -0.3943
+#       R_joint2: -0.4169
+#       R_joint3: -2.0812
+#       R_joint4: 0.8209
+#       R_joint5: -0.5912
+#       R_joint6: 1.997
+#       R_joint7: 0.3109
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --name dispense_via
+#     # -32, -10, -127, 61, -14, 113, 18
+#     dispense_via:
+#       R_joint1: -0.5522
+#       R_joint2: -0.1816
+#       R_joint3: -2.21
+#       R_joint4: 1.0617
+#       R_joint5: -0.2431
+#       R_joint6: 1.9781
+#       R_joint7: 0.3061
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --name dispense_glove_surface1
+#     # -32, -10, -129, 94, -14, 86, 20
+#     dispense_glove_surface1:
+#       R_joint1: -0.5651
+#       R_joint2: -0.1813
+#       R_joint3: -2.2582
+#       R_joint4: 1.6409
+#       R_joint5: -0.2456
+#       R_joint6: 1.5063
+#       R_joint7: 0.3473
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --name dispense_glove_surface3
+#     # -32, -10, -130, 94, -14, 88, 198
+#     dispense_glove_surface3:
+#       R_joint1: -0.5668
+#       R_joint2: -0.1814
+#       R_joint3: -2.2644
+#       R_joint4: 1.6401
+#       R_joint5: -0.2445
+#       R_joint6: 1.5378
+#       R_joint7: 3.4559
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --name dispense_glove_surface2
+#     # -33, -8, -131, 91, -13, 86, 17
+#     dispense_glove_surface2:
+#       R_joint1: -0.5707
+#       R_joint2: -0.1439
+#       R_joint3: -2.2794
+#       R_joint4: 1.5921
+#       R_joint5: -0.2216
+#       R_joint6: 1.5079
+#       R_joint7: 0.3049
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --name final1
+#     # -33, -8, -131, 65, -12, 109, 17
+#     final1:
+#       R_joint1: -0.5707
+#       R_joint2: -0.1429
+#       R_joint3: -2.2789
+#       R_joint4: 1.1357
+#       R_joint5: -0.2178
+#       R_joint6: 1.903
+#       R_joint7: 0.3043
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --name final2
+#     # -9, -80, -102, 94, 6, 98, -4
+#     final2:
+#       R_joint1: -0.1549
+#       R_joint2: -1.3973
+#       R_joint3: -1.7804
+#       R_joint4: 1.6352
+#       R_joint5: 0.0999
+#       R_joint6: 1.717
+#       R_joint7: -0.068
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ 
+
+
+
+
+# Bin Motion Poses
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --pole --name stowed_bin_hand_grasp
+#     # 1, -97, -129, 68, -6, 110, -44
+#     stowed_bin_hand_grasp:
+#       R_sliding_plate_joint: 0.2955
+#       R_joint1: 0.0201
+#       R_joint2: -1.6861
+#       R_joint3: -2.2495
+#       R_joint4: 1.189
+#       R_joint5: -0.098
+#       R_joint6: 1.9131
+#       R_joint7: -0.7753
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --pole --name pre_stowed_bin_hand_grasp
+#     # 1, -93, -129, 70, 3, 98, -47
+#     pre_stowed_bin_hand_grasp:
+#       R_sliding_plate_joint: 0.2955
+#       R_joint1: 0.0187
+#       R_joint2: -1.6171
+#       R_joint3: -2.2434
+#       R_joint4: 1.2273
+#       R_joint5: 0.0466
+#       R_joint6: 1.7158
+#       R_joint7: -0.8194
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --pole --name lowered_bin_hand_grasp
+#     # 77, -81, -83, 121, 18, -10, -4
+#     lowered_bin_hand_grasp:
+#       R_sliding_plate_joint: 0.2955
+#       R_joint1: 1.3385
+#       R_joint2: -1.409
+#       R_joint3: -1.4513
+#       R_joint4: 2.1088
+#       R_joint5: 0.3089
+#       R_joint6: -0.1751
+#       R_joint7: -0.0617
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --pole --name post_lowered_bin_hand_grasp
+#     # 76, -81, -83, 121, 17, -21, -4
+#     post_lowered_bin_hand_grasp:
+#       R_sliding_plate_joint: 0.2955
+#       R_joint1: 1.3184
+#       R_joint2: -1.409
+#       R_joint3: -1.4422
+#       R_joint4: 2.1084
+#       R_joint5: 0.3001
+#       R_joint6: -0.366
+#       R_joint7: -0.0618
+# alai-labs@alailabs:~/but
+# Bin Motion Poses
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --pole --name stowed_bin_hand_grasp
+#     # 1, -97, -129, 68, -6, 110, -44
+#     stowed_bin_hand_grasp:
+#       R_sliding_plate_joint: 0.2955
+#       R_joint1: 0.0201
+#       R_joint2: -1.6861
+#       R_joint3: -2.2495
+#       R_joint4: 1.189
+#       R_joint5: -0.098
+#       R_joint6: 1.9131
+#       R_joint7: -0.7753
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --pole --name pre_stowed_bin_hand_grasp
+#     # 1, -93, -129, 70, 3, 98, -47
+#     pre_stowed_bin_hand_grasp:
+#       R_sliding_plate_joint: 0.2955
+#       R_joint1: 0.0187
+#       R_joint2: -1.6171
+#       R_joint3: -2.2434
+#       R_joint4: 1.2273
+#       R_joint5: 0.0466
+#       R_joint6: 1.7158
+#       R_joint7: -0.8194
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --pole --name lowered_bin_hand_grasp
+#     # 77, -81, -83, 121, 18, -10, -4
+#     lowered_bin_hand_grasp:
+#       R_sliding_plate_joint: 0.2955
+#       R_joint1: 1.3385
+#       R_joint2: -1.409
+#       R_joint3: -1.4513
+#       R_joint4: 2.1088
+#       R_joint5: 0.3089
+#       R_joint6: -0.1751
+#       R_joint7: -0.0617
+# alai-labs@alailabs:~/butterfli_ws/src/butterfli-ai-ros-jazzy/Resource/scripts$ python3 capture_joint_state.py --side right --pole --name post_lowered_bin_hand_grasp
+#     # 76, -81, -83, 121, 17, -21, -4
+#     post_lowered_bin_hand_grasp:
+#       R_sliding_plate_joint: 0.2955
+#       R_joint1: 1.3184
+#       R_joint2: -1.409
+#       R_joint3: -1.4422
+#       R_joint4: 2.1084
+#       R_joint5: 0.3001
+#       R_joint6: -0.366
+#       R_joint7: -0.0618

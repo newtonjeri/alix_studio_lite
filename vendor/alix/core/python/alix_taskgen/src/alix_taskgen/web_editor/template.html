@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ALIX Studio</title>
+    <!-- Vendored locally (three.js, OrbitControls, TransformControls, Plotly, js-yaml) — works offline, no CDN. -->
+    __VENDOR_JS__
+    <style>__EDITOR_CSS__</style>
+</head>
+<body>
+    <script id="viewerManifest" type="application/json">__VIEWER_MANIFEST__</script>
+    <div class="app">
+        <!-- ===== APPLICATION BAR (file/state actions, always visible) ===== -->
+        <header class="app-bar">
+            <div class="brand">
+                <!-- The butterfli mark: four facets — two broad upper wings and
+                     two narrower lower ones — meeting at a centre seam.
+
+                     Traced from the supplied artwork by measurement, not by eye:
+                     the four shapes were segmented out of the PNG as connected
+                     components and their convex hulls simplified to these
+                     vertices. An earlier hand-estimated version was 21 % short on
+                     wing area and placed the lower wings far too narrow, which
+                     looked like a rocket rather than a butterfly.
+
+                     Inline SVG rather than a raster: crisp at any DPI, follows
+                     the theme tokens in light and dark, and keeps the Studio a
+                     single self-contained file — it is served offline, and a
+                     strict CSP would block an external image anyway.
+
+                     `--brand-seam` draws the facet edges. The artwork separates
+                     its facets with DARK shadow lines, not gaps, and that is why
+                     it survives being shrunk: at 22 px the seams thicken into the
+                     silhouette instead of eating white wedges out of it. Leaving
+                     the facets to be divided by the page background — the obvious
+                     thing — broke the butterfly into fragments at bar size.
+                     Verified by downscaling both to 22 px and comparing. -->
+                <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                    <g stroke="var(--brand-seam)" stroke-width="0.55" stroke-linejoin="round">
+                        <path fill="var(--brand)"
+                              d="M0.60 1.31 L1.52 0.60 L2.60 0.75 L15.45 11.23 L15.63 12.18 L2.20 22.96 L1.12 22.96 L0.60 22.44 Z"/>
+                        <path fill="var(--brand)"
+                              d="M31.40 22.44 L30.88 22.96 L29.80 22.96 L16.37 12.18 L16.55 11.23 L29.40 0.75 L30.48 0.60 L31.40 1.31 Z"/>
+                        <path fill="var(--brand-strong)"
+                              d="M2.02 24.35 L15.69 13.17 L10.95 31.25 L10.36 31.40 Z"/>
+                        <path fill="var(--brand-strong)"
+                              d="M21.64 31.40 L21.05 31.25 L16.31 13.17 L29.98 24.35 Z"/>
+                    </g>
+                </svg>
+                <h1>ALIX Studio</h1>
+                <span class="badge" id="modeBadge" title="Viewer mode: opened as a static file (edit/mirror only). Run `alix-studio` and open the localhost URL for Generator mode (the Generate Task panel + Validate/Deploy).">Viewer</span>
+            </div>
+
+            <!-- ===== VIEW SWITCH =====
+                 Author and Simulate are different ACTIVITIES on the same scene,
+                 not consecutive steps. The tabs below are numbered 1..5 because
+                 they are a workflow; adding "6 · Simulate" would teach the tool
+                 wrongly. A top-level switch keeps each activity's panels and
+                 shortcuts to itself. -->
+            <div class="view-switch" role="tablist" aria-label="Workspace">
+                <button class="view-btn active" data-view="author" role="tab" aria-selected="true">Author</button>
+                <button class="view-btn" data-view="simulate" role="tab" aria-selected="false">Simulate</button>
+            </div>
+            <!-- Coverage banner. The approved frame states the headline verdict in
+                 the app bar, where it is visible on every tab regardless of which
+                 dock is open. It sits BESIDE the status line rather than replacing
+                 it: ~149 setStatus() calls write there, and a banner that a routine
+                 status message can overwrite is not a banner. -->
+            <div class="cov-banner" id="coverageBanner" hidden></div>
+            <div class="status-row" id="appStatusRow"><span id="spinner" class="spinner"></span><span id="status">Waiting for cleaning path YAML.</span></div>
+        </header>
+
+        <!-- ===== SIMULATE VIEW =====
+             Shares the 3D viewport with Author (same scene, same robot
+             overlay); only the controls differ. Visibility is driven by
+             body[data-view], the same idiom the codebase already uses for
+             body[data-task-mode]. -->
+        <section class="sim-panel" id="simPanel">
+            <div class="sim-row">
+                <span class="sim-dot" id="simDot" data-state="off"></span>
+                <strong id="simState">Emulator not running</strong>
+                <span class="sim-hint" id="simHint">Start the emulator and connect an arm.</span>
+            </div>
+            <div class="sim-row">
+                <label>Source
+                    <select id="simSource">
+                        <option value="auto">Auto</option>
+                        <option value="emulator">Emulator</option>
+                        <option value="external">External feed</option>
+                    </select>
+                </label>
+                <label>Poll
+                    <select id="simRate">
+                        <option value="0">Paused</option>
+                        <option value="500">2 Hz</option>
+                        <option value="200" selected>5 Hz</option>
+                        <option value="100">10 Hz</option>
+                    </select>
+                </label>
+                <button id="simLive" class="primary">Go live</button>
+                <button id="simOnce">Refresh once</button>
+            </div>
+            <div class="sim-row sim-readout" id="simReadout"></div>
+            <p class="sim-caveat">
+                Command-level, not dynamics: the emulator interpolates linearly
+                per device, so joint geometry and timing are faithful and
+                physics is not. <strong>A <code>movel</code> stroke shows as a
+                hold</strong> &mdash; the emulator does not move the arm for
+                Cartesian segments (FINDINGS F20).
+            </p>
+        </section>
+
+        <!-- ===== RIBBON TABS (on top) ===== -->
+        <nav class="ribbon-tabs">
+            <!-- Grouped by purpose, not numbered. The ordinals told a linear
+                 story ("step 1 of 5") over a loop the operator runs 38 times,
+                 and Generate/Edit were two halves of ONE task. §C. -->
+            <button class="tab-button active" data-tab="regions">Regions</button>
+            <button class="tab-button" data-tab="board">Board <span id="tabBoardBadge" class="tab-badge"></span></button>
+            <button class="tab-button" data-tab="workbench">Workbench <span id="tabTaskBadge" class="tab-badge"></span></button>
+            <button class="tab-button tab-button-sep" data-tab="collisions">Dual-Arm Collisions</button>
+            <button class="tab-button" data-tab="schedule">Schedule &amp; Run</button>
+            <button class="tab-button" data-tab="workspace">Workspace</button>
+            <button class="tab-button tab-button-end" data-tab="gizmo">Gizmo</button>
+        </nav>
+
+        <!-- The open task's identity: its own slim strip ABOVE the band, not a row
+     inside it. Inside the capped band it consumed a full row and left the
+     command groups ~124px of a 170px cap — the second row of groups was
+     clipped 43px past the edge (measured). Shown only on the Workbench. -->
+        <div class="task-strip" id="taskStrip">
+            <div class="task-header" id="taskHeader">
+                    <button class="task-back" id="taskBack" title="Back to the fixture board">&#8249; Board</button>
+                    <!-- The SESSION (Newton, 2026-09-15): editing a file and generating a
+                         new one never share the workbench. The chip says which one this
+                         is; Close file ends an edit session (Save / Discard first). -->
+                    <span class="task-session" id="taskSession" data-kind="generate" aria-live="polite">GENERATING</span>
+                    <button class="task-close-file" id="taskCloseFile" disabled title="Close the open config — ends the edit session so a new generation can start">Close file</button>
+                    <span class="task-crumb" id="taskCrumb">No task open &mdash; pick a cell on the Board</span>
+                    <span class="task-dest" id="taskDest"></span>
+                    <button class="task-edit-dest" id="taskEditDest" title="Override where Deploy writes this task (rare)">edit destination…</button>
+                    <!-- The three gates Deploy is judged against. Chips are controls:
+                         each one takes you to what it is judging. They live HERE, in
+                         the always-visible strip, not inside the Analyze & Finish
+                         flyout where they were — a gate you must open a menu to read
+                         is not a gate, and the approved frame puts them here. -->
+                    <span class="task-gates-label">GATES</span>
+                    <div id="deployGates" class="gate-row" aria-label="Deploy gates"></div>
+                </div>
+        </div>
+
+        <!-- ===== RIBBON BODY (tools for the active tab, laid out horizontally) ===== -->
+        <div class="ribbon-body">
+            <!-- ===== REGIONS TAB (entry point) ===== -->
+            <div class="tab-page active" data-page="regions">
+                <section class="panel rg-panel" data-layout="manual">
+                    <h2>Region Labels &mdash; step 1 <span class="info-ico" data-tip="Mark regions once (editable later), then Generate creates a config per region. ALL components (body/lid/seat) are shown and paintable at once — one region may cross a component boundary (e.g. lid + seat); it stays ONE region and generates ONE config. <b>Left-drag</b> paints visible faces under the brush ring with the selected tool (Paint / Erase — <b>Shift</b> momentarily swaps); <b>[</b> / <b>]</b> or <b>Ctrl+wheel</b> resize the brush; <b>right-drag</b> orbits; <b>middle-drag</b> (or Ctrl+right-drag) pans. Faces already in another region are protected in BOTH directions — neither painting nor erasing touches them; <b>Alt</b>+erase frees them to reassign. Export writes every touched <code>models/&lt;component&gt;_regions.obj</code> and syncs regions.yaml.">&#9432;</span></h2>
+                    <div class="rg-grid">
+                        <div class="rg-controls">
+                            <label class="field-label" id="paintFixtureLabel">Fixture</label>
+                            <select id="paintFixture" class="select-field" style="display: none;" aria-label="Fixture"></select>
+                            <div class="rg-comp-state" id="paintRegionStateRow">
+                                <div><label class="field-label">Component <span class="info-ico" data-tip="OBJ import target only — painting always works on ALL parts at once (body/lid/seat), so one region can cross a component boundary.">&#9432;</span></label><select id="paintComponentSelect" class="select-field" aria-label="Component"></select></div>
+                                <!-- One state select per articulated fixture part, generated from
+                                     the manifest's part registry (renderPaintStateControls). -->
+                                <div id="paintStateControls" style="display: contents;"></div>
+                            </div>
+                            <div class="hint" id="paintUnavailableHint" style="display: none;">No component meshes — open via <code>alix-studio</code>.</div>
+                        </div>
+                        <!-- The region LIST moved to the Browser dock (row 35). A
+                             208px wrapping ribbon cannot hold 20 chips of 5
+                             elements each; the dock is a tall vertical list that
+                             can show every chip's face count, rename and delete
+                             at all times. The brush stays here: it is a painting
+                             tool, used continuously while the viewport has focus. -->
+                        <div class="rg-regions">
+                            <div class="mode-grid rg-tool" style="grid-template-columns: 1fr 1fr;">
+                                <button id="paintToolPaint" class="arm-toggle active" data-tip="Brush faces into the active region. Hold <b>Shift</b> for a momentary eraser without leaving the tool.">Paint</button>
+                                <button id="paintToolErase" class="arm-toggle" data-tip="Remove faces from the ACTIVE region under the brush. Other regions' faces are protected exactly as they are while painting, so cleaning up one region can never destroy a neighbour's marking. Hold <b>Alt</b> while erasing to free faces owned by any region (what reassigning them needs); hold <b>Shift</b> to paint momentarily.">Erase</button>
+                            </div>
+                            <div class="rg-brush"><label class="field-label">Brush: <span id="paintBrushValue">2.0 cm</span> <span class="info-ico" data-tip="Brush radius. Shortcuts: <b>[</b> smaller, <b>]</b> larger, or <b>Ctrl+wheel</b> over the viewport. The ring on the surface previews exactly what the next stroke touches.">&#9432;</span></label><input id="paintBrushSlider" type="range" min="0.005" max="0.08" step="0.005" value="0.02" aria-label="Brush radius"></div>
+                            <div class="hint">Regions are listed in the <strong>Browser</strong> dock.</div>
+                        </div>
+                        <div class="rg-actions">
+                            <div class="button-row"><label class="file-button" for="paintObjInput">Import OBJ</label><button id="paintExportButton">Export OBJ</button></div>
+                            <input id="paintObjInput" type="file" accept=".obj">
+                            <button id="regionReachButton" title="Check how much of the active region the arms can reach (workspace analysis)">Check Arm Reachability</button>
+                            <button id="combineRegionsButton" title="Combine labeled regions (from any neighbouring components, e.g. body + seat) into ONE region cleaned as a single task. Written to regions.yaml — the single source of truth.">Combine Regions…</button>
+                            <div class="info-list" id="regionReachInfo"></div>
+                            <div class="hint" id="paintStats"></div>
+                        </div>
+                        <div class="rg-combine" id="combinePanel" style="display: none;">
+                            <label class="field-label">Combine into one region <span class="info-ico" data-tip="Tick two or more labeled regions — they may live on different but NEIGHBOURING components (lid + seat, body + seat). The combined region keeps each group on its own component and is planned per group, chained into one task.">&#9432;</span></label>
+                            <div id="combineRegionList" class="paint-region-list"></div>
+                            <div class="twist-row"><input id="combineNameInput" type="text" placeholder="combined region name"><button id="combineCreateButton">Create</button></div>
+                            <div class="hint" id="combineHint"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ===== GENERATE TAB ===== -->
+            <div class="tab-page" data-page="workbench">
+                <!-- ONE task, ONE screen. "Is this point reachable?" used to be
+                     answered by 5 buttons on 3 tabs writing into 4 readouts.
+                     Generate and Edit were two halves of one task. §C. -->
+                
+
+                <section class="panel gen-panel" id="generatePanel" data-cmd="dock" data-layout="manual" data-promote="none" style="display: none;">
+                    <h2>Generate Task</h2>
+                    <div class="gen-dialog" id="genDialogBody">
+                        <div class="gen-params" id="genParamsCol">
+                            <div class="hint" id="generateModeHint" style="display: none;">Generation runs in the server — open via <code>alix-studio</code> to enable the Generate panel.</div>
+                            
+                            
+                            <details class="collapsible gen-group" id="genGroupA" open>
+                                <summary>Target</summary>
+                                <div class="gen-grid">
+                        <div class="gen-col">
+                            <label class="field-label">Fixture</label>
+                            <select id="genFixture" class="select-field" aria-label="Fixture"></select>
+                            <label class="field-label" data-task-modes="cleaning">Region</label>
+                            <select id="genRegion" class="select-field" aria-label="Region" data-task-modes="cleaning"></select>
+                            <div class="mode-grid" style="grid-template-columns: 1fr 1fr;"><button id="genArmRight" class="arm-toggle active">Right</button><button id="genArmLeft" class="arm-toggle">Left</button></div>
+                        </div>
+                        <div class="gen-col">
+                            <label class="field-label">IK frame <em class="label-role">(written to the task)</em> <span class="info-ico" data-tip="The TOOL frame the generated poses are expressed for — which point on the hand is driven to each cleaning point. Glove frames sit on the glove contact patch; tip frames on the fingertip. Written into the YAML as task_parameters.ik_frame. Changing it here RELABELS the frame without moving the poses, so every point shifts relative to the hand — to change it and keep the motion, retarget with <code>tools/task_authoring/retarget_task.py</code>, which re-expresses the poses so the flange trajectory is unchanged. <b>Arm Tip</b> is the controller&#x27;s tool-zero; <b>ConnectorLink</b> is the URDF link 15.3&nbsp;mm beyond it (they are NOT the same point). This is the AUTHORED frame; the Workspace tab has its own viewer-only frame selector that changes nothing in the file.">&#9432;</span></label>
+                            <select id="genIkFrame" class="select-field" aria-label="IK frame"><option value="">(auto)</option><optgroup label="Right — glove pads"><option>R_glove_frame_1</option><option>R_glove_frame_2</option><option>R_glove_frame_3</option><option>R_glove_frame_4</option></optgroup><optgroup label="Right — fingertips"><option>R_tip_frame</option><option>R_index_tip_frame</option></optgroup><optgroup label="Right — no tool"><option>R_arm_tip</option><option>R_ConnectorLink</option></optgroup><optgroup label="Left — glove pads"><option>L_glove_frame_1</option><option>L_glove_frame_2</option><option>L_glove_frame_3</option><option>L_glove_frame_4</option></optgroup><optgroup label="Left — fingertips"><option>L_tip_frame</option><option>L_index_tip_frame</option></optgroup><optgroup label="Left — no tool"><option>L_arm_tip</option><option>L_ConnectorLink</option></optgroup></select>
+                            <p class="hand-state-row" title="The SRDF group_state this frame's pad is presented with (glove_frames.yaml: hand_state). Written downstream via the frame, not separately.">Hand state <span id="genHandState" class="hand-state">&mdash;</span></p>
+                            <label class="field-label">Fixture type <span class="info-ico" data-tip="Which physical commode variant this task targets. Selects the articulation and the mesh set, so a task authored for one variant does not fit another. Written into the YAML as task_parameters.commode_fixture_type.">&#9432;</span></label>
+                            <select id="genFixtureType" class="select-field" aria-label="Fixture type"><option value="">(auto)</option><option>closed</option><option>lid_open</option><option>lid_seat_open</option></select>
+                        </div>
+                        <div class="gen-col">
+                            <label class="field-label">Pole <em class="label-role">(written to the task)</em> <span class="info-ico" data-tip="Pole position variable stage of the generalized stage sequence. (auto) reuses the hand config's sequence when one exists, else quarter_length; an explicit choice rebuilds the sequence.">&#9432;</span></label>
+                            <select id="genPoleState" class="select-field" aria-label="Pole state"><option value="">(auto)</option><option>quarter_length</option><option>half_length</option><option>three_quarter_length</option><option>full_length</option><option value="__custom__">custom height (m)&hellip;</option></select>
+                            <input id="genPoleM" class="readonly-field" type="number" step="0.005" min="0" max="0.315" placeholder="metres, 0 &ndash; 0.315" aria-label="Pole height (m)" style="display: none;" data-tip="An EXPLICIT pole height anywhere in the sliding plate's 0&ndash;0.315 m travel (pole.xacro), for the heights BETWEEN the five named rungs. It has no SRDF group state, so the generated config names the pose custom_length and carries the metres in joint_space_poses.pole_&lt;arm&gt; &mdash; which TaskBase::addPoleStage reads before the SRDF, and which ConfigLoader passes through unconverted because a pole group's joints are linear.">
+                            <p class="gen-pole-warn" id="genPoleBandWarn" style="display: none;"></p>
+                            <label class="field-label">Channel <span class="info-ico" data-tip="The joint-position stream the runtime will use to send this task: track upload (PROVEN &mdash; 12/12 twice on 2026-09-04) or movej_canfd (NOT TESTABLE YET, no measured run). It selects the TIMING mode at plan time through the one channel policy table &mdash; track &rarr; toppra, canfd &rarr; ruckig_on_s &mdash; and it is NEVER written into the task config. Studio does not dispatch it either: the plan request carries it (alix_interfaces/srv/RunCleaningTask.channel). Recorded on the generated config only as provenance.stroke.channelAuthoredFor, a declaration of what the stroke was authored for.">&#9432;</span></label>
+                            <select id="genChannel" class="select-field" aria-label="Channel"><option value="track" selected>track</option><option value="canfd">canfd</option></select>
+                            <label class="field-label">Standoff (m) <span class="info-ico" data-tip="UGV-front to fixture-front distance this task runs at (e.g. 0.25 default, 0.38). The fixture is placed shifted by the difference from the scene's calibrated default; recorded in task_parameters.ugv_standoff_m so the runtime scene and the orchestrator's UGV repositioning follow. Blank = existing config's value, else the scene default.">&#9432;</span></label>
+                            <input id="genUgvStandoff" class="readonly-field" type="number" step="0.005" min="0.25" max="2" placeholder="(auto)" aria-label="UGV standoff (m)">
+                        </div>
+                                </div>
+                                <div class="gen-readout" id="genTargetResolved" data-tip="What stage 0 ACTUALLY used, read back from the run — not what was requested. Stage 0 may override the pole state, and a standoff below 0.25 m is clamped with only a warning, so the request and the resolved value can differ. Every coverage number is printed beside its ik_frame: a coverage figure without the frame it was measured for is meaningless.">resolved &mdash; run one to fill this in</div>
+                            </details>
+<!-- ===== START POSE — straight after TARGET, not buried in group D =====
+                                 It was buried inside group D, four disclosures down, in a
+                                 dialog that covered the mesh it asks you to click. It is
+                                 the input the operator actually has to give, so it sits
+                                 directly under TARGET — you cannot pick on a mesh you have
+                                 not bound a fixture and region to, which is why it is second
+                                 and not first — and it owns its own affordances. -->
+                            <section class="gen-start" id="genStartSection" data-task-modes="cleaning">
+                                <h3>Start pose <em class="label-role">(optional &mdash; blank lets the generator choose)</em></h3>
+                                <div class="gen-start-row">
+                                    <button id="pickStartPoseButton" title="Click, then pick the start pose on the mesh surface">Pick on mesh</button>
+                                    <button id="placeStartPoseButton" title="Move and rotate the PICKED start pose with the gizmo. Shift snaps 5 mm / 5 deg. Edits land immediately — Verify re-checks them.">Place</button>
+                                </div>
+                                <div class="gen-pose" id="genStartPoseText">not set</div>
+                                <input id="genStartPose" class="readonly-field" type="text" placeholder="x y z qx qy qz qw" aria-label="start_pose" hidden>
+                                <div class="gen-start-row">
+                                    <button id="pickPreStartPoseButton" title="Pick the PRE-START on the mesh — where the arm stands off before it comes in">Pick pre-start</button>
+                                    <button id="placePreStartPoseButton" title="Move and rotate the PICKED pre-start with the gizmo. Unlinks it from the start if it was following.">Place</button>
+                                </div>
+                                <div class="gen-pose" id="genPreStartPoseText">derived &mdash; retreat along the press axis</div>
+                                <input id="genPreStartPose" class="readonly-field" type="text" placeholder="pre_start (blank = auto retreat)" aria-label="pre_start_pose" hidden>
+                                <label class="toggle"><input id="genPreStartLinked" type="checkbox" checked><span>pre-start follows the start <em class="label-role">(uncheck to place your own)</em></span></label>
+                                <!-- ONE pair for BOTH poses (Newton 2026-09-10). Picking and dragging
+                                     already commit on the spot, so a button labelled "Apply" would be
+                                     a button that does nothing: VERIFY is what the operator actually
+                                     wants from it — re-solve IK at both poses, pose the arm there, and
+                                     say whether the next run can use them. -->
+                                <div class="gen-start-row gen-start-pair">
+                                    <button id="verifyStartPosesButton" class="primary" title="Check the start and pre-start with the generator's OWN start guards (reach, collision filter, contact law, a clear pre-start) for the ik_frame and pole the run resolves, and pose the arm at the start. Edits are already live — this says whether the run can USE them.">Verify both</button>
+                                    <button id="clearStartPosesButton" title="Forget both the picked start and the picked pre-start, and go back to letting the generator choose">Clear both</button>
+                                </div>
+                                <div class="gen-readout" id="genStartPoseInfo">corner &mdash; &middot; derived start_pose &mdash;</div>
+                                <div class="gen-start-hint" id="genStartPoseNote">Your picked start is used <b>exactly</b> &mdash; position and orientation &mdash; when every start guard passes: the map is authored at its pad alignment and the rows start at the row end nearest it. If a guard refuses it, the nearest designed start is used and the result names the guard and how far it moved. A placed pre-start is used exactly where placed. <b>Verify</b> runs the same guards now.</div>
+                            </section>
+                            <details class="collapsible gen-group" id="genGroupB" open>
+                                <summary>Pad &amp; rows</summary>
+                                <label class="field-label">Pad footprint w &times; l <span class="info-ico" data-tip="The glove pad&#x27;s contact rectangle. GLOVE_FOOTPRINT_M = 0.035 x 0.080 m (constants.py), per-frame values come from glove_frames.yaml. The pad&#x27;s LONG edge is on tool Y. Read-only: it is a property of the hardware, not a knob. Once a run lands this shows the run&#x27;s own surface.footprintM.">&#9432;</span></label>
+                                <input id="genPadFootprint" class="readonly-field" type="text" value="0.035 &times; 0.080 m" readonly aria-label="Pad footprint">
+                                <label class="field-label">Row pitch (m) <span class="info-ico" data-tip="The LATTICE row pitch. AUTO_SPACING_M = pad width minus 15 mm = 0.020 m (constants.py). A region&#x27;s own spacing_m in the region manifest outranks this. NOT the same number as the layout&#x27;s pitch_nominal_m -> pitch_effective_m, which is derived from the footprint and the overlap fraction and is reported separately in the layout readout.">&#9432;</span></label>
+                                <div class="gen-slider-row"><input id="genRowPitch" type="range" min="0.005" max="0.035" step="0.001" value="0.020" aria-label="Row pitch (m)"><output id="genRowPitchVal" class="gen-num">0.020</output></div>
+                                <details class="gen-derivation">
+                                    <summary>row pitch &mdash; lattice vs layout</summary>
+                                    <div class="gen-readout" id="genRowsReadout">k &mdash; &middot; pitch &mdash;</div>
+                                </details>
+                            </details>
+                            <details class="collapsible gen-group" id="genGroupC" open>
+                                <summary>Stroke &amp; turn</summary>
+                                <label class="field-label">Passes per point <span class="info-ico" data-tip="THE spacing parameter (Newton R5, 2026-09-07): row pitch = pad swath / passes. 1.0 abuts the rows and wipes every point once; 2.0 overlaps them by half and wipes every point twice, which is the generator&#x27;s own default. Blank sends nothing and the generator uses that default &mdash; this panel never supplies a value it did not measure. Below 1.0 is refused: the rows stop abutting, the bands between them are never wiped, and the coverage figure measures what the rows cover rather than the gaps.">&#9432;</span></label>
+                                <input id="genStrokePasses" class="readonly-field" type="number" step="0.1" min="1" max="8" placeholder="(generator default 2.0)" aria-label="Passes per point">
+                                <label class="field-label">Row connection <span class="info-ico" data-tip="How consecutive rows are joined. serpentine: looped turns joining adjacent rows without overshooting the region. interleaved: 1,3,5.. then 2,4,6.., so every turn has two pitches of room. interleaved_desc runs the second sweep descending, which removes the crossing link. (auto) lets the layout build BOTH and choose; either way both shapes are measured into turn_plan_comparison.">&#9432;</span></label>
+                                <select id="genStrokeConnection" class="select-field" aria-label="Row connection"><option value="">(auto)</option><option value="interleaved">interleaved</option><option value="interleaved_desc">interleaved_desc</option></select>
+                                <label class="field-label">Cleaning action <span class="info-ico" data-tip="What the pad does along each row (Newton, 2026-09-17). raster: each row once. push_pull: forward, back, forward, then the next row; every return is a stop. looped: overlapping short strokes, each return taken on a lane beside the row, no stops. circular: small near-square loops circling along the row, no stops. auto: decided from the region&#x27;s map &mdash; row length, room for a return lane on certified surface, the swivel freedom at the row nodes &mdash; and the rule is in the layout report. (region) sends nothing: the region manifest&#x27;s action, else raster. The sizes come from the pad, the row pitch and the runtime&#x27;s own blend law, per region, and the layout report says why.">&#9432;</span></label>
+                                <select id="genCleaningAction" class="select-field" aria-label="Cleaning action"><option value="">(region)</option><option value="raster">raster</option><option value="push_pull">push_pull</option><option value="looped">looped</option><option value="circular">circular</option><option value="auto">auto (from the region's map)</option></select>
+                                <label class="field-label">Overtravel &plusmn;x (m) <em class="label-role">(fixed)</em> <span class="info-ico" data-tip="turn_overtravel_m = 0.002 m, global, enforced by _apex_allowed. Shown, not offered: the budget is asymmetric in reality (2 mm past the +x lid edge, 30-40 mm past -x) and the generator applies the single global number.">&#9432;</span></label>
+                                <input id="genOvertravel" class="readonly-field" type="text" value="0.002 m" readonly aria-label="Overtravel (m)">
+                                <label class="field-label">Backtrack residual <em class="label-role">(derived)</em> <span class="info-ico" data-tip="The inboard turn&#x27;s backtrack against osc_tol_m = 0.0005 m (validation.hpp). Over budget the turn becomes a STOP &mdash; said in words, with the residual quoted. Never an outboard.">&#9432;</span></label>
+                                <input id="genBacktrack" class="readonly-field" type="text" value="&mdash;" readonly aria-label="Backtrack residual">
+                                <label class="field-label">Per-corner deviation max_offset (m) <span class="info-ico" data-tip="PathParams.max_offset_m, default 0.010 m. A SCALAR only: PathParams is frozen, so there is no per-corner value to set here.">&#9432;</span></label>
+                                <input id="genMaxOffset" class="readonly-field" type="number" step="0.001" min="0" max="0.1" value="0.010" aria-label="Max offset (m)">
+                                <details class="gen-derivation">
+                                    <summary>the turn law, in full</summary>
+                                    <div class="gen-readout" id="genTurnReadouts" data-tip="Closed form and GEOMETRIC, computed here from the fields above and from the coefficients the server sends back with a run. No server call, no speed and no timing: seconds never appear on this panel, and the timing is the runtime&#x27;s one parameterisation (Newton R1).">run one to fill these in</div>
+                                </details>
+                            </details>
+                            <details class="collapsible gen-group" id="genGroupD">
+                                <summary>Spline <em class="label-role">(advanced)</em></summary>
+                                <label class="field-label">blend_radius_m <span class="info-ico" data-tip="BLEND_RADIUS_M = 0.020 m. Binds 106 of 183 corners in the measured corpus. LIVE: forwarded to the pipeline.">&#9432;</span></label>
+                                <input id="genBlendRadius" class="readonly-field" type="number" step="0.001" min="0" max="0.2" value="0.020" aria-label="blend_radius_m">
+                                <label class="field-label">reversal_deg <span class="info-ico" data-tip="REVERSAL_DEG = 150 deg: the turn angle above which a corner is treated as a reversal rather than a blend. LIVE.">&#9432;</span></label>
+                                <input id="genReversalDeg" class="readonly-field" type="number" step="1" min="90" max="180" value="150" aria-label="reversal_deg">
+                                <label class="field-label">collinear_deg <span class="info-ico" data-tip="COLLINEAR_DEG = 10 deg &mdash; the number the sampling law is built on: ds &lt;= 2 R sin(collinear_deg/2). LIVE.">&#9432;</span></label>
+                                <input id="genCollinearDeg" class="readonly-field" type="number" step="0.5" min="1" max="45" value="10" aria-label="collinear_deg">
+                                <label class="field-label">Sampling ds (m) <span class="info-ico" data-tip="Blank = the sampling law on turns (GeneratorParams.sample_ds_m = None). A fixed ds overrides it everywhere. This pipeline emits 413-444 samples on the two measured side regions &mdash; the legacy DEFAULT_MAX_POINTS = 250 cap does NOT apply here and is not shown as a ceiling.">&#9432;</span></label>
+                                <input id="genSampleDs" class="readonly-field" type="number" step="0.0001" min="0.0002" max="0.02" placeholder="(law)" aria-label="Sampling ds (m)">
+                                <details class="gen-derivation">
+                                    <summary>the sampling law, in full</summary>
+                                    <div class="gen-readout" id="genSplineReadouts">ds &le; 0.1743 R &middot; chord error &mdash; &middot; ~18 points per turn</div>
+                                </details>
+                            </details>
+                            <details class="collapsible gen-group" id="genGroupE">
+                                <summary>&psi; / C-space <span class="gen-chip" id="genPsiChip">&psi; &mdash;</span></summary>
+                                <label class="field-label">Entry &psi; <em class="label-role">(auto, and chosen)</em> <span class="info-ico" data-tip="The entry arm angle is CHOSEN by the entry stage &mdash; and then rewritten up to three times by the start-at-path stage. All four values are shown because showing only the screen&#x27;s choice was wrong by 203 deg on a measured region: chosen at the entry node, achievable at the path&#x27;s first pose, designed psi(0) after the start was freed, and the artefact&#x27;s own psi_entry. Choosing psi from this panel is deferred: there is no schema field that carries an entry angle to the runtime.">&#9432;</span></label>
+                                <div class="gen-readout" id="genEntryPsi">chosen &mdash; &middot; achievable &mdash; &middot; designed &mdash; &middot; artefact &mdash;</div>
+                                <label class="field-label">&psi; policy <span class="info-ico" data-tip="designed plan = the piecewise-linear swivel plan with continuation IK (the pipeline&#x27;s own). hold / ramp / free are the comparison policies. A section boundary buys BOTH a place to re-anchor psi and a free psi&#x27; discontinuity, but only at a dead stop.">&#9432;</span></label>
+                                <select id="genPsiPolicy" class="select-field" aria-label="psi policy"><option value="designed">designed plan</option><option value="hold">hold</option><option value="ramp">ramp</option><option value="free">free</option></select>
+                                <label class="field-label">band_deg <em class="label-role">(read-only at 0)</em> <span class="info-ico" data-tip="THE TRAP: the C++ loader&#x27;s own default is kSwivelPlanDefaultBandDeg = 5.0, and at a 5 deg band an authored plan is COMPLETELY INERT &mdash; clamp fraction 0.00, byte-identical to free. The emitter writes 0.0 (SWIVEL_PLAN_BAND_DEG) and band_deg reaches the swivel lane only through EmissionLanes, which default_stages does not expose &mdash; so it is read-only at 0 in this build.">&#9432;</span></label>
+                                <input id="genBandDeg" class="readonly-field" type="number" step="1" min="0" max="20" value="0" readonly aria-label="band_deg">
+                                <label class="field-label">|dq/d&psi;| peak <em class="label-role">(derived)</em> <span class="info-ico" data-tip="How hard the joints move for a degree of swivel. Measured to swing up to 259x along a single stroke, which is why a psi plan that looks smooth in psi can be violent in q.">&#9432;</span></label>
+                                <input id="genDqDpsi" class="readonly-field" type="text" value="&mdash;" readonly aria-label="dq/dpsi peak">
+                                <label class="field-label">Singularity gate <em class="label-role">(resolved)</em> <span class="info-ico" data-tip="The gate the run&#x27;s map was certified at, and who set it (plan/P17 L0): an operator&#x27;s singularityGateDeg, else the region&#x27;s manifest declaration (singular_margin_deg), else 15 deg (singularity.GATE_DEFAULT_DEG); never below 5, at most 20 (Newton 2026-09-22). Four vendor singularity types. The margin contour is drawn as an OUTLINE, never a fill: it sits 8-10 mm inside the last reachable point, so a filled region reads as reach and is not.">&#9432;</span></label>
+                                <input id="genGateDeg" class="readonly-field" type="text" value="&mdash;" readonly aria-label="Singularity gate (deg)">
+                                <label class="field-label">Wipe yaw &gamma; <em class="label-role">(resolved)</em> <span class="info-ico" data-tip="Spin about the press axis. INERT as a request: stage 2 overwrites it from the start pose, and the run reports wipeYawSource = &#x27;start pose (stage 2)&#x27;. The RESOLVED value is shown here; the requested one is not, because it changes nothing.">&#9432;</span></label>
+                                <input id="genWipeYaw" class="readonly-field" type="text" value="auto" readonly aria-label="Wipe yaw (deg)">
+                                <div class="gen-note" id="genPsiNotes"></div>
+                            </details>
+                            <details class="collapsible gen-group" id="genGroupF">
+                                <summary>Output <em class="label-role">(advanced)</em></summary>
+                                <div class="gen-grid">
+                        <div class="gen-col">
+                            <div class="rpy-grid" style="grid-template-columns: 1fr 1fr;" data-task-modes="cleaning">
+                            </div>
+                        </div>
+                                    
+                                </div>
+                            </details>
+                            <div class="gen-grid" id="genMechGrid">
+                        <div class="gen-col" id="genTaskTypeCol">
+                            <label class="field-label">Task type <span class="info-ico" data-tip="cleaning: surface path generated from the region mesh. mechanism: a discovered task from the merged config trees — lid/seat ops are fixture-dependent (mechanism_tasks/&lt;fixture&gt;), glove and bin ops are robot actions (glove_tasks/, bin_tasks/). Selecting a mechanism op LOADS its calibrated exemplar for editing; new task files dropped in those folders appear here automatically.">&#9432;</span></label>
+                            <select id="genTaskType" class="select-field" aria-label="Task type"><option value="cleaning" selected>cleaning</option><option value="mechanism">mechanism</option></select>
+                            <div data-task-modes="mechanism">
+                                <label class="field-label">Op <span class="info-ico" data-tip="Discovered ops, grouped by category. The shape is part of the entry: single (one arm), compound (ONE YAML, both arm blocks, arms run one after the other), dual sync (matched *_right/*_left pair, deltas identical on both sides), joint-space (stage-only — no cartesian path). Selecting an op loads its exemplar immediately.">&#9432;</span></label>
+                                <select id="genMechOp" class="select-field" aria-label="Mechanism op"></select>
+                                <label class="field-label">Arm</label>
+                                <select id="spaceChainSelect" class="select-field" aria-label="Arm"><option value="right">right</option><option value="left">left</option></select>
+                            </div>
+                        </div>
+                        <div class="gen-col" id="genSpacePathCol" data-task-modes="mechanism">
+                            <label class="field-label">Space path <span class="info-ico" data-tip="Mechanism points live in EMPTY space — the reachability dots are the pickable surface (computed automatically on entering mechanism mode). The box bounds the workspace: it auto-fits around the loaded task's points; drag its gizmo to adjust (Move/Rotate/Scale below, key B cycles). Click the cyan 3 cm dots IN PATH ORDER (click again to remove; yellow→red shows order), then Reroute re-threads the loaded task's path through them (no clicks = auto-order along the chosen box axis). Orient points afterwards with the pose gizmo (Workbench, Rotate mode — key 4).">&#9432;</span></label>
+                            <div class="mode-grid" style="grid-template-columns: auto 1fr 1fr 1fr; gap: 4px;">
+                                <button id="spaceBoxToggle" title="Show / hide the selection box">Box</button>
+                                <button id="spaceBoxMove" class="arm-toggle active" title="Drag arrows to move the box">Move</button>
+                                <button id="spaceBoxRotate" class="arm-toggle" title="Drag rings to rotate the box">Rotate</button>
+                                <button id="spaceBoxScale" class="arm-toggle" title="Drag handles to resize the box">Scale</button>
+                            </div>
+                            <div class="mode-grid" style="grid-template-columns: 1fr 1fr; gap: 4px;">
+                                <select id="spaceOrderSelect" class="select-field" aria-label="Ordering" title="Auto-order axis (used when no dots are clicked)"><option value="x">along box X</option><option value="y">along box Y</option><option value="z">along box Z</option></select>
+                                <input id="spaceNumPoints" class="select-field" type="number" min="2" max="50" value="8" aria-label="Point count" title="Point count (auto-order mode)">
+                            </div>
+                            <!-- data-task-modes lives on the BUTTON, not only on the enclosing
+                                 #genSpacePathCol, because buildCommandGroup promotes every
+                                 .primary button into the .cmd-quick bar and carries only the
+                                 PANEL's dataset.taskModes onto the new group (editor.js
+                                 buildCommandGroup) — and #generatePanel has none. Promoted out
+                                 of its column, Reroute lost its gate and showed up in the
+                                 cleaning quick bar, where clicking it can only ever report
+                                 "the box holds fewer than 2 pickable dots": the reachability
+                                 cloud it re-threads through refuses to build outside mechanism
+                                 mode (rebuildSpaceCloud). pickStartPoseButton already tags the
+                                 button itself; this follows it. (Newton, 2026-08-20) -->
+                            <button id="spaceRerouteButton" data-task-modes="mechanism" class="primary" title="Re-thread the loaded task's path through the clicked dots (in click order); with no dots clicked, auto-order the in-box dots along the chosen axis">Reroute path</button>
+                            <div id="spaceSelInfo" class="hint">No selection box placed.</div>
+                        </div>
+                            </div>
+                        </div>
+                        <div class="gen-feedback" id="genFeedbackCol">
+                            <div class="gen-job" id="genJobRow" hidden>
+                                <div class="gen-job-head"><span id="genJobStage">idle</span><span id="genJobElapsed">0:00</span></div>
+                                <div class="gen-job-sub" id="genJobSub"></div>
+                                <div class="gen-job-note" id="genJobNote"></div>
+                            </div>
+                            <div class="gen-edit-apply" id="genApplyRow" hidden>
+                                <button id="genApplyKnotsButton" class="primary" title="Re-run the generator from the knots on screen: knots &rarr; spline &rarr; swivel &rarr; emit, then the same stroke gate a generation runs, with collision on. It reuses this run's surface, coverable map and entry (96-99% of a run), so it costs about 22 s rather than a whole generation. Until you press it, the config still holds the ORIGINAL samples &mdash; moving a knot changes the picture, not the file.">Apply knot edits</button>
+                                <span class="gen-edit-note" id="genApplyNote"></span>
+                            </div>
+                            <div class="gen-failure" id="genFailure" hidden></div>
+                            <div id="genCoverageInfo" class="info-list" data-task-modes="cleaning"></div>
+                            <div class="gen-reasons" id="genReasons"></div>
+                        </div>
+                        <div class="gen-verdict" id="genVerdictCol">
+                            <div class="gen-chips" id="genGateChips"></div>
+                            <div class="gen-notes" id="genNotesList"></div>
+                            <div class="gen-counts" id="genCounts">knots &mdash; &middot; samples &mdash;</div>
+                        </div>
+                    </div>
+                    <div class="gen-actions" id="genActions">
+                        <button id="generateButton" class="primary" data-task-modes="cleaning" title="Run the C-space path pipeline as a background job: surface, coverable map, entry, layout, knots, path, swivel, emit and gate. Measured at 64-83 s. Progress and the result appear below; Cancel is cooperative.">Generate</button>
+                        <button id="cancelPathButton" class="primary" data-task-modes="cleaning" disabled title="Ask the running generation to stop. Cancel is cooperative and coarse: it is checked between stages and every 25 lattice nodes.">Cancel</button>
+                        <!-- Appears only after the client gives up on a run. The run lives on the
+                             SERVER, so losing the polls never cancelled it — the only thing lost is
+                             this page's attention, and this takes it back. -->
+                        <button id="reattachRunButton" data-task-modes="cleaning" hidden title="Pick the run back up. The generation kept going on the server after this panel stopped polling it.">Reattach</button>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>Editor Mode</h2>
+                    <div class="mode-grid"><button class="mode-button active" data-mode="inspect">Inspect <kbd>1</kbd></button><button class="mode-button" data-mode="add">Add <kbd>2</kbd></button><button class="mode-button" data-mode="move">Move <kbd>3</kbd></button><button class="mode-button" data-mode="sequence">Sequence <kbd>5</kbd></button></div>
+                    <label class="toggle" data-task-modes="cleaning"><input id="snapVertexToggle" type="checkbox"><span>Snap Added Points To Vertex</span></label>
+                    <div class="hint" id="modeHint">Inspect points and mesh. Click a point to select it — the Move+Rotate gizmo appears on it.</div>
+                </section>
+                <section class="panel sp-panel" data-layout="manual">
+                    <h2>Selected Point</h2>
+                    <div class="sp-grid">
+                        <div class="sp-nav">
+                            <button id="prevButton" disabled>&#8592; Prev</button>
+                            <button id="nextButton" disabled>Next &#8594;</button>
+                            <button id="deleteButton" disabled>Delete</button>
+                        </div>
+                        <div class="sp-rotate">
+                            <label class="field-label">Gizmo target <span class="info-ico" data-tip="Which pose the Move+Rotate gizmo edits. Arrows and plane handles translate along alix_ref_frame axes; arcs rotate. X flips the arcs between alix_ref_frame and pose-local; Shift snaps 5 mm / 5&deg;.">&#9432;</span></label>
+                            <div class="button-row" id="rotateTargetRow"><button id="rotateTargetPointBtn" class="active" data-target="point" title="Edit the selected cleaning point">Point</button><button id="rotateTargetStartBtn" data-target="start" title="Edit start_pose">Start</button><button id="rotateTargetPreBtn" data-target="prestart" title="Edit pre_start_pose">Pre-start</button></div>
+                            <div id="poseGizmoReadout" class="hint" style="display:none;" title="Live values in the YAML's convention: alix_ref_frame translation; point rotations as the delta vs start_pose (intrinsic XYZ, deg). Shift = snap 5 mm / 5&deg;. Translation is always alix_ref_frame; X flips only the rotation axes."></div>
+                        </div>
+                        <div class="sp-actions">
+                            <button id="resetRotationButton" data-tip="Discard the selected point's hand-edited orientation and restore the rotation the generator produced for it (zero RPY delta against start_pose). Use it when a point has been rotated past a reachable orientation and you want a known-good baseline before nudging it again. Only the rotation is reset &mdash; the point's position is untouched." disabled>Reset Rotation</button>
+                        </div>
+                        <div class="sp-rpy">
+                            <label class="field-label">RPY delta (deg) <span id="rpyLiveReadout" class="rpy-live" title="The selected point's CURRENT orientation delta, live. The boxes below are what you are typing; this is what the point holds.">&mdash;</span> <span class="info-ico" data-tip="Rotation delta Rx&middot;Ry&middot;Rz applied on start_pose (intrinsic XYZ, degrees). The read-out shows what the point holds now; the boxes are the value you are about to apply.">&#9432;</span></label>
+                            <div class="rpy-grid"><input id="rotXInput" type="number" step="0.5" placeholder="roll" disabled><input id="rotYInput" type="number" step="0.5" placeholder="pitch" disabled><input id="rotZInput" type="number" step="0.5" placeholder="yaw" disabled></div>
+                        </div>
+                        <div class="sp-apply">
+                            <button id="applyRotationButton" data-tip="Apply the roll / pitch / yaw values typed above to the selected point, as a rotation delta on start_pose (intrinsic XYZ, degrees &mdash; the YAML's own convention). This is the numeric counterpart to dragging the rotation gizmo: use it to type an exact orientation, or to repeat the same correction across several points." disabled>Apply RPY</button>
+                        </div>
+                    </div>
+                </section>
+                <section class="panel sp2-panel" data-cmd="dialog" data-layout="manual">
+                    <h2>Start / Pre-start Pose</h2>
+                    <div class="sp2-grid">
+                        <div class="sp2-fields">
+                            <label class="field-label">start_pose (x y z qx qy qz qw)</label>
+                            <input id="editStartPose" class="readonly-field" type="text" placeholder="no config loaded">
+                            <label class="field-label">pre_start_pose</label>
+                            <input id="editPreStartPose" class="readonly-field" type="text" placeholder="no config loaded">
+                        </div>
+                        <div class="sp2-actions">
+                            <button id="editPickStartButton" disabled>Pick start on mesh</button>
+                            <button id="editApplyPosesButton" disabled>Apply</button>
+                            <button id="editVerifyPosesButton" disabled title="Check these two poses against the generator's OWN start guards, for the frame, pole and standoff this task resolves: on the marked surface, the contact law, reach with the singularity gate and the stroke rules, the arm chain clear of the world, the tool-fixed links under the full collision filter, and a clear pre-start. The same POST /api/start-pose-check the Generate panel's Verify uses.">Verify</button>
+                            <button id="editRetreatPreStartButton" disabled title="Seed pre-start as a RETREAT from the start along the press axis &mdash; the generator's own derived retreat when it has given one for this start, else 35 mm back along the frame's press direction. It is NOT a copy of the start: the server refuses a gap under 1 mm.">Pre-start = derived retreat</button>
+                            <button id="setStartCurrentButton" disabled title="Set start_pose to the current robot end-effector pose (the selected cleaning point), in the config's ik_frame">Set start = current pose</button>
+                        </div>
+                    </div>
+                </section>
+                <section class="panel">
+                    <h2>Sequence</h2>
+                    <div class="button-row"><button id="clearSequenceButton" disabled>Clear Sequence</button><button id="usePointOrderButton" disabled>Use Point Order</button></div>
+                    <div class="button-row"><button id="animateSequenceButton" disabled title="Drive the robot overlay smoothly through the cleaning sequence (start → points)">▶ Animate Sequence</button><button id="animateStopButton" disabled>■ Stop</button></div>
+                    <label class="toggle"><input id="animateLoopToggle" type="checkbox"><span>Loop animation</span></label>
+                </section>
+                <section class="panel af-panel" data-layout="manual">
+                    <h2>Analyze &amp; Finish <span class="info-ico" data-tip="The last step of the edit loop: analyze the points (results in the Browser dock), check coverage against the &ge;95% target, then Validate (per-check detail in the Properties dock) and Deploy to the destination the server chose (under ros/orchestration/alix_tasks/config).">&#9432;</span></h2>
+                    <div class="af-grid">
+                        <div class="af-col">
+                            <button id="analyzePointsButton" disabled title="Run reachability + manipulability for every cleaning point. Results list is in the Browser dock.">Analyze All Points</button>
+                            <label class="toggle" data-tip="Include robot-vs-fixture collision in the per-point analysis: each reachable point&#x27;s IK pose is FCL-checked against the fixture, and contacted fixture faces paint red in the viewport. Slower — one collision query per point."><input id="analyzeCollisionToggle" type="checkbox"><span>+ collision</span></label>
+                            <button id="coverageButton" data-task-modes="cleaning" disabled title="Recompute coverage for the current (edited) points (server). Report is in the Properties dock.">Recompute Coverage</button>
+                            <label class="toggle" data-task-modes="cleaning" data-tip="Paint the region mesh by coverage — green where the glove footprint swept, red where it missed, up to the point selected in the sequence. Run Recompute Coverage after edits to refresh it."><input id="coveragePaintToggle" type="checkbox"><span>Coverage paint</span></label>
+                        </div>
+                        <div class="af-col" id="finishPanel" style="display: none;">
+                            <button id="finishValidateButton" disabled title="Run config-level validation checks (server); per-check detail lands in the Properties dock">Validate</button>
+                            <div id="finishResult" class="hint finish-headline">not validated yet</div>
+                            <button id="finishDeployButton" class="primary" disabled title="Write this config to the destination the server chose for it (under ros/orchestration/alix_tasks/config) — shown for confirmation first">Deploy &rarr;</button>
+                        </div>
+                    </div>
+                </section>
+                <section class="panel rf-panel" data-layout="manual" data-quick=".rf-row" data-caret="none">
+                    <h2>Reference Frame <span class="info-ico" id="rfInfoIco" data-tip="Which frame the Selected Point readout is expressed in. <b>alix_ref_frame</b> is the frame every saved YAML is written in, and the default. <b>Arm Base</b> is that arm&#x27;s URDF <code>*_base_link</code> — what the RealMan pendant shows under &quot;Base&quot;. <b>Arm World</b> is the level frame at the same origin, pitched by the 90&deg; mount the controller reports as install pose (0,&nbsp;90,&nbsp;0), and the frame <code>rm_movel</code> receives. Arm frames are LOCAL: the task&#x27;s own arm decides which side they mean. Drives the Selected Point readout AND what <b>Save Copy</b> exports — a copy is an export, so it may be written in the controller&#x27;s own terms while the authored file stays canonical. <b>Save Changes</b> is unaffected and always writes alix_ref_frame. Every export is verified: the flange trajectory is compared against the original and a retarget that moved the robot is refused, not written.">&#9432;</span></h2>
+                    <div class="rf-row">
+                        <span class="rf-ico" data-ico="refframe" aria-hidden="true"></span>
+                        <label class="rf-field">
+                            <span class="rf-name">Reference</span>
+                        <select id="workFrameSelect" class="select-field" aria-label="Reference frame for the point readout">
+                            <option value="ref" selected>alix_ref_frame — saved YAML</option>
+                            <option value="base">Arm Base — URDF *_base_link</option>
+                            <option value="world">Arm World — controller / movel</option>
+                        </select>
+                        </label>
+                    </div>
+                    <div class="rf-row">
+                        <span class="rf-ico" data-ico="tipframe" aria-hidden="true"></span>
+                        <label class="rf-field">
+                            <span class="rf-name">Tip frame</span>
+                        <select id="exportIkFrame" class="select-field" aria-label="IK frame for Save Copy">
+                            <option value="" selected>IK frame: unchanged</option>
+                            <optgroup label="Right — glove pads"><option>R_glove_frame_1</option><option>R_glove_frame_2</option><option>R_glove_frame_3</option><option>R_glove_frame_4</option></optgroup>
+                            <optgroup label="Right — fingertips"><option>R_tip_frame</option><option>R_index_tip_frame</option></optgroup>
+                            <optgroup label="Right — no tool"><option>R_arm_tip</option><option>R_ConnectorLink</option></optgroup>
+                            <optgroup label="Left — glove pads"><option>L_glove_frame_1</option><option>L_glove_frame_2</option><option>L_glove_frame_3</option><option>L_glove_frame_4</option></optgroup>
+                            <optgroup label="Left — fingertips"><option>L_tip_frame</option><option>L_index_tip_frame</option></optgroup>
+                            <optgroup label="Left — no tool"><option>L_arm_tip</option><option>L_ConnectorLink</option></optgroup>
+                        </select>
+                        </label>
+                    </div>
+                    <div class="rf-grid">
+                        <div id="workFrameNote" class="frame-note"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ===== EDIT TAB (actions only — readouts/lists live in the docks) ===== -->
+            
+
+            <!-- ===== FIXTURE BOARD =====
+                 The operator's unit of work is one region x one arm -> one
+                 config file, and nothing in the Studio ever showed those.
+                 commode_c has 38 of them; "which still need a right-arm task"
+                 was answerable only by listing a directory in a shell.
+                 Deliberately shows ONLY what is on disk: coverage is not
+                 stamped into a config and validation state is not persisted,
+                 so there are no columns for them. -->
+            <div class="tab-page" data-page="board">
+                <!-- data-cmd="keep": the board is a 20x2 NAVIGATION table, not a
+                     command. It must not be folded into a flyout, and it must not
+                     live in a 44px bar — it takes the main area instead. -->
+                <section class="panel board-panel" data-cmd="keep" data-layout="manual">
+                    <h2>Fixture Board <span class="info-ico" data-tip="Every region of this fixture against both arms. A cell is one config file. Click a missing cell to generate it, or an existing one to load it. Regions declared R-only or L-only show a dash for the other arm — that is the declaration in models/regions.yaml, not a gap.">&#9432;</span></h2>
+                    <div class="board-head">
+                        <button id="boardRefresh">Refresh</button>
+                        <button id="boardGenerateMissing" class="primary" title="Generate every applicable region x arm that has no config yet, on the C-space pipeline (the same generator as the Workbench's Generate, stroke-gated). Runs as a job; nothing is written until you choose which passing configs to write.">Generate missing</button>
+                        <button id="boardBulkCancel" hidden title="Stop the bulk job before its next cell">Cancel</button>
+                        <button id="boardRasterSweep" title="REFERENCE route: the legacy raster sweep (never stroke-gated). Kept for comparison while the C-space pipeline proves itself on every family.">Raster sweep (reference)</button>
+                        <span id="boardSummary" class="hint"></span>
+                    </div>
+                    <div id="boardTable" class="board-table"></div>
+                    <div id="boardBatch" class="board-batch"></div>
+                </section>
+            </div>
+
+            <!-- ===== WORKSPACE ANALYSIS TAB (standalone; optional alix_workspace pkg) ===== -->
+            <div class="tab-page" data-page="workspace">
+                <section class="panel">
+                    <h2>Workspace Analysis <span class="info-ico" data-tip="Standalone reachability from the robot URDF (computed in <code>base_link</code>), independent of the generate/edit pipeline — uses the optional <code>alix_workspace</code> package. Overlay toggles are in the Visibility bar; the IK frame is set in the Browser dock.">&#9432;</span></h2>
+                    <div class="button-row"><button id="reachabilityButton" title="Compute reachability voxel maps from the URDF (server)">Compute Reachability</button><button id="manipulabilityButton" title="Compute the per-voxel manipulability (dexterity) heatmap">Compute Manipulability</button></div>
+                    <div id="reachabilityInfo" class="info-list"><div class="info-row"><span>Reachability</span><code>Compute to evaluate.</code></div></div>
+                    <div id="manipulabilityInfo" class="info-list"><div class="info-row"><span>Manipulability</span><code>Compute to evaluate.</code></div></div>
+                </section>
+                <section class="panel">
+                    <h2>Kinematics Solver <span class="info-ico" data-tip="Per-point inverse kinematics on the robot URDF (damped least-squares; ROS/MoveIt-free). Adding/moving/picking a start pose live-poses the robot and reports reachability at orientation + which arm; unreachable points flag red. Robot↔fixture collisions paint contacting faces red. IK frame &amp; pole length are in the Browser dock.">&#9432;</span></h2>
+                    <label class="toggle"><input id="ikAutoToggle" type="checkbox"><span>Check on click (IK + collision)</span></label>
+                    <div class="button-row"><button id="ikCheckButton" title="Run IK + collision for the currently selected point">Check Selected Point</button><button id="ikClearButton" title="Clear IK result + collision paint">Clear</button></div>
+                    <div id="ikInfo" class="info-list"><div class="info-row"><span>IK</span><code>Select a point, then Check.</code></div></div>
+                </section>
+                <section class="panel atlas-panel">
+                    <h2>Redundancy Atlas <span class="info-ico" data-tip="The configurations BEHIND this stroke, not just its points. Reachability and manipulability both reduce over configurations — the envelope records that SOME joint solution reaches a voxel, the dexterity map records the BEST one. In an 800&nbsp;mm cubicle that is the wrong question, because the configuration that reaches the point is usually the one that puts the elbow through a wall. This sweeps the coordinate they reduced over — the elbow swivel — across the whole stroke and asks whether a CONTINUOUS choice of swivel exists from the first waypoint to the last. Purely geometric: joint limits, the vendor singular sets and collision. No speed, acceleration or scaling value is read, so the answer survives a task being re-timed.">&#9432;</span></h2>
+                    <div class="atlas-controls">
+                        <label class="field-label">Swivel step&deg;<input id="atlasSwivelStep" type="number" value="5" min="1" max="30" step="1"></label>
+                        <label class="field-label">Wipe yaw&deg;<input id="atlasGamma" type="number" value="0" min="-180" max="180" step="5" title="Spin about the press axis. Free in the contact constraint, but priced by coverage through the glove's 35 x 80 mm footprint — so it is a parameter to choose, not a don't-care."></label>
+                        <label class="field-label">Pole m<input id="atlasPole" type="number" placeholder="config" step="0.025" min="0" max="0.3" title="Blank uses the config's own move_pole state — the height the task actually runs at. Set a value to sweep it; the collision world is pinned to the same number."></label>
+                        <label class="field-label">Max &Delta;&psi;&deg;<input id="atlasMaxStep" type="number" value="15" min="1" max="90" step="1" title="How far the swivel may move between consecutive samples. The discretisation's continuity requirement, not a velocity limit."></label>
+                        <label class="field-label">Resample mm<input id="atlasResample" type="number" value="15" min="2" max="100" step="1" title="Even arc-length spacing along the stroke. Authored waypoints sit 26-187 mm apart on the shipped corpus, and at that spacing a continuity limit tight enough to forbid a branch flip also forbids ordinary motion."></label>
+                        <label class="field-label">Venue<select id="atlasVenue" class="dac-select" title="The cubicle the collision world is built against. Populated from the scene files on disk. An atlas computed against the wrong walls reports the arm clear of a wall 200 mm closer than the one it checked."><option value="">(default 800 mm)</option></select></label>
+                    </div>
+                    <div class="atlas-controls">
+                        <label class="field-label" title="How far the pad may depart from the LOCAL surface normal, about the pad's own axes: ROLL about the wipe axis, PITCH about the lateral (row-step) axis. The press normal is a tolerance, not an equality: the contract's band rule (f = t/(D sin theta) at the 0.40 gate) caps it at 38.7 deg and the pad's 20 mm compliance at 30 deg on a flat face — less on a concave one, where the trailing edge digs in. It matters because the wrist centre sits 341.8 mm from the contact point. A spin about the press axis is NOT a tilt (it changes brush width, not contact) and is the separate wipe-yaw control.">Contact tilt&deg; roll<input id="atlasTiltX" type="number" value="0" min="0" max="38.7" step="5"></label>
+                        <label class="field-label" title="pitch about the pad's lateral axis">pitch<input id="atlasTiltZ" type="number" value="0" min="0" max="38.7" step="5"></label>
+                        <label class="field-label">apply<select id="atlasTiltApply" class="dac-select" title="none = only report what tilt WOULD fix each waypoint. uniform = one tilt for the whole stroke, the cheapest thing to author. profile = a tilt that varies smoothly along the stroke, for when no single one works."><option value="none">report only</option><option value="uniform">uniform</option><option value="profile">smooth profile</option></select></label>
+                    </div>
+                    <label class="toggle"><input id="atlasCollision" type="checkbox"><span>Include collision &mdash; walls, fixture, self (slower)</span></label>
+                    <div class="button-row"><button id="atlasButton" title="Compute the swivel-against-arc-length image for the loaded task config">Compute Atlas</button><button id="atlasSweepButton" title="Run the atlas across EVERY region x arm config of this fixture (~16 s, kinematics only) and sort them by what to do about each: a branch discontinuity, a contact tilt, a placement move, a sampling limit, or nothing.">Sweep Fixture</button><button id="atlasResetPoseButton" title="Return the robot overlay to its home pose">Reset Pose</button></div>
+                    <div id="atlasSweep" class="atlas-sweep"></div>
+                    <p class="hint">The atlas draws in the <b>viewport</b> &mdash; switch on <b>Atlas band</b> in the Visibility bar. The chart below is the companion: it is the only view of every swivel at every waypoint at once, which the rings cannot give you because they occlude each other.</p>
+                    <div class="atlas-canvas-wrap"><canvas id="atlasCanvas" width="760" height="190"></canvas></div>
+                    <div id="atlasLegend" class="atlas-legend"></div>
+                    <div id="atlasInfo" class="info-list"><div class="info-row"><span>Atlas</span><code>Load a task config, then Compute.</code></div></div>
+                </section>
+                <section class="panel spa-panel">
+                    <h2>Selected Point — Analysis</h2>
+                    <div id="selectedPointAnalysis" class="spa-body"><div class="spa-empty">Select a point and <b>Check Selected Point</b> (or enable check-on-click / the robot overlay) to see reachability, dexterity &amp; manipulability here.</div></div>
+                </section>
+            </div>
+
+            <!-- ===== DUAL-ARM COLLISIONS TAB ===== -->
+            <div class="tab-page" data-page="collisions">
+                <section class="panel dac-main">
+                    <h2>Dual-Arm Collisions <span class="info-ico" data-tip="Loads two single-arm plan JSONs (left + right) and plays them SIMULTANEOUSLY, checking inter-arm (left↔right) collisions with FCL. Adjacent/SRDF-disabled pairs are ignored; only different-arm links are tested. The left picker lists left-arm + dual + arm-agnostic plans; the right picker lists right-arm + dual + arm-agnostic. The full motion is always playable, collisions or not. A visualization aid — results need not exactly match MoveIt.">&#9432;</span></h2>
+                    <div class="dac-col" style="margin-bottom:8px">
+                        <label class="field-label">Schedule combination <span class="info-ico" data-tip="DEFAULT pairing source: the orchestrator schedule CSV (the sole source of the execution sequence) plus the session phases. Lists exactly the combinations that run CONCURRENTLY — paired rows, each leg of a chained row, compound rows and dual phases (one plan, checked arm-vs-arm internally). Serial rows and single-arm tasks are listed but not checkable (no inter-arm overlap). Always resolves the HARDWARE fixture-specific plan set. Picking an entry fills the manual pickers below; choose Custom to pair any two plans by hand.">&#9432;</span></label>
+                        <select id="dacSchedulePair" class="dac-select"></select>
+                    </div>
+                    <div class="dac-col" style="margin-bottom:8px">
+                        <label class="field-label">Path mode <span class="info-ico" data-tip="Which recorded plan variant the schedule combinations resolve to — the filename suffix, e.g. toplid_right_&lt;mode&gt;.json. Changing it re-resolves the combination list above; entries whose plan is absent for that mode are flagged (plan missing). ruckig_pro_only is deprecated — the Ruckig Pro licence ended, so no new plan can be smoothed with it, but the plans it already recorded are ordinary joint samples and replay fine, so it stays selectable for loading. The manual pickers below are unaffected — they always list every plan on disk.">&#9432;</span></label>
+                        <select id="dacPlanMode" class="dac-select"></select>
+                    </div>
+                    <div class="dac-pickers">
+                        <div class="dac-col">
+                            <label class="field-label">Left-arm plan</label>
+                            <input id="dacLeftSearch" class="dac-search" type="search" placeholder="Search left plans…">
+                            <select id="dacLeftPlan" class="dac-select"></select>
+                        </div>
+                        <div class="dac-col">
+                            <label class="field-label">Right-arm plan</label>
+                            <input id="dacRightSearch" class="dac-search" type="search" placeholder="Search right plans…">
+                            <select id="dacRightPlan" class="dac-select"></select>
+                        </div>
+                    </div>
+                    <div class="dac-dt-row">
+                        <label class="field-label">dt&nbsp;s</label>
+                        <input id="dacDt" type="number" value="0.05" step="0.01" min="0.01" max="0.5">
+                        <button id="dacCheckButton">Check Collisions</button>
+                    </div>
+                </section>
+                <section class="panel dac-tl" data-layout="manual">
+                    <!-- F75: head row = title + transport (play/stop/prev/next + scrub),
+                         so the graph below gets the panel's FULL width and the
+                         controls are never wrapped out of view by panel-cols. -->
+                    <div class="tl-head">
+                        <h2>Timeline &amp; Playback</h2>
+                        <!-- Transport controls injected by renderPlaybackBlock (shared with Schedule) -->
+                        <div id="dacPlayback" class="playback-block"></div>
+                    </div>
+                    <div id="dacPlot"></div>
+                </section>
+            </div>
+
+            <!-- ===== SCHEDULE & RUN TAB (whole-fixture process editing + playback) ===== -->
+            <div class="tab-page" data-page="schedule">
+                <section class="panel sch-main">
+                    <h2>Schedule &amp; Run <span class="info-ico" data-tip="Loads the execution schedule for a fixture (order + arm pairing + fixture-state transitions from the orchestrator's schedule_&lt;family&gt;.csv), resolves each step's plan(s), and plays the WHOLE cleaning process end-to-end. The sequence is EDITABLE: drag steps to reorder, re-pair arms, add or remove rows — every edit is re-resolved by the orchestrator's own loader and checked by three guard tiers (logical, reality-logical, and the inter-arm collision sweep, the supreme decider for paired tasks) before Save writes the CSV back.">&#9432;</span></h2>
+                    <div class="sch-body">
+                        <div class="sch-controls">
+                            <label class="field-label">Fixture</label>
+                            <select id="schFixture" class="select-field" aria-label="Schedule fixture"></select>
+                            <label class="field-label">Plan set</label>
+                            <select id="schPlanSet" class="select-field" aria-label="Plan set"><option value="hardware">hardware</option><option value="simulation">simulation</option></select>
+                            <label class="field-label">Mode</label>
+                            <select id="schMode" class="select-field" aria-label="Cleaning path mode"></select>
+                            <div class="sch-btn-row">
+                                <button id="schLoadButton">Load Schedule</button>
+                                <button id="schCheckCollisionsButton" disabled title="Run the inter-arm FCL sweep on every concurrent step and badge the results — the supreme decider for paired tasks">Check Collisions</button>
+                                <button id="schSaveButton" disabled title="Write the edited sequence back to the orchestrator's schedule CSV (guard-gated)">Save Schedule</button>
+                            </div>
+                        </div>
+                        <div id="schStatus" class="info-list"><div class="info-row"><span>Status</span><code>Pick a fixture, then Load Schedule.</code></div></div>
+                    </div>
+                </section>
+                <section class="panel sch-tl" data-layout="manual">
+                    <!-- F75: head row = title + transport, full-width ruler/track below. -->
+                    <div class="tl-head">
+                        <h2>Process Timeline <span class="info-ico" data-tip="Proportional to real plan durations (trajectory time + stage dwells + the orchestrator's inter-row settling delay). Step TYPE is texture + code chip + word. Click a bar to jump; drag an editable bar left/right to reorder the sequence; session phases are locked (they are code, not CSV rows). Markers: 🧤 glove change · 🔍 inspection checkpoint. <b>▶ Play all</b> runs from the selected step to the end; <b>▶ Play step</b> plays only the selected step, then stops — and clicking a plan name in the Step detail dock solos that single plan file for it.">&#9432;</span></h2>
+                        <!-- Transport controls injected by renderPlaybackBlock (shared with DAC) -->
+                        <div id="schPlayback" class="playback-block"></div>
+                    </div>
+                    <div id="schRuler" class="sch-ruler" aria-label="Timeline markers"></div>
+                    <div id="schTrack" class="sch-track" aria-label="Schedule timeline — click a step to jump, drag to reorder"></div>
+                </section>
+            </div>
+
+            <!-- ===== GIZMO TAB (last) ===== -->
+            <div class="tab-page" data-page="gizmo">
+                <section class="panel">
+                    <h2>Orientation Gizmo <span class="info-ico" data-tip="The gizmo shows the glove contact patch at the selected point; the bright face presses into the surface. Contact axis + footprint come from <code>config/glove_frames.yaml</code> for the ik_frame. Load a custom STL to override the preset; mm-unit files auto-scale.">&#9432;</span></h2>
+                    <div class="button-row"><label class="file-button" for="gizmoStlInput">Load Gizmo STL</label><button id="defaultGizmoButton" disabled>Use Preset</button></div>
+                    <input id="gizmoStlInput" type="file" accept=".stl">
+                </section>
+                <section class="panel">
+                    <h2>IK Frame Calibration <span class="info-ico" data-tip="Define named tool-frame poses on a glove STL with a drag gizmo (one-time, editable later). Saved frames align the glove gizmo to cleaning points. Stored in <code>config/ik_frames.yaml</code> + <code>config/gizmos/</code>.">&#9432;</span></h2>
+                    <label class="field-label">Saved frames (click to edit)</label>
+                    <div id="ikFrameList" class="paint-region-list"></div>
+                    <div class="button-row"><button id="ikCalibrateButton" disabled>Calibrate</button></div>
+                    <div id="ikCalibControls" style="display: none;">
+                        <div class="mode-grid" style="grid-template-columns: 1fr 1fr; margin-top: 8px;"><button id="ikModeTranslate" class="arm-toggle active">Move</button><button id="ikModeRotate" class="arm-toggle">Rotate</button></div>
+                        <div class="twist-row" style="margin-top: 8px;"><input id="ikFrameName" type="text" placeholder="frame name e.g. R_glove_frame_1"><button id="ikSaveFrameButton">Save Frame</button></div>
+                        <pre id="ikFrameReadout" class="ik-readout"></pre>
+                    </div>
+                    <div class="button-row"><label class="file-button" for="ikImportInput">Import YAML</label><button id="ikExportButton">Export YAML</button></div>
+                    <input id="ikImportInput" type="file" accept=".yaml,.yml">
+                </section>
+            </div>
+        </div>
+
+        <!-- ===== ALWAYS-PRESENT VISIBILITY BAR (thin, full width, under the ribbon) ===== -->
+        <div class="visibility-bar" id="visibilityBar">
+            <div class="vis-group"><span class="vis-label">Meshes</span>
+                <label class="toggle"><input id="showMeshToggle" type="checkbox" checked><span>Active</span></label>
+                <!-- One visibility toggle per fixture part, generated from the
+                     manifest's part registry (renderFixturePartToggles). -->
+                <span id="fixturePartToggles" style="display: contents;"></span>
+            </div>
+            <div class="vis-group"><span class="vis-label">Path</span>
+                <label class="toggle"><input id="showPointsToggle" type="checkbox" checked><span>Points</span></label>
+                <label class="toggle" title="The straight waypoint polyline — the chords between the authored points, before any fillet."><input id="showPathToggle" type="checkbox" checked><span>Path</span></label>
+                <label class="toggle" title="The G2 spline the runtime actually builds through those points. Drawn green and thicker because it is the curve that runs; the polyline beside it is the scaffold."><input id="showSplineToggle" type="checkbox" checked><span>Spline</span></label>
+                <label class="toggle"><input id="showFramesToggle" type="checkbox"><span>Frames</span></label>
+                <label class="toggle"><input id="showNormalsToggle" type="checkbox"><span>Normals</span></label>
+                <label class="toggle"><input id="showGizmoToggle" type="checkbox" checked><span>Gizmo</span></label>
+                <label class="toggle" title="Draw the glove at the start / pre-start pose, so the pose is judged against the thing that actually touches the surface."><input id="showStartGizmoToggle" type="checkbox" checked><span>Start gizmo</span></label>
+                <select id="startGizmoMode" class="select-inline" title="What every gizmo draws — at each selected point AND at the start / pre-start pose. HAND is the real inspire-hand links, posed at the SRDF hand_state this ik_frame presents (open_tenth / half_grasp / quarter_grasp) — the same geometry as the docs/kinematics figures. The PAD (a 3.5x8 cm box centred on the ik_frame) is drawn either way, because its offset from the tool frame is what a start pose is judged on.">
+                    <option value="hand" selected>Hand + pad</option>
+                    <option value="pad">Pad only</option>
+                </select>
+            </div>
+            <div class="vis-group"><span class="vis-label">Frames &amp; Grid</span>
+                <label class="toggle"><input id="showGridToggle" type="checkbox" checked><span>Grid</span></label>
+                <label class="toggle"><input id="showBaseFrameToggle" type="checkbox" checked><span>base_link</span></label>
+                <label class="toggle"><input id="showRefFrameToggle" type="checkbox" checked><span>ref_frame</span></label>
+                <label class="toggle"><input id="showStartPoseToggle" type="checkbox" checked><span>start EE</span></label>
+                <label class="toggle"><input id="showTaskFrameToggle" type="checkbox" checked><span>task frame</span></label>
+            </div>
+            <div class="vis-group"><span class="vis-label">Workspace &amp; Robot</span>
+                <label class="toggle"><input id="showRobotToggle" type="checkbox" checked><span>Robot</span></label>
+                <label class="toggle" title="Robot visual meshes (real colours)"><input id="robotVisualToggle" type="checkbox" checked><span>Visual</span></label>
+                <label class="toggle" title="Robot collision meshes (what the FCL check tests)"><input id="robotCollisionToggle" type="checkbox"><span>Collision</span></label>
+                <label class="toggle"><input id="reachabilityToggle" type="checkbox"><span>Reach voxels</span></label>
+                <label class="toggle"><input id="manipulabilityToggle" type="checkbox"><span>Manip heatmap</span></label>
+                <label class="toggle"><input id="safetyZonesToggle" type="checkbox"><span>Safety zones</span></label>
+                <label class="toggle"><input id="unreachableToggle" type="checkbox"><span>Unreachable</span></label>
+                <label class="toggle" title="The redundancy atlas in space. At each waypoint the elbow travels a ring about the shoulder-wrist axis, and every point of that ring is one swivel angle — so this draws the band of swivel the stroke actually has, swept along it, hemmed on each side by whatever closes it (blue = wall, amber = fixture, red = singular, yellow = joint limit). The band TEARS where no continuous choice of swivel gets to the next waypoint. The tube through it is the corridor, reddening where it cinches. Compute it in Workspace > Redundancy Atlas."><input id="atlas3dToggle" type="checkbox"><span>Atlas band</span></label>
+                <label class="toggle" title="Every elbow ring along the stroke, hairline, coloured cell by cell — the evidence behind the band. Off by default: it is the whole atlas as geometry and it will crowd the band it explains. Rings that have shrunk to a dot are marked; that is the redundancy exhausted because the arm straightened."><input id="atlasRingsToggle" type="checkbox"><span>Ring cage</span></label>
+                <label class="toggle" title="The boundary the wrist centre can never cross (the arm's own 466 mm) and, just inside it, the shell where the elbow is too straight to steer through — computed from the gate actually in use, not a fixed 7 mm. Drawn as a cap over the directions the stroke visits rather than a full sphere, which would enclose the camera too. Markers sit on wrist centres that fall outside: those waypoints are unreachable at every swivel, wipe yaw and wrist branch."><input id="atlasBallToggle" type="checkbox"><span>Reach dome</span></label>
+                <label class="toggle" title="The venue's boundary walls (washroom_scene.yaml washroom_structure) — the site's boundary of operation, not always symmetric about the robot"><input id="showWallsToggle" type="checkbox"><span>Walls</span></label>
+                <label class="toggle" title="Wall opacity"><input id="wallsOpacity" type="range" min="0.1" max="1" step="0.1" value="0.5" style="width: 70px; min-height: 24px;" aria-label="Wall opacity"><span>Opacity</span></label>
+            </div>
+        </div>
+
+        <!-- ===== WORKSPACE ROW: Browser dock | viewport | Properties dock ===== -->
+        <div class="workspace-row">
+            <aside class="dock browser-dock" id="browserDock">
+                <div class="dock-resize" data-edge="browser" role="separator" aria-orientation="vertical" aria-label="Resize Browser dock" tabindex="0" title="Drag to resize — or focus and use ←/→ (Shift for a bigger step, Home/End for the limits)"></div>
+                <div class="dock-head"><span>Browser</span><button class="dock-collapse" data-dock="browser" title="Hide Browser dock">&#10094;</button></div>
+                <div class="dock-body">
+                    <section class="panel" data-tabs="regions workbench workspace collisions schedule">
+                        <h2>Tool Frame &amp; Pole</h2>
+                        <label class="field-label">IK frame (reach / robot overlay / collision)</label>
+                        <select id="reachFrameSelect" class="select-field" title="Tool frame used for IK feasibility, the robot overlay, collision checks and the reachability envelope. Shared across all tabs."></select>
+                        <p class="hand-state-row" title="The SRDF group_state the hand takes to present this frame's pad (glove_frames.yaml: hand_state). Derived from the frame, not chosen — the server reads the same field to pose the fingers, so the frame IS the hand.">Hand state <span id="reachHandState" class="hand-state">&mdash;</span><span id="handStateMismatch" class="hand-state-warn" hidden></span></p>
+                        <label class="field-label">Pole length (sliding plate — excluded from IK once chosen)</label>
+                        <select id="poleStateSelect" class="select-field" title="Pin the pole/sliding-plate to this SRDF length; IK then solves only the arm joints. Bin is always LOWERED. Shared across all tabs."></select>
+                    </section>
+                    <!-- Direct plan-file playback: ANY saved plan JSON under the
+                         plan roots, independent of the schedule and of the
+                         orchestrator's filename contract — files the resolver
+                         rejects (e.g. differently-named bin plans) still play. -->
+                    <section class="panel" data-tabs="schedule">
+                        <h2>Plan File <span class="info-ico" data-tip="Play ANY saved plan JSON found under the plan roots (Resource/plans, alix_core/plans) — no schedule needed, and the orchestrator's filename contract does not apply. Selecting a plan snaps the robot to its first sample; ▶ plays it through. Robot motion only: the fixture stays as currently shown. A file with an unsupported structure reports the load error in Status.">&#9432;</span></h2>
+                        <label class="field-label">Saved plan (all plan roots)</label>
+                        <!-- In-panel list, NOT a native <select>: 105 files need
+                             filtering, and the native popup kept light-dismissing
+                             mid-pick. The list scrolls in place and cannot vanish. -->
+                        <input id="schPlanFilter" type="text" class="select-field" placeholder="filter… e.g. bin totg" aria-label="Filter saved plans">
+                        <div id="schPlanList" class="sch-plan-list" aria-label="Saved plan files"><div class="sch-plan-empty">Loading plans…</div></div>
+                        <div class="button-row"><button id="schPlayPlanButton" disabled>▶ Play plan file</button></div>
+                    </section>
+                    <!-- Reachable from Regions and Generate too, not only Edit: the
+                         app boots on Regions with the status "Waiting for cleaning
+                         path YAML", and the only control that loads one was hidden
+                         two tabs away. -->
+                    <section class="panel" data-tabs="regions workbench">
+                        <h2>Config File</h2>
+                        <input id="currentConfigFile" class="readonly-field" type="text" value="No config loaded" readonly>
+                        <div id="dropzone" class="dropzone"><strong>Drop a cleaning YAML here</strong><span>or choose a file from disk</span><label class="file-button" for="yamlInput">Choose YAML</label><input id="yamlInput" type="file" accept=".yaml,.yml,text/yaml,text/plain"></div>
+                    </section>
+                    <!-- Row 35: 20 regions x 5 elements never fitted the ribbon's
+                         208px wrapping box, and hiding the extras until :hover
+                         made each chip GROW ~50px on hover, reflowing every chip
+                         after it — you could aim at a name and land on ✕ Delete.
+                         A vertical dock list shows everything, always. -->
+                    <section class="panel" data-tabs="regions">
+                        <h2>Regions</h2>
+                        <div id="paintRegionList" class="paint-region-list"></div>
+                        <div class="rg-add">
+                            <input id="paintRegionNameInput" type="text" placeholder="new region name"><button id="paintAddRegionButton">Add</button>
+                        </div>
+                        <!-- Row 35. These two are properties of the ACTIVE REGION, exactly
+                             like the list above — and in the command band they did not fit:
+                             rg-controls is a 114px box whose children ran to 367px, so all
+                             three Paintable-parts toggles and the Standoff field were
+                             clipped away entirely. Not hard to reach; impossible. The band
+                             is capped at 170px by design, so the answer is to move them
+                             next to what they describe, not to shave pixels. -->
+                            <div class="rg-active-parts" id="paintActivePartsRow" style="margin-top: 4px;">
+                            <label class="field-label">Paintable parts <span class="info-ico" data-tip="Only the checked part(s) accept the brush for the ACTIVE region — a stroke near a part boundary cannot bleed onto a neighbouring part. Defaults to the parts the region already lives on (all parts for a brand-new region). Enable several parts deliberately to author a cross-part region.">&#9432;</span></label>
+                            <div id="paintActiveParts" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+                        </div>
+                        <div class="rg-standoff">
+                            <label class="field-label">Standoff (m) <span class="info-ico" data-tip="Authoring default UGV standoff for the ACTIVE region's tasks (UGV-front to fixture-front, METRES — e.g. 0.38). Blank = fleet default 0.25. Saved per region to regions.yaml and stamped into every config generated for this region; the runtime scene and the orchestrator's UGV repositioning follow the stamped value. Already-generated configs keep their old value until regenerated.">&#9432;</span></label>
+                            <input id="paintUgvStandoff" class="select-field" type="number" step="0.005" min="0.25" max="2" placeholder="0.25 (default)" aria-label="Region UGV standoff (m)">
+                        </div>
+
+                    </section>
+                    <section class="panel" data-tabs="workbench">
+                        <h2>Sequence</h2>
+                        <div id="sequenceList" class="sequence-list">No sequence loaded.</div>
+                    </section>
+                    <section class="panel" data-tabs="workbench workspace">
+                        <h2>Per-point Analysis</h2>
+                        <div id="analyzeSummary" class="info-list"></div>
+                        <div id="analyzeList" class="sequence-list">Load a config with points, then run Analyze All Points (Workbench ribbon).</div>
+                    </section>
+                    <section class="panel" data-tabs="schedule">
+                        <h2>Schedule Steps</h2>
+                        <div id="schStepList" class="info-list dac-scroll">Load a schedule.</div>
+                        <div class="sch-list-actions">
+                            <button id="schAddStepButton" disabled title="Add a schedule row — pick a region and arms; the guards check it before it can be saved">+ Add step</button>
+                        </div>
+                    </section>
+                </div>
+            </aside>
+
+            <main>
+                <button class="dock-expand left" data-dock="browser" title="Show Browser dock">&#10095; Browser</button>
+                <div id="threeViewport"></div>
+                <canvas id="viewCube" width="132" height="132" title="Click a face/edge/corner to orient the view to the active part; drag to rotate"></canvas>
+                <button id="homeViewButton" title="Reset to the default (home) view">Home View</button>
+                <div class="viewport-overlay" id="viewportModeOverlay"><strong>Inspect</strong> &mdash; click points to select &middot; keys 1-5 switch edit modes &middot; <kbd>S</kbd> search</div>
+                <!-- Mode island. The two modes that change what a CLICK does live
+                     on the canvas, not in the band, because that is where the
+                     click happens. Keys 1-5 still work; this is the visible
+                     statement of which mode you are in. -->
+                <div class="vp-island vp-mode" id="viewportModeIsland" role="group" aria-label="Edit mode">
+                    <button class="vp-chip" data-mode="paint" data-tip="Paint regions onto the fixture. Left-drag paints with the selected tool (Paint / Erase — <b>Shift</b> momentarily swaps); <b>Alt</b>+erase also frees faces owned by other regions. <b>[</b> / <b>]</b> or <b>Ctrl+wheel</b> resize the brush ring.">Paint</button>
+                    <button class="vp-chip" data-mode="inspect" title="Inspect: click points to select">Inspect</button>
+                </div>
+                <!-- Navigation bar. Orbit/Pan/Zoom remap the LEFT button so a
+                     trackpad without a middle or right button can still drive the
+                     camera; Fit reframes the scene. -->
+                <div class="vp-island vp-nav" id="viewportNavBar" role="group" aria-label="Viewport navigation">
+                    <button class="vp-chip" data-nav="orbit" title="Left-drag orbits the camera">Orbit</button>
+                    <button class="vp-chip" data-nav="pan" title="Left-drag pans the camera">Pan</button>
+                    <button class="vp-chip" data-nav="zoom" title="Left-drag zooms (the wheel always zooms)">Zoom</button>
+                    <button class="vp-chip" data-nav="fit" title="Frame the whole scene">Fit</button>
+                    <button class="vp-chip" data-nav="overlays" aria-expanded="false" aria-controls="visibilityBar" title="Show/hide the overlay toggles">Overlays</button>
+                </div>
+                <button class="dock-expand right" data-dock="props" title="Show Properties dock">Properties &#10094;</button>
+            </main>
+
+            <!-- ===== GENERATE DOCK =====
+                 The Generate panel is a DOCK, not a covering dialog. Its own
+                 machinery already says why: "picking a start pose means clicking
+                 the viewport, and a light-dismiss popover closes on exactly that
+                 click". A dialog at two thirds of the viewport does not dismiss
+                 itself — it just covers the mesh it is asking you to click, which
+                 is the same failure wearing a different hat. Docked, `main` keeps
+                 the 1fr track, the viewport's ResizeObserver resizes the canvas,
+                 and the surface stays live under the cursor. -->
+            <aside class="dock gen-dock" id="genDock" aria-label="Generate">
+                <div class="dock-resize" data-edge="gen" role="separator" aria-orientation="vertical" aria-label="Resize Generate dock" tabindex="0" title="Drag to resize — or focus and use &larr;/&rarr;"></div>
+                <div class="dock-head"><span>Generate</span><button class="dock-collapse" data-dock="gen" title="Close Generate">&#10005;</button></div>
+                <div class="dock-body" id="genDockBody"></div>
+            </aside>
+
+            <aside class="dock props-dock" id="propsDock">
+                <div class="dock-resize" data-edge="props" role="separator" aria-orientation="vertical" aria-label="Resize Properties dock" tabindex="0" title="Drag to resize — or focus and use ←/→ (Shift for a bigger step, Home/End for the limits)"></div>
+                <div class="dock-head"><button class="dock-collapse" data-dock="props" title="Hide Properties dock">&#10095;</button><span>Properties</span></div>
+                <div class="dock-body">
+                    <section class="panel" data-tabs="workbench workspace">
+                        <h2>Selected Point</h2>
+                        <div id="waypointInfo" class="info-list"><div class="info-row"><span>No point selected</span><code>Load YAML or add a point from the mesh.</code></div></div>
+                    </section>
+                    <section class="panel" data-tabs="workbench">
+                        <h2>Animation</h2>
+                        <div id="animateInfo" class="info-list"><div class="info-row"><span>Animation</span><code>Build a sequence, then Animate.</code></div></div>
+                    </section>
+                    <section class="panel" data-tabs="workbench" data-task-modes="cleaning">
+                        <h2>Coverage</h2>
+                        <div id="coverageInfo" class="info-list"><div class="info-row"><span>Coverage</span><code>Generate or recompute to evaluate.</code></div></div>
+                    </section>
+                    <section class="panel" data-tabs="workbench">
+                        <h2>Validation</h2>
+                        <div id="finishResultDetail" class="info-list"><div class="info-row"><span>Validation</span><code>not run yet</code></div></div>
+                    </section>
+                    <section class="panel" data-tabs="schedule">
+                        <h2>Execution Status</h2>
+                        <div id="schRunInfo" class="info-list"><div class="info-row"><span>Run</span><code>idle — offline preview (arms not connected)</code></div></div>
+                        <h2>Current Step</h2>
+                        <div id="schStepDetail" class="info-list"><div class="info-row"><span>&mdash;</span><code>Load a schedule, then pick a step.</code></div></div>
+                        <h2>Guards</h2>
+                        <div id="schGuardInfo" class="info-list"><div class="info-row"><span>&mdash;</span><code>Load a schedule to evaluate the guards.</code></div></div>
+                    </section>
+                    <section class="panel" data-tabs="collisions">
+                        <h2>Collision Log</h2>
+                        <div id="dacInfo" class="info-list"><div class="info-row"><span>Status</span><code>Pick two plans, then Check.</code></div></div>
+                        <div id="dacLog" class="info-list dac-scroll"></div>
+                    </section>
+                    <details class="panel collapsible" id="panelDiagnostics" data-tabs="workbench">
+                        <summary>Frame Diagnostics</summary>
+                        <div class="mode-grid"><button class="mesh-mode-button active" data-mesh-mode="scene">Scene Pose</button><button class="mesh-mode-button" data-mesh-mode="pathAligned">Path-Aligned</button></div>
+                        <div class="hint" id="meshModeHint">Scene Pose shows the runtime collision/STL placement from scene.yaml.</div>
+                        <div id="frameDiagnostics" class="info-list"><div class="info-row"><span>No diagnostics</span><code>Load YAML and mesh to compare frames.</code></div></div>
+                    </details>
+                    <details class="panel collapsible" id="panelAnalysis" data-tabs="workbench" data-task-modes="cleaning">
+                        <summary>Segment Analysis</summary>
+                        <div id="analysisPlot"></div>
+                    </details>
+                    <!-- Per-tab legend — content is rendered by renderLegend(tab); kept LAST so it
+                         sits at the bottom of the Properties dock on every tab. -->
+                    <section class="panel" data-tabs="all" id="legendPanel">
+                        <h2>Legend</h2>
+                        <div id="legendBody"></div>
+                    </section>
+                </div>
+            </aside>
+
+            
+        </div>
+
+        <!-- ===== BOTTOM STATUS / ACTION BAR (full width) ===== -->
+        <footer class="status-bar">
+            <div class="toolbar">
+                <div class="toolbar-center">
+                <div class="toolbar-group">
+                    <button id="saveChangesButton" class="primary" disabled title="Save (writes back to the loaded file)">Save</button>
+                    <button id="saveCopyButton" disabled title="Download a copy of the edited YAML">Save Copy</button>
+                    <button id="mirrorButton" disabled title="Generate the opposite-arm task by reflecting this one across the robot's sagittal plane (paired regions)">Mirror Arm</button>
+                    <button id="mirrorReverseButton" disabled title="Like Mirror, but the cleaning order is reversed (path runs end→start) and the start/pre-start move to the new first point — for coordinated dual-arm motion (arms sweep in opposite directions)">Mirror + Reverse</button>
+                    <button id="undoButton" disabled title="Undo (Ctrl+Z)">Undo</button>
+                    <button id="redoButton" disabled title="Redo (Ctrl+Shift+Z)">Redo</button>
+                    <span id="statDirty" class="dirty-indicator" title="Unsaved changes">&#9679;</span>
+                </div>
+                <div class="toolbar-stats">
+                    <span>Points <strong id="statWaypoints">--</strong></span>
+                    <span>Length <strong id="statLength">--</strong></span>
+                    <span>Selected <strong id="statSelected">--</strong></span>
+                    <span data-task-modes="cleaning" title="Estimated fraction of the marked region wiped by the glove along the path">Coverage <strong id="statCoverage">--</strong></span>
+                </div>
+                </div>
+                <!-- A keyboard shortcut nobody can see is a shortcut nobody
+                     uses; this is how "?" gets discovered. -->
+                <button id="focusButton" class="dock-toggle-btn" disabled title="Frame the selected point in the viewport (F)">&#8853; Focus</button>
+                <button id="pointFormButton" class="dock-toggle-btn" aria-pressed="false" title="How Save Copy writes cleaning_points. DELTAS (default, and what every shipped config uses) store each point relative to start_pose — the runtime's own convention. ABSOLUTE stores each point outright in the selected reference frame, which is what you want when handing coordinates to something that has never heard of start_pose. Save Changes always writes deltas.">&#9776; Points: deltas</button>
+                <button id="helpButton" class="dock-toggle-btn" title="Open help (?) — the long-form documentation from every ⓘ, searchable">? Help</button>
+                <button id="maximizeViewBtn" class="dock-toggle-btn" aria-pressed="false" title="Maximize viewport (hide both side docks); press again to restore the docks you had open">&#10530; Maximize view</button>
+            </div>
+        </footer>
+    </div>
+    <script>__EDITOR_JS__</script>
+</body>
+</html>

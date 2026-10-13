@@ -1,0 +1,88 @@
+# =============================================================================
+# FIXTURE MODEL: commode_b  (Amsterdam — articulated body / lid / seat)
+# =============================================================================
+# Geometry and articulation data for this fixture model.
+#
+# pose             → default position of this fixture relative to base_link.
+#                    The venue's washroom_scene.yaml commode_slot.position
+#                    overrides this at runtime; this value is the fallback
+#                    used when no venue file is loaded (standalone testing).
+#
+# articulated: true  → ArticulatedSceneBuilder computes lid & seat poses from
+#                       joint kinematics, enabling smooth state transitions.
+#
+# Joint convention:
+#   angles_deg.closed → part angle when lid/seat is down
+#   angles_deg.open   → part angle when lid/seat is raised
+# =============================================================================
+
+fixture:
+  display_name: "Commode B (Amsterdam)"
+  type: "commode"
+  articulated: true
+  # Commode part classification (Newton, 2026-08-18) — orthogonal to
+  # `articulated`: which openable parts this commode HAS. One of
+  # has_lid_only | has_seat_only | has_lid_and_seat. Every commode in the
+  # current fleet (a-c) has both. Consumers: mechanism-task invocation
+  # (which lid/seat open/close tasks exist for this fixture), the cleaning
+  # generator's reality-logic validator (a region requiring seat states is
+  # impossible on has_lid_only), and the future perception package's
+  # inspection stages.
+  commode_classification: "has_lid_and_seat"
+
+  # AUTHORITATIVE position used at runtime (calibrated per-fixture).
+  # The venue washroom_scene.yaml commode_slot.position is only used as a
+  # fallback if this block is absent (i.e. when the fixture is not yet calibrated).
+  # PLACEMENT (measured 2026-08-15): the BODY mesh's origin is the FRONT arc
+  # tip (body spans x [-0.678, +0.004] — it extends BACKWARD), so the front
+  # tip sits at x = 0.225 + 0.250 + 0.004 = 0.479 ~ the 0.480 this file
+  # always carried. A 2026-08-14 "correction" derived 0.889 from the
+  # body+lid+seat UNION — the lid/seat meshes are hinge-local, poisoning the
+  # bounds — and pushed the fixture 0.41 m past the standoff; reverted, and
+  # the placement rule now measures the body only and DETECTS the front
+  # (tall-back-half rule) instead of assuming it.
+  pose:
+    relative_to: "base_link"
+    position: [0.480, 0.0, 0.425]
+    orientation_rpy_deg: [0.0, 0.0, 0.0]
+    # UGV-front → commode-front distance the position above was calibrated at
+    # (see commode_c/scene.yaml for the per-task ugv_standoff_m mechanism).
+    default_ugv_standoff_m: 0.25
+
+  # ------------------------------------------------------------------
+  # Commode body (cistern + bowl — static, no moving parts)
+  # ------------------------------------------------------------------
+  body:
+    mesh:  "package://alix_tasks/config/commode_cleaning/commode_b/models/body.stl"
+    scale: [1.0, 1.0, 1.0]
+
+  # ------------------------------------------------------------------
+  # Toilet lid — revolute joint at the back of the bowl
+  # ------------------------------------------------------------------
+  lid:
+    mesh:  "package://alix_tasks/config/commode_cleaning/commode_b/models/lid.stl"
+    scale: [1.0, 1.0, 1.0]
+    joint:
+      # Hinge position relative to commode body origin (m)
+      origin:          [-0.43, -0.003, 0.035]
+      # Hinge orientation relative to commode body (deg)
+      origin_rpy_deg:  [0.0, 0.0, 0.0]
+      # Rotation axis at hinge
+      axis:            [0.0, 1.0, 0.0]
+      angles_deg:
+        closed:  0.0      # Lid resting on seat
+        open:   -107.0    # Lid leaning against cistern
+
+  # ------------------------------------------------------------------
+  # Toilet seat — revolute joint at same hinge point as lid
+  # ------------------------------------------------------------------
+  seat:
+    mesh:  "package://alix_tasks/config/commode_cleaning/commode_b/models/seat.stl"
+    scale: [1.0, 1.0, 1.0]
+    joint:
+      origin:          [-0.43, 0.003, 0.03]
+      origin_rpy_deg:  [0.0, 0.0, 0.0]
+      axis:            [0.0, 1.0, 0.0]
+      angles_deg:
+        closed:  0.0      # Seat resting on bowl rim
+        open:   -107.0    # Seat flipped up

@@ -1,0 +1,62 @@
+/* ALIX Studio design tokens — the single source every card inlines verbatim.
+   Palette is the SHIPPING app's palette (editor.css), not an invention, so the
+   design system and the product cannot drift. Light is the default per the
+   polarity research (positive polarity measurably wins for small dense text,
+   and the advantage grows as size shrinks — STUDIO_UIUX_RESEARCH §5.7).
+   ISA-101 discipline: ~90% of every surface is neutral; saturation is reserved
+   for state, and every state pairs colour with a glyph. */
+:root {
+  /* brand — selection and primary action ONLY, never decoration */
+  --brand:#2F96EE; --brand-strong:#1B7FD4; --brand-tint:#97CBF7;
+  --brand-wash:rgba(47,150,238,.10);
+  /* neutrals — the 90% */
+  --bg:#FFFFFF; --panel:#FFFFFF; --panel-raised:#FAFBFC;
+  --surface-inset:#F4F6F8; --surface-ribbon-2:#F4F6F8;
+  --surface-overlay:rgba(255,255,255,.97); --surface-scrim:rgba(16,24,40,.28);
+  --border:#EEEEEE; --border-strong:#DCDFE3;
+  --text:#14181D; --muted:#6B7480;
+  --viewport-bg:#1B2733;            /* canvas stays dark under light chrome */
+  /* state — the only saturated colours on screen */
+  --ok:#2E9E5B; --warning:#C77700; --danger:#D93A34;
+  --ok-wash:rgba(46,158,91,.14); --warn-wash:rgba(199,119,0,.14); --danger-wash:rgba(217,58,52,.12);
+  /* type — 11px floor, density from grouping not from shrinking */
+  --fs-xs:14px; --fs-sm:16px; --fs-md:17px; --fs-lg:19px; --fs-xl:22px;
+  --font:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* space / shape / elevation */
+  --s1:2px; --s2:4px; --s3:6px; --s4:8px; --s5:12px; --s6:16px; --s7:24px;
+  --radius:4px; --radius-sm:2px; --radius-pill:999px;
+  --shadow-sm:0 0 0 1px rgba(16,24,40,.04);
+  --shadow-md:0 2px 4px rgba(16,24,40,.05);
+  --shadow-lg:0 4px 4px rgba(16,24,40,.05);
+  /* structural — the fixed decisions */
+  --cmdbar-max:210px;               /* auto-height, max 2 rows, never scrolls */
+  --browser-w:300px; --props-w:330px;
+  --target-min:24px;                /* WCAG 2.5.8 */
+  --target-primary:44px;            /* high-frequency controls */
+}
+:root[data-theme="dark"] {
+  --brand:#2F96EE; --brand-strong:#57A9F0; --brand-tint:#1B4E7A;
+  --brand-wash:rgba(47,150,238,.16);
+  /* --panel is translucent on purpose and --panel-raised is not: panels float
+     over the dark 3-D canvas, and the raised variant is the opaque one. An
+     earlier transcription of this file collapsed the two to the same hex and
+     dropped the alpha, which is why they differed only in letter case. */
+  --bg:#121821; --panel:rgba(22,27,34,.86); --panel-raised:#161b22;
+  --surface-inset:rgba(1,4,9,.30); --surface-ribbon-2:rgba(13,17,23,.40);
+  --surface-overlay:rgba(10,14,20,.97); --surface-scrim:rgba(1,4,9,.55);
+  --border:rgba(139,148,158,.24); --border-strong:#30363d;
+  --text:#e6edf3; --muted:#8b949e; --viewport-bg:#0D1117;
+  --ok:#3fb950; --warning:#ffcc66; --danger:#ff7b72;
+  --ok-wash:rgba(63,185,80,.16); --warn-wash:rgba(255,204,102,.16); --danger-wash:rgba(255,123,114,.16);
+  --shadow-sm:0 0 0 1px rgba(1,4,9,.30);
+  --shadow-md:0 2px 4px rgba(1,4,9,.30);
+  --shadow-lg:0 4px 4px rgba(1,4,9,.40);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);font-size:var(--fs-md);color:var(--text);background:var(--bg)}
+.dsWrap{padding:var(--s7);display:flex;flex-direction:column;gap:var(--s7)}
+.dsRow{display:flex;gap:var(--s7);flex-wrap:wrap;align-items:flex-start}
+.dsCap{font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 var(--s3)}
+.dsNote{font-size:var(--fs-sm);color:var(--muted);line-height:1.5;max-width:70ch;margin:0}
+.dsPane{border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);padding:var(--s6)}

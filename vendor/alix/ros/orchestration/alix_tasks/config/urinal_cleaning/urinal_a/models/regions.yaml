@@ -1,0 +1,33 @@
+labeled_meshes:
+  default: default_regions.obj
+regions:
+  side_right:
+    region_id: 26
+    component: default
+    groups:
+    - side_right
+    arm_coverage: R
+  side_left:
+    region_id: 27
+    component: default
+    groups:
+    - side_left
+    arm_coverage: L
+  top:
+    region_id: 0
+    component: default
+    groups:
+    - top
+    arm_coverage: RL_paired
+  front:
+    region_id: 1
+    component: default
+    groups:
+    - front
+    arm_coverage: RL_paired
+  inside:
+    region_id: 28
+    component: default
+    groups:
+    - inside
+    arm_coverage: RL_paired

@@ -1,0 +1,172 @@
+# =============================================================================
+# SRDF GROUP STATES — COMPLETE ARMS  (SOURCE OF TRUTH)
+# =============================================================================
+# complete_{right,left}_arm states (pole slider + 7-DOF RM75 + inspire hand
+# as ONE group), so a single move_to_state plans pole height, arm posture
+# and hand aperture together as one collision-checked trajectory.
+# The plain alix.srdf is ASSEMBLED from these fragment files by
+#   python3 Resource/scripts/sync_srdf_group_states.py
+# (the test suite runs it in check mode — edit HERE, never in the .srdf).
+#
+# Values are BORROWED from arms/poles/hands_group_states.yaml — keep them in
+# sync when recalibrating there:
+#   ready      -> arm ready     + pole full (0.30) + hand release
+#   *_min_pole -> same arm/hand + pole minimum (0.01)
+#   rest_pose  -> arm rest_pose + pole full (0.30) + hand grasp
+#   zero_pose  -> arm zero_pose + pole full (0.30) + hand release
+# =============================================================================
+
+group_states:
+  complete_right_arm:
+    ready:
+      R_sliding_plate_joint: 0.3
+      R_joint1: 0.0
+      R_joint2: -1.885
+      R_joint3: 0.0
+      R_joint4: 1.798
+      R_joint5: 0.0
+      R_joint6: 1.379
+      R_joint7: 0.0
+      IRH_right_index_1_joint: 0.01
+      IRH_right_little_1_joint: 0.01
+      IRH_right_middle_1_joint: 0.01
+      IRH_right_ring_1_joint: 0.01
+      IRH_right_thumb_1_joint: 0.01
+      IRH_right_thumb_2_joint: 0.01
+    ready_min_pole:
+      R_sliding_plate_joint: 0.01
+      R_joint1: 0.0
+      R_joint2: -1.885
+      R_joint3: 0.0
+      R_joint4: 1.798
+      R_joint5: 0.0
+      R_joint6: 1.379
+      R_joint7: 0.0
+      IRH_right_index_1_joint: 0.01
+      IRH_right_little_1_joint: 0.01
+      IRH_right_middle_1_joint: 0.01
+      IRH_right_ring_1_joint: 0.01
+      IRH_right_thumb_1_joint: 0.01
+      IRH_right_thumb_2_joint: 0.01
+    rest_pose:
+      R_sliding_plate_joint: 0.3
+      R_joint1: 0.0
+      R_joint2: -1.431
+      R_joint3: -0.4538
+      R_joint4: 1.7103
+      R_joint5: 0.1047
+      R_joint6: 1.0821
+      R_joint7: 1.2043
+      IRH_right_index_1_joint: 1.3
+      IRH_right_little_1_joint: 1.3
+      IRH_right_middle_1_joint: 1.3
+      IRH_right_ring_1_joint: 1.3
+      IRH_right_thumb_1_joint: 0.0698
+      IRH_right_thumb_2_joint: 0.454
+    rest_pose_min_pole:
+      R_sliding_plate_joint: 0.01
+      R_joint1: 0.0
+      R_joint2: -1.431
+      R_joint3: -0.4538
+      R_joint4: 1.7103
+      R_joint5: 0.1047
+      R_joint6: 1.0821
+      R_joint7: 1.2043
+      IRH_right_index_1_joint: 1.3
+      IRH_right_little_1_joint: 1.3
+      IRH_right_middle_1_joint: 1.3
+      IRH_right_ring_1_joint: 1.3
+      IRH_right_thumb_1_joint: 0.0698
+      IRH_right_thumb_2_joint: 0.454
+    zero_pose:
+      R_sliding_plate_joint: 0.3
+      R_joint1: 0.0
+      R_joint2: 0.0
+      R_joint3: 0.0
+      R_joint4: 0.0
+      R_joint5: 0.0
+      R_joint6: 0.0
+      R_joint7: 0.0
+      IRH_right_index_1_joint: 0.01
+      IRH_right_little_1_joint: 0.01
+      IRH_right_middle_1_joint: 0.01
+      IRH_right_ring_1_joint: 0.01
+      IRH_right_thumb_1_joint: 0.01
+      IRH_right_thumb_2_joint: 0.01
+
+  complete_left_arm:
+    ready:
+      L_sliding_plate_joint: 0.3
+      L_joint1: 0.0
+      L_joint2: -1.885
+      L_joint3: 0.0
+      L_joint4: 1.798
+      L_joint5: 0.0
+      L_joint6: 1.379
+      L_joint7: 3.1416
+      ILH_left_index_1_joint: 0.01
+      ILH_left_little_1_joint: 0.01
+      ILH_left_middle_1_joint: 0.01
+      ILH_left_ring_1_joint: 0.01
+      ILH_left_thumb_1_joint: 0.01
+      ILH_left_thumb_2_joint: 0.01
+    ready_min_pole:
+      L_sliding_plate_joint: 0.01
+      L_joint1: 0.0
+      L_joint2: -1.885
+      L_joint3: 0.0
+      L_joint4: 1.798
+      L_joint5: 0.0
+      L_joint6: 1.379
+      L_joint7: 3.1416
+      ILH_left_index_1_joint: 0.01
+      ILH_left_little_1_joint: 0.01
+      ILH_left_middle_1_joint: 0.01
+      ILH_left_ring_1_joint: 0.01
+      ILH_left_thumb_1_joint: 0.01
+      ILH_left_thumb_2_joint: 0.01
+    rest_pose:
+      L_sliding_plate_joint: 0.3
+      L_joint1: 0.0
+      L_joint2: -1.431
+      L_joint3: 0.4538
+      L_joint4: 1.7103
+      L_joint5: -0.1047
+      L_joint6: 1.0821
+      L_joint7: 1.9373
+      ILH_left_index_1_joint: 1.3
+      ILH_left_little_1_joint: 1.3
+      ILH_left_middle_1_joint: 1.3
+      ILH_left_ring_1_joint: 1.3
+      ILH_left_thumb_1_joint: 0.0698
+      ILH_left_thumb_2_joint: 0.454
+    rest_pose_min_pole:
+      L_sliding_plate_joint: 0.01
+      L_joint1: 0.0
+      L_joint2: -1.431
+      L_joint3: 0.4538
+      L_joint4: 1.7103
+      L_joint5: -0.1047
+      L_joint6: 1.0821
+      L_joint7: 1.9373
+      ILH_left_index_1_joint: 1.3
+      ILH_left_little_1_joint: 1.3
+      ILH_left_middle_1_joint: 1.3
+      ILH_left_ring_1_joint: 1.3
+      ILH_left_thumb_1_joint: 0.0698
+      ILH_left_thumb_2_joint: 0.454
+    zero_pose:
+      L_sliding_plate_joint: 0.3
+      L_joint1: 0.0
+      L_joint2: 0.0
+      L_joint3: 0.0
+      L_joint4: 0.0
+      L_joint5: 0.0
+      L_joint6: 0.0
+      L_joint7: 3.1416
+      ILH_left_index_1_joint: 0.01
+      ILH_left_little_1_joint: 0.01
+      ILH_left_middle_1_joint: 0.01
+      ILH_left_ring_1_joint: 0.01
+      ILH_left_thumb_1_joint: 0.01
+      ILH_left_thumb_2_joint: 0.01

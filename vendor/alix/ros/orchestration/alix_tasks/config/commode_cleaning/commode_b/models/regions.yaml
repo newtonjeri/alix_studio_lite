@@ -1,0 +1,25 @@
+labeled_meshes:
+  body: body_regions.obj
+  lid: lid_regions.obj
+  seat: seat_regions.obj
+regions:
+  lid_top:
+    region_id: 28
+    component: body
+    groups:
+    - component: lid
+      name: lid_top
+    - component: seat
+      name: lid_top
+    arm_coverage: RL_paired
+    ugv_standoff_m: 0.03
+    lid_state: open
+    seat_state: open
+  commode_top:
+    region_id: 30
+    component: body
+    groups:
+    - commode_top
+    arm_coverage: RL_paired
+    lid_state: open
+    seat_state: open

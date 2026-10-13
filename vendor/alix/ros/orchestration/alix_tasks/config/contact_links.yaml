@@ -1,0 +1,421 @@
+# =============================================================================
+# CONTACT LINK GROUPS + CONTACT SURFACE OBJECTS
+# =============================================================================
+# contact_link_groups[ik_frame] x contact_surface_objects[contact_surface]
+#   -> the collision pairs an allow_collision / forbid_collision stage toggles.
+#
+# THE GLOVE-FRAME GROUPS, AND THE COMMENT ABOVE EACH ONE, ARE DERIVED FROM
+# GEOMETRY. DO NOT EDIT THEM.
+#   regenerate:   python3 tools/regen_contact_links.py --write
+#   check drift:  python3 tools/regen_contact_links.py --check
+#   pinned by:    core/python/alix_taskgen/test_generate/test_contact_links_derived.py
+#
+# THE RULE
+#   * a FINGER link is in the group when its geometry comes within the pad's own
+#     20 mm band (thickness_m) of the frame-origin contact plane;
+#   * five digits, no exceptions - index, middle, ring, little AND thumb
+#     (Newton, 2026-09-04, ruled twice and settled);
+#   * a finger's RUBBER follows the segment it is bonded to. Every *_rubber_* is
+#     a FIXED child of one finger link in the hand urdf, so it is that segment's
+#     contact face: the porcelain meets the rubber first, and admitting the rigid
+#     segment while excluding its rubber is backwards (Newton, 2026-09-16);
+#   * NON-FINGER links are out of the PLANE RULE - plam, palm_rubber_1, base_link -
+#     even where they lie on the plane. palm_rubber_1's parent is the palm, so
+#     the rubber rule does not readmit it;
+#   * PLUS NEWTON'S RULING OF 2026-09-22, on the executed hardware runs
+#     (tools/calibrate_oracle_on_hardware.py): "keep fingers-only but add the
+#     palm for the palm-pad frames and the thumb for frame 3" - the palm shell
+#     and its rubber join glove_frame_1 and glove_frame_2 (the pad IS the palm
+#     there: frame_2 executed with the palm in the body on 42-61 % of samples at
+#     2-4 mm median penetration) and every thumb link joins glove_frame_3 (rim
+#     tasks executed with thumb_2/3/4 in the body on 30 % of samples).  Written
+#     as a named addition above the plane-derived list, never mixed into it;
+#   * no lateral footprint window. The band governs CONTACT (what may touch the
+#     porcelain), the footprint governs COVERAGE (what counts as wiped), and this
+#     file governs contact.
+#
+# NOT DERIVED, authored: L/R_tip_frame (no pad in glove_frames.yaml, so the rule
+# has no contact plane to stand on) and L/R_bin_grip_fingers (a grip set, not a
+# pressed pad). This tool never writes them.
+#
+# Full derivation, distance tables, stability analysis and blast radius:
+#   Resource/reports/2026-09-04_contact_link_derivation/final_rule.md
+# =============================================================================
+
+contact_link_groups:
+
+  # glove_frame_1 — open_tenth, presses +x, pad 35x80x20 mm, band 20 mm.
+  # 27 links on the plane — index:{1,2,pad,rubber_1,tip} middle:{1,2,pad,rubber_1,tip} ring:{1,2,pad,rubber_1,tip} little:{1,2,pad,rubber_1,tip} thumb:{2,3,4,rubber_1,rubber_2,rubber_3,tip}
+  # + 2 by Newton's ruling of 2026-09-22 (the pad's own shell, measured on the executed hardware runs): rubber_1,plam
+  R_glove_frame_1:
+    - IRH_palm_rubber_1
+    - IRH_plam
+    - IRH_right_index_1
+    - IRH_right_index_2
+    - IRH_right_index_pad
+    - IRH_right_index_rubber_1
+    - IRH_right_index_tip
+    - IRH_right_little_1
+    - IRH_right_little_2
+    - IRH_right_little_pad
+    - IRH_right_little_rubber_1
+    - IRH_right_little_tip
+    - IRH_right_middle_1
+    - IRH_right_middle_2
+    - IRH_right_middle_pad
+    - IRH_right_middle_rubber_1
+    - IRH_right_middle_tip
+    - IRH_right_ring_1
+    - IRH_right_ring_2
+    - IRH_right_ring_pad
+    - IRH_right_ring_rubber_1
+    - IRH_right_ring_tip
+    - IRH_right_thumb_2
+    - IRH_right_thumb_3
+    - IRH_right_thumb_4
+    - IRH_right_thumb_rubber_1
+    - IRH_right_thumb_rubber_2
+    - IRH_right_thumb_rubber_3
+    - IRH_right_thumb_tip
+
+  # glove_frame_2 — open_tenth, presses +z, pad 35x80x20 mm, band 20 mm.
+  # 25 links on the plane — index:{1,2,pad,rubber_1,tip} middle:{1,2,pad,rubber_1,tip} ring:{1,2,pad,rubber_1,tip} little:{1,2,pad,rubber_1,tip} thumb:{3,4,rubber_2,rubber_3,tip}
+  # + 2 by Newton's ruling of 2026-09-22 (the pad's own shell, measured on the executed hardware runs): rubber_1,plam
+  R_glove_frame_2:
+    - IRH_palm_rubber_1
+    - IRH_plam
+    - IRH_right_index_1
+    - IRH_right_index_2
+    - IRH_right_index_pad
+    - IRH_right_index_rubber_1
+    - IRH_right_index_tip
+    - IRH_right_little_1
+    - IRH_right_little_2
+    - IRH_right_little_pad
+    - IRH_right_little_rubber_1
+    - IRH_right_little_tip
+    - IRH_right_middle_1
+    - IRH_right_middle_2
+    - IRH_right_middle_pad
+    - IRH_right_middle_rubber_1
+    - IRH_right_middle_tip
+    - IRH_right_ring_1
+    - IRH_right_ring_2
+    - IRH_right_ring_pad
+    - IRH_right_ring_rubber_1
+    - IRH_right_ring_tip
+    - IRH_right_thumb_3
+    - IRH_right_thumb_4
+    - IRH_right_thumb_rubber_2
+    - IRH_right_thumb_rubber_3
+    - IRH_right_thumb_tip
+
+  # glove_frame_3 — half_grasp, presses +x, pad 20x80x20 mm, band 20 mm.
+  # 12 links on the plane — index:{2,pad,tip} middle:{2,pad,tip} ring:{2,pad,tip} little:{2,pad,tip}
+  # + 8 by Newton's ruling of 2026-09-22 (the pad's own shell, measured on the executed hardware runs): thumb_1,thumb_2,thumb_3,thumb_4,thumb_rubber_1,thumb_rubber_2,thumb_rubber_3,thumb_tip
+  R_glove_frame_3:
+    - IRH_right_index_2
+    - IRH_right_index_pad
+    - IRH_right_index_tip
+    - IRH_right_little_2
+    - IRH_right_little_pad
+    - IRH_right_little_tip
+    - IRH_right_middle_2
+    - IRH_right_middle_pad
+    - IRH_right_middle_tip
+    - IRH_right_ring_2
+    - IRH_right_ring_pad
+    - IRH_right_ring_tip
+    - IRH_right_thumb_1
+    - IRH_right_thumb_2
+    - IRH_right_thumb_3
+    - IRH_right_thumb_4
+    - IRH_right_thumb_rubber_1
+    - IRH_right_thumb_rubber_2
+    - IRH_right_thumb_rubber_3
+    - IRH_right_thumb_tip
+
+  # glove_frame_4 — quarter_grasp, presses +x, pad 20x80x20 mm, band 20 mm.
+  # 16 links on the plane — index:{2,pad,tip} middle:{2,pad,tip} ring:{2,pad,tip} little:{2,pad,tip} thumb:{2,3,rubber_1,rubber_2}
+  R_glove_frame_4:
+    - IRH_right_index_2
+    - IRH_right_index_pad
+    - IRH_right_index_tip
+    - IRH_right_little_2
+    - IRH_right_little_pad
+    - IRH_right_little_tip
+    - IRH_right_middle_2
+    - IRH_right_middle_pad
+    - IRH_right_middle_tip
+    - IRH_right_ring_2
+    - IRH_right_ring_pad
+    - IRH_right_ring_tip
+    - IRH_right_thumb_2
+    - IRH_right_thumb_3
+    - IRH_right_thumb_rubber_1
+    - IRH_right_thumb_rubber_2
+
+  # NOT DERIVED — the tip frames declare no pad in glove_frames.yaml, so the
+  # rule has no contact plane to stand on. Authored set, unchanged.
+  R_tip_frame:
+    - IRH_right_index_2
+    - IRH_right_index_pad
+    - IRH_right_index_tip
+    - IRH_right_little_2
+    - IRH_right_little_pad
+    - IRH_right_little_tip
+    - IRH_right_middle_2
+    - IRH_right_middle_pad
+    - IRH_right_middle_tip
+    - IRH_right_ring_2
+    - IRH_right_ring_pad
+    - IRH_right_ring_tip
+
+  # glove_frame_1 — open_tenth, presses -x, pad 35x80x20 mm, band 20 mm.
+  # 27 links on the plane — index:{1,2,pad,rubber_1,tip} middle:{1,2,pad,rubber_1,tip} ring:{1,2,pad,rubber_1,tip} little:{1,2,pad,rubber_1,tip} thumb:{2,3,4,rubber_1,rubber_2,rubber_3,tip}
+  # + 2 by Newton's ruling of 2026-09-22 (the pad's own shell, measured on the executed hardware runs): rubber_1,plam
+  L_glove_frame_1:
+    - ILH_left_index_1
+    - ILH_left_index_2
+    - ILH_left_index_pad
+    - ILH_left_index_rubber_1
+    - ILH_left_index_tip
+    - ILH_left_little_1
+    - ILH_left_little_2
+    - ILH_left_little_pad
+    - ILH_left_little_rubber_1
+    - ILH_left_little_tip
+    - ILH_left_middle_1
+    - ILH_left_middle_2
+    - ILH_left_middle_pad
+    - ILH_left_middle_rubber_1
+    - ILH_left_middle_tip
+    - ILH_left_ring_1
+    - ILH_left_ring_2
+    - ILH_left_ring_pad
+    - ILH_left_ring_rubber_1
+    - ILH_left_ring_tip
+    - ILH_left_thumb_2
+    - ILH_left_thumb_3
+    - ILH_left_thumb_4
+    - ILH_left_thumb_rubber_1
+    - ILH_left_thumb_rubber_2
+    - ILH_left_thumb_rubber_3
+    - ILH_left_thumb_tip
+    - ILH_palm_rubber_1
+    - ILH_plam
+
+  # glove_frame_2 — open_tenth, presses +z, pad 35x80x20 mm, band 20 mm.
+  # 25 links on the plane — index:{1,2,pad,rubber_1,tip} middle:{1,2,pad,rubber_1,tip} ring:{1,2,pad,rubber_1,tip} little:{1,2,pad,rubber_1,tip} thumb:{3,4,rubber_2,rubber_3,tip}
+  # + 2 by Newton's ruling of 2026-09-22 (the pad's own shell, measured on the executed hardware runs): rubber_1,plam
+  L_glove_frame_2:
+    - ILH_left_index_1
+    - ILH_left_index_2
+    - ILH_left_index_pad
+    - ILH_left_index_rubber_1
+    - ILH_left_index_tip
+    - ILH_left_little_1
+    - ILH_left_little_2
+    - ILH_left_little_pad
+    - ILH_left_little_rubber_1
+    - ILH_left_little_tip
+    - ILH_left_middle_1
+    - ILH_left_middle_2
+    - ILH_left_middle_pad
+    - ILH_left_middle_rubber_1
+    - ILH_left_middle_tip
+    - ILH_left_ring_1
+    - ILH_left_ring_2
+    - ILH_left_ring_pad
+    - ILH_left_ring_rubber_1
+    - ILH_left_ring_tip
+    - ILH_left_thumb_3
+    - ILH_left_thumb_4
+    - ILH_left_thumb_rubber_2
+    - ILH_left_thumb_rubber_3
+    - ILH_left_thumb_tip
+    - ILH_palm_rubber_1
+    - ILH_plam
+
+  # glove_frame_3 — half_grasp, presses -x, pad 20x80x20 mm, band 20 mm.
+  # 12 links on the plane — index:{2,pad,tip} middle:{2,pad,tip} ring:{2,pad,tip} little:{2,pad,tip}
+  # + 8 by Newton's ruling of 2026-09-22 (the pad's own shell, measured on the executed hardware runs): thumb_1,thumb_2,thumb_3,thumb_4,thumb_rubber_1,thumb_rubber_2,thumb_rubber_3,thumb_tip
+  L_glove_frame_3:
+    - ILH_left_index_2
+    - ILH_left_index_pad
+    - ILH_left_index_tip
+    - ILH_left_little_2
+    - ILH_left_little_pad
+    - ILH_left_little_tip
+    - ILH_left_middle_2
+    - ILH_left_middle_pad
+    - ILH_left_middle_tip
+    - ILH_left_ring_2
+    - ILH_left_ring_pad
+    - ILH_left_ring_tip
+    - ILH_left_thumb_1
+    - ILH_left_thumb_2
+    - ILH_left_thumb_3
+    - ILH_left_thumb_4
+    - ILH_left_thumb_rubber_1
+    - ILH_left_thumb_rubber_2
+    - ILH_left_thumb_rubber_3
+    - ILH_left_thumb_tip
+
+  # glove_frame_4 — quarter_grasp, presses -x, pad 20x80x20 mm, band 20 mm.
+  # 16 links on the plane — index:{2,pad,tip} middle:{2,pad,tip} ring:{2,pad,tip} little:{2,pad,tip} thumb:{2,3,rubber_1,rubber_2}
+  L_glove_frame_4:
+    - ILH_left_index_2
+    - ILH_left_index_pad
+    - ILH_left_index_tip
+    - ILH_left_little_2
+    - ILH_left_little_pad
+    - ILH_left_little_tip
+    - ILH_left_middle_2
+    - ILH_left_middle_pad
+    - ILH_left_middle_tip
+    - ILH_left_ring_2
+    - ILH_left_ring_pad
+    - ILH_left_ring_tip
+    - ILH_left_thumb_2
+    - ILH_left_thumb_3
+    - ILH_left_thumb_rubber_1
+    - ILH_left_thumb_rubber_2
+
+  # NOT DERIVED — see R_tip_frame. Authored set, unchanged.
+  L_tip_frame:
+    - ILH_left_index_2
+    - ILH_left_index_pad
+    - ILH_left_index_tip
+    - ILH_left_little_2
+    - ILH_left_little_pad
+    - ILH_left_little_tip
+    - ILH_left_middle_2
+    - ILH_left_middle_pad
+    - ILH_left_middle_tip
+    - ILH_left_ring_2
+    - ILH_left_ring_pad
+    - ILH_left_ring_tip
+
+  # FINGER-ONLY sets for the bin-carry tasks: the bin handle is held by the
+  # FINGERS; the palm/base shells never touch it, so allowing them would mask
+  # real planning errors. Keys are referenced by the stage-level
+  # `contact_links_groups:` selector, not by any ik_frame.
+  R_bin_grip_fingers:
+    - IRH_right_index_1
+    - IRH_right_index_2
+    - IRH_right_index_pad
+    - IRH_right_index_rubber_1
+    - IRH_right_index_tip
+    - IRH_right_little_1
+    - IRH_right_little_2
+    - IRH_right_little_pad
+    - IRH_right_little_rubber_1
+    - IRH_right_little_tip
+    - IRH_right_middle_1
+    - IRH_right_middle_2
+    - IRH_right_middle_pad
+    - IRH_right_middle_rubber_1
+    - IRH_right_middle_tip
+    - IRH_right_ring_1
+    - IRH_right_ring_2
+    - IRH_right_ring_pad
+    - IRH_right_ring_rubber_1
+    - IRH_right_ring_tip
+    - IRH_right_thumb_1
+    - IRH_right_thumb_2
+    - IRH_right_thumb_3
+    - IRH_right_thumb_4
+    - IRH_right_thumb_rubber_1
+    - IRH_right_thumb_rubber_2
+    - IRH_right_thumb_rubber_3
+    - IRH_right_thumb_tip
+  L_bin_grip_fingers:
+    - ILH_left_index_1
+    - ILH_left_index_2
+    - ILH_left_index_pad
+    - ILH_left_index_rubber_1
+    - ILH_left_index_tip
+    - ILH_left_little_1
+    - ILH_left_little_2
+    - ILH_left_little_pad
+    - ILH_left_little_rubber_1
+    - ILH_left_little_tip
+    - ILH_left_middle_1
+    - ILH_left_middle_2
+    - ILH_left_middle_pad
+    - ILH_left_middle_rubber_1
+    - ILH_left_middle_tip
+    - ILH_left_ring_1
+    - ILH_left_ring_2
+    - ILH_left_ring_pad
+    - ILH_left_ring_rubber_1
+    - ILH_left_ring_tip
+    - ILH_left_thumb_1
+    - ILH_left_thumb_2
+    - ILH_left_thumb_3
+    - ILH_left_thumb_4
+    - ILH_left_thumb_rubber_1
+    - ILH_left_thumb_rubber_2
+    - ILH_left_thumb_rubber_3
+    - ILH_left_thumb_tip
+
+# =============================================================================
+# CONTACT SURFACE OBJECTS
+# Values are lists of URDF collision object names in the planning scene.
+# =============================================================================
+contact_surface_objects:
+
+  # The glove wearing unit (2026-08-19, C11): named so glove-task
+  # allow/forbid brackets can carry a valid contact_surface. Tip frames
+  # have no contact_link_groups entry, so auto-resolution stays empty and
+  # ONLY the brackets' explicit `collisions:` pairs act — the narrow
+  # wear-insertion window, not a wholesale hand allowance.
+  glove_unit:
+    # - glove_wearing_unit_arm
+    - glove_wearing_unit_base
+  # Toilet seat only (ring / seat tasks)
+  seat:
+    - commode_seat
+
+  # Lid only (toplid tasks)
+  lid:
+    - commode_lid
+
+  # Outer body / side panels
+  body:
+    - commode_body
+
+  # Seat ring + lid (bottomlid, seat_ring tasks — hand contacts both surfaces)
+  seat_and_lid:
+    - commode_seat
+    - commode_lid
+
+  # Seat ring + body (seat_body tasks — hand contacts both surfaces)
+  seat_and_body:
+    - commode_seat
+    - commode_body
+
+  # All three surfaces (side tasks — hand sweeps across seat, lid, and body)
+  all:
+    - commode_seat
+    - commode_lid
+    - commode_body
+
+  # Bin HANDLES only (Newton, 2026-08-18): the carry tasks (extend/lower,
+  # raise/retract) grip the handles — the bin BODY and the opening covers are
+  # never legitimate contact during a carry, and the old group (bin body +
+  # handles + both covers) allowed all of them. Glove-removal contact goes
+  # through `bin_lid_covers` below; the key keeps its historic name because
+  # every bin task config references it.
+  bin_handle_right:
+    - bin_handle_right
+  bin_handle_left:
+    - bin_handle_left
+
+  # Bin top covers alone — allow_collision target for glove_remove stages
+  # (hand pushes the used glove through the 21 mm centre slot).
+  bin_lid_covers:
+    - lid_opening_cover1
+    - lid_opening_cover2
+

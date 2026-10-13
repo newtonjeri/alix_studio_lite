@@ -1,0 +1,34 @@
+ ALIX Studio LITE Edition
+
+ What is ALIX Studio Lite - It is a light weight version of the ALix Studio (/home/newtonjeri/alix_ws/src/alix/core/python/alix_taskgen) that uses the drag and teach generated plans, that are optimized (smoothed and speed increased) since they are recorded at slow speed and with a number of stops, with th e following functionality not include,
+ 1. the geometric path autogeneration and editing since we start in joint space (taught .txt plans)
+ 2. the C SPace and Workspace features
+ 
+
+1. Region-wise Data Collection: The UI should prompt the (non technical person) user to clean each region with a specified cleaning time. Once a region is completed, the system should automatically prompt the next region. (Regions Tab -> Regions PPT and the Dashboard to show the regions with and withput the taught raw txt)
+
+2. Trajectory Editing: Each region and sub-region should have independent options to adjust smoothing, trimming, and scaling, with an undo option for up to five previous changes. - Trajectory Optimization Tab (/home/newtonjeri/alix_studio_lite_ws/Alix_Studio_Lite_Trajectory_V2.html)
+
+3. Simulation Playback: The edited trajectory should be played back in a simulation window to identify collisions, missed spots, or other issues. If any issues are detected, the user should be able to return to trajectory editing. -> Already exixting in ALix Studio - borrow 
+
+4. Real-Arm Testing: The validated simulation trajectory should be executed on the actual robotic arms. If collisions, missed spots, or other issues occur, the user should be able to return to trajectory editing. - should be able to connect to the real robot, have the IP address entry options, also toggle between real and sim
+
+5. Collision Detection and Graph Highlighting: If a collision occurs during real-arm testing or simulation view , the graph should stop at the corresponding joint value and highlight the collision point for easy identification and tuning. - Borrow from ALix Studio
+
+6. Adjustable plot : The UI should allow users to resize and adjust the graph, and editing windows based on their requirements. - check the /home/newtonjeri/alix_studio_lite_ws/Alix_Studio_Lite_Trajectory_V2.html
+
+7. Pole Height and Hand Position: Each region should have independent settings to adjust the pole height and robotic hand position before the person start drag and teach cleaning. - borrow from alix studio
+
+8. TXT File Merging: The software should provide an option to merge multiple trajectory TXT files into a single executable trajectory. - There exists a mechanism, provided takes into account the collision scene (commode) in alix workspace in the upload channel tests and experiments
+
+9. Offset Adjustment Using IK: The software should allow users to apply position offsets using Forward Kinematics (FK) apply offset to each point then inverse kinematics (IK) making sure the path is traceable no adjuscent point jumps, recalculate the joint positions, and test the adjusted trajectory. - obeyin the joint limits
+
+10. Dual-Arm Speed Optimization: The UI should display dual-arm simulation on the left screen and trajectory plot analysis on the right screen to optimize movement speed and cleaning time. - Borrow from ALix Studio -> should use the correct urdf and the robot meshes, also add toggle for bin inclusion and exclusion
+
+11. Smoothness Adjustment: Users should be able to adjust trajectory smoothness and immediately validate the changes through simulation.
+
+12. Plot Spike Analysis: The software should identify high and low spikes in joint trajectory plots and provide suggestions to reduce sudden movements and improve trajectory smoothness.
+
+13. Faster Trajectory Upload: The software should support fast and efficient uploading of trajectory files to the robot controller for real-arm testing. - Check some of the findings in the alix ws related work
+
+14. Offset Calculation and Testing: Users should be able to calculate, apply, and test positional offsets in simulation before executing the adjusted trajectory on the actual robotic arms. - simulate offsets related to 9

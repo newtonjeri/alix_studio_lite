@@ -1,0 +1,17 @@
+# Existing taught recordings for commode C (the commode C taught set, LEFT arm 192.168.1.10).
+# A new commode C project uses the mapped recording for each region by default; the operator
+# can re-teach live or pick another file on the Teach tab. Paths are relative to the Lite folder.
+# Source: tests/data/recordings/commode_c_taught_paths/description.txt.
+folder: tests/data/recordings/commode_c_taught_paths
+files:
+  FILE_01.1.txt:   {task: LID TOP CLEANING,      arm: left, pole_mm: 140, hand: "100% open"}
+  FILE_01.2.txt:   {task: LID TOP CLEANING V2,   arm: left, pole_mm: 140, hand: "100% open"}
+  FILE_02.txt:     {task: BOWL OUTSIDE CLEANING, arm: left, pole_mm: 140, hand: "100% open"}
+  FILE_03.1.txt:   {task: SEAT TOP CLEANING,     arm: left, pole_mm: 140, hand: "100% open", unit: L-R05_PART1}
+  FILE_04.txt:     {task: RIM TOP CLEANING,      arm: left, pole_mm: 140, hand: "100% open", unit: L-R07_PART1}
+  FILE_6.txt:      {task: BOWL INSIDE CLEAN,     arm: left, pole_mm: 200, hand: "100% open", max_dev_mm: 10, unit: L-R10_PART1}
+  FILE_07.txt:     {task: RIM SIDE,              arm: left, pole_mm: 200, hand: "50% open", unit: L-R09_PART1}
+  FILE_08.txt:     {task: BOWL INNER BACK,       arm: left, pole_mm: 200, hand: "50% open", max_dev_mm: 10, unit: L-R10_PART2}
+  FILE_09.txt:     {task: HINGE AREA,            arm: left, pole_mm: 200, hand: "50% open", unit: L-R04}
+  FILE_10.1.txt:   {task: LID SEAT OPEN,         arm: left, pole_mm: 200, hand: "50% open", max_dev_mm: 5, unit: L-T01}
+  FILE_11.txt:     {task: SEAT ONLY CLOSE,       arm: left, pole_mm: 200, hand: "50% open", max_dev_mm: 5, unit: L-T02}

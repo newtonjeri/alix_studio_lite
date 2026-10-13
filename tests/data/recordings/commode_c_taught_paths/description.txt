@@ -1,0 +1,20 @@
+LEFT ARM (192.168.1.10) - commode C
+
+FILE        TASK                   POLE    HAND        MAX DEV
+FILE_01.1   LID TOP CLEANING       140mm   100% open   -
+FILE_01.2   LID TOP CLEANING V2    140mm   100% open   -
+FILE_02     BOWL OUTSIDE CLEANING  140mm   100% open   -
+FILE_03.1   SEAT TOP CLEANING      140mm   100% open   -
+FILE_04     RIM TOP CLEANING       140mm   100% open   -
+FILE_06     BOWL INSIDE CLEAN      200mm   100% open   10mm
+FILE_07     RIM SIDE               200mm   50% open    -
+FILE_08     BOWL INNER BACK        200mm   50% open    10mm
+FILE_09     HINGE AREA             200mm   50% open    -
+FILE_10.1   LID SEAT OPEN          200mm   50% open    5mm
+FILE_11     SEAT ONLY CLOSE        200mm   50% open    5mm
+FILE_01.2x2 LID TOP V2 2x faster   140mm   100% open   20mm
+FILE_01.2x1.5 LID TOP V2 1.5x faster   140mm   100% open   15mm+acc
+
+Hand % open = the first four fingers; the thumb is left as it is.
+MAX DEV = the most the executed TCP path may depart from the raw .txt path; - = none.
+Nmm+acc = the same cap, acceleration not held to the arm's limit (logged, with a warning).

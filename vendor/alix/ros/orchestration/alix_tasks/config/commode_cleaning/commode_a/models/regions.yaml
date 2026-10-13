@@ -1,0 +1,26 @@
+labeled_meshes:
+  closed: closed_regions.obj
+regions:
+  lid_top:
+    component: closed
+    groups:
+    - lid_top
+    arm_coverage: RL_paired
+  commode_side:
+    region_id: 31
+    component: closed
+    groups:
+    - commode_side
+    arm_coverage: RL_paired
+  commode_front:
+    region_id: 32
+    component: closed
+    groups:
+    - commode_front
+    arm_coverage: RL_paired
+  lid_seat_sides:
+    region_id: 33
+    component: closed
+    groups:
+    - lid_seat_sides
+    arm_coverage: RL_paired

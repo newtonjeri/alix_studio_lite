@@ -1,0 +1,16 @@
+# ALIX Studio Lite: the Python packages Lite runs on, pinned to the tested versions.
+#
+# Installed into alix_studio_lite/.venv by one command (any platform):
+#     python3 tools/setup_lite.py          (Windows: py tools\setup_lite.py)
+#
+# Every package here has ready-made wheels for Linux x86-64, Linux aarch64 (the Jetson), Windows
+# and macOS, so nothing is compiled. Python 3.11 or newer (numpy 2.4 and scipy 1.17 need it).
+# Optional packages are in requirements-optional.txt.
+numpy==2.4.6
+scipy==1.17.1
+PyYAML==6.0.2
+trimesh==4.12.2
+python-fcl==0.7.0.11
+pycollada==0.9.3
+networkx==3.6.1
+pytest==8.3.5

@@ -1,0 +1,12 @@
+ik_frames:
+  R_glove_frame_2:
+    translation:
+    - 0.02483
+    - 0
+    - 0.13521
+    quaternion:
+    - 0
+    - 0
+    - 0
+    - 1
+    gloveStl: plam.STL

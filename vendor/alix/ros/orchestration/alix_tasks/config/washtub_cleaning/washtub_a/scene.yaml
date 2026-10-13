@@ -1,0 +1,30 @@
+# =============================================================================
+# FIXTURE MODEL: washtub_a  (wall-hung washbasin — single static mesh)
+# =============================================================================
+# The first non-commode/non-urinal family (F75) — the generalization target the
+# studio docs call "washtub" (STUDIO_IMPROVEMENT_PLAN, AnalyzeScene.srv spells
+# it "washtab"; the mesh asset is alix_description's washbasin.stl).
+
+fixture:
+  display_name: "Washtub A (wall-hung basin)"
+  type: "washtub"
+  articulated: false
+
+  # AUTO-DERIVED bring-up pose (alix-studio placement standard):
+  # This mesh's FORE-AFT axis is local Y (width 0.485 is X, depth 0.376 is Y) —
+  # the tall backsplash half (max_z 0.312) sits at -Y, so the FRONT is +Y and
+  # yaw +90 turns it toward the UGV.  After the yaw, the front lip (local
+  # y=+0.183) must land at x = 0.225 (UGV half) + 0.250 (standoff) = 0.475,
+  # so x = 0.475 + 0.183 = 0.658.  z = 0.50 from the venue washtub slot
+  # (mounting height is venue knowledge; rim lands at 0.81 m).
+  # Calibrate in place like commode_c (this is the uncalibrated value).
+  pose:
+    relative_to: "base_link"
+    position: [0.658, 0.0, 0.50]
+    orientation_rpy_deg: [0.0, 0.0, 90.0]
+    default_ugv_standoff_m: 0.25
+
+  meshes:
+    default: "package://alix_tasks/config/washtub_cleaning/washtub_a/models/washbasin.stl"
+
+  scale: [1.0, 1.0, 1.0]

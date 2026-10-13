@@ -1,0 +1,63 @@
+# =============================================================================
+# SRDF GROUP STATES — POLES  (SOURCE OF TRUTH)
+# =============================================================================
+# Pole slider states (per-pole + dual_poles). Lengths in metres.
+# The plain alix.srdf is ASSEMBLED from these fragment files by
+#   python3 Resource/scripts/sync_srdf_group_states.py
+# (the test suite runs it in check mode — edit HERE, never in the .srdf).
+# bin_rail / glove_arm states are NOT here: peripheral_joints.yaml owns them.
+# =============================================================================
+
+group_states:
+  pole_right:
+    # 0.30 (was 0.29): the full stroke is 0.315 m in hardware and in the URDF
+    # (pole.xacro upper="0.315"), so full_length sits 15 mm under the ceiling
+    # — the value docs/TEST_PROCEDURE.md already quotes. Every state that
+    # previously meant "pole fully up" moved with it (inspection_pole_1 here,
+    # inspection_pose_1 and the glove_wear vias in arm_poles, and ready /
+    # rest_pose / zero_pose in complete_arms). The shorter states —
+    # three_quarter 0.225, half 0.15, quarter 0.075, minimum 0.01 — are
+    # unchanged.
+    full_length:
+      R_sliding_plate_joint: 0.3
+    three_quarter_length:
+      R_sliding_plate_joint: 0.225
+    half_length:
+      R_sliding_plate_joint: 0.15
+    quarter_length:
+      R_sliding_plate_joint: 0.075
+    minimum_length:
+      R_sliding_plate_joint: 0.01
+    # inspection_pole_1..4 were RETIRED on 2026-10-08 (Newton: two inspection
+    # poses, 1 and 4, at ANY of the five principal heights above — every height
+    # frames the fixture). The inspection node takes the height as
+    # `inspection_pole_height`; the capture tool and the SDG plan visit all five.
+
+  pole_left:
+    full_length:
+      L_sliding_plate_joint: 0.3
+    three_quarter_length:
+      L_sliding_plate_joint: 0.225
+    half_length:
+      L_sliding_plate_joint: 0.15
+    quarter_length:
+      L_sliding_plate_joint: 0.075
+    minimum_length:
+      L_sliding_plate_joint: 0.01
+
+  dual_poles:
+    full_length:
+      R_sliding_plate_joint: 0.3
+      L_sliding_plate_joint: 0.3
+    three_quarter_length:
+      R_sliding_plate_joint: 0.225
+      L_sliding_plate_joint: 0.225
+    half_length:
+      R_sliding_plate_joint: 0.15
+      L_sliding_plate_joint: 0.15
+    quarter_length:
+      R_sliding_plate_joint: 0.075
+      L_sliding_plate_joint: 0.075
+    minimum_length:
+      R_sliding_plate_joint: 0.01
+      L_sliding_plate_joint: 0.01

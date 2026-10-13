@@ -1,0 +1,282 @@
+# joint_limits.yaml allows the dynamics properties specified in the URDF to be overwritten or augmented as needed
+#
+# ARM max_jerk = 1500 rad/s^3 — MEASURED CEILING (2026-07-31, hardware, toplid task).
+# Previously 1000.0, which was a round placeholder never validated against hardware.
+# Determined by executing the same cleaning stroke at four ceilings and judging
+# smoothness AND path fidelity on the real arm:
+#
+#   ceiling  accel cap  duration  |a| railed  result
+#   300      10.472     15.7 s     9.8 %      chatters (jerk too low to finish a jerk phase)
+#   1000      4.313     22.2 s     0.0 %      smooth; measured a_rms -44 % vs baseline
+#   1500      6.470     18.2 s     0.0 %      smooth, NO path deviation  <-- chosen
+#   2000      8.634     15.8 s     0.0 %      path deviation appears
+#   2471     10.472     14.4 s    23.0 %      deviation + harsh
+#
+# Above ~1500 the arm can no longer TRACK the commanded profile: the plan stays
+# accurate (between-via EEF deviation is 0.40 mm max) but the servo lags, so the
+# EXECUTED path leaves the surface. For a cleaning stroke that is the binding
+# requirement, not smoothness. See Documentation/ruckig_pro_review.md.
+#
+# NOTE: this interacts with max_acceleration. cleaning_tasks couples them
+# (jerk_coupling: auto) as j >= 2*a/dt_section, capping acceleration when the
+# ceiling cannot supply the jerk. Raising one without the other reintroduces the
+# inconsistency that caused the original chatter.
+
+# ARM max_velocity comes from the ROBOT DESCRIPTION, not from a hand-typed
+# rounding. Until 2026-08-27 these read 3.14 and 3.92 rad/s — 179.909 and
+# 224.600 deg/s against the vendor's 180 and 225 (RM75 Ontology Parameters),
+# which is also what rm_75_macro.xacro now states exactly. The values below are
+# pi and 225*pi/180 to full double precision.
+# tools/kinematics/check_kinematics_sources.py compares them against the URDF on every
+# run of tools/run_tests.sh; edit the XACRO, then re-run that checker.
+#
+# For beginners, we downscale velocity and acceleration limits.
+# You can always specify higher scaling factors (<= 1.0) in your motion requests.  # Increase the values below to 1.0 to always move at maximum speed.
+default_velocity_scaling_factor: 0.1
+default_acceleration_scaling_factor: 0.1
+
+# Specific joint properties can be changed with the keys [max_position, min_position, max_velocity, max_acceleration]
+# Joint limits can be turned off with [has_velocity_limits, has_acceleration_limits]
+joint_limits:
+  ILH_left_index_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_index_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_little_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_little_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_middle_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_middle_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_ring_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_ring_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_thumb_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_thumb_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_thumb_3_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  ILH_left_thumb_4_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_index_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_index_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_little_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_little_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_middle_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_middle_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_ring_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_ring_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_thumb_1_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_thumb_2_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_thumb_3_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  IRH_right_thumb_4_joint:
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  L_joint1:
+    has_velocity_limits: true
+    max_velocity: 3.141592653589793
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  L_joint2:
+    has_velocity_limits: true
+    max_velocity: 3.141592653589793
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  L_joint3:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  L_joint4:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  L_joint5:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  L_joint6:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  L_joint7:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  L_sliding_plate_joint:
+    # MEASURED lift profile (bench_pole_profile matrix 2026-07-14,
+    # alix_hw/doc/BENCHMARKS.md §3.5): cruise 0.0018 m/s per speed%
+    # (0.18 m/s at 100%), trapezoid acceleration 0.166 m/s^2. Velocity limit
+    # = 0.16 m/s, the highest average actually achieved over the full stroke
+    # (0.18 cruise is only reached asymptotically).
+    has_velocity_limits: true
+    max_velocity: 0.16
+    has_acceleration_limits: true
+    max_acceleration: 0.166
+    has_jerk_limits: true
+    max_jerk: 100.0
+  R_joint1:
+    has_velocity_limits: true
+    max_velocity: 3.141592653589793
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  R_joint2:
+    has_velocity_limits: true
+    max_velocity: 3.141592653589793
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  R_joint3:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  R_joint4:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  R_joint5:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  R_joint6:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  R_joint7:
+    has_velocity_limits: true
+    max_velocity: 3.9269908169872414
+    has_acceleration_limits: true
+    max_acceleration: 10.472
+    has_jerk_limits: true
+    max_jerk: 1500.0
+  R_sliding_plate_joint:
+    # MEASURED lift profile (bench_pole_profile matrix 2026-07-14,
+    # alix_hw/doc/BENCHMARKS.md §3.5): cruise 0.0018 m/s per speed%
+    # (0.18 m/s at 100%), trapezoid acceleration 0.166 m/s^2. Velocity limit
+    # = 0.16 m/s, the highest average actually achieved over the full stroke
+    # (0.18 cruise is only reached asymptotically).
+    has_velocity_limits: true
+    max_velocity: 0.16
+    has_acceleration_limits: true
+    max_acceleration: 0.166
+    has_jerk_limits: true
+    max_jerk: 100.0

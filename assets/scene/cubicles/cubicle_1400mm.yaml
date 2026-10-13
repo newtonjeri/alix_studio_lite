@@ -1,0 +1,26 @@
+# =============================================================================
+# 1400 MM CUBICLE - single-cubicle wall model for ALIX Studio Lite
+# =============================================================================
+# Built by tools/make_cubicle.py the same way as ALIX's standalone 800 mm and
+# 1000 mm planning-scene cubicles: a back wall 0.1 m thick at x = 0 (mesh
+# frame) and two side walls 0.1 m thick, about 1.98 m deep and 2 m high, with
+# inner side faces at y = +/-0.700 m. Same pose as ALIX's 800 mm cubicle:
+# the back wall's inner face sits 1.215 m in front of base_link (yaw 180 deg).
+#
+# Format: ALIX's venue scene format (washroom_scene.washroom_structure), so the
+# vendored ALIX wall checker reads it unchanged. The mesh is a package:// URI in
+# Lite's own asset package `alix_studio_lite` (assets/package.xml), which Lite
+# registers with ALIX's resolver at start-up (src/alix_studio_lite/vendor_paths.py).
+# Lite's default cubicle (decision D21, 13 Oct 2026). Confirm the width and the back-wall distance once on site.
+# =============================================================================
+
+washroom_scene:
+  reference_frame: "base_link"
+
+  washroom_structure:
+    enabled: true
+    pose:
+      position: [1.215, 0.0, 0.0]
+      orientation_rpy_deg: [0.0, 0.0, 180.0]
+    mesh: "package://alix_studio_lite/scene/cubicles/cubicle_1400mm.stl"
+    scale: [1.0, 1.0, 1.0]

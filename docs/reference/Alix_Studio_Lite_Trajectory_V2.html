@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alix Studio Lite - Trajectory Processor</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #17202a;
+      --muted: #667085;
+      --line: #d0d5dd;
+      --accent: #175cd3;
+      --accent2: #0e9384;
+      --danger: #b42318;
+      --warning: #b54708;
+      --ok: #027a48;
+      --shadow: 0 4px 18px rgba(16, 24, 40, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: #0b1220;
+      color: white;
+      padding: 20px 28px;
+    }
+    header h1 { margin: 0 0 6px; font-size: 24px; }
+    header p { margin: 0; color: #cbd5e1; font-size: 14px; }
+    main { max-width: 1500px; margin: 0 auto; padding: 20px; }
+    .card {
+      background: var(--card);
+      border: 1px solid #e4e7ec;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    .row { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }
+    .field { min-width: 150px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #344054;
+      margin-bottom: 6px;
+    }
+    input[type="number"], input[type="text"], input[type="file"] {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--text);
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+    }
+    button.secondary { background: #475467; }
+    button.green { background: var(--accent2); }
+    button.danger { background: var(--danger); }
+    button.light { background: #e9eef7; color: #163a70; }
+    button:disabled { cursor: not-allowed; opacity: 0.45; }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .metric {
+      border: 1px solid #e4e7ec;
+      border-radius: 10px;
+      padding: 12px;
+      background: #fafafa;
+    }
+    .metric .k { font-size: 12px; color: var(--muted); }
+    .metric .v { font-size: 20px; font-weight: 800; margin-top: 3px; }
+    .hint {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #eff8ff;
+      border: 1px solid #b2ddff;
+      color: #175cd3;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .status {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f2f4f7;
+      border: 1px solid #e4e7ec;
+      color: #344054;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    .status.ok { background: #ecfdf3; border-color: #abefc6; color: var(--ok); }
+    .status.warn { background: #fffaeb; border-color: #fedf89; color: var(--warning); }
+    .status.err { background: #fef3f2; border-color: #fecdca; color: var(--danger); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    th, td {
+      border-bottom: 1px solid #e4e7ec;
+      padding: 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th { background: #f9fafb; color: #475467; }
+    td input[type="number"] { min-width: 92px; }
+    .plot {
+      width: 100%;
+      height: 600px;
+    }
+    .plot.small { height: 520px; }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .section-title h2 { margin: 0; font-size: 18px; }
+    .muted { color: var(--muted); font-size: 13px; }
+    .hidden { display: none !important; }
+    details { margin-top: 12px; }
+    summary { cursor: pointer; font-weight: 700; color: #344054; }
+    code { background: #f2f4f7; padding: 2px 5px; border-radius: 4px; }
+    .legend-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .stage-options {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid #d0d5dd;
+      border-radius: 10px;
+      background: #f9fafb;
+    }
+    .stage-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border: 1px solid #d0d5dd;
+      border-radius: 8px;
+      background: white;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+    }
+    .stage-option input { width: 18px; height: 18px; cursor: pointer; }
+    .stage-option small { color: var(--muted); font-weight: 500; }
+    .disabled-block { opacity: 0.5; }
+    .table-scroll { overflow-x: auto; }
+    .analysis-note {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #fffaeb;
+      border: 1px solid #fedf89;
+      color: #7a2e0e;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #f2f4f7;
+      color: #344054;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .badge.fast { background: #ecfdf3; color: #027a48; }
+    .badge.slow { background: #fffaeb; color: #b54708; }
+    .badge.keep { background: #eff8ff; color: #175cd3; }
+    .playback-controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 12px;
+      margin-top: 12px;
+      border: 1px solid #d0d5dd;
+      border-radius: 10px;
+      background: #f9fafb;
+    }
+    .playback-controls .timeline-wrap { min-width: 260px; flex: 1; }
+    .playback-controls input[type="range"] { width: 100%; }
+    .time-readout {
+      min-width: 190px;
+      padding: 8px 10px;
+      border: 1px solid #e4e7ec;
+      border-radius: 8px;
+      background: white;
+      font-variant-numeric: tabular-nums;
+    }
+    select {
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--text);
+    }
+    /* Guided pipeline navigation */
+    .pipeline-shell {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(244, 246, 248, 0.96);
+      backdrop-filter: blur(8px);
+      padding: 12px 0 14px;
+      margin-bottom: 6px;
+    }
+    .pipeline-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .pipeline-head strong { font-size: 15px; color: #1d2939; }
+    .pipeline-head span { font-size: 12px; color: var(--muted); }
+    .pipeline-track {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .pipeline-node {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 120px;
+      padding: 10px 11px;
+      border: 1px solid #d0d5dd;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #475467;
+      cursor: pointer;
+      text-align: left;
+      transition: 0.15s ease;
+    }
+    .pipeline-node:hover:not(.locked) { border-color: #84adf4; box-shadow: 0 2px 8px rgba(23, 92, 211, 0.10); }
+    .pipeline-node .step-num {
+      flex: 0 0 28px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #eef2f6;
+      font-size: 12px;
+      font-weight: 800;
+      color: #475467;
+    }
+    .pipeline-node .step-copy { min-width: 0; }
+    .pipeline-node .step-title { display: block; font-size: 12px; font-weight: 800; color: #344054; white-space: nowrap; }
+    .pipeline-node .step-sub { display: block; font-size: 10px; margin-top: 2px; color: #667085; white-space: nowrap; }
+    .pipeline-node.active { border-color: var(--accent); background: #eff6ff; }
+    .pipeline-node.active .step-num { background: var(--accent); color: white; }
+    .pipeline-node.active .step-title { color: #174ea6; }
+    .pipeline-node.done { border-color: #abefc6; background: #f6fef9; }
+    .pipeline-node.done .step-num { background: var(--ok); color: white; }
+    .pipeline-node.done .step-num::after { content: '✓'; }
+    .pipeline-node.done .step-num { font-size: 0; }
+    .pipeline-node.done .step-num::after { font-size: 13px; }
+    .pipeline-node.locked { opacity: 0.48; cursor: not-allowed; background: #f9fafb; }
+    .pipeline-step { display: none; }
+    .pipeline-step.active { display: block !important; }
+    .pipeline-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #eaecf0;
+    }
+    .pipeline-nav .nav-note { color: var(--muted); font-size: 12px; flex: 1; text-align: center; }
+    .pipeline-nav .nav-actions { display: flex; gap: 8px; }
+    .pipeline-nav button { min-width: 118px; }
+    .pipeline-inline-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #f2f4f7;
+      color: #475467;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    @media (max-width: 850px) {
+      .plot { height: 480px; }
+      main { padding: 10px; }
+      .pipeline-shell { position: static; padding-top: 4px; }
+      .pipeline-track { grid-template-columns: repeat(6, 145px); }
+      .pipeline-nav { align-items: stretch; flex-direction: column; }
+      .pipeline-nav .nav-actions { width: 100%; }
+      .pipeline-nav .nav-actions button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Alix Studio Lite - 7-Joint Trajectory Processor</h1>
+  <p>Guided pipeline: Upload → Setup → Analyze → Review → Generate & Save → Compare & Validate · Plot visibility fix</p>
+</header>
+
+<main>
+  <div class="pipeline-shell" id="pipelineShell">
+    <div class="pipeline-head">
+      <strong id="pipelineTitle">Trajectory Optimization Pipeline</strong>
+      <span id="pipelineSummary">Step 1 of 6 - Upload trajectory</span>
+    </div>
+    <div class="pipeline-track" id="pipelineTrack" aria-label="Trajectory processing steps">
+      <button type="button" class="pipeline-node active" data-pipeline-go="1"><span class="step-num">1</span><span class="step-copy"><span class="step-title">Upload</span><span class="step-sub">Source file</span></span></button>
+      <button type="button" class="pipeline-node locked" data-pipeline-go="2"><span class="step-num">2</span><span class="step-copy"><span class="step-title">Setup</span><span class="step-sub">Parameters</span></span></button>
+      <button type="button" class="pipeline-node locked" data-pipeline-go="3"><span class="step-num">3</span><span class="step-copy"><span class="step-title">Analyze</span><span class="step-sub">Suggestions</span></span></button>
+      <button type="button" class="pipeline-node locked" data-pipeline-go="4"><span class="step-num">4</span><span class="step-copy"><span class="step-title">Review</span><span class="step-sub">Fine-tune</span></span></button>
+      <button type="button" class="pipeline-node locked" data-pipeline-go="5"><span class="step-num">5</span><span class="step-copy"><span class="step-title">Generate</span><span class="step-sub">Save output</span></span></button>
+      <button type="button" class="pipeline-node locked" data-pipeline-go="6"><span class="step-num">6</span><span class="step-copy"><span class="step-title">Compare</span><span class="step-sub">Validate</span></span></button>
+    </div>
+  </div>
+  <section id="pipelineStep1" class="card pipeline-step" data-step="1">
+    <div class="section-title">
+      <h2>1. Upload trajectory</h2>
+      <span class="muted">Expected line format: {"point":[J1,J2,J3,J4,J5,J6,J7]}</span>
+    </div>
+    <div class="row">
+      <div class="field" style="min-width:330px; flex:1;">
+        <label for="fileInput">Original TXT / JSONL file</label>
+        <input id="fileInput" type="file" accept=".txt,.jsonl,text/plain" />
+      </div>
+      <button id="resetBtn" class="secondary" disabled>Reset</button>
+    </div>
+    <div id="loadStatus" class="status" style="margin-top:12px;">No file loaded.</div>
+    <div id="originalMetrics" class="metric-grid hidden"></div>
+  </section>
+
+  <section id="pipelineStep2" class="card pipeline-step" data-step="2">
+    <div class="section-title">
+      <h2>2. Processing parameters</h2>
+      <span class="muted">Defaults match the trajectory algorithm used previously.</span>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Sample interval (ms)</label>
+        <input id="sampleMs" type="number" value="5" min="0.001" step="0.001" />
+      </div>
+      <div class="field">
+        <label>Idle rolling window</label>
+        <input id="idleWindow" type="number" value="11" min="3" step="2" />
+      </div>
+      <div class="field">
+        <label>Idle threshold (counts/sample)</label>
+        <input id="idleThreshold" type="number" value="8" min="0" step="0.1" />
+      </div>
+      <div class="field">
+        <label>Minimum idle run</label>
+        <input id="idleMinRun" type="number" value="20" min="1" step="1" />
+      </div>
+      <div class="field">
+        <label>Mean smoothing window</label>
+        <input id="smoothWindow" type="number" value="101" min="3" step="2" />
+      </div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div style="font-size:13px; font-weight:800; color:#344054;">Processing stages to apply</div>
+      <div class="stage-options">
+        <label class="stage-option">
+          <input id="stageTrim" type="checkbox" checked />
+          <span>(1) Trim <small>idle-region removal</small></span>
+        </label>
+        <label class="stage-option">
+          <input id="stageSmooth" type="checkbox" checked />
+          <span>(2) Mean Smooth <small>centered moving mean</small></span>
+        </label>
+        <label class="stage-option">
+          <input id="stageScale" type="checkbox" checked />
+          <span>(3) Scale <small>selected-region resampling</small></span>
+        </label>
+      </div>
+      <div class="hint" style="margin-top:8px;">
+        Select any one stage or any combination. When multiple stages are enabled, they are always applied in this order:
+        <b>Trim → Mean Smooth → Scale</b>. Unchecked stages are skipped completely.
+      </div>
+    </div>
+
+    <details>
+      <summary>Algorithm used</summary>
+      <p class="muted">
+        Idle trim: calculate absolute change between consecutive rows for each joint, apply a centered rolling mean,
+        mark a step idle only when all 7 joints are at or below the threshold, require the condition to persist for the minimum run,
+        then keep the first and last point of each idle block and remove the interior points.
+      </p>
+      <p class="muted">
+        Mean smoothing: centered moving mean (default 101 points), then recenter each joint so its overall trimmed mean is preserved;
+        exact first and last joint positions are restored.
+      </p>
+      <p class="muted">
+        Region scaling: synchronized linear interpolation across all 7 joints. <b>100%</b> = unchanged duration,
+        <b>150%</b> = 50% longer/slower, <b>50%</b> = half as many intervals/faster, <b>30%</b> = 30% of the original region duration.
+      </p>
+    </details>
+  </section>
+
+  <section id="analysisSection" class="card pipeline-step" data-step="3">
+    <div class="section-title">
+      <h2>3. Automatic speed optimization analysis</h2>
+      <span class="muted">Section B1/B2 - motion analysis and region-based recommendations</span>
+    </div>
+    <div class="hint">
+      After a trajectory is loaded, the browser automatically analyzes joint-motion intensity, direction-change activity and peak motion.
+      It divides the trajectory into review regions and suggests whether each region should be shorter/faster, longer/slower or unchanged.
+    </div>
+    <div class="analysis-note">
+      <b>Important:</b> The uploaded trajectory contains joint positions only. The browser can identify motion patterns, but it cannot prove physical cleaning contact or collision safety without force/contact and simulation data.
+      Smooth continuous regions are therefore marked as <b>possible cleaning/straight-pass candidates</b> for operator review.
+    </div>
+    <div class="row" style="margin-top:12px;">
+      <button id="analyzeBtn" disabled>Analyze Again</button>
+      <button id="applySuggestionsBtn" class="green" disabled>Apply Selected Suggestions to Scale Regions</button>
+    </div>
+    <div id="analysisStatus" class="status" style="margin-top:12px;">Load a file to run automatic analysis.</div>
+    <div id="analysisMetrics" class="metric-grid hidden"></div>
+    <div class="table-scroll">
+      <table id="suggestionsTable">
+        <thead>
+          <tr>
+            <th>Use</th>
+            <th>#</th>
+            <th>Rows</th>
+            <th>Original time</th>
+            <th>Motion type</th>
+            <th>Peak guidance</th>
+            <th>Recommendation</th>
+            <th>Scale (%)</th>
+            <th>Estimated time</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="pipelineStep4" class="card pipeline-step" data-step="4">
+    <div class="section-title">
+      <h2>4. Original trajectory - playback & manual scaling regions</h2>
+      <span class="muted">Play the trajectory in real time or manually select/adjust scaling regions.</span>
+    </div>
+    <div class="hint">
+      Selection is made on the <b>original row numbers</b>. Each selected region is added to the table below. Enter an independent scale percentage for every region. Regions may not overlap. If <b>Scale</b> is unchecked, these regions are retained but ignored during generation.
+    </div>
+    <div class="playback-controls">
+      <button id="playOriginalBtn" disabled>Play</button>
+      <button id="pauseOriginalBtn" class="secondary" disabled>Pause</button>
+      <button id="restartOriginalBtn" class="light" disabled>Restart</button>
+      <div class="timeline-wrap">
+        <label for="originalTimeline" style="font-size:12px; font-weight:700; color:#344054;">Trajectory timeline</label>
+        <input id="originalTimeline" type="range" min="0" max="0" step="0.001" value="0" disabled />
+      </div>
+      <div class="time-readout">
+        <div><b id="originalCurrentTime">0.000 s</b> / <span id="originalTotalTime">0.000 s</span></div>
+        <div id="originalRegionLabel" class="muted" style="margin-top:3px;">Current region: -</div>
+      </div>
+    </div>
+    <div id="originalPlot" class="plot"></div>
+
+    <div class="row" style="margin-top:12px; align-items:center;">
+      <div class="field">
+        <label>Manual start row</label>
+        <input id="manualStart" type="number" min="1" step="1" />
+      </div>
+      <div class="field">
+        <label>Manual end row</label>
+        <input id="manualEnd" type="number" min="1" step="1" />
+      </div>
+      <button id="addManualBtn" class="light" disabled>Add manual region</button>
+      <button id="clearRegionsBtn" class="secondary" disabled>Clear regions</button>
+    </div>
+
+    <table id="regionsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Original start row</th>
+          <th>Original end row</th>
+          <th>Scale (%)</th>
+          <th>Meaning</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="regionStatus" class="status" style="margin-top:10px;">No scaling regions selected. The file can still be trimmed and smoothed.</div>
+  </section>
+
+  <section id="pipelineStep5" class="card pipeline-step" data-step="5">
+    <div class="section-title">
+      <h2>5. Generate optimized / processed trajectory</h2>
+      <span class="muted">Only checked processing stages will be applied.</span>
+    </div>
+    <div class="row">
+      <button id="processBtn" class="green" disabled>Confirm & Generate</button>
+      <button id="downloadTxtBtn" disabled>Download processed TXT</button>
+      <button id="downloadReportBtn" class="secondary" disabled>Download processing report</button>
+      <button id="downloadPlotBtn" class="light" disabled>Download processed plot PNG</button>
+    </div>
+    <div class="hint" style="margin-top:10px;">
+      <b>Save As:</b> Clicking a download button will open the browser's Save As dialog when supported, so you can choose the folder and rename the file before saving.
+    </div>
+    <div id="processStatus" class="status" style="margin-top:12px;">Load a file to begin.</div>
+    <div id="processedMetrics" class="metric-grid hidden"></div>
+  </section>
+
+  <section id="comparisonSection" class="card pipeline-step hidden" data-step="6">
+    <div class="section-title">
+      <h2>6. Original vs optimized comparison</h2>
+      <span class="muted">Section B4 - duration, time saved, percentage reduction and modified regions</span>
+    </div>
+    <div class="row">
+      <div class="field" style="min-width:330px; flex:1;">
+        <label for="optimizedFileInput">Optional optimized TXT / JSONL file for external comparison</label>
+        <input id="optimizedFileInput" type="file" accept=".txt,.jsonl,text/plain" />
+      </div>
+      <button id="useGeneratedBtn" class="light" disabled>Use Generated Optimized File</button>
+    </div>
+    <div id="comparisonStatus" class="status" style="margin-top:10px;">Comparison uses the generated optimized trajectory unless an external optimized file is loaded.</div>
+    <div id="comparisonMetrics" class="metric-grid"></div>
+    <div class="playback-controls">
+      <button id="playCompareBtn">Play Comparison</button>
+      <button id="pauseCompareBtn" class="secondary">Pause</button>
+      <button id="restartCompareBtn" class="light">Restart</button>
+      <div class="timeline-wrap">
+        <label for="compareTimeline" style="font-size:12px; font-weight:700; color:#344054;">Synchronized time cursor</label>
+        <input id="compareTimeline" type="range" min="0" max="0" step="0.001" value="0" />
+      </div>
+      <div class="time-readout"><b id="compareCurrentTime">0.000 s</b> / <span id="compareTotalTime">0.000 s</span></div>
+    </div>
+    <div id="originalComparePlot" class="plot small"></div>
+    <div id="processedPlot" class="plot small"></div>
+    <h3 style="margin:12px 0 4px; font-size:15px;">Modified / scaled regions</h3>
+    <div class="table-scroll">
+      <table id="comparisonRegionsTable">
+        <thead><tr><th>#</th><th>Original rows</th><th>Scale (%)</th><th>Input rows</th><th>Output rows</th><th>Effect</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  const JOINT_COLORS = [
+    '#1f77b4', // J1
+    '#ff7f0e', // J2
+    '#2ca02c', // J3
+    '#d62728', // J4
+    '#9467bd', // J5
+    '#8c564b', // J6
+    '#e377c2'  // J7
+  ];
+
+  const state = {
+    fileName: '',
+    original: null,
+    validSourceLineNumbers: [],
+    skippedLines: [],
+    regions: [],
+    processed: null,
+    processingReport: null,
+    analysisSuggestions: [],
+    analysisReport: null,
+    externalOptimized: null,
+    externalOptimizedName: '',
+    pipelineStep: 1,
+    playback: {
+      original: { playing: false, currentSec: 0, startPerf: 0, raf: null },
+      compare: { playing: false, currentSec: 0, startPerf: 0, raf: null }
+    }
+  };
+
+  const el = id => document.getElementById(id);
+
+
+  const PIPELINE_META = {
+    1: { title: 'Upload trajectory', note: 'Load the original 7-joint trajectory file.' },
+    2: { title: 'Processing setup', note: 'Choose Trim / Mean Smooth / Scale and review processing parameters.' },
+    3: { title: 'Automatic analysis', note: 'Review motion regions and optimization recommendations.' },
+    4: { title: 'Playback & fine-tune', note: 'Play the source trajectory and manually adjust scaling regions if needed.' },
+    5: { title: 'Generate & save', note: 'Create the optimized output, then save TXT / report / plot.' },
+    6: { title: 'Compare & validate', note: 'Compare original and optimized timing and review modified regions.' }
+  };
+
+  function pipelineStepUnlocked(step) {
+    if (step <= 1) return true;
+    if (step >= 2 && step <= 5) return !!state.original;
+    if (step === 6) return !!(state.processed || state.externalOptimized);
+    return false;
+  }
+
+  function updatePipelineUI() {
+    const current = state.pipelineStep || 1;
+    document.querySelectorAll('.pipeline-step').forEach(section => {
+      section.classList.toggle('active', Number(section.dataset.step) === current);
+    });
+
+    document.querySelectorAll('[data-pipeline-go]').forEach(node => {
+      const step = Number(node.dataset.pipelineGo);
+      const unlocked = pipelineStepUnlocked(step);
+      node.classList.toggle('locked', !unlocked);
+      node.classList.toggle('active', step === current);
+      node.classList.toggle('done', step < current && unlocked);
+      node.disabled = !unlocked;
+      node.setAttribute('aria-current', step === current ? 'step' : 'false');
+    });
+
+    const meta = PIPELINE_META[current] || PIPELINE_META[1];
+    if (el('pipelineSummary')) el('pipelineSummary').textContent = `Step ${current} of 6 - ${meta.title}`;
+
+    document.querySelectorAll('.pipeline-nav').forEach(nav => {
+      const step = Number(nav.dataset.pipelineNav);
+      const prev = nav.querySelector('[data-pipeline-prev]');
+      const next = nav.querySelector('[data-pipeline-next]');
+      if (prev) prev.disabled = step <= 1;
+      if (next) {
+        next.disabled = step >= 6 || !pipelineStepUnlocked(step + 1);
+        if (step === 5 && !pipelineStepUnlocked(6)) next.textContent = 'Generate first to unlock Compare';
+        else if (step < 6) next.textContent = `Next: ${PIPELINE_META[step + 1].title} →`;
+      }
+      const note = nav.querySelector('.nav-note');
+      if (note) note.textContent = PIPELINE_META[step]?.note || '';
+    });
+  }
+
+  function goToStep(step, scroll = true) {
+    step = Math.max(1, Math.min(6, Number(step) || 1));
+    if (!pipelineStepUnlocked(step)) return;
+    stopPlayback?.('original');
+    stopPlayback?.('compare');
+    state.pipelineStep = step;
+    updatePipelineUI();
+
+    // Wait until the newly selected pipeline panel has a real layout size,
+    // then render/resize its Plotly charts. Two animation frames avoids
+    // hidden-container rendering issues in Chrome/Edge.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => refreshPipelineStepPlots(step));
+    });
+
+    if (scroll) {
+      const shell = el('pipelineShell');
+      if (shell) shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function installPipelineNavigation() {
+    document.querySelectorAll('.pipeline-step').forEach(section => {
+      const step = Number(section.dataset.step);
+      if (!step || section.querySelector('.pipeline-nav')) return;
+      const nav = document.createElement('div');
+      nav.className = 'pipeline-nav';
+      nav.dataset.pipelineNav = step;
+      nav.innerHTML = `
+        <div class="nav-actions">
+          ${step > 1 ? '<button type="button" class="secondary" data-pipeline-prev>← Back</button>' : ''}
+        </div>
+        <div class="nav-note"></div>
+        <div class="nav-actions">
+          ${step < 6 ? '<button type="button" data-pipeline-next>Next →</button>' : '<span class="pipeline-inline-status">Pipeline complete</span>'}
+        </div>`;
+      section.appendChild(nav);
+      nav.querySelector('[data-pipeline-prev]')?.addEventListener('click', () => goToStep(step - 1));
+      nav.querySelector('[data-pipeline-next]')?.addEventListener('click', () => goToStep(step + 1));
+    });
+
+    document.querySelectorAll('[data-pipeline-go]').forEach(node => {
+      node.addEventListener('click', () => goToStep(Number(node.dataset.pipelineGo)));
+    });
+    updatePipelineUI();
+  }
+
+  function formatSeconds(seconds) {
+    if (!Number.isFinite(seconds)) return '-';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds - mins * 60;
+    if (mins > 0) return `${seconds.toFixed(3)} s (${mins} min ${secs.toFixed(1)} s)`;
+    return `${seconds.toFixed(3)} s`;
+  }
+
+  function baseName(name) {
+    return (name || 'trajectory').replace(/\.[^.]+$/, '');
+  }
+
+  function setStatus(node, text, type = '') {
+    node.className = 'status' + (type ? ` ${type}` : '');
+    node.textContent = text;
+  }
+
+  function validateOdd(value, fallback) {
+    let n = Math.max(3, Math.round(Number(value) || fallback));
+    if (n % 2 === 0) n += 1;
+    return n;
+  }
+
+  function getParams() {
+    return {
+      sampleMs: Math.max(0.001, Number(el('sampleMs').value) || 5),
+      idleWindow: validateOdd(el('idleWindow').value, 11),
+      idleThreshold: Math.max(0, Number(el('idleThreshold').value) || 8),
+      idleMinRun: Math.max(1, Math.round(Number(el('idleMinRun').value) || 20)),
+      smoothWindow: validateOdd(el('smoothWindow').value, 101)
+    };
+  }
+
+
+  function getStageSelection() {
+    return {
+      trim: el('stageTrim').checked,
+      meanSmooth: el('stageSmooth').checked,
+      scale: el('stageScale').checked
+    };
+  }
+
+  function stageLabel(stages = getStageSelection()) {
+    const names = [];
+    if (stages.trim) names.push('Trim');
+    if (stages.meanSmooth) names.push('Mean Smooth');
+    if (stages.scale) names.push('Scale');
+    return names.length ? names.join(' + ') : 'None';
+  }
+
+  function outputSuffix(stages = getStageSelection()) {
+    const names = [];
+    if (stages.trim) names.push('trim');
+    if (stages.meanSmooth) names.push('mean');
+    if (stages.scale) names.push('scale');
+    return names.length ? names.join('_') : 'unchanged';
+  }
+
+  function invalidateProcessed(message = 'Processing options changed. Click Confirm & Generate again.') {
+    if (state.processed) {
+      state.processed = null;
+      state.processingReport = null;
+      el('downloadTxtBtn').disabled = true;
+      el('downloadReportBtn').disabled = true;
+      el('downloadPlotBtn').disabled = true;
+      el('useGeneratedBtn').disabled = true;
+      if (!state.externalOptimized) {
+        stopPlayback('compare');
+        state.playback.compare.currentSec = 0;
+        el('comparisonSection').classList.add('hidden');
+      } else {
+        updateComparisonView();
+      }
+      setStatus(el('processStatus'), message, 'warn');
+    }
+    updatePipelineUI();
+  }
+
+  function updateStageUI() {
+    const stages = getStageSelection();
+    const scaleEnabled = stages.scale && !!state.original;
+    el('manualStart').disabled = !scaleEnabled;
+    el('manualEnd').disabled = !scaleEnabled;
+    el('addManualBtn').disabled = !scaleEnabled;
+    el('clearRegionsBtn').disabled = !scaleEnabled;
+
+    el('idleWindow').disabled = !stages.trim;
+    el('idleThreshold').disabled = !stages.trim;
+    el('idleMinRun').disabled = !stages.trim;
+    el('smoothWindow').disabled = !stages.meanSmooth;
+
+    refreshRegionsTable();
+    if (!stages.scale) {
+      setStatus(el('regionStatus'), `Scale stage is disabled. ${state.regions.length ? state.regions.length + ' saved region(s) will be ignored.' : 'No scaling will be applied.'}`, 'warn');
+    }
+  }
+
+  async function parseTrajectoryFile(file) {
+    const text = await file.text();
+    const lines = text.split(/\r?\n/);
+    const rows = [];
+    const validSourceLineNumbers = [];
+    const skipped = [];
+
+    lines.forEach((raw, idx) => {
+      const lineNo = idx + 1;
+      const line = raw.trim();
+      if (!line) return;
+      try {
+        const obj = JSON.parse(line);
+        if (!obj || !Array.isArray(obj.point) || obj.point.length !== 7 || !obj.point.every(Number.isFinite)) {
+          skipped.push(lineNo);
+          return;
+        }
+        rows.push(obj.point.map(Number));
+        validSourceLineNumbers.push(lineNo);
+      } catch (_) {
+        skipped.push(lineNo);
+      }
+    });
+
+    if (rows.length < 2) throw new Error('The file must contain at least two valid 7-joint rows.');
+    return { rows, validSourceLineNumbers, skipped };
+  }
+
+  function buildTraces(data) {
+    const x = Array.from({ length: data.length }, (_, i) => i + 1);
+    // SVG scatter is more reliable when a pipeline step was previously hidden.
+    // Switch to WebGL only for large trajectories where performance benefits matter.
+    const traceType = data.length > 15000 ? 'scattergl' : 'scatter';
+    return Array.from({ length: 7 }, (_, j) => ({
+      x,
+      y: data.map(r => r[j]),
+      type: traceType,
+      mode: 'lines',
+      name: `J${j + 1}`,
+      line: { color: JOINT_COLORS[j], width: 1.5 },
+      hovertemplate: `J${j + 1}<br>Row %{x}<br>Value %{y}<extra></extra>`
+    }));
+  }
+
+  function plotTrajectory(divId, data, title, selectable = false, sharedYRange = null) {
+    const layout = {
+      title: { text: title, font: { size: 16 } },
+      margin: { l: 80, r: 25, t: 55, b: 60 },
+      xaxis: { title: 'Sample / Row Number', rangeslider: { visible: false } },
+      yaxis: { title: 'Joint Value', automargin: true },
+      hovermode: 'x unified',
+      legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.08 },
+      dragmode: selectable ? 'select' : 'zoom',
+      selectdirection: selectable ? 'h' : undefined,
+      paper_bgcolor: '#ffffff',
+      plot_bgcolor: '#ffffff'
+    };
+    if (sharedYRange) layout.yaxis.range = sharedYRange;
+
+    const config = {
+      responsive: true,
+      scrollZoom: true,
+      displaylogo: false,
+      modeBarButtonsToRemove: ['lasso2d']
+    };
+
+    return Plotly.react(divId, buildTraces(data), layout, config);
+  }
+
+  function attachOriginalPlotSelectionHandler() {
+    const plot = el('originalPlot');
+    if (!plot || !plot.on) return;
+    plot.removeAllListeners && plot.removeAllListeners('plotly_selected');
+    plot.on('plotly_selected', evData => {
+      if (!evData) return;
+      let start, end;
+      if (evData.range && evData.range.x) {
+        start = evData.range.x[0];
+        end = evData.range.x[1];
+      } else if (evData.points && evData.points.length) {
+        const xs = evData.points.map(p => p.x);
+        start = Math.min(...xs);
+        end = Math.max(...xs);
+      }
+      if (Number.isFinite(start) && Number.isFinite(end)) {
+        addRegion(Math.ceil(start), Math.floor(end));
+        try { Plotly.restyle(plot, { selectedpoints: null }); } catch (_) {}
+      }
+    });
+  }
+
+  async function refreshPipelineStepPlots(step) {
+    // Plotly/WebGL can render a blank trace layer when initialized inside display:none.
+    // Re-create the plot only after its pipeline step is visible.
+    try {
+      if (step === 4 && state.original) {
+        await plotTrajectory(
+          'originalPlot',
+          state.original,
+          `Original — ${state.fileName}`,
+          true,
+          yRangeFor(state.original)
+        );
+        attachOriginalPlotSelectionHandler();
+        updateOriginalPlaybackUI();
+        updateOriginalPlotShapes(rowForTime(state.original, state.playback.original.currentSec));
+        try { Plotly.Plots.resize(el('originalPlot')); } catch (_) {}
+      }
+
+      if (step === 6 && state.original && comparisonOptimizedData()) {
+        await updateComparisonView();
+        try { Plotly.Plots.resize(el('originalComparePlot')); } catch (_) {}
+        try { Plotly.Plots.resize(el('processedPlot')); } catch (_) {}
+      }
+    } catch (err) {
+      console.error('Visible-step plot refresh failed:', err);
+    }
+  }
+
+  function yRangeFor(a, b = null) {
+    let mn = Infinity, mx = -Infinity;
+    [a, b].filter(Boolean).forEach(data => {
+      data.forEach(row => row.forEach(v => {
+        if (v < mn) mn = v;
+        if (v > mx) mx = v;
+      }));
+    });
+    const pad = Math.max(1, (mx - mn) * 0.05);
+    return [mn - pad, mx + pad];
+  }
+
+  function percentile(values, p) {
+    if (!values.length) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const pos = (sorted.length - 1) * p;
+    const lo = Math.floor(pos), hi = Math.ceil(pos);
+    if (lo === hi) return sorted[lo];
+    const a = pos - lo;
+    return sorted[lo] * (1 - a) + sorted[hi] * a;
+  }
+
+  function analyzeMotionRegions(data) {
+    const n = data.length;
+    const p = getParams();
+    const dt = p.sampleMs / 1000;
+    const step = new Float64Array(n);
+    const accel = new Float64Array(n);
+
+    for (let i = 1; i < n; i++) {
+      let sumSq = 0;
+      for (let j = 0; j < 7; j++) {
+        const d = data[i][j] - data[i - 1][j];
+        sumSq += d * d;
+      }
+      step[i] = Math.sqrt(sumSq);
+    }
+    for (let i = 2; i < n; i++) accel[i] = Math.abs(step[i] - step[i - 1]);
+
+    // Keep the automatic analysis readable: normally 5-10 review regions.
+    const regionCount = Math.min(10, Math.max(5, Math.round(n / 3000)));
+    const raw = [];
+    for (let r = 0; r < regionCount; r++) {
+      const s0 = Math.floor(r * n / regionCount);
+      const e0 = Math.max(s0, Math.floor((r + 1) * n / regionCount) - 1);
+      let sumStep = 0, maxStep = 0, sumAccel = 0;
+      const count = Math.max(1, e0 - s0 + 1);
+      for (let i = s0; i <= e0; i++) {
+        sumStep += step[i];
+        sumAccel += accel[i];
+        if (step[i] > maxStep) maxStep = step[i];
+      }
+      raw.push({
+        start: s0 + 1,
+        end: e0 + 1,
+        avgStep: sumStep / count,
+        maxStep,
+        avgAccel: sumAccel / count,
+        originalSec: count * dt
+      });
+    }
+
+    const avgSteps = raw.map(r => r.avgStep);
+    const maxSteps = raw.map(r => r.maxStep);
+    const avgAccels = raw.map(r => r.avgAccel);
+    const q25Step = percentile(avgSteps, 0.25);
+    const q50Step = percentile(avgSteps, 0.50);
+    const q75Max = percentile(maxSteps, 0.75);
+    const q25Accel = percentile(avgAccels, 0.25);
+    const q50Accel = percentile(avgAccels, 0.50);
+    const q75Accel = percentile(avgAccels, 0.75);
+
+    return raw.map((r, idx) => {
+      let motionType = 'General continuous motion';
+      let action = 'Slightly shorter';
+      let peakGuidance = 'Keep moderate';
+      let scalePct = 95;
+      let reason = 'Balanced motion region; use a conservative reduction and review in simulation.';
+
+      if (idx === 0) {
+        motionType = 'Approach candidate';
+        action = 'Shorter / faster';
+        peakGuidance = 'Can increase carefully';
+        scalePct = 75;
+        reason = 'Beginning transition candidate; typically less accuracy-sensitive than the cleaning path.';
+      } else if (idx === raw.length - 1) {
+        motionType = 'Exit candidate';
+        action = 'Shorter / faster';
+        peakGuidance = 'Can increase carefully';
+        scalePct = 75;
+        reason = 'End transition candidate; move away from the work area efficiently.';
+      } else if (r.avgAccel >= q75Accel && r.avgAccel > 0) {
+        motionType = 'Direction-change / high-dynamic region';
+        action = 'Longer / slower';
+        peakGuidance = 'Limit peak speed';
+        scalePct = 115;
+        reason = 'High acceleration/deceleration activity suggests a direction change or dynamic transition.';
+      } else if (r.maxStep >= q75Max && r.avgAccel >= q50Accel) {
+        motionType = 'High-peak motion';
+        action = 'Keep or slightly slower';
+        peakGuidance = 'Limit peak speed';
+        scalePct = 105;
+        reason = 'Peak joint movement is high; avoid further compression until hardware/simulation validation.';
+      } else if (r.avgStep <= q25Step) {
+        motionType = 'Slow / possibly redundant';
+        action = 'Shorter / review for trim';
+        peakGuidance = 'Can increase after review';
+        scalePct = 80;
+        reason = 'Low average movement may contain dwell or redundant motion; review together with Trim results.';
+      } else if (r.avgAccel <= q25Accel && r.avgStep >= q50Step) {
+        motionType = 'Smooth / possible straight cleaning pass';
+        action = 'Moderately shorter';
+        peakGuidance = 'Can increase moderately';
+        scalePct = 85;
+        reason = 'Smooth continuous motion with relatively low direction-change activity is a candidate for moderate speed-up.';
+      }
+
+      return {
+        ...r,
+        motionType,
+        action,
+        peakGuidance,
+        scalePct,
+        selected: scalePct !== 100,
+        estimatedSec: r.originalSec * scalePct / 100,
+        reason
+      };
+    });
+  }
+
+  function recommendationBadge(action, scalePct) {
+    const cls = scalePct < 100 ? 'fast' : scalePct > 100 ? 'slow' : 'keep';
+    return `<span class="badge ${cls}">${action}</span>`;
+  }
+
+  function renderSuggestionsTable() {
+    const tbody = el('suggestionsTable').querySelector('tbody');
+    tbody.innerHTML = '';
+    const p = getParams();
+    state.analysisSuggestions.forEach((r, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="checkbox" data-suggest-use="${idx}" ${r.selected ? 'checked' : ''}></td>
+        <td>${idx + 1}</td>
+        <td>${r.start.toLocaleString()} - ${r.end.toLocaleString()}</td>
+        <td>${formatSeconds(r.originalSec)}</td>
+        <td>${r.motionType}</td>
+        <td>${r.peakGuidance}</td>
+        <td data-suggest-action="${idx}">${recommendationBadge(r.action, r.scalePct)}</td>
+        <td><input type="number" min="1" max="300" step="1" value="${r.scalePct}" data-suggest-scale="${idx}"></td>
+        <td data-suggest-time="${idx}">${formatSeconds(r.originalSec * r.scalePct / 100)}</td>
+        <td>${r.reason}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('input[data-suggest-use]').forEach(inp => {
+      inp.addEventListener('change', ev => {
+        state.analysisSuggestions[Number(ev.target.dataset.suggestUse)].selected = ev.target.checked;
+        updateAnalysisMetrics();
+        updateOriginalPlotShapes(state.playback.original.currentSec > 0 ? rowForTime(state.original, state.playback.original.currentSec) : null);
+      });
+    });
+    tbody.querySelectorAll('input[data-suggest-scale]').forEach(inp => {
+      inp.addEventListener('input', ev => {
+        const i = Number(ev.target.dataset.suggestScale);
+        const v = Math.max(1, Math.min(300, Number(ev.target.value) || 100));
+        const r = state.analysisSuggestions[i];
+        r.scalePct = v;
+        r.estimatedSec = r.originalSec * v / 100;
+        r.action = v < 100 ? 'Shorter / faster' : v > 100 ? 'Longer / slower' : 'Unchanged';
+        tbody.querySelector(`[data-suggest-time="${i}"]`).textContent = formatSeconds(r.estimatedSec);
+        tbody.querySelector(`[data-suggest-action="${i}"]`).innerHTML = recommendationBadge(r.action, v);
+        updateAnalysisMetrics();
+        updateOriginalPlotShapes();
+      });
+    });
+    el('applySuggestionsBtn').disabled = !state.analysisSuggestions.length;
+  }
+
+  function updateAnalysisMetrics() {
+    if (!state.original || !state.analysisSuggestions.length) {
+      el('analysisMetrics').classList.add('hidden');
+      return;
+    }
+    const original = state.analysisSuggestions.reduce((a, r) => a + r.originalSec, 0);
+    const estimated = state.analysisSuggestions.reduce((a, r) => a + (r.selected ? r.originalSec * r.scalePct / 100 : r.originalSec), 0);
+    const saved = original - estimated;
+    const pct = original > 0 ? saved / original * 100 : 0;
+    const faster = state.analysisSuggestions.filter(r => r.selected && r.scalePct < 100).length;
+    const slower = state.analysisSuggestions.filter(r => r.selected && r.scalePct > 100).length;
+    el('analysisMetrics').classList.remove('hidden');
+    el('analysisMetrics').innerHTML = `
+      <div class="metric"><div class="k">Detected review regions</div><div class="v">${state.analysisSuggestions.length}</div></div>
+      <div class="metric"><div class="k">Faster / shorter candidates</div><div class="v">${faster}</div></div>
+      <div class="metric"><div class="k">Slower / longer candidates</div><div class="v">${slower}</div></div>
+      <div class="metric"><div class="k">Motion-only estimated time</div><div class="v">${formatSeconds(estimated)}</div></div>
+      <div class="metric"><div class="k">Estimated change</div><div class="v">${saved >= 0 ? '-' : '+'}${Math.abs(saved).toFixed(3)} s (${Math.abs(pct).toFixed(1)}%)</div></div>`;
+  }
+
+  function analysisShapes() {
+    if (!state.analysisSuggestions.length) return [];
+    return state.analysisSuggestions.map(r => ({
+      type: 'rect',
+      xref: 'x', yref: 'paper',
+      x0: r.start, x1: r.end,
+      y0: 0, y1: 1,
+      fillcolor: r.scalePct < 100 ? 'rgba(2,122,72,0.055)' : r.scalePct > 100 ? 'rgba(181,71,8,0.065)' : 'rgba(23,92,211,0.035)',
+      line: { width: 0 },
+      layer: 'below'
+    }));
+  }
+
+  function updateOriginalPlotShapes(cursorRow = null) {
+    if (!state.original || !el('originalPlot').data) return;
+    const shapes = analysisShapes();
+    if (Number.isFinite(cursorRow)) shapes.push({
+      type: 'line', xref: 'x', yref: 'paper', x0: cursorRow, x1: cursorRow, y0: 0, y1: 1,
+      line: { color: '#b42318', width: 1.5 }
+    });
+    Plotly.relayout('originalPlot', { shapes }).catch(() => {});
+  }
+
+  function runAutomaticAnalysis() {
+    if (!state.original) return;
+    state.analysisSuggestions = analyzeMotionRegions(state.original);
+    state.analysisReport = {
+      generatedAt: new Date().toISOString(),
+      method: 'Motion-only heuristic using joint step magnitude and acceleration/change activity',
+      contactDataAvailable: false,
+      suggestions: state.analysisSuggestions.map(r => ({ ...r }))
+    };
+    renderSuggestionsTable();
+    updateAnalysisMetrics();
+    setStatus(el('analysisStatus'), `Automatic analysis complete: ${state.analysisSuggestions.length} review region(s) detected. Review the suggested scale values before applying them. Motion-only analysis does not replace collision or hardware validation.`, 'ok');
+    updateOriginalPlotShapes();
+  }
+
+  function applySelectedSuggestions() {
+    if (!state.original || !state.analysisSuggestions.length) return;
+    const chosen = state.analysisSuggestions.filter(r => r.selected);
+    if (!chosen.length) {
+      setStatus(el('analysisStatus'), 'No suggestions are selected. Tick at least one region to apply.', 'warn');
+      return;
+    }
+    if (state.regions.length && !window.confirm('Replace the current manual scaling regions with the selected automatic suggestions?')) return;
+    el('stageScale').checked = true;
+    state.regions = chosen.map(r => ({ start: r.start, end: r.end, scalePct: r.scalePct }));
+    state.regions.sort((a, b) => a.start - b.start);
+    invalidateProcessed('Automatic optimization suggestions applied. Click Confirm & Generate to create the optimized trajectory.');
+    updateStageUI();
+    refreshRegionsTable();
+    setStatus(el('analysisStatus'), `${chosen.length} selected suggestion(s) were copied to the Scale regions. You can still edit every scale value manually before generation.`, 'ok');
+  }
+
+  function trajectoryTotalSeconds(data) {
+    if (!data) return 0;
+    return data.length * getParams().sampleMs / 1000;
+  }
+
+  function rowForTime(data, sec) {
+    if (!data || !data.length) return 1;
+    const total = trajectoryTotalSeconds(data);
+    if (total <= 0) return 1;
+    const f = Math.max(0, Math.min(1, sec / total));
+    return 1 + f * (data.length - 1);
+  }
+
+  function currentRegionText(row) {
+    const r = state.analysisSuggestions.find(x => row >= x.start && row <= x.end);
+    if (!r) return 'Current region: -';
+    const i = state.analysisSuggestions.indexOf(r) + 1;
+    return `Current region: ${i} - ${r.motionType}`;
+  }
+
+  function updateOriginalPlaybackUI() {
+    if (!state.original) return;
+    const pb = state.playback.original;
+    const total = trajectoryTotalSeconds(state.original);
+    pb.currentSec = Math.max(0, Math.min(total, pb.currentSec));
+    el('originalTimeline').max = total;
+    el('originalTimeline').value = pb.currentSec;
+    el('originalCurrentTime').textContent = `${pb.currentSec.toFixed(3)} s`;
+    el('originalTotalTime').textContent = `${total.toFixed(3)} s`;
+    const row = rowForTime(state.original, pb.currentSec);
+    el('originalRegionLabel').textContent = currentRegionText(row);
+    updateOriginalPlotShapes(row);
+  }
+
+  function stopPlayback(which) {
+    const pb = state.playback[which];
+    pb.playing = false;
+    if (pb.raf) cancelAnimationFrame(pb.raf);
+    pb.raf = null;
+  }
+
+  function playOriginal() {
+    if (!state.original) return;
+    const pb = state.playback.original;
+    const total = trajectoryTotalSeconds(state.original);
+    if (pb.currentSec >= total - 0.001) pb.currentSec = 0;
+    pb.playing = true;
+    pb.startPerf = performance.now() - pb.currentSec * 1000;
+    const tick = now => {
+      if (!pb.playing) return;
+      pb.currentSec = Math.min(total, (now - pb.startPerf) / 1000);
+      updateOriginalPlaybackUI();
+      if (pb.currentSec >= total) { stopPlayback('original'); return; }
+      pb.raf = requestAnimationFrame(tick);
+    };
+    pb.raf = requestAnimationFrame(tick);
+  }
+
+  function comparisonOptimizedData() {
+    return state.externalOptimized || state.processed;
+  }
+
+  function comparisonOptimizedName() {
+    return state.externalOptimized ? state.externalOptimizedName : (state.processed ? `${baseName(state.fileName)}_${outputSuffix(state.processingReport?.selectedStages || getStageSelection())}_processed.txt` : '');
+  }
+
+  function renderComparisonRegionTable() {
+    const tbody = el('comparisonRegionsTable').querySelector('tbody');
+    tbody.innerHTML = '';
+    const report = state.externalOptimized ? [] : (state.processingReport?.scalingRegions || []);
+    if (!report.length) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="6" class="muted">${state.externalOptimized ? 'External optimized file loaded; region-level modification metadata is not available in the TXT file.' : 'No scaling regions were applied.'}</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+    report.forEach((r, idx) => {
+      const effect = r.scalePct < 100 ? `${(100-r.scalePct).toFixed(1)}% shorter` : r.scalePct > 100 ? `${(r.scalePct-100).toFixed(1)}% longer` : 'unchanged';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${idx+1}</td><td>${r.originalStartRow} - ${r.originalEndRow}</td><td>${r.scalePct}</td><td>${r.inputRows}</td><td>${r.outputRows}</td><td>${effect}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function updateComparisonView() {
+    const opt = comparisonOptimizedData();
+    if (!state.original || !opt) return;
+    const p = getParams();
+    const originalSeconds = state.original.length * p.sampleMs / 1000;
+    const optimizedSeconds = opt.length * p.sampleMs / 1000;
+    const saved = originalSeconds - optimizedSeconds;
+    const pct = originalSeconds > 0 ? saved / originalSeconds * 100 : 0;
+    const yRange = yRangeFor(state.original, opt);
+    await plotTrajectory('originalComparePlot', state.original, `Original - ${state.fileName}`, false, yRange);
+    await plotTrajectory('processedPlot', opt, `Optimized - ${comparisonOptimizedName()}`, false, yRange);
+    el('comparisonMetrics').innerHTML = `
+      <div class="metric"><div class="k">Original duration</div><div class="v">${formatSeconds(originalSeconds)}</div></div>
+      <div class="metric"><div class="k">Optimized duration</div><div class="v">${formatSeconds(optimizedSeconds)}</div></div>
+      <div class="metric"><div class="k">Time saved</div><div class="v">${saved >= 0 ? saved.toFixed(3) : '-' + Math.abs(saved).toFixed(3)} s</div></div>
+      <div class="metric"><div class="k">Percentage reduction</div><div class="v">${pct.toFixed(1)}%</div></div>
+      <div class="metric"><div class="k">Modified scale regions</div><div class="v">${state.externalOptimized ? '-' : (state.processingReport?.scalingRegions?.length || 0)}</div></div>`;
+    renderComparisonRegionTable();
+    el('comparisonSection').classList.remove('hidden');
+    el('useGeneratedBtn').disabled = !state.processed;
+    const total = Math.max(originalSeconds, optimizedSeconds);
+    el('compareTimeline').max = total;
+    state.playback.compare.currentSec = Math.min(state.playback.compare.currentSec, total);
+    updateComparePlaybackUI();
+  }
+
+  function compareCursorShapes(row) {
+    return [{ type:'line', xref:'x', yref:'paper', x0:row, x1:row, y0:0, y1:1, line:{ color:'#b42318', width:1.5 } }];
+  }
+
+  function updateComparePlaybackUI() {
+    const opt = comparisonOptimizedData();
+    if (!state.original || !opt) return;
+    const pb = state.playback.compare;
+    const total = Math.max(trajectoryTotalSeconds(state.original), trajectoryTotalSeconds(opt));
+    pb.currentSec = Math.max(0, Math.min(total, pb.currentSec));
+    el('compareTimeline').max = total;
+    el('compareTimeline').value = pb.currentSec;
+    el('compareCurrentTime').textContent = `${pb.currentSec.toFixed(3)} s`;
+    el('compareTotalTime').textContent = `${total.toFixed(3)} s`;
+    const r1 = rowForTime(state.original, Math.min(pb.currentSec, trajectoryTotalSeconds(state.original)));
+    const r2 = rowForTime(opt, Math.min(pb.currentSec, trajectoryTotalSeconds(opt)));
+    if (el('originalComparePlot').data) Plotly.relayout('originalComparePlot', { shapes: compareCursorShapes(r1) }).catch(() => {});
+    if (el('processedPlot').data) Plotly.relayout('processedPlot', { shapes: compareCursorShapes(r2) }).catch(() => {});
+  }
+
+  function playCompare() {
+    const opt = comparisonOptimizedData();
+    if (!state.original || !opt) return;
+    const pb = state.playback.compare;
+    const total = Math.max(trajectoryTotalSeconds(state.original), trajectoryTotalSeconds(opt));
+    if (pb.currentSec >= total - 0.001) pb.currentSec = 0;
+    pb.playing = true;
+    pb.startPerf = performance.now() - pb.currentSec * 1000;
+    const tick = now => {
+      if (!pb.playing) return;
+      pb.currentSec = Math.min(total, (now - pb.startPerf) / 1000);
+      updateComparePlaybackUI();
+      if (pb.currentSec >= total) { stopPlayback('compare'); return; }
+      pb.raf = requestAnimationFrame(tick);
+    };
+    pb.raf = requestAnimationFrame(tick);
+  }
+
+  function updateOriginalMetrics() {
+    if (!state.original) return;
+    const p = getParams();
+    const seconds = state.original.length * p.sampleMs / 1000;
+    el('originalMetrics').classList.remove('hidden');
+    el('originalMetrics').innerHTML = `
+      <div class="metric"><div class="k">Valid rows</div><div class="v">${state.original.length.toLocaleString()}</div></div>
+      <div class="metric"><div class="k">Skipped / malformed lines</div><div class="v">${state.skippedLines.length.toLocaleString()}</div></div>
+      <div class="metric"><div class="k">Sample interval</div><div class="v">${p.sampleMs} ms</div></div>
+      <div class="metric"><div class="k">Original file time</div><div class="v">${formatSeconds(seconds)}</div></div>
+    `;
+  }
+
+  function refreshRegionsTable() {
+    const tbody = el('regionsTable').querySelector('tbody');
+    tbody.innerHTML = '';
+
+    state.regions.forEach((r, idx) => {
+      const tr = document.createElement('tr');
+      const meaning = r.scalePct > 100
+        ? `${(r.scalePct - 100).toFixed(1)}% longer`
+        : r.scalePct < 100
+          ? `${(100 - r.scalePct).toFixed(1)}% shorter`
+          : 'unchanged';
+      tr.innerHTML = `
+        <td>${idx + 1}</td>
+        <td>${r.start}</td>
+        <td>${r.end}</td>
+        <td><input type="number" min="1" step="1" value="${r.scalePct}" data-scale-index="${idx}" ${getStageSelection().scale ? '' : 'disabled'}></td>
+        <td data-meaning-index="${idx}">${meaning}</td>
+        <td><button class="danger" data-delete-index="${idx}" style="padding:6px 9px;">Delete</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('input[data-scale-index]').forEach(inp => {
+      inp.addEventListener('input', ev => {
+        const i = Number(ev.target.dataset.scaleIndex);
+        const v = Math.max(1, Number(ev.target.value) || 100);
+        state.regions[i].scalePct = v;
+        const meaningCell = tbody.querySelector(`[data-meaning-index="${i}"]`);
+        meaningCell.textContent = v > 100 ? `${(v - 100).toFixed(1)}% longer` : v < 100 ? `${(100 - v).toFixed(1)}% shorter` : 'unchanged';
+        state.processed = null;
+        state.processingReport = null;
+        el('downloadTxtBtn').disabled = true;
+        el('downloadReportBtn').disabled = true;
+        el('downloadPlotBtn').disabled = true;
+      });
+    });
+
+    tbody.querySelectorAll('button[data-delete-index]').forEach(btn => {
+      btn.addEventListener('click', ev => {
+        state.regions.splice(Number(ev.target.dataset.deleteIndex), 1);
+        invalidateProcessed('Scaling regions changed. Click Confirm & Generate again.');
+        refreshRegionsTable();
+      });
+    });
+
+    const scaleEnabled = getStageSelection().scale;
+    if (!scaleEnabled) {
+      setStatus(el('regionStatus'), `Scale stage is disabled. ${state.regions.length ? state.regions.length + ' saved region(s) will be ignored.' : 'No scaling will be applied.'}`, 'warn');
+    } else if (state.regions.length === 0) {
+      setStatus(el('regionStatus'), 'Scale stage is enabled, but no scaling regions are selected yet.');
+    } else {
+      setStatus(el('regionStatus'), `${state.regions.length} scaling region(s) selected. Enter the target duration percentage for each region.`, 'ok');
+    }
+  }
+
+  function addRegion(start, end) {
+    if (!state.original) return;
+    if (!getStageSelection().scale) {
+      setStatus(el('regionStatus'), 'Enable the Scale stage before selecting a scaling region.', 'warn');
+      return;
+    }
+    let s = Math.max(1, Math.min(state.original.length, Math.round(Math.min(start, end))));
+    let e = Math.max(1, Math.min(state.original.length, Math.round(Math.max(start, end))));
+    if (e <= s) {
+      setStatus(el('regionStatus'), 'Selected region is too small. Choose at least two different row positions.', 'warn');
+      return;
+    }
+
+    const overlaps = state.regions.some(r => !(e < r.start || s > r.end));
+    if (overlaps) {
+      setStatus(el('regionStatus'), 'The selected region overlaps an existing region. Delete or adjust the existing region first.', 'err');
+      return;
+    }
+
+    state.regions.push({ start: s, end: e, scalePct: 100 });
+    state.regions.sort((a, b) => a.start - b.start);
+    invalidateProcessed('Scaling regions changed. Click Confirm & Generate again.');
+    refreshRegionsTable();
+  }
+
+  function centeredRollingMean(values, window) {
+    const n = values.length;
+    const half = Math.floor(window / 2);
+    const prefix = new Float64Array(n + 1);
+    for (let i = 0; i < n; i++) prefix[i + 1] = prefix[i] + values[i];
+
+    const out = new Float64Array(n);
+    const first = values[0], last = values[n - 1];
+    for (let i = 0; i < n; i++) {
+      const rawStart = i - half;
+      const rawEnd = i + half;
+      const start = Math.max(0, rawStart);
+      const end = Math.min(n - 1, rawEnd);
+      let sum = prefix[end + 1] - prefix[start];
+      if (rawStart < 0) sum += (-rawStart) * first;
+      if (rawEnd >= n) sum += (rawEnd - (n - 1)) * last;
+      out[i] = sum / window;
+    }
+    return out;
+  }
+
+  function trimIdle(data, params) {
+    const n = data.length;
+    if (n < 2) return { data: data.map(r => [...r]), keptOriginalIndices: data.map((_, i) => i), regions: [] };
+
+    const diffLen = n - 1;
+    const smoothedDiffs = Array.from({ length: 7 }, () => new Float64Array(diffLen));
+
+    for (let j = 0; j < 7; j++) {
+      const d = new Float64Array(diffLen);
+      for (let i = 0; i < diffLen; i++) d[i] = Math.abs(data[i + 1][j] - data[i][j]);
+      smoothedDiffs[j] = centeredRollingMean(d, params.idleWindow);
+    }
+
+    const idleStep = new Array(diffLen).fill(false);
+    for (let i = 0; i < diffLen; i++) {
+      let idle = true;
+      for (let j = 0; j < 7; j++) {
+        if (smoothedDiffs[j][i] > params.idleThreshold) { idle = false; break; }
+      }
+      idleStep[i] = idle;
+    }
+
+    const remove = new Array(n).fill(false);
+    const regions = [];
+    let i = 0;
+    while (i < diffLen) {
+      if (!idleStep[i]) { i++; continue; }
+      const a = i;
+      while (i + 1 < diffLen && idleStep[i + 1]) i++;
+      const b = i;
+      const transitions = b - a + 1;
+      if (transitions >= params.idleMinRun) {
+        // Transition run a..b covers data rows a..b+1 (zero-based).
+        // Keep endpoints a and b+1, remove interior rows a+1..b.
+        for (let r = a + 1; r <= b; r++) remove[r] = true;
+        regions.push({
+          originalStartRow: a + 1,
+          originalEndRow: b + 2,
+          transitions,
+          removedPoints: Math.max(0, transitions - 1)
+        });
+      }
+      i++;
+    }
+
+    const trimmed = [];
+    const keptOriginalIndices = [];
+    for (let r = 0; r < n; r++) {
+      if (!remove[r]) {
+        trimmed.push([...data[r]]);
+        keptOriginalIndices.push(r);
+      }
+    }
+    return { data: trimmed, keptOriginalIndices, regions };
+  }
+
+  function meanSmooth(data, window) {
+    const n = data.length;
+    const out = Array.from({ length: n }, () => new Array(7).fill(0));
+    const originalMeans = new Array(7).fill(0);
+
+    for (let j = 0; j < 7; j++) {
+      const y = new Float64Array(n);
+      let sumOrig = 0;
+      for (let i = 0; i < n; i++) { y[i] = data[i][j]; sumOrig += y[i]; }
+      const meanOrig = sumOrig / n;
+      originalMeans[j] = meanOrig;
+
+      const ys = centeredRollingMean(y, window);
+      let sumSmooth = 0;
+      for (let i = 0; i < n; i++) sumSmooth += ys[i];
+      const meanSmoothValue = sumSmooth / n;
+      const correction = meanOrig - meanSmoothValue;
+
+      for (let i = 0; i < n; i++) out[i][j] = Math.round(ys[i] + correction);
+      out[0][j] = data[0][j];
+      out[n - 1][j] = data[n - 1][j];
+    }
+    return { data: out, originalMeans };
+  }
+
+  function lowerBound(arr, target) {
+    let lo = 0, hi = arr.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (arr[mid] < target) lo = mid + 1; else hi = mid;
+    }
+    return lo;
+  }
+
+  function upperBound(arr, target) {
+    let lo = 0, hi = arr.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (arr[mid] <= target) lo = mid + 1; else hi = mid;
+    }
+    return lo;
+  }
+
+  function mapRegionsToTrimmed(regions, keptOriginalIndices) {
+    const mapped = [];
+    for (const r of [...regions].sort((a, b) => a.start - b.start)) {
+      const origStart0 = r.start - 1;
+      const origEnd0 = r.end - 1;
+      const s = lowerBound(keptOriginalIndices, origStart0);
+      const eExclusive = upperBound(keptOriginalIndices, origEnd0);
+      const e = eExclusive - 1;
+      if (s >= keptOriginalIndices.length || e < s) {
+        mapped.push({ ...r, skipped: true, reason: 'Region contained no retained samples after idle trimming.' });
+        continue;
+      }
+      mapped.push({
+        ...r,
+        trimmedStart: s,
+        trimmedEnd: e,
+        trimmedStartRow: s + 1,
+        trimmedEndRow: e + 1,
+        skipped: false
+      });
+    }
+
+    const active = mapped.filter(r => !r.skipped);
+    for (let i = 1; i < active.length; i++) {
+      if (active[i].trimmedStart <= active[i - 1].trimmedEnd) {
+        throw new Error('Two selected regions overlap after idle trimming. Adjust the original selections and try again.');
+      }
+    }
+    return mapped;
+  }
+
+  function interpolateRegion(region, scalePct) {
+    const oldLen = region.length;
+    if (oldLen <= 1) return region.map(r => [...r]);
+    const factor = scalePct / 100;
+    const oldIntervals = oldLen - 1;
+    const newIntervals = Math.max(1, Math.round(oldIntervals * factor));
+    const newLen = newIntervals + 1;
+    const out = Array.from({ length: newLen }, () => new Array(7).fill(0));
+
+    for (let k = 0; k < newLen; k++) {
+      const t = k / (newLen - 1);
+      const pos = t * (oldLen - 1);
+      const i0 = Math.floor(pos);
+      const i1 = Math.min(oldLen - 1, i0 + 1);
+      const a = pos - i0;
+      for (let j = 0; j < 7; j++) {
+        out[k][j] = Math.round(region[i0][j] + a * (region[i1][j] - region[i0][j]));
+      }
+    }
+    out[0] = [...region[0]];
+    out[newLen - 1] = [...region[oldLen - 1]];
+    return out;
+  }
+
+  function applyRegionScales(data, mappedRegions) {
+    const active = mappedRegions.filter(r => !r.skipped).sort((a, b) => a.trimmedStart - b.trimmedStart);
+    const out = [];
+    const report = [];
+    let cursor = 0;
+
+    for (const r of active) {
+      for (let i = cursor; i < r.trimmedStart; i++) out.push([...data[i]]);
+      const region = data.slice(r.trimmedStart, r.trimmedEnd + 1).map(row => [...row]);
+      const scaled = interpolateRegion(region, r.scalePct);
+      scaled.forEach(row => out.push(row));
+      report.push({
+        originalStartRow: r.start,
+        originalEndRow: r.end,
+        trimmedStartRow: r.trimmedStartRow,
+        trimmedEndRow: r.trimmedEndRow,
+        scalePct: r.scalePct,
+        inputRows: region.length,
+        outputRows: scaled.length
+      });
+      cursor = r.trimmedEnd + 1;
+    }
+    for (let i = cursor; i < data.length; i++) out.push([...data[i]]);
+    return { data: out, regionReport: report };
+  }
+
+  function dataToTxt(data) {
+    return data.map(row => JSON.stringify({ point: row.map(v => Math.round(v)) })).join('\n') + '\n';
+  }
+
+  async function saveBlobAs(blob, suggestedName, fileTypes = []) {
+    // Preferred path: Chromium/Edge File System Access API.
+    // This opens a native Save As dialog so the user can choose the folder
+    // and edit the file name before saving.
+    if (typeof window.showSaveFilePicker === 'function') {
+      try {
+        const options = { suggestedName };
+        if (fileTypes.length) options.types = fileTypes;
+        const handle = await window.showSaveFilePicker(options);
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return { saved: true, name: handle.name || suggestedName, usedPicker: true };
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          return { saved: false, cancelled: true, usedPicker: true };
+        }
+        console.warn('Save As picker failed; falling back to browser download.', err);
+      }
+    }
+
+    // Fallback for browsers without showSaveFilePicker(). Whether this asks
+    // for a folder depends on the browser's "Ask where to save each file" setting.
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = suggestedName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return { saved: true, name: suggestedName, usedPicker: false };
+  }
+
+  async function saveContentAs(content, suggestedName, mime, extensions = []) {
+    const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+    const fileTypes = extensions.length ? [{
+      description: `${extensions.join('/').toUpperCase()} file`,
+      accept: { [mime.split(';')[0]]: extensions.map(ext => ext.startsWith('.') ? ext : `.${ext}`) }
+    }] : [];
+    return saveBlobAs(blob, suggestedName, fileTypes);
+  }
+
+  async function plotToPngBlob(divId, width = 1600, height = 900) {
+    const dataUrl = await Plotly.toImage(divId, {
+      format: 'png',
+      width,
+      height,
+      scale: 1
+    });
+    const response = await fetch(dataUrl);
+    return response.blob();
+  }
+
+  async function processTrajectory() {
+    if (!state.original) return;
+    try {
+      const stages = getStageSelection();
+      if (!stages.trim && !stages.meanSmooth && !stages.scale) {
+        throw new Error('Select at least one processing stage: Trim, Mean Smooth, or Scale.');
+      }
+
+      setStatus(el('processStatus'), `Processing selected stages: ${stageLabel(stages)}…`);
+      await new Promise(resolve => setTimeout(resolve, 20));
+
+      const params = getParams();
+      el('idleWindow').value = params.idleWindow;
+      el('smoothWindow').value = params.smoothWindow;
+
+      // Stage 1: Trim (optional)
+      let trim;
+      if (stages.trim) {
+        trim = trimIdle(state.original, params);
+      } else {
+        trim = {
+          data: state.original.map(r => [...r]),
+          keptOriginalIndices: state.original.map((_, i) => i),
+          regions: []
+        };
+      }
+
+      // Stage 2: Mean smooth (optional)
+      let smooth;
+      if (stages.meanSmooth) {
+        smooth = meanSmooth(trim.data, params.smoothWindow);
+      } else {
+        smooth = { data: trim.data.map(r => [...r]), originalMeans: null };
+      }
+
+      // Stage 3: Region scaling (optional)
+      let mappedRegions = [];
+      let scaled;
+      if (stages.scale) {
+        mappedRegions = mapRegionsToTrimmed(state.regions, trim.keptOriginalIndices);
+        scaled = applyRegionScales(smooth.data, mappedRegions);
+      } else {
+        scaled = { data: smooth.data.map(r => [...r]), regionReport: [] };
+      }
+
+      // Preserve exact global endpoints from original file.
+      scaled.data[0] = [...state.original[0]];
+      scaled.data[scaled.data.length - 1] = [...state.original[state.original.length - 1]];
+
+      state.processed = scaled.data;
+      const originalSeconds = state.original.length * params.sampleMs / 1000;
+      const afterTrimSeconds = trim.data.length * params.sampleMs / 1000;
+      const afterSmoothSeconds = smooth.data.length * params.sampleMs / 1000;
+      const processedSeconds = state.processed.length * params.sampleMs / 1000;
+      const idleRemoved = stages.trim ? state.original.length - trim.data.length : 0;
+
+      state.processingReport = {
+        sourceFile: state.fileName,
+        generatedAt: new Date().toISOString(),
+        selectedStages: stages,
+        selectedStageLabel: stageLabel(stages),
+        parameters: params,
+        sourceValidRows: state.original.length,
+        skippedSourceLines: state.skippedLines,
+        idleRegions: stages.trim ? trim.regions : [],
+        idlePointsRemoved: idleRemoved,
+        rowsAfterTrim: trim.data.length,
+        rowsAfterMeanSmooth: smooth.data.length,
+        scalingRegions: stages.scale ? scaled.regionReport : [],
+        automaticOptimizationAnalysis: state.analysisReport,
+        finalRows: state.processed.length,
+        originalTimeSeconds: originalSeconds,
+        afterTrimTimeSeconds: afterTrimSeconds,
+        afterMeanSmoothTimeSeconds: afterSmoothSeconds,
+        finalTimeSeconds: processedSeconds,
+        endpointPreserved: {
+          first: JSON.stringify(state.processed[0]) === JSON.stringify(state.original[0]),
+          last: JSON.stringify(state.processed[state.processed.length - 1]) === JSON.stringify(state.original[state.original.length - 1])
+        }
+      };
+
+      const skippedMapped = stages.scale ? mappedRegions.filter(r => r.skipped) : [];
+      const outName = `${baseName(state.fileName)}_${outputSuffix(stages)}_processed.txt`;
+      state.externalOptimized = null;
+      state.externalOptimizedName = '';
+      el('optimizedFileInput').value = '';
+      await updateComparisonView();
+      setStatus(el('comparisonStatus'), `Comparing original source with newly generated optimized output: ${outName}`, 'ok');
+
+      el('processedMetrics').classList.remove('hidden');
+      el('processedMetrics').innerHTML = `
+        <div class="metric"><div class="k">Selected stages</div><div class="v" style="font-size:15px;">${stageLabel(stages)}</div></div>
+        <div class="metric"><div class="k">Original rows</div><div class="v">${state.original.length.toLocaleString()}</div></div>
+        <div class="metric"><div class="k">Idle points removed</div><div class="v">${idleRemoved.toLocaleString()}</div></div>
+        <div class="metric"><div class="k">Rows after Trim</div><div class="v">${trim.data.length.toLocaleString()}</div></div>
+        <div class="metric"><div class="k">Rows after Mean Smooth</div><div class="v">${smooth.data.length.toLocaleString()}</div></div>
+        <div class="metric"><div class="k">Scaling regions applied</div><div class="v">${stages.scale ? scaled.regionReport.length : 0}</div></div>
+        <div class="metric"><div class="k">Final rows</div><div class="v">${state.processed.length.toLocaleString()}</div></div>
+        <div class="metric"><div class="k">Original time</div><div class="v">${formatSeconds(originalSeconds)}</div></div>
+        <div class="metric"><div class="k">Final time</div><div class="v">${formatSeconds(processedSeconds)}</div></div>
+        <div class="metric"><div class="k">Time saved</div><div class="v">${(originalSeconds - processedSeconds).toFixed(3)} s</div></div>
+        <div class="metric"><div class="k">Reduction</div><div class="v">${originalSeconds > 0 ? ((originalSeconds - processedSeconds) / originalSeconds * 100).toFixed(1) : '0.0'}%</div></div>
+      `;
+
+      let message = `Generated successfully.
+` +
+        `Stages applied: ${stageLabel(stages)}
+` +
+        `Trim: ${stages.trim ? `ON — ${trim.regions.length} idle region(s), ${idleRemoved} point(s) removed` : 'OFF'}
+` +
+        `Mean Smooth: ${stages.meanSmooth ? `ON — ${params.smoothWindow}-point centered moving mean` : 'OFF'}
+` +
+        `Scale: ${stages.scale ? `ON — ${scaled.regionReport.length} region(s) applied` : 'OFF'}
+` +
+        `Final rows: ${state.processed.length}
+` +
+        `Final time @ ${params.sampleMs} ms/row: ${formatSeconds(processedSeconds)}`;
+      if (skippedMapped.length) message += `
+Warning: ${skippedMapped.length} selected region(s) had no retained points after trimming and were skipped.`;
+      if (stages.scale && state.regions.length === 0) message += `
+Note: Scale was enabled but no regions were selected, so no scaling change was made.`;
+      setStatus(el('processStatus'), message, skippedMapped.length ? 'warn' : 'ok');
+
+      el('downloadTxtBtn').disabled = false;
+      el('downloadReportBtn').disabled = false;
+      el('downloadPlotBtn').disabled = false;
+
+      updatePipelineUI();
+      setStatus(el('comparisonStatus'), `Comparison is ready. Step 6 is now unlocked for original-vs-optimized validation.`, 'ok');
+    } catch (err) {
+      console.error(err);
+      setStatus(el('processStatus'), `Processing failed: ${err.message}`, 'err');
+    }
+  }
+
+  el('fileInput').addEventListener('change', async ev => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    try {
+      setStatus(el('loadStatus'), 'Loading and parsing…');
+      const parsed = await parseTrajectoryFile(file);
+      state.fileName = file.name;
+      state.original = parsed.rows;
+      state.validSourceLineNumbers = parsed.validSourceLineNumbers;
+      state.skippedLines = parsed.skipped;
+      state.regions = [];
+      state.processed = null;
+      state.processingReport = null;
+      state.analysisSuggestions = [];
+      state.analysisReport = null;
+      state.externalOptimized = null;
+      state.externalOptimizedName = '';
+      stopPlayback('original');
+      stopPlayback('compare');
+      state.playback.original.currentSec = 0;
+      state.playback.compare.currentSec = 0;
+      el('optimizedFileInput').value = '';
+
+      const msg = parsed.skipped.length
+        ? `Loaded ${file.name}: ${parsed.rows.length.toLocaleString()} valid rows. Skipped ${parsed.skipped.length} malformed line(s).`
+        : `Loaded ${file.name}: ${parsed.rows.length.toLocaleString()} valid rows.`;
+      setStatus(el('loadStatus'), msg, parsed.skipped.length ? 'warn' : 'ok');
+      updateOriginalMetrics();
+      refreshRegionsTable();
+
+      el('manualStart').max = parsed.rows.length;
+      el('manualEnd').max = parsed.rows.length;
+      el('manualStart').value = 1;
+      el('manualEnd').value = parsed.rows.length;
+
+      el('resetBtn').disabled = false;
+      el('processBtn').disabled = false;
+      el('analyzeBtn').disabled = false;
+      el('playOriginalBtn').disabled = false;
+      el('pauseOriginalBtn').disabled = false;
+      el('restartOriginalBtn').disabled = false;
+      el('originalTimeline').disabled = false;
+      updateStageUI();
+      el('downloadTxtBtn').disabled = true;
+      el('downloadReportBtn').disabled = true;
+      el('downloadPlotBtn').disabled = true;
+      el('processedMetrics').classList.add('hidden');
+      el('comparisonSection').classList.add('hidden');
+      setStatus(el('processStatus'), `Ready. Selected stages: ${stageLabel()}. Configure any enabled stage, then click Confirm & Generate.`);
+
+      // Step 4 is hidden during upload, so delay Plotly creation until Review is opened.
+      runAutomaticAnalysis();
+      updateOriginalPlaybackUI();
+      updatePipelineUI();
+    } catch (err) {
+      console.error(err);
+      setStatus(el('loadStatus'), `Load failed: ${err.message}`, 'err');
+    }
+  });
+
+  el('sampleMs').addEventListener('input', () => {
+    updateOriginalMetrics();
+    if (state.original) {
+      runAutomaticAnalysis();
+      updateOriginalPlaybackUI();
+      if (comparisonOptimizedData()) updateComparisonView();
+    }
+    if (state.processed) {
+      // Require regeneration so displayed processed time always matches current settings.
+      state.processed = null;
+      el('downloadTxtBtn').disabled = true;
+      el('downloadReportBtn').disabled = true;
+      el('downloadPlotBtn').disabled = true;
+      setStatus(el('processStatus'), 'Sample interval changed. Click Confirm & Generate again to refresh processed timing.', 'warn');
+    }
+  });
+
+  ['idleWindow','idleThreshold','idleMinRun','smoothWindow'].forEach(id => {
+    el(id).addEventListener('input', () => invalidateProcessed());
+  });
+
+  ['stageTrim','stageSmooth','stageScale'].forEach(id => {
+    el(id).addEventListener('change', () => {
+      invalidateProcessed(`Stage selection changed. Current selection: ${stageLabel()}. Click Confirm & Generate again.`);
+      updateStageUI();
+      if (state.original && !state.processed) {
+        setStatus(el('processStatus'), `Ready. Selected stages: ${stageLabel()}. Click Confirm & Generate.`);
+      }
+    });
+  });
+
+  el('addManualBtn').addEventListener('click', () => {
+    addRegion(Number(el('manualStart').value), Number(el('manualEnd').value));
+  });
+
+  el('clearRegionsBtn').addEventListener('click', () => {
+    state.regions = [];
+    invalidateProcessed('Scaling regions cleared. Click Confirm & Generate again.');
+    refreshRegionsTable();
+  });
+
+  el('processBtn').addEventListener('click', processTrajectory);
+
+  el('downloadTxtBtn').addEventListener('click', async () => {
+    if (!state.processed) return;
+    const stages = state.processingReport?.selectedStages || getStageSelection();
+    const filename = `${baseName(state.fileName)}_${outputSuffix(stages)}_processed.txt`;
+    try {
+      const result = await saveContentAs(
+        dataToTxt(state.processed),
+        filename,
+        'text/plain;charset=utf-8',
+        ['.txt']
+      );
+      if (result.cancelled) {
+        setStatus(el('processStatus'), 'Save cancelled. Processed trajectory was not written.', 'warn');
+      } else {
+        setStatus(el('processStatus'), result.usedPicker
+          ? `Processed trajectory saved as: ${result.name}`
+          : `Processed trajectory download started as: ${result.name}. To always choose the folder, enable your browser's “Ask where to save each file” setting.`, 'ok');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus(el('processStatus'), `Could not save processed TXT: ${err.message}`, 'err');
+    }
+  });
+
+  el('downloadReportBtn').addEventListener('click', async () => {
+    if (!state.processingReport) return;
+    const stages = state.processingReport?.selectedStages || getStageSelection();
+    const filename = `${baseName(state.fileName)}_${outputSuffix(stages)}_processing_report.json`;
+    try {
+      const result = await saveContentAs(
+        JSON.stringify(state.processingReport, null, 2),
+        filename,
+        'application/json;charset=utf-8',
+        ['.json']
+      );
+      if (result.cancelled) {
+        setStatus(el('processStatus'), 'Save cancelled. Processing report was not written.', 'warn');
+      } else {
+        setStatus(el('processStatus'), result.usedPicker
+          ? `Processing report saved as: ${result.name}`
+          : `Processing report download started as: ${result.name}. To always choose the folder, enable your browser's “Ask where to save each file” setting.`, 'ok');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus(el('processStatus'), `Could not save processing report: ${err.message}`, 'err');
+    }
+  });
+
+  el('downloadPlotBtn').addEventListener('click', async () => {
+    if (!state.processed) return;
+    const stages = state.processingReport?.selectedStages || getStageSelection();
+    const filename = `${baseName(state.fileName)}_${outputSuffix(stages)}_processed_J1_to_J7.png`;
+    try {
+      const pngBlob = await plotToPngBlob('processedPlot', 1600, 900);
+      const result = await saveBlobAs(pngBlob, filename, [{
+        description: 'PNG image',
+        accept: { 'image/png': ['.png'] }
+      }]);
+      if (result.cancelled) {
+        setStatus(el('processStatus'), 'Save cancelled. Plot image was not written.', 'warn');
+      } else {
+        setStatus(el('processStatus'), result.usedPicker
+          ? `Processed plot saved as: ${result.name}`
+          : `Processed plot download started as: ${result.name}. To always choose the folder, enable your browser's “Ask where to save each file” setting.`, 'ok');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus(el('processStatus'), `Could not save plot PNG: ${err.message}`, 'err');
+    }
+  });
+
+  el('analyzeBtn').addEventListener('click', runAutomaticAnalysis);
+  el('applySuggestionsBtn').addEventListener('click', applySelectedSuggestions);
+
+  el('playOriginalBtn').addEventListener('click', playOriginal);
+  el('pauseOriginalBtn').addEventListener('click', () => stopPlayback('original'));
+  el('restartOriginalBtn').addEventListener('click', () => {
+    stopPlayback('original');
+    state.playback.original.currentSec = 0;
+    updateOriginalPlaybackUI();
+  });
+  el('originalTimeline').addEventListener('input', ev => {
+    stopPlayback('original');
+    state.playback.original.currentSec = Number(ev.target.value) || 0;
+    updateOriginalPlaybackUI();
+  });
+
+  el('optimizedFileInput').addEventListener('change', async ev => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file || !state.original) return;
+    try {
+      setStatus(el('comparisonStatus'), 'Loading optimized comparison file...');
+      const parsed = await parseTrajectoryFile(file);
+      state.externalOptimized = parsed.rows;
+      state.externalOptimizedName = file.name;
+      stopPlayback('compare');
+      state.playback.compare.currentSec = 0;
+      await updateComparisonView();
+      setStatus(el('comparisonStatus'), `External optimized file loaded: ${file.name}. Original source remains unchanged.`, parsed.skipped.length ? 'warn' : 'ok');
+    } catch (err) {
+      console.error(err);
+      setStatus(el('comparisonStatus'), `Optimized comparison load failed: ${err.message}`, 'err');
+    }
+  });
+
+  el('useGeneratedBtn').addEventListener('click', async () => {
+    if (!state.processed) return;
+    state.externalOptimized = null;
+    state.externalOptimizedName = '';
+    el('optimizedFileInput').value = '';
+    stopPlayback('compare');
+    state.playback.compare.currentSec = 0;
+    await updateComparisonView();
+    setStatus(el('comparisonStatus'), 'Comparison switched back to the generated optimized trajectory.', 'ok');
+  });
+
+  el('playCompareBtn').addEventListener('click', playCompare);
+  el('pauseCompareBtn').addEventListener('click', () => stopPlayback('compare'));
+  el('restartCompareBtn').addEventListener('click', () => {
+    stopPlayback('compare');
+    state.playback.compare.currentSec = 0;
+    updateComparePlaybackUI();
+  });
+  el('compareTimeline').addEventListener('input', ev => {
+    stopPlayback('compare');
+    state.playback.compare.currentSec = Number(ev.target.value) || 0;
+    updateComparePlaybackUI();
+  });
+
+  el('resetBtn').addEventListener('click', () => {
+    state.fileName = '';
+    state.original = null;
+    state.validSourceLineNumbers = [];
+    state.skippedLines = [];
+    state.regions = [];
+    state.processed = null;
+    state.processingReport = null;
+    state.analysisSuggestions = [];
+    state.analysisReport = null;
+    state.externalOptimized = null;
+    state.externalOptimizedName = '';
+    state.pipelineStep = 1;
+    stopPlayback('original');
+    stopPlayback('compare');
+    state.playback.original.currentSec = 0;
+    state.playback.compare.currentSec = 0;
+    el('fileInput').value = '';
+    el('optimizedFileInput').value = '';
+    el('originalMetrics').classList.add('hidden');
+    el('processedMetrics').classList.add('hidden');
+    el('comparisonSection').classList.add('hidden');
+    el('regionsTable').querySelector('tbody').innerHTML = '';
+    el('suggestionsTable').querySelector('tbody').innerHTML = '';
+    el('comparisonRegionsTable').querySelector('tbody').innerHTML = '';
+    el('analysisMetrics').classList.add('hidden');
+    el('comparisonMetrics').innerHTML = '';
+    try { Plotly.purge('originalPlot'); } catch (_) {}
+    try { Plotly.purge('originalComparePlot'); } catch (_) {}
+    try { Plotly.purge('processedPlot'); } catch (_) {}
+    setStatus(el('loadStatus'), 'No file loaded.');
+    setStatus(el('regionStatus'), 'No scaling regions selected. The file can still be trimmed and smoothed.');
+    setStatus(el('analysisStatus'), 'Load a file to run automatic analysis.');
+    setStatus(el('comparisonStatus'), 'Comparison uses the generated optimized trajectory unless an external optimized file is loaded.');
+    el('originalCurrentTime').textContent = '0.000 s';
+    el('originalTotalTime').textContent = '0.000 s';
+    el('originalRegionLabel').textContent = 'Current region: -';
+    el('compareCurrentTime').textContent = '0.000 s';
+    el('compareTotalTime').textContent = '0.000 s';
+    el('stageTrim').checked = true;
+    el('stageSmooth').checked = true;
+    el('stageScale').checked = true;
+    setStatus(el('processStatus'), 'Load a file to begin.');
+    ['resetBtn','addManualBtn','clearRegionsBtn','processBtn','downloadTxtBtn','downloadReportBtn','downloadPlotBtn','analyzeBtn','applySuggestionsBtn','playOriginalBtn','pauseOriginalBtn','restartOriginalBtn','originalTimeline','useGeneratedBtn'].forEach(id => el(id).disabled = true);
+    updateStageUI();
+    updatePipelineUI();
+  });
+
+  installPipelineNavigation();
+  goToStep(1, false);
+})();
+</script>
+</body>
+</html>

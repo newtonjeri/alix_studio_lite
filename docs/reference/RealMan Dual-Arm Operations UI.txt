@@ -1,0 +1,243 @@
+**RealMan Dual-Arm Operations UI**:
+
+1. **Dual-Robot Control**
+   - Independent control for **LEFT RM75** and **RIGHT RM75**
+   - LEFT controller: `192.168.1.10`
+   - RIGHT controller: `192.168.1.103`
+   - UI 50% 50% LEFT and RIGHT workspace
+   - Both arms can work independently or as a coordinated dual-arm system
+
+2. **Page 01 – Manual + Setup**
+   - Select trajectory `.txt` files separately for LEFT and RIGHT
+   - Select controller Program ID / upload slot
+   - Upload trajectory files to robot controller
+   - Multi-file trajectory upload
+   - Select multiple `.txt` files
+   - Upload multiple programs sequentially
+   - Existing-slot replacement confirmation
+   - Controller program list refresh
+   - Run stored controller programs alone
+   - Run one program individually
+   - Multi Run stored programs
+   - Save and load Multi Run sequences
+
+3. **Trajectory Execution**
+   - Run uploaded/stored trajectory by Program ID
+   - Program speed control (global points speed)
+   - Overall controller speed control respective to global points speed
+   - Current Page 02 overall speed default: **100%**
+   - Fast switching between stored trajectory programs - additional- - need to check
+   - Reduced unnecessary delay between one trajectory and the next
+   - Controller run-state monitoring - additional - need to check
+   - Detects when a trajectory is still running or has completed
+
+4. **Dual Stored Program Run**
+   - Select one LEFT stored program
+   - Select one RIGHT stored program
+   - Start both approximately together
+   - Synchronized software launch using a barrier
+   - Common STOP BOTH control
+
+5. **Drag & Teach**
+   - Individual LEFT Drag Teach
+   - Individual RIGHT Drag Teach
+   - START DRAG + RECORD
+   - STOP DRAG
+   - Save recorded trajectory locally as `.txt`
+   - Move robot back to recorded start pose
+   - Playback recorded Drag Teach trajectory
+   - Common **START BOTH DRAG**
+   - Common **STOP BOTH DRAG**
+   - Save both LEFT and RIGHT Drag Teach recordings
+   - Run both saved Drag Teach `.txt` files
+
+6. **Global Points**
+   - Read Global Points saved in each robot controller
+   - Refresh Global Point list
+   - Select multiple points
+   - Move using **MoveJ**
+   - Move using **MoveL**
+   - Adjustable speed %
+   - Optional wait after reaching a point
+   - Build an ordered Global Point sequence
+   - Move points Up / Down
+   - Remove / Clear sequence entries
+   - Run Global Point sequence
+   - Uses the saved joint/pose information from the controller
+
+7. **Hand Control**
+   - Independent hand control for LEFT and RIGHT
+   - Six individual channels:
+     - Little finger
+     - Ring finger
+     - Middle finger
+     - Index finger
+     - Thumb Bend
+     - Thumb Rotate
+   - Range: `0–1000`
+   - Slider control
+   - Direct numeric entry
+   - Apply all six channels together
+   - **GRIP preset:** `0, 0, 0, 0, 150, 1000`
+   - **ALL OPEN preset:** `1000, 1000, 1000, 1000, 1000, 1000`
+
+8. **Pole / Lift Control**
+   - Independent pole control for LEFT and RIGHT
+   - Enter requested pole height in mm
+   - Manual Apply
+   - Pole movements can also be included inside automated sequences
+
+9. **Simulation / Real Mode**
+   - Independent mode selection for each arm
+   - **SIMULATION**
+   - **REAL**
+   - **CHECK MODE**
+   - Controller mode read-back
+   - REAL mode requires confirmation
+
+10. **Page 02 – Dual Sequence Builder**
+    - Separate LEFT workflow builder
+    - Separate RIGHT workflow builder
+    - Build complete cleaning sequences without modifying Python code
+    - Supported sequence steps:
+      - Program
+      - Global Point
+      - Pole
+      - Hand
+      - Wait
+    - Move steps Up / Down
+    - Duplicate steps
+    - Remove steps
+    - Clear sequence
+    - Save sequence as JSON
+    - Load sequence JSON
+
+11. **Per-Program Dual Rules**
+    - Every Program added on Page 02 can have its own dual-arm execution rule
+    - **TOGETHER**
+      - Matching LEFT and RIGHT Program IDs run together
+    - **RUN FIRST**
+      - This arm must finish its program first
+    - **WAIT OTHER**
+      - This arm waits until the opposite arm finishes
+    - LEFT and RIGHT programs are paired using their **matching Program ID**
+
+12. **Mixed Parallel + Sequential Operation**
+    - Different parts of the same cleaning sequence can use different behavior
+    - Example:
+      - Programs 1–7 → LEFT + RIGHT together
+      - LEFT Program 8 → first
+      - RIGHT Program 8 → second
+      - LEFT Program 9 → third
+      - RIGHT Program 9 → fourth
+      - Programs 10 onward → LEFT + RIGHT together again
+    - No separate execution MODE needs to be selected
+
+13. **Automatic Program Handoff**
+    - Waiting arm does not use a fixed timer to determine completion
+    - Software monitors the first robot's actual program execution
+    - Waiting arm starts only after successful completion of the first program
+    - If first program fails or is stopped, waiting arm is not started
+
+14. **Optional Handoff Confirmation**
+    - **CONFIRM BEFORE WAITING ARM** checkbox
+    - Checked:
+      - First arm completes
+      - Popup appears
+      - Operator presses YES
+      - Waiting arm starts
+    - Unchecked:
+      - First arm completes
+      - Waiting arm starts automatically
+
+15. **Live Program Status**
+    - Dedicated LEFT live-status display
+    - Dedicated RIGHT live-status display
+    - Shows current Program ID and state
+    - Example states:
+      - `RUNNING`
+      - `RUNNING // RUN FIRST`
+      - `WAITING FOR LEFT`
+      - `WAITING FOR RIGHT`
+      - `WAITING // CONFIRMATION REQUIRED`
+      - `WAITING // AUTO HANDOFF`
+      - `RUNNING // SECOND`
+      - `COMPLETE ✓`
+      - `FAILED rc=...`
+      - `STOP REQUESTED`
+
+16. **Program Completion Detection**
+    - Tracks the actual subprocess/controller command result
+    - Does not depend only on UI status text
+    - Prevents timing/race-condition problems between program transitions
+    - Automatically continues to the next Program Rule stage after successful completion
+
+17. **Fast Program Switching**
+    - Keeps a persistent controller connection during Page 02 workflows
+    - Avoids repeatedly reading the full controller program list between every trajectory
+    - Avoids unnecessary per-program speed restoration
+    - Short stability check between trajectory programs
+    - Designed to reduce transition delay
+
+18. **Overall Speed Control**
+    - Page 02 includes **OVERALL SPEED %**
+    - Default is **100%**
+    - Overall controller plan speed is applied before workflow execution
+    - Reapplied before stored Program launches
+    - Helps prevent slow travel when the next trajectory's starting pose differs slightly
+
+19. **Safety / Stop Controls**
+    - Immediate **SLOW STOP**
+    - No confirmation required for Stop
+    - STOP LEFT
+    - STOP RIGHT
+    - STOP BOTH
+    - Stopping a RUN FIRST program prevents the WAIT OTHER program from starting
+    - Error states stop the coordinated workflow rather than continuing blindly
+
+20. **Telemetry**
+    - Separate telemetry/log display for LEFT and RIGHT
+    - Live command output
+    - Robot/API errors
+    - Program execution messages
+    - Runtime information
+    - Warning information
+    - Warning code `4105` treated as warning-only where applicable
+    - Telemetry auto-scroll does not force scrolling when the user is reading older messages
+
+21. **Runtime Display**
+    - Individual arm runtime
+    - Dual sequence runtime
+    - Live elapsed-time display during execution
+
+22. **Software Version Display**
+    - Permanent version bar visible above both Page 01 and Page 02
+    - Shows:
+      - **UI Program version**
+      - Current UI Python filename
+      - **Runner version**
+      - Current runner Python filename
+      - Python interpreter version
+      - Dual-arm system indicator
+    - Current version:
+      - **UI v50**
+      - **Runner v13**
+    - Runner version display updates when a different runner file is selected
+
+23. **User Interface**
+    - Dark robotics / control-console theme
+    - High-contrast buttons and status information
+    - White blinking text cursor in editable fields
+    - Separate workflow tabs:
+      - RUN
+      - POINTS
+      - DRAG TEACH
+      - HAND / POLE
+      - TELEMETRY
+    - Color-coded Run / Upload / Stop / List controls
+
+24. **Current JSON Workflow Support**
+    - Uses `realman_workflow_sequence_v1`
+    - Saves Program Dual Rules directly inside the JSON
+    - Existing sequence details such as Program IDs, waits, hand values, pole heights and speeds are preserved
+    - JSON workflows can be loaded again and run directly from Page 02

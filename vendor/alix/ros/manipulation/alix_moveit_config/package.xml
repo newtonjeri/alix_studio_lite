@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>alix_moveit_config</name>
+  <version>0.3.0</version>
+  <description>
+     An automatically generated package with all the configuration and launch files for using the alix with the MoveIt Motion Planning Framework
+  </description>
+  <maintainer email="newtonkaris45@gmail.com">Newton Kariuki</maintainer>
+
+  <license>BSD-3-Clause</license>
+
+  <url type="website">http://moveit.ros.org/</url>
+  <url type="bugtracker">https://github.com/moveit/moveit2/issues</url>
+  <url type="repository">https://github.com/moveit/moveit2</url>
+
+  <author email="newtonkaris45@gmail.com">Newton Kariuki</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- P12: the RealMan Algo-backed kinematics plugin (src/) — the package's
+       only C++. Deliberately NOT moveit_task_constructor_core; MTC lives with
+       alix_tasks. The RealMan SDK itself is vendored in-tree
+       (the external/butterfli-realman-alix submodule) and linked directly,
+       not a rosdep. -->
+  <depend>geometry_msgs</depend>
+  <depend>moveit_core</depend>
+  <depend>moveit_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>eigen</depend>
+
+  <exec_depend>moveit_ros_move_group</exec_depend>
+  <exec_depend>moveit_kinematics</exec_depend>
+  <exec_depend>trac_ik_kinematics_plugin</exec_depend>
+  <exec_depend>pick_ik</exec_depend>
+  <exec_depend>moveit_planners</exec_depend>
+  <exec_depend>moveit_simple_controller_manager</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <!-- The next 2 packages are required for the gazebo simulation.
+       We don't include them by default to prevent installing gazebo and all its dependencies. -->
+  <!-- <exec_depend>joint_trajectory_controller</exec_depend> -->
+  <!-- <exec_depend>gazebo_ros_control</exec_depend> -->
+  <exec_depend>alix_description</exec_depend>
+  <exec_depend>controller_manager</exec_depend>
+  <exec_depend>moveit_configs_utils</exec_depend>
+  <exec_depend>moveit_ros_move_group</exec_depend>
+  <exec_depend>moveit_ros_visualization</exec_depend>
+  <exec_depend>moveit_ros_warehouse</exec_depend>
+  <exec_depend>moveit_setup_assistant</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>rviz_common</exec_depend>
+  <exec_depend>rviz_default_plugins</exec_depend>
+  <!-- warehouse_ros_mongo: removed 2026-08-19. The MoveIt Setup Assistant
+       writes it by default, but it has no Jazzy package on any architecture and
+       nothing in this package's launch/ or config/ references the warehouse.
+       Declaring it made `rosdep install` abort over a dependency no alix launch
+       reaches. Re-add it only alongside a warehouse launch that actually uses
+       it, and note that you will need a source build for Jazzy. -->
+  <exec_depend>xacro</exec_depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_index_cpp</test_depend>
+
+  <depend>srdfdom</depend>
+  <depend>urdf</depend>
+
+  <export>
+      <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,32 @@
+{
+ "version": 4,
+ "fitted": "2026-09-16",
+ "tau_path_s": 0.056,
+ "tau_path_p50_s": 0.011,
+ "percentile": "p90",
+ "tau_limit_s": 0.139,
+ "floor_deg": 0.85,
+ "limit_eps_deg": 0.5,
+ "pad_factor": 1.0,
+ "prominence_deg": 0.5,
+ "approach_window_s": 0.3,
+ "window_after_s": 0.05,
+ "fitted_from": [
+  "Resource/reports/2026-09-14_taught_track_lane/runs_2026-09-16/results.json (269 turns)",
+  "Resource/reports/2026-09-14_taught_track_lane/runs_2026-09-15/results.json (422 turns)",
+  "Resource/reports/2026-09-14_taught_track_lane/runs_2026-09-14/results.json (0 turns)",
+  "Resource/reports/2026-09-15_planned_task_runs/summary.json (27029 turns)",
+  "Resource/reports/2026-09-16_predictor_generalisation/results_corpus.json (158 byte-verified runs, 425,726 commanded points, 480,368 replay frames, 33 tracks)"
+ ],
+ "tau_joint_s": [
+  0.0678,
+  0.0324,
+  0.0536,
+  0.0378,
+  0.0533,
+  0.0603,
+  0.0654
+ ],
+ "departure_calibration": 2.0,
+ "departure_law": "joint-space per-joint carry-on: p_pred(k) = FK(q(k) + tau_j (*) qdot(k)), departure = its distance to the commanded pad path, times departure_calibration. Replaced the pad-space law p + tau*pdot on 2026-09-16 after the 158-run corpus test: a lag COMMON to all seven joints lands along the path (0.00 mm perpendicular) and is invisible as a departure, so forming one pad velocity before applying one tau discards the entire effect. Real p95 / predicted p95 = 1.56x taught, 1.99x planned (hence the calibration of 2.0), against 1.94x and 9.08x for the pad-space law."
+}

@@ -1,0 +1,109 @@
+# =============================================================================
+# GLOVE CLEANING-AREA + CONTACT-AXIS DEFINITIONS
+# =============================================================================
+# Isolated, editable definition of each IK (tool) frame's *cleaning contact
+# patch* and the axis it presses with. This is what coverage uses to compute the
+# swept area — edit it to match the physical glove/tool so coverage numbers are
+# accurate.
+#
+# This file is SEPARATE from ik_frames.yaml on purpose: ik_frames.yaml is the
+# GUI-managed calibration store (translation/quaternion) and is overwritten when
+# you save calibrations, which would clobber these static properties.
+#
+# Per frame:
+#   contact_axis : tool axis pressed into the surface, optionally SIGNED
+#                  ("z"/"+z"/"-z", "x"/"+x"/"-x"); unsigned means positive.
+#                  *_glove_frame_2 presses with Z; *_glove_frame_1 presses with X.
+#
+#                  The SIGN matters because the two hands are mirrored. Every
+#                  frame here inherits its orientation from its *_ConnectorLink
+#                  (ik_frames.xacro sets rpy="0 0 0" on all of them), and the
+#                  pads are displaced -0.05 m in X on the left vs +0.05 m in X
+#                  on the right — so the left frame_1 glove presses along -X
+#                  while the right presses along +X. Frame_2's pad is displaced
+#                  +Z on BOTH arms, so it presses +Z on both and needs no sign.
+#
+#                  Path generation is unaffected by the sign: generate_poses
+#                  anchors every normal to the operator's start pose
+#                  (harmonize_normal), so it reproduces whichever direction was
+#                  authored. Coverage is what needs it — its contact-facing gate
+#                  tests `normal . press_axis <= -cos(tol)`, which is the only
+#                  sign-sensitive step in the pipeline. Left frame_1 regions
+#                  scored exactly 0.0% until this was declared.
+#   footprint_m  : [W, L] of the contact patch (m) — the pad's two in-plane
+#                  edges, SHORT first:
+#                  W = the short edge (35 mm on frames 1/2, 20 mm on 3/4)
+#                  L = the long edge (80 mm on every frame)
+#                  These are pure geometry. Which of them runs ALONG the travel
+#                  is set by the tool's spin about its press axis, which the
+#                  START POSE fixes and nothing here does. At zero wipe yaw the
+#                  emitter (path_emission.knot_poses_from) lays the tool axis
+#                  carrying W on the travel direction, so the SWATH one stroke
+#                  lays down is L. Read it with
+#                  alix_workspace.contact.pad_swath_m rather than by picking an
+#                  index: these lines used to say "W = edge perpendicular to
+#                  the wipe (brush width), L = edge along the wipe", which is
+#                  the opposite of the pose the emitter builds, and the two
+#                  halves of the pipeline rastered at 35 mm and 80 mm from the
+#                  same pad because of it.
+#                  L lies on tool Y on every frame — measured, see
+#                  alix_workspace.contact.PAD_LONG_AXIS_INDEX and
+#                  docs/kinematics/GLOVE_FRAMES_AND_PADS.md.
+#   thickness_m  : glove thickness = contact band; a surface point within this
+#                  normal distance of the contact plane counts as wiped (glove
+#                  compliance / contact tolerance). (Legacy key: depth_tol_m.)
+#   hand_state   : SRDF group_state the inspire hand takes for this tool frame.
+#                  Only the NAME is stored here; the finger joint VALUES are read
+#                  live from alix.srdf (group inspire_hand_right/left),
+#                  so editing the state in the SRDF reflects in the visualizer
+#                  automatically. Used to pose the fingers for collision + the
+#                  robot overlay so contact geometry matches the real grasp.
+#
+# Glove face dimensions (mm) — from the physical glove spec:
+#   frame          L    W    t(thickness)
+#   glove_frame_1  80   35   20
+#   glove_frame_2  80   35   20
+#   glove_frame_3  80   20   20
+#   glove_frame_4  80   20   20
+#
+# THICKNESS IS STANDARDISED AT 20 mm ON EVERY FRAME (Newton, 2026-08-17).
+# This table used to disagree with the `frames:` block below — it claimed
+# frame_2 t=30 against the block's 0.020, and frame_4 W=35 t=10 against the
+# block's [0.020, 0.08] / 0.018 — and the contract (§4) cites the block while
+# a reader cites the table. Two numbers for one physical pad is how a coverage
+# figure and a contact-fraction gate silently stop describing the same glove.
+# Resolved CONSERVATIVELY on the smaller of the frame_2 pair (0.020, not
+# 0.030): thickness is what `f = min(1, t/(D·sinθ))` divides by, so the smaller
+# value is the stricter gate. Note this MOVED frames 3/4 from 0.018 to 0.020
+# (+2 mm of contact band) — the only place standardising is less strict.
+# =============================================================================
+
+defaults:
+  thickness_m: 0.02
+  by_contact_axis:
+    z: {footprint_m: [0.035, 0.08]}   # *_glove_frame_2 — 3.5 cm (W) x 8 cm (L) palm patch
+    x: {footprint_m: [0.035, 0.08]}   # *_glove_frame_1 — 3.5 cm (W) x 8 cm (L) patch
+
+frames:
+  # frame_1 is the mirrored pair: the right pad sits at +X of its connector, the
+  # left at -X, so they press in opposite directions along the same tool axis.
+  # ── palm_pads group (frames 1+2) — ONE hand state for the whole group ──
+  # `open_tenth` and `grasp` differ by 0.130 rad on the four finger joints
+  # (1.170 vs 1.300), measured 9.1% relative over alix.srdf's group states — so
+  # the two pads do not need different hands and a task using both never has to
+  # re-pose mid-path. Frame_2 declared `grasp` while stage_sequence emitted
+  # `open_tenth` regardless, so every frame_2 task in the corpus (toplid
+  # included) already ran open_tenth. The declaration now matches what runs.
+  R_glove_frame_1: {contact_axis: +x, footprint_m: [0.035, 0.08], thickness_m: 0.020, hand_state: open_tenth}
+  L_glove_frame_1: {contact_axis: -x, footprint_m: [0.035, 0.08], thickness_m: 0.020, hand_state: open_tenth}
+  R_glove_frame_2: {contact_axis: z, footprint_m: [0.035, 0.08], thickness_m: 0.020, hand_state: open_tenth}
+  L_glove_frame_2: {contact_axis: z, footprint_m: [0.035, 0.08], thickness_m: 0.020, hand_state: open_tenth}
+  # ── finger_pads group (frames 3+4) ──
+  # These are NOT as close: half_grasp vs quarter_grasp is 0.221 rad / 42.4%
+  # relative. They keep their own declared states, and the generator holds the
+  # FIRST frame's hand state for the whole task rather than re-posing at a band
+  # seam (hand_state_for_frames()).
+  R_glove_frame_3: {contact_axis: +x, footprint_m: [0.020, 0.08], thickness_m: 0.020, hand_state: half_grasp}
+  L_glove_frame_3: {contact_axis: -x, footprint_m: [0.020, 0.08], thickness_m: 0.020, hand_state: half_grasp}
+  R_glove_frame_4: {contact_axis: +x, footprint_m: [0.020, 0.08], thickness_m: 0.020, hand_state: quarter_grasp}
+  L_glove_frame_4: {contact_axis: -x, footprint_m: [0.020, 0.08], thickness_m: 0.020, hand_state: quarter_grasp}

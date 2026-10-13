@@ -1,0 +1,13 @@
+# Optional packages. tools/setup_lite.py installs each one if it can and says so if it cannot;
+# Lite works without them.
+#
+# The Time-optimal optimiser (TOPP-RA). PyPI has wheels for Linux x86-64 only and no source
+# package; elsewhere (Jetson aarch64, Windows, macOS) setup builds it from its git tag, which
+# needs a C compiler. Without it Lite offers the Default optimiser only.
+toppra==0.6.10
+# Re-baking the robot's 3D overlay with ALIX's own tool (tools/bake_robot_overlay.py). Only
+# needed when the robot model changes; the bake itself is kept in assets/robot/. PyPI has
+# source packages only, so it needs a C++ compiler.
+meshoptimizer==0.2.30a0
+# The bake tool's deviation check (trimesh proximity queries); wheels for every platform.
+rtree==1.4.1

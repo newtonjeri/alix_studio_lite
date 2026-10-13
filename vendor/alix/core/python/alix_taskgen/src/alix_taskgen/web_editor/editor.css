@@ -1,0 +1,2166 @@
+:root {
+    /* ── ALIX brand, sampled from butterfli.ai ────────────────────────────
+       Primary #2F96EE was measured four independent ways on the live site
+       (feature-card fill, primary button, icon stroke, the "Here" accent),
+       so it is the brand blue rather than an approximation of it.
+       Surfaces are white with a #EEEEEE hairline, matching the site's cards.
+
+       Chrome is light; the VIEWPORT is deliberately not (--viewport-bg).
+       A CAD viewport on pure white loses mesh silhouettes and washes out the
+       green/red coverage overlay, which is the one thing in this tool that
+       must stay unambiguous. Onshape, Fusion and Shapr3D all make the same
+       split: bright chrome, recessed canvas.
+
+       That was D7's reasoning and the first value did not deliver it: #F4F6F8
+       is 4% off white, giving the fixture a contrast ratio of **1.70:1**
+       against the canvas and the robot 1.99:1 — which is what "the fixture
+       colour is close to the background" means, measured. #1B2733 puts every
+       scene element above 4.6:1 (robot 7.05, fixture 8.24, grid 4.85,
+       coverage green 7.84, collision red 4.64) without going to black, which
+       would blow out the emissive point markers.
+       ------------------------------------------------------------------- */
+    --brand:          #2F96EE;
+    --brand-strong:   #1B7FD4;
+    --brand-tint:     #97CBF7;
+    --brand-wash:     rgba(47, 150, 238, 0.10);
+    /* Facet edges on the brand mark. Dark, because the artwork divides its
+       facets with shadow rather than with gaps — see template.html. */
+    --brand-seam:     #12558F;
+
+    --bg:             #FFFFFF;
+    --panel:          #FFFFFF;
+    --panel-raised:   #FAFBFC;
+    --viewport-bg:    #1B2733;   /* the 3D CANVAS only — see above */
+    --border:         #EEEEEE;
+    --border-strong:  #DCDFE3;
+
+    --text:           #14181D;
+    --muted:          #6B7480;
+    --accent:         var(--brand);
+    --accent-soft:    var(--brand-wash);
+
+    --ok:             #2E9E5B;
+    --warning:        #C77700;
+    --danger:         #D93A34;
+
+    --shadow-sm:      0 0 0 1px rgba(16, 24, 40, 0.04);
+    --shadow-md:      0 2px 4px rgba(16, 24, 40, 0.05);
+    /* Overlay elevation, as a token — because --shadow-sm/-md are already
+       COMPLETE shadow values, and four rules tried to build a bigger one out
+       of --shadow-md by prefixing offsets. That expands to six lengths;
+       box-shadow accepts four, so the browser dropped the declaration and
+       every panel, tooltip and the command palette rendered flat. Invisible
+       as a bug: flat panels read as a design choice.
+       Same token confusion as the theme defect where a shadow value was used
+       as a `background` — this is that mistake in the other direction. */
+    --shadow-lg:      0 4px 4px rgba(16, 24, 40, 0.05);
+    --radius:         4px;    /* Stitch: buttons, inputs, toolbar groups */
+    --radius-pill:    999px;
+
+
+    /* Structural surfaces. These were hard-coded rgba(13,17,23,·) — the dark
+       page fill — at nine call sites, which is why the chrome stayed dark
+       after the first token pass. Opaque here on purpose: translucency that
+       reads as depth over a dark page reads as dirt over a white one. */
+    --surface-bar:      #FFFFFF;
+    --surface-ribbon:   #FAFBFC;
+    --surface-ribbon-2: #F4F6F8;
+    --surface-dock:     #FFFFFF;
+    --surface-inset:    #F4F6F8;
+    --surface-overlay:  rgba(255, 255, 255, 0.97);
+    --surface-scrim:    rgba(16, 24, 40, 0.28);
+
+    /* Redundancy atlas cells. The atlas is a data-dense readout, so it follows
+       the theme like the rest of the chrome rather than borrowing the 3D
+       viewport's dark ground — the swivel image is read next to the info rows
+       beside it, not across a 3D scene. Free cells ramp low->high by margin, so
+       the WIDTH of a corridor is visible and not only its existence; the block
+       reasons are categorical and keep their hue in both themes. */
+    --atlas-free-low:   #A9D6BC;
+    --atlas-free-high:  #1F7A4D;
+    --atlas-reach:      #8C2F2F;
+    --atlas-noseed:     #A9631F;
+    --atlas-nobranch:   #B4BCC4;
+    --atlas-limit:      #B08A20;
+    --atlas-singular:   #C0442F;
+    --atlas-self:       #8E4A8B;
+    --atlas-wall:       #3D6FB0;
+    --atlas-fixture:    #C08A34;
+    --atlas-partner:    #D2566B;
+    --atlas-corridor:   #B26B00;
+    --atlas-blocked:    #C0392B;
+    --atlas-axis:       rgba(16, 24, 40, 0.55);
+    --atlas-grid:       rgba(16, 24, 40, 0.13);
+
+    --sidebar-width: 410px;
+    --browser-w: 300px;
+    --props-w: 330px;
+    --gen-w: 0px;                 /* the Generate dock, 0 until it is opened */
+    --ribbon-h: 208px;
+
+    /* ── Design-system tokens ────────────────────────────────────────────
+       Mirrored from `design/_tokens.css`, which is the authored source the
+       claude.ai/design cards inline verbatim. `test_design_tokens_match_the
+       _design_system` compares the two per theme and fails on any drift, so
+       these are not a second opinion — editing one without the other is a
+       test failure. Values here are numerically identical to the design
+       file; only whitespace and alpha spelling (`.10` vs `0.10`) differ.
+       -------------------------------------------------------------------- */
+    --font: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --fs-xl:          22px;
+    --radius-sm:      2px;    /* Stitch: inner segment of a segmented control */
+    /* State washes — the tinted fills behind a state colour. Every state also
+       carries a glyph or word: ~8% of a male-skewed operator population is
+       red-green colour-deficient (STUDIO_UIUX_RESEARCH §5.4). */
+    --ok-wash:        rgba(46, 158, 91, 0.14);
+    --warn-wash:      rgba(199, 119, 0, 0.14);
+    --danger-wash:    rgba(217, 58, 52, 0.12);
+    /* Spacing scale. Density comes from grouping, not from shrinking type. */
+    --s1: 2px;  --s2: 4px;  --s3: 6px;  --s4: 8px;
+    --s5: 12px; --s6: 16px; --s7: 24px;
+    /* Structural decisions the layout audit enforces (tools/layout_audit.py).
+       The command band auto-sizes to at most two rows and NEVER scrolls on
+       either axis; a 208px two-axis scroll band once clipped controls
+       mid-button, and a 68px single row pushed groups off the right edge. */
+    --cmdbar-max:     210px;
+    --target-min:     24px;   /* WCAG 2.2 SC 2.5.8 */
+    --target-primary: 44px;   /* high-frequency controls */
+}
+
+/* The original GitHub-dark palette, kept as an opt-in variant. The token
+   migration made this nearly free, and long authoring sessions are exactly
+   when someone wants it. Set `data-theme="dark"` on <html>. */
+:root[data-theme="dark"] {
+    --brand:          #2F96EE;
+    --brand-strong:   #57A9F0;
+    --brand-seam:     #0B3E6B;
+    --brand-tint:     #1B4E7A;
+    --brand-wash:     rgba(47, 150, 238, 0.16);
+
+    --bg:             #121821;
+    --panel:          rgba(22, 27, 34, 0.86);
+    --panel-raised:   #161b22;
+    --viewport-bg:    #0D1117;
+    --border:         rgba(139, 148, 158, 0.24);
+    --border-strong:  #30363d;
+
+    --text:           #e6edf3;
+    --muted:          #8b949e;
+    --accent:         var(--brand);
+    --accent-soft:    var(--brand-wash);
+
+    --ok:             #3fb950;
+    --warning:        #ffcc66;
+    --danger:         #ff7b72;
+
+    --shadow-sm:      0 0 0 1px rgba(1, 4, 9, 0.30);
+    --shadow-md:      0 2px 4px rgba(1, 4, 9, 0.30);
+    --shadow-lg:      0 4px 4px rgba(1, 4, 9, 0.40);
+    --surface-bar:      rgba(13, 17, 23, 0.86);
+    --surface-ribbon:   rgba(13, 17, 23, 0.55);
+    --surface-ribbon-2: rgba(13, 17, 23, 0.40);
+    --surface-dock:     rgba(22, 27, 34, 0.70);
+    --surface-inset:    rgba(1, 4, 9, 0.30);
+    --surface-overlay:  rgba(10, 14, 20, 0.97);
+    --surface-scrim:    rgba(1, 4, 9, 0.55);
+
+    /* Atlas cells — dark variants. See the light block. */
+    --atlas-free-low:   #1E4433;
+    --atlas-free-high:  #4FD18B;
+    --atlas-reach:      #7A2B2B;
+    --atlas-noseed:     #8A5620;
+    --atlas-nobranch:   #454C55;
+    --atlas-limit:      #8A6D1F;
+    --atlas-singular:   #B4462F;
+    --atlas-self:       #8B4789;
+    --atlas-wall:       #3A6FB8;
+    --atlas-fixture:    #B07D2A;
+    --atlas-partner:    #C24B60;
+    --atlas-corridor:   #FFC862;
+    --atlas-blocked:    #FF6B6B;
+    --atlas-axis:       rgba(230, 237, 243, 0.55);
+    --atlas-grid:       rgba(230, 237, 243, 0.13);
+
+    /* Design-system state washes — dark variants. See the light block. */
+    --ok-wash:        rgba(63, 185, 80, 0.16);
+    --warn-wash:      rgba(255, 204, 102, 0.16);
+    --danger-wash:    rgba(255, 123, 114, 0.16);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+body { overflow: hidden; }
+.app { height: 100vh; display: flex; flex-direction: column; min-height: 0; background: var(--bg); }
+main { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+
+/* ===== Application bar (top) ===== */
+.app-bar { display: flex; align-items: center; gap: 16px; padding: 7px 14px; border-bottom: 1px solid var(--border); background: var(--surface-bar); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); z-index: 6; }
+.app-bar .brand { margin-bottom: 0; flex: none; }
+.app-bar .brand h1 { font-size: 18px; }
+.app-bar .toolbar { border-bottom: 0; padding: 0; flex: 1; min-width: 0; }
+.dock-toggle-btn { flex: none; font-size: var(--fs-sm); padding: 6px 10px; white-space: nowrap; }
+.app.browser-collapsed.props-collapsed .dock-toggle-btn { border-color: var(--accent); background: var(--accent-soft); }
+
+/* ===== Ribbon tabs + body ===== */
+.ribbon-tabs { display: flex; gap: 4px; padding: 0 14px; border-bottom: 1px solid var(--border); background: var(--surface-ribbon); z-index: 5; }
+/* Ribbon body is a CONSTANT height — it never changes when switching tabs. */
+/* Auto-fit: each tab's ribbon is only as tall as its content (capped at
+   --ribbon-h) — sparse tabs (Gizmo, DAC, Schedule) give the viewport the
+   space back. Regions keeps the full height: its chip list scrolls in the
+   leftover flex space. */
+.ribbon-body { height: auto; max-height: var(--cmdbar-h); border-bottom: 1px solid var(--border); background: var(--surface-ribbon-2); z-index: 4; }
+/* Tools span the full ribbon width; panels are compact so the ribbon stays short. */
+/* overflow-y auto (not hidden): on smaller/zoomed displays wrapped controls
+   scroll into reach instead of being clipped — behaviour stays consistent
+   across resolutions. */
+/* THE COMMAND BAR. Fixed height, and `overflow-y: hidden` is the point: the
+   old rule had overflow auto on BOTH axes inside a 208px band, so a tab with
+   more controls than fitted became a two-axis scroll window and clipped its
+   last panel mid-button. Content that does not fit now lives in a flyout or in
+   a dock — never in a taller bar. */
+.ribbon-body .tab-page.active { display: flex; flex-wrap: wrap; gap: 4px 6px;
+    align-items: flex-start; align-content: flex-start;
+    height: auto; max-height: var(--cmdbar-h); padding: 5px 10px; overflow: hidden; }
+/* Regions was pinned to the full --ribbon-h whether or not it needed it,
+   which on a 1366x768 laptop is 208px of the ~640px available spent on a tab
+   that is mostly a region list. `auto` lets it take what it uses; the
+   max-height on .tab-page.active still caps it. */
+/* (The old `height: auto` override for Regions is gone: it existed to unpin
+   that tab from a 208px band, and the band is now a 44px fixed bar for every
+   tab. Leaving it would let Regions alone grow again.) */
+/* Panels are content-sized vertical stacks (no auto-flow scatter); single-panel
+   tabs (Regions, Generate) grow to fill the row via their deliberate grids. */
+.ribbon-body .panel { flex: 0 1 auto; min-width: 0; margin-bottom: 0; height: 100%; max-height: 100%; overflow: hidden; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.ribbon-body .panel > * { flex: none; }
+.ribbon-body .rg-panel, .ribbon-body .gen-panel { flex: 1 1 auto; }
+.ribbon-body .panel h2 { margin: 0 0 4px; flex: none; }
+.ribbon-body .panel .button-row, .ribbon-body .panel .mode-grid { margin: 0; }
+/* Column distribution: panels grow to fill the row; controls fill the panel
+   height top-down then spill into EXTRA COLUMNS (column-fill:auto never clips
+   vertically — a tall panel like Selected Point becomes 2 columns and shows all
+   controls incl. the RPY boxes). */
+.ribbon-body .panel-cols { flex: 1 1 auto; min-height: 0; columns: 136px auto; column-gap: 14px; column-fill: auto; }
+/* 8px -> 6px between stacked panels. The 24px control minimum cost Regions
+   3px at 1366x768 and cut the component select past the band edge. */
+.ribbon-body .panel-cols > * { break-inside: avoid; margin: 0 0 6px; }
+.ribbon-body .panel-cols > *:last-child { margin-bottom: 0; }
+.ribbon-body .panel-cols > .paint-region-list { column-span: all; }
+.ribbon-body .paint-region-list { columns: 138px; column-gap: 10px; display: block; margin: 0; }
+.ribbon-body .paint-region-item { break-inside: avoid; margin-bottom: 4px; }
+.ribbon-body .hint { font-size: var(--fs-sm); line-height: 1.32; }
+.ribbon-body .field-label { margin-bottom: 3px; }
+.ribbon-body .button-row, .ribbon-body .mode-grid, .ribbon-body .nav-grid, .ribbon-body .rpy-grid, .ribbon-body .twist-row { margin-top: 6px; margin-bottom: 6px; gap: 6px; }
+.ribbon-body .mode-grid { margin-bottom: 6px; }
+.ribbon-body .readonly-field, .ribbon-body .select-field, .ribbon-body .ik-readout {
+    /* 6px -> 4px: raising these controls to the 24px target minimum cost the
+       Schedule tab 4px and cut two buttons past the band edge. The gap between
+       stacked fields is the cheapest place to give it back — padding is what
+       makes the target, margin is only separation. */
+    margin-bottom: 4px; padding: 5px 8px; }
+.ribbon-body button, .ribbon-body .file-button { padding: 5px 8px; }
+.ribbon-body .toggle { padding: 3px 0; }
+
+/* ===== Bottom status / action bar (full width) ===== */
+.status-bar { display: flex; align-items: center; gap: 16px; padding: 7px 14px; border-top: 1px solid var(--border); background: var(--surface-bar); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); z-index: 6; }
+.status-bar .toolbar { border: 0; padding: 0; flex: 1; min-width: 0; }
+
+/* ===== Always-present visibility bar (thin, under the ribbon) ===== */
+/* Compact enough to stay ONE row at working widths — when it wrapped to two
+   rows on some tabs the viewport's top edge jumped 35px between tabs. */
+/* The overlay toggles are a POPOVER, not a permanent band.
+   As a fixed two-row bar they cost ~60px of chrome above the canvas on every
+   tab, for twenty controls that are set once and then left alone — on a
+   1366x768 field laptop that is ~8% of the whole window spent on switches
+   nobody is touching. Folded behind the Overlays button in the viewport nav
+   bar, the canvas gets that height back and the toggles are one click away.
+   It is `position: fixed` so it escapes the chrome's own clipping, and it
+   anchors above the nav bar it belongs to. */
+.visibility-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 7px; padding: 4px 10px; border-bottom: 1px solid var(--border); background: var(--surface-inset); z-index: 4; font-size: var(--fs-xs); }
+.visibility-bar[hidden] { display: none; }
+.visibility-bar.as-popover { position: fixed; z-index: 60; left: 50%; transform: translateX(-50%);
+    max-width: min(940px, 94vw); max-height: 46vh; overflow-y: auto; justify-content: flex-start;
+    padding: var(--s5); border: 1px solid var(--border-strong); border-radius: var(--radius);
+    background: var(--surface-overlay); box-shadow: var(--shadow-lg); }
+.vis-group { display: flex; align-items: center; gap: 6px; }
+.vis-group + .vis-group { border-left: 1px solid var(--border); padding-left: 8px; }
+.vis-label { color: var(--muted); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.8; }
+.visibility-bar .toggle { padding: 2px 0; gap: 5px; font-size: var(--fs-sm); white-space: nowrap; }
+
+/* ===== Workspace row: Browser dock | viewport | Properties dock ===== */
+/* FOUR TRACKS, each a variable, and the states set the variables rather than
+   restating the whole template. There were SEVEN rules here (browser x props,
+   empty x collapsed, and their combinations) each spelling out three columns;
+   adding the Generate track to all seven is how a layout starts disagreeing
+   with itself. Three rules now say the same thing and the Generate dock sits
+   where it belongs — beside the viewport, INSIDE Properties, because it is the
+   panel being worked in and Properties is the reference beside it. */
+.workspace-row { flex: 1; min-height: 0; display: grid;
+    --col-browser: var(--browser-w);
+    --col-props: var(--props-w);
+    grid-template-columns: var(--col-browser) minmax(0, 1fr) var(--gen-w, 0px) var(--col-props); }
+/* Pin each child to its column so hiding a dock (display:none) can't shift `main`
+   out of the 1fr middle track (which left empty space when maximizing). */
+/* Every child pinned to row 1 as well as to its column: an item placed in an
+   EARLIER column than the one before it starts a new implicit ROW, which is
+   exactly what dropped the Generate dock below the viewport. */
+.workspace-row > * { grid-row: 1; }
+.workspace-row > .browser-dock { grid-column: 1; }
+.workspace-row > main { grid-column: 2; min-width: 0; }
+.workspace-row > .gen-dock { grid-column: 3; }
+.workspace-row > .props-dock { grid-column: 4; }
+.dock { min-width: 0; overflow: hidden; display: flex; flex-direction: column; background: var(--surface-dock); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+.browser-dock { border-right: 1px solid var(--border); }
+.props-dock { border-left: 1px solid var(--border); }
+/* Side docks: cleaner single-column panels + a slim scrollbar (they scroll). */
+/* `.dock .panel` and `.dock-body` were each declared twice, 10 lines apart, and
+   the second won: the first block's padding (11px 12px) and margin (10px) had
+   been dead since the second was added, while its `background` survived because
+   the second never restated it. Merged to the values that were actually
+   computing — this changes no pixel, it just stops the file describing two. */
+.dock .panel { padding: 12px; margin-bottom: 12px; box-shadow: none; background: var(--surface-inset); }
+.dock .panel:last-child { margin-bottom: 0; }
+.dock .panel h2 { margin: 0 0 8px; }
+.dock-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 12px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.dock-body::-webkit-scrollbar { width: 9px; }
+.dock-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius); border: 2px solid transparent; background-clip: content-box; }
+.dock-body::-webkit-scrollbar-thumb:hover { background: var(--border); background-clip: content-box; }
+.dock-body::-webkit-scrollbar-track { background: transparent; }
+.dock-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); flex: none; }
+.dock .sequence-list, .dock .info-list { font-size: var(--fs-sm); }
+
+/* ===== Resizable dock handles ===== */
+.dock { position: relative; }
+.dock-resize { position: absolute; top: 0; bottom: 0; width: 8px; z-index: 7; cursor: col-resize; touch-action: none; }
+.browser-dock .dock-resize { right: -4px; }
+.props-dock .dock-resize { left: -4px; }
+.dock-resize::after { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; background: transparent; transform: translateX(-50%); transition: background 120ms ease; }
+.dock-resize:hover::after, .dock-resize.dragging::after, .dock-resize:focus-visible::after { background: var(--accent); }
+/* The separator is focusable now, so it needs to SHOW focus — and it is an 8px
+   sliver, so the ring goes on the 2px bar rather than the invisible hit box. */
+.dock-resize:focus-visible { outline: none; }
+.dock-resize:focus-visible::after { width: 4px; box-shadow: 0 0 0 1px var(--surface-dock); }
+
+/* An empty dock stands down: same geometry as collapsed, but derived from
+   "no panel on this tab" rather than from the operator hiding it — so no
+   ⟩ Browser affordance appears, because there is nothing behind it to show. */
+.app.browser-empty .workspace-row { --col-browser: 0; }
+.app.props-empty .workspace-row { --col-props: 0; }
+.app.browser-empty #browserDock { display: none; }
+.app.props-empty #propsDock { display: none; }
+.app.browser-empty .dock-expand.left { display: none; }
+.app.props-empty .dock-expand.right { display: none; }
+
+/* A DERIVATION is evidence, not a caption. The blend law, the sampling law and
+   the two row pitches are each right and each worth reading once; all three
+   open at once in a 460px column is a wall of monospace that buries the four
+   controls they belong to. Folded, the numbers are one click away and the
+   panel is a panel. */
+.gen-derivation > summary { cursor: pointer; font-size: var(--fs-xs); color: var(--muted);
+    padding: 2px 0; list-style: revert; }
+.gen-derivation[open] > summary { color: var(--text); }
+.gen-derivation .gen-readout { margin-top: 4px; }
+
+/* ===== The Generate dock =====
+   Docked, the panel's three columns become one: the params, then the run's own
+   feedback, then the verdict, in the order the work happens. The centre column
+   was a 60%-of-the-dialog empty grey field with one line of status floating in
+   it — the space existed because the layout was designed for a screen-wide
+   dialog and never revisited when the content shrank. */
+.app.gen-docked { --gen-w: clamp(320px, 30vw, 460px); }
+.app:not(.gen-docked) .gen-dock { display: none; }
+/* DOCKED IN FACT, FLOATING IN READING. It occupies a grid track — the viewport
+   shrinks for it, nothing is covered — but it is the panel being worked in, and
+   a flush-edged column reads as furniture. Inset from its track, with a real
+   border, rounded corners and elevation, it reads as the active surface without
+   floating over anything or stealing a click from the mesh. */
+.gen-dock { position: relative; background: transparent; border-left: 0;
+    padding: 8px 8px 8px 0; overflow: visible;
+    /* A grid item's `min-height` is `auto`, so a flex column inside it grows to
+       its content unless told otherwise; `.dock`'s `overflow: hidden` was doing
+       that job by clipping, and the inset shadow needs `visible`. `min-height:
+       0` is the honest way to say "you are the height of your track" — without
+       it the body ran 1888px inside a 1250px window and simply stopped
+       scrolling. */
+    min-height: 0; }
+.gen-dock > .dock-head,
+.gen-dock > .dock-body { background: var(--surface-dock); }
+.gen-dock > .dock-head {
+    border: 1px solid var(--accent); border-bottom: 0;
+    border-radius: var(--radius-lg, 10px) var(--radius-lg, 10px) 0 0;
+    padding: 8px 12px; font-weight: 600; letter-spacing: .02em;
+    box-shadow: 0 -1px 0 0 var(--accent-soft) inset; }
+.gen-dock > .dock-body {
+    border: 1px solid var(--accent); border-top: 0;
+    border-radius: 0 0 var(--radius-lg, 10px) var(--radius-lg, 10px);
+    padding: 0; min-height: 0; }
+/* the elevation goes on the pair, so the seam between head and body stays flat */
+.gen-dock::after { content: ''; position: absolute; inset: 8px 8px 8px 0;
+    border-radius: var(--radius-lg, 10px); pointer-events: none;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.10); }
+.gen-dock .dock-resize { left: 0; }
+.cmd-dock { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.cmd-dock > .gen-dialog { grid-template-columns: minmax(0, 1fr); overflow-y: auto; padding: 0 12px; }
+.cmd-dock > .gen-actions { position: sticky; bottom: 0; }
+/* In the dock the verdict is a strip under the run, not a bordered side rail. */
+.cmd-dock .gen-verdict { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 8px; }
+
+/* THE START POSE IS THE POINT OF THE DOCK, so it is not buried in group D.
+   It sits above the parameter groups with its own affordances. */
+.gen-start { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; margin: 8px 0 4px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-inset); }
+.gen-start > h3 { margin: 0; font-size: var(--fs-sm); font-weight: 600; letter-spacing: .02em; }
+.gen-start .gen-start-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.gen-start .gen-start-row > button { flex: 1 1 auto; min-height: var(--target-min, 32px);
+    padding: 4px 8px; font-size: var(--fs-sm); white-space: nowrap; }
+.gen-start .gen-pose { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted);
+    word-break: break-all; }
+.gen-start .gen-pose.set { color: var(--text); }
+.gen-start[data-picking="1"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.gen-start-hint { font-size: var(--fs-xs); color: var(--muted); }
+
+/* ===== Editable sequence list (drag to reorder, × to remove) ===== */
+#sequenceList.seq-edit { display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start; }
+.seq-item { display: inline-flex; align-items: center; gap: 5px; padding: 2px 3px 2px 6px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-inset); font-size: var(--fs-sm); cursor: grab; }
+.seq-item.selected { border-color: var(--warning); background: rgba(255, 204, 102, 0.16); color: var(--warning); }
+.seq-item.dragging { opacity: 0.4; }
+.seq-item.drop-target { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.seq-grip { color: var(--muted); font-size: var(--fs-xs); cursor: grab; }
+.seq-name { cursor: pointer; font-family: "JetBrains Mono", ui-monospace, monospace; }
+/* The knot list reuses the sequence list: same grip, same drop target. The
+   kind badge is what distinguishes a knot row from a waypoint row -- start /
+   row_end / turn / interior is what the turn classification and the start
+   anchoring read, so it is worth seeing before a reorder. */
+.seq-kind { margin-left: 6px; font-size: var(--fs-xs); color: var(--muted);
+    font-family: var(--font, inherit); }
+.seq-del { border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 0 2px; font-size: var(--fs-md); line-height: 1; border-radius: 50%; }
+.seq-del:hover { color: #fff; background: var(--danger); }
+
+/* ===== Selected-point analysis (Workspace tab, fills the empty space) ===== */
+.ribbon-body .spa-panel { flex: 1 1 auto; min-width: 300px; }
+.ribbon-body .spa-panel .spa-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 7px; overflow-y: auto; }
+.spa-empty { color: var(--muted); font-size: var(--fs-md); line-height: 1.4; }
+.spa-title { font-weight: 600; font-size: var(--fs-md); font-family: "JetBrains Mono", ui-monospace, monospace; }
+.spa-arms { display: flex; gap: 10px; }
+.spa-arm { flex: 1 1 0; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius); padding: 7px 9px; }
+.spa-arm-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: var(--fs-md); }
+.spa-best { margin-left: auto; font-size: var(--fs-xs); color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.spa-row { display: flex; justify-content: space-between; gap: 10px; font-size: var(--fs-sm); padding: 1px 0; }
+.spa-row span { color: var(--muted); white-space: nowrap; }
+.spa-row code { color: var(--text); font-family: "JetBrains Mono", ui-monospace, monospace; text-align: right; }
+.spa-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+.spa-dot.ok { background: #40d959; }
+.spa-dot.warn { background: #f0a020; }
+.spa-dot.bad { background: var(--danger); }
+.spa-coll { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--muted); }
+.dock-collapse { padding: 2px 8px; font-size: var(--fs-sm); line-height: 1.1; }
+.dock-expand { position: absolute; top: 10px; z-index: 5; display: none; padding: 5px 9px; font-size: var(--fs-sm); }
+.dock-expand.left { left: 10px; }
+.dock-expand.right { right: 10px; }
+.app.browser-collapsed .workspace-row { --col-browser: 0; }
+.app.props-collapsed .workspace-row { --col-props: 0; }
+.app.browser-collapsed #browserDock { display: none; }
+.app.props-collapsed #propsDock { display: none; }
+.app.browser-collapsed .dock-expand.left { display: block; }
+.app.props-collapsed .dock-expand.right { display: block; }
+
+/* ===== Icon + label buttons (ribbon) ===== */
+.btn-ico { display: inline-flex; align-items: center; vertical-align: -2px; margin-right: 6px; color: var(--accent); }
+.btn-ico svg { width: 13px; height: 13px; display: block; }
+button:disabled .btn-ico { color: var(--muted); }
+
+/* ===== Compact controls in the ribbon (fit-content, wrap; no full-width stretch) ===== */
+.ribbon-body .button-row, .ribbon-body .nav-grid, .ribbon-body .mode-grid { display: flex; flex-wrap: wrap; grid-template-columns: none; gap: 6px; }
+.ribbon-body button, .ribbon-body .file-button { width: auto; flex: 0 0 auto; }
+.ribbon-body .select-field { width: auto; min-width: 92px; max-width: 100%; }
+/* Roll/Pitch/Yaw stay a 3-up grid so all three boxes are visible (not collapsed). */
+.ribbon-body .rpy-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ribbon-body .rpy-grid input { width: 100%; min-width: 0; padding: 5px 6px; }
+
+/* ===== Selected Point: deliberate fixed layout (nav 2x2 top-left, controls,
+   RPY + Apply pinned to the bottom) — excluded from the auto column flow. ===== */
+.ribbon-body .sp-panel .sp-grid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: auto minmax(120px, 1fr) auto; grid-template-rows: auto 1fr; gap: 8px 14px; }
+.sp-nav { grid-area: 1 / 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+.sp-rotate { grid-area: 1 / 2; min-width: 0; }
+.sp-actions { grid-area: 1 / 3; display: flex; flex-direction: column; gap: 6px; }
+.sp-rpy { grid-area: 2 / 1 / 3 / 3; align-self: end; min-width: 0; }
+/* Live orientation read-out beside the RPY label: what the point HOLDS, as
+   against the boxes below, which are what you are about to apply. */
+.rpy-live { font-variant-numeric: tabular-nums; opacity: 0.85; margin-left: 4px; }
+.rpy-live.is-edited { color: var(--accent); opacity: 1; }
+.sp-apply { grid-area: 2 / 3; align-self: end; }
+.ribbon-body .sp-panel .sp-nav button, .ribbon-body .sp-panel .sp-actions button, .ribbon-body .sp-panel .sp-apply button { width: 100%; }
+.ribbon-body .sp-panel .field-label { margin: 0 0 4px; }
+.ribbon-body .sp-panel .select-field { width: 100%; margin: 0; }
+.ribbon-body .sp-panel .button-row { margin: 6px 0 0; }
+
+/* ===== Start / Pre-start: fields (left) | actions 2x2 (right) ===== */
+.ribbon-body .sp2-panel .sp2-grid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(190px, 1fr) auto; gap: 8px 14px; align-content: start; }
+.sp2-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-content: start; }
+.ribbon-body .sp2-panel .field-label { margin: 0 0 4px; }
+.ribbon-body .sp2-panel .readonly-field { width: 100%; margin: 0 0 8px; }
+.ribbon-body .sp2-panel .sp2-actions button { width: 100%; }
+
+/* ===== Regions: controls | region chips (2-row matrix) | actions, + long brush row ===== */
+/* Column 2 is capped. With the panel now growing to the full band, an
+   unbounded 1fr handed every spare pixel to the brush slider — a 1200px slider
+   on a 2000px screen. Cap it and let a trailing spacer absorb the rest, so the
+   controls stay a readable group instead of being stretched apart. */
+.ribbon-body .rg-panel .rg-grid { flex: 1 1 auto; min-height: 0; display: grid;
+    grid-template-columns: minmax(270px, 330px) minmax(220px, 460px) minmax(150px, 240px) 1fr;
+    grid-template-rows: minmax(0, 1fr); gap: 6px 16px; }
+.rg-controls { grid-area: 1 / 1; }
+.rg-regions { grid-area: 1 / 2; }
+.rg-actions { grid-area: 1 / 3; }
+/* Bottom row of the regions section, ONE compact ~500px row: brush slider on
+   the left, then the name field and a normal-width Add button. */
+.rg-add { display: flex; gap: 8px; flex: none; margin-top: 6px; align-items: flex-end; max-width: 500px; }
+/* The brush stayed in the ribbon when the list moved to the dock (row 35), so
+   it is no longer nested inside .rg-add. */
+.rg-brush { display: flex; flex-direction: column; gap: 2px; flex: 1 1 200px; min-width: 140px; }
+.rg-brush input[type="range"] { width: 100%; margin: 0; }
+.rg-add input[type="text"] { font-size: var(--fs-sm); padding: 4px 6px; flex: 0 1 180px; min-width: 100px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-inset);
+    color: var(--text); font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+.rg-add button { padding: 4px 12px; flex: none; }
+/* gap 4px -> 2px. The 24px control minimum pushed the component select 3px
+   past the band edge at 1366x768. Note this column already overflows its
+   own box at that width — the Regions inline panel is denser than the band
+   can show, which is backlog row 35 (move the region list to the Browser
+   dock), not something a gap tweak fixes. This only stops a control being
+   sliced in half at the boundary. */
+.rg-controls, .rg-actions { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow: hidden; }
+/* Component | Lid | Seat — three equal dropdowns on one row (lid/seat = the
+   ACTIVE region's cleaning state, sized like the fixture/component selects). */
+.rg-comp-state { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.rg-comp-state .select-field { width: 100%; }
+/* Region standoff: label + compact metres input on one row. */
+.rg-standoff { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 6px; align-items: center; }
+.rg-standoff input { width: 100%; }
+.rg-actions .hint { flex: none; overflow: hidden; text-overflow: ellipsis; }
+.rg-regions { display: flex; flex-direction: column; min-height: 0; }
+.ribbon-body .rg-panel .select-field { width: 100%; }
+.ribbon-body .rg-panel .field-label { margin: 0; }
+/* The band caps this panel's height, so a hint that wraps is cut through the
+   middle of its second line rather than merely truncated. One line, ellipsis,
+   full text on the tooltip. */
+#paintStats { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.rg-actions .button-row { width: 100%; }
+.rg-actions > button, .rg-actions .button-row > * { width: 100%; flex: 1 1 0; }
+.rg-actions .info-list { overflow-y: auto; max-height: 56px; }
+/* Region chips: 2 rows, columns grow with count (fill col 1 top→bottom, then col 2…),
+   each chip content-sized so name + rename + delete never overlap. */
+/* (The wrapping-chip layout that used to be here went with the list — see the
+   ROW 35 block below. `.ribbon-body .paint-region-item` above still applies:
+   the Combine Regions popover reuses that class and is still a descendant of
+   the ribbon even though it renders `position: fixed`.) */
+/* ROW 35 — the region list now lives in the Browser dock, one region per row.
+   What was here before: chips in a wrapping 208px box with the face count,
+   rename and delete set to `display: none` until `:hover`. Two consequences,
+   both bugs:
+     * `display: none` takes a real <button> out of the tab order entirely, so
+       rename and delete were unreachable by keyboard — and invisible to a
+       screen reader — until a pointer happened to be over the chip.
+     * revealing three elements on a `flex: none` chip GREW it by ~50px, which
+       reflowed every chip after it. The row you were aiming at moved out from
+       under the pointer, and ✕ Delete is 20px from the name you meant to click.
+   A vertical list makes the trade-off unnecessary: there is room for all of it,
+   all of the time. Nothing appears or disappears, so nothing can reflow. */
+#paintRegionList.paint-region-list { display: flex; flex-direction: column; gap: 4px;
+    max-height: 320px; overflow-y: auto; overflow-x: hidden; }
+#paintRegionList .paint-region-item { width: 100%; padding: 4px 8px; font-size: var(--fs-sm); }
+#paintRegionList .paint-region-item > span:first-child { flex: 1 1 auto; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#paintRegionList .paint-region-count { flex: none; margin-left: auto; font-size: var(--fs-xs);
+    color: var(--muted); font-variant-numeric: tabular-nums; }
+#paintRegionList .paint-region-rename,
+#paintRegionList .paint-region-delete { flex: none; opacity: 0.55; }
+/* Dim, not hidden — the affordance is quiet until you reach for it, but it
+   always occupies its space and always answers to Tab. */
+#paintRegionList .paint-region-item:hover .paint-region-rename,
+#paintRegionList .paint-region-item:hover .paint-region-delete,
+#paintRegionList .paint-region-item:focus-within .paint-region-rename,
+#paintRegionList .paint-region-item:focus-within .paint-region-delete,
+#paintRegionList .paint-region-rename:focus-visible,
+#paintRegionList .paint-region-delete:focus-visible { opacity: 1; }
+.dock-body .rg-add { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin-top: 8px; }
+.dock-body .rg-add input { min-width: 0; }
+
+/* Combine Regions popover: floats below the ribbon so the compact grid layout
+   is untouched. */
+.rg-panel { position: relative; }
+/* `position: absolute; top: 100%` puts this popover OUTSIDE its panel, and
+   `.ribbon-body .panel` sets `overflow: hidden` — so the bottom of the Combine
+   Regions list was clipped away, and on a short ribbon it could be clipped
+   entirely. `fixed` takes it out of the panel's clipping context; the JS
+   positions it against the button's bounding box. */
+.rg-combine { position: fixed; z-index: 40; width: 340px;
+    background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius); padding: 10px 12px;
+    box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 6px;
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.rg-combine .paint-region-list { display: grid; gap: 4px; max-height: 190px; overflow-y: auto; margin: 0; }
+.rg-combine .twist-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+.rg-combine .combine-tag { margin-left: auto; font-size: var(--fs-xs); color: var(--muted, var(--muted)); }
+.paint-region-comps { font-size: var(--fs-xs); color: var(--accent); margin-left: 4px; }
+
+/* Analyze & Finish panel (Edit ribbon): analysis + coverage in one column,
+   Validate -> one-line result -> Deploy in the other (detail: Properties dock). */
+.ribbon-body .af-panel .af-grid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: auto auto; gap: 8px 14px; align-content: start; }
+.af-col { display: flex; flex-direction: column; gap: 6px; min-width: 150px; }
+.af-col button { width: 100%; }
+.finish-headline { font-size: var(--fs-sm); line-height: 1.3; }
+.finish-headline.ok { color: var(--ok); }
+.finish-headline.bad { color: var(--danger); }
+/* Edited since the last Validate: neither pass nor fail, and it must not read
+   as either. Amber because the operator has to act (re-run), not because
+   anything failed. */
+.finish-headline.stale { color: var(--warning); font-style: italic; }
+/* A 1px inset ring was the ONLY difference between validated-and-passing and
+   never-validated. Now it is a filled tint as well, so the state is visible
+   without hunting for a hairline. */
+#finishDeployButton.validated {
+    box-shadow: 0 0 0 1px var(--ok) inset;
+    background: color-mix(in srgb, var(--ok) 12%, var(--panel));
+}
+
+/* Edit-tab panels keep a working width; the tab scrolls horizontally on
+   genuinely narrow windows instead of crushing content into overlaps. */
+.ribbon-body .sp-panel { min-width: 320px; }
+.ribbon-body .sp2-panel { min-width: 300px; }
+.ribbon-body .af-panel { min-width: 200px; }
+
+/* Narrow windows (~laptop): tighten the Edit-tab minimums so the ribbon fits
+   (the tab still scrolls horizontally as a last resort — never overlaps). */
+@media (max-width: 1460px) {
+    .ribbon-body .af-panel .af-grid { gap: 6px 10px; }
+    .af-col { min-width: 138px; }
+    .ribbon-body .sp-panel { min-width: 290px; }
+    .ribbon-body .sp2-panel { min-width: 265px; }
+    .ribbon-body .tab-page.active { gap: 3px; padding: 0 8px; }
+}
+
+/* Shared transport block (DAC + Schedule): compact buttons, full-width scrub. */
+.playback-block { display: flex; flex-direction: column; gap: 6px; flex: 1 1 auto; min-height: 0; }
+.playback-block .button-row { margin: 0; max-width: 420px; }
+.playback-block input[type="range"] { width: 100%; }
+
+/* In-place fixes on failing analysis rows (problems-first loop). */
+.analyze-fixes { display: flex; gap: 4px; margin-top: 4px; }
+.analyze-fixes button { font-size: var(--fs-xs); padding: 2px 7px; }
+/* With a generated path loaded, every analysis row is a DERIVED sample and the
+   align-to-normal fix is replaced by a note saying so (an edit there does not
+   survive a regeneration). It sits in the button row, so it takes the button
+   row's size rather than the page-wide .hint size. */
+.analyze-fixes .hint { font-size: var(--fs-xs); align-self: center; }
+
+/* Coverage gate: the footer stat is judged against the >=95% target. */
+.toolbar-stats strong.cov-good { color: var(--ok); }
+.toolbar-stats strong.cov-warn { color: #f0a020; }
+.toolbar-stats strong.cov-bad { color: var(--danger); }
+
+/* ===== Generate: 4 columns spread across the row ===== */
+/* auto-fit: all 5 columns side-by-side when the viewport is wide enough;
+   on narrower displays the columns wrap (and the ribbon scrolls) instead of
+   clipping controls. */
+.ribbon-body .gen-panel .gen-grid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 220px)); justify-content: start; gap: 8px 24px; align-content: start; }
+.gen-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ribbon-body .gen-panel .select-field, .ribbon-body .gen-panel .readonly-field { width: 100%; margin: 0; }
+.ribbon-body .gen-panel .field-label { margin: 2px 0 0; }
+.ribbon-body .gen-panel .button-row > * { flex: 1 1 0; width: auto; }
+.ribbon-body .gen-panel button.primary { width: 100%; }
+.ribbon-body .gen-panel .rpy-grid { gap: 6px; }
+/* Pose strings (7 numbers) still need room */
+.ribbon-body .readonly-field[type="text"] { width: 100%; }
+
+/* ===== Info (ⓘ) icon — collapses a panel's long help text into a hover tooltip ===== */
+.info-ico { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-left: 6px; border: 1px solid var(--muted); border-radius: 50%; color: var(--muted); font-size: var(--fs-xs); line-height: 1; cursor: help; vertical-align: middle; flex: none; }
+.info-ico:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ===== Delayed (~2s) fade-in tooltip ===== */
+.tooltip-pop { position: fixed; z-index: 99999; max-width: 420px; padding: 8px 11px; border: 1px solid var(--accent); border-radius: var(--radius); background: var(--surface-overlay); color: var(--text); font-size: var(--fs-md); line-height: 1.45; pointer-events: none; opacity: 0; transform: translateY(5px); transition: opacity 160ms ease, transform 160ms ease; box-shadow: var(--shadow-lg); }
+.tooltip-pop.show { opacity: 1; transform: translateY(0); }
+.tooltip-pop code { color: var(--accent); font-family: "JetBrains Mono", ui-monospace, monospace; }
+
+/* ===== Command palette ("S" search) ===== */
+/* --surface-inset is an opaque control surface (#F4F6F8 in light theme), so
+   the palette hid the entire application behind a flat panel instead of
+   dimming it. --surface-scrim is the token for exactly this and was defined,
+   in both themes, and unused. */
+.cmd-overlay { position: fixed; inset: 0; z-index: 100000; display: none; background: var(--surface-scrim); }
+.cmd-overlay.show { display: block; }
+.cmd-box { position: absolute; top: 11%; left: 50%; transform: translateX(-50%); width: min(640px, 92vw); border: 1px solid var(--accent); border-radius: var(--radius); background: var(--surface-overlay); box-shadow: var(--shadow-lg); overflow: hidden; }
+.cmd-input { width: 100%; padding: 14px 16px; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--text); font-size: 18px; outline: none; }
+.cmd-input::placeholder { color: var(--muted); }
+.cmd-results { max-height: 52vh; overflow-y: auto; }
+.cmd-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 16px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.cmd-item.active { background: var(--accent-soft); }
+.cmd-label { color: var(--text); font-size: var(--fs-md); }
+.cmd-tab { color: var(--muted); font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+.cmd-dis { color: var(--warning); }
+.cmd-empty { padding: 16px; color: var(--muted); font-size: var(--fs-md); text-align: center; }
+.cmd-foot { padding: 8px 16px; color: var(--muted); font-size: var(--fs-sm); border-top: 1px solid var(--border); }
+
+/* ===== Styled confirmation modal (F69, simulate-deploy template) ==========
+   Scrim + 640px card via .cmd-overlay/.cmd-box. Structure: head (title + ×)
+   → body fields (.axm-f label-over-content; .axm-dest resolved destination,
+   dir muted / file bold, displayed never typed; .axm-chips gate/diff chips)
+   → foot (note + Cancel + primary). Replaces window.confirm for schedule
+   save and deploy: the chips restate the gates at the moment of commit. */
+.axm-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+    background: var(--panel-raised); border-bottom: 1px solid var(--border-strong); }
+.axm-title { font-size: var(--fs-lg); font-weight: 650; flex: 1 1 auto; }
+.axm-close { min-width: 24px; min-height: 24px; padding: 0 6px; background: transparent;
+    border: 0; color: var(--muted); font-size: var(--fs-md); cursor: pointer; }
+.axm-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;
+    max-height: min(58vh, 560px); overflow-y: auto; }
+.axm-f .axm-lbl { display: block; font-size: var(--fs-xs); font-weight: 700;
+    text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
+.axm-dest { background: var(--surface-inset); border-radius: var(--radius-sm);
+    padding: 6px 8px; font-family: var(--mono); font-size: var(--fs-sm);
+    overflow-wrap: anywhere; }
+.axm-dest .dir { color: var(--muted); }
+.axm-dest .file { color: var(--text); font-weight: 600; }
+.axm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.axm-chip { display: inline-flex; align-items: center; gap: 5px; min-height: 24px;
+    padding: 1px 9px; border-radius: var(--radius-pill); font-size: var(--fs-sm);
+    border: 1px solid var(--border-strong); background: var(--surface-inset); }
+.axm-chip .val { font-family: var(--mono); }
+.axm-chip.g-ok { background: var(--ok-wash); border-color: var(--ok); }
+.axm-chip.g-warn { background: var(--warn-wash); border-color: var(--warning); }
+.axm-chip.g-bad { background: var(--danger-wash); border-color: var(--danger); }
+.axm-chip.g-stale { border-style: dashed; color: var(--muted); }
+.axm-lines { margin: 0; padding: 0; list-style: none; display: flex;
+    flex-direction: column; gap: 4px; font-size: var(--fs-sm); }
+.axm-lines li { padding-left: 4px; }
+.axm-lines .lv-error { color: var(--danger); }
+.axm-lines .lv-warning { color: var(--warning); }
+.axm-lines .lv-note { color: var(--muted); }
+.axm-foot { display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+    background: var(--panel-raised); border-top: 1px solid var(--border-strong); }
+.axm-note { flex: 1 1 auto; margin: 0; font-size: var(--fs-sm); color: var(--muted); }
+.axm-foot button { min-height: 32px; padding: 5px 16px; }
+.axm-foot .axm-primary { background: var(--accent); color: var(--bg); font-weight: 600; }
+.axm-foot .axm-primary:disabled { opacity: .5; }
+
+/* ROW 38 — the Help overlay ("?"). Built from the same `data-tip` attributes
+   the tooltips use, so there is no second copy of the text to drift. Reuses
+   .cmd-overlay/.cmd-box so it inherits the palette's scrim and focus handling. */
+.help-box { top: 7%; width: min(760px, 94vw); }
+.help-results { max-height: 68vh; overflow-y: auto; padding: 4px 0; }
+.help-entry { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.help-entry:last-child { border-bottom: none; }
+.help-entry h3 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 5px;
+    font-size: var(--fs-md); font-weight: 600; color: var(--text); }
+.help-entry .help-section { font-size: var(--fs-xs); font-weight: 500; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.04em; }
+.help-entry p { margin: 0; font-size: var(--fs-md); line-height: 1.55; color: var(--text);
+    max-width: 68ch; }
+.help-entry code { color: var(--accent); font-family: "JetBrains Mono", ui-monospace, monospace; }
+
+/* ── The task header (§C) ──────────────────────────────────────────────────
+   Compact, and FIRST in the command bar rather than a column beside it. In the
+   merged workbench it took a whole left column and scrolled away with the rest
+   of the ribbon — so the task's identity, the entire point of §C, disappeared
+   the moment you scrolled. The destination moves to a title, because a full
+   repo-relative path is 70+ characters and the bar has one row. */
+.task-header { display: flex; align-items: center; gap: 8px; flex: none;
+    padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--panel); }
+/* Its own strip above the band (see template): inside the band it consumed a
+   full wrap row of the 170px cap and the second group row clipped. */
+.task-strip { display: none; padding: 3px 12px; border-bottom: 1px solid var(--border);
+    background: var(--surface-inset); }
+/* ── The context strip, on EVERY canvas tab (Newton: "adopt strip") ────────
+   One camera is shared across tabs, so the chrome above the canvas must be
+   identical or the scene lurches on every switch. The workbench alone carried
+   a strip, which put its viewport 21px lower than the rest; giving the other
+   canvas tabs the same strip closes most of that. Board is excluded — it has
+   no canvas — and Simulate replaces the band entirely. */
+body[data-tab="workbench"] .task-strip,
+body[data-tab="regions"] .task-strip,
+body[data-tab="collisions"] .task-strip,
+body[data-tab="schedule"] .task-strip,
+body[data-tab="workspace"] .task-strip,
+body[data-tab="gizmo"] .task-strip { display: flex; }
+/* The strip alone still leaves the band's own height varying by tab (measured
+   158-169px), so the canvas tabs also share a band FLOOR. The cost is at most
+   ~11px of empty band on the least busy tab — nothing like the 208px empty
+   band that started this; the benefit is a viewport that never moves. The cap
+   is untouched, so a busier tab still grows to it and no tab exceeds it. */
+/* The floor is MEASURED, not the cap. Pinning every canvas tab to 170px made
+   the viewport top constant but left the workbench 85px empty on a 2560px
+   monitor, where its six groups fit one row — re-creating the empty-band
+   complaint this whole redesign started from. `equaliseCanvasBands()` measures
+   what each canvas tab actually needs at the CURRENT width and shares the
+   tallest, so the top is constant AND the emptiness is the minimum possible.
+   The cap still wins: --cmdbar-h is the ceiling, the measured value the floor. */
+body[data-tab="workbench"] .ribbon-body,
+body[data-tab="regions"] .ribbon-body,
+body[data-tab="collisions"] .ribbon-body,
+body[data-tab="schedule"] .ribbon-body,
+body[data-tab="workspace"] .ribbon-body,
+body[data-tab="gizmo"] .ribbon-body { min-height: var(--cmdbar-shared, 0px); }
+.task-strip .task-header { border: 0; background: none; padding: 0 4px; flex: 1 1 auto; }
+.task-back { flex: none; padding: 3px 9px; font-size: var(--fs-sm); }
+/* The session chip: loud on purpose (a subtle mode is the top confusion source,
+   STUDIO_UIUX_RESEARCH §6.3). Colour is paired with the word, never alone. */
+.task-session { flex: none; padding: 1px 8px; border-radius: 999px; font-size: var(--fs-xs);
+    font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; max-width: 280px;
+    overflow: hidden; text-overflow: ellipsis; border: 1px solid transparent; }
+.task-session[data-kind="generate"] { color: var(--brand-strong); background: var(--brand-wash);
+    border-color: var(--brand-tint); }
+.task-session[data-kind="edit"] { color: var(--ok); background: var(--ok-wash); border-color: var(--ok); }
+.task-close-file { flex: none; padding: 3px 9px; font-size: var(--fs-sm); }
+body[data-stage="generate"] .task-close-file { display: none; }
+.task-crumb { display: flex; align-items: baseline; gap: 6px; font-size: var(--fs-md);
+    font-weight: 600; color: var(--text); white-space: nowrap; }
+.task-crumb.empty { font-weight: 500; color: var(--muted); font-size: var(--fs-sm); }
+.crumb-sep { color: var(--muted); font-weight: 400; }
+.crumb-fixture { color: var(--muted); font-weight: 500; }
+.crumb-arm { padding: 1px 7px; border-radius: 999px; font-size: var(--fs-xs);
+    letter-spacing: 0.04em; color: #fff; background: var(--muted); }
+.crumb-arm.arm-right { background: var(--brand); }
+.crumb-arm.arm-left { background: #8a63d2; }
+/* Just the filename on the bar; the full path is the title and is repeated in
+   the Deploy confirm, which is where it actually matters. */
+.task-dest { flex: none; max-width: 240px; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: var(--fs-xs); color: var(--muted); }
+.task-dest.overridden { color: var(--warning); font-weight: 600; }
+.task-edit-dest { flex: none; padding: 2px 8px; font-size: var(--fs-xs); }
+/* Progress belongs on the tab, not in an ordinal that told a linear story
+   about a loop the operator runs 38 times. */
+.tab-badge { margin-left: 6px; padding: 0 6px; border-radius: 999px;
+    font-size: var(--fs-xs); font-weight: 600; color: var(--muted);
+    background: var(--surface-inset); }
+.task-edit-dest { flex: none; padding: 2px 8px; font-size: var(--fs-xs); }
+.task-dest.overridden { color: var(--warning); font-weight: 600; }
+.tab-badge:empty { display: none; }
+.tab-button.active .tab-badge { color: var(--brand); }
+.toolbar { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 9px 14px; border-bottom: 1px solid var(--border); background: var(--surface-bar); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); z-index: 5; }
+.toolbar-group { display: flex; align-items: center; gap: 8px; }
+/* `.primary` marks the one action a panel exists for. It was scoped to
+   `.toolbar`, so Generate (template.html:211), Deploy (:317), Reroute path and
+   Go live — every primary action outside the footer — rendered identical to
+   the `Clear` button 6px away. On a tab carrying 29 controls that leaves no
+   entry point at all. Scoped to the whole app, with a filled brand background
+   rather than the 10%-alpha wash, so it reads as the primary at a glance. */
+button.primary {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: #fff;
+    font-weight: 600;
+}
+button.primary:hover:not(:disabled) { background: var(--brand-strong); border-color: var(--brand-strong); }
+button.primary:disabled { background: var(--accent-soft); border-color: var(--border-strong); color: var(--muted); }
+.toolbar-stats { display: flex; gap: 14px; color: var(--muted); font-size: var(--fs-md); }
+.toolbar-stats strong { color: var(--text); font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; }
+.toolbar .status-row { margin: 0; flex: 1 1 200px; min-width: 0; justify-content: flex-end; }
+/* Logs moved to the top-right of the app bar (plenty of room for long messages). */
+.app-bar .status-row { margin: 0 0 0 auto; flex: 1 1 auto; min-width: 0; justify-content: flex-end; gap: 8px; }
+/* Two lines, not one. ~150 setStatus() calls funnel through this element and
+   several run 150-250 characters, with the WARNINGS concatenated last — so the
+   clause that mattered was always the one past the ellipsis, with no `title`
+   to recover it and no history. `line-clamp` keeps the bar from growing while
+   showing twice as much; the full text is on the `title` (set in setStatus). */
+.app-bar #status {
+    overflow: hidden; max-width: 100%;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+    line-clamp: 2; white-space: normal; line-height: 1.25;
+}
+.app-bar #status.error { color: var(--danger); }
+/* Bottom bar: center the buttons + stats, keep Maximize at the right. */
+.status-bar .toolbar { display: flex; align-items: center; }
+.toolbar-center { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; }
+.status-bar #maximizeViewBtn { flex: none; }
+.toolbar #status { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toolbar #status.error { color: var(--danger); }
+.dirty-indicator { color: var(--warning); font-size: 18px; opacity: 0; transition: opacity 140ms ease; }
+.dirty-indicator.active { opacity: 1; }
+/* `min-height: 0` inside `body { overflow: hidden }` means the viewport is the
+   thing that gives when the chrome grows — silently, down to nothing. The only
+   min-height guarantee used to be below 900px wide, where the viewport is
+   actually TALLER than on a 1366px laptop. 280px is a floor, not a target. */
+#threeViewport { position: relative; width: 100%; flex: 1; min-height: 280px; cursor: default; }
+.webgl-fail { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 24px; color: var(--muted); }
+.webgl-fail strong { color: var(--warning); font-size: 18px; }
+.webgl-fail span { max-width: 560px; font-size: var(--fs-md); line-height: 1.5; }
+.webgl-fail code { color: var(--accent); font-family: "JetBrains Mono", ui-monospace, monospace; }
+#threeViewport.mode-add { cursor: crosshair; }
+#threeViewport.mode-move { cursor: move; }
+#threeViewport.mode-rotate { cursor: ew-resize; }
+#threeViewport.mode-sequence { cursor: pointer; }
+kbd { padding: 1px 5px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-inset); color: var(--muted); font-size: var(--fs-xs); font-family: "JetBrains Mono", ui-monospace, monospace; }
+details.panel.collapsible > summary { cursor: pointer; font-size: var(--fs-md); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); list-style: none; display: flex; align-items: center; gap: 8px; -webkit-user-select: none; user-select: none; }
+details.panel.collapsible > summary::before { content: "\25B8"; transition: transform 140ms ease; }
+details.panel.collapsible[open] > summary::before { transform: rotate(90deg); }
+details.panel.collapsible[open] > summary { margin-bottom: 10px; }
+details.advanced { margin-top: 10px; }
+details.advanced > summary { cursor: pointer; color: var(--muted); font-size: var(--fs-sm); -webkit-user-select: none; user-select: none; }
+.toggle-group { padding: 4px 0; }
+.group-label { display: block; margin: 6px 0 2px; color: var(--muted); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
+.twist-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.twist-row input { width: 100%; padding: 7px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-inset); color: var(--text); font: 12px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+.twist-row input:disabled { opacity: 0.45; }
+.nav-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+#threeViewport.mode-paint { cursor: cell; }
+.paint-region-list { display: grid; gap: 4px; margin: 6px 0; }
+.paint-region-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; font-size: var(--fs-md); transition: border-color 120ms ease, background 120ms ease; }
+.paint-region-item:hover { border-color: var(--accent); }
+.paint-region-item.active { border-color: var(--accent); background: var(--accent-soft); }
+.paint-region-swatch { width: 14px; height: 14px; border-radius: var(--radius); flex: none; }
+.paint-region-count { margin-left: auto; color: var(--muted); font-family: "JetBrains Mono", ui-monospace, monospace; font-size: var(--fs-sm); }
+.paint-region-rename, .paint-region-delete { flex: none; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: var(--fs-md); line-height: 1; padding: 2px 4px; border-radius: var(--radius); }
+.paint-region-rename { margin-left: 2px; }
+.paint-region-rename:hover { color: #fff; background: var(--accent, var(--accent)); }
+.paint-region-delete:hover { color: #fff; background: var(--warning, var(--danger)); }
+.ik-frame-item { display: inline-block; margin: 2px 3px 2px 0; padding: 3px 8px; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; font-size: var(--fs-sm); }
+.ik-frame-item:hover { border-color: var(--accent); }
+.ik-frame-item.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.ik-readout { margin: 8px 0 0; padding: 8px; border-radius: var(--radius); background: var(--surface-inset); border: 1px solid var(--border); color: var(--text); font: 11px "JetBrains Mono", ui-monospace, monospace; white-space: pre; }
+.twist-row input[type="text"] { font-family: inherit; }
+#paintComponentSelect { cursor: pointer; }
+/* height: the 24px SC 2.5.8 target minimum — these rendered 16px, their
+   height coming only from the default track. */
+input[type="range"] { accent-color: var(--accent); height: var(--target-min); }
+.sequence-item { display: inline-block; margin: 2px 3px 2px 0; padding: 2px 7px; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; font-size: var(--fs-sm); transition: border-color 120ms ease, background 120ms ease; }
+.sequence-item:hover { border-color: var(--accent); background: var(--accent-soft); }
+.sequence-item.selected { border-color: var(--warning); background: rgba(255, 204, 102, 0.16); color: var(--warning); }
+#analysisPlot { height: 190px; }
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.tab-bar { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+.tab-button { flex: 1; border: none; border-bottom: 2px solid transparent; border-radius: 6px 6px 0 0; background: transparent; color: var(--muted); padding: 9px 8px; font-size: var(--fs-md); font-weight: 600; cursor: pointer; transition: color 140ms ease, border-color 140ms ease, background 140ms ease; }
+.tab-button:hover { color: var(--text); background: var(--accent-soft); transform: none; }
+.tab-button.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--accent-soft); }
+/* Separator before the "tools" group (Workspace, Gizmo) — the pipeline is steps 1-5. */
+.tab-button-sep { margin-left: 14px; position: relative; }
+.tab-button-sep::before { content: ''; position: absolute; left: -8px; top: 20%; bottom: 20%; width: 1px; background: var(--border); }
+.tab-page { display: none; }
+.tab-page.active { display: block; }
+h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0; }
+.badge { padding: 4px 8px; border: 1px solid var(--accent-soft); border-radius: 999px; color: var(--accent); background: var(--accent-soft); font-size: var(--fs-sm); font-weight: 700; white-space: nowrap; }
+.panel { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 14px; background: var(--panel); box-shadow: var(--shadow-lg); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.panel h2 { margin: 0 0 10px; font-size: var(--fs-md); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.dropzone { display: grid; gap: 8px; place-items: center; min-height: 112px; padding: 16px; border: 1px dashed var(--accent-soft); border-radius: var(--radius); background: var(--accent-soft); text-align: center; transition: border-color 160ms ease, background 160ms ease, transform 160ms ease; }
+.dropzone.dragover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); }
+.dropzone strong { font-size: 16px; }
+.dropzone span, #status, .hint { color: var(--muted); font-size: var(--fs-md); line-height: 1.45; }
+input[type="file"] { display: none; }
+/* Sentence case, not all-caps: these are field labels, not category headers.
+   In caps, "IK frame (reach / robot overlay / collision)" wrapped to three
+   lines of shouting above a single select. */
+.field-label { display: block; margin-bottom: var(--s3); color: var(--muted);
+    font-size: var(--fs-sm); letter-spacing: 0; }
+/* Property inspectors put the label BESIDE the control (Stitch), which is
+   where the vertical space in a 300px dock actually goes. Falls back to the
+   stacked form under ~230px, where a side-by-side row would crush both. */
+.dock-body .panel > label.field-label + select,
+.dock-body .panel > label.field-label + input {
+    margin-top: calc(-1 * var(--s1)); }
+@media (min-width: 1100px) {
+  .dock-body .field-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+      gap: var(--s4); align-items: center; margin-bottom: var(--s3); }
+  .dock-body .field-row > .field-label { margin: 0; }
+}
+.readonly-field { width: 100%; margin-bottom: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-inset); color: var(--text); font: 12px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; }
+/* Dropdowns: like readonly-field but without overflow clipping, with a caret and pointer. */
+.select-field { width: 100%; padding: 8px 28px 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--surface-inset); color: var(--text); font: 12px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%238b949e' stroke-width='1.5' fill='none' stroke-linecap='round'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; }
+/* WCAG 2.2 SC 2.5.8 — every one of these is a pointer target, so each carries
+   the 24px minimum. Selects sat at 22px and range inputs at 16px because their
+   height came entirely from padding around an 11-12px font; the minimum is
+   asserted here instead, so tightening padding elsewhere can never drop a
+   control back under the floor. Height, never font-size: the labels are at the
+   11px text floor and must stay there.
+   Checkboxes are deliberately absent — each is wrapped in `<label class=
+   "toggle">`, and clicking anywhere in that 25px label toggles it, so the
+   label already IS a conformant target. */
+.select-field,
+.dac-select, .dac-search,
+.ribbon-body input[type="number"],
+.ribbon-body input[type="text"],
+.dac-panel input[type="number"] { min-height: var(--target-min); }
+.select-field:hover { border-color: var(--accent); }
+.select-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-soft) inset; }
+.select-field option { background: var(--panel-raised); color: var(--text); }
+button, .file-button { border: 1px solid var(--accent-soft); background: linear-gradient(180deg, var(--accent-soft), var(--accent-soft)); color: var(--text); border-radius: var(--radius); padding: 8px 10px; cursor: pointer; font: inherit; font-size: var(--fs-md); transition: border-color 140ms ease, background 140ms ease, transform 140ms ease; }
+button:hover, .file-button:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); }
+button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.button-row, .camera-grid, .nav-grid, .mode-grid { display: grid; gap: 8px; margin-top: 10px; }
+.rpy-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.rpy-grid input { width: 100%; padding: 7px 8px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-inset); color: var(--text); font: 12px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+.rpy-grid input:disabled { opacity: 0.45; }
+.button-row { grid-template-columns: 1fr 1fr; }
+.camera-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.nav-grid { grid-template-columns: 1fr 1fr 1fr; margin-bottom: 12px; }
+.mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 10px; }
+.mode-button.active, button.active { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent-soft) inset; }
+.arm-toggle.active { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent-soft) inset; }
+.mesh-mode-button.active { border-color: var(--warning); background: rgba(255, 204, 102, 0.18); box-shadow: 0 0 0 1px rgba(255, 204, 102, 0.18) inset; }
+.diagnostic-warning code { color: var(--warning); }
+.diagnostic-danger code { color: var(--danger); }
+.toggle { display: flex; align-items: center; gap: 9px; padding: 7px 0; color: var(--text); font-size: var(--fs-md); }
+.toggle input { accent-color: var(--accent); }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat { padding: 10px; border-radius: var(--radius); background: var(--surface-inset); border: 1px solid var(--border); }
+.stat label { display: block; margin-bottom: 5px; color: var(--muted); font-size: var(--fs-sm); }
+.stat strong, .info-row code, .sequence-list { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+.stat strong { font-size: var(--fs-md); font-weight: 600; }
+.info-list { display: grid; gap: 8px; }
+/* Readout table, per Stitch: label LEFT of the value, and the value in MONO —
+   "use JetBrains Mono for all numerical values, coordinates, timestamps and
+   file paths ... so that columns of numbers align vertically for easy
+   scanning". These rows were a stacked label-above-value pair in the UI font,
+   so a column of coordinates had neither a shared left edge nor equal digit
+   widths, and comparing two points meant reading rather than scanning.
+   Below 220px the pair stacks again — a two-column row that narrow crushes
+   both halves. */
+.info-row { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+/* A pose in the pad-contact HOLE looks fine on screen and cleans nothing —
+   the glove corner is what touches. This is the one point-info row that has to
+   be impossible to skim past. */
+.info-row.is-error code { color: var(--danger, #d64545); font-weight: 600; }
+/* An annotation on the rows above it — the pole the arm frames were taken at.
+   Muted because it qualifies a reading rather than being one. */
+.info-row.is-weak span, .info-row.is-weak code { color: var(--muted); font-size: var(--fs-sm); }
+/* Position over pose, the way the teach pendant stacks them. Scoped to this
+   cell so every other info-row keeps its single-line ellipsis behaviour. */
+.info-row code.two-line { white-space: pre; overflow-x: auto; line-height: 1.5; }
+.info-row.is-error { border-left: 3px solid var(--danger, #d64545); padding-left: 6px; }
+    gap: var(--s2) var(--s4); align-items: baseline;
+    padding-bottom: var(--s3); border-bottom: 1px solid var(--border); }
+.info-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.info-row span { color: var(--muted); font-size: var(--fs-sm); }
+.info-row code { color: var(--text); font-family: var(--mono); font-size: var(--fs-xs);
+    white-space: pre-wrap; word-break: break-word; }
+@container (max-width: 220px) { .info-row { grid-template-columns: minmax(0, 1fr); } }
+.sequence-list { max-height: 160px; overflow: auto; color: var(--muted); font-size: var(--fs-md); line-height: 1.55; padding: 8px; border-radius: var(--radius); background: var(--surface-inset); border: 1px solid var(--border); }
+.spinner { display: none; width: 18px; height: 18px; border: 2px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%; animation: spin 800ms linear infinite; }
+.spinner.active { display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.status-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.resize-handle { position: relative; cursor: col-resize; background: var(--accent-soft); border-right: 1px solid var(--border); border-left: 1px solid var(--border); touch-action: none; }
+.resize-handle::before { content: ""; position: absolute; top: 50%; left: 50%; width: 2px; height: 48px; border-radius: 999px; background: var(--accent-soft); transform: translate(-50%, -50%); box-shadow: -3px 0 0 var(--accent-soft), 3px 0 0 var(--accent-soft); opacity: 0.72; transition: opacity 140ms ease, height 140ms ease; }
+.resize-handle:hover::before, .resize-handle.dragging::before { height: 84px; opacity: 1; }
+body.resizing { cursor: col-resize; -webkit-user-select: none; user-select: none; }
+.viewport-overlay { position: absolute; right: 18px; top: 18px; max-width: min(390px, calc(100% - 36px)); padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-dock); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); color: var(--muted); font-size: var(--fs-md); pointer-events: none; }
+.viewport-overlay strong { color: var(--text); }
+.viewport-overlay { pointer-events: none; }
+#viewCube { position: absolute; top: 64px; right: 18px; width: 132px; height: 132px; cursor: grab; z-index: 4; touch-action: none; filter: drop-shadow(0 6px 16px rgba(16, 24, 40, 0.22)); }
+#viewCube.dragging { cursor: grabbing; }
+#homeViewButton { position: absolute; top: 198px; right: 18px; width: 132px; z-index: 4; padding: 6px 0; font-size: var(--fs-md); color: var(--text); background: var(--panel-raised); border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer; }
+#homeViewButton:hover { background: var(--border-strong); }
+
+/* ===== Viewport islands (mode + navigation) ==============================
+   Floating chrome ON the canvas, per the approved viewport-chrome card. They
+   sit inside the canvas rather than in the command band on purpose: both act
+   on the thing under the pointer, and the band is already at its 170px cap.
+   Every chip clears the 24px target minimum, and state is carried by fill AND
+   weight, never by colour alone. */
+.vp-island { position: absolute; z-index: 5; display: flex; gap: var(--s1);
+    padding: var(--s2); border: 1px solid var(--border-strong); border-radius: var(--radius-pill);
+    background: var(--surface-overlay); box-shadow: var(--shadow-md); }
+.vp-mode { top: 18px; left: 18px; }
+.vp-nav  { bottom: 18px; left: 50%; transform: translateX(-50%); }
+.vp-chip { min-height: var(--target-min); padding: 0 var(--s5); border: 0;
+    border-radius: var(--radius-pill); background: none; color: var(--muted);
+    font-size: var(--fs-sm); line-height: 1; cursor: pointer; white-space: nowrap; }
+.vp-chip:hover { background: var(--surface-inset); color: var(--text); }
+.vp-chip.active { background: var(--brand-wash); color: var(--brand); font-weight: 600; }
+.vp-chip[disabled] { opacity: .45; cursor: not-allowed; }
+@media (max-width: 900px) { body { overflow: auto; } .app { min-height: 100vh; height: auto; } .workspace-row { grid-template-columns: 1fr; } .browser-dock { border-right: 0; border-bottom: 1px solid var(--border); } .props-dock { border-left: 0; border-bottom: 1px solid var(--border); } #threeViewport { height: 60vh; min-height: 420px; } }
+
+/* Dual-Arm Collisions tab */
+/* Controls take --surface-inset, NOT --viewport-bg. The two shared a token
+   until the canvas was darkened for contrast, at which point these inputs
+   became dark-on-dark: they pair the background with color: var(--text). A
+   token doing two jobs is fine right up until one of them changes. */
+.dac-select, .dac-search {
+    width: 100%;
+    background: var(--surface-inset);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 4px 6px;
+    font-size: var(--fs-md);
+}
+.dac-search { margin: 0; }
+
+/* dt + Check on ONE row (label | number | button). The old .twist-row is a
+   2-col grid, which pushed the 3rd child (the button) onto a clipped 2nd row. */
+.dac-dt-row { display: flex; align-items: center; gap: 6px; margin: 0; }
+.dac-dt-row .field-label { margin: 0; flex: none; }
+.dac-dt-row input { width: 52px; flex: none; background: var(--surface-inset); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 4px 6px; font-size: var(--fs-md); }
+.dac-dt-row button { flex: 1 1 auto; padding: 5px 8px; white-space: nowrap; }
+
+/* Dual-Arm Collisions tab — two panels: controls | timeline. (The collision
+   log lives in the Properties dock since F73; its old 430px right-panel
+   reservation was dead width the timeline now owns — F75.) */
+.ribbon-body .dac-main, .ribbon-body .dac-tl { gap: 5px; overflow: hidden; }
+.ribbon-body .dac-main h2, .ribbon-body .dac-tl h2 { margin: 0 0 2px; }
+.ribbon-body .dac-main .field-label { margin: 0 0 2px; }
+
+/* Controls: WIDER, two side-by-side pickers so everything fits without a scrollbar. */
+.ribbon-body .dac-main { flex: 0 0 auto; width: 430px; }
+.dac-pickers { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 10px; }
+.dac-col { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+/* Timeline panel FILLS everything right of the 430px controls panel. */
+.ribbon-body .dac-tl { flex: 1 1 auto; min-width: 320px; display: flex; flex-direction: column; }
+#dacPlot { width: 100%; flex: 1 1 auto; min-height: 64px; }
+#dacSlider { width: 100%; margin: 0; accent-color: #ff4d4d; }
+.dac-frame { font-size: var(--fs-sm); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dac-frame code { color: var(--text); }
+.ribbon-body .dac-tl .button-row { display: flex; flex-wrap: nowrap; justify-content: center; gap: 8px; margin: 2px 0; }
+.ribbon-body .dac-tl .button-row button { flex: 0 0 auto; padding: 5px 12px; font-size: var(--fs-sm); white-space: nowrap; }
+.dac-scroll { overflow-y: auto; min-height: 0; }
+
+/* ── Timeline head row (F75): title + transport share one line so the
+   graph/track below gets the panel's FULL width and the play/prev/next
+   controls are always visible (they were being column-wrapped into the
+   band's overflow:hidden by .panel-cols). Order: ⏵ transport left of the
+   scrub bar, frame readout at the right edge — the standard editor layout. */
+.tl-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tl-head h2 { margin: 0; flex: 0 0 auto; }
+.tl-head .playback-block { flex: 1 1 auto; flex-direction: row; align-items: center;
+    gap: 10px; min-width: 0; }
+.tl-head .playback-block .button-row { flex: 0 0 auto; margin: 0; max-width: none;
+    justify-content: flex-start; }
+.tl-head .playback-block input[type="range"] { flex: 1 1 140px; min-width: 90px; width: auto; }
+.tl-head .playback-block .dac-frame { flex: 0 1 auto; margin-left: auto; }
+
+/* Schedule & Run tab — mirrors the DAC three-panel layout: controls | timeline | steps. */
+.ribbon-body .sch-main, .ribbon-body .sch-tl, .ribbon-body .sch-steps { gap: 5px; overflow: hidden; }
+.ribbon-body .sch-main h2, .ribbon-body .sch-tl h2, .ribbon-body .sch-steps h2 { margin: 0 0 2px; }
+/* Controls take a bounded share; the timeline takes the rest. `width` here was
+   an explicit 660px that fought the panel's grow — the box ended up 1145px wide
+   while its inner grid still laid out against the old basis, so the Status
+   column collapsed to 108px and wrapped "Pick a fixture, then Load Schedule."
+   into four lines with 700px empty beside it. flex-basis with a max does the
+   same job without contradicting the used width. */
+/* F75: narrowed from min(660px,52vw)/min(760px,52vw) — the timeline is the
+   point of this tab, and the transport moved into its head row, so the
+   controls+status column no longer needs half the band. */
+.ribbon-body .sch-main { flex: 0 1 auto; width: auto; flex-basis: min(520px, 40vw);
+    max-width: min(560px, 42vw); }
+.ribbon-body .sch-main > .sch-body { width: 100%; }
+/* The timeline takes everything the controls do not. It had no width rule at
+   all, so it was content-sized and sat in a narrow box with the rest of the
+   band empty to its right — while .dac-tl, the same component on the Dual-Arm
+   tab, already grew. The Gantt is the whole point of this tab; it should be the
+   widest thing on it. */
+.ribbon-body .sch-tl { flex: 1 1 0; min-width: 320px; }
+/* Controls left, status right — the status stays visible (scrolls if long)
+   instead of overflowing below the ribbon. */
+.sch-body { display: grid; grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 6px 12px; min-height: 0; flex: 1 1 auto; }
+.sch-body #schStatus { overflow-y: auto; min-height: 0; align-self: stretch; margin: 0; }
+/* Row gap 5px -> 3px. Raising the three selects to the 24px target minimum
+   and the slider from 16px made this column need 125px inside a 115px
+   .sch-body at 1366x768, which pushed Load/Check Collisions 3px past the
+   band edge. The containers are overflow:hidden, so the page's scrollHeight
+   never saw it — only the per-control cut check did. Gap is separation, not
+   target, so this is the right place to give the pixels back. */
+.sch-controls { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; align-items: center; align-content: start; }
+.sch-controls > button { grid-column: 1 / -1; padding: 6px 8px; }
+/* Load Schedule + Check Collisions side by side, equal width (both visible). */
+.sch-btn-row { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sch-btn-row button { padding: 6px 8px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ===== Per-tab legend (bottom of the Properties dock) ===== */
+.legend { font-size: var(--fs-sm); line-height: 1.4; }
+.legend + .legend { margin-top: 10px; }
+.legend-title { font-weight: 600; margin: 6px 0 4px; }
+.legend-row { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; display: inline-block; }
+.legend-swatch { width: 12px; height: 12px; border-radius: var(--radius); flex: none; display: inline-block; }
+.legend-line { width: 14px; height: 0; border-top: 3px solid; flex: none; display: inline-block; }
+.ribbon-body .sch-tl { flex: 1 1 0; min-width: 320px; display: flex; flex-direction: column; }
+#schSlider { width: 100%; margin: 0; accent-color: var(--accent); }
+/* wrap, not nowrap: the transport grew a 5th button (▶ Play step) and the
+   tl-head lives in overflow:hidden panels — without wrap the extra ~100px
+   crushes the Step readout / clips the row edge at laptop widths. Wrapping
+   flows spare buttons onto a second line instead; the head just gets taller. */
+.ribbon-body .sch-tl .button-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 2px 0; }
+.ribbon-body .sch-tl .button-row button { flex: 0 0 auto; padding: 5px 12px; font-size: var(--fs-sm); white-space: nowrap; }
+/* Let the row actually shrink below its one-line width so the wrap engages
+   (the shared .tl-head rule pins .button-row at flex: 0 0 auto). */
+.tl-head #schPlayback .button-row { flex: 0 1 auto; min-width: 0; }
+/* The Step readout carries the step DESCRIPTION (can be ~80ch on chained
+   rows) as nowrap text. Once the button row became shrinkable, flex
+   distributed any deficit ∝ basis and the long readout stacked the buttons
+   4-5 lines tall — pushing the ruler/track out of the panel's max-height.
+   Grow-from-zero instead of shrink-from-huge: basis 0 means the readout
+   never CAUSES a deficit (the buttons keep one line whenever they fit at
+   all), grow 1000 + max-content cap gives it the leftover space up to its
+   text width (ellipsis from the base .dac-frame rule past that), and the
+   remainder still stretches the slider as before. */
+.tl-head #schPlayback .dac-frame { flex: 1000 1 0; min-width: 48px;
+    max-width: max-content; }
+
+/* ===== Process timeline (Stitch/designer hybrid, F69) =====================
+   One proportional TRACK of textured bar buttons — step type is texture +
+   2-letter code chip + word, never five hues alone (colorblind-safe; the
+   SCH_TYPE_COLOR hue survives only as the bcode chip's border, a redundant
+   cue). A 24px ruler lane above carries the glove/inspection marker buttons
+   and the mono total readout. Editable bars drag to reorder; session-phase
+   bars are locked chrome. Guard state paints the bar: danger wash for a
+   blocked row, warn wash for warnings, dashed outline for a pairing whose
+   collision sweep has not been run since it was edited (stale ≠ passing). */
+.sch-ruler { position: relative; height: 24px; flex: 0 0 auto; }
+.sch-ruler .sch-mk { position: absolute; top: 0; width: 24px; height: 24px;
+    transform: translateX(-50%); display: inline-flex; align-items: center;
+    justify-content: center; padding: 0; font-size: var(--fs-sm);
+    background: var(--surface-inset); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); cursor: default; }
+.sch-ruler .sch-tick { position: absolute; right: 0; top: 4px;
+    font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); }
+.sch-track { position: relative; display: flex; height: 34px; flex: 0 0 auto;
+    background: var(--surface-inset); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); overflow: hidden; }
+.sch-bar { position: relative; display: inline-flex; align-items: center; gap: 4px;
+    min-width: 14px; padding: 0 4px; border: 0; margin: 0;
+    border-right: 1px solid var(--border-strong); background: transparent;
+    color: var(--text); font-size: var(--fs-xs); cursor: pointer;
+    overflow: hidden; white-space: nowrap; text-align: left; }
+.sch-bar:last-child { border-right: 0; }
+.sch-bar .bcode { flex: none; font-family: var(--mono); font-size: var(--fs-xs);
+    padding: 0 3px; border: 1px solid var(--border-strong); border-radius: 3px;
+    background: var(--panel); }
+.sch-bar .bname { overflow: hidden; text-overflow: ellipsis; }
+/* Step-type textures (repeating gradients of border-strong — no hue coding). */
+.sch-bar.t-pa { background-image: repeating-linear-gradient(45deg, var(--border-strong) 0 1px, transparent 1px 7px); }
+.sch-bar.t-se { background-image: repeating-linear-gradient(90deg, var(--border-strong) 0 1px, transparent 1px 8px); }
+.sch-bar.t-ch { background-image: radial-gradient(var(--border-strong) 1px, transparent 1.5px); background-size: 8px 8px; }
+.sch-bar.t-co { background-image: repeating-linear-gradient(45deg, var(--border-strong) 0 1px, transparent 1px 8px),
+    repeating-linear-gradient(-45deg, var(--border-strong) 0 1px, transparent 1px 8px); }
+.sch-bar.t-ph { opacity: .75; }                       /* session phase: quieter */
+.sch-bar.is-locked { cursor: default; }
+.sch-bar.is-now { background-color: var(--accent-soft); box-shadow: inset 0 -3px 0 0 var(--accent); }
+.sch-bar.is-warn { background-color: var(--warn-wash); }
+.sch-bar.is-bad { background-color: var(--danger-wash); box-shadow: inset 0 -3px 0 0 var(--danger); }
+.sch-bar.is-stale { outline: 1px dashed var(--muted); outline-offset: -2px; }
+.sch-bar.drag-src { opacity: .35; }
+.sch-drop-mark { position: absolute; top: 0; bottom: 0; width: 2px;
+    background: var(--accent); pointer-events: none; z-index: 3; }
+.sch-playhead { position: absolute; top: 0; bottom: 0; width: 2px;
+    background: var(--accent); pointer-events: none; z-index: 2; }
+
+/* Steps list rows (Browser dock): grip + title/sub + status pill. */
+.sch-step { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 6px;
+    align-items: center; border-left: 3px solid var(--border);
+    padding: 4px 8px; margin-bottom: 4px; cursor: pointer;
+    border-radius: 0 var(--radius) var(--radius) 0; }
+.sch-step:hover { background: var(--accent-soft); }
+.sch-step.active { border-left-color: var(--accent); background: var(--accent-soft); }
+.sch-step .sch-step-title { font-size: var(--fs-md); font-weight: 600; color: var(--text); grid-column: 2; }
+.sch-step .sch-step-meta { font-size: var(--fs-xs); color: var(--muted); grid-column: 2; }
+.sch-step .sch-grip { grid-column: 1; grid-row: 1 / span 2; color: var(--muted);
+    cursor: grab; padding: 2px 4px; min-width: 24px; min-height: 24px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: 0; font-size: var(--fs-md); touch-action: none; }
+.sch-step .sch-lock { grid-column: 1; grid-row: 1 / span 2; color: var(--muted); text-align: center; }
+.sch-step .sch-pill { grid-column: 3; grid-row: 1 / span 2; }
+.sch-step.drag-src { opacity: .35; }
+.sch-step.drop-before { box-shadow: 0 -2px 0 0 var(--accent); }
+.sch-step.drop-after { box-shadow: 0 2px 0 0 var(--accent); }
+.sch-step-tag { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; padding: 1px 5px; border-radius: var(--radius); background: rgba(255,255,255,.08); color: var(--muted); }
+.sch-step-missing { color: #ff8c69; }
+.sch-list-actions { display: flex; margin-top: 6px; }
+.sch-list-actions button { flex: 1 1 auto; padding: 5px 8px; }
+
+/* Per-row actions on the selected editable row. Inline with the meta line but
+   full 24px targets — padding makes the target, margin is only separation. */
+.sch-row-edit, .sch-row-del { min-height: 24px; min-width: 24px; margin-left: 6px;
+    padding: 2px 8px; font-size: var(--fs-xs); background: var(--surface-inset);
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    color: var(--text); cursor: pointer; }
+.sch-row-del:hover { background: var(--danger-wash); border-color: var(--danger); }
+
+/* Plan-file chips in the Step detail "Plans" row. A chip with data-plan is a
+   BUTTON that solos its file for ▶ Play step (`.solo` = active); a slot with
+   no recorded plan is an inert span (`.missing`). */
+.sch-plan-chips { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+/* Two-class selector on purpose: `.info-row span` (0,1,1) would out-specify a
+   bare `.sch-plan-chip` (0,1,0) on the missing-slot SPANS and render them a
+   size larger than the button chips beside them. */
+.sch-plan-chips .sch-plan-chip { display: inline-flex; align-items: center; min-height: 24px;
+    max-width: 100%; padding: 1px 8px; border-radius: var(--radius-pill);
+    font-family: var(--mono); font-size: var(--fs-xs); overflow-wrap: anywhere;
+    border: 1px solid var(--border-strong); background: var(--surface-inset);
+    color: var(--text); }
+button.sch-plan-chip { cursor: pointer; }
+/* Restate the background: the global button:hover paints --accent-soft, which
+   is exactly the .solo fill — hovering must not impersonate the solo state.
+   The accent border alone is the hover cue. */
+button.sch-plan-chip:hover { border-color: var(--accent); background: var(--surface-inset); }
+.sch-plan-chips .sch-plan-chip.solo { background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+.sch-plan-chips .sch-plan-chip.missing { border-style: dashed; color: var(--muted); }
+
+/* Plan File panel (Browser dock): filter input + in-place scrolling list of
+   every plan JSON under the plan roots. A LIST, not a native <select> —
+   105 files need substring filtering, and the popup kept light-dismissing. */
+.sch-plan-list { max-height: 200px; overflow-y: auto; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface-inset); }
+.sch-plan-item { display: flex; flex-direction: column; gap: 1px; width: 100%;
+    padding: 4px 8px; text-align: left; background: transparent; border: 0;
+    border-bottom: 1px solid var(--border); cursor: pointer; min-height: 24px; }
+.sch-plan-item:last-child { border-bottom: 0; }
+.sch-plan-item:hover { background: var(--accent-soft); }
+.sch-plan-item.selected { background: var(--accent-soft);
+    box-shadow: inset 2px 0 0 var(--accent); }
+.sch-plan-item .name { font-family: var(--mono); font-size: var(--fs-xs);
+    color: var(--text); overflow-wrap: anywhere; }
+.sch-plan-item.selected .name { font-weight: 600; }
+.sch-plan-item .dir { font-size: var(--fs-xs); color: var(--muted);
+    overflow-wrap: anywhere; }
+.sch-plan-empty { padding: 8px; font-size: var(--fs-sm); color: var(--muted); }
+
+/* Row editor dialog form (programmatic .cmd-dialog). */
+.sch-row-form { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px;
+    min-width: 300px; }
+.sch-row-form .button-row { display: flex; gap: 8px; margin-top: 6px; }
+.sch-row-form .button-row button { flex: 1 1 auto; min-height: 28px; }
+.sch-row-form [data-shape] { display: flex; flex-direction: column; gap: 4px; }
+
+/* Status pills: every state = glyph + word (+ wash), never color alone. */
+.sch-pill { display: inline-flex; align-items: center; gap: 4px;
+    min-height: 24px; padding: 1px 8px; border-radius: var(--radius-pill);
+    border: 1px solid var(--border-strong); background: var(--surface-inset);
+    font-size: var(--fs-xs); white-space: nowrap; }
+.sch-pill.p-ok { background: var(--ok-wash); border-color: var(--ok); }
+.sch-pill.p-warn { background: var(--warn-wash); border-color: var(--warning); }
+.sch-pill.p-bad { background: var(--danger-wash); border-color: var(--danger); }
+.sch-pill.p-stale { border-style: dashed; color: var(--muted); }
+.sch-pill.p-locked { border-style: none; background: transparent; color: var(--muted); }
+/* Inner list grows to natural height; the PANEL provides the single scrollbar. */
+.ribbon-body .dac-log .dac-scroll { flex: 0 0 auto; overflow: visible; }
+.ribbon-body .dac-log .info-row { padding-bottom: 4px; gap: 2px; }
+.dac-event { cursor: pointer; border-radius: var(--radius); }
+.dac-event:hover { background: rgba(255, 109, 107, 0.12); }
+
+/* ===== Task-mode gating ====================================================
+   The Task type selection (cleaning vs mechanism) decides which features are
+   visible ACROSS tabs: elements tagged data-task-modes="cleaning" vanish in
+   mechanism mode and vice versa. display:none collapses rows, so the fixed
+   ribbon height is preserved. */
+body[data-task-mode="mechanism"] [data-task-modes="cleaning"] { display: none !important; }
+body[data-task-mode="cleaning"] [data-task-modes="mechanism"] { display: none !important; }
+
+
+/* ── View switch + Simulate panel ─────────────────────────────────────────
+   Author and Simulate are peer activities on one scene. body[data-view]
+   gates them, mirroring the existing body[data-task-mode] idiom rather than
+   inventing a second visibility mechanism. */
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 22px; height: 22px; flex: none; }
+
+/* Segmented control, per Stitch: "professional segmented controls should have
+   4px rounding on the container and 2px on the internal active segment". The
+   container carries the border and inset ground; the active segment is a chip
+   inside it. Two brand-filled buttons side by side read as two ACTIONS —
+   Author and Simulate are two MODES, and only one is ever current. */
+.view-switch {
+    display: inline-flex; gap: 0; padding: 2px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius);
+    background: var(--surface-inset);
+}
+.view-btn {
+    min-height: var(--target-min); padding: 0 var(--s6); border: 0;
+    border-radius: var(--radius-sm); background: none; color: var(--muted);
+    font-size: var(--fs-sm); font-weight: 500; line-height: 1; cursor: pointer;
+    white-space: nowrap;
+}
+.view-btn:hover { color: var(--text); }
+.view-btn.active { background: var(--panel-raised); color: var(--brand);
+    font-weight: 600; box-shadow: var(--shadow-sm); }
+.view-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* Author is the default; Simulate hides the authoring ribbon entirely so the
+   viewport gets the room, and vice versa. */
+body[data-view="author"]   .sim-panel { display: none; }
+body[data-view="simulate"] .ribbon-tabs,
+body[data-view="simulate"] .ribbon-body { display: none; }
+
+.sim-panel {
+    padding: 12px 16px; background: var(--panel);
+    border-bottom: 1px solid var(--border); display: grid; gap: 10px;
+}
+.sim-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sim-row label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.sim-dot {
+    width: 9px; height: 9px; border-radius: 50%; flex: none;
+    background: var(--muted); box-shadow: 0 0 0 3px var(--border);
+}
+.sim-dot[data-state="live"] { background: var(--ok); box-shadow: 0 0 0 3px rgba(46,158,91,.18); }
+.sim-dot[data-state="ready"] { background: var(--brand); box-shadow: 0 0 0 3px var(--brand-wash); }
+.sim-dot[data-state="off"]  { background: var(--muted); }
+.sim-hint { color: var(--muted); }
+.sim-readout {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: var(--fs-md); color: var(--muted); gap: 18px;
+}
+.sim-readout b { color: var(--text); font-weight: 600; }
+.sim-caveat {
+    margin: 0; padding: 8px 12px; border-radius: var(--radius);
+    background: var(--brand-wash); color: var(--text);
+    border-left: 3px solid var(--brand); font-size: var(--fs-md); line-height: 1.5;
+}
+
+
+/* ===== Deploy gates =======================================================
+   Three chips replace a 1px ring as the signal for "is this task ready".
+   State is carried by colour AND glyph (✓ △ ✗ ·) so it survives a colour-blind
+   reader and a greyscale screenshot. */
+/* In the task strip the row is inline and must NOT wrap — the strip is one
+   line of chrome above a shared canvas, so a second line there would move the
+   viewport top on one tab and break the shared edge the audit enforces. */
+.gate-row { display: flex; gap: var(--s3); margin: 0; flex-wrap: nowrap; align-items: center; }
+.task-gates-label { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .06em;
+    color: var(--muted); margin-left: var(--s5); flex: none; }
+.task-strip .gate-chip { padding: 2px var(--s4); min-height: var(--target-min); display: inline-flex;
+    align-items: center; }
+.gate-chip {
+    font-size: var(--fs-sm); padding: 3px 8px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border-strong); background: var(--surface-inset);
+    color: var(--muted); white-space: nowrap;
+}
+.gate-chip:hover { border-color: var(--accent); }
+.gate-chip[data-state="pass"] { color: var(--ok);      border-color: var(--ok);      background: var(--ok-wash); }
+.gate-chip[data-state="warn"] { color: var(--warning); border-color: var(--warning); background: var(--warn-wash); }
+.gate-chip[data-state="fail"] { color: var(--danger);  border-color: var(--danger);  background: var(--danger-wash); font-weight: 600; }
+.gate-chip[data-state="unrun"] { opacity: 0.75; }
+/* [N-1]: a paired task's SHARE figure is shown, never judged against the union's target */
+.gate-chip[data-state="info"] { color: var(--muted); border-color: var(--muted); }
+
+
+/* ===== Coverage headline + validation rows (Properties dock) =============
+   The approved frame leads the panel with the NUMBER and the distance to the
+   95% gate, because "is this task ready" is the question the dock exists to
+   answer. Both blocks pair colour with a word or glyph. */
+.cov-head { margin: 0 0 var(--s5); }
+.cov-top { display: flex; align-items: baseline; gap: var(--s4); }
+.cov-pct { font-size: 30px; font-weight: 600; line-height: 1.1; color: var(--text); }
+.cov-pill { font-size: var(--fs-xs); font-weight: 600; padding: 2px var(--s4);
+    border-radius: var(--radius-pill); white-space: nowrap; }
+.cov-head[data-state="pass"] .cov-pct  { color: var(--ok); }
+.cov-head[data-state="pass"] .cov-pill { color: var(--ok); background: var(--ok-wash); }
+.cov-head[data-state="warn"] .cov-pct  { color: var(--warning); }
+.cov-head[data-state="warn"] .cov-pill { color: var(--warning); background: var(--warn-wash); }
+.cov-bar { position: relative; height: 6px; margin-top: var(--s4);
+    border-radius: var(--radius-pill); background: var(--surface-inset); overflow: hidden; }
+.cov-bar i { position: absolute; inset: 0 auto 0 0; display: block; border-radius: var(--radius-pill); }
+.cov-head[data-state="pass"] .cov-bar i { background: var(--ok); }
+.cov-head[data-state="warn"] .cov-bar i { background: var(--warning); }
+.cov-head[data-state="info"] .cov-pill { color: var(--muted); background: var(--surface-inset); }
+.cov-head[data-state="info"] .cov-bar i { background: var(--muted); }
+/* The target marker. `overflow:hidden` on the bar would clip it, so it sits
+   above rather than inside — the gate must stay visible at 100% coverage. */
+.cov-bar b { position: absolute; top: -2px; width: 2px; height: 10px;
+    background: var(--text); opacity: .55; }
+.cov-scale { display: flex; justify-content: space-between; margin-top: var(--s2);
+    font-size: var(--fs-xs); color: var(--muted); }
+
+.val-head { display: flex; justify-content: space-between; gap: var(--s4);
+    margin-bottom: var(--s3); font-size: var(--fs-xs); color: var(--muted); }
+.val-head span:first-child { font-weight: 600; color: var(--text); }
+.val-row { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: var(--s3);
+    align-items: baseline; padding: var(--s2) 0; border-top: 1px solid var(--border); }
+.val-row:first-of-type { border-top: 0; }
+.val-glyph { font-weight: 600; }
+.val-row[data-state="ok"] .val-glyph    { color: var(--ok); }
+.val-row[data-state="warn"] .val-glyph  { color: var(--warning); }
+.val-row[data-state="warn"] .val-name   { color: var(--warning); font-weight: 600; }
+.val-row[data-state="error"] .val-glyph { color: var(--danger); }
+.val-row[data-state="error"] .val-name  { color: var(--danger); font-weight: 600; }
+.val-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.val-name { font-size: var(--fs-sm); color: var(--text); overflow-wrap: anywhere; }
+.val-detail { font-size: var(--fs-xs); color: var(--muted); overflow-wrap: anywhere; }
+/* WHERE a gate failed: the arc length, the point, the joint and its step, the
+   colliding pair. Monospaced because every one of them is a coordinate the
+   operator reads against the viewport, and set apart from the sentence above
+   it so the two are not skimmed as one. */
+.val-where { font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: var(--fs-xs); color: var(--text); margin-top: 2px;
+    overflow-wrap: anywhere; }
+
+/* App-bar coverage banner — the headline verdict, visible on every tab. */
+.cov-banner { margin-left: auto; padding: var(--s2) var(--s5); border-radius: var(--radius-pill);
+    font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; }
+.cov-banner[data-state="pass"] { color: var(--ok);      background: var(--ok-wash); }
+.cov-banner[data-state="warn"] { color: var(--warning); background: var(--warn-wash); }
+.cov-banner[data-state="fail"] { color: var(--danger);  background: var(--danger-wash); }
+.cov-banner[data-state="info"] { color: var(--muted); background: var(--surface-inset); }
+.cov-banner[hidden] { display: none; }
+
+/* Sequence chips carry the step's reachability. Glyph ("!") AND colour, and the
+   title says which in words — the marker colours in the viewport were the only
+   place this lived, so a sequence with four unreachable steps looked ready. */
+.seq-item[data-ik="bad"]    { border-color: var(--danger);  background: var(--danger-wash); }
+.seq-item[data-ik="bad"] .seq-name    { color: var(--danger); font-weight: 600; }
+.seq-item[data-ik="orient"] { border-color: var(--warning); background: var(--warn-wash); }
+.seq-item[data-ik="orient"] .seq-name { color: var(--warning); font-weight: 600; }
+.seq-summary { flex-basis: 100%; margin-top: var(--s3); font-size: var(--fs-xs); color: var(--muted); }
+.seq-summary[data-state="bad"]    { color: var(--danger); font-weight: 600; }
+.seq-summary[data-state="orient"] { color: var(--warning); }
+.seq-summary[data-state="ok"]     { color: var(--ok); }
+
+
+/* ===== Fixture board =====================================================
+   A cell is one config file. State is glyph + colour (✓ · —), never colour
+   alone, so it survives greyscale and colour-blindness. */
+.board-panel { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.board-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.board-table { overflow: auto; flex: 1 1 auto; min-height: 0; }
+table.board { border-collapse: collapse; width: 100%; font-size: var(--fs-md); }
+table.board th, table.board td { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+table.board thead th { position: sticky; top: 0; background: var(--panel); color: var(--muted);
+    font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.06em; z-index: 1; }
+table.board tbody th { font-weight: 500; color: var(--text); white-space: nowrap; }
+.board-meta { color: var(--muted); }
+.board-cell { white-space: nowrap; }
+.board-cell[data-region] { cursor: pointer; }
+.board-cell[data-region]:hover { background: var(--accent-soft); }
+.board-cell[data-state="present"] { color: var(--ok); }
+.board-cell[data-state="missing"] { color: var(--warning); font-weight: 600; }
+.board-cell[data-state="na"] { color: var(--muted); opacity: 0.6; }
+
+/* Distinguishes an AUTHORED control (its value lands in the YAML) from the
+   viewer-only twin of the same name in the docks. Two pairs carried identical
+   labels — "IK frame" and "Pole" — and only one of each changes the file. */
+.label-role { font-style: normal; font-weight: 400; color: var(--muted); font-size: var(--fs-xs); }
+
+/* Errors survive the next setStatus(). The status bar is a single overwritten
+   line; an error that vanishes because the operator clicked something is an
+   error they never read. */
+.error-toast {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%) translateY(8px);
+    max-width: min(680px, 90%); padding: 9px 14px; border-radius: var(--radius);
+    background: var(--danger); color: #fff; font-size: var(--fs-md); line-height: 1.35;
+    box-shadow: var(--shadow-lg); cursor: pointer; z-index: 50;
+    opacity: 0; pointer-events: none; transition: opacity .15s ease, transform .15s ease;
+}
+.error-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+/* ===== Focus =============================================================
+   There were two focus rules in 706 lines, and one of them REMOVED the outline
+   from all 24 selects. Keyboard users had almost no way to tell where they
+   were in a page carrying 81 buttons and 49 inputs — and this is a tool people
+   sit in all day.
+
+   `:focus-visible` (not `:focus`) so a mouse click does not draw a ring; the
+   keyboard does. */
+:where(button, [href], input, select, textarea, summary, .file-button, [tabindex]):focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: var(--radius);
+}
+/* The selects had their outline replaced by an inset shadow, which is nearly
+   invisible against the field's own border. Give them the same ring as
+   everything else and keep the border tint as a secondary cue. */
+.select-field:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* Short screens: the ribbon is the largest single block of chrome, and on a
+   768px-tall laptop it was taking a third of everything below the app bar. */
+@media (max-height: 800px) {
+    :root { --ribbon-h: 168px; }
+    .ribbon-body .tab-page.active { padding: 0 6px; gap: 3px; }
+    .visibility-bar { padding: 3px 14px; }
+}
+
+/* Batch-generate results: a to-do list, not a report. Every row that came out
+   below the coverage target is marked, and `open` loads that task for review —
+   nothing is written until the operator deploys it. */
+.board-batch { margin-top: 10px; overflow: auto; max-height: 40%; }
+.board-batch:empty { display: none; }
+.board-open { font-size: var(--fs-sm); padding: 2px 8px; }
+
+
+/* ── Command groups + flyouts (Fusion-style) ───────────────────────────────
+   A group shows its primary actions inline and opens the rest on click. The
+   bar stays one row tall whatever a tab contains, which is what stops the
+   ribbon from ever scrolling again. */
+/* Two tiers, Fusion's shape: the group's commands as icon buttons on top, the
+   group name + caret centred beneath. The name is the flyout/dialog handle. */
+.cmd-group { display: flex; align-items: stretch; flex: none; padding: 1px 5px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+.cmd-stack { display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    padding: 1px 0; }
+.tab-page.active > .cmd-group { align-self: stretch; }
+.tab-page.active > .cmd-group > .cmd-stack { flex: 1 1 auto; }
+/* TWO ROWS per group (2026-08-15, Newton): "there is a lot of space in the
+   ribbon, we can have 2 rows of feature per mini panel … make sure [frequent
+   editing commands] are easily accessible, a click away". A second row both
+   uses the height the shared band already reserves AND halves each group's
+   width, so twice as many commands fit on one row of groups. Reset Rotation,
+   Apply RPY and Align To Normal are back on the surface instead of two clicks
+   down a menu. `grid-auto-flow: column` fills top-then-bottom, so a group with
+   an odd count keeps its columns even. */
+.cmd-quick { display: grid; grid-template-rows: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: column; align-items: stretch; justify-items: stretch; gap: 2px; }
+/* One or two commands do not need a second row to hang off. */
+.cmd-quick[data-rows="1"] { grid-template-rows: minmax(0, 1fr); }
+.cmd-quick:empty { display: none; }
+/* Icon buttons: icon above an 11px caption — captions stay, because an icon
+   language nobody has learned yet is a puzzle, not a shortcut. */
+/* Ribbon v2 (2026-08-15, Newton — Fusion anatomy): icon on top, the command's
+   OWN WORDS beneath on up to two lines. The band is pinned to a shared height
+   by equaliseCanvasBands (one camera ⇒ identical chrome on every tab), so on
+   the workbench ~100px of that height was already paid for and sat empty while
+   twelve captions ellipsised ("Reset Rota…", "Recomput…"). Spending the paid
+   height on the words costs no canvas and ends the truncation. */
+button.cmd-icon-btn { display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; gap: 3px;
+    min-width: 66px; max-width: 104px; padding: 3px 5px;
+    border: 1px solid transparent; border-radius: var(--radius);
+    background: none; color: var(--text); font-size: var(--fs-xs); line-height: 1.12;
+    white-space: normal; cursor: pointer; }
+button.cmd-icon-btn:hover { background: var(--surface-inset); border-color: var(--border); }
+button.cmd-icon-btn.primary { color: var(--brand); font-weight: 600; }
+button.cmd-icon-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+button.cmd-icon-btn .btn-ico { display: block; margin: 0; }
+button.cmd-icon-btn .btn-ico svg { width: 21px; height: 21px; }
+/* The group caption is a BUTTON — it opens the flyout — so it is a target and
+   carries the 24px minimum (WCAG 2.2 SC 2.5.8), not the 15px it was hard-coded
+   to. The band absorbs this without growing: it is pinned to the tallest canvas
+   tab by equaliseCanvasBands(), and every group had ~80px of unused height
+   underneath it. Height comes from min-height + padding, never from a larger
+   font — the caption stays at the 11px floor. */
+/* `margin-top: auto` pins the group name directly BENEATH its buttons, so
+   every group in a row lands its name on the same line — Fusion's footer rail.
+   (It lives here, not in a separate `.cmd-stack > .cmd-group-btn` rule: an
+   earlier rule of that shape shadows this one for the target-size guard.) */
+.cmd-group-btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    height: var(--target-min); line-height: 1; flex: none; align-self: stretch; margin-top: auto;
+    padding: 0 8px; border: 1px solid transparent; border-radius: var(--radius);
+    background: none; color: var(--muted); font-size: var(--fs-xs); font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    white-space: nowrap; cursor: pointer; }
+.cmd-group-btn:hover { background: var(--surface-inset); border-color: var(--border); }
+.cmd-group.open > .cmd-group-btn { background: var(--accent-soft); border-color: var(--accent); }
+.cmd-caret { font-size: var(--fs-xs); color: var(--muted); }
+.cmd-group.open .cmd-caret { color: var(--accent); }
+
+/* The flyout is `position: fixed` for the same reason the Combine popover had
+   to be (row 26): the bar clips its own overflow, so an absolutely-positioned
+   child is cut off by the thing it belongs to. */
+.cmd-flyout { position: fixed; z-index: 60; width: min(560px, 94vw);
+    max-height: min(70vh, 620px); overflow-y: auto; padding: 12px 14px;
+    border: 1px solid var(--accent); border-radius: var(--radius);
+    background: var(--surface-overlay); box-shadow: var(--shadow-lg); }
+.cmd-flyout[hidden] { display: none; }
+/* Menu ergonomics (2026-08-15): what remains in a flyout after promotion is a
+   command list — give rows full-width hover targets, and scale the checkbox
+   with the type instead of the 13px browser default. */
+.cmd-flyout { min-width: 280px; }
+.cmd-flyout .toggle, .cmd-dialog .toggle { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; margin: 2px 0; border-radius: 6px; cursor: pointer; }
+.cmd-flyout .toggle:hover, .cmd-dialog .toggle:hover { background: var(--accent-soft); }
+.cmd-flyout .toggle input[type="checkbox"], .cmd-dialog .toggle input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--accent); flex: none; cursor: pointer; }
+.cmd-flyout button:not(.cmd-dialog-close) { width: 100%; text-align: left; padding: 9px 10px; margin: 2px 0; }
+
+/* ── Ribbon v2 flyouts are MENUS, not forms (2026-08-15, Newton) ───────────
+   What is left in a group's flyout after promotion is a command list, so it
+   reads like one: the icon, the command's full name, a one-line description of
+   what it does, and its keyboard shortcut. Previously these were bare buttons
+   whose only explanation was a hover tooltip that opened ON TOP of the menu. */
+.cmd-flyout button.cmd-menu-item { display: flex; align-items: center; gap: 12px; }
+.cmd-menu-item .btn-ico { flex: none; margin: 0; }
+.cmd-menu-item .btn-ico svg { width: 20px; height: 20px; }
+.cmd-menu-text { flex: 1 1 auto; min-width: 0; text-align: left; }
+.cmd-menu-name { display: block; font-size: var(--fs-sm); font-weight: 500; line-height: 1.25; }
+.cmd-menu-hint { display: block; margin-top: 2px; font-size: var(--fs-xs); font-weight: 400;
+    line-height: 1.3; color: var(--muted); }
+.cmd-menu-key { flex: none; padding: 3px 7px; border: 1px solid var(--border); border-radius: 5px;
+    font-size: var(--fs-xs); font-weight: 600; color: var(--muted); white-space: nowrap; }
+.cmd-flyout .cmd-menu-sep { height: 1px; margin: 6px 6px; background: var(--border); }
+
+/* ── Type weight hierarchy (2026-08-15, Newton) ────────────────────────────
+   Fusion carries hierarchy with weight as much as size: headings and field
+   labels medium-bold, control text medium, body/notes regular. */
+.field-label, .dock-head, .axm-lbl { font-weight: 600; }
+button, select { font-weight: 500; }
+.hint, .axm-note, .info-list { font-weight: 400; }
+
+/* ── Stage-aware ribbon (2026-08-15, Newton option A) ──────────────────────
+   Before a config exists the Workbench leads with Generate: the editing
+   groups sit dimmed (their modes are inert anyway — canUseMode refuses them
+   without a config) and wake on hover. Once a config is loaded, Generate
+   collapses to its caret and the editing groups take the width. */
+body[data-stage="generate"] .tab-page[data-page="workbench"] .cmd-group:not(#generatePanel) {
+    opacity: 0.45; filter: saturate(0.55); transition: opacity 140ms ease, filter 140ms ease; }
+body[data-stage="generate"] .tab-page[data-page="workbench"] .cmd-group:not(#generatePanel):hover,
+body[data-stage="generate"] .tab-page[data-page="workbench"] .cmd-group:not(#generatePanel):focus-within {
+    opacity: 1; filter: none; }
+body[data-stage="generate"] #generatePanel { outline: 2px solid var(--brand-tint); outline-offset: 2px; border-radius: 8px; }
+body[data-stage="edit"] #generatePanel .cmd-quick { display: none; }
+
+/* ── Ribbon layout: Generate anchored left, the rest centred (2026-08-15) ──
+   Newton: "move the Generate mini tab groups to right, make them centred along
+   the horizontal axis — the generate tools should remain at their current
+   positions." Two rows per group freed ~800px at the right edge, which left
+   every editing group hugging the left while the band's right third sat empty.
+   TWO auto margins — one after Generate, one after the last group — split that
+   slack evenly, so the editing groups sit centred in the space to the right of
+   Generate while Generate itself does not move. With no slack (a full or
+   wrapped row) an auto margin collapses to zero, so this cannot push a group
+   off the band. */
+.ribbon-body .tab-page.active > #generatePanel { margin-right: auto; }
+.ribbon-body .tab-page.active > .cmd-group:last-of-type { margin-right: auto; }
+.cmd-flyout-help { float: right; margin: 0 0 6px 10px; }
+.cmd-flyout .field-label { margin-top: 8px; }
+.cmd-flyout .button-row { flex-wrap: wrap; }
+
+/* ── Type scale ────────────────────────────────────────────────────────────
+   Raised across the board. Density now comes from GROUPING (flyouts), not from
+   shrinking text to 9px — which is what the old ribbon was doing to fit. */
+:root {
+    /* Raised 2026-08-15 (Newton, second pass after on-screen review at
+       2500x1620): Fusion-style main/minor split — main text 16-17px, minor
+       14px, hierarchy carried by WEIGHT as much as size. */
+    --fs-xs: 14px;    /* minor — badges, table headers, hints */
+    --fs-sm: 16px;    /* main UI text */
+    --fs-md: 17px;    /* control text, table body */
+    --fs-lg: 19px;    /* headings */
+    --cmdbar-h: 210px; /* the CAP, not the height: the band auto-sizes to its rows. Raised with the 2026-08-15 type scale so two rows of icon groups still fit under it. */
+}
+
+
+/* ── The Board owns the main area ──────────────────────────────────────────
+   It is the fixture's navigation surface: 20 regions x 2 arms x a description.
+   It was living in the 208px ribbon showing ~9 of 20 rows through a scrollbar
+   while 75% of that band sat empty and a 500px-tall dock beside it was blank.
+   Content belongs in the container that has room for it. */
+body[data-tab="board"] .ribbon-body { height: auto; max-height: none; flex: 1 1 auto; min-height: 0;
+    display: flex; flex-direction: column; }
+body[data-tab="board"] .ribbon-body .tab-page.active { height: auto; max-height: none; flex: 1 1 auto; min-height: 0;
+    padding: 10px 14px; align-items: stretch; overflow: hidden; }
+/* The whole workspace row goes, not just the viewport: a hidden canvas between
+   two blank docks left a dead white band filling most of the screen. */
+body[data-tab="board"] .workspace-row { display: none; }
+/* The board is the one tab that is ALL table. It must clear two inherited
+   caps, not one: `.tab-page.cmd-inline > .panel` caps every inline panel at
+   `--cmdbar-h - 14px` so a band panel cannot outgrow the band, and that applied
+   here too — the board sat 156px tall and 937px wide inside a 2000x1102 page,
+   scrolling two rows in a letterbox while the rest of the screen was empty.
+   `width: 100%` because the page is a wrapping flex row: `flex: 1 1 auto` grows
+   a panel only within its line, and the panel's content-based basis kept it
+   short of the full width. */
+body[data-tab="board"] .board-panel,
+body[data-tab="board"] .tab-page.cmd-inline > .panel {
+    flex: 1 1 auto; width: 100%; max-height: none;
+    display: flex; flex-direction: column; min-height: 0; }
+body[data-tab="board"] .board-table { flex: 1 1 auto; max-height: none; }
+
+
+/* ── Command dialogs (whole subtasks) ──────────────────────────────────────
+   Generate Task and Start/Pre-start Pose are WORK, not commands: picking a
+   start pose means clicking the viewport, and a light-dismiss dropdown closes
+   on exactly that click. A dialog persists until its ×, Esc, or its group
+   button — Fusion's command palette, not a menu. */
+.cmd-dialog { position: fixed; z-index: 55; width: min(360px, 92vw);
+    max-height: min(78vh, 720px); display: flex; flex-direction: column;
+    border: 1px solid var(--accent); border-radius: var(--radius);
+    background: var(--surface-overlay); box-shadow: var(--shadow-lg); }
+.cmd-dialog[hidden] { display: none; }
+.cmd-dialog-head { display: flex; align-items: center; gap: 8px; flex: none;
+    padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--border);
+    cursor: grab; user-select: none; touch-action: none; }
+.cmd-dialog-head:active { cursor: grabbing; }
+.cmd-dialog-title { flex: 1 1 auto; font-size: var(--fs-md); font-weight: 600; }
+.cmd-dialog-close { flex: none; width: 24px; height: 24px; border: 0; border-radius: var(--radius);
+    background: none; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; }
+.cmd-dialog-close:hover { background: var(--surface-inset); color: var(--text); }
+.cmd-dialog > :not(.cmd-dialog-head) { padding-left: 14px; padding-right: 14px; }
+.cmd-dialog { padding-bottom: 12px; overflow-y: auto; }
+.cmd-dialog .field-label { margin-top: 8px; }
+
+/* ── A dialog that opens at two thirds and can be resized ──────────────────
+   The base rule above is `width: min(360px, 92vw); max-height: min(78vh,720px)`
+   — right for a command palette, far too small for Generate, which is a
+   six-group form plus a live-feedback column plus a verdict column. A dialog
+   carrying `data-dialog-frac` opens at that fraction of the viewport and is
+   then sized by the operator; `--dlg-w` / `--dlg-h` are written by
+   toggleCommandFlyout / makeDialogResizable and persisted on pointer-up.
+   `max-height: none` because the two-thirds height IS the height. */
+.cmd-dialog[data-frac] { width: var(--dlg-w, 66.7vw); height: var(--dlg-h, 66.7vh);
+    max-height: none; overflow: hidden; padding-bottom: 0;
+    display: flex; flex-direction: column; }
+.cmd-dialog[data-frac] > :not(.cmd-dialog-head):not(.cmd-dialog-grip) { min-height: 0; }
+/* The grip is a real, focusable separator (WCAG 2.1.1): arrows resize by 16px,
+   Shift+arrows by 64, Home re-centres at two thirds. A drag-only corner is the
+   dock-separator defect again. */
+.cmd-dialog-grip { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px;
+    cursor: nwse-resize; touch-action: none; background: none; border: 0; padding: 0;
+    color: var(--muted); }
+.cmd-dialog-grip::after { content: ''; position: absolute; right: 3px; bottom: 3px;
+    width: 10px; height: 10px;
+    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    border-bottom-right-radius: 2px; opacity: 0.7; }
+.cmd-dialog-grip:hover, .cmd-dialog-grip:focus-visible { color: var(--accent); }
+.cmd-dialog-grip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── The Generate dialog's three columns ───────────────────────────────────
+   Designed at two thirds of 1366x768 = 911x512 CSS px, which is the tight
+   case and the one tools/layout_audit.py sweeps. The ladder is driven by a
+   container query on the DIALOG, not by media queries: once the operator has
+   resized it, the dialog's width has nothing to do with the viewport's.
+   PARAMETERS 300px scrolling | LIVE FEEDBACK flex | VERDICT 240px. */
+.gen-panel { container-type: inline-size; }
+.cmd-dialog:has(> .gen-dialog) { container-type: inline-size; }
+.gen-dialog { flex: 1 1 auto; min-height: 0; display: grid; gap: 10px;
+    grid-template-columns: 300px minmax(0, 1fr) 240px; align-items: stretch; overflow: hidden; }
+.gen-dialog > * { min-width: 0; min-height: 0; overflow-y: auto; }
+.gen-params { display: flex; flex-direction: column; gap: 6px; }
+.gen-feedback { display: flex; flex-direction: column; gap: 8px; }
+.gen-verdict { display: flex; flex-direction: column; gap: 8px;
+    border-left: 1px solid var(--border); padding-left: 10px; }
+@container (max-width: 859px) {
+    .gen-dialog { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .gen-verdict { border-left: 0; padding-left: 0; }
+}
+@container (max-width: 639px) {
+    .gen-dialog { grid-template-columns: minmax(0, 1fr); }
+}
+/* The action row never scrolls away: Generate and Auto-generate are the two
+   things the whole dialog exists to reach. */
+.gen-actions { position: sticky; bottom: 0; z-index: 2; flex: none;
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    padding: 8px 14px 12px; margin-top: 6px;
+    border-top: 1px solid var(--border); background: var(--surface-overlay); }
+.gen-actions > button { flex: 1 1 auto; min-height: var(--target-primary); }
+.gen-group > summary { cursor: pointer; font-weight: 600; font-size: var(--fs-sm);
+    padding: 4px 0; list-style: revert; }
+.gen-group[open] > summary { border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.gen-group .gen-grid { display: grid; gap: 4px 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-content: start; }
+.gen-pipe-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.gen-pipe-note { font-size: var(--fs-xs); color: var(--muted); }
+.gen-slider-row { display: flex; align-items: center; gap: 8px; }
+.gen-slider-row input[type="range"] { flex: 1 1 auto; }
+.gen-num { flex: none; min-width: 5ch; font-family: var(--mono); font-size: var(--fs-xs); }
+.gen-readout { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted);
+    white-space: pre-wrap; line-height: 1.5; }
+.gen-note { font-size: var(--fs-xs); color: var(--muted); line-height: 1.45; }
+.gen-chip { display: inline-block; margin-left: 8px; padding: 1px 6px; border-radius: 999px;
+    border: 1px solid var(--border); font-size: var(--fs-xs); font-weight: 400; }
+/* State: every state carries a WORD or a glyph as well as a hue (ISA-101;
+   ~8% of a male-skewed operator population is red-green colour-deficient). */
+.gen-field-warn { outline: 2px solid var(--warning); outline-offset: 1px; }
+.gen-field-danger { outline: 2px solid var(--danger); outline-offset: 1px; }
+.gen-job { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; }
+.gen-job-head { display: flex; justify-content: space-between; gap: 8px;
+    font-size: var(--fs-sm); font-weight: 600; }
+.gen-job-sub, .gen-job-note { font-size: var(--fs-xs); color: var(--muted); margin-top: 4px; }
+/* The Apply row: shown only while a knot edit is UNAPPLIED, i.e. while the
+   config on disk and the path on screen disagree. It is warning-coloured for
+   that reason -- the state it marks is one where Save would write the wrong
+   path, and it is the only way out of it. */
+.gen-edit-apply { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    border: 1px solid var(--warning); border-radius: var(--radius);
+    background: var(--warn-wash); padding: 8px 10px; }
+.gen-edit-apply[hidden] { display: none; }
+.gen-edit-note { font-size: var(--fs-xs); color: var(--muted); }
+/* The stowed-bin foul band, said before the run rather than after it. */
+.gen-pole-warn { margin: 4px 0 0; font-size: var(--fs-xs); color: var(--warning);
+    line-height: 1.4; }
+.gen-failure { border: 1px solid var(--danger); border-radius: var(--radius);
+    background: var(--danger-wash); padding: 8px 10px; font-size: var(--fs-xs); line-height: 1.5; }
+.gen-reasons { display: flex; flex-direction: column; gap: 8px; }
+.gen-reason { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 8px; }
+.gen-reason > h4 { margin: 0 0 4px; font-size: var(--fs-xs); text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--muted); }
+.gen-reason-value { font-family: var(--mono); font-size: var(--fs-xs);
+    white-space: pre-wrap; line-height: 1.5; overflow-x: auto; }
+.gen-reason-rule { font-size: var(--fs-xs); color: var(--muted); margin-top: 3px; line-height: 1.45; }
+.gen-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gen-chips > span { padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border);
+    font-size: var(--fs-xs); }
+.gen-chips > span[data-state="ok"] { background: var(--ok-wash); border-color: var(--ok); }
+.gen-chips > span[data-state="warn"] { background: var(--warn-wash); border-color: var(--warning); }
+.gen-chips > span[data-state="bad"] { background: var(--danger-wash); border-color: var(--danger); }
+.gen-notes { font-size: var(--fs-xs); color: var(--muted); line-height: 1.5; }
+.gen-counts { font-family: var(--mono); font-size: var(--fs-xs); }
+
+/* ── Help canvas ───────────────────────────────────────────────────────────
+   Fusion's command help: hovering a command shows a TITLED panel with the full
+   description, not a one-line whisper. Applied to command-bar / flyout /
+   dialog elements; ordinary controls keep the compact tooltip. */
+/* Beside-a-menu variant: same canvas, but anchored to the flyout's SIDE by
+   initTooltips so it cannot cover the items you are choosing between. The
+   accent edge points back at the menu it belongs to. */
+.tooltip-pop.canvas { max-width: 420px; padding: 12px 14px; }
+.tooltip-pop.canvas.beside { border-left: 3px solid var(--accent); }
+.tooltip-pop.canvas .tip-title { display: block; margin-bottom: 6px;
+    font-size: var(--fs-md); font-weight: 600; color: var(--text); }
+
+
+/* ── F54: inline sparse tabs, ellipsised captions, richer board ────────────
+   A sparse tab collapsed into groups was a near-empty strip with its few
+   controls hidden behind carets. Tabs with <=3 panels keep them inline. */
+.tab-page.cmd-inline { align-items: stretch; }
+/* GROW, do not cluster. `flex: 0 1 auto` sized every inline panel to its
+   content, so on a 2000px band Regions ended at x=824 and the gizmo tab at
+   x=512 — 1176px and 1488px of dead band beside controls squeezed against the
+   left edge. The workbench looked right only because its panels are converted
+   to `.cmd-group`s, which lay out differently. Growing them spreads the content
+   too, because the panels' own interiors are grids built on minmax(0, 1fr)
+   (sch-body, dac-main, rg-grid) — they were being handed a content-width box to
+   fill, not choosing one.
+   This is also the rule that letterboxed the Board and beat `.sch-tl`'s width
+   on specificity (3 classes vs 2); both are now consistent with it. */
+.tab-page.cmd-inline > .panel { flex: 1 1 auto; min-width: 0; padding: 6px 10px;
+    max-height: calc(var(--cmdbar-h) - 14px); overflow: hidden; }
+.tab-page.cmd-inline > .panel > h2 { margin-bottom: 4px; }
+.tab-page.cmd-inline .select-field, .tab-page.cmd-inline input[type="text"],
+.tab-page.cmd-inline input[type="number"] { padding-top: 3px; padding-bottom: 3px; }
+.tab-page.cmd-inline .field-label { margin-top: 4px; margin-bottom: 2px; }
+/* Captions WRAP to two lines rather than ellipsise: a truncated command name
+   is a command you cannot identify without hovering. Wrapping happens at
+   spaces only (overflow-wrap: normal, hyphens: none) so a word is never cut
+   mid-stem; a caption longer than two lines is clamped and the full text stays
+   on the help canvas. */
+.cmd-cap { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    max-width: 100%; overflow: hidden; text-align: center;
+    white-space: normal; overflow-wrap: normal; word-break: normal; hyphens: none; }
+
+/* ── Ribbon v2 on the sparse (inline) tabs ────────────────────────────────
+   Same language as a command group, without hiding anything: the panel title
+   drops to a footer rail and its action buttons take the icon-top anatomy.
+   Titles then line up across every tab, and the Regions actions column stops
+   spending ~120px of band on four full-width stacked buttons. */
+.tab-page.cmd-inline > .panel { display: flex; flex-direction: column;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); }
+.tab-page.cmd-inline > .panel > h2 { order: 90; margin: auto 0 0; padding-top: 4px;
+    min-height: var(--target-min); display: flex; align-items: center; justify-content: center; gap: 5px;
+    color: var(--muted); font-size: var(--fs-xs); font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase; text-align: center; }
+/* Action rows lay their icon buttons out side by side; everything else in the
+   panel keeps its own layout. */
+.tab-page.cmd-inline .button-row { align-items: stretch; }
+.tab-page.cmd-inline .rg-actions > button.cmd-icon-btn,
+.tab-page.cmd-inline .button-row > .cmd-icon-btn { width: auto; flex: 0 0 auto; }
+/* Sparse tabs are not width-constrained the way the seven-group workbench is,
+   so their captions get the room a long command name needs
+   ("Compute Manipulability") instead of being clipped to fit a cap set for a
+   full band. */
+.tab-page.cmd-inline .cmd-icon-btn { max-width: 148px; }
+.ribbon-body .tab-page.cmd-inline .rg-panel .rg-actions {
+    flex-direction: row; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: 4px; }
+/* The brush column stops claiming a 200px flex basis it does not need. */
+.ribbon-body .tab-page.cmd-inline .rg-panel .rg-brush { flex: 0 0 auto; }
+.ribbon-body .tab-page.cmd-inline .rg-panel .rg-grid { grid-template-rows: auto; align-content: start; }
+/* The actions take the empty 4th column with them: it was a `1fr` holding
+   nothing while four buttons stacked in a 240px column. Four icon buttons in
+   ONE row is the whole height saving. */
+.ribbon-body .tab-page.cmd-inline .rg-panel .rg-actions { grid-column: 3 / -1; }
+/* Sparse-tab rhythm: the same content, minus the padding that made these tabs
+   the tallest thing in a band every OTHER tab has to match. */
+.tab-page.cmd-inline .panel-cols > * { margin-bottom: 4px; }
+.tab-page.cmd-inline .button-row, .tab-page.cmd-inline .mode-grid,
+.tab-page.cmd-inline .nav-grid, .tab-page.cmd-inline .rpy-grid,
+.tab-page.cmd-inline .twist-row { margin-top: 4px; margin-bottom: 4px; }
+.tab-page.cmd-inline .rg-actions .button-row { width: auto; }
+.tab-page.cmd-inline .rg-actions > .hint, .tab-page.cmd-inline .rg-actions > .info-list { flex-basis: 100%; }
+
+/* Narrow screens: the seven groups need a SECOND ROW, and the band never
+   scrolls (it clips) — so the anatomy compacts enough that two rows still fit
+   under --cmdbar-h. Placed after the base rule on purpose: an equal-specificity
+   media block earlier in the file loses to it and silently does nothing. */
+@media (max-width: 2200px) {
+    button.cmd-icon-btn { min-width: 58px; max-width: 94px; padding: 2px 4px; gap: 0; }
+    button.cmd-icon-btn .btn-ico svg { width: 18px; height: 18px; }
+    .cmd-cap { -webkit-line-clamp: 2; }
+    .cmd-stack { padding: 0; }
+}
+
+/* The board, presented as data rather than a bare grid: status pills, an
+   updated column, zebra rows, summary chips. */
+.board-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.board-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 3px 10px;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: var(--panel); font-size: var(--fs-sm); color: var(--muted); }
+.board-chip strong { font-size: var(--fs-md); color: var(--text); }
+.board-chip.warn strong { color: var(--warning); }
+.board tbody tr:nth-child(even) { background: var(--surface-inset); }
+.board tbody tr:hover { background: var(--accent-soft); }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 1px 9px;
+    border-radius: 999px; font-size: var(--fs-sm); white-space: nowrap; }
+.pill-ok { background: rgba(46, 160, 67, 0.14); color: var(--ok); }
+/* Which generator wrote the cell. Neutral unless it says something is wrong:
+   the raster route was never stroke-gated, so it reads amber, not green. */
+.pill-route { margin-left: 4px; font-size: var(--fs-xs); background: var(--brand-wash); color: var(--brand-strong); }
+.pill-route[data-route="raster-legacy"] { background: var(--warn-wash); color: var(--warning); }
+.pill-route[data-route="hand-authored"] { background: transparent; color: var(--muted); }
+.pill-missing { background: rgba(199, 119, 0, 0.14); color: var(--warning); font-weight: 600; }
+.pill-na { color: var(--muted); opacity: 0.6; }
+.board-age { color: var(--muted); white-space: nowrap; }
+
+.pill-warn { background: rgba(199, 119, 0, 0.16); color: var(--warning); font-weight: 600; }
+.pill-metrics { display: inline-flex; gap: 4px; margin-left: 6px; color: var(--muted); }
+
+
+/* ── Inline panels: children flow into COLUMNS instead of stacking past the
+   box. .panel-cols was a plain block, so a panel taller than the band was
+   simply cut (dacLeftSearch +18px, measured). Column-wrap packs them. */
+.tab-page.cmd-inline .panel-cols { display: flex; flex-direction: column; flex-wrap: wrap;
+    align-content: flex-start; column-gap: 16px; max-height: 122px; }
+.tab-page.cmd-inline .panel-cols > * { max-width: 400px; }
+/* ...except the bodies that ARE the panel's layout. The 400px cap above keeps
+   one column of a multi-column panel from running away, but `.sch-body`,
+   `.rg-grid` and `.dac-body` are grids built to fill their panel: capped, they
+   held the Schedule status column to 108px and wrapped a one-line hint into
+   four, with 700px empty beside it. */
+.tab-page.cmd-inline .panel-cols > .sch-body,
+.tab-page.cmd-inline .panel-cols > .rg-grid,
+.tab-page.cmd-inline .panel-cols > .dac-body,
+.tab-page.cmd-inline .panel-cols > .sch-ruler,
+.tab-page.cmd-inline .panel-cols > .sch-track,
+.tab-page.cmd-inline .panel-cols > #dacPlot { max-width: none; width: 100%; }
+/* Plotly measures its container once and keeps that width, so a chart capped at
+   400px stays 400px in a 1214px panel even after the cap is lifted. */
+.sch-track, #dacPlot { width: 100%; min-width: 0; }
+.tab-page.cmd-inline .panel button { padding-top: 3px; padding-bottom: 3px; }
+/* F75: 44px → 64px — the transport row moved into the panel head, so the
+   freed band height goes to the collision graph itself. */
+.tab-page.cmd-inline #dacPlot { height: 64px; }
+/* The generic inline-panel rule above says `flex: 1 1 auto`, and its three
+   classes outrank `.ribbon-body .sch-tl` — with the DOM track inside, an auto
+   basis sizes the panel from the bar labels' max-content (thousands of px),
+   wrapping the whole timeline onto a second band row that the 170px cap then
+   clips to nothing. Basis 0 sizes it from the ROW; four classes so it wins.
+   F75: same twin for .dac-tl — without it the DAC timeline was content-sized
+   and the band kept dead space to its right (Newton's screenshot). */
+.tab-page.cmd-inline > .panel.sch-tl { flex: 1 1 0; }
+.tab-page.cmd-inline > .panel.dac-tl { flex: 1 1 0; }
+
+/* ── Reference-frame picker (Workbench > Properties) ───────────────────────
+   Governs the Selected Point readout and the gizmo's translation/rotation
+   axes. Deliberately NOT a save control: every YAML in the tree is written in
+   alix_ref_frame, and the offline gates (verify_task_motion, sdk_reach,
+   coverage) read that frame without consulting task_parameters.reference_frame
+   — so a config saved in another frame would run correctly under dispatch and
+   be mis-verified by every gate. */
+.ribbon-body .rf-panel { min-width: 230px; max-width: 300px; }
+/* ── Reference Frame as a FIELD group ───────────────────────────────────────
+   Two rows, each a big class icon beside the frame's own field. It reads the
+   way the other groups do (icon, then the words) while staying a control you
+   set rather than a command you fire — so the selects live on the surface and
+   the caret keeps only the live note and the ⓘ.
+   The width is a floor, not a preference: `alix_ref_frame — saved YAML` and
+   `R_index_tip_frame` are the strings that must survive, and a select that
+   ellipsises its own value is no better than the caret this replaced. */
+.cmd-group.cmd-fields .cmd-quick { grid-auto-flow: row; gap: 5px; min-width: 258px;
+    align-items: center; padding: 2px 1px; }
+.rf-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* Big, per Newton: the icon is the row's identity, and at 19px it read as
+   decoration on a field rather than the label of a frame class. */
+.rf-ico { flex: none; display: grid; place-items: center; width: 48px; height: 48px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface-inset); color: var(--accent); }
+.rf-ico svg { width: 32px; height: 32px; display: block; }
+.rf-field { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.rf-name { font-size: var(--fs-xs); font-weight: 600; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--muted); line-height: 1; }
+.ribbon-body .rf-row .select-field { width: 100%; min-width: 0; }
+/* The caption is what makes an unlearned icon readable; on a short ribbon the
+   icon + tooltip carry it, and the row still beats a caret. */
+@media (max-height: 820px) {
+    .rf-name { display: none; }
+    .cmd-group.cmd-fields .cmd-quick { gap: 4px; }
+    .rf-ico { width: 40px; height: 40px; }
+    .rf-ico svg { width: 27px; height: 27px; }
+}
+/* A group with everything on its surface has no menu, so no caret. Its bottom
+   rail becomes the corner the ⓘ sits in — same height as the caret rail it
+   replaces, so the group still bottom-aligns with its neighbours. */
+.cmd-corner { display: flex; align-items: center; justify-content: flex-end;
+    align-self: stretch; margin-top: auto; min-height: 18px; padding: 0 2px 1px 0; }
+.cmd-corner .info-ico { margin-left: 0; }
+.ribbon-body .rf-panel .rf-grid { flex: 1 1 auto; min-height: 0; display: flex;
+    flex-direction: column; gap: 8px; align-content: start; }
+.ribbon-body .rf-panel .select-field { width: 100%; }
+.frame-note { color: var(--muted); font-size: var(--fs-sm); line-height: 1.4; }
+.frame-note code { font-family: "JetBrains Mono", ui-monospace, monospace; }
+@media (max-height: 900px) {
+    .ribbon-body .rf-panel .rf-grid { gap: 6px; }
+    .frame-note { display: none; }   /* the tooltip carries it on a short ribbon */
+}
+
+/* ===== Redundancy Atlas ===================================================
+   Swivel against arc length. The cell colours are TOKENS, read back by the
+   renderer through getComputedStyle the same way syncColorsFromCss keeps the
+   3D palette in step — a canvas painted from literals would be an unthemed
+   island, and this one sits directly beside themed info rows. */
+.atlas-controls { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 6px; }
+.atlas-controls .field-label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.atlas-controls input[type="number"] { width: 68px; }
+
+.atlas-canvas-wrap { overflow-x: auto; margin: 8px 0 6px; border: 1px solid var(--line);
+                     border-radius: 4px; background: var(--surface-inset); }
+#atlasCanvas { display: block; width: 100%; min-width: 420px; height: auto; cursor: crosshair; }
+
+.atlas-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: var(--fs-sm);
+                color: var(--text-muted, inherit); margin-bottom: 8px; }
+.atlas-key { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.atlas-key i { width: 10px; height: 10px; border-radius: 2px; display: inline-block;
+               border: 1px solid rgba(0, 0, 0, 0.25); }
+
+/* A corridor that exists and one that does not are the two answers this panel
+   gives, so they get the tree's own semantic colours rather than a new pair. */
+.atlas-panel .info-row code.ok  { color: var(--ok); font-weight: 600; }
+.atlas-panel .info-row code.bad { color: var(--danger); font-weight: 600; }
+
+/* Corpus sweep table — the atlas across a whole fixture, sorted by fix class. */
+.atlas-sweep { margin-top: 8px; }
+.atlas-sweep .scrollx { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; }
+.atlas-sweep-table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); min-width: 480px; }
+.atlas-sweep-table th, .atlas-sweep-table td { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.atlas-sweep-table th { font-weight: 600; color: var(--text-muted, inherit); }
+.atlas-sweep-table td.n, .atlas-sweep-table th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.atlas-sweep-table tbody tr:last-child td { border-bottom: none; }
+.atlas-sweep-table tbody tr:hover { background: var(--surface-inset); }
+
+/* A group that cannot be acted on yet is DIMMED, not hidden: the operator can
+   still read what will be asked for once a fixture and a region are bound. */
+.gen-dimmed { opacity: 0.55; }
+.gen-dimmed > summary { color: var(--muted); }
+
+/* Hand state — DERIVED from the tool frame (glove_frames.yaml: hand_state), so
+   it reads as a value, not a control. The mismatch flag is the point of
+   showing it at all: the viewer and the task each resolve a frame, and when
+   they disagree the start pose is being judged against a hand the generated
+   task will not use. */
+.hand-state-row {
+    margin: 6px 0 10px;
+    font-size: 11px;
+    color: var(--text-dim, #8b93a7);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.hand-state {
+    font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    color: var(--text, #e6e9ef);
+    background: var(--surface-2, rgba(255, 255, 255, 0.06));
+    border-radius: 4px;
+    padding: 1px 6px;
+}
+.hand-state.is-muted { color: var(--text-dim, #8b93a7); font-style: italic; background: none; padding: 1px 0; }
+.hand-state-warn {
+    color: var(--warn, #e8b339);
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    padding: 0 5px;
+}
+.hand-state-warn::before { content: "\\26A0\\FE0E  "; }
+
+/* Inline select inside the visibility strip — matches the toggles it sits with
+   rather than the full-width .select-field used in the docks. */
+.select-inline {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: var(--surface-2, rgba(255, 255, 255, 0.06));
+    color: var(--text, #e6e9ef);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.14));
+    max-width: 120px;
+}
