@@ -75,7 +75,7 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
   - its pole height and hand pose are staged first and read back, and nothing runs if either fails;
   - a run needs a version that passes L1–L6, with L3 read as ALIX reads it (20 Hz band-limited);
   - the robot's own rules (mode, confirmation, E-stop on either arm).
-- **Fixed in the bridge:** four defects of the page (contract, D1–D4). The most serious was STOP BOTH leaving the screen below 1,610 px wide.
+- **Fixed in the bridge:** five defects of the page (contract, D1–D5). The most serious was STOP BOTH leaving the screen below 1,610 px wide; the widest was the dark theme, which covered only part of the page.
 
 **Checked:**
 - Tests: `tests/test_lite_ui.py` (the page is the designer's file plus one block), `tests/test_api_v2.py`, `tests/test_lite_region_loop.py` (one arm step through the whole loop over HTTP, the gates, staging failures, the E-stop interlock, cuts and the recorded-pace mode), `tests/test_library.py` (the Trajectory Viewer's files), `tests/test_staging.py` (staging times and FK, L3 against ALIX's own reading).

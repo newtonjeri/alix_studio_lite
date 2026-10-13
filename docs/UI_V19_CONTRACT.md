@@ -11,7 +11,7 @@ This file states, screen by screen, what the page needs from the backend, what i
 - **`web/index.html`** is the designer's file, byte for byte, plus one marked block at the end that loads `web/lite/`. `tests/test_lite_ui.py` enforces this. A new designer version therefore drops in as a file swap.
 - **`web/lite/`** is Lite's bridge. It replaces the page's template functions, one group per file, with versions that call the backend. It keeps the page's own screen updates.
   - The same test fails if a function the bridge replaces is renamed or removed in a new version.
-  - The bridge uses only the page's colour variables, so the light and dark themes both apply.
+  - The bridge uses only the page's colour variables, so the light and dark themes both apply. The page's own dark theme is incomplete (defect D5); `lite/dark.css` completes it.
 - **`/api/*`** is the Lite UI's API (`server/api_v2.py`). It is named after the handoff's suggested boundary (section 17).
   - Every route needs the session from the log-in, except the log-in itself and STOP.
   - Legacy Lite keeps `/api/lite/*`. Both share one backend, so one robot, one E-stop state and one STOP.
@@ -74,6 +74,9 @@ State legend:
 - **D2 — Opening Advanced Robot Controls throws `vals.forEach is not a function`.** `readHandValues()` returns an object, but `rcSyncGuidedValues` and `demoApplyToRobotControl` iterate it as an array. As a result, Prepare's **Apply Hand** never reaches the arm panel.
 - **D3 — Resume loses the stage after Lock.** Logging in again opens the Project Manager, which saves the open project with the view the log-in has just set (Home). "Resume: TASK 5A · RIGHT ARM · Tune + Simulation" then becomes "Resume: Home". After a Lock, the bridge closes the project; Continue restores the saved stage.
 - **D4 — Wording.** The delete confirmation says the project is "browser-saved"; the bridge's text says its folder moves to the trash.
+- **D5 — The dark theme covers only part of the page.** V19's dark rules recolour its variables and 24 components; everything else stays light. In the dark theme, a headless audit of every screen and modal found 96 kinds of element still on a light background and 102 with text below 3:1 contrast. Examples: the task numbers (white on white), the top-bar buttons, the status bars, the stage pipeline, the PASS / Needs Tuning / Record Again buttons, the whole Merge + Full Sequence page, Advanced Robot Controls, form labels (2.3:1) and every coloured badge.
+  - Fix: `web/lite/dark.css`, generated from the page's own stylesheet by `tools/make_dark_css.py`. Every light background, pastel border and dark text moves onto V19's dark palette by its hue; the values live in `lite/tokens.css`. The page's cascade is kept with `:where()`. Picture frames stay white, as V19 keeps them. A test checks the file is current; rerun the tool for a new designer version.
+  - Checked: after the fix, the same audit finds only the white picture frames, the carousel dots, and V19's white-on-orange buttons (2.9:1 in both themes, the designer's choice).
 
 ## Task list: V19 against the region catalogue
 

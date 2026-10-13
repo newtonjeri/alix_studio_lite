@@ -58,3 +58,18 @@ def test_bridge_uses_the_pages_colours():
             if LITERAL.search(line):
                 bad.append(f"{f.name}:{i}: {line.strip()[:90]}")
     assert not bad, "\n".join(bad)
+
+
+def test_dark_theme_is_generated_from_the_page():
+    """web/lite/dark.css completes the page's dark theme and is tools/make_dark_css.py's output for
+    the page as it is: rerun the tool when the designer's page changes."""
+    import importlib.util
+
+    tool = WEB.parents[2] / "tools/make_dark_css.py"
+    spec = importlib.util.spec_from_file_location("make_dark_css", tool)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    text, count = mod.build(WEB / "index.html")
+    assert count > 150
+    assert (WEB / "lite/dark.css").read_text(encoding="utf-8") == text, "run: python3 tools/make_dark_css.py"
+    assert '@import url("dark.css")' in (WEB / "lite/lite.css").read_text(encoding="utf-8")

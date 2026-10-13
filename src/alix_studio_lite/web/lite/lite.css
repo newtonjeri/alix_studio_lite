@@ -2,6 +2,7 @@
    variables (:root in web/index.html), so light and dark themes both apply; the 3D view's
    palette is in tokens.css. */
 @import url("tokens.css");
+@import url("dark.css");          /* the page's own dark theme, completed (tools/make_dark_css.py) */
 
 .topbar .mode-pill[data-lite] { transition: background .2s, color .2s, border-color .2s; }
 .topbar .mode-pill[data-lite="visual"] { background: var(--blue2); border-color: var(--blue); color: var(--blue); }
@@ -194,3 +195,12 @@
 .lite-file-row.todo { grid-template-columns: auto minmax(0, 1fr); }
 .lite-file-row.todo .lite-file-name { grid-column: 1 / -1; order: -1; }
 .lite-file-row.todo .lite-file-actions { justify-content: flex-end; }
+
+/* Lite's additions in the dark theme: accents as text on their own dark tints need the light tint */
+html[data-theme="dark"] .topbar .mode-pill[data-lite="visual"] { color: var(--lite-d-blue); }
+html[data-theme="dark"] .topbar .mode-pill[data-lite="hwsim"] { color: var(--lite-d-orange); }
+html[data-theme="dark"] .topbar .mode-pill[data-lite="real"],
+html[data-theme="dark"] .topbar .mode-pill[data-lite="estop"] { color: var(--lite-d-red); }
+html[data-theme="dark"] .lite-limit.ok, html[data-theme="dark"] .lite-ok, html[data-theme="dark"] .lite-file-stage.ok { color: var(--lite-d-green); }
+html[data-theme="dark"] .lite-limit.bad, html[data-theme="dark"] .lite-bad, html[data-theme="dark"] .lite-file-stage.bad { color: var(--lite-d-red); }
+html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
