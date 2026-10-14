@@ -259,7 +259,7 @@ class StandInRobot:
                    "The controller reports " + "; ".join(error_text(c) for c in errs) + ".",
                    "Check the arm and its pendant; clear the error there before running.")
         age = fb.get("age_s")
-        stale = age is None or age > STALE_S
+        stale = (age is None or age > STALE_S) and not fb.get("busy")      # a command owns the connection
         self._once(side, "link", "stale" if stale else None, "warn",
                    "No fresh reading from the controller: robot motion is blocked.",
                    "Check the controller's power and cable; Lite reconnects by itself when it answers.")
@@ -519,7 +519,7 @@ class StandInRobot:
     def in_stage(self, side: str, stage: "staging.Stage") -> bool:
         pole_mm, hand = self._measured(side)
         return (pole_mm is not None and hand is not None and abs(pole_mm - stage.pole_mm) <= staging.POLE_TOL_MM
-                and staging.same_hand(hand, stage.hand))
+                and staging.hand_holds(hand, stage.hand))         # a grip stops on the tool, not at 0
 
     # ── pole, hand, teach
     def move_pole(self, side: str, pole_mm: float, title: str, mode: str | None = None):
@@ -706,8 +706,8 @@ class StandInRobot:
 
     def _run_real(self, job, real, side: str, pid: int, prog: dict, dry_run: bool, on_done) -> dict:
         """A stored program on a linked controller: it must hold the program Lite sent; then its
-        SIM or REAL mode (read back), the move to the first line and the run (ALIX's verdict); the
-        mode it had is put back after."""
+        SIM or REAL mode (read back), then the control program's own run (rm_upload.run: the move to
+        the first point, the program, its error codes); the mode it had is put back after."""
         held = next((x for x in real.programs() if int(x["id"]) == pid), None)
         if held is None or not self._same_program(prog, held):
             raise UserError(f"Program {pid} on the {side.upper()} controller is not the one Lite sent "
@@ -719,23 +719,18 @@ class StandInRobot:
         try:
             self.arm(side).controller_mode = want
             job.log(f"Controller mode {want} (read back).")
-            job.progress(f"Moving to the start, then running program {pid}"
+            job.progress(f"Moving to the start (20 %), then running program {pid}"
                          + (" (the controller's SIM mode: the arm stays still)" if dry_run else ""), 0, prog["lines"])
-            states = {1: "running", 0: "ended", 2: "paused"}
-            out = real.run(pid, prog["first_row"], prog["lines"],
-                           on_transition=lambda t: job.log(f"Program {pid} {states.get(t.get('run_state'), t.get('run_state'))} "
-                                                           f"at {t.get('t', 0):.2f} s."))
+            out = real.run(pid, prog["first_row"], prog["lines"],      # its own lines, as they come
+                           on_line=lambda ln: job.log(ln.strip()) if ln.strip().startswith(("running", "RUN", "!!", "**")) else None)
         finally:
             real.restore_run_mode(originals)
         job.check()                                     # STOP or an E-stop ended it
-        if not out.get("ok"):
-            raise UserError(f"The run did not complete ({str(out.get('verdict') or 'no verdict').replace('_', ' ')}).",
+        if not out["ok"]:
+            raise UserError(f"The run did not complete: {out['why'] or 'see the hardware log'}.",
                             "Check the arm and the controller's errors, then run it again.")
-        replay = out.get("replay_s")
-        job.log("Finished: the controller completed the program"
-                + ("" if replay is None else f" ({replay:.2f} s of trajectory)") + ".")
-        res = dict(program_id=pid, dry_run=dry_run, seconds=None if replay is None else round(replay, 2),
-                   verdict=out.get("verdict"))
+        job.log(f"Finished: the controller completed program {pid} ({out['seconds']:.1f} s with the move to the start).")
+        res = dict(program_id=pid, dry_run=dry_run, seconds=out["seconds"])
         if on_done:
             on_done(res)
         return res

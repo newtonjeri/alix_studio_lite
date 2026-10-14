@@ -9,7 +9,7 @@
 import { get, say } from './api.js';
 import { ctx, step, unitUrl } from './ctx.js';
 import { loadRobot } from './robot3d.js';
-import { createViewer } from './three_scene.js';
+import { NO_WEBGL, createViewer } from './three_scene.js';
 
 const CYCLE_S = 0.005;
 let viewer = null, robot = null, robotP = null;
@@ -24,7 +24,7 @@ let preRaf = 0, playRaf = 0;
 async function ensure() {
   if (!viewer) viewer = createViewer();
   if (!robotP) {
-    robotP = loadRobot().then((r) => { robot = r; viewer.add(r.group); return r; });
+    robotP = loadRobot().then(async (r) => { robot = r; await viewer.add(r.group); return r; });
     robotP.catch(() => { robotP = null; });          // tried again next time (after a new log-in, say)
   }
   await viewer.ready;
@@ -94,6 +94,8 @@ export async function showFile(host, unit, which, progress = null) {
   sim.progress = progress;
   rewind();
   host.dataset.lite3d = 'ready';
+  say3d(host, null);
+  syncScrub();
   const cap = host.querySelector('.simulation-caption');
   if (cap) {
     const what = which === 'raw' ? 'Recording before tuning' : which === 'version' ? 'Kept version' : 'Tuned trajectory';
@@ -117,6 +119,8 @@ export async function showStanding(host, unit, note = 'No recording yet: the arm
   robot.home();
   viewer.dirty = true;
   host.dataset.lite3d = 'ready';
+  say3d(host, null);
+  syncScrub();
   const cap = host.querySelector('.simulation-caption');
   if (cap) {
     cap.querySelector('strong').textContent = `3D simulation · ${unit.arm.toUpperCase()} ARM · ${unit.display}`;
@@ -126,6 +130,21 @@ export async function showStanding(host, unit, note = 'No recording yet: the arm
 }
 
 export function invalidate() { sim.stale = true; }
+
+// A 3D host that shows nothing playable says why, in place of any picture (V19's placeholder is
+// never shown): the server's refusal, or how to get the browser's 3D back. `text` null clears it.
+export function say3d(host, text, err = null) {
+  if (!host) return;
+  let m = host.querySelector(':scope > .lite-3d-msg');
+  if (!text) { m?.remove(); return; }
+  if (!m) { m = Object.assign(document.createElement('div'), { className: 'lite-3d-msg' }); host.append(m); }
+  m.textContent = err && err.code === 'webgl' ? NO_WEBGL : text;
+  const cap = host.querySelector('.simulation-caption');
+  if (cap) {
+    cap.querySelector('strong').textContent = '3D simulation';
+    cap.querySelector('span').textContent = err && err.code === 'webgl' ? '3D graphics are off in this browser' : 'Nothing plays';
+  }
+}
 
 // Whether the Trajectory Viewer, the full sequence or one of the page's pictures (pictures.js: Home,
 // Setup & Safety, the arm cards in Prepare, Drag & Teach and Real Test) has the 3D: the region's
@@ -213,6 +232,16 @@ export function rowAt(line) {
   return Math.round(b0 + (b1 - b0) * (line - a0) / Math.max(1, a1 - a0));
 }
 
+// The trajectory scrubber in the simulation pane's controls: any moment of the trajectory, the
+// arm and the plot's playhead with it.
+function syncScrub(t = null) {
+  const sc = document.getElementById('liteSimScrub');
+  if (!sc) return;
+  sc.max = String(Math.round(duration() * 1000));
+  sc.disabled = !sim.tl;
+  if (document.activeElement !== sc) sc.value = String(Math.round((t ?? 0) * 1000));
+}
+
 function placePlayhead(row) {
   const ph = document.getElementById('simPlotPlayhead');
   if (!ph) return;
@@ -234,6 +263,7 @@ export function installSim() {
     const line = Math.round(Math.min(simElapsedSec, duration()) / CYCLE_S);
     showLine(line);
     placePlayhead(rowAt(line + 1));
+    syncScrub(Math.min(simElapsedSec, duration()));
   };
 
   const pageReset = window.resetSimulationPlayback;
@@ -241,6 +271,7 @@ export function installSim() {
     pageReset(showToast);
     rewind();
     if (sim.tl) placePlayhead(rowAt(1));
+    syncScrub(0);
   };
 
   const pageControl = window.simulationControl;
@@ -269,10 +300,34 @@ export function installSim() {
     }
     if (action !== 'start' && sim.abort) sim.abort();
     pageControl(action);
+    if (action === 'stop') syncScrub(Math.min(simElapsedSec, duration()));
     if (action === 'stop' && sim.tl && sim.staged) {
       const line = Math.round(Math.min(simElapsedSec, duration()) / CYCLE_S);
       showLine(line);
       placePlayhead(rowAt(line + 1));
     }
   };
+
+  // the scrubber: dragging it pauses the run and shows that moment of the trajectory
+  const bar = document.querySelector('#simulationViewport .sim-controls-overlay');
+  if (bar && !document.getElementById('liteSimScrub')) {
+    const sc = Object.assign(document.createElement('input'), { type: 'range', id: 'liteSimScrub', className: 'lite-sim-scrub',
+      min: '0', max: '0', step: '5', value: '0', disabled: true });
+    sc.setAttribute('aria-label', 'Trajectory time');
+    sc.title = 'Drag through the trajectory';
+    sc.addEventListener('input', () => {
+      if (!sim.tl) return;
+      if (sim.abort) sim.abort();
+      if (simRunning) pageControl('stop');
+      const t = Math.min(duration(), Number(sc.value) / 1000);
+      simElapsedSec = t;
+      sim.staged = true;                                   // Start goes on from here, without the staging again
+      const line = Math.round(t / CYCLE_S);
+      showLine(line);
+      placePlayhead(rowAt(line + 1));
+      const timer = document.getElementById('simRunTimer');
+      if (timer) timer.textContent = fmt(t);
+    });
+    bar.insertBefore(sc, document.getElementById('simExpandBtn'));
+  }
 }

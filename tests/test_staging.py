@@ -114,3 +114,16 @@ def test_l3_reads_as_alix_does():
     assert float(acc_deg_s2(q, 0.005).max()) == pytest.approx(a_max, rel=0.03)
     l3 = next(c for c in check_bytes(md, load_limits("left")).to_dict()["checks"] if c["id"] == "L3")
     assert l3["passed"] is True, l3
+
+
+def test_a_grip_holds_when_the_fingers_stop_on_the_tool():
+    """A grip closes onto the brush and stops there, not at 0 (the robot, 14 Oct: Grip read back
+    842, 762, 754, 765, 714, 992): that is the grip. An opening hand that stopped short is not."""
+    from alix_studio_lite.server.staging import hand_holds
+
+    grip = [0, 0, 0, 0, 150, 1000]
+    assert hand_holds([842, 762, 754, 765, 714, 992], grip)
+    assert not hand_holds([1000, 999, 1000, 1000, 999, 992], grip)               # still open: not the grip
+    assert not hand_holds([950, 950, 950, 950, 950, 992], grip)                  # barely closed
+    assert not hand_holds([700] * 6, [1000] * 6)                                 # opening, blocked
+    assert hand_holds([500, 498, 503, 501, 1000, 1000], [500, 500, 500, 500, None, None])

@@ -10,7 +10,7 @@
 
 import { get, post, say } from './api.js';
 import { ctx, el, fmtS, loadUnit, step, tell, unitUrl, watchJob } from './ctx.js';
-import { elsewhere, invalidate, release, showFile, showStanding, sim, unload } from './sim.js';
+import { elsewhere, invalidate, release, say3d, showFile, showStanding, sim, unload } from './sim.js';
 
 let unit = null;               // the server's view of the arm step on screen
 let syncing = false;           // writing the server's settings into the page's controls
@@ -256,7 +256,7 @@ async function loadSimulation() {
   if (elsewhere()) { invalidate(); return; }              // the Viewer, the full sequence or a picture has the 3D: later
   if (!unit.active) {                                     // nothing to play: the arm stands, and ▶ Start says why
     unload(Object.assign(new Error('This region has no recording yet.'), { hint: 'Record it, or use an existing or loaded file.', key: unit.key }));
-    await showStanding(host, unit).catch(() => {});
+    await showStanding(host, unit).catch((err) => say3d(host, `The 3D view could not start: ${say(err)}`, err));
     return;
   }
   const which = unit.candidate ? 'candidate' : 'raw';
@@ -273,6 +273,7 @@ async function loadSimulation() {
     $('simStatus').textContent = `Nothing plays: ${say(err)}`;
     $('simStatus').className = 'statusbar warn';
     host.dataset.lite3d = 'blocked';
+    say3d(host, `Nothing plays: ${say(err)}`, err);
   }
 }
 
@@ -321,7 +322,8 @@ async function enter() {
   if (!unit.candidate || !unit.fresh) {
     const host = $('simulationViewport');
     if (host && !host.querySelector('canvas') && !elsewhere()) {      // while it tunes: the scene, not the designer's picture
-      showStanding(host, unit, 'Tuning: the tuned trajectory plays here when it is ready.').catch(() => {});
+      showStanding(host, unit, 'Tuning: the tuned trajectory plays here when it is ready.')
+        .catch((err) => say3d(host, `The 3D view could not start: ${say(err)}`, err));
     }
     await retune();
   } else await loadSimulation();

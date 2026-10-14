@@ -97,7 +97,10 @@
 /* the 3D view in the simulation pane and the review preview */
 .lite-3d { position: relative; }
 .lite-3d > .lite-3d-canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; z-index: 1; display: block; }
-.lite-3d[data-lite3d="ready"] .simulation-reference-image { display: none; }
+.lite-3d .simulation-reference-image { display: none; }      /* never V19's picture, whatever the 3D's state */
+.simulation-placeholder.lite-3d { background: var(--lite-viewport-bg); }
+.lite-3d-msg { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: 24px; text-align: center;
+  color: var(--vp-text); font-weight: 700; line-height: 1.5; }
 .simulation-placeholder.lite-3d[data-lite3d="ready"] { border-style: solid; }
 .simulation-placeholder.lite-3d .simulation-caption { z-index: 3; }
 .playback-preview.lite-3d { min-height: 360px !important; background: var(--lite-viewport-bg); overflow: hidden; }
@@ -291,3 +294,7 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 .lite-alert-head small, .lite-alert-hint { color: var(--muted); }
 .lite-alert-x { border: 0; background: none; color: var(--muted); font-size: 15px; cursor: pointer; padding: 2px 6px; }
 .lite-alerts-all { align-self: flex-end; min-height: 32px; padding: 4px 12px; }
+
+/* the trajectory scrubber in the simulation pane's controls (sim.js) */
+.lite-sim-scrub { width: min(240px, 30vw); accent-color: var(--blue); }
+.lite-sim-scrub:disabled { opacity: 0.4; }

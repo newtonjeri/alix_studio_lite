@@ -11,8 +11,10 @@ and the E-stop input, IO3, which must be in the controller's E-stop mode (5), wi
 normally-closed button to ground: it reads 0 when pressed.
 
 The link reads; Lite's commands (robot_real.py: staging, drag teaching, upload, runs, moves) use
-its connection, and while one runs the link reads only the E-stop input, so two callers never
-compete for a controller. STOP (``ArmLink.stop``) is ALIX's own stop of a controller
+its connection, and while one runs the link does not read at all: a second caller on one
+controller makes its replies time out (ALIX measured it; the hardware showed it on 14 Oct, a
+program list after an upload answering -2). The controller acts on its own E-stop meanwhile; Lite
+reads everything again the moment the command ends. STOP (``ArmLink.stop``) is ALIX's own stop of a controller
 (``staging.stop_devices``: the arm, the pole, and the hand frozen where it is), then ALIX's check
 that the arm is still (``track.stop_program``); STOP BOTH stops the E-stop's way
 (``rm_set_arm_stop``: the fastest stop, the trajectory dropped).
@@ -108,9 +110,8 @@ class ArmLink:
         self._hand = None
         self._modbus_set = False
         self._stopping = threading.Event()          # a STOP is being sent: no new reading starts
-        self._busy: list = []                       # commands running (robot_real.py): only IO3 is read
+        self._busy: list = []                       # commands running (robot_real.py): no reading meanwhile
         self._read_lock = threading.Lock()          # one reading at a time
-        self._light_t = 0.0
         self._stop = threading.Event()
         self._lock = threading.Lock()
         self._thread = None
@@ -154,11 +155,7 @@ class ArmLink:
                 if self._stopping.is_set():
                     continue
                 try:
-                    if self._busy:
-                        if time.time() - self._light_t >= 0.5:
-                            self._light_t = time.time()
-                            self.read_estop()
-                    else:
+                    if not self._busy:                  # a command owns the connection: it alone talks
                         self.read_once()
                 except Exception:                                        # noqa: BLE001 - keep reading
                     pass
@@ -168,11 +165,12 @@ class ArmLink:
 
     @contextmanager
     def busy(self, what: str):
-        """A command runs on this controller (robot_real.py): meanwhile the reading loop only
-        watches the E-stop input, twice a second, so two callers never compete for it (ALIX
-        measured reply timeouts when they do). The panel shows what is running."""
+        """A command runs on this controller (robot_real.py): meanwhile the reading loop does not
+        read, so two callers never compete for it. The panel shows what is running, with the last
+        reading; everything is read again as the command ends."""
         with self._lock:
             self._busy.append(what)
+            self.feedback = dict(self.feedback, busy=what)
         try:
             yield
         finally:
@@ -184,28 +182,6 @@ class ArmLink:
                     self.read_once()
                 except Exception:                                                # noqa: BLE001
                     pass
-
-    def read_estop(self) -> None:
-        """The light reading while a command runs: IO3 only; the rest stays as last read."""
-        with self._read_lock:
-            self._read_estop()
-
-    def _read_estop(self) -> None:
-        robot = self.handle.robot
-        with self._lock:
-            fb = dict(self.feedback)
-            fb["busy"] = self._busy[-1] if self._busy else None
-        if hasattr(robot, "rm_get_io_state"):
-            fb["estop"], fb["io3"] = estop_state(lambda: robot.rm_get_io_state(ESTOP_IO), self.estop_active)
-        elif self.emulated:
-            fb["estop"], fb["io3"] = "CLEAR", {"emulated": True}
-        else:
-            fb["estop"], fb["io3"] = "UNKNOWN", {}
-        fb["t"] = time.time()
-        with self._lock:
-            self.feedback = fb
-        if self.on_read is not None:
-            self.on_read()
 
     def stop(self, hard: bool = True) -> dict:
         """STOP this controller as ALIX stops one (``staging.stop_devices``): the arm, the E-stop's
@@ -296,8 +272,9 @@ class ArmLink:
     def view(self) -> dict:
         with self._lock:
             fb = dict(self.feedback)
+            fb["busy"] = self._busy[-1] if self._busy else None
         age = time.time() - fb["t"] if fb.get("t") else None
-        if age is None or age > STALE_S:
+        if (age is None or age > STALE_S) and not fb["busy"]:
             fb["estop"] = "UNKNOWN"                                      # no fresh reading: fail closed
         fb["age_s"] = None if age is None else round(age, 2)
         fb.pop("t", None)

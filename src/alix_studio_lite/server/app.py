@@ -60,10 +60,10 @@ MODE_TEXT = {"visual": "Visual sim: the 3D robot moves, no hardware",
 
 
 class LiteApp:
-    def __init__(self, project: Project, data_dir: Path, robot_link: str | None = None):
+    def __init__(self, project: Project, data_dir: Path, robot_link: str | None = None, log_dir: Path | None = None):
         self.project = project
         self.data_dir = Path(data_dir)
-        self.log = Logbook(self.data_dir)                      # every activity, and the hardware's
+        self.log = Logbook(Path(log_dir) if log_dir else self.data_dir / "logs")   # every activity, and the hardware's
         self.jobs = Jobs(on_end=self._job_ended)
         self.robot = StandInRobot(self.data_dir, self.jobs, link=robot_link, log=self.log)
         self.auth = Auth(self.data_dir)                       # both PINs, hashed (handoff section 19)
@@ -80,6 +80,31 @@ class LiteApp:
         self.ui["mode"] = "visual"              # Lite always starts in Visual sim (NFR-UX f)
         self.ui["role"] = "operator"
         self._toppra = None
+        threading.Thread(target=self._status_loop, name="lite-status-log", daemon=True).start()
+
+    def _status_loop(self) -> None:
+        """The unit's status, twice a second while an arm is connected (logbook.status)."""
+        while True:
+            time.sleep(0.5)
+            try:
+                arms = {}
+                for side, a in self.robot.arms.items():
+                    if not a.connected:
+                        continue
+                    rec = dict(estop=a.estop, teaching=a.teaching)
+                    link = self.robot.links.get(side)
+                    if link is not None:
+                        fb = link.view()["feedback"]
+                        rec.update({k: fb.get(k) for k in ("joints_deg", "errors", "run_mode", "pole_mm", "hand", "io3",
+                                                           "age_s", "busy")})
+                    else:
+                        rec.update(pole_mm=round(a.pole_mm, 1), hand=list(a.hand), stand_in=True)
+                    arms[side] = rec
+                if arms:
+                    jobs = [dict(kind=j.kind, arm=j.arm, title=j.title, stage=j.stage) for j in self.jobs.running()]
+                    self.log.status(dict(t=round(time.time(), 3), mode=self.ui["mode"], arms=arms, jobs=jobs))
+            except Exception:                                   # noqa: BLE001 - a log never stops Lite
+                pass
 
     def _job_ended(self, job) -> None:
         """Every job's end goes to the log; a robot job that failed is a hardware alert too."""
@@ -871,7 +896,8 @@ class Handler(BaseHTTPRequestHandler):
                     traceback.print_exc()
                     out = err = {"error": "Something went wrong on the server.", "hint": "Details are in the terminal."}
                 if method != "GET" and url.path != "/api/activity":       # every change, and every refusal
-                    self.app.log.activity(f"{method} {url.path}", who=self._who(), detail=body,
+                    autosave = method == "PUT" and url.path.startswith("/api/projects/")   # the whole project, often
+                    self.app.log.activity(f"{method} {url.path}", who=self._who(), detail=None if autosave else body,
                                           ok=err is None, error=err and err["error"])
                 if err is not None:
                     return self._json(err)

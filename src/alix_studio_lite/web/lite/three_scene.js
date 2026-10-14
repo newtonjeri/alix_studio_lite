@@ -96,7 +96,14 @@ async function buildFixture(spec, phase) {
   return root;
 }
 
-// The viewer: created once, attached to one host element at a time.
+// What the page says when the browser gives no WebGL (it turns it off after a graphics crash).
+export const NO_WEBGL = 'This browser has turned its 3D graphics (WebGL) off, often after a graphics crash. Close every '
+  + 'Chrome window and open Lite again; if it stays off, chrome://gpu says why.';
+
+// The viewer: created once, attached to one host element at a time. ONE WebGL context for the
+// whole page: the pictures shown side by side (view()) are drawn by this same renderer and copied
+// into plain canvases; several contexts each holding the robot's meshes crashed the GPU on the
+// robot computer (14 Oct), after which Chrome blocks WebGL for the page.
 export function createViewer() {
   const v = { dirty: true, animating: false, host: null, ready: null, borrowedBy: null };
   let renderer = null, scene = null, cam = null, controls = null, ro = null, wall = null, fixture = null;
@@ -107,9 +114,25 @@ export function createViewer() {
   v.ready = ensureThree().then(() => {
     const THREE = window.THREE;
     const col = (n) => new THREE.Color(css(n));
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+    } catch (e) {
+      throw Object.assign(new Error(NO_WEBGL), { code: 'webgl' });
+    }
+    renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
     renderer.domElement.className = 'lite-3d-canvas';
+    // a lost context (the GPU reset) comes back by itself when the browser restores it
+    renderer.domElement.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      v.lost = true;
+      document.dispatchEvent(new CustomEvent('lite:3d-lost'));
+    });
+    renderer.domElement.addEventListener('webglcontextrestored', () => {
+      v.lost = false;
+      v.dirty = true;
+      for (const w of views) w.dirty = true;
+      document.dispatchEvent(new CustomEvent('lite:3d-restored'));
+    });
     scene = new THREE.Scene();
     scene.background = col('--lite-viewport-bg');
     cam = new THREE.PerspectiveCamera(45, 1.5, 0.01, 50);
@@ -126,12 +149,15 @@ export function createViewer() {
     grid.rotation.x = Math.PI / 2; grid.position.x = 0.6; scene.add(grid);
     ro = new ResizeObserver(() => v.resize());
     // One loop draws every view of the scene: each when the scene changed, or its own camera or size.
+    // The side-by-side views go first (each borrows the canvas at its size), the main view last.
     const loop = () => {
-      const changed = v.dirty || v.animating;
-      let drawn = false;
-      if (v.host && changed) { renderer.render(scene, cam); drawn = true; }
-      for (const w of views) if (w.frame(changed)) drawn = true;
-      if (drawn) v.dirty = false;
+      if (!v.lost) {
+        const changed = v.dirty || v.animating;
+        let drawn = false, again = false;
+        for (const w of views) if (w.frame(changed)) { drawn = true; again = true; }
+        if (v.host && (changed || again)) { renderer.render(scene, cam); drawn = true; }
+        if (drawn) v.dirty = false;
+      }
       requestAnimationFrame(loop);
     };
     loop();
@@ -206,23 +232,35 @@ export function createViewer() {
     v.dirty = true;
   };
 
-  // A secondary view: a renderer of its own, with its own camera and controls, drawing this same
-  // scene (no second robot). For pictures shown side by side; pictures.js keeps two and reuses them.
+  // A secondary view: a plain canvas with its own camera and controls, showing this same scene (no
+  // second robot, no second WebGL context): the one renderer draws it at its size and the picture
+  // is copied in. For pictures shown side by side; pictures.js keeps two and reuses them.
   // `paused()`: true while another window has the scene (the view keeps its last picture). `paths`:
   // 'left' or 'right', that arm's region path shows too.
+  const kept = { x: 0, y: 0 };
+  const drawView = (w) => {
+    const THREE = window.THREE;
+    const size = renderer.getSize(new THREE.Vector2());
+    kept.x = size.x; kept.y = size.y;
+    renderer.setSize(w.W, w.H, false);
+    renderer.render(scene, w.cam);
+    w.g2.clearRect(0, 0, w.canvas.width, w.canvas.height);
+    w.g2.drawImage(renderer.domElement, 0, 0, w.canvas.width, w.canvas.height);
+    renderer.setSize(kept.x, kept.y, false);
+  };
   v.view = async ({ paused = null, paths = null } = {}) => {
     await v.ready;
     const THREE = window.THREE;
-    const r = new THREE.WebGLRenderer({ antialias: true });
-    r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-    r.domElement.className = 'lite-3d-canvas';
+    const canvas = document.createElement('canvas');
+    canvas.className = 'lite-3d-canvas';
+    const g2 = canvas.getContext('2d');
     const c = new THREE.PerspectiveCamera(45, 1.5, 0.01, 50);
     c.up.set(0, 0, 1);
     if (PATH_LAYERS[paths]) c.layers.enable(PATH_LAYERS[paths]);
-    const oc = new THREE.OrbitControls(c, r.domElement);
+    const oc = new THREE.OrbitControls(c, canvas);
     oc.enableZoom = false;
-    const w = { host: null, cam: c, controls: oc, renderer: r, look: null, shown: false, dirty: true, missed: false,
-      touched: false, fitted: 0, minGapMs: 0, last: 0 };
+    const w = { host: null, cam: c, controls: oc, canvas, g2, W: 0, H: 0, look: null, shown: false, dirty: true,
+      missed: false, touched: false, fitted: 0, minGapMs: 0, last: 0 };
     oc.addEventListener('change', () => { w.dirty = true; });
     oc.addEventListener('start', () => { w.touched = true; });            // turned by hand: a resize keeps it
     const wro = new ResizeObserver(() => w.resize());
@@ -231,7 +269,11 @@ export function createViewer() {
       if (!w.host) return;
       const W = w.host.clientWidth, H = w.host.clientHeight;
       if (!W || !H) return;
-      r.setSize(W, H); c.aspect = W / H; c.updateProjectionMatrix();
+      const pr = renderer.getPixelRatio();
+      w.W = W; w.H = H;
+      canvas.width = Math.round(W * pr); canvas.height = Math.round(H * pr);
+      canvas.style.width = `${W}px`; canvas.style.height = `${H}px`;
+      c.aspect = W / H; c.updateProjectionMatrix();
       if (w.look && !w.touched && (!w.fitted || Math.abs(Math.log(c.aspect / w.fitted)) > 0.15)) { aim(c, oc, w.look); w.fitted = c.aspect; }
       w.dirty = true;
     };
@@ -239,7 +281,7 @@ export function createViewer() {
       if (w.host !== el) {
         if (w.host) { wro.unobserve(w.host); io.unobserve(w.host); }
         w.host = el;
-        el.prepend(r.domElement);
+        el.prepend(canvas);
         wro.observe(el); io.observe(el);
       }
       w.resize();
@@ -252,7 +294,8 @@ export function createViewer() {
       if (!w.host || !w.shown || (paused && paused())) { w.missed = true; return false; }
       const now = performance.now();
       if (!w.dirty && w.minGapMs && now - w.last < w.minGapMs) { w.missed = true; return false; }
-      r.render(scene, c);
+      if (!w.W || !w.H) { w.missed = true; return false; }
+      drawView(w);
       w.dirty = w.missed = false;
       w.last = now;
       return true;

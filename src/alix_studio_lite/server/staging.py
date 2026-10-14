@@ -154,6 +154,28 @@ def same_hand(a, b, tol: int = HAND_TOL) -> bool:
     return all(t is None or (r is not None and abs(int(r) - int(t)) <= tol) for r, t in zip(a, b))
 
 
+GRIP_CLOSE_MIN = 100                  # counts: a channel this far closed from open (1000) is holding
+
+
+def hand_holds(measured, target, tol: int = HAND_TOL) -> bool:
+    """Whether the hand is in ``target``'s pose as the robot sees it: every set channel within
+    ``tol``, or, closing onto something (a grip round the brush), stopped short of its target
+    after closing at least GRIP_CLOSE_MIN from open. The fingers of a grip stop on the tool, not
+    at 0 (the hardware, 14 Oct: Grip read back 842, 762, 754, 765, 714, 992). A held channel
+    (None) is anything; an opening channel that stopped short is not in the pose."""
+    if measured is None:
+        return False
+    for m, t in zip(measured, target):
+        if t is None:
+            continue
+        if m is None:
+            return False
+        if abs(m - t) <= tol or t < m <= 1000 - GRIP_CLOSE_MIN:
+            continue
+        return False
+    return True
+
+
 def pole_travel_s(from_mm: float, to_mm: float) -> float:
     d = abs(float(to_mm) - float(from_mm)) / 1000.0
     if d < POLE_TOL_MM / 1000.0:

@@ -1,12 +1,15 @@
 """Lite's logs: every activity, kept as ALIX's programs keep theirs (the owner's request, 14 October).
 
-Three streams, one folder per day under ``<data>/logs/YYYY-MM-DD/``:
+Four streams, one folder per day under ``Resources/Logs/YYYY-MM-DD/`` in the repository (the
+owner's choice, 14 October; ``run_lite --logs DIR`` puts them elsewhere):
 
 - ``activity.jsonl``: what the operator did (every request that changes something, and the page's
   own steps: a stage, a task, an arm, a window), with who (the session), what, and the outcome;
 - ``hardware.jsonl``: every command to a controller, with its arguments, the return code, the time
   it took and what it means, plus the lines ALIX's own functions log while they run;
-- ``lite.log``: both, as plain text lines, for reading in a terminal (``tail -f``).
+- ``status.jsonl``: twice a second while an arm is connected, the whole unit as read: each arm's
+  joints, error codes and run mode, its pole, its hand, its E-stop input, and what Lite is doing;
+- ``lite.log``: activity and hardware as plain text lines, for reading in a terminal (``tail -f``).
 
 Hardware errors and failures are also kept as ALERTS (the newest 200), which the robot status
 carries to the page: it shows them at the bottom right until they are closed (alerts.js). Never
@@ -38,8 +41,8 @@ def _clean(v, depth: int = 0):
 
 
 class Logbook:
-    def __init__(self, data_dir: Path):
-        self.root = Path(data_dir) / "logs"
+    def __init__(self, root: Path):
+        self.root = Path(root)
         self.instance = f"{int(time.time())}"          # alert ids restart with the server
         self._lock = threading.Lock()
         self._ids = itertools.count(1)
@@ -60,6 +63,15 @@ class Logbook:
                 with open(d / "lite.log", "a", encoding="utf-8") as f:
                     f.write(f"{time.strftime('%H:%M:%S', time.localtime(rec['t']))}.{int(rec['t'] * 1000) % 1000:03d} "
                             f"{text}\n")
+        except OSError:
+            pass
+
+    def status(self, rec: dict) -> None:
+        """One snapshot of the unit (2 Hz): status.jsonl only, not the text log."""
+        try:
+            with self._lock:
+                with open(self._day() / "status.jsonl", "a", encoding="utf-8") as f:
+                    f.write(json.dumps(rec, default=str, ensure_ascii=False) + "\n")
         except OSError:
             pass
 

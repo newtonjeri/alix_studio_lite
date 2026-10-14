@@ -186,7 +186,7 @@ def test_a_second_start_tells_this_lite_an_older_one_and_another_program(lite, t
     port = int(lite["base"].rsplit(":", 1)[1])
     me = _running_lite(port)
     assert me["code"] == code_id() and me["pid"] > 0
-    assert main(["--port", str(port), "--no-browser", "--data", str(tmp_path / "d1")]) == 0
+    assert main(["--port", str(port), "--no-browser", "--data", str(tmp_path / "d1"), "--logs", str(tmp_path / "logs")]) == 0
     assert "already running" in capsys.readouterr().out
 
     class Old(BaseHTTPRequestHandler):                       # a Lite from before /api/lite/hello
@@ -206,7 +206,7 @@ def test_a_second_start_tells_this_lite_an_older_one_and_another_program(lite, t
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         try:
             assert _running_lite(srv.server_address[1]) == want
-            assert main(["--port", str(srv.server_address[1]), "--no-browser", "--data", str(tmp_path / "d2")]) == 2
+            assert main(["--port", str(srv.server_address[1]), "--no-browser", "--data", str(tmp_path / "d2"), "--logs", str(tmp_path / "logs")]) == 2
             assert said in capsys.readouterr().err
         finally:
             srv.shutdown()
