@@ -114,3 +114,32 @@ def test_l3_reads_as_alix_does():
     assert float(acc_deg_s2(q, 0.005).max()) == pytest.approx(a_max, rel=0.03)
     l3 = next(c for c in check_bytes(md, load_limits("left")).to_dict()["checks"] if c["id"] == "L3")
     assert l3["passed"] is True, l3
+
+
+def test_a_hand_that_settles_on_the_tool_is_done():
+    """The control program's rule (vendor/control_app/hand.py, Hand.command): ARRIVED or SETTLED
+    is done, "fingers closing on a tool stop early on force". The robot, 14 Oct: Grip settled at
+    842, 762, 754, 765, 714, 992; then the setup check takes the hand while it still reads that."""
+    from pathlib import Path
+
+    from alix_studio_lite.server.jobs import Jobs
+    from alix_studio_lite.server.robot_real import _settled
+    from alix_studio_lite.server.robot_standin import StandInRobot
+    from alix_studio_lite.server.staging import make_stage
+
+    settled = {"ok": False, "refusal": "hand_unverified",
+               "steps": [{"step": "hand", "result": {"ok": True, "arrived": False, "settled": True}}]}
+    timed_out = {"ok": False, "refusal": "hand_unverified",
+                 "steps": [{"step": "hand", "result": {"ok": False, "arrived": False, "settled": False}}]}
+    assert _settled(settled) and not _settled(timed_out)
+
+    import tempfile
+    robot = StandInRobot(Path(tempfile.mkdtemp()), Jobs())
+    grip = make_stage(200, "GRIP")
+    a = robot.arm("left")
+    a.pole_mm, a.hand = 200.0, [842, 762, 754, 765, 714, 992]
+    assert not robot.in_stage("left", grip)                              # never staged: not the grip
+    a.staged_hand = dict(target=list(grip.hand), read=list(a.hand))      # staging the grip left it there
+    assert robot.in_stage("left", grip)
+    a.hand = [1000] * 6                                                  # opened since: not in the setup
+    assert not robot.in_stage("left", grip)

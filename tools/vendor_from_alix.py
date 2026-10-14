@@ -126,6 +126,7 @@ EXTRA_PACKAGE_ROOTS = ["../vendor"]          # realsense2_description lives besi
 # ---------------------------------------------------------------------------------------------
 WORKSPACE_COPIES = [
     ("upload_channel/rm_upload_fast_v14_safe_transit.py", "vendor/control_app/rm_upload_fast_v14_safe_transit.py"),
+    ("upload_channel/upload/rm_upload.py", "vendor/control_app/rm_upload.py"),     # upload, check, run a slot
     ("upload_channel/hand.py", "vendor/control_app/hand.py"),
     ("upload_channel/pole.py", "vendor/control_app/pole.py"),
     ("upload_channel/usage.py", "vendor/control_app/usage.py"),

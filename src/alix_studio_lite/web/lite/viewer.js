@@ -202,7 +202,9 @@ function stagingLine() {
 }
 
 function show() {
-  ensure3D().then(({ robot, viewer }) => {
+  ensure3D().catch(() => null).then((v3) => {
+    if (!v3) return;                                  // no 3D in this browser: the times still show
+    const { robot, viewer } = v3;
     for (const a of loaded()) robot.showTime(armTime(a, t), a);
     viewer.dirty = true;
   });

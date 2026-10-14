@@ -91,3 +91,13 @@ def test_hardware_failures_and_estops_are_alerts(lite):
     assert any(r["verb"] == "ALERT WARN" and r["side"] == "right" for r in hw)
     ended = [r for r in records(lite, "activity") if r["what"].startswith("job ")]
     assert ended and not ended[-1]["ok"] and "pole did not reach" in ended[-1]["error"]
+
+
+def test_the_unit_is_logged_twice_a_second(lite):
+    for arm in ("left", "right"):
+        call(lite, "POST", f"/api/robots/{arm}/connect", {})
+    time.sleep(1.6)
+    recs = records(lite, "status")
+    assert len(recs) >= 2 and recs[-1]["t"] - recs[-2]["t"] < 0.8
+    arm = recs[-1]["arms"]["left"]
+    assert {"pole_mm", "hand", "estop"} <= set(arm) and len(arm["hand"]) == 6

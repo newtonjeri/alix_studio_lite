@@ -3756,6 +3756,13 @@
       "bytes": 91105
     },
     {
+      "dest": "vendor/control_app/rm_upload.py",
+      "source": "/home/newtonjeri/alix_studio_lite_ws/upload_channel/upload/rm_upload.py",
+      "origin": "workspace",
+      "sha256": "0c957931c67bba0ea4c12e6cb0df85ba572db81ecbf803e8e07bfdee1b163e06",
+      "bytes": 16697
+    },
+    {
       "dest": "vendor/control_app/usage.py",
       "source": "/home/newtonjeri/alix_studio_lite_ws/upload_channel/usage.py",
       "origin": "workspace",

@@ -154,6 +154,7 @@ def same_hand(a, b, tol: int = HAND_TOL) -> bool:
     return all(t is None or (r is not None and abs(int(r) - int(t)) <= tol) for r, t in zip(a, b))
 
 
+
 def pole_travel_s(from_mm: float, to_mm: float) -> float:
     d = abs(float(to_mm) - float(from_mm)) / 1000.0
     if d < POLE_TOL_MM / 1000.0:

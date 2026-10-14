@@ -24,7 +24,7 @@ def server(tmp_path_factory):
         port = s.getsockname()[1]
     data = tmp_path_factory.mktemp("lite-real")
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
-                             "--no-browser", "--port", str(port), "--data", str(data)],
+                             "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs")],
                             cwd=str(vendor_paths.LITE_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ctx = {"base": f"http://127.0.0.1:{port}", "data": data}
     for _ in range(150):
@@ -116,13 +116,13 @@ def test_stop_ends_a_run_on_the_controller(server):
     call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
     job = call(server, "POST", f"{U}/L-T01/run", {"confirmed": True})
     deadline = time.time() + 60                                  # until the program runs on the controller
-    while "running at" not in text(call(server, "GET", f"/api/jobs/{job['id']}")):
+    while "running (" not in text(call(server, "GET", f"/api/jobs/{job['id']}")):      # rm_upload.run's own line
         assert time.time() < deadline
         time.sleep(0.3)
     r = call(server, "POST", "/api/robots/stop-both", {}, tok=False)
     assert r["result"]["ok"] and "press Recover" in r["message"]
     j = wait(server, job)
-    assert j["state"] == "cancelled" and "ended at" in text(j), j
+    assert j["state"] == "cancelled", j
     for side in ("left", "right"):
         assert call(server, "POST", f"/api/robots/{side}/recover", {})["estop"] == "CLEAR"
 
@@ -132,6 +132,7 @@ def test_named_poses_are_refused_and_every_command_is_logged(server):
     assert "not stored on the controller" in r["error"]
     hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
     verbs = {r["verb"] for r in hw}
-    assert {"stage", "rm_start_drag_teach", "rm_stop_drag_teach", "rm_save_trajectory", "rm_send_project",
-            "program read back", "run mode REAL", "run mode SIM", "run program"} <= verbs
-    assert all(r["ret"] == 0 for r in hw if r["verb"] in ("rm_send_project", "rm_save_trajectory"))
+    assert {"stage", "rm_start_drag_teach", "rm_stop_drag_teach", "rm_save_trajectory", "upload", "rm_upload",
+            "run mode REAL", "run mode SIM", "run"} <= verbs
+    assert all(r["ret"] == 0 for r in hw if r["verb"] in ("upload", "rm_save_trajectory"))
+    assert any("VERIFIED" in (r["text"] or "") for r in hw if r["verb"] == "rm_upload")      # its read-back

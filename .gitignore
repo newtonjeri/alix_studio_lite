@@ -10,3 +10,6 @@ incoming_ui/
 
 # vs code settings
 .vscode
+# Lite's logs (server/logbook.py): kept on this computer, never committed
+Resources/Logs/*
+!Resources/Logs/README.md

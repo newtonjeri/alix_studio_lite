@@ -9,9 +9,10 @@ connected controller, on the link's connection (robot_link.ArmLink):
 - the controller's run mode, SIM or REAL, verified by reading it back (``runmode``);
 - drag teaching: the SDK's drag-teach start and stop, and the controller's recording saved by the
   SDK itself, as the control program does, so the files are byte for byte the control program's;
-- upload to a program number, with the stored size read back (``track``);
-- a stored program's run: the move to its first line at 30 %, the run, and its verdict
-  (``track.run_verified``);
+- upload to a program number, the program list and a stored program's run: the control program's
+  own tool, ``vendor/control_app/rm_upload.py`` (the operators' upload-and-run script), its steps
+  and its printed lines (into the hardware log); the read-back after an upload is tried again when
+  the controller does not answer at once;
 - a move to a joint pose at 30 % (``staging.park_arm``), checked against the pose.
 
 Every command goes to the hardware log with its return code and what it means (logbook.py), and
@@ -20,9 +21,13 @@ callers never compete for one controller (ALIX measured reply timeouts when they
 """
 from __future__ import annotations
 
-import tempfile
+import io
+import sys
+import threading
 import time
+from contextlib import contextmanager
 from pathlib import Path
+from types import SimpleNamespace
 
 from .jobs import UserError
 from .robot_link import return_text
@@ -30,12 +35,82 @@ from .robot_link import return_text
 POLE_SPEED_PCT = 50       # the pole in Real (the owner's choice, 14 Oct; ALIX itself ran it at 100 %)
 HAND_SPEED_SET = 500      # the hand's SPEED_SET, of 1000: 50 %
 MOVE_SPEED = 30           # % for a move to a start: what Lite's simulation models (staging.TRANSIT_FRACTION)
-RUN_SPEED = 50            # ALIX's speed for a stored program's run
-RESTORE_PCT = 50          # the global speed ratio left after a run or a move, as ALIX leaves it
+RUN_TRANSIT_SPEED = 20    # % of the controller's own move to a program's first point (rm_upload.py's default)
+RESTORE_PCT = 50          # the global speed ratio left after a run or a move, as ALIX and rm_upload leave it
+CHECK_TRIES = 4           # the read-back after an upload: tries, 1 s apart, before it is called failed
 
 
 def _words(code: str | None) -> str:
     return (code or "no reason given").replace("_", " ")
+
+
+def _settled(staged: dict) -> bool:
+    """Whether stage_arm's hand step ended SETTLED: ANGLE_ACT stopped changing (ALIX's
+    HandModbus.command), the way the control program's Hand.command takes a hand as done."""
+    step = next((s for s in staged.get("steps") or [] if s.get("step") == "hand"), None)
+    r = (step or {}).get("result") or {}
+    return bool(r.get("ok") and (r.get("arrived") or r.get("settled")))
+
+
+# ── the control program's upload-and-run tool, as a module, and its printed lines in Lite's log
+_RMU = None
+_RMU_LOCK = threading.Lock()
+
+
+def _rmu():
+    """vendor/control_app/rm_upload.py, loaded once. Its main() sets the SDK's rm_send_project_t;
+    Lite is not its main, so it is set here."""
+    global _RMU
+    with _RMU_LOCK:
+        if _RMU is None:
+            import importlib.util
+
+            from .. import vendor_paths
+            from Robotic_Arm.rm_robot_interface import rm_send_project_t
+
+            spec = importlib.util.spec_from_file_location("lite_rm_upload", vendor_paths.RM_UPLOAD)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            mod.rm_send_project_t = rm_send_project_t
+            _RMU = mod
+        return _RMU
+
+
+class _ThreadLines(io.TextIOBase):
+    """sys.stdout, with the lines one thread prints sent to its sink (the hardware log of the arm
+    whose command prints them); every other thread's output goes to the terminal as before."""
+
+    def __init__(self, real):
+        self.real, self.sinks, self.parts = real, {}, {}
+
+    def write(self, text):
+        tid = threading.get_ident()
+        sink = self.sinks.get(tid)
+        if sink is None:
+            return self.real.write(text)
+        *lines, self.parts[tid] = (self.parts.get(tid, "") + text).split("\n")
+        for line in lines:
+            if line.strip():
+                sink(line.rstrip())
+        return len(text)
+
+    def flush(self):
+        self.real.flush()
+
+
+@contextmanager
+def _printed_to(sink):
+    if not isinstance(sys.stdout, _ThreadLines):
+        sys.stdout = _ThreadLines(sys.stdout)
+    out, tid = sys.stdout, threading.get_ident()
+    out.sinks[tid] = sink
+    try:
+        yield
+    finally:
+        rest = out.parts.pop(tid, "")
+        out.sinks.pop(tid, None)
+        if rest.strip():
+            sink(rest.rstrip())
 
 
 class RealArm:
@@ -90,6 +165,12 @@ class RealArm:
             task = {"side": self.side, "pre_stroke": {"pole_m": stage.pole_mm / 1000.0, "hand_counts": list(stage.hand)}}
             out = alix_staging.stage_arm(self.handle, task, pole=pole, hand=hand, log=log, pole_speed_pct=POLE_SPEED_PCT)
         p, h = out.get("pole") or {}, out.get("hand") or {}
+        if not out.get("ok") and out.get("refusal") == "hand_unverified" and _settled(out):
+            # the control program's rule (vendor/control_app/hand.py, Hand.command): a hand that has
+            # ARRIVED or SETTLED is done, "fingers closing on a tool stop early on force"
+            out = dict(out, ok=True, refusal=None, settled=True)
+            self._hw("hand settled", args=dict(target=list(stage.hand)), ok=True,
+                     text=f"stopped at {h.get('read')} (on the tool): done, as the control program takes it")
         found = p.get("found_m")
         self._hw("stage", args=dict(pole_mm=stage.pole_mm, hand=list(stage.hand), speed_pct=POLE_SPEED_PCT),
                  ok=bool(out.get("ok")), text=(f"pole {found * 1000:.0f} mm" if found is not None else "pole not read")
@@ -186,58 +267,109 @@ class RealArm:
             pass
 
     # ── programs
-    def programs(self) -> list[dict]:
-        from alix_dispatch import track
+    def _slots(self) -> dict:
+        """{slot: (name, bytes, speed)}: rm_upload.slots, tried again when the controller does not
+        answer (it calls sys.exit then)."""
+        rmu = _rmu()
+        why = None
+        for i in range(CHECK_TRIES):
+            try:
+                return rmu.slots(self.robot)
+            except SystemExit as exc:
+                why = str(exc)
+                self._hw("program list", ok=False, text=why)
+                time.sleep(1.0)
+        raise UserError(f"The {self.SIDE} controller's program list could not be read ({why}).",
+                        "Check the controller, then try again.")
 
-        with self.link.busy("reading the program list"):
-            ret, items = track.program_list(self.robot)
-        self._hw("program list", ret=ret, ok=ret == 0, text=f"{len(items or [])} programs")
-        if ret != 0:
-            raise UserError(f"The {self.SIDE} controller's program list could not be read ({return_text(ret)}).")
-        return items
+    def programs(self) -> list[dict]:
+        with self.link.busy("reading the program list"), _printed_to(self._printed):
+            held = self._slots()
+        self._hw("program list", ok=True, text=f"{len(held)} programs")
+        return [dict(id=k, name=v[0], size=v[1], speed=v[2]) for k, v in sorted(held.items())]
+
+    def _printed(self, line: str) -> None:
+        self._hw("rm_upload", text=line)
 
     def upload(self, path: Path, program_id: int, name: str) -> dict:
-        """Store a track file as program ``program_id``; the stored size is read back."""
-        from alix_dispatch import track
+        """Store a track file as program ``program_id`` with rm_upload.upload (the project file, store
+        only, then the stored size read back); the read-back is tried again if the controller does
+        not answer at once."""
+        import tempfile
 
-        with self.link.busy(f"sending program {program_id}"):
+        rmu = _rmu()
+        pid = int(program_id)
+        t0 = time.monotonic()
+        with self.link.busy(f"sending program {pid}"), _printed_to(self._printed):
+            try:
+                lines = rmu.read_track(Path(path))
+            except SystemExit as exc:
+                raise UserError(f"The file cannot be sent: {exc}.") from None
             with tempfile.TemporaryDirectory() as tmp:
-                proj = Path(tmp) / f"{name}.txt"
-                info = track.build_project_file(Path(path), proj)
-                ret, err_line, secs = track.send_project(self.robot, proj, int(program_id))
-            self._hw("rm_send_project", args=dict(program_id=program_id, file=proj.name, bytes=info["bytes"]), ret=ret,
-                     ok=ret == 0 and err_line == -1, elapsed_s=secs,
-                     text=None if ret == 0 and err_line == -1 else f"err_line {err_line}")
-            if ret != 0 or err_line != -1:
-                where = " (its data length was refused)" if err_line == 0 else f" (line {err_line} was refused)" if err_line > 0 else ""
-                raise UserError(f"The {self.SIDE} controller refused program {program_id}{where}: "
-                                f"{return_text(ret, 'rm_send_project')}.", "Check the file, then send it again.")
-            r, items = track.program_list(self.robot)
-        sent = info["bytes"]
-        item = next((i for i in items or [] if int(i.get("id", -1)) == int(program_id)), None)
-        size = int((item or {}).get("size") or 0)
-        ok = r == 0 and item is not None and abs(size - sent) <= max(64, sent // 1000)
-        self._hw("program read back", args=dict(program_id=program_id), ret=r, ok=ok,
-                 text=f"stored {size} bytes as {(item or {}).get('name')!r} (sent {sent})")
-        if not ok:
-            raise UserError(f"Program {program_id} is not confirmed on the {self.SIDE} controller "
-                            f"(it reads {size} bytes, {sent} were sent).", "Send it again.")
-        return dict(program_id=int(program_id), bytes=sent, points=info["points"], stored_name=item.get("name"),
-                    seconds=round(secs, 1))
+                sent = rmu.write_project(lines, Path(tmp) / f"{name}.proj")       # the bytes the controller gets
+            a = SimpleNamespace(track=Path(tmp) / f"{name}.txt", slot=pid, speed=0, yes=True)
+            log = io.StringIO()
+            with _printed_to(lambda line: (log.write(line + "\n"), self._printed(line))):
+                try:
+                    rc = rmu.upload(self.robot, a, self.link.ip, lines)
+                except SystemExit as exc:                 # its program list did not answer
+                    rc = 1
+                    self._printed(f"** {exc}")
+            said = log.getvalue()
+            if rc != 0 and "sent: ret=0 err_line=-1" in said:           # sent; only the check did not answer
+                for i in range(CHECK_TRIES):
+                    time.sleep(1.0)
+                    try:
+                        got = rmu.slots(self.robot).get(pid)
+                    except SystemExit as exc:
+                        self._printed(f"** read-back {i + 1}: {exc}")
+                        continue
+                    if got and abs(got[1] - sent) <= max(64, sent // 1000):
+                        self._printed(f"  VERIFIED (read back again): slot {pid} holds {got[0]!r}, {got[1]} bytes (sent {sent})")
+                        rc = 0
+                    break
+        elapsed = time.monotonic() - t0
+        self._hw("upload", args=dict(program_id=pid, file=Path(path).name, bytes=sent), ret=rc, ok=rc == 0, elapsed_s=elapsed)
+        if rc != 0:
+            why = next((ln.strip(" *") for ln in reversed(said.splitlines()) if ln.strip().startswith("**")), "not confirmed")
+            raise UserError(f"Program {pid} was not stored on the {self.SIDE} controller: {why}.", "Send it again.")
+        held = self._slots_quiet().get(pid)
+        return dict(program_id=pid, bytes=sent, points=len(lines), stored_name=(held or ("?",))[0], seconds=round(elapsed, 1))
 
-    def run(self, program_id: int, first_row_millideg: list, points: int, on_transition=None) -> dict:
-        """Move to the program's first line at 30 % and run it; ALIX judges whether it completed."""
-        from alix_dispatch import track
+    def _slots_quiet(self) -> dict:
+        try:
+            with _printed_to(self._printed):
+                return self._slots()
+        except UserError:
+            return {}
 
-        with self.link.busy(f"running program {program_id}"):
-            out = track.run_verified(self.robot, save_id=int(program_id), band_s=track.expected_band_s(int(points)),
-                                     first_row_millideg=list(first_row_millideg), points=int(points), speed=RUN_SPEED,
-                                     restore_pct=RESTORE_PCT, movej_speed=MOVE_SPEED, log=self._alix_log(),
-                                     on_transition=on_transition)
-        self._hw("run program", args=dict(program_id=program_id, points=points, speed=RUN_SPEED, movej_speed=MOVE_SPEED),
-                 ret=out.get("run_ret"), ok=bool(out.get("ok")), elapsed_s=out.get("duration_s"),
-                 text=f"verdict {out.get('verdict')}, gap {out.get('gap_deg')} deg, replay {out.get('replay_s')} s")
-        return out
+    def run(self, program_id: int, first_row_millideg: list, points: int, on_line=None) -> dict:
+        """rm_upload.run: refuses an empty slot, an arm error or a program already running; the
+        controller moves the arm to the first point at 20 % and plays the points at their own
+        timing; error codes are watched every half second; the global speed is put back."""
+        rmu = _rmu()
+        pid = int(program_id)
+        timeout = max(60.0, (int(points) - 1) * 0.005 * 1.5 + 60.0)
+        a = SimpleNamespace(yes=True, side=self.side, run_speed=RUN_TRANSIT_SPEED, restore_speed=RESTORE_PCT, timeout=timeout)
+        log = io.StringIO()
+        t0 = time.monotonic()
+        def line_out(line):
+            log.write(line + "\n")
+            self._printed(line)
+            if on_line is not None:
+                on_line(line)
+
+        with self.link.busy(f"running program {pid}"), _printed_to(line_out):
+            try:
+                rc = rmu.run(self.robot, a, self.link.ip, pid, list(first_row_millideg))
+            except SystemExit as exc:                     # its program list did not answer
+                rc = 1
+                log.write(f"** {exc}\n")
+        said = log.getvalue()
+        why = next((ln.strip(" *") for ln in reversed(said.splitlines()) if ln.strip().startswith("**")), None)
+        self._hw("run", args=dict(program_id=pid, points=points, transit_speed=RUN_TRANSIT_SPEED), ret=rc, ok=rc == 0,
+                 elapsed_s=time.monotonic() - t0, text=why)
+        return dict(ok=rc == 0, why=why, seconds=round(time.monotonic() - t0, 2), lines=said.splitlines())
 
     def move_to(self, target_millideg: list) -> dict:
         """A move to a joint pose at 30 %, checked against it (within 2 degrees)."""

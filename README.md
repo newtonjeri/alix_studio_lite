@@ -108,10 +108,9 @@ the three devices on each side, refreshed about five times a second:
 With the arms connected, Lite **commands** them through ALIX's own robot code:
 
 - **Real robot** (after a confirmation; every move asks again):
-  - **Prepare → Apply** stages the region's setup. The hand opens if the pole must move, the arm is checked at rest, then the pole and then the hand move at **50 % speed**, each read back.
+  - **Prepare → Apply** stages the region's setup. The hand opens if the pole must move, the arm is checked at rest, then the pole and then the hand move at **50 % speed**, each read back. A hand that stops on the tool counts as done, as the control program's `hand.py` takes it (arrived or settled).
   - **Drag teaching** runs on the controller, as in the control program. STOP DRAG saves the controller's recording into the project, byte for byte as the control program saves it, with the arm and the stage it was taught with.
-  - **Upload** sends the kept version to its Program ID; the stored size is read back.
-  - **Run** stages the pole and the hand, moves the arm to the trajectory's first line at 30 % speed, runs the program and reports whether it completed. The controller is set to its REAL mode for it (read back) and put back after.
+  - **Upload** and **Run** use the control program's own tool, `rm_upload.py` (in `vendor/control_app/`): the upload stores the kept version in its Program ID and reads the stored size back; the run stages the pole and the hand, then the controller moves the arm to the first point at 20 % and plays the program, its error codes watched. The controller is set to its REAL mode for it (read back) and put back after.
   - **Move to Recorded Start** moves the arm to the file's first line at 30 % speed. Start poses by name are not stored on the controller yet.
 - **Hardware sim**: the controller runs the program in its SIM mode, so the arm stays still. The pole and the hand, which the controller cannot simulate, are taken as arrived at their commanded positions.
 - **STOP BOTH stops the real arms, like the E-stop.** Each controller gets ALIX's own stop, both at once: the arm stops the fastest way (`rm_set_arm_stop`, which drops its trajectory), the pole stops, and the hand freezes where it is. ALIX's check then proves the arm is still, including a running program. One arm's STOP (SLOW STOP in Advanced) stops that arm on its path. Drag teaching ends first. If a controller does not confirm, the page says so: press the red E-stop button. After any STOP, nothing moves until **Recover**, as after the E-stop. The red E-stop buttons remain the safety stop.
@@ -146,13 +145,14 @@ only after tuning has passed every limit. [`docs/UI_V19_CONTRACT.md`](docs/UI_V1
 
 ### Logs
 
-Every activity is logged, one folder per day in `~/ALIX-Lite/logs/<date>/`:
+Every activity is logged, one folder per day in **`Resources/Logs/<date>/`** in this folder (git ignores the logs; `--logs DIR` puts them elsewhere):
 
 | File | What it holds |
 |---|---|
 | `activity.jsonl` | What the operator did: every change and every refusal, with who (the session) and the outcome, and the page's own steps (view, stage, task, arm). PINs are never written. |
 | `hardware.jsonl` | Every command to a controller, with its arguments, its return code, the time it took and what it means, and the lines ALIX's own functions log while they run. |
-| `lite.log` | Both, as plain text: `tail -f ~/ALIX-Lite/logs/$(date +%F)/lite.log` follows Lite live. |
+| `status.jsonl` | Twice a second while an arm is connected: each arm's joints, error codes and run mode, its pole, its hand, its E-stop input, and the jobs running. |
+| `lite.log` | Activity and hardware, as plain text: `tail -f Resources/Logs/$(date +%F)/lite.log` follows Lite live. |
 
 ---
 
@@ -171,6 +171,7 @@ Every activity is logged, one folder per day in `~/ALIX-Lite/logs/<date>/`:
 | E-stop chip reads *not configured* | IO3 is not in the controller's E-stop mode. An engineer sets it at the pendant; Lite never writes IO modes. |
 | Time-optimal optimiser missing | `toppra` has no ready-made package for this computer. The Default optimiser still works. |
 | A ROS workspace is sourced | Nothing to do: Lite clears `PYTHONPATH` and uses its own environment. |
+| The 3D view says WebGL is off | Chrome turns 3D graphics off for a page after a graphics crash. Close every Chrome window and open Lite again; `chrome://gpu` should read *WebGL: Hardware accelerated*. |
 
 ---
 

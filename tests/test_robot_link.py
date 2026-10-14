@@ -39,7 +39,7 @@ def server(tmp_path_factory):
         port = s.getsockname()[1]
     data = tmp_path_factory.mktemp("lite-link")
     proc = subprocess.Popen([sys.executable, "-m", "alix_studio_lite.server", "--robot", "emulated", "--no-browser",
-                             "--port", str(port), "--data", str(data)],
+                             "--port", str(port), "--data", str(data), "--logs", str(data / "logs")],
                             cwd=str(vendor_paths.LITE_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ctx = {"base": f"http://127.0.0.1:{port}"}
     for _ in range(100):

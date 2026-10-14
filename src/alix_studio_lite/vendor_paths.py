@@ -44,6 +44,7 @@ CUBICLES = ASSETS / "scene/cubicles"
 DEFAULT_CUBICLE_MM = 1400                                       # decision D21
 EXECUTION_MODEL = ALIX / "Resource/tracks/taught/EXECUTION_MODEL.json"
 RUNNER_V14 = CONTROL_APP / "rm_upload_fast_v14_safe_transit.py"
+RM_UPLOAD = CONTROL_APP / "rm_upload.py"             # upload a track to a slot, check it, run it
 
 _ACTIVE = False
 
