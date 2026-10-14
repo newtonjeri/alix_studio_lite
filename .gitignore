@@ -7,3 +7,6 @@ __pycache__/
 
 # drop folder for incoming designer files (the kept copies are in docs/reference/)
 incoming_ui/
+
+# vs code settings
+.vscode
