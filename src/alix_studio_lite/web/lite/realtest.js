@@ -47,6 +47,30 @@ async function refresh() {
     : 'No tuned version yet: finish Tune + Simulation first.' }));
 }
 
+// The upload as a horizontal bar with its percentage (the owner, 14 Oct), under the page's status
+// line. On the robot the SDK sends in one call, so the server's percentage is estimated until the
+// stored size is read back; the bar is red when the upload did not finish.
+function uploadBar(status) {
+  let box = $('liteUploadBar');
+  if (!box && status) {
+    box = el('div', { id: 'liteUploadBar', class: 'lite-progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100' },
+      el('div', { class: 'lite-progress-fill' }), el('span', { class: 'lite-progress-text' }));
+    status.after(box);
+  }
+  return {
+    show(pct, failed = false) {
+      if (!box) return;
+      box.hidden = false;
+      box.classList.toggle('failed', !!failed);
+      if (pct == null) return;
+      const v = Math.max(0, Math.min(100, Math.round(pct)));
+      box.querySelector('.lite-progress-fill').style.width = `${v}%`;
+      box.querySelector('.lite-progress-text').textContent = `${v} %`;
+      box.setAttribute('aria-valuenow', String(v));
+    },
+  };
+}
+
 export function installRealTest() {
   window.simulateUpload = async function simulateUpload() {
     if (!window.validateProgramId()) { window.toast('Enter a valid Program ID from 1 to 100 before Upload.'); $('programId')?.focus(); return; }
@@ -54,10 +78,13 @@ export function installRealTest() {
     if (!s || !ctx.pid) return;
     const pid = Number($('programId').value);
     const status = $('uploadStatus');
+    const bar = uploadBar(status);
     try {
       const out = await robotCall(unitUrl(s.key, 'upload'), { program_id: pid }, { what: 'Upload' });
-      if (out.unchanged) { status.textContent = `Program ${pid} already holds this version ✓`; return; }
-      const done = await watchJob(out, (j) => { status.textContent = jobLine(j); });
+      if (out.unchanged) { status.textContent = `Program ${pid} already holds this version ✓`; bar.show(100); return; }
+      bar.show(0);
+      const done = await watchJob(out, (j) => { status.textContent = jobLine(j); bar.show(j.n ? (100 * j.i) / j.n : 0); });
+      bar.show(done.state === 'done' ? 100 : null, done.state !== 'done');
       status.textContent = done.state !== 'done' ? (done.error || 'Upload stopped.')
         : standIn() ? `Uploaded to Program ID ${pid} on the stand-in robot ✓ (nothing reached a controller)`
           : `Uploaded to Program ID ${pid} ✓ (name and size read back)`;
@@ -68,7 +95,7 @@ export function installRealTest() {
         taskRecords[currentTask] = rec;
         window.safeSaveTaskRecords();
       }
-    } catch (err) { status.textContent = err.message; tell(err); }
+    } catch (err) { status.textContent = err.message; bar.show(null, true); tell(err); }
     refresh();
   };
 

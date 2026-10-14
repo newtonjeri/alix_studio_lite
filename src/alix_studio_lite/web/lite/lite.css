@@ -361,3 +361,22 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 .lite-plot-compare { position: absolute; inset: 0; }
 /* the plot is Plotly's now, with its own selection and playhead: the page's picture of a plot stays hidden */
 .lite-plotted > svg { display: none !important; }
+
+/* the upload's progress bar (realtest.js) */
+.lite-progress { position: relative; height: 18px; margin-top: 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); overflow: hidden; }
+.lite-progress[hidden] { display: none; }
+.lite-progress-fill { height: 100%; width: 0; background: var(--green); }
+.lite-progress.failed .lite-progress-fill { background: var(--red); }
+.lite-progress-text { position: absolute; inset: 0; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: var(--ink); }
+
+/* Advanced: the controller's programs and global points as lists (advanced.js) */
+.lite-rc-list { max-height: 240px; overflow: auto; margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; }
+.lite-rc-list:empty { display: none; }
+.lite-rc-table td, .lite-rc-table th { padding: 6px 8px; font-size: 12px; }
+.lite-rc-table tbody tr { cursor: pointer; }
+.lite-rc-table tbody tr:hover, .lite-rc-table tbody tr:focus { background: var(--blue2); outline: none; }
+
+/* the start-pose lists as the controller's global points (prepare.js) */
+.lite-point-search { width: 100%; margin: 0 0 6px; }
+.lite-point-search[hidden], .lite-point-motion[hidden] { display: none; }
+.lite-point-motion { flex: 0 0 auto; max-width: 96px; }

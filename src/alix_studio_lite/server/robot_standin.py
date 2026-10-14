@@ -43,6 +43,7 @@ from .jobs import Jobs, UserError
 ARMS = ("left", "right")
 DEFAULT_IP = {"left": "192.168.1.10", "right": "192.168.1.103"}
 UPLOAD_BYTES_S = 45_000            # the controller's measured transfer rate
+REAL_UPLOAD_BYTES_S = 20_000       # sent and read back, as on the lab's robot (127,846 bytes in 6.4 s, 14 Oct)
 POLE_MM_S = 25.0
 MOTION_KINDS = ("run", "prepare", "teach", "move", "playback", "pole", "hand", "stage")   # one at a time per arm
 ESTOP_STOP = ("INTERRUPTED — E-STOP: it did not finish.",
@@ -687,6 +688,36 @@ class StandInRobot:
 
         return self._start("move", title, work, side, mode)
 
+    # ── the controller's global points (a linked arm only: they are stored on its controller)
+    def global_points(self, side: str) -> list[dict] | None:
+        """A linked arm's global points; None for the stand-in, which has no controller."""
+        real = self._real(side)
+        return None if real is None else real.global_points()
+
+    def move_point(self, side: str, name: str, move: str, speed: int, wait_s: float, title: str, mode: str | None = None):
+        """MoveJ or MoveL to a global point of a linked arm: in Real the arm moves, in Hardware sim
+        the controller's SIM mode simulates it (read back either way)."""
+        mode = mode or self.mode
+        if self._real(side) is None:
+            raise UserError(f"Global points are stored on the {side.upper()} arm's controller: the stand-in has none.",
+                            "Start Lite with --robot realman and connect the arm.", code="connect")
+        label = "MoveL" if str(move).lower() == "movel" else "MoveJ"
+
+        def work(job):
+            self._same_mode(mode, "the arm did not move")
+            real = self._real(side)
+            originals = real.set_run_mode("REAL" if mode == "real" else "SIM")
+            try:
+                job.progress(f"{label} to {name} ({int(speed)} % speed)", 1, 1)
+                out = real.move_point(name, move, speed, wait_s)
+            finally:
+                real.restore_run_mode(originals)
+            job.log(f"At global point {name} ({label}" + (f", {out['gap_deg']:.2f} degrees away at most" if out["gap_deg"] is not None else "")
+                    + ("; read back)." if mode == "real" else "; the controller's SIM mode, the arm did not move)."))
+            return out
+
+        return self._start("move", title, work, side, mode)
+
     def playback(self, side: str, lines: int, *, dry_run: bool, title: str, stage: "staging.Stage",
                  mode: str | None = None):
         """Stage the pole and hand, move to a recording's start, then replay it: (lines - 1) x 5 ms."""
@@ -804,9 +835,25 @@ class StandInRobot:
 
         if real is not None:
             def work(job):
-                job.progress(f"Sending {size / 1e3:.0f} kB to program {pid}", 1, 2)
-                out = real.upload(Path(path), pid, name)
-                job.progress("Read back", 2, 2)
+                # The SDK sends the file in one call and says nothing until it is done: the bar
+                # moves by the expected time (said to be estimated) and fills at the read-back.
+                what = f"Sending {size / 1e3:.0f} kB to program {pid} (estimated)"
+                expect, t0, done = max(1.0, size / REAL_UPLOAD_BYTES_S), time.time(), threading.Event()
+
+                def tick():
+                    while not done.wait(0.25):
+                        try:
+                            job.progress(what, min(95, int(100 * (time.time() - t0) / expect)), 100)
+                        except Exception:                                           # noqa: BLE001 - stopped
+                            return
+
+                job.progress(what, 0, 100)
+                threading.Thread(target=tick, name="lite-upload-progress", daemon=True).start()
+                try:
+                    out = real.upload(Path(path), pid, name)
+                finally:
+                    done.set()
+                job.progress("Stored: the name and the size read back", 100, 100)
                 a.programs[pid] = dict(name=name, lines=lines, bytes=size, sha256=sha256, stage=stage, first_row=first,
                                        controller_bytes=out["bytes"], stored_name=out["stored_name"],
                                        uploaded=time.strftime("%Y-%m-%d %H:%M"))

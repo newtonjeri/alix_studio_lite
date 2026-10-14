@@ -974,6 +974,44 @@ def post_recover(app, q, body, m):
     return app.robot.recover(_arm(m))
 
 
+@route("GET", r"/api/robots/(left|right)/points")
+def get_points(app, q, body, m):
+    """The global points stored on a linked arm's controller (``search``: part of the name, any
+    case). The stand-in has none: ``points`` is empty and ``note`` says why."""
+    session(app)
+    side = _arm(m)
+    if not app.robot.arm(side).connected:
+        return {"arm": side, "points": [], "note": f"Connect the {side.upper()} arm to read its global points."}
+    pts = app.robot.global_points(side)
+    if pts is None:
+        return {"arm": side, "points": [], "note": "The stand-in robot has no controller, so no global points."}
+    want = str((q.get("search") or [""])[0]).strip().casefold()
+    return {"arm": side, "total": len(pts), "points": [p for p in pts if want in p["name"].casefold()]}
+
+
+@route("POST", r"/api/robots/(left|right)/points/move")
+def post_point_move(app, q, body, m):
+    """MoveJ or MoveL to a global point: ``{name, move: movej|movel, speed (1-100), wait_s, confirmed}``."""
+    session(app)
+    side = _arm(m)
+    mode = require_robot_mode(app)
+    name = str(body.get("name") or "").strip()
+    if not name:
+        raise UserError("Choose a global point first.")
+    move = str(body.get("move") or "movej").lower()
+    if move not in ("movej", "movel"):
+        raise UserError("The move is MoveJ or MoveL.")
+    speed = int(body.get("speed") or 20)
+    if not 1 <= speed <= 100:
+        raise UserError("The speed is 1 to 100 %.")
+    wait_s = float(body.get("wait_s") or 0)
+    if not 0 <= wait_s <= 3600:
+        raise UserError("The wait is 0 to 3,600 seconds.")
+    require_confirmed(app, body, "Moving the arm to a global point")
+    label = "MoveL" if move == "movel" else "MoveJ"
+    return app.robot.move_point(side, name, move, speed, wait_s, f"{side.upper()} {label} to {name}", mode=mode).view()
+
+
 @route("GET", r"/api/robots/(left|right)/programs")
 def get_programs(app, q, body, m):
     session(app)

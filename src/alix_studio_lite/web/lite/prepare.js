@@ -5,10 +5,12 @@
 // emulated, as nothing moves there. The hand sent is the one on screen: the preset, or with Custom
 // the six channels, where an empty channel is held (left where it is).
 // Drag teaching starts only with the arm in that setup, so every recording knows its true stage,
-// and every execution stages that stage first (staging.py). The start-pose moves wait for the arm.
+// and every execution stages that stage first (staging.py). The start-pose moves wait for the arm;
+// with the live link the start poses are the controller's global points (MoveJ or MoveL).
 
 import { post, say } from './api.js';
-import { REAL_CHECKS, confirmDialog, ctx, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
+import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
+import { hasController, loadPoints, matches, movePoint } from './points.js';
 import { liteMode } from './status.js';
 
 const $ = (id) => document.getElementById(id);
@@ -104,6 +106,59 @@ async function applySetup(kind) {
   } catch (err) { tell(err); }
 }
 
+// ── the start poses as the controller's global points (the owner, 14 Oct): with the arm linked, its
+// start-pose list (Setup & Safety, and Redo Preparation, which copies it) holds the global points read
+// from its controller, a search field narrows it, and MoveJ or MoveL takes the arm there at 20 %.
+// The stand-in keeps the page's own profiles (it has no controller).
+
+const POINT_SPEED = 20;                          // % : the control program's default for a global point
+const ownOptions = {};                           // each arm's list as the page made it
+
+function filterOptions(sel, q) {
+  if (!sel) return;
+  let first = null;
+  for (const o of sel.options) {
+    o.hidden = !matches(o.textContent, q);
+    if (!o.hidden && !first) first = o;
+  }
+  if (sel.selectedOptions[0]?.hidden && first) sel.value = first.value;
+}
+
+// A search field above a start-pose list and the motion beside it, made once.
+function pointControls(sel, id) {
+  if (!sel || $(`${id}Search`)) return;
+  const search = el('input', { type: 'search', id: `${id}Search`, class: 'lite-point-search', placeholder: 'Search the global points',
+    'aria-label': 'Search the global points', oninput: (e) => filterOptions(sel, e.target.value) });
+  const motion = el('select', { id: `${id}Motion`, class: 'lite-point-motion', 'aria-label': 'Motion to the point',
+    title: `How the arm moves to a global point (at ${POINT_SPEED} %)` },
+  el('option', { value: 'movej', text: 'MoveJ' }), el('option', { value: 'movel', text: 'MoveL' }));
+  (sel.closest('.inline') || sel).before(search);
+  sel.after(motion);
+}
+
+async function fillPoses(side) {
+  const sel = $(`${side}PoseSelect`);
+  if (!sel) return;
+  if (!(side in ownOptions)) ownOptions[side] = sel.innerHTML;
+  pointControls(sel, `lite_${side}_pose`);
+  const linkedArm = hasController(side);
+  for (const id of [`lite_${side}_poseSearch`, `lite_${side}_poseMotion`]) if ($(id)) $(id).hidden = !linkedArm;
+  if (!linkedArm) { if (sel.querySelector('optgroup.lite-points')) sel.innerHTML = ownOptions[side]; return; }
+  try {
+    const d = await loadPoints(side);
+    const keep = sel.value;
+    sel.replaceChildren(d.points.length
+      ? el('optgroup', { class: 'lite-points', label: `${side.toUpperCase()} controller · ${d.points.length} global points` },
+        d.points.map(pt => el('option', { value: `gp:${pt.name}`, text: pt.name })))
+      : el('optgroup', { class: 'lite-points', label: d.note || 'No global points on this controller' }));
+    if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
+    filterOptions(sel, $(`lite_${side}_poseSearch`)?.value);
+  } catch (err) {
+    const e = $(`${side}PoseStatus`);
+    if (e) e.textContent = `The ${side.toUpperCase()} controller's global points could not be read: ${say(err)}`;
+  }
+}
+
 async function move(url, body, what, statusEl) {
   const job = await robotCall(url, body, { what });
   const done = await watchJob(job, (j) => { if (statusEl) statusEl.textContent = jobLine(j); });
@@ -132,12 +187,21 @@ export function installPrepare() {
     }
     lastMoveError = null;
     const results = await Promise.allSettled(arms.map((arm) => {
-      const name = $(`${arm}PoseSelect`)?.value || 'Default Start Pose';
-      return move(`/api/robots/${arm}/move-pose`, { name, ...extra }, `Moving the ${arm.toUpperCase()} arm to its start pose`, $(`${arm}PoseStatus`))
-        .then(() => {
-          const e = $(`${arm}PoseStatus`);
-          if (e) e.textContent = `${arm.toUpperCase()} at “${name}” ` + (mode === 'real' ? '(joints read back).' : '(dry run: nothing moved).');
-        });
+      const value = $(`${arm}PoseSelect`)?.value || 'Default Start Pose';
+      const point = value.startsWith('gp:') ? value.slice(3) : null;           // a global point of the controller
+      const motion = $(`lite_${arm}_poseMotion`)?.value || 'movej';
+      const status = $(`${arm}PoseStatus`);
+      const go = point
+        ? movePoint(arm, point, motion, POINT_SPEED, 0, extra, (j) => { if (status) status.textContent = jobLine(j); }).then((done) => {
+          if (done.state !== 'done') throw Object.assign(new Error(done.error || 'The move did not finish.'), { hint: done.hint });
+        })
+        : move(`/api/robots/${arm}/move-pose`, { name: value, ...extra }, `Moving the ${arm.toUpperCase()} arm to its start pose`, status);
+      return go.then(() => {
+        if (status) {
+          status.textContent = `${arm.toUpperCase()} at “${point || value}”` + (point ? ` (${motion === 'movel' ? 'MoveL' : 'MoveJ'})` : '')
+            + (mode === 'real' ? ' (joints read back).' : ' (dry run: nothing moved).');
+        }
+      });
     }));
     results.forEach((r, i) => {
       if (r.status !== 'rejected') return;
@@ -154,9 +218,24 @@ export function installPrepare() {
     return true;
   };
 
+  // Redo Preparation copies the arm's list as it opens: read the controller's points first, then
+  // give the copy its own search and motion.
+  const pageRedo = window.openRedoPoseModal;
+  window.openRedoPoseModal = async function openRedoPoseModal() {
+    await fillPoses(selectedArm).catch(() => {});
+    pageRedo();
+    const dest = $('redoPoseSelect');
+    pointControls(dest, 'lite_redo');
+    for (const o of dest?.options || []) o.hidden = false;
+    const linkedArm = hasController(selectedArm);
+    if ($('lite_redoSearch')) { $('lite_redoSearch').value = ''; $('lite_redoSearch').hidden = !linkedArm; }
+    if ($('lite_redoMotion')) { $('lite_redoMotion').value = $(`lite_${selectedArm}_poseMotion`)?.value || 'movej'; $('lite_redoMotion').hidden = !linkedArm; }
+  };
+
   window.moveRedoToStart = async function moveRedoToStart() {
     const dest = $('redoPoseSelect'), source = $(`${selectedArm}PoseSelect`);
     if (source && dest) source.value = dest.value;
+    if ($('lite_redoMotion') && $(`lite_${selectedArm}_poseMotion`)) $(`lite_${selectedArm}_poseMotion`).value = $('lite_redoMotion').value;
     $('redoPoseStatus').textContent = `Moving the ${selectedArm.toUpperCase()} arm to “${dest?.value || 'its start pose'}”…`;
     const ok = await window.demoMove(selectedArm.toUpperCase());
     redoPoseMoved = ok;
@@ -173,5 +252,14 @@ export function installPrepare() {
 
   document.addEventListener('lite:step', refresh);
   document.addEventListener('lite:stage', (e) => { if (e.detail === 'prepare') refresh(); });
+
+  // the start-pose lists follow each arm's controller: read when Setup & Safety opens and when an arm
+  // connects or disconnects
+  const pageShow = window.showView;
+  window.showView = function showView(v, btn) {
+    pageShow(v, btn);
+    if (v === 'setup') { fillPoses('left'); fillPoses('right'); }
+  };
+  document.addEventListener('lite:points', (e) => fillPoses(e.detail));
 }
 

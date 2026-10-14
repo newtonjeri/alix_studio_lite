@@ -176,3 +176,25 @@ def test_a_hand_settled_short_on_force_is_in_pose(monkeypatch):
     said["out"] = dict(ok=False, arrived=False, settled=False, ret=0, after=None, t_s=3.0)       # timed out
     with pytest.raises(UserError, match="did not reach its pose"):
         arm.hand_to(pose)
+
+
+def test_global_points_are_the_controllers_and_moved_to_as_the_control_program_does(server):
+    """The owner (14 Oct): the start-pose lists and Advanced show the controller's global points,
+    found by name, and MoveJ / MoveL go to one (the control program's runner v14 functions)."""
+    call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
+    pts = call(server, "GET", "/api/robots/left/points")
+    assert pts["total"] == 3 and [p["name"] for p in pts["points"]] == ["STP_HOME", "STP_LID_OPEN", "CLEAN_A"]
+    assert len(pts["points"][0]["joints"]) == 7 and len(pts["points"][0]["pose"]) == 6
+    assert [p["name"] for p in call(server, "GET", "/api/robots/left/points?search=lid")["points"]] == ["STP_LID_OPEN"]
+    assert call(server, "POST", "/api/robots/left/points/move", {"name": "STP_LID_OPEN", "move": "movej"})["code"] == "confirm"
+    j = wait(server, call(server, "POST", "/api/robots/left/points/move", {"name": "STP_LID_OPEN", "move": "movej", "confirmed": True}))
+    assert j["state"] == "done" and "At global point STP_LID_OPEN (MoveJ" in text(j), j
+    fb = call(server, "GET", "/api/robots/status")["arms"]["left"]["link"]["feedback"]
+    assert abs(fb["joints_deg"][0] - pts["points"][1]["joints"][0]) < 0.5
+    j = wait(server, call(server, "POST", "/api/robots/left/points/move", {"name": "STP_HOME", "move": "movel", "confirmed": True}))
+    assert j["state"] == "done" and "(MoveL" in text(j), j
+    j = wait(server, call(server, "POST", "/api/robots/left/points/move", {"name": "NO_SUCH", "move": "movej", "confirmed": True}))
+    assert j["state"] == "failed" and "did not reach global point 'NO_SUCH'" in j["error"]
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    assert {"global points", "movej global point", "movel global point"} <= {r["verb"] for r in hw}
+    assert any("GLOBAL MOVE COMPLETE: STP_LID_OPEN" in (r["text"] or "") for r in hw if r["verb"] == "runner v14")

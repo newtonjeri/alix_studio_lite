@@ -37,6 +37,7 @@ HAND_SPEED_SET = 500      # the hand's SPEED_SET, of 1000: 50 %
 MOVE_SPEED = 30           # % for a move to a start: what Lite's simulation models (staging.TRANSIT_FRACTION)
 RUN_TRANSIT_SPEED = 20    # % of the controller's own move to a program's first point (rm_upload.py's default)
 RESTORE_PCT = 50          # the global speed ratio left after a run or a move, as ALIX and rm_upload leave it
+POINT_SPEED = 20          # % for a move to a global point: the control program's default
 CHECK_TRIES = 4           # the read-back after an upload: tries, 1 s apart, before it is called failed
 
 
@@ -74,6 +75,27 @@ def _rmu():
             mod.rm_send_project_t = rm_send_project_t
             _RMU = mod
         return _RMU
+
+
+# ── the control program's runner v14 (v53 support), as a module: the controller's global points
+_RUNNER = None
+
+
+def _runner():
+    """vendor/control_app/rm_upload_fast_v14_safe_transit.py, loaded once: its global points are
+    listed and moved to as the control program does (global_waypoints, move_global_waypoint)."""
+    global _RUNNER
+    with _RMU_LOCK:
+        if _RUNNER is None:
+            import importlib.util
+
+            from .. import vendor_paths
+
+            spec = importlib.util.spec_from_file_location("lite_runner_v14", vendor_paths.RUNNER_V14)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            _RUNNER = mod
+        return _RUNNER
 
 
 class _ThreadLines(io.TextIOBase):
@@ -375,6 +397,52 @@ class RealArm:
         self._hw("run", args=dict(program_id=pid, points=points, transit_speed=RUN_TRANSIT_SPEED), ret=rc, ok=rc == 0,
                  elapsed_s=time.monotonic() - t0, text=why)
         return dict(ok=rc == 0, why=why, seconds=round(time.monotonic() - t0, 2), lines=said.splitlines())
+
+    # ── the controller's global points (the control program's runner v14)
+    def global_points(self) -> list[dict]:
+        """The global points stored on this controller, as the control program lists them: each
+        one's name, joints (deg), pose (m, rad), work and tool frame, and when it was saved."""
+        rt = _runner()
+        with self.link.busy("reading the global points"), _printed_to(self._runner_line):
+            try:
+                pts = rt.global_waypoints(self.robot)
+            except Exception as exc:                                                # noqa: BLE001
+                self._hw("global points", ok=False, text=str(exc))
+                raise UserError(f"The {self.SIDE} controller's global points could not be read ({exc}).",
+                                "Check the controller, then try again.") from None
+        self._hw("global points", ok=True, text=f"{len(pts)} point(s)")
+        return [dict(name=p["point_name"], joints=[round(float(v), 3) for v in p["joint"][:7]],
+                     pose=[round(float(v), 5) for v in p["pose"][:6]], work_frame=p["work_frame"],
+                     tool_frame=p["tool_frame"], time=p["time"]) for p in pts]
+
+    def move_point(self, name: str, move: str = "movej", speed: int = POINT_SPEED, wait_s: float = 0.0) -> dict:
+        """MoveJ (to its joints) or MoveL (to its pose, in its own frames, put back after) to a global
+        point, with the runner's move_global_waypoint; a MoveJ is read back against the point's joints."""
+        from alix_dispatch import staging as alix_staging
+        from alix_dispatch import track
+
+        rt = _runner()
+        move = "movel" if str(move).lower() == "movel" else "movej"
+        t0, gap, why = time.monotonic(), None, None
+        with self.link.busy(f"{'MoveL' if move == 'movel' else 'MoveJ'} to {name}"), _printed_to(self._runner_line):
+            try:
+                rc = rt.move_global_waypoint(self.robot, str(name), move, int(speed), float(wait_s))
+            except Exception as exc:                     # noqa: BLE001 - a controller without a call refuses too
+                rc, why = 1, str(exc)
+            if rc == 0 and move == "movej":
+                point = rt.get_global_waypoint(self.robot, str(name))
+                gap = track.start_gap_deg(self.robot, [round(float(v) * 1000) for v in point["joint"][:7]])
+                if gap is None or gap > alix_staging.START_TOLERANCE_DEG:
+                    rc, why = 1, f"the arm is {'?' if gap is None else round(gap, 1)} degrees from it"
+        self._hw(f"{move} global point", args=dict(name=name, speed=int(speed), wait_s=float(wait_s)), ret=rc, ok=rc == 0,
+                 elapsed_s=time.monotonic() - t0, text=why or (None if gap is None else f"gap {gap:.2f} deg"))
+        if rc != 0:
+            raise UserError(f"The {self.SIDE} arm did not reach global point {name!r} ({why or 'the move did not finish'}).",
+                            "Check the arm and the point on the pendant, then try again.")
+        return dict(name=name, move=move, gap_deg=gap, seconds=round(time.monotonic() - t0, 2))
+
+    def _runner_line(self, line: str) -> None:
+        self._hw("runner v14", text=line)
 
     def move_to(self, target_millideg: list) -> dict:
         """A move to a joint pose at 30 %, checked against it (within 2 degrees)."""
