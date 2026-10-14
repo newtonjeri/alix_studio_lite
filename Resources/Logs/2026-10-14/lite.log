@@ -455,3 +455,303 @@
 20:05:24.834 [activity] operator:739d22 DELETE /api/projects/alix_mv7x0zhy_z3wx7
 20:05:27.729 [activity] operator:739d22 DELETE /api/projects/alix_mv7sito0_2yypy
 20:05:29.666 [activity] operator:739d22 DELETE /api/projects/alix_mv7sc3zm_s1n9o
+20:31:41.769 [activity] - POST /api/auth/login
+20:31:41.928 [activity] operator page: showView
+20:32:02.039 [activity] operator page: selectArm
+20:32:02.039 [activity] operator page: loadTask
+20:32:02.041 [activity] operator page: showView
+20:32:02.043 [activity] operator page: showView
+20:32:02.044 [activity] operator page: setStage
+20:32:02.062 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:32:02.916 [activity] operator page: showView
+20:32:02.950 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:32:03.797 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:04.447 [activity] operator page: showView
+20:33:05.455 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:18.688 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:21.564 [activity] operator page: showView
+20:33:22.567 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:26.164 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:28.634 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:33.803 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:35.030 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:37.001 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:38.461 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:52.260 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:33:59.963 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:34:02.970 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:34:03.058 [activity] operator page: showView
+20:34:03.070 [activity] operator page: loadTask
+20:34:03.061 [activity] operator page: setStage
+20:34:03.059 [activity] operator page: selectArm
+20:34:05.579 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:12.749 [activity] operator page: showView
+20:35:13.765 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:16.538 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:17.704 [activity] operator page: showView
+20:35:18.705 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:19.939 [activity] operator page: showView
+20:35:21.770 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:27.949 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:29.868 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:31.769 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:33.096 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:34.528 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:36.511 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/setup
+20:35:37.494 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:39.535 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:39.748 [activity] operator:93d8c8 POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+20:35:39.766 [activity] operator page: robot panel
+20:35:40.763 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:41.049 [activity] operator:93d8c8 POST /api/robots/left/connect
+20:35:41.715 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:42.516 [activity] operator:93d8c8 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+20:35:43.523 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:43.831 [activity] operator:93d8c8 POST /api/robots/mode
+20:35:44.844 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:45.981 [activity] operator:93d8c8 POST /api/robots/right/connect
+20:35:46.543 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:48.715 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:50.395 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/setup -> REFUSED: Moving the pole and the hand on the real robot needs your confirmation.
+20:35:51.401 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:52.646 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/setup
+20:35:52.889 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+20:35:52.961 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+20:35:52.969 [LEFT] alix · hand: OPEN before the pole moves — from peripherals.HAND_OPEN — this plan authors no release stage and the caller named none
+20:35:53.036 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 999, 1000, 1000, 714, 992]; law 0.33 s)
+20:35:53.460 [LEFT] alix · hand: arrived at [1000, 1000, 1000, 1000, 1000, 992] after 0.35 s (per-channel travel [0, 1, 0, 0, 286, 0])
+20:35:53.599 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:35:53.703 [LEFT] alix · pole: 151 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 3.58 s, timeout 10.7 s)
+20:35:56.416 [LEFT] alix · pole: at 51 mm after 2.71 s (verified_by=getter, moved 100 mm through 43 distinct readings)
+20:35:56.418 [LEFT] alix · hand: None (the state the stroke was planned with)
+20:35:56.474 [LEFT] alix · hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [1000, 1000, 1000, 1000, 997, 992]; law 0.86 s)
+20:35:57.451 [LEFT] alix · hand: settled at [800, 729, 719, 716, 693, 992] after 0.90 s (per-channel travel [244, 272, 281, 284, 304, 0])
+20:35:57.452 [LEFT] alix · ** hand: settled without arriving — worst channel 1 is 800 counts short (target 0, readback 800)
+20:35:57.454 [LEFT] alix · ** left: the hand read back [800, 729, 719, 716, 693, 992] against a commanded [0, 0, 0, 0, 150, 1000] — channel 1 is 800 counts out, past its 25-count staging band
+20:35:57.548 [LEFT] hand settled {"target": [0, 0, 0, 0, 150, 1000]} · stopped at [800, 729, 719, 716, 693, 992] (on the tool): done, as the control program takes it
+20:35:57.548 [LEFT] stage {"pole_mm": 50.0, "hand": [0, 0, 0, 0, 150, 1000], "speed_pct": 50} · pole 51 mm, hand [800, 729, 719, 716, 693, 992]
+20:35:57.549 [activity] - job stage done: Stage L-R01: pole 50 mm, hand grip
+20:36:07.378 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:12.988 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:15.145 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/setup -> REFUSED: Moving the pole and the hand on the real robot needs your confirmation.
+20:36:15.444 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:16.156 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:16.605 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/setup
+20:36:16.836 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+20:36:16.918 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+20:36:16.932 [LEFT] alix · pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)
+20:36:16.933 [LEFT] alix · hand: None (the state the stroke was planned with)
+20:36:17.007 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [800, 729, 719, 716, 693, 992]; law 0.34 s)
+20:36:17.423 [LEFT] alix · hand: arrived at [1000, 998, 1000, 1000, 985, 992] after 0.33 s (per-channel travel [200, 269, 281, 284, 292, 0])
+20:36:17.522 [LEFT] stage {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 50 mm, hand [1000, 998, 1000, 1000, 985, 992]
+20:36:17.523 [activity] - job stage done: Stage L-R01: pole 50 mm, hand open
+20:36:17.579 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:20.591 [activity] operator page: setStage
+20:36:22.380 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:28.680 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:32.755 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+20:36:33.765 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:34.083 [LEFT] rm_start_drag_teach [1] ret=0 (0.026 s)
+20:36:34.183 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/teach/start
+20:36:35.066 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:46.920 [LEFT] rm_stop_drag_teach [] ret=0 (0.008 s)
+20:36:47.920 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:36:50.653 [LEFT] rm_save_trajectory ["/tmp/lite-teach-0pzo0kz0/left_drag_20261014_203646.txt"] ret=0 (3.732 s)
+20:36:50.796 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/teach/stop
+20:37:04.628 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:37:06.336 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:37:07.274 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:37:08.883 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+20:37:09.889 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:37:10.769 [LEFT] rm_start_drag_teach [1] ret=0 (0.054 s)
+20:37:10.924 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/teach/start
+20:37:11.753 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:37:28.289 [LEFT] rm_stop_drag_teach [] ret=0 (0.011 s)
+20:37:29.218 [activity] operator page: setStage
+20:37:29.345 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:37:30.229 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:37:32.721 [LEFT] rm_save_trajectory ["/tmp/lite-teach-inojc679/left_drag_20261014_203728.txt"] ret=0 (4.430 s)
+20:37:32.890 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/teach/stop
+20:37:34.855 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:37:37.790 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:38:19.617 [activity] operator page: setStage
+20:38:21.033 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/optimise
+20:38:23.564 [activity] - job optimise done: Tune L-R01
+20:38:23.820 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:38:33.186 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:38:34.402 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:38:36.779 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:38:38.350 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:07.963 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:39:08.769 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:10.388 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:11.577 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:14.422 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:20.212 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:23.852 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:37.036 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:49.670 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:52.053 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:57.007 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:39:58.674 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:39:59.473 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:02.397 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:02.678 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:40:03.519 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:05.368 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:05.517 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:40:06.313 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:08.161 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:11.800 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/optimise
+20:40:12.517 [activity] - job optimise done: Tune L-R01
+20:40:12.784 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:16.433 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:41.996 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep -> REFUSED: This trajectory does not pass every limit, so it cannot go to the robot.
+20:40:42.002 [activity] operator page: setStage
+20:40:43.000 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:45.616 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep -> REFUSED: This trajectory does not pass every limit, so it cannot go to the robot.
+20:40:45.634 [activity] operator page: setStage
+20:40:46.623 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:48.971 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep -> REFUSED: This trajectory does not pass every limit, so it cannot go to the robot.
+20:40:48.979 [activity] operator page: setStage
+20:40:49.981 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:52.147 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep -> REFUSED: This trajectory does not pass every limit, so it cannot go to the robot.
+20:40:52.153 [activity] operator page: setStage
+20:40:53.164 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:56.738 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:40:57.603 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:41:15.824 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep -> REFUSED: This trajectory does not pass every limit, so it cannot go to the robot.
+20:41:15.834 [activity] operator page: setStage
+20:41:16.830 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:42:18.130 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:42:18.762 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:42:19.521 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:42:27.215 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/optimise
+20:42:28.025 [activity] - job optimise done: Tune L-R01
+20:42:28.186 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:42:30.036 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep -> REFUSED: This trajectory does not pass every limit, so it cannot go to the robot.
+20:42:30.048 [activity] operator page: setStage
+20:42:36.518 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:42:37.284 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:42:39.651 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/optimise
+20:42:40.362 [activity] - job optimise done: Tune L-R01
+20:42:40.624 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:42:42.310 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep -> REFUSED: This trajectory does not pass every limit, so it cannot go to the robot.
+20:42:42.336 [activity] operator page: setStage
+20:43:04.836 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:43:05.648 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:43:13.522 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:43:14.274 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:43:27.502 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:43:28.257 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:43:29.059 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:43:29.827 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:43:59.124 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/settings
+20:43:59.900 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:44:19.881 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/optimise
+20:44:20.851 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:44:23.307 [activity] - job optimise done: Tune L-R01
+20:45:18.263 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep
+20:45:18.288 [activity] operator page: setStage
+20:45:19.215 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:45:45.901 [activity] operator page: setStage
+20:45:49.696 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:45:54.748 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:45:59.427 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep
+20:45:59.447 [activity] operator page: setStage
+20:46:00.375 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:02.013 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:03.610 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:04.587 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:06.127 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:08.539 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:09.672 [LEFT] program list · 79 programs
+20:46:09.673 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/upload -> REFUSED: Program 92 on the LEFT controller already holds “92_ORG_lid_top_sl_20pct.txt”.
+20:46:12.762 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:12.779 [LEFT] program list · 79 programs
+20:46:12.782 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/upload
+20:46:13.660 [LEFT] rm_upload · upload L-R01_v001.txt: 2202 points, 124.8 KB -> slot 92 on 192.168.1.10
+20:46:13.660 [LEFT] rm_upload ·   slot 92 now: 92_ORG_lid_top_sl_20pct.txt (286.8 KB) — it will be REPLACED
+20:46:17.402 [LEFT] rm_upload ·   sent: ret=0 err_line=-1
+20:46:19.073 [LEFT] rm_upload ·   VERIFIED: slot 92 holds '92_L-R01_v001.txt', 127846 bytes (sent 127846)
+20:46:19.182 [LEFT] upload {"program_id": 92, "file": "v001.txt", "bytes": 127846} ret=0 (6.400 s)
+20:46:19.693 [activity] - job upload done: Upload L-R01 to program 92
+20:46:19.740 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:20.539 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:23.120 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:26.036 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/run -> REFUSED: A run on the real robot needs your confirmation.
+20:46:27.047 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:27.234 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/run
+20:46:27.517 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+20:46:27.590 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+20:46:27.598 [LEFT] alix · pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)
+20:46:27.599 [LEFT] alix · hand: None (the state the stroke was planned with)
+20:46:27.666 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 1000, 1000, 1000, 996, 992]; law 0.12 s)
+20:46:27.846 [LEFT] alix · hand: arrived at [1000, 1000, 1000, 1000, 996, 992] after 0.11 s (per-channel travel [0, 0, 0, 0, 0, 0])
+20:46:27.928 [LEFT] stage {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 50 mm, hand [1000, 1000, 1000, 1000, 996, 992]
+20:46:28.177 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:46:28.414 [LEFT] program list · 79 programs
+20:46:28.543 [LEFT] run mode REAL
+20:46:29.312 [LEFT] rm_upload · run slot 92 (92_L-R01_v001.txt) on 192.168.1.10; transit speed 20 %
+20:46:29.313 [LEFT] rm_upload ·   the controller first moves the arm to the program's first point: up to 47.3 deg on J7 — keep that path clear
+20:46:30.462 [LEFT] rm_upload ·   running (1.1 s)
+20:46:49.125 [LEFT] rm_upload ·   global speed restored to 50 % (ret=0)
+20:46:49.141 [LEFT] rm_upload ·   RUN COMPLETE: 19.8 s, no error
+20:46:49.240 [LEFT] run {"program_id": 92, "points": 2202, "transit_speed": 20} ret=0 (20.695 s)
+20:46:49.390 [activity] - job run done: Real run L-R01
+20:49:38.747 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/verdict
+20:49:38.776 [activity] operator page: setStage
+20:49:39.921 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:49:42.641 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/keep
+20:49:42.688 [activity] operator page: setStage
+20:49:43.500 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:49:45.424 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/verdict
+20:49:46.419 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:49:49.835 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:49:49.927 [activity] operator:93d8c8 POST /api/projects/alix_mv83aj0e_leskp/units/L-R01/verdict
+20:49:49.957 [activity] operator page: selectArm
+20:49:49.962 [activity] operator page: setStage
+20:49:52.299 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:49:53.254 [activity] operator page: selectArm
+20:49:54.646 [activity] operator page: selectArm
+20:49:55.518 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:49:55.791 [activity] operator page: selectArm
+20:49:57.400 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:50:03.918 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:50:06.131 [activity] operator page: showView
+20:50:07.139 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:50:11.564 [activity] operator page: showView
+20:50:12.573 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:50:13.955 [activity] operator page: showView
+20:50:14.967 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:50:22.360 [activity] operator page: showView
+20:50:23.377 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:50:25.494 [activity] operator page: showView
+20:50:26.512 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+20:50:27.864 [activity] operator page: showView
+20:50:29.835 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:25.481 [activity] operator:93d8c8 POST /api/auth/engineer/lock
+21:07:26.500 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:27.975 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:28.936 [activity] engineer:93d8c8 POST /api/auth/engineer
+21:07:29.175 [activity] engineer page: openRobotControl
+21:07:29.894 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:32.119 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:34.102 [activity] engineer:93d8c8 POST /api/robots/left/pole -> REFUSED: Moving the pole on the real robot needs your confirmation.
+21:07:34.334 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:35.114 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:35.357 [activity] engineer:93d8c8 POST /api/robots/left/pole
+21:07:35.368 [LEFT] alix · pole: 50 mm -> 102 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 3.26 s, timeout 9.8 s)
+21:07:36.364 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:37.099 [LEFT] alix · pole: at 100 mm after 1.72 s (verified_by=getter, moved 50 mm through 25 distinct readings)
+21:07:37.210 [LEFT] pole move {"mm": 102.0, "speed_pct": 50} ret=0 (1.723 s) · final 0.1 m, verified by getter
+21:07:37.211 [activity] - job pole done: Pole LEFT to 102 mm
+21:07:39.177 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:40.521 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:42.161 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:45.798 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:47.357 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:49.170 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:51.974 [activity] engineer:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
+21:07:56.676 [activity] operator:93d8c8 POST /api/auth/engineer/lock
+21:07:57.679 [activity] operator:93d8c8 PUT /api/projects/alix_mv83aj0e_leskp
