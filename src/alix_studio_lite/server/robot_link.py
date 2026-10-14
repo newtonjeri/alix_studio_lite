@@ -1,4 +1,5 @@
-"""A read-only link to the real arms, through ALIX's own robot I/O code (``alix_dispatch``).
+"""A live link to the real arms, through ALIX's own robot I/O code (``alix_dispatch``): it reads
+them, and its one command is STOP.
 
 It connects each controller (``connect.open_arm``) and reads, about five times a second, the
 feedback of the three devices ALIX drives on each side (alix_hw: one transport per side):
@@ -9,10 +10,13 @@ feedback of the three devices ALIX drives on each side (alix_hw: one transport p
 
 and the E-stop input, IO3, which must be in the controller's E-stop mode (5).
 
-READ ONLY. Lite commands nothing through this link: robot actions stay with the stand-in until
-Lite's robot commands exist, and the screens say so. The one setting it may write is the end
-port's Modbus mode, which reading the hand needs (the control program and ALIX set it the same
-way); it never writes the hand, the pole or the arm.
+READ ONLY, BUT FOR STOP. Robot actions stay with the stand-in until Lite's robot commands exist,
+and the screens say so. The one command is STOP (``ArmLink.stop``): ALIX's own stop of a
+controller (``staging.stop_devices``: the arm, the pole, and the hand frozen where it is), then
+ALIX's check that the arm is still (``track.stop_program``). STOP BOTH stops the E-stop's way
+(``rm_set_arm_stop``: the fastest stop, the trajectory dropped). The one setting the link writes
+is the end port's Modbus mode, which reading the hand needs (the control program and ALIX set it
+the same way).
 
 ``run_lite --robot realman`` uses it with the real controllers; ``--robot emulated`` with ALIX's
 controller emulator, which has no IO, so its E-stop reads as clear.
@@ -75,6 +79,7 @@ class ArmLink:
         self.feedback: dict = {}
         self._hand = None
         self._modbus_set = False
+        self._stopping = threading.Event()          # a STOP is being sent: no new reading starts
         self._stop = threading.Event()
         self._lock = threading.Lock()
         self._thread = None
@@ -115,6 +120,8 @@ class ArmLink:
 
         try:
             while not self._stop.wait(self.period_s):
+                if self._stopping.is_set():
+                    continue
                 try:
                     self.read_once()
                 except Exception:                                        # noqa: BLE001 - keep reading
@@ -122,6 +129,43 @@ class ArmLink:
         finally:
             connect.close_arm(self.handle)
             self.handle = None
+
+    def stop(self, hard: bool = True) -> dict:
+        """STOP this controller as ALIX stops one (``staging.stop_devices``): the arm, the E-stop's
+        way when ``hard`` (``rm_set_arm_stop``), else the slow stop on its path (escalating when it
+        is refused); the pole (``rm_set_lift_speed(0)``); the hand frozen where it is. Then ALIX's
+        check (``track.stop_program``) that the arm is still, a program running on the controller
+        included, escalating until it is. ``ok``: the arm and the pole took the stop and the arm
+        is proven still. Never raises."""
+        from alix_dispatch import peripherals, staging, track
+
+        side, h = self.side.upper(), self.handle
+        if h is None:
+            return dict(ok=False, text=f"{side}: not connected, so STOP could not be sent")
+        quiet = lambda *_: None                                                     # noqa: E731
+        self._stopping.set()
+        try:
+            hand = self._hand if self.feedback.get("hand") else None
+            if hand is not None:
+                hand.opened = True              # its port is in Modbus mode: the last reading came through it
+            st = staging.stop_devices(h, pole=peripherals.Pole(h.robot, log=quiet), hand=hand, log=quiet,
+                                      hard=hard).get("stop") or {}
+            proof = track.stop_program(h.robot, log=quiet, **({"rungs": ("stop",)} if hard else {}))
+        except Exception as exc:                                                    # noqa: BLE001
+            return dict(ok=False, text=f"{side}: STOP could not be sent ({exc})")
+        finally:
+            self._stopping.clear()
+        arm, pole, hand_out = st.get("arm") or {}, st.get("pole") or {}, st.get("hand") or {}
+        ok = bool(arm.get("ok") and pole.get("ok") and proof.get("stopped"))
+        if ok:
+            text = (f"{side}: stopped on its controller ({arm.get('escalated') or arm.get('verb')}), the pole "
+                    f"stopped, the hand {'frozen' if hand_out.get('ok') else 'not frozen (not readable)'}; the arm is still")
+        else:
+            bad = ([f"the arm's stop returned {arm.get('escalated_ret', arm.get('ret'))}"] if not arm.get("ok") else []) \
+                + ([f"the pole: {pole.get('error') or pole.get('ret')}"] if not pole.get("ok") else []) \
+                + ([f"the arm is not proven still ({proof.get('refusal') or 'no proof'})"] if not proof.get("stopped") else [])
+            text = f"{side}: STOP not confirmed: " + "; ".join(bad)
+        return dict(ok=ok, text=text, arm=arm, pole=pole, hand=hand_out, still=proof.get("stopped"))
 
     def _read_hand(self, robot):
         from alix_dispatch import peripherals

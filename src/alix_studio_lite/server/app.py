@@ -50,7 +50,7 @@ MODES = ("visual", "hwsim", "real")
 CODE_ID = code_id()                      # the code this server runs, as loaded at its start
 #: the only /api/ requests without the session: logging in and out, and STOP (never refused)
 OPEN_ROUTES = re.compile(r"^/api/(auth/login|auth/logout|robots/stop-both|robots/(left|right)/stop|lite/robot/stop|lite/hello)$")
-READ_ONLY_REAL = ("Lite reads the real arms but does not command them yet, so Real robot is not available.",
+READ_ONLY_REAL = ("Lite reads the real arms and can STOP them, but does not move them yet, so Real robot is not available.",
                   "Run on the real arms with the control program meanwhile; Visual sim and Hardware sim work as usual.")
 MODE_TEXT = {"visual": "Visual sim: the 3D robot moves, no hardware",
              "hwsim": "Hardware sim: nothing moves (the controllers' SIM mode; pole and hand emulated)",
@@ -471,7 +471,13 @@ def post_disconnect(app, q, body, m):
 
 @route("POST", "/api/lite/robot/stop")
 def post_stop(app, q, body, m):
-    return app.robot.stop(_arm_arg(body, allow_all=True))
+    """STOP (no session): like the E-stop, a linked controller is stopped too and the arms are held
+    until Recover; a controller that did not confirm it is an error."""
+    out = app.robot.stop(_arm_arg(body, allow_all=True))
+    if not out["ok"]:
+        out["error"] = "STOP not confirmed: " + " ".join(r["text"] + "." for r in out["controllers"].values() if not r["ok"])
+        out["hint"] = "Press the red E-stop button on the robot if it is still moving."
+    return out
 
 
 @route("POST", "/api/lite/robot/estop-test")

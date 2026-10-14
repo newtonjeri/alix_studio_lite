@@ -70,7 +70,7 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
   - Start is refused until every included arm step has a kept version, each listed with what it needs; a preview with the recordings as taught plays what exists and never approves the sequence;
   - play, pause, speed and a time slider; the arm panels say what each arm is doing (staging, waiting, running).
 - **ALIX's brand mark**, as ALIX Studio draws it, in place of the page's "AX" tiles, in both themes and as the tab's icon.
-- **A live, read-only link to the arms** (`tools/run_lite.sh --robot realman`, `server/robot_link.py`): it connects each controller through ALIX's own robot I/O code and shows, about five times a second, the arm (joints, error codes, run mode), the pole, the hand and the E-stop input IO3. The live E-stop drives the motion interlock. Lite commands nothing through it, so Real robot is refused while linked; the one setting it writes is the end port's Modbus mode, which reading the hand needs (as the control program and ALIX set it). **Lite's STOP BOTH does not reach the linked controllers:** the red E-stop buttons stop the arms. Linux only (the RealMan SDK ships for Linux). Checked against ALIX's emulated arms (`--robot emulated`); not yet on the robot itself.
+- **A live, read-only link to the arms** (`tools/run_lite.sh --robot realman`, `server/robot_link.py`): it connects each controller through ALIX's own robot I/O code and shows, about five times a second, the arm (joints, error codes, run mode), the pole, the hand and the E-stop input IO3. The live E-stop drives the motion interlock. Its one command is STOP; every other action stays the stand-in's, so Real robot is refused while linked. The one setting it writes is the end port's Modbus mode, which reading the hand needs (as the control program and ALIX set it). **STOP acts like the E-stop** (decided 14 October): STOP BOTH sends each linked controller ALIX's own stop (`staging.stop_devices`, the E-stop's way: `rm_set_arm_stop`, the pole stopped, the hand frozen), then ALIX's check that the arm is still (`track.stop_program`); one arm's STOP stops it on its path; any STOP holds the connected arms until Recover, on the stand-in too. A controller that does not confirm is reported. The red E-stop buttons remain the safety stop. Linux only (the RealMan SDK ships for Linux). Checked against ALIX's emulated arms (`--robot emulated`); not yet on the robot itself.
 - **Hardware sim moves nothing physically** (D30 as clarified on 13 Oct): programs run in the controllers' SIM mode, and the pole and the hand are emulated. Drag teaching therefore needs Real, and a recording as taught never plays back on the real arms.
 - **One-command install:** `install_lite.py` clones (or updates) the private repository and runs the setup; see the README.
 - **Trajectory Viewer** (in the Operator Journey, on Home, and in Save & Review):
@@ -96,7 +96,7 @@ What is connected, screen by screen, is in [`UI_V19_CONTRACT.md`](UI_V19_CONTRAC
 
 **Not yet:**
 - Merge + Full Sequence: the custom merge with joins, the single-arm merged simulation (Simulate LEFT / RIGHT) and the real full run are still the template.
-- Robot commands: uploading, running, the pole, the hand and drag teaching on the real arms. Lite reads the arms (the live link) but commands nothing yet.
+- Robot commands: uploading, running, the pole, the hand and drag teaching on the real arms. Lite reads the arms and can STOP them (the live link), but moves nothing yet.
 - The rest of Advanced Robot Controls: uploading any file, stored and multi runs, Global Points, the arm's own drag teach.
 - Stored start poses.
 - The 3D collision check.
@@ -131,7 +131,7 @@ Legacy Lite is no longer developed; its working parts (3D robot, plots, optimise
 
 | Area | State |
 |---|---|
-| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 149 tests pass in about three minutes, with no ALIX checkout. |
+| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 150 tests pass in about three minutes, with no ALIX checkout. |
 | Cubicle walls | Done. The 1400 mm cubicle (default) and the 800 mm cubicle are in `assets/scene/cubicles/`. |
 | Motion basics (`src/alix_studio_lite/motion/`) | Implemented and smoke-tested. It covers track read/write, the 5 ms clock, the limit set from the URDF, and the hard limits L1–L6 plus checks C1–C4 on the integer bytes. L3 reads acceleration as ALIX does (20 Hz band-limited, F99c; ALIX accepts at 1.00 of 600 °/s², Lite at 1.02). |
 | Optimiser engine (`src/alix_studio_lite/optimise/`) | Implemented, smoke-tested and connected to the Lite UI's Tune + Simulation. Golden tests still to write. |

@@ -87,8 +87,8 @@ def main(argv=None) -> int:
     ap.add_argument("--set-pin", choices=("operator", "engineer"), metavar="ROLE",
                     help="change the operator or engineer PIN (asks for it twice), then exit")
     ap.add_argument("--robot", choices=("standin", "realman", "emulated"), default="standin",
-                    help="standin (default): no hardware. realman: a live read-only link to the real arms "
-                         "(feedback of arm, pole and hand; Lite commands nothing). emulated: the same link to "
+                    help="standin (default): no hardware. realman: a live link to the real arms (feedback of "
+                         "arm, pole and hand; its one command is STOP). emulated: the same link to "
                          "ALIX's emulated arms")
     a = ap.parse_args(argv)
 

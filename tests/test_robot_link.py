@@ -1,6 +1,7 @@
-"""The live read-only link to the arms (server/robot_link.py), through ALIX's own robot I/O code:
-connecting each controller, the feedback of the arm, the pole and the hand, the E-stop input
-(fail closed), and that Lite commands nothing through it (no Real robot while linked)."""
+"""The live link to the arms (server/robot_link.py), through ALIX's own robot I/O code: connecting
+each controller, the feedback of the arm, the pole and the hand, the E-stop input (fail closed),
+STOP reaching the controllers like the E-stop, and nothing else commanded (no Real robot while
+linked)."""
 import json
 import socket
 import subprocess
@@ -88,6 +89,27 @@ def test_the_estop_interlock_follows_the_arm(server):
     assert call(server, "POST", "/api/robots/left/estop-test", {"pressed": False})["estop"] == "RECOVERING"
     assert call(server, "POST", "/api/robots/left/recover", {})["estop"] == "CLEAR"
     assert call(server, "GET", "/api/robots/status")["motion_block"] is None
+
+
+def test_stop_reaches_the_controllers_and_holds_like_the_estop(server):
+    """STOP BOTH: ALIX's stop on each controller the E-stop's way (the arm, the pole, the hand
+    frozen), proven still, no log-in needed; then Lite holds both arms until Recover."""
+    r = call({"base": server["base"]}, "POST", "/api/robots/stop-both", {})
+    for side in ("left", "right"):
+        c = r["result"]["controllers"][side]
+        assert c["ok"] and c["arm"]["verb"] == "rm_set_arm_stop" and c["arm"]["ret"] == 0
+        assert c["pole"]["ok"] and c["hand"]["ok"] and c["still"]
+    assert "error" not in r and "press Recover on the LEFT and RIGHT arms" in r["message"]
+    st = call(server, "GET", "/api/robots/status")
+    assert all(st["arms"][s]["estop"] == "RECOVERING" and st["arms"][s]["stopped"] for s in ("left", "right"))
+    assert "stopped by STOP" in st["motion_block"]
+    assert all(st["arms"][s]["link"]["feedback"]["age_s"] < 1 for s in ("left", "right"))   # still reading
+    for side in ("left", "right"):
+        assert call(server, "POST", f"/api/robots/{side}/recover", {})["estop"] == "CLEAR"
+    one = call({"base": server["base"]}, "POST", "/api/robots/left/stop", {})     # one arm: the slow stop on its path
+    assert one["result"]["controllers"]["left"]["arm"]["verb"] == "rm_set_arm_slow_stop"
+    assert list(one["result"]["controllers"]) == ["left"] and one["result"]["held"] == ["left"]
+    assert call(server, "POST", "/api/robots/left/recover", {})["estop"] == "CLEAR"
 
 
 def test_an_unreachable_controller_is_refused_plainly(server):

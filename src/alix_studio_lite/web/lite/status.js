@@ -1,6 +1,6 @@
 // The live state in the top bar: the page's "FRONTEND READY · Controller backend not connected"
 // pill shows what the backend reports instead: the mode (Visual sim, Hardware sim or Real),
-// which robot is behind it (the stand-in, or a live read-only link to the arms) and any E-stop.
+// which robot is behind it (the stand-in, or a live link to the arms: read, and STOP) and any E-stop.
 
 import { get, session } from './api.js';
 
@@ -15,7 +15,7 @@ export async function liteMode() {
   return last ? last.mode : null;
 }
 // Whether robot actions go to the stand-in (until Lite's robot commands exist), and whether an
-// arm has the live read-only link: then nothing is sent to its controller.
+// arm has the live link: then nothing but STOP is sent to its controller.
 export const standIn = () => !last || last.backend === 'stand-in';
 export const linked = () => !!last && Object.values(last.arms || {}).some((a) => a.link);
 
@@ -23,7 +23,7 @@ function pillText(st) {
   if (st.motion_block) return { state: 'estop', head: 'E-STOP', text: st.motion_block };
   const arms = Object.values(st.arms || {});
   const linked = arms.filter((a) => a.connected && a.link).map((a) => a.side.toUpperCase());
-  const robot = linked.length ? `${linked.join(' + ')} live, read only`
+  const robot = linked.length ? `${linked.join(' + ')} live: read and STOP`
     : st.backend === 'stand-in' ? 'stand-in robot, no hardware' : 'robot not connected';
   return { state: st.mode, head: MODE[st.mode] || st.mode, text: robot };
 }

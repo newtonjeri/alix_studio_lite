@@ -111,6 +111,9 @@ def test_region_through_every_step(server):
     assert "stopped" in call(server, "robot/stop", {"arm": "all"})
     call(server, "robot/estop-test", {"arm": "right", "pressed": False})
     assert call(server, "robot/recover", {"arm": "right"})["estop"] == "CLEAR"
+    st = call(server, "state")["arms"]["left"]                     # STOP holds the arms, like the E-stop
+    assert st["estop"] == "RECOVERING" and st["stopped"] and "STOP" in st["estop_text"]
+    assert call(server, "robot/recover", {"arm": "left"})["estop"] == "CLEAR"
 
     # dry run completes and moves the status on; a real run needs confirmation
     job = call(server, f"unit/{key}/run", {})

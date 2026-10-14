@@ -107,7 +107,7 @@ function renderBanners(s) {
   for (const [side, a] of Object.entries(s.arms).filter(([, a]) => a.connected && a.estop !== 'CLEAR')) {
     const rec = a.estop === 'RECOVERING';
     parts.push(`<div class="banner estop" role="alert"><span>✗</span><span class="grow">
-      ${rec ? `${ARM[side]} arm: E-stop released. Recover before any motion.` :
+      ${rec ? `${ARM[side]} arm: ${a.stopped ? 'stopped by STOP' : 'E-stop released'}. Recover before any motion.` :
               `E-STOP PRESSED on the ${ARM[side]} arm. All robot motion is blocked on both arms. Make the cell safe, then release the button.`}</span>
       ${rec ? `<button class="btn" data-recover="${side}">Recover ${ARM[side]} arm</button>` : ''}</div>`);
   }

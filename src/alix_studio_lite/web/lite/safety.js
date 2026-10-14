@@ -1,5 +1,6 @@
 // STOP: every stop button of the page reaches the backend first, before any page work, and
-// needs no login (handoff sections 21.13, 21.14 and 24). The page's own stop functions still
+// needs no login (handoff sections 21.13, 21.14 and 24). It acts like the E-stop: a linked arm's
+// controller is stopped too, and the arms stay held until Recover (Robot & mode). The page's own stop functions still
 // run afterwards for their screen updates. While anything covers the top bar's STOP BOTH (the
 // log-in screen, the Project Manager, a dialog, the Trajectory Viewer), a second one, in the
 // page's own STOP style, stays on top of everything (lite.css).
@@ -18,7 +19,7 @@ export const stopArm = (side) => send(`/api/robots/${side === 'right' ? 'right' 
 function report(promise, done) {
   promise.then((d) => {
     if (d && d.error) window.toast(`${d.error} Press the red E-stop button on the robot if it is still moving.`);
-    else window.toast(done);
+    else window.toast((d && d.message) || done);
   });
 }
 

@@ -195,10 +195,16 @@ def test_estop_blocks_both_arms_and_stop_always_works(lite):
     r = unit(lite, "L-T01", "move-start", {"which": "version"})
     assert "E-stop" in r["error"]
     assert call(lite, "GET", "/api/robots/status")["motion_block"]
-    assert call(lite, "POST", "/api/robots/stop-both", {})["stopped"] == ["left", "right"]
+    r = call(lite, "POST", "/api/robots/stop-both", {})
+    assert r["stopped"] == ["left", "right"] and "press Recover" in r["message"]
+    arms = call(lite, "GET", "/api/robots/status")["arms"]          # STOP holds the arms, like the E-stop
+    assert arms["left"]["stopped"] and arms["left"]["estop"] == "RECOVERING"
+    assert not arms["right"]["stopped"] and arms["right"]["estop"] == "ENGAGED"   # the button keeps its own words
     assert "still pressed" in call(lite, "POST", "/api/robots/right/recover", {})["error"]
     call(lite, "POST", "/api/robots/right/estop-test", {"pressed": False})
     assert call(lite, "POST", "/api/robots/right/recover", {})["estop"] == "CLEAR"
+    assert "stopped by STOP" in call(lite, "GET", "/api/robots/status")["motion_block"]
+    assert call(lite, "POST", "/api/robots/left/recover", {})["estop"] == "CLEAR"
     assert wait(lite, unit(lite, "L-T01", "move-start", {"which": "version"}))["state"] == "done"
     call(lite, "POST", "/api/auth/engineer/lock", {})
 

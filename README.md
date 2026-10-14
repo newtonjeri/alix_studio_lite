@@ -69,7 +69,7 @@ alix_studio_lite/tools/run_lite.sh                # Windows: py alix_studio_lite
 A browser tab opens at **http://127.0.0.1:8766/**.
 - Log in with the operator PIN. Advanced Robot Controls ask for the engineer PIN.
 - Both PINs are **`1234`** until changed: `tools/run_lite.sh --set-pin operator`, or `--set-pin engineer`.
-- STOP BOTH always works, with or without a log-in. When a window covers the top bar (the log-in screen, the Project Manager, a dialog), a second STOP BOTH stays at the bottom left.
+- STOP BOTH always works, with or without a log-in, and acts like the E-stop: afterwards nothing moves until **Recover** (Robot & mode). When a window covers the top bar (the log-in screen, the Project Manager, a dialog), a second STOP BOTH stays at the bottom left.
 - Projects and settings live in `~/ALIX-Lite/`, outside the code, so updating never touches them.
 - A project file (`.alixproj`) from another computer brings its recordings and settings, but not its kept versions or test results: tune and keep again here before running on this robot.
 
@@ -105,11 +105,11 @@ the three devices on each side, refreshed about five times a second:
 | **Hand** (Inspire RH56) | Where its six fingers actually are (0–1000, 1000 = open). |
 | **E-stop** (IO3) | Clear, pressed, unknown, or *not configured*. IO3 must be in the controller's E-stop mode (5); RealMan's demo maps it to "continue program". |
 
-The connection is **read-only**: Lite commands nothing on the robot yet.
-- **Robot actions stay with the stand-in.** That covers runs, moves, the pole and the hand. **Real robot** is not available, so use the control program for real runs meanwhile.
-- **Lite's STOP BOTH does not stop the real arms** while they are only linked: it stops Lite's own (stand-in) work. Use the red E-stop buttons on the robot.
+The connection **reads** the arms, and its one command is **STOP**.
+- **STOP BOTH stops the real arms, like the E-stop.** Each controller gets ALIX's own stop, both at once: the arm stops the fastest way (`rm_set_arm_stop`, which drops its trajectory), the pole stops, and the hand freezes where it is. ALIX's check then proves the arm is still, including a program the control program is running. One arm's STOP (SLOW STOP in Advanced) stops that arm on its path. If a controller does not confirm, the page says so: press the red E-stop button. After any STOP, nothing moves until **Recover**, as after the E-stop. The red E-stop buttons remain the safety stop.
+- **Every other robot action stays with the stand-in.** That covers runs, moves, the pole and the hand. **Real robot** is not available, so use the control program for real runs meanwhile.
 - **The live E-stop still guards Lite.** While either arm's E-stop is not clear, every robot action in Lite is refused on both arms. After a press, motion stays blocked until **Recover**.
-- **The one setting Lite writes** is the hand port's Modbus mode, which reading the hand needs; the control program and ALIX set it the same way. Lite never writes the arm, the pole or the hand.
+- **The one setting Lite writes** is the hand port's Modbus mode, which reading the hand needs; the control program and ALIX set it the same way. Apart from STOP, Lite never commands the arm, the pole or the hand.
 - **The link needs Linux** (x86-64 or ARM): the RealMan SDK ships only for Linux. Elsewhere, Connect says so.
 
 If an arm cannot be reached, Lite says so, with its address. Check that the controller is on, the
@@ -173,7 +173,7 @@ The tests cover:
 - the Trajectory Viewer;
 - the full sequence;
 - the dark theme;
-- the read-only robot link, against ALIX's emulated arms;
+- the robot link and its STOP, against ALIX's emulated arms;
 - the fixes from the final review: sessions, the E-stop latch, kept versions used only as kept, imports, stopped tunes, the dark-theme tool.
 
 ### Where things are
@@ -183,7 +183,7 @@ The tests cover:
 | `src/alix_studio_lite/` | Lite's code. See the rows below. |
 | `src/alix_studio_lite/motion/` | Tracks, the 5 ms clock, limits and checks. |
 | `src/alix_studio_lite/optimise/` | The Default and Time-optimal optimisers. |
-| `src/alix_studio_lite/server/` | The local web server: projects, log-in, the robot stand-in and the read-only robot link (`robot_link.py`). |
+| `src/alix_studio_lite/server/` | The local web server: projects, log-in, the robot stand-in and the live robot link, which reads the arms and STOPs them (`robot_link.py`). |
 | `src/alix_studio_lite/web/` | The Lite UI: the designer's page plus `lite/`, its bridge to the backend. |
 | `src/alix_studio_lite/web_legacy/` | Legacy Lite. |
 | `vendor/alix/` | The parts of ALIX that Lite reuses, in ALIX's own layout. `vendor/MANIFEST.json` lists every file with its sha256. |

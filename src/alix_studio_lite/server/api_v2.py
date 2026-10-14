@@ -145,15 +145,24 @@ def robots_status(app, q, body, m):
 
 @route("POST", "/api/robots/stop-both")
 def stop_both(app, q, body, m):
-    """STOP: no session needed, so it works from any page state (handoff sections 21 and 24)."""
-    out = app.robot.stop("all")
-    return {"stopped": ["left", "right"], "result": out}
+    """STOP: no session needed, so it works from any page state (handoff sections 21 and 24). It
+    acts like the E-stop: linked controllers are stopped too, and the arms are held until Recover."""
+    return stop_reply(app.robot.stop("all"), ["left", "right"])
 
 
 @route("POST", r"/api/robots/(left|right)/stop")
 def stop_arm(app, q, body, m):
-    out = app.robot.stop(m.group(1))
-    return {"stopped": [m.group(1)], "result": out}
+    return stop_reply(app.robot.stop(m.group(1)), [m.group(1)])
+
+
+def stop_reply(out: dict, sides: list) -> dict:
+    """What STOP did, for the page's line; a controller that did not confirm it is an error."""
+    reply = {"stopped": sides, "result": out}
+    if out.get("text"):
+        reply["message"] = out["text"]
+    if not out.get("ok", True):
+        reply["error"] = "STOP not confirmed: " + " ".join(r["text"] + "." for r in out["controllers"].values() if not r["ok"])
+    return reply
 
 
 # ── reference data

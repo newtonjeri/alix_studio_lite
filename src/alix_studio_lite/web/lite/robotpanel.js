@@ -23,7 +23,7 @@ function liveRows(link) {
   const deg = (q) => (q ? q.map((v) => `${Number(v).toFixed(1)}°`).join(' ') : 'not read');
   const io = f.io3 && f.io3.emulated ? 'emulated (no IO)' : f.io3 && f.io3.mode != null ? `IO3 mode ${f.io3.mode}, level ${f.io3.level}` : 'IO3 not read';
   return el('div', { class: 'lite-arm-live' },
-    el('small', { text: `${link.emulated ? 'Emulated controller' : 'Controller'} ${link.ip}:${link.port} · read only · updated ${f.age_s ?? '?'} s ago` }),
+    el('small', { text: `${link.emulated ? 'Emulated controller' : 'Controller'} ${link.ip}:${link.port} · read only, but for STOP · updated ${f.age_s ?? '?'} s ago` }),
     el('small', { text: `Arm ${deg(f.joints_deg)} · errors ${f.errors ? (f.errors.length ? f.errors.join(', ') : 'none') : 'not read'} · run mode ${f.run_mode || 'not read'}` }),
     el('small', { text: `Pole ${f.pole_mm != null ? `${f.pole_mm} mm` : 'not read'} · hand ${f.hand ? f.hand.join(', ') : 'not read'} · E-stop ${io}` }));
 }
@@ -34,11 +34,11 @@ async function render() {
   const linked = Object.values(st.arms).some((a) => a.link);
   const modes = el('div', { class: 'lite-mode-choice', role: 'radiogroup', 'aria-label': 'Run mode' },
     MODES.map(([id, name, help]) => {
-      const off = linked && id === 'real';            // the server refuses it too (read-only link)
+      const off = linked && id === 'real';            // the server refuses it too (the link only reads and stops)
       return el('button', {
         class: `lite-mode-btn${st.mode === id ? ' active' : ''}`, 'data-mode': id, role: 'radio', 'aria-checked': String(st.mode === id),
         disabled: off, onclick: () => setMode(id),
-      }, el('b', { text: name }), el('small', { text: off ? 'Not available while the arms are linked read only: Lite sends nothing to the controllers yet.' : help }));
+      }, el('b', { text: name }), el('small', { text: off ? 'Not available while the arms are linked: Lite only reads them and stops them yet.' : help }));
     }));
   const arms = el('div', { class: 'lite-arm-rows' }, ['left', 'right'].map((side) => {
     const a = st.arms[side];
@@ -47,7 +47,8 @@ async function render() {
     return el('div', { class: `lite-arm-row ${side}` },
       el('div', {}, el('span', { class: `badge ${side === 'left' ? 'blue' : 'orange'}`, text: `${side.toUpperCase()} RM75` }), ip),
       el('div', { class: 'lite-arm-state' }, el('span', { class: `lite-dot ${a.connected ? 'on' : ''}` }), a.connected ? 'Connected' : 'Not connected'),
-      el('div', { class: `lite-estop ${a.estop}`, title: 'E-stop input IO3' }, `E-stop: ${ESTOP[a.estop] || a.estop}`),
+      el('div', { class: `lite-estop ${a.estop}`, title: 'E-stop input IO3' },
+        a.stopped ? 'Stopped by STOP: press Recover' : `E-stop: ${ESTOP[a.estop] || a.estop}`),
       a.connected && !a.link ? el('small', { class: 'lite-arm-readback', text: `Pole ${a.pole_mm} mm · hand ${a.hand.join(', ')}`
         + (a.faults && a.faults.length ? ` · test fault: ${a.faults.join(' and ')} will not arrive` : '') }) : null,
       el('div', { class: 'cta-row' },
@@ -59,7 +60,7 @@ async function render() {
       a.link ? liveRows(a.link) : null);
   }));
   const note = el('div', { class: `statusbar ${st.motion_block ? 'warn' : 'ok'}` },
-    st.motion_block || `${st.label}.` + (linked ? ' Robot actions stay with the stand-in: Real robot is not available yet.'
+    st.motion_block || `${st.label}.` + (linked ? ' STOP reaches the controllers; every other robot action stays with the stand-in, so Real robot is not available yet.'
       : ' The robot I/O backend is not built yet: nothing moves.'));
   body.replaceChildren(modes, arms, note);
   if (robotControlUnlocked) {

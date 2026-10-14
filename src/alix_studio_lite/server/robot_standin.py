@@ -1,13 +1,15 @@
 """A stand-in for the two arms, so every robot screen works without hardware (``run_lite``'s
-default). With ``--robot realman`` (or ``emulated``) it also holds a live, READ-ONLY link to the
-arms (robot_link.py): the panel shows their feedback and their E-stop input drives the interlock,
-but every action stays the stand-in's. Nothing here commands hardware, and every reply says so.
+default). With ``--robot realman`` (or ``emulated``) it also holds a live link to the arms
+(robot_link.py): the panel shows their feedback, their E-stop input drives the interlock, and
+STOP reaches their controllers; every other action stays the stand-in's, and every reply says so.
 
 It follows the real rules the backend must keep:
 
 - connect reads the E-stop input (IO3, mode 5) on each arm;
 - while either arm's E-stop is not CLEAR, motion is refused on BOTH arms; uploads are allowed;
-- STOP is never refused and never queued;
+- STOP is never refused and never queued. It acts like the E-stop: it reaches a linked arm's
+  controller (ALIX's stop: STOP BOTH the E-stop's way, one arm's STOP on its path), ends every
+  job and drag teaching, and holds each connected arm it stopped until Recover;
 - an E-stop press is LATCHED: released, the arm reads RECOVERING until Recover, whatever happens in
   between (a reconnect, an unreadable input); while drag teaching runs on either arm, no other
   motion starts;
@@ -65,7 +67,8 @@ class StandInArm:
         self.teaching = False
         self.teach_started = None
         self.teach_stage = None
-        self.estop_latched = False              # pressed since the last Recover (the button's manual reset)
+        self.estop_latched = False              # pressed (or STOPped) since the last Recover
+        self.stop_latched = False               # held by STOP rather than by the E-stop button
         self.button_pressed = False             # the stand-in's own button (an engineer's test)
         self._store = store
         self.programs: dict[int, dict] = {}
@@ -80,8 +83,10 @@ class StandInArm:
         self._store.write_text(json.dumps({"programs": self.programs}, indent=1), encoding="utf-8")
 
     def view(self) -> dict:
-        return dict(side=self.side, ip=self.ip, connected=self.connected, estop=self.estop,
-                    estop_text=ESTOP_TEXT[self.estop], estop_io="IO3", controller_mode=self.controller_mode,
+        by_stop = self.estop == "RECOVERING" and self.stop_latched
+        return dict(side=self.side, ip=self.ip, connected=self.connected, estop=self.estop, stopped=by_stop,
+                    estop_text="Stopped by STOP: press Recover" if by_stop else ESTOP_TEXT[self.estop],
+                    estop_io="IO3", controller_mode=self.controller_mode,
                     pole_mm=round(self.pole_mm), hand=list(self.hand), teaching=self.teaching,
                     teach_s=round(time.time() - self.teach_started, 1) if self.teaching else None)
 
@@ -151,9 +156,9 @@ class StandInRobot:
     @property
     def label(self) -> str:
         if self.link_kind == "realman":
-            return "Live link to the real arms, read only: Lite reads them and commands nothing yet"
+            return "Live link to the real arms, read only but for STOP: Lite reads them and can stop them"
         if self.link_kind == "emulated":
-            return "Live link to ALIX's emulated arms, read only (no hardware)"
+            return "Live link to ALIX's emulated arms, read only but for STOP (no hardware)"
         return "Stand-in robot (no hardware)"
 
     def _engage(self, side: str) -> None:
@@ -161,7 +166,7 @@ class StandInRobot:
         INTERRUPTED, and drag teaching stops."""
         a = self.arms[side]
         newly = a.estop != "ENGAGED"
-        a.estop, a.estop_latched = "ENGAGED", True
+        a.estop, a.estop_latched, a.stop_latched = "ENGAGED", True, False
         if newly:
             for arm in self.arms.values():
                 arm.teaching = False
@@ -211,6 +216,9 @@ class StandInRobot:
         for s in self.links:
             self._sync(s)
         for s, a in self.arms.items():
+            if a.connected and a.estop == "RECOVERING" and a.stop_latched:
+                return (f"The {s.upper()} arm was stopped by STOP. Robot motion is blocked on both arms "
+                        "until you press Recover.")
             if a.connected and a.estop != "CLEAR":
                 return (f"The {s.upper()} arm's E-stop is {ESTOP_TEXT[a.estop].lower()}. "
                         "Robot motion is blocked on both arms until it is released and recovered.")
@@ -336,19 +344,50 @@ class StandInRobot:
                                 "Lite needs IO3 readable and in the controller's E-stop mode (5) before motion.")
             if a.estop == "ENGAGED" or a.button_pressed:
                 raise UserError("The E-stop button is still pressed.", "Make the cell safe, then release the button.")
-            a.estop_latched = False
+            a.estop_latched = a.stop_latched = False
             if a.connected:
                 a.estop = "CLEAR"
         return a.view()
 
     def stop(self, side: str) -> dict:
-        """STOP: never refused. "all" and "both" mean every arm."""
+        """STOP: never refused, and it acts like the E-stop. "all" and "both" mean every arm.
+
+        A linked arm's controller gets ALIX's stop first (robot_link.ArmLink.stop), both at once:
+        STOP BOTH the E-stop's way, one arm's STOP on its path. Then Lite's jobs and drag teaching
+        end, and every connected arm stopped is held until Recover, as after an E-stop.
+        ``controllers``: what each controller confirmed; ``ok`` False when one did not."""
         every = side in ("all", "both")
-        n = self.jobs.cancel_arm("all" if every else side)
-        for s in (ARMS if every else (side,)):
-            if s in self.arms:
-                self.arms[s].teaching = False
-        return dict(stopped=n, side="all" if every else side)
+        sides = [s for s in (ARMS if every else (side,)) if s in self.arms]
+        snap = dict(self.links)
+        links = {s: snap[s] for s in sides if s in snap}
+        sent: dict = {}
+        threads = [threading.Thread(target=lambda s=s, l=l: sent.__setitem__(s, l.stop(hard=every)),
+                                    name=f"lite-stop-{s}", daemon=True) for s, l in links.items()]
+        for t in threads:
+            t.start()
+        with self.lock:
+            n = self.jobs.cancel_arm("all" if every else side)
+            held = []
+            for s in sides:
+                a = self.arms[s]
+                a.teaching = False
+                if a.connected:
+                    held_by_button = a.estop == "ENGAGED" or (a.estop == "RECOVERING" and not a.stop_latched)
+                    a.estop_latched = True
+                    a.stop_latched = a.stop_latched or not held_by_button   # an E-stop press keeps its own words
+                    if a.estop == "CLEAR":
+                        a.estop = "RECOVERING"
+                    held.append(s)
+        for t in threads:
+            t.join(timeout=5.0)
+        for s in links:
+            sent.setdefault(s, dict(ok=False, text=f"{s.upper()}: no answer from its controller within 5 s"))
+        ok = all(r["ok"] for r in sent.values())
+        names = " and ".join(x.upper() for x in held)
+        text = " ".join(sent[s]["text"] + "." for s in ARMS if s in sent) + (
+            f" Nothing moves until you press Recover on the {names} arm{'s' if len(held) > 1 else ''} (Robot & mode)."
+            if held else "")
+        return dict(stopped=n, side="all" if every else side, controllers=sent, ok=ok, held=held, text=text.strip())
 
     # ── staging: pole, then hand, each read back; nothing moves the arm unless both arrived
     def set_fault(self, side: str, pole: bool | None = None, hand: bool | None = None) -> dict:

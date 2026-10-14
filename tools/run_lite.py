@@ -4,7 +4,7 @@
     python3 tools/run_lite.py                 # opens the Lite UI at http://127.0.0.1:8766/
     python3 tools/run_lite.py --ui legacy     # opens Legacy Lite at http://127.0.0.1:8766/legacy/
     python3 tools/run_lite.py --no-browser
-    python3 tools/run_lite.py --robot realman    # connect to the real arms and show their feedback (read only)
+    python3 tools/run_lite.py --robot realman    # connect to the real arms: their feedback, and STOP
     python3 tools/run_lite.py --port 8800
     python3 tools/run_lite.py --fixture commode_b      # Legacy Lite: commode_a | commode_b | commode_c | urinal_a | washtub_a
     python3 tools/run_lite.py --set-pin operator       # change the operator (or engineer) PIN, then exit
@@ -76,8 +76,8 @@ def main(argv=None) -> int:
     if not known.set_pin:
         print(f"ALIX Studio Lite  ->  http://127.0.0.1:{known.port}/", flush=True)
         robot = known.robot
-        print({"realman": "Robot: live read-only link to the real arms -- Lite reads them, commands nothing.",
-               "emulated": "Robot: live read-only link to ALIX's emulated arms -- no hardware."}.get(
+        print({"realman": "Robot: live link to the real arms -- Lite reads them and can STOP them; it moves nothing.",
+               "emulated": "Robot: live link to ALIX's emulated arms (read, and STOP) -- no hardware."}.get(
             robot, "Robot: stand-in (no hardware) -- the robot screens work, nothing moves."), flush=True)
     from alix_studio_lite import server
 

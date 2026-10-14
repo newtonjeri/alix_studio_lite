@@ -31,7 +31,7 @@ async function refresh() {
     const linked = Object.values(st.arms || {}).some((a) => a.link);
     note.className = cls;
     note.textContent = st.mode === 'visual' || st.backend !== 'stand-in' ? text
-      : `${text} ${linked ? 'The arms are linked read only: Upload, Move to Start and Run go to the stand-in robot, and nothing is sent to the controllers.'
+      : `${text} ${linked ? 'The arms are linked for reading and STOP only: Upload, Move to Start and Run go to the stand-in robot, and nothing else is sent to the controllers.'
         : 'The robot is the stand-in: nothing is sent to a controller.'}`;
   }
   const v = u.versions[u.versions.length - 1];
