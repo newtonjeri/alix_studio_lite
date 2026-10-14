@@ -37,7 +37,7 @@ from .project import DEFAULT_SETTINGS, Project, _atomic_write, _read_json, libra
 
 #: the page's processing switches and the time mode; smoothing 41 lines is R11's Standard
 LITE_DEFAULTS = dict(DEFAULT_SETTINGS, trim=True, smooth=True, smooth_window=41, scale=True, cuts=[],
-                     time_mode="natural")
+                     time_mode="natural", idle_window=11, idle_threshold_md=8.0, idle_min_run=20)   # the processor's trim
 TIME_MODES = ("natural", "target", "fastest")
 
 
@@ -92,8 +92,13 @@ class LiteUnits(Project):
         """The region whose recording already has ``name`` (any case), ``skip`` = (key, file) aside."""
         want = Path(str(name)).name.strip().casefold()
         for k, u in self.units.items():
-            if (self.root / "trajectories" / u["arm"] / k / "raw").is_dir():
+            d = self.root / "trajectories" / u["arm"] / k
+            if (d / "raw").is_dir():
                 if any((k, r["file"]) != skip and r["name"].casefold() == want for r in self.recordings(k)):
+                    return k
+            if (d / "versions").is_dir():                   # the tuned files kept under a name too
+                if any((k, f"version:{v['version']}") != skip and (v.get("name") or "").casefold() == want
+                       for v in self.versions(k)):
                     return k
         return None
 
@@ -236,7 +241,30 @@ class LiteUnits(Project):
         for v in out:
             extra = _read_json(Path(v["path"]).with_name(Path(v["path"]).stem + ".extra.json"), {})
             v["taught_arm"], v["stage"] = extra.get("taught_arm"), extra.get("stage")
+            v["name"] = extra.get("name")                 # the tuned file's name (V32's Save Tuned File As…)
         return out
+
+    def name_version(self, key: str, version: str, name: str) -> dict:
+        """Names a kept version (V32's "Save Tuned File As…"): one name per file in a project, as
+        for the recordings."""
+        name = Path(str(name)).name.strip()[:120]
+        if not name:
+            raise UserError("A file name is needed.")
+        if not name.lower().endswith(".txt"):
+            name += ".txt"
+        with self.lock:
+            ver = next((v for v in self.versions(key) if v["version"] == version), None)
+            if ver is None:
+                raise UserError(f"There is no version {version} of {key}.")
+            owner = self.name_owner(name, skip=(key, f"version:{version}"))
+            if owner:
+                raise UserError(f"{self.taken_text(name, owner)}.", "Every file name in a project is used once: "
+                                "choose another name.", code="name")
+            extra = Path(ver["path"]).with_name(Path(ver["path"]).stem + ".extra.json")
+            d = _read_json(extra, {})
+            d["name"] = name
+            _atomic_write(extra, json.dumps(d, indent=1))
+            return next(v for v in self.versions(key) if v["version"] == version)
 
     def rename_recording(self, key: str, file: str, name: str) -> None:
         name = Path(str(name)).name.strip()[:120]

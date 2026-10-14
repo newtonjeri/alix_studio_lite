@@ -472,12 +472,26 @@ def _check_settings(changes: dict) -> dict:
             v |= 1                                               # the prototype's windows are odd
         elif k in ("trim", "smooth", "scale"):
             v = bool(v)
+        elif k == "idle_window":                                  # the processor's trim (its Setup step)
+            v = int(v)
+            if not 3 <= v <= 201:
+                raise UserError("The idle rolling window is 3 to 201 lines.")
+            v |= 1
+        elif k == "idle_threshold_md":
+            v = round(float(v), 3)
+            if not 0 <= v <= 1000:
+                raise UserError("The idle threshold is 0 to 1,000 counts per line.")
+        elif k == "idle_min_run":
+            v = int(v)
+            if not 1 <= v <= 20000:
+                raise UserError("The minimum idle run is 1 to 20,000 lines.")
         elif k in ("segments", "cuts"):
             rows = []
             for r in v or []:
                 a, b = int(r["start"]), int(r["end"])
-                if a < 1 or b < a:
-                    raise UserError("A region needs a start row of 1 or more and an end row after it.")
+                if a < 1 or b <= a:                              # as the processor: two different rows at least
+                    raise UserError(f"Rows {a}–{b} are not a region: it needs a start row of 1 or more and an end "
+                                    "row after it.")
                 row = dict(start=a, end=b)
                 if k == "segments":
                     pct = float(r["pct"])
@@ -601,11 +615,63 @@ def post_keep(app, q, body, m):
                             " ".join((result.get("hints") or [])[:2])
                             or "See the limits under the results, then change the tuning and re-run the simulation.")
         ver = units.current_version(key)
+        name = str(body.get("name") or "").strip()                    # V32's "Save Tuned File As…"
         if (ver and ver.get("sha256") == made.get("track_sha256")
                 and ver.get("taught_arm") == info["taught_arm"] and staging.same_stage(ver.get("stage"), info["stage"])):
+            if name and name != ver.get("name"):
+                units.name_version(key, ver["version"], name)        # already kept: it gets the name
             return unit_view(app, units, key)                        # already kept, with this arm and stage
-        units.save_candidate(key)
+        if name:
+            owner = units.name_owner(name if name.lower().endswith(".txt") else name + ".txt")
+            if owner:                                                # refused before anything is kept
+                raise UserError(f"{units.taken_text(name, owner)}.", "Every file name in a project is used once: "
+                                "choose another name.", code="name")
+        ver = units.save_candidate(key)
+        if name:
+            units.name_version(key, ver["version"], name)
     return unit_view(app, units, key)
+
+
+@route("GET", U + "/analysis")
+def get_analysis(app, q, body, m):
+    """Tune's automatic optimisation (its Analyze step): the Trajectory V2 processor's review regions
+    of the active recording, each with a suggested time % (optimise/analysis.py)."""
+    from ..motion import track
+    from ..optimise.analysis import analyse
+
+    units, key = units_of(app, m.group(1)), m.group(2)
+    _unit(units, key)
+    raw = units.current_recording(key)
+    if raw is None:
+        raise UserError("There is no recording to analyse yet.", "Record the region, or load a file.")
+    out = analyse(track.read_md(raw))
+    out["file"] = _name_of(units, key, raw)
+    return out
+
+
+@route("GET", U + "/file")
+def get_file(app, q, body, m):
+    """A step's file as it is on disk (``which``: raw | candidate | version), to save on this
+    computer: the processor's "Download processed TXT"."""
+    from .app import RawResponse
+
+    units, key = units_of(app, m.group(1)), m.group(2)
+    _unit(units, key)
+    which = (q.get("which") or ["candidate"])[0]
+    if which == "raw":
+        path = units.current_recording(key)
+        name = _name_of(units, key, path) if path else None
+    elif which == "candidate":
+        path, name = units.candidate_path(key), f"{key}_tuned.txt"
+    elif which == "version":
+        ver = units.current_version(key)
+        path = Path(ver["path"]) if ver else None
+        name = ver and (ver.get("name") or f"{key}_{ver['version']}.txt")
+    else:
+        raise UserError("Say which file: raw, candidate or version.")
+    if path is None or not path.is_file():
+        raise UserError("That file is not there yet.", "Record, tune or keep it first.")
+    return RawResponse(path.read_bytes(), "text/plain; charset=utf-8", name)
 
 
 # ── robot steps (Hardware sim or Real only)

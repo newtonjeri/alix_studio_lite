@@ -70,9 +70,13 @@ def request_kwargs(settings: dict) -> dict:
               target_s=settings.get("target_s") if mode == "target" else None, natural=mode == "natural",
               cuts=tuple((int(c["start"]), int(c["end"])) for c in (settings.get("cuts") or []) if trim))
     if opt == "default":
-        window = (int(settings.get("smooth_window") or DefaultOptions().smooth_window)
+        base = DefaultOptions()
+        window = (int(settings.get("smooth_window") or base.smooth_window)
                   if settings.get("smooth", True) else 0)
-        kw["default"] = replace(DefaultOptions(), trim=bool(trim), smooth_window=window)
+        kw["default"] = replace(base, trim=bool(trim), smooth_window=window,     # the processor's trim settings
+                                idle_window=int(settings.get("idle_window") or base.idle_window) | 1,
+                                idle_threshold_md=float(settings.get("idle_threshold_md", base.idle_threshold_md)),
+                                idle_min_run=int(settings.get("idle_min_run") or base.idle_min_run))
     return kw
 
 

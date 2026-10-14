@@ -245,12 +245,14 @@ function syncScrub(t = null) {
   if (document.activeElement !== sc) sc.value = String(Math.round((t ?? 0) * 1000));
 }
 
-function placePlayhead(row) {
-  const ph = document.getElementById('simPlotPlayhead');
-  if (!ph) return;
-  const x = 800 * (row - 1) / Math.max(1, activeTrajectoryRows - 1);
-  ph.setAttribute('x1', String(x));
-  ph.setAttribute('x2', String(x));
+// The moment on the plots: Tune draws it (its plots zoom and pan, so the page's own playhead, drawn
+// for its picture of a plot, no longer lines up). `fn(line, row)`: the file's line and the
+// recording's row at that line (the same for the recording itself), both 1-based.
+let playheadTo = null;
+export function onPlayhead(fn) { playheadTo = fn; }
+
+function placePlayhead(row, line = row) {
+  if (playheadTo) playheadTo(line, row);
 }
 
 export function installSim() {
@@ -265,7 +267,7 @@ export function installSim() {
     if (!sim.tl) return;
     const line = Math.round(Math.min(simElapsedSec, duration()) / CYCLE_S);
     showLine(line);
-    placePlayhead(rowAt(line + 1));
+    placePlayhead(rowAt(line + 1), line + 1);
     syncScrub(Math.min(simElapsedSec, duration()));
   };
 
@@ -273,7 +275,7 @@ export function installSim() {
   window.resetSimulationPlayback = function resetSimulationPlayback(showToast = true) {
     pageReset(showToast);
     rewind();
-    if (sim.tl) placePlayhead(rowAt(1));
+    if (sim.tl) placePlayhead(rowAt(1), 1);
     syncScrub(0);
   };
 
@@ -307,7 +309,7 @@ export function installSim() {
     if (action === 'stop' && sim.tl && sim.staged) {
       const line = Math.round(Math.min(simElapsedSec, duration()) / CYCLE_S);
       showLine(line);
-      placePlayhead(rowAt(line + 1));
+      placePlayhead(rowAt(line + 1), line + 1);
     }
   };
 
@@ -327,7 +329,7 @@ export function installSim() {
       sim.staged = true;                                   // Start goes on from here, without the staging again
       const line = Math.round(t / CYCLE_S);
       showLine(line);
-      placePlayhead(rowAt(line + 1));
+      placePlayhead(rowAt(line + 1), line + 1);
       const timer = document.getElementById('simRunTimer');
       if (timer) timer.textContent = fmt(t);
     });

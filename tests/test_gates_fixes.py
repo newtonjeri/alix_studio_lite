@@ -405,3 +405,36 @@ def test_a_recordings_hand_can_change_after_teaching_but_never_its_pole(lite):
     assert not v["fresh"]                                                   # tuned again before it is kept
     src = work_dir(lite, key).parent / "raw" / Path(u["active"]).with_suffix(".source.json").name
     assert json.loads(src.read_text())["stage_history"][0]["was"]["hand"] == [0, 0, 0, 0, 150, 1000]
+
+
+def test_tune_has_the_processors_analysis_trim_settings_and_named_tuned_files(lite):
+    """Tune as the Trajectory V2 processor (the owner, 14 Oct): its automatic analysis of the active
+    recording, its trim settings reaching the optimiser, no one-row region, and the tuned file kept
+    under a name of the project's own (one name per file) and saved to this computer as it is."""
+    from alix_studio_lite.optimise.analysis import analyse
+
+    key = "L-R01"
+    u = load(lite, key, "FILE_09.txt", "L_hinge.txt", 140, "100% open", lines=1200)
+    a = call(lite, "GET", f"/api/projects/{lite['pid']}/units/{key}/analysis")
+    assert a["file"] == "L_hinge.txt" and a["lines"] == 1200 and len(a["regions"]) == 5
+    assert [r["start"] for r in a["regions"]][0] == 1 and a["regions"][-1]["end"] == 1200
+    assert a["regions"][0]["scale_pct"] == 75 and a["regions"][0]["motion_type"] == "Approach candidate"
+    assert len(analyse([[0] * 7] * 10)["regions"]) == 5
+
+    r = unit(lite, key, "settings", {"changes": {"idle_window": 14, "idle_threshold_md": 6, "idle_min_run": 30}})
+    assert {k: r["settings_view"]["settings"][k] for k in ("idle_window", "idle_threshold_md", "idle_min_run")} == \
+        {"idle_window": 15, "idle_threshold_md": 6.0, "idle_min_run": 30}
+    assert "not a region" in unit(lite, key, "settings", {"changes": {"segments": [{"start": 9, "end": 9, "pct": 80}]}})["error"]
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
+    assert lite["pool"].calls[-1]["settings"]["idle_window"] == 15
+
+    assert "already the name" in unit(lite, key, "keep", {"name": "L_hinge"})["error"]      # the recording's name
+    v = unit(lite, key, "keep", {"name": "L_hinge_TUNED"})
+    assert v["versions"][-1]["name"] == "L_hinge_TUNED.txt"
+    assert "already the name" in unit(lite, key, "name", {"name": "L_hinge_TUNED.txt"})["error"]
+    req = urllib.request.Request(f"{lite['base']}/api/projects/{lite['pid']}/units/{key}/file?which=version",
+                                 headers={"X-Lite-Token": lite["tok"]})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        body, disp = resp.read(), resp.headers.get("Content-Disposition", "")
+    kept = work_dir(lite, key).parent / "versions" / v["versions"][-1]["file"]
+    assert body == kept.read_bytes() and "L_hinge_TUNED.txt" in disp
