@@ -197,6 +197,23 @@ class CheckReport:
                 "notes": list(self.notes)}
 
 
+def failures_text(report: dict | None) -> str:
+    """The hard limits a report (``CheckReport.to_dict()``) fails, worded as the Tune page shows
+    them (tune.js fmtCheck): e.g. "L5 Path accuracy 6.20 mm (limit 5 mm)". Empty if none."""
+    out = []
+    for c in (report or {}).get("checks") or []:
+        if not (c.get("hard") and c.get("passed") is False):
+            continue
+        v, lim, unit = c.get("value"), c.get("limit"), c.get("unit") or ""
+        if v is None:
+            out.append(f"{c['id']} {c['name']}" + (f" ({c['detail']})" if c.get("detail") else ""))
+            continue
+        u = f" {unit}" if unit else ""
+        out.append(f"{c['id']} {c['name']} {round(v) if abs(v) >= 100 else f'{v:.2f}'}{u}"
+                   + (f" (limit {lim:g}{u})" if lim is not None else ""))
+    return "; ".join(out)
+
+
 def _fmt(x: float, nd: int = 2) -> float:
     return float(round(float(x), nd))
 

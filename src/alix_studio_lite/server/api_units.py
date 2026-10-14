@@ -565,6 +565,8 @@ def _discard(tmp: Path) -> None:
 def post_keep(app, q, body, m):
     """Keep the tuned candidate as the version to upload: only when every hard limit passes and
     it was made from the current settings and recording."""
+    from ..motion.checks import failures_text
+
     units, key = units_of(app, m.group(1)), m.group(2)
     _unit(units, key)
     cand, rec, extra_path = _candidate_files(units, key)
@@ -575,12 +577,16 @@ def post_keep(app, q, body, m):
             raise UserError("The settings or the recording changed after the last tuning.",
                             "Re-run the simulation first.")
         info = identity(units, key, "candidate")  # the tuned file's arm and stage are known and right
-        result = (_read(rec) or {}).get("result") or {}
-        if not result.get("uploadable"):
-            raise UserError("This trajectory does not pass every limit, so it cannot go to the robot.",
-                            "Follow the hint under the results, then re-run the simulation.")
+        made = _read(rec) or {}
+        result = made.get("result") or {}
+        if not result.get("uploadable"):        # say which limits, and the optimiser's own hints
+            failed = failures_text(made.get("checks"))
+            raise UserError("This trajectory does not pass every limit, so it cannot go to the robot"
+                            + (f": {failed}." if failed else "."),
+                            " ".join((result.get("hints") or [])[:2])
+                            or "See the limits under the results, then change the tuning and re-run the simulation.")
         ver = units.current_version(key)
-        if (ver and ver.get("sha256") == (_read(rec) or {}).get("track_sha256")
+        if (ver and ver.get("sha256") == made.get("track_sha256")
                 and ver.get("taught_arm") == info["taught_arm"] and staging.same_stage(ver.get("stage"), info["stage"])):
             return unit_view(app, units, key)                        # already kept, with this arm and stage
         units.save_candidate(key)

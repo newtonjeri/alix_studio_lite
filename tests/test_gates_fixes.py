@@ -32,6 +32,7 @@ class FakePool:
         self.gate = threading.Event()
         self.gate.set()
         self.calls, self.threads = [], []
+        self.fail = None             # a hard check (CheckReport.to_dict() form) the tune fails
 
     def submit(self, fn, raw_path, out_path, side, settings):
         self.calls.append(dict(raw=raw_path, out=out_path, side=side, settings=dict(settings)))
@@ -43,10 +44,13 @@ class FakePool:
             out = Path(out_path)
             shutil.copyfile(raw_path, out)
             sha = hashlib.sha256(out.read_bytes()).hexdigest()
+            fail = self.fail
+            checks = dict(passed=False, checks=[fail], notes=[]) if fail else {}
+            result = dict(uploadable=not fail, optimiser="default", lines=2, achieved_s=0.005,
+                          hints=["Lower the smoothing window to 31."] if fail else [])
             out.with_name(out.stem + ".lite.json").write_text(json.dumps(dict(
-                track_sha256=sha, recipe=dict(origin=str(raw_path)),
-                result=dict(uploadable=True, optimiser="default", lines=2, achieved_s=0.005))))
-            fut.set_result(dict(summary=dict(message="fake tune", uploadable=True), checks={}, recipe={},
+                track_sha256=sha, recipe=dict(origin=str(raw_path)), result=result, **({"checks": checks} if fail else {}))))
+            fut.set_result(dict(summary=dict(result, message="fake tune"), checks=checks, recipe={},
                                 util=None, progress=None))
 
         t = threading.Thread(target=work, daemon=True)
@@ -352,3 +356,22 @@ def test_a_stage_that_is_not_valid_can_be_stated(tmp_path):
     assert next(r for r in units.recordings("L-R01") if r["file"] == dst.name)["stage"]["pole_mm"] == 150
     with pytest.raises(UserError, match="cannot change"):
         units.set_recording_stage("L-R01", dst.name, staging.make_stage(50, "GRIP"))
+
+
+def test_a_refused_keep_names_the_limits_and_the_log_says_what_each_tune_came_to(lite):
+    """The lab (14 Oct): Keep was refused six times, never saying which limit failed. The refusal
+    names the failing limits with the optimiser's hint, and the log says what each tune came to."""
+    key = "L-T01"
+    lite["pool"].fail = dict(id="L5", name="Path accuracy", hard=True, passed=False, value=6.2, limit=5.0,
+                             unit="mm", detail="max departure 6.2 mm around line 1230")
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
+    r = unit(lite, key, "keep", {})
+    assert r["error"].endswith("cannot go to the robot: L5 Path accuracy 6.20 mm (limit 5 mm).")
+    assert r["hint"] == "Lower the smoothing window to 31."
+    lite["pool"].fail = None
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
+    assert "error" not in unit(lite, key, "keep", {})
+    day = next((lite["data"] / "logs").iterdir())
+    tunes = [json.loads(x) for x in (day / "activity.jsonl").read_text().splitlines() if '"job optimise' in x]
+    assert [t["detail"]["outcome"] for t in tunes] == ["fails L5 Path accuracy 6.20 mm (limit 5 mm)", "passes every limit"]
+    assert "(fails L5 Path accuracy 6.20 mm (limit 5 mm))" in (day / "lite.log").read_text()

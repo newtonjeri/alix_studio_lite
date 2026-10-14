@@ -107,10 +107,20 @@ class LiteApp:
                 pass
 
     def _job_ended(self, job) -> None:
-        """Every job's end goes to the log; a robot job that failed is a hardware alert too."""
+        """Every job's end goes to the log; a robot job that failed is a hardware alert too. A
+        tune's says what it came to, so a Keep it refused is explained in the log."""
         v = job.view()
-        self.log.activity(f"job {job.kind} {v['state']}: {job.title}", detail=dict(id=job.id, unit=job.unit, arm=job.arm,
-                          elapsed_s=v["elapsed_s"]), ok=v["state"] != "failed", error=v["error"])
+        detail, came = dict(id=job.id, unit=job.unit, arm=job.arm, elapsed_s=v["elapsed_s"]), ""
+        res = v.get("result") if isinstance(v.get("result"), dict) else {}
+        if job.kind == "optimise" and isinstance(res.get("summary"), dict):
+            from ..motion.checks import failures_text
+
+            s = res["summary"]
+            came = ("passes every limit" if s.get("uploadable")
+                    else "fails " + (failures_text(res.get("checks")) or "a limit"))
+            detail.update(optimiser=s.get("optimiser"), achieved_s=s.get("achieved_s"), outcome=came)
+        self.log.activity(f"job {job.kind} {v['state']}: {job.title}" + (f" ({came})" if came else ""), detail=detail,
+                          ok=v["state"] != "failed", error=v["error"])
         if v["state"] == "failed" and job.kind in ROBOT_JOB_KINDS:
             self.log.alert("error", f"{job.title}: {v['error']}", hint=v["hint"], side=job.arm, source=job.kind)
 
