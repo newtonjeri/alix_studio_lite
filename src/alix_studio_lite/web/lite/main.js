@@ -47,5 +47,5 @@ installAdvanced();
 installViewer();          // taught .txt files: upload, check, replay in 3D
 installSequence();        // Merge + Full Sequence: the full simulation in 3D, each arm step staged
 installPictures();        // the single-arm merged simulation in 3D; the page's own region images elsewhere
-installActivity();        // last: logs the page's own steps (view, stage, task, arm, windows)
+installActivity();        // last: the page's audit trail goes to the server, its Activity Logs page reads it
 document.documentElement.dataset.lite = 'ready';

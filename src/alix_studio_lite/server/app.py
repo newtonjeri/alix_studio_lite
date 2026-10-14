@@ -53,7 +53,7 @@ CODE_ID = code_id()                      # the code this server runs, as loaded 
 #: jobs that drive the robot: their failures are hardware alerts (the page shows them, bottom right)
 ROBOT_JOB_KINDS = ("run", "prepare", "teach", "move", "playback", "pole", "hand", "stage", "upload")
 #: the only /api/ requests without the session: logging in and out, and STOP (never refused)
-OPEN_ROUTES = re.compile(r"^/api/(auth/login|auth/logout|robots/stop-both|robots/(left|right)/stop|lite/robot/stop|lite/hello)$")
+OPEN_ROUTES = re.compile(r"^/api/(auth/login|auth/logout|robots/stop-both|robots/(left|right)/stop|lite/robot/stop|lite/hello|audit)$")
 MODE_TEXT = {"visual": "Visual sim: the 3D robot moves, no hardware",
              "hwsim": "Hardware sim: nothing moves (the controllers' SIM mode; pole and hand emulated)",
              "real": "Real robot: the arms, the pole and the hand move"}
@@ -905,7 +905,7 @@ class Handler(BaseHTTPRequestHandler):
                 except Exception:                                   # noqa: BLE001
                     traceback.print_exc()
                     out = err = {"error": "Something went wrong on the server.", "hint": "Details are in the terminal."}
-                if method != "GET" and url.path != "/api/activity":       # every change, and every refusal
+                if method != "GET" and url.path not in ("/api/activity", "/api/audit"):   # every change and refusal (those two log themselves)
                     autosave = method == "PUT" and url.path.startswith("/api/projects/")   # the whole project, often
                     self.app.log.activity(f"{method} {url.path}", who=self._who(), detail=None if autosave else body,
                                           ok=err is None, error=err and err["error"])

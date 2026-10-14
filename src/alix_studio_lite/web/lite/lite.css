@@ -36,6 +36,9 @@
 @media (max-width: 1200px) {
   .topbar .brand > div:not(.logo) { display: none; }
 }
+/* The content column keeps to the screen: a wide table (Activity Logs: 1,780 px) scrolls in its own
+   box instead of widening the whole page past the window. */
+.shell > .main { min-width: 0; }
 
 /* Status pill: it opens Robot & mode */
 .topbar .mode-pill { cursor: pointer; }

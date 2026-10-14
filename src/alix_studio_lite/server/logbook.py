@@ -106,6 +106,25 @@ class Logbook:
         cut = time.time() - since_s
         return [a for a in list(self.alerts) if a["at"] >= cut]
 
+    def records(self, stream: str, t0: float, t1: float) -> list[dict]:
+        """A stream's records with ``t0 <= t <= t1``, oldest first (the day folders in between)."""
+        out = []
+        day, last = time.strftime("%Y-%m-%d", time.localtime(t0)), time.strftime("%Y-%m-%d", time.localtime(t1))
+        for d in sorted(x for x in (self.root.iterdir() if self.root.is_dir() else []) if x.is_dir() and day <= x.name <= last):
+            try:
+                lines = (d / f"{stream}.jsonl").read_text(encoding="utf-8").splitlines()
+            except OSError:
+                continue
+            for line in lines:
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                if t0 <= float(r.get("t") or 0) <= t1:
+                    out.append(r)
+        out.sort(key=lambda r: r["t"])
+        return out
+
     def hw_logger(self, side: str | None, prefix: str = ""):
         """A ``log=`` callable for ALIX's functions: each line they print goes to the hardware log."""
         def log(*parts):

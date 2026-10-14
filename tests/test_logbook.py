@@ -101,3 +101,27 @@ def test_the_unit_is_logged_twice_a_second(lite):
     assert len(recs) >= 2 and recs[-1]["t"] - recs[-2]["t"] < 0.8
     arm = recs[-1]["arms"]["left"]
     assert {"pole_mm", "hand", "estop"} <= set(arm) and len(arm["hand"]) == 6
+
+
+def test_the_activity_logs_page_reads_the_servers_record(lite):
+    """V32's Activity Logs: the page's own events are kept by the server (no session needed: its
+    log-in screen logs too), and the page's table reads them back with every request, job and
+    controller record, as V32's rows."""
+    page = {"id": "log_t1", "timestamp": "2026-10-14T08:00:00.000Z", "user": "Unauthenticated", "sessionId": "session_t",
+            "page": "login", "category": "auth", "event": "Operator login attempt", "details": "x" * 900, "result": "error"}
+    anon = {k: v for k, v in lite.items() if k != "tok"}
+    assert call(anon, "POST", "/api/audit", {"events": [page, "not a row"]})["kept"] == 1
+    assert call(anon, "GET", "/api/logs")["code"] == "login"                    # reading needs the session
+    rows = call(lite, "GET", f"/api/logs?from={time.time() - 3600}")["events"]
+    mine = next(r for r in rows if r["id"] == "log_t1")
+    assert mine["category"] == "AUTH" and mine["result"] == "ERROR" and len(mine["details"]) == 400
+    assert mine["source"] == "FRONTEND" and mine["timestamp"] == page["timestamp"]
+    backend = [r for r in rows if r["source"] == "BACKEND"]
+    login = next(r for r in backend if r["event"] == "POST /api/auth/engineer" and r["result"] == "SUCCESS")
+    assert login["category"] == "AUTH" and login["user"] == "Engineer"
+    assert any(r["event"] == "POST /api/auth/engineer" and r["result"] == "WARNING" for r in backend)   # the wrong PIN
+    assert any(r["event"].startswith("job stage failed") and r["result"] == "ERROR" for r in backend)
+    robot = [r for r in rows if r["source"] == "ROBOT"]
+    assert any(r["event"] == "ALERT ERROR" and r["category"] == "SAFETY" and r["arm"] == "left" for r in robot)
+    assert [r["timestamp"] for r in rows] == sorted(r["timestamp"] for r in rows)
+    assert not any("1234" in json.dumps(r) or "0000" in json.dumps(r) for r in rows)
