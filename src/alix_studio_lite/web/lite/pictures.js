@@ -22,7 +22,7 @@
 
 import { get, say, session } from './api.js';
 import { ctx, el, loadUnit, step, unitUrl } from './ctx.js';
-import { PATH_LAYERS, css } from './three_scene.js';
+import { PATH_LAYERS, css, webglFail } from './three_scene.js';
 import { ensure3D, pictureHas, release, scene, sim, unload } from './sim.js';
 
 const $ = (id) => document.getElementById(id);
@@ -82,7 +82,7 @@ function say3d(host, state, chip = '', title = '') {
   const c = host.querySelector(':scope > .lite-pic-chip');
   if (c) { c.textContent = chip; c.title = title || chip; c.hidden = !chip; }
   const m = host.querySelector(':scope > .lite-pic-msg');
-  if (m && state === 'loading') m.textContent = 'Loading the 3D view…';
+  if (m && state === 'loading') { m.classList.remove('webgl-fail'); m.textContent = 'Loading the 3D view…'; }
 }
 
 // ── what is on screen
@@ -128,10 +128,12 @@ async function refresh() {
     else await showCards(my, want === 'cards');
   } catch (err) {
     if (my !== pic.token) return;
+    const noGl = err && err.code === 'webgl';
     for (const h of hosts) {
-      say3d(h, 'failed', 'The 3D view could not start.', say(err));
+      say3d(h, 'failed', noGl ? '3-D view unavailable' : 'The 3D view could not start.', say(err));
       const m = h && h.querySelector(':scope > .lite-pic-msg');
-      if (m) m.textContent = `The 3D view could not start: ${say(err)}`;
+      if (m && noGl) webglFail(m);                            // ALIX Studio's notice, with its fixes
+      else if (m) m.textContent = `The 3D view could not start: ${say(err)}`;
     }
   }
 }

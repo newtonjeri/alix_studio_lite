@@ -4,7 +4,7 @@
     python3 tools/run_lite.py                 # opens the Lite UI at http://127.0.0.1:8766/
     python3 tools/run_lite.py --ui legacy     # opens Legacy Lite at http://127.0.0.1:8766/legacy/
     python3 tools/run_lite.py --no-browser
-    python3 tools/run_lite.py --robot realman    # connect to the real arms: their feedback, and STOP
+    python3 tools/run_lite.py --robot realman    # the real arms: feedback, staging, teaching, upload, runs, STOP
     python3 tools/run_lite.py --port 8800
     python3 tools/run_lite.py --fixture commode_b      # Legacy Lite: commode_a | commode_b | commode_c | urinal_a | washtub_a
     python3 tools/run_lite.py --set-pin operator       # change the operator (or engineer) PIN, then exit
@@ -14,8 +14,9 @@ launcher then runs inside that environment (``.venv`` in this folder) by itself:
 
 Lite uses port 8766, so it can run beside ALIX Studio (8765). Data lives in ``~/ALIX-Lite``
 (``--data``), outside this folder: the Lite UI's projects in ``projects/``, Legacy Lite's in
-``legacy/projects/``. Until the robot I/O backend is built (docs/STATUS.md), the robot is a
-stand-in: every robot screen works and nothing moves.
+``legacy/projects/``; the logs in ``Resources/Logs`` (``--logs``). Without ``--robot`` the robot is a
+stand-in: every robot screen works and nothing moves. The page opens in a Chrome window of Lite's
+own (``--no-browser`` to open it yourself), which shows the 3D even where the graphics run in software.
 """
 from __future__ import annotations
 
@@ -76,8 +77,9 @@ def main(argv=None) -> int:
     if not known.set_pin:
         print(f"ALIX Studio Lite  ->  http://127.0.0.1:{known.port}/", flush=True)
         robot = known.robot
-        print({"realman": "Robot: live link to the real arms -- Lite reads them and can STOP them; it moves nothing.",
-               "emulated": "Robot: live link to ALIX's emulated arms (read, and STOP) -- no hardware."}.get(
+        print({"realman": "Robot: the real arms -- Lite reads them, stages the pole and hand, drag-teaches, uploads, "
+                          "runs (Real or Hardware sim) and STOPs them.",
+               "emulated": "Robot: ALIX's emulated arms -- the same link and commands, no hardware."}.get(
             robot, "Robot: stand-in (no hardware) -- the robot screens work, nothing moves."), flush=True)
     from alix_studio_lite import server
 

@@ -229,7 +229,8 @@ class RealArm:
     def restore_run_mode(self, originals: dict) -> None:
         from alix_dispatch import runmode
 
-        failed = runmode.restore_run_modes(originals, {self.side: self.robot})
+        with self.link.busy("restoring the run mode"):
+            failed = runmode.restore_run_modes(originals, {self.side: self.robot})
         if failed and self.log is not None:
             self.log.alert("warn", f"The controller's run mode could not be set back ({', '.join(map(str, failed))}).",
                            hint="Check its mode on the pendant before the next run.", side=self.side, source="runmode")

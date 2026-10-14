@@ -9,7 +9,7 @@
 import { get, say } from './api.js';
 import { ctx, step, unitUrl } from './ctx.js';
 import { loadRobot } from './robot3d.js';
-import { NO_WEBGL, createViewer } from './three_scene.js';
+import { createViewer, webglFail } from './three_scene.js';
 
 const CYCLE_S = 0.005;
 let viewer = null, robot = null, robotP = null;
@@ -138,11 +138,14 @@ export function say3d(host, text, err = null) {
   let m = host.querySelector(':scope > .lite-3d-msg');
   if (!text) { m?.remove(); return; }
   if (!m) { m = Object.assign(document.createElement('div'), { className: 'lite-3d-msg' }); host.append(m); }
-  m.textContent = err && err.code === 'webgl' ? NO_WEBGL : text;
+  const noGl = !!err && err.code === 'webgl';
+  m.classList.remove('webgl-fail');
+  if (noGl) webglFail(m);                                  // ALIX Studio's notice, with its fixes
+  else m.textContent = text;
   const cap = host.querySelector('.simulation-caption');
   if (cap) {
     cap.querySelector('strong').textContent = '3D simulation';
-    cap.querySelector('span').textContent = err && err.code === 'webgl' ? '3D graphics are off in this browser' : 'Nothing plays';
+    cap.querySelector('span').textContent = noGl ? '3-D view unavailable in this browser' : 'Nothing plays';
   }
 }
 

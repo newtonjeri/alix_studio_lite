@@ -10,7 +10,7 @@
 
 import { del, get, post, say } from './api.js';
 import { ctx, el, fmtS, stageDialog, step, tell } from './ctx.js';
-import { ensure3D, release, scene } from './sim.js';
+import { ensure3D, release, say3d, scene } from './sim.js';
 
 const CYCLE = 0.005;
 const ARMS = ['left', 'right'];
@@ -406,7 +406,15 @@ export async function openViewer() {
   release();                                          // the region's simulation stops; it reloads after this
   renderSlots(); renderChecks();
   refreshList();
-  const { viewer, robot } = await ensure3D();
+  let v3;
+  try {
+    v3 = await ensure3D();
+  } catch (err) {
+    if (err.code !== 'webgl') throw err;
+    say3d($('liteViewer3d'), say(err), err);            // ALIX Studio's notice; the file list still works
+    return;
+  }
+  const { viewer, robot } = v3;
   await viewer.attach($('liteViewer3d'));
   await scene(phase);
   robot.home();

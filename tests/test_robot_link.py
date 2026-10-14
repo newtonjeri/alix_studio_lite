@@ -30,6 +30,37 @@ def test_estop_input_fails_closed():
     assert error_codes({"err": ["0"]}) == [] and error_codes({"err": ["4109", "0x100D", "x"]}) == [4109, 4109]
 
 
+def test_a_command_waits_for_a_reading_under_way_and_none_starts_meanwhile():
+    """On the lab's first run a reading overlapping the hand's staging made the hand's command time
+    out: a command starts only once the reading under way has ended, and the loop reads nothing
+    while a command runs."""
+    import threading
+
+    from alix_studio_lite.server.robot_link import ArmLink
+
+    link = ArmLink("left", "127.0.0.1")
+    link.handle = object()
+    reads = []
+
+    def slow_read():
+        t0 = time.time()
+        time.sleep(0.3)
+        reads.append((t0, time.time()))
+        return {}
+
+    link._read_all = slow_read
+    reader = threading.Thread(target=link._read_if_idle)
+    reader.start()
+    time.sleep(0.05)                                         # the reading is under way
+    with link.busy("moving the hand"):
+        started = time.time()
+        assert reads and started >= reads[0][1]               # it ended before the command started
+        link._read_if_idle()                                  # the loop's turn comes: nothing is read
+        assert len(reads) == 1
+    reader.join()
+    assert len(reads) == 2                                    # read again as the command ended
+
+
 @pytest.fixture(scope="module")
 def server(tmp_path_factory):
     """Lite with a live link to ALIX's emulated arms, in its own process (the emulator replaces

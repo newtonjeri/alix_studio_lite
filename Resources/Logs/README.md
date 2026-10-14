@@ -1,8 +1,8 @@
 # Lite's logs
 
-ALIX Studio Lite writes its logs here, one folder per day (`YYYY-MM-DD/`). They stay on this
-computer: git ignores everything in this folder but this file. `run_lite --logs DIR` writes them
-somewhere else.
+ALIX Studio Lite writes its logs here, one folder per day (`YYYY-MM-DD/`). They are committed with
+the repository, so a run on the lab computer can be read on any copy after a pull (`.gitignore`
+says how to keep them local instead). `run_lite --logs DIR` writes them somewhere else.
 
 | File | What it holds |
 |---|---|

@@ -6,6 +6,7 @@ long solve never blocks a STOP.
 from __future__ import annotations
 
 import multiprocessing as mp
+import signal
 import threading
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -16,19 +17,30 @@ _POOL: ProcessPoolExecutor | None = None
 _POOL_LOCK = threading.Lock()          # two first tunes at once still make one pool, one worker
 
 
+def _worker_start() -> None:
+    """Ctrl+C in Lite's terminal reaches every process in it: the worker leaves it to the server,
+    which ends it in shutdown() (it printed a KeyboardInterrupt traceback on its way out)."""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
 def pool() -> ProcessPoolExecutor:
     global _POOL
     with _POOL_LOCK:
         if _POOL is None:
-            _POOL = ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context("spawn"))
+            _POOL = ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context("spawn"), initializer=_worker_start)
         return _POOL
 
 
 def shutdown() -> None:
+    """The server is stopping: a tune still running is ended, not waited for."""
     global _POOL
     with _POOL_LOCK:
         if _POOL is not None:
+            procs = list((getattr(_POOL, "_processes", None) or {}).values())
             _POOL.shutdown(wait=False, cancel_futures=True)
+            for p in procs:
+                if p.is_alive():
+                    p.terminate()
             _POOL = None
 
 

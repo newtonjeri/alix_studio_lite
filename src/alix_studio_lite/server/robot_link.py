@@ -155,8 +155,7 @@ class ArmLink:
                 if self._stopping.is_set():
                     continue
                 try:
-                    if not self._busy:                  # a command owns the connection: it alone talks
-                        self.read_once()
+                    self._read_if_idle()
                 except Exception:                                        # noqa: BLE001 - keep reading
                     pass
         finally:
@@ -171,6 +170,8 @@ class ArmLink:
         with self._lock:
             self._busy.append(what)
             self.feedback = dict(self.feedback, busy=what)
+        with self._read_lock:                       # a reading already under way ends before the command starts
+            pass
         try:
             yield
         finally:
@@ -238,6 +239,14 @@ class ArmLink:
     def read_once(self) -> dict:
         with self._read_lock:
             return self._read_all()
+
+    def _read_if_idle(self) -> None:
+        """The loop's reading: none while a command runs (busy() waits for one under way, so the
+        two never overlap: on the lab's first run a reading overlapping the hand's staging made
+        the hand's command time out)."""
+        with self._read_lock:
+            if not self._busy:                      # a command owns the connection: it alone talks
+                self._read_all()
 
     def _read_all(self) -> dict:
         from alix_dispatch import peripherals, runmode

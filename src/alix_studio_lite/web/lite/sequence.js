@@ -10,7 +10,7 @@
 
 import { post, say } from './api.js';
 import { ctx, el, fmtS, tell, unitUrl } from './ctx.js';
-import { ensure3D, release, scene } from './sim.js';
+import { ensure3D, release, say3d, scene } from './sim.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
@@ -250,7 +250,10 @@ export function installSequence() {
       seq.phase = null;
       robot.home();
       seq.shown = { left: null, right: null };
-    } catch (err) { tell(err); }
+    } catch (err) {
+      if (err.code === 'webgl') say3d(seq.ui.host, say(err), err);       // ALIX Studio's notice
+      else tell(err);
+    }
     await loadPlan();
   };
 

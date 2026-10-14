@@ -136,10 +136,11 @@ def emulated_stage(job, side: str, a, stage: "staging.Stage", faults=(), *, emul
 
 
 class StandInRobot:
-    """The stand-in, optionally with a live read-only link to the arms (``link``: "realman" for the
-    real controllers, "emulated" for ALIX's emulator; robot_link.py). Linked, Connect reaches the
+    """The stand-in, optionally with a live link to the arms (``link``: "realman" for the real
+    controllers, "emulated" for ALIX's emulator; robot_link.py). Linked, Connect reaches the
     controller and the panel shows its feedback (arm, pole, hand, IO3); the real E-stop input
-    drives the motion interlock; actions stay the stand-in's, so Real robot is refused."""
+    drives the motion interlock; and the robot's actions go to the controller through ALIX's
+    functions (robot_real.py): staging, drag teaching, upload, Real and Hardware sim runs, STOP."""
 
     def __init__(self, data_dir: Path, jobs: Jobs, link: str | None = None, log=None):
         self.jobs = jobs

@@ -66,7 +66,7 @@ own. It clones the repository into `~/alix_studio_lite`, or into `--dir`, and in
 alix_studio_lite/tools/run_lite.sh                # Windows: py alix_studio_lite\tools\run_lite.py
 ```
 
-A browser tab opens at **http://127.0.0.1:8766/**.
+Lite opens at **http://127.0.0.1:8766/** in a Chrome window of its own (its own profile, with Chrome's GPU blocklist ignored), so the 3D shows even on a computer whose graphics run in software. Without Chrome, the default browser opens a tab.
 - Log in with the operator PIN. Advanced Robot Controls ask for the engineer PIN.
 - Both PINs are **`1234`** until changed: `tools/run_lite.sh --set-pin operator`, or `--set-pin engineer`.
 - STOP BOTH always works, with or without a log-in, and acts like the E-stop: afterwards nothing moves until **Recover** (Robot & mode). When a window covers the top bar (the log-in screen, the Project Manager, a dialog), a second STOP BOTH stays at the bottom left.
@@ -77,7 +77,7 @@ Other options:
 
 | Option | What it does |
 |---|---|
-| `--no-browser` | Does not open a browser tab. |
+| `--no-browser` | Opens no browser: open the address yourself. |
 | `--port 8800` | Uses another port. The default 8766 runs beside ALIX Studio (8765). |
 | `--data DIR` | Keeps the projects and settings somewhere other than `~/ALIX-Lite/`. |
 | `--ui legacy` | Opens Legacy Lite instead. |
@@ -145,7 +145,7 @@ only after tuning has passed every limit. [`docs/UI_V19_CONTRACT.md`](docs/UI_V1
 
 ### Logs
 
-Every activity is logged, one folder per day in **`Resources/Logs/<date>/`** in this folder (git ignores the logs; `--logs DIR` puts them elsewhere):
+Every activity is logged, one folder per day in **`Resources/Logs/<date>/`** in this folder (committed, so the lab's runs reach every copy; `--logs DIR` puts them elsewhere):
 
 | File | What it holds |
 |---|---|
@@ -171,7 +171,7 @@ Every activity is logged, one folder per day in **`Resources/Logs/<date>/`** in 
 | E-stop chip reads *not configured* | IO3 is not in the controller's E-stop mode. An engineer sets it at the pendant; Lite never writes IO modes. |
 | Time-optimal optimiser missing | `toppra` has no ready-made package for this computer. The Default optimiser still works. |
 | A ROS workspace is sourced | Nothing to do: Lite clears `PYTHONPATH` and uses its own environment. |
-| The 3D view says WebGL is off | Chrome turns 3D graphics off for a page after a graphics crash. Close every Chrome window and open Lite again; `chrome://gpu` should read *WebGL: Hardware accelerated*. |
+| *3-D view unavailable* | The browser gives the page no WebGL. `chrome://gpu` names the reason. *WebGL: Disabled* with an *llvmpipe* GPU means the computer's graphics run in software (the GPU driver is not in use: `nvidia-smi` tells), and Chrome then turns WebGL off for every page, ALIX Studio's too. Open Lite with `tools/run_lite.sh`: its own Chrome window ignores that block. In another Chrome: `chrome://flags/#ignore-gpu-blocklist` → Enabled. |
 
 ---
 

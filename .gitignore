@@ -10,6 +10,7 @@ incoming_ui/
 
 # vs code settings
 .vscode
-# Lite's logs (server/logbook.py): kept on this computer, never committed
+# Lite's logs (server/logbook.py) are committed, so a run on the lab computer reaches every copy;
+# to keep them on each computer instead, uncomment:
 # Resources/Logs/*
 # !Resources/Logs/README.md

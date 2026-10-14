@@ -96,14 +96,51 @@ async function buildFixture(spec, phase) {
   return root;
 }
 
-// What the page says when the browser gives no WebGL (it turns it off after a graphics crash).
-export const NO_WEBGL = 'This browser has turned its 3D graphics (WebGL) off, often after a graphics crash. Close every '
-  + 'Chrome window and open Lite again; if it stays off, chrome://gpu says why.';
+// When the browser gives no WebGL, the 3D panes say so with ALIX Studio's notice (web_editor/editor.js
+// initThree, its .webgl-fail block) and its fixes for this browser (webglHelpHtml). Chrome turns WebGL
+// off for every page where the computer's graphics run in software (Mesa llvmpipe, e.g. while the GPU
+// driver is not loaded: the lab laptop, 14 Oct), so Lite's launcher opens its own Chrome window with
+// the GPU blocklist ignored (server/__init__.py); the notice's first fix is to use that window.
+export const NO_WEBGL = '3-D view unavailable: WebGL could not start a rendering context on this browser/GPU.';
+
+// ALIX Studio's webglHelpHtml (web_editor/editor.js), with Lite's own window first for Chromium browsers.
+function webglHelpHtml() {
+  const ua = navigator.userAgent || '';
+  const lite = 'Open Lite with <code>tools/run_lite.sh</code>: it starts its own Chrome window, which draws the '
+    + '3-D even when the graphics run in software. ';
+  const chromiumFix = scheme =>
+    'First: open <code>' + scheme + '://gpu</code> — it names the reason under '
+    + '<em>Graphics Feature Status</em>. Then: <code>' + scheme + '://settings/system</code> → '
+    + '"Use graphics acceleration when available", <code>' + scheme
+    + '://flags/#ignore-gpu-blocklist</code> → Enabled, or relaunch with '
+    + '<code>--enable-unsafe-swiftshader</code> if it fell back to software rendering.';
+  if (/Edg\//.test(ua)) return 'Fixes (Edge): ' + chromiumFix('edge');
+  if (/OPR\//.test(ua)) return 'Fixes (Opera): ' + chromiumFix('opera');
+  if (/Chrome\//.test(ua)) return 'Fixes (Chrome): ' + lite + chromiumFix('chrome');
+  if (/Firefox\//.test(ua)) {
+    return 'Fixes (Firefox): open <code>about:support</code> → <em>Graphics</em> for the reason. '
+      + 'Then: <code>about:config</code> → <code>webgl.disabled=false</code>, '
+      + '<code>gfx.webrender.all=true</code>, or launch with <code>MOZ_X11_EGL=1</code>. '
+      + 'The snap build often cannot reach the GPU at all — the deb build can.';
+  }
+  return 'Fixes: enable hardware acceleration in your browser’s settings, update the GPU driver, '
+    + 'or try a different browser. Your browser’s GPU diagnostic page (<code>about:support</code> on '
+    + 'Firefox, <code>&lt;browser&gt;://gpu</code> on Chromium-based ones) names the actual reason.';
+}
+
+// Fills `el` with ALIX Studio's in-viewport notice: what is off, what still works, and the fixes.
+export function webglFail(el) {
+  el.classList.add('webgl-fail');
+  el.innerHTML = '<strong>⚠ 3-D view unavailable</strong>'
+    + '<span>WebGL could not start a rendering context on this browser/GPU. Teaching, tuning and the '
+    + 'robot still work — only the 3-D view is off.</span>'
+    + '<span>' + webglHelpHtml() + '</span>';
+}
 
 // The viewer: created once, attached to one host element at a time. ONE WebGL context for the
 // whole page: the pictures shown side by side (view()) are drawn by this same renderer and copied
-// into plain canvases; several contexts each holding the robot's meshes crashed the GPU on the
-// robot computer (14 Oct), after which Chrome blocks WebGL for the page.
+// into plain canvases, so the robot's meshes are held once (where the graphics run in software,
+// every context draws on the processor).
 export function createViewer() {
   const v = { dirty: true, animating: false, host: null, ready: null, borrowedBy: null };
   let renderer = null, scene = null, cam = null, controls = null, ro = null, wall = null, fixture = null;
@@ -114,12 +151,15 @@ export function createViewer() {
   v.ready = ensureThree().then(() => {
     const THREE = window.THREE;
     const col = (n) => new THREE.Color(css(n));
-    try {
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-    } catch (e) {
-      throw Object.assign(new Error(NO_WEBGL), { code: 'webgl' });
+    // ALIX Studio's WebGL start (editor.js initThree): 'high-performance' can fail to create a
+    // context on some hybrid Intel+NVIDIA Linux setups; fall back to the default GPU, then to bare
+    // options, before giving up. The rest of the page works without 3-D.
+    for (const opts of [{ antialias: true, powerPreference: 'high-performance' }, { antialias: true }, {}]) {
+      try { renderer = new THREE.WebGLRenderer(opts); break; }
+      catch (err) { console.warn('[ALIX Studio Lite] WebGLRenderer failed for', opts, err); }
     }
-    renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+    if (!renderer) throw Object.assign(new Error(NO_WEBGL), { code: 'webgl' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.domElement.className = 'lite-3d-canvas';
     // a lost context (the GPU reset) comes back by itself when the browser restores it
     renderer.domElement.addEventListener('webglcontextlost', (e) => {

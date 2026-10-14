@@ -210,3 +210,32 @@ def test_a_second_start_tells_this_lite_an_older_one_and_another_program(lite, t
             assert said in capsys.readouterr().err
         finally:
             srv.shutdown()
+
+
+def test_lite_opens_in_a_chrome_window_of_its_own_that_ignores_the_gpu_blocklist(tmp_path, monkeypatch):
+    """Where the graphics run in software, Chrome turns WebGL off for every page (the lab laptop):
+    Lite's window ignores that block, in a profile of its own so the switch applies while another
+    Chrome is open. A snap Chromium cannot use that profile, and without Chrome a tab opens."""
+    import shutil
+    import subprocess
+    import webbrowser
+
+    from alix_studio_lite import server
+
+    started, tabs = [], []
+    monkeypatch.setattr(server, "CHROME_PROFILE", tmp_path / "chrome")
+    monkeypatch.setattr(subprocess, "Popen", lambda argv, **kw: started.append((argv, kw)))
+    monkeypatch.setattr(webbrowser, "open", tabs.append)
+    found = {"google-chrome": "/usr/bin/google-chrome"}
+    monkeypatch.setattr(shutil, "which", lambda name: found.get(name))
+    server._open_browser("http://127.0.0.1:8766/")
+    (argv, kw), = started
+    assert argv[0] == "/usr/bin/google-chrome" and argv[-1] == "http://127.0.0.1:8766/"
+    assert "--ignore-gpu-blocklist" in argv and f"--user-data-dir={tmp_path / 'chrome'}" in argv
+    assert kw["start_new_session"] and (tmp_path / "chrome").is_dir() and not tabs
+
+    found = {"chromium": "/snap/bin/chromium"}
+    server._open_browser("http://127.0.0.1:8766/")
+    found = {}
+    server._open_browser("http://127.0.0.1:8766/")
+    assert len(started) == 1 and tabs == ["http://127.0.0.1:8766/"] * 2

@@ -10,6 +10,42 @@ from pathlib import Path
 
 DEFAULT_PORT = 8766                     # ALIX Studio uses 8765, so both can run side by side
 DEFAULT_DATA = Path(os.environ.get("ALIX_LITE_DATA", Path.home() / "ALIX-Lite"))
+# Lite's own Chrome profile (_open_browser): a separate Chrome, so its switches apply even while another is open
+CHROME_PROFILE = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "alix-studio-lite" / "chrome"
+
+
+def _chrome() -> str | None:
+    """Google Chrome or Chromium on this computer, if any (not a snap: it cannot use Lite's profile)."""
+    import shutil
+
+    for name in ("google-chrome", "google-chrome-stable", "chromium"):
+        path = shutil.which(name)
+        if path and "/snap/" not in path:
+            return path
+    return None
+
+
+def _open_browser(url: str) -> None:
+    """Opens Lite's page. Chrome gets a window of its own with Chrome's GPU blocklist ignored: where
+    the computer's graphics run in software (Mesa llvmpipe, e.g. while the GPU driver is not
+    loaded), Chrome turns WebGL off for every page and no 3D view can start, ALIX Studio's
+    included (the lab laptop, 14 October: chrome://gpu "WebGL: Disabled"). ALIX Studio's own fix
+    for that is the same switch (chrome://flags/#ignore-gpu-blocklist); a profile of Lite's own
+    makes it apply even while another Chrome is open. Any other browser opens the page as a tab."""
+    chrome = _chrome()
+    if not chrome:
+        webbrowser.open(url)
+        return
+    import subprocess
+
+    try:
+        CHROME_PROFILE.mkdir(parents=True, exist_ok=True)
+        subprocess.Popen([chrome, f"--user-data-dir={CHROME_PROFILE}", "--ignore-gpu-blocklist", "--no-first-run",
+                          "--no-default-browser-check", "--new-window", url],
+                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                         start_new_session=True)        # as webbrowser does: Ctrl+C here leaves the window open
+    except OSError:
+        webbrowser.open(url)
 
 
 def _running_lite(port: int) -> dict | None:
@@ -38,8 +74,8 @@ def _port_taken(port: int, root: str, url: str, no_browser: bool) -> int:
         print(f"ALIX Studio Lite is already running at {url}", flush=True)
         print(f"   data folder {running.get('data_dir', '?')}", flush=True)
         if not no_browser:
-            webbrowser.open(url)
-            print("   opened a browser tab to it", flush=True)
+            _open_browser(url)
+            print("   opened a browser window to it", flush=True)
         return 0
     if running is not None:                     # its server still runs the code it started with
         pid = running.get("pid")
@@ -77,7 +113,8 @@ def _set_pin(data: Path, role: str) -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="alix_studio_lite.server", description="Run ALIX Studio Lite.")
     ap.add_argument("-p", "--port", type=int, default=DEFAULT_PORT, help=f"default {DEFAULT_PORT}")
-    ap.add_argument("--no-browser", action="store_true", help="do not open a browser tab")
+    ap.add_argument("--no-browser", action="store_true",
+                    help="do not open a browser window (Lite opens its own Chrome window, or a tab of the default browser)")
     ap.add_argument("--data", type=Path, default=DEFAULT_DATA, help=f"project data folder (default {DEFAULT_DATA})")
     ap.add_argument("--fixture", default=None,
                     help="Legacy Lite's fixture: commode_a | commode_b | commode_c | urinal_a | washtub_a "
@@ -89,9 +126,9 @@ def main(argv=None) -> int:
     ap.add_argument("--logs", type=Path, default=None,
                     help="where the logs go (default: Resources/Logs in the repository)")
     ap.add_argument("--robot", choices=("standin", "realman", "emulated"), default="standin",
-                    help="standin (default): no hardware. realman: a live link to the real arms (feedback of "
-                         "arm, pole and hand; its one command is STOP). emulated: the same link to "
-                         "ALIX's emulated arms")
+                    help="standin (default): no hardware. realman: the real arms through ALIX's dispatch "
+                         "(feedback of arm, pole and hand; staging, drag teaching, upload, Real and Hardware sim "
+                         "runs, STOP). emulated: the same link to ALIX's emulated arms")
     a = ap.parse_args(argv)
 
     if a.set_pin:
@@ -146,8 +183,8 @@ def main(argv=None) -> int:
 
     signal.signal(signal.SIGTERM, _terminate)
     if not a.no_browser:
-        threading.Timer(0.6, lambda: webbrowser.open(url)).start()
-        print("Opening a browser tab...", flush=True)
+        threading.Timer(0.6, lambda: _open_browser(url)).start()
+        print("Opening Lite in its own Chrome window..." if _chrome() else "Opening a browser tab...", flush=True)
     print(f"ALIX Studio Lite running at {root}  (Ctrl+C to stop)", flush=True)
     print(f"Legacy Lite:  {root}legacy/", flush=True)
     print(f"Data folder:  {a.data}", flush=True)
@@ -158,8 +195,12 @@ def main(argv=None) -> int:
     except KeyboardInterrupt:
         print("\nShutting down.", flush=True)
     finally:
-        app.robot.stop("all")
-        app.robot.close()                           # the live links, if any
-        srv.server_close()
-        workers.shutdown()
+        signal.signal(signal.SIGINT, signal.SIG_IGN)       # a second Ctrl+C must not cut the shutdown short
+        try:
+            app.robot.stop("all")
+            app.robot.close()                       # the live links, if any
+        finally:
+            srv.server_close()
+            workers.shutdown()
+    print("ALIX Studio Lite stopped.", flush=True)
     return 0

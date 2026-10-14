@@ -101,6 +101,19 @@
 .simulation-placeholder.lite-3d { background: var(--lite-viewport-bg); }
 .lite-3d-msg { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: 24px; text-align: center;
   color: var(--vp-text); font-weight: 700; line-height: 1.5; }
+/* ALIX Studio's notice when the browser gives no WebGL (editor.css .webgl-fail), in the 3D panes and pictures */
+.lite-3d-msg.webgl-fail, .lite-pic-msg.webgl-fail { display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; overflow: auto; font-weight: 400; }
+.webgl-fail strong { color: var(--lite-d-orange); font-size: 18px; }
+.webgl-fail span { max-width: 560px; font-size: 13px; line-height: 1.5; }
+.webgl-fail code { color: var(--lite-d-blue); font-family: "JetBrains Mono", ui-monospace, monospace; }
+.lite-pic-msg.webgl-fail { z-index: 3; justify-content: flex-start; }
+.lite-pic-msg.webgl-fail strong { font-size: 15px; }
+.lite-pic-msg.webgl-fail span { font-size: 12px; }
+/* in the simulation pane, between its caption (top) and its playback controls (bottom); it scrolls there */
+.simulation-placeholder.lite-3d > .lite-3d-msg.webgl-fail { inset: 62px 0 208px; padding: 4px 20px; gap: 6px; justify-content: safe center; }
+.simulation-placeholder.lite-3d > .lite-3d-msg.webgl-fail strong { font-size: 16px; }
+.simulation-placeholder.lite-3d > .lite-3d-msg.webgl-fail span { font-size: 12px; line-height: 1.45; }
 .simulation-placeholder.lite-3d[data-lite3d="ready"] { border-style: solid; }
 .simulation-placeholder.lite-3d .simulation-caption { z-index: 3; }
 .playback-preview.lite-3d { min-height: 360px !important; background: var(--lite-viewport-bg); overflow: hidden; }
