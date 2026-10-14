@@ -108,7 +108,7 @@ the three devices on each side, refreshed about five times a second:
 With the arms connected, Lite **commands** them through ALIX's own robot code:
 
 - **Real robot** (after a confirmation; every move asks again):
-  - **Prepare → Apply** stages the region's setup. The hand opens if the pole must move, the arm is checked at rest, then the pole and then the hand move at **50 % speed**, each read back. A grip counts as arrived when the fingers stop on the tool while closing (they never reach 0 round a brush).
+  - **Prepare → Apply** stages the region's setup. The hand opens if the pole must move, the arm is checked at rest, then the pole and then the hand move at **50 % speed**, each read back. A hand that stops on the tool counts as done, as the control program's `hand.py` takes it (arrived or settled).
   - **Drag teaching** runs on the controller, as in the control program. STOP DRAG saves the controller's recording into the project, byte for byte as the control program saves it, with the arm and the stage it was taught with.
   - **Upload** and **Run** use the control program's own tool, `rm_upload.py` (in `vendor/control_app/`): the upload stores the kept version in its Program ID and reads the stored size back; the run stages the pole and the hand, then the controller moves the arm to the first point at 20 % and plays the program, its error codes watched. The controller is set to its REAL mode for it (read back) and put back after.
   - **Move to Recorded Start** moves the arm to the file's first line at 30 % speed. Start poses by name are not stored on the controller yet.

@@ -116,14 +116,30 @@ def test_l3_reads_as_alix_does():
     assert l3["passed"] is True, l3
 
 
-def test_a_grip_holds_when_the_fingers_stop_on_the_tool():
-    """A grip closes onto the brush and stops there, not at 0 (the robot, 14 Oct: Grip read back
-    842, 762, 754, 765, 714, 992): that is the grip. An opening hand that stopped short is not."""
-    from alix_studio_lite.server.staging import hand_holds
+def test_a_hand_that_settles_on_the_tool_is_done():
+    """The control program's rule (vendor/control_app/hand.py, Hand.command): ARRIVED or SETTLED
+    is done, "fingers closing on a tool stop early on force". The robot, 14 Oct: Grip settled at
+    842, 762, 754, 765, 714, 992; then the setup check takes the hand while it still reads that."""
+    from pathlib import Path
 
-    grip = [0, 0, 0, 0, 150, 1000]
-    assert hand_holds([842, 762, 754, 765, 714, 992], grip)
-    assert not hand_holds([1000, 999, 1000, 1000, 999, 992], grip)               # still open: not the grip
-    assert not hand_holds([950, 950, 950, 950, 950, 992], grip)                  # barely closed
-    assert not hand_holds([700] * 6, [1000] * 6)                                 # opening, blocked
-    assert hand_holds([500, 498, 503, 501, 1000, 1000], [500, 500, 500, 500, None, None])
+    from alix_studio_lite.server.jobs import Jobs
+    from alix_studio_lite.server.robot_real import _settled
+    from alix_studio_lite.server.robot_standin import StandInRobot
+    from alix_studio_lite.server.staging import make_stage
+
+    settled = {"ok": False, "refusal": "hand_unverified",
+               "steps": [{"step": "hand", "result": {"ok": True, "arrived": False, "settled": True}}]}
+    timed_out = {"ok": False, "refusal": "hand_unverified",
+                 "steps": [{"step": "hand", "result": {"ok": False, "arrived": False, "settled": False}}]}
+    assert _settled(settled) and not _settled(timed_out)
+
+    import tempfile
+    robot = StandInRobot(Path(tempfile.mkdtemp()), Jobs())
+    grip = make_stage(200, "GRIP")
+    a = robot.arm("left")
+    a.pole_mm, a.hand = 200.0, [842, 762, 754, 765, 714, 992]
+    assert not robot.in_stage("left", grip)                              # never staged: not the grip
+    a.staged_hand = dict(target=list(grip.hand), read=list(a.hand))      # staging the grip left it there
+    assert robot.in_stage("left", grip)
+    a.hand = [1000] * 6                                                  # opened since: not in the setup
+    assert not robot.in_stage("left", grip)

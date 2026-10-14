@@ -70,6 +70,7 @@ class StandInArm:
         self.teaching = False
         self.teach_started = None
         self.teach_stage = None
+        self.staged_hand = None                 # {target, read}: where the last real staging left the hand
         self.estop_latched = False              # pressed (or STOPped) since the last Recover
         self.stop_latched = False               # held by STOP rather than by the E-stop button
         self.button_pressed = False             # the stand-in's own button (an engineer's test)
@@ -499,6 +500,7 @@ class StandInRobot:
             found = (out.get("pole") or {}).get("found_m")
             a.pole_mm = stage.pole_mm if found is None else found * 1000.0
             a.hand = list((out.get("hand") or {}).get("read") or a.hand)
+            a.staged_hand = dict(target=list(stage.hand), read=list(a.hand))      # where this pose left it
             job.log(f"Pole at {a.pole_mm:.0f} mm, then hand in pose: " + ", ".join(map(str, a.hand))
                     + " (read back on the controller).")
             job.check()
@@ -518,8 +520,14 @@ class StandInRobot:
 
     def in_stage(self, side: str, stage: "staging.Stage") -> bool:
         pole_mm, hand = self._measured(side)
-        return (pole_mm is not None and hand is not None and abs(pole_mm - stage.pole_mm) <= staging.POLE_TOL_MM
-                and staging.hand_holds(hand, stage.hand))         # a grip stops on the tool, not at 0
+        if pole_mm is None or hand is None or abs(pole_mm - stage.pole_mm) > staging.POLE_TOL_MM:
+            return False
+        if staging.same_hand(hand, stage.hand):
+            return True
+        # a hand that settled short of the pose (on the tool, as the control program allows) is in it
+        # while it still reads what staging that same pose left
+        last = self.arm(side).staged_hand
+        return bool(last and last["target"] == list(stage.hand) and staging.same_hand(hand, last["read"]))
 
     # ── pole, hand, teach
     def move_pole(self, side: str, pole_mm: float, title: str, mode: str | None = None):

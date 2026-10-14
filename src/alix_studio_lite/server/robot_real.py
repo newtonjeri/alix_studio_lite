@@ -29,7 +29,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 
-from . import staging as lite_staging
 from .jobs import UserError
 from .robot_link import return_text
 
@@ -43,6 +42,14 @@ CHECK_TRIES = 4           # the read-back after an upload: tries, 1 s apart, bef
 
 def _words(code: str | None) -> str:
     return (code or "no reason given").replace("_", " ")
+
+
+def _settled(staged: dict) -> bool:
+    """Whether stage_arm's hand step ended SETTLED: ANGLE_ACT stopped changing (ALIX's
+    HandModbus.command), the way the control program's Hand.command takes a hand as done."""
+    step = next((s for s in staged.get("steps") or [] if s.get("step") == "hand"), None)
+    r = (step or {}).get("result") or {}
+    return bool(r.get("ok") and (r.get("arrived") or r.get("settled")))
 
 
 # ── the control program's upload-and-run tool, as a module, and its printed lines in Lite's log
@@ -158,12 +165,12 @@ class RealArm:
             task = {"side": self.side, "pre_stroke": {"pole_m": stage.pole_mm / 1000.0, "hand_counts": list(stage.hand)}}
             out = alix_staging.stage_arm(self.handle, task, pole=pole, hand=hand, log=log, pole_speed_pct=POLE_SPEED_PCT)
         p, h = out.get("pole") or {}, out.get("hand") or {}
-        if (not out.get("ok") and out.get("refusal") == "hand_unverified"
-                and lite_staging.hand_holds(h.get("read"), list(stage.hand))):
-            # the fingers stopped on the tool while closing: that is the grip (ALIX's band asks for 0)
-            out = dict(out, ok=True, refusal=None, gripped=True)
-            self._hw("hand holds", args=dict(target=list(stage.hand)), ok=True,
-                     text=f"closed onto the tool at {h.get('read')}: taken as the grip")
+        if not out.get("ok") and out.get("refusal") == "hand_unverified" and _settled(out):
+            # the control program's rule (vendor/control_app/hand.py, Hand.command): a hand that has
+            # ARRIVED or SETTLED is done, "fingers closing on a tool stop early on force"
+            out = dict(out, ok=True, refusal=None, settled=True)
+            self._hw("hand settled", args=dict(target=list(stage.hand)), ok=True,
+                     text=f"stopped at {h.get('read')} (on the tool): done, as the control program takes it")
         found = p.get("found_m")
         self._hw("stage", args=dict(pole_mm=stage.pole_mm, hand=list(stage.hand), speed_pct=POLE_SPEED_PCT),
                  ok=bool(out.get("ok")), text=(f"pole {found * 1000:.0f} mm" if found is not None else "pole not read")
