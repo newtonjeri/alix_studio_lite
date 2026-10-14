@@ -383,3 +383,9 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 .lite-point-search { width: 100%; margin: 0 0 6px; }
 .lite-point-search[hidden], .lite-point-motion[hidden] { display: none; }
 .lite-point-motion { flex: 0 0 auto; max-width: 96px; }
+
+/* Prepare's transition trajectories (V32): the Program ID beside the run buttons, the 3D window */
+.transition-run-actions .lite-transition-program { width: 130px; min-height: 44px; }
+.lite-transition-card { width: min(980px, calc(100vw - 32px)); max-width: none; }
+.lite-transition-3d { position: relative; height: min(58vh, 520px); margin: 10px 0; border: 1px solid var(--line); background: var(--lite-viewport-bg);
+  border-radius: 14px; overflow: hidden; }

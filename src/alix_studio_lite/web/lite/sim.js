@@ -154,7 +154,7 @@ export function say3d(host, text, err = null) {
 // simulation waits, and loads again when Tune shows it.
 let pictureHolds = false;
 export function pictureHas(on) { pictureHolds = !!on; }
-export const elsewhere = () => pictureHolds || !!document.querySelector('#liteViewer.show, #fullSequenceSimModal.show');
+export const elsewhere = () => pictureHolds || !!document.querySelector('#liteViewer.show, #fullSequenceSimModal.show, #liteTransitionSim.show');
 
 // The stage is left, or another view takes the 3D (`stale`: it replaces the robot's tracks, so the
 // file loads again when it is shown next): nothing of the region's file keeps playing.

@@ -259,6 +259,7 @@ class ArmLink:
             ret, st = -1, None
         ok = ret == 0 and bool(st)
         fb["joints_deg"] = [round(float(v), 3) for v in (st.get("joint") or [])] if ok else None
+        fb["pose"] = [round(float(v), 6) for v in (st.get("pose") or [])[:6]] if ok and st.get("pose") else None   # m, rad
         fb["errors"] = error_codes(st.get("err")) if ok else None
         r, mode = runmode.read_run_mode(robot)
         fb["run_mode"] = {0: "SIM", 1: "REAL"}.get(mode) if r == 0 else None

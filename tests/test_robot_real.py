@@ -198,3 +198,21 @@ def test_global_points_are_the_controllers_and_moved_to_as_the_control_program_d
     hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
     assert {"global points", "movej global point", "movel global point"} <= {r["verb"] for r in hw}
     assert any("GLOBAL MOVE COMPLETE: STP_LID_OPEN" in (r["text"] or "") for r in hw if r["verb"] == "runner v14")
+
+
+def test_capture_reads_the_controller_and_a_start_point_is_moved_to(server):
+    """V32's Capture Current Pose reads the linked controller (J1-J7, the tool pose, the pole, the
+    hand, the controller); Move to Start Point goes back to those joints, read back."""
+    c = call(server, "GET", "/api/robots/left/capture")
+    assert len(c["joints_deg"]) == 7 and len(c["pose"]) == 6 and len(c["hand"]) == 6 and c["pole_mm"] is not None
+    assert c["controller"]["side"] == "left" and c["controller"]["emulated"] and c["at"]
+    call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
+    target = list(c["joints_deg"])
+    target[0] += 5
+    assert call(server, "POST", "/api/robots/left/move-joints", {"joints_deg": target, "name": "P1"})["code"] == "confirm"
+    j = wait(server, call(server, "POST", "/api/robots/left/move-joints", {"joints_deg": target, "name": "P1", "confirmed": True}))
+    assert j["state"] == "done" and "start point “P1”" in text(j), j
+    again = call(server, "GET", "/api/robots/left/capture")
+    assert max(abs(a - b) for a, b in zip(again["joints_deg"], target)) < 2.0
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    assert {"capture pose", "move to pose"} <= {r["verb"] for r in hw}

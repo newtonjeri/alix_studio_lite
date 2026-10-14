@@ -306,7 +306,9 @@ class StandInRobot:
         jobs = [j for j in self.jobs.running() if j.kind in MOTION_KINDS]
         return jobs[0].title if jobs else None
 
-    def require_motion(self, side: str) -> None:
+    def require_motion(self, side: str, alone: bool = False) -> None:
+        """Every motion's interlocks. ``alone``: the other arm must be still too, and stays so while
+        this runs (V32's single-arm transition: "the opposite arm must remain stopped")."""
         sides = ARMS if side == "both" else (side,)
         for s in sides:
             if not self.arm(s).connected:
@@ -321,6 +323,15 @@ class StandInRobot:
         busy = [j for s in sides for j in self.jobs.running(arm=s) if j.kind in MOTION_KINDS]
         if busy:
             raise UserError(f"The {busy[0].arm.upper()} arm is busy: {busy[0].title}.", "Wait, or press STOP.")
+        lone = [j for j in self.jobs.running() if getattr(j, "alone", False) and j.arm not in sides]
+        if lone:
+            raise UserError(f"{lone[0].title} runs on the {lone[0].arm.upper()} arm alone: the {sides[0].upper()} arm "
+                            "stays stopped until it ends.", "Wait, or press STOP.")
+        if alone:
+            other = [j for j in self.jobs.running() if j.kind in MOTION_KINDS and j.arm not in sides]
+            if other:
+                raise UserError(f"The {other[0].arm.upper()} arm is moving ({other[0].title}); this runs on the "
+                                f"{sides[0].upper()} arm only while the other arm is stopped.", "Wait, or press STOP.")
 
     def _same_mode(self, mode: str, done: str = "nothing was staged or moved") -> None:
         """Refuses when the mode is no longer ``mode``, the one the motion was asked (and
@@ -330,13 +341,15 @@ class StandInRobot:
                             f"{MODE_NAME.get(mode, mode)}, so {done}.", "Check the mode at the top, then ask again.",
                             code="mode")
 
-    def _start(self, kind: str, title: str, work, side: str, mode: str):
+    def _start(self, kind: str, title: str, work, side: str, mode: str, alone: bool = False):
         """The interlocks and the job's start in one step, so two requests cannot both pass, and
         only while the mode is still the one the request was made in."""
         with self.lock:
             self._same_mode(mode)
-            self.require_motion(side)
-            return self.jobs.start(kind, title, work, arm=side)
+            self.require_motion(side, alone)
+            job = self.jobs.start(kind, title, work, arm=side)
+            job.alone = alone
+            return job
 
     def close(self) -> None:
         """Let go of every live link (the server is stopping); an arm in drag teaching leaves it first."""
@@ -688,6 +701,29 @@ class StandInRobot:
 
         return self._start("move", title, work, side, mode)
 
+    # ── the arm's pose now (V32's Capture Current Pose: a linked arm only)
+    def capture(self, side: str) -> dict:
+        """What a linked arm's controller reads now: J1-J7 (deg), the tool pose (X Y Z in m, RX RY
+        RZ in rad, the controller's own frames), the pole, the hand, the time and the controller.
+        Read afresh while no command runs; the stand-in has no controller to read."""
+        a = self.arm(side)
+        if not a.connected:
+            raise UserError(f"The {side.upper()} arm is not connected.", "Connect it, then capture its pose.", code="connect")
+        link = self.links.get(side)
+        if link is None:
+            raise UserError(f"The stand-in robot has no {side.upper()} controller to read the pose from.",
+                            "Start Lite with --robot realman and connect the arm.", code="connect")
+        if link.view()["feedback"].get("busy"):
+            raise UserError(f"The {side.upper()} controller is busy ({link.view()['feedback']['busy']}).",
+                            "Capture the pose when the arm has stopped.")
+        fb = link.read_once()
+        if not fb.get("joints_deg") or len(fb["joints_deg"]) < 7:
+            raise UserError(f"The {side.upper()} controller did not answer with the arm's joints.", "Try again.")
+        return dict(arm=side, joints_deg=fb["joints_deg"][:7], pose=fb.get("pose"), pole_mm=fb.get("pole_mm"),
+                    hand=fb.get("hand"), errors=fb.get("errors"), run_mode=fb.get("run_mode"),
+                    at=time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                    controller=dict(side=side, ip=link.ip, port=link.port, emulated=bool(link.emulated)))
+
     # ── the controller's global points (a linked arm only: they are stored on its controller)
     def global_points(self, side: str) -> list[dict] | None:
         """A linked arm's global points; None for the stand-in, which has no controller."""
@@ -879,7 +915,7 @@ class StandInRobot:
         return self.jobs.start("upload", title, work, arm=side)
 
     def run(self, side: str, program_id: int, *, dry_run: bool, title: str, on_done=None,
-            stage: "staging.Stage | None" = None, mode: str | None = None):
+            stage: "staging.Stage | None" = None, mode: str | None = None, alone: bool = False):
         """Run a stored program: the pole and the hand are staged first (read back in Real,
         emulated in Hardware sim), and the program never starts when either fails, nor without a
         stage at all, nor once the mode is no longer ``mode`` (by default the one ``dry_run`` was
@@ -920,4 +956,4 @@ class StandInRobot:
                 on_done(out)
             return out
 
-        return self._start("run", title, work, side, mode)
+        return self._start("run", title, work, side, mode, alone)

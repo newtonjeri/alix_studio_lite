@@ -24,6 +24,7 @@ import { installSim } from './sim.js';
 import { installStatus } from './status.js';
 import { installTasks } from './tasks.js';
 import { installTeach } from './teach.js';
+import { installTransitions } from './transitions.js';
 import { installTune } from './tune.js';
 import { installViewer } from './viewer.js';
 
@@ -39,6 +40,7 @@ installAlerts();          // hardware errors and failures, bottom right, until c
 installRobotPanel();      // Visual sim / Hardware sim / Real, connections, E-stop (D30, R4)
 installTasks();           // the 22 tasks tied to the region catalogue (D35), fixtures (D29)
 installPrepare();
+installTransitions();     // Prepare's transition trajectories and task start points (V32)
 installTeach();           // existing recordings first (D31), drag teach, Save & Review
 installSim();             // the 3D robot in the simulation pane, on the 5 ms clock
 installTune();            // tuning with the optimiser, limits, target time (D24, D36)

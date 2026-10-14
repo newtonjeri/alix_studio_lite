@@ -16,6 +16,9 @@
     POST units/<KEY>/teach/start|stop|cancel  drag-teach (the robot stand-in until robot I/O exists)
     POST units/<KEY>/move-start | playback    robot moves, in Hardware sim or Real only
     POST units/<KEY>/upload | run | verdict   Real Test
+    GET|POST units/<KEY>/transition           the step's transition trajectory (V32 Prepare), kept in the project
+    POST units/<KEY>/transition/upload | run  sent to a Program ID and run on this arm alone
+    GET  units/<KEY>/end                      the last line of the step's file (a start point: Previous Task End)
 
 THE GATES, checked here on every execution (simulation, Hardware sim and Real), never only on
 the page: the trajectory was taught on THIS arm (a LEFT trajectory never reaches a RIGHT-arm
@@ -118,8 +121,14 @@ def identity(units: LiteUnits, key: str, which: str) -> dict:
             raise UserError("There is no tuned version yet.", "Finish Tune + Simulation first.")
         info = dict(path=Path(ver["path"]), name=f"version {ver['version']}", taught_arm=ver.get("taught_arm"),
                     stage=ver.get("stage"))
+    elif which == "transition":
+        tv = units.transition(key)
+        if not tv:
+            raise UserError("This step has no transition trajectory yet.",
+                            "Choose its .txt in Prepare: Task Transition & Start Point Tools.")
+        info = dict(path=Path(tv["path"]), name=tv["name"], taught_arm=tv.get("taught_arm"), stage=tv.get("stage"))
     else:
-        raise UserError("which must be raw, candidate or version.")
+        raise UserError("which must be raw, candidate, version or transition.")
     if info["taught_arm"] != u["arm"]:
         if info["taught_arm"] in ("left", "right"):
             raise UserError(f"{info['name']} was taught on the {info['taught_arm'].upper()} arm: it never runs on "
@@ -851,6 +860,177 @@ def post_verdict(app, q, body, m):
     units.add_result(key, "verdict", ver["sha256"] if ver else None, v == "pass",
                      {"verdict": v, "note": str(body.get("note") or "")[:500], "mode": app.ui["mode"]})
     return unit_view(app, units, key)
+
+
+# ── V32's Task Transition & Start Point Tools (Prepare, optional)
+
+def _transition_view(units: LiteUnits, key: str) -> dict | None:
+    tv = units.transition(key)
+    if not tv:
+        return None
+    out = {k: v for k, v in tv.items() if k != "path"}
+    out["end_joints_deg"] = [round(v / 1000.0, 3) for v in tv.get("end_millideg") or []]
+    out["project_path"] = Path(tv["path"]).relative_to(units.root).as_posix()
+    return out
+
+
+@route("GET", U + "/transition")
+def get_transition(app, q, body, m):
+    units, key = units_of(app, m.group(1)), m.group(2)
+    _unit(units, key)
+    return {"transition": _transition_view(units, key)}
+
+
+@route("POST", U + "/transition")
+def post_transition(app, q, body, m):
+    """Keep a transition trajectory for this arm step: ``{name, content, arm, pole_mm, hand}``, as a
+    loaded recording (the arm from its name or ``arm``, and the stage it was taught with, both
+    required). Its L1-L4 are checked on its bytes and shown; a file that fails them can still be
+    simulated, but is never sent to the robot."""
+    import tempfile
+
+    from ..motion import track
+    from .library import detect_arm
+
+    units, key = units_of(app, m.group(1)), m.group(2)
+    _unit(units, key)
+    content = body.get("content")
+    if not isinstance(content, str) or not content.strip():
+        raise UserError("The file is empty.")
+    if len(content) > 20_000_000:
+        raise UserError("The file is too large for a trajectory (over 20 MB).")
+    name = Path(str(body.get("name") or "transition.txt")).name
+    named, said = detect_arm(name), body.get("arm") or None
+    if said not in (None, "left", "right"):
+        raise UserError("The arm is left or right.")
+    if named and said and named != said:
+        raise UserError(f"{name}'s name says the {named.upper()} arm, but the {said.upper()} arm was given.", code="arm")
+    if body.get("pole_mm") is None or body.get("hand") is None:
+        raise UserError(f"Say the pole height and hand pose {name} was taught with.", code="stage")
+    stage = staging.make_stage(body["pole_mm"], body["hand"], "stated when the transition was loaded")
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td) / name
+        tmp.write_text(content, encoding="utf-8")
+        try:
+            track.read_md(tmp)
+        except ValueError as exc:
+            raise UserError(f"This file is not a trajectory Lite can use: {exc}",
+                            "A trajectory has one line per 5 ms: {\"point\":[7 whole numbers]}.") from None
+        units.set_transition(key, tmp, name, taught_arm=said or named, stage=stage)
+    return {"transition": _transition_view(units, key)}
+
+
+def _checked_transition(units: LiteUnits, key: str, arm: str) -> dict:
+    """The transition a robot step sends or runs: its bytes still the ones kept, and L1-L4 passed
+    again on them (a transition is not tuned, so nothing else vouches for it)."""
+    from dataclasses import asdict
+
+    from ..motion import track
+    from ..motion.checks import check_bytes, failures_text
+    from ..motion.limits import load_limits
+
+    tv = units.transition(key)
+    if not tv:
+        raise UserError("This step has no transition trajectory yet.", "Choose its .txt first.")
+    path = Path(tv["path"])
+    if track.sha256_file(path) != tv.get("sha256"):
+        raise UserError(f"{tv['name']} is not the file that was kept: its bytes have changed.", "Choose it again.")
+    rep = check_bytes(track.read_md(path), load_limits(arm), with_departure=False)
+    bad = [asdict(c) for c in rep.checks if c.hard and c.passed is False and c.id in ("L1", "L2", "L3", "L4")]
+    if bad:
+        raise UserError(f"{tv['name']} fails {failures_text({'checks': bad})}, so it never goes to the robot.",
+                        "Use a transition within the limits (tune it as a region's recording first), or watch it in "
+                        "the simulation only.")
+    return tv
+
+
+@route("POST", U + "/transition/upload")
+def post_transition_upload(app, q, body, m):
+    """Send the step's transition to a Program ID (1-100), as Real Test sends a kept version: its
+    arm and stage checked, its limits checked on the bytes sent; a slot holding another program
+    needs ``replace``. ``{unchanged: true}`` when the slot already holds it."""
+    units, key = units_of(app, m.group(1)), m.group(2)
+    u = _unit(units, key)
+    require_robot_mode(app)
+    pid = _program_check(body.get("program_id"))
+    info = identity(units, key, "transition")
+    tv = _checked_transition(units, key, u["arm"])
+    job = app.robot.upload(u["arm"], pid, Path(tv["path"]), f"{key}_transition"[:32], tv["sha256"], bool(body.get("replace")),
+                           f"Upload the {u['arm'].upper()} transition of {key} to program {pid}", stage=info["stage"].as_dict())
+    return {"unchanged": True, "program_id": pid} if job is None else job.view()
+
+
+@route("POST", U + "/transition/run")
+def post_transition_run(app, q, body, m):
+    """Run the step's transition, once sent: on this arm alone, the other arm stopped before and
+    while it runs (V32: "the opposite arm must remain stopped"), the pole and hand staged first; in
+    Hardware sim the controller's SIM mode, in Real confirmed."""
+    units, key = units_of(app, m.group(1)), m.group(2)
+    u = _unit(units, key)
+    mode = require_robot_mode(app)
+    require_confirmed(app, body, "The transition")
+    pid = _program_check(body.get("program_id"))
+    info = identity(units, key, "transition")
+    tv = _checked_transition(units, key, u["arm"])
+    prog = app.robot.arm(u["arm"]).programs.get(pid)
+    if not prog or prog.get("sha256") != tv["sha256"]:
+        raise UserError(f"Program {pid} does not hold this transition.", "Send it first.")
+    dry = mode != "real"
+    return app.robot.run(u["arm"], pid, dry_run=dry, stage=info["stage"], mode=mode, alone=True,
+                         title=f"{'Hardware sim' if dry else 'Real'} transition {u['arm'].upper()} ({key})").view()
+
+
+@route("GET", U + "/end")
+def get_end(app, q, body, m):
+    """Where the step's file ends (V32's Previous Task End): the last line of its kept version, or of
+    its active recording before one is kept, as joints (deg), with the file and its stage."""
+    from ..motion import track
+
+    units, key = units_of(app, m.group(1)), m.group(2)
+    _unit(units, key)
+    which = "version" if units.current_version(key) else "raw"
+    info = identity(units, key, which)
+    md = track.read_md(info["path"])
+    ver = units.current_version(key) if which == "version" else None
+    name = (ver.get("name") or f"{key} {ver['version']}") if ver else info["name"]
+    return {"which": which, "name": name, "sha256": track.sha256_file(info["path"]), "lines": int(md.shape[0]),
+            "joints_deg": [round(float(v) / 1000.0, 3) for v in md[-1]], "stage": info["stage"].as_dict()}
+
+
+@route("GET", r"/api/robots/(left|right)/capture")
+def get_capture(app, q, body, m):
+    """V32's Capture Current Pose: what the linked controller reads now (J1-J7, the tool pose, the
+    pole, the hand, the time and the controller)."""
+    session(app)
+    out = app.robot.capture(_arm(m))
+    app.log.hardware(out["arm"], "capture pose", ok=True, args=dict(joints_deg=out["joints_deg"], pose=out["pose"],
+                                                                     pole_mm=out["pole_mm"], hand=out["hand"]))
+    return out
+
+
+@route("POST", r"/api/robots/(left|right)/move-joints")
+def post_move_joints(app, q, body, m):
+    """A move to a start point's joints (V32's Move to Start Point): ``{joints_deg: [7], name,
+    confirmed}``, each joint within the arm's limits; on a linked arm at 30 % and read back."""
+    from ..motion.limits import load_limits
+
+    session(app)
+    side = _arm(m)
+    mode = require_robot_mode(app)
+    q_deg = body.get("joints_deg")
+    try:
+        q_deg = [float(v) for v in q_deg]
+    except (TypeError, ValueError):
+        q_deg = None
+    if not q_deg or len(q_deg) != 7:
+        raise UserError("A start point needs its seven joint values.", "Capture it again.")
+    for i, (v, (lo, hi)) in enumerate(zip(q_deg, load_limits(side).pos_deg)):
+        if not lo <= v <= hi:
+            raise UserError(f"J{i + 1} of that start point is {v:.1f}°, outside the arm's range ({lo:g}° to {hi:g}°).")
+    require_confirmed(app, body, "Moving the arm")
+    name = str(body.get("name") or "the start point")[:80]
+    return app.robot.move_to(side, f"start point “{name}”", f"{side.upper()} to {name}", mode=mode,
+                             target_millideg=[round(v * 1000) for v in q_deg]).view()
 
 
 # ── robots: mode, connection, pole, hand, E-stop (shared with Legacy Lite's stand-in)

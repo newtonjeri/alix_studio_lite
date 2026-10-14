@@ -28,6 +28,7 @@ class Job:
         self.hint: str | None = None
         self.events: list[dict] = []
         self.reason: tuple[str, str | None] | None = None   # why it was stopped, when not by STOP (an E-stop)
+        self.alone = False                                 # runs on its arm alone: the other arm stays stopped
         self._cancel = threading.Event()
         self._lock = threading.Lock()
 

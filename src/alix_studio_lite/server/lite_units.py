@@ -100,6 +100,10 @@ class LiteUnits(Project):
                 if any((k, f"version:{v['version']}") != skip and (v.get("name") or "").casefold() == want
                        for v in self.versions(k)):
                     return k
+            t = self.root / "trajectories" / "transitions" / u["arm"] / k
+            if t.is_dir() and any(str(_read_json(m, {}).get("name") or "").casefold() == want
+                                  for m in t.glob("*.source.json")):           # and the transition trajectories
+                return k
         return None
 
     def free_name(self, name: str) -> str:
@@ -299,6 +303,68 @@ class LiteUnits(Project):
     def library_file(self, key: str) -> dict | None:
         files = library(self.fixture)["files"]
         return next((f for f in files.values() if f.get("unit") == key and f.get("arm") == self.units[key]["arm"]), None)
+
+    # ── a transition trajectory per arm step (V32's Prepare, Task Transition & Start Point Tools): a
+    # file that takes the arm from where the previous task left it toward this task's start. Kept in
+    # the project where the handoff puts it (trajectories/transitions/<arm>/<KEY>/), with the arm and
+    # the stage it was taught with, like every recording; the latest is the step's transition.
+
+    def transition_dir(self, key: str) -> Path:
+        if key not in self.units:
+            raise KeyError(f"no region {key!r} in this project's catalogue")
+        return self.root / "trajectories" / "transitions" / self.units[key]["arm"] / key
+
+    def transition(self, key: str) -> dict | None:
+        """The step's transition: its record (name, arm, stage, lines, sha256, first and last line,
+        limits) with ``file`` and ``path``; None when it has none."""
+        f = self._unit_state(key).get("transition")
+        path = self.transition_dir(key) / str(f or "")
+        if not f or not path.is_file():
+            return None
+        return dict(_read_json(path.with_suffix(".source.json"), {}), file=f, path=str(path))
+
+    def set_transition(self, key: str, src: Path, name: str, *, taught_arm: str | None, stage) -> dict:
+        """Keep ``src`` as the step's transition. Like a recording, it must be this arm's file and
+        say the pole and hand it was taught with; its name is numbered when the project has it."""
+        import shutil
+        from dataclasses import asdict
+
+        from ..motion import track
+        from ..motion.checks import check_bytes, failures_text
+        from ..motion.limits import load_limits
+
+        arm = self.units[key]["arm"]
+        if taught_arm not in ("left", "right"):
+            raise UserError(f"Say which arm {name} was taught on.", code="arm")
+        if taught_arm != arm:
+            raise UserError(f"{name} was taught on the {taught_arm.upper()} arm; it cannot be the {arm.upper()} arm's "
+                            "transition. A trajectory never runs on the other arm.", code="arm")
+        st = stage if isinstance(stage, staging.Stage) else staging.stage_from(stage)
+        if st is None:
+            raise UserError(f"Say the pole height and hand pose {name} was taught with.", code="stage")
+        md = track.read_md(src)
+        if md.shape[0] < 2:
+            raise UserError(f"{name} has fewer than two lines.")
+        rep = check_bytes(md, load_limits(arm), with_departure=False)
+        bad = [asdict(c) for c in rep.checks if c.hard and c.passed is False and c.id in ("L1", "L2", "L3", "L4")]
+        with self.lock:
+            if self.name_owner(name):
+                name = self.free_name(name)
+            d = self.transition_dir(key)
+            d.mkdir(parents=True, exist_ok=True)
+            stem = re.sub(r"[^A-Za-z0-9_.\-]+", "_", Path(name).stem)[:60] or "transition"
+            dst = d / f"{time.strftime('%Y%m%d_%H%M%S')}_{stem}.txt"
+            shutil.copyfile(src, dst)
+            n = int(md.shape[0])
+            meta = dict(name=name, taught_arm=taught_arm, stage=st.as_dict(), sha256=track.sha256_file(dst), lines=n,
+                        seconds=round(0.005 * (n - 1), 3), first_millideg=[int(v) for v in md[0]],
+                        end_millideg=[int(v) for v in md[-1]], limits_ok=not bad,
+                        limits_text=failures_text({"checks": bad}), added=time.strftime("%Y-%m-%d %H:%M:%S"))
+            _atomic_write(dst.with_suffix(".source.json"), json.dumps(meta, indent=1))
+            state = self._unit_state(key)
+            state["transition"] = dst.name
+            self._write_state(key, state)
+        return self.transition(key)
 
     # ── results
 

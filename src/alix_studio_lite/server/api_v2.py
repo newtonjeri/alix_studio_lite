@@ -203,6 +203,7 @@ _CATEGORY = (("/stop", "SAFETY"), ("/recover", "SAFETY"), ("/estop", "SAFETY"), 
              ("/active", "TRAJECTORY"), ("/optimise", "TUNING"), ("/settings", "TUNING"), ("/undo", "TUNING"),
              ("/redo", "TUNING"), ("/keep", "TUNING"), ("/timeline", "SIMULATION"), ("/sequence", "SEQUENCE"),
              ("/api/robots", "ROBOT"), ("/upload", "ROBOT"), ("/run", "ROBOT"), ("/setup", "ROBOT"), ("/move", "ROBOT"),
+             ("/transition", "TRAJECTORY"),
              ("/api/projects", "PROJECT"), ("/api/library", "TRAJECTORY"))
 _JOB_CATEGORY = {"optimise": "TUNING", "teach": "TEACH"}
 
