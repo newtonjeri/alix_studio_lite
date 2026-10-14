@@ -136,3 +136,43 @@ def test_named_poses_are_refused_and_every_command_is_logged(server):
             "run mode REAL", "run mode SIM", "run"} <= verbs
     assert all(r["ret"] == 0 for r in hw if r["verb"] in ("upload", "rm_save_trajectory"))
     assert any("VERIFIED" in (r["text"] or "") for r in hw if r["verb"] == "rm_upload")      # its read-back
+
+
+def test_a_hand_settled_short_on_force_is_in_pose(monkeypatch):
+    """The lab's manual hand move (14 Oct): channel 5 stopped 714 counts short of 0, on force. The
+    control program's Hand.command takes ARRIVED or SETTLED as done, as staging already did."""
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    vendor_paths.activate()
+    from alix_dispatch import peripherals
+
+    from alix_studio_lite.server.jobs import UserError
+    from alix_studio_lite.server.robot_real import RealArm
+
+    class Link:
+        side, handle = "left", SimpleNamespace(robot=object())
+
+        @contextmanager
+        def busy(self, what):
+            yield
+
+    said = {}
+
+    class Hand:
+        def __init__(self, robot, side, log=None):
+            pass
+
+        def open(self, speed_set=None):
+            return 0
+
+        def command(self, counts, wait=True):
+            return said["out"]
+
+    monkeypatch.setattr(peripherals, "HandModbus", Hand)
+    arm, pose = RealArm(Link()), [1000, 1000, 1000, 1000, 0, 1000]
+    said["out"] = dict(ok=True, arrived=False, settled=True, ret=0, after=[1000, 999, 1000, 1000, 714, 992], t_s=0.89)
+    assert arm.hand_to(pose)["after"][4] == 714
+    said["out"] = dict(ok=False, arrived=False, settled=False, ret=0, after=None, t_s=3.0)       # timed out
+    with pytest.raises(UserError, match="did not reach its pose"):
+        arm.hand_to(pose)

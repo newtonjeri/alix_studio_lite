@@ -195,7 +195,9 @@ class RealArm:
         return out
 
     def hand_to(self, counts: list) -> dict:
-        """The hand alone to six counts (Advanced), at 50 %, read back."""
+        """The hand alone to six counts (Advanced), at 50 %, read back. Done as staging takes it
+        (_settled: the control program's Hand.command): ARRIVED, or SETTLED short of the target,
+        fingers stopped on force (on the lab's hand, 14 Oct, the thumb stopped 714 counts short)."""
         from alix_dispatch import peripherals
 
         with self.link.busy("moving the hand"):
@@ -205,9 +207,11 @@ class RealArm:
                 self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
                 raise UserError(f"The {self.SIDE} hand cannot be reached (Modbus).", "Check the hand's cable and power.")
             out = hand.command(list(counts), wait=True)
+        done = bool(out.get("ok") and (out.get("arrived") or out.get("settled")))
+        short = "" if out.get("arrived") or not done else " (settled short of the target: stopped on force)"
         self._hw("hand move", args=dict(counts=list(counts), speed_set=HAND_SPEED_SET), ret=out.get("ret"),
-                 ok=bool(out.get("ok") and out.get("arrived")), elapsed_s=out.get("t_s"), text=f"read back {out.get('after')}")
-        if not (out.get("ok") and out.get("arrived")):
+                 ok=done, elapsed_s=out.get("t_s"), text=f"read back {out.get('after')}{short}")
+        if not done:
             raise UserError(f"The {self.SIDE} hand did not reach its pose (it reads {out.get('after')}).",
                             "Check the hand, then try again.")
         return out

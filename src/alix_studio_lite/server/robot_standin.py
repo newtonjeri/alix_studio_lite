@@ -573,8 +573,9 @@ class StandInRobot:
                 job.progress("Setting the hand (50 % speed)", 1, 1)
                 out = real.hand_to(vals)
                 a.hand = list(out.get("after") or vals)
-                job.log("Hand in pose (read back on the controller): " + ", ".join(map(str, a.hand)))
-                return dict(hand=a.hand)
+                job.log(("Hand in pose" if out.get("arrived") else "Hand settled short of the pose, stopped on force")
+                        + " (read back on the controller): " + ", ".join(map(str, a.hand)))
+                return dict(hand=a.hand, arrived=bool(out.get("arrived")))
             job.progress("Setting the hand", 1, 1)
             job.sleep(0.8)
             a.hand = vals
