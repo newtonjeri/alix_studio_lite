@@ -1,0 +1,283 @@
+{"t": 1791976335.4281313, "who": "-", "what": "POST /api/auth/login", "detail": {"pin": "***"}, "ok": true, "error": null}
+{"t": 1791976335.4574401, "who": "operator", "what": "page: showView", "detail": {"view": "home"}, "ok": true, "error": null}
+{"t": 1791976341.812139, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791976341.8124547, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791976341.812601, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976341.8127413, "who": "operator", "what": "page: showView", "detail": {"view": "teach"}, "ok": true, "error": null}
+{"t": 1791976341.8128686, "who": "operator", "what": "page: loadTask", "detail": {"task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791976341.8140109, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976341.814761, "who": "operator", "what": "page: openProjectById", "detail": {"project": "alix_mv7x0zhy_z3wx7"}, "ok": true, "error": null}
+{"t": 1791976366.8095615, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976367.634972, "who": "operator:f19cf5", "what": "POST /api/robots/mode", "detail": {"mode": "visual"}, "ok": true, "error": null}
+{"t": 1791976368.6383445, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976368.8239799, "who": "operator:f19cf5", "what": "POST /api/robots/left/connect", "detail": {"ip": "192.168.1.10"}, "ok": true, "error": null}
+{"t": 1791976369.565993, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976371.6995804, "who": "operator:f19cf5", "what": "POST /api/robots/right/connect", "detail": {"ip": "192.168.1.103"}, "ok": true, "error": null}
+{"t": 1791976372.2690184, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976374.9341366, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976377.0592432, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup", "detail": {"pole_mm": 150, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "apply": false}, "ok": true, "error": null}
+{"t": 1791976378.0431952, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976380.6494858, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976381.3720965, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976382.8216097, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976383.50032, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup", "detail": {"pole_mm": 100, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "apply": false}, "ok": true, "error": null}
+{"t": 1791976384.4869232, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976388.2279553, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup", "detail": {"pole_mm": 100, "hand": [0, 0, 0, 0, 150, 1000], "apply": false}, "ok": true, "error": null}
+{"t": 1791976389.2140024, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976391.592387, "who": "operator", "what": "page: setStage", "detail": {"asked": "teach", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976392.700049, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976393.9955816, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {}, "ok": false, "error": "Lite is in Visual sim, so it does not use the robot."}
+{"t": 1791976393.997864, "who": "operator", "what": "page: robot panel", "detail": {}, "ok": true, "error": null}
+{"t": 1791976394.9986243, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976395.8267677, "who": "operator:f19cf5", "what": "POST /api/robots/mode", "detail": {"mode": "visual"}, "ok": true, "error": null}
+{"t": 1791976396.8303485, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976399.2621813, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976399.3006551, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {}, "ok": false, "error": "Lite is in Visual sim, so it does not use the robot."}
+{"t": 1791976399.3046863, "who": "operator", "what": "page: robot panel", "detail": {}, "ok": true, "error": null}
+{"t": 1791976400.3049479, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976402.5784967, "who": "operator:f19cf5", "what": "POST /api/robots/mode", "detail": {"mode": "real"}, "ok": false, "error": "Switching to the real robot needs your confirmation."}
+{"t": 1791976403.5816681, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976403.6683428, "who": "operator:f19cf5", "what": "POST /api/robots/mode", "detail": {"mode": "real", "confirmed": true}, "ok": true, "error": null}
+{"t": 1791976404.6708815, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976406.0901947, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976406.3779938, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {}, "ok": false, "error": "Drag teaching on the real robot needs your confirmation."}
+{"t": 1791976407.3806465, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976407.4984949, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {"confirmed": true}, "ok": false, "error": "The LEFT arm is not in this region's setup (pole 100 mm, hand grip): it reads pole 150 mm, hand 1000, 1000, 1000, 1000, 997, 992."}
+{"t": 1791976408.5009766, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976411.1958084, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {}, "ok": false, "error": "Drag teaching on the real robot needs your confirmation."}
+{"t": 1791976412.1560607, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {"confirmed": true}, "ok": false, "error": "The LEFT arm is not in this region's setup (pole 100 mm, hand grip): it reads pole 150 mm, hand 1000, 1000, 1000, 1000, 997, 992."}
+{"t": 1791976412.1995265, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976413.1586237, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976416.1753132, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976418.2114346, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {}, "ok": false, "error": "Drag teaching on the real robot needs your confirmation."}
+{"t": 1791976419.215025, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976420.3821876, "who": "operator:f19cf5", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {"confirmed": true}, "ok": false, "error": "The LEFT arm is not in this region's setup (pole 100 mm, hand grip): it reads pole 150 mm, hand 1000, 999, 1000, 1000, 997, 992."}
+{"t": 1791976421.3850276, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976425.0674465, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976426.1809072, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976426.5810533, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976427.432486, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976427.6762328, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976428.5433488, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976429.4237025, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976429.8640501, "who": "operator", "what": "page: setStage", "detail": {"asked": "teach", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976430.3379514, "who": "operator", "what": "page: setStage", "detail": {"asked": "review", "stage": "review", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976431.341271, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976432.1305063, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "review", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976432.6775696, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "review", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976433.1375823, "who": "operator", "what": "page: setStage", "detail": {"asked": "teach", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976434.1434999, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976434.659963, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976435.7385561, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976436.516198, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976436.7301064, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976436.7918997, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976437.7331035, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976440.743281, "who": "operator:f19cf5", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976443.7162366, "who": "-", "what": "POST /api/auth/login", "detail": {"pin": "***"}, "ok": false, "error": "Incorrect operator PIN. Please try again."}
+{"t": 1791976447.2167656, "who": "-", "what": "POST /api/auth/login", "detail": {"pin": "***"}, "ok": true, "error": null}
+{"t": 1791976447.2339854, "who": "operator", "what": "page: showView", "detail": {"view": "home"}, "ok": true, "error": null}
+{"t": 1791976452.2887866, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791976452.2889981, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976452.2892761, "who": "operator", "what": "page: loadTask", "detail": {"task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791976452.2919273, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791976452.2934134, "who": "operator", "what": "page: showView", "detail": {"view": "teach"}, "ok": true, "error": null}
+{"t": 1791976452.2941573, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976452.2952788, "who": "operator", "what": "page: openProjectById", "detail": {"project": "alix_mv7x0zhy_z3wx7"}, "ok": true, "error": null}
+{"t": 1791976476.3758073, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976477.4457507, "who": "operator", "what": "page: setStage", "detail": {"asked": "teach", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976477.4992526, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976478.553018, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976482.5499916, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976483.6361165, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976484.2415762, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976485.3197365, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976495.9345567, "who": "operator:436798", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {}, "ok": false, "error": "Drag teaching on the real robot needs your confirmation."}
+{"t": 1791976496.9380808, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976497.2393856, "who": "operator:436798", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {"confirmed": true}, "ok": false, "error": "The LEFT arm is not in this region's setup (pole 100 mm, hand grip): it reads pole 150 mm, hand 1000, 999, 1000, 1000, 997, 992."}
+{"t": 1791976498.242314, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976501.4569414, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976502.2171304, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976515.089904, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976516.1862173, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976519.2321327, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976522.310318, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976523.4110818, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976526.6812046, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976527.990574, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976529.0956807, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976529.9385474, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976531.024135, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976531.7354147, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976532.813753, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976533.4252288, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976534.516821, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976534.9245183, "who": "operator:436798", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976542.0031722, "who": "-", "what": "POST /api/auth/login", "detail": {"pin": "***"}, "ok": true, "error": null}
+{"t": 1791976542.017689, "who": "operator", "what": "page: showView", "detail": {"view": "home"}, "ok": true, "error": null}
+{"t": 1791976545.372043, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791976545.3724518, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976545.3727224, "who": "operator", "what": "page: loadTask", "detail": {"task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791976545.3743868, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791976545.3779924, "who": "operator", "what": "page: showView", "detail": {"view": "teach"}, "ok": true, "error": null}
+{"t": 1791976545.3785625, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976545.3799198, "who": "operator", "what": "page: openProjectById", "detail": {"project": "alix_mv7x0zhy_z3wx7"}, "ok": true, "error": null}
+{"t": 1791976547.9792924, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup", "detail": {"pole_mm": 100, "hand": [0, 0, 0, 0, 150, 1000], "apply": true}, "ok": false, "error": "Moving the pole and the hand on the real robot needs your confirmation."}
+{"t": 1791976548.9823895, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976549.0718565, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup", "detail": {"pole_mm": 100, "hand": [0, 0, 0, 0, 150, 1000], "apply": true, "confirmed": true}, "ok": true, "error": null}
+{"t": 1791976550.049183, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976552.7980115, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup", "detail": {"pole_mm": 100, "hand": [0, 0, 0, 0, 150, 1000], "apply": true}, "ok": false, "error": "Moving the pole and the hand on the real robot needs your confirmation."}
+{"t": 1791976552.878536, "who": null, "what": "job stage done: Stage L-R01: pole 100 mm, hand grip", "detail": {"id": "stage-1", "unit": null, "arm": "left", "elapsed_s": 3.8}, "ok": true, "error": null}
+{"t": 1791976553.8013146, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976553.8933425, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup", "detail": {"pole_mm": 100, "hand": [0, 0, 0, 0, 150, 1000], "apply": true, "confirmed": true}, "ok": true, "error": null}
+{"t": 1791976554.8747213, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976555.2106545, "who": null, "what": "job stage done: Stage L-R01: pole 100 mm, hand grip", "detail": {"id": "stage-2", "unit": null, "arm": "left", "elapsed_s": 1.3}, "ok": true, "error": null}
+{"t": 1791976560.5663722, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup", "detail": {"pole_mm": 100, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "apply": true}, "ok": false, "error": "Moving the pole and the hand on the real robot needs your confirmation."}
+{"t": 1791976561.568923, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976561.6075668, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup", "detail": {"pole_mm": 100, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "apply": true, "confirmed": true}, "ok": true, "error": null}
+{"t": 1791976562.5895803, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976562.5966024, "who": null, "what": "job stage done: Stage L-R01: pole 100 mm, hand open", "detail": {"id": "stage-3", "unit": null, "arm": "left", "elapsed_s": 1.0}, "ok": true, "error": null}
+{"t": 1791976568.6659052, "who": "operator", "what": "page: setStage", "detail": {"asked": "teach", "stage": "teach", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976569.7873373, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976570.6874747, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {}, "ok": false, "error": "Drag teaching on the real robot needs your confirmation."}
+{"t": 1791976571.6905758, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976571.7856777, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {"confirmed": true}, "ok": true, "error": null}
+{"t": 1791976572.637039, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976574.5392992, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/cancel", "detail": {}, "ok": true, "error": null}
+{"t": 1791976575.4524837, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976575.5390685, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {}, "ok": false, "error": "Drag teaching on the real robot needs your confirmation."}
+{"t": 1791976576.5127287, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {"confirmed": true}, "ok": true, "error": null}
+{"t": 1791976576.5424514, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976577.4099936, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976595.0275946, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976596.4156284, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976598.0511787, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976599.2659254, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976600.267893, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/stop", "detail": {"name": "L_TASK_1A_trajectory.txt"}, "ok": true, "error": null}
+{"t": 1791976636.3599653, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {}, "ok": false, "error": "Drag teaching on the real robot needs your confirmation."}
+{"t": 1791976637.363974, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976637.428159, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start", "detail": {"confirmed": true}, "ok": true, "error": null}
+{"t": 1791976638.2942095, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976645.5635421, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976646.633364, "who": "operator", "what": "page: setStage", "detail": {"asked": "review", "stage": "review", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976647.292504, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/stop", "detail": {"name": "L_TASK_1A_trajectory.txt"}, "ok": true, "error": null}
+{"t": 1791976647.6373343, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976650.211674, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976651.6038013, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/name", "detail": {"name": "L_TASK_1A_trajectory.txt"}, "ok": true, "error": null}
+{"t": 1791976652.5877664, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976657.7658942, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976660.9210167, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976665.7096903, "who": "operator", "what": "page: setStage", "detail": {"asked": "optimize", "stage": "optimize", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976666.0640087, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/optimise", "detail": {}, "ok": true, "error": null}
+{"t": 1791976666.471203, "who": null, "what": "job optimise failed: Tune L-R01", "detail": {"id": "optimise-4", "unit": "L-R01", "arm": "left", "elapsed_s": 0.4}, "ok": false, "error": "These settings cannot be used: two segments overlap; adjust them so they do not share lines."}
+{"t": 1791976666.714277, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976673.4215517, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976674.6834064, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976676.6138575, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976688.6230564, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976689.5364633, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976691.0897737, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976692.1421824, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976700.6213214, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976702.3407564, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976703.3985457, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976703.5884986, "who": "operator:4244cf", "what": "POST /api/robots/mode", "detail": {"mode": "visual"}, "ok": true, "error": null}
+{"t": 1791976704.5916927, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976710.0051374, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976711.0769012, "who": "operator:4244cf", "what": "POST /api/robots/mode", "detail": {"mode": "real"}, "ok": false, "error": "Switching to the real robot needs your confirmation."}
+{"t": 1791976712.079622, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976714.2314155, "who": "operator:4244cf", "what": "POST /api/robots/mode", "detail": {"mode": "real", "confirmed": true}, "ok": true, "error": null}
+{"t": 1791976715.2341132, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976717.329215, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976719.1463835, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976720.7649522, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976722.1838918, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976723.0727155, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976726.1158319, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976726.953745, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976730.6222582, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976734.6620393, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976737.7420614, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976738.8700874, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976744.1121912, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976787.8948019, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976788.6725185, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976789.806549, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976792.4548728, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976794.6968925, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976799.005388, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976800.70529, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976811.8794913, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976815.096491, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976838.8533552, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/optimise", "detail": {}, "ok": true, "error": null}
+{"t": 1791976838.954263, "who": null, "what": "job optimise failed: Tune L-R01", "detail": {"id": "optimise-5", "unit": "L-R01", "arm": "left", "elapsed_s": 0.1}, "ok": false, "error": "These settings cannot be used: two segments overlap; adjust them so they do not share lines."}
+{"t": 1791976839.181879, "who": "operator", "what": "page: setStage", "detail": {"asked": "real", "stage": "optimize", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976839.8406563, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976842.8374875, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/optimise", "detail": {}, "ok": true, "error": null}
+{"t": 1791976842.9381924, "who": null, "what": "job optimise failed: Tune L-R01", "detail": {"id": "optimise-6", "unit": "L-R01", "arm": "left", "elapsed_s": 0.1}, "ok": false, "error": "These settings cannot be used: two segments overlap; adjust them so they do not share lines."}
+{"t": 1791976843.170526, "who": "operator", "what": "page: setStage", "detail": {"asked": "real", "stage": "optimize", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976843.8253362, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976847.3883533, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/settings", "detail": {"changes": {"segments": [{"start": 500, "end": 500, "pct": 90}, {"start": 6232, "end": 6232, "pct": 100}]}, "label": "Scale regions"}, "ok": true, "error": null}
+{"t": 1791976848.0828664, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/settings", "detail": {"changes": {"segments": [{"start": 6232, "end": 6232, "pct": 100}]}, "label": "Scale regions"}, "ok": true, "error": null}
+{"t": 1791976848.1207085, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976848.8167922, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976848.8841336, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/settings", "detail": {"changes": {"segments": []}, "label": "Scale regions"}, "ok": true, "error": null}
+{"t": 1791976849.6178308, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976855.1916564, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/optimise", "detail": {}, "ok": true, "error": null}
+{"t": 1791976855.6937969, "who": null, "what": "job optimise done: Tune L-R01", "detail": {"id": "optimise-7", "unit": "L-R01", "arm": "left", "elapsed_s": 0.5}, "ok": true, "error": null}
+{"t": 1791976855.878289, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/keep", "detail": {}, "ok": true, "error": null}
+{"t": 1791976855.88607, "who": "operator", "what": "page: setStage", "detail": {"asked": "real", "stage": "real", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791976856.2633028, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976860.185971, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976863.5530298, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976865.1215115, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976867.6967485, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976869.3126373, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976870.1019616, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/upload", "detail": {"program_id": 90}, "ok": false, "error": "Program 90 on the LEFT controller already holds “90_L-R01_v001.txt”."}
+{"t": 1791976875.1622555, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976876.916272, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976877.9052033, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976880.6033382, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976881.6899366, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/upload", "detail": {"program_id": 91}, "ok": false, "error": "Program 91 on the LEFT controller already holds “91_V3.txt”."}
+{"t": 1791976881.8170998, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976884.627762, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976886.0676534, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/upload", "detail": {"program_id": 91, "replace": true}, "ok": true, "error": null}
+{"t": 1791976886.1113956, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976891.5330172, "who": null, "what": "job upload done: Upload L-R01 to program 91", "detail": {"id": "upload-8", "unit": null, "arm": "left", "elapsed_s": 5.5}, "ok": true, "error": null}
+{"t": 1791976892.4687474, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976912.1172342, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976913.3818178, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976917.8246946, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976919.2431998, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791976921.7025006, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977000.007345, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977000.045899, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/run", "detail": {}, "ok": false, "error": "A run on the real robot needs your confirmation."}
+{"t": 1791977001.0488386, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977001.296716, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/run", "detail": {"confirmed": true}, "ok": true, "error": null}
+{"t": 1791977002.2659514, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977003.976128, "who": null, "what": "job run failed: Real run L-R01", "detail": {"id": "run-9", "unit": null, "arm": "left", "elapsed_s": 2.7}, "ok": false, "error": "The LEFT arm was not staged: hand command failed (pole 100 mm of 100 mm). Nothing else ran."}
+{"t": 1791977005.269837, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977013.1016395, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977034.4893882, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/run", "detail": {}, "ok": false, "error": "A run on the real robot needs your confirmation."}
+{"t": 1791977035.4957623, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977036.2122672, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/run", "detail": {"confirmed": true}, "ok": true, "error": null}
+{"t": 1791977037.1880856, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977050.5365632, "who": null, "what": "job run done: Real run L-R01", "detail": {"id": "run-10", "unit": null, "arm": "left", "elapsed_s": 14.3}, "ok": true, "error": null}
+{"t": 1791977054.8900456, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977058.5040612, "who": "operator:4244cf", "what": "POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/verdict", "detail": {"verdict": "pass"}, "ok": true, "error": null}
+{"t": 1791977058.5219774, "who": "operator", "what": "page: selectArm", "detail": {"arm": "right", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791977058.5333304, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "right"}, "ok": true, "error": null}
+{"t": 1791977059.4859145, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977070.0231135, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977070.5889392, "who": "operator", "what": "page: showView", "detail": {"view": "sequence"}, "ok": true, "error": null}
+{"t": 1791977071.5960505, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977077.9371939, "who": "operator", "what": "page: showView", "detail": {"view": "teach"}, "ok": true, "error": null}
+{"t": 1791977078.8877516, "who": "operator", "what": "page: showView", "detail": {"view": "setup"}, "ok": true, "error": null}
+{"t": 1791977078.963322, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977079.900896, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977157.2236536, "who": "operator:4244cf", "what": "POST /api/auth/engineer/lock", "detail": {}, "ok": true, "error": null}
+{"t": 1791977158.2383058, "who": "operator:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977159.4349282, "who": "engineer:4244cf", "what": "POST /api/auth/engineer", "detail": {"pin": "***"}, "ok": true, "error": null}
+{"t": 1791977159.661737, "who": "engineer", "what": "page: openRobotControl", "detail": {}, "ok": true, "error": null}
+{"t": 1791977159.7685049, "who": "engineer:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}
+{"t": 1791977162.4410884, "who": "engineer:4244cf", "what": "PUT /api/projects/alix_mv7x0zhy_z3wx7", "detail": null, "ok": true, "error": null}

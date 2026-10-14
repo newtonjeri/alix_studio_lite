@@ -1,0 +1,354 @@
+19:12:15.428 [activity] - POST /api/auth/login
+19:12:15.457 [activity] operator page: showView
+19:12:21.812 [activity] operator page: selectArm
+19:12:21.812 [activity] operator page: selectArm
+19:12:21.812 [activity] operator page: setStage
+19:12:21.812 [activity] operator page: showView
+19:12:21.812 [activity] operator page: loadTask
+19:12:21.814 [activity] operator page: setStage
+19:12:21.814 [activity] operator page: openProjectById
+19:12:46.809 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:12:47.634 [activity] operator:f19cf5 POST /api/robots/mode
+19:12:48.638 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:12:48.823 [activity] operator:f19cf5 POST /api/robots/left/connect
+19:12:49.565 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:12:51.699 [activity] operator:f19cf5 POST /api/robots/right/connect
+19:12:52.269 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:12:54.934 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:12:57.059 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup
+19:12:58.043 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:00.649 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:01.372 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:02.821 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:03.500 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup
+19:13:04.486 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:08.227 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup
+19:13:09.214 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:11.592 [activity] operator page: setStage
+19:13:12.700 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:13.995 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: Lite is in Visual sim, so it does not use the robot.
+19:13:13.997 [activity] operator page: robot panel
+19:13:14.998 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:15.826 [activity] operator:f19cf5 POST /api/robots/mode
+19:13:16.830 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:19.262 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:19.300 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: Lite is in Visual sim, so it does not use the robot.
+19:13:19.304 [activity] operator page: robot panel
+19:13:20.304 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:22.578 [activity] operator:f19cf5 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+19:13:23.581 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:23.668 [activity] operator:f19cf5 POST /api/robots/mode
+19:13:24.670 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:26.090 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:26.377 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+19:13:27.380 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:27.498 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 100 mm, hand grip): it reads pole 150 mm, hand 1000, 1000, 1000, 1000, 997, 992.
+19:13:28.500 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:31.195 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+19:13:32.156 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 100 mm, hand grip): it reads pole 150 mm, hand 1000, 1000, 1000, 1000, 997, 992.
+19:13:32.199 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:33.158 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:36.175 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:38.211 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+19:13:39.215 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:40.382 [activity] operator:f19cf5 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 100 mm, hand grip): it reads pole 150 mm, hand 1000, 999, 1000, 1000, 997, 992.
+19:13:41.385 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:45.067 [activity] operator page: setStage
+19:13:46.180 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:46.581 [activity] operator page: setStage
+19:13:47.432 [activity] operator page: setStage
+19:13:47.676 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:48.543 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:49.423 [activity] operator page: setStage
+19:13:49.864 [activity] operator page: setStage
+19:13:50.337 [activity] operator page: setStage
+19:13:51.341 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:52.130 [activity] operator page: setStage
+19:13:52.677 [activity] operator page: setStage
+19:13:53.137 [activity] operator page: setStage
+19:13:54.143 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:54.659 [activity] operator page: setStage
+19:13:55.738 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:56.516 [activity] operator page: setStage
+19:13:56.730 [activity] operator page: setStage
+19:13:56.791 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:13:57.733 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:14:00.743 [activity] operator:f19cf5 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:14:03.716 [activity] - POST /api/auth/login -> REFUSED: Incorrect operator PIN. Please try again.
+19:14:07.216 [activity] - POST /api/auth/login
+19:14:07.233 [activity] operator page: showView
+19:14:12.288 [activity] operator page: selectArm
+19:14:12.288 [activity] operator page: setStage
+19:14:12.289 [activity] operator page: loadTask
+19:14:12.291 [activity] operator page: selectArm
+19:14:12.293 [activity] operator page: showView
+19:14:12.294 [activity] operator page: setStage
+19:14:12.295 [activity] operator page: openProjectById
+19:14:36.375 [activity] operator page: setStage
+19:14:37.445 [activity] operator page: setStage
+19:14:37.499 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:14:38.553 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:14:42.549 [activity] operator page: setStage
+19:14:43.636 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:14:44.241 [activity] operator page: setStage
+19:14:45.319 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:14:55.934 [activity] operator:436798 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+19:14:56.938 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:14:57.239 [activity] operator:436798 POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 100 mm, hand grip): it reads pole 150 mm, hand 1000, 999, 1000, 1000, 997, 992.
+19:14:58.242 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:01.456 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:02.217 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:15.089 [activity] operator page: setStage
+19:15:16.186 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:19.232 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:22.310 [activity] operator page: setStage
+19:15:23.411 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:26.681 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:27.990 [activity] operator page: setStage
+19:15:29.095 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:29.938 [activity] operator page: setStage
+19:15:31.024 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:31.735 [activity] operator page: setStage
+19:15:32.813 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:33.425 [activity] operator page: setStage
+19:15:34.516 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:34.924 [activity] operator:436798 PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:42.003 [activity] - POST /api/auth/login
+19:15:42.017 [activity] operator page: showView
+19:15:45.372 [activity] operator page: selectArm
+19:15:45.372 [activity] operator page: setStage
+19:15:45.372 [activity] operator page: loadTask
+19:15:45.374 [activity] operator page: selectArm
+19:15:45.377 [activity] operator page: showView
+19:15:45.378 [activity] operator page: setStage
+19:15:45.379 [activity] operator page: openProjectById
+19:15:47.979 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup -> REFUSED: Moving the pole and the hand on the real robot needs your confirmation.
+19:15:48.982 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:49.071 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup
+19:15:49.484 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+19:15:49.572 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+19:15:49.580 [LEFT] alix · hand: OPEN before the pole moves — from peripherals.HAND_OPEN — this plan authors no release stage and the caller named none
+19:15:49.634 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 1000, 1000, 1000, 997, 992]; law 0.12 s)
+19:15:49.810 [LEFT] alix · hand: arrived at [1000, 1000, 1000, 1000, 997, 992] after 0.11 s (per-channel travel [0, 0, 0, 0, 0, 0])
+19:15:50.033 [LEFT] alix · pole: 150 mm -> 100 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.53 s, timeout 7.6 s)
+19:15:50.049 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:51.779 [LEFT] alix · pole: at 101 mm after 1.73 s (verified_by=getter, moved 49 mm through 26 distinct readings)
+19:15:51.780 [LEFT] alix · hand: None (the state the stroke was planned with)
+19:15:51.838 [LEFT] alix · hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [1000, 1000, 1000, 1000, 997, 992]; law 0.86 s)
+19:15:52.789 [LEFT] alix · hand: settled at [793, 726, 719, 740, 713, 992] after 0.89 s (per-channel travel [245, 274, 281, 282, 288, 0])
+19:15:52.789 [LEFT] alix · ** hand: settled without arriving — worst channel 1 is 793 counts short (target 0, readback 793)
+19:15:52.790 [LEFT] alix · ** left: the hand read back [793, 726, 719, 740, 713, 992] against a commanded [0, 0, 0, 0, 150, 1000] — channel 1 is 793 counts out, past its 25-count staging band
+19:15:52.798 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup -> REFUSED: Moving the pole and the hand on the real robot needs your confirmation.
+19:15:52.877 [LEFT] hand settled {"target": [0, 0, 0, 0, 150, 1000]} · stopped at [793, 726, 719, 740, 713, 992] (on the tool): done, as the control program takes it
+19:15:52.878 [LEFT] stage {"pole_mm": 100.0, "hand": [0, 0, 0, 0, 150, 1000], "speed_pct": 50} · pole 101 mm, hand [793, 726, 719, 740, 713, 992]
+19:15:52.878 [activity] - job stage done: Stage L-R01: pole 100 mm, hand grip
+19:15:53.801 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:53.893 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup
+19:15:54.142 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+19:15:54.237 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+19:15:54.244 [LEFT] alix · pole: already at 100 mm, the plan's 100 mm (within 5 mm, read from the getter)
+19:15:54.244 [LEFT] alix · hand: None (the state the stroke was planned with)
+19:15:54.298 [LEFT] alix · hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [793, 726, 719, 740, 713, 992]; law 0.71 s)
+19:15:54.874 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:15:55.127 [LEFT] alix · hand: settled at [750, 723, 718, 713, 713, 992] after 0.75 s (per-channel travel [53, 3, 1, 35, 0, 0])
+19:15:55.127 [LEFT] alix · ** hand: channel(s) [2, 3, 5] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [750, 723, 718, 713, 713, 992]. Either that channel is dead or the readback is not the device.
+19:15:55.127 [LEFT] alix · ** left: the hand read back [750, 723, 718, 713, 713, 992] against a commanded [0, 0, 0, 0, 150, 1000] — channel 1 is 750 counts out, past its 25-count staging band
+19:15:55.210 [LEFT] hand settled {"target": [0, 0, 0, 0, 150, 1000]} · stopped at [750, 723, 718, 713, 713, 992] (on the tool): done, as the control program takes it
+19:15:55.210 [LEFT] stage {"pole_mm": 100.0, "hand": [0, 0, 0, 0, 150, 1000], "speed_pct": 50} · pole 100 mm, hand [750, 723, 718, 713, 713, 992]
+19:15:55.210 [activity] - job stage done: Stage L-R01: pole 100 mm, hand grip
+19:16:00.566 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup -> REFUSED: Moving the pole and the hand on the real robot needs your confirmation.
+19:16:01.568 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:01.607 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/setup
+19:16:01.960 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+19:16:02.037 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+19:16:02.045 [LEFT] alix · pole: already at 100 mm, the plan's 100 mm (within 5 mm, read from the getter)
+19:16:02.045 [LEFT] alix · hand: None (the state the stroke was planned with)
+19:16:02.109 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [750, 723, 718, 712, 713, 992]; law 0.33 s)
+19:16:02.507 [LEFT] alix · hand: arrived at [1000, 998, 1000, 1000, 999, 992] after 0.33 s (per-channel travel [250, 275, 282, 288, 286, 0])
+19:16:02.589 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:02.596 [LEFT] stage {"pole_mm": 100.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 100 mm, hand [1000, 998, 1000, 1000, 999, 992]
+19:16:02.596 [activity] - job stage done: Stage L-R01: pole 100 mm, hand open
+19:16:08.665 [activity] operator page: setStage
+19:16:09.787 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:10.687 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+19:16:11.641 [LEFT] rm_start_drag_teach [1] ret=0 (0.008 s)
+19:16:11.690 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:11.785 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start
+19:16:12.637 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:14.453 [LEFT] rm_stop_drag_teach [] ret=0 (0.004 s)
+19:16:14.539 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/cancel
+19:16:15.452 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:15.539 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+19:16:16.417 [LEFT] rm_start_drag_teach [1] ret=0 (0.010 s)
+19:16:16.512 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start
+19:16:16.542 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:17.409 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:34.039 [LEFT] rm_stop_drag_teach [] ret=0 (0.015 s)
+19:16:35.027 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:36.415 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:38.051 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:39.265 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:16:40.160 [LEFT] rm_save_trajectory ["/tmp/lite-teach-3hug3ixy/left_drag_20261014_191634.txt"] ret=0 (6.121 s)
+19:16:40.267 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/stop
+19:17:16.359 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+19:17:17.322 [LEFT] rm_start_drag_teach [1] ret=0 (0.034 s)
+19:17:17.363 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:17.428 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/start
+19:17:18.294 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:24.566 [LEFT] rm_stop_drag_teach [] ret=0 (0.006 s)
+19:17:25.563 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:26.633 [activity] operator page: setStage
+19:17:27.175 [LEFT] rm_save_trajectory ["/tmp/lite-teach-gvmowdk_/left_drag_20261014_191724.txt"] ret=0 (2.608 s)
+19:17:27.292 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/teach/stop
+19:17:27.637 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:30.211 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:31.603 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/name
+19:17:32.587 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:37.765 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:40.921 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:45.709 [activity] operator page: setStage
+19:17:46.064 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/optimise
+19:17:46.471 [activity] - job optimise failed: Tune L-R01 -> REFUSED: These settings cannot be used: two segments overlap; adjust them so they do not share lines.
+19:17:46.714 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:53.421 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:54.683 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:17:56.613 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:08.623 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:09.536 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:11.089 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:12.142 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:20.621 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:22.340 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:23.398 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:23.588 [activity] operator:4244cf POST /api/robots/mode
+19:18:24.591 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:30.005 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:31.076 [activity] operator:4244cf POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+19:18:32.079 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:34.231 [activity] operator:4244cf POST /api/robots/mode
+19:18:35.234 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:37.329 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:39.146 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:40.764 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:42.183 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:43.072 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:46.115 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:46.953 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:50.622 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:54.662 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:57.742 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:18:58.870 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:19:04.112 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:19:47.894 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:19:48.672 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:19:49.806 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:19:52.454 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:19:54.696 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:19:59.005 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:20:00.705 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:20:11.879 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:20:15.096 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:20:38.853 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/optimise
+19:20:38.954 [activity] - job optimise failed: Tune L-R01 -> REFUSED: These settings cannot be used: two segments overlap; adjust them so they do not share lines.
+19:20:39.181 [activity] operator page: setStage
+19:20:39.840 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:20:42.837 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/optimise
+19:20:42.938 [activity] - job optimise failed: Tune L-R01 -> REFUSED: These settings cannot be used: two segments overlap; adjust them so they do not share lines.
+19:20:43.170 [activity] operator page: setStage
+19:20:43.825 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:20:47.388 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/settings
+19:20:48.082 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/settings
+19:20:48.120 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:20:48.816 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:20:48.884 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/settings
+19:20:49.617 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:20:55.191 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/optimise
+19:20:55.693 [activity] - job optimise done: Tune L-R01
+19:20:55.878 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/keep
+19:20:55.886 [activity] operator page: setStage
+19:20:56.263 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:00.185 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:03.553 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:05.121 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:07.696 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:09.312 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:10.101 [LEFT] program list · 79 programs
+19:21:10.101 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/upload -> REFUSED: Program 90 on the LEFT controller already holds “90_L-R01_v001.txt”.
+19:21:15.162 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:16.916 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:17.905 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:20.603 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:21.689 [LEFT] program list · 79 programs
+19:21:21.689 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/upload -> REFUSED: Program 91 on the LEFT controller already holds “91_V3.txt”.
+19:21:21.817 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:24.627 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:26.066 [LEFT] program list · 79 programs
+19:21:26.067 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/upload
+19:21:26.111 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:27.055 [LEFT] rm_upload · upload L-R01_v002.txt: 1124 points, 63.4 KB -> slot 91 on 192.168.1.10
+19:21:27.055 [LEFT] rm_upload ·   slot 91 now: 91_V3.txt (43.5 KB) — it will be REPLACED
+19:21:28.881 [LEFT] rm_upload ·   sent: ret=0 err_line=-1
+19:21:30.092 [LEFT] rm_upload ·   VERIFIED: slot 91 holds '91_L-R01_v002.txt', 64887 bytes (sent 64887)
+19:21:30.247 [LEFT] upload {"program_id": 91, "file": "v002.txt", "bytes": 64887} ret=0 (4.180 s)
+19:21:31.533 [activity] - job upload done: Upload L-R01 to program 91
+19:21:32.468 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:52.117 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:53.381 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:57.824 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:21:59.243 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:22:01.702 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:23:20.007 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:23:20.045 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/run -> REFUSED: A run on the real robot needs your confirmation.
+19:23:21.048 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:23:21.296 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/run
+19:23:21.604 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+19:23:21.696 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+19:23:21.708 [LEFT] alix · pole: already at 100 mm, the plan's 100 mm (within 5 mm, read from the getter)
+19:23:21.708 [LEFT] alix · hand: None (the state the stroke was planned with)
+19:23:21.766 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 999, 1000, 1000, 996, 992]; law 0.12 s)
+19:23:22.265 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:23:23.825 [LEFT] alix · hand: TIMEOUT after 2.0 s at None
+19:23:23.886 [LEFT] alix · ** left: the hand did not settle at None [1000, 1000, 1000, 1000, 1000, 1000]
+19:23:23.975 [LEFT] stage {"pole_mm": 100.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 100 mm, hand [1000, 1000, 1000, 1000, 996, 992]; refused: hand command failed
+19:23:23.976 [activity] - job run failed: Real run L-R01 -> REFUSED: The LEFT arm was not staged: hand command failed (pole 100 mm of 100 mm). Nothing else ran.
+19:23:23.976 [LEFT] ALERT ERROR · Real run L-R01: The LEFT arm was not staged: hand command failed (pole 100 mm of 100 mm). Nothing else ran. (Check the pole and the hand, then try again.)
+19:23:25.269 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:23:33.101 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:23:54.489 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/run -> REFUSED: A run on the real robot needs your confirmation.
+19:23:55.495 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:23:56.212 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/run
+19:23:56.458 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+19:23:56.533 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+19:23:56.545 [LEFT] alix · pole: already at 100 mm, the plan's 100 mm (within 5 mm, read from the getter)
+19:23:56.546 [LEFT] alix · hand: None (the state the stroke was planned with)
+19:23:56.608 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 999, 1000, 1000, 996, 992]; law 0.12 s)
+19:23:56.795 [LEFT] alix · hand: arrived at [1000, 1000, 1000, 1000, 996, 992] after 0.12 s (per-channel travel [0, 1, 0, 0, 0, 0])
+19:23:56.934 [LEFT] stage {"pole_mm": 100.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 100 mm, hand [1000, 1000, 1000, 1000, 996, 992]
+19:23:57.188 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:23:58.410 [LEFT] program list · 79 programs
+19:23:58.636 [LEFT] run mode REAL
+19:23:59.816 [LEFT] rm_upload · run slot 91 (91_L-R01_v002.txt) on 192.168.1.10; transit speed 20 %
+19:23:59.816 [LEFT] rm_upload ·   the controller first moves the arm to the program's first point: up to 21.0 deg on J4 — keep that path clear
+19:24:00.462 [LEFT] rm_upload ·   running (0.6 s)
+19:24:10.420 [LEFT] rm_upload ·   global speed restored to 50 % (ret=0)
+19:24:10.434 [LEFT] rm_upload ·   RUN COMPLETE: 10.6 s, no error
+19:24:10.517 [LEFT] run {"program_id": 91, "points": 1124, "transit_speed": 20} ret=0 (11.881 s)
+19:24:10.536 [activity] - job run done: Real run L-R01
+19:24:14.890 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:24:18.504 [activity] operator:4244cf POST /api/projects/alix_mv7x0zhy_z3wx7/units/L-R01/verdict
+19:24:18.521 [activity] operator page: selectArm
+19:24:18.533 [activity] operator page: setStage
+19:24:19.485 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:24:30.023 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:24:30.588 [activity] operator page: showView
+19:24:31.596 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:24:37.937 [activity] operator page: showView
+19:24:38.887 [activity] operator page: showView
+19:24:38.963 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:24:39.900 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:25:57.223 [activity] operator:4244cf POST /api/auth/engineer/lock
+19:25:58.238 [activity] operator:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:25:59.434 [activity] engineer:4244cf POST /api/auth/engineer
+19:25:59.661 [activity] engineer page: openRobotControl
+19:25:59.768 [activity] engineer:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:26:02.441 [activity] engineer:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
