@@ -352,3 +352,106 @@
 19:25:59.661 [activity] engineer page: openRobotControl
 19:25:59.768 [activity] engineer:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
 19:26:02.441 [activity] engineer:4244cf PUT /api/projects/alix_mv7x0zhy_z3wx7
+19:33:00.907 [activity] - POST /api/auth/login
+19:33:00.952 [activity] operator page: showView
+19:33:06.636 [activity] operator page: selectArm
+19:33:06.636 [activity] operator page: loadTask
+19:33:06.636 [activity] operator page: showView
+19:33:06.636 [activity] operator page: setStage
+19:33:06.637 [activity] operator page: showView
+19:33:06.649 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:33:06.711 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:33:07.290 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:33:07.970 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:33:14.259 [activity] operator page: toggleTheme
+19:33:15.262 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:33:15.633 [activity] operator page: toggleTheme
+19:33:16.639 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:34:23.105 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:34:25.676 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:34:27.120 [activity] operator page: showView
+19:34:28.126 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:34:37.354 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:34:42.305 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:34:44.775 [activity] operator page: showView
+19:34:45.781 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:34:46.662 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:34:50.129 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:34:58.765 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:35:02.618 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:35:05.222 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:35:08.729 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:37:47.755 [activity] operator:dba1ab POST /api/auth/engineer/lock
+19:37:48.768 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:37:50.528 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:37:51.424 [activity] engineer:dba1ab POST /api/auth/engineer
+19:37:51.659 [activity] engineer page: openRobotControl
+19:37:52.377 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:37:54.427 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:37:55.432 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:38:00.672 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:38:01.185 [activity] engineer:dba1ab POST /api/robots/left/pole -> REFUSED: Lite is in Visual sim, so it does not use the robot.
+19:38:01.189 [activity] engineer page: robot panel
+19:38:02.190 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:38:02.960 [activity] engineer:dba1ab POST /api/robots/left/connect
+19:38:03.689 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:38:04.359 [activity] engineer:dba1ab POST /api/robots/right/connect
+19:38:05.039 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:38:05.143 [activity] engineer:dba1ab POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+19:38:06.151 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:38:07.390 [activity] engineer:dba1ab POST /api/robots/mode
+19:38:08.398 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:38:23.432 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:38:58.287 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:38:58.414 [activity] engineer:dba1ab POST /api/robots/left/pole -> REFUSED: Moving the pole on the real robot needs your confirmation.
+19:38:59.414 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:00.070 [activity] engineer:dba1ab POST /api/robots/left/pole
+19:39:00.081 [LEFT] alix · pole: 100 mm -> 151 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 3.23 s, timeout 9.7 s)
+19:39:01.080 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:01.821 [LEFT] alix · pole: at 149 mm after 1.73 s (verified_by=getter, moved 49 mm through 25 distinct readings)
+19:39:01.922 [LEFT] pole move {"mm": 151.0, "speed_pct": 50} ret=0 (1.728 s) · final 0.149 m, verified by getter
+19:39:01.923 [activity] - job pole done: Pole LEFT to 151 mm
+19:39:06.153 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:07.794 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:10.701 [activity] engineer:dba1ab POST /api/robots/left/hand -> REFUSED: Moving the hand on the real robot needs your confirmation.
+19:39:11.710 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:13.921 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:18.758 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:20.699 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:22.113 [activity] engineer:dba1ab POST /api/robots/left/hand -> REFUSED: Moving the hand on the real robot needs your confirmation.
+19:39:23.117 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:23.348 [activity] engineer:dba1ab POST /api/robots/left/hand
+19:39:23.667 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+19:39:23.740 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+19:39:23.801 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 999, 1000, 1000, 996, 992]; law 0.86 s)
+19:39:24.354 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:24.758 [LEFT] alix · hand: settled at [1000, 999, 1000, 1000, 714, 992] after 0.89 s (per-channel travel [0, 1, 0, 0, 283, 0])
+19:39:24.759 [LEFT] alix · ** hand: settled without arriving — worst channel 5 is 714 counts short (target 0, readback 714)
+19:39:24.841 [LEFT] hand move {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500} ret=0 (0.886 s) · read back [1000, 999, 1000, 1000, 714, 992]
+19:39:24.842 [activity] - job hand failed: Hand LEFT -> REFUSED: The LEFT hand did not reach its pose (it reads [1000, 999, 1000, 1000, 714, 992]).
+19:39:24.842 [LEFT] ALERT ERROR · Hand LEFT: The LEFT hand did not reach its pose (it reads [1000, 999, 1000, 1000, 714, 992]). (Check the hand, then try again.)
+19:39:28.165 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:29.677 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:32.194 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:35.606 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:39.679 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:40.516 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:41.445 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:43.683 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:44.958 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:39:47.476 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:40:15.234 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:40:17.114 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:40:18.661 [activity] engineer:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:40:55.689 [activity] operator:dba1ab POST /api/auth/engineer/lock
+19:40:56.693 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:40:59.273 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:41:00.262 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:41:02.903 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+19:43:45.804 [activity] operator:dba1ab PUT /api/projects/alix_mv816r3u_n00by
+20:05:17.515 [activity] - POST /api/auth/login
+20:05:17.557 [activity] operator page: showView
+20:05:21.416 [activity] operator:739d22 DELETE /api/projects/alix_mv816r3u_n00by
+20:05:24.834 [activity] operator:739d22 DELETE /api/projects/alix_mv7x0zhy_z3wx7
+20:05:27.729 [activity] operator:739d22 DELETE /api/projects/alix_mv7sito0_2yypy
+20:05:29.666 [activity] operator:739d22 DELETE /api/projects/alix_mv7sc3zm_s1n9o

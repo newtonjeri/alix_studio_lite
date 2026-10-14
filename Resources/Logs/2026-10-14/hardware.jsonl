@@ -69,3 +69,13 @@
 {"t": 1791977050.420444, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
 {"t": 1791977050.434554, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 10.6 s, no error"}
 {"t": 1791977050.5174823, "side": "left", "verb": "run", "args": {"program_id": 91, "points": 1124, "transit_speed": 20}, "ret": 0, "ok": true, "elapsed_s": 11.881, "text": null}
+{"t": 1791977940.0817502, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 100 mm -> 151 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 3.23 s, timeout 9.7 s)"}
+{"t": 1791977941.8211734, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 149 mm after 1.73 s (verified_by=getter, moved 49 mm through 25 distinct readings)"}
+{"t": 1791977941.922777, "side": "left", "verb": "pole move", "args": {"mm": 151.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 1.728, "text": "final 0.149 m, verified by getter"}
+{"t": 1791977963.6678908, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1791977963.7408366, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1791977963.8010519, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 999, 1000, 1000, 996, 992]; law 0.86 s)"}
+{"t": 1791977964.7588253, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 999, 1000, 1000, 714, 992] after 0.89 s (per-channel travel [0, 1, 0, 0, 283, 0])"}
+{"t": 1791977964.7591999, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: settled without arriving — worst channel 5 is 714 counts short (target 0, readback 714)"}
+{"t": 1791977964.841144, "side": "left", "verb": "hand move", "args": {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500}, "ret": 0, "ok": false, "elapsed_s": 0.886, "text": "read back [1000, 999, 1000, 1000, 714, 992]"}
+{"t": 1791977964.8428102, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "Hand LEFT: The LEFT hand did not reach its pose (it reads [1000, 999, 1000, 1000, 714, 992]). (Check the hand, then try again.)"}
