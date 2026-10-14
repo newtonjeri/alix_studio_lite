@@ -61,6 +61,9 @@ ALIX_FILES = [
     "core/python/src/alix_core/__init__.py",
     "core/python/src/alix_core/sdk/__init__.py",
     "core/python/src/alix_core/sdk/endpoints.py",
+    # the RealMan error-code tables (controller codes, SDK returns), for Lite's hardware messages
+    "core/python/src/alix_core/diagnostics/__init__.py",
+    "core/python/src/alix_core/diagnostics/error_codes.py",
     # taught-track tools (TOPP-RA chain, gates, shim) — top-level modules in ALIX's tools/
     *[f"tools/{m}" for m in (
         "taught_tracks.py", "plan_min_time.py", "dual_arm_verdicts.py", "cleaning_tracks.py",

@@ -1,7 +1,10 @@
-"""A stand-in for the two arms, so every robot screen works without hardware (``run_lite``'s
-default). With ``--robot realman`` (or ``emulated``) it also holds a live link to the arms
-(robot_link.py): the panel shows their feedback, their E-stop input drives the interlock, and
-STOP reaches their controllers; every other action stays the stand-in's, and every reply says so.
+"""The two arms behind Lite's API. Without hardware it is a stand-in, so every robot screen works
+(``run_lite``'s default). With ``--robot realman`` (or ``emulated``) each connected arm has a live
+link (robot_link.py: its feedback, its E-stop input driving the interlock, STOP) and its commands
+go to its controller through ALIX's own code (robot_real.py): in Real the pole and the hand are
+staged at 50 % and read back, drag teaching records on the controller, programs are uploaded and
+run; in Hardware sim the controller runs them in its SIM mode and the pole and the hand, which it
+cannot simulate, are taken as arrived.
 
 It follows the real rules the backend must keep:
 
@@ -136,10 +139,11 @@ class StandInRobot:
     real controllers, "emulated" for ALIX's emulator; robot_link.py). Linked, Connect reaches the
     controller and the panel shows its feedback (arm, pole, hand, IO3); the real E-stop input
     drives the motion interlock; actions stay the stand-in's, so Real robot is refused."""
-    backend = "stand-in"
 
-    def __init__(self, data_dir: Path, jobs: Jobs, link: str | None = None):
+    def __init__(self, data_dir: Path, jobs: Jobs, link: str | None = None, log=None):
         self.jobs = jobs
+        self.log = log                                  # logbook.Logbook: the hardware log and its alerts
+        self._seen: dict = {}                           # side -> what was last reported (errors, link, E-stop)
         self.mode = "visual"                            # visual | hwsim | real, set by LiteApp.set_mode
         self.link_kind = link
         self.links: dict = {}                           # side -> robot_link.ArmLink while connected
@@ -150,16 +154,45 @@ class StandInRobot:
 
     @property
     def read_only(self) -> bool:
-        """Linked to the arms, Lite reads them but commands nothing: no Real robot."""
-        return self.link_kind is not None
+        """Lite commands the linked arms (robot_real.py): Real robot is available with them."""
+        return False
+
+    @property
+    def backend(self) -> str:
+        """Where robot actions go: "stand-in", or the linked controllers ("realman", "emulated")."""
+        return self.link_kind or "stand-in"
 
     @property
     def label(self) -> str:
         if self.link_kind == "realman":
-            return "Live link to the real arms, read only but for STOP: Lite reads them and can stop them"
+            return "Live link to the real arms: Lite reads and commands them"
         if self.link_kind == "emulated":
-            return "Live link to ALIX's emulated arms, read only but for STOP (no hardware)"
+            return "Live link to ALIX's emulated arms (no hardware)"
         return "Stand-in robot (no hardware)"
+
+    def _real(self, side: str):
+        """A linked arm's controller commands (robot_real.RealArm), or None for the stand-in."""
+        link = self.links.get(side)
+        if link is None:
+            return None
+        from .robot_real import RealArm
+
+        return RealArm(link, self.log)
+
+    def _measured(self, side: str) -> tuple:
+        """The pole (mm) and the hand as they are now: read from a linked controller, else the stand-in's."""
+        link = self.links.get(side)
+        if link is None:
+            a = self.arm(side)
+            return a.pole_mm, list(a.hand)
+        fb = link.view()["feedback"]
+        return fb.get("pole_mm"), fb.get("hand")
+
+    def _leave_drag(self, side: str) -> None:
+        """A linked arm in drag teaching leaves it (STOP, an E-stop, a cancel, Lite closing)."""
+        real = self._real(side)
+        if real is not None:
+            real.teach_cancel()
 
     def _engage(self, side: str) -> None:
         """An E-stop press: latched until Recover; every motion job on BOTH arms ends as
@@ -168,7 +201,11 @@ class StandInRobot:
         newly = a.estop != "ENGAGED"
         a.estop, a.estop_latched, a.stop_latched = "ENGAGED", True, False
         if newly:
+            self._alert("warn", side, "E-stop pressed: robot motion is blocked on both arms.",
+                        "Make the cell safe, release the button, then press Recover.", "estop")
             for arm in self.arms.values():
+                if arm.teaching and arm.side in self.links:
+                    threading.Thread(target=self._leave_drag, args=(arm.side,), daemon=True).start()
                 arm.teaching = False
             for j in self.jobs.running():
                 if j.kind in MOTION_KINDS:
@@ -186,7 +223,9 @@ class StandInRobot:
                 if self.link_kind and a.connected:
                     a.estop = "UNKNOWN"
                 return
-            live = link.view()["feedback"].get("estop", "UNKNOWN")
+            fb = link.view()["feedback"]
+            self._report(side, fb)
+            live = fb.get("estop", "UNKNOWN")
             if link.emulated and self.test_estop.get(side):
                 live = "ENGAGED"
             if live == "ENGAGED":
@@ -195,6 +234,38 @@ class StandInRobot:
                 a.estop = live
             else:
                 a.estop = "RECOVERING" if a.estop_latched else "CLEAR"
+
+    # ── hardware alerts (logbook.py; the page shows them at the bottom right until closed)
+    def _alert(self, level: str, side: str | None, text: str, hint: str | None = None, source: str | None = None) -> None:
+        if self.log is not None:
+            self.log.alert(level, text, hint=hint, side=side, source=source)
+
+    def _once(self, side: str, what: str, now, level: str, text: str, hint: str | None = None) -> None:
+        """An alert when ``what`` changes to a reportable value ``now`` (None: back to normal)."""
+        key = (side, what)
+        if self._seen.get(key) == now:
+            return
+        self._seen[key] = now
+        if now:
+            self._alert(level, side, text, hint, what)
+
+    def _report(self, side: str, fb: dict) -> None:
+        """What a linked controller's feedback says that the operator must see: its error codes, a
+        link that stopped reading, IO3 not in E-stop mode."""
+        from .robot_link import STALE_S, error_text
+
+        errs = tuple(fb.get("errors") or ())
+        self._once(side, "errors", errs or None, "error",
+                   "The controller reports " + "; ".join(error_text(c) for c in errs) + ".",
+                   "Check the arm and its pendant; clear the error there before running.")
+        age = fb.get("age_s")
+        stale = age is None or age > STALE_S
+        self._once(side, "link", "stale" if stale else None, "warn",
+                   "No fresh reading from the controller: robot motion is blocked.",
+                   "Check the controller's power and cable; Lite reconnects by itself when it answers.")
+        self._once(side, "io3", fb.get("estop") if fb.get("estop") == "NOT_CONFIGURED" else None, "error",
+                   "IO3 is not in the controller's E-stop mode (5): its E-stop button would not stop the arm.",
+                   "An engineer sets IO3 to mode 5 at the pendant. Motion stays blocked until then.")
 
     # ── state
     def view(self) -> dict:
@@ -265,7 +336,11 @@ class StandInRobot:
             return self.jobs.start(kind, title, work, arm=side)
 
     def close(self) -> None:
-        """Let go of every live link (the server is stopping)."""
+        """Let go of every live link (the server is stopping); an arm in drag teaching leaves it first."""
+        for side, a in self.arms.items():
+            if a.teaching:
+                a.teaching = False
+                self._leave_drag(side)
         with self.lock:
             links, self.links = list(self.links.values()), {}
         for link in links:
@@ -311,6 +386,9 @@ class StandInRobot:
         a = self.arm(side)
         if not a.connected:
             raise UserError(f"The {side.upper()} arm is not connected.")
+        real = self._real(side)
+        if real is not None:
+            real.set_run_mode(mode)                     # read back; an engineer's setting, not restored
         a.controller_mode = mode
         return a.view()
 
@@ -361,8 +439,14 @@ class StandInRobot:
         snap = dict(self.links)
         links = {s: snap[s] for s in sides if s in snap}
         sent: dict = {}
-        threads = [threading.Thread(target=lambda s=s, l=l: sent.__setitem__(s, l.stop(hard=every)),
-                                    name=f"lite-stop-{s}", daemon=True) for s, l in links.items()]
+        teaching = {s for s in links if self.arms[s].teaching}
+
+        def one(s, link):
+            if s in teaching:
+                self._leave_drag(s)                     # drag teaching ends first, then the stop
+            sent[s] = link.stop(hard=every)
+
+        threads = [threading.Thread(target=one, args=(s, l), name=f"lite-stop-{s}", daemon=True) for s, l in links.items()]
         for t in threads:
             t.start()
         with self.lock:
@@ -383,6 +467,9 @@ class StandInRobot:
         for s in links:
             sent.setdefault(s, dict(ok=False, text=f"{s.upper()}: no answer from its controller within 5 s"))
         ok = all(r["ok"] for r in sent.values())
+        for s, r in sent.items():
+            if not r["ok"]:
+                self._alert("error", s, r["text"] + ".", "Press the red E-stop button on the robot if it is still moving.", "stop")
         names = " and ".join(x.upper() for x in held)
         text = " ".join(sent[s]["text"] + "." for s in ARMS if s in sent) + (
             f" Nothing moves until you press Recover on the {names} arm{'s' if len(held) > 1 else ''} (Robot & mode)."
@@ -404,6 +491,18 @@ class StandInRobot:
         only takes the time either way; the real backend sends the commands in Real). Nothing is
         staged when the mode is no longer ``mode``, the one the job was asked in."""
         self._same_mode(mode)
+        real = self._real(side)
+        if real is not None and mode == "real":          # the real pole and hand, at 50 %, read back
+            job.progress(f"Staging the {side.upper()} pole, then the hand (50 % speed)", step, steps)
+            out = real.stage(stage)
+            a = self.arm(side)
+            found = (out.get("pole") or {}).get("found_m")
+            a.pole_mm = stage.pole_mm if found is None else found * 1000.0
+            a.hand = list((out.get("hand") or {}).get("read") or a.hand)
+            job.log(f"Pole at {a.pole_mm:.0f} mm, then hand in pose: " + ", ".join(map(str, a.hand))
+                    + " (read back on the controller).")
+            job.check()
+            return
         emulated_stage(job, side, self.arm(side), stage, self.faults[side], emulated=mode != "real",
                        step=step, steps=steps)
 
@@ -418,35 +517,11 @@ class StandInRobot:
         return self._start("stage", title, work, side, mode)
 
     def in_stage(self, side: str, stage: "staging.Stage") -> bool:
-        a = self.arm(side)
-        return abs(a.pole_mm - stage.pole_mm) <= staging.POLE_TOL_MM and staging.same_hand(a.hand, stage.hand)
+        pole_mm, hand = self._measured(side)
+        return (pole_mm is not None and hand is not None and abs(pole_mm - stage.pole_mm) <= staging.POLE_TOL_MM
+                and staging.same_hand(hand, stage.hand))
 
     # ── pole, hand, teach
-    def prepare(self, side: str, pole_mm: float, hand: list[int], title: str, mode: str | None = None):
-        a = self.arm(side)
-        mode = mode or self.mode
-
-        def work(job):
-            self._same_mode(mode)
-            start, goal = a.pole_mm, float(pole_mm)
-            dur = max(0.5, abs(goal - start) / POLE_MM_S)
-            t0 = time.time()
-            while True:
-                f = min(1.0, (time.time() - t0) / dur)
-                a.pole_mm = start + f * (goal - start)
-                job.progress(f"Moving the pole to {goal:.0f} mm", 1, 2)
-                if f >= 1.0:
-                    break
-                job.sleep(0.1)
-            job.log(f"Pole at {goal:.0f} mm ({self._how(mode)}).")
-            job.progress("Setting the hand", 2, 2)
-            job.sleep(1.0)
-            a.hand = [int(v) for v in hand]
-            job.log(f"Hand set ({self._how(mode)}).")
-            return dict(pole_mm=goal, hand=a.hand)
-
-        return self._start("prepare", title, work, side, mode)
-
     def move_pole(self, side: str, pole_mm: float, title: str, mode: str | None = None):
         a = self.arm(side)
         mode = mode or self.mode
@@ -455,6 +530,13 @@ class StandInRobot:
 
         def work(job):
             self._same_mode(mode)
+            real = self._real(side)
+            if real is not None and mode == "real":
+                job.progress(f"Moving the pole to {float(pole_mm):.0f} mm (50 % speed)", 1, 1)
+                out = real.pole_to(float(pole_mm))
+                a.pole_mm = float(out.get("final_m") or float(pole_mm) / 1000.0) * 1000.0
+                job.log(f"Pole at {a.pole_mm:.0f} mm (read back on the controller).")
+                return dict(pole_mm=a.pole_mm)
             start, goal = a.pole_mm, float(pole_mm)
             dur = max(0.5, abs(goal - start) / POLE_MM_S)
             t0 = time.time()
@@ -477,6 +559,13 @@ class StandInRobot:
 
         def work(job):
             self._same_mode(mode)
+            real = self._real(side)
+            if real is not None and mode == "real":
+                job.progress("Setting the hand (50 % speed)", 1, 1)
+                out = real.hand_to(vals)
+                a.hand = list(out.get("after") or vals)
+                job.log("Hand in pose (read back on the controller): " + ", ".join(map(str, a.hand)))
+                return dict(hand=a.hand)
             job.progress("Setting the hand", 1, 1)
             job.sleep(0.8)
             a.hand = vals
@@ -507,32 +596,74 @@ class StandInRobot:
             self._same_mode(mode)
             self.require_motion(side)
             if not self.in_stage(side, setup):
+                pole_mm, hand = self._measured(side)
                 raise UserError(f"The {side.upper()} arm is not in this region's setup ({staging.describe(setup)}): "
-                                f"it reads pole {a.pole_mm:.0f} mm, hand {', '.join(map(str, a.hand))}.",
+                                f"it reads pole {'?' if pole_mm is None else f'{pole_mm:.0f}'} mm, hand "
+                                f"{'?' if hand is None else ', '.join(map(str, hand))}.",
                                 "Press Apply in Prepare for the pole and the hand, then start again.", code="stage")
             a.teaching, a.teach_started = True, time.time()
             a.teach_stage = setup
+        real = self._real(side)
+        if real is not None:
+            try:
+                real.teach_start()                      # the controller records, as the control program has it do
+            except UserError:
+                a.teaching = False
+                raise
         return a.view()
 
-    def teach_stop(self, side: str) -> float:
+    def teach_stop(self, side: str, save_to: Path | None = None) -> dict:
+        """End drag teaching. A linked arm's controller saves its recording (``file``: written by
+        the SDK, as the control program's are); the stand-in has none (``file`` None)."""
         a = self.arm(side)
         if not a.teaching:
             raise UserError("Teaching is not running on this arm.")
         a.teaching = False
-        return time.time() - (a.teach_started or time.time())
+        secs = time.time() - (a.teach_started or time.time())
+        real = self._real(side)
+        if real is None:
+            return dict(seconds=secs, file=None, points=None, stage=a.teach_stage)
+        import tempfile
+
+        path = Path(save_to) if save_to else Path(tempfile.mkdtemp(prefix="lite-teach-")) / \
+            f"{side}_drag_{time.strftime('%Y%m%d_%H%M%S')}.txt"
+        points = real.teach_stop(path)
+        return dict(seconds=secs, file=path, points=points, stage=a.teach_stage)
+
+    def teach_cancel(self, side: str) -> dict:
+        """Drop the recording being taught: nothing is saved; a linked arm leaves drag teaching."""
+        a = self.arm(side)
+        was, a.teaching = a.teaching, False
+        if was:
+            self._leave_drag(side)
+        return a.view()
 
     def move_to(self, side: str, what: str, title: str, seconds: float = 2.5, stage: "staging.Stage | None" = None,
-                mode: str | None = None):
+                mode: str | None = None, target_millideg: list | None = None):
         """Move the arm to a pose (a start pose, a file's first line), staging the pole and hand
         first when the pose belongs to a trajectory. The real backend sweeps the joint-space line
         for collisions first (R4); the stand-in only takes the time."""
         a = self.arm(side)
         mode = mode or self.mode
+        if side in self.links and target_millideg is None:
+            raise UserError("Start poses by name are not stored on the controller yet, so Lite cannot move the arm to one.",
+                            "Use Move to Recorded Start, or move the arm with its pendant.")
 
         def work(job):
             if stage is not None:
                 self._stage(job, side, stage, mode)
             self._same_mode(mode, "the arm did not move")
+            real = self._real(side)
+            if real is not None:                         # the controller moves it (REAL) or simulates it (SIM)
+                originals = real.set_run_mode("REAL" if mode == "real" else "SIM")
+                try:
+                    job.progress(f"Moving to {what} (30 % speed)", 1, 1)
+                    out = real.move_to(target_millideg)
+                finally:
+                    real.restore_run_mode(originals)
+                job.log(f"At {what}: {out['gap_deg']:.2f} degrees away at most (read back"
+                        + ("" if mode == "real" else "; the controller's SIM mode, the arm did not move") + ").")
+                return dict(at=what, gap_deg=out["gap_deg"])
             t0 = time.time()
             while (el := time.time() - t0) < seconds:
                 if a.estop != "CLEAR":
@@ -573,11 +704,65 @@ class StandInRobot:
 
         return self._start("playback", title, work, side, mode)
 
+    def _run_real(self, job, real, side: str, pid: int, prog: dict, dry_run: bool, on_done) -> dict:
+        """A stored program on a linked controller: it must hold the program Lite sent; then its
+        SIM or REAL mode (read back), the move to the first line and the run (ALIX's verdict); the
+        mode it had is put back after."""
+        held = next((x for x in real.programs() if int(x["id"]) == pid), None)
+        if held is None or not self._same_program(prog, held):
+            raise UserError(f"Program {pid} on the {side.upper()} controller is not the one Lite sent "
+                            f"(it holds “{(held or {}).get('name')}”).", "Upload it again.")
+        if not prog.get("first_row"):
+            raise UserError(f"Lite has no first line recorded for program {pid}.", "Upload it again.")
+        want = "SIM" if dry_run else "REAL"
+        originals = real.set_run_mode(want)
+        try:
+            self.arm(side).controller_mode = want
+            job.log(f"Controller mode {want} (read back).")
+            job.progress(f"Moving to the start, then running program {pid}"
+                         + (" (the controller's SIM mode: the arm stays still)" if dry_run else ""), 0, prog["lines"])
+            states = {1: "running", 0: "ended", 2: "paused"}
+            out = real.run(pid, prog["first_row"], prog["lines"],
+                           on_transition=lambda t: job.log(f"Program {pid} {states.get(t.get('run_state'), t.get('run_state'))} "
+                                                           f"at {t.get('t', 0):.2f} s."))
+        finally:
+            real.restore_run_mode(originals)
+        job.check()                                     # STOP or an E-stop ended it
+        if not out.get("ok"):
+            raise UserError(f"The run did not complete ({str(out.get('verdict') or 'no verdict').replace('_', ' ')}).",
+                            "Check the arm and the controller's errors, then run it again.")
+        replay = out.get("replay_s")
+        job.log("Finished: the controller completed the program"
+                + ("" if replay is None else f" ({replay:.2f} s of trajectory)") + ".")
+        res = dict(program_id=pid, dry_run=dry_run, seconds=None if replay is None else round(replay, 2),
+                   verdict=out.get("verdict"))
+        if on_done:
+            on_done(res)
+        return res
+
     # ── programs
     def programs(self, side: str) -> list[dict]:
+        """Programs 1-100: a linked arm's as its controller lists them (with Lite's record of the
+        ones it sent), else the stand-in's."""
         a = self.arm(side)
-        return [dict(id=i, **a.programs[i]) if i in a.programs else dict(id=i, name=None)
-                for i in range(1, 101)]
+        real = self._real(side)
+        if real is None:
+            return [dict(id=i, **a.programs[i]) if i in a.programs else dict(id=i, name=None) for i in range(1, 101)]
+        held = {int(x["id"]): x for x in real.programs()}
+        out = []
+        for i in range(1, 101):
+            x, mine = held.get(i), a.programs.get(i)
+            ours = bool(x and mine and self._same_program(mine, x))
+            out.append(dict(id=i, name=(x or {}).get("name"), bytes=(x or {}).get("size"),
+                            **({k: mine[k] for k in ("sha256", "stage", "lines", "uploaded")} if ours else {})))
+        return out
+
+    @staticmethod
+    def _same_program(mine: dict, held: dict) -> bool:
+        """Whether the controller's program is the one Lite sent (its stored size, as read back at upload)."""
+        sent = mine.get("controller_bytes")
+        size = int(held.get("size") or 0)
+        return sent is not None and abs(size - int(sent)) <= max(64, int(sent) // 1000)
 
     def upload(self, side: str, program_id: int, path: Path, name: str, sha256: str, replace: bool, title: str,
                stage: dict | None = None):
@@ -590,15 +775,42 @@ class StandInRobot:
         if not 1 <= pid <= 100:
             raise UserError("Program numbers are 1 to 100.")
         cur = a.programs.get(pid)
-        if cur and cur.get("sha256") == sha256:
+        real = self._real(side)
+        held = None
+        if real is not None:                            # what the controller really holds in that slot
+            held = next((x for x in real.programs() if int(x["id"]) == pid), None)
+        ours = cur is not None and (real is None or (held is not None and self._same_program(cur, held)))
+        if ours and cur.get("sha256") == sha256:
             if stage is not None and cur.get("stage") != stage:   # the same bytes, kept again with another stage
                 cur["stage"] = stage
                 a.save()
             return None                                       # unchanged: nothing to send
-        if cur and not replace:
-            raise UserError(f"Program {pid} already holds “{cur['name']}”.", "Confirm the replacement to overwrite it.")
+        if real is not None:                            # the controller's slot, whoever filled it
+            holder = held.get("name") if held else None
+        else:
+            holder = cur.get("name") if cur else None
+        if holder and not replace:
+            raise UserError(f"Program {pid} on the {side.upper()} controller already holds “{holder}”.",
+                            "Confirm to replace it, or choose another Program ID.", code="replace")
         size = Path(path).stat().st_size
         lines = sum(1 for _ in open(path, "rb"))
+        with open(path, "rb") as f:
+            first = json.loads(f.readline())["point"]
+
+        if real is not None:
+            def work(job):
+                job.progress(f"Sending {size / 1e3:.0f} kB to program {pid}", 1, 2)
+                out = real.upload(Path(path), pid, name)
+                job.progress("Read back", 2, 2)
+                a.programs[pid] = dict(name=name, lines=lines, bytes=size, sha256=sha256, stage=stage, first_row=first,
+                                       controller_bytes=out["bytes"], stored_name=out["stored_name"],
+                                       uploaded=time.strftime("%Y-%m-%d %H:%M"))
+                a.save()
+                job.log(f"Stored as program {pid} on the {side.upper()} controller as “{out['stored_name']}”; "
+                        f"{out['bytes']} bytes read back.")
+                return dict(program_id=pid, lines=lines, bytes=size, seconds=out["seconds"])
+
+            return self.jobs.start("upload", title, work, arm=side)
 
         def work(job):
             dur = max(1.0, size / UPLOAD_BYTES_S)
@@ -606,7 +818,7 @@ class StandInRobot:
             while (el := time.time() - t0) < dur:
                 job.progress(f"Sending {size / 1e3:.0f} kB to program {pid}", int(100 * el / dur), 100)
                 job.sleep(0.2)
-            a.programs[pid] = dict(name=name, lines=lines, bytes=size, sha256=sha256, stage=stage,
+            a.programs[pid] = dict(name=name, lines=lines, bytes=size, sha256=sha256, stage=stage, first_row=first,
                                    uploaded=time.strftime("%Y-%m-%d %H:%M"))
             a.save()
             job.log(f"Stored as program {pid}; name and size read back.")
@@ -630,9 +842,13 @@ class StandInRobot:
         want = "SIM" if dry_run else "REAL"
         mode = mode or ("hwsim" if dry_run else "real")
 
+        real = self._real(side)
+
         def work(job):
             self._stage(job, side, stage, mode)
             self._same_mode(mode, "the pole and the hand were staged, but the program did not start")
+            if real is not None:
+                return self._run_real(job, real, side, int(program_id), prog, dry_run, on_done)
             a.controller_mode = want
             job.log(f"Controller mode {want} (read back).")
             job.progress("Moving to the start pose", 0, prog["lines"])

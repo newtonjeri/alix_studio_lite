@@ -1,6 +1,7 @@
 // Robot & mode (decision D30), opened from the status pill in the top bar: Visual sim / Hardware
 // sim / Real robot, the connection of each arm, each arm's E-stop (IO3) with Recover (R4), and
-// its pole and hand as read back. Lite always starts in Visual sim; Real needs a confirmation; an
+// its pole and hand as read back. With ``--robot realman`` the arms' own feedback, live, and what
+// Lite is commanding on each controller. Lite always starts in Visual sim; Real needs a confirmation; an
 // E-stop blocks motion on both arms. An engineer can make the stand-in's pole or hand fail to
 // arrive, to see that nothing runs when staging fails.
 
@@ -24,7 +25,8 @@ function liveRows(link) {
   const io = f.io3 && f.io3.emulated ? 'emulated (no IO)'
     : f.io3 && f.io3.mode != null ? `IO3 mode ${f.io3.mode}, level ${f.io3.level} (${f.io3.pressed ? 'pressed' : 'released'})` : 'IO3 not read';
   return el('div', { class: 'lite-arm-live' },
-    el('small', { text: `${link.emulated ? 'Emulated controller' : 'Controller'} ${link.ip}:${link.port} · read only, but for STOP · updated ${f.age_s ?? '?'} s ago` }),
+    el('small', { text: `${link.emulated ? 'Emulated controller' : 'Controller'} ${link.ip}:${link.port} · `
+      + (f.busy ? `now: ${f.busy} (only the E-stop is read meanwhile)` : `updated ${f.age_s ?? '?'} s ago`) }),
     el('small', { text: `Arm ${deg(f.joints_deg)} · errors ${f.errors ? (f.errors.length ? f.errors.join(', ') : 'none') : 'not read'} · run mode ${f.run_mode || 'not read'}` }),
     el('small', { text: `Pole ${f.pole_mm != null ? `${f.pole_mm} mm` : 'not read'} · hand ${f.hand ? f.hand.join(', ') : 'not read'} · E-stop ${io}` }));
 }
@@ -35,11 +37,10 @@ async function render() {
   const linked = Object.values(st.arms).some((a) => a.link);
   const modes = el('div', { class: 'lite-mode-choice', role: 'radiogroup', 'aria-label': 'Run mode' },
     MODES.map(([id, name, help]) => {
-      const off = linked && id === 'real';            // the server refuses it too (the link only reads and stops)
       return el('button', {
         class: `lite-mode-btn${st.mode === id ? ' active' : ''}`, 'data-mode': id, role: 'radio', 'aria-checked': String(st.mode === id),
-        disabled: off, onclick: () => setMode(id),
-      }, el('b', { text: name }), el('small', { text: off ? 'Not available while the arms are linked: Lite only reads them and stops them yet.' : help }));
+        onclick: () => setMode(id),
+      }, el('b', { text: name }), el('small', { text: help }));
     }));
   const arms = el('div', { class: 'lite-arm-rows' }, ['left', 'right'].map((side) => {
     const a = st.arms[side];
@@ -61,8 +62,8 @@ async function render() {
       a.link ? liveRows(a.link) : null);
   }));
   const note = el('div', { class: `statusbar ${st.motion_block ? 'warn' : 'ok'}` },
-    st.motion_block || `${st.label}.` + (linked ? ' STOP reaches the controllers; every other robot action stays with the stand-in, so Real robot is not available yet.'
-      : ' The robot I/O backend is not built yet: nothing moves.'));
+    st.motion_block || `${st.label}.` + (linked ? ' In Real the arms, the poles and the hands move (the pole and the hand at 50 % speed); in Hardware sim the controllers run in their SIM mode.'
+      : ' The stand-in: every robot screen works and nothing moves.'));
   body.replaceChildren(modes, arms, note);
   if (robotControlUnlocked) {
     body.append(el('details', { class: 'advanced' }, el('summary', { text: 'Engineer: E-stop test (stand-in robot)' }),

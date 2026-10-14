@@ -35,7 +35,7 @@ from pathlib import Path
 
 from . import fixtures, sequence, staging, workers
 from .api_v2 import session
-from .app import MODE_TEXT, MODES, READ_ONLY_REAL, route
+from .app import MODE_TEXT, MODES, route
 from .jobs import Cancelled, UserError
 from .lite_units import TIME_MODES, LiteUnits, open_units, task_list
 from .project import _atomic_write
@@ -381,7 +381,7 @@ def get_track(app, q, body, m):
     return workers.track_arrays(str(_track_path(units, key, q)))
 
 
-def _timeline(app, units, key: str, which: str, start=None) -> dict:
+def _timeline(app, units, key: str, which: str, start=None, max_frames: int = 5000) -> dict:
     from .routes_robot import _mesh_links, _payload
 
     from ..motion import track
@@ -394,7 +394,7 @@ def _timeline(app, units, key: str, which: str, start=None) -> dict:
     return staging.execution_timeline(u["arm"], md, info["stage"],
                                       home=staging.start_values(u["arm"], dict(p["home"]), start),
                                       links=staging.staged_links(u["arm"], _mesh_links(p)),
-                                      rating_deg_s=load_limits(u["arm"]).rating_deg_s)
+                                      rating_deg_s=load_limits(u["arm"]).rating_deg_s, max_frames=max_frames)
 
 
 @route("GET", U + "/timeline")
@@ -402,9 +402,11 @@ def get_timeline(app, q, body, m):
     """The execution as the 3D view shows it (``which``: raw, candidate or version): the pole to
     the stage height, the hand to the stage pose, the arm to the first line, then the trajectory,
     every link the pole moves posed by ALIX's FK. Refused for a file of the other arm or with no
-    stage, exactly as a run would be."""
+    stage, exactly as a run would be. ``coarse=1``: at most 400 frames, for a picture of where the
+    arm starts and the path its hand takes (the arm cards), a tenth of the size."""
     units = units_of(app, m.group(1))
-    return _timeline(app, units, m.group(2), (q.get("which") or ["raw"])[0])
+    coarse = (q.get("coarse") or ["0"])[0] == "1"
+    return _timeline(app, units, m.group(2), (q.get("which") or ["raw"])[0], max_frames=400 if coarse else 5000)
 
 
 @route("POST", U + "/timeline")
@@ -612,14 +614,21 @@ def post_teach(app, q, body, m):
         setup = staging.stage_from(units.setup(key))
         return {"arm": app.robot.teach_start(side, setup, mode=mode)}
     if verb == "cancel":
-        app.robot.arm(side).teaching = False
-        return {"arm": app.robot.arm(side).view()}
-    secs = app.robot.teach_stop(side)
+        return {"arm": app.robot.teach_cancel(side)}
+    out = app.robot.teach_stop(side)
+    secs = out["seconds"]
+    name = str(body.get("name") or f"{key}_taught.txt")
+    if out["file"] is not None:                     # the controller's own recording (the SDK wrote it)
+        st = out["stage"].as_dict()
+        path = units.add_recording(key, Path(out["file"]), source="teach", name=name, taught_arm=side, stage=st,
+                                   note=f"drag-taught on the {side.upper()} arm: {out['points']} points in "
+                                        f"{secs:.0f} s, at {st['text']}")
+        return {"saved": path.name, "seconds": round(secs, 1), "take": None, "stage": st,
+                "unit": unit_view(app, units, key)}
     # stand-in: a real recording of the SAME arm, saved with the stage it was taught with
     from .library import standin_take
 
     take = standin_take(side, key, units.fixture)
-    name = str(body.get("name") or f"{key}_taught.txt")
     path = units.add_recording(key, Path(take["path"]), source="teach", name=name, taught_arm=take["arm"],
                                stage=take["stage"],
                                note=f"stand-in recording ({secs:.0f} s of teaching): {take['name']}, "
@@ -637,8 +646,9 @@ def post_move_start(app, q, body, m):
     which = body.get("which") or "raw"
     info = identity(units, key, "version" if which == "version" else "raw")
     what = "the tuned trajectory's start" if which == "version" else "the recorded start"
+    first = json.loads(Path(info["path"]).read_text(encoding="utf-8").split("\n", 1)[0])["point"]
     return app.robot.move_to(u["arm"], what, f"{u['arm'].upper()} to {what} ({key})", stage=info["stage"],
-                             mode=mode).view()
+                             mode=mode, target_millideg=first).view()
 
 
 @route("POST", U + "/playback")
@@ -683,8 +693,8 @@ def post_upload(app, q, body, m):
         raise UserError(f"Program {pid} on the {u['arm'].upper()} controller already holds “{cur.get('name')}”.",
                         "Confirm to replace it, or choose another Program ID.", code="replace")
     name = f"{key}_{ver['version']}"[:32]
-    job = app.robot.upload(u["arm"], pid, Path(ver["path"]), name, ver["sha256"], True, f"Upload {key} to program {pid}",
-                           stage=info["stage"].as_dict())
+    job = app.robot.upload(u["arm"], pid, Path(ver["path"]), name, ver["sha256"], bool(body.get("replace")),
+                           f"Upload {key} to program {pid}", stage=info["stage"].as_dict())
     if job is None:
         units.add_result(key, "uploaded", ver["sha256"], True, {"program_id": pid, "unchanged": True})
         return {"unchanged": True, "program_id": pid, "unit": unit_view(app, units, key)}
@@ -778,8 +788,6 @@ def post_mode(app, q, body, m):
             why = app.robot.motion_block()
             if why and mode == "real":
                 raise UserError(why, "Release the E-stop and press Recover.")
-            if mode == "real" and app.robot.read_only:
-                raise UserError(READ_ONLY_REAL[0], READ_ONLY_REAL[1], code="mode")
             if mode == "real" and not body.get("confirmed"):
                 raise UserError("Switching to the real robot needs your confirmation.", code="confirm")
         app.set_mode(mode)

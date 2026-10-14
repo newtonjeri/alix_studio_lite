@@ -1,5 +1,4 @@
-"""A live link to the real arms, through ALIX's own robot I/O code (``alix_dispatch``): it reads
-them, and its one command is STOP.
+"""A live link to the real arms, through ALIX's own robot I/O code (``alix_dispatch``).
 
 It connects each controller (``connect.open_arm``) and reads, about five times a second, the
 feedback of the three devices ALIX drives on each side (alix_hw: one transport per side):
@@ -11,13 +10,12 @@ feedback of the three devices ALIX drives on each side (alix_hw: one transport p
 and the E-stop input, IO3, which must be in the controller's E-stop mode (5), wired as a
 normally-closed button to ground: it reads 0 when pressed.
 
-READ ONLY, BUT FOR STOP. Robot actions stay with the stand-in until Lite's robot commands exist,
-and the screens say so. The one command is STOP (``ArmLink.stop``): ALIX's own stop of a
-controller (``staging.stop_devices``: the arm, the pole, and the hand frozen where it is), then
-ALIX's check that the arm is still (``track.stop_program``). STOP BOTH stops the E-stop's way
-(``rm_set_arm_stop``: the fastest stop, the trajectory dropped). The one setting the link writes
-is the end port's Modbus mode, which reading the hand needs (the control program and ALIX set it
-the same way).
+The link reads; Lite's commands (robot_real.py: staging, drag teaching, upload, runs, moves) use
+its connection, and while one runs the link reads only the E-stop input, so two callers never
+compete for a controller. STOP (``ArmLink.stop``) is ALIX's own stop of a controller
+(``staging.stop_devices``: the arm, the pole, and the hand frozen where it is), then ALIX's check
+that the arm is still (``track.stop_program``); STOP BOTH stops the E-stop's way
+(``rm_set_arm_stop``: the fastest stop, the trajectory dropped).
 
 ``run_lite --robot realman`` uses it with the real controllers; ``--robot emulated`` with ALIX's
 controller emulator, which has no IO, so its E-stop reads as clear.
@@ -26,6 +24,7 @@ from __future__ import annotations
 
 import threading
 import time
+from contextlib import contextmanager
 
 from .jobs import UserError
 
@@ -53,6 +52,28 @@ def estop_state(read, active_level: int = ESTOP_PRESSED_LEVEL) -> tuple[str, dic
         return "NOT_CONFIGURED", {"mode": mode, "level": level}
     pressed = level == active_level
     return ("ENGAGED" if pressed else "CLEAR"), {"mode": mode, "level": level, "pressed": pressed}
+
+
+def error_text(code: int) -> str:
+    """A controller error code in words, from ALIX's RealMan tables (alix_core.diagnostics):
+    e.g. "4109 (0x100D Robotic arm collision)"."""
+    try:
+        from alix_core.diagnostics import error_codes
+
+        return error_codes.describe_system_err(int(code))
+    except Exception:                                                    # noqa: BLE001
+        return f"{code} (0x{int(code):04X})"
+
+
+def return_text(ret, func: str | None = None) -> str:
+    """An SDK call's return code in words (ALIX's tables; a call with its own codes says so)."""
+    try:
+        from alix_core.diagnostics import error_codes
+
+        text = error_codes.describe_api2_return(int(ret), func)
+    except Exception:                                                    # noqa: BLE001
+        return f"return code {ret}"
+    return text.split("  FIX:")[0].rstrip() + (")" if "  FIX:" in text else "")      # the description only
 
 
 def error_codes(err) -> list[int]:
@@ -87,6 +108,9 @@ class ArmLink:
         self._hand = None
         self._modbus_set = False
         self._stopping = threading.Event()          # a STOP is being sent: no new reading starts
+        self._busy: list = []                       # commands running (robot_real.py): only IO3 is read
+        self._read_lock = threading.Lock()          # one reading at a time
+        self._light_t = 0.0
         self._stop = threading.Event()
         self._lock = threading.Lock()
         self._thread = None
@@ -130,12 +154,58 @@ class ArmLink:
                 if self._stopping.is_set():
                     continue
                 try:
-                    self.read_once()
+                    if self._busy:
+                        if time.time() - self._light_t >= 0.5:
+                            self._light_t = time.time()
+                            self.read_estop()
+                    else:
+                        self.read_once()
                 except Exception:                                        # noqa: BLE001 - keep reading
                     pass
         finally:
             connect.close_arm(self.handle)
             self.handle = None
+
+    @contextmanager
+    def busy(self, what: str):
+        """A command runs on this controller (robot_real.py): meanwhile the reading loop only
+        watches the E-stop input, twice a second, so two callers never compete for it (ALIX
+        measured reply timeouts when they do). The panel shows what is running."""
+        with self._lock:
+            self._busy.append(what)
+        try:
+            yield
+        finally:
+            with self._lock:
+                self._busy.remove(what)
+                idle = not self._busy
+            if idle and self.handle is not None:    # what the command left, read at once (not 0.2 s later)
+                try:
+                    self.read_once()
+                except Exception:                                                # noqa: BLE001
+                    pass
+
+    def read_estop(self) -> None:
+        """The light reading while a command runs: IO3 only; the rest stays as last read."""
+        with self._read_lock:
+            self._read_estop()
+
+    def _read_estop(self) -> None:
+        robot = self.handle.robot
+        with self._lock:
+            fb = dict(self.feedback)
+            fb["busy"] = self._busy[-1] if self._busy else None
+        if hasattr(robot, "rm_get_io_state"):
+            fb["estop"], fb["io3"] = estop_state(lambda: robot.rm_get_io_state(ESTOP_IO), self.estop_active)
+        elif self.emulated:
+            fb["estop"], fb["io3"] = "CLEAR", {"emulated": True}
+        else:
+            fb["estop"], fb["io3"] = "UNKNOWN", {}
+        fb["t"] = time.time()
+        with self._lock:
+            self.feedback = fb
+        if self.on_read is not None:
+            self.on_read()
 
     def stop(self, hard: bool = True) -> dict:
         """STOP this controller as ALIX stops one (``staging.stop_devices``): the arm, the E-stop's
@@ -190,6 +260,10 @@ class ArmLink:
         return counts
 
     def read_once(self) -> dict:
+        with self._read_lock:
+            return self._read_all()
+
+    def _read_all(self) -> dict:
         from alix_dispatch import peripherals, runmode
 
         robot = self.handle.robot
@@ -212,6 +286,7 @@ class ArmLink:
             fb["estop"], fb["io3"] = "CLEAR", {"emulated": True}
         else:
             fb["estop"], fb["io3"] = "UNKNOWN", {}
+        fb["busy"] = None
         with self._lock:
             self.feedback = fb
         if self.on_read is not None:

@@ -103,10 +103,36 @@ export async function showFile(host, unit, which, progress = null) {
   return true;
 }
 
+// Nothing to play (no recording yet, or the tuning still running): the pane shows the scene, the
+// robot standing in the region's toilet state, instead of the designer's picture. No file loads.
+export async function showStanding(host, unit, note = 'No recording yet: the arm stands. Record the region, or use an existing or loaded file.') {
+  const token = ++sim.token;                              // the scene changes: whoever set it before sets it again
+  host.classList.add('lite-3d');
+  host.dataset.lite3d = 'loading';
+  await ensure();
+  if (token !== sim.token) return false;
+  await viewer.attach(host);
+  await scene(unit.phase);
+  if (token !== sim.token) return false;
+  robot.home();
+  viewer.dirty = true;
+  host.dataset.lite3d = 'ready';
+  const cap = host.querySelector('.simulation-caption');
+  if (cap) {
+    cap.querySelector('strong').textContent = `3D simulation · ${unit.arm.toUpperCase()} ARM · ${unit.display}`;
+    cap.querySelector('span').textContent = note;
+  }
+  return true;
+}
+
 export function invalidate() { sim.stale = true; }
 
-// Whether the Trajectory Viewer or the full sequence has the 3D: the region's simulation waits.
-export const elsewhere = () => !!document.querySelector('#liteViewer.show, #fullSequenceSimModal.show');
+// Whether the Trajectory Viewer, the full sequence or one of the page's pictures (pictures.js: Home,
+// Setup & Safety, the arm cards in Prepare, Drag & Teach and Real Test) has the 3D: the region's
+// simulation waits, and loads again when Tune shows it.
+let pictureHolds = false;
+export function pictureHas(on) { pictureHolds = !!on; }
+export const elsewhere = () => pictureHolds || !!document.querySelector('#liteViewer.show, #fullSequenceSimModal.show');
 
 // The stage is left, or another view takes the 3D (`stale`: it replaces the robot's tracks, so the
 // file loads again when it is shown next): nothing of the region's file keeps playing.

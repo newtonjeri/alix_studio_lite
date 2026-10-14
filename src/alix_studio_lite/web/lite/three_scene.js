@@ -1,10 +1,28 @@
 // The 3D view of the Lite UI: the project's fixture in a region's lid/seat state inside the cubicle,
 // in the robot's base frame (x forward, y left, z up), with the robot (robot3d.js) posed by ALIX's FK.
-// One renderer for the page: attach(el) moves it into V19's simulation pane, the expanded view or
-// the review preview, so the robot model is loaded once. Built from Legacy Lite's scene.js.
+// One scene and one robot for the page, so the robot model is loaded once. Its renderer moves:
+// attach(el) puts it in V19's simulation pane, the expanded view or the review preview; a picture
+// of the page (pictures.js) borrows it with a camera of its own, and the next attach() gives the
+// camera back as it was. Where pictures show side by side (the two arm cards), view() adds a
+// renderer of the SAME scene with its own camera and controls. Built from Legacy Lite's scene.js.
 
 export function css(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Objects only the pictures show: each region's hand path, on its arm's layer (each arm card sees its
+// own); the simulation's own camera never sees them.
+export const PATH_LAYERS = { left: 1, right: 2 };
+
+// Points a camera at look = {target, dir, radius} (metres, base frame; dir: from the target towards
+// the camera): a ball of that radius around the target fills the view, whatever its shape.
+function aim(cam, controls, look) {
+  const THREE = window.THREE;
+  const half = Math.atan(Math.tan((cam.fov * Math.PI) / 360) * Math.min(1, cam.aspect));
+  const dir = new THREE.Vector3(...look.dir).normalize();
+  controls.target.set(...look.target);
+  cam.position.copy(controls.target).addScaledVector(dir, look.radius / Math.sin(half));
+  controls.update();
 }
 
 let ready = null;
@@ -80,9 +98,11 @@ async function buildFixture(spec, phase) {
 
 // The viewer: created once, attached to one host element at a time.
 export function createViewer() {
-  const v = { dirty: true, animating: false, host: null, ready: null };
+  const v = { dirty: true, animating: false, host: null, ready: null, borrowedBy: null };
   let renderer = null, scene = null, cam = null, controls = null, ro = null, wall = null, fixture = null;
-  let wallKey = '', fixtureKey = '', wallGen = 0, fixtureGen = 0;
+  let wallKey = '', fixtureKey = '', wallGen = 0, fixtureGen = 0, sceneCall = 0;
+  const views = new Set();                       // the secondary views (view()), drawn by the same loop
+  let lent = null, borrowed = null;              // the camera before a picture borrowed it; the picture's aim
 
   v.ready = ensureThree().then(() => {
     const THREE = window.THREE;
@@ -105,8 +125,13 @@ export function createViewer() {
     const grid = new THREE.GridHelper(4, 40, col('--vp-grid'), col('--vp-grid-minor'));
     grid.rotation.x = Math.PI / 2; grid.position.x = 0.6; scene.add(grid);
     ro = new ResizeObserver(() => v.resize());
+    // One loop draws every view of the scene: each when the scene changed, or its own camera or size.
     const loop = () => {
-      if (v.host && (v.dirty || v.animating)) { renderer.render(scene, cam); v.dirty = false; }
+      const changed = v.dirty || v.animating;
+      let drawn = false;
+      if (v.host && changed) { renderer.render(scene, cam); drawn = true; }
+      for (const w of views) if (w.frame(changed)) drawn = true;
+      if (drawn) v.dirty = false;
       requestAnimationFrame(loop);
     };
     loop();
@@ -119,11 +144,12 @@ export function createViewer() {
   const HOME_TARGET = [0.45, 0, 0.72], HOME_OFFSET = [0.70, -1.95, 0.83];
   let fittedAspect = 0;
   v.fit = (aspect) => {
+    fittedAspect = aspect;
+    if (borrowed) { aim(cam, controls, borrowed); return; }               // a picture's own view
     const k = Math.max(1, 1.33 / aspect);
     controls.target.set(...HOME_TARGET);
     cam.position.set(...HOME_TARGET.map((t, i) => t + HOME_OFFSET[i] * k));
     controls.update();
-    fittedAspect = aspect;
   };
   v.resize = () => {
     if (!renderer || !v.host) return;
@@ -134,8 +160,7 @@ export function createViewer() {
     renderer.render(scene, cam);                                         // resizing clears the canvas
   };
 
-  v.attach = async (el) => {
-    await v.ready;
+  const place = (el) => {
     if (v.host === el) { v.resize(); return; }
     if (v.host) ro.unobserve(v.host);
     v.host = el;
@@ -145,11 +170,108 @@ export function createViewer() {
     v.dirty = true;
   };
 
+  // The simulation pane, the preview, the Viewer and the full sequence: the camera comes back as it
+  // was before a picture borrowed the view.
+  v.attach = async (el) => {
+    await v.ready;
+    if (lent) {
+      cam.position.copy(lent.position); controls.target.copy(lent.target);
+      controls.enableZoom = lent.zoom; cam.layers.mask = lent.layers; fittedAspect = lent.fitted;
+      controls.update();
+      lent = null; borrowed = null; v.borrowedBy = null;
+    }
+    place(el);
+  };
+
+  // A picture shows the scene with a camera of its own (`look`, see aim()); the camera as it was is
+  // kept for the next attach(). `zoom`: the wheel zooms (in a window; on the page it scrolls the
+  // page). `paths`: 'left' or 'right', that arm's region path shows too (PATH_LAYERS).
+  v.borrow = async (el, look, { zoom = false, paths = null } = {}) => {
+    await v.ready;
+    if (!lent) lent = { position: cam.position.clone(), target: controls.target.clone(), zoom: controls.enableZoom, layers: cam.layers.mask, fitted: fittedAspect };
+    borrowed = look;
+    v.borrowedBy = el;
+    controls.enableZoom = zoom;
+    for (const layer of Object.values(PATH_LAYERS)) cam.layers.disable(layer);
+    if (PATH_LAYERS[paths]) cam.layers.enable(PATH_LAYERS[paths]);
+    place(el);
+    v.aim(look);
+  };
+  // While borrowed: the picture's camera, aimed again (another arm, another fixture).
+  v.aim = (look) => {
+    if (!v.borrowedBy) return;
+    borrowed = look;
+    aim(cam, controls, look);
+    fittedAspect = cam.aspect;
+    v.dirty = true;
+  };
+
+  // A secondary view: a renderer of its own, with its own camera and controls, drawing this same
+  // scene (no second robot). For pictures shown side by side; pictures.js keeps two and reuses them.
+  // `paused()`: true while another window has the scene (the view keeps its last picture). `paths`:
+  // 'left' or 'right', that arm's region path shows too.
+  v.view = async ({ paused = null, paths = null } = {}) => {
+    await v.ready;
+    const THREE = window.THREE;
+    const r = new THREE.WebGLRenderer({ antialias: true });
+    r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    r.domElement.className = 'lite-3d-canvas';
+    const c = new THREE.PerspectiveCamera(45, 1.5, 0.01, 50);
+    c.up.set(0, 0, 1);
+    if (PATH_LAYERS[paths]) c.layers.enable(PATH_LAYERS[paths]);
+    const oc = new THREE.OrbitControls(c, r.domElement);
+    oc.enableZoom = false;
+    const w = { host: null, cam: c, controls: oc, renderer: r, look: null, shown: false, dirty: true, missed: false,
+      touched: false, fitted: 0, minGapMs: 0, last: 0 };
+    oc.addEventListener('change', () => { w.dirty = true; });
+    oc.addEventListener('start', () => { w.touched = true; });            // turned by hand: a resize keeps it
+    const wro = new ResizeObserver(() => w.resize());
+    const io = new IntersectionObserver((es) => { w.shown = es[es.length - 1].isIntersecting; if (w.shown) w.dirty = true; });
+    w.resize = () => {
+      if (!w.host) return;
+      const W = w.host.clientWidth, H = w.host.clientHeight;
+      if (!W || !H) return;
+      r.setSize(W, H); c.aspect = W / H; c.updateProjectionMatrix();
+      if (w.look && !w.touched && (!w.fitted || Math.abs(Math.log(c.aspect / w.fitted)) > 0.15)) { aim(c, oc, w.look); w.fitted = c.aspect; }
+      w.dirty = true;
+    };
+    w.attach = (el) => {
+      if (w.host !== el) {
+        if (w.host) { wro.unobserve(w.host); io.unobserve(w.host); }
+        w.host = el;
+        el.prepend(r.domElement);
+        wro.observe(el); io.observe(el);
+      }
+      w.resize();
+    };
+    w.aim = (look) => { w.look = look; w.touched = false; aim(c, oc, look); w.fitted = c.aspect; w.dirty = true; };
+    // Draws when due; `changed`: the scene changed. A view off screen or paused catches up later.
+    // minGapMs: at most one picture per gap while the scene keeps changing (a small mirror of a run).
+    w.frame = (changed) => {
+      if (!(changed || w.dirty || w.missed)) return false;
+      if (!w.host || !w.shown || (paused && paused())) { w.missed = true; return false; }
+      const now = performance.now();
+      if (!w.dirty && w.minGapMs && now - w.last < w.minGapMs) { w.missed = true; return false; }
+      r.render(scene, c);
+      w.dirty = w.missed = false;
+      w.last = now;
+      return true;
+    };
+    views.add(w);
+    return w;
+  };
+
+  // The fixture's box in the scene (THREE.Box3), or null while it is not built.
+  v.fixtureBox = () => (fixture ? new window.THREE.Box3().setFromObject(fixture) : null);
+  // The theme changed: the viewport's background follows it.
+  v.retheme = () => { if (scene) { scene.background = new window.THREE.Color(css('--lite-viewport-bg')); v.dirty = true; } };
+
   // The cubicle walls and the fixture in `phase`, rebuilt only when they change.
   v.setScene = async ({ cubicleMm = 1400, fixtureSpec = null, fixtureId = '', phase = 'lid_closed' } = {}) => {
     await v.ready;
     const THREE = window.THREE;
     const col = (n) => new THREE.Color(css(n));
+    const call = ++sceneCall;
     // Changes can overlap (a slider dragged across states): only the newest one is put in the scene.
     if (wallKey !== String(cubicleMm)) {
       const gen = ++wallGen;
@@ -165,6 +287,7 @@ export function createViewer() {
         scene.add(wall);
       } catch (e) { /* the view works without walls */ }
     }
+    if (call !== sceneCall) { v.dirty = true; return; }   // a newer change came while the walls loaded: it sets the fixture
     const key = `${fixtureId}:${phase}`;
     if (fixtureSpec && fixtureKey !== key) {
       const gen = ++fixtureGen;
@@ -180,5 +303,6 @@ export function createViewer() {
   };
 
   v.add = async (obj) => { await v.ready; scene.add(obj); v.dirty = true; };
+  v.remove = (obj) => { if (scene && obj) { scene.remove(obj); v.dirty = true; } };
   return v;
 }

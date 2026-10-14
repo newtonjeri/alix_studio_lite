@@ -72,7 +72,8 @@ class Job:
 
 
 class Jobs:
-    def __init__(self):
+    def __init__(self, on_end=None):
+        self.on_end = on_end                          # called with every job once it has ended (the log)
         self._jobs: dict[str, Job] = {}
         self._ids = itertools.count(1)
         self._pool = ThreadPoolExecutor(max_workers=16, thread_name_prefix="lite-job")
@@ -108,6 +109,11 @@ class Jobs:
                 traceback.print_exc()
             finally:
                 job.finished = time.time()
+                if self.on_end is not None:
+                    try:
+                        self.on_end(job)
+                    except Exception:                                   # noqa: BLE001 - a log never stops a job
+                        traceback.print_exc()
 
         self._pool.submit(run)
         return job

@@ -12,6 +12,7 @@ show. Long work (optimise, upload, run, prepare) is a job the page polls.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import mimetypes
 import os
@@ -28,6 +29,7 @@ from . import workers
 from .auth import Auth
 from .jobs import Jobs, UserError
 from .library import TaughtLibrary
+from .logbook import Logbook
 from .project import Project
 from .robot_standin import ARMS, StandInRobot
 from .store import ProjectStore
@@ -48,10 +50,10 @@ MESHES = {
 #: mode, rm_set_arm_run_mode(0): programs run, the arms stay still) / Real (the arms move)
 MODES = ("visual", "hwsim", "real")
 CODE_ID = code_id()                      # the code this server runs, as loaded at its start
+#: jobs that drive the robot: their failures are hardware alerts (the page shows them, bottom right)
+ROBOT_JOB_KINDS = ("run", "prepare", "teach", "move", "playback", "pole", "hand", "stage", "upload")
 #: the only /api/ requests without the session: logging in and out, and STOP (never refused)
 OPEN_ROUTES = re.compile(r"^/api/(auth/login|auth/logout|robots/stop-both|robots/(left|right)/stop|lite/robot/stop|lite/hello)$")
-READ_ONLY_REAL = ("Lite reads the real arms and can STOP them, but does not move them yet, so Real robot is not available.",
-                  "Run on the real arms with the control program meanwhile; Visual sim and Hardware sim work as usual.")
 MODE_TEXT = {"visual": "Visual sim: the 3D robot moves, no hardware",
              "hwsim": "Hardware sim: nothing moves (the controllers' SIM mode; pole and hand emulated)",
              "real": "Real robot: the arms, the pole and the hand move"}
@@ -61,8 +63,9 @@ class LiteApp:
     def __init__(self, project: Project, data_dir: Path, robot_link: str | None = None):
         self.project = project
         self.data_dir = Path(data_dir)
-        self.jobs = Jobs()
-        self.robot = StandInRobot(self.data_dir, self.jobs, link=robot_link)
+        self.log = Logbook(self.data_dir)                      # every activity, and the hardware's
+        self.jobs = Jobs(on_end=self._job_ended)
+        self.robot = StandInRobot(self.data_dir, self.jobs, link=robot_link, log=self.log)
         self.auth = Auth(self.data_dir)                       # both PINs, hashed (handoff section 19)
         self.store = ProjectStore(self.data_dir / "projects")  # the Lite UI's projects
         self.library = TaughtLibrary(self.data_dir)            # the Trajectory Viewer's files
@@ -77,6 +80,14 @@ class LiteApp:
         self.ui["mode"] = "visual"              # Lite always starts in Visual sim (NFR-UX f)
         self.ui["role"] = "operator"
         self._toppra = None
+
+    def _job_ended(self, job) -> None:
+        """Every job's end goes to the log; a robot job that failed is a hardware alert too."""
+        v = job.view()
+        self.log.activity(f"job {job.kind} {v['state']}: {job.title}", detail=dict(id=job.id, unit=job.unit, arm=job.arm,
+                          elapsed_s=v["elapsed_s"]), ok=v["state"] != "failed", error=v["error"])
+        if v["state"] == "failed" and job.kind in ROBOT_JOB_KINDS:
+            self.log.alert("error", f"{job.title}: {v['error']}", hint=v["hint"], side=job.arm, source=job.kind)
 
     def set_mode(self, mode: str) -> None:
         """Visual sim, Hardware sim or Real (D30). The robot backend follows it: in Hardware sim it
@@ -389,8 +400,6 @@ def post_mode(app, q, body, m):
             why = app.robot.motion_block()
             if why and mode == "real":
                 raise UserError(why, "Release the E-stop and press Recover.")
-            if mode == "real" and app.robot.read_only:
-                raise UserError(READ_ONLY_REAL[0], READ_ONLY_REAL[1], code="mode")
             if mode == "real" and not body.get("confirmed"):
                 raise UserError("Switching to the real robot needs your confirmation.", code="confirm")
         app.set_mode(mode)
@@ -601,9 +610,13 @@ def post_teach(app, q, body, m):
         _require_confirmed(app, body, "Drag teaching", mode)
         return app.robot.teach_start(side, _legacy_stage(u), mode=mode)
     if verb == "cancel":
-        app.robot.arm(side).teaching = False
-        return app.robot.arm(side).view()
-    secs = app.robot.teach_stop(side)
+        return app.robot.teach_cancel(side)
+    out = app.robot.teach_stop(side)
+    secs = out["seconds"]
+    if out["file"] is not None:                     # the controller's own recording (the SDK wrote it)
+        path = app.project.add_recording(key, Path(out["file"]), source="teach",
+                                         note=f"drag-taught on the {side.upper()} arm: {out['points']} points in {secs:.0f} s")
+        return {"saved": path.name, "seconds": round(secs, 1), "unit": _unit(app, key)}
     # stand-in: a real recording of the SAME arm (never the other arm's)
     from .library import standin_take
 
@@ -844,23 +857,37 @@ class Handler(BaseHTTPRequestHandler):
         for meth, pat, fn in ROUTES:
             mm = pat.match(url.path)
             if mm and meth == method:
+                err = None
                 try:
                     out = fn(self.app, q, body, mm)
                 except UserError as exc:
                     out = {"error": str(exc), "hint": exc.hint}
                     if exc.code:
                         out["code"] = exc.code
-                    return self._json(out)
+                    err = out
                 except KeyError as exc:
-                    return self._json({"error": str(exc).strip("'\"")})
+                    out = err = {"error": str(exc).strip("'\"")}
                 except Exception:                                   # noqa: BLE001
                     traceback.print_exc()
-                    return self._json({"error": "Something went wrong on the server.",
-                                       "hint": "Details are in the terminal."})
+                    out = err = {"error": "Something went wrong on the server.", "hint": "Details are in the terminal."}
+                if method != "GET" and url.path != "/api/activity":       # every change, and every refusal
+                    self.app.log.activity(f"{method} {url.path}", who=self._who(), detail=body,
+                                          ok=err is None, error=err and err["error"])
+                if err is not None:
+                    return self._json(err)
                 if isinstance(out, RawResponse):        # once sending starts, no second reply on this socket
                     return self._send_raw(out)
                 return self._json(out)
         return self._json({"error": f"Unknown request {url.path}."}, 404)
+
+    def _who(self) -> str:
+        """The session behind a request, for the log: its level and a short tag (never the token)."""
+        tok = self.headers.get("X-Lite-Token")
+        if not tok:
+            return "-"
+        s = self.app.auth.session(tok)
+        role = "ended" if s is None else "engineer" if s.get("engineer") else "operator"
+        return f"{role}:{hashlib.sha256(tok.encode()).hexdigest()[:6]}"
 
     def do_GET(self):
         self._dispatch("GET")

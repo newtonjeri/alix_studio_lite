@@ -44,7 +44,7 @@ own. It clones the repository into `~/alix_studio_lite`, or into `--dir`, and in
 1. It checks Python (with `venv`) and git.
 2. It clones the code, or updates the branch an existing copy is on. It never updates over changes or commits you made; when it does not update, it says *NOT updated* and why.
 3. It builds a private environment, `.venv`, inside the copy, and installs the pinned packages. Nothing is installed system-wide.
-4. It checks that everything works by running the test suite, which takes about 3 minutes. Use `--no-tests` to skip this.
+4. It checks that everything works by running the test suite, which takes about 4 minutes. Use `--no-tests` to skip this.
 
 | Option | What it does |
 |---|---|
@@ -105,12 +105,23 @@ the three devices on each side, refreshed about five times a second:
 | **Hand** (Inspire RH56) | Where its six fingers actually are (0–1000, 1000 = open). |
 | **E-stop** (IO3) | Clear, pressed, unknown, or *not configured*. IO3 must be in the controller's E-stop mode (5), with the button wired normally-closed to ground (RealMan's circuit-type IO E-stop wiring): it reads 1 released, 0 pressed. RealMan's demo maps IO3 to "continue program". |
 
-The connection **reads** the arms, and its one command is **STOP**.
-- **STOP BOTH stops the real arms, like the E-stop.** Each controller gets ALIX's own stop, both at once: the arm stops the fastest way (`rm_set_arm_stop`, which drops its trajectory), the pole stops, and the hand freezes where it is. ALIX's check then proves the arm is still, including a program the control program is running. One arm's STOP (SLOW STOP in Advanced) stops that arm on its path. If a controller does not confirm, the page says so: press the red E-stop button. After any STOP, nothing moves until **Recover**, as after the E-stop. The red E-stop buttons remain the safety stop.
-- **Every other robot action stays with the stand-in.** That covers runs, moves, the pole and the hand. **Real robot** is not available, so use the control program for real runs meanwhile.
-- **The live E-stop still guards Lite.** While either arm's E-stop is not clear, every robot action in Lite is refused on both arms. After a press, motion stays blocked until **Recover**.
-- **The one setting Lite writes** is the hand port's Modbus mode, which reading the hand needs; the control program and ALIX set it the same way. Apart from STOP, Lite never commands the arm, the pole or the hand.
+With the arms connected, Lite **commands** them through ALIX's own robot code:
+
+- **Real robot** (after a confirmation; every move asks again):
+  - **Prepare → Apply** stages the region's setup. The hand opens if the pole must move, the arm is checked at rest, then the pole and then the hand move at **50 % speed**, each read back.
+  - **Drag teaching** runs on the controller, as in the control program. STOP DRAG saves the controller's recording into the project, byte for byte as the control program saves it, with the arm and the stage it was taught with.
+  - **Upload** sends the kept version to its Program ID; the stored size is read back.
+  - **Run** stages the pole and the hand, moves the arm to the trajectory's first line at 30 % speed, runs the program and reports whether it completed. The controller is set to its REAL mode for it (read back) and put back after.
+  - **Move to Recorded Start** moves the arm to the file's first line at 30 % speed. Start poses by name are not stored on the controller yet.
+- **Hardware sim**: the controller runs the program in its SIM mode, so the arm stays still. The pole and the hand, which the controller cannot simulate, are taken as arrived at their commanded positions.
+- **STOP BOTH stops the real arms, like the E-stop.** Each controller gets ALIX's own stop, both at once: the arm stops the fastest way (`rm_set_arm_stop`, which drops its trajectory), the pole stops, and the hand freezes where it is. ALIX's check then proves the arm is still, including a running program. One arm's STOP (SLOW STOP in Advanced) stops that arm on its path. Drag teaching ends first. If a controller does not confirm, the page says so: press the red E-stop button. After any STOP, nothing moves until **Recover**, as after the E-stop. The red E-stop buttons remain the safety stop.
+- **The live E-stop guards Lite.** While either arm's E-stop is not clear, every robot action in Lite is refused on both arms. After a press, motion stays blocked until **Recover**.
+- **Errors show at the bottom right** of the screen until closed: a controller's error codes (in words, from ALIX's RealMan tables), a command refused or failed with its return code, an E-stop press, STOP not confirmed, a link that stopped reading.
 - **The link needs Linux** (x86-64 or ARM): the RealMan SDK ships only for Linux. Elsewhere, Connect says so.
+
+**The first time on the robot**, keep the area clear and a hand on the red E-stop button: ALIX ran
+the pole and the hand at 100 % speed, so their 50 % speeds, and the stop of a running program, are
+new on the hardware.
 
 If an arm cannot be reached, Lite says so, with its address. Check that the controller is on, the
 cable, and that this computer has a 192.168.1.x address (`ip addr`).
@@ -126,12 +137,22 @@ The status pill at the top chooses where the region steps run. Lite always start
 |---|---|
 | **Visual sim** | Only the 3D robot on screen. Nothing is sent to the robot. |
 | **Hardware sim** | **Nothing physical.** The controllers run programs in their own SIM mode, so the arms stay still. The pole and the hand are **emulated**: Lite takes their measured times, but sends them nothing. |
-| **Real robot** | The arms, the pole and the hand. Every move asks for confirmation first. Not available yet (see above). |
+| **Real robot** | The arms, the pole and the hand (the pole and the hand at 50 % speed). Every move asks for confirmation first. |
 
 Whatever the mode, every execution stages the file's own pole height and hand pose first. If
 either does not arrive, nothing else runs. A trajectory runs only on the arm it was taught on, and
 only after tuning has passed every limit. [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md),
 "The gates on every execution", explains each gate.
+
+### Logs
+
+Every activity is logged, one folder per day in `~/ALIX-Lite/logs/<date>/`:
+
+| File | What it holds |
+|---|---|
+| `activity.jsonl` | What the operator did: every change and every refusal, with who (the session) and the outcome, and the page's own steps (view, stage, task, arm). PINs are never written. |
+| `hardware.jsonl` | Every command to a controller, with its arguments, its return code, the time it took and what it means, and the lines ALIX's own functions log while they run. |
+| `lite.log` | Both, as plain text: `tail -f ~/ALIX-Lite/logs/$(date +%F)/lite.log` follows Lite live. |
 
 ---
 
@@ -159,7 +180,7 @@ only after tuning has passed every limit. [`docs/UI_V19_CONTRACT.md`](docs/UI_V1
 
 ```bash
 cd alix_studio_lite
-.venv/bin/python -m pytest -q          # Windows: .venv\Scripts\python -m pytest -q   (about 3 minutes; no robot, no network)
+.venv/bin/python -m pytest -q          # Windows: .venv\Scripts\python -m pytest -q   (about 4 minutes; no robot, no network)
 ```
 
 The tests cover:
@@ -173,7 +194,8 @@ The tests cover:
 - the Trajectory Viewer;
 - the full sequence;
 - the dark theme;
-- the robot link and its STOP, against ALIX's emulated arms;
+- the robot link, its STOP, and Lite commanding the arms (staging, drag teaching, upload, Real and Hardware sim runs), against ALIX's emulated arms;
+- the logs and the hardware alerts;
 - the fixes from the final review: sessions, the E-stop latch, kept versions used only as kept, imports, stopped tunes, the dark-theme tool.
 
 ### Where things are
@@ -183,7 +205,7 @@ The tests cover:
 | `src/alix_studio_lite/` | Lite's code. See the rows below. |
 | `src/alix_studio_lite/motion/` | Tracks, the 5 ms clock, limits and checks. |
 | `src/alix_studio_lite/optimise/` | The Default and Time-optimal optimisers. |
-| `src/alix_studio_lite/server/` | The local web server: projects, log-in, the robot stand-in and the live robot link, which reads the arms and STOPs them (`robot_link.py`). |
+| `src/alix_studio_lite/server/` | The local web server: projects, log-in, the robot stand-in, the live robot link (`robot_link.py`), Lite's commands to the arms through ALIX's code (`robot_real.py`), and the logs (`logbook.py`). |
 | `src/alix_studio_lite/web/` | The Lite UI: the designer's page plus `lite/`, its bridge to the backend. |
 | `src/alix_studio_lite/web_legacy/` | Legacy Lite. |
 | `vendor/alix/` | The parts of ALIX that Lite reuses, in ALIX's own layout. `vendor/MANIFEST.json` lists every file with its sha256. |

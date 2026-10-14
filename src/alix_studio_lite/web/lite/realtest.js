@@ -30,9 +30,8 @@ async function refresh() {
     const [cls, text] = MODE_NOTE[st.mode];
     const linked = Object.values(st.arms || {}).some((a) => a.link);
     note.className = cls;
-    note.textContent = st.mode === 'visual' || st.backend !== 'stand-in' ? text
-      : `${text} ${linked ? 'The arms are linked for reading and STOP only: Upload, Move to Start and Run go to the stand-in robot, and nothing else is sent to the controllers.'
-        : 'The robot is the stand-in: nothing is sent to a controller.'}`;
+    note.textContent = st.mode === 'visual' || st.backend !== 'stand-in' || linked ? text
+      : `${text} The robot is the stand-in: nothing is sent to a controller.`;
   }
   const v = u.versions[u.versions.length - 1];
   $('realTaskLabel').textContent = `${TASKS[currentTask].label} · ${s.display}`;

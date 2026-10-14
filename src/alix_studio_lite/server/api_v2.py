@@ -140,7 +140,19 @@ def robots_status(app, q, body, m):
     session(app)
     return {"mode": app.ui["mode"], "mode_text": MODE_TEXT[app.ui["mode"]], "arms": app.robot.view(),
             "backend": app.robot.backend, "label": app.robot.label, "motion_block": app.robot.motion_block(),
-            "jobs": [j.view() for j in app.jobs.running()]}
+            "jobs": [j.view() for j in app.jobs.running()],
+            "alerts": app.log.alerts_view(), "instance": app.log.instance}
+
+
+@route("POST", "/api/activity")
+def post_activity(app, q, body, m):
+    """The page's own steps, for the activity log (a stage, a task, an arm, a window opened)."""
+    s = session(app)
+    event = str(body.get("event") or "")[:80]
+    if not event:
+        raise UserError("Say what happened.")
+    app.log.activity(f"page: {event}", who="engineer" if s.get("engineer") else "operator", detail=body.get("detail"))
+    return {"ok": True}
 
 
 @route("POST", "/api/robots/stop-both")

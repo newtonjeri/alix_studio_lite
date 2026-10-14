@@ -10,7 +10,7 @@
 
 import { get, post, say } from './api.js';
 import { ctx, el, fmtS, loadUnit, step, tell, unitUrl, watchJob } from './ctx.js';
-import { elsewhere, invalidate, release, sim, showFile, unload } from './sim.js';
+import { elsewhere, invalidate, release, showFile, showStanding, sim, unload } from './sim.js';
 
 let unit = null;               // the server's view of the arm step on screen
 let syncing = false;           // writing the server's settings into the page's controls
@@ -252,8 +252,13 @@ async function drawPlot() {
 
 async function loadSimulation() {
   const host = $('simulationViewport');
-  if (!host || !unit || !unit.active) return;
-  if (elsewhere()) { invalidate(); return; }              // the Viewer or the full sequence has the 3D: later
+  if (!host || !unit) return;
+  if (elsewhere()) { invalidate(); return; }              // the Viewer, the full sequence or a picture has the 3D: later
+  if (!unit.active) {                                     // nothing to play: the arm stands, and ▶ Start says why
+    unload(Object.assign(new Error('This region has no recording yet.'), { hint: 'Record it, or use an existing or loaded file.', key: unit.key }));
+    await showStanding(host, unit).catch(() => {});
+    return;
+  }
   const which = unit.candidate ? 'candidate' : 'raw';
   const progress = unit.candidate_extra && unit.candidate_extra.progress;
   try {
@@ -309,11 +314,17 @@ async function enter() {
   if (!unit.active) {
     unload();
     $('simStatus').textContent = 'No recording yet: go back to Drag & Teach or Save & Review.';
+    loadSimulation();                                    // the scene with the arm standing, not the designer's picture
     return;
   }
   await drawPlot().catch(tell);
-  if (!unit.candidate || !unit.fresh) await retune();
-  else await loadSimulation();
+  if (!unit.candidate || !unit.fresh) {
+    const host = $('simulationViewport');
+    if (host && !host.querySelector('canvas') && !elsewhere()) {      // while it tunes: the scene, not the designer's picture
+      showStanding(host, unit, 'Tuning: the tuned trajectory plays here when it is ready.').catch(() => {});
+    }
+    await retune();
+  } else await loadSimulation();
 }
 
 export function installTune() {

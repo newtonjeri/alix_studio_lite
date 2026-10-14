@@ -2,7 +2,8 @@
    0. ALIX's brand blues, as ALIX Studio defines them (its design tokens, design/_tokens.css):
       the brand mark's facets and seams (brand.js), lighter facets and darker seams in the dark theme.
    1. The 3D view's colours: ALIX's viewport palette, as in Legacy Lite (the canvas stays dark in
-      both themes).
+      both themes); a region's hand path in the arm cards, in light tints of V19's LEFT blue and
+      RIGHT orange, which read on the dark canvas.
    2. The dark theme's extra surfaces and text tints (dark.css, lite.css): V19's own dark values
       (its inputs, check rows and sidebar #0f172a, its light buttons #1e293b, its input edges
       #475569, its nav text #cbd5e1), light tints of V19's accents for text on dark tints, and
@@ -12,6 +13,7 @@
   --lite-viewport-bg:#1B2733; --vp-text:#C9D1D9;
   --vp-grid:#56677A; --vp-grid-minor:#2E3B48; --vp-wall:#8FA3B8; --vp-wall-edge:#9FB4C8;
   --vp-porcelain:#E9EDF2; --vp-seat:#D8DDE3; --vp-sky:#FFFFFF; --vp-ground:#334455;
+  --vp-path-left:#60A5FA; --vp-path-right:#FB923C;
 }
 html[data-theme="dark"] { --lite-viewport-bg:#0D1117; }
 html[data-theme="dark"] {

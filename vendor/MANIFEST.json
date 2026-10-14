@@ -1026,6 +1026,20 @@
       "bytes": 6227
     },
     {
+      "dest": "vendor/alix/core/python/src/alix_core/diagnostics/__init__.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/src/alix_core/diagnostics/__init__.py",
+      "origin": "alix",
+      "sha256": "a985802b3ca4a22cb1de58871970b00424a764e72307af51461bf35bf63c1f05",
+      "bytes": 1036
+    },
+    {
+      "dest": "vendor/alix/core/python/src/alix_core/diagnostics/error_codes.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/src/alix_core/diagnostics/error_codes.py",
+      "origin": "alix",
+      "sha256": "66b031d397ca454ebd607f8bd3fa12f1e2790bc26715bf0361d04957b6e8918c",
+      "bytes": 34876
+    },
+    {
       "dest": "vendor/alix/core/python/src/alix_emulator/__init__.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/src/alix_emulator/__init__.py",
       "origin": "alix",

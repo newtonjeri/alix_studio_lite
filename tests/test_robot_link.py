@@ -1,7 +1,6 @@
 """The live link to the arms (server/robot_link.py), through ALIX's own robot I/O code: connecting
 each controller, the feedback of the arm, the pole and the hand, the E-stop input (fail closed),
-STOP reaching the controllers like the E-stop, and nothing else commanded (no Real robot while
-linked)."""
+STOP reaching the controllers like the E-stop, and Real robot available with it."""
 import json
 import socket
 import subprocess
@@ -74,11 +73,14 @@ def test_connect_and_read_the_three_devices(server):
         assert len(f["hand"]) == 6 and all(0 <= c <= 1000 for c in f["hand"])                          # the hand
     time.sleep(0.6)
     st = call(server, "GET", "/api/robots/status")
-    assert "read only" in st["label"] and all(st["arms"][s]["link"]["feedback"]["age_s"] < 1 for s in ("left", "right"))
+    assert "Live link" in st["label"] and st["backend"] == "emulated"
+    assert all(st["arms"][s]["link"]["feedback"]["age_s"] < 1 for s in ("left", "right"))
 
 
-def test_lite_commands_nothing_through_the_link(server):
-    assert call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})["code"] == "mode"
+def test_real_robot_is_available_with_the_link(server):
+    """Lite commands the linked arms (robot_real.py; tests/test_robot_real.py runs the loop)."""
+    assert call(server, "POST", "/api/robots/mode", {"mode": "real"})["code"] == "confirm"
+    assert call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})["mode"] == "real"
     assert call(server, "POST", "/api/robots/mode", {"mode": "hwsim"})["mode"] == "hwsim"
 
 
