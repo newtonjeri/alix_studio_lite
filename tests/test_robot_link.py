@@ -18,8 +18,9 @@ def test_estop_input_fails_closed():
     from alix_studio_lite.server.robot_link import error_codes, estop_state
 
     io = lambda mode, level, ret=0: (lambda: (ret, {"io_state": level, "io_config": {"io_mode": mode}}))  # noqa: E731
-    assert estop_state(io(5, 0))[0] == "CLEAR" and estop_state(io(5, 1))[0] == "ENGAGED"
-    assert estop_state(io(5, 0), active_level=0)[0] == "ENGAGED"                       # a site wired active-low
+    # a normally-closed button to ground (RealMan's circuit-type IO E-stop): 1 released, 0 pressed
+    assert estop_state(io(5, 1))[0] == "CLEAR" and estop_state(io(5, 0))[0] == "ENGAGED"
+    assert estop_state(io(5, 1), active_level=1)[0] == "ENGAGED"                       # wired the other way
     assert estop_state(io(4, 0))[0] == "NOT_CONFIGURED"                                # RealMan's demo mapping
     assert estop_state(io(5, 0, ret=-2))[0] == "UNKNOWN"
 

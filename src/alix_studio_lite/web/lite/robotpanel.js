@@ -21,7 +21,8 @@ let box = null, timer = null;
 function liveRows(link) {
   const f = link.feedback || {};
   const deg = (q) => (q ? q.map((v) => `${Number(v).toFixed(1)}°`).join(' ') : 'not read');
-  const io = f.io3 && f.io3.emulated ? 'emulated (no IO)' : f.io3 && f.io3.mode != null ? `IO3 mode ${f.io3.mode}, level ${f.io3.level}` : 'IO3 not read';
+  const io = f.io3 && f.io3.emulated ? 'emulated (no IO)'
+    : f.io3 && f.io3.mode != null ? `IO3 mode ${f.io3.mode}, level ${f.io3.level} (${f.io3.pressed ? 'pressed' : 'released'})` : 'IO3 not read';
   return el('div', { class: 'lite-arm-live' },
     el('small', { text: `${link.emulated ? 'Emulated controller' : 'Controller'} ${link.ip}:${link.port} · read only, but for STOP · updated ${f.age_s ?? '?'} s ago` }),
     el('small', { text: `Arm ${deg(f.joints_deg)} · errors ${f.errors ? (f.errors.length ? f.errors.join(', ') : 'none') : 'not read'} · run mode ${f.run_mode || 'not read'}` }),

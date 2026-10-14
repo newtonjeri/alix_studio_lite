@@ -103,7 +103,7 @@ the three devices on each side, refreshed about five times a second:
 | **Arm** (RM75) | Its seven joints, its error codes, and the controller's run mode (SIM or REAL). |
 | **Pole** (lift) | Its height in mm. |
 | **Hand** (Inspire RH56) | Where its six fingers actually are (0–1000, 1000 = open). |
-| **E-stop** (IO3) | Clear, pressed, unknown, or *not configured*. IO3 must be in the controller's E-stop mode (5); RealMan's demo maps it to "continue program". |
+| **E-stop** (IO3) | Clear, pressed, unknown, or *not configured*. IO3 must be in the controller's E-stop mode (5), with the button wired normally-closed to ground (RealMan's circuit-type IO E-stop wiring): it reads 1 released, 0 pressed. RealMan's demo maps IO3 to "continue program". |
 
 The connection **reads** the arms, and its one command is **STOP**.
 - **STOP BOTH stops the real arms, like the E-stop.** Each controller gets ALIX's own stop, both at once: the arm stops the fastest way (`rm_set_arm_stop`, which drops its trajectory), the pole stops, and the hand freezes where it is. ALIX's check then proves the arm is still, including a program the control program is running. One arm's STOP (SLOW STOP in Advanced) stops that arm on its path. If a controller does not confirm, the page says so: press the red E-stop button. After any STOP, nothing moves until **Recover**, as after the E-stop. The red E-stop buttons remain the safety stop.

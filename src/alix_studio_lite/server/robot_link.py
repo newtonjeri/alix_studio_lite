@@ -8,7 +8,8 @@ feedback of the three devices ALIX drives on each side (alix_hw: one transport p
 - the lift pole: its height (``peripherals.Pole``);
 - the Inspire hand: where its six channels actually are (``peripherals.HandModbus.read``, ANGLE_ACT);
 
-and the E-stop input, IO3, which must be in the controller's E-stop mode (5).
+and the E-stop input, IO3, which must be in the controller's E-stop mode (5), wired as a
+normally-closed button to ground: it reads 0 when pressed.
 
 READ ONLY, BUT FOR STOP. Robot actions stay with the stand-in until Lite's robot commands exist,
 and the screens say so. The one command is STOP (``ArmLink.stop``): ALIX's own stop of a
@@ -30,10 +31,14 @@ from .jobs import UserError
 
 ESTOP_IO = 3                       # the E-stop input on both controllers (decided 13 Oct)
 ESTOP_MODE = 5                     # the controller's "input emergency stop" mode
+# Every robot is wired as RealMan's circuit-type IO E-stop: a normally-closed button between IO3
+# and ground. Released, the circuit is closed and IO3 reads 1; pressed (or a cut wire), it opens
+# and reads 0. So 0 is the E-stop (decided 14 Oct, after reading both controllers).
+ESTOP_PRESSED_LEVEL = 0
 STALE_S = 1.0                      # no fresh reading for this long: the E-stop is UNKNOWN
 
 
-def estop_state(read, active_level: int = 1) -> tuple[str, dict]:
+def estop_state(read, active_level: int = ESTOP_PRESSED_LEVEL) -> tuple[str, dict]:
     """The E-stop chip from one ``rm_get_io_state(3)`` reading: CLEAR, ENGAGED, NOT_CONFIGURED
     (IO3 not in E-stop mode, so it would not stop the arm) or UNKNOWN (unreadable). Fails closed."""
     try:
@@ -46,7 +51,8 @@ def estop_state(read, active_level: int = 1) -> tuple[str, dict]:
         return "UNKNOWN", {"ret": ret}
     if mode != ESTOP_MODE:
         return "NOT_CONFIGURED", {"mode": mode, "level": level}
-    return ("ENGAGED" if level == active_level else "CLEAR"), {"mode": mode, "level": level}
+    pressed = level == active_level
+    return ("ENGAGED" if pressed else "CLEAR"), {"mode": mode, "level": level, "pressed": pressed}
 
 
 def error_codes(err) -> list[int]:
@@ -69,7 +75,8 @@ class ArmLink:
     closes it when it stops, so nothing uses a deleted handle). ``on_read`` is called after every
     reading, so an E-stop press reaches the robot's jobs without waiting for a page to poll."""
 
-    def __init__(self, side: str, ip: str, port: int = 8080, *, period_s: float = 0.2, estop_active: int = 1,
+    def __init__(self, side: str, ip: str, port: int = 8080, *, period_s: float = 0.2,
+                 estop_active: int = ESTOP_PRESSED_LEVEL,
                  on_read=None):
         self.side, self.ip, self.port = side, ip, int(port)
         self.period_s, self.estop_active = period_s, estop_active
