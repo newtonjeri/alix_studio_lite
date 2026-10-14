@@ -2,8 +2,8 @@
 // needs no login (handoff sections 21.13, 21.14 and 24). It acts like the E-stop: a linked arm's
 // controller is stopped too, and the arms stay held until Recover (Robot & mode). The page's own stop functions still
 // run afterwards for their screen updates. While anything covers the top bar's STOP BOTH (the
-// log-in screen, the Project Manager, a dialog, the Trajectory Viewer), a second one, in the
-// page's own STOP style, stays on top of everything (lite.css).
+// Project Manager, a dialog, the Trajectory Viewer), a second one, in the page's own STOP style,
+// stays on top of everything (lite.css); never on the log-in screen (the owner's choice, 14 Oct).
 
 let nested = 0;               // inside a STOP BOTH: the page's per-arm stops send nothing more
 

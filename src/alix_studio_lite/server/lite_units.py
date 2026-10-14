@@ -85,6 +85,30 @@ class LiteUnits(Project):
                 arm = detect_arm(src.get("original") or src.get("name") or "")
         return arm, stage
 
+    # ── every file name in a project is used once (the owner, 14 Oct): two recordings of one name
+    # could not be told apart in the lists, the project folder or the controller's program names
+
+    def name_owner(self, name: str, skip: tuple | None = None) -> str | None:
+        """The region whose recording already has ``name`` (any case), ``skip`` = (key, file) aside."""
+        want = Path(str(name)).name.strip().casefold()
+        for k, u in self.units.items():
+            if (self.root / "trajectories" / u["arm"] / k / "raw").is_dir():
+                if any((k, r["file"]) != skip and r["name"].casefold() == want for r in self.recordings(k)):
+                    return k
+        return None
+
+    def free_name(self, name: str) -> str:
+        """``name``, or ``<stem>_2``, ``_3``… when the project already has it."""
+        p = Path(Path(str(name)).name.strip() or "recording.txt")
+        stem, suffix, cand, n = p.stem, p.suffix or ".txt", p.name, 1
+        while self.name_owner(cand):
+            n += 1
+            cand = f"{stem}_{n}{suffix}"
+        return cand
+
+    def taken_text(self, name: str, owner: str) -> str:
+        return f"{Path(str(name)).name.strip()} is already the name of a recording in this project ({display_name(self.units[owner])})"
+
     def current_recording(self, key: str) -> Path | None:
         recs = self.recordings(key)
         if not recs:
@@ -117,6 +141,8 @@ class LiteUnits(Project):
         if st is None:
             raise UserError(f"Say the pole height and hand pose {label} was taught with.", code="stage")
         with self.lock:
+            if name and self.name_owner(name):              # a take or a file loaded again (a correction) is
+                name = self.free_name(name)                 # kept under a numbered name, never refused
             dst = super().add_recording(key, src_path, note=note, source=source)
             self._update_source(dst, taught_arm=taught_arm, stage=st.as_dict())
             if name:
@@ -149,6 +175,27 @@ class LiteUnits(Project):
             raise UserError(f"{rec['name']} must have been taught on the {self.units[key]['arm'].upper()} arm to "
                             f"belong to {key}.", code="arm")
         self._update_source(self.unit_dir(key) / "raw" / file, taught_arm=arm, stage=stage.as_dict())
+
+    def set_recording_hand(self, key: str, file: str, hand) -> dict:
+        """The hand a recording runs with, changed by the operator after teaching (the owner, 14 Oct:
+        what was forgotten in Prepare is set there and carries on to the later stages). Only the hand:
+        the arm is mounted on the pole, so a recording runs only at the pole height it was taught
+        at. The stage it had is kept in its record."""
+        rec = next((r for r in self.recordings(key) if r["file"] == file), None)
+        if rec is None:
+            raise KeyError(f"no recording {file!r} for {key}")
+        old = staging.stage_from(rec["stage"])
+        if old is None:
+            raise UserError(f"{rec['name']} has no pole and hand yet.", "State them first (State pole & hand…).",
+                            code="stage")
+        new = staging.make_stage(old.pole_mm, hand, "the hand set in Prepare after teaching")
+        if staging.same_stage(new, old):
+            return old.as_dict()
+        path = self.unit_dir(key) / "raw" / file
+        history = list(_read_json(path.with_suffix(".source.json"), {}).get("stage_history") or [])
+        history.append(dict(at=time.strftime("%Y-%m-%d %H:%M:%S"), was=old.as_dict(), why=new.source))
+        self._update_source(path, stage=new.as_dict(), stage_history=history)
+        return new.as_dict()
 
     # ── the region's setup: the pole and hand it is taught with
 
@@ -197,6 +244,9 @@ class LiteUnits(Project):
             raise ValueError("a file name is needed")
         if file not in {r["file"] for r in self.recordings(key)}:     # one of this region's files, nothing else
             raise KeyError(f"no recording {file!r} for {key}")
+        owner = self.name_owner(name, skip=(key, file))
+        if owner:
+            raise ValueError(self.taken_text(name, owner))
         side = self.unit_dir(key) / "raw" / file
         meta = side.with_suffix(".source.json")
         if not side.is_file():

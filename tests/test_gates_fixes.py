@@ -375,3 +375,33 @@ def test_a_refused_keep_names_the_limits_and_the_log_says_what_each_tune_came_to
     tunes = [json.loads(x) for x in (day / "activity.jsonl").read_text().splitlines() if '"job optimise' in x]
     assert [t["detail"]["outcome"] for t in tunes] == ["fails L5 Path accuracy 6.20 mm (limit 5 mm)", "passes every limit"]
     assert "(fails L5 Path accuracy 6.20 mm (limit 5 mm))" in (day / "lite.log").read_text()
+
+
+def test_every_file_name_in_a_project_is_used_once(lite):
+    """The owner (14 Oct): Save TXT refuses a name already used in the project (any region, any
+    case); a file loaded again under a used name (a correction) is kept with a numbered name."""
+    load(lite, "L-R01", "FILE_09.txt", "L_hinge.txt", 140, "100% open", lines=200)
+    load(lite, "L-R02", "FILE_09.txt", "L_side.txt", 140, "100% open", lines=200)
+    r = unit(lite, "L-R02", "name", {"name": "l_HINGE.TXT"})
+    assert "already the name of a recording in this project" in r["error"]
+    assert "error" not in unit(lite, "L-R01", "name", {"name": "L_hinge.txt"})          # its own name again
+    again = load(lite, "L-R01", "FILE_09.txt", "L_hinge.txt", 200, "50% open", lines=200)
+    names = [x["name"] for x in again["recordings"]]
+    assert names.count("L_hinge.txt") == 1 and "L_hinge_2.txt" in names
+
+
+def test_a_recordings_hand_can_change_after_teaching_but_never_its_pole(lite):
+    """Back in Prepare (the owner, 14 Oct): on the operator's word a recording runs with another hand
+    from then on; its tuning is stale until made again, and its old stage stays in its record."""
+    key = "L-R01"
+    u = load(lite, key, "FILE_09.txt", "L_hinge.txt", 140, "GRIP", lines=400)
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
+    assert unit(lite, key)["fresh"]
+    path = f"recordings/{u['active']}/hand"
+    assert unit(lite, key, path, {"hand": "OPEN"})["code"] == "confirm"
+    v = unit(lite, key, path, {"hand": "OPEN", "confirmed": True})
+    rec = next(r for r in v["recordings"] if r["file"] == u["active"])
+    assert rec["stage"]["pole_mm"] == 140 and rec["stage"]["hand"] == [1000] * 6
+    assert not v["fresh"]                                                   # tuned again before it is kept
+    src = work_dir(lite, key).parent / "raw" / Path(u["active"]).with_suffix(".source.json").name
+    assert json.loads(src.read_text())["stage_history"][0]["was"]["hand"] == [0, 0, 0, 0, 150, 1000]

@@ -5,7 +5,7 @@ cleaning trajectories on the dual-arm RealMan RM75 robot (commode C). It reuses 
 its kinematics and 3D robot, its optimisers, its robot I/O library and its control program.
 
 It runs in a web browser on the operator's computer. It has two front ends on one backend:
-- the **Lite UI**, at `/`: the designer's *ALIX Studio LITE Edition V19* page, connected to the backend;
+- the **Lite UI**, at `/`: the designer's *ASL* page (V32, which replaced V19 on 14 October), connected to the backend;
 - **Legacy Lite**, at `/legacy/`: the earlier ALIX-themed UI, kept working. It asks for the same operator PIN.
 
 **The repository is self-contained.** Everything Lite needs is in this folder: no ALIX checkout and
@@ -140,7 +140,7 @@ The status pill at the top chooses where the region steps run. Lite always start
 
 Whatever the mode, every execution stages the file's own pole height and hand pose first. If
 either does not arrive, nothing else runs. A trajectory runs only on the arm it was taught on, and
-only after tuning has passed every limit. [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md),
+only after tuning has passed every limit. [`docs/UI_CONTRACT.md`](docs/UI_CONTRACT.md),
 "The gates on every execution", explains each gate.
 
 ### Logs
@@ -232,6 +232,6 @@ The maintenance tools in `tools/`:
 ### Read more
 
 - [`docs/STATUS.md`](docs/STATUS.md): what works and what comes next.
-- [`docs/UI_V19_CONTRACT.md`](docs/UI_V19_CONTRACT.md): each screen, what it does, and the gates on every execution.
+- [`docs/UI_CONTRACT.md`](docs/UI_CONTRACT.md): each screen, what it does, and the gates on every execution.
 - [`docs/ALIX_Studio_Lite_Requirements_Revised.md`](docs/ALIX_Studio_Lite_Requirements_Revised.md): the requirements (final, v1.6).
 - [`docs/ALIX_Studio_Lite_Implementation_Plan.md`](docs/ALIX_Studio_Lite_Implementation_Plan.md): the implementation plan.

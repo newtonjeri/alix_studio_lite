@@ -1,7 +1,7 @@
-"""The Lite UI page (``web/index.html``) is the designer's V19 file, unchanged except for one
+"""The Lite UI page (``web/index.html``) is the designer's V32 file (ASL), unchanged except for one
 marked block that loads Lite's bridge (``web/lite/``):
 
-- the page minus that block is byte-identical to ``docs/reference/ui_v19/``;
+- the page minus that block is byte-identical to ``docs/reference/ui_v32/``;
 - every page function the bridge replaces still exists in the page (a new designer version
   that renames one fails here, not on the robot);
 - nothing loads from the network, and the bridge uses the page's colour variables only.
@@ -11,7 +11,7 @@ import re
 from alix_studio_lite import vendor_paths
 
 WEB = vendor_paths.LITE_ROOT / "src/alix_studio_lite/web"
-ORIGINAL = vendor_paths.LITE_ROOT / "docs/reference/ui_v19/ALIX_Studio_LITE_Edition_V19_Project_Manager.html"
+ORIGINAL = vendor_paths.LITE_ROOT / "docs/reference/ui_v32/ASL_FINAL_Template_V32_AutoHide_Journey.html"
 BLOCK = (b"<!-- ALIX Studio Lite: the designer's page above is unchanged; Lite's link to the backend is web/lite/ -->\n"
          b"<link rel=\"stylesheet\" href=\"lite/lite.css\">\n"
          b"<script type=\"module\" src=\"lite/main.js\"></script>\n")

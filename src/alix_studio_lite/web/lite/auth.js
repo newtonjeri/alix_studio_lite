@@ -29,18 +29,25 @@ export function installAuth() {
       await loadProjects();
     } catch (err) {
       session.set(null);
+      window.auditLog('AUTH', 'Operator login attempt', 'Incorrect PIN entered · PIN value not stored', 'ERROR',
+        { page: 'login', stage: '', task: '', arm: '', projectId: null, projectName: '—', user: 'Unauthenticated' });
       loginMessage(say(err), 'error');
       if (input) { input.value = ''; input.focus(); }
       return;
     }
     document.dispatchEvent(new CustomEvent('lite:logged-in'));
-    // the page's own steps after a correct PIN (V19 submitOperatorLogin)
+    // the page's own steps after a correct PIN (V32 submitOperatorLogin): its audit log, then the
+    // workspace with the journey hidden
     operatorLoggedIn = true;
+    ASL_AUDIT_LAST_INTERACTION_AT = Date.now();
+    window.auditLog('AUTH', 'Operator login', 'Login successful', 'SUCCESS',
+      { page: 'login', stage: '', task: '', arm: '', projectId: null, projectName: '—', user: 'Operator' });
+    window.startAuditLiveServices();
     loginMessage('Login successful', 'ok');
     document.getElementById('operatorLoginScreen')?.classList.add('hidden');
     document.getElementById('mainApp')?.classList.remove('app-login-locked');
     window.showView('home');
-    window.setJourneyVisible(true, false);
+    window.setJourneyVisible(false, false);
     try { operatorFirstRunTourPending = localStorage.getItem(TOUR_STORAGE_KEY) !== 'true'; } catch (_) { operatorFirstRunTourPending = true; }
     setTimeout(() => {
       window.showProjectManager();

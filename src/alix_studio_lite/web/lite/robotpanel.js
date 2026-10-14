@@ -61,10 +61,15 @@ async function render() {
             { ip: e.target.closest('.lite-arm-row').querySelector('.lite-ip')?.value.trim() || undefined }) })),
       a.link ? liveRows(a.link) : null);
   }));
+  // both arms at once (the owner, 14 Oct); each still uses the address in its own row
+  const sides = ['left', 'right'];
+  const all = el('div', { class: 'cta-row lite-arms-all' },
+    el('button', { class: 'btn', text: 'Connect all', disabled: sides.every(s => st.arms[s].connected), onclick: () => connectAll(body) }),
+    el('button', { class: 'btn light', text: 'Disconnect all', disabled: !sides.some(s => st.arms[s].connected), onclick: disconnectAll }));
   const note = el('div', { class: `statusbar ${st.motion_block ? 'warn' : 'ok'}` },
     st.motion_block || `${st.label}.` + (linked ? ' In Real the arms, the poles and the hands move (the pole and the hand at 50 % speed); in Hardware sim the controllers run in their SIM mode.'
       : ' The stand-in: every robot screen works and nothing moves.'));
-  body.replaceChildren(modes, arms, note);
+  body.replaceChildren(modes, all, arms, note);
   if (robotControlUnlocked) {
     body.append(el('details', { class: 'advanced' }, el('summary', { text: 'Engineer: E-stop test (stand-in robot)' }),
       el('div', { class: 'advanced-body cta-row' }, ['left', 'right'].filter(side => !st.arms[side].link).flatMap(side => [
@@ -90,6 +95,23 @@ const changed = () => document.dispatchEvent(new CustomEvent('lite:mode'));
 
 async function act(url, body = {}) {
   try { await post(url, body); } catch (err) { tell(err); }
+  render().catch(tell);
+  changed();
+}
+
+// Each arm in turn, so a refusal names its arm and the other still connects.
+async function connectAll(body) {
+  const ips = Object.fromEntries(['left', 'right'].map(s => [s, body.querySelector(`.lite-arm-row.${s} .lite-ip`)?.value.trim()]));
+  for (const side of ['left', 'right']) {
+    if (ips[side] === undefined) continue;                 // connected already: its row shows no address field
+    try { await post(`/api/robots/${side}/connect`, { ip: ips[side] || undefined }); } catch (err) { tell(err); }
+  }
+  render().catch(tell);
+  changed();
+}
+
+async function disconnectAll() {
+  for (const side of ['left', 'right']) await post(`/api/robots/${side}/disconnect`, {}).catch(() => {});
   render().catch(tell);
   changed();
 }

@@ -116,32 +116,20 @@
 .simulation-placeholder.lite-3d > .lite-3d-msg.webgl-fail span { font-size: 12px; line-height: 1.45; }
 .simulation-placeholder.lite-3d[data-lite3d="ready"] { border-style: solid; }
 .simulation-placeholder.lite-3d .simulation-caption { z-index: 3; }
-.playback-preview.lite-3d { min-height: 360px !important; background: var(--lite-viewport-bg); overflow: hidden; }
-.playback-preview.lite-3d[data-lite3d="ready"] > div:not(.lite-3d-canvas) { display: none; }
+/* Save & Review keeps its file and its way on: the playback part (Move to Recorded Start, Playback,
+   Record Again and the preview area) is removed (the owner, 14 Oct). */
+#stage-review .active-trajectory-bar + .cta-row, #stage-review .playback-preview { display: none !important; }
 
-/* The page's pictures in 3D (pictures.js): Home, Setup & Safety, the arm cards, Drag & Teach, the
-   zoom and the single-arm simulation show the scene where V19 shows an image. The designer's frames
-   stay; inside each, the canvas and a status chip, and the image hidden. */
+/* The single-arm merged simulation in 3D (pictures.js): the designer's frame stays; inside it, the
+   canvas and a status line, the reference image hidden. Elsewhere the page shows its own images. */
 .lite-pic { position: relative; overflow: hidden; isolation: isolate; background: var(--lite-viewport-bg) !important; }
-.lite-pic > img, .lite-pic > .single-arm-sim-image, .hero-art.lite-pic-frame > img { display: none !important; }
+.lite-pic > .single-arm-sim-image { display: none !important; }
 .lite-pic > .lite-3d-canvas { cursor: grab; }
 .lite-pic > .lite-3d-canvas:active { cursor: grabbing; }
 .lite-pic-msg { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; padding: 12px; text-align: center;
   font-size: 13px; font-weight: 700; color: var(--vp-text); }
-.lite-pic-chip { position: absolute; left: 8px; bottom: 8px; z-index: 2; max-width: calc(100% - 16px); padding: 3px 8px;
-  border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--card) 90%, transparent); color: var(--ink);
-  font-size: 11px; font-weight: 700; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: help; }
-.lite-pic-chip[hidden] { display: none; }
-.hero-art.lite-pic-frame { background: var(--card); border-color: var(--line); }
-.lite-hero-3d { width: 100%; aspect-ratio: 16 / 10; min-height: 220px; border-radius: 12px; }
-/* the page's own rules for these frames are scoped and !important (and so are dark.css's) */
-#view-teach .choice-region-thumb.lite-pic, #stage-teach .teach-reference-image-wrap.lite-pic,
-#visualCarousel.lite-pic, #imageModal .image-zoom-stage.lite-pic { background: var(--lite-viewport-bg) !important; }
-#view-teach .choice-region-thumb.lite-pic > img, #stage-teach .teach-reference-image-wrap.lite-pic > img,
-#visualCarousel.lite-pic > img, #imageModal .image-zoom-stage.lite-pic > img { display: none !important; }
 .single-arm-sim-viewport.lite-pic .single-arm-sim-status, .single-arm-sim-viewport.lite-pic .single-arm-sim-controls { z-index: 3; }
 .lite-single-note { margin: 4px 0 0; }
-#imageModal .lite-pic-chip { left: auto; right: 8px; }          /* the window's STOP BOTH sits bottom left */
 #visualRefCounter { white-space: nowrap; flex-shrink: 0; }
 
 /* Robot & mode */
@@ -161,8 +149,9 @@
 .lite-dot.on { background: var(--green); }
 /* STOP BOTH on top of everything while an overlay covers the top bar's (safety.js) */
 .lite-stop-fixed { display: none; position: fixed; left: 16px; bottom: 16px; z-index: 2147483000; }
-body:has(.modal.show, .project-manager-screen.show, .operator-login-screen:not(.hidden)) .lite-stop-fixed,
+body:has(.modal.show, .project-manager-screen.show) .lite-stop-fixed,
 body.simulation-expanded .lite-stop-fixed { display: block; }
+body:has(.operator-login-screen:not(.hidden)) .lite-stop-fixed { display: none; }   /* never on the log-in screen (owner, 14 Oct) */
 .lite-estop { font-size: 13px; font-weight: 800; border-radius: 999px; padding: 5px 10px; border: 1px solid var(--line); color: var(--muted); }
 .lite-estop.CLEAR { color: var(--green); border-color: var(--green); background: var(--green2); }
 .lite-estop.ENGAGED, .lite-estop.UNKNOWN, .lite-estop.NOT_CONFIGURED { color: var(--red); border-color: var(--red); background: var(--red2); }
@@ -311,3 +300,7 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 /* the trajectory scrubber in the simulation pane's controls (sim.js) */
 .lite-sim-scrub { width: min(240px, 30vw); accent-color: var(--blue); }
 .lite-sim-scrub:disabled { opacity: 0.4; }
+
+/* notifications stay 15 s (notify.js); a click closes one */
+#toast { cursor: pointer; }
+.lite-arms-all { justify-content: flex-end; margin: 10px 0 0; }

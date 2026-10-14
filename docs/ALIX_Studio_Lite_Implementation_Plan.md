@@ -2,7 +2,7 @@
 
 **Status: Version 1.6, 13 October 2026 (current).**
 
-> **Update (D33–D36, 13 October 2026):** the designer's V19 page is now the primary UI (the Lite UI) and the backend is built around it, in the order of its handoff (`UI_V19_CONTRACT.md`, last section). The earlier UI is kept as Legacy Lite. Where this plan describes screens, read them as the matching V19 screens.
+> **Update (D33–D36, 13 October 2026):** the designer's V19 page is now the primary UI (the Lite UI) and the backend is built around it, in the order of its handoff (`UI_CONTRACT.md`, last section). The earlier UI is kept as Legacy Lite. Where this plan describes screens, read them as the matching V19 screens.
 
 | | |
 |---|---|

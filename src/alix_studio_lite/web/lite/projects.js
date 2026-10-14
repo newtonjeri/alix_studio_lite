@@ -104,7 +104,7 @@ export function installProjects() {
       await flush();
       const blob = await get(`/api/projects/${id}/export`, { raw: true });
       const name = `${(p.name || 'ALIX_Project').replace(/[^A-Za-z0-9_-]+/g, '_')}.alixproj`;
-      await saveFile(blob, name, 'ALIX Studio Project', { 'application/zip': ['.alixproj'] });
+      await saveFile(blob, name, 'ASL Project', { 'application/zip': ['.alixproj'] });
       window.toast(`Project file saved: ${p.name}`);
     } catch (err) {
       if (err?.name !== 'AbortError') window.toast(`Could not save the project file: ${say(err)}`);

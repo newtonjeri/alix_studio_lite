@@ -23,7 +23,7 @@ export function installBrand() {
     tile.innerHTML = mark();
     tile.classList.add('lite-brand');
     tile.setAttribute('role', 'img');
-    tile.setAttribute('aria-label', 'ALIX');
+    tile.setAttribute('aria-label', 'Butterfli');
   }
   // the tab's icon, in the theme's colours at load (an icon cannot use the page's variables)
   const css = getComputedStyle(document.documentElement);

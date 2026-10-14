@@ -1,7 +1,7 @@
 // Advanced Robot Controls (engineer PIN, server-checked). Connected so far: the controller's run
 // mode per arm (SIM / REAL / CHECK), the hand and the pole, and the program list. Uploading any
 // file, stored-program runs, Global Points and the arm's own drag teach come with the robot I/O
-// backend (docs/UI_V19_CONTRACT.md); until then those buttons keep the page's template behaviour.
+// backend (docs/UI_CONTRACT.md); until then those buttons keep the page's template behaviour.
 // With the live link they command the controllers (the pole and the hand at 50 % speed, the run
 // mode read back); without it, the stand-in.
 

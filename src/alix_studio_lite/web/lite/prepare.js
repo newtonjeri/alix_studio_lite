@@ -7,7 +7,7 @@
 // Drag teaching starts only with the arm in that setup, so every recording knows its true stage,
 // and every execution stages that stage first (staging.py). The start-pose moves wait for the arm.
 
-import { say } from './api.js';
+import { post, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
 import { liteMode } from './status.js';
 
@@ -50,6 +50,30 @@ async function refresh() {
   try { const u = await loadUnit(s.key); showSetup(u.setup); } catch (_) { /* the page still works */ }
 }
 
+// Back in Prepare after teaching (the owner, 14 Oct: what was forgotten is set here and carries on to
+// the later stages). The hand can be changed for the recording already made, when the operator says
+// so (it is tuned and kept again); the pole cannot: the arm is mounted on the pole, so a recording
+// runs only at the height it was taught at, and the new height is for the next recording.
+async function afterTeaching(s, u, set) {
+  const rec = (u.recordings || []).find(r => r.file === u.active);
+  if (!rec || !rec.stage || !armSelectionLocked) return;
+  if (Math.abs(Number(rec.stage.pole_mm) - set.pole_mm) > 5) {
+    window.toast(`${rec.name} was taught at pole ${rec.stage.pole_mm} mm. The arm moves with the pole, so it runs only at that `
+      + `height: ${set.pole_mm} mm is for the next recording (Record Again).`);
+    return;
+  }
+  const same = rec.stage.hand.every((v, i) => set.hand[i] == null || (v != null && Math.abs(v - set.hand[i]) <= 30));
+  if (same) return;
+  const yes = await confirmDialog({ title: `Use this hand for ${rec.name}?`, danger: false, ok: 'Use it for this recording',
+    body: `${rec.name} was taught with the hand ${rec.stage.hand_text}. From now on every run of it stages the hand set here. `
+      + 'Tune it again and keep it: Real Test runs the kept version.' });
+  if (!yes) { window.toast(`The hand set here is for the next recording; ${rec.name} keeps its own.`); return; }
+  try {
+    ctx.units[s.key] = await post(`${unitUrl(s.key, 'recordings')}/${rec.file}/hand`, { hand: set.hand, confirmed: true });
+    window.toast(`${rec.name} now runs with this hand. Tune it again, then keep it.`);
+  } catch (err) { tell(err); }
+}
+
 async function applySetup(kind) {
   const s = step();
   if (!s || !ctx.pid) return;
@@ -58,7 +82,11 @@ async function applySetup(kind) {
   try {
     const out = await robotCall(unitUrl(s.key, 'setup'), body, { what: `Moving the ${s.arm.toUpperCase()} pole and hand` });
     showSetup(out.unit.setup);
-    if (!out.job) { window.toast(`Setup kept for ${s.display}: ${out.unit.setup.text}. In Visual sim nothing moves.`); return; }
+    if (!out.job) {
+      window.toast(`Setup kept for ${s.display}: ${out.unit.setup.text}. In Visual sim nothing moves.`);
+      await afterTeaching(s, out.unit, body);
+      return;
+    }
     const done = await watchJob(out.job, (j) => { const n = $('liteSetupNote'); if (n) n.textContent = jobLine(j); });
     showSetup(out.unit.setup);
     if (done.state !== 'done') {                       // the arm is NOT in its setup: say so where it shows
@@ -72,6 +100,7 @@ async function applySetup(kind) {
     window.toast(`${s.arm.toUpperCase()} staged: ${out.unit.setup.text} `
       + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).'));
     window.rcSyncGuidedValues();                       // the Advanced panel shows the same values (nothing is sent)
+    await afterTeaching(s, out.unit, body);
   } catch (err) { tell(err); }
 }
 

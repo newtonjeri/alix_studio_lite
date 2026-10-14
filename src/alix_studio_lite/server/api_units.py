@@ -300,7 +300,7 @@ def add_recording(app, q, body, m):
                                        taught_arm=arm, stage=stage)
     else:
         raise UserError("Say where the recording comes from: library or upload.")
-    return {"saved": path.name, "arm": u["arm"], "unit": unit_view(app, units, key)}
+    return {"saved": path.name, "name": _name_of(units, key, path), "arm": u["arm"], "unit": unit_view(app, units, key)}
 
 
 @route("POST", U + r"/recordings/([A-Za-z0-9_.\-]+)/stage")
@@ -311,6 +311,21 @@ def state_recording_stage(app, q, body, m):
     stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "stated for this recording")
     try:
         units.set_recording_stage(key, file, stage, body.get("arm"))
+    except KeyError:
+        raise UserError("That recording is not in this region.") from None
+    return unit_view(app, units, key)
+
+
+@route("POST", U + r"/recordings/([A-Za-z0-9_.\-]+)/hand")
+def change_recording_hand(app, q, body, m):
+    """The hand a recording runs with, changed in Prepare after teaching, on the operator's word: every
+    run then stages that hand (its tuning is made again before it is kept). ``{hand, confirmed}``."""
+    units, key, file = units_of(app, m.group(1)), m.group(2), m.group(3)
+    _unit(units, key)
+    if not body.get("confirmed"):
+        raise UserError("Changing the hand of a recording needs your confirmation.", code="confirm")
+    try:
+        units.set_recording_hand(key, file, body.get("hand"))
     except KeyError:
         raise UserError("That recording is not in this region.") from None
     return unit_view(app, units, key)
@@ -629,8 +644,8 @@ def post_teach(app, q, body, m):
         path = units.add_recording(key, Path(out["file"]), source="teach", name=name, taught_arm=side, stage=st,
                                    note=f"drag-taught on the {side.upper()} arm: {out['points']} points in "
                                         f"{secs:.0f} s, at {st['text']}")
-        return {"saved": path.name, "seconds": round(secs, 1), "take": None, "stage": st,
-                "unit": unit_view(app, units, key)}
+        return {"saved": path.name, "name": _name_of(units, key, path), "seconds": round(secs, 1), "take": None,
+                "stage": st, "unit": unit_view(app, units, key)}
     # stand-in: a real recording of the SAME arm, saved with the stage it was taught with
     from .library import standin_take
 
@@ -639,8 +654,13 @@ def post_teach(app, q, body, m):
                                stage=take["stage"],
                                note=f"stand-in recording ({secs:.0f} s of teaching): {take['name']}, "
                                     f"taught at {take['stage']['text']}")
-    return {"saved": path.name, "seconds": round(secs, 1), "take": take["name"], "stage": take["stage"],
-            "unit": unit_view(app, units, key)}
+    return {"saved": path.name, "name": _name_of(units, key, path), "seconds": round(secs, 1), "take": take["name"],
+            "stage": take["stage"], "unit": unit_view(app, units, key)}
+
+
+def _name_of(units: LiteUnits, key: str, path: Path) -> str:
+    """A kept recording's name: the one asked for, or numbered when the project already had it."""
+    return next((r["name"] for r in units.recordings(key) if r["file"] == path.name), path.name)
 
 
 @route("POST", U + "/move-start")

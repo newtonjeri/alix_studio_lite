@@ -337,6 +337,10 @@ export function installTune() {
       if (!ok) return;
     }
     const was = currentStage;
+    // Prepare stays open to the arm being taught (the owner, 14 Oct: what was forgotten there is set
+    // there and carries on). The page refuses it once the arm is locked, its own Record Again
+    // included; it is entered as Prepare, and the arm stays locked, so the sides never swap.
+    if (s === 'prepare' && armSelectionLocked && was !== 'prepare') currentStage = 'prepare';
     pageSetStage(s, scroll);
     if (currentStage !== was) release(false);           // the simulation or the preview stops with its stage
     if (currentStage === 'optimize' && (s === 'optimize' || s === 'simulate')) enter();
