@@ -11,6 +11,7 @@ import { installAlerts } from './alerts.js';
 import { installAuth } from './auth.js';
 import { installBrand } from './brand.js';
 import { installFixes } from './fixes.js';
+import { installFolder } from './folder.js';
 import { installLayout } from './layout.js';
 import { installNotify } from './notify.js';
 import { installPictures } from './pictures.js';
@@ -34,6 +35,7 @@ installBrand();           // ALIX's brand mark, as ALIX Studio draws it
 installNotify();          // notifications stay 15 s (the owner, 14 Oct)
 installFixes();
 installProjects();
+installFolder();          // Save Project Folder with Lite's real files (V32)
 installAuth();
 installStatus();
 installAlerts();          // hardware errors and failures, bottom right, until closed

@@ -122,6 +122,43 @@ def export_project(app, q, body, m):
     return RawResponse(app.store.export_zip(m.group(1)), "application/zip", (safe or "ALIX_Project") + ".alixproj")
 
 
+def _folder_files(app, pid: str) -> list[tuple[str, "object"]]:
+    """The files of a project's folder that V32's Save Project Folder copies: all of them but the
+    record (the page writes its project.json) and a tuning not kept (``work/``)."""
+    folder = app.store.folder(pid)
+    if not (folder / "project.json").is_file():
+        raise UserError("Project not found.")
+    out = []
+    for f in sorted(folder.rglob("*")):
+        rel = f.relative_to(folder).as_posix()
+        if f.is_file() and not f.name.endswith(".tmp") and rel != "project.json" and "/work/" not in f"/{rel}":
+            out.append((rel, f))
+    return out
+
+
+@route("GET", r"/api/projects/([A-Za-z0-9_\-]+)/folder")
+def get_folder(app, q, body, m):
+    """What Lite keeps for a project, for V32's Save Project Folder: each file's path in the
+    folder, its size and sha256 (the recordings, kept files and transitions with their records, the
+    steps' settings and results)."""
+    import hashlib
+
+    session(app)
+    return {"files": [dict(path=rel, bytes=f.stat().st_size, sha256=hashlib.sha256(f.read_bytes()).hexdigest())
+                      for rel, f in _folder_files(app, m.group(1))]}
+
+
+@route("GET", r"/api/projects/([A-Za-z0-9_\-]+)/folder/file")
+def get_folder_file(app, q, body, m):
+    """One of those files, by its listed ``path``; nothing outside the list is served."""
+    session(app)
+    want = str((q.get("path") or [""])[0])
+    hit = next((f for rel, f in _folder_files(app, m.group(1)) if rel == want), None)
+    if hit is None:
+        raise UserError("That file is not in the project's folder.")
+    return RawResponse(hit.read_bytes(), "application/octet-stream", hit.name)
+
+
 @route("POST", "/api/projects/import")
 def import_project(app, q, body, m):
     session(app)

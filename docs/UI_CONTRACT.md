@@ -12,7 +12,8 @@ The Lite UI is the designer's **ASL FINAL Template V32** (product name ASL): one
 - The controller's global points (search, MoveJ / MoveL) are in the start-pose lists and in Advanced, the controller's programs are a list in Advanced's RUN tab, and the upload shows a progress bar.
 - The Activity Logs page reads the server's logs: the page's own events with every request, job result and controller command.
 - Prepare's Task Transition & Start Point Tools are connected: transition trajectories kept in the project, simulated in 3D and run on one arm alone; start points captured from the controller or taken from a file's last line, and moved to.
-- Still to come: V32's Save Project Folder with the real files, and the UGV position in the manifest.
+- Save Project Folder writes the real files: everything Lite's server keeps for the project, with the page's manifests (the UGV position and the start points and transitions in them) and the project's audit trail.
+- V32's new workflow features are all connected.
 
 This file states, screen by screen, what the page needs from the backend, what is connected today, and what is still the designer's template. It also lists what reviewing the page found: defects, data issues, gaps against the requirements, and the decisions that are open.
 
@@ -33,6 +34,7 @@ This file states, screen by screen, what the page needs from the backend, what i
 | `layout.js` + `lite.css` | — (top-bar labels) | Keeps STOP BOTH and the status on screen from 900 px wide (defect D1). |
 | `fixes.js` | `rcSyncGuidedValues`, `demoApplyToRobotControl` | Page defect D2 |
 | `projects.js` | `loadProjectDatabase`, `saveProjectDatabase`, `duplicateProject`, `deleteProject`, `exportProjectFile`, `importProjectFile` | `/api/projects…` (folders, ZIP project files, trash; a new project's fixture) |
+| `folder.js` | `saveProjectFolder` (wrapped) | The page writes its folder layout, manifests and README into the folder picked; then `GET /api/projects/<id>/folder` (each file's path, size, sha256) and `…/folder/file?path=` copy every file Lite keeps for the project into it, and `GET /api/logs` the project's audit trail |
 | `auth.js` | `submitOperatorLogin`, `lockOperatorSession`, `submitRobotPin`, `requestRobotControlAccess`, `closeRobotControl`, `lockRobotControl` | `/api/auth/…` (hashed PINs, sessions, engineer level), with V32's own steps after a log-in (its audit entries, the journey hidden). Also fixes page defect D3. |
 | `status.js` | the "FRONTEND READY" pill | `GET /api/robots/status` every 1.5 s and after each mode change |
 | `alerts.js` | — (added) | The status's `alerts`: hardware errors and failures at the bottom right until closed (`server/logbook.py`) |
@@ -63,7 +65,7 @@ State legend:
 | Screen and element | What it needs | State | Requirement |
 |---|---|---|---|
 | **Log-in** (keypad) | Operator PIN checked server-side | **Live** (PBKDF2, 5 tries then 30 s); no STOP BOTH on this screen (the owner, 14 October) | Handoff §19 |
-| **Project Manager**: Continue, New, Open/Manage, rename, duplicate, archive, delete, Load/Save Project File, auto save | Projects owned by the backend, with their files | **Live**: `~/ALIX-Lite/projects/<id>/` in the handoff's layout. A project file is a ZIP. Delete moves the folder to `.trash/`. | Handoff §5, §20; NFR-DATA |
+| **Project Manager**: Continue, New, Open/Manage, rename, duplicate, archive, delete, Load/Save Project File, auto save | Projects owned by the backend, with their files | **Live**: `~/ALIX-Lite/projects/<id>/` in the handoff's layout. A project file is a ZIP. Delete moves the folder to `.trash/`. Save Project Folder (Chrome / Edge) writes V32's manifests and README into the folder picked and copies in every file Lite keeps for the project (recordings, kept files and transitions with their records, each step's settings and results; not a tuning that was not kept), with the project's audit trail from Lite's logs; elsewhere the page saves the project file. | Handoff §5, §20; NFR-DATA |
 | Top bar: project chip, Save, Projects, Lock | as above | **Live** | — |
 | Top bar: status pill | Mode, robot and E-stop | **Live** (stand-in robot) | R4, D30 |
 | Top bar: **STOP BOTH** | Both arms stop, from any state | **Live** (no log-in needed; on screen from 900 px) | NFR-SAFETY; handoff §21.13–14 |

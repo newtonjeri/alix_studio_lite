@@ -142,3 +142,24 @@ def test_a_transition_beyond_the_limits_is_never_sent(lite):
     r = unit(lite, "L-T01", "transition/upload", {"program_id": 32})
     assert "L4" in r["error"] and "never goes to the robot" in r["error"], r
 
+
+def test_the_project_folder_has_every_kept_file(lite):
+    """V32's Save Project Folder copies what Lite keeps for the project: the recordings, the kept
+    files and the transitions with their records; never the record itself (the page writes it) nor an
+    unkept tuning; only the folder's own files are served."""
+    import hashlib
+
+    files = call(lite, "GET", "/api/projects/alix_tr/folder")["files"]
+    paths = [f["path"] for f in files]
+    assert any(p.startswith("trajectories/left/L-T01/raw/") and p.endswith(".txt") for p in paths), paths
+    assert any(p.startswith("trajectories/left/L-T01/raw/") and p.endswith(".source.json") for p in paths)
+    assert any(p.startswith("trajectories/transitions/left/L-T01/") and p.endswith(".txt") for p in paths)
+    assert "project.json" not in paths and not any("/work/" in p for p in paths)
+    f = next(f for f in files if f["path"].startswith("trajectories/transitions/") and f["path"].endswith(".txt"))
+    r = urllib.request.Request(lite["base"] + "/api/projects/alix_tr/folder/file?path=" + urllib.request.quote(f["path"]),
+                               headers={"X-Lite-Token": lite["tok"]})
+    with urllib.request.urlopen(r, timeout=30) as resp:
+        data = resp.read()
+    assert len(data) == f["bytes"] and hashlib.sha256(data).hexdigest() == f["sha256"]
+    for bad in ("project.json", "../../alix_tr/project.json", "/etc/passwd"):
+        assert "not in the project" in call(lite, "GET", "/api/projects/alix_tr/folder/file?path=" + urllib.request.quote(bad))["error"]
