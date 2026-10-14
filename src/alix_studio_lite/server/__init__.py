@@ -13,16 +13,48 @@ DEFAULT_DATA = Path(os.environ.get("ALIX_LITE_DATA", Path.home() / "ALIX-Lite"))
 
 
 def _running_lite(port: int) -> dict | None:
-    """What a Lite already serving on ``port`` says about itself, or None if something else is there."""
+    """What a Lite already serving on ``port`` says about itself, or None if another program is
+    there. A Lite from before /api/lite/hello still names itself in its Server header: {}."""
     import json
+    import urllib.error
     import urllib.request
 
     try:
         with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/lite/hello", timeout=2) as r:
             d = json.loads(r.read().decode("utf-8"))
         return d if isinstance(d, dict) and d.get("app") == "ALIX Studio Lite" else None
+    except urllib.error.HTTPError as exc:
+        return {} if (exc.headers.get("Server") or "").startswith("ALIXStudioLite/") else None
     except Exception:                                                      # noqa: BLE001
         return None
+
+
+def _port_taken(port: int, root: str, url: str, no_browser: bool) -> int:
+    """The port is in use: open this same Lite if it is the one running there, else say what to do."""
+    from .. import code_id
+
+    running = _running_lite(port)
+    if running is not None and running.get("code") == code_id():
+        print(f"ALIX Studio Lite is already running at {url}", flush=True)
+        print(f"   data folder {running.get('data_dir', '?')}", flush=True)
+        if not no_browser:
+            webbrowser.open(url)
+            print("   opened a browser tab to it", flush=True)
+        return 0
+    if running is not None:                     # its server still runs the code it started with
+        pid = running.get("pid")
+        stop = (f"taskkill /PID {pid}" if os.name == "nt" else f"kill {pid}") if pid else None
+        print(f"An older ALIX Studio Lite is still running at {root} (started before this copy changed, "
+              "or from another copy).", file=sys.stderr)
+        print("   Stop it first: press Ctrl+C in its terminal" + (f", or run: {stop}" if stop else "")
+              + ". Then start Lite again.", file=sys.stderr)
+        print(f"   Or start this one beside it: --port {port + 1}.", file=sys.stderr, flush=True)
+        return 2
+    print(f"Cannot use port {port}: another program (not ALIX Studio Lite) is using it.", file=sys.stderr)
+    if sys.platform.startswith("linux"):
+        print(f"   To see which: ss -ltnp 'sport = :{port}'", file=sys.stderr)
+    print(f"   Close that program, or start Lite on another port: --port {port + 1}.", file=sys.stderr, flush=True)
+    return 2
 
 
 def _set_pin(data: Path, role: str) -> int:
@@ -99,19 +131,8 @@ def main(argv=None) -> int:
     url = root + ("legacy/" if a.ui == "legacy" else "")
     try:
         srv = make_server(app, a.port)
-    except OSError as exc:
-        running = _running_lite(a.port)
-        if running is not None:
-            # Lite is already running there: open it rather than fail
-            print(f"ALIX Studio Lite is already running at {url}", flush=True)
-            print(f"   version {running.get('version', '?')}, data folder {running.get('data_dir', '?')}", flush=True)
-            if not a.no_browser:
-                webbrowser.open(url)
-                print("   opened a browser tab to it", flush=True)
-            return 0
-        print(f"Cannot use port {a.port}: {exc.strerror}. Another program is using it. "
-              f"Try --port {a.port + 1}.", file=sys.stderr, flush=True)
-        return 2
+    except OSError:
+        return _port_taken(a.port, root, url, a.no_browser)
 
     def _terminate(signum, frame):        # a service manager's stop behaves like Ctrl+C
         raise KeyboardInterrupt
@@ -121,6 +142,7 @@ def main(argv=None) -> int:
     signal.signal(signal.SIGTERM, _terminate)
     if not a.no_browser:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
+        print("Opening a browser tab...", flush=True)
     print(f"ALIX Studio Lite running at {root}  (Ctrl+C to stop)", flush=True)
     print(f"Legacy Lite:  {root}legacy/", flush=True)
     print(f"Data folder:  {a.data}", flush=True)

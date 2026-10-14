@@ -67,7 +67,6 @@ def main(argv=None) -> int:
     peek.add_argument("--robot", default="standin")
     peek.add_argument("--data")
     peek.add_argument("--set-pin")
-    peek.add_argument("--no-browser", action="store_true")
     known, _ = peek.parse_known_args(argv)
     if known.data:                        # a relative --data is relative to where Lite was started
         data = str(Path(known.data).expanduser().resolve())
@@ -80,8 +79,6 @@ def main(argv=None) -> int:
         print({"realman": "Robot: live read-only link to the real arms -- Lite reads them, commands nothing.",
                "emulated": "Robot: live read-only link to ALIX's emulated arms -- no hardware."}.get(
             robot, "Robot: stand-in (no hardware) -- the robot screens work, nothing moves."), flush=True)
-        if not known.no_browser:
-            print("Opening a browser tab...", flush=True)
     from alix_studio_lite import server
 
     return server.main(argv) or 0

@@ -131,7 +131,7 @@ Legacy Lite is no longer developed; its working parts (3D robot, plots, optimise
 
 | Area | State |
 |---|---|
-| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 148 tests pass in about three minutes, with no ALIX checkout. |
+| Self-contained repository | Done. The ALIX subset is vendored in `vendor/` with a manifest. 149 tests pass in about three minutes, with no ALIX checkout. |
 | Cubicle walls | Done. The 1400 mm cubicle (default) and the 800 mm cubicle are in `assets/scene/cubicles/`. |
 | Motion basics (`src/alix_studio_lite/motion/`) | Implemented and smoke-tested. It covers track read/write, the 5 ms clock, the limit set from the URDF, and the hard limits L1–L6 plus checks C1–C4 on the integer bytes. L3 reads acceleration as ALIX does (20 Hz band-limited, F99c; ALIX accepts at 1.00 of 600 °/s², Lite at 1.02). |
 | Optimiser engine (`src/alix_studio_lite/optimise/`) | Implemented, smoke-tested and connected to the Lite UI's Tune + Simulation. Golden tests still to write. |

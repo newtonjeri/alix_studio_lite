@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import os
 import re
 import threading
 import time
@@ -22,7 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
 
-from .. import __version__, vendor_paths
+from .. import __version__, code_id, vendor_paths
 from . import workers
 from .auth import Auth
 from .jobs import Jobs, UserError
@@ -46,6 +47,7 @@ MESHES = {
 #: decision D30: Visual sim (the 3D robot moves, no hardware) / Hardware sim (the controller's own SIM
 #: mode, rm_set_arm_run_mode(0): programs run, the arms stay still) / Real (the arms move)
 MODES = ("visual", "hwsim", "real")
+CODE_ID = code_id()                      # the code this server runs, as loaded at its start
 #: the only /api/ requests without the session: logging in and out, and STOP (never refused)
 OPEN_ROUTES = re.compile(r"^/api/(auth/login|auth/logout|robots/stop-both|robots/(left|right)/stop|lite/robot/stop|lite/hello)$")
 READ_ONLY_REAL = ("Lite reads the real arms but does not command them yet, so Real robot is not available.",
@@ -165,8 +167,10 @@ def _unit(app: LiteApp, key: str) -> dict:
 
 @route("GET", "/api/lite/hello")
 def get_hello(app, q, body, m):
-    """Who serves this port, with no log-in: how a second start finds the Lite already running."""
-    return {"app": "ALIX Studio Lite", "version": __version__, "data_dir": str(app.data_dir)}
+    """Who serves this port, with no log-in: how a second start finds the Lite already running, and
+    whether it runs the same code."""
+    return {"app": "ALIX Studio Lite", "version": __version__, "code": CODE_ID, "pid": os.getpid(),
+            "data_dir": str(app.data_dir)}
 
 
 @route("GET", "/api/lite/state")

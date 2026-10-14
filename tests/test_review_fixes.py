@@ -173,3 +173,40 @@ def test_a_stop_with_a_reason_ends_the_job_as_failed():
     time.sleep(0.1)
     jobs.cancel_arm("right")
     assert until_done(j2).state == "cancelled" and j2.error is None
+
+
+def test_a_second_start_tells_this_lite_an_older_one_and_another_program(lite, tmp_path, capsys):
+    """Starting Lite on a port in use opens it when it is this same Lite; an older Lite (whose server
+    still runs its old code) must be stopped first; anything else is another program."""
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    from alix_studio_lite import code_id
+    from alix_studio_lite.server import _running_lite, main
+
+    port = int(lite["base"].rsplit(":", 1)[1])
+    me = _running_lite(port)
+    assert me["code"] == code_id() and me["pid"] > 0
+    assert main(["--port", str(port), "--no-browser", "--data", str(tmp_path / "d1")]) == 0
+    assert "already running" in capsys.readouterr().out
+
+    class Old(BaseHTTPRequestHandler):                       # a Lite from before /api/lite/hello
+        server_version = "ALIXStudioLite/0.0.9"
+
+        def do_GET(self):
+            self.send_error(404)
+
+        def log_message(self, *a):
+            pass
+
+    class Other(Old):
+        server_version = "SimpleHTTP/0.6"
+
+    for cls, want, said in ((Old, {}, "older ALIX Studio Lite"), (Other, None, "another program")):
+        srv = HTTPServer(("127.0.0.1", 0), cls)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        try:
+            assert _running_lite(srv.server_address[1]) == want
+            assert main(["--port", str(srv.server_address[1]), "--no-browser", "--data", str(tmp_path / "d2")]) == 2
+            assert said in capsys.readouterr().err
+        finally:
+            srv.shutdown()

@@ -143,7 +143,8 @@ only after tuning has passed every limit. [`docs/UI_V19_CONTRACT.md`](docs/UI_V1
 | `this Python has no venv module` | Ubuntu or Debian: `sudo apt install python3.12-venv` (use your Python version). Then run the installer again. |
 | `NOT updated: could not reach GitHub (sign-in or network)` | Lite is installed as it was. Check the internet connection and the GitHub sign-in, then run the installer again. |
 | `the repository could not be cloned` | Sign in first (see above), then run the installer again. |
-| `Cannot use port 8766` | Another program uses that port: start Lite with `--port 8800`. (If Lite itself is already running there, starting it again just opens it.) |
+| `Cannot use port 8766: another program …` | Something other than Lite holds the port. On Linux, `ss -ltnp 'sport = :8766'` shows which program; close it, or start Lite with `--port 8800`. (If this Lite is already running there, starting it again just opens it.) |
+| `An older ALIX Studio Lite is still running` | The Lite started before an update still runs the old code. Press Ctrl+C in its terminal, or run the `kill` command it shows, then start Lite again. |
 | `Lite cannot reach the LEFT arm's controller` | Check the power, the cable, the address in Robot & mode, and that the computer is on 192.168.1.x. |
 | `The RealMan SDK does not load on this computer` | The robot link needs Linux. Run Lite on the Linux computer that runs the control program. |
 | E-stop chip reads *not configured* | IO3 is not in the controller's E-stop mode. An engineer sets it at the pendant; Lite never writes IO modes. |
