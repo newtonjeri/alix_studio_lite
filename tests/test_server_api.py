@@ -23,7 +23,7 @@ def server(tmp_path_factory):
     app = LiteApp(open_project(data, "commode_c"), data)
     srv = make_server(app, 0)
     port = srv.server_address[1]
-    threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.1}, daemon=True).start()
+    threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()
     base = f"http://127.0.0.1:{port}/api/lite/"
     TOKEN["t"] = None
     TOKEN["t"] = call(f"http://127.0.0.1:{port}/api/auth/", "login", {"pin": "1234"})["token"]   # Legacy needs the log-in too

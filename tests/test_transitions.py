@@ -22,7 +22,7 @@ def lite(tmp_path_factory):
     data = tmp_path_factory.mktemp("lite-transitions")
     app = LiteApp(open_project(data, "commode_c"), data)
     srv = make_server(app, 0)
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()   # shuts down at once
     ctx = {"base": f"http://127.0.0.1:{srv.server_address[1]}", "app": app, "data": data}
     ctx["tok"] = call(ctx, "POST", "/api/auth/login", {"pin": "1234"})["token"]
     call(ctx, "PUT", "/api/projects/alix_tr", {"id": "alix_tr", "name": "Transitions", "createdAt": "2026-10-14T10:00:00.000Z",

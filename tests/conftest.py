@@ -8,6 +8,11 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 os.environ.pop("ALIX_REPO_ROOT", None)          # vendor_paths forces its own value anyway
+# The robot's simulated time runs 10 times faster than the wall clock in the tests: the stand-in's
+# (robot_standin.TIME_SCALE) and ALIX's emulated arms' (RM_EMU_TIME_SCALE, also in the servers the
+# tests start). Every step is still taken; a 15 s program plays in 1.5 s.
+os.environ.setdefault("LITE_STANDIN_TIME_SCALE", "10")
+os.environ.setdefault("RM_EMU_TIME_SCALE", "10")
 
 from alix_studio_lite import vendor_paths  # noqa: E402
 
@@ -25,3 +30,13 @@ def lite_root() -> Path:
 @pytest.fixture(scope="session")
 def commode_c_recordings() -> Path:
     return RECORDINGS / "commode_c_taught_paths"
+
+
+@pytest.fixture(autouse=True, scope="session")
+def _quick_pins():
+    """The tests' PINs are hashed the same way with fewer PBKDF2 rounds (each test server logs in; at
+    Lite's 200,000 rounds that was about 0.3 s a server). A stored record keeps its own count."""
+    from alix_studio_lite.server import auth
+
+    auth.ITERATIONS = 2_000
+    yield

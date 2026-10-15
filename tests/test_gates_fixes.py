@@ -74,7 +74,7 @@ def lite(tmp_path, monkeypatch, request):
     monkeypatch.setattr(workers, "pool", lambda: pool)
     app = LiteApp(open_project(tmp_path, "commode_c"), tmp_path)
     srv = make_server(app, 0)
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()   # shuts down at once
     pid = "alix_fix_" + request.node.name[5:30].replace("[", "_").replace("]", "")
     ctx = {"base": f"http://127.0.0.1:{srv.server_address[1]}", "app": app, "pool": pool, "pid": pid,
            "data": tmp_path}
@@ -221,8 +221,10 @@ def test_a_run_never_starts_after_the_mode_changed(lite, monkeypatch):
     assert unit(lite, key, "move-start", {"which": "version"})["code"] == "mode"
 
 
-def test_staging_and_programs_check_the_mode_again(tmp_path):
-    from alix_studio_lite.server import staging
+def test_staging_and_programs_check_the_mode_again(tmp_path, monkeypatch):
+    from alix_studio_lite.server import robot_standin, staging
+
+    monkeypatch.setattr(robot_standin, "TIME_SCALE", 1.0)           # the mode changes while the pole still moves
     from alix_studio_lite.server.jobs import Jobs, UserError
     from alix_studio_lite.server.robot_standin import StandInRobot
 

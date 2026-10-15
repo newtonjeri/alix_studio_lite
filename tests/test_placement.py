@@ -19,7 +19,7 @@ def lite(tmp_path_factory):
     data = tmp_path_factory.mktemp("lite-placement")
     app = LiteApp(open_project(data, "commode_c"), data)
     srv = make_server(app, 0)
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()   # shuts down at once
     ctx = {"base": f"http://127.0.0.1:{srv.server_address[1]}", "app": app, "data": data}
     ctx["tok"] = call(ctx, "POST", "/api/auth/login", {"pin": "1234"})["token"]
     call(ctx, "PUT", "/api/projects/alix_pl", {"id": "alix_pl", "name": "Placement", "createdAt": "2026-10-15T10:00:00.000Z",
@@ -133,7 +133,11 @@ def test_each_apply_moves_its_own_part_and_the_cleaning_pose(lite):
     assert arm.pole_mm == 150 and arm.hand == hand0              # the hand did not move
     apply("hand", 250, "Cleaning Pose")
     assert arm.hand == [1000, 1000, 1000, 1000, 0, 1000] and arm.pole_mm == 150   # nor the pole
-    held = apply("hand", 150, [600, None, 600, 600, None, None])["unit"]
+    apply("hand", 150, [600, None, 600, 600, None, None])
     assert arm.hand == [600, 1000, 600, 600, 0, 1000]              # a held channel keeps what it reads
-    assert set(held["applied"]) >= {"pole", "hand"}
+    t0 = time.time()                                             # each Apply is marked once its move is done
+    while (done := call(lite, "GET", P + "/units/L-R02")["applied"]).get("hand", {}).get("hand") != [600, None, 600, 600, None, None]:
+        assert time.time() - t0 < 5, done
+        time.sleep(0.1)
+    assert done["pole"]["pole_mm"] == 150
     call(lite, "POST", "/api/robots/mode", {"mode": "visual"})

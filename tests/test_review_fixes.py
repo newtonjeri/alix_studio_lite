@@ -24,7 +24,7 @@ def lite(tmp_path_factory):
     data = tmp_path_factory.mktemp("lite-fixes")
     app = LiteApp(open_project(data, "commode_c"), data)
     srv = make_server(app, 0)
-    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()   # shuts down at once
     ctx = {"base": f"http://127.0.0.1:{srv.server_address[1]}", "app": app, "data": data}
     ctx["tok"] = call(ctx, "POST", "/api/auth/login", {"pin": "1234"}, tok=False)["token"]
     rec = {"id": "alix_fix", "name": "Fixes", "createdAt": "2026-10-13T10:00:00.000Z",
@@ -82,7 +82,10 @@ def test_a_bad_content_length_is_refused(lite):
     c.close()
 
 
-def test_estop_latches_and_ends_motion_on_both_arms(lite):
+def test_estop_latches_and_ends_motion_on_both_arms(lite, monkeypatch):
+    from alix_studio_lite.server import robot_standin
+
+    monkeypatch.setattr(robot_standin, "TIME_SCALE", 1.0)           # the pole must still be moving when the E-stop comes
     call(lite, "POST", "/api/auth/engineer", {"pin": "1234"})
     for arm in ("left", "right"):
         call(lite, "POST", f"/api/robots/{arm}/connect", {})
@@ -203,7 +206,7 @@ def test_a_second_start_tells_this_lite_an_older_one_and_another_program(lite, t
 
     for cls, want, said in ((Old, {}, "older ALIX Studio Lite"), (Other, None, "another program")):
         srv = HTTPServer(("127.0.0.1", 0), cls)
-        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()   # shuts down at once
         try:
             assert _running_lite(srv.server_address[1]) == want
             assert main(["--port", str(srv.server_address[1]), "--no-browser", "--data", str(tmp_path / "d2"), "--logs", str(tmp_path / "logs")]) == 2

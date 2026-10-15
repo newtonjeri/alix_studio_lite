@@ -33,6 +33,7 @@ It follows the real rules the backend must keep:
 from __future__ import annotations
 
 import json
+import os
 import threading
 import time
 from pathlib import Path
@@ -45,6 +46,17 @@ DEFAULT_IP = {"left": "192.168.1.10", "right": "192.168.1.103"}
 UPLOAD_BYTES_S = 45_000            # the controller's measured transfer rate
 REAL_UPLOAD_BYTES_S = 20_000       # sent and read back, as on the lab's robot (127,846 bytes in 6.4 s, 14 Oct)
 POLE_MM_S = 25.0
+# The stand-in's own clock against the wall clock, as ALIX's emulator has RM_EMU_TIME_SCALE: 1 in use;
+# the tests set it higher, so a 15 s program or a pole move plays in a tenth of the time, every step
+# still taken. What a job reports stays in the robot's own seconds.
+TIME_SCALE = max(1e-6, float(os.environ.get("LITE_STANDIN_TIME_SCALE", "1") or 1))
+
+
+def _s(seconds: float) -> float:
+    """``seconds`` of the robot's time on the wall clock."""
+    return float(seconds) / TIME_SCALE
+
+
 MOTION_KINDS = ("run", "prepare", "teach", "move", "playback", "pole", "hand", "stage")   # one at a time per arm
 ESTOP_STOP = ("INTERRUPTED — E-STOP: it did not finish.",
               "Release the E-stop and follow Recover. Nothing restarts by itself.")
@@ -104,7 +116,7 @@ def emulated_stage(job, side: str, a, stage: "staging.Stage", faults=(), *, emul
     when either does not arrive (``faults``: an engineer's test) or the E-stop is pressed."""
     how = "emulated: Hardware sim moves nothing" if emulated else "read back"
     start, goal = a.pole_mm, float(stage.pole_mm)
-    dur = staging.pole_travel_s(start, goal)
+    dur = _s(staging.pole_travel_s(start, goal))
     end = start + (0.6 if "pole" in faults else 1.0) * (goal - start)
     t0 = time.time()
     while dur and (el := time.time() - t0) < dur:
@@ -113,14 +125,14 @@ def emulated_stage(job, side: str, a, stage: "staging.Stage", faults=(), *, emul
                             "Release the E-stop and follow Recover.")
         a.pole_mm = start + min(1.0, el / dur) * (end - start)
         job.progress(f"Pole {start:.0f} → {goal:g} mm" + (" (emulated)" if emulated else ""), step, steps)
-        job.sleep(0.1)
+        job.sleep(min(0.1, dur))
     a.pole_mm = end if dur else a.pole_mm
     if abs(a.pole_mm - goal) > staging.POLE_TOL_MM:
         raise UserError(f"The {side.upper()} pole did not reach {goal:g} mm ({how.split(':')[0]} {a.pole_mm:.0f} mm). "
                         "Nothing else ran.", "Check the pole and try again.")
     job.log(f"Pole at {a.pole_mm:.0f} mm ({how}).")
     target = [h if t is None else int(t) for h, t in zip(a.hand, stage.hand)]
-    dur = staging.hand_move_s(a.hand, target)
+    dur = _s(staging.hand_move_s(a.hand, target))
     if "hand" in faults:
         target = [h + (t - h) // 2 for h, t in zip(a.hand, target)]
     if dur:
@@ -432,7 +444,7 @@ class StandInRobot:
             self._sync(side)
             self._read_speed(side)
             return self.view()[side]
-        time.sleep(0.4)
+        time.sleep(_s(0.4))
         self._read_speed(side)
         with self.lock:
             a.ip, a.connected = target, True
@@ -628,12 +640,12 @@ class StandInRobot:
                 job.log(f"Pole at {a.pole_mm:.0f} mm (read back on the controller).")
                 return dict(pole_mm=a.pole_mm)
             start, goal = a.pole_mm, float(pole_mm)
-            dur = max(0.5, abs(goal - start) / POLE_MM_S)
+            dur = _s(max(0.5, abs(goal - start) / POLE_MM_S))
             t0 = time.time()
             while (f := min(1.0, (time.time() - t0) / dur)) < 1.0:
                 a.pole_mm = start + f * (goal - start)
                 job.progress(f"Moving the pole to {goal:.0f} mm", 1, 1)
-                job.sleep(0.1)
+                job.sleep(min(0.1, dur))
             a.pole_mm = goal
             job.log(f"Pole at {goal:.0f} mm ({self._how(mode)}).")
             return dict(pole_mm=goal)
@@ -658,7 +670,7 @@ class StandInRobot:
                         + " (read back on the controller): " + ", ".join(map(str, a.hand)))
                 return dict(hand=a.hand, arrived=bool(out.get("arrived")))
             job.progress("Setting the hand", 1, 1)
-            job.sleep(0.8)
+            job.sleep(_s(0.8))
             a.hand = vals
             job.log(f"Hand set ({self._how(mode)}): " + ", ".join(map(str, vals)))
             return dict(hand=vals)
@@ -755,13 +767,13 @@ class StandInRobot:
                 job.log(f"At {what}: {out['gap_deg']:.2f} degrees away at most (read back"
                         + ("" if mode == "real" else "; the controller's SIM mode, the arm did not move") + ").")
                 return dict(at=what, gap_deg=out["gap_deg"])
-            t0 = time.time()
-            while (el := time.time() - t0) < seconds:
+            t0, wall = time.time(), _s(seconds)
+            while (el := time.time() - t0) < wall:
                 if a.estop != "CLEAR":
                     raise UserError("INTERRUPTED — E-STOP. The arm did not reach the pose.",
                                     "Release the E-stop and follow Recover.")
-                job.progress(f"Moving to {what}", int(100 * el / seconds), 100)
-                job.sleep(0.1)
+                job.progress(f"Moving to {what}", int(100 * el / wall), 100)
+                job.sleep(min(0.1, wall))
             job.log(f"At {what} (joints read back)." if mode == "real"
                     else f"At {what} (dry run: the controller's SIM mode, the arm did not move).")
             return dict(at=what)
@@ -845,16 +857,16 @@ class StandInRobot:
             self._same_mode(mode, "the pole and the hand were staged, but the playback did not start")
             a.controller_mode = want
             job.progress("Moving to the recorded start", 0, lines)
-            job.sleep(1.5)
+            job.sleep(_s(1.5))
             dur = max(int(lines) - 1, 0) * 0.005
-            t0 = time.time()
-            while (el := time.time() - t0) < dur:
+            t0, wall = time.time(), _s(dur)
+            while (el := time.time() - t0) < wall:
                 if a.estop != "CLEAR":
                     raise UserError("INTERRUPTED — E-STOP. The playback did not finish.",
                                     "Release the E-stop and follow Recover.")
                 job.progress("Playing back the recording" + (" (dry run: arms stay still)" if dry_run else ""),
-                             int(lines * el / dur), lines)
-                job.sleep(0.1)
+                             int(lines * el / wall), lines)
+                job.sleep(min(0.1, wall))
             job.log("Playback finished.")
             return dict(seconds=round(dur, 1), dry_run=dry_run)
 
@@ -1016,10 +1028,10 @@ class StandInRobot:
 
         def work(job):
             dur = max(1.0, size / UPLOAD_BYTES_S)
-            t0 = time.time()
-            while (el := time.time() - t0) < dur:
-                job.progress(f"Sending {size / 1e3:.0f} kB to program {pid}", int(100 * el / dur), 100)
-                job.sleep(0.2)
+            t0, wall = time.time(), _s(dur)
+            while (el := time.time() - t0) < wall:
+                job.progress(f"Sending {size / 1e3:.0f} kB to program {pid}", int(100 * el / wall), 100)
+                job.sleep(min(0.2, wall))
             a.programs[pid] = dict(name=name, lines=lines, bytes=size, sha256=sha256, stage=stage, first_row=first,
                                    uploaded=time.strftime("%Y-%m-%d %H:%M"))
             a.save()
@@ -1054,16 +1066,16 @@ class StandInRobot:
             a.controller_mode = want
             job.log(f"Controller mode {want} (read back).")
             job.progress("Moving to the start pose", 0, prog["lines"])
-            job.sleep(1.5)
+            job.sleep(_s(1.5))
             dur = max(prog["lines"] - 1, 0) * 0.005
-            t0 = time.time()
-            while (el := time.time() - t0) < dur:
+            t0, wall = time.time(), _s(dur)
+            while (el := time.time() - t0) < wall:
                 if a.estop != "CLEAR":
                     raise UserError("INTERRUPTED — E-STOP. The run did not finish.",
                                     "Release the E-stop and follow Recover. Nothing restarts by itself.")
                 job.progress(f"Running program {program_id}" + (" (dry run: arms stay still)" if dry_run else ""),
-                             int(prog["lines"] * el / dur), prog["lines"])
-                job.sleep(0.1)
+                             int(prog["lines"] * el / wall), prog["lines"])
+                job.sleep(min(0.1, wall))
             job.log("Finished: the controller reports the program complete.")
             out = dict(program_id=int(program_id), dry_run=dry_run, seconds=round(dur, 1))
             if on_done:
