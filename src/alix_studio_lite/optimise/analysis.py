@@ -13,8 +13,7 @@ classed against the other regions' quartiles:
 - anything else: slightly shorter, 95 %.
 
 Motion only: it cannot see contact or collisions, so every suggestion is the operator's to keep or
-change, and the limits L1-L6 still judge the tuned file. The percentages are the Default
-optimiser's (time as a % of the recording's), as in the processor.
+change. The percentages are manual tuning's Scale (time as a % of the region's), as in the HTML.
 """
 from __future__ import annotations
 
@@ -111,40 +110,57 @@ def _totals(regions: list[dict]) -> dict:
                 original_s=original, estimated_s=estimated, change_s=original - estimated)
 
 
-def fit_target(result: dict, target_s: float, lo: float = 5.0, hi: float = 400.0) -> dict:
+def fit_target(result: dict, target_s: float, counts: list[int] | None = None, kept_total: int | None = None,
+               lo: float = 1.0, hi: float = 300.0) -> dict:
     """The suggestions fitted to a total time (the owner, 15 Oct: "if the user types 20 seconds, it
     should give suggestions for the scale regions"). One factor multiplies every region's suggested %,
     so each keeps the analysis' guidance relative to the others (a region suggested slower stays
-    slower than one suggested faster), each clamped to the scale range Lite accepts (5-400 %); the
-    factor is found by bisection so the motion-only estimate comes to ``target_s``, or as near as the
-    range allows (``reached`` False). Whole percent, as the page enters them. The limits L1-L6 still
-    judge the tuned file, and its idle trim can make it shorter still."""
+    slower than one suggested faster), each a whole percent within the HTML's scale range (1-300 %).
+
+    With ``counts`` (the rows of each region that Trim keeps, ``manual.trimmed_counts``) and
+    ``kept_total``, the factor is found so the GENERATED file comes to ``target_s``: Trim first, then
+    each region resampled to its %, exactly as manual tuning makes it (the owner, 15 Oct: a 15 s target
+    came out 36 s; Trim's idle rows were not counted, and the limits then stretched the file). Without
+    them, the HTML's motion-only estimate. ``reached`` is False when the scale range cannot get there."""
+    from .manual import final_lines
+    from ..motion.timing import duration_for
+
     target = float(target_s)
     if not target > 0:
         raise ValueError("the target time must be above 0 s")
     base = [float(r["scale_pct"]) for r in result["regions"]]
     orig = [float(r["original_s"]) for r in result["regions"]]
-    est = lambda k: sum(o * min(hi, max(lo, p * k)) / 100.0 for o, p in zip(orig, base))   # noqa: E731
-    k_lo, k_hi = lo / max(base), hi / min(base)
+    after_trim = counts is not None and kept_total is not None
+
+    def pcts(k: float) -> list[int]:
+        return [int(min(hi, max(lo, np.floor(p * k + 0.5)))) for p in base]
+
+    def est(k: float) -> float:
+        ps = pcts(k)
+        if after_trim:
+            return duration_for(final_lines(counts, kept_total, ps, [x != 100 for x in ps]))
+        return sum(o * x / 100.0 for o, x in zip(orig, ps))
+
+    k_lo, k_hi = lo / max(base) * 0.5, hi / min(base) * 1.5
     if est(k_lo) >= target:
         k = k_lo
     elif est(k_hi) <= target:
         k = k_hi
     else:
-        for _ in range(80):
+        for _ in range(80):                                      # the smallest factor that reaches the target
             mid = (k_lo + k_hi) / 2.0
             if est(mid) < target:
                 k_lo = mid
             else:
                 k_hi = mid
-        k = (k_lo + k_hi) / 2.0
+        k = k_hi if abs(est(k_hi) - target) <= abs(est(k_lo) - target) else k_lo
     regions = []
-    for r, p in zip(result["regions"], base):
-        pct = int(round(min(hi, max(lo, p * k))))
+    for r, pct in zip(result["regions"], pcts(k)):
         action = "Shorter / faster" if pct < 100 else "Longer / slower" if pct > 100 else "Unchanged"
         regions.append(dict(r, scale_pct=pct, selected=pct != 100, action=action, estimated_s=r["original_s"] * pct / 100.0))
     out = dict(result, regions=regions, totals=_totals(regions))
-    reached = abs(out["totals"]["estimated_s"] - target) <= max(0.05, 0.01 * target)
-    out["target"] = dict(target_s=target, factor=round(k, 4), estimated_s=out["totals"]["estimated_s"], reached=reached,
-                         shortest_s=sum(o * lo / 100.0 for o in orig), longest_s=sum(o * hi / 100.0 for o in orig))
+    got = est(k)
+    reached = abs(got - target) <= max(0.05, 0.01 * target)
+    out["target"] = dict(target_s=target, factor=round(k, 4), estimated_s=round(got, 3), reached=reached, after_trim=after_trim,
+                         shortest_s=round(est(lo / max(base) * 0.5), 3), longest_s=round(est(hi / min(base) * 1.5), 3))
     return out

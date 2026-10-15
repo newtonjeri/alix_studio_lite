@@ -6,7 +6,8 @@ a join is put between them: a smooth joint-space move (a cosine: still at both e
 Lite moves an arm to a trajectory's start, staging.TRANSIT_FRACTION of each joint's rating, as the
 robot would move between them. The merge runs as one program, so it has one pole height and hand
 pose: the operator states them, for the whole merge. Its limits L1-L4 are checked on the merged
-bytes; a merge that fails them plays in 3D, but is never sent to the robot.
+bytes and shown, never enforced, as for the manually tuned files it is made of (the owner, 15 Oct):
+sending one that breaks a limit asks once.
 
 Kept in the project where the page's folder has them (``merged/<arm>/``), each with its record:
 name, parts, joins, arm, stage, lines, time, sha256 and limits. One name per file in a project.
@@ -142,7 +143,8 @@ def rename(units, side: str, file: str, name: str) -> dict:
 
 
 def checked(units, side: str, file: str) -> dict:
-    """A merge a robot step sends or runs: its bytes still the ones made, and L1-L4 again on them."""
+    """A merge a robot step sends or runs: its bytes still the ones made, and L1-L4 read again on
+    them (``limits_ok``, ``limits_text``) for the page to show; never refused for them."""
     from dataclasses import asdict
 
     from ..motion import track
@@ -155,7 +157,4 @@ def checked(units, side: str, file: str) -> dict:
         raise UserError(f"{m['name']} is not the file that was merged: its bytes have changed.", "Merge it again.")
     rep = check_bytes(track.read_md(p), load_limits(side), with_departure=False)
     bad = [asdict(c) for c in rep.checks if c.hard and c.passed is False and c.id in ("L1", "L2", "L3", "L4")]
-    if bad:
-        raise UserError(f"{m['name']} fails {failures_text({'checks': bad})}, so it never goes to the robot.",
-                        "Merge files that stay within the limits (tune them first), or watch it in the simulation only.")
-    return m
+    return dict(m, limits_ok=not bad, limits_text=failures_text({"checks": bad}))

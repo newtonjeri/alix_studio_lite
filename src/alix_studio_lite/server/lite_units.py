@@ -35,10 +35,12 @@ from . import staging
 from .jobs import UserError
 from .project import DEFAULT_SETTINGS, Project, _atomic_write, _read_json, library
 
-#: the page's processing switches and the time mode; smoothing 41 lines is R11's Standard
-LITE_DEFAULTS = dict(DEFAULT_SETTINGS, trim=True, smooth=True, smooth_window=41, scale=True, cuts=[],
-                     time_mode="natural", idle_window=11, idle_threshold_md=8.0, idle_min_run=20)   # the processor's trim
-TIME_MODES = ("natural", "target", "fastest")
+#: manual tuning's stages and parameters, the trajectory HTML's defaults (the owner, 15 Oct: "with
+#: everything adopted, including the default values"), and Time-optimal's time: as fast as the limits
+#: allow, or a target. A region already tuned keeps the values it was saved with.
+LITE_DEFAULTS = dict(DEFAULT_SETTINGS, trim=True, smooth=True, smooth_window=101, scale=True,
+                     time_mode="fastest", idle_window=11, idle_threshold_md=8.0, idle_min_run=20)
+TIME_MODES = ("fastest", "target")
 
 
 class LiteUnits(Project):

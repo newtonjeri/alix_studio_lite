@@ -98,7 +98,7 @@ def test_upload_and_runs_on_the_controller(server):
     assert wait(server, call(server, "POST", f"{U}/L-T01/optimise", {}))["state"] == "done"
     assert call(server, "POST", f"{U}/L-T01/keep", {})["versions"][-1]["version"] == "v001"
 
-    j = wait(server, call(server, "POST", f"{U}/L-T01/upload", {"program_id": 9, "confirmed": True}))
+    j = wait(server, call(server, "POST", f"{U}/L-T01/upload", {"program_id": 9, "confirmed": True, "limits_seen": True}))
     assert j["state"] == "done" and "bytes read back" in text(j), j
     progs = {p["id"]: p for p in call(server, "GET", "/api/robots/left/programs")["programs"]}
     assert progs[9]["name"] == "9_L-T01_v001.txt" and progs[9]["sha256"]

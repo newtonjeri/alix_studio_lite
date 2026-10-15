@@ -116,8 +116,9 @@ class LiteApp:
             from ..motion.checks import failures_text
 
             s = res["summary"]
-            came = ("passes every limit" if s.get("uploadable")
-                    else "fails " + (failures_text(res.get("checks")) or "a limit"))
+            bad = failures_text(res.get("checks")) or "a limit"
+            came = ("passes every limit" if s.get("limits_ok", s.get("uploadable"))
+                    else f"breaks {bad}, shown, not enforced" if s.get("optimiser") == "manual" else f"fails {bad}")
             detail.update(optimiser=s.get("optimiser"), achieved_s=s.get("achieved_s"), outcome=came)
         self.log.activity(f"job {job.kind} {v['state']}: {job.title}" + (f" ({came})" if came else ""), detail=detail,
                           ok=v["state"] != "failed", error=v["error"])
@@ -323,8 +324,10 @@ def post_settings(app, q, body, m):
         if not 0.05 <= t <= 600:
             raise UserError("A target time must be between 0.05 and 600 seconds.")
         changes["target_s"] = round(t, 3)
-    if "optimiser" in changes and changes["optimiser"] not in ("default", "toppra"):
-        raise UserError("Choose Default or Time-optimal.")
+    if changes.get("optimiser") == "default":           # the earlier name of manual tuning
+        changes["optimiser"] = "manual"
+    if "optimiser" in changes and changes["optimiser"] not in ("manual", "toppra"):
+        raise UserError("Choose manual tuning or Time-optimal.")
     if "program_id" in changes and changes["program_id"] is not None:
         if not 1 <= int(changes["program_id"]) <= 100:
             raise UserError("Program numbers are 1 to 100.")
@@ -347,7 +350,7 @@ def post_optimise(app, q, body, m):
     side = p.units[key]["arm"]
     out = p.candidate_path(key)
     out.parent.mkdir(parents=True, exist_ok=True)
-    name = "Time-optimal" if settings["optimiser"] == "toppra" else "Default"
+    name = "manual tuning" if workers.is_manual(settings) else "Time-optimal"
 
     def work(job):
         job.progress(f"Optimising with {name}", 1, 2)

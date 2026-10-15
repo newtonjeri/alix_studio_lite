@@ -13,7 +13,7 @@
    optimum (``plan_min_time.resample_clock``). A longer target stretches the timing uniformly.
 
 TOPP-RA is optional: ``available()`` is False when the ``toppra`` package is missing (it has no
-aarch64 wheel and is built from source on the Jetson), and Lite then offers the default only.
+aarch64 wheel and is built from source on the Jetson), and Lite then offers manual tuning only.
 """
 from __future__ import annotations
 
@@ -116,7 +116,7 @@ def sample(traj, n: int) -> np.ndarray:
 class ToppraPlan:
     optimiser = "toppra"
 
-    def __init__(self, md_raw: np.ndarray, limits: LimitSet, opts: ToppraOptions, segments=()):
+    def __init__(self, md_raw: np.ndarray, limits: LimitSet, opts: ToppraOptions):
         if not available():
             raise RuntimeError(UNAVAILABLE_TEXT)
         import local_speed as LS
@@ -126,43 +126,28 @@ class ToppraPlan:
         self.opts = opts
         raw = track.to_deg(md_raw)
         q = tt.smooth_taught(raw, opts.smooth_hz, DT_RECORD_S) if opts.smooth_hz else raw.copy()
-        rows = np.arange(raw.shape[0])
         removed = 0
         if opts.strip_pauses:
             keep = prep.pause_mask(q, tt.PAUSE_TOL_DEG, tt.PAUSE_MIN_LINES)
             removed = int((~keep).sum())
-            q, rows = q[keep], rows[keep]
+            q = q[keep]
         p0 = LS.TaughtPath(q, limits.side, limits.frame)
-        rows = rows[p0.kept]
         qs = LS.arclen_smooth(p0, opts.smooth_mm) if opts.smooth_mm else p0.q_src[p0.kept]
         end_shift = float(np.abs(qs[-1] - raw[-1]).max())
         if opts.pin_ends:
             qs = pin_ends(qs, p0.s, raw[0], raw[-1], max(float(opts.smooth_mm), 30.0))
         path = LS.TaughtPath(qs, limits.side, limits.frame)
-        rows = rows[path.kept]
         self.path = path
         rating = np.asarray(limits.rating_deg_s, dtype=float)
         self.vlim = limits.rate_design * rating
         self.acc = np.full(7, float(limits.acc_deg_s2))
-        self.segments = []
-        vcap = None
-        for s in sorted(segments, key=lambda s: s.start):
-            m = (rows >= s.start - 1) & (rows <= s.end - 1)
-            if not m.any():
-                continue
-            if vcap is None:
-                vcap = np.full((rows.shape[0], 7), np.inf)
-            vcap[m] = np.minimum(vcap[m], float(s.pct) / 100.0 * self.vlim)
-            self.segments.append(dict(start=s.start, end=s.end, pct=s.pct, label=s.label,
-                                      knots=int(m.sum())))
-        self.traj = solve_min_time(path, self.vlim, self.acc, vcap)
+        self.traj = solve_min_time(path, self.vlim, self.acc)
         self.T = float(self.traj.duration)
         self.n_floor = max(1, math.ceil(self.T / limits.dt_gate - 1e-9))
         self.n_start = self.n_floor
         self.n_cap = max(20 * self.n_floor, 100)
         self.info = dict(paused_lines_removed=removed, path_mm=round(path.total(), 1),
-                         t_opt_s=round(self.T, 4), end_shift_before_pin_deg=round(end_shift, 4),
-                         segments=self.segments)
+                         t_opt_s=round(self.T, 4), end_shift_before_pin_deg=round(end_shift, 4))
 
     def make(self, n: int) -> np.ndarray:
         return track.to_md(sample(self.traj, max(int(n), self.n_floor)))
@@ -203,4 +188,4 @@ def smoothing_hint(md_raw: np.ndarray, limits: LimitSet, opts: ToppraOptions) ->
         if dev <= limits.max_dev_mm:
             return (f"Use lighter path smoothing ({mm:g} mm): the hand then stays within {dev:.1f} mm "
                     f"of the taught path, and the file is {plan.T:.1f} s at its fastest.")
-    return "Re-teach this region, or use the Default optimiser with light smoothing."
+    return "Re-teach this region, or tune it manually with light smoothing."

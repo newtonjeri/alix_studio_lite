@@ -61,11 +61,21 @@ async function refresh() {
   window.validateProgramId();
   let box = $('liteVersion');
   if (!box) { box = el('div', { id: 'liteVersion', class: 'lite-version mini-note' }); $('stage-real').querySelector('.real-program-row')?.after(box); }
-  box.replaceChildren(gateChips(u), el('div', { text: v
-    ? `Tuned version ${v.version}: ${fmtS(v.achieved_s)}, ${Number(v.lines).toLocaleString()} rows, every limit passed.`
-      + (v.stage ? ` Every run stages ${v.stage.text} first (read back in Real, emulated in Hardware sim); if either fails, nothing runs.` : '')
-      + (u.last_run ? ` Last run: ${u.last_run.ok ? 'completed ✓' : 'did not finish'} (${u.last_run.at}).` : ' Not run yet.')
-    : 'No tuned version yet: finish Tune + Simulation first.' }));
+  const file = v ? (v.name || `${s.key}_${v.version}.txt`) : null;    // the file this section sends (the owner, 15 Oct)
+  const limits = !v ? '' : v.limits_ok === false
+    ? ` It breaks ${v.limits_text || 'a limit'}: shown, not enforced (the hardware decides); the upload asks once.`
+    : ' Every limit passes.';
+  box.replaceChildren(
+    v ? el('div', { class: 'lite-real-file' }, el('span', { text: 'File' }), el('b', { text: file }), el('small', { text: `version ${v.version}` })) : '',
+    gateChips(u), el('div', { text: v
+      ? `Tuned version ${v.version} (${file}): ${fmtS(v.achieved_s)}, ${Number(v.lines).toLocaleString()} rows.${limits}`
+        + (v.stage ? ` Every run stages ${v.stage.text} first (read back in Real, emulated in Hardware sim); if either fails, nothing runs.` : '')
+        + (u.last_run ? ` Last run: ${u.last_run.ok ? 'completed ✓' : 'did not finish'} (${u.last_run.at}).` : ' Not run yet.')
+      : 'No tuned version yet: finish Tune + Simulation first.' }));
+  const btn = $('uploadTrajectoryBtn');
+  let up = $('liteUploadFile');
+  if (!up && btn) { up = el('div', { id: 'liteUploadFile', class: 'lite-upload-file mini-note' }); btn.before(up); }
+  if (up) up.textContent = file ? `Sends ${file} (${v.version})` : 'No tuned file yet';
 }
 
 // The upload as a horizontal bar with its percentage (the owner, 14 Oct), under the page's status

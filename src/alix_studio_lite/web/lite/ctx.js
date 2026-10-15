@@ -90,6 +90,12 @@ export async function robotCall(url, body = {}, { what = 'This move', replacing 
       if (!yes) throw Object.assign(new Error(`Cancelled: ${replacing} on the robot was kept.`), { code: 'cancelled' });
       return robotCall(url, { ...body, replace: true }, { what, replacing });
     }
+    if (err.code === 'limits') {               // manual tuning's limits: shown, never enforced (the owner, 15 Oct)
+      const yes = await confirmDialog({ title: 'This file breaks a limit', body: `${err.message} Send it anyway?`,
+        ok: 'Send it anyway', danger: true });
+      if (!yes) throw Object.assign(new Error('Cancelled: nothing was sent to the robot.'), { code: 'cancelled' });
+      return robotCall(url, { ...body, limits_seen: true }, { what, replacing });
+    }
     throw err;
   }
 }

@@ -1,23 +1,21 @@
-"""Optimise a drag-taught recording.
+"""Tune a drag-taught recording. Two separate tunings, chosen per region (the owner, 15 Oct):
 
-Two optimisers, chosen per region by the operator or engineer (decision D24):
+- ``"manual"`` (the default, ``optimise.manual``): the trajectory HTML's algorithm as it is
+  (trim idle, mean smoothing, region scaling), the operator's settings and scale regions. The
+  limits are checked and reported, never enforced: the hardware decides;
+- ``"toppra"`` (Time-optimal, ``optimise.engine``): ALIX's hardware-proven TOPP-RA chain on the
+  recording as taught, the fastest time within the limits (or a longer target). It never goes
+  through the manual tuning's steps, and its limits stay enforced.
 
-- ``"default"``: the trajectory prototype's algorithm (trim idle, moving-mean smoothing,
-  per-segment time %) with three fixes, then uniform timing to the target;
-- ``"toppra"`` (Time-optimal): ALIX's hardware-proven TOPP-RA chain.
-
-Both follow the same rule: the operator's time is the target; if the limits do not allow it,
-the result is the closest feasible time and names the limit that binds. Both deliver integer
-bytes that pass the same hard limits (``motion.checks``).
-
-    from alix_studio_lite.optimise import optimise, request_from_file
-    res = optimise(request_from_file("FILE_01.1.txt", "left", optimiser="toppra", target_s=25))
-    print(res.message)
+    from alix_studio_lite.optimise import manual, optimise, request_from_file
+    res = manual.optimise(md, "left", {"segments": [{"start": 1, "end": 2000, "pct": 75}]})
+    res = optimise(request_from_file("FILE_01.1.txt", "left", target_s=25))      # TOPP-RA
 """
+from . import manual
 from .engine import optimise, optimise_together, request_from_file
 from .sidecar import write_result
 from .toppra_opt import available as toppra_available
-from .types import Binding, DefaultOptions, OptRequest, OptResult, Segment, ToppraOptions
+from .types import Binding, OptRequest, OptResult, ToppraOptions
 
-__all__ = ["optimise", "optimise_together", "request_from_file", "write_result", "toppra_available",
-           "Binding", "DefaultOptions", "OptRequest", "OptResult", "Segment", "ToppraOptions"]
+__all__ = ["manual", "optimise", "optimise_together", "request_from_file", "write_result", "toppra_available",
+           "Binding", "OptRequest", "OptResult", "ToppraOptions"]

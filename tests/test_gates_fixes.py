@@ -33,8 +33,9 @@ class FakePool:
         self.gate.set()
         self.calls, self.threads = [], []
         self.fail = None             # a hard check (CheckReport.to_dict() form) the tune fails
+        self.optimiser = "manual"    # a manual tune is never held to it; a time-optimal one is
 
-    def submit(self, fn, raw_path, out_path, side, settings):
+    def submit(self, fn, raw_path, out_path, side, settings, source_name=""):
         self.calls.append(dict(raw=raw_path, out=out_path, side=side, settings=dict(settings)))
         fut = Future()
         fut.set_running_or_notify_cancel()             # already running: a cancel cannot stop it
@@ -44,10 +45,10 @@ class FakePool:
             out = Path(out_path)
             shutil.copyfile(raw_path, out)
             sha = hashlib.sha256(out.read_bytes()).hexdigest()
-            fail = self.fail
+            fail, opt = self.fail, self.optimiser
             checks = dict(passed=False, checks=[fail], notes=[]) if fail else {}
-            result = dict(uploadable=not fail, optimiser="default", lines=2, achieved_s=0.005,
-                          hints=["Lower the smoothing window to 31."] if fail else [])
+            result = dict(uploadable=not fail or opt == "manual", limits_ok=not fail, optimiser=opt, lines=2,
+                          achieved_s=0.005, hints=["Use lighter path smoothing (20 mm)."] if fail else [])
             out.with_name(out.stem + ".lite.json").write_text(json.dumps(dict(
                 track_sha256=sha, recipe=dict(origin=str(raw_path)), result=result, **({"checks": checks} if fail else {}))))
             fut.set_result(dict(summary=dict(result, message="fake tune"), checks=checks, recipe={},
@@ -359,21 +360,28 @@ def test_a_stage_that_is_not_valid_can_be_stated(tmp_path):
 
 
 def test_a_refused_keep_names_the_limits_and_the_log_says_what_each_tune_came_to(lite):
-    """The lab (14 Oct): Keep was refused six times, never saying which limit failed. The refusal
-    names the failing limits with the optimiser's hint, and the log says what each tune came to."""
+    """The lab (14 Oct): Keep was refused six times, never saying which limit failed. A time-optimal
+    tune that fails one is refused, naming it with the optimiser's hint; a manual one is kept with
+    what it breaks shown (the owner, 15 Oct: never enforced); the log says what each tune came to."""
     key = "L-T01"
     lite["pool"].fail = dict(id="L5", name="Path accuracy", hard=True, passed=False, value=6.2, limit=5.0,
                              unit="mm", detail="max departure 6.2 mm around line 1230")
+    lite["pool"].optimiser = "toppra"
     assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
     r = unit(lite, key, "keep", {})
     assert r["error"].endswith("cannot go to the robot: L5 Path accuracy 6.20 mm (limit 5 mm).")
-    assert r["hint"] == "Lower the smoothing window to 31."
+    assert r["hint"] == "Use lighter path smoothing (20 mm)."
+    lite["pool"].optimiser = "manual"                           # the same limit broken by a manual tune: kept
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
+    assert "error" not in unit(lite, key, "keep", {})
     lite["pool"].fail = None
     assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
     assert "error" not in unit(lite, key, "keep", {})
     day = next((lite["data"] / "logs").iterdir())
     tunes = [json.loads(x) for x in (day / "activity.jsonl").read_text().splitlines() if '"job optimise' in x]
-    assert [t["detail"]["outcome"] for t in tunes] == ["fails L5 Path accuracy 6.20 mm (limit 5 mm)", "passes every limit"]
+    assert [t["detail"]["outcome"] for t in tunes] == ["fails L5 Path accuracy 6.20 mm (limit 5 mm)",
+                                                       "breaks L5 Path accuracy 6.20 mm (limit 5 mm), shown, not enforced",
+                                                       "passes every limit"]
     assert "(fails L5 Path accuracy 6.20 mm (limit 5 mm))" in (day / "lite.log").read_text()
 
 
@@ -442,8 +450,8 @@ def test_tune_has_the_processors_analysis_trim_settings_and_named_tuned_files(li
 
 def test_the_suggestions_fit_an_optimised_time(lite):
     """Analyze with an optimised time (the owner, 15 Oct: "if the user types 20 seconds, it should give
-    suggestions for the scale regions"): one factor on every suggestion, each kept in 5-400 %, so the
-    estimate comes to the time asked, or as near as the range allows."""
+    suggestions for the scale regions"): one factor on every suggestion, each kept in the HTML's 1-300 %,
+    so the generated file, after the region's Trim, comes to the time asked, or as near as the range allows."""
     from alix_studio_lite.optimise.analysis import analyse, fit_target
 
     key = "L-R02"
@@ -452,10 +460,10 @@ def test_the_suggestions_fit_an_optimised_time(lite):
     base = [r["scale_pct"] for r in a["regions"]]
     want = round(a["totals"]["original_s"] * 0.6, 2)
     t = call(lite, "GET", f"/api/projects/{lite['pid']}/units/{key}/analysis?target_s={want}")
-    assert t["target"]["reached"] and abs(t["totals"]["estimated_s"] - want) <= max(0.05, 0.01 * want)
+    assert t["target"]["reached"] and t["target"]["after_trim"] and abs(t["target"]["estimated_s"] - want) <= max(0.05, 0.01 * want)
     got = [r["scale_pct"] for r in t["regions"]]
     assert all(r["selected"] for r in t["regions"] if r["scale_pct"] != 100)
     assert sorted(range(len(base)), key=lambda i: base[i]) == sorted(range(len(got)), key=lambda i: got[i])   # the guidance kept
-    far = fit_target(analyse([[i * 100, 0, 0, 0, 0, 0, 0] for i in range(400)]), 0.01)
-    assert not far["target"]["reached"] and {r["scale_pct"] for r in far["regions"]} == {5}
+    far = fit_target(analyse([[i * 100, 0, 0, 0, 0, 0, 0] for i in range(4000)]), 0.01)
+    assert not far["target"]["reached"] and {r["scale_pct"] for r in far["regions"]} == {1}
     assert "above 0" in call(lite, "GET", f"/api/projects/{lite['pid']}/units/{key}/analysis?target_s=-3")["error"]

@@ -1,7 +1,7 @@
 """The Lite UI's region loop over HTTP, against the robot stand-in: the task queue (D35), an
 existing recording used by default (D31), tuning with every limit checked, keeping a version,
 upload with replace confirmation, Hardware sim and Real runs (D30), the verdict, the E-stop
-interlock, and the optimiser's cuts and recorded-pace mode.
+interlock, and Time-optimal's own time rule.
 
 And the gates on every execution: a trajectory runs only on the arm it was taught on, only with
 its stage (pole height, hand pose) known, and only after the pole and then the hand are staged
@@ -94,7 +94,8 @@ def test_one_arm_step_through_the_loop(lite):
     u = unit(lite, key)
     assert u["active"] and u["recordings"][0]["source"] == "library" and u["recordings"][0]["name"] == "FILE_10.1.txt"
     s = u["settings_view"]["settings"]
-    assert (s["trim"], s["smooth"], s["smooth_window"], s["scale"], s["time_mode"]) == (True, True, 41, True, "natural")
+    assert (s["optimiser"], s["trim"], s["smooth"], s["smooth_window"], s["scale"]) == ("manual", True, True, 101, True)  # the HTML's
+    assert (s["idle_window"], s["idle_threshold_md"], s["idle_min_run"], s["time_mode"]) == (11, 8.0, 20, "fastest")
     assert "no tuned" in unit(lite, key, "keep", {})["error"]
     rec = u["recordings"][0]                        # the existing recording keeps its arm and stage
     assert rec["taught_arm"] == "left" and rec["stage"]["text"] == "pole 200 mm, fingers 50 % open, thumb held"
@@ -106,7 +107,9 @@ def test_one_arm_step_through_the_loop(lite):
     j = wait(lite, unit(lite, key, "optimise", {}))
     assert j["state"] == "done", j
     u = unit(lite, key)
-    assert u["fresh"] and u["candidate"]["result"]["uploadable"] and u["candidate_extra"]["progress"]
+    r = u["candidate"]["result"]
+    assert u["fresh"] and r["uploadable"] and r["optimiser"] == "manual" and u["candidate_extra"]["progress"]
+    assert r["enforced"] is False and (r["limits_ok"] or r["limits_text"])            # shown, never enforced
     v = unit(lite, key, "keep", {})["versions"][-1]
     assert v["version"] == "v001" and v["taught_arm"] == "left" and v["stage"]["pole_mm"] == 200
 
@@ -115,7 +118,11 @@ def test_one_arm_step_through_the_loop(lite):
     assert not u["fresh"] and u["settings_view"]["can_undo"]
     assert "changed" in unit(lite, key, "keep", {})["error"]
     assert unit(lite, key, "undo", {})["fresh"]
-    assert "Scale is" in unit(lite, key, "settings", {"changes": {"segments": [{"start": 1, "end": 5, "pct": 900}]}})["error"]
+    assert "1 % or more" in unit(lite, key, "settings", {"changes": {"segments": [{"start": 1, "end": 5, "pct": 0.5}]}})["error"]
+    over = [{"start": 1, "end": 50, "pct": 80}, {"start": 50, "end": 90, "pct": 80}]
+    assert "may not overlap" in unit(lite, key, "settings", {"changes": {"segments": over}})["error"]
+    assert unit(lite, key, "settings", {"changes": {"smooth_window": 40}})["settings_view"]["settings"]["smooth_window"] == 41
+    assert unit(lite, key, "undo", {})["fresh"]
 
     # robot steps need a robot mode and a connected arm (D30)
     assert unit(lite, key, "upload", {"program_id": 7})["code"] == "mode"
@@ -125,17 +132,19 @@ def test_one_arm_step_through_the_loop(lite):
     assert call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})["mode"] == "hwsim"
     assert "1 to 100" in unit(lite, key, "upload", {"program_id": 101})["error"]
     assert "PASS needs a completed run" in unit(lite, key, "verdict", {"verdict": "pass"})["error"]
-    assert wait(lite, unit(lite, key, "upload", {"program_id": 7}))["state"] == "done"
+    r = unit(lite, key, "upload", {"program_id": 7})               # manual: what it breaks is shown, then it is sent
+    assert r["code"] == "limits" and "does not hold manual tuning to the limits" in r["error"], r
+    assert wait(lite, unit(lite, key, "upload", {"program_id": 7, "limits_seen": True}))["state"] == "done"
     time.sleep(0.4)
 
     # a second version to the same slot needs the replace confirmation
     unit(lite, key, "settings", {"changes": {"smooth_window": 21}, "label": "Light smoothing"})
     assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
     assert unit(lite, key, "keep", {})["versions"][-1]["version"] == "v002"
-    r = unit(lite, key, "upload", {"program_id": 7})
+    r = unit(lite, key, "upload", {"program_id": 7, "limits_seen": True})
     assert r["code"] == "replace" and "already holds" in r["error"]
     assert "Upload it again" in unit(lite, key, "run", {})["hint"]          # never runs a stale program
-    assert wait(lite, unit(lite, key, "upload", {"program_id": 7, "replace": True}))["state"] == "done"
+    assert wait(lite, unit(lite, key, "upload", {"program_id": 7, "replace": True, "limits_seen": True}))["state"] == "done"
     time.sleep(0.4)
 
     # Hardware sim run: the pole and then the hand first, emulated (nothing moves); then PASS
@@ -306,39 +315,16 @@ def test_later_steps_cannot_be_taught(lite):
     assert "not in Release 1" in unit(lite, "R-T04", "teach/start", {})["error"]
 
 
-def test_cuts_are_bridged_and_segments_follow():
-    import numpy as np
-
-    from alix_studio_lite import vendor_paths
-
-    vendor_paths.activate()
-    from alix_studio_lite.optimise import OptRequest, Segment
-    from alix_studio_lite.optimise.engine import apply_cuts
-
-    md = np.zeros((100, 7), dtype=np.int64)
-    md[:, 0] = np.arange(100) * 10                      # 0.01 deg per line on joint 1
-    md[60:, 0] += 5000                                  # a 5 deg jump after the cut
-    req = OptRequest(md_raw=md, side="left", cuts=((41, 60),), segments=(Segment(30, 70, 50),))
-    out, info = apply_cuts(req)
-    bridge = info["bridges"][0]
-    assert info["removed_lines"] == 20 and bridge["after_line"] == 40 and bridge["before_line"] == 61
-    jump_md = int(md[60, 0] - md[39, 0])                # 5.21 deg across the gap
-    k = round(bridge["seconds"] / 0.005)
-    assert k == int(np.ceil(jump_md / 1000 / 20 / 0.005)) and out.md_raw.shape[0] == 80 + k - 1
-    assert np.abs(np.diff(out.md_raw[:, 0])).max() <= np.ceil(jump_md / k) + 1     # crossed at 20 deg/s
-    seg = out.segments[0]                               # rows 30..70 -> 30..40 then 61..70 after the bridge
-    assert (seg.start, seg.end) == (30, 40 + (k - 1) + 10)
-
-
-def test_recorded_pace_mode():
+def test_time_optimal_keeps_its_limits():
+    """TOPP-RA works on the recording as taught: the fastest time within the limits, which it keeps."""
+    pytest.importorskip("toppra")
     from alix_studio_lite import vendor_paths
 
     vendor_paths.activate()
     from alix_studio_lite.optimise import optimise, request_from_file
 
     f = vendor_paths.LITE_ROOT / "tests/data/recordings/commode_c_taught_paths/FILE_10.1.txt"
-    nat = optimise(request_from_file(f, "left", natural=True))
     fast = optimise(request_from_file(f, "left"))
-    assert nat.uploadable and fast.uploadable
-    assert nat.achieved_s > fast.achieved_s and "Recorded pace kept" in nat.message
-    assert nat.achieved_s <= nat.recorded_s + 0.01
+    s = fast.summary()
+    assert s["optimiser"] == "toppra" and s["enforced"] and s["uploadable"] == s["limits_ok"]
+    assert fast.uploadable and "Fastest safe time" in fast.message and fast.achieved_s < fast.recorded_s

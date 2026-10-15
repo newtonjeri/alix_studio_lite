@@ -115,10 +115,10 @@ def test_a_version_is_used_only_as_kept_and_imports_drop_evidence(lite):
     kept = sorted((lite["data"] / "projects" / "alix_fix").rglob("versions/*.txt"))[-1]
     good = kept.read_bytes()
     kept.write_bytes(good.replace(b"\n", b"\n\n", 1))         # changed on disk after it was kept
-    r = unit(lite, key, "upload", {"program_id": 9})
+    r = unit(lite, key, "upload", {"program_id": 9, "limits_seen": True})
     assert "bytes have changed" in r["error"]
     kept.write_bytes(good)
-    assert wait(lite, unit(lite, key, "upload", {"program_id": 9}))["state"] == "done"
+    assert wait(lite, unit(lite, key, "upload", {"program_id": 9, "limits_seen": True}))["state"] == "done"
     call(lite, "POST", "/api/robots/mode", {"mode": "visual"})
 
     blob = call(lite, "GET", "/api/projects/alix_fix/export")

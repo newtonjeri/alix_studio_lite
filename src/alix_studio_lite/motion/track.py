@@ -30,8 +30,8 @@ def to_deg(md) -> np.ndarray:
 
 
 def to_md(q_deg) -> np.ndarray:
-    """Degrees to integer millidegrees (``np.round``, as ALIX's emitters do). The prototype
-    compatibility path uses JavaScript's rounding instead (``optimise.prep.js_round``)."""
+    """Degrees to integer millidegrees (``np.round``, as ALIX's emitters do). Manual tuning works
+    on the integers themselves with JavaScript's rounding (``optimise.manual.js_round``)."""
     return np.round(np.asarray(q_deg, dtype=float) * 1000.0).astype(np.int64)
 
 

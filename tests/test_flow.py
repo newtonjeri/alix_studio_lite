@@ -74,7 +74,7 @@ def test_each_row_shows_its_files_and_a_version_is_chosen(lite):
     for arm in ("left", "right"):
         call(lite, "POST", f"/api/robots/{arm}/connect", {})
     call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})
-    assert wait(lite, unit(lite, key, "upload", {"program_id": 12}))["state"] == "done"            # the chosen one is sent
+    assert wait(lite, unit(lite, key, "upload", {"program_id": 12, "limits_seen": True}))["state"] == "done"   # the chosen one is sent
     a = task(call(lite, "GET", "/api/projects/alix_fl/flow-files"), "TASK 3")["left"]
     v1, v2 = a["versions"]
     assert a["version"] == "v001" and [u["program_id"] for u in v1["uploaded"]] == [12] and v2["uploaded"] == []
@@ -98,7 +98,8 @@ def test_one_arm_single_files_and_programs(lite):
     assert call(lite, "POST", P + "/points-plan", {"side": "left", "points": ["STP_HOME"]})["code"] == "connect"   # stand-in
 
     assert "never runs on the real arms" in unit(lite, "L-T01", "file/upload", {"which": "raw", "program_id": 13})["error"]
-    assert wait(lite, unit(lite, "L-T01", "file/upload", {"which": "version:v002", "program_id": 13}))["state"] == "done"
+    assert unit(lite, "L-T01", "file/upload", {"which": "version:v002", "program_id": 13})["code"] == "limits"
+    assert wait(lite, unit(lite, "L-T01", "file/upload", {"which": "version:v002", "program_id": 13, "limits_seen": True}))["state"] == "done"
     assert "does not hold" in unit(lite, "L-T01", "file/run", {"which": "version:v001", "program_id": 13})["error"]
     run = unit(lite, "L-T01", "file/run", {"which": "version:v002", "program_id": 13})
     assert run["state"] == "running" and "alone" in call(lite, "POST", "/api/robots/right/pole", {"mm": 150})["error"]
@@ -155,7 +156,7 @@ def test_a_custom_merge_of_one_arm(lite):
         call(lite, "POST", f"/api/robots/{arm}/connect", {})
     call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})
     assert "does not hold" in call(lite, "POST", f"{P}/merges/left/{mm['file']}/run", {"program_id": 30})["error"]
-    assert wait(lite, call(lite, "POST", f"{P}/merges/left/{mm['file']}/upload", {"program_id": 30}))["state"] == "done"
+    assert wait(lite, call(lite, "POST", f"{P}/merges/left/{mm['file']}/upload", {"program_id": 30, "limits_seen": True}))["state"] == "done"
     run = call(lite, "POST", f"{P}/merges/left/{mm['file']}/run", {"program_id": 30})
     assert "alone" in call(lite, "POST", "/api/robots/right/pole", {"mm": 160})["error"]
     assert wait(lite, run)["state"] == "done"

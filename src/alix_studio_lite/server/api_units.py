@@ -162,26 +162,38 @@ def _version_of(units, key: str, which: str = "version") -> dict:
 
 def checked_version(units, key: str, arm: str, which: str = "version") -> dict:
     """The kept version a robot step sends or runs, checked at that moment whatever the files
-    beside it say: it passed every limit when kept, its bytes are still the ones kept (sha256),
-    and L1-L4 pass again on those bytes. An edited or imported project cannot slip a file past the
-    gate. (L5 and L6 compare with the recording, so they are judged when the version is kept.)"""
+    beside it say: its bytes are still the ones kept (sha256), so an edited or imported project
+    cannot slip another file past. A time-optimal version must also have passed every limit when
+    kept and pass L1-L4 again on those bytes; a manual one is held to no limit (the owner, 15 Oct:
+    "the lite manual optimizer never enforces any limits, it is up to the hardware"): what it
+    breaks is shown, and sending it asks once (``require_limits_seen``)."""
     from ..motion import track
     from ..motion.checks import check_bytes
     from ..motion.limits import load_limits
 
     ver = _version_of(units, key, which)
     again = "Tune the region again and keep the new version."
-    if not ver.get("uploadable"):
-        raise UserError(f"Version {ver['version']} did not pass every limit, so it never goes to the robot.", again)
     path = Path(ver["path"])
     if track.sha256_file(path) != ver.get("sha256"):
         raise UserError(f"Version {ver['version']} is not the file that was kept: its bytes have changed.", again)
+    if not ver.get("enforced"):
+        return ver
+    if not ver.get("uploadable"):
+        raise UserError(f"Time-optimal version {ver['version']} did not pass every limit, so it never goes to the robot.", again)
     rep = check_bytes(track.read_md(path), load_limits(arm), with_departure=False)
     bad = [c.id for c in rep.checks if c.hard and c.passed is False and c.id in ("L1", "L2", "L3", "L4")]
     if bad:
-        raise UserError(f"Version {ver['version']} breaks {', '.join(bad)} on its own bytes, so it never goes "
+        raise UserError(f"Time-optimal version {ver['version']} breaks {', '.join(bad)} on its own bytes, so it never goes "
                         "to the robot.", again)
     return ver
+
+
+def require_limits_seen(body: dict, what: str, limits_ok, limits_text: str) -> None:
+    """A manual file that breaks a limit goes to the robot once the operator has seen what it
+    breaks: the page asks, then sends ``limits_seen`` (the owner, 15 Oct: shown, not enforced)."""
+    if limits_ok is False and not body.get("limits_seen"):
+        raise UserError(f"{what} breaks {limits_text or 'a limit'}. Lite does not hold manual tuning to the limits: "
+                        "the robot's own protections decide.", "Send it anyway, or tune it again.", code="limits")
 
 
 def gates(app, units: LiteUnits, key: str, view: dict) -> list[dict]:
@@ -206,10 +218,17 @@ def gates(app, units: LiteUnits, key: str, view: dict) -> list[dict]:
                         text=(f"Staged first{whose}: {staging.describe(st)}" if st else
                               f"Pole and hand of {ver['version']} not known: tune and keep it again" if ver else
                               "Pole and hand not known: state them")))
-    out.append(dict(id="limits", ok=bool(ver and ver.get("uploadable")),
-                    text=(f"Version {ver['version']} passes every limit" if ver and ver.get("uploadable")
-                          else f"Version {ver['version']} does not pass every limit: tune and keep again" if ver
-                          else "No kept version yet (Tune: Simulation Looks Good)")))
+    if ver is None:
+        out.append(dict(id="limits", ok=False, text="No kept version yet (Tune: Simulation Looks Good)"))
+    elif ver.get("enforced"):                          # time-optimal: every limit, or it never runs
+        out.append(dict(id="limits", ok=bool(ver.get("uploadable")),
+                        text=(f"Version {ver['version']} passes every limit" if ver.get("uploadable")
+                              else f"Version {ver['version']} does not pass every limit: tune and keep again")))
+    else:                                              # manual: shown, never enforced
+        out.append(dict(id="limits", ok=True, warn=not ver.get("limits_ok", True),
+                        text=(f"Version {ver['version']} passes every limit" if ver.get("limits_ok", True)
+                              else f"Version {ver['version']} breaks {ver.get('limits_text') or 'a limit'} "
+                                   "(shown, not enforced: the hardware decides)")))
     block = app.robot.motion_block()
     mode = app.ui["mode"]
     out.append(dict(id="robot", ok=mode != "visual" and not block,
@@ -252,7 +271,8 @@ def _flow_arm(app, units: LiteUnits, step: dict | None) -> dict | None:
         hit = [(pid, p) for pid, p in held.items() if sha and p.get("sha256") == sha]
         return [dict(program_id=pid, name=p.get("stored_name") or p.get("name"), at=p.get("uploaded")) for pid, p in sorted(hit)]
     vs = [dict(version=v["version"], name=v.get("name") or f"{key}_{v['version']}.txt", achieved_s=v.get("achieved_s"),
-               lines=v.get("lines"), uploadable=bool(v.get("uploadable")), uploaded=uploaded(v.get("sha256")), sha256=v.get("sha256"))
+               lines=v.get("lines"), uploadable=bool(v.get("uploadable")), uploaded=uploaded(v.get("sha256")), sha256=v.get("sha256"),
+               limits_ok=v.get("limits_ok"), limits_text=v.get("limits_text") or "", optimiser=v.get("optimiser"))
           for v in units.versions(key)]
     rec = units.current_recording(key)
     tv = units.transition(key)
@@ -498,9 +518,11 @@ def _track_path(units: LiteUnits, key: str, q) -> Path:
 
 @route("GET", U + "/track")
 def get_track(app, q, body, m):
+    """A file's joints for a plot: degrees, or ``units=counts`` the file's own values (the trajectory
+    HTML plots those: "Joint Value" against "Sample / Row Number")."""
     units, key = units_of(app, m.group(1)), m.group(2)
     _unit(units, key)
-    return workers.track_arrays(str(_track_path(units, key, q)))
+    return workers.track_arrays(str(_track_path(units, key, q)), counts=(q.get("units") or [""])[0] == "counts")
 
 
 def _recording_behind(units: LiteUnits, key: str, which: str) -> dict | None:
@@ -694,53 +716,56 @@ def post_points_timeline(app, q, body, m):
 # ── tuning
 
 def _check_settings(changes: dict) -> dict:
+    """A region's tuning settings as the trajectory HTML takes them (its windows odd and at least 3,
+    a threshold of 0 or more, a minimum idle run of 1 or more, a scale of 1 % or more, regions of two
+    rows or more that do not overlap), and Time-optimal's time."""
+    from ..optimise.manual import validate_odd
+
     out = {}
     for k, v in changes.items():
         if k == "optimiser":
-            if v not in ("default", "toppra"):
-                raise UserError("Choose Default or Time-optimal.")
+            if v == "default":                                   # the earlier name of manual tuning
+                v = "manual"
+            if v not in ("manual", "toppra"):
+                raise UserError("Choose manual tuning or Time-optimal (TOPP-RA).")
         elif k == "time_mode":
             if v not in TIME_MODES:
-                raise UserError("Choose: recorded pace, a target time, or as fast as safe.")
+                raise UserError("Choose: as fast as the limits allow, or a target time.")
         elif k == "target_s":
             if v is not None:
                 v = round(float(v), 3)
                 if not 0.05 <= v <= 600:
                     raise UserError("A target time must be between 0.05 and 600 seconds.")
-        elif k == "smooth_window":
-            v = int(v)
-            if not 1 <= v <= 501:
-                raise UserError("The smoothing window is 1 to 501 points.")
-            v |= 1                                               # the prototype's windows are odd
+        elif k in ("smooth_window", "idle_window"):
+            v = validate_odd(v, 101 if k == "smooth_window" else 11)
+            if v > 20001:
+                raise UserError("A window is at most 20,001 rows.")
         elif k in ("trim", "smooth", "scale"):
             v = bool(v)
-        elif k == "idle_window":                                  # the processor's trim (its Setup step)
-            v = int(v)
-            if not 3 <= v <= 201:
-                raise UserError("The idle rolling window is 3 to 201 lines.")
-            v |= 1
         elif k == "idle_threshold_md":
             v = round(float(v), 3)
-            if not 0 <= v <= 1000:
-                raise UserError("The idle threshold is 0 to 1,000 counts per line.")
+            if not 0 <= v <= 1e6:
+                raise UserError("The idle threshold is 0 counts per sample or more.")
         elif k == "idle_min_run":
             v = int(v)
-            if not 1 <= v <= 20000:
-                raise UserError("The minimum idle run is 1 to 20,000 lines.")
-        elif k in ("segments", "cuts"):
+            if not 1 <= v <= 10_000_000:
+                raise UserError("The minimum idle run is 1 or more.")
+        elif k == "segments":
             rows = []
             for r in v or []:
                 a, b = int(r["start"]), int(r["end"])
-                if a < 1 or b <= a:                              # as the processor: two different rows at least
+                if a < 1 or b <= a:                              # as the HTML: two different rows at least
                     raise UserError(f"Rows {a}–{b} are not a region: it needs a start row of 1 or more and an end "
                                     "row after it.")
-                row = dict(start=a, end=b)
-                if k == "segments":
-                    pct = float(r["pct"])
-                    if not 5 <= pct <= 400:
-                        raise UserError("Scale is 5 % to 400 %.")
-                    row["pct"] = pct
-                rows.append(row)
+                pct = float(r["pct"])
+                if not 1 <= pct <= 10000:
+                    raise UserError("A scale is 1 % or more (100 % = unchanged).")
+                rows.append(dict(start=a, end=b, pct=pct))
+            rows.sort(key=lambda r: r["start"])
+            for x, y in zip(rows, rows[1:]):
+                if y["start"] <= x["end"]:
+                    raise UserError(f"Rows {y['start']}–{y['end']} overlap rows {x['start']}–{x['end']}: regions may not overlap.",
+                                    "Delete or adjust the existing region first.")
             v = rows
         elif k == "program_id":
             if v is not None and not 1 <= int(v) <= 100:
@@ -784,12 +809,12 @@ def post_optimise(app, q, body, m):
     cand, rec, extra_path = _candidate_files(units, key)
     cand.parent.mkdir(parents=True, exist_ok=True)
     src = _read(raw.with_suffix(".source.json")) or {}
-    name = "Time-optimal" if settings["optimiser"] == "toppra" else "Default"
+    name = "manual tuning" if workers.is_manual(settings) else "Time-optimal (TOPP-RA)"
 
     def work(job):
         job.progress(f"Tuning with {name}", 1, 2)
         tmp = cand.with_name(f"candidate.{job.id}.txt")       # this tune's own files until it is done
-        fut = workers.pool().submit(workers.optimise_unit, str(raw), str(tmp), u["arm"], settings)
+        fut = workers.pool().submit(workers.optimise_unit, str(raw), str(tmp), u["arm"], settings, info["name"])
         try:
             while not fut.done():
                 job.sleep(0.1)
@@ -812,7 +837,7 @@ def post_optimise(app, q, body, m):
                 os.replace(tmp.with_name(tmp.stem + ".lite.json"), rec)
                 _atomic_write(extra_path, json.dumps(extra))
             job.log(res["summary"]["message"])
-            return dict(summary=res["summary"], checks=res["checks"], cut=res["recipe"].get("cut"))
+            return dict(summary=res["summary"], checks=res["checks"])
         finally:
             _discard(tmp)
 
@@ -834,8 +859,9 @@ def _discard(tmp: Path) -> None:
 
 @route("POST", U + "/keep")
 def post_keep(app, q, body, m):
-    """Keep the tuned candidate as the version to upload: only when every hard limit passes and
-    it was made from the current settings and recording."""
+    """Keep the tuned candidate as the version to upload, when it was made from the current
+    settings and recording. A manual tune is kept whatever its limits say (they are shown, never
+    enforced); a time-optimal one only when every hard limit passes."""
     from ..motion.checks import failures_text
 
     units, key = units_of(app, m.group(1)), m.group(2)
@@ -864,8 +890,11 @@ def post_keep(app, q, body, m):
                 units.name_version(key, ver["version"], name)        # already kept: it gets the name
             return unit_view(app, units, key)                        # already kept, with this arm and stage
         if name:
-            owner = units.name_owner(name if name.lower().endswith(".txt") else name + ".txt")
-            if owner:                                                # refused before anything is kept
+            name = name if name.lower().endswith(".txt") else name + ".txt"
+            owner = units.name_owner(name)
+            if owner and body.get("numbered"):                        # the suggested name (the HTML's): numbered
+                name = units.free_name(name)
+            elif owner:                                              # a typed one is refused before anything is kept
                 raise UserError(f"{units.taken_text(name, owner)}.", "Every file name in a project is used once: "
                                 "choose another name.", code="name")
         ver = units.save_candidate(key)
@@ -876,10 +905,11 @@ def post_keep(app, q, body, m):
 
 @route("GET", U + "/analysis")
 def get_analysis(app, q, body, m):
-    """Tune's automatic optimisation (its Analyze step): the Trajectory V2 processor's review regions
-    of the active recording, each with a suggested time % (optimise/analysis.py). ``target_s``: the
-    suggestions fitted to that total time (``fit_target``)."""
+    """Tune's automatic optimisation (its Analyze step): the trajectory HTML's review regions of the
+    active recording, each with a suggested time % (optimise/analysis.py). ``target_s``: the
+    suggestions fitted so the generated file, after the region's Trim, comes to that time."""
     from ..motion import track
+    from ..optimise import manual
     from ..optimise.analysis import analyse, fit_target
 
     units, key = units_of(app, m.group(1)), m.group(2)
@@ -887,13 +917,18 @@ def get_analysis(app, q, body, m):
     raw = units.current_recording(key)
     if raw is None:
         raise UserError("There is no recording to analyse yet.", "Record the region, or load a file.")
-    out = analyse(track.read_md(raw))
+    md = track.read_md(raw)
+    out = analyse(md)
     target = (q.get("target_s") or [None])[0]
     if target not in (None, ""):
         try:
-            out = fit_target(out, float(target))
+            target = float(target)
         except ValueError:
             raise UserError("Enter the target time in seconds, above 0.") from None
+        if not target > 0:
+            raise UserError("Enter the target time in seconds, above 0.")
+        counts, kept_total = manual.trimmed_counts(md, units.settings(key), out["regions"])
+        out = fit_target(out, target, counts=counts, kept_total=kept_total)
     out["file"] = _name_of(units, key, raw)
     return out
 
@@ -910,8 +945,10 @@ def get_file(app, q, body, m):
     if which == "raw":
         path = units.current_recording(key)
         name = _name_of(units, key, path) if path else None
-    elif which == "candidate":
-        path, name = units.candidate_path(key), f"{key}_tuned.txt"
+    elif which == "candidate":                                  # the HTML's name: <recording>_trim_mean_scale_processed.txt
+        path = units.candidate_path(key)
+        made = _read(path.with_name(path.stem + ".lite.json")) or {}
+        name = ((made.get("recipe") or {}).get("report") or {}).get("outputName") or f"{key}_tuned.txt"
     elif which == "version":
         ver = units.current_version(key)
         path = Path(ver["path"]) if ver else None
@@ -1028,7 +1065,8 @@ def post_upload(app, q, body, m):
     require_robot_mode(app)
     pid = _program_check(body.get("program_id"))
     info = identity(units, key, "version")         # never send another arm's trajectory to this arm
-    ver = checked_version(units, key, u["arm"])    # every limit, on the very bytes sent
+    ver = checked_version(units, key, u["arm"])    # the very bytes kept (and a time-optimal one's limits)
+    require_limits_seen(body, ver.get("name") or f"Version {ver['version']}", ver.get("limits_ok"), ver.get("limits_text"))
     if units.settings(key).get("program_id") != pid:
         units.update_settings(key, {"program_id": pid}, f"Program ID {pid}")
     cur = app.robot.arm(u["arm"]).programs.get(pid)
@@ -1304,11 +1342,12 @@ def post_merge_timeline(app, q, body, m):
 
 @route("POST", M + "/upload")
 def post_merge_upload(app, q, body, m):
-    """Send a merge to a Program ID (its limits checked on the bytes sent; ``replace`` as for Real Test)."""
+    """Send a merge to a Program ID (its limits read on the bytes sent and shown; ``replace`` as for Real Test)."""
     units, side = units_of(app, m.group(1)), m.group(2)
     require_robot_mode(app)
     pid = _program_check(body.get("program_id"))
     mm = merges.checked(units, side, m.group(3))
+    require_limits_seen(body, mm["name"], mm["limits_ok"], mm["limits_text"])
     job = app.robot.upload(side, pid, Path(mm["path"]), Path(mm["name"]).stem[:32], mm["sha256"], bool(body.get("replace")),
                            f"Upload {mm['name']} to program {pid}", stage=mm["stage"])
     return {"unchanged": True, "program_id": pid} if job is None else job.view()
@@ -1341,7 +1380,8 @@ def _sendable(units: LiteUnits, key: str, arm: str, which: str) -> dict:
     if which == "version" or which.startswith("version:"):
         ver = checked_version(units, key, arm, which)
         return dict(path=Path(ver["path"]), sha256=ver["sha256"], name=f"{key}_{ver['version']}"[:32],
-                    what=ver.get("name") or f"{key} {ver['version']}")
+                    what=ver.get("name") or f"{key} {ver['version']}", limits_ok=ver.get("limits_ok"),
+                    limits_text=ver.get("limits_text"))
     raise UserError("A recording as taught never runs on the real arms.",
                     "Tune it and keep the version: that file can be sent. In 3D every file plays.", code="mode")
 
@@ -1358,6 +1398,7 @@ def post_file_upload(app, q, body, m):
     which = str(body.get("which") or "version")
     info = identity(units, key, which)
     f = _sendable(units, key, u["arm"], which)
+    require_limits_seen(body, f["what"], f.get("limits_ok"), f.get("limits_text"))
     job = app.robot.upload(u["arm"], pid, f["path"], f["name"], f["sha256"], bool(body.get("replace")),
                            f"Upload {f['what']} to program {pid}", stage=info["stage"].as_dict())
     return {"unchanged": True, "program_id": pid} if job is None else job.view()

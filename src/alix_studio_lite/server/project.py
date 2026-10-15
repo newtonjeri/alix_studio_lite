@@ -37,7 +37,7 @@ STATUSES = [
     ("real_ok", "Tested on robot"),
 ]
 
-DEFAULT_SETTINGS = dict(optimiser="default", target_s=None, segments=[], smooth_window=41,
+DEFAULT_SETTINGS = dict(optimiser="manual", target_s=None, segments=[], smooth_window=101,
                         program_id=None, max_dev_mm=None)
 
 
@@ -172,6 +172,9 @@ class Project:
             out.append(dict(version=p.stem, file=p.name, path=str(p), sha256=rec.get("track_sha256"),
                             optimiser=res.get("optimiser"), lines=res.get("lines"),
                             achieved_s=res.get("achieved_s"), uploadable=res.get("uploadable"),
+                            # whether every hard limit passes; only a time-optimal file is held to it
+                            limits_ok=res.get("limits_ok", res.get("uploadable")),
+                            limits_text=res.get("limits_text") or "", enforced=res.get("optimiser") == "toppra",
                             saved=rec.get("written_utc")))
         return out
 

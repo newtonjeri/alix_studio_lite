@@ -243,6 +243,19 @@ export async function playOnce(sayLine) {
   });
 }
 
+// The loaded file at trajectory time `t` (s), staged: Tune's Play / Pause / Restart and timelines
+// (the trajectory HTML's playback) drive the 3D through this, the plots following on their own.
+export function seekTo(t) {
+  if (!sim.tl) return false;
+  if (sim.abort) sim.abort();
+  if (simRunning) window.simulationControl('stop');
+  const at = Math.max(0, Math.min(duration(), Number(t) || 0));
+  simElapsedSec = at;
+  sim.staged = true;
+  showLine(Math.round(at / CYCLE_S));
+  return true;
+}
+
 // The recording's row (1-based) at the file's line (1-based), through the tuning's map.
 export function rowAt(line) {
   const p = sim.progress;

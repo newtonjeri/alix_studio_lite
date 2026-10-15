@@ -1,5 +1,12 @@
-"""Run an optimisation: one region on one arm (``optimise``), or a TOGETHER pair that must
-start and finish together (``optimise_together``)."""
+"""TIME-OPTIMAL tuning (TOPP-RA), the alternative to manual tuning: one region on one arm
+(``optimise``), or a TOGETHER pair that must start and finish together (``optimise_together``).
+
+It works on the recording as taught, through ALIX's own chain (``toppra_opt``), and never goes
+through the manual tuning's Trim, Mean Smooth or Scale, its suggestions or its scale regions
+(the owner, 15 Oct: "the other option is toppra, and should never undergo the approach in the
+html"). Its limits stay enforced: the file is the target time when the limits allow it, else the
+fastest time they allow, and a file that still fails a hard limit is never uploadable.
+"""
 from __future__ import annotations
 
 import json
@@ -13,73 +20,16 @@ from ..motion import timing, track
 from ..motion.checks import check_bytes, motion_ok
 from ..motion.limits import LimitSet, load_limits
 from . import binding as bnd
-from . import default_opt, toppra_opt
+from . import toppra_opt
 from .target import Search, find_min_lines, settle
 from .types import OPTIMISERS, OptRequest, OptResult
 
 
-BRIDGE_DEG_S = 20.0          # a cut's gap is crossed at this joint speed (largest joint), then smoothed
-BRIDGE_MIN_LINES = 20        # and never in less than 0.1 s
-
-
-def apply_cuts(req: OptRequest) -> tuple[OptRequest, dict | None]:
-    """Remove the cut stretches from the recording before anything else.
-
-    Where a cut leaves a gap, the two sides are joined by a straight joint-space move at
-    ``BRIDGE_DEG_S`` (smoothing then rounds its corners), so the slowdown stays local instead of
-    the whole file being stretched to survive a jump. The segments' line numbers move onto the
-    new recording, which is then the reference for the path (L5) and end (L6) checks. Whether a
-    bridge clears the toilet is the 3D check's job.
-    """
-    from dataclasses import replace
-
-    if not req.cuts:
-        return req, None
-    md = np.asarray(req.md_raw, dtype=np.int64)
-    n = int(md.shape[0])
-    keep = np.ones(n, dtype=bool)
-    cuts = []
-    for a, b in sorted(req.cuts):
-        a, b = max(1, int(a)), min(n, int(b))
-        if a <= b:
-            keep[a - 1:b] = False
-            cuts.append([a, b])
-    if int(keep.sum()) < 2:
-        raise ValueError("the cuts remove the whole recording")
-    edges = np.flatnonzero(np.diff(np.concatenate([[0], keep.astype(np.int8), [0]])))
-    runs = list(zip(edges[0::2], edges[1::2] - 1))                    # kept stretches, inclusive
-    new_row = np.full(n, -1, dtype=np.int64)
-    pieces, bridges, pos = [], [], 0
-    for i, (a, b) in enumerate(runs):
-        if i:
-            q0, q1 = md[runs[i - 1][1]].astype(float), md[a].astype(float)
-            jump = float(np.abs(q1 - q0).max()) / 1000.0
-            k = max(BRIDGE_MIN_LINES, int(np.ceil(jump / BRIDGE_DEG_S / timing.CYCLE_S)))
-            t = np.arange(1, k)[:, None] / k
-            pieces.append(np.rint(q0 + (q1 - q0) * t).astype(np.int64))
-            bridges.append(dict(after_line=int(runs[i - 1][1]) + 1, before_line=int(a) + 1,
-                                jump_deg=round(jump, 2), seconds=round(k * timing.CYCLE_S, 3)))
-            pos += k - 1
-        pieces.append(md[a:b + 1])
-        new_row[a:b + 1] = np.arange(pos, pos + b - a + 1)
-        pos += b - a + 1
-    kept = np.flatnonzero(keep)
-    segs = []
-    for sg in req.segments:
-        lo = kept[kept >= sg.start - 1]
-        hi = kept[kept <= sg.end - 1]
-        if lo.size and hi.size and new_row[hi[-1]] >= new_row[lo[0]]:
-            segs.append(replace(sg, start=int(new_row[lo[0]]) + 1, end=int(new_row[hi[-1]]) + 1))
-    info = dict(cuts=cuts, removed_lines=int(n - keep.sum()), recorded_lines=n, bridges=bridges)
-    return replace(req, md_raw=np.vstack(pieces), segments=tuple(segs), cuts=()), info
-
-
 def make_plan(req: OptRequest, limits: LimitSet):
-    if req.optimiser == "default":
-        return default_opt.DefaultPlan(req.md_raw, limits, req.default, req.segments)
     if req.optimiser == "toppra":
-        return toppra_opt.ToppraPlan(req.md_raw, limits, req.toppra, req.segments)
-    raise ValueError(f"optimiser must be one of {OPTIMISERS}, got {req.optimiser!r}")
+        return toppra_opt.ToppraPlan(req.md_raw, limits, req.toppra)
+    raise ValueError(f"the time-optimal engine runs {OPTIMISERS[1]!r} only, got {req.optimiser!r} "
+                     "(manual tuning is optimise.manual)")
 
 
 def _versions() -> dict:
@@ -117,7 +67,7 @@ class _Solved:
 
 
 def _finish(s: _Solved, n: int, n_target: int | None, *, n_min_shared: int | None = None,
-            binding_note: str | None = None, own_binding: bool = True, cut: dict | None = None) -> OptResult:
+            binding_note: str | None = None, own_binding: bool = True) -> OptResult:
     """Build the result at ``n`` intervals. For a TOGETHER pair ``n_min_shared`` is the pair's
     minimum, and only the arm that sets it reports the binding limit."""
     req, limits = s.req, s.limits
@@ -134,8 +84,7 @@ def _finish(s: _Solved, n: int, n_target: int | None, *, n_min_shared: int | Non
     hints = []
     l5 = checks.get("L5")
     if l5 is not None and l5.passed is False:
-        hint = (default_opt.smoothing_hint(req.md_raw, limits, req.default) if req.optimiser == "default"
-                else toppra_opt.smoothing_hint(req.md_raw, limits, req.toppra))
+        hint = toppra_opt.smoothing_hint(req.md_raw, limits, req.toppra)
         if hint:
             hints.append(hint)
     for c in checks.failures():
@@ -143,42 +92,32 @@ def _finish(s: _Solved, n: int, n_target: int | None, *, n_min_shared: int | Non
             hints.append("A joint goes too close to its end stop: re-teach that part of the region.")
     achieved = timing.duration_for(lines)
     t_min = timing.duration_for(lines_min)
-    recorded = timing.duration_for(cut["recorded_lines"] if cut else len(req.md_raw))
-    unit = "s"
+    recorded = timing.duration_for(len(req.md_raw))
     why = bnd.describe(bindings)
     if not checks.passed:
         first = checks.failures()[0]
         message = f"Not ready to upload: {first.name.lower()} - {first.detail}"
-    elif req.target_s is None and req.natural:
-        message = (f"Recorded pace kept: {achieved:.2f} {unit}." if exact and met else
-                   f"The recorded pace is faster than the limits allow here. The fastest safe time is "
-                   f"{t_min:.2f} {unit}" + (f", {why}." if why else "."))
     elif req.target_s is None:
-        message = f"Fastest safe time: {achieved:.2f} {unit}" + (f", {why}." if why else ".")
+        message = f"Fastest safe time: {achieved:.2f} s" + (f", {why}." if why else ".")
     elif not met:
-        message = (f"The robot cannot do this region in {req.target_s:.2f} {unit} within its limits. "
-                   f"The fastest safe time is {t_min:.2f} {unit}" + (f", {why}." if why else "."))
+        message = (f"The robot cannot do this region in {req.target_s:.2f} s within its limits. "
+                   f"The fastest safe time is {t_min:.2f} s" + (f", {why}." if why else "."))
     elif not exact:
-        message = (f"Target {req.target_s:.2f} {unit} adjusted to {achieved:.2f} {unit} to stay within "
-                   "the limits after rounding.")
+        message = f"Target {req.target_s:.2f} s adjusted to {achieved:.2f} s to stay within the limits after rounding."
     else:
-        message = f"Target met: {achieved:.2f} {unit}."
+        message = f"Target met: {achieved:.2f} s."
     if binding_note:
         message = f"{message} {binding_note}"
     recipe = dict(
         optimiser=req.optimiser, side=req.side, frame=limits.frame, cycle_s=timing.CYCLE_S,
-        target_s=req.target_s,
-        options=asdict(req.default if req.optimiser == "default" else req.toppra),
-        segments=[asdict(sg) for sg in req.segments],
-        max_dev_mm=req.max_dev_mm,
+        target_s=req.target_s, options=asdict(req.toppra), max_dev_mm=req.max_dev_mm, enforced=True,
         limits=dict(rating_deg_s=list(limits.rating_deg_s), rate_bar=limits.rate_bar,
                     rate_design=limits.rate_design, acc_deg_s2=limits.acc_deg_s2, acc_tol=limits.acc_tol,
                     acc_reading="20 Hz band-limited (ALIX F99c)", step_deg=limits.step_deg,
                     max_dev_mm=limits.max_dev_mm, ends_tol_deg=limits.ends_tol_deg,
                     dt_gate_s=limits.dt_gate, execution_model=limits.model.get("fitted")),
-        plan=s.plan.recipe(), lines=lines, lines_min=lines_min,
-        recorded_lines=int(cut["recorded_lines"] if cut else len(req.md_raw)), natural=req.natural, cut=cut,
-        speedup_vs_recording=round((cut["recorded_lines"] if cut else len(req.md_raw)) / lines, 3),
+        plan=s.plan.recipe(), lines=lines, lines_min=lines_min, recorded_lines=int(len(req.md_raw)),
+        natural=req.natural, speedup_vs_recording=round(len(req.md_raw) / lines, 3),
         search_evaluations=s.search.evaluations,
         timings=dict(s.timings, finish_s=round(time.perf_counter() - t0, 3)),
         origin=req.origin, origin_sha256=req.origin_sha256, versions=_versions())
@@ -196,15 +135,14 @@ def _limits_for(req: OptRequest, limits: LimitSet | None) -> LimitSet:
 
 
 def optimise(req: OptRequest, limits: LimitSet | None = None) -> OptResult:
-    """Optimise one recording: the target time if the limits allow it, else the closest."""
+    """Time-optimise one recording: the target time if the limits allow it, else the closest."""
     vendor_paths.activate()
-    req, cut = apply_cuts(req)
     s = _Solved(req, _limits_for(req, limits))
     if s.n_min is None:
         raise RuntimeError("no timing within the limits was found, even 20x slower than recorded")
     n_target = s.target_n()
     n = s.n_min if n_target is None or n_target < s.n_min else settle(s.search, n_target)
-    return _finish(s, n, n_target, cut=cut)
+    return _finish(s, n, n_target)
 
 
 def optimise_together(left: OptRequest, right: OptRequest,

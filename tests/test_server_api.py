@@ -74,7 +74,7 @@ def test_refusals_are_sentences(server):
 @pytest.mark.slow
 def test_region_through_every_step(server):
     key = "L-T01"
-    h = call(server, f"unit/{key}/settings", {"changes": {"target_s": 3.0, "optimiser": "default"}, "label": "Target 3 s"})
+    h = call(server, f"unit/{key}/settings", {"changes": {"target_s": 3.0, "optimiser": "toppra"}, "label": "Target 3 s"})
     assert h["can_undo"] and h["settings"]["target_s"] == 3.0
     h = call(server, f"unit/{key}/undo", {})
     assert h["settings"]["target_s"] is None
@@ -84,7 +84,7 @@ def test_region_through_every_step(server):
     v = wait(server, call(server, f"unit/{key}/optimise", {}))
     assert v["state"] == "done", v
     res = v["result"]["summary"]
-    assert res["met"] is False and res["uploadable"] is True           # 3 s is too fast: closest safe time
+    assert res["met"] is False and res["uploadable"] is True           # Time-optimal: 3 s is too fast, closest safe time
     assert res["binding"] and res["achieved_s"] == res["t_min_s"]
     u = call(server, f"unit/{key}")
     assert u["candidate_util"]["speed"]
