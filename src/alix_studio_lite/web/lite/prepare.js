@@ -1,9 +1,11 @@
 // Prepare and Setup & Safety (R7, R4). Each arm step has a SETUP on the server: the pole height and
 // hand pose it is taught with (from its existing recording's record or the region catalogue).
-// Prepare shows it; Apply Pole / Apply Hand keep the page's values as the setup and stage them:
-// in Real on the robot (pole, then hand, each read back, after a confirmation); in Hardware sim
-// emulated, as nothing moves there. The hand sent is the one on screen: the preset, or with Custom
-// the six channels, where an empty channel is held (left where it is).
+// Prepare shows it; Apply beside the pole and Apply beside the hand each keep the page's values as the
+// setup and move that one alone (the owner, 15 Oct: the pole's Apply moved the hand too): in Real on
+// the robot, read back, after a confirmation; in Hardware sim emulated, as nothing moves there. The
+// hand sent is the one on screen: a preset (Grip / Cleaning, All Open, Cleaning Pose), or with Custom
+// the six channels, where an empty channel is held (left where it is); the Custom channels have their
+// own Apply.
 // Drag teaching starts only with the arm in that setup, so every recording knows its true stage,
 // and every execution stages that stage first (staging.py). The start-pose moves wait for the arm;
 // with the live link the start poses are the controller's global points (MoveJ or MoveL).
@@ -16,7 +18,8 @@ import { liteMode } from './status.js';
 
 const $ = (id) => document.getElementById(id);
 const GRIP = [0, 0, 0, 0, 150, 1000], OPEN = [1000, 1000, 1000, 1000, 1000, 1000];
-const PRESETS = { 'Grip / Cleaning': GRIP, 'All Open': OPEN };
+const CLEANING = [1000, 1000, 1000, 1000, 0, 1000];          // Cleaning Pose (the owner, 15 Oct)
+const PRESETS = { 'Grip / Cleaning': GRIP, 'All Open': OPEN, 'Cleaning Pose': CLEANING };
 let lastKey = null;
 let lastMoveError = null;
 
@@ -82,10 +85,11 @@ async function applySetup(kind) {
   const s = step();
   if (!s || !ctx.pid) return;
   const mode = await liteMode();
-  const body = { pole_mm: Number($('poleHeight').value), hand: handFromPage(), apply: mode === 'hwsim' || mode === 'real',
-    kind: String(kind || '').toLowerCase() };                  // which Apply: teaching waits for both (the owner, 15 Oct)
+  const part = String(kind || '').toLowerCase();               // which Apply: it alone moves; teaching waits for both
+  const body = { pole_mm: Number($('poleHeight').value), hand: handFromPage(), apply: mode === 'hwsim' || mode === 'real', kind: part };
+  const what = part === 'pole' ? 'pole' : part === 'hand' ? 'hand' : 'pole and hand';
   try {
-    const out = await robotCall(unitUrl(s.key, 'setup'), body, { what: `Moving the ${s.arm.toUpperCase()} pole and hand` });
+    const out = await robotCall(unitUrl(s.key, 'setup'), body, { what: `Moving the ${s.arm.toUpperCase()} ${what}` });
     showSetup(out.unit.setup);
     if (!out.job) {
       window.toast(`Setup kept for ${s.display}: ${out.unit.setup.text}. In Visual sim nothing moves.`);
@@ -102,8 +106,8 @@ async function applySetup(kind) {
       return;
     }
     $('liteSetupNote').classList.remove('lite-bad');
-    window.toast(`${s.arm.toUpperCase()} staged: ${out.unit.setup.text} `
-      + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).'));
+    window.toast(`${s.arm.toUpperCase()} ${part === 'pole' ? `pole at ${out.unit.setup.pole_mm} mm` : part === 'hand' ? 'hand set' : 'staged'}: `
+      + `${out.unit.setup.text} ` + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).'));
     window.rcSyncGuidedValues();                       // the Advanced panel shows the same values (nothing is sent)
     await afterTeaching(s, out.unit, body);
   } catch (err) { tell(err); }
@@ -274,6 +278,27 @@ export function installPrepare() {
     if (!ctx.pid) { window.toast('Open a project first: Apply keeps the setup of its region.'); return; }
     applySetup(kind);
   };
+
+  // the Cleaning Pose preset beside the page's own, and an Apply for the Custom channels (the owner, 15 Oct)
+  const preset = $('handPreset');
+  if (preset && ![...preset.options].some(o => o.value === 'Cleaning Pose')) {
+    const open = [...preset.options].find(o => o.value === 'All Open');
+    const opt = el('option', { value: 'Cleaning Pose', text: 'Cleaning Pose' });
+    if (open) open.after(opt); else preset.append(opt);
+  }
+  const fields = $('handFields');
+  if (fields && !$('liteCustomHandApply')) {
+    fields.after(el('div', { class: 'lite-custom-apply' },
+      el('button', { class: 'btn', id: 'liteCustomHandApply', text: 'Apply', onclick: () => {
+        if ($('handPreset')) $('handPreset').value = 'Custom';      // the six channels as they are on screen
+        applySetup('Hand');
+      } }),
+      el('span', { class: 'mini-note', text: 'Applies these six channels to the hand only (an empty channel is held).' })));
+  }
+  preset?.addEventListener('change', () => {                    // a preset's six values shown in the channels
+    const h = PRESETS[preset.value];
+    if (h) fillHand(h);
+  });
 
   // Move to the selected start pose. BOTH asks one confirmation in Real, then sends both arms, and
   // says what each arm did: one arm refused or stopped never hides that the other one moved.

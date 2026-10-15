@@ -109,6 +109,21 @@ async function choose(key, file) {
 }
 
 export function installTeach() {
+  // The voice timer counts every second until STOP DRAG, past the target, and never says "Target
+  // time reached" (the owner, 15 Oct: it stopped speaking at 30 s). The screen still shows the target.
+  window.updateTimer = function updateTimer() {
+    elapsed = (performance.now() - timerStart) / 1000;
+    const target = Math.max(1, Number($('targetSec')?.value) || 30);
+    $('timer').textContent = fmt(elapsed);
+    $('timerProgress').style.width = `${Math.min(100, (elapsed / target) * 100)}%`;
+    const whole = Math.floor(elapsed);
+    if (whole >= 1 && whole !== lastSpokenSecond) {
+      lastSpokenSecond = whole;
+      window.speakEnglish(String(whole), true);
+    }
+    if (elapsed >= target) $('timerResult').textContent = 'Target time reached. Finish safely and press STOP when the region/action is complete.';
+  };
+
   const pageStart = window.startTeach;
   window.startTeach = async function startTeach() {
     if (!isSetupReady()) { window.toast('Complete Setup & Safety first.'); return; }

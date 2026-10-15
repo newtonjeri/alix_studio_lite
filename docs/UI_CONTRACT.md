@@ -30,6 +30,8 @@ The Lite UI is the designer's **ASL FINAL Template V32** (product name ASL): one
 - Time-optimal (TOPP-RA) is the other choice in Setup, separate on the server (`optimise/engine.py`): ALIX's chain on the recording as taught, the fastest time within the limits or a longer target; it never goes through Trim, Mean Smooth, Scale, the suggestions or the scale regions (Analyze and Review are closed for it), and its limits stay enforced.
 - Analyze's optimised time is fitted to the generated file: the suggestions scaled together (each a whole percent, 1–300 %) so that after the region's Trim the file comes to the time asked (`analysis.fit_target` with `manual.trimmed_counts`).
 - Real Test shows the file it sends: its name above the gates and under Upload.
+- Prepare: Apply beside the pole moves the pole alone and Apply beside the hand the hand alone (the pole's Apply staged the hand too); a held channel keeps what it reads (`POST …/setup {kind}`, `robot.stage_part`). A new hand preset, Cleaning Pose (Little, Ring, Middle, Index 1000, Thumb Bend 0, Thumb Rotate 1000), in Prepare, Advanced Robot Controls and the stage dialog (`staging.PRESETS["CLEANING"]`). The Custom hand channels have their own Apply (the hand only).
+- Drag & Teach: the voice counts every second until STOP DRAG, past the target, and no longer says "Target time reached" (the screen still shows the target).
 
 This file states, screen by screen, what the page needs from the backend, what is connected today, and what is still the designer's template. It also lists what reviewing the page found: defects, data issues, gaps against the requirements, and the decisions that are open.
 

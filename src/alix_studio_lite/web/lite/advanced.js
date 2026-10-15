@@ -49,6 +49,22 @@ export function installAdvanced() {
     } catch (err) { tell(err); }
   };
 
+  // the Cleaning Pose preset beside Grip and All Open (the owner, 15 Oct): fingers open, thumb bent
+  const pagePreset = window.rcHandPreset;
+  window.rcHandPreset = function rcHandPreset(side, type) {
+    if (type !== 'cleaning') { pagePreset(side, type); return; }
+    [1000, 1000, 1000, 1000, 0, 1000].forEach((v, i) => window.rcHandSync(side, i, v, 'num'));
+  };
+  for (const side of ['left', 'right']) {
+    const open = document.querySelector(`#rcArmPane-${side}-hand button[onclick="rcHandPreset('${side}','open')"]`);
+    if (open && !open.nextElementSibling?.dataset.liteCleaning) {
+      const b = Object.assign(document.createElement('button'), { className: 'btn green', textContent: 'Cleaning Pose' });
+      b.dataset.liteCleaning = '1';
+      b.addEventListener('click', () => window.rcHandPreset(side, 'cleaning'));
+      open.after(b);
+    }
+  }
+
   window.rcApplyHand = async function rcApplyHand(side) {
     try { await job(side, `/api/robots/${side}/hand`, { counts: window.rcHandValues(side) }, 'Hand'); } catch (err) { tell(err); }
   };

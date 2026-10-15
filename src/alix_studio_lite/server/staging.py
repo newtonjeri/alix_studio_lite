@@ -40,6 +40,7 @@ CHANNELS = ("little", "ring", "middle", "index", "thumb bend", "thumb rotate")
 PRESETS = {
     "OPEN": [1000, 1000, 1000, 1000, 1000, 1000],
     "GRIP": [0, 0, 0, 0, 150, 1000],
+    "CLEANING": [1000, 1000, 1000, 1000, 0, 1000],     # Cleaning Pose: fingers open, thumb bent (the owner, 15 Oct)
 }
 TRANSIT_FRACTION = 0.30               # the move to the start, as a fraction of each joint's rating
 CYCLE_S = 0.005
@@ -70,9 +71,10 @@ class Stage:
 
 
 def parse_hand(value) -> tuple:
-    """Six counts from a list, a preset name (OPEN, GRIP) or the sheets' "100% open" text."""
+    """Six counts from a list, a preset name (OPEN, GRIP, CLEANING) or the sheets' "100% open" text."""
     if isinstance(value, str):
         v = value.strip().upper()
+        v = {"CLEANING POSE": "CLEANING", "ALL OPEN": "OPEN"}.get(v, v)
         if v in PRESETS:
             return tuple(PRESETS[v])
         m = re.fullmatch(r"(\d{1,3})\s*%\s*OPEN(\s*\(FIRST 4 FINGERS\))?", v)
@@ -83,7 +85,7 @@ def parse_hand(value) -> tuple:
             import taught_tracks as tt                                    # noqa: PLC0415
 
             return tuple(tt.fingers_pct_counts(int(m.group(1))))
-        raise UserError(f"Unknown hand setting {value!r}.", "Use six values from 0 to 1000, Open or Grip.")
+        raise UserError(f"Unknown hand setting {value!r}.", "Use six values from 0 to 1000, Open, Grip or Cleaning Pose.")
     if not isinstance(value, (list, tuple)) or len(value) != 6:
         raise UserError("The hand needs six values: little, ring, middle, index, thumb bend, thumb rotate.")
     out = []
@@ -133,12 +135,14 @@ def same_stage(a, b) -> bool:
 
 
 def hand_words(hand) -> str:
-    """A hand pose in words: "grip", "open", "fingers 50 % open, thumb held", or its six counts."""
+    """A hand pose in words: "grip", "open", "cleaning pose", "fingers 50 % open, thumb held", or its six counts."""
     h = list(hand)
     if h == PRESETS["OPEN"]:
         return "open"
     if h == PRESETS["GRIP"]:
         return "grip"
+    if h == PRESETS["CLEANING"]:
+        return "cleaning pose"
     if h[4] is None and h[5] is None and len(set(h[:4])) == 1:
         return f"fingers {h[0] / 10:g} % open, thumb held"
     return ", ".join("hold" if c is None else str(c) for c in h)

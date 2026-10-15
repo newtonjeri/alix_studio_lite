@@ -109,6 +109,7 @@ export function tell(err) {
 const HAND_CHOICES = [
   ['GRIP', 'Grip (0, 0, 0, 0, 150, 1000)'],
   ['OPEN', 'All open (1000 × 6)'],
+  ['CLEANING', 'Cleaning pose (1000, 1000, 1000, 1000, 0, 1000)'],
   ['100% open', 'Fingers 100 % open, thumb held'],
   ['50% open', 'Fingers 50 % open, thumb held'],
 ];
@@ -126,6 +127,7 @@ export function stageDialog({ title, body, arm = null, setup = null, askArm = fa
     const preset = (h) => {
       const k = JSON.stringify(h);
       if (k === JSON.stringify([0, 0, 0, 0, 150, 1000])) return 'GRIP';
+      if (k === JSON.stringify([1000, 1000, 1000, 1000, 0, 1000])) return 'CLEANING';
       if (k === JSON.stringify([1000, 1000, 1000, 1000, 1000, 1000])) return 'OPEN';
       if (k === JSON.stringify([1000, 1000, 1000, 1000, null, null])) return '100% open';
       if (k === JSON.stringify([500, 500, 500, 500, null, null])) return '50% open';

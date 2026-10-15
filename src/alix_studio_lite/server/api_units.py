@@ -454,11 +454,18 @@ def set_setup(app, q, body, m):
     units, key = units_of(app, m.group(1)), m.group(2)
     u = _unit(units, key)
     stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "set in Prepare")
-    kind = body.get("kind")                            # which Apply was pressed: pole | hand
+    kind = body.get("kind")                            # which Apply was pressed: pole | hand (it alone moves)
     mode, job = app.ui["mode"], None
     if body.get("apply") and mode != "visual":         # confirmed and accepted by the robot first,
-        require_confirmed(app, body, "Moving the pole and the hand")     # so a refusal changes nothing
-        job = app.robot.stage(u["arm"], stage, f"Stage {key}: {staging.describe(stage)}", mode=mode)
+        if kind == "pole":                             # so a refusal changes nothing
+            require_confirmed(app, body, "Moving the pole")
+            job = app.robot.stage_part(u["arm"], stage, "pole", f"Pole {key}: {stage.pole_mm:g} mm", mode=mode)
+        elif kind == "hand":
+            require_confirmed(app, body, "Moving the hand")
+            job = app.robot.stage_part(u["arm"], stage, "hand", f"Hand {key}: {staging.hand_words(stage.hand)}", mode=mode)
+        else:
+            require_confirmed(app, body, "Moving the pole and the hand")
+            job = app.robot.stage(u["arm"], stage, f"Stage {key}: {staging.describe(stage)}", mode=mode)
     units.set_setup(key, stage)
     if job is None:
         units.mark_applied(key, kind, stage)

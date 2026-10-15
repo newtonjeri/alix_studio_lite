@@ -533,6 +533,18 @@ class StandInRobot:
 
         return self._start("stage", title, work, side, mode)
 
+    def stage_part(self, side: str, stage: "staging.Stage", part: str, title: str, mode: str | None = None):
+        """Prepare's Apply beside the pole or beside the hand: that one alone (the owner, 15 Oct: "If I
+        click apply for pole, hand apply automatically triggered"). A channel the stage holds keeps
+        the value it reads now."""
+        if part == "pole":
+            return self.move_pole(side, stage.pole_mm, title, mode=mode)
+        if part != "hand":
+            raise UserError("Apply the pole or the hand.")
+        now = self._measured(side)[1] or self.arm(side).hand
+        counts = [int(h if t is None else t) for h, t in zip(now, stage.hand)]
+        return self.set_hand(side, counts, title, mode=mode)
+
     def in_stage(self, side: str, stage: "staging.Stage") -> bool:
         pole_mm, hand = self._measured(side)
         if pole_mm is None or hand is None or abs(pole_mm - stage.pole_mm) > staging.POLE_TOL_MM:

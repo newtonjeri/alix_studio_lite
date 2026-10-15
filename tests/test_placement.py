@@ -103,3 +103,37 @@ def test_prepare_records_each_apply(lite):
     assert set(u["applied"]) == {"pole"} and u["applied"]["pole"]["pole_mm"] == 120
     u = call(lite, "POST", P + "/units/L-R01/setup", {"pole_mm": 120, "hand": "GRIP", "kind": "hand", "apply": False})["unit"]
     assert set(u["applied"]) == {"pole", "hand"} and u["applied"]["hand"]["hand"] == [0, 0, 0, 0, 150, 1000]
+
+
+def test_each_apply_moves_its_own_part_and_the_cleaning_pose(lite):
+    """Feedback v3 (15 Oct): Apply beside the pole moves the pole alone, Apply beside the hand the hand
+    alone (the pole's Apply moved the hand too); the Cleaning Pose preset is 1000, 1000, 1000, 1000, 0, 1000."""
+    import time
+
+    from alix_studio_lite.server import staging
+
+    assert staging.parse_hand("Cleaning Pose") == (1000, 1000, 1000, 1000, 0, 1000)
+    assert staging.hand_words([1000, 1000, 1000, 1000, 0, 1000]) == "cleaning pose"
+    for arm in ("left", "right"):
+        call(lite, "POST", f"/api/robots/{arm}/connect", {})
+    assert call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})["mode"] == "hwsim"
+    arm = lite["app"].robot.arm("left")
+
+    def apply(kind, pole_mm, hand):
+        out = call(lite, "POST", P + "/units/L-R02/setup", {"pole_mm": pole_mm, "hand": hand, "kind": kind, "apply": True})
+        assert out["job"]["kind"] == kind, out["job"]          # the pole's or the hand's own job, not a stage
+        t0 = time.time()
+        while call(lite, "GET", f"/api/jobs/{out['job']['id']}")["state"] == "running":
+            assert time.time() - t0 < 30
+            time.sleep(0.1)
+        return out
+
+    hand0 = list(arm.hand)
+    apply("pole", 150, "CLEANING")
+    assert arm.pole_mm == 150 and arm.hand == hand0              # the hand did not move
+    apply("hand", 250, "Cleaning Pose")
+    assert arm.hand == [1000, 1000, 1000, 1000, 0, 1000] and arm.pole_mm == 150   # nor the pole
+    held = apply("hand", 150, [600, None, 600, 600, None, None])["unit"]
+    assert arm.hand == [600, 1000, 600, 600, 0, 1000]              # a held channel keeps what it reads
+    assert set(held["applied"]) >= {"pole", "hand"}
+    call(lite, "POST", "/api/robots/mode", {"mode": "visual"})

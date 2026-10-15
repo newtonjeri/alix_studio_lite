@@ -202,6 +202,7 @@ body:has(.operator-login-screen:not(.hidden)) .lite-stop-fixed { display: none; 
 /* gates and stages */
 .lite-gates { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
 .lite-setup-note { margin-top: 10px; }
+.lite-custom-apply { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .lite-stage-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px; }
 .lite-stage-form select, .lite-stage-form input { min-height: 46px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px;
   background: var(--card); color: var(--ink); width: 100%; }
