@@ -622,3 +622,75 @@
 {"t": 1791983271.974196, "who": "engineer:93d8c8", "what": "PUT /api/projects/alix_mv83aj0e_leskp", "detail": null, "ok": true, "error": null}
 {"t": 1791983276.6760302, "who": "operator:93d8c8", "what": "POST /api/auth/engineer/lock", "detail": {}, "ok": true, "error": null}
 {"t": 1791983277.67934, "who": "operator:93d8c8", "what": "PUT /api/projects/alix_mv83aj0e_leskp", "detail": null, "ok": true, "error": null}
+{"t": 1791993844.971577, "who": "-", "what": "POST /api/auth/login", "detail": {"pin": "***"}, "ok": true, "error": null}
+{"t": 1791993845.0004458, "who": "operator", "what": "page: showView", "detail": {"view": "home"}, "ok": true, "error": null}
+{"t": 1791993849.51097, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791993849.5126183, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791993849.514952, "who": "operator", "what": "page: loadTask", "detail": {"task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791993849.516157, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791993849.517907, "who": "operator", "what": "page: showView", "detail": {"view": "setup"}, "ok": true, "error": null}
+{"t": 1791993849.5194628, "who": "operator", "what": "page: openProjectById", "detail": {"project": "alix_mv6rod78_nj8fa"}, "ok": true, "error": null}
+{"t": 1791993849.8156407, "who": "operator", "what": "page: showView", "detail": {"view": "home"}, "ok": true, "error": null}
+{"t": 1791993855.9813757, "who": "operator", "what": "page: showView", "detail": {"view": "home"}, "ok": true, "error": null}
+{"t": 1791993856.9857962, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993865.8910437, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993870.1496992, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993871.005631, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993872.9383738, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993878.1016605, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993879.0218027, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993879.8226368, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993881.3555439, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993884.5412803, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993886.562002, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993891.552247, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993904.846927, "who": "operator", "what": "page: toggleTheme", "detail": {"theme": "dark"}, "ok": true, "error": null}
+{"t": 1791993905.8497763, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993911.4424016, "who": "operator", "what": "page: toggleTheme", "detail": {"theme": "light"}, "ok": true, "error": null}
+{"t": 1791993912.4447947, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993916.2326825, "who": "operator", "what": "page: showView", "detail": {"view": "setup"}, "ok": true, "error": null}
+{"t": 1791993917.2351081, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993924.7354019, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993925.9127684, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993927.5930963, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791993928.491511, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791994661.415428, "who": "operator", "what": "page: showView", "detail": {"view": "teach"}, "ok": true, "error": null}
+{"t": 1791994661.4168468, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791994661.4178607, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791994661.4188974, "who": "operator", "what": "page: loadTask", "detail": {"task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791994662.4823358, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791994676.4796941, "who": "operator", "what": "page: setStage", "detail": {"asked": "optimize", "stage": "optimize", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791994677.7810514, "who": "operator:ae041b", "what": "POST /api/projects/alix_mv6rod78_nj8fa/units/L-R01/optimise", "detail": {}, "ok": true, "error": null}
+{"t": 1791994677.818503, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791994678.904178, "who": null, "what": "job optimise done: Tune L-R01", "detail": {"id": "optimise-1", "unit": "L-R01", "arm": "left", "elapsed_s": 1.1}, "ok": true, "error": null}
+{"t": 1791996075.4403837, "who": "operator:ae041b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999134.5189795, "who": "-", "what": "POST /api/auth/login", "detail": {"pin": "***"}, "ok": false, "error": "Incorrect operator PIN. Please try again."}
+{"t": 1791999139.698618, "who": "-", "what": "POST /api/auth/login", "detail": {"pin": "***"}, "ok": true, "error": null}
+{"t": 1791999139.7552242, "who": "operator", "what": "page: showView", "detail": {"view": "home"}, "ok": true, "error": null}
+{"t": 1791999145.6122127, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791999145.6158223, "who": "operator", "what": "page: loadTask", "detail": {"task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791999145.6164684, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791999145.6178954, "who": "operator", "what": "page: showView", "detail": {"view": "teach"}, "ok": true, "error": null}
+{"t": 1791999145.6197634, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791999145.6255288, "who": "operator", "what": "page: setStage", "detail": {"asked": "prepare", "stage": "prepare", "task": "TASK 1A", "arm": "left"}, "ok": true, "error": null}
+{"t": 1791999145.6296225, "who": "operator", "what": "page: openProjectById", "detail": {"project": "alix_mv6rod78_nj8fa"}, "ok": true, "error": null}
+{"t": 1791999160.7453651, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791999161.752051, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999162.0598834, "who": "operator", "what": "page: selectArm", "detail": {"arm": "left", "task": "TASK 1A"}, "ok": true, "error": null}
+{"t": 1791999163.0624523, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999184.794932, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999186.1051784, "who": "operator", "what": "page: showView", "detail": {"view": "logs"}, "ok": true, "error": null}
+{"t": 1791999187.0996242, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999196.6898506, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999202.4965918, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999205.524638, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999211.3688023, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999219.3024156, "who": "operator", "what": "page: toggleTheme", "detail": {"theme": "dark"}, "ok": true, "error": null}
+{"t": 1791999220.3093445, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999221.605661, "who": "operator", "what": "page: toggleTheme", "detail": {"theme": "light"}, "ok": true, "error": null}
+{"t": 1791999222.6134129, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999228.4551492, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999229.927649, "who": "operator", "what": "page: showView", "detail": {"view": "setup"}, "ok": true, "error": null}
+{"t": 1791999230.909683, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999240.8877203, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
+{"t": 1791999242.8703651, "who": "operator:a9177b", "what": "PUT /api/projects/alix_mv6rod78_nj8fa", "detail": null, "ok": true, "error": null}
