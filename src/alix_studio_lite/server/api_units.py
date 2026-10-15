@@ -116,10 +116,8 @@ def identity(units: LiteUnits, key: str, which: str) -> dict:
         if not cand.is_file():
             raise UserError("There is no tuned trajectory yet.", "Run the simulation to make one.")
         info = dict(path=cand, name="the tuned trajectory", taught_arm=extra.get("taught_arm"), stage=extra.get("stage"))
-    elif which == "version":
-        ver = units.current_version(key)
-        if not ver:
-            raise UserError("There is no tuned version yet.", "Finish Tune + Simulation first.")
+    elif which == "version" or which.startswith("version:"):            # the one it runs, or a named one
+        ver = _version_of(units, key, which)
         info = dict(path=Path(ver["path"]), name=f"version {ver['version']}", taught_arm=ver.get("taught_arm"),
                     stage=ver.get("stage"))
     elif which == "transition":
@@ -145,7 +143,17 @@ def identity(units: LiteUnits, key: str, which: str) -> dict:
     return info
 
 
-def checked_version(units, key: str, arm: str) -> dict:
+def _version_of(units, key: str, which: str = "version") -> dict:
+    """``version``: the kept version the region runs; ``version:v002``: that one."""
+    want = which.split(":", 1)[1] if ":" in which else None
+    ver = next((v for v in units.versions(key) if v["version"] == want), None) if want else units.current_version(key)
+    if not ver:
+        raise UserError(f"There is no version {want} of {key}." if want else "There is no tuned version yet.",
+                        "Finish Tune + Simulation first.")
+    return ver
+
+
+def checked_version(units, key: str, arm: str, which: str = "version") -> dict:
     """The kept version a robot step sends or runs, checked at that moment whatever the files
     beside it say: it passed every limit when kept, its bytes are still the ones kept (sha256),
     and L1-L4 pass again on those bytes. An edited or imported project cannot slip a file past the
@@ -154,9 +162,7 @@ def checked_version(units, key: str, arm: str) -> dict:
     from ..motion.checks import check_bytes
     from ..motion.limits import load_limits
 
-    ver = units.current_version(key)
-    if not ver:
-        raise UserError("There is no tuned version yet.", "Finish Tune + Simulation (Simulation Looks Good).")
+    ver = _version_of(units, key, which)
     again = "Tune the region again and keep the new version."
     if not ver.get("uploadable"):
         raise UserError(f"Version {ver['version']} did not pass every limit, so it never goes to the robot.", again)
@@ -239,11 +245,13 @@ def _flow_arm(app, units: LiteUnits, step: dict | None) -> dict | None:
         hit = [(pid, p) for pid, p in held.items() if sha and p.get("sha256") == sha]
         return [dict(program_id=pid, name=p.get("stored_name") or p.get("name"), at=p.get("uploaded")) for pid, p in sorted(hit)]
     vs = [dict(version=v["version"], name=v.get("name") or f"{key}_{v['version']}.txt", achieved_s=v.get("achieved_s"),
-               lines=v.get("lines"), uploadable=bool(v.get("uploadable")), uploaded=uploaded(v.get("sha256")))
+               lines=v.get("lines"), uploadable=bool(v.get("uploadable")), uploaded=uploaded(v.get("sha256")), sha256=v.get("sha256"))
           for v in units.versions(key)]
     rec = units.current_recording(key)
+    tv = units.transition(key)
     return dict(key=key, display=step["display"], later=step["later"], versions=vs, version=cur and cur["version"],
-                recording=_name_of(units, key, rec) if rec else None)
+                recording=_name_of(units, key, rec) if rec else None,
+                transition=dict(name=tv["name"], sha256=tv.get("sha256"), limits_ok=tv.get("limits_ok")) if tv else None)
 
 
 @route("GET", P + "/flow-files")
@@ -496,9 +504,12 @@ def _recording_behind(units: LiteUnits, key: str, which: str) -> dict | None:
         return next((r for r in recs if cur and r["file"] == cur.name), None)
     if which == "candidate":
         extra = _read(_candidate_files(units, key)[2]) or {}
-    elif which == "version":
-        ver = units.current_version(key)
-        extra = (_read(Path(ver["path"]).with_name(Path(ver["path"]).stem + ".extra.json")) or {}) if ver else {}
+    elif which == "version" or which.startswith("version:"):
+        try:
+            ver = _version_of(units, key, which)
+        except UserError:
+            return None
+        extra = _read(Path(ver["path"]).with_name(Path(ver["path"]).stem + ".extra.json")) or {}
     else:
         return None
     return next((r for r in recs if r["file"] == extra.get("raw_file")), None)
@@ -563,13 +574,108 @@ def post_sequence(app, q, body, m):
     from .routes_robot import _payload
 
     units = units_of(app, m.group(1))
+    items = body.get("items")
     steps = body.get("steps")
-    if not isinstance(steps, list) or not steps or len(steps) > 200:
+    if items is not None:                                # single files (feedback v2, slide 11)
+        if not isinstance(items, list) or not items:
+            raise UserError("Choose at least one file.")
+        steps = []
+    elif not isinstance(steps, list) or not steps or len(steps) > 200:
         raise UserError("Include at least one step in the sequence.")
     p = _payload(app)
     return sequence.plan(units, [s for s in steps if isinstance(s, dict)], source=str(body.get("source") or "version"),
                          home=dict(p["home"]), rating={s: load_limits(s).rating_deg_s for s in ARMS},
-                         identity=identity)
+                         identity=identity, only=body.get("only") or None,
+                         items=None if items is None else [x for x in items if isinstance(x, dict)])
+
+
+POINT_SPEED_PCT = 20.0          # %: the control program's default for a global point (web/lite/points.js)
+
+
+def _points_path(app, side: str, points: list, speed: float):
+    """An arm's path through global points of its controller, as the 5 ms lines a 3D view plays:
+    from the first point, joint by joint to each next one at ``speed`` % of each joint's rating, with
+    a smooth start and stop. (On the robot a MoveL goes in a straight line; the 3D shows it joint by
+    joint.)"""
+    import numpy as np
+
+    from ..motion.limits import load_limits
+
+    names = [str((x.get("name") if isinstance(x, dict) else x) or "") for x in (points or [])][:100]
+    if not names:
+        raise UserError("Choose at least one global point.")
+    pts = app.robot.global_points(side)
+    if pts is None:
+        raise UserError(f"Global points are stored on the {side.upper()} arm's controller: the stand-in has none.",
+                        "Start Lite with --robot realman and connect the arm.", code="connect")
+    by = {p["name"]: p for p in pts}
+    missing = [n for n in names if n not in by]
+    if missing:
+        raise UserError(f"The {side.upper()} controller has no global point {', '.join(missing)}.", "Refresh the global points.")
+    v = np.asarray(load_limits(side).rating_deg_s, dtype=float) * max(1.0, min(100.0, float(speed))) / 100.0
+    q = [np.asarray(by[n]["joints"][:7], dtype=float) for n in names]
+    lines = [q[0]]
+    for a, b in zip(q, q[1:]):
+        t = max(0.2, float(np.max(np.abs(b - a) / v)) * np.pi / 2)        # a cosine's peak speed is pi/2 x its mean
+        n = int(round(t / 0.005)) + 1
+        s = (1 - np.cos(np.linspace(0.0, np.pi, n))) / 2
+        lines.extend(a + np.outer(s[1:], b - a))
+    if len(lines) < 2:
+        lines.append(q[0])                                # one point: the arm goes there and stays
+    return names, np.round(np.asarray(lines) * 1000.0).astype(np.int64)
+
+
+def _points_stage(app, side: str):
+    from .routes_robot import _payload
+
+    pole0, hand0 = staging.home_stage(side, dict(_payload(app)["home"]))
+    return staging.make_stage(pole0, hand0, "as the arm stands: global points move the arm only")
+
+
+@route("POST", P + "/points-plan")
+def post_points_plan(app, q, body, m):
+    """Global points in the 3D (feedback v2, slide 11): ``{side, points: [names], speed, task}``, as a
+    one-step plan (sequence.js plays it like a sequence) whose 3D frames come from points-timeline."""
+    from ..motion.limits import load_limits
+    from .routes_robot import _payload
+
+    units_of(app, m.group(1))
+    side = str(body.get("side") or "")
+    if side not in ARMS:
+        raise UserError("Say which arm: left or right.")
+    speed = float(body.get("speed") or POINT_SPEED_PCT)
+    names, md = _points_path(app, side, body.get("points"), speed)
+    st = _points_stage(app, side)
+    clock = staging.execution_times(side, md.astype(float) / 1000.0, st, staging.start_values(side, dict(_payload(app)["home"])),
+                                    load_limits(side).rating_deg_s)
+    act = dict(side=side, key=None, display=f"Global points: {' → '.join(names)}", phase=None, which="points", ready=True,
+               file=f"{len(names)} global point{'s' if len(names) != 1 else ''} at {speed:g} %", stage=st.as_dict(),
+               lines=int(md.shape[0]), start=None, end=clock["end"], t_pole=round(clock["t_pole"], 4),
+               t_hand=round(clock["t_hand"], 4), t_move=round(clock["t_move"], 4), traj_t0=round(clock["traj_t0"], 4),
+               traj_s=round(clock["traj_s"], 4), stage_at=0.0, traj_at=round(clock["traj_t0"], 4),
+               end_at=round(clock["traj_t0"] + clock["traj_s"], 4),
+               timeline=dict(url=f"/api/projects/{m.group(1)}/points-timeline",
+                             body=dict(side=side, points=names, speed=speed, task=body.get("task"))))
+    row = dict(index=0, step=None, label=f"{side.upper()} global points", rule="ONE BY ONE", wait_s=0.0, arms={side: act},
+               t0=0.0, t1=act["end_at"], note="Shown joint by joint; on the robot a MoveL moves the tool in a straight line.")
+    return dict(source="points", rows=[row], total_s=act["end_at"], playable=True, ready=False, only=side, files=True, blocking=[])
+
+
+@route("POST", P + "/points-timeline")
+def post_points_timeline(app, q, body, m):
+    from ..motion.limits import load_limits
+    from .routes_robot import _mesh_links, _payload
+
+    units = units_of(app, m.group(1))
+    side = str(body.get("side") or "")
+    if side not in ARMS:
+        raise UserError("Say which arm: left or right.")
+    _, md = _points_path(app, side, body.get("points"), float(body.get("speed") or POINT_SPEED_PCT))
+    p = _payload(app)
+    out = staging.execution_timeline(side, md, _points_stage(app, side), home=dict(p["home"]),
+                                     links=staging.staged_links(side, _mesh_links(p)), rating_deg_s=load_limits(side).rating_deg_s)
+    out["scene"] = scene_of(units, None, None, body.get("task"))
+    return out
 
 
 # ── tuning
@@ -953,7 +1059,8 @@ def post_run(app, q, body, m):
         units.add_result(key, "dryrun_ok" if dry else "real_ok", ver["sha256"], True, out)
 
     job = app.robot.run(u["arm"], int(pid), dry_run=dry, title=("Hardware sim run " if dry else "Real run ") + key,
-                        on_done=done, stage=info["stage"], mode=mode)    # refused if the mode changed meanwhile
+                        on_done=done, stage=info["stage"], mode=mode,    # refused if the mode changed meanwhile
+                        alone=bool(body.get("alone")))                 # an arm's full sequence: the other arm stays stopped
 
     def watch():
         while job.state == "running":
@@ -1101,6 +1208,86 @@ def post_transition_run(app, q, body, m):
     dry = mode != "real"
     return app.robot.run(u["arm"], pid, dry_run=dry, stage=info["stage"], mode=mode, alone=True,
                          title=f"{'Hardware sim' if dry else 'Real'} transition {u['arm'].upper()} ({key})").view()
+
+
+# ── single files and controller programs on one arm (feedback v2, slide 11)
+
+def _sendable(units: LiteUnits, key: str, arm: str, which: str) -> dict:
+    """A file a robot step may send: a kept version or the transition, each checked on its bytes;
+    never a recording as taught."""
+    if which == "transition":
+        tv = _checked_transition(units, key, arm)
+        return dict(path=Path(tv["path"]), sha256=tv["sha256"], name=f"{key}_transition"[:32], what=tv["name"])
+    if which == "version" or which.startswith("version:"):
+        ver = checked_version(units, key, arm, which)
+        return dict(path=Path(ver["path"]), sha256=ver["sha256"], name=f"{key}_{ver['version']}"[:32],
+                    what=ver.get("name") or f"{key} {ver['version']}")
+    raise UserError("A recording as taught never runs on the real arms.",
+                    "Tune it and keep the version: that file can be sent. In 3D every file plays.", code="mode")
+
+
+@route("POST", U + "/file/upload")
+def post_file_upload(app, q, body, m):
+    """Send one of the region's files to a Program ID: ``{which: version | version:vNNN | transition,
+    program_id, replace}`` (its arm, stage and limits checked; a slot holding another program needs
+    ``replace``)."""
+    units, key = units_of(app, m.group(1)), m.group(2)
+    u = _unit(units, key)
+    require_robot_mode(app)
+    pid = _program_check(body.get("program_id"))
+    which = str(body.get("which") or "version")
+    info = identity(units, key, which)
+    f = _sendable(units, key, u["arm"], which)
+    job = app.robot.upload(u["arm"], pid, f["path"], f["name"], f["sha256"], bool(body.get("replace")),
+                           f"Upload {f['what']} to program {pid}", stage=info["stage"].as_dict())
+    return {"unchanged": True, "program_id": pid} if job is None else job.view()
+
+
+@route("POST", U + "/file/run")
+def post_file_run(app, q, body, m):
+    """Run one of the region's files, once sent, on its arm alone: ``{which, program_id, confirmed}``."""
+    units, key = units_of(app, m.group(1)), m.group(2)
+    u = _unit(units, key)
+    mode = require_robot_mode(app)
+    require_confirmed(app, body, "The run")
+    pid = _program_check(body.get("program_id"))
+    which = str(body.get("which") or "version")
+    info = identity(units, key, which)
+    f = _sendable(units, key, u["arm"], which)
+    prog = app.robot.arm(u["arm"]).programs.get(pid)
+    if not prog or prog.get("sha256") != f["sha256"]:
+        raise UserError(f"Program {pid} does not hold {f['what']}.", "Send it first.")
+    dry = mode != "real"
+    return app.robot.run(u["arm"], pid, dry_run=dry, stage=info["stage"], mode=mode, alone=True,
+                         title=f"{'Hardware sim' if dry else 'Real'} run of {f['what']} ({u['arm'].upper()})").view()
+
+
+@route("POST", r"/api/robots/(left|right)/programs/run")
+def post_program_run(app, q, body, m):
+    """Run a program stored on the arm's controller, on that arm alone: ``{program_id, confirmed}``,
+    and for one Lite did not send, the ``pole_mm`` and ``hand`` it runs with (staged first; Lite
+    cannot check its limits or show it in 3D, and the controller moves the arm to its first point)."""
+    session(app)
+    side = _arm(m)
+    mode = require_robot_mode(app)
+    require_confirmed(app, body, "Running the program")
+    pid = _program_check(body.get("program_id"))
+    held = next((p for p in app.robot.programs(side) if int(p["id"]) == pid), None)
+    if not held or not held.get("name"):
+        raise UserError(f"Program {pid} is empty on the {side.upper()} controller.")
+    dry = mode != "real"
+    title = f"{'Hardware sim' if dry else 'Real'} run of program {pid} ({side.upper()})"
+    if held.get("sha256"):                               # Lite sent it, and the controller still holds it
+        st = staging.stage_from(held.get("stage"))
+        if st is None:
+            raise UserError(f"Lite has no pole and hand recorded for program {pid}.", "Send it again from its region.", code="stage")
+        return app.robot.run(side, pid, dry_run=dry, stage=st, mode=mode, alone=True, title=title).view()
+    if body.get("pole_mm") is None or body.get("hand") is None:
+        raise UserError(f"Lite did not send program {pid} (“{held['name']}”): say the pole height and hand pose it runs with.",
+                        "Lite cannot check its limits or show it in 3D; the controller moves the arm to its first point "
+                        "in its own joint move.", code="stage")
+    st = staging.make_stage(body["pole_mm"], body["hand"], "stated for a program Lite did not send")
+    return app.robot.run_foreign(side, pid, stage=st, mode=mode, title=title).view()
 
 
 @route("GET", U + "/end")

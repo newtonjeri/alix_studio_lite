@@ -376,7 +376,7 @@ class RealArm:
         timing; error codes are watched every half second; the global speed is put back."""
         rmu = _rmu()
         pid = int(program_id)
-        timeout = max(60.0, (int(points) - 1) * 0.005 * 1.5 + 60.0)
+        timeout = 900.0 if points is None else max(60.0, (int(points) - 1) * 0.005 * 1.5 + 60.0)   # unknown length: 15 min
         a = SimpleNamespace(yes=True, side=self.side, run_speed=RUN_TRANSIT_SPEED, restore_speed=RESTORE_PCT, timeout=timeout)
         log = io.StringIO()
         t0 = time.monotonic()
@@ -388,7 +388,7 @@ class RealArm:
 
         with self.link.busy(f"running program {pid}"), _printed_to(line_out):
             try:
-                rc = rmu.run(self.robot, a, self.link.ip, pid, list(first_row_millideg))
+                rc = rmu.run(self.robot, a, self.link.ip, pid, None if first_row_millideg is None else list(first_row_millideg))
             except SystemExit as exc:                     # its program list did not answer
                 rc = 1
                 log.write(f"** {exc}\n")

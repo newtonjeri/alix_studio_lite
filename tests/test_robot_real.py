@@ -236,3 +236,16 @@ def test_the_current_pose_is_saved_as_a_global_point(server):
     assert call(server, "POST", "/api/robots/left/points/save", {"name": "STP_SEAT_1", "replace": True})["replaced"]
     hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
     assert {"add global point", "update global point"} <= {r["verb"] for r in hw}
+
+
+def test_global_points_play_in_3d(server):
+    """Feedback v2, slide 11: the controller's global points as a one-step plan, the arm going from
+    point to point at 20 % of each joint's rating, with the 3D frames to show it."""
+    names = ["STP_HOME", "STP_LID_OPEN", "CLEAN_A"]
+    plan = call(server, "POST", "/api/projects/alix_real/points-plan", {"side": "left", "points": names})
+    a = plan["rows"][0]["arms"]["left"]
+    assert a["ready"] and a["lines"] > 100 and a["timeline"]["url"] == "/api/projects/alix_real/points-timeline"
+    assert plan["total_s"] == a["end_at"] and "joint by joint" in plan["rows"][0]["note"]
+    tl = call(server, "POST", a["timeline"]["url"], a["timeline"]["body"])
+    assert tl["lines"] == a["lines"] and "scene" in tl
+    assert "no global point NOPE" in call(server, "POST", "/api/projects/alix_real/points-plan", {"side": "left", "points": ["NOPE"]})["error"]

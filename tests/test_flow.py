@@ -81,3 +81,29 @@ def test_each_row_shows_its_files_and_a_version_is_chosen(lite):
     plan = call(lite, "POST", "/api/projects/alix_fl/sequence", {"source": "version", "steps": [{"step": 5, "rule": "TOGETHER"}]})
     left = plan["rows"][0]["arms"]["left"]
     assert left["ready"] and "v001" in left["file"], left                          # the full sequence runs it too
+
+
+def test_one_arm_single_files_and_programs(lite):
+    """Feedback v2, slide 11: an arm's full sequence alone, single files of the project, and programs on
+    the controller, each on one arm (the other arm stays stopped)."""
+    P = "/api/projects/alix_fl"
+    plan = call(lite, "POST", P + "/sequence", {"source": "version", "only": "left", "steps": [{"step": 5, "rule": "TOGETHER"}]})
+    assert plan["only"] == "left" and list(plan["rows"][0]["arms"]) == ["left"]
+    plan = call(lite, "POST", P + "/sequence", {"source": "version", "items": [{"key": "L-T01", "which": "version:v002"}]})
+    a = plan["rows"][0]["arms"]["left"]
+    assert plan["files"] and a["ready"] and a["file"] == "version v002" and a["which"] == "version:v002"
+    assert call(lite, "POST", P + "/sequence", {"source": "version", "only": "left", "items": [{"key": "R-T01"}]})["code"] == "arm"
+    tl = call(lite, "POST", P + "/units/L-T01/timeline", {"which": "version:v002"})
+    assert tl["lines"] == a["lines"]
+    assert call(lite, "POST", P + "/points-plan", {"side": "left", "points": ["STP_HOME"]})["code"] == "connect"   # stand-in
+
+    assert "never runs on the real arms" in unit(lite, "L-T01", "file/upload", {"which": "raw", "program_id": 13})["error"]
+    assert wait(lite, unit(lite, "L-T01", "file/upload", {"which": "version:v002", "program_id": 13}))["state"] == "done"
+    assert "does not hold" in unit(lite, "L-T01", "file/run", {"which": "version:v001", "program_id": 13})["error"]
+    run = unit(lite, "L-T01", "file/run", {"which": "version:v002", "program_id": 13})
+    assert run["state"] == "running" and "alone" in call(lite, "POST", "/api/robots/right/pole", {"mm": 150})["error"]
+    assert wait(lite, run)["state"] == "done"
+
+    assert "empty" in call(lite, "POST", "/api/robots/left/programs/run", {"program_id": 77})["error"]
+    j = wait(lite, call(lite, "POST", "/api/robots/left/programs/run", {"program_id": 12}))      # Real Test sent v001 there
+    assert j["state"] == "done" and "program 12" in j["title"], j

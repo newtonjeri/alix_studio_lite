@@ -253,19 +253,19 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 .lite-seq-slider input { flex: 1; }
 .lite-seq-source select { min-height: 36px; margin-left: 4px; }
 /* the page laid its overlays over a picture; over a live robot they get rows of their own */
-#fullSequenceSimModal.lite-seq .full-sim-viewport { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px;
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-viewport { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px;
   grid-template-rows: auto auto minmax(0, 1fr) auto; grid-template-areas: "progress" "arms" "scene" "controls"; place-items: stretch; }
-#fullSequenceSimModal.lite-seq .full-sim-progress,
-#fullSequenceSimModal.lite-seq .full-sim-arm-status-grid,
-#fullSequenceSimModal.lite-seq .full-sim-overlay-controls { position: static !important; transform: none; width: auto; inset: auto; }
-#fullSequenceSimModal.lite-seq .full-sim-progress { grid-area: progress; padding: 6px 10px; }
-#fullSequenceSimModal.lite-seq .full-sim-arm-status-grid { grid-area: arms; }
-#fullSequenceSimModal.lite-seq .full-sim-arm-status { padding: 6px 10px; gap: 2px; box-shadow: none; }
-#fullSequenceSimModal.lite-seq .full-sim-scene { grid-area: scene; position: relative !important; inset: auto !important; border-radius: 12px; min-height: 200px; }
-#fullSequenceSimModal.lite-seq .dual-interlock { grid-area: scene; position: static; transform: none; align-self: start; justify-self: center;
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-progress,
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-arm-status-grid,
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-overlay-controls { position: static !important; transform: none; width: auto; inset: auto; }
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-progress { grid-area: progress; padding: 6px 10px; }
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-arm-status-grid { grid-area: arms; }
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-arm-status { padding: 6px 10px; gap: 2px; box-shadow: none; }
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-scene { grid-area: scene; position: relative !important; inset: auto !important; border-radius: 12px; min-height: 200px; }
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .dual-interlock { grid-area: scene; position: static; transform: none; align-self: start; justify-self: center;
   margin-top: 8px; width: min(92%, 860px); }
-#fullSequenceSimModal.lite-seq .full-sim-overlay-controls { grid-area: controls; padding: 8px; gap: 6px; }
-#fullSequenceSimModal.lite-seq .full-sim-overlay-controls .btn { min-height: 40px; padding: 6px 14px; }
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-overlay-controls { grid-area: controls; padding: 8px; gap: 6px; }
+:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-overlay-controls .btn { min-height: 40px; padding: 6px 14px; }
 .lite-seq-plan { grid-area: scene; align-self: start; justify-self: end; z-index: 6; margin: 52px 8px 8px 0; width: min(460px, 46%);
   max-height: calc(100% - 64px); overflow: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
   padding: 8px 10px; box-shadow: var(--shadow); }
@@ -436,3 +436,22 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 .lite-flow-file { display: grid; gap: 3px; margin-top: 6px; min-width: 220px; }
 .lite-flow-file select { font-size: 12px; padding: 5px 6px; }
 .lite-flow-file small { font-size: 11px; }
+
+/* Merge + Full Sequence: what to run, the simulation at full width, the real machine (feedback v2) */
+.lite-run { display: grid; gap: 14px; margin: 14px 0; }
+.lite-run .card { margin: 0; }
+.lite-run-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.lite-run-row > .field { margin: 0; min-width: 240px; }
+.lite-run-pick { display: flex; flex: 1 1 520px; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.lite-run-pick .field { margin: 0; }
+.lite-run-pick .mini-note { flex: 1 1 100%; }
+.lite-run-grow { flex: 1 1 280px; }
+.lite-run-grow select { width: 100%; }
+.lite-run-chips { display: flex; flex: 1 1 100%; flex-wrap: wrap; gap: 6px; }
+.lite-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--bg); font-size: 12px; font-weight: 700; color: var(--ink); }
+.lite-chip-x { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; padding: 2px 4px; }
+#liteRunSim .full-sim-viewport { height: min(80vh, 780px); position: relative; border-radius: 14px; }
+.lite-run-real .real-full-run { margin-top: 12px; }
+.lite-run-real .cta-row input { width: 130px; min-height: 44px; }
+#view-sequence .full-run-grid[hidden] { display: none !important; }   /* its view is in the page now (run.js) */

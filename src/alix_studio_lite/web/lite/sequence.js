@@ -1,5 +1,8 @@
 // Merge + Full Sequence: the Full Cleaning Sequence Simulation in 3D (R8, R10), in place of the
-// page's reference picture. The included rows of the flow table run as the robot would run them:
+// page's reference picture, in the page itself (feedback v2, slide 12: what to run at the top, the
+// simulation in the middle at full width, the real machine below; run.js makes the top and the
+// bottom). It plays what is chosen there: the full sequence, one arm's full sequence alone, single
+// files of the project, the controller's global points, or a program Lite sent. The included rows of the flow table run as the robot would run them:
 // each arm step's file (the region's kept version; or, as a preview, its recording as taught),
 // each arm continuing from where its previous step left it: the pole, then the hand, then the move
 // to the file's first line, then the trajectory on the 5 ms clock, with the row's rule (TOGETHER,
@@ -16,8 +19,16 @@ const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
 const SOURCES = [['version', 'Kept versions · what the robot runs'], ['recording', 'Recordings as taught · preview']];
 // clean: the run started at 0 and nothing was skipped (no slider move, no step that could not be shown)
-const seq = { plan: null, source: 'version', acts: { left: [], right: [] }, cache: new Map(), shown: { left: null, right: null },
-  phase: null, loading: false, token: 0, ui: null, clean: false };
+// req: what is played (run.js): mode both | left | right (the flow table's included rows), file (items),
+// points (a side's global points), program (a program Lite sent, as its file)
+export const seq = { plan: null, source: 'version', acts: { left: [], right: [] }, cache: new Map(), shown: { left: null, right: null },
+  phase: null, sceneKey: '', loading: false, token: 0, ui: null, clean: false, req: { mode: 'both' } };
+
+export function setRequest(req) {
+  seq.req = req;
+  if (seq.ui) { window.fullSequenceSimulationControl('reset', false); loadPlan(); }
+}
+export const planOf = () => seq.plan;
 
 // ── the flow table's files (feedback v2, slide 8): under each row's LEFT and RIGHT flow, the kept
 // version that arm step runs, chosen from its versions, with its time and limits, and the controller
@@ -68,20 +79,30 @@ async function chooseVersion(a, version) {
 
 // ── the plan
 
-async function loadPlan() {
+export async function loadPlan() {
   const token = ++seq.token;
   seq.plan = null;
   seq.acts = { left: [], right: [] };                         // nothing of the previous plan is shown meanwhile
   seq.clean = false;
   seq.cache.clear();
   seq.shown = { left: null, right: null };
-  showPlan(null, 'Working out the sequence…');
+  if (seq.ui) ensure3D().then(({ robot }) => robot.home()).catch(() => {});     // the plan never waits for the 3D
+  showPlan(null, 'Working out what to play…');
   const steps = window.fullSequenceIncludedSteps();
   if (!ctx.pid) { showPlan(null, 'Open a project first.'); return; }
+  const r = seq.req;
   let plan;
   try {
-    plan = await post(`/api/projects/${ctx.pid}/sequence`, { steps, source: seq.source });
-  } catch (err) { showPlan(null, say(err)); return; }
+    if (r.mode === 'points') {
+      if (!r.points || !r.points.length) { showPlan(null, r.why || 'Add the global points to play.'); return; }
+      plan = await post(`/api/projects/${ctx.pid}/points-plan`, { side: r.side, points: r.points.map(x => x.name), task: TASKS[currentTask]?.label });
+    } else if (r.mode === 'file' || r.mode === 'program') {
+      if (!r.items || !r.items.length) { showPlan(null, r.why || 'Add the files to play.'); return; }
+      plan = await post(`/api/projects/${ctx.pid}/sequence`, { items: r.items, only: r.side, source: 'version' });
+    } else {
+      plan = await post(`/api/projects/${ctx.pid}/sequence`, { steps, source: seq.source, ...(r.mode !== 'both' ? { only: r.mode } : {}) });
+    }
+  } catch (err) { if (token === seq.token) showPlan(null, say(err)); return; }
   if (token !== seq.token) return;
   seq.plan = plan;
   seq.acts = { left: [], right: [] };
@@ -96,11 +117,16 @@ async function loadPlan() {
   if (total) total.textContent = fmt(plan.total_s);
   syncSlider();
   await show(0);
+  paintPanels(0);
+  document.dispatchEvent(new CustomEvent('lite:run-plan'));
 }
 
-function canRun() {
+const flowMode = () => ['both', 'left', 'right'].includes(seq.req.mode);
+
+export function canRun() {
   const p = seq.plan;
-  return !!p && (seq.source === 'version' ? p.ready : p.playable);
+  if (!p) return false;
+  return flowMode() ? (seq.source === 'version' ? p.ready : p.playable) : p.playable;
 }
 
 function armLine(side, a) {
@@ -118,11 +144,15 @@ function showPlan(plan, message = '') {
   const blocked = plan.blocking.length;
   head.textContent = `${plan.rows.length} rows · ${fmt(plan.total_s)}`
     + (blocked ? ` · ${blocked} arm step${blocked === 1 ? '' : 's'} not ready` : ' · every arm step ready ✓');
+  const what = seq.req.mode === 'both' ? (seq.source === 'version'
+    ? (plan.ready ? 'Every included arm step runs its kept version, staged first: this run can approve the sequence.'
+      : 'The full simulation runs the kept versions, every one of them: tune the regions listed ✕, or exclude their rows from the flow, then open it again.')
+    : 'Preview: each region\'s recording as taught. Arm steps without one stand still. A preview never approves the sequence.')
+    : flowMode() ? `The ${seq.req.mode.toUpperCase()} arm's full sequence alone: the other arm stands still. Only the full sequence of both arms approves the sequence.`
+      : seq.req.mode === 'points' ? `The ${seq.req.side.toUpperCase()} arm through its global points.`
+        : `Single files on the ${seq.req.side.toUpperCase()} arm, one after another, each staged first.`;
   body.replaceChildren(
-    el('p', { class: `mini-note ${canRun() ? '' : 'lite-bad'}`, text: seq.source === 'version'
-      ? (plan.ready ? 'Every included arm step runs its kept version, staged first: this run can approve the sequence.'
-        : 'The full simulation runs the kept versions, every one of them: tune the regions listed ✕, or exclude their rows from the flow, then open it again.')
-      : 'Preview: each region\'s recording as taught. Arm steps without one stand still. A preview never approves the sequence.' }),
+    el('p', { class: `mini-note ${canRun() ? '' : 'lite-bad'}`, text: what }),
     ...plan.rows.map(r => el('div', { class: 'lite-seq-row', 'data-row': r.index },
       el('div', {}, el('b', { text: `${r.index + 1} · ${r.label}` }), el('small', { text: ` · ${r.rule}${r.wait_s ? ` · then wait ${r.wait_s} s` : ''} · ${fmt(r.t0)}` })),
       r.note ? el('small', { class: 'mini-note', text: r.note }) : null,
@@ -161,7 +191,7 @@ function timeline(a) {
   let e = seq.cache.get(id);
   if (!e) {
     e = { result: null, error: null };
-    post(unitUrl(a.key, 'timeline'), { which: a.which, start: a.start })
+    (a.timeline ? post(a.timeline.url, a.timeline.body) : post(unitUrl(a.key, 'timeline'), { which: a.which, start: a.start, task: a.row.task }))
       .then((r) => { e.result = r; }, (err) => { e.error = err; });
     seq.cache.set(id, e);
   }
@@ -202,7 +232,10 @@ async function show(g) {
   }
   const row = rowAt(g);                                       // the toilet as the row's region needs it
   const phase = (row && (Object.values(row.arms).find(x => x.ready && x.phase) || {}).phase) || 'lid_closed';
-  if (phase !== seq.phase) { seq.phase = phase; scene(phase).catch(() => {}); }
+  const shownRes = row && Object.values(row.arms).filter(x => x.ready).map(x => (seq.cache.get(`${x.side}:${row.index}`) || {}).result).find(Boolean);
+  const place = shownRes ? shownRes.scene || null : undefined;            // the UGV where its task places it
+  const key = JSON.stringify([phase, place && place.offset_m, place && place.walls]);
+  if (key !== seq.sceneKey) { seq.sceneKey = key; seq.phase = phase; scene(phase, undefined, place).catch(() => {}); }
   viewer.dirty = true;
   prune(g);
   return ready;
@@ -254,17 +287,18 @@ function syncSlider() {
   sl.value = String(Math.round(fullSimOverlayElapsed * 1000));
 }
 
-// ── the modal
+// ── the simulation, in the page (run.js puts the modal's view and controls in its middle section)
+
+export function setSource(v) { seq.source = v; if (seq.ui) { window.fullSequenceSimulationControl('reset', false); loadPlan(); } }
+export const SOURCE_CHOICES = SOURCES;
 
 function build() {
-  const modal = $('fullSequenceSimModal');
-  const host = modal && modal.querySelector('.full-sim-scene');
+  const root = $('liteRunSim');
+  const host = root && root.querySelector('.full-sim-scene');
   if (!host) return null;
   host.classList.add('lite-3d', 'lite-seq-scene');
-  modal.classList.add('lite-seq');                          // rows instead of overlays (lite.css)
+  root.classList.add('lite-seq');                           // rows instead of overlays (lite.css)
   const status = el('div', { class: 'lite-seq-status', role: 'status' });
-  const source = el('select', { 'aria-label': 'Files', onchange: (e) => { seq.source = e.target.value; window.fullSequenceSimulationControl('reset', false); loadPlan(); } },
-    SOURCES.map(([v, n]) => el('option', { value: v, text: n, selected: v === seq.source })));
   const slider = el('input', { type: 'range', min: '0', max: '0', step: '5', value: '0', 'aria-label': 'Sequence time',
     oninput: (e) => {
       seq.clean = false;                                    // a run that skipped part of the sequence never approves it
@@ -273,13 +307,34 @@ function build() {
       if ($('fullSimOverlayTimer')) $('fullSimOverlayTimer').textContent = fmt(fullSimOverlayElapsed);
       show(fullSimOverlayElapsed).then(() => paintPanels(fullSimOverlayElapsed));
     } });
-  const controls = modal.querySelector('.full-sim-overlay-controls');
+  const controls = root.querySelector('.full-sim-overlay-controls');
   controls.prepend(status);
-  controls.append(el('label', { class: 'sim-speed-control lite-seq-source' }, 'Files ', source),
-    el('div', { class: 'lite-seq-slider' }, slider));
+  controls.append(el('div', { class: 'lite-seq-slider' }, slider));
+  controls.querySelectorAll('button[onclick*="exit"]').forEach((b) => { b.hidden = true; });
   const plan = el('details', { class: 'lite-seq-plan' }, el('summary', { text: 'Sequence' }), el('div', { class: 'lite-seq-rows' }));
-  modal.querySelector('.full-sim-viewport').append(plan);
+  root.querySelector('.full-sim-viewport').append(plan);
   return { host, status, slider, plan };
+}
+
+// The 3D in the page's simulation section, and what is chosen loaded into it.
+export async function openRun() {
+  if (!$('liteRunSim')) return;
+  if (!seq.ui) seq.ui = build();
+  if (!seq.ui) return;
+  release();                                                // the region's simulation stops; it reloads after this
+  try {
+    const { viewer, robot } = await ensure3D();
+    await viewer.attach(seq.ui.host);
+    seq.ui.host.dataset.lite3d = 'ready';
+    seq.phase = null;
+    seq.sceneKey = '';
+    robot.home();
+    seq.shown = { left: null, right: null };
+  } catch (err) {
+    if (err.code === 'webgl') say3d(seq.ui.host, say(err), err);       // ALIX Studio's notice
+    else tell(err);
+  }
+  await loadPlan();
 }
 
 export function installSequence() {
@@ -290,25 +345,13 @@ export function installSequence() {
     return out;
   };
 
-  const pageOpen = window.runFullSequenceSimulation;
+  // the page's Open Full Simulation: the full sequence of both arms, in the page's own view
   window.runFullSequenceSimulation = async function runFullSequenceSimulation() {
-    pageOpen();
-    if (!$('fullSequenceSimModal')?.classList.contains('show')) return;    // the page refused
-    if (!seq.ui) seq.ui = build();
-    if (!seq.ui) return;
-    release();                                            // the region's simulation stops; it reloads after this
-    try {
-      const { viewer, robot } = await ensure3D();
-      await viewer.attach(seq.ui.host);
-      seq.ui.host.dataset.lite3d = 'ready';
-      seq.phase = null;
-      robot.home();
-      seq.shown = { left: null, right: null };
-    } catch (err) {
-      if (err.code === 'webgl') say3d(seq.ui.host, say(err), err);       // ALIX Studio's notice
-      else tell(err);
-    }
-    await loadPlan();
+    window.auditLog('SIMULATION', 'Full sequence simulation requested', 'Complete LEFT / RIGHT flow simulation requested', 'REQUESTED');
+    document.dispatchEvent(new CustomEvent('lite:run-mode', { detail: 'both' }));
+    seq.req = { mode: 'both' };
+    await openRun();
+    $('liteRunSim')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const pageDuration = window.fullSequenceSimulationDuration;
@@ -353,21 +396,27 @@ export function installSequence() {
   function finish() {
     fullSimOverlayRunning = false;
     fullSimOverlayPaused = false;
-    const approve = seq.source === 'version' && seq.plan.ready && seq.clean;
+    const approve = seq.req.mode === 'both' && seq.source === 'version' && seq.plan.ready && seq.clean;
     fullSimCompleted = approve;
     const c = $('fullSimulationApproved');
     if (c) c.disabled = !approve;
     if ($('fullSimCurrentStep')) $('fullSimCurrentStep').textContent = 'COMPLETE ✓';
     window.setFullSimStateBadge('left', 'COMPLETE');
     window.setFullSimStateBadge('right', 'COMPLETE');
-    const why = seq.source !== 'version' ? 'Preview complete. The full simulation that approves the sequence runs the kept versions.'
-      : 'Run complete, but not played from the start without skipping: press ↺ Reset, then ▶ Start to approve the sequence.';
+    const why = seq.req.mode !== 'both' ? 'Done. Only the full sequence of both arms, run from the start, approves the sequence.'
+      : seq.source !== 'version' ? 'Preview complete. The full simulation that approves the sequence runs the kept versions.'
+        : 'Run complete, but not played from the start without skipping: press ↺ Reset, then ▶ Start to approve the sequence.';
     setStatus(approve ? 'Full sequence simulation complete ✓ · Review the result and confirm below.' : why, approve ? 'ok' : 'warn');
     window.updateSequenceGate();
     window.toast(approve ? 'Full sequence simulation complete.' : 'This run does not approve the sequence.');
   }
 
   window.fullSequenceSimulationControl = function fullSequenceSimulationControl(action, announce = true) {
+    if (action === 'exit') return;                         // the view is in the page now
+    if (action === 'start' && seq.req.mode === 'both' && !$('sequenceVisualConfirmed')?.checked) {
+      window.toast('Confirm the sequence order first (Visual Confirmation, above).');
+      return;
+    }
     if (action === 'start' && !canRun()) {
       if (seq.ui && seq.ui.plan) seq.ui.plan.open = true;
       window.toast(seq.plan ? 'Not ready: the steps marked ✕ need a kept version (or exclude their rows).' : 'The sequence is still loading.');
@@ -381,6 +430,5 @@ export function installSequence() {
       syncSlider();
       if (seq.plan) { show(0).then(() => paintPanels(0)); showPlan(seq.plan); }
     }
-    if (action === 'exit') document.dispatchEvent(new CustomEvent('lite:viewer-closed'));
   };
 }

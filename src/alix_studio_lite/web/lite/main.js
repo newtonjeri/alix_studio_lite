@@ -20,6 +20,7 @@ import { installPrepare } from './prepare.js';
 import { installProjects } from './projects.js';
 import { installRealTest } from './realtest.js';
 import { installRobotPanel } from './robotpanel.js';
+import { installRun } from './run.js';
 import { installSafety } from './safety.js';
 import { installSequence } from './sequence.js';
 import { installSim } from './sim.js';
@@ -52,6 +53,7 @@ installRealTest();
 installAdvanced();
 installViewer();          // taught .txt files: upload, check, replay in 3D
 installSequence();        // Merge + Full Sequence: the full simulation in 3D, each arm step staged
+installRun();              // ...what to run at the top, the simulation in the middle, the real machine below (feedback v2)
 installPictures();        // the single-arm merged simulation in 3D; the page's own region images elsewhere
 installActivity();        // last: the page's audit trail goes to the server, its Activity Logs page reads it
 document.documentElement.dataset.lite = 'ready';

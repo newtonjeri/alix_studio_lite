@@ -55,18 +55,12 @@ def _arm_step(units, task: dict | None, side: str, which: str, identity) -> dict
     return out
 
 
-def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, identity) -> dict:
-    """The schedule of the included rows ``steps`` (the page's flow table, in order): for each
-    arm step its file, its start state and its times on one clock from the standing pose."""
+def _entries(units, steps: list[dict], which: str) -> list[dict]:
+    """The flow table's included rows as (task, label, rule, wait, which), each checked."""
     from .lite_units import task_list
 
-    if source not in ("version", "recording"):
-        raise UserError("The source is version or recording.")
-    which = "version" if source == "version" else "raw"
     tasks = task_list(units)
-    state = {side: None for side in ARMS}                 # where each arm was left: {pole_mm, hand, q_deg}
-    rows, blocking = [], []
-    T = 0.0
+    out = []
     for i, s in enumerate(steps):
         try:                                              # no step given: the row's place in the table
             n = i + 1 if s.get("step") in (None, "") else int(str(s.get("step")).strip())
@@ -79,11 +73,53 @@ def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, ide
             wait = 0.0
         task = tasks[n - 1] if n is not None and 1 <= n <= len(tasks) else None
         label = str(s.get("label") or (task or {}).get("label") or f"Step {n or i + 1}")[:60]
-        row = dict(index=i, step=n, label=label, rule=rule, wait_s=wait, arms={}, t0=round(T, 4))
         why = (f"“{str(s.get('step'))[:20]}” is not a task number: give the task's number in the flow table."
                if n is None else f"Task {n} is not in this project's task list." if task is None
                else f"“{rule}” is not a rule: choose {', '.join(RULES[:-1])} or {RULES[-1]}." if rule not in RULES
                else None)                                 # never guessed: the row blocks, its arms stand still
+        out.append(dict(step=n, task=task, label=label, rule=rule, wait=wait, which=which, why=why))
+    return out
+
+
+def _file_entries(units, items: list[dict], only: str | None) -> list[dict]:
+    """Single files, one after another on their arm (feedback v2, slide 11): ``{key, which}`` with
+    ``which`` raw, version, version:vNNN or transition."""
+    out = []
+    for it in items[:50]:
+        key = str(it.get("key") or "")
+        if key not in units.units:
+            raise UserError(f"There is no region {key!r} in this project.")
+        side = units.units[key]["arm"]
+        if only and side != only:
+            raise UserError(f"{key} is a {side.upper()}-arm region: it never runs on the {only.upper()} arm.", code="arm")
+        which = str(it.get("which") or "version")
+        if not (which in ("raw", "version", "transition") or which.startswith("version:")):
+            raise UserError("A file is raw, version, version:vNNN or transition.")
+        view = units.step_view(key)
+        out.append(dict(step=None, task={side: view}, label=str(it.get("label") or view["display"])[:60], rule="ONE BY ONE",
+                        wait=0.0, which=which, why=None))
+    return out
+
+
+def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, identity,
+         only: str | None = None, items: list[dict] | None = None) -> dict:
+    """The schedule of the included rows ``steps`` (the page's flow table, in order): for each
+    arm step its file, its start state and its times on one clock from the standing pose.
+    ``only``: one arm's steps, the other arm standing (an arm's full sequence alone); ``items``:
+    single files instead of the flow table's rows."""
+    if source not in ("version", "recording"):
+        raise UserError("The source is version or recording.")
+    if only not in (None, *ARMS):
+        raise UserError("The arm is left or right.")
+    which = "version" if source == "version" else "raw"
+    entries = _file_entries(units, items, only) if items is not None else _entries(units, steps, which)
+    state = {side: None for side in ARMS}                 # where each arm was left: {pole_mm, hand, q_deg}
+    rows, blocking = [], []
+    T = 0.0
+    for i, e in enumerate(entries):
+        n, task, label, rule, wait, why = e["step"], e["task"], e["label"], e["rule"], e["wait"], e["why"]
+        row = dict(index=i, step=n, label=label, rule=rule, wait_s=wait, arms={}, t0=round(T, 4),
+                   task=(task or {}).get("label"))          # its task: the 3D shows the task's UGV placement
         if why:
             row["note"] = why
             blocking.append(f"{label}: {why}")
@@ -94,7 +130,9 @@ def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, ide
             continue
         acts = {}
         for side in ARMS:
-            a = _arm_step(units, task, side, which, identity)
+            if only and side != only:
+                continue
+            a = _arm_step(units, task, side, e["which"], identity)
             if a is None:
                 continue
             row["arms"][side] = a
@@ -118,7 +156,7 @@ def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, ide
         T = end + wait
         rows.append(row)
     runs = any(a.get("ready") for r in rows for a in r["arms"].values())
-    return dict(source=source, rows=rows, total_s=round(T, 4), playable=runs,
+    return dict(source=source, rows=rows, total_s=round(T, 4), playable=runs, only=only, files=items is not None,
                 ready=source == "version" and not blocking and runs,        # a preview never approves
                 blocking=blocking)
 
