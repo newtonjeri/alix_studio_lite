@@ -95,8 +95,10 @@ def test_each_arm_continues_where_it_stopped(units):
     from alix_studio_lite.motion.limits import load_limits
 
     first_line = track.read_md(FILES["L-T01"][0])[0] / 1000.0                           # last line back to the first,
-    span = np.abs(first_line - np.asarray(a["end"]["q_deg"])) / (0.3 * np.asarray(load_limits("left").rating_deg_s))
-    assert b["t_move"] == pytest.approx(max(1.0, float(span.max()) + 0.5), abs=1e-3)    # at 30 % of the rating
+    from alix_studio_lite.server import staging
+
+    span = np.abs(first_line - np.asarray(a["end"]["q_deg"])) / (staging.move_fraction() * np.asarray(load_limits("left").rating_deg_s))
+    assert b["t_move"] == pytest.approx(max(1.0, float(span.max()) + 0.5), abs=1e-3)    # at the speed slider's % of the rating
     assert second["t0"] == pytest.approx(first["t1"] + 1.5, abs=1e-3)
 
 

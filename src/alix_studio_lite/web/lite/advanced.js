@@ -9,7 +9,7 @@
 import { get, say } from './api.js';
 import { el, jobLine, robotCall, tell, watchJob } from './ctx.js';
 import { loadPoints, matches, movePoint } from './points.js';
-import { standIn } from './status.js';
+import { speedPct, standIn } from './status.js';
 
 const S = (side) => (side === 'left' ? 'LEFT' : 'RIGHT');
 const readBack = () => (standIn() ? 'stand-in robot: nothing reached a controller' : 'read back');
@@ -116,7 +116,19 @@ export function installAdvanced() {
   for (const side of ['left', 'right']) {
     document.getElementById(`rc${S(side)}PointSearch`)?.addEventListener('input', () => renderPoints(side));
   }
-  const speedOf = (side) => Math.max(1, Math.min(100, Number(document.getElementById(`rc${S(side)}PointSpeed`)?.value) || 20));
+  // the panel's Speed % shows the top bar's speed slider: every MoveJ / MoveL goes at it (the owner, 15 Oct)
+  const speedOf = () => speedPct();
+  const showSpeed = () => {
+    for (const side of ['left', 'right']) {
+      const f = document.getElementById(`rc${S(side)}PointSpeed`);
+      if (!f) continue;
+      f.readOnly = true;
+      f.title = 'The speed slider in the top bar: every MoveJ / MoveL of both arms';
+      if (document.activeElement !== f) f.value = String(speedPct());
+    }
+  };
+  showSpeed();
+  document.addEventListener('lite:status', showSpeed);
   const waitOf = (side) => Math.max(0, Number(document.getElementById(`rc${S(side)}PointWait`)?.value) || 0);
 
   window.rcPointMove = async function rcPointMove(side, motion) {
@@ -124,8 +136,8 @@ export function installAdvanced() {
     if (!name) { window.toast('Enter or choose a Global Point name first.'); return; }
     const move = String(motion).toLowerCase() === 'movel' ? 'movel' : 'movej';
     try {
-      const done = await movePoint(side, name, move, speedOf(side), waitOf(side), {}, (v) => window.rcSetStatus(side, jobLine(v), true));
-      const what = `GLOBAL POINT // ${motion} // ${name} // ${speedOf(side)} %`;
+      const done = await movePoint(side, name, move, waitOf(side), {}, (v) => window.rcSetStatus(side, jobLine(v), true));
+      const what = `GLOBAL POINT // ${motion} // ${name} // ${speedOf()} %`;
       window.rcSetStatus(side, done.state === 'done' ? `${what}: done ✓` : (done.error || `${what} stopped`), false);
       window.rcAppend(side, `${what} // ${done.state.toUpperCase()}${done.error ? ' // ' + done.error : ''}`);
       if (done.state !== 'done') window.toast(`${done.error || 'The move stopped.'} ${done.hint || ''}`);
@@ -141,7 +153,7 @@ export function installAdvanced() {
     for (const [i, st] of steps.entries()) {
       const move = String(st.motion).toLowerCase() === 'movel' ? 'movel' : 'movej';
       try {
-        const done = await movePoint(side, st.name, move, Math.max(1, Math.min(100, Number(st.speed) || 20)), Number(st.wait) || 0, extra,
+        const done = await movePoint(side, st.name, move, Number(st.wait) || 0, extra,
           (v) => window.rcSetStatus(side, `Step ${i + 1} of ${steps.length}: ${jobLine(v)}`, true));
         extra = { confirmed: true };
         window.rcAppend(side, `SEQUENCE ${i + 1}/${steps.length} // ${st.motion} // ${st.name} // ${done.state.toUpperCase()}`);

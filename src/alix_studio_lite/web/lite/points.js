@@ -5,8 +5,7 @@
 
 import { get } from './api.js';
 import { el, robotCall, watchJob } from './ctx.js';
-
-export const POINT_SPEED = 20;                   // % : the control program's default for a global point
+import { speedPct } from './status.js';
 
 const lists = { left: null, right: null };      // {at, data}: the last list read from each controller
 const reach = { left: false, right: false };     // the arm is connected with the live link: it has a controller
@@ -35,8 +34,9 @@ export async function loadPoints(side, force = false) {
 }
 
 // MoveJ / MoveL to a global point; resolves the finished job. `extra`: {confirmed} when asked already.
-export async function movePoint(side, name, move = 'movej', speed = 20, waitS = 0, extra = {}, onProgress = null) {
-  const job = await robotCall(`/api/robots/${side}/points/move`, { name, move, speed, wait_s: waitS, ...extra },
+// At the speed slider's % (the server's own, the same for every MoveJ / MoveL of both arms).
+export async function movePoint(side, name, move = 'movej', waitS = 0, extra = {}, onProgress = null) {
+  const job = await robotCall(`/api/robots/${side}/points/move`, { name, move, wait_s: waitS, ...extra },
     { what: `${move === 'movel' ? 'MoveL' : 'MoveJ'} of the ${side.toUpperCase()} arm to “${name}”` });
   return watchJob(job, onProgress);
 }
@@ -62,7 +62,7 @@ export function pointControls(sel, id, show = true) {
     const search = el('input', { type: 'search', id: `${id}Search`, class: 'lite-point-search', placeholder: 'Search the global points',
       'aria-label': 'Search the global points', oninput: (e) => filterOptions(sel, e.target.value) });
     const motion = el('select', { id: `${id}Motion`, class: 'lite-point-motion', 'aria-label': 'Motion to the point',
-      title: `How the arm moves to a global point (at ${POINT_SPEED} %)` },
+      title: 'How the arm moves to a global point (at the speed slider’s %, top bar)' },
     el('option', { value: 'movej', text: 'MoveJ' }), el('option', { value: 'movel', text: 'MoveL' }));
     (sel.closest('.inline') || sel).before(search);
     sel.after(motion);

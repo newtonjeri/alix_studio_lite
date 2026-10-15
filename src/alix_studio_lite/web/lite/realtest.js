@@ -8,7 +8,7 @@
 
 import { get, say } from './api.js';
 import { ctx, el, fmtS, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
-import { POINT_SPEED, fillPointGroup, filterOptions, hasController, movePoint, pointControls } from './points.js';
+import { fillPointGroup, filterOptions, hasController, movePoint, pointControls } from './points.js';
 import { liteMode, standIn } from './status.js';
 import { gateChips } from './tune.js';
 
@@ -154,7 +154,7 @@ export function installRealTest() {
     const side = selectedArm, name = v.slice(3), motion = $('lite_realstartMotion')?.value || 'movej';
     const status = moveCard()?.querySelector('.mini-note');
     try {
-      const done = await movePoint(side, name, motion, POINT_SPEED, 0, {}, (j) => { if (status) status.textContent = jobLine(j); });
+      const done = await movePoint(side, name, motion, 0, {}, (j) => { if (status) status.textContent = jobLine(j); });
       const real = (await liteMode()) === 'real';
       const said = done.state === 'done'
         ? `${side.toUpperCase()} at “${name}” (${motion === 'movel' ? 'MoveL' : 'MoveJ'})${real ? ', read back' : ': the controller’s SIM mode, nothing moved'}.`

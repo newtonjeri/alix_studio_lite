@@ -1,8 +1,10 @@
 // The live state in the top bar: the page's "FRONTEND READY · Controller backend not connected"
 // pill shows what the backend reports instead: the mode (Visual sim, Hardware sim or Real),
 // which robot is behind it (the stand-in, or the live link to the arms) and any E-stop.
+// Beside it, the speed slider (the owner, 15 Oct): the % every MoveJ / MoveL Lite sends goes at,
+// the same for both arms; each controller gets back the speed it had when it was connected.
 
-import { get, session } from './api.js';
+import { get, post, session } from './api.js';
 
 const MODE = { visual: 'VISUAL SIM', hwsim: 'HARDWARE SIM', real: 'REAL ROBOT' };
 let timer = null;
@@ -18,6 +20,8 @@ export async function liteMode() {
 // arm has the live link: then Lite commands its controller.
 export const standIn = () => !last || last.backend === 'stand-in';
 export const linked = () => !!last && Object.values(last.arms || {}).some((a) => a.link);
+// The speed slider's %: MoveJ / MoveL, both arms.
+export const speedPct = () => (last && last.speed ? last.speed.pct : 50);
 
 function pillText(st) {
   if (st.motion_block) return { state: 'estop', head: 'E-STOP', text: st.motion_block };
@@ -45,11 +49,49 @@ function show(state, head, text, title) {
   }
 }
 
+// The speed slider: MoveJ / MoveL for both arms; what each controller had is put back after every
+// move, on disconnecting and when Lite closes.
+let speedBusy = false;
+function speedSlider() {
+  let box = document.getElementById('liteSpeed');
+  if (box) return box;
+  const pill = document.querySelector('.topbar .mode-pill');
+  if (!pill) return null;
+  const input = Object.assign(document.createElement('input'), { type: 'range', min: '1', max: '100', step: '1', value: '50', id: 'liteSpeedRange' });
+  input.setAttribute('aria-label', 'MoveJ / MoveL speed, both arms (%)');
+  const val = el('b', 'lite-speed-val', '50 %');
+  box = Object.assign(document.createElement('label'), { id: 'liteSpeed', className: 'lite-speed' });
+  box.append(el('span', 'lite-speed-head', 'Speed'), input, val);
+  input.addEventListener('input', () => { speedBusy = true; val.textContent = `${input.value} %`; });
+  input.addEventListener('change', async () => {
+    try {
+      const out = await post('/api/robots/speed', { pct: Number(input.value) });
+      if (last) last.speed = out;
+      window.toast(`Speed ${out.pct} %: every MoveJ / MoveL of both arms goes at it.`);
+    } catch (err) { window.toast(err.message || String(err)); } finally { speedBusy = false; poll(); }
+  });
+  pill.before(box);
+  return box;
+}
+
+function showSpeed(sp) {
+  const box = speedSlider();
+  if (!box || !sp) return;
+  const input = box.querySelector('input'), val = box.querySelector('.lite-speed-val');
+  if (!speedBusy && document.activeElement !== input) { input.value = String(sp.pct); val.textContent = `${sp.pct} %`; }
+  const arms = Object.entries(sp.found || {}).filter(([, f]) => f.connected)
+    .map(([side, f]) => `${side.toUpperCase()} ${f.pct} %${f.read ? ' (read)' : ' (the controller does not report it: taken as ' + sp.assumed + ' %)'}`);
+  box.title = `MoveJ / MoveL speed, both arms: ${sp.pct} %. `
+    + (arms.length ? `Each controller gets back the speed it had: ${arms.join(', ')}, after every move and when Lite disconnects or closes.`
+      : 'Connect an arm: Lite reads its speed and gives it back after every move.');
+}
+
 async function poll() {
   if (!session.token) return;
   try {
     const st = await get('/api/robots/status');
     last = st;
+    showSpeed(st.speed);
     document.dispatchEvent(new CustomEvent('lite:status', { detail: st }));      // alerts.js, and anyone else
     const p = pillText(st);
     show(p.state, p.head, p.text, st.mode_text);

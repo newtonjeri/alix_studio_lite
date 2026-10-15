@@ -631,9 +631,6 @@ def post_sequence(app, q, body, m):
     return out
 
 
-POINT_SPEED_PCT = 20.0          # %: the control program's default for a global point (web/lite/points.js)
-
-
 def _points_path(app, side: str, points: list, speed: float):
     """An arm's path through global points of its controller, as the 5 ms lines a 3D view plays:
     from the first point, joint by joint to each next one at ``speed`` % of each joint's rating, with
@@ -676,8 +673,9 @@ def _points_stage(app, side: str):
 
 @route("POST", P + "/points-plan")
 def post_points_plan(app, q, body, m):
-    """Global points in the 3D (feedback v2, slide 11): ``{side, points: [names], speed, task}``, as a
-    one-step plan (sequence.js plays it like a sequence) whose 3D frames come from points-timeline."""
+    """Global points in the 3D (feedback v2, slide 11): ``{side, points: [names], task}``, at the speed
+    slider's %, as a one-step plan (sequence.js plays it like a sequence) whose 3D frames come from
+    points-timeline."""
     from ..motion.limits import load_limits
     from .routes_robot import _payload
 
@@ -685,7 +683,7 @@ def post_points_plan(app, q, body, m):
     side = str(body.get("side") or "")
     if side not in ARMS:
         raise UserError("Say which arm: left or right.")
-    speed = float(body.get("speed") or POINT_SPEED_PCT)
+    speed = float(app.robot.speed_pct)                # the speed slider: the moves to the points go at it
     names, md = _points_path(app, side, body.get("points"), speed)
     st = _points_stage(app, side)
     clock = staging.execution_times(side, md.astype(float) / 1000.0, st, staging.start_values(side, dict(_payload(app)["home"])),
@@ -712,7 +710,7 @@ def post_points_timeline(app, q, body, m):
     side = str(body.get("side") or "")
     if side not in ARMS:
         raise UserError("Say which arm: left or right.")
-    _, md = _points_path(app, side, body.get("points"), float(body.get("speed") or POINT_SPEED_PCT))
+    _, md = _points_path(app, side, body.get("points"), float(app.robot.speed_pct))
     p = _payload(app)
     out = staging.execution_timeline(side, md, _points_stage(app, side), home=dict(p["home"]),
                                      links=staging.staged_links(side, _mesh_links(p)), rating_deg_s=load_limits(side).rating_deg_s)
@@ -1673,7 +1671,7 @@ def post_point_save(app, q, body, m):
 
 @route("POST", r"/api/robots/(left|right)/points/move")
 def post_point_move(app, q, body, m):
-    """MoveJ or MoveL to a global point: ``{name, move: movej|movel, speed (1-100), wait_s, confirmed}``."""
+    """MoveJ or MoveL to a global point at the speed slider's %: ``{name, move: movej|movel, wait_s, confirmed}``."""
     session(app)
     side = _arm(m)
     mode = require_robot_mode(app)
@@ -1683,9 +1681,7 @@ def post_point_move(app, q, body, m):
     move = str(body.get("move") or "movej").lower()
     if move not in ("movej", "movel"):
         raise UserError("The move is MoveJ or MoveL.")
-    speed = int(body.get("speed") or 20)
-    if not 1 <= speed <= 100:
-        raise UserError("The speed is 1 to 100 %.")
+    speed = int(app.robot.speed_pct)                  # the speed slider, the same for every MoveJ / MoveL
     wait_s = float(body.get("wait_s") or 0)
     if not 0 <= wait_s <= 3600:
         raise UserError("The wait is 0 to 3,600 seconds.")

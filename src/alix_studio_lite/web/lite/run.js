@@ -13,7 +13,8 @@
 
 import { get, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, robotCall, stageDialog, tell, unitUrl, watchJob } from './ctx.js';
-import { POINT_SPEED, hasController, loadPoints, movePoint } from './points.js';
+import { hasController, loadPoints, movePoint } from './points.js';
+import { speedPct } from './status.js';
 import { SOURCE_CHOICES, canRun, openRun, planOf, seq, setRequest, setSource } from './sequence.js';
 import { liteMode } from './status.js';
 
@@ -125,7 +126,7 @@ function paintTop() {
         apply();
       } }),
       chips(pick.points, (i) => { pick.points.splice(i, 1); apply(); }),
-      el('div', { class: 'mini-note', text: `In order, at ${POINT_SPEED} % (the control program’s speed for a global point).` }));
+      el('div', { class: 'mini-note', text: `In order, at the speed slider’s ${speedPct()} % (top bar; the same for every MoveJ / MoveL).` }));
   }
   if (m === 'program') {
     const list = programs[side].filter((p) => p.name);
@@ -271,7 +272,7 @@ async function runPoints(side, extra) {
   for (const [n, p] of pick.points.entries()) {
     if (running.stop) return;
     const label = `Point ${n + 1} of ${pick.points.length} · ${p.label}`;
-    const done = await movePoint(side, p.name, p.move, POINT_SPEED, 0, extra, (j) => realStatus(`${label}: ${jobLine(j)}`));
+    const done = await movePoint(side, p.name, p.move, 0, extra, (j) => realStatus(`${label}: ${jobLine(j)}`));
     if (done.state !== 'done') throw Object.assign(new Error(done.error || `${label} did not finish.`), { hint: done.hint });
   }
 }

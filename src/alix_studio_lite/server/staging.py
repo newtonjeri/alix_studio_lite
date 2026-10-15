@@ -42,8 +42,22 @@ PRESETS = {
     "GRIP": [0, 0, 0, 0, 150, 1000],
     "CLEANING": [1000, 1000, 1000, 1000, 0, 1000],     # Cleaning Pose: fingers open, thumb bent (the owner, 15 Oct)
 }
-TRANSIT_FRACTION = 0.30               # the move to the start, as a fraction of each joint's rating
+TRANSIT_FRACTION = 0.30               # a merge's join: its moves between files, as a fraction of each joint's rating
 CYCLE_S = 0.005
+SPEED_FOUND_PCT = 50                  # the controller's global speed when it does not say: what ALIX and the runner leave
+_move_pct = float(SPEED_FOUND_PCT)    # Lite's MoveJ / MoveL speed, the top bar's slider (both arms)
+
+
+def set_move_pct(pct: float) -> float:
+    """The speed slider (the owner, 15 Oct): every MoveJ / MoveL Lite sends, and the 3D's move to a start."""
+    global _move_pct
+    _move_pct = float(max(1.0, min(100.0, float(pct))))
+    return _move_pct
+
+
+def move_fraction() -> float:
+    """The move to a start, as a fraction of each joint's rating: the speed slider's %."""
+    return _move_pct / 100.0
 
 
 def _alix():
@@ -218,7 +232,7 @@ def execution_times(side: str, q_deg: np.ndarray, stage: Stage, home: dict, rati
     t_pole = pole_travel_s(pole0, stage.pole_mm)
     t_hand = hand_move_s(hand0, hand1)
     rating = np.asarray(rating_deg_s, dtype=float)
-    t_move = max(1.0, float(np.max(np.abs(q_deg[0] - arm0) / (TRANSIT_FRACTION * rating))) + 0.5)
+    t_move = max(1.0, float(np.max(np.abs(q_deg[0] - arm0) / (move_fraction() * rating))) + 0.5)
     traj_t0 = t_pole + t_hand + t_move
     return dict(pole0=pole0, hand0=hand0, hand1=hand1, arm0=arm0, t_pole=t_pole, t_hand=t_hand, t_move=t_move,
                 traj_t0=traj_t0, traj_s=(q_deg.shape[0] - 1) * CYCLE_S,
@@ -248,7 +262,7 @@ def execution_timeline(side: str, md: np.ndarray, stage: Stage, *, home: dict, l
     """What an execution does, as 3D frames on one clock: from ``home`` (the standing pose, or
     where an earlier execution left the arm: start_values), the pole moves to the stage height,
     then the hand to the stage pose, then the arm moves joint-linearly to the trajectory's first
-    line (at TRANSIT_FRACTION of each joint's rating), then the trajectory plays at 5 ms per
+    line (at the speed slider's % of each joint's rating), then the trajectory plays at 5 ms per
     line. Frames hold the transform of every link the pole moves; ``end`` is where it leaves the
     arm (pole, hand counts, last line)."""
     from . import robot_model

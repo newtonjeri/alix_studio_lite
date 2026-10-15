@@ -240,12 +240,48 @@ def test_the_current_pose_is_saved_as_a_global_point(server):
 
 def test_global_points_play_in_3d(server):
     """Feedback v2, slide 11: the controller's global points as a one-step plan, the arm going from
-    point to point at 20 % of each joint's rating, with the 3D frames to show it."""
+    point to point at the speed slider's % of each joint's rating, with the 3D frames to show it."""
     names = ["STP_HOME", "STP_LID_OPEN", "CLEAN_A"]
+    call(server, "POST", "/api/robots/speed", {"pct": 20})
     plan = call(server, "POST", "/api/projects/alix_real/points-plan", {"side": "left", "points": names})
     a = plan["rows"][0]["arms"]["left"]
     assert a["ready"] and a["lines"] > 100 and a["timeline"]["url"] == "/api/projects/alix_real/points-timeline"
+    assert a["file"] == "3 global points at 20 %"
+    fast = call(server, "POST", "/api/robots/speed", {"pct": 80}) and call(server, "POST", "/api/projects/alix_real/points-plan",
+                                                                            {"side": "left", "points": names})
+    assert fast["rows"][0]["arms"]["left"]["lines"] < a["lines"]          # the slider moves the 3D too
+    call(server, "POST", "/api/robots/speed", {"pct": 20})
     assert plan["total_s"] == a["end_at"] and "joint by joint" in plan["rows"][0]["note"]
     tl = call(server, "POST", a["timeline"]["url"], a["timeline"]["body"])
     assert tl["lines"] == a["lines"] and "scene" in tl
     assert "no global point NOPE" in call(server, "POST", "/api/projects/alix_real/points-plan", {"side": "left", "points": ["NOPE"]})["error"]
+
+
+def test_the_speed_slider_moves_both_arms_and_each_controller_gets_its_speed_back(server):
+    """Feedback v3 (15 Oct): one speed for every MoveJ / MoveL of both arms. On connecting, Lite reads the
+    controller's global speed (the emulated arms report it; the real ones do not, then 50 % is taken, as
+    ALIX and the runner leave it); each move runs with the global speed at 100 % and the slider's % (ALIX's
+    park move and guard), and the speed found is put back after it, on disconnecting and on closing."""
+    sp = call(server, "GET", "/api/robots/speed")
+    assert sp["found"]["left"]["read"] and sp["found"]["left"]["pct"] == 100 and sp["assumed"] == 50
+    assert "1 to 100" in call(server, "POST", "/api/robots/speed", {"pct": 0})["error"]
+    assert call(server, "POST", "/api/robots/speed", {"pct": 35})["pct"] == 35
+    assert call(server, "GET", "/api/robots/status")["speed"]["pct"] == 35
+    call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
+    j = wait(server, call(server, "POST", "/api/robots/left/points/move", {"name": "STP_HOME", "move": "movej", "confirmed": True}))
+    assert j["state"] == "done", j
+    c = call(server, "GET", "/api/robots/left/capture")
+    target = list(c["joints_deg"])
+    target[1] += 4
+    assert wait(server, call(server, "POST", "/api/robots/left/move-joints", {"joints_deg": target, "name": "P2", "confirmed": True}))["state"] == "done"
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    assert [r for r in hw if r["verb"] == "read global speed"][0]["text"] == "100 %"
+    assert [r for r in hw if r["verb"] == "movej global point"][-1]["args"]["speed"] == 35
+    assert {"speed": 35, "restore_speed": 100}.items() <= [r for r in hw if r["verb"] == "move to pose"][-1]["args"].items()
+    assert sum("global speed restored to 100" in (r.get("text") or "") for r in hw) >= 2       # after each move
+    call(server, "POST", "/api/robots/left/disconnect", {})
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    back = [r for r in hw if r["verb"] == "restore global speed"]
+    assert back and back[-1]["args"]["pct"] == 100 and back[-1]["ok"]
+    assert call(server, "POST", "/api/robots/left/connect", {})["connected"]
+    assert call(server, "GET", "/api/robots/speed")["pct"] == 35          # the other arm stayed connected: the slider stays

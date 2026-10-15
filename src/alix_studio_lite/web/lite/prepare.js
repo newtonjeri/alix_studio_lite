@@ -13,7 +13,7 @@
 import { get, post, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
 import { standoffSaved } from './placement.js';
-import { POINT_SPEED, fillPointGroup, filterOptions, hasController, loadPoints, movePoint, pointControls } from './points.js';
+import { fillPointGroup, filterOptions, hasController, loadPoints, movePoint, pointControls } from './points.js';
 import { liteMode } from './status.js';
 
 const $ = (id) => document.getElementById(id);
@@ -184,7 +184,7 @@ async function moveRegion() {
   if (!String(sel.value).startsWith('gp:')) { window.toast('Choose one of the controller’s global points first.'); return; }
   const side = selectedArm, name = sel.value.slice(3), motion = $('lite_regionMotion')?.value || 'movej';
   try {
-    const done = await movePoint(side, name, motion, POINT_SPEED, 0, {}, (j) => { status.textContent = jobLine(j); });
+    const done = await movePoint(side, name, motion, 0, {}, (j) => { status.textContent = jobLine(j); });
     const real = (await liteMode()) === 'real';
     status.textContent = done.state === 'done'
       ? `${side.toUpperCase()} at “${name}” (${motion === 'movel' ? 'MoveL' : 'MoveJ'})${real ? ', read back' : ': the controller’s SIM mode, nothing moved'}.`
@@ -320,7 +320,7 @@ export function installPrepare() {
       const motion = $(`lite_${arm}_poseMotion`)?.value || 'movej';
       const status = $(`${arm}PoseStatus`);
       const go = point
-        ? movePoint(arm, point, motion, POINT_SPEED, 0, extra, (j) => { if (status) status.textContent = jobLine(j); }).then((done) => {
+        ? movePoint(arm, point, motion, 0, extra, (j) => { if (status) status.textContent = jobLine(j); }).then((done) => {
           if (done.state !== 'done') throw Object.assign(new Error(done.error || 'The move did not finish.'), { hint: done.hint });
         })
         : move(`/api/robots/${arm}/move-pose`, { name: value, ...extra }, `Moving the ${arm.toUpperCase()} arm to its start pose`, status);

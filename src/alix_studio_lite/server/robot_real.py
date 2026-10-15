@@ -34,10 +34,11 @@ from .robot_link import return_text
 
 POLE_SPEED_PCT = 50       # the pole in Real (the owner's choice, 14 Oct; ALIX itself ran it at 100 %)
 HAND_SPEED_SET = 500      # the hand's SPEED_SET, of 1000: 50 %
-MOVE_SPEED = 30           # % for a move to a start: what Lite's simulation models (staging.TRANSIT_FRACTION)
-RUN_TRANSIT_SPEED = 20    # % of the controller's own move to a program's first point (rm_upload.py's default)
-RESTORE_PCT = 50          # the global speed ratio left after a run or a move, as ALIX and rm_upload leave it
-POINT_SPEED = 20          # % for a move to a global point: the control program's default
+# MoveJ / MoveL (a move to a start, to a global point, the controller's own move to a program's first
+# point) go at the top bar's speed slider, the same for both arms (the owner, 15 Oct), passed in by the
+# caller: ALIX's way (staging.park_arm), the controller's global speed at 100 % while Lite moves, the
+# move at the slider's %, then the global speed put back to the one found when the arm was connected.
+RESTORE_PCT = 50          # the global speed put back when the controller did not say which it had
 CHECK_TRIES = 4           # the read-back after an upload: tries, 1 s apart, before it is called failed
 
 
@@ -370,14 +371,45 @@ class RealArm:
         except UserError:
             return {}
 
-    def run(self, program_id: int, first_row_millideg: list, points: int, on_line=None) -> dict:
+    # ── the controller's global speed (the speed slider)
+    def read_speed(self) -> int | None:
+        """The controller's global speed ratio as it reports it, or None. The program run state carries
+        it (``plan_speed``); ALIX found no getter for it (F98) and its hardware run records show the field
+        empty whenever no program runs, so None is the expected answer on the real arms."""
+        try:
+            with self.link.busy("reading the global speed"):
+                ret, st = self.robot.rm_get_program_run_state()
+        except Exception as exc:                                                    # noqa: BLE001
+            self._hw("read global speed", ok=False, text=f"raised {exc!r}")
+            return None
+        v = (st or {}).get("plan_speed") if ret == 0 and (st or {}).get("run_state") == 0 else None
+        ok = isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 100
+        self._hw("read global speed", ret=ret, ok=ok, text=f"{v} %" if ok else "not reported")
+        return int(v) if ok else None
+
+    def restore_speed(self, pct: int) -> bool:
+        """The global speed put back (Lite disconnecting or closing). Never raises."""
+        from alix_dispatch import track
+
+        try:
+            with self.link.busy("putting the global speed back"):
+                ret = track.set_global_speed(self.robot, int(pct))
+        except Exception as exc:                                                    # noqa: BLE001
+            self._hw("restore global speed", args=dict(pct=int(pct)), ok=False, text=f"raised {exc!r}")
+            return False
+        self._hw("restore global speed", args=dict(pct=int(pct)), ret=ret, ok=ret == 0)
+        return ret == 0
+
+    def run(self, program_id: int, first_row_millideg: list, points: int, on_line=None, *, speed: int = RESTORE_PCT,
+            restore_pct: int = RESTORE_PCT) -> dict:
         """rm_upload.run: refuses an empty slot, an arm error or a program already running; the
-        controller moves the arm to the first point at 20 % and plays the points at their own
-        timing; error codes are watched every half second; the global speed is put back."""
+        controller moves the arm to the first point at ``speed`` % (the speed slider) and plays the
+        points at their own timing; error codes are watched every half second; the global speed is
+        put back to ``restore_pct`` however the run ends (its ``finally``)."""
         rmu = _rmu()
         pid = int(program_id)
         timeout = 900.0 if points is None else max(60.0, (int(points) - 1) * 0.005 * 1.5 + 60.0)   # unknown length: 15 min
-        a = SimpleNamespace(yes=True, side=self.side, run_speed=RUN_TRANSIT_SPEED, restore_speed=RESTORE_PCT, timeout=timeout)
+        a = SimpleNamespace(yes=True, side=self.side, run_speed=int(speed), restore_speed=int(restore_pct), timeout=timeout)
         log = io.StringIO()
         t0 = time.monotonic()
         def line_out(line):
@@ -394,7 +426,8 @@ class RealArm:
                 log.write(f"** {exc}\n")
         said = log.getvalue()
         why = next((ln.strip(" *") for ln in reversed(said.splitlines()) if ln.strip().startswith("**")), None)
-        self._hw("run", args=dict(program_id=pid, points=points, transit_speed=RUN_TRANSIT_SPEED), ret=rc, ok=rc == 0,
+        self._hw("run", args=dict(program_id=pid, points=points, transit_speed=int(speed), restore_speed=int(restore_pct)),
+                 ret=rc, ok=rc == 0,
                  elapsed_s=time.monotonic() - t0, text=why)
         return dict(ok=rc == 0, why=why, seconds=round(time.monotonic() - t0, 2), lines=said.splitlines())
 
@@ -415,9 +448,12 @@ class RealArm:
                      pose=[round(float(v), 5) for v in p["pose"][:6]], work_frame=p["work_frame"],
                      tool_frame=p["tool_frame"], time=p["time"]) for p in pts]
 
-    def move_point(self, name: str, move: str = "movej", speed: int = POINT_SPEED, wait_s: float = 0.0) -> dict:
+    def move_point(self, name: str, move: str = "movej", speed: int = RESTORE_PCT, wait_s: float = 0.0,
+                   restore_pct: int = RESTORE_PCT) -> dict:
         """MoveJ (to its joints) or MoveL (to its pose, in its own frames, put back after) to a global
-        point, with the runner's move_global_waypoint; a MoveJ is read back against the point's joints."""
+        point at ``speed`` % (the speed slider), with the runner's move_global_waypoint inside ALIX's
+        global speed guard (the global speed at 100 % for the move, ``restore_pct`` after it, however it
+        ends); a MoveJ is read back against the point's joints."""
         from alix_dispatch import staging as alix_staging
         from alix_dispatch import track
 
@@ -426,7 +462,9 @@ class RealArm:
         t0, gap, why = time.monotonic(), None, None
         with self.link.busy(f"{'MoveL' if move == 'movel' else 'MoveJ'} to {name}"), _printed_to(self._runner_line):
             try:
-                rc = rt.move_global_waypoint(self.robot, str(name), move, int(speed), float(wait_s))
+                with track.global_speed_guard(self.robot, int(restore_pct), log=self._alix_log()):
+                    track.set_global_speed(self.robot, 100)
+                    rc = rt.move_global_waypoint(self.robot, str(name), move, int(speed), float(wait_s))
             except Exception as exc:                     # noqa: BLE001 - a controller without a call refuses too
                 rc, why = 1, str(exc)
             if rc == 0 and move == "movej":
@@ -494,18 +532,19 @@ class RealArm:
     def _runner_line(self, line: str) -> None:
         self._hw("runner v14", text=line)
 
-    def move_to(self, target_millideg: list) -> dict:
-        """A move to a joint pose at 30 %, checked against it (within 2 degrees)."""
+    def move_to(self, target_millideg: list, speed: int = RESTORE_PCT, restore_pct: int = RESTORE_PCT) -> dict:
+        """A MoveJ to a joint pose at ``speed`` % (the speed slider), ALIX's park move (the global speed at
+        100 % for it, ``restore_pct`` after), checked against the pose (within 2 degrees)."""
         from alix_dispatch import staging as alix_staging
         from alix_dispatch import track
 
         deg = [v / 1000.0 for v in target_millideg]
         with self.link.busy("moving to the start"):
-            out = alix_staging.park_arm(self.handle, {}, rest_deg=deg, rest_speed=MOVE_SPEED, restore_speed=RESTORE_PCT,
+            out = alix_staging.park_arm(self.handle, {}, rest_deg=deg, rest_speed=int(speed), restore_speed=int(restore_pct),
                                         log=self._alix_log())
             gap = track.start_gap_deg(self.robot, list(target_millideg))
         ok = bool(out.get("ok")) and gap is not None and gap <= alix_staging.START_TOLERANCE_DEG
-        self._hw("move to pose", args=dict(deg=[round(d, 2) for d in deg], speed=MOVE_SPEED), ok=ok,
+        self._hw("move to pose", args=dict(deg=[round(d, 2) for d in deg], speed=int(speed), restore_speed=int(restore_pct)), ok=ok,
                  text=f"gap {gap} deg" + ("" if out.get("ok") else f"; refused: {_words(out.get('refusal'))}"))
         if not ok:
             raise UserError(f"The {self.SIDE} arm did not reach the start (" + (_words(out.get("refusal")) if not out.get("ok")

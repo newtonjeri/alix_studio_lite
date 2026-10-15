@@ -179,8 +179,26 @@ def robots_status(app, q, body, m):
     session(app)
     return {"mode": app.ui["mode"], "mode_text": MODE_TEXT[app.ui["mode"]], "arms": app.robot.view(),
             "backend": app.robot.backend, "label": app.robot.label, "motion_block": app.robot.motion_block(),
-            "jobs": [j.view() for j in app.jobs.running()],
+            "jobs": [j.view() for j in app.jobs.running()], "speed": app.robot.speed_view(),
             "alerts": app.log.alerts_view(), "instance": app.log.instance}
+
+
+@route("GET", "/api/robots/speed")
+def get_speed(app, q, body, m):
+    """The speed slider (both arms): the % every MoveJ / MoveL Lite sends goes at, and each arm's
+    controller speed found when it was connected (put back after every move, on disconnecting and
+    when Lite closes)."""
+    session(app)
+    return app.robot.speed_view()
+
+
+@route("POST", "/api/robots/speed")
+def post_speed(app, q, body, m):
+    s = session(app)
+    out = app.robot.set_speed(body.get("pct"))
+    app.log.activity(f"speed slider at {out['pct']} % (MoveJ / MoveL, both arms)",
+                     who="engineer" if s.get("engineer") else "operator", detail=dict(pct=out["pct"]))
+    return out
 
 
 @route("POST", "/api/activity")

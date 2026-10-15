@@ -5,6 +5,13 @@
 @import url("dark.css");          /* the page's own dark theme, completed (tools/make_dark_css.py) */
 
 .topbar .mode-pill[data-lite] { transition: background .2s, color .2s, border-color .2s; }
+/* the speed slider beside the mode pill: MoveJ / MoveL, both arms (status.js) */
+.topbar .lite-speed { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--card); color: var(--ink); white-space: nowrap; cursor: default; }
+.topbar .lite-speed-head { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.topbar .lite-speed input { width: 110px; accent-color: var(--blue); }
+.topbar .lite-speed-val { min-width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 1280px) { .topbar .lite-speed-head { display: none; } .topbar .lite-speed input { width: 80px; } }
 .topbar .mode-pill[data-lite="visual"] { background: var(--blue2); border-color: var(--blue); color: var(--blue); }
 .topbar .mode-pill[data-lite="visual"] .dot { background: var(--blue); }
 .topbar .mode-pill[data-lite="hwsim"] { background: var(--orange2); border-color: var(--orange); color: var(--orange); }

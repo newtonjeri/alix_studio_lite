@@ -154,6 +154,11 @@ class StandInRobot:
         self.lock = threading.RLock()
         self.arms = {s: StandInArm(s, Path(data_dir) / "standin" / f"{s}_programs.json") for s in ARMS}
         self.faults = {s: set() for s in ARMS}         # engineer test: {"pole", "hand"} fail to arrive
+        # the speed slider (the owner, 15 Oct): every MoveJ / MoveL Lite sends, both arms; and each arm's
+        # controller speed found when it was connected, put back after every move and when Lite lets go
+        self.speed_pct = staging.SPEED_FOUND_PCT
+        staging.set_move_pct(self.speed_pct)
+        self.speed_found = {s: None for s in ARMS}      # side -> the global speed found (None: not reported)
 
     @property
     def read_only(self) -> bool:
@@ -352,15 +357,61 @@ class StandInRobot:
             return job
 
     def close(self) -> None:
-        """Let go of every live link (the server is stopping); an arm in drag teaching leaves it first."""
+        """Let go of every live link (the server is stopping); an arm in drag teaching leaves it first,
+        and every controller gets the global speed it had when it was connected."""
         for side, a in self.arms.items():
             if a.teaching:
                 a.teaching = False
                 self._leave_drag(side)
+        for side in list(self.links):
+            self._give_back_speed(side)
         with self.lock:
             links, self.links = list(self.links.values()), {}
         for link in links:
             link.close()
+
+    # ── the speed slider: MoveJ / MoveL for both arms, and the controller's own speed put back
+    def found_speed(self, side: str) -> int:
+        """The global speed this arm's controller had when it was connected, or the 50 % ALIX and the
+        control program's runner leave (the controller does not report it: ALIX's F98)."""
+        f = self.speed_found.get(side)
+        return int(f) if f else staging.SPEED_FOUND_PCT
+
+    def speed_view(self) -> dict:
+        return dict(pct=int(self.speed_pct), assumed=staging.SPEED_FOUND_PCT,
+                    found={s: dict(pct=self.found_speed(s), read=self.speed_found[s] is not None,
+                                   connected=self.arms[s].connected) for s in ARMS})
+
+    def set_speed(self, pct) -> dict:
+        try:
+            v = int(round(float(pct)))
+        except (TypeError, ValueError):
+            raise UserError("The speed is 1 to 100 %.") from None
+        if not 1 <= v <= 100:
+            raise UserError("The speed is 1 to 100 % (the controller takes no 0).")
+        self.speed_pct = v
+        staging.set_move_pct(v)                          # the 3D's moves follow it
+        return self.speed_view()
+
+    def _read_speed(self, side: str) -> None:
+        """On connecting: the controller's global speed, when it says (the slider starts there when it
+        is the first arm connected); else the 50 % that ALIX and the runner leave."""
+        real = self._real(side)
+        got = real.read_speed() if real is not None else None
+        first = not any(self.arms[o].connected for o in ARMS if o != side)
+        with self.lock:
+            self.speed_found[side] = got
+            if first:
+                self.set_speed(self.found_speed(side))
+        if self.log is not None:
+            self.log.activity(f"{side.upper()} global speed " + (f"read: {got} %" if got is not None else
+                              f"not reported by the controller: taken as {staging.SPEED_FOUND_PCT} %")
+                              + f"; the speed slider is at {self.speed_pct} %", detail=dict(side=side, found=got))
+
+    def _give_back_speed(self, side: str) -> None:
+        real = self._real(side)
+        if real is not None:
+            real.restore_speed(self.found_speed(side))
 
     # ── connection and safety
     def connect(self, side: str, ip: str | None = None) -> dict:
@@ -379,8 +430,10 @@ class StandInRobot:
             if old is not None:
                 old.close()
             self._sync(side)
+            self._read_speed(side)
             return self.view()[side]
         time.sleep(0.4)
+        self._read_speed(side)
         with self.lock:
             a.ip, a.connected = target, True
             a.estop = "ENGAGED" if a.button_pressed else "RECOVERING" if a.estop_latched else "CLEAR"
@@ -388,6 +441,8 @@ class StandInRobot:
 
     def disconnect(self, side: str) -> dict:
         a = self.arm(side)
+        if side in self.links:
+            self._give_back_speed(side)                  # the controller's own speed, as found on connecting
         with self.lock:
             self.jobs.cancel_arm(side)
             link = self.links.pop(side, None)
@@ -693,8 +748,8 @@ class StandInRobot:
             if real is not None:                         # the controller moves it (REAL) or simulates it (SIM)
                 originals = real.set_run_mode("REAL" if mode == "real" else "SIM")
                 try:
-                    job.progress(f"Moving to {what} (30 % speed)", 1, 1)
-                    out = real.move_to(target_millideg)
+                    job.progress(f"Moving to {what} ({self.speed_pct} % speed)", 1, 1)
+                    out = real.move_to(target_millideg, speed=self.speed_pct, restore_pct=self.found_speed(side))
                 finally:
                     real.restore_run_mode(originals)
                 job.log(f"At {what}: {out['gap_deg']:.2f} degrees away at most (read back"
@@ -769,7 +824,7 @@ class StandInRobot:
             originals = real.set_run_mode("REAL" if mode == "real" else "SIM")
             try:
                 job.progress(f"{label} to {name} ({int(speed)} % speed)", 1, 1)
-                out = real.move_point(name, move, speed, wait_s)
+                out = real.move_point(name, move, speed, wait_s, restore_pct=self.found_speed(side))
             finally:
                 real.restore_run_mode(originals)
             job.log(f"At global point {name} ({label}" + (f", {out['gap_deg']:.2f} degrees away at most" if out["gap_deg"] is not None else "")
@@ -820,10 +875,11 @@ class StandInRobot:
         try:
             self.arm(side).controller_mode = want
             job.log(f"Controller mode {want} (read back).")
-            job.progress(f"Moving to the start (20 %), then running program {pid}"
+            job.progress(f"Moving to the start ({self.speed_pct} %), then running program {pid}"
                          + (" (the controller's SIM mode: the arm stays still)" if dry_run else ""), 0, prog["lines"])
             out = real.run(pid, prog["first_row"], prog["lines"],      # its own lines, as they come
-                           on_line=lambda ln: job.log(ln.strip()) if ln.strip().startswith(("running", "RUN", "!!", "**")) else None)
+                           on_line=lambda ln: job.log(ln.strip()) if ln.strip().startswith(("running", "RUN", "!!", "**")) else None,
+                           speed=self.speed_pct, restore_pct=self.found_speed(side))
         finally:
             real.restore_run_mode(originals)
         job.check()                                     # STOP or an E-stop ended it
@@ -857,7 +913,8 @@ class StandInRobot:
                 job.progress(f"Running program {pid}: the controller first moves the arm to its first point"
                              + (" (the controller's SIM mode: the arm stays still)" if dry else ""), 0, 1)
                 out = real.run(pid, None, None,
-                               on_line=lambda ln: job.log(ln.strip()) if ln.strip().startswith(("running", "RUN", "!!", "**")) else None)
+                               on_line=lambda ln: job.log(ln.strip()) if ln.strip().startswith(("running", "RUN", "!!", "**")) else None,
+                               speed=self.speed_pct, restore_pct=self.found_speed(side))
             finally:
                 real.restore_run_mode(originals)
             job.check()

@@ -2,9 +2,8 @@
 Single-Arm Test"; feedback v2, slide 10: download, upload to the controller, rename).
 
 The files are put end to end in the order given. Where one ends away from where the next begins,
-a join is put between them: a smooth joint-space move (a cosine: still at both ends) at the speed
-Lite moves an arm to a trajectory's start, staging.TRANSIT_FRACTION of each joint's rating, as the
-robot would move between them. The merge runs as one program, so it has one pole height and hand
+a join is put between them: a smooth joint-space move (a cosine: still at both ends) at 30 % of
+each joint's rating (staging.TRANSIT_FRACTION), as the robot would move between them. The merge runs as one program, so it has one pole height and hand
 pose: the operator states them, for the whole merge. Its limits L1-L4 are checked on the merged
 bytes and shown, never enforced, as for the manually tuned files it is made of (the owner, 15 Oct):
 sending one that breaks a limit asks once.
