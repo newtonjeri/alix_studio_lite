@@ -3,7 +3,8 @@ has no drag teaching, so the three SDK calls the control program uses for it are
 recording is written by "the SDK" itself, as on the robot (one {"point":[...]} line of integer
 millidegrees per 5 ms sample, CRLF), starting from where the arm stands. Nor has it global points:
 three are stored here, made from where the arm stands at the first list (reachable by MoveJ and
-MoveL), answered as the SDK answers (a page of the list, or one point by name)."""
+MoveL), answered as the SDK answers (a page of the list, or one point by name), and saved as the SDK
+saves them (rm_add_global_waypoint, rm_update_global_waypoint with its rm_waypoint_t)."""
 import json
 import sys
 import time
@@ -49,6 +50,31 @@ def waypoint(self, name):
     return (0, dict(p)) if p else (-1, {})
 
 
+class Waypoint:
+    """RealMan's rm_waypoint_t as the SDK builds it: name, joints (deg), pose, work and tool frame."""
+
+    def __init__(self, point_name=None, joint=None, pose=None, work_frame=None, tool_frame=None, time=""):
+        self.d = dict(point_name=point_name, joint=list(joint or []), pose=list(pose or []), work_frame=work_frame or "",
+                      tool_frame=tool_frame or "", time=time)
+
+
+def add_point(self, wp):
+    pts = _points(self)
+    if any(p["point_name"] == wp.d["point_name"] for p in pts):
+        return 1                                # the controller refuses a name it has
+    pts.append(dict(wp.d, time=time.strftime("%Y-%m-%d %H:%M:%S")))
+    return 0
+
+
+def update_point(self, wp):
+    pts = _points(self)
+    i = next((i for i, p in enumerate(pts) if p["point_name"] == wp.d["point_name"]), None)
+    if i is None:
+        return 1
+    pts[i] = dict(wp.d, time=time.strftime("%Y-%m-%d %H:%M:%S"))
+    return 0
+
+
 if __name__ == "__main__":                  # Lite's tuning workers import the main module again
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
     from alix_studio_lite import vendor_paths
@@ -61,6 +87,16 @@ if __name__ == "__main__":                  # Lite's tuning workers import the m
     rm_emulator.RoboticArm.rm_save_trajectory = save
     rm_emulator.RoboticArm.rm_get_global_waypoints_list = waypoints
     rm_emulator.RoboticArm.rm_get_given_global_waypoint = waypoint
+    rm_emulator.RoboticArm.rm_add_global_waypoint = add_point
+    rm_emulator.RoboticArm.rm_update_global_waypoint = update_point
+    emulator_install = rm_emulator.install
+
+    def install():                          # the SDK's waypoint structure beside the emulated arm
+        ri, cw = emulator_install()
+        ri.rm_waypoint_t = cw.rm_waypoint_t = Waypoint
+        return ri, cw
+
+    rm_emulator.install = install
     from alix_studio_lite.server import main
 
     sys.exit(main(sys.argv[1:]))

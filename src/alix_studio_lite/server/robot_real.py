@@ -441,6 +441,56 @@ class RealArm:
                             "Check the arm and the point on the pendant, then try again.")
         return dict(name=name, move=move, gap_deg=gap, seconds=round(time.monotonic() - t0, 2))
 
+    def save_global_point(self, name: str, expect_deg: list | None = None, replace: bool = False) -> dict:
+        """The arm's pose now, saved on this controller as global point ``name`` (feedback v2, slide 14):
+        its joints and its tool pose as the controller reads them, in its current work and tool frames.
+        A point of that name is replaced only when asked. Neither the control program nor ALIX saves a
+        point, so this is RealMan's own add / update call (the owner allowed it, 15 Oct); it is read back
+        with the runner's get_global_waypoint. ``expect_deg``: the joints the operator saw, the arm
+        must still be there (0.5 degrees)."""
+        import importlib
+
+        rt = _runner()
+        waypoint = getattr(importlib.import_module("Robotic_Arm.rm_robot_interface"), "rm_waypoint_t", None)
+        if waypoint is None:
+            raise UserError(f"This SDK cannot save global points on the {self.SIDE} controller.")
+        t0, rc, gap, exists = time.monotonic(), 1, None, False
+        with self.link.busy(f"saving global point {name}"), _printed_to(self._runner_line):
+            ret, st = self.robot.rm_get_current_arm_state()
+            if ret != 0 or not st or len(st.get("joint") or []) < 7 or len(st.get("pose") or []) < 6:
+                raise UserError(f"The {self.SIDE} controller did not answer with the arm's pose.", "Try again.")
+            joints = [float(v) for v in st["joint"][:7]]
+            pose = [float(v) for v in st["pose"][:6]]
+            if expect_deg is not None:
+                off = max(abs(float(a) - b) for a, b in zip(expect_deg, joints))
+                if off > 0.5:
+                    raise UserError(f"The {self.SIDE} arm is no longer at the pose shown ({off:.1f} degrees away).",
+                                    "Fetch the current pose again, then save it.")
+            work, tool = rt._capture_current_frames(self.robot)
+            try:
+                rt.get_global_waypoint(self.robot, name)
+                exists = True
+            except Exception:                                                   # noqa: BLE001 - not on this controller
+                exists = False
+            if exists and not replace:
+                raise UserError(f"“{name}” is already a global point on the {self.SIDE} controller.",
+                                "Confirm to replace it, or choose another name.", code="replace")
+            wp = waypoint(point_name=name, joint=joints, pose=pose, work_frame=work, tool_frame=tool)
+            rc = self.robot.rm_update_global_waypoint(wp) if exists else self.robot.rm_add_global_waypoint(wp)
+            if rc == 0:
+                back = rt.get_global_waypoint(self.robot, name)
+                gap = max(abs(float(a) - b) for a, b in zip(back["joint"][:7], joints))
+        ok = rc == 0 and gap is not None and gap <= 0.05
+        self._hw("update global point" if exists else "add global point",
+                 args=dict(name=name, joints_deg=[round(v, 3) for v in joints], pose=[round(v, 5) for v in pose],
+                           work_frame=work, tool_frame=tool), ret=rc, ok=ok, elapsed_s=time.monotonic() - t0,
+                 text=None if gap is None else f"read back: {gap:.3f} deg")
+        if not ok:
+            raise UserError(f"Global point “{name}” was not saved on the {self.SIDE} controller "
+                            + (f"(ret {rc})." if rc != 0 else "(it reads back different)."), "Check the controller, then try again.")
+        return dict(name=name, joints_deg=[round(v, 3) for v in joints], pose=[round(v, 6) for v in pose],
+                    work_frame=work, tool_frame=tool, replaced=exists)
+
     def _runner_line(self, line: str) -> None:
         self._hw("runner v14", text=line)
 

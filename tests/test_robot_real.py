@@ -216,3 +216,23 @@ def test_capture_reads_the_controller_and_a_start_point_is_moved_to(server):
     assert max(abs(a - b) for a, b in zip(again["joints_deg"], target)) < 2.0
     hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
     assert {"capture pose", "move to pose"} <= {r["verb"] for r in hw}
+
+
+def test_the_current_pose_is_saved_as_a_global_point(server):
+    """Feedback v2, slide 14: the arm's pose now, saved on its controller as a global point (RealMan's
+    add / update, read back with the runner); a name it has is replaced only after a confirmation."""
+    call(server, "POST", "/api/robots/mode", {"mode": "hwsim"})
+    c = call(server, "GET", "/api/robots/left/capture")
+    assert "letters, digits" in call(server, "POST", "/api/robots/left/points/save", {"name": "bad name!"})["error"]
+    moved = list(c["joints_deg"])
+    moved[0] += 3
+    assert "no longer at the pose" in call(server, "POST", "/api/robots/left/points/save",
+                                           {"name": "STP_SEAT_1", "joints_deg": moved})["error"]
+    out = call(server, "POST", "/api/robots/left/points/save", {"name": "STP_SEAT_1", "joints_deg": c["joints_deg"]})
+    assert out["name"] == "STP_SEAT_1" and not out["replaced"] and len(out["pose"]) == 6
+    pts = call(server, "GET", "/api/robots/left/points?search=SEAT")["points"]
+    assert [p["name"] for p in pts] == ["STP_SEAT_1"] and abs(pts[0]["joints"][0] - c["joints_deg"][0]) < 0.01
+    assert call(server, "POST", "/api/robots/left/points/save", {"name": "STP_SEAT_1"})["code"] == "replace"
+    assert call(server, "POST", "/api/robots/left/points/save", {"name": "STP_SEAT_1", "replace": True})["replaced"]
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    assert {"add global point", "update global point"} <= {r["verb"] for r in hw}

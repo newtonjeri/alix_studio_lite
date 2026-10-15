@@ -730,6 +730,18 @@ class StandInRobot:
         real = self._real(side)
         return None if real is None else real.global_points()
 
+    def save_global_point(self, side: str, name: str, expect_deg: list | None = None, replace: bool = False) -> dict:
+        """The arm's pose now as a global point on its controller (a linked arm, standing still)."""
+        real = self._real(side)
+        if real is None:
+            raise UserError(f"Global points are stored on the {side.upper()} arm's controller: the stand-in has none.",
+                            "Start Lite with --robot realman and connect the arm.", code="connect")
+        moving = [j for j in self.jobs.running(arm=side) if j.kind in MOTION_KINDS]
+        if moving or self.arm(side).teaching:
+            raise UserError(f"The {side.upper()} arm is busy ({moving[0].title if moving else 'drag teaching'}).",
+                            "Save the point once the arm has stopped.")
+        return real.save_global_point(name, expect_deg, replace)
+
     def move_point(self, side: str, name: str, move: str, speed: int, wait_s: float, title: str, mode: str | None = None):
         """MoveJ or MoveL to a global point of a linked arm: in Real the arm moves, in Hardware sim
         the controller's SIM mode simulates it (read back either way)."""

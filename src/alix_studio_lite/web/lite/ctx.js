@@ -74,7 +74,7 @@ export const REAL_CHECKS = ['The work area around the arm is clear of people.', 
 
 // A robot request. The server answers code "confirm" (Real needs a yes), "replace" (a program
 // slot holds another file) or "mode" (Visual sim uses no robot); this asks and retries once.
-export async function robotCall(url, body = {}, { what = 'This move' } = {}) {
+export async function robotCall(url, body = {}, { what = 'This move', replacing = 'the program' } = {}) {
   try {
     return await post(url, body);
   } catch (err) {
@@ -85,10 +85,10 @@ export async function robotCall(url, body = {}, { what = 'This move' } = {}) {
       return robotCall(url, { ...body, confirmed: true }, { what });
     }
     if (err.code === 'replace') {
-      const yes = await confirmDialog({ title: 'Replace the program?', body: `${err.message} ${err.hint || ''}`.trim(),
+      const yes = await confirmDialog({ title: `Replace ${replacing}?`, body: `${err.message} ${err.hint || ''}`.trim(),
         ok: 'Replace it', danger: true });
-      if (!yes) throw Object.assign(new Error('Cancelled: the program on the robot was kept.'), { code: 'cancelled' });
-      return robotCall(url, { ...body, replace: true }, { what });
+      if (!yes) throw Object.assign(new Error(`Cancelled: ${replacing} on the robot was kept.`), { code: 'cancelled' });
+      return robotCall(url, { ...body, replace: true }, { what, replacing });
     }
     throw err;
   }

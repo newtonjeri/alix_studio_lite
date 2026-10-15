@@ -1254,6 +1254,30 @@ def get_points(app, q, body, m):
     return {"arm": side, "total": len(pts), "points": [p for p in pts if want in p["name"].casefold()]}
 
 
+@route("POST", r"/api/robots/(left|right)/points/save")
+def post_point_save(app, q, body, m):
+    """The arm's pose now, saved on its controller as a global point (feedback v2, slide 14):
+    ``{name, joints_deg (the pose the operator saw), replace}``. In Hardware sim or Real (it writes to
+    the controller); a point of that name is replaced only after a confirmation."""
+    import re
+
+    session(app)
+    side = _arm(m)
+    require_robot_mode(app)
+    name = str(body.get("name") or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9_\-]{1,32}", name):
+        raise UserError("A global point's name is 1 to 32 letters, digits, _ or -.", "For example STP_SEAT_1.")
+    expect = body.get("joints_deg")
+    if expect is not None:
+        try:
+            expect = [float(v) for v in expect][:7]
+        except (TypeError, ValueError):
+            raise UserError("The joints shown must be numbers.") from None
+        if len(expect) != 7:
+            expect = None
+    return app.robot.save_global_point(side, name, expect, bool(body.get("replace")))
+
+
 @route("POST", r"/api/robots/(left|right)/points/move")
 def post_point_move(app, q, body, m):
     """MoveJ or MoveL to a global point: ``{name, move: movej|movel, speed (1-100), wait_s, confirmed}``."""

@@ -8,7 +8,7 @@
 // and every execution stages that stage first (staging.py). The start-pose moves wait for the arm;
 // with the live link the start poses are the controller's global points (MoveJ or MoveL).
 
-import { post, say } from './api.js';
+import { get, post, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
 import { standoffSaved } from './placement.js';
 import { POINT_SPEED, fillPointGroup, filterOptions, hasController, loadPoints, movePoint, pointControls } from './points.js';
@@ -188,6 +188,68 @@ async function moveRegion() {
   } catch (err) { status.textContent = say(err); tell(err); }
 }
 
+// Setup & Safety (feedback v2, slide 13): one button reads both arms' global points again.
+async function refreshAllPoints() {
+  const sides = ['left', 'right'].filter(hasController);
+  if (!sides.length) { window.toast('Connect the arms with the live link (--robot realman) to read their global points.'); return; }
+  const counts = await Promise.all(sides.map(async (side) => {
+    try { const d = await loadPoints(side, true); return `${side.toUpperCase()} ${d.points.length}`; }
+    catch (err) { return `${side.toUpperCase()}: ${say(err)}`; }
+  }));
+  for (const side of sides) document.dispatchEvent(new CustomEvent('lite:points', { detail: side }));
+  window.toast(`Global points read again from the controllers: ${counts.join(' · ')}.`);
+}
+
+function refreshButton() {
+  const head = [...document.querySelectorAll('#view-setup h2')].find((h) => /Robot start poses/i.test(h.textContent))?.closest('.section-head');
+  if (!head || $('liteRefreshPoints')) return;
+  head.append(el('button', { id: 'liteRefreshPoints', class: 'btn light', type: 'button', text: '↻ Refresh global points (both arms)',
+    onclick: refreshAllPoints }));
+}
+
+// The Different Start Pose window (feedback v2, slide 14): the arm's pose now, read from its controller
+// into J1-J7, and saved on the controller as a global point under the profile's name.
+function poseTools() {
+  const grid = $('poseGrid');
+  if (!grid || $('litePoseTools')) return;
+  grid.after(el('div', { id: 'litePoseTools', class: 'lite-pose-tools' },
+    el('div', { class: 'cta-row' },
+      el('button', { class: 'btn light', type: 'button', text: '📍 Fetch current pose', onclick: fetchPose }),
+      el('button', { class: 'btn', type: 'button', text: '💾 Save to controller as global point', onclick: savePoint })),
+    el('div', { id: 'litePoseStatus', class: 'mini-note' })));
+}
+
+const poseInputs = () => [...document.querySelectorAll('#poseGrid input')];
+
+async function fetchPose() {
+  const st = $('litePoseStatus');
+  try {
+    const c = await get(`/api/robots/${poseSide}/capture`);
+    poseInputs().forEach((x, i) => { x.value = c.joints_deg[i].toFixed(3); });
+    st.textContent = `${poseSide.toUpperCase()} arm now: J1–J7 read from its controller (${c.controller.ip}) at ${c.at.slice(11, 19)}.`;
+  } catch (err) { st.textContent = say(err); tell(err); }
+}
+
+async function savePoint() {
+  const st = $('litePoseStatus'), name = ($('poseName')?.value || '').trim();
+  if (!/^[A-Za-z0-9_-]{1,32}$/.test(name)) {
+    st.textContent = 'Name the global point with 1 to 32 letters, digits, _ or - (for example STP_SEAT_1).';
+    $('poseName')?.focus();
+    return;
+  }
+  const shown = poseInputs().map((x) => (x.value === '' ? null : Number(x.value)));
+  if (shown.some((v) => v == null)) { st.textContent = 'Fetch the current pose first: the controller saves the arm where it is.'; return; }
+  try {
+    const out = await robotCall(`/api/robots/${poseSide}/points/save`, { name, joints_deg: shown },
+      { what: `Saving “${name}” on the ${poseSide.toUpperCase()} controller`, replacing: 'the global point' });
+    await loadPoints(poseSide, true);
+    document.dispatchEvent(new CustomEvent('lite:points', { detail: poseSide }));
+    st.textContent = `Saved on the ${poseSide.toUpperCase()} controller as “${out.name}”${out.replaced ? ' (replaced)' : ''}: `
+      + `the arm's joints and its pose in the ${out.work_frame || 'current'} work frame and ${out.tool_frame || 'current'} tool frame, read back.`;
+    window.toast(`Global point “${out.name}” saved on the ${poseSide.toUpperCase()} controller.`);
+  } catch (err) { st.textContent = say(err); tell(err); }
+}
+
 async function move(url, body, what, statusEl) {
   const job = await robotCall(url, body, { what });
   const done = await watchJob(job, (j) => { if (statusEl) statusEl.textContent = jobLine(j); });
@@ -295,11 +357,20 @@ export function installPrepare() {
   document.addEventListener('lite:stage', (e) => { if (e.detail === 'prepare') refresh(); });
 
   // the start-pose lists follow each arm's controller: read when Setup & Safety opens and when an arm
-  // connects or disconnects
+  // connects or disconnects; Refresh reads both again
   const pageShow = window.showView;
   window.showView = function showView(v, btn) {
     pageShow(v, btn);
-    if (v === 'setup') { fillPoses('left'); fillPoses('right'); }
+    if (v === 'setup') { refreshButton(); fillPoses('left'); fillPoses('right'); }
+  };
+  refreshButton();
+  const pageOpenPose = window.openPose;
+  window.openPose = function openPose(side) {
+    pageOpenPose(side);
+    poseTools();
+    if ($('litePoseStatus')) $('litePoseStatus').textContent = hasController(poseSide)
+      ? 'Fetch the arm’s current pose, then save it on the controller as a global point under the name above.'
+      : 'With the arm connected by the live link, its current pose can be fetched and saved on its controller.';
   };
   document.addEventListener('lite:points', (e) => { fillPoses(e.detail); if (e.detail === selectedArm) regionPoints(); });
 }
