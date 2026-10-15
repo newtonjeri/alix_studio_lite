@@ -55,10 +55,9 @@ What is connected, screen by screen, is in [`UI_CONTRACT.md`](UI_CONTRACT.md).
   - Prepare: each region's setup (pole height and hand pose); Apply stages the hand shown (the preset, or the six channels with Custom), the pole and then the hand: read back in Real, emulated in Hardware sim. Move BOTH asks one confirmation in Real and reports each arm.
   - Drag & Teach: the existing recording is offered first (D31); drag teaching needs Real, starts only with the arm in the region's setup, and saves the take in the region it started in.
   - Save & Review: every recording is listed with its arm and stage, one is active, and a loaded file never replaces the new one. A loaded file needs its arm and its pole and hand; a file of the other arm is refused. Playback runs in 3D, or as a dry run in Hardware sim, staging first.
-  - Tune + Simulation:
-    - V19's Trim, Mean Smooth (41 by default, R11) and Scale regions are the region's server-side settings, with undo.
-    - Rows marked with Trim Selected are cut, and the gap is crossed by a short joint move that is then smoothed.
-    - Optimiser: Default or Time-optimal (D24). Total time: the recorded pace, a target, or as fast as safe.
+  - Tune + Simulation (since 15 Oct, the trajectory HTML's front end):
+    - Manual tuning, the default, is the HTML's algorithm byte for byte: Trim, Mean Smooth (101 by default) and Scale, the region's server-side settings with undo. Its limits are shown, never enforced.
+    - Time-optimal (TOPP-RA) is the other choice: on the recording as taught, as fast as the limits allow or a target, its limits kept (D24).
     - A result strip shows the gates (arm, stage, limits, robot) and L1–L6.
     - The real recording is on the plot. ▶ Start stages the pole and the hand in 3D, moves the arm to the start, then plays the trajectory on the 5 ms clock, with V19's playhead on the recording's rows.
   - Real Test:
@@ -145,15 +144,14 @@ Legacy Lite is no longer developed; its working parts (3D robot, plots, optimise
 
 The optimiser engine covers:
 
-- the **default** optimiser: the prototype's algorithm with fixes F-a, F-b and F-c;
+- **manual tuning** (since 15 Oct, replacing the default optimiser with its fixes F-a, F-b and F-c): the prototype's algorithm as it is, its limits reported, never enforced (`optimise/manual.py`);
 - the **time-optimal** optimiser: ALIX's TOPP-RA chain, copied, plus an end-pose pin;
 - the shared target-time search with the binding-limit report;
 - TOGETHER pairs;
 - the `.lite.json` record;
 - a command line: `python3 -m alix_studio_lite.optimise`;
 - for the Lite UI (13 Oct):
-  - **cuts**: rows removed before tuning, with each gap crossed by a straight joint move at 20 °/s and then smoothed, so the slowdown stays local. The cut recording is the reference for L5 and L6.
-  - **the recorded pace**: no target, the recording's own timing with the Scale regions. The engine's default is still "as fast as safe".
+  - **cuts** and **the recorded pace** (13 Oct) went with the default optimiser on 15 Oct: manual tuning is the HTML's, and Time-optimal takes the recording as taught.
   - A FILE_08 example: recorded 41.72 s; the recorded pace with smoothing 41 gives 38.79 s; as fast as safe, 27.16 s. With smoothing off, the fastest safe is 276 s: the recorder's ripple (on joint 6, every third or fourth line is a double step) is above 20 Hz at the recorded pace, but a slowed file brings it into the band, where it is real commanded vibration.
 
 ### Smoke results

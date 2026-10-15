@@ -169,7 +169,7 @@ Every activity is logged, one folder per day in **`Resources/Logs/<date>/`** in 
 | `Lite cannot reach the LEFT arm's controller` | Check the power, the cable, the address in Robot & mode, and that the computer is on 192.168.1.x. |
 | `The RealMan SDK does not load on this computer` | The robot link needs Linux. Run Lite on the Linux computer that runs the control program. |
 | E-stop chip reads *not configured* | IO3 is not in the controller's E-stop mode. An engineer sets it at the pendant; Lite never writes IO modes. |
-| Time-optimal optimiser missing | `toppra` has no ready-made package for this computer. The Default optimiser still works. |
+| Time-optimal optimiser missing | `toppra` has no ready-made package for this computer. Manual tuning (the default) still works. |
 | A ROS workspace is sourced | Nothing to do: Lite clears `PYTHONPATH` and uses its own environment. |
 | *3-D view unavailable* | The browser gives the page no WebGL. `chrome://gpu` names the reason. *WebGL: Disabled* with an *llvmpipe* GPU means the computer's graphics run in software (the GPU driver is not in use: `nvidia-smi` tells), and Chrome then turns WebGL off for every page, ALIX Studio's too. Open Lite with `tools/run_lite.sh`: its own Chrome window ignores that block. In another Chrome: `chrome://flags/#ignore-gpu-blocklist` → Enabled. |
 

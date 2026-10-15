@@ -39,7 +39,8 @@ function paint(side) {
     ` · ${m.parts.map((x) => x.name).join(' → ')} · ${m.lines.toLocaleString()} lines, ${m.seconds.toFixed(2)} s`
       + (m.joins.length ? ` · ${m.joins.length} join${m.joins.length === 1 ? '' : 's'} (${m.joins.map((j) => `${j.seconds.toFixed(2)} s`).join(', ')})` : '')
       + ` · staged first: ${m.stage.text} · `,
-    el('span', { class: m.limits_ok ? 'lite-ok' : 'lite-bad', text: m.limits_ok ? 'passes L1–L4' : `${m.limits_text}: 3D only` }));
+    el('span', { class: m.limits_ok ? 'lite-ok' : 'lite-warn', text: m.limits_ok ? 'passes L1–L4'
+      : `${m.limits_text}: shown, not enforced (sending it asks once)` }));
   const name = el('input', { type: 'text', value: m.name, 'aria-label': `${ARM(side)} merge file name`, maxlength: '120' });
   box.after(el('div', { class: 'lite-merge-tools' },
     el('div', { class: 'inline' }, name, el('button', { class: 'btn light', type: 'button', text: 'Rename', onclick: () => rename(side, name.value) })),
@@ -110,7 +111,7 @@ export function installMerge() {
     window.closeMergeModal();
     paint(side);
     const m = last[side];
-    status(`${ARM(side)} merge ${m.name}: ${m.parts.length} files, ${m.joins.length} join(s), ${m.seconds.toFixed(2)} s${m.limits_ok ? ', within the limits.' : `; ${m.limits_text}: it plays in 3D only.`}`, m.limits_ok ? 'ok' : 'warn');
+    status(`${ARM(side)} merge ${m.name}: ${m.parts.length} files, ${m.joins.length} join(s), ${m.seconds.toFixed(2)} s${m.limits_ok ? ', within the limits.' : `; it breaks ${m.limits_text}: shown, not enforced (the hardware decides; sending it asks once).`}`, m.limits_ok ? 'ok' : 'warn');
     if (action === 'simulation') window.runMergedArmSimulation(side);
     if (action === 'real') window.runMergedArmReal(side);
   };

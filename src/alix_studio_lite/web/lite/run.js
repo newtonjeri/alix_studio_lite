@@ -8,7 +8,8 @@
 // - at the bottom, the real machine: the page's two-arm card, and the run of what is chosen on its
 //   arm alone (the other arm stays stopped; the server refuses otherwise), in Hardware sim or Real.
 // The robot runs go through the routes every robot step uses, so the gates hold: the arm a file was
-// taught on, its pole and hand staged first, a kept version or a transition within the limits (a
+// taught on, its pole and hand staged first, a kept version (a manual one's limits shown and asked
+// about once when it is sent; a time-optimal one within them) or a transition within the limits (a
 // recording as taught never runs on the real arms), one confirmation for a run on the real robot.
 
 import { get, say } from './api.js';
@@ -40,14 +41,14 @@ function files(side) {
     const a = t[side];
     if (!a || a.later || seen.has(a.key)) continue;
     seen.add(a.key);
-    const opts = a.versions.map((v) => ({ value: `${a.key}|version:${v.version}`, text: `Kept ${v.version} · ${v.name}${v.version === a.version ? ' (runs)' : ''}${v.uploadable ? '' : ' · fails a limit'}`, sha: v.sha256 }));
+    const opts = a.versions.map((v) => ({ value: `${a.key}|version:${v.version}`, text: `Kept ${v.version} · ${v.name}${v.version === a.version ? ' (runs)' : ''}${!v.uploadable ? ' · fails a limit' : v.limits_ok === false ? ' · breaks a limit' : ''}`, sha: v.sha256 }));
     if (a.transition) opts.push({ value: `${a.key}|transition`, text: `Transition · ${a.transition.name}${a.transition.limits_ok ? '' : ' · fails a limit'}`, sha: a.transition.sha256 });
     if (a.recording) opts.push({ value: `${a.key}|raw`, text: `Recording as taught · ${a.recording} (3D only)` });
     if (opts.length) out.push({ key: a.key, display: `${t.label} · ${a.display}`, opts });
   }
   if ((merged[side] || []).length) {
     out.push({ key: null, display: `${ARM(side)} merges`, opts: merged[side].map((m) => ({ value: `merge|${m.file}`,
-      text: `Merge · ${m.name}${m.limits_ok ? '' : ' · fails a limit'}`, sha: m.sha256 })) });
+      text: `Merge · ${m.name}${m.limits_ok ? '' : ' · breaks a limit'}`, sha: m.sha256 })) });
   }
   return out;
 }
@@ -183,7 +184,7 @@ function paintReal() {
   const side = ['left', 'right'].includes(m) ? m : pick.side;
   box.replaceChildren(
     el('p', { class: 'mini-note', text: `Runs ${what} on the ${ARM(side)} arm alone, in Hardware sim or Real (asked first): the other arm stays stopped while it runs. `
-      + (m === 'file' ? 'Each file is sent to the Program ID below, then run, its limits checked first.' : m === 'left' || m === 'right'
+      + (m === 'file' ? 'Each file is sent to the Program ID below, then run; a file that breaks a limit asks once.' : m === 'left' || m === 'right'
         ? 'Each step is sent to its Program ID in the flow table (or the one its Real Test used), then run, staged first.' : '') }),
     el('div', { class: 'cta-row' },
       m === 'file' ? el('input', { id: 'liteRunProgram', type: 'number', min: '1', max: '100', step: '1', placeholder: 'Program ID', 'aria-label': 'Program ID for the files' }) : null,

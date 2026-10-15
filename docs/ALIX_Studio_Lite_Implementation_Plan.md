@@ -177,6 +177,8 @@ Dual start = two launches released by threading.Barrier(2) just before Popen (so
 - the smoothing snaps the end points: the first or last line jumps 546–1005 millidegrees in one tick (`HTML:1513-1514, 1721-1723`);
 - segment boundaries cause acceleration spikes of 440–880 °/s² (C2) or 640–919 °/s² (`HTML:1568-1616`).
 
+> **Superseded on 15 October 2026 (the owner's feedback v3):** manual tuning, the default, is the prototype's algorithm *as it is*, without the three fixes below, its limits reported and never enforced; Time-optimal (TOPP-RA) is a separate choice that never goes through it (`optimise/manual.py`, `docs/UI_CONTRACT.md`). The text below is the earlier plan.
+
 **Its role in Lite (F2).** It becomes Lite's **default optimiser**, with three small fixes (odd-reflection padding at the window edges, a 0.25 s speed blend at each segment boundary, a default window of 41 points with a hard path-change check) and the same hard limit checks as TOPP-RA. With the fixes, the pad stays 2.9–4.5 mm from the recording and the boundary spikes drop to 200–280 °/s² (optimiser research).
 
 #### 1.3.4 ALIX libraries Lite builds on (all ROS-free)

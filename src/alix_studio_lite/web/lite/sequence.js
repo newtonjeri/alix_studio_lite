@@ -61,7 +61,7 @@ function fileBox(side, a) {
   const sel = el('select', { class: 'lite-flow-version', 'aria-label': `${side.toUpperCase()} file of ${a.display}`,
     onchange: (e) => chooseVersion(a, e.target.value) },
   a.versions.map((v) => el('option', { value: v.version, selected: v.version === a.version,
-    text: `${v.version} · ${v.name} · ${fmtS(v.achieved_s)}${v.uploadable ? '' : ' · fails a limit'}` })));
+    text: `${v.version} · ${v.name} · ${fmtS(v.achieved_s)}${!v.uploadable ? ' · fails a limit' : v.limits_ok === false ? ' · breaks a limit (shown, not enforced)' : ''}` })));
   const cur = a.versions.find((v) => v.version === a.version);
   const up = cur && cur.uploaded.length;
   return el('div', { class: 'lite-flow-file' }, sel, el('small', { class: up ? 'lite-ok' : 'mini-note',

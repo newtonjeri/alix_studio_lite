@@ -293,7 +293,8 @@ function renderChecks() {
       el('p', { class: 'mini-note', text: (fails.length
         ? `As taught, this file breaks ${fails.map(c => c.id).join(', ')}.`
         : 'As taught, this file stays within L1 to L4.')
-        + ' Lite never runs a file as taught: it runs only after tuning in a region, with every limit (L1 to L6) passed.' }),
+        + ' Lite never runs a file as taught: it runs only after tuning in a region (manual tuning shows the limits L1 to L6, '
+        + 'Time-optimal keeps them).' }),
       use);
   }));
 }
