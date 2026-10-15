@@ -1136,3 +1136,704 @@
 15:03:38.078 [activity] operator:6b7fc0 PUT /api/projects/alix_mv95iiq7_y1yt4
 15:03:41.983 [activity] - job stage done: Stage L-R01: pole 250 mm, hand open
 15:04:02.849 [activity] operator:6b7fc0 page: SYSTEM · Session active
+21:19:36.176 [activity] - page: NAVIGATION · Open screen
+21:19:36.186 [activity] - page: SYSTEM · ASL frontend initialized
+21:19:41.999 [activity] - POST /api/auth/login
+21:19:42.004 [activity] operator:0e55ca page: UI · Button action
+21:19:42.805 [activity] operator:0e55ca page: AUTH · Operator login
+21:19:42.805 [activity] operator:0e55ca page: NAVIGATION · Open screen
+21:19:46.058 [activity] operator:0e55ca page: PROJECT · Button action
+21:19:46.889 [activity] operator:0e55ca page: NAVIGATION · Task loaded
+21:19:46.913 [activity] operator:0e55ca page: SETUP · Arm selected
+21:19:46.919 [activity] operator:0e55ca page: NAVIGATION · Teaching stage changed
+21:19:46.920 [activity] operator:0e55ca page: SETUP · Arm selected
+21:19:46.922 [activity] operator:0e55ca page: NAVIGATION · Open screen
+21:19:46.923 [activity] operator:0e55ca page: NAVIGATION · Teaching stage changed
+21:19:52.143 [activity] operator speed slider at 67 % (MoveJ / MoveL, both arms)
+21:19:52.143 [activity] operator:0e55ca POST /api/robots/speed
+21:19:52.943 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:52.944 [activity] operator:0e55ca page: ROBOT · Input updated
+21:19:53.148 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:19:58.482 [activity] operator speed slider at 66 % (MoveJ / MoveL, both arms)
+21:19:58.482 [activity] operator:0e55ca POST /api/robots/speed
+21:19:58.981 [activity] operator speed slider at 65 % (MoveJ / MoveL, both arms)
+21:19:58.981 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.012 [activity] operator speed slider at 64 % (MoveJ / MoveL, both arms)
+21:19:59.012 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.045 [activity] operator speed slider at 63 % (MoveJ / MoveL, both arms)
+21:19:59.046 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.080 [activity] operator speed slider at 62 % (MoveJ / MoveL, both arms)
+21:19:59.080 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.114 [activity] operator speed slider at 61 % (MoveJ / MoveL, both arms)
+21:19:59.115 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.144 [activity] operator speed slider at 60 % (MoveJ / MoveL, both arms)
+21:19:59.144 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.174 [activity] operator speed slider at 59 % (MoveJ / MoveL, both arms)
+21:19:59.174 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.204 [activity] operator speed slider at 58 % (MoveJ / MoveL, both arms)
+21:19:59.204 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.234 [activity] operator speed slider at 57 % (MoveJ / MoveL, both arms)
+21:19:59.234 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.265 [activity] operator speed slider at 56 % (MoveJ / MoveL, both arms)
+21:19:59.265 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.282 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.283 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.283 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.283 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.283 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.283 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.283 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.283 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.284 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.284 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.284 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:19:59.295 [activity] operator speed slider at 55 % (MoveJ / MoveL, both arms)
+21:19:59.295 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.325 [activity] operator speed slider at 54 % (MoveJ / MoveL, both arms)
+21:19:59.325 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.355 [activity] operator speed slider at 53 % (MoveJ / MoveL, both arms)
+21:19:59.355 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.385 [activity] operator speed slider at 52 % (MoveJ / MoveL, both arms)
+21:19:59.386 [activity] operator:0e55ca POST /api/robots/speed
+21:19:59.415 [activity] operator speed slider at 51 % (MoveJ / MoveL, both arms)
+21:19:59.415 [activity] operator:0e55ca POST /api/robots/speed
+21:20:00.067 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:20:00.095 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:20:00.096 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:20:00.096 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:20:00.096 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:20:00.096 [activity] operator:0e55ca page: ROBOT · Setting changed
+21:20:00.096 [activity] operator:0e55ca page: ROBOT · Input updated
+21:20:05.177 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:20:08.646 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:20:10.397 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:20:11.186 [activity] operator:0e55ca page: UI · Input updated
+21:20:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:20:21.355 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:20:25.831 [activity] operator:0e55ca page: UI · Setting changed
+21:20:25.832 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:20:25.832 [activity] operator:0e55ca page: TEACH · Button action
+21:20:26.214 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:20:28.071 [activity] operator:0e55ca page: TEACH · Button action
+21:20:28.071 [activity] operator:0e55ca page: NAVIGATION · Teaching stage changed
+21:20:28.273 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:20:31.077 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:20:32.326 [activity] operator:0e55ca page: SIMULATION · Button action
+21:20:32.326 [activity] operator:0e55ca page: NAVIGATION · Teaching stage changed
+21:20:32.528 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:20:35.370 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:20:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:20:43.746 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:20:46.973 [activity] operator:0e55ca page: TEACH · Button action
+21:20:46.973 [activity] operator:0e55ca page: NAVIGATION · Teaching stage changed
+21:20:47.175 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:20:49.976 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:20:54.655 [activity] operator:0e55ca page: SIMULATION · Button action
+21:20:54.655 [activity] operator:0e55ca page: NAVIGATION · Teaching stage changed
+21:20:54.857 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:20:57.670 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:21:04.050 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:21:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:21:15.472 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:21:19.988 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:21:32.921 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:21:36.897 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:21:42.466 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:21:42.467 [activity] operator:0e55ca page: SYSTEM · Session active
+21:21:49.037 [activity] operator:0e55ca page: NAVIGATION · Scrolled view
+21:21:49.624 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:21:50.422 [activity] operator:0e55ca page: PROJECT · Button action
+21:21:50.624 [activity] operator:0e55ca PUT /api/projects/alix_mv6rod78_nj8fa
+21:21:54.483 [activity] operator:0e55ca page: PROJECT · Button action
+21:21:57.224 [activity] operator:0e55ca page: PROJECT · Button action
+21:21:57.224 [activity] operator:0e55ca page: NAVIGATION · Task loaded
+21:21:57.225 [activity] operator:0e55ca page: SETUP · Arm selected
+21:21:57.225 [activity] operator:0e55ca page: NAVIGATION · Open screen
+21:21:57.225 [activity] operator:0e55ca PUT /api/projects/alix_mv9v8doo_lv7mp
+21:21:57.226 [activity] operator:0e55ca page: NAVIGATION · Open screen
+21:21:57.227 [activity] operator:0e55ca page: NAVIGATION · Open screen
+21:21:57.231 [activity] operator:0e55ca PUT /api/projects/alix_mv9v8doo_lv7mp
+21:21:57.873 [activity] operator:0e55ca PUT /api/projects/alix_mv9v8doo_lv7mp
+21:22:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:22:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:23:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:23:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:24:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:24:42.806 [activity] operator:0e55ca page: SYSTEM · Session active
+21:25:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:25:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:26:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:26:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:27:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:27:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:28:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:28:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:29:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:29:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:30:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:30:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:31:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:31:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:32:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:32:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:33:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:33:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:34:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:34:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:35:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:35:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:36:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:36:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:37:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:37:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:38:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:38:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:39:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:39:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:40:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:40:42.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:41:12.805 [activity] operator:0e55ca page: SYSTEM · Session active
+21:42:34.960 [activity] - page: NAVIGATION · Open screen
+21:42:34.960 [activity] - page: SYSTEM · ASL frontend initialized
+21:42:39.945 [activity] - POST /api/auth/login
+21:42:39.949 [activity] operator:96239a page: UI · Button action
+21:42:40.751 [activity] operator:96239a page: AUTH · Operator login
+21:42:40.751 [activity] operator:96239a page: NAVIGATION · Open screen
+21:42:44.648 [activity] operator:96239a page: PROJECT · Button action
+21:42:44.657 [activity] operator:96239a page: NAVIGATION · Task loaded
+21:42:44.664 [activity] operator:96239a page: SETUP · Arm selected
+21:42:44.671 [activity] operator:96239a page: SETUP · Arm selected
+21:42:44.677 [activity] operator:96239a page: NAVIGATION · Open screen
+21:42:52.835 [activity] operator:96239a page: SETUP · Button action
+21:42:52.835 [activity] operator:96239a page: NAVIGATION · Open screen
+21:42:53.038 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:42:54.714 [activity] operator:96239a page: UI · Setting changed
+21:42:54.714 [activity] operator:96239a page: UI · Input updated
+21:42:55.671 [activity] operator:96239a page: UI · Setting changed
+21:42:55.671 [activity] operator:96239a page: UI · Input updated
+21:42:55.872 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:42:57.112 [activity] operator:96239a page: UI · Setting changed
+21:42:57.113 [activity] operator:96239a page: UI · Input updated
+21:42:57.316 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:05.105 [activity] operator:96239a page: UI · Button action
+21:43:05.308 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:07.139 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:09.883 [activity] operator:96239a page: UI · Setting changed
+21:43:09.884 [activity] operator:96239a page: UI · Input updated
+21:43:10.085 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:10.750 [activity] operator:96239a page: SYSTEM · Session active
+21:43:10.751 [activity] operator:96239a page: UI · Setting changed
+21:43:11.119 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:11.567 [activity] operator:96239a page: UI · Input updated
+21:43:14.791 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:16.925 [activity] operator:96239a page: NAVIGATION · Button action
+21:43:16.926 [activity] operator:96239a page: NAVIGATION · Open screen
+21:43:17.127 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:19.991 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:21.671 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:31.435 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:32.335 [activity] operator:96239a page: SETUP · Button action
+21:43:32.335 [activity] operator:96239a page: NAVIGATION · Open screen
+21:43:32.538 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:36.872 [activity] operator:96239a page: TEACH · Button action
+21:43:36.872 [activity] operator:96239a page: NAVIGATION · Open screen
+21:43:36.872 [activity] operator:96239a page: NAVIGATION · Task loaded
+21:43:36.872 [activity] operator:96239a page: SETUP · Arm selected
+21:43:36.872 [activity] operator:96239a page: NAVIGATION · Teaching stage changed
+21:43:37.074 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:43:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:43:46.036 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:43:50.032 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:43:53.650 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:44:00.614 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:44:04.441 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:44:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:44:13.098 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:44:14.004 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:44:17.348 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:44:18.146 [activity] operator:96239a page: UI · Input updated
+21:44:18.210 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:44:19.008 [activity] operator:96239a page: UI · Input updated
+21:44:20.527 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:44:21.326 [activity] operator:96239a page: UI · Input updated
+21:44:22.003 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:44:22.801 [activity] operator:96239a page: UI · Input updated
+21:44:27.113 [activity] operator:96239a page: UI · Setting changed
+21:44:27.114 [activity] operator:96239a page: TEACH · Button action
+21:44:27.496 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:44:33.097 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/setup
+21:44:33.883 [activity] operator:96239a page: UI · Button action
+21:44:34.086 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:44:34.286 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/setup
+21:44:35.066 [activity] operator:96239a page: UI · Button action
+21:44:35.269 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:44:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:45:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:45:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:46:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:46:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:46:54.208 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:46:55.006 [activity] operator:96239a page: UI · Input updated
+21:46:56.146 [activity] operator:96239a page: UI · Setting changed
+21:46:56.147 [activity] operator:96239a page: TEACH · Button action
+21:46:56.528 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:00.697 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/placement/task -> REFUSED: Enter the UGV standoff (mm).
+21:47:01.496 [activity] operator:96239a page: SETUP · Button action
+21:47:01.699 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:05.975 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:06.773 [activity] operator:96239a page: UI · Input updated
+21:47:07.496 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/placement/task
+21:47:08.107 [activity] operator:96239a page: UI · Setting changed
+21:47:08.107 [activity] operator:96239a page: SETUP · Button action
+21:47:08.488 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:47:10.752 [activity] operator:96239a page: TEACH · Button action
+21:47:10.752 [activity] operator:96239a page: NAVIGATION · Teaching stage changed
+21:47:11.217 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:14.035 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:47:17.333 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:47:19.167 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/teach/start -> REFUSED: Lite is in Visual sim, so it does not use the robot.
+21:47:19.967 [activity] operator:96239a page: TEACH · Button action
+21:47:19.967 [activity] operator:96239a page: ROBOT · Robot & mode opened
+21:47:20.170 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:22.930 [activity] operator:96239a POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+21:47:23.730 [activity] operator:96239a page: ROBOT · Button action
+21:47:23.730 [activity] operator:96239a page: ROBOT · Robot & mode opened
+21:47:23.932 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:24.345 [activity] operator:96239a POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+21:47:25.145 [activity] operator:96239a page: ROBOT · Button action
+21:47:25.145 [activity] operator:96239a page: ROBOT · Robot & mode opened
+21:47:25.348 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:27.092 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 50 %
+21:47:27.092 [activity] operator:96239a POST /api/robots/left/connect
+21:47:27.491 [activity] operator:96239a page: UI · Button action
+21:47:27.495 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 50 %
+21:47:27.495 [activity] operator:96239a POST /api/robots/right/connect
+21:47:27.694 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:36.172 [activity] operator:96239a page: UI · Button action
+21:47:36.384 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:36.713 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/teach/start -> REFUSED: Lite is in Visual sim, so it does not use the robot.
+21:47:37.513 [activity] operator:96239a page: TEACH · Button action
+21:47:37.513 [activity] operator:96239a page: ROBOT · Robot & mode opened
+21:47:37.716 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:47:46.257 [activity] operator:96239a POST /api/robots/mode
+21:47:47.057 [activity] operator:96239a page: ROBOT · Button action
+21:47:47.259 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:51.464 [activity] operator:96239a page: UI · Button action
+21:47:51.666 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:47:52.189 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/teach/start -> REFUSED: Drag teaching uses the real arm, pole and hand, so it needs Real robot.
+21:47:52.989 [activity] operator:96239a page: TEACH · Button action
+21:47:52.990 [activity] operator:96239a page: ROBOT · Robot & mode opened
+21:47:53.192 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:48:05.461 [activity] operator:96239a POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+21:48:06.261 [activity] operator:96239a page: ROBOT · Button action
+21:48:06.464 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:48:06.816 [activity] operator:96239a POST /api/robots/mode
+21:48:07.615 [activity] operator:96239a page: ROBOT · Button action
+21:48:07.818 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:48:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:48:11.898 [activity] operator:96239a page: UI · Button action
+21:48:12.100 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:48:12.672 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+21:48:13.472 [activity] operator:96239a page: TEACH · Button action
+21:48:13.674 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:48:14.596 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 50 mm, hand grip): it reads pole 300 mm, hand 1000, 1000, 1000, 1000, 1000, 1000.
+21:48:15.394 [activity] operator:96239a page: ROBOT · Button action
+21:48:15.596 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:48:31.351 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:48:35.455 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:48:39.525 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+21:48:40.325 [activity] operator:96239a page: TEACH · Button action
+21:48:40.325 [activity] operator:96239a page: SYSTEM · Session active
+21:48:40.528 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:48:41.626 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 50 mm, hand grip): it reads pole 300 mm, hand 1000, 1000, 1000, 1000, 1000, 1000.
+21:48:42.425 [activity] operator:96239a page: ROBOT · Button action
+21:48:42.627 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:48:46.979 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:48:50.101 [activity] operator:96239a page: UI · Button action
+21:48:50.304 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:48:52.708 [activity] operator:96239a page: UI · Button action
+21:48:52.911 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:49:00.123 [activity] operator:96239a page: TEACH · Button action
+21:49:00.123 [activity] operator:96239a page: NAVIGATION · Teaching stage changed
+21:49:00.123 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:49:00.326 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:49:10.750 [activity] operator:96239a page: SYSTEM · Session active
+21:49:21.096 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/name -> REFUSED: There is no recording to save yet.
+21:49:21.897 [activity] operator:96239a page: UI · Button action
+21:49:22.105 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:49:32.748 [activity] operator:96239a page: TRAJECTORY · Button action
+21:49:32.950 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:49:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:50:06.306 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:50:06.455 [activity] operator:96239a page: TRAJECTORY · Setting changed
+21:50:06.455 [activity] operator:96239a page: TRAJECTORY · Input updated
+21:50:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:50:16.083 [activity] operator:96239a page: UI · Setting changed
+21:50:16.083 [activity] operator:96239a page: UI · Input updated
+21:50:16.286 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:50:16.833 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/recordings
+21:50:17.536 [activity] operator:96239a page: UI · Button action
+21:50:17.738 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:50:22.394 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:50:22.394 [activity] operator:96239a page: SIMULATION · Button action
+21:50:22.394 [activity] operator:96239a page: NAVIGATION · Teaching stage changed
+21:50:22.948 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:50:25.784 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:50:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:50:42.831 [activity] operator:96239a page: SETUP · Button action
+21:50:43.033 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:50:45.850 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:50:49.527 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:50:52.996 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:50:58.999 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/settings
+21:50:59.523 [activity] operator:96239a page: UI · Setting changed
+21:50:59.524 [activity] operator:96239a page: UI · Input updated
+21:50:59.726 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:51:02.526 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:51:07.731 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/settings
+21:51:08.270 [activity] operator:96239a page: UI · Setting changed
+21:51:08.270 [activity] operator:96239a page: UI · Input updated
+21:51:08.472 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:51:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:51:12.899 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:51:17.266 [activity] operator:96239a page: UI · Button action
+21:51:17.468 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:51:20.271 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:51:21.211 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:51:27.553 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:51:28.351 [activity] operator:96239a page: UI · Input updated
+21:51:31.052 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:51:31.850 [activity] operator:96239a page: UI · Input updated
+21:51:36.051 [activity] operator:96239a page: UI · Setting changed
+21:51:36.052 [activity] operator:96239a page: UI · Button action
+21:51:36.433 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:51:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:51:40.751 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:51:41.205 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/settings
+21:51:41.994 [activity] operator:96239a page: TUNING · Button action
+21:51:42.196 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:51:45.010 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:52:02.656 [activity] operator:96239a page: TRAJECTORY · Button action
+21:52:03.077 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:05.667 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:52:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:52:11.981 [activity] operator:96239a page: UI · Button action
+21:52:11.981 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:52:12.180 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:21.122 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:28.749 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:29.548 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:30.475 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:31.459 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:33.357 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:35.608 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:52:47.158 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:54.315 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:52:56.707 [activity] operator:96239a page: UI · Button action
+21:52:56.911 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:52:59.715 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:53:10.435 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:53:10.435 [activity] operator:96239a page: SYSTEM · Session active
+21:53:11.661 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:53:30.601 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:53:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:53:42.476 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:53:55.529 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/optimise
+21:53:56.311 [activity] operator:96239a page: UI · Button action
+21:53:56.436 [activity] - job optimise done: Tune L-R01 (breaks L1 Joint limits -1.90 deg (limit 0.5 deg); L2 Joint speed 1.83 x limit (limit 1 x limit); L3 Joint acceleration 5274 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 28.23 mm (limit 10 mm), shown, not enforced)
+21:53:56.514 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:53:59.335 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:54:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:54:17.825 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/keep
+21:54:18.598 [activity] operator:96239a page: UI · Button action
+21:54:18.802 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:54:27.138 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:54:28.591 [activity] operator:96239a page: UI · Button action
+21:54:28.794 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:54:31.626 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:54:39.606 [activity] operator:96239a page: UI · Button action
+21:54:39.807 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:54:40.753 [activity] operator:96239a page: SYSTEM · Session active
+21:54:53.188 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:54:59.082 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:55:07.853 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:55:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:55:16.545 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:55:21.140 [activity] operator:96239a page: SIMULATION · Button action
+21:55:21.140 [activity] operator:96239a page: NAVIGATION · Teaching stage changed
+21:55:21.342 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:55:24.149 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:55:27.426 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:55:30.991 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:55:40.750 [activity] operator:96239a page: SYSTEM · Session active
+21:55:41.211 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:55:42.009 [activity] operator:96239a page: ROBOT · Input updated
+21:55:42.493 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:55:48.296 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:55:49.550 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:55:50.348 [activity] operator:96239a page: ROBOT · Input updated
+21:55:54.077 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:55:55.515 [activity] operator:96239a page: ROBOT · Setting changed
+21:55:55.897 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:01.121 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:56:07.966 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/upload -> REFUSED: R15_BUPFUL_trim_mean_scale_processed.txt breaks L1 Joint limits -1.90 deg (limit 0.5 deg); L2 Joint speed 1.83 x limit (limit 1 x limit); L3 Joint acceleration 5274 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 28.23 mm (limit 10 mm). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+21:56:08.765 [activity] operator:96239a page: TRAJECTORY · Button action
+21:56:08.968 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:56:17.663 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/upload
+21:56:18.457 [activity] operator:96239a page: UI · Button action
+21:56:18.659 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:22.877 [activity] - job upload done: Upload L-R01 to program 91
+21:56:23.762 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:29.120 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/move-start -> REFUSED: Moving the arm on the real robot needs your confirmation.
+21:56:29.920 [activity] operator:96239a page: ROBOT · Button action
+21:56:30.123 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:30.274 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/move-start
+21:56:30.874 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:56:30.874 [activity] operator:96239a page: ROBOT · Button action
+21:56:31.272 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:32.272 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:33.100 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:36.476 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:37.239 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/run -> REFUSED: A run on the real robot needs your confirmation.
+21:56:38.040 [activity] operator:96239a page: UI · Button action
+21:56:38.243 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:38.915 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/run -> REFUSED: The LEFT arm is busy: LEFT to the tuned trajectory's start (L-R01).
+21:56:39.681 [activity] - job move done: LEFT to the tuned trajectory's start (L-R01)
+21:56:39.710 [activity] operator:96239a page: ROBOT · Button action
+21:56:39.913 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:56:47.273 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/verdict
+21:56:48.065 [activity] operator:96239a page: TUNING · Button action
+21:56:48.071 [activity] operator:96239a page: TEACH · Operator decision
+21:56:48.075 [activity] operator:96239a page: NAVIGATION · Teaching stage changed
+21:56:48.262 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:56:51.117 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:56:55.214 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:56:58.223 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:57:02.567 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:57:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:57:17.172 [activity] operator:96239a page: UI · Button action
+21:57:17.374 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:57:20.177 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:57:23.131 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:57:24.633 [activity] operator:96239a page: UI · Button action
+21:57:24.835 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:57:28.291 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:57:29.510 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:57:40.750 [activity] operator:96239a page: SYSTEM · Session active
+21:57:40.751 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:57:44.426 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:57:51.877 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:58:01.326 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:58:10.750 [activity] operator:96239a page: SYSTEM · Session active
+21:58:12.172 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:58:16.072 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:58:19.569 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:58:24.812 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:58:24.887 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:58:26.435 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:58:32.703 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:58:33.642 [activity] operator:96239a page: SIMULATION · Button action
+21:58:33.643 [activity] operator:96239a page: NAVIGATION · Teaching stage changed
+21:58:33.845 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:58:36.649 [activity] operator:96239a page: NAVIGATION · Scrolled view
+21:58:40.751 [activity] operator:96239a page: SYSTEM · Session active
+21:58:42.296 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/run -> REFUSED: A run on the real robot needs your confirmation.
+21:58:43.096 [activity] operator:96239a page: UI · Button action
+21:58:43.298 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:58:44.114 [activity] operator:96239a POST /api/projects/alix_mv9v8doo_lv7mp/units/L-R01/run
+21:58:44.909 [activity] operator:96239a page: ROBOT · Button action
+21:58:45.112 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:59:05.650 [activity] - job run done: Real run L-R01
+21:59:10.751 [activity] operator:96239a page: SYSTEM · Session active
+21:59:13.291 [activity] operator:96239a PUT /api/projects/alix_mv9v8doo_lv7mp
+21:59:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:00:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:00:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:01:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:01:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:02:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:02:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:03:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:03:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:04:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:04:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:05:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:05:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:06:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:06:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:07:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:07:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:08:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:08:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:09:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:09:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:10:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:10:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:11:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:11:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:12:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:12:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:13:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:13:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:14:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:14:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:15:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:15:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:16:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:16:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:17:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:17:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:18:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:18:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:19:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:19:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:20:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:20:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:21:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:21:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:22:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:22:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:23:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:23:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:24:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:24:17.813 [activity] operator:96239a page: NAVIGATION · Scrolled view
+22:24:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:25:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:25:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:26:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:26:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:27:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:27:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:28:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:28:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:29:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:29:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:30:10.750 [activity] operator:96239a page: SYSTEM · Session active
+22:30:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:31:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:31:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:32:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:32:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:33:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:33:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:34:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:34:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:35:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:35:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:36:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:36:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:37:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:37:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:38:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:38:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:39:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:39:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:40:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:40:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:41:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:41:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:42:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:42:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:43:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:43:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:44:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:44:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:45:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:45:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:46:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:46:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:47:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:47:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:48:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:48:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:49:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:49:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:50:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:50:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:51:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:51:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:52:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:52:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:53:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:53:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:54:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:54:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:55:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:55:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:56:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:56:40.750 [activity] operator:96239a page: SYSTEM · Session active
+22:57:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:57:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:58:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:58:40.751 [activity] operator:96239a page: SYSTEM · Session active
+22:59:10.751 [activity] operator:96239a page: SYSTEM · Session active
+22:59:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:00:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:00:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:01:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:01:40.750 [activity] operator:96239a page: SYSTEM · Session active
+23:02:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:02:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:03:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:03:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:04:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:04:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:05:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:05:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:06:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:06:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:07:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:07:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:08:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:08:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:09:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:09:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:10:10.750 [activity] operator:96239a page: SYSTEM · Session active
+23:10:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:11:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:11:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:12:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:12:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:13:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:13:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:14:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:14:40.750 [activity] operator:96239a page: SYSTEM · Session active
+23:15:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:15:40.750 [activity] operator:96239a page: SYSTEM · Session active
+23:16:10.750 [activity] operator:96239a page: SYSTEM · Session active
+23:16:40.750 [activity] operator:96239a page: SYSTEM · Session active
+23:17:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:17:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:18:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:18:40.750 [activity] operator:96239a page: SYSTEM · Session active
+23:19:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:19:40.750 [activity] operator:96239a page: SYSTEM · Session active
+23:20:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:20:40.750 [activity] operator:96239a page: SYSTEM · Session active
+23:21:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:21:40.750 [activity] operator:96239a page: SYSTEM · Session active
+23:22:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:22:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:23:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:23:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:24:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:24:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:25:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:25:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:26:10.750 [activity] operator:96239a page: SYSTEM · Session active
+23:26:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:27:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:27:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:28:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:28:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:29:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:29:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:30:10.750 [activity] operator:96239a page: SYSTEM · Session active
+23:30:40.751 [activity] operator:96239a page: SYSTEM · Session active
+23:31:10.751 [activity] operator:96239a page: SYSTEM · Session active
+23:31:40.751 [activity] operator:96239a page: SYSTEM · Session active
