@@ -141,8 +141,12 @@ function addControls() {
     el('div', { class: 'lite-note', text: 'Important: the recording holds joint positions only. The analysis finds motion patterns; it cannot '
       + 'prove cleaning contact or that nothing collides. Smooth continuous regions are therefore possible cleaning or straight-pass '
       + 'candidates for you to review, and every limit is still checked when the file is generated.' }),
-    el('div', { class: 'cta-row' },
+    el('div', { class: 'cta-row lite-analysis-actions' },
       el('button', { class: 'btn light', id: 'liteAnalyze', text: '↻ Analyze Again', onclick: () => loadAnalysis(true) }),
+      el('div', { class: 'field lite-target-field' }, el('label', { for: 'liteAnalysisTarget', text: 'Optimised time (s)' }),
+        el('input', { id: 'liteAnalysisTarget', type: 'number', min: '0.1', max: '600', step: '0.1', placeholder: 'e.g. 20',
+          onkeydown: (e) => { if (e.key === 'Enter') loadAnalysis(true, true); } })),
+      el('button', { class: 'btn', id: 'liteSuggestTarget', text: 'Suggest for this time', onclick: () => loadAnalysis(true, true) }),
       el('button', { class: 'btn green', id: 'liteApplySuggest', text: 'Apply Selected Suggestions to Scale Regions', onclick: applySuggestions })),
     el('div', { id: 'liteAnalysisStatus', class: 'statusbar' }),
     el('div', { id: 'liteAnalysisMetrics', class: 'lite-metrics' }),
@@ -151,10 +155,13 @@ function addControls() {
         'Estimated time', 'Reason'].map(h => el('th', { text: h })))), el('tbody')))));
 
   // 4 Review and 6 Compare: Play / Pause / Restart and the moment under the plot
+  // One set of controls (the owner, 15 Oct: Start and Play did the same): the 3D's, named as the
+  // processor's; the plot shows the moment and the region.
+  for (const [action, text] of [['start', '▶ Play'], ['stop', '❚❚ Pause'], ['reset', '↺ Restart']]) {
+    const b = p.querySelector(`#simulationPane button[onclick="simulationControl('${action}')"]`);
+    if (b) b.textContent = text;
+  }
   p.querySelector('.analysis-pane #plotSelectionStatus')?.before(el('div', { id: 'litePlotBar', class: 'lite-play-bar' },
-    el('button', { class: 'btn', text: '▶ Play', onclick: () => window.simulationControl('start') }),
-    el('button', { class: 'btn light', text: '❚❚ Pause', onclick: () => window.simulationControl('stop') }),
-    el('button', { class: 'btn outline', text: '↺ Restart', onclick: () => window.simulationControl('reset') }),
     el('div', { class: 'lite-play-time' }, el('b', { id: 'litePlotTime', text: '0.000 s' }), el('span', { id: 'litePlotTotal', text: ' / 0.000 s' }),
       el('div', { id: 'liteRegionLabel', class: 'mini-note', text: 'Current region: –' }))));
 
@@ -178,9 +185,10 @@ function addControls() {
   // 6 Compare
   p.querySelector('.workspace-50-50')?.after(el('div', { id: 'liteCompare', class: 'lite-step-card', 'data-lite-steps': '6' },
     el('div', { class: 'lite-step-title' }, el('h3', { text: '6. Recording vs tuned comparison' }),
-      el('span', { class: 'mini-note', text: 'Duration, time saved, reduction and the regions changed. The recording below is marked where the tuned file is.' })),
+      el('span', { class: 'mini-note', text: 'Duration, time saved, reduction and the regions changed. The original recording and the tuned file, on the same time axis.' })),
     el('div', { id: 'liteCompareMetrics', class: 'lite-metrics' }),
-    el('div', { id: 'liteComparePlot', class: 'lite-compare-plot' }),
+    el('div', { id: 'liteComparePlot', class: 'lite-compare-plots' },
+      el('div', { id: 'liteCompareOriginal', class: 'lite-compare-plot' }), el('div', { id: 'liteCompareTuned', class: 'lite-compare-plot' })),
     el('h4', { text: 'Modified / scaled regions' }),
     el('div', { class: 'lite-table-scroll' }, el('table', { class: 'lite-table', id: 'liteCompareRegions' },
       el('thead', {}, el('tr', {}, ['#', 'Recording rows', 'Scale (%)', 'Rows in', 'Effect'].map(h => el('th', { text: h })))), el('tbody')))));
@@ -342,13 +350,16 @@ function afterSettings() {
 
 // ── 3 Analyze: the processor's automatic optimisation
 
-async function loadAnalysis(again) {
+// `withTarget`: the suggestions fitted to the optimised time typed (the owner, 15 Oct).
+async function loadAnalysis(again, withTarget = false) {
   const status = $('liteAnalysisStatus');
   if (!unit || !unit.active) return;
+  const target = withTarget ? Number($('liteAnalysisTarget')?.value) : null;
+  if (withTarget && !(target > 0)) { window.toast('Type the optimised time in seconds first, e.g. 20.'); $('liteAnalysisTarget')?.focus(); return; }
   if (again || !analysis || analysis.key !== unit.key || analysis.file !== unit.active) {
     if (status) { status.textContent = 'Analysing the recording…'; status.className = 'statusbar'; }
     try {
-      const data = await get(unitUrl(unit.key, 'analysis'));
+      const data = await get(unitUrl(unit.key, 'analysis') + (target ? `?target_s=${target}` : ''));
       analysis = { key: unit.key, file: unit.active, data };
     } catch (err) {
       if (status) { status.textContent = `The analysis could not run: ${say(err)}`; status.className = 'statusbar warn'; }
@@ -382,10 +393,14 @@ function renderAnalysis() {
       act, el('td', {}, input), time, el('td', { class: 'lite-reason', text: r.reason }));
   }));
   const status = $('liteAnalysisStatus');
+  const t = analysis.data.target;
   if (status) {
-    status.textContent = `Automatic analysis of ${analysis.data.file}: ${regions.length} review regions. Review the suggested scale values `
-      + 'before applying them. Motion-only analysis does not replace the 3D check or the hardware test.';
-    status.className = 'statusbar ok';
+    status.textContent = `Automatic analysis of ${analysis.data.file}: ${regions.length} review regions. `
+      + (t ? (t.reached ? `Suggestions fitted to ${fmtS(t.target_s)}: every region’s suggestion × ${t.factor}, so each keeps its guidance against the others. `
+        : `${fmtS(t.target_s)} cannot be reached with scales of 5–400 %: this is as near as it goes (${fmtS(t.shortest_s)} to ${fmtS(t.longest_s)} for this recording). `)
+        + 'The estimate is motion-only: the idle trim can make the tuned file shorter still. ' : '')
+      + 'Review the suggested scale values before applying them. Motion-only analysis does not replace the 3D check or the hardware test.';
+    status.className = `statusbar ${t && !t.reached ? 'warn' : 'ok'}`;
   }
   analysisMetrics();
 }
@@ -442,21 +457,25 @@ function trackData(which) {
   return tracks.get(id);
 }
 
-function figure(tr, { selectable = false, title = '', shapes = [] } = {}) {
+// `seconds`: x is the time (line - 1) x 5 ms, over `span` lines (Compare: both files on one axis).
+function figure(tr, { selectable = false, title = '', shapes = [], seconds = false, span = null } = {}) {
   const pal = palette();
   const n = tr.lines, stride = n > 15000 ? Math.ceil(n / 15000) : 1;
-  const x = [];
-  for (let i = 0; i < n; i += stride) x.push(i + 1);
-  const data = [{ x, y: x.map(i => tr.joints[0][i - 1]), name: 'Line', mode: 'lines', line: { width: 0, color: pal.ink }, showlegend: false,
-    hovertemplate: 'Line %{x:,d}<extra></extra>' }]
-    .concat(tr.joints.map((q, j) => ({ x, y: x.map(i => q[i - 1]), name: `J${j + 1}`, mode: 'lines', line: { width: 1.6, color: pal.joints[j] },
+  const lines = [];
+  for (let i = 0; i < n; i += stride) lines.push(i + 1);
+  const x = seconds ? lines.map(i => (i - 1) * CYCLE_S) : lines;
+  const data = [{ x, y: lines.map(i => tr.joints[0][i - 1]), name: 'Line', mode: 'lines', line: { width: 0, color: pal.ink }, showlegend: false,
+    customdata: lines, hovertemplate: seconds ? 'Line %{customdata:,d} · %{x:.3f} s<extra></extra>' : 'Line %{x:,d}<extra></extra>' }]
+    .concat(tr.joints.map((q, j) => ({ x, y: lines.map(i => q[i - 1]), name: `J${j + 1}`, mode: 'lines', line: { width: 1.6, color: pal.joints[j] },
       hovertemplate: `J${j + 1}: %{y:.2f}°<extra></extra>` })));
   const layout = {
     title: title ? { text: title, font: { size: 12, color: pal.ink }, x: 0.01, xanchor: 'left', y: 0.99 } : undefined,
     margin: { l: 46, r: 30, t: title ? 30 : 10, b: 36 }, paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
     hovermode: 'x unified', dragmode: selectable ? 'select' : 'zoom', selectdirection: 'h',
     hoverlabel: { font: { size: 12 } },
-    xaxis: { title: { text: 'Line (5 ms each)', font: { size: 11, color: pal.ink } }, range: [1, n], showgrid: false, zeroline: false, color: pal.ink, hoverformat: ',d' },
+    xaxis: seconds
+      ? { title: { text: 'Time (s, 5 ms per line)', font: { size: 11, color: pal.ink } }, range: [0, (span ?? n - 1) * CYCLE_S], showgrid: false, zeroline: false, color: pal.ink, hoverformat: '.3f' }
+      : { title: { text: 'Line (5 ms each)', font: { size: 11, color: pal.ink } }, range: [1, n], showgrid: false, zeroline: false, color: pal.ink, hoverformat: ',d' },
     yaxis: { ticksuffix: '°', zeroline: false, gridcolor: pal.ink, gridwidth: 0.3, color: pal.ink, automargin: true },
     legend: { orientation: 'h', x: 0, y: 1.0, yanchor: 'bottom', font: { size: 11, color: pal.ink } },
     modebar: { orientation: 'v', bgcolor: 'transparent', color: pal.ink, activecolor: pal.blue },
@@ -470,7 +489,6 @@ const PLOT_CONFIG = { responsive: true, scrollZoom: true, displaylogo: false, di
 
 const rect = (a, b, colour, opacity, edge = false) => ({ type: 'rect', xref: 'x', yref: 'paper', x0: a, x1: b, y0: 0, y1: 1,
   fillcolor: colour, opacity, line: { width: edge ? 1 : 0, color: colour }, layer: 'below' });
-const cursor = (at, colour) => ({ type: 'line', xref: 'x', yref: 'paper', x0: at, x1: at, y0: 0, y1: 1, line: { color: colour, width: 1.6 } });
 
 // What the recording's plot marks in Review: the analysis' regions, the scale regions, the rows
 // trimmed, the selection, and the moment (always last).
@@ -482,7 +500,6 @@ function reviewShapes() {
   for (const r of manualScaleRegions) out.push(rect(r.start, r.end, pal.violet, 0.13));
   for (const r of manualTrimRegions) out.push(rect(r.start, r.end, pal.red, 0.15));
   if (plotSelection && plotSelection.start != null) out.push(rect(plotSelection.start, plotSelection.end, pal.blue, 0.18, true));
-  out.push(cursor(head.row, pal.red));
   return out;
 }
 
@@ -514,9 +531,10 @@ async function drawPlot(which = pipeStep === 6 ? 'candidate' : 'raw') {
   const div = plotDiv(host, 'lite-plot');
   div.dataset.which = which;
   const title = which === 'raw' ? `Recording — ${(rec() || {}).name || ''}` : `Tuned — ${tunedName()}`;
-  const shapes = which === 'raw' ? reviewShapes() : [cursor(head.line, palette().red)];
+  const shapes = which === 'raw' ? reviewShapes() : [];
   const fig = figure(tr, { selectable: which === 'raw', title, shapes });
   await window.Plotly.react(div, fig.data, fig.layout, { ...PLOT_CONFIG, toImageButtonOptions: { filename: title.replace(/[^\w.-]+/g, '_') } });
+  cursorAt(div, which === 'raw' ? head.row : head.line);
   if (!div.dataset.liteSel) {
     div.dataset.liteSel = '1';
     // the processor's box-select of rows, into the page's own selection (its start and end fields, its line)
@@ -537,8 +555,28 @@ async function drawPlot(which = pipeStep === 6 ? 'candidate' : 'raw') {
 function refreshShapes() {
   const div = mainPlot();
   if (!div || !div.data || !unit) return;
-  const shapes = div.dataset.which === 'raw' ? reviewShapes() : [cursor(head.line, palette().red)];
+  const shapes = div.dataset.which === 'raw' ? reviewShapes() : [];
   window.Plotly.relayout(div, { shapes }).catch(() => {});
+}
+
+// The moment on a plot: a thin line laid over it, moved without redrawing the plot (the owner,
+// 15 Oct: playback lagged; the plot was laid out again at every frame). `x` in the plot's own units.
+function cursorAt(div, x) {
+  const fl = div && div._fullLayout;
+  if (!fl || !fl.xaxis || !div.parentElement) return;
+  div._liteX = x;
+  let c = div._liteCursor;
+  if (!c || !c.isConnected) {
+    c = div._liteCursor = el('div', { class: 'lite-plot-cursor', 'aria-hidden': 'true' });
+    div.parentElement.append(c);
+    if (!div._liteCursorZoom) { div._liteCursorZoom = true; div.on('plotly_relayout', () => cursorAt(div, div._liteX)); }
+  }
+  const [a, b] = fl.xaxis.range;
+  c.hidden = x == null || x < Math.min(a, b) || x > Math.max(a, b);
+  if (c.hidden) return;
+  c.style.left = `${div.offsetLeft + fl._size.l + fl.xaxis.l2p(x)}px`;
+  c.style.top = `${div.offsetTop + fl._size.t}px`;
+  c.style.height = `${fl._size.h}px`;
 }
 
 function setTotal() {
@@ -551,13 +589,11 @@ function setTotal() {
 function moveHead(line, row) {
   head.line = line; head.row = row;
   const div = mainPlot();
-  const at = div && div.dataset.which === 'raw' ? row : line;
-  if (div && div.data && div.layout && div.layout.shapes && div.layout.shapes.length) {
-    const i = div.layout.shapes.length - 1;
-    window.Plotly.relayout(div, { [`shapes[${i}].x0`]: at, [`shapes[${i}].x1`]: at }).catch(() => {});
+  if (div && div.data) cursorAt(div, div.dataset.which === 'raw' ? row : line);
+  if (pipeStep === 6) {                                   // Compare: both files on one time axis
+    cursorAt($('liteCompareOriginal')?.querySelector(':scope > .lite-plot-compare'), (row - 1) * CYCLE_S);
+    cursorAt($('liteCompareTuned')?.querySelector(':scope > .lite-plot-compare'), (line - 1) * CYCLE_S);
   }
-  const cmp = $('liteComparePlot')?.querySelector(':scope > .lite-plot-compare');
-  if (cmp && cmp.data && pipeStep === 6) window.Plotly.relayout(cmp, { 'shapes[0].x0': row, 'shapes[0].x1': row }).catch(() => {});
   const t = Math.max(0, line - 1) * CYCLE_S;
   if ($('litePlotTime')) $('litePlotTime').textContent = `${t.toFixed(3)} s`;
   const lab = $('liteRegionLabel');
@@ -758,10 +794,16 @@ async function renderCompare() {
       : [el('tr', {}, el('td', { colspan: '5', class: 'mini-note', text: 'No scale region was applied.' }))]));
   }
   await loadPlotly();
-  const div = plotDiv($('liteComparePlot'), 'lite-plot-compare');
-  const fig = figure(await trackData('raw'), { title: `Recording — ${(raw || {}).name || ''} (marked where the tuned file is)`,
-    shapes: [cursor(head.row, palette().red)] });
-  await window.Plotly.react(div, fig.data, fig.layout, PLOT_CONFIG);
+  const [orig, tuned] = await Promise.all([trackData('raw'), trackData('candidate')]);
+  const span = Math.max(orig.lines, tuned.lines, 2) - 1;
+  const draw = async (host, tr, title, at) => {
+    const div = plotDiv(host, 'lite-plot-compare');
+    const fig = figure(tr, { title, seconds: true, span });
+    await window.Plotly.react(div, fig.data, fig.layout, { ...PLOT_CONFIG, toImageButtonOptions: { filename: title.replace(/[^\w.-]+/g, '_') } });
+    cursorAt(div, at);
+  };
+  await draw($('liteCompareOriginal'), orig, `Original — ${(raw || {}).name || ''} · ${fmtS(original)}`, (head.row - 1) * CYCLE_S);
+  await draw($('liteCompareTuned'), tuned, `Tuned — ${tunedName()} · ${fmtS(r.achieved_s)}`, (head.line - 1) * CYCLE_S);
 }
 
 // ── the simulation beside the plot

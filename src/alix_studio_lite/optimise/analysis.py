@@ -101,3 +101,50 @@ def analyse(md, sample_ms: float = 5.0) -> dict:
                 totals=dict(regions=len(out), faster=sum(1 for r in out if r["selected"] and r["scale_pct"] < 100),
                             slower=sum(1 for r in out if r["selected"] and r["scale_pct"] > 100),
                             original_s=original, estimated_s=estimated, change_s=original - estimated))
+
+
+def _totals(regions: list[dict]) -> dict:
+    original = sum(r["original_s"] for r in regions)
+    estimated = sum(r["estimated_s"] if r["selected"] else r["original_s"] for r in regions)
+    return dict(regions=len(regions), faster=sum(1 for r in regions if r["selected"] and r["scale_pct"] < 100),
+                slower=sum(1 for r in regions if r["selected"] and r["scale_pct"] > 100),
+                original_s=original, estimated_s=estimated, change_s=original - estimated)
+
+
+def fit_target(result: dict, target_s: float, lo: float = 5.0, hi: float = 400.0) -> dict:
+    """The suggestions fitted to a total time (the owner, 15 Oct: "if the user types 20 seconds, it
+    should give suggestions for the scale regions"). One factor multiplies every region's suggested %,
+    so each keeps the analysis' guidance relative to the others (a region suggested slower stays
+    slower than one suggested faster), each clamped to the scale range Lite accepts (5-400 %); the
+    factor is found by bisection so the motion-only estimate comes to ``target_s``, or as near as the
+    range allows (``reached`` False). Whole percent, as the page enters them. The limits L1-L6 still
+    judge the tuned file, and its idle trim can make it shorter still."""
+    target = float(target_s)
+    if not target > 0:
+        raise ValueError("the target time must be above 0 s")
+    base = [float(r["scale_pct"]) for r in result["regions"]]
+    orig = [float(r["original_s"]) for r in result["regions"]]
+    est = lambda k: sum(o * min(hi, max(lo, p * k)) / 100.0 for o, p in zip(orig, base))   # noqa: E731
+    k_lo, k_hi = lo / max(base), hi / min(base)
+    if est(k_lo) >= target:
+        k = k_lo
+    elif est(k_hi) <= target:
+        k = k_hi
+    else:
+        for _ in range(80):
+            mid = (k_lo + k_hi) / 2.0
+            if est(mid) < target:
+                k_lo = mid
+            else:
+                k_hi = mid
+        k = (k_lo + k_hi) / 2.0
+    regions = []
+    for r, p in zip(result["regions"], base):
+        pct = int(round(min(hi, max(lo, p * k))))
+        action = "Shorter / faster" if pct < 100 else "Longer / slower" if pct > 100 else "Unchanged"
+        regions.append(dict(r, scale_pct=pct, selected=pct != 100, action=action, estimated_s=r["original_s"] * pct / 100.0))
+    out = dict(result, regions=regions, totals=_totals(regions))
+    reached = abs(out["totals"]["estimated_s"] - target) <= max(0.05, 0.01 * target)
+    out["target"] = dict(target_s=target, factor=round(k, 4), estimated_s=out["totals"]["estimated_s"], reached=reached,
+                         shortest_s=sum(o * lo / 100.0 for o in orig), longest_s=sum(o * hi / 100.0 for o in orig))
+    return out

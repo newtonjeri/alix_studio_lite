@@ -720,9 +720,10 @@ def post_keep(app, q, body, m):
 @route("GET", U + "/analysis")
 def get_analysis(app, q, body, m):
     """Tune's automatic optimisation (its Analyze step): the Trajectory V2 processor's review regions
-    of the active recording, each with a suggested time % (optimise/analysis.py)."""
+    of the active recording, each with a suggested time % (optimise/analysis.py). ``target_s``: the
+    suggestions fitted to that total time (``fit_target``)."""
     from ..motion import track
-    from ..optimise.analysis import analyse
+    from ..optimise.analysis import analyse, fit_target
 
     units, key = units_of(app, m.group(1)), m.group(2)
     _unit(units, key)
@@ -730,6 +731,12 @@ def get_analysis(app, q, body, m):
     if raw is None:
         raise UserError("There is no recording to analyse yet.", "Record the region, or load a file.")
     out = analyse(track.read_md(raw))
+    target = (q.get("target_s") or [None])[0]
+    if target not in (None, ""):
+        try:
+            out = fit_target(out, float(target))
+        except ValueError:
+            raise UserError("Enter the target time in seconds, above 0.") from None
     out["file"] = _name_of(units, key, raw)
     return out
 

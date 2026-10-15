@@ -438,3 +438,24 @@ def test_tune_has_the_processors_analysis_trim_settings_and_named_tuned_files(li
         body, disp = resp.read(), resp.headers.get("Content-Disposition", "")
     kept = work_dir(lite, key).parent / "versions" / v["versions"][-1]["file"]
     assert body == kept.read_bytes() and "L_hinge_TUNED.txt" in disp
+
+
+def test_the_suggestions_fit_an_optimised_time(lite):
+    """Analyze with an optimised time (the owner, 15 Oct: "if the user types 20 seconds, it should give
+    suggestions for the scale regions"): one factor on every suggestion, each kept in 5-400 %, so the
+    estimate comes to the time asked, or as near as the range allows."""
+    from alix_studio_lite.optimise.analysis import analyse, fit_target
+
+    key = "L-R02"
+    load(lite, key, "FILE_09.txt", "L_side_target.txt", 140, "100% open", lines=1500)
+    a = call(lite, "GET", f"/api/projects/{lite['pid']}/units/{key}/analysis")
+    base = [r["scale_pct"] for r in a["regions"]]
+    want = round(a["totals"]["original_s"] * 0.6, 2)
+    t = call(lite, "GET", f"/api/projects/{lite['pid']}/units/{key}/analysis?target_s={want}")
+    assert t["target"]["reached"] and abs(t["totals"]["estimated_s"] - want) <= max(0.05, 0.01 * want)
+    got = [r["scale_pct"] for r in t["regions"]]
+    assert all(r["selected"] for r in t["regions"] if r["scale_pct"] != 100)
+    assert sorted(range(len(base)), key=lambda i: base[i]) == sorted(range(len(got)), key=lambda i: got[i])   # the guidance kept
+    far = fit_target(analyse([[i * 100, 0, 0, 0, 0, 0, 0] for i in range(400)]), 0.01)
+    assert not far["target"]["reached"] and {r["scale_pct"] for r in far["regions"]} == {5}
+    assert "above 0" in call(lite, "GET", f"/api/projects/{lite['pid']}/units/{key}/analysis?target_s=-3")["error"]
