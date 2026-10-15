@@ -258,13 +258,6 @@ class LiteUnits(Project):
             self._write_state(key, state)
             return done
 
-    def drop_applied(self, key: str, kind: str) -> None:
-        """That Apply's part is no longer as applied (the hand ALIX opened before a pole move)."""
-        with self.lock:
-            state = self._unit_state(key)
-            if (state.get("applied") or {}).pop(kind, None) is not None:
-                self._write_state(key, state)
-
     def applied(self, key: str) -> dict:
         return self._unit_state(key).get("applied") or {}
 

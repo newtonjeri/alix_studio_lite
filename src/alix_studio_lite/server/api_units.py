@@ -457,14 +457,9 @@ def set_setup(app, q, body, m):
     stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "set in Prepare")
     kind = body.get("kind")                            # which Apply was pressed: pole | hand (it alone moves)
     mode, job = app.ui["mode"], None
-
-    def mark(out):                                     # applied once the arm is in it (read back), before its job
-        units.mark_applied(key, kind, stage)           # reports done; confirmed and accepted by the robot first,
-        if (out or {}).get("hand_opened"):             # so a refusal changes nothing. ALIX opened the hand before
-            units.drop_applied(key, "hand")            # the pole moved: the hand is no longer in its pose
-
-    if body.get("apply") and mode != "visual":
-        if kind == "pole":
+    mark = lambda _out: units.mark_applied(key, kind, stage)     # noqa: E731  applied once the arm is in it (read back),
+    if body.get("apply") and mode != "visual":         # before its job reports done; confirmed and accepted by
+        if kind == "pole":                             # the robot first, so a refusal changes nothing
             require_confirmed(app, body, "Moving the pole")
             job = app.robot.stage_part(u["arm"], stage, "pole", f"Pole {key}: {stage.pole_mm:g} mm", mode=mode, on_done=mark)
         elif kind == "hand":

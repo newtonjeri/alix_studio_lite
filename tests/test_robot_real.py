@@ -291,32 +291,33 @@ def hardware(server) -> list[dict]:
     return [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
 
 
-def test_the_poles_apply_is_alixs_staging_with_the_pole_alone(server):
-    """Prepare's Apply beside the pole moves the pole alone (feedback v3), ALIX's way: staging.stage_arm with
-    the pole alone, so when the pole must move the hand is opened first (no fingers on the tool while the
-    column travels) and the arm is checked at rest; the hand's Apply then no longer holds. A pole already
-    at its height moves nothing, the hand included."""
+def test_each_apply_moves_its_own_part_only(server):
+    """Prepare's Apply beside the pole moves the pole only, and the one beside the hand the hand only (the
+    owner, 15 Oct, twice): on the controller, the hand stays as it was while the pole moves, and the pole
+    while the hand moves; each Apply stays applied."""
     call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
     pole = call(server, "GET", f"{U}/L-T01")["setup"]["pole_mm"]
     grip = [0, 0, 0, 0, 150, 1000]
     j = wait(server, call(server, "POST", f"{U}/L-T01/setup", {"pole_mm": pole, "hand": grip, "apply": True, "kind": "hand",
                                                                "confirmed": True})["job"])
-    assert j["state"] == "done" and "hand" in call(server, "GET", f"{U}/L-T01")["applied"], j
+    assert j["state"] == "done", j
+    held = call(server, "GET", "/api/robots/status")["arms"]["left"]["link"]["feedback"]["hand"]
+    seen = len(hardware(server))
     other = pole - 100 if pole > 150 else pole + 100
     j = wait(server, call(server, "POST", f"{U}/L-T01/setup", {"pole_mm": other, "hand": grip, "apply": True, "kind": "pole",
                                                                "confirmed": True})["job"])
-    assert j["state"] == "done" and j["result"]["hand_opened"] and "The hand opened before the pole moved" in text(j), j
-    applied = call(server, "GET", f"{U}/L-T01")["applied"]
-    assert "pole" in applied and "hand" not in applied
+    assert j["state"] == "done", j
     fb = call(server, "GET", "/api/robots/status")["arms"]["left"]["link"]["feedback"]
-    assert abs(fb["pole_mm"] - other) <= 5 and min(fb["hand"]) >= 975
-    hw = hardware(server)
-    assert any(r["verb"] == "stage pole" and r["ok"] and "the hand opened first" in (r.get("text") or "") for r in hw)
-    alix = " ".join(r.get("text") or "" for r in hw)
-    assert "OPEN before the pole moves" in alix
-    j = wait(server, call(server, "POST", f"{U}/L-T01/setup", {"pole_mm": other, "hand": grip, "apply": True, "kind": "pole",
+    assert abs(fb["pole_mm"] - other) <= 5 and all(abs(a - b) <= 10 for a, b in zip(fb["hand"], held))   # the hand as it was
+    new = hardware(server)[seen:]
+    assert [r["verb"] for r in new if r["verb"] in ("pole move", "hand move", "stage")] == ["pole move"]
+    assert not any("OPEN before the pole moves" in (r.get("text") or "") for r in new)
+    assert {"pole", "hand"} <= set(call(server, "GET", f"{U}/L-T01")["applied"])           # both still applied
+    j = wait(server, call(server, "POST", f"{U}/L-T01/setup", {"pole_mm": other, "hand": [1000] * 6, "apply": True, "kind": "hand",
                                                                "confirmed": True})["job"])
-    assert j["state"] == "done" and not j["result"]["hand_opened"], j          # already there: nothing moved
+    assert j["state"] == "done", j
+    fb = call(server, "GET", "/api/robots/status")["arms"]["left"]["link"]["feedback"]
+    assert abs(fb["pole_mm"] - other) <= 5 and min(fb["hand"]) >= 975                      # the pole where it was
 
 
 def test_a_linked_arm_is_not_let_go_while_a_job_runs_on_it(server):

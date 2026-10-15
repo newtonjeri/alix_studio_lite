@@ -2,9 +2,7 @@
 // hand pose it is taught with (from its existing recording's record or the region catalogue).
 // Prepare shows it; Apply beside the pole and Apply beside the hand each keep the page's values as the
 // setup and move that one alone (the owner, 15 Oct: the pole's Apply moved the hand too): in Real on
-// the robot, read back, after a confirmation; in Hardware sim emulated, as nothing moves there. In Real
-// the pole's Apply is ALIX's staging with the pole alone: when the pole has to move, the hand is opened
-// first (no fingers on the tool while the column travels), never put in the region's pose. The
+// the robot, read back, after a confirmation; in Hardware sim emulated, as nothing moves there. The
 // hand sent is the one on screen: a preset (Grip / Cleaning, All Open, Cleaning Pose), or with Custom
 // the six channels, where an empty channel is held (left where it is); the Custom channels have their
 // own Apply.
@@ -113,8 +111,7 @@ async function applySetup(kind) {
   const mode = await liteMode();
   const part = String(kind || '').toLowerCase();               // which Apply: it alone moves; teaching waits for both
   const body = { pole_mm: Number($('poleHeight').value), hand: handFromPage(), apply: mode === 'hwsim' || mode === 'real', kind: part };
-  const what = part === 'pole' ? 'pole (when it has to move, the hand opens first, as ALIX stages it: no fingers on the tool '
-    + 'while the pole travels)' : part === 'hand' ? 'hand' : 'pole and hand';
+  const what = part === 'pole' ? 'pole' : part === 'hand' ? 'hand' : 'pole and hand';
   paintApplied(appliedNow, part);
   try {
     const out = await robotCall(unitUrl(s.key, 'setup'), body, { what: `Moving the ${s.arm.toUpperCase()} ${what}` });
@@ -136,10 +133,8 @@ async function applySetup(kind) {
       return;
     }
     $('liteSetupNote').classList.remove('lite-bad');
-    const opened = done.result && done.result.hand_opened;     // ALIX opened the hand before the pole moved
     window.toast(`${s.arm.toUpperCase()} ${part === 'pole' ? `pole at ${out.unit.setup.pole_mm} mm` : part === 'hand' ? 'hand set' : 'staged'}: `
-      + `${out.unit.setup.text} ` + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).')
-      + (opened ? ' The hand opened first, so it is no longer in its pose: press Apply beside the hand again.' : ''));
+      + `${out.unit.setup.text} ` + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).'));
     window.rcSyncGuidedValues();                       // the Advanced panel shows the same values (nothing is sent)
     await afterTeaching(s, out.unit, body, part);
   } catch (err) { paintApplied(); tell(err); }
