@@ -118,10 +118,16 @@ def test_one_arm_step_through_the_loop(lite):
     assert not u["fresh"] and u["settings_view"]["can_undo"]
     assert "changed" in unit(lite, key, "keep", {})["error"]
     assert unit(lite, key, "undo", {})["fresh"]
-    assert "1 % or more" in unit(lite, key, "settings", {"changes": {"segments": [{"start": 1, "end": 5, "pct": 0.5}]}})["error"]
+    # as the HTML takes them: a scale below 1 % is 1 %; a window kept as typed, read odd when the file is made
+    from alix_studio_lite.optimise import manual
+
+    tiny = unit(lite, key, "settings", {"changes": {"segments": [{"start": 1, "end": 5, "pct": 0.5}]}})
+    assert tiny["settings_view"]["settings"]["segments"][0]["pct"] == 1.0
+    assert unit(lite, key, "undo", {})["fresh"]
     over = [{"start": 1, "end": 50, "pct": 80}, {"start": 50, "end": 90, "pct": 80}]
     assert "may not overlap" in unit(lite, key, "settings", {"changes": {"segments": over}})["error"]
-    assert unit(lite, key, "settings", {"changes": {"smooth_window": 40}})["settings_view"]["settings"]["smooth_window"] == 41
+    s40 = unit(lite, key, "settings", {"changes": {"smooth_window": 40}})["settings_view"]["settings"]
+    assert s40["smooth_window"] == 40 and manual.params(s40)["smooth_window"] == 41
     assert unit(lite, key, "undo", {})["fresh"]
 
     # robot steps need a robot mode and a connected arm (D30)

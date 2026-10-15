@@ -102,6 +102,23 @@ def analyse(md, sample_ms: float = 5.0) -> dict:
                             original_s=original, estimated_s=estimated, change_s=original - estimated))
 
 
+HTML_KEYS = (("start", "start"), ("end", "end"), ("avgStep", "avg_step"), ("maxStep", "max_step"),
+             ("avgAccel", "avg_accel"), ("originalSec", "original_s"), ("motionType", "motion_type"),
+             ("action", "action"), ("peakGuidance", "peak_guidance"), ("scalePct", "scale_pct"),
+             ("selected", "selected"), ("estimatedSec", "estimated_s"), ("reason", "reason"))
+
+
+def html_report(md, generated_at: str, sample_ms: float = 5.0) -> dict | None:
+    """The HTML's ``state.analysisReport`` (its runAutomaticAnalysis), with its keys: what its
+    processing report carries as ``automaticOptimizationAnalysis``. None for a file too short to analyse."""
+    try:
+        res = analyse(md, sample_ms)
+    except ValueError:
+        return None
+    return dict(generatedAt=generated_at, method=METHOD, contactDataAvailable=False,
+                suggestions=[{k: r[ours] for k, ours in HTML_KEYS} for r in res["regions"]])
+
+
 def _totals(regions: list[dict]) -> dict:
     original = sum(r["original_s"] for r in regions)
     estimated = sum(r["estimated_s"] if r["selected"] else r["original_s"] for r in regions)

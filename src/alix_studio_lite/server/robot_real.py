@@ -4,8 +4,9 @@ connected controller, on the link's connection (robot_link.ArmLink):
 
 - the pole and the hand to a file's stage, ALIX's way (``staging.stage_arm``: the hand opened when
   the pole must move, the arm checked at rest, the pole, then the hand, each read back), at 50 %
-  speed. Real only: the controller cannot simulate them, so in Hardware sim they are taken as
-  arrived (robot_standin.py);
+  speed; Prepare's Apply beside the pole the same way with the pole alone (the hand opened first
+  when the pole must move, never put in the region's pose). Real only: the controller cannot
+  simulate them, so in Hardware sim they are taken as arrived (robot_standin.py);
 - the controller's run mode, SIM or REAL, verified by reading it back (``runmode``);
 - drag teaching: the SDK's drag-teach start and stop, and the controller's recording saved by the
   SDK itself, as the control program does, so the files are byte for byte the control program's;
@@ -13,7 +14,7 @@ connected controller, on the link's connection (robot_link.ArmLink):
   own tool, ``vendor/control_app/rm_upload.py`` (the operators' upload-and-run script), its steps
   and its printed lines (into the hardware log); the read-back after an upload is tried again when
   the controller does not answer at once;
-- a move to a joint pose at 30 % (``staging.park_arm``), checked against the pose.
+- a move to a joint pose at the speed slider's % (``staging.park_arm``), checked against the pose.
 
 Every command goes to the hardware log with its return code and what it means (logbook.py), and
 ALIX's own lines with it. While a command runs, the link only watches the E-stop input, so two
@@ -40,6 +41,11 @@ HAND_SPEED_SET = 500      # the hand's SPEED_SET, of 1000: 50 %
 # move at the slider's %, then the global speed put back to the one found when the arm was connected.
 RESTORE_PCT = 50          # the global speed put back when the controller did not say which it had
 CHECK_TRIES = 4           # the read-back after an upload: tries, 1 s apart, before it is called failed
+POLE_HINT = {             # what to do when ALIX's staging refused the pole (staging.stage_arm's codes)
+    "hand_release_failed": "ALIX opens the hand before the pole moves: check the hand's cable and power, then try again.",
+    "arm_moving_refuse_pole": "The arm was still moving: wait until it stands still, then try again.",
+    "pole_height_ambiguous": "The pole's two height readings disagree: check the pole, then try again.",
+}
 
 
 def _words(code: str | None) -> str:
@@ -202,6 +208,32 @@ class RealArm:
             raise UserError(f"The {self.SIDE} arm was not staged: {_words(out.get('refusal'))} "
                             f"(pole {'?' if found is None else f'{found * 1000:.0f}'} mm of {stage.pole_mm:.0f} mm). "
                             "Nothing else ran.", "Check the pole and the hand, then try again.")
+        return out
+
+    def stage_pole(self, mm: float) -> dict:
+        """The pole alone to ``mm`` (Prepare's Apply beside the pole), ALIX's way: ``staging.stage_arm``
+        with a stage that names only the pole, so when the pole must move the hand is opened first (no
+        fingers on the tool while the column travels), the arm is checked at rest (F9), then the pole
+        moves at 50 % and is read back. The hand is not put in the region's pose. Raises when the pole
+        did not arrive: then nothing else ran."""
+        from alix_dispatch import staging as alix_staging
+
+        log = self._alix_log()
+        with self.link.busy("staging the pole"):
+            pole, hand, _opened = alix_staging.open_devices(self.handle, log=log, speed_set=HAND_SPEED_SET)
+            task = {"side": self.side, "pre_stroke": {"pole_m": float(mm) / 1000.0}}
+            out = alix_staging.stage_arm(self.handle, task, pole=pole, hand=hand, log=log, pole_speed_pct=POLE_SPEED_PCT)
+        found = (out.get("pole") or {}).get("found_m")
+        opened = next((s.get("result") or {} for s in out.get("steps") or [] if s.get("step") == "hand_open"), None)
+        out["hand_opened"] = None if opened is None else list(opened.get("after") or opened.get("target") or [])
+        self._hw("stage pole", args=dict(pole_mm=mm, speed_pct=POLE_SPEED_PCT), ok=bool(out.get("ok")),
+                 text=(f"pole {found * 1000:.0f} mm" if found is not None else "pole not read")
+                 + ("" if opened is None else f", the hand opened first ({opened.get('after')})")
+                 + ("" if out.get("ok") else f"; refused: {_words(out.get('refusal'))}"))
+        if not out.get("ok"):
+            raise UserError(f"The {self.SIDE} pole was not moved to {mm:.0f} mm: {_words(out.get('refusal'))} "
+                            f"(pole {'?' if found is None else f'{found * 1000:.0f}'} mm). Nothing else ran.",
+                            POLE_HINT.get(out.get("refusal"), "Check the pole and the hand, then try again."))
         return out
 
     def pole_to(self, mm: float) -> dict:

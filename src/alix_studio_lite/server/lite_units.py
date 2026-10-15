@@ -141,9 +141,19 @@ class LiteUnits(Project):
         with self.lock:
             if not any(r["file"] == file for r in self.recordings(key)):
                 raise KeyError(f"no recording {file!r} for {key}")
+            was = self.current_recording(key)
             st = self._unit_state(key)
             st["active"] = file
             self._write_state(key, st)
+            if was is None or was.name != file:
+                self._regions_cleared(key, file)
+
+    def _regions_cleared(self, key: str, file: str) -> None:
+        """The scale regions are rows of the recording they were set on: another recording starts
+        without them, as the trajectory HTML clears them with every file it loads (one undo step)."""
+        if self.settings(key).get("segments"):
+            name = next((r.get("name") or r["file"] for r in self.recordings(key) if r["file"] == file), file)
+            self.update_settings(key, {"segments": []}, f"Scale regions cleared: another recording ({name})")
 
     def add_recording(self, key: str, src_path: Path, note: str = "", source: str = "teach",
                       name: str | None = None, *, taught_arm: str | None = None, stage=None,
@@ -173,6 +183,7 @@ class LiteUnits(Project):
             state = self._unit_state(key)
             state["active"] = dst.name
             self._write_state(key, state)
+            self._regions_cleared(key, dst.name)
             return dst
 
     def _update_source(self, path: Path, **fields) -> None:
@@ -246,6 +257,13 @@ class LiteUnits(Project):
             state["applied"] = done
             self._write_state(key, state)
             return done
+
+    def drop_applied(self, key: str, kind: str) -> None:
+        """That Apply's part is no longer as applied (the hand ALIX opened before a pole move)."""
+        with self.lock:
+            state = self._unit_state(key)
+            if (state.get("applied") or {}).pop(kind, None) is not None:
+                self._write_state(key, state)
 
     def applied(self, key: str) -> dict:
         return self._unit_state(key).get("applied") or {}

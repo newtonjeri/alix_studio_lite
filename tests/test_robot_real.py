@@ -250,10 +250,10 @@ def test_global_points_play_in_3d(server):
     fast = call(server, "POST", "/api/robots/speed", {"pct": 80}) and call(server, "POST", "/api/projects/alix_real/points-plan",
                                                                             {"side": "left", "points": names})
     assert fast["rows"][0]["arms"]["left"]["lines"] < a["lines"]          # the slider moves the 3D too
+    assert plan["total_s"] == a["end_at"] and "joint by joint" in plan["rows"][0]["note"] and plan["move_pct"] == 20
+    tl = call(server, "POST", a["timeline"]["url"], a["timeline"]["body"])          # the slider at 80 % now: the frames
+    assert tl["lines"] == a["lines"] and tl["traj_t0"] == a["traj_t0"] and tl["move_pct"] == 20 and "scene" in tl   # keep the plan's clock
     call(server, "POST", "/api/robots/speed", {"pct": 20})
-    assert plan["total_s"] == a["end_at"] and "joint by joint" in plan["rows"][0]["note"]
-    tl = call(server, "POST", a["timeline"]["url"], a["timeline"]["body"])
-    assert tl["lines"] == a["lines"] and "scene" in tl
     assert "no global point NOPE" in call(server, "POST", "/api/projects/alix_real/points-plan", {"side": "left", "points": ["NOPE"]})["error"]
 
 
@@ -285,3 +285,53 @@ def test_the_speed_slider_moves_both_arms_and_each_controller_gets_its_speed_bac
     assert back and back[-1]["args"]["pct"] == 100 and back[-1]["ok"]
     assert call(server, "POST", "/api/robots/left/connect", {})["connected"]
     assert call(server, "GET", "/api/robots/speed")["pct"] == 35          # the other arm stayed connected: the slider stays
+
+
+def hardware(server) -> list[dict]:
+    return [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+
+
+def test_the_poles_apply_is_alixs_staging_with_the_pole_alone(server):
+    """Prepare's Apply beside the pole moves the pole alone (feedback v3), ALIX's way: staging.stage_arm with
+    the pole alone, so when the pole must move the hand is opened first (no fingers on the tool while the
+    column travels) and the arm is checked at rest; the hand's Apply then no longer holds. A pole already
+    at its height moves nothing, the hand included."""
+    call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
+    pole = call(server, "GET", f"{U}/L-T01")["setup"]["pole_mm"]
+    grip = [0, 0, 0, 0, 150, 1000]
+    j = wait(server, call(server, "POST", f"{U}/L-T01/setup", {"pole_mm": pole, "hand": grip, "apply": True, "kind": "hand",
+                                                               "confirmed": True})["job"])
+    assert j["state"] == "done" and "hand" in call(server, "GET", f"{U}/L-T01")["applied"], j
+    other = pole - 100 if pole > 150 else pole + 100
+    j = wait(server, call(server, "POST", f"{U}/L-T01/setup", {"pole_mm": other, "hand": grip, "apply": True, "kind": "pole",
+                                                               "confirmed": True})["job"])
+    assert j["state"] == "done" and j["result"]["hand_opened"] and "The hand opened before the pole moved" in text(j), j
+    applied = call(server, "GET", f"{U}/L-T01")["applied"]
+    assert "pole" in applied and "hand" not in applied
+    fb = call(server, "GET", "/api/robots/status")["arms"]["left"]["link"]["feedback"]
+    assert abs(fb["pole_mm"] - other) <= 5 and min(fb["hand"]) >= 975
+    hw = hardware(server)
+    assert any(r["verb"] == "stage pole" and r["ok"] and "the hand opened first" in (r.get("text") or "") for r in hw)
+    alix = " ".join(r.get("text") or "" for r in hw)
+    assert "OPEN before the pole moves" in alix
+    j = wait(server, call(server, "POST", f"{U}/L-T01/setup", {"pole_mm": other, "hand": grip, "apply": True, "kind": "pole",
+                                                               "confirmed": True})["job"])
+    assert j["state"] == "done" and not j["result"]["hand_opened"], j          # already there: nothing moved
+
+
+def test_a_linked_arm_is_not_let_go_while_a_job_runs_on_it(server):
+    """A move or run under way keeps its link: its own finally puts the controller's speed back, which a
+    closed link cannot. Disconnecting waits for STOP (or the end); then the speed is put back and the link
+    closes."""
+    call(server, "POST", "/api/robots/mode", {"mode": "hwsim"})
+    now = call(server, "GET", "/api/robots/status")["arms"]["right"]["pole_mm"]
+    job = call(server, "POST", "/api/robots/right/pole", {"mm": 0 if now > 150 else 300})
+    r = call(server, "POST", "/api/robots/right/disconnect", {})
+    assert r.get("code") == "busy" and "STOP" in r["hint"], r
+    assert call(server, "GET", "/api/robots/status")["arms"]["right"]["connected"]
+    call(server, "POST", "/api/robots/right/stop", {})
+    assert wait(server, job)["state"] in ("cancelled", "failed")
+    assert not call(server, "POST", "/api/robots/right/disconnect", {})["connected"]
+    assert [r for r in hardware(server) if r["verb"] == "restore global speed"][-1]["side"] == "right"
+    assert call(server, "POST", "/api/robots/right/connect", {})["connected"]
+    assert call(server, "POST", "/api/robots/right/recover", {})["estop"] == "CLEAR"

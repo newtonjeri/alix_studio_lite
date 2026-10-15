@@ -55,9 +55,15 @@ def set_move_pct(pct: float) -> float:
     return _move_pct
 
 
-def move_fraction() -> float:
-    """The move to a start, as a fraction of each joint's rating: the speed slider's %."""
-    return _move_pct / 100.0
+def move_fraction(pct: float | None = None) -> float:
+    """The move to a start, as a fraction of each joint's rating: ``pct`` (the % a plan was made at,
+    so its 3D frames keep its clock), else the speed slider's % now."""
+    return (_move_pct if pct is None else max(1.0, min(100.0, float(pct)))) / 100.0
+
+
+def move_pct() -> float:
+    """The speed slider's %, as a plan records it."""
+    return _move_pct
 
 
 def _alix():
@@ -222,9 +228,10 @@ def start_values(side: str, home: dict, start: dict | None = None) -> dict:
     return out
 
 
-def execution_times(side: str, q_deg: np.ndarray, stage: Stage, home: dict, rating_deg_s) -> dict:
+def execution_times(side: str, q_deg: np.ndarray, stage: Stage, home: dict, rating_deg_s, move_pct: float | None = None) -> dict:
     """The clock of an execution from ``home`` (its start values): the pole to the stage height,
-    the hand to the stage pose, the joint move to the first line, then (N - 1) x 5 ms."""
+    the hand to the stage pose, the joint move to the first line (at ``move_pct``, else the speed
+    slider's %), then (N - 1) x 5 ms."""
     s = SIDE_PREFIX[side]
     pole0, hand0 = home_stage(side, home)
     hand1 = [c0 if c is None else int(c) for c0, c in zip(hand0, stage.hand)]
@@ -232,7 +239,7 @@ def execution_times(side: str, q_deg: np.ndarray, stage: Stage, home: dict, rati
     t_pole = pole_travel_s(pole0, stage.pole_mm)
     t_hand = hand_move_s(hand0, hand1)
     rating = np.asarray(rating_deg_s, dtype=float)
-    t_move = max(1.0, float(np.max(np.abs(q_deg[0] - arm0) / (move_fraction() * rating))) + 0.5)
+    t_move = max(1.0, float(np.max(np.abs(q_deg[0] - arm0) / (move_fraction(move_pct) * rating))) + 0.5)
     traj_t0 = t_pole + t_hand + t_move
     return dict(pole0=pole0, hand0=hand0, hand1=hand1, arm0=arm0, t_pole=t_pole, t_hand=t_hand, t_move=t_move,
                 traj_t0=traj_t0, traj_s=(q_deg.shape[0] - 1) * CYCLE_S,
@@ -258,13 +265,13 @@ def staged_links(side: str, links) -> list[str]:
 
 def execution_timeline(side: str, md: np.ndarray, stage: Stage, *, home: dict, links,
                        rating_deg_s, every: int = 4, step_s: float = 0.05,
-                       max_frames: int = 5000) -> dict:
+                       max_frames: int = 5000, move_pct: float | None = None) -> dict:
     """What an execution does, as 3D frames on one clock: from ``home`` (the standing pose, or
     where an earlier execution left the arm: start_values), the pole moves to the stage height,
     then the hand to the stage pose, then the arm moves joint-linearly to the trajectory's first
-    line (at the speed slider's % of each joint's rating), then the trajectory plays at 5 ms per
-    line. Frames hold the transform of every link the pole moves; ``end`` is where it leaves the
-    arm (pole, hand counts, last line)."""
+    line (at ``move_pct``, the % its plan was made at, else the speed slider's %, of each joint's
+    rating), then the trajectory plays at 5 ms per line. Frames hold the transform of every link the
+    pole moves; ``end`` is where it leaves the arm (pole, hand counts, last line)."""
     from . import robot_model
 
     model = robot_model.fk_model()
@@ -272,7 +279,7 @@ def execution_timeline(side: str, md: np.ndarray, stage: Stage, *, home: dict, l
     arm_names = [f"{s}_joint{i}" for i in range(1, 8)]
     q = np.asarray(md, dtype=float) / 1000.0                              # degrees
     n = q.shape[0]
-    clock = execution_times(side, q, stage, home, rating_deg_s)
+    clock = execution_times(side, q, stage, home, rating_deg_s, move_pct)
     pole0, hand0, hand1, arm0 = clock["pole0"], clock["hand0"], clock["hand1"], clock["arm0"]
     t_pole, t_hand, t_move = clock["t_pole"], clock["t_hand"], clock["t_move"]
     every = max(int(every), math.ceil(n / max(1, max_frames - int((t_pole + t_hand + t_move) / step_s) - 4)))
@@ -315,6 +322,7 @@ def execution_timeline(side: str, md: np.ndarray, stage: Stage, *, home: dict, l
         side=side, links=list(links), times=[round(x[0], 4) for x in samples],
         frames=base64.b64encode(frames.tobytes()).decode("ascii"),
         traj_t0=round(traj_t0, 4), total_s=round(traj_t0 + (n - 1) * CYCLE_S, 4), lines=n,
+        move_pct=round(100.0 * move_fraction(move_pct), 3),
         stage=stage.as_dict(), end=clock["end"],
         phases=[
             dict(name="pole", t0=0.0, t1=round(t_pole, 3),

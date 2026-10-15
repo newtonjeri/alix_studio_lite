@@ -369,13 +369,15 @@ class StandInRobot:
             return job
 
     def close(self) -> None:
-        """Let go of every live link (the server is stopping); an arm in drag teaching leaves it first,
-        and every controller gets the global speed it had when it was connected."""
+        """Let go of every live link (the server is stopping, after STOP); an arm in drag teaching
+        leaves it first, and every controller gets the global speed it had when it was connected, once
+        the jobs STOP ended have ended (their own ``finally`` runs on a link still open)."""
         for side, a in self.arms.items():
             if a.teaching:
                 a.teaching = False
                 self._leave_drag(side)
         for side in list(self.links):
+            self._settle(side)
             self._give_back_speed(side)
         with self.lock:
             links, self.links = list(self.links.values()), {}
@@ -425,6 +427,18 @@ class StandInRobot:
         if real is not None:
             real.restore_speed(self.found_speed(side))
 
+    def _refuse_if_busy(self, side: str, what: str) -> None:
+        busy = [j for j in self.jobs.running(arm=side) if not j.cancelled]
+        if busy:
+            raise UserError(f"The {side.upper()} arm is busy: {busy[0].title}. It stays connected.",
+                            f"Press STOP, or let it finish, then {what}.", code="busy")
+
+    def _settle(self, side: str, timeout_s: float = 5.0) -> None:
+        """Wait (at most ``timeout_s``) for the arm's stopped jobs to end."""
+        t_end = time.monotonic() + timeout_s
+        while self.jobs.running(arm=side) and time.monotonic() < t_end:
+            time.sleep(0.05)
+
     # ── connection and safety
     def connect(self, side: str, ip: str | None = None) -> dict:
         a = self.arm(side)
@@ -432,6 +446,8 @@ class StandInRobot:
         if self.link_kind:
             from .robot_link import ArmLink
 
+            if side in self.links:                       # its old link is closed below: not under a running job
+                self._refuse_if_busy(side, "connect again")
             # the new link first: when it cannot open, the arm keeps its old link (or stays
             # disconnected), never "connected" without a reading behind its E-stop chip
             new = ArmLink(side, target, on_read=lambda: self._sync(side)).open()
@@ -452,8 +468,13 @@ class StandInRobot:
         return a.view()
 
     def disconnect(self, side: str) -> dict:
+        """A linked arm lets go only once nothing runs on it: its controller's own speed is put back,
+        then the link closes (a move or run under way would lose its link mid-command, and with it its
+        own ``finally`` that puts the speed back)."""
         a = self.arm(side)
         if side in self.links:
+            self._refuse_if_busy(side, "disconnect")
+            self._settle(side)                           # a job STOP ended finishes on the open link
             self._give_back_speed(side)                  # the controller's own speed, as found on connecting
         with self.lock:
             self.jobs.cancel_arm(side)
@@ -615,14 +636,16 @@ class StandInRobot:
     def stage_part(self, side: str, stage: "staging.Stage", part: str, title: str, mode: str | None = None,
                    on_done=None):
         """Prepare's Apply beside the pole or beside the hand: that one alone (the owner, 15 Oct: "If I
-        click apply for pole, hand apply automatically triggered"). A channel the stage holds keeps
-        the value it reads now; what the hand reads after is what this pose left (as staging keeps it,
-        for a hand that settled short on the tool)."""
-        if part == "pole":
-            return self.move_pole(side, stage.pole_mm, title, mode=mode, on_done=on_done)
+        click apply for pole, hand apply automatically triggered"). In Real the pole's is ALIX's staging
+        with the pole alone, which opens the hand first when the pole must move (never into the region's
+        pose). A channel the stage holds keeps the value it reads now; what the hand reads after is
+        what this pose left (as staging keeps it, for a hand that settled short on the tool)."""
+        if part == "pole":                              # in Real ALIX's staging with the pole alone
+            return self.move_pole(side, stage.pole_mm, title, mode=mode, on_done=on_done, staged=True)
         if part != "hand":
             raise UserError("Apply the pole or the hand.")
-        now = self._measured(side)[1] or self.arm(side).hand
+        commanded = side in self.links and (mode or self.mode) == "real"
+        now = self._measured(side)[1] or ([None] * 6 if commanded else self.arm(side).hand)   # a hand not read holds nothing
         if any(t is None and h is None for h, t in zip(now, stage.hand)):
             raise UserError(f"The {side.upper()} hand's reading is not known yet, so a channel left empty cannot be held.",
                             "Try again in a moment, or set all six channels.")
@@ -648,7 +671,11 @@ class StandInRobot:
         return bool(last and last["target"] == list(stage.hand) and staging.same_hand(hand, last["read"]))
 
     # ── pole, hand, teach
-    def move_pole(self, side: str, pole_mm: float, title: str, mode: str | None = None, on_done=None):
+    def move_pole(self, side: str, pole_mm: float, title: str, mode: str | None = None, on_done=None,
+                  staged: bool = False):
+        """The pole to ``pole_mm``. In Real on a linked arm: ``staged`` (Prepare's Apply), ALIX's staging
+        with the pole alone (the hand opened first when the pole must move, the arm checked at rest);
+        else (Advanced) the pole's own move."""
         a = self.arm(side)
         mode = mode or self.mode
         if not 0 <= float(pole_mm) <= staging.POLE_MAX_MM:
@@ -657,6 +684,18 @@ class StandInRobot:
         def work(job):
             self._same_mode(mode)
             real = self._real(side)
+            if real is not None and mode == "real" and staged:
+                job.progress(f"Moving the pole to {float(pole_mm):.0f} mm (50 % speed; the hand opens first "
+                             "if the pole has to move)", 1, 1)
+                out = real.stage_pole(float(pole_mm))
+                found = (out.get("pole") or {}).get("found_m")
+                a.pole_mm = float(pole_mm) if found is None else found * 1000.0
+                if out.get("hand_opened") is not None:
+                    a.hand = list(out["hand_opened"] or a.hand)
+                    job.log("The hand opened before the pole moved (ALIX: no fingers on the tool while the column "
+                            "travels): " + ", ".join(map(str, a.hand)))
+                job.log(f"Pole at {a.pole_mm:.0f} mm (read back on the controller).")
+                return dict(pole_mm=a.pole_mm, hand_opened=out.get("hand_opened") is not None)
             if real is not None and mode == "real":
                 job.progress(f"Moving the pole to {float(pole_mm):.0f} mm (50 % speed)", 1, 1)
                 out = real.pole_to(float(pole_mm))

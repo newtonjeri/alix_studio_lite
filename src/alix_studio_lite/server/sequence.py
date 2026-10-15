@@ -129,6 +129,7 @@ def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, ide
     state = {side: None for side in ARMS}                 # where each arm was left: {pole_mm, hand, q_deg}
     rows, blocking = [], []
     T = 0.0
+    pct = staging.move_pct()                              # the speed slider now: every timeline asked for keeps it
     for i, e in enumerate(entries):
         n, task, label, rule, wait, why = e["step"], e["task"], e["label"], e["rule"], e["wait"], e["why"]
         row = dict(index=i, step=n, label=label, rule=rule, wait_s=wait, arms={}, t0=round(T, 4),
@@ -155,7 +156,7 @@ def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, ide
                 blocking.append(f"{label} · {side.upper()} {a['display']}: {a['why']}")
                 continue
             values = staging.start_values(side, home, state[side])
-            clock = staging.execution_times(side, a.pop("_q"), a.pop("_stage"), values, rating[side])
+            clock = staging.execution_times(side, a.pop("_q"), a.pop("_stage"), values, rating[side], pct)
             a.update(start=state[side], end=clock["end"], t_pole=round(clock["t_pole"], 4),
                      t_hand=round(clock["t_hand"], 4), t_move=round(clock["t_move"], 4),
                      traj_t0=round(clock["traj_t0"], 4), traj_s=round(clock["traj_s"], 4))
@@ -169,7 +170,7 @@ def plan(units, steps: list[dict], *, source: str, home: dict, rating: dict, ide
         T = end + wait
         rows.append(row)
     runs = any(a.get("ready") for r in rows for a in r["arms"].values())
-    return dict(source=source, rows=rows, total_s=round(T, 4), playable=runs, only=only, files=items is not None,
+    return dict(source=source, rows=rows, total_s=round(T, 4), playable=runs, only=only, files=items is not None, move_pct=pct,
                 ready=source == "version" and not blocking and runs,        # a preview never approves
                 blocking=blocking)
 

@@ -32,6 +32,7 @@ works).
 from __future__ import annotations
 
 import json
+import math
 import os
 import threading
 import time
@@ -456,9 +457,14 @@ def set_setup(app, q, body, m):
     stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "set in Prepare")
     kind = body.get("kind")                            # which Apply was pressed: pole | hand (it alone moves)
     mode, job = app.ui["mode"], None
-    mark = lambda _out: units.mark_applied(key, kind, stage)     # noqa: E731  applied once the arm is in it (read back),
-    if body.get("apply") and mode != "visual":         # before its job reports done; confirmed and accepted by
-        if kind == "pole":                             # the robot first, so a refusal changes nothing
+
+    def mark(out):                                     # applied once the arm is in it (read back), before its job
+        units.mark_applied(key, kind, stage)           # reports done; confirmed and accepted by the robot first,
+        if (out or {}).get("hand_opened"):             # so a refusal changes nothing. ALIX opened the hand before
+            units.drop_applied(key, "hand")            # the pole moved: the hand is no longer in its pose
+
+    if body.get("apply") and mode != "visual":
+        if kind == "pole":
             require_confirmed(app, body, "Moving the pole")
             job = app.robot.stage_part(u["arm"], stage, "pole", f"Pole {key}: {stage.pole_mm:g} mm", mode=mode, on_done=mark)
         elif kind == "hand":
@@ -556,7 +562,16 @@ def scene_of(units: LiteUnits, key: str | None, which: str | None, task: str | N
     return out
 
 
-def _timeline(app, units, key: str, which: str, start=None, max_frames: int = 5000, task: str | None = None) -> dict:
+def _move_pct(v) -> float | None:
+    """The % a plan's moves to a start were timed at (its 3D frames keep that clock), or None: the slider now."""
+    try:
+        return None if v in (None, "") else max(1.0, min(100.0, float(v)))
+    except (TypeError, ValueError):
+        raise UserError("The move speed is 1 to 100 %.") from None
+
+
+def _timeline(app, units, key: str, which: str, start=None, max_frames: int = 5000, task: str | None = None,
+              move_pct: float | None = None) -> dict:
     from .routes_robot import _mesh_links, _payload
 
     from ..motion import track
@@ -569,7 +584,7 @@ def _timeline(app, units, key: str, which: str, start=None, max_frames: int = 50
     out = staging.execution_timeline(u["arm"], md, info["stage"],
                                      home=staging.start_values(u["arm"], dict(p["home"]), start),
                                      links=staging.staged_links(u["arm"], _mesh_links(p)),
-                                     rating_deg_s=load_limits(u["arm"]).rating_deg_s, max_frames=max_frames)
+                                     rating_deg_s=load_limits(u["arm"]).rating_deg_s, max_frames=max_frames, move_pct=move_pct)
     out["scene"] = scene_of(units, key, which, task)
     return out
 
@@ -593,7 +608,7 @@ def post_timeline(app, q, body, m):
     the full sequence, starting where the arm's previous step left it."""
     units = units_of(app, m.group(1))
     return _timeline(app, units, m.group(2), str(body.get("which") or "raw"), sequence.check_start(body.get("start")),
-                     task=body.get("task"))
+                     task=body.get("task"), move_pct=_move_pct(body.get("move_pct")))
 
 
 @route("POST", P + "/sequence")
@@ -621,7 +636,8 @@ def post_sequence(app, q, body, m):
         for a in row["arms"].values():
             if str(a.get("which") or "").startswith("merge:") and a.get("ready"):
                 side, _, file = a["which"][6:].partition("/")
-                a["timeline"] = dict(url=f"/api/projects/{m.group(1)}/merges/{side}/{file}/timeline", body=dict(start=a.get("start")))
+                a["timeline"] = dict(url=f"/api/projects/{m.group(1)}/merges/{side}/{file}/timeline",
+                                     body=dict(start=a.get("start"), move_pct=out["move_pct"]))
     return out
 
 
@@ -681,7 +697,7 @@ def post_points_plan(app, q, body, m):
     names, md = _points_path(app, side, body.get("points"), speed)
     st = _points_stage(app, side)
     clock = staging.execution_times(side, md.astype(float) / 1000.0, st, staging.start_values(side, dict(_payload(app)["home"])),
-                                    load_limits(side).rating_deg_s)
+                                    load_limits(side).rating_deg_s, speed)
     act = dict(side=side, key=None, display=f"Global points: {' → '.join(names)}", phase=None, which="points", ready=True,
                file=f"{len(names)} global point{'s' if len(names) != 1 else ''} at {speed:g} %", stage=st.as_dict(),
                lines=int(md.shape[0]), start=None, end=clock["end"], t_pole=round(clock["t_pole"], 4),
@@ -692,7 +708,8 @@ def post_points_plan(app, q, body, m):
                              body=dict(side=side, points=names, speed=speed, task=body.get("task"))))
     row = dict(index=0, step=None, label=f"{side.upper()} global points", rule="ONE BY ONE", wait_s=0.0, arms={side: act},
                t0=0.0, t1=act["end_at"], note="Shown joint by joint; on the robot a MoveL moves the tool in a straight line.")
-    return dict(source="points", rows=[row], total_s=act["end_at"], playable=True, ready=False, only=side, files=True, blocking=[])
+    return dict(source="points", rows=[row], total_s=act["end_at"], playable=True, ready=False, only=side, files=True, blocking=[],
+                move_pct=speed)
 
 
 @route("POST", P + "/points-timeline")
@@ -704,10 +721,13 @@ def post_points_timeline(app, q, body, m):
     side = str(body.get("side") or "")
     if side not in ARMS:
         raise UserError("Say which arm: left or right.")
-    _, md = _points_path(app, side, body.get("points"), float(app.robot.speed_pct))
+    speed = _move_pct(body.get("speed"))                 # the plan's speed: its frames keep the plan's clock
+    speed = float(app.robot.speed_pct) if speed is None else speed
+    _, md = _points_path(app, side, body.get("points"), speed)
     p = _payload(app)
     out = staging.execution_timeline(side, md, _points_stage(app, side), home=dict(p["home"]),
-                                     links=staging.staged_links(side, _mesh_links(p)), rating_deg_s=load_limits(side).rating_deg_s)
+                                     links=staging.staged_links(side, _mesh_links(p)), rating_deg_s=load_limits(side).rating_deg_s,
+                                     move_pct=speed)
     out["scene"] = scene_of(units, None, None, body.get("task"))
     return out
 
@@ -715,10 +735,11 @@ def post_points_timeline(app, q, body, m):
 # ── tuning
 
 def _check_settings(changes: dict) -> dict:
-    """A region's tuning settings as the trajectory HTML takes them (its windows odd and at least 3,
-    a threshold of 0 or more, a minimum idle run of 1 or more, a scale of 1 % or more, regions of two
-    rows or more that do not overlap), and Time-optimal's time."""
-    from ..optimise.manual import validate_odd
+    """A region's tuning settings. The manual tuning's numbers are kept as typed, as the trajectory
+    HTML's fields keep them, and read the HTML's way when a file is made (``manual.params``: a window
+    odd and at least 3, empty or 0 is the default, ...); regions as the HTML takes them (two rows or
+    more, a scale of 1 % or more, no overlaps); and Time-optimal's time."""
+    from ..optimise.manual import _js_number
 
     out = {}
     for k, v in changes.items():
@@ -735,20 +756,10 @@ def _check_settings(changes: dict) -> dict:
                 v = round(float(v), 3)
                 if not 0.05 <= v <= 600:
                     raise UserError("A target time must be between 0.05 and 600 seconds.")
-        elif k in ("smooth_window", "idle_window"):
-            v = validate_odd(v, 101 if k == "smooth_window" else 11)
-            if v > 20001:
-                raise UserError("A window is at most 20,001 rows.")
+        elif k in ("smooth_window", "idle_window", "idle_threshold_md", "idle_min_run"):
+            v = _typed(v)
         elif k in ("trim", "smooth", "scale"):
             v = bool(v)
-        elif k == "idle_threshold_md":
-            v = round(float(v), 3)
-            if not 0 <= v <= 1e6:
-                raise UserError("The idle threshold is 0 counts per sample or more.")
-        elif k == "idle_min_run":
-            v = int(v)
-            if not 1 <= v <= 10_000_000:
-                raise UserError("The minimum idle run is 1 or more.")
         elif k == "segments":
             rows = []
             for r in v or []:
@@ -756,9 +767,10 @@ def _check_settings(changes: dict) -> dict:
                 if a < 1 or b <= a:                              # as the HTML: two different rows at least
                     raise UserError(f"Rows {a}–{b} are not a region: it needs a start row of 1 or more and an end "
                                     "row after it.")
-                pct = float(r["pct"])
-                if not 1 <= pct <= 10000:
-                    raise UserError("A scale is 1 % or more (100 % = unchanged).")
+                pct = max(1.0, _js_number(r.get("pct"), 100.0))        # the HTML's Math.max(1, Number(v) || 100)
+                if pct > 10000:                                          # Lite's guard: the HTML sets no maximum
+                    raise UserError(f"{pct:g} % would make rows {a}–{b} over 100 times as long: Lite makes regions up "
+                                    "to 10,000 %.", "Enter a smaller scale (100 % = unchanged).")
                 rows.append(dict(start=a, end=b, pct=pct))
             rows.sort(key=lambda r: r["start"])
             for x, y in zip(rows, rows[1:]):
@@ -776,6 +788,19 @@ def _check_settings(changes: dict) -> dict:
             continue
         out[k] = v
     return out
+
+
+def _typed(v):
+    """A number field as typed: a number, or None when it is empty (the HTML then takes its default)."""
+    if v is None or (isinstance(v, str) and not v.strip()):
+        return None
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        raise UserError(f"{v!r} is not a number.") from None
+    if not math.isfinite(f) or abs(f) > 1e7:
+        raise UserError(f"{v} is not a number Lite can use here.")
+    return int(f) if f.is_integer() else f
 
 
 @route("POST", U + "/settings")
@@ -935,7 +960,8 @@ def get_analysis(app, q, body, m):
 @route("GET", U + "/file")
 def get_file(app, q, body, m):
     """A step's file as it is on disk (``which``: raw | candidate | version), to save on this
-    computer: the processor's "Download processed TXT"."""
+    computer. The candidate is the processor's "Download processed TXT": its bytes as the trajectory
+    HTML writes them, one line each ended by LF (Lite keeps its files with the pendant's CRLF)."""
     from .app import RawResponse
 
     units, key = units_of(app, m.group(1)), m.group(2)
@@ -956,7 +982,8 @@ def get_file(app, q, body, m):
         raise UserError("Say which file: raw, candidate or version.")
     if path is None or not path.is_file():
         raise UserError("That file is not there yet.", "Record, tune or keep it first.")
-    return RawResponse(path.read_bytes(), "text/plain; charset=utf-8", name)
+    data = path.read_bytes()
+    return RawResponse(data.replace(b"\r\n", b"\n") if which == "candidate" else data, "text/plain; charset=utf-8", name)
 
 
 # ── robot steps (Hardware sim or Real only)
@@ -1334,7 +1361,8 @@ def post_merge_timeline(app, q, body, m):
     p = _payload(app)
     out = staging.execution_timeline(side, track.read_md(info["path"]), info["stage"],
                                      home=staging.start_values(side, dict(p["home"]), sequence.check_start(body.get("start"))),
-                                     links=staging.staged_links(side, _mesh_links(p)), rating_deg_s=load_limits(side).rating_deg_s)
+                                     links=staging.staged_links(side, _mesh_links(p)), rating_deg_s=load_limits(side).rating_deg_s,
+                                     move_pct=_move_pct(body.get("move_pct")))
     out["scene"] = scene_of(units, None, None, body.get("task"))
     return out
 
@@ -1481,7 +1509,7 @@ def get_capture(app, q, body, m):
 @route("POST", r"/api/robots/(left|right)/move-joints")
 def post_move_joints(app, q, body, m):
     """A move to a start point's joints (V32's Move to Start Point): ``{joints_deg: [7], name,
-    confirmed}``, each joint within the arm's limits; on a linked arm at 30 % and read back."""
+    confirmed}``, each joint within the arm's limits; on a linked arm at the speed slider's % and read back."""
     from ..motion.limits import load_limits
 
     session(app)

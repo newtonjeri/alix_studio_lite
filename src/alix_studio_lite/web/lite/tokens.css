@@ -7,7 +7,13 @@
    2. The dark theme's extra surfaces and text tints (dark.css, lite.css): V19's own dark values
       (its inputs, check rows and sidebar #0f172a, its light buttons #1e293b, its input edges
       #475569, its nav text #cbd5e1), light tints of V19's accents for text on dark tints, and
-      dark edges of each hue for V19's pastel borders. */
+      dark edges of each hue for V19's pastel borders.
+   3. The trajectory HTML's plot image (Tune's "Download processed plot PNG"): its JOINT_COLORS on
+      white with Plotly's own ink and grid, the same in both themes. */
+:root {
+  --png-j1:#1f77b4; --png-j2:#ff7f0e; --png-j3:#2ca02c; --png-j4:#d62728; --png-j5:#9467bd; --png-j6:#8c564b;
+  --png-j7:#e377c2; --png-bg:#ffffff; --png-ink:#444444; --png-grid:#eeeeee;
+}
 :root {
   --lite-brand:#2F96EE; --lite-brand-strong:#1B7FD4; --lite-brand-seam:#12558F;
   --lite-viewport-bg:#1B2733; --vp-text:#C9D1D9;

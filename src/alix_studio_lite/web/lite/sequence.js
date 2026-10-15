@@ -29,6 +29,9 @@ export function setRequest(req) {
   if (seq.ui) { window.fullSequenceSimulationControl('reset', false); loadPlan(); }
 }
 export const planOf = () => seq.plan;
+// The speed slider moved: the moves to a start take another time, so the plan is made again and the 3D
+// shows what the robot will do (a plan's frames keep the speed it was made at: move_pct).
+document.addEventListener('lite:speed', () => { if (seq.ui && seq.plan) setRequest(seq.req); });
 
 // ── the flow table's files (feedback v2, slide 8): under each row's LEFT and RIGHT flow, the kept
 // version that arm step runs, chosen from its versions, with its time and limits, and the controller
@@ -191,7 +194,9 @@ function timeline(a) {
   let e = seq.cache.get(id);
   if (!e) {
     e = { result: null, error: null };
-    (a.timeline ? post(a.timeline.url, a.timeline.body) : post(unitUrl(a.key, 'timeline'), { which: a.which, start: a.start, task: a.row.task }))
+    const pct = seq.plan && seq.plan.move_pct;               // the frames keep the plan's clock (its moves to a start)
+    (a.timeline ? post(a.timeline.url, { move_pct: pct, ...a.timeline.body })
+      : post(unitUrl(a.key, 'timeline'), { which: a.which, start: a.start, task: a.row.task, move_pct: pct }))
       .then((r) => { e.result = r; }, (err) => { e.error = err; });
     seq.cache.set(id, e);
   }

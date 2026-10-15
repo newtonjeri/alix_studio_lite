@@ -165,3 +165,16 @@ def test_sequence_and_step_timeline_over_http(lite):
     assert np.allclose(f[0], f[-1], atol=1e-4)                                         # it ends where it started
     bad = call(lite, "POST", "/api/projects/alix_seq/units/L-T01/timeline", {"which": "raw", "start": {"pole_mm": 900}})
     assert bad["error"]
+    # a plan's steps keep the speed it was made at (its moves to a start), whatever the slider says by then
+    from alix_studio_lite.server import staging
+
+    assert p["move_pct"] == staging.move_pct() and a["traj_t0"] > 0
+    was = staging.move_pct()
+    staging.set_move_pct(100)
+    try:
+        own = call(lite, "POST", "/api/projects/alix_seq/units/L-T01/timeline", {"which": "raw", "move_pct": p["move_pct"]})
+        now = call(lite, "POST", "/api/projects/alix_seq/units/L-T01/timeline", {"which": "raw"})
+    finally:
+        staging.set_move_pct(was)
+    assert own["traj_t0"] == a["traj_t0"] and own["move_pct"] == p["move_pct"]
+    assert now["move_pct"] == 100 and now["traj_t0"] < own["traj_t0"]

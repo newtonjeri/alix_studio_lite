@@ -80,6 +80,12 @@ class Project:
         st = _read_json(self.unit_dir(key) / "unit.json", {})
         s = copy.deepcopy(self.DEFAULTS)
         s.update(st.get("settings") or {})
+        if s.get("optimiser") == "default":            # saved before 15 Oct, for Lite's earlier algorithm: manual
+            s["optimiser"] = "manual"                  # tuning now (the HTML's), with the HTML's smoothing window
+            if s.get("smooth_window") == 41:           # where the earlier algorithm's default was left
+                s["smooth_window"] = self.DEFAULTS["smooth_window"]
+        if s.get("time_mode") == "natural":            # the earlier "as taught": Time-optimal's own default now
+            s["time_mode"] = self.DEFAULTS.get("time_mode", "fastest")
         if s.get("target_s") is None and self.units[key].get("target_s"):
             s["target_s"] = self.units[key]["target_s"]
         return s

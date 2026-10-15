@@ -431,12 +431,21 @@ def test_tune_has_the_processors_analysis_trim_settings_and_named_tuned_files(li
     assert a["regions"][0]["scale_pct"] == 75 and a["regions"][0]["motion_type"] == "Approach candidate"
     assert len(analyse([[0] * 7] * 10)["regions"]) == 5
 
-    r = unit(lite, key, "settings", {"changes": {"idle_window": 14, "idle_threshold_md": 6, "idle_min_run": 30}})
-    assert {k: r["settings_view"]["settings"][k] for k in ("idle_window", "idle_threshold_md", "idle_min_run")} == \
-        {"idle_window": 15, "idle_threshold_md": 6.0, "idle_min_run": 30}
+    # the HTML's fields as typed (feedback v3): kept so, and read its way (getParams) when the file is made
+    from alix_studio_lite.optimise import manual
+
+    r = unit(lite, key, "settings", {"changes": {"idle_window": 14, "idle_threshold_md": 6, "idle_min_run": 2.6}})
+    s = r["settings_view"]["settings"]
+    assert {k: s[k] for k in ("idle_window", "idle_threshold_md", "idle_min_run")} == \
+        {"idle_window": 14, "idle_threshold_md": 6, "idle_min_run": 2.6}
+    assert manual.params(s) == dict(sample_ms=5.0, idle_window=15, idle_threshold_md=6.0, idle_min_run=3, smooth_window=101)
+    s0 = unit(lite, key, "settings", {"changes": {"idle_window": None, "idle_threshold_md": -4, "idle_min_run": 0}})
+    assert manual.params(s0["settings_view"]["settings"]) == \
+        dict(sample_ms=5.0, idle_window=11, idle_threshold_md=0.0, idle_min_run=20, smooth_window=101)   # empty, 0: its defaults
+    assert unit(lite, key, "undo", {})["settings_view"]["settings"]["idle_min_run"] == 2.6
     assert "not a region" in unit(lite, key, "settings", {"changes": {"segments": [{"start": 9, "end": 9, "pct": 80}]}})["error"]
     assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
-    assert lite["pool"].calls[-1]["settings"]["idle_window"] == 15
+    assert lite["pool"].calls[-1]["settings"]["idle_window"] == 14
 
     assert "already the name" in unit(lite, key, "keep", {"name": "L_hinge"})["error"]      # the recording's name
     v = unit(lite, key, "keep", {"name": "L_hinge_TUNED"})
@@ -448,6 +457,47 @@ def test_tune_has_the_processors_analysis_trim_settings_and_named_tuned_files(li
         body, disp = resp.read(), resp.headers.get("Content-Disposition", "")
     kept = work_dir(lite, key).parent / "versions" / v["versions"][-1]["file"]
     assert body == kept.read_bytes() and "L_hinge_TUNED.txt" in disp
+
+
+def test_regions_end_with_their_recording_and_old_settings_tune_manually(lite):
+    """Feedback v3, checked: a region's scale is the HTML's (empty or 0: 100 %, at least 1 %); the scale
+    regions are rows of the recording they were set on (the HTML clears them with every file it loads), so
+    another recording starts without them, one undo step back; the processed TXT downloads as the HTML
+    writes it (LF); and settings saved for Lite's earlier algorithm ("default") read as manual tuning with
+    the HTML's smoothing window, so the file that algorithm made is not current."""
+    key = "L-T01"
+    first = unit(lite, key)["active"]
+    got = unit(lite, key, "settings", {"changes": {"segments": [{"start": 1, "end": 50, "pct": 0}, {"start": 60, "end": 90, "pct": -5}]}})
+    assert [g["pct"] for g in got["settings_view"]["settings"]["segments"]] == [100.0, 1.0]
+    assert "10,000 %" in unit(lite, key, "settings", {"changes": {"segments": [{"start": 1, "end": 50, "pct": 20000}]}})["error"]
+    segs = [{"start": 1, "end": 2000, "pct": 75.0}, {"start": 2001, "end": 4000, "pct": 115.0}]
+    unit(lite, key, "settings", {"changes": {"segments": segs}})
+    load(lite, key, "FILE_04.txt", "L_rim.txt", 140, "100% open", lines=3000)
+    sv = unit(lite, key)["settings_view"]
+    assert sv["settings"]["segments"] == [] and sv["undo_label"] == "Scale regions cleared: another recording (L_rim.txt)"
+    assert unit(lite, key, "undo", {})["settings_view"]["settings"]["segments"] == segs        # the operator's to bring back
+    assert unit(lite, key, "active", {"file": first})["settings_view"]["settings"]["segments"] == []
+    assert unit(lite, key, "active", {"file": first})["settings_view"]["undo_label"].startswith("Scale regions cleared")
+
+    assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done" and unit(lite, key)["fresh"]
+    req = urllib.request.Request(f"{lite['base']}/api/projects/{lite['pid']}/units/{key}/file?which=candidate",
+                                 headers={"X-Lite-Token": lite["tok"]})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        body = resp.read()
+    cand = work_dir(lite, key) / "candidate.txt"
+    assert b"\r" in cand.read_bytes() and b"\r" not in body and body == cand.read_bytes().replace(b"\r\n", b"\n")
+
+    uj = work_dir(lite, key).parent / "unit.json"                # as a region tuned before 15 Oct left it
+    st = json.loads(uj.read_text())
+    st["settings"] = dict(st["settings"], optimiser="default", smooth_window=41, time_mode="natural")
+    uj.write_text(json.dumps(st))
+    ex = cand.with_name("candidate.extra.json")
+    extra = json.loads(ex.read_text())
+    extra["settings"] = {k: v for k, v in st["settings"].items() if k != "program_id"}
+    ex.write_text(json.dumps(extra))
+    u = unit(lite, key)
+    s = u["settings_view"]["settings"]
+    assert (s["optimiser"], s["smooth_window"], s["time_mode"]) == ("manual", 101, "fastest") and not u["fresh"]
 
 
 def test_the_suggestions_fit_an_optimised_time(lite):

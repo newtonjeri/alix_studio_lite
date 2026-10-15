@@ -7,6 +7,7 @@ were run in Chrome on the same recording and settings on 15 Oct 2026, and their 
 HTML's "Download processed TXT" form (one {"point":[...]} per line)."""
 import hashlib
 import json
+import re
 
 import pytest
 
@@ -48,6 +49,26 @@ def test_the_same_bytes_as_the_html(md):
     assert rep["outputName"] == "FILE_10.1_trim_mean_scale_processed.txt"
     assert rep["parameters"] == dict(sampleMs=5.0, idleWindow=11, idleThreshold=8.0, idleMinRun=20, smoothWindow=101)
     assert rep["selectedStageLabel"] == "Trim + Mean Smooth + Scale" and len(rep["scalingRegions"]) == 5
+    # the HTML's report keys: getStageSelection's, its toISOString time, its analysis as made with the file
+    assert rep["selectedStages"] == dict(trim=True, meanSmooth=True, scale=True)
+    assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z", rep["generatedAt"])
+    an = rep["automaticOptimizationAnalysis"]
+    assert an["generatedAt"] == rep["generatedAt"] and an["contactDataAvailable"] is False and an["method"].startswith("Motion-only")
+    assert list(an["suggestions"][0]) == ["start", "end", "avgStep", "maxStep", "avgAccel", "originalSec", "motionType", "action",
+                                          "peakGuidance", "scalePct", "selected", "estimatedSec", "reason"]
+    assert [(g["start"], g["end"], g["scalePct"]) for g in an["suggestions"]] == [(r["start"], r["end"], r["pct"]) for r in sugg]
+    assert list(rep).index("automaticOptimizationAnalysis") == list(rep).index("skippedRegions") + 1
+
+
+def test_seconds_are_written_as_javascripts_tofixed():
+    """formatSeconds with toFixed's rounding: an exact tie goes up (Python's own formatting takes it to
+    the even digit), as Chrome writes them."""
+    from alix_studio_lite.optimise import manual
+
+    assert manual.format_seconds(60.25) == "60.250 s (1 min 0.3 s)"           # Python's .1f: 0.2
+    assert manual.format_seconds(0.0625) == "0.063 s" and manual.format_seconds(1.005) == "1.005 s"
+    assert manual.format_seconds(120.05) == "120.050 s (2 min 0.0 s)" and manual.format_seconds(61.15) == "61.150 s (1 min 1.1 s)"
+    assert manual.to_fixed(0.25, 1) == "0.3" and manual.to_fixed(9.985, 1) == "10.0" and manual.to_fixed(2.5e-3, 1) == "0.0"
 
 
 def test_the_htmls_checks_and_defaults(md):

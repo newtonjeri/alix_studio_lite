@@ -150,6 +150,7 @@ export async function showStanding(host, unit, note = 'No recording yet: the arm
 }
 
 export function invalidate() { sim.stale = true; }
+document.addEventListener('lite:speed', invalidate);      // a move to the start takes another time at the new speed
 
 // A 3D host that shows nothing playable says why, in place of any picture (V19's placeholder is
 // never shown): the server's refusal, or how to get the browser's 3D back. `text` null clears it.

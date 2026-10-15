@@ -20,13 +20,15 @@ hardware"). Time-optimal (TOPP-RA, ``engine``) is the other choice and never goe
 """
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from decimal import ROUND_HALF_UP, Decimal
 
 import numpy as np
 
 from ..motion import timing
 from ..motion.checks import CheckReport
+from . import analysis
 
 SAMPLE_MS = 5.0          # the HTML's sample interval: Lite's one clock, 5 ms per line (D26)
 DEFAULTS = dict(idle_window=11, idle_threshold_md=8.0, idle_min_run=20, smooth_window=101)
@@ -242,9 +244,11 @@ def process(md_raw: np.ndarray, settings: dict, source_name: str = "", regions: 
     data[0], data[-1] = original[0], original[-1]            # the recording's exact first and last rows
     sec = timing.duration_for                                # Lite's one clock (D26): N lines last (N - 1) x 5 ms
     skipped = [m for m in mapped if m["skipped"]]
+    now = iso_now()
     report = dict(
-        sourceFile=source_name, generatedAt=time.strftime("%Y-%m-%dT%H:%M:%S"),
-        selectedStages=st, selectedStageLabel=stage_label(st),
+        sourceFile=source_name, generatedAt=now,
+        selectedStages=dict(trim=st["trim"], meanSmooth=st["smooth"], scale=st["scale"]),   # getStageSelection's keys
+        selectedStageLabel=stage_label(st),
         parameters=dict(sampleMs=p["sample_ms"], idleWindow=p["idle_window"], idleThreshold=p["idle_threshold_md"],
                         idleMinRun=p["idle_min_run"], smoothWindow=p["smooth_window"]),
         sourceValidRows=int(n0), skippedSourceLines=[],
@@ -254,6 +258,7 @@ def process(md_raw: np.ndarray, settings: dict, source_name: str = "", regions: 
         scalingRegions=region_report if st["scale"] else [],
         skippedRegions=[dict(originalStartRow=int(m["start"]), originalEndRow=int(m["end"]), reason=m["reason"])
                         for m in skipped],
+        automaticOptimizationAnalysis=analysis.html_report(original, now),
         finalRows=int(data.shape[0]),
         originalTimeSeconds=sec(n0), afterTrimTimeSeconds=sec(trim["data"].shape[0]),
         afterMeanSmoothTimeSeconds=sec(smooth.shape[0]), finalTimeSeconds=sec(data.shape[0]),
@@ -274,7 +279,7 @@ def status_message(rep: dict, regions_set: int) -> str:
     lines = ["Generated successfully.", f"Stages applied: {rep['selectedStageLabel']}",
              "Trim: " + (f"ON — {len(rep['idleRegions'])} idle region(s), {rep['idlePointsRemoved']} point(s) removed"
                          if st["trim"] else "OFF"),
-             "Mean Smooth: " + (f"ON — {prm['smoothWindow']}-point centered moving mean" if st["smooth"] else "OFF"),
+             "Mean Smooth: " + (f"ON — {prm['smoothWindow']}-point centered moving mean" if st["meanSmooth"] else "OFF"),
              "Scale: " + (f"ON — {len(rep['scalingRegions'])} region(s) applied" if st["scale"] else "OFF"),
              f"Final rows: {rep['finalRows']}",
              f"Final time @ {prm['sampleMs']:g} ms/row: {format_seconds(timing.duration_for(rep['finalRows']))}"]
@@ -286,14 +291,26 @@ def status_message(rep: dict, regions_set: int) -> str:
     return "\n".join(lines)
 
 
+def to_fixed(x: float, digits: int) -> str:
+    """``Number.prototype.toFixed``: the exact value of the double, a tie away from zero (Python's
+    own formatting takes a tie to the even digit: 0.25 is "0.2" there and "0.3" in JavaScript)."""
+    q = Decimal(float(x)).quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP)
+    return f"{q:.{digits}f}"
+
+
+def iso_now() -> str:
+    """``new Date().toISOString()``: UTC, to the millisecond, with its Z."""
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
 def format_seconds(seconds: float) -> str:
     """The HTML's ``formatSeconds``."""
     if not np.isfinite(seconds):
         return "-"
     mins = int(seconds // 60)
     if mins > 0:
-        return f"{seconds:.3f} s ({mins} min {seconds - mins * 60:.1f} s)"
-    return f"{seconds:.3f} s"
+        return f"{to_fixed(seconds, 3)} s ({mins} min {to_fixed(seconds - mins * 60, 1)} s)"
+    return f"{to_fixed(seconds, 3)} s"
 
 
 # ───────────────────────────────────────────────────────── the result Lite keeps
@@ -330,7 +347,7 @@ class ManualResult:
                     enforced=False, plan=dict(kept_lines=self.report["rowsAfterTrim"],
                                               trimmed_lines=self.report["idlePointsRemoved"],
                                               smooth_window=self.report["parameters"]["smoothWindow"]
-                                              if self.report["selectedStages"]["smooth"] else 0,
+                                              if self.report["selectedStages"]["meanSmooth"] else 0,
                                               segments=self.report["scalingRegions"]))
 
     def summary(self) -> dict:

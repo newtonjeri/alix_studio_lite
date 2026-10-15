@@ -20,7 +20,9 @@ import { elsewhere, invalidate, onPlayhead, release, say3d, seekTo, showFile, sh
 const CYCLE_S = 0.005;
 let unit = null;               // the server's view of the arm step on screen
 let syncing = false;           // writing the server's settings into the controls
-let pushTimer = 0;
+let pushTimer = 0;             // a change on screen waiting to go to the server (its label in pushLabel)
+let pushLabel = null;
+let pushing = null;            // a change on its way to the server
 let plotP = null;
 let tuning = null;             // the running tune, if any
 let pipeStep = 1;              // the HTML's step on screen
@@ -30,7 +32,8 @@ let analysis = null;           // {key, file, data}: the automatic analysis of t
 let regions = [];              // the scale regions on screen: {start, end, scalePct}, original rows
 let external = null;           // Compare's optional optimized file: {name, rows, skipped}
 const plotted = { raw: null, opt: null };   // the files on the plots now
-const pb = { playing: false, t: 0, startPerf: 0, raf: 0, kind: null };   // the HTML's real-time playback
+const pb = { playing: false, at: { review: 0, compare: 0 }, startPerf: 0, raf: 0, kind: null };   // the HTML's real-time
+let lastChange = null;         // playbacks, each at its own moment; the last settings change, for Generate's status
 
 const pane = () => document.getElementById('stage-optimize');
 const $ = (id) => document.getElementById(id);
@@ -79,7 +82,13 @@ function loadPlotly() {
 function palette() {
   const cs = getComputedStyle(document.documentElement), v = (n) => cs.getPropertyValue(n).trim();
   return { joints: ['--blue', '--orange', '--green', '--red', '--violet', '--cyan', '--muted'].map(v), ink: v('--muted'),
-    line: v('--line'), blue: v('--blue'), green: v('--green'), orange: v('--orange'), violet: v('--violet'), red: v('--red') };
+    line: v('--line'), blue: v('--blue'), green: v('--green'), orange: v('--orange'), violet: v('--violet'), red: v('--red'), bg: 'transparent' };
+}
+
+// The HTML's plot image: its JOINT_COLORS on white with Plotly's own ink, whichever theme is on (lite/tokens.css).
+function printPalette() {
+  const cs = getComputedStyle(document.documentElement), v = (n) => cs.getPropertyValue(n).trim();
+  return { joints: [1, 2, 3, 4, 5, 6, 7].map(j => v(`--png-j${j}`)), ink: v('--png-ink'), line: v('--png-grid'), bg: v('--png-bg') };
 }
 
 const metric = (k, v) => el('div', { class: 'lite-metric' }, el('div', { class: 'k', text: k }), el('div', { class: 'v', text: v }));
@@ -132,7 +141,8 @@ function addControls() {
     title('1. Source trajectory', 'Expected line format: {"point":[J1,J2,J3,J4,J5,J6,J7]}'),
     el('div', { class: 'lite-row' },
       el('div', { class: 'field lite-grow' }, el('label', { text: 'Original TXT / JSONL file' }), el('div', { id: 'liteSourceName', class: 'lite-source-name', text: '-' })),
-      el('button', { class: 'btn outline', text: 'Choose or load another (Save & Review)', onclick: () => window.setStage('review') })),
+      el('button', { class: 'btn outline', text: 'Choose or load another (Save & Review)', onclick: () => window.setStage('review') }),
+      el('button', { class: 'btn light', id: 'liteReset', text: 'Reset', disabled: true, onclick: resetPipe })),
     statusLine('liteLoadStatus', 'No file loaded.'),
     el('div', { id: 'liteSourceMetrics', class: 'lite-metrics' }));
 
@@ -189,12 +199,12 @@ function addControls() {
     title('3. Automatic speed optimization analysis', 'Section B1/B2 - motion analysis and region-based recommendations'),
     el('div', { class: 'lite-hint', text: 'After a trajectory is loaded, Lite automatically analyzes joint-motion intensity, direction-change activity '
       + 'and peak motion. It divides the trajectory into review regions and suggests whether each region should be shorter/faster, longer/slower or unchanged.' }),
-    el('div', { class: 'lite-note' }, el('b', { text: 'Important:' }), ' The uploaded trajectory contains joint positions only. The browser can identify '
+    el('div', { class: 'lite-note' }, el('b', { text: 'Important:' }), ' The uploaded trajectory contains joint positions only. Lite can identify '
       + 'motion patterns, but it cannot prove physical cleaning contact or collision safety without force/contact and simulation data. '
       + 'Smooth continuous regions are therefore marked as ', el('b', { text: 'possible cleaning/straight-pass candidates' }), ' for operator review.'),
     el('div', { class: 'lite-row' },
       el('button', { class: 'btn', id: 'liteAnalyze', text: 'Analyze Again', onclick: () => loadAnalysis(true) }),
-      el('button', { class: 'btn green', id: 'liteApplySuggest', text: 'Apply Selected Suggestions to Scale Regions', onclick: applySuggestions }),
+      el('button', { class: 'btn green', id: 'liteApplySuggest', text: 'Apply Selected Suggestions to Scale Regions', disabled: true, onclick: applySuggestions }),
       el('div', { class: 'field lite-target-field' }, el('label', { for: 'liteAnalysisTarget', text: 'Optimised time (s)' }),
         el('input', { id: 'liteAnalysisTarget', type: 'number', min: '0.1', max: '600', step: '0.1', placeholder: 'e.g. 20',
           onkeydown: (e) => { if (e.key === 'Enter') loadAnalysis(true, true); } })),
@@ -265,7 +275,8 @@ function addControls() {
   compare.after(el('div', { id: 'litePipeNav', class: 'lite-pipe-nav' },
     el('button', { class: 'btn outline', id: 'litePipeBack', text: '← Back', onclick: () => goStep(prevStep(pipeStep)) }),
     el('div', { class: 'mini-note', id: 'litePipeNote' }),
-    el('button', { class: 'btn', id: 'litePipeNext', onclick: () => goStep(nextStep(pipeStep)) })));
+    el('button', { class: 'btn', id: 'litePipeNext', onclick: () => goStep(nextStep(pipeStep)) }),
+    el('span', { id: 'litePipeDone', class: 'lite-pipe-done', text: 'Pipeline complete', hidden: true })));
 }
 
 // The HTML's unlocking: Setup to Generate once there is a source, Compare once there is an output.
@@ -299,10 +310,12 @@ function renderPipe() {
   if (back) back.hidden = pipeStep <= 1;
   if (next) {
     const k = nextStep(pipeStep);
+    next.hidden = pipeStep >= 6;
     next.disabled = pipeStep >= 6 || !unlocked(k);
-    next.textContent = pipeStep >= 6 ? 'Pipeline complete' : pipeStep === 5 && !unlocked(6) ? 'Generate first to unlock Compare'
-      : `Next: ${STEPS[k].name} →`;
+    next.textContent = pipeStep >= 6 ? '' : pipeStep === 5 && !unlocked(6) ? 'Generate first to unlock Compare' : `Next: ${STEPS[k].name} →`;
   }
+  if ($('litePipeDone')) $('litePipeDone').hidden = pipeStep < 6;
+  if ($('liteReset')) $('liteReset').disabled = !(unit && unit.active);
 }
 
 async function goStep(n, scroll = true) {
@@ -357,6 +370,29 @@ function renderSource() {
     metric('Taught on', `${String(r.taught_arm || '?').toUpperCase()} arm · ${r.stage ? r.stage.text : 'stage unknown'}`));
 }
 
+// The HTML's Reset: the scale regions, the analysis, the comparison and the playback cleared and every
+// stage checked again (one undo step), back at step 1. The recording stays: it is the region's.
+async function resetPipe() {
+  if (!unit || !unit.active) return;
+  pause();
+  analysis = null;
+  external = null;
+  pb.at.review = pb.at.compare = 0;
+  if ($('liteExtFile')) $('liteExtFile').value = '';
+  $('liteSuggestions')?.querySelector('tbody')?.replaceChildren();
+  $('liteAnalysisMetrics')?.replaceChildren();
+  syncing = true;
+  for (const id of ['liteStageTrim', 'liteStageSmooth', 'liteStageScale']) $(id).checked = true;
+  syncing = false;
+  regions = [];
+  updateStageUI();
+  clearTimeout(pushTimer);
+  pushTimer = 0;
+  await push('Reset');
+  setStatus($('liteRegionStatus'), 'No scaling regions selected. The file can still be trimmed and smoothed.');
+  await goStep(1);
+}
+
 // ── 2 Setup: the controls <-> the region's settings on the server (one undo step per change)
 
 function stageSel() {
@@ -368,23 +404,27 @@ function stageLabel(st = stageSel()) {
   return names.length ? names.join(' + ') : 'None';
 }
 
+// A field being typed in keeps what is typed (a reply to an earlier change never overwrites it), and the
+// regions on screen stay while one of their scales is being typed.
+const typing = (node) => !!node && document.activeElement === node;
+const editingRegion = () => !!$('liteRegions')?.contains(document.activeElement) && document.activeElement.tagName === 'INPUT';
+
 function writeControls(s) {
   syncing = true;
   try {
     $('liteStageTrim').checked = s.trim !== false;
     $('liteStageSmooth').checked = s.smooth !== false;
     $('liteStageScale').checked = s.scale !== false;
-    $('liteIdleWindow').value = s.idle_window ?? 11;
-    $('liteIdleThreshold').value = s.idle_threshold_md ?? 8;
-    $('liteIdleRun').value = s.idle_min_run ?? 20;
-    $('liteSmoothWindow').value = s.smooth_window ?? 101;
-    regions = (s.segments || []).map(r => ({ start: r.start, end: r.end, scalePct: r.pct }));
+    // the numbers as typed, as the HTML's fields keep them (empty: its default is used)
+    for (const [id, k] of [['liteIdleWindow', 'idle_window'], ['liteIdleThreshold', 'idle_threshold_md'], ['liteIdleRun', 'idle_min_run'],
+      ['liteSmoothWindow', 'smooth_window']]) if (!typing($(id))) $(id).value = s[k] ?? '';
+    if (!editingRegion()) regions = (s.segments || []).map(r => ({ start: r.start, end: r.end, scalePct: r.pct }));
     const tp = s.optimiser === 'toppra';
     $('liteMode_manual').checked = !tp;
     $('liteMode_toppra').checked = tp;
     $('liteMode_toppra').disabled = !unit.toppra && !tp;
     $('liteTopMode').value = s.time_mode === 'target' ? 'target' : 'fastest';
-    $('liteTopTarget').value = s.target_s ?? '';
+    if (!typing($('liteTopTarget'))) $('liteTopTarget').value = s.target_s ?? '';
     $('liteTopTarget').disabled = s.time_mode !== 'target';
     $('liteManualSetup').hidden = tp;
     $('liteToppraSetup').hidden = !tp;
@@ -408,13 +448,15 @@ function updateStageUI() {
   renderRegions();
 }
 
+const typed = (id) => { const v = String($(id).value).trim(); return v === '' ? null : Number(v); };
+
 function readControls() {
   const tp = $('liteMode_toppra').checked, target = Number($('liteTopTarget').value);
   return {
     optimiser: tp ? 'toppra' : 'manual',
     trim: $('liteStageTrim').checked, smooth: $('liteStageSmooth').checked, scale: $('liteStageScale').checked,
-    idle_window: Number($('liteIdleWindow').value), idle_threshold_md: Number($('liteIdleThreshold').value) || 0,
-    idle_min_run: Number($('liteIdleRun').value), smooth_window: Number($('liteSmoothWindow').value),
+    idle_window: typed('liteIdleWindow'), idle_threshold_md: typed('liteIdleThreshold'),       // read the HTML's way
+    idle_min_run: typed('liteIdleRun'), smooth_window: typed('liteSmoothWindow'),               // when a file is made
     segments: regions.map(r => ({ start: r.start, end: r.end, pct: r.scalePct })),
     time_mode: $('liteTopMode').value,
     target_s: $('liteTopMode').value === 'target' && target > 0 ? target : settingsOf(unit).target_s,
@@ -424,7 +466,14 @@ function readControls() {
 function queuePush(label) {
   if (syncing || !unit) return;
   clearTimeout(pushTimer);
-  pushTimer = setTimeout(() => push(label), 250);
+  pushLabel = label;
+  pushTimer = setTimeout(() => { pushTimer = 0; push(label); }, 250);
+}
+
+// What is on screen reaches the server first: Generate, keeping and another arm step use these settings.
+async function flushPush() {
+  if (pushTimer) { clearTimeout(pushTimer); pushTimer = 0; await push(pushLabel); }
+  while (pushing) await pushing;
 }
 
 async function push(label) {
@@ -432,10 +481,13 @@ async function push(label) {
   const now = readControls(), was = settingsOf(unit);
   const changes = Object.fromEntries(Object.entries(now).filter(([k, v]) => JSON.stringify(v) !== JSON.stringify(was[k])));
   if (!Object.keys(changes).length) return;
+  const req = post(unitUrl(unit.key, 'settings'), { changes, label });
+  const mine = pushing = req.catch(() => null);
   try {
-    unit = await post(unitUrl(unit.key, 'settings'), { changes, label });
+    unit = await req;
     ctx.units[unit.key] = unit;
-  } catch (err) { tell(err); }
+  } catch (err) { tell(err); } finally { if (pushing === mine) pushing = null; }
+  if (pushTimer) return;                      // a newer change goes next: the controls keep what is on screen
   afterSettings(label);
 }
 
@@ -446,7 +498,9 @@ async function history(dir) {
 }
 
 function afterSettings(label = null) {
+  if (label) lastChange = label;
   writeControls(settingsOf(unit));
+  if (label == null || TRIM_LABELS.includes(label)) dropFit();   // the fit was "after Trim" with the earlier values
   renderPipe();
   if (pipeStep === 4) refreshShapes();
   if (pipeStep === 5) { renderGenerate(label); showResults(); }
@@ -467,6 +521,7 @@ async function loadAnalysis(again, withTarget = false) {
   if (withTarget && !(target > 0)) { window.toast('Type the optimised time in seconds first, e.g. 20.'); $('liteAnalysisTarget')?.focus(); return; }
   if (again || !analysis || analysis.key !== unit.key || analysis.file !== unit.active) {
     setStatus(status, 'Analysing…');
+    if ($('liteApplySuggest')) $('liteApplySuggest').disabled = true;
     try {
       const data = await get(unitUrl(unit.key, 'analysis') + (target ? `?target_s=${target}` : ''));
       analysis = { key: unit.key, file: unit.active, data };
@@ -497,18 +552,25 @@ function renderAnalysis() {
         r.action = v < 100 ? 'Shorter / faster' : v > 100 ? 'Longer / slower' : 'Unchanged';
         time.textContent = formatSeconds(r.estimated_s);
         act.replaceChildren(badge(r));
+        dropFit();
         analysisMetrics();
         refreshShapes();
       } });
     return el('tr', {},
       el('td', {}, el('input', { type: 'checkbox', checked: r.selected, 'aria-label': `Use region ${i + 1}`,
-        onchange: (e) => { r.selected = e.target.checked; analysisMetrics(); } })),
+        onchange: (e) => { r.selected = e.target.checked; dropFit(); analysisMetrics(); } })),
       el('td', { text: String(i + 1) }), el('td', { text: `${r.start.toLocaleString()} - ${r.end.toLocaleString()}` }),
       el('td', { text: formatSeconds(r.original_s) }), el('td', { text: r.motion_type }), el('td', { text: r.peak_guidance }),
       act, el('td', {}, input), time, el('td', { class: 'lite-reason', text: r.reason }));
   }));
   $('liteApplySuggest').disabled = !rs.length;
-  const t = analysis.data.target;
+  analysisStatus();
+  analysisMetrics();
+  refreshShapes();
+}
+
+function analysisStatus() {
+  const rs = analysis.data.regions, t = analysis.data.target;
   let text = `Automatic analysis complete: ${rs.length} review region(s) detected. Review the suggested scale values before applying them. `
     + 'Motion-only analysis does not replace collision or hardware validation.';
   if (t) {
@@ -519,8 +581,15 @@ function renderAnalysis() {
         + `(${formatSeconds(t.shortest_s)} to ${formatSeconds(t.longest_s)} for this recording with these settings).\n`) + text;
   }
   setStatus($('liteAnalysisStatus'), text, t && !t.reached ? 'warn' : 'ok');
-  analysisMetrics();
-  refreshShapes();
+}
+
+// The fitted time holds only for the suggestions as fitted, after Trim as it was then: a tick, a scale
+// or a Trim setting changed, it is no longer said (Suggest for this time fits them again).
+const TRIM_LABELS = ['Trim', 'Idle rolling window', 'Idle threshold', 'Minimum idle run'];
+function dropFit() {
+  if (!analysis || !analysis.data.target) return;
+  analysis.data.target = null;
+  analysisStatus();
 }
 
 function analysisMetrics() {
@@ -578,8 +647,7 @@ function yRangeFor(...trs) {
   return [mn - pad, mx + pad];
 }
 
-function figure(tr, plotTitle, { selectable = false, yRange = null } = {}) {
-  const pal = palette();
+function figure(tr, plotTitle, { selectable = false, yRange = null, pal = palette() } = {}) {
   const n = tr.lines;
   const x = Array.from({ length: n }, (_, i) => i + 1);
   const type = n > 15000 ? 'scattergl' : 'scatter';      // as the HTML: SVG unless the file is long
@@ -591,7 +659,7 @@ function figure(tr, plotTitle, { selectable = false, yRange = null } = {}) {
     yaxis: { title: { text: 'Joint Value' }, automargin: true, color: pal.ink, gridcolor: pal.line, ...(yRange ? { range: yRange } : {}) },
     hovermode: 'x unified', legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.08, font: { color: pal.ink } },
     dragmode: selectable ? 'select' : 'zoom', ...(selectable ? { selectdirection: 'h' } : {}),
-    paper_bgcolor: 'transparent', plot_bgcolor: 'transparent', shapes: [],
+    paper_bgcolor: pal.bg, plot_bgcolor: pal.bg, shapes: [],
     modebar: { orientation: 'v', bgcolor: 'transparent', color: pal.ink, activecolor: pal.blue },   // clear of the title beside the 3D
   };
   return { data, layout };
@@ -702,19 +770,29 @@ function clearRegions() {
   queuePush('Scaling regions cleared');
 }
 
+// The HTML's invalidateProcessed as a scale is typed: the downloads wait for Confirm & Generate.
+function typedStale() {
+  for (const id of ['liteDlTxt', 'liteDlReport', 'liteDlPng', 'liteKeepBtn']) if ($(id)) $(id).disabled = true;
+}
+
 function renderRegions() {
   const tbody = $('liteRegions')?.querySelector('tbody');
   if (!tbody) return;
   const scaleOn = stageSel().scale;
-  tbody.replaceChildren(...regions.map((r, i) => {
-    const mean = el('td', { text: meaning(r.scalePct) });
-    return el('tr', {},
-      el('td', { text: String(i + 1) }), el('td', { text: String(r.start) }), el('td', { text: String(r.end) }),
-      el('td', {}, el('input', { type: 'number', min: '1', step: '1', value: String(r.scalePct), disabled: !scaleOn, 'aria-label': `Scale of region ${i + 1}`,
-        oninput: (e) => { r.scalePct = Math.max(1, Number(e.target.value) || 100); mean.textContent = meaning(r.scalePct); queuePush('Region scale'); } })),
-      mean,
-      el('td', {}, el('button', { class: 'btn red', text: 'Delete', onclick: () => { regions.splice(i, 1); renderRegions(); refreshShapes(); queuePush('Scaling regions changed'); } })));
-  }));
+  if (editingRegion()) {                                // a scale being typed keeps its field
+    tbody.querySelectorAll('input').forEach((x) => { x.disabled = !scaleOn; });
+  } else {
+    tbody.replaceChildren(...regions.map((r, i) => {
+      const mean = el('td', { text: meaning(r.scalePct) });
+      return el('tr', {},
+        el('td', { text: String(i + 1) }), el('td', { text: String(r.start) }), el('td', { text: String(r.end) }),
+        el('td', {}, el('input', { type: 'number', min: '1', step: '1', value: String(r.scalePct), disabled: !scaleOn, 'aria-label': `Scale of region ${i + 1}`,
+          oninput: (e) => { r.scalePct = Math.max(1, Number(e.target.value) || 100); mean.textContent = meaning(r.scalePct); typedStale(); },
+          onchange: () => queuePush('Region scale') })),
+        mean,
+        el('td', {}, el('button', { class: 'btn red', text: 'Delete', onclick: () => { regions.splice(i, 1); renderRegions(); refreshShapes(); queuePush('Scaling regions changed'); } })));
+    }));
+  }
   const status = $('liteRegionStatus');
   if (!scaleOn) {
     setStatus(status, `Scale stage is disabled. ${regions.length ? `${regions.length} saved region(s) will be ignored.` : 'No scaling will be applied.'}`, 'warn');
@@ -744,7 +822,7 @@ function setTotals(kind) {
 
 // `seek`: move the 3D too (not when the 3D itself plays: the page's Re-run Simulation).
 function showMoment(kind, seek = true) {
-  const t = pb.kind === kind ? pb.t : 0;
+  const t = pb.at[kind];
   if ($(`liteNow_${kind}`)) $(`liteNow_${kind}`).textContent = `${t.toFixed(3)} s`;
   const tl = $(`liteTimeline_${kind}`);
   if (tl && document.activeElement !== tl) tl.value = String(t);
@@ -769,17 +847,17 @@ function showMoment(kind, seek = true) {
 function play(kind) {
   if (!unit || (kind === 'compare' && !optLines()) || !(plotted.raw && plotted.raw.lines)) return;
   const total = totalFor(kind);
-  if (pb.kind !== kind) pb.t = 0;
-  if (pb.t >= total - 0.001) pb.t = 0;
+  if (pb.playing && pb.kind !== kind) pause();
+  if (pb.at[kind] >= total - 0.001) pb.at[kind] = 0;
   pb.kind = kind;
   pb.playing = true;
-  pb.startPerf = performance.now() - pb.t * 1000;
+  pb.startPerf = performance.now() - pb.at[kind] * 1000;
   cancelAnimationFrame(pb.raf);
   const tick = (now) => {
     if (!pb.playing) return;
-    pb.t = Math.min(total, (now - pb.startPerf) / 1000);
+    pb.at[kind] = Math.min(total, (now - pb.startPerf) / 1000);
     showMoment(kind);
-    if (pb.t >= total) { pause(); return; }
+    if (pb.at[kind] >= total) { pause(); return; }
     pb.raf = requestAnimationFrame(tick);
   };
   pb.raf = requestAnimationFrame(tick);
@@ -791,16 +869,16 @@ function pause() {
   pb.raf = 0;
 }
 
-function restart(kind) { pause(); pb.kind = kind; pb.t = 0; showMoment(kind); }
+function restart(kind) { pause(); pb.kind = kind; pb.at[kind] = 0; showMoment(kind); }
 
-function scrub(kind, t) { pause(); pb.kind = kind; pb.t = Math.max(0, Math.min(totalFor(kind), t)); showMoment(kind); }
+function scrub(kind, t) { pause(); pb.kind = kind; pb.at[kind] = Math.max(0, Math.min(totalFor(kind), t)); showMoment(kind); }
 
 // The 3D playing on its own (V32's Re-run Simulation): the plots follow it.
 function moveHead(line) {
   if (pb.playing || (pipeStep !== 4 && pipeStep !== 6)) return;
   const kind = pipeStep === 4 ? 'review' : 'compare';
   pb.kind = kind;
-  pb.t = Math.max(0, line - 1) * CYCLE_S;
+  pb.at[kind] = Math.max(0, line - 1) * CYCLE_S;
   showMoment(kind, false);
 }
 
@@ -808,6 +886,7 @@ function moveHead(line) {
 
 async function generate() {
   if (!unit) return;
+  await flushPush();
   const status = $('liteProcessStatus');
   if (isManual() && !Object.values(stageSel()).some(Boolean)) {
     setStatus(status, 'Processing failed: Select at least one processing stage: Trim, Mean Smooth, or Scale.', 'err');
@@ -820,6 +899,7 @@ async function generate() {
   renderPipe();
   if (ok) {
     external = null;
+    lastChange = null;
     if ($('liteExtFile')) $('liteExtFile').value = '';
     setStatus($('liteCompareStatus'), 'Comparison is ready. Step 6 is now unlocked for original-vs-optimized validation.', 'ok');
   }
@@ -834,10 +914,12 @@ function renderGenerate(changed = null) {
   syncKeep();
   if (!unit.active) { setStatus(status, 'Load a file to begin.'); box.replaceChildren(); return; }
   if (!ready) {
+    const why = changed || lastChange;
     box.replaceChildren();
-    if (r) setStatus(status, staleText(changed), 'warn');
-    else setStatus(status, isManual() ? `Ready. Selected stages: ${stageLabel()}. Configure any enabled stage, then click Confirm & Generate.`
-      : 'Ready. Time-optimal (TOPP-RA): click Confirm & Generate.');
+    if (r) setStatus(status, staleText(why), 'warn');
+    else if (!isManual()) setStatus(status, 'Ready. Time-optimal (TOPP-RA): click Confirm & Generate.');
+    else setStatus(status, STAGE_LABELS.includes(why) ? `Ready. Selected stages: ${stageLabel()}. Click Confirm & Generate.`
+      : `Ready. Selected stages: ${stageLabel()}. Configure any enabled stage, then click Confirm & Generate.`);
     return;
   }
   const rep = report();
@@ -860,8 +942,9 @@ function renderGenerate(changed = null) {
 }
 
 // The HTML's word for what made the processed file stale (its invalidateProcessed messages).
+const STAGE_LABELS = ['Trim', 'Mean Smooth', 'Scale'];
 function staleText(label) {
-  if (['Trim', 'Mean Smooth', 'Scale'].includes(label)) return `Stage selection changed. Current selection: ${stageLabel()}. Click Confirm & Generate again.`;
+  if (STAGE_LABELS.includes(label)) return `Stage selection changed. Current selection: ${stageLabel()}. Click Confirm & Generate again.`;
   if (label === 'Automatic suggestions') return 'Automatic optimization suggestions applied. Click Confirm & Generate to create the optimized trajectory.';
   if (label === 'Scaling regions cleared') return 'Scaling regions cleared. Click Confirm & Generate again.';
   if (/^(Scaling regions|Region scale)/.test(label || '')) return 'Scaling regions changed. Click Confirm & Generate again.';
@@ -899,9 +982,9 @@ export async function saveBlobAs(blob, name, types) {
 async function download(kind) {
   const status = $('liteProcessStatus');
   if (!fresh()) { setStatus(status, 'Generate first: Confirm & Generate makes the processed trajectory.', 'warn'); return; }
-  const what = { txt: ['Processed trajectory', 'Save cancelled. Processed trajectory was not written.'],
-    report: ['Processing report', 'Save cancelled. Processing report was not written.'],
-    png: ['Processed plot', 'Save cancelled. Plot image was not written.'] }[kind];
+  const what = { txt: ['Processed trajectory', 'Save cancelled. Processed trajectory was not written.', 'processed TXT'],
+    report: ['Processing report', 'Save cancelled. Processing report was not written.', 'processing report'],
+    png: ['Processed plot', 'Save cancelled. Plot image was not written.', 'plot PNG'] }[kind];
   try {
     let saved;
     if (kind === 'txt') {
@@ -909,24 +992,23 @@ async function download(kind) {
       saved = await saveBlobAs(blob, outputName(), [{ description: 'TXT file', accept: { 'text/plain': ['.txt'] } }]);
     } else if (kind === 'report') {
       const rep = report();
-      const body = rep
-        ? { ...rep, automaticOptimizationAnalysis: analysis && analysis.key === unit.key && analysis.file === unit.active ? analysis.data : null,
-          limits: { enforced: false, ok: unit.candidate.result.limits_ok, text: unit.candidate.result.limits_text, checks: unit.candidate.checks } }
+      const body = rep                                   // the HTML's report as made with the file, and Lite's limits
+        ? { ...rep, limits: { enforced: false, ok: unit.candidate.result.limits_ok, text: unit.candidate.result.limits_text, checks: unit.candidate.checks } }
         : { sourceFile: rec() && rec().name, optimiser: 'Time-optimal (TOPP-RA)', result: unit.candidate.result, checks: unit.candidate.checks,
           recipe: unit.candidate.recipe };
       saved = await saveBlobAs(new Blob([JSON.stringify(body, null, 2)], { type: 'application/json' }), `${outputBase()}_processing_report.json`,
         [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }]);
     } else {
-      await loadPlotly();
-      const fig = figure(await trackData('candidate'), `Optimized - ${outputName()}`);
-      const url = await window.Plotly.toImage({ data: fig.data, layout: { ...fig.layout, paper_bgcolor: 'white', plot_bgcolor: 'white' } },
-        { format: 'png', width: 1600, height: 900, scale: 1 });
+      await loadPlotly();                                // the HTML's Compare plot: the original's y-range shared
+      const [orig, opt] = await Promise.all([trackData('raw'), trackData('candidate')]);
+      const fig = figure(opt, `Optimized - ${outputName()}`, { yRange: yRangeFor(orig, opt), pal: printPalette() });
+      const url = await window.Plotly.toImage({ data: fig.data, layout: fig.layout }, { format: 'png', width: 1600, height: 900, scale: 1 });
       saved = await saveBlobAs(await (await fetch(url)).blob(), `${outputBase()}_processed_J1_to_J7.png`, [{ description: 'PNG image', accept: { 'image/png': ['.png'] } }]);
     }
     if (!saved) { setStatus(status, what[1], 'warn'); return; }
     setStatus(status, saved.picker ? `${what[0]} saved as: ${saved.name}`
       : `${what[0]} download started as: ${saved.name}. To always choose the folder, enable your browser’s “Ask where to save each file” setting.`, 'ok');
-  } catch (err) { setStatus(status, `Could not save: ${say(err)}`, 'err'); }
+  } catch (err) { setStatus(status, `Could not save ${what[2]}: ${say(err)}`, 'err'); }
 }
 
 // Keeping the processed file in the project, under its name, for Real Test (V32's Save Tuned File As…).
@@ -1057,7 +1139,7 @@ async function loadExternal(ev) {
     const parsed = parseTrajectoryText(await file.text());
     external = { name: file.name, ...parsed };
     pause();
-    pb.t = 0;
+    pb.at.compare = 0;
     await renderCompare();
     setStatus(status, `External optimized file loaded: ${file.name}. Original source remains unchanged. The 3D plays the generated file.`,
       parsed.skipped.length ? 'warn' : 'ok');
@@ -1071,7 +1153,7 @@ async function useGenerated() {
   external = null;
   if ($('liteExtFile')) $('liteExtFile').value = '';
   pause();
-  pb.t = 0;
+  pb.at.compare = 0;
   await renderCompare();
   setStatus($('liteCompareStatus'), 'Comparison switched back to the generated optimized trajectory.', 'ok');
 }
@@ -1128,10 +1210,13 @@ async function loadSimulation(which) {
   }
   const progress = which === 'candidate' ? unit.candidate_extra && unit.candidate_extra.progress : null;
   if (!host.querySelector('canvas')) say3d(host, 'Loading the 3D view…');   // the first time: the robot's meshes come first
+  const kind = which === 'raw' ? 'review' : 'compare', at = pb.at[kind];   // loading rewinds the 3D: the view keeps its moment
   try {
     if (!(await showFile(host, unit, which, progress))) return;     // another file was asked for meanwhile
     window.resetSimulationPlayback(false);
-    seekTo(pb.kind === (which === 'raw' ? 'review' : 'compare') ? pb.t : 0);
+    pb.at[kind] = at;
+    seekTo(at);
+    if (pipeStep === (kind === 'review' ? 4 : 6)) showMoment(kind, false);
     $('simStatus').textContent = (which === 'candidate' ? 'The processed file' : 'The recording as taught')
       + ` in 3D, staged first (${sim.tl.stage.text}): Play / Pause / Restart and the timeline above move it with the plot.`;
     $('simStatus').className = 'statusbar ok';
@@ -1155,11 +1240,13 @@ export async function retune() {
   };
   tuning = (async () => {
     try {
+      await flushPush();                                 // the settings on screen are the ones tuned
       const job = await post(unitUrl(key, 'optimise'), {});
       if (job && job.error) return refused(Object.assign(new Error(job.error), { hint: job.hint, code: job.code }));
       const done = await watchJob(job, (j) => {
         showResults(j);
-        setStatus($('liteProcessStatus'), `Processing: ${j.stage || '…'}`);
+        setStatus($('liteProcessStatus'), isManual() ? `Processing selected stages: ${stageLabel()}…`
+          : `Processing: Time-optimal (TOPP-RA)… ${j.stage || ''}`.trim());
       });
       unit = await loadUnit(key);
       if (done.state !== 'done') return refused(Object.assign(new Error(done.error || 'Processing stopped.'), { hint: done.hint }));
@@ -1173,13 +1260,15 @@ export async function retune() {
 async function enter() {
   const s = step();
   if (!s || !ctx.pid) return;
+  await flushPush();                                     // the step left keeps what was typed there
   addControls();
   if (sim.key !== s.key) unload();                      // another step's file never plays here
   try { unit = await loadUnit(s.key); } catch (err) { tell(err); return; }
   if (!analysis || analysis.key !== unit.key) analysis = null;
   external = null;
+  lastChange = null;
   pause();
-  pb.t = 0;
+  pb.at.review = pb.at.compare = 0;
   plotted.raw = plotted.opt = null;
   if ($('liteManualStart')) $('liteManualStart').value = '';
   if ($('liteManualEnd')) $('liteManualEnd').value = '';
@@ -1224,6 +1313,7 @@ export function installTune() {
   window.applyTuningToActiveTrajectory = function applyTuningToActiveTrajectory() { generate(); };
   window.saveTunedTrajectoryAs = async function saveTunedTrajectoryAs() {
     if (!unit) return;
+    await flushPush();
     if (!fresh()) { window.toast('Generate first: Confirm & Generate makes the processed file.'); return; }
     let name = ($('liteKeepName')?.value || '').trim() || outputName();
     if (!/\.txt$/i.test(name)) name += '.txt';
@@ -1250,6 +1340,10 @@ export function installTune() {
     if (labels[id]) queuePush(labels[id]);
   });
 
+  document.addEventListener('lite:speed', () => {           // the move to the start at the new speed: the 3D again
+    if (currentStage === 'optimize' && unit && (pipeStep === 4 || pipeStep === 6)) loadSimulation(pipeStep === 6 ? 'candidate' : 'raw');
+  });
+
   document.addEventListener('lite:viewer-closed', () => {   // the 3D view is back from the Trajectory Viewer
     if (currentStage === 'optimize' && unit && (pipeStep === 4 || pipeStep === 6)) loadSimulation(pipeStep === 6 ? 'candidate' : 'raw');
   });
@@ -1266,6 +1360,7 @@ export function installTune() {
 // under the HTML's name (numbered when the project already has it).
 async function keep() {
   if (!unit) return true;
+  await flushPush();
   if (!fresh()) {
     const ok = await retune();
     if (!ok) return false;

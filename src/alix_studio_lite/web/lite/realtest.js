@@ -76,7 +76,8 @@ async function refresh() {
   const btn = $('uploadTrajectoryBtn');
   let up = $('liteUploadFile');
   if (!up && btn) { up = el('div', { id: 'liteUploadFile', class: 'lite-upload-file mini-note' }); btn.before(up); }
-  if (up) up.textContent = file ? `Sends ${file} (${v.version})` : 'No tuned file yet';
+  // the controller keeps a program under a short name of its own (api_units: <region>_<version>, 32 characters)
+  if (up) up.textContent = file ? `Sends ${file} (${v.version}), named “${`${s.key}_${v.version}`.slice(0, 32)}” on the controller` : 'No tuned file yet';
   const next = teachAnotherButton();
   if (next) {                                          // open once the file is on the controller (or its run completed)
     const ready = !!v && ['uploaded', 'dryrun_ok', 'real_ok'].includes(u.status);
