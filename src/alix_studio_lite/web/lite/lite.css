@@ -389,3 +389,31 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 .lite-transition-card { width: min(980px, calc(100vw - 32px)); max-width: none; }
 .lite-transition-3d { position: relative; height: min(58vh, 520px); margin: 10px 0; border: 1px solid var(--line); background: var(--lite-viewport-bg);
   border-radius: 14px; overflow: hidden; }
+
+/* Prepare: the room and the UGV placement (V32 feedback v2), and the measuring guide */
+.lite-room-card { margin-bottom: 12px; }
+.lite-room-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.lite-standoff-row { display: grid; grid-template-columns: minmax(180px, 260px) 1fr; gap: 12px; align-items: end; margin-bottom: 10px; }
+.lite-standoff-row .field { margin: 0; }
+.lite-guide-btn { white-space: nowrap; }
+.ugv-position-head { gap: 10px; }
+@media (max-width: 1100px) { .lite-room-grid { grid-template-columns: 1fr 1fr; } .lite-standoff-row { grid-template-columns: 1fr; } }
+.lite-guide-card { width: min(980px, calc(100vw - 32px)); max-width: none; }
+.lite-guide-body { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; gap: 18px; align-items: start; margin: 8px 0 12px; }
+@media (max-width: 820px) { .lite-guide-body { grid-template-columns: 1fr; } }
+.lite-guide-figure svg { width: 100%; height: auto; display: block; }
+.lite-guide-steps { margin: 0; padding-left: 22px; display: grid; gap: 8px; line-height: 1.45; }
+.lite-guide-moves { list-style: none; margin-left: -22px; }
+.lite-guide-wall { fill: none; stroke: var(--ink); stroke-width: 6; }
+.lite-guide-front { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 8 6; }
+.lite-guide-commode { fill: var(--orange2); stroke: var(--orange); stroke-width: 2; }
+.lite-guide-ugv { fill: var(--blue2); stroke: var(--blue); stroke-width: 2; }
+.lite-guide-dim { stroke: var(--red); stroke-width: 1.6; }
+.lite-guide-standoff { stroke: var(--green); stroke-width: 2.2; }
+.lite-guide-arrowhead { fill: var(--red); }
+.lite-guide-axis { stroke: var(--blue); stroke-width: 2; }
+.lite-guide-label { fill: var(--ink); font-size: 12px; font-weight: 700; }
+.lite-guide-axis-label { fill: var(--blue); font-size: 12px; font-weight: 800; }
+.lite-guide-num { fill: var(--red); font-size: 15px; font-weight: 900; }
+.lite-real-start { margin: 6px 0 8px; }
+.lite-real-start select { min-width: 0; flex: 1; }

@@ -119,7 +119,7 @@ export function installTeach() {
       try {
         await robotCall(unitUrl(s.key, 'teach/start'), {}, { what: 'Drag teaching' });
       } catch (err) { $('timerResult').textContent = say(err); tell(err); return; }
-      teaching = { pid: ctx.pid, key: s.key, arm: s.arm };
+      teaching = { pid: ctx.pid, key: s.key, arm: s.arm, task: TASKS[currentTask]?.label };     // the task: its UGV placement is kept with the recording
     }
     pageStart();
   };
@@ -136,7 +136,7 @@ export function installTeach() {
     const here = () => ctx.pid === t.pid && step()?.key === t.key;
     const asked = ($('fileName')?.value || '').trim();
     try {
-      const r = await post(`/api/projects/${t.pid}/units/${t.key}/teach/stop`, { name: asked });
+      const r = await post(`/api/projects/${t.pid}/units/${t.key}/teach/stop`, { name: asked, task: t.task });
       if (ctx.pid === t.pid) ctx.units[t.key] = r.unit;
       if (r.name && asked && r.name !== asked) window.toast(`Saved as ${r.name}: ${asked} is already used in this project.`);
       if (here()) {
@@ -197,7 +197,8 @@ export function installTeach() {
     if (!v) { event.target.value = ''; return; }
     st.textContent = `Checking ${file.name}…`;
     try {
-      const r = await post(unitUrl(s.key, 'recordings'), { source: 'upload', name: file.name, content: await file.text(), ...v });
+      const r = await post(unitUrl(s.key, 'recordings'), { source: 'upload', name: file.name, content: await file.text(), ...v,
+        task: TASKS[currentTask]?.label });
       ctx.units[s.key] = r.unit;
       tuningApplied = false; tunedOutputFileName = ''; tuningSourceFileName = file.name;   // V32: a new source to tune
       const rec = activeRec(r.unit);

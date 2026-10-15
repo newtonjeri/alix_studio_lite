@@ -67,6 +67,7 @@ class LiteUnits(Project):
             r["name"] = src.get("name") or r.get("original") or r["file"]
             r["seconds"] = round(0.005 * max(int(r.get("lines") or 1) - 1, 0), 3)
             r["taught_arm"], r["stage"] = self._identity(src)
+            r["placement"] = src.get("placement")           # the task's UGV placement it was taught at
         return out
 
     def _identity(self, src: dict) -> tuple[str | None, dict | None]:
@@ -135,7 +136,8 @@ class LiteUnits(Project):
             self._write_state(key, st)
 
     def add_recording(self, key: str, src_path: Path, note: str = "", source: str = "teach",
-                      name: str | None = None, *, taught_arm: str | None = None, stage=None) -> Path:
+                      name: str | None = None, *, taught_arm: str | None = None, stage=None,
+                      placement: dict | None = None) -> Path:
         """Keep a recording for a region and make it the active one. ``taught_arm`` must be the
         region's arm (a trajectory never runs on the other arm), and ``stage`` (a staging.Stage or
         its dict) is the pole and hand it was taught with: without both, nothing is kept."""
@@ -154,6 +156,8 @@ class LiteUnits(Project):
                 name = self.free_name(name)                 # kept under a numbered name, never refused
             dst = super().add_recording(key, src_path, note=note, source=source)
             self._update_source(dst, taught_arm=taught_arm, stage=st.as_dict())
+            if placement:
+                self._update_source(dst, placement=placement)
             if name:
                 self.rename_recording(key, dst.name, name)
             state = self._unit_state(key)
@@ -220,6 +224,21 @@ class LiteUnits(Project):
         if u.get("pole_mm") is not None and hand:
             return staging.make_stage(u["pole_mm"], hand, "the region catalogue").as_dict()
         return None
+
+    def mark_applied(self, key: str, kind: str | None, stage: staging.Stage) -> dict:
+        """Prepare's Apply Pole / Apply Hand pressed and done (the owner, 15 Oct: teaching starts only
+        after both): the values each one applied."""
+        with self.lock:
+            state = self._unit_state(key)
+            done = state.get("applied") or {}
+            for k in ((kind,) if kind in ("pole", "hand") else ("pole", "hand")):
+                done[k] = {"pole_mm": stage.pole_mm, "hand": list(stage.hand), "at": time.strftime("%Y-%m-%d %H:%M:%S")}
+            state["applied"] = done
+            self._write_state(key, state)
+            return done
+
+    def applied(self, key: str) -> dict:
+        return self._unit_state(key).get("applied") or {}
 
     def set_setup(self, key: str, stage: staging.Stage) -> dict:
         with self.lock:

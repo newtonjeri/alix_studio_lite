@@ -6,9 +6,10 @@
 // shown, and PASS is accepted only after a completed run (tasks.js). Until Lite's robot commands
 // exist the robot is the stand-in, and the screens say that nothing reached a controller.
 
-import { get } from './api.js';
+import { get, say } from './api.js';
 import { ctx, el, fmtS, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
-import { standIn } from './status.js';
+import { POINT_SPEED, fillPointGroup, filterOptions, hasController, movePoint, pointControls } from './points.js';
+import { liteMode, standIn } from './status.js';
 import { gateChips } from './tune.js';
 
 const $ = (id) => document.getElementById(id);
@@ -19,7 +20,27 @@ const MODE_NOTE = {
   real: ['notice warn', 'REAL ROBOT: the arm, the pole and the hand move. Keep the area clear and the red E-stop buttons within reach. Each move asks for confirmation.'],
 };
 
+// Move to start (feedback v2, slide 7): the tuned trajectory's first line, as before, or one of the
+// arm's global points from its controller, by MoveJ or MoveL.
+const moveCard = () => $('stage-real')?.querySelector('button[onclick*="trajectory start pose"]')?.closest('.card');
+
+async function startPoints() {
+  const card = moveCard();
+  if (!card) return;
+  let sel = $('liteRealStart');
+  if (!sel) {
+    sel = el('select', { id: 'liteRealStart', 'aria-label': 'Where Move to Start goes' },
+      el('option', { value: 'trajectory', text: 'The tuned trajectory’s first line' }));
+    card.querySelector('button')?.before(el('div', { class: 'inline lite-real-start' }, sel));
+  }
+  const side = selectedArm, linkedArm = hasController(side);
+  pointControls(sel, 'lite_realstart', linkedArm);
+  await fillPointGroup(sel, side).catch(() => {});
+  filterOptions(sel, $('lite_realstartSearch')?.value);
+}
+
 async function refresh() {
+  startPoints();
   const s = step();
   if (!s || !ctx.pid || s.later) return;
   let u;
@@ -115,6 +136,25 @@ export function installRealTest() {
     } catch (err) { status.textContent = err.message; status.className = 'mini-note lite-bad'; tell(err); }
     refresh();
   };
+
+  const pageAction = window.demoAction;
+  window.demoAction = async function demoAction(x) {
+    const v = $('liteRealStart')?.value || '';
+    if (currentStage !== 'real' || !/start pose/i.test(String(x)) || !v.startsWith('gp:')) return pageAction(x);
+    const side = selectedArm, name = v.slice(3), motion = $('lite_realstartMotion')?.value || 'movej';
+    const status = moveCard()?.querySelector('.mini-note');
+    try {
+      const done = await movePoint(side, name, motion, POINT_SPEED, 0, {}, (j) => { if (status) status.textContent = jobLine(j); });
+      const real = (await liteMode()) === 'real';
+      const said = done.state === 'done'
+        ? `${side.toUpperCase()} at “${name}” (${motion === 'movel' ? 'MoveL' : 'MoveJ'})${real ? ', read back' : ': the controller’s SIM mode, nothing moved'}.`
+        : `Stopped: ${done.error || 'the move did not finish.'} ${done.hint || ''}`;
+      if (status) status.textContent = said;
+      window.toast(said);
+    } catch (err) { if (status) status.textContent = say(err); tell(err); }
+    return undefined;
+  };
+  document.addEventListener('lite:points', (e) => { if (currentStage === 'real' && e.detail === selectedArm) startPoints(); });
 
   const pageSync = window.syncRealTestTask;
   window.syncRealTestTask = function syncRealTestTask() {

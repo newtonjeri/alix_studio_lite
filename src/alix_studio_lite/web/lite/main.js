@@ -15,6 +15,7 @@ import { installFolder } from './folder.js';
 import { installLayout } from './layout.js';
 import { installNotify } from './notify.js';
 import { installPictures } from './pictures.js';
+import { installPlacement } from './placement.js';
 import { installPrepare } from './prepare.js';
 import { installProjects } from './projects.js';
 import { installRealTest } from './realtest.js';
@@ -42,6 +43,7 @@ installAlerts();          // hardware errors and failures, bottom right, until c
 installRobotPanel();      // Visual sim / Hardware sim / Real, connections, E-stop (D30, R4)
 installTasks();           // the 22 tasks tied to the region catalogue (D35), fixtures (D29)
 installPrepare();
+installPlacement();       // the room, the commode in it and each task's UGV placement (V32 feedback v2)
 installTransitions();     // Prepare's transition trajectories and task start points (V32)
 installTeach();           // existing recordings first (D31), drag teach, Save & Review
 installSim();             // the 3D robot in the simulation pane, on the 5 ms clock

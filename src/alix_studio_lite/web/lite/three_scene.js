@@ -145,6 +145,7 @@ export function createViewer() {
   const v = { dirty: true, animating: false, host: null, ready: null, borrowedBy: null };
   let renderer = null, scene = null, cam = null, controls = null, ro = null, wall = null, fixture = null;
   let wallKey = '', fixtureKey = '', wallGen = 0, fixtureGen = 0, sceneCall = 0;
+  let room = null, roomKey = '', offset = [0, 0];          // the measured room, and the commode's offset for the UGV's placement
   const views = new Set();                       // the secondary views (view()), drawn by the same loop
   let lent = null, borrowed = null;              // the camera before a picture borrowed it; the picture's aim
 
@@ -349,8 +350,38 @@ export function createViewer() {
   // The theme changed: the viewport's background follows it.
   v.retheme = () => { if (scene) { scene.background = new window.THREE.Color(css('--lite-viewport-bg')); v.dirty = true; } };
 
-  // The cubicle walls and the fixture in `phase`, rebuilt only when they change.
-  v.setScene = async ({ cubicleMm = 1400, fixtureSpec = null, fixtureId = '', phase = 'lid_closed' } = {}) => {
+  // The measured room (server/placement.py): three walls like ALIX's cubicle meshes, open at the front,
+  // and the front wall as a line on the floor. Without one, ALIX's venue cubicle stays.
+  const showRoom = (THREE, place) => {
+    const key = place && place.walls ? JSON.stringify([place.walls, place.front_x, place.room_y]) : '';
+    if (key !== roomKey) {
+      roomKey = key;
+      if (room) { scene.remove(room); room = null; }
+      if (key) {
+        const col = (n) => new THREE.Color(css(n));
+        const mat = new THREE.MeshStandardMaterial({ color: col('--vp-wall'), transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false });
+        const edge = new THREE.LineBasicMaterial({ color: col('--vp-wall-edge') });
+        room = new THREE.Group();
+        for (const w of place.walls) {
+          const g = new THREE.BoxGeometry(...w.size);
+          const m = new THREE.Mesh(g, mat);
+          const e = new THREE.LineSegments(new THREE.EdgesGeometry(g), edge);
+          m.position.set(...w.center); e.position.set(...w.center);
+          room.add(m, e);
+        }
+        if (place.front_x != null && place.room_y) {
+          const pts = [new THREE.Vector3(place.front_x, place.room_y[0], 0.002), new THREE.Vector3(place.front_x, place.room_y[1], 0.002)];
+          room.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), edge));
+        }
+        scene.add(room);
+      }
+    }
+    if (wall) wall.visible = !room;
+  };
+
+  // The cubicle walls and the fixture in `phase`, rebuilt only when they change. `placement`: the
+  // scene of the room and the UGV's placement (server/placement.py: the fixture's offset, the walls).
+  v.setScene = async ({ cubicleMm = 1400, fixtureSpec = null, fixtureId = '', phase = 'lid_closed', placement = null } = {}) => {
     await v.ready;
     const THREE = window.THREE;
     const col = (n) => new THREE.Color(css(n));
@@ -367,10 +398,13 @@ export function createViewer() {
         if (wall) scene.remove(wall);
         wall = new THREE.Group(); wall.add(m, edges);
         wall.position.set(...CUBICLE_POSE.pos); wall.rotation.z = CUBICLE_POSE.yawDeg * D2R;
+        wall.visible = !room;                              // a measured room replaces the venue's walls
         scene.add(wall);
       } catch (e) { /* the view works without walls */ }
     }
     if (call !== sceneCall) { v.dirty = true; return; }   // a newer change came while the walls loaded: it sets the fixture
+    offset = (placement && placement.offset_m) || [0, 0];
+    showRoom(THREE, placement);
     const key = `${fixtureId}:${phase}`;
     if (fixtureSpec && fixtureKey !== key) {
       const gen = ++fixtureGen;
@@ -382,6 +416,7 @@ export function createViewer() {
       fixture = built;
       if (fixture) scene.add(fixture);
     }
+    if (fixture) fixture.position.set(offset[0], offset[1], 0);
     v.dirty = true;
   };
 

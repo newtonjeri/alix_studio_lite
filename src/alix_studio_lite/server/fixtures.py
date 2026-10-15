@@ -150,3 +150,44 @@ def catalogue(fid: str) -> dict:
               for p in ("lid_closed", "lid_open", "seat_open")]
     return dict(fixture=fid, deck=None, source=f"vendored {FIXTURES[fid]}/models/regions.yaml (provisional)",
                 phases=phases, hand_presets={"GRIP": [0, 0, 0, 0, 150, 1000], "ALL OPEN": [1000] * 6}, units=units)
+
+
+def _stl_points(path: Path):
+    """An STL's vertices (binary or ASCII), N x 3, in the mesh's own units."""
+    import struct
+
+    import numpy as np
+
+    data = path.read_bytes()
+    if data[:5] == b"solid" and b"facet" in data[:512]:
+        return np.array([[float(v) for v in ln.split()[1:4]] for ln in data.decode(errors="ignore").splitlines()
+                         if ln.strip().startswith("vertex")])
+    n = struct.unpack("<I", data[80:84])[0]
+    rows = np.frombuffer(data[84:84 + n * 50], dtype=np.dtype([("n", "<3f4"), ("v", "<9f4"), ("a", "<u2")]))
+    return rows["v"].reshape(-1, 3).astype(float)
+
+
+@lru_cache(maxsize=None)
+def footprint(fid: str) -> dict:
+    """The fixture's extent in the robot base frame at ALIX's calibrated pose (lid and seat closed),
+    from its own meshes as ALIX places them: ``front_x`` its front tip (nearest the robot), ``back_x``,
+    ``left_y`` / ``right_y`` its edges on the robot's left (+Y) and right (-Y), in metres; and
+    ``standoff_m``, the UGV standoff that pose was calibrated at (``scene_pose.default_ugv_standoff``)."""
+    import numpy as np
+    from alix_taskgen.scene_pose import default_ugv_standoff
+
+    pts = []
+    for part in spec(fid)["parts"]:
+        url = (part.get("state_meshes") or {}).get("lid_closed") or part.get("mesh")
+        path = mesh_path(fid, url.rsplit("/", 1)[-1]) if url else None
+        if path is None:
+            continue
+        p = _stl_points(path) * np.asarray(part.get("scale") or [1, 1, 1], dtype=float)
+        M = np.asarray(part["matrices"]["lid_closed"], dtype=float).reshape(4, 4)
+        pts.append(p @ M[:3, :3].T + M[:3, 3])
+    if not pts:
+        raise ValueError(f"no meshes for {fid}")
+    p = np.vstack(pts)
+    lo, hi = p.min(0), p.max(0)
+    return dict(front_x=float(lo[0]), back_x=float(hi[0]), right_y=float(lo[1]), left_y=float(hi[1]),
+                standoff_m=float(default_ugv_standoff(_folder(fid) / "scene.yaml")))

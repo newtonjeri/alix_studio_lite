@@ -852,7 +852,7 @@ export function installTune() {
     // there and carries on). The page refuses it once the arm is locked, its own Record Again
     // included; it is entered as Prepare, and the arm stays locked, so the sides never swap.
     if (s === 'prepare' && armSelectionLocked && was !== 'prepare') currentStage = 'prepare';
-    pageSetStage(s, scroll);
+    await pageSetStage(s, scroll);                       // Prepare's gate may hold it (prepare.js)
     if (currentStage !== was) release(false);           // the simulation or the preview stops with its stage
     if (currentStage === 'optimize' && (s === 'optimize' || s === 'simulate')) enter();
     document.dispatchEvent(new CustomEvent('lite:stage', { detail: currentStage }));

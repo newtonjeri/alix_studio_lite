@@ -3,6 +3,7 @@
     GET  tasks                                the task queue (decision D35)
     GET  units/<KEY>                          one arm step: setup, recordings, tuning, versions, gates
     POST units/<KEY>/setup                    the region's pole and hand (Prepare), staged on the robot
+    GET  placement | POST placement/room|task the room, the commode in it and each task's UGV placement
     POST units/<KEY>/recordings               add a recording: existing (library) or a loaded .txt
     POST units/<KEY>/recordings/<FILE>/stage  state the pole and hand of a recording that has none
     POST units/<KEY>/active | name            which recording is used; the operator's file name
@@ -36,7 +37,7 @@ import threading
 import time
 from pathlib import Path
 
-from . import fixtures, sequence, staging, workers
+from . import fixtures, placement, sequence, staging, workers
 from .api_v2 import session
 from .app import MODE_TEXT, MODES, route
 from .jobs import Cancelled, UserError
@@ -221,7 +222,39 @@ def unit_view(app, units: LiteUnits, key: str) -> dict:
     u["results"] = units.results(key)["events"][-20:]
     u["toppra"] = app.toppra()
     u["gates"] = gates(app, units, key, u)
+    u["applied"] = units.applied(key)
     return u
+
+
+# ── the room, the commode in it, and each task's UGV placement (V32 feedback v2, slide 1)
+
+def _placement_view(units: LiteUnits, task: str | None) -> dict:
+    d = placement.load(units)
+    lo, hi = placement.standoff_range_mm()
+    return {"room": d["room"], "tasks": d["tasks"], "task": task, "standoff_range_mm": [lo, hi],
+            "scene": scene_of(units, None, None, task)}
+
+
+@route("GET", P + "/placement")
+def get_placement(app, q, body, m):
+    """``task``: the scene for that task's UGV placement (the room alone without it)."""
+    return _placement_view(units_of(app, m.group(1)), (q.get("task") or [None])[0])
+
+
+@route("POST", P + "/placement/room")
+def post_placement_room(app, q, body, m):
+    """The room: ``{width_mm, length_mm, left_mm, right_mm, front_mm}``, all required."""
+    units = units_of(app, m.group(1))
+    placement.save_room(units, body)
+    return _placement_view(units, body.get("task"))
+
+
+@route("POST", P + "/placement/task")
+def post_placement_task(app, q, body, m):
+    """A task's UGV placement: ``{task, standoff_mm (required), front_mm, rear_mm, left_mm, right_mm}``."""
+    units = units_of(app, m.group(1))
+    placement.save_task(units, body.get("task"), body)
+    return _placement_view(units, body.get("task"))
 
 
 # ── tasks and one arm step
@@ -274,6 +307,7 @@ def add_recording(app, q, body, m):
             raise UserError("This region has no existing recording.", "Teach it, or load a file from this computer.")
         path = units.add_recording(key, Path(f["path"]), note=f"existing recording {f['file']}: {f.get('task', '')}",
                                    source="library", name=f["file"], taught_arm=f.get("arm"),
+                                   placement=placement.for_task(units, body.get("task")),
                                    stage=staging.make_stage(f.get("pole_mm"), f.get("hand"), "the taught set's record"))
     elif body.get("source") == "upload":
         content = body.get("content")
@@ -306,7 +340,7 @@ def add_recording(app, q, body, m):
                 raise UserError(f"Say the pole height and hand pose {name} was taught with.", code="stage")
             stage = staging.make_stage(body["pole_mm"], body["hand"], "stated when it was loaded")
             path = units.add_recording(key, tmp, note=f"loaded file {name}", source="upload", name=name,
-                                       taught_arm=arm, stage=stage)
+                                       taught_arm=arm, stage=stage, placement=placement.for_task(units, body.get("task")))
     else:
         raise UserError("Say where the recording comes from: library or upload.")
     return {"saved": path.name, "name": _name_of(units, key, path), "arm": u["arm"], "unit": unit_view(app, units, key)}
@@ -347,11 +381,22 @@ def set_setup(app, q, body, m):
     units, key = units_of(app, m.group(1)), m.group(2)
     u = _unit(units, key)
     stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "set in Prepare")
+    kind = body.get("kind")                            # which Apply was pressed: pole | hand
     mode, job = app.ui["mode"], None
     if body.get("apply") and mode != "visual":         # confirmed and accepted by the robot first,
         require_confirmed(app, body, "Moving the pole and the hand")     # so a refusal changes nothing
         job = app.robot.stage(u["arm"], stage, f"Stage {key}: {staging.describe(stage)}", mode=mode)
     units.set_setup(key, stage)
+    if job is None:
+        units.mark_applied(key, kind, stage)
+    else:
+        def watch():                                   # applied once the arm is in it (read back)
+            while job.state == "running":
+                time.sleep(0.2)
+            if job.state == "done":
+                units.mark_applied(key, kind, stage)
+
+        threading.Thread(target=watch, daemon=True).start()
     out = {"unit": unit_view(app, units, key)}
     if job is not None:
         out["job"] = job.view()
@@ -405,7 +450,34 @@ def get_track(app, q, body, m):
     return workers.track_arrays(str(_track_path(units, key, q)))
 
 
-def _timeline(app, units, key: str, which: str, start=None, max_frames: int = 5000) -> dict:
+def _recording_behind(units: LiteUnits, key: str, which: str) -> dict | None:
+    """The recording a step's file was made from (itself for ``raw``)."""
+    recs = units.recordings(key)
+    if which == "raw":
+        cur = units.current_recording(key)
+        return next((r for r in recs if cur and r["file"] == cur.name), None)
+    if which == "candidate":
+        extra = _read(_candidate_files(units, key)[2]) or {}
+    elif which == "version":
+        ver = units.current_version(key)
+        extra = (_read(Path(ver["path"]).with_name(Path(ver["path"]).stem + ".extra.json")) or {}) if ver else {}
+    else:
+        return None
+    return next((r for r in recs if r["file"] == extra.get("raw_file")), None)
+
+
+def scene_of(units: LiteUnits, key: str | None, which: str | None, task: str | None) -> dict:
+    """The scene a file plays in: the project's room, and the UGV placement its recording was taught
+    at, else the task's as entered now (a recording kept before placements were has none)."""
+    rec = _recording_behind(units, key, which) if key and which else None
+    kept = (rec or {}).get("placement")
+    pl = kept or placement.for_task(units, task)
+    out = placement.scene(units.fixture, placement.load(units)["room"], pl)
+    out["from"] = "the recording" if kept else "the task" if pl else None
+    return out
+
+
+def _timeline(app, units, key: str, which: str, start=None, max_frames: int = 5000, task: str | None = None) -> dict:
     from .routes_robot import _mesh_links, _payload
 
     from ..motion import track
@@ -415,10 +487,12 @@ def _timeline(app, units, key: str, which: str, start=None, max_frames: int = 50
     info = identity(units, key, which)
     md = track.read_md(info["path"])
     p = _payload(app)
-    return staging.execution_timeline(u["arm"], md, info["stage"],
-                                      home=staging.start_values(u["arm"], dict(p["home"]), start),
-                                      links=staging.staged_links(u["arm"], _mesh_links(p)),
-                                      rating_deg_s=load_limits(u["arm"]).rating_deg_s, max_frames=max_frames)
+    out = staging.execution_timeline(u["arm"], md, info["stage"],
+                                     home=staging.start_values(u["arm"], dict(p["home"]), start),
+                                     links=staging.staged_links(u["arm"], _mesh_links(p)),
+                                     rating_deg_s=load_limits(u["arm"]).rating_deg_s, max_frames=max_frames)
+    out["scene"] = scene_of(units, key, which, task)
+    return out
 
 
 @route("GET", U + "/timeline")
@@ -430,7 +504,8 @@ def get_timeline(app, q, body, m):
     arm starts and the path its hand takes (the arm cards), a tenth of the size."""
     units = units_of(app, m.group(1))
     coarse = (q.get("coarse") or ["0"])[0] == "1"
-    return _timeline(app, units, m.group(2), (q.get("which") or ["raw"])[0], max_frames=400 if coarse else 5000)
+    return _timeline(app, units, m.group(2), (q.get("which") or ["raw"])[0], max_frames=400 if coarse else 5000,
+                     task=(q.get("task") or [None])[0])
 
 
 @route("POST", U + "/timeline")
@@ -438,7 +513,8 @@ def post_timeline(app, q, body, m):
     """The same execution from a start state ({which, start: {pole_mm, hand, q_deg}}): a step of
     the full sequence, starting where the arm's previous step left it."""
     units = units_of(app, m.group(1))
-    return _timeline(app, units, m.group(2), str(body.get("which") or "raw"), sequence.check_start(body.get("start")))
+    return _timeline(app, units, m.group(2), str(body.get("which") or "raw"), sequence.check_start(body.get("start")),
+                     task=body.get("task"))
 
 
 @route("POST", P + "/sequence")
@@ -717,6 +793,7 @@ def post_teach(app, q, body, m):
     if out["file"] is not None:                     # the controller's own recording (the SDK wrote it)
         st = out["stage"].as_dict()
         path = units.add_recording(key, Path(out["file"]), source="teach", name=name, taught_arm=side, stage=st,
+                                   placement=placement.for_task(units, body.get("task")),
                                    note=f"drag-taught on the {side.upper()} arm: {out['points']} points in "
                                         f"{secs:.0f} s, at {st['text']}")
         return {"saved": path.name, "name": _name_of(units, key, path), "seconds": round(secs, 1), "take": None,
@@ -726,6 +803,7 @@ def post_teach(app, q, body, m):
 
     take = standin_take(side, key, units.fixture)
     path = units.add_recording(key, Path(take["path"]), source="teach", name=name, taught_arm=take["arm"],
+                               placement=placement.for_task(units, body.get("task")),
                                stage=take["stage"],
                                note=f"stand-in recording ({secs:.0f} s of teaching): {take['name']}, "
                                     f"taught at {take['stage']['text']}")

@@ -10,7 +10,8 @@
 
 import { post, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
-import { hasController, loadPoints, matches, movePoint } from './points.js';
+import { standoffSaved } from './placement.js';
+import { POINT_SPEED, fillPointGroup, filterOptions, hasController, loadPoints, movePoint, pointControls } from './points.js';
 import { liteMode } from './status.js';
 
 const $ = (id) => document.getElementById(id);
@@ -46,6 +47,7 @@ function showSetup(setup) {
 }
 
 async function refresh() {
+  regionPoints();
   const s = step();
   if (!s || !ctx.pid || s.later) return;
   if (s.key !== lastKey) { lastKey = s.key; showSetup(s.setup); }
@@ -80,7 +82,8 @@ async function applySetup(kind) {
   const s = step();
   if (!s || !ctx.pid) return;
   const mode = await liteMode();
-  const body = { pole_mm: Number($('poleHeight').value), hand: handFromPage(), apply: mode === 'hwsim' || mode === 'real' };
+  const body = { pole_mm: Number($('poleHeight').value), hand: handFromPage(), apply: mode === 'hwsim' || mode === 'real',
+    kind: String(kind || '').toLowerCase() };                  // which Apply: teaching waits for both (the owner, 15 Oct)
   try {
     const out = await robotCall(unitUrl(s.key, 'setup'), body, { what: `Moving the ${s.arm.toUpperCase()} pole and hand` });
     showSetup(out.unit.setup);
@@ -106,43 +109,36 @@ async function applySetup(kind) {
   } catch (err) { tell(err); }
 }
 
+// ── Configuration Ready → Start Teaching waits for both Applies, with the values on screen, and the
+// task's UGV standoff (the owner, 15 Oct: "without click the apply buttons, it not allow to move next")
+
+const sameHand = (a, b) => Array.isArray(a) && a.length === b.length && a.every((v, i) => (v == null ? null : Number(v)) === (b[i] == null ? null : Number(b[i])));
+
+async function missingForTeaching() {
+  const s = step();
+  if (!s || !ctx.pid || s.later) return [];
+  let u;
+  try { u = await loadUnit(s.key); } catch (_) { return []; }
+  const done = u.applied || {}, missing = [];
+  if (!done.pole || Math.abs(Number(done.pole.pole_mm) - Number($('poleHeight')?.value)) > 0.5) missing.push('press Apply beside the pole height');
+  if (!done.hand || !sameHand(done.hand.hand, handFromPage())) missing.push('press Apply beside the hand preset');
+  if (!(await standoffSaved())) missing.push('enter the UGV standoff and save the UGV placement');
+  return missing;
+}
+
 // ── the start poses as the controller's global points (the owner, 14 Oct): with the arm linked, its
 // start-pose list (Setup & Safety, and Redo Preparation, which copies it) holds the global points read
 // from its controller, a search field narrows it, and MoveJ or MoveL takes the arm there at 20 %.
 // The stand-in keeps the page's own profiles (it has no controller).
 
-const POINT_SPEED = 20;                          // % : the control program's default for a global point
 const ownOptions = {};                           // each arm's list as the page made it
-
-function filterOptions(sel, q) {
-  if (!sel) return;
-  let first = null;
-  for (const o of sel.options) {
-    o.hidden = !matches(o.textContent, q);
-    if (!o.hidden && !first) first = o;
-  }
-  if (sel.selectedOptions[0]?.hidden && first) sel.value = first.value;
-}
-
-// A search field above a start-pose list and the motion beside it, made once.
-function pointControls(sel, id) {
-  if (!sel || $(`${id}Search`)) return;
-  const search = el('input', { type: 'search', id: `${id}Search`, class: 'lite-point-search', placeholder: 'Search the global points',
-    'aria-label': 'Search the global points', oninput: (e) => filterOptions(sel, e.target.value) });
-  const motion = el('select', { id: `${id}Motion`, class: 'lite-point-motion', 'aria-label': 'Motion to the point',
-    title: `How the arm moves to a global point (at ${POINT_SPEED} %)` },
-  el('option', { value: 'movej', text: 'MoveJ' }), el('option', { value: 'movel', text: 'MoveL' }));
-  (sel.closest('.inline') || sel).before(search);
-  sel.after(motion);
-}
 
 async function fillPoses(side) {
   const sel = $(`${side}PoseSelect`);
   if (!sel) return;
   if (!(side in ownOptions)) ownOptions[side] = sel.innerHTML;
-  pointControls(sel, `lite_${side}_pose`);
   const linkedArm = hasController(side);
-  for (const id of [`lite_${side}_poseSearch`, `lite_${side}_poseMotion`]) if ($(id)) $(id).hidden = !linkedArm;
+  pointControls(sel, `lite_${side}_pose`, linkedArm);
   if (!linkedArm) { if (sel.querySelector('optgroup.lite-points')) sel.innerHTML = ownOptions[side]; return; }
   try {
     const d = await loadPoints(side);
@@ -159,6 +155,39 @@ async function fillPoses(side) {
   }
 }
 
+// Prepare's Region start pose (feedback v2, slide 7): after the page's own choices, the arm's global
+// points from its controller, a search, MoveJ / MoveL, and ▶ Move to Point.
+async function regionPoints() {
+  const sel = $('regionPose');
+  if (!sel) return;
+  const side = selectedArm, linkedArm = hasController(side);
+  pointControls(sel, 'lite_region', linkedArm);
+  let go = $('liteRegionMove');
+  if (!go) {
+    go = el('button', { id: 'liteRegionMove', class: 'btn green', type: 'button', text: '▶ Move to Point', onclick: moveRegion });
+    sel.closest('.inline')?.append(go);
+    sel.closest('.field')?.append(el('div', { id: 'liteRegionStatus', class: 'mini-note' }));
+    sel.addEventListener('change', () => { go.disabled = !String(sel.value).startsWith('gp:'); });
+  }
+  try { await fillPointGroup(sel, side); } catch (err) { $('liteRegionStatus').textContent = say(err); }
+  filterOptions(sel, $('lite_regionSearch')?.value);
+  go.hidden = !linkedArm;
+  go.disabled = !String(sel.value).startsWith('gp:');
+}
+
+async function moveRegion() {
+  const sel = $('regionPose'), status = $('liteRegionStatus');
+  if (!String(sel.value).startsWith('gp:')) { window.toast('Choose one of the controller’s global points first.'); return; }
+  const side = selectedArm, name = sel.value.slice(3), motion = $('lite_regionMotion')?.value || 'movej';
+  try {
+    const done = await movePoint(side, name, motion, POINT_SPEED, 0, {}, (j) => { status.textContent = jobLine(j); });
+    const real = (await liteMode()) === 'real';
+    status.textContent = done.state === 'done'
+      ? `${side.toUpperCase()} at “${name}” (${motion === 'movel' ? 'MoveL' : 'MoveJ'})${real ? ', read back' : ': the controller’s SIM mode, nothing moved'}.`
+      : `Stopped: ${done.error || 'the move did not finish.'} ${done.hint || ''}`;
+  } catch (err) { status.textContent = say(err); tell(err); }
+}
+
 async function move(url, body, what, statusEl) {
   const job = await robotCall(url, body, { what });
   const done = await watchJob(job, (j) => { if (statusEl) statusEl.textContent = jobLine(j); });
@@ -167,6 +196,18 @@ async function move(url, body, what, statusEl) {
 }
 
 export function installPrepare() {
+  const pageStage = window.setStage;
+  window.setStage = async function setStage(stage, ...rest) {
+    if (stage === 'teach' && currentStage === 'prepare' && ctx.pid) {
+      const missing = await missingForTeaching();
+      if (missing.length) {
+        window.toast(`Before teaching ${step()?.display || 'this region'}: ${missing.join('; ')}.`);
+        return undefined;
+      }
+    }
+    return pageStage.call(this, stage, ...rest);
+  };
+
   window.demoApply = function demoApply(kind) {
     if (!ctx.pid) { window.toast('Open a project first: Apply keeps the setup of its region.'); return; }
     applySetup(kind);
@@ -225,11 +266,11 @@ export function installPrepare() {
     await fillPoses(selectedArm).catch(() => {});
     pageRedo();
     const dest = $('redoPoseSelect');
-    pointControls(dest, 'lite_redo');
-    for (const o of dest?.options || []) o.hidden = false;
     const linkedArm = hasController(selectedArm);
-    if ($('lite_redoSearch')) { $('lite_redoSearch').value = ''; $('lite_redoSearch').hidden = !linkedArm; }
-    if ($('lite_redoMotion')) { $('lite_redoMotion').value = $(`lite_${selectedArm}_poseMotion`)?.value || 'movej'; $('lite_redoMotion').hidden = !linkedArm; }
+    pointControls(dest, 'lite_redo', linkedArm);
+    for (const o of dest?.options || []) o.hidden = false;
+    if ($('lite_redoSearch')) $('lite_redoSearch').value = '';
+    if ($('lite_redoMotion')) $('lite_redoMotion').value = $(`lite_${selectedArm}_poseMotion`)?.value || 'movej';
   };
 
   window.moveRedoToStart = async function moveRedoToStart() {
@@ -260,6 +301,6 @@ export function installPrepare() {
     pageShow(v, btn);
     if (v === 'setup') { fillPoses('left'); fillPoses('right'); }
   };
-  document.addEventListener('lite:points', (e) => fillPoses(e.detail));
+  document.addEventListener('lite:points', (e) => { fillPoses(e.detail); if (e.detail === selectedArm) regionPoints(); });
 }
 

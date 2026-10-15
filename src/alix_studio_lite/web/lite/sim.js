@@ -18,7 +18,7 @@ const scenes = new Map();                       // fixture -> scene spec request
 // What is loaded: unit, which file (`file`: what its timeline depends on), its timeline (phases,
 // traj_t0, stage), its line -> row map; `blocked`: the server's refusal of the step's file.
 export const sim = { key: null, which: null, file: null, arm: null, lines: 0, tl: null, progress: null, token: 0,
-  staged: false, abort: null, stale: false, blocked: null };
+  staged: false, abort: null, stale: false, blocked: null, place: null };
 let preRaf = 0, playRaf = 0;
 
 async function ensure() {
@@ -37,15 +37,33 @@ export async function ensure3D() {
   return { viewer, robot };
 }
 
-// The fixture (the open project's, else commode C) in `phase`, inside the cubicle.
-export async function scene(phase, fixture = ctx.fixture || 'commode_c') {
+// The project's room and a task's UGV placement as the scene shows them (server/placement.py), read
+// once per project and task until Prepare changes them ('lite:placement').
+const places = new Map();
+export function placementOf(task = null) {
+  if (!ctx.pid) return Promise.resolve(null);
+  const k = `${ctx.pid}|${task || ''}`;
+  if (!places.has(k)) {
+    const p = get(`/api/projects/${ctx.pid}/placement${task ? `?task=${encodeURIComponent(task)}` : ''}`);
+    p.catch(() => places.delete(k));
+    places.set(k, p);
+  }
+  return places.get(k);
+}
+document.addEventListener('lite:placement', () => { places.clear(); sim.stale = true; });
+
+// The fixture (the open project's, else commode C) in `phase`, inside the cubicle: the measured room
+// with the commode where the UGV's placement puts it (`place`: a scene from the server; by default
+// the room alone, at ALIX's calibrated standoff).
+export async function scene(phase, fixture = ctx.fixture || 'commode_c', place = undefined) {
   if (!scenes.has(fixture)) {
     const p = get(`/api/fixtures/${fixture}/scene`);
     p.catch(() => scenes.delete(fixture));
     scenes.set(fixture, p);
   }
   const d = await scenes.get(fixture);
-  await viewer.setScene({ cubicleMm: d.cubicle_mm, fixtureSpec: d.spec, fixtureId: fixture, phase: phase || 'lid_closed' });
+  if (place === undefined) place = (await placementOf(null).catch(() => null))?.scene || null;
+  await viewer.setScene({ cubicleMm: d.cubicle_mm, fixtureSpec: d.spec, fixtureId: fixture, phase: phase || 'lid_closed', placement: place });
 }
 
 // What a step's timeline depends on: the file, its arm and stated stage, and its tuning or version.
@@ -68,20 +86,19 @@ export function unload(why = null) {
 // Loads unit `key`'s execution timeline (`which`: raw | candidate | version) into `host`, at its
 // start: the robot standing, before the pole moves. Resolves true when shown, false when a newer
 // request replaced it; throws the server's refusal (wrong arm, no stage), and then nothing plays.
-export async function showFile(host, unit, which, progress = null) {
+export async function showFile(host, unit, which, progress = null, task = TASKS[currentTask]?.label) {
   const token = ++sim.token;
   if (sim.abort) sim.abort();                             // nothing of the previous file keeps playing
   host.classList.add('lite-3d');
   host.dataset.lite3d = 'loading';
   await ensure();
   await viewer.attach(host);
-  await scene(unit.phase);
   if (token !== sim.token) return false;
-  const file = fileOf(unit, which);
+  const file = fileOf(unit, which) + `|${task || ''}`;      // a region in two tasks plays at each task's placement
   if (sim.key !== unit.key || sim.file !== file || sim.stale) {
     let r;
     try {
-      r = await get(`${unitUrl(unit.key, 'timeline')}?which=${which}`);
+      r = await get(`${unitUrl(unit.key, 'timeline')}?which=${which}${task ? `&task=${encodeURIComponent(task)}` : ''}`);
     } catch (err) {
       if (token === sim.token) unload(Object.assign(err, { key: unit.key }));
       throw err;
@@ -89,8 +106,10 @@ export async function showFile(host, unit, which, progress = null) {
     if (token !== sim.token) return false;                 // a newer request won
     robot.home();
     sim.tl = robot.loadTimeline(unit.arm, r);
-    Object.assign(sim, { key: unit.key, which, file, arm: unit.arm, lines: r.lines, stale: false, blocked: null });
+    Object.assign(sim, { key: unit.key, which, file, arm: unit.arm, lines: r.lines, stale: false, blocked: null, place: r.scene || null });
   }
+  await scene(unit.phase, undefined, sim.place || null);   // where its recording was taught: the room, the UGV's placement
+  if (token !== sim.token) return false;
   sim.progress = progress;
   rewind();
   host.dataset.lite3d = 'ready';
@@ -114,7 +133,8 @@ export async function showStanding(host, unit, note = 'No recording yet: the arm
   await ensure();
   if (token !== sim.token) return false;
   await viewer.attach(host);
-  await scene(unit.phase);
+  const place = (await placementOf(TASKS[currentTask]?.label).catch(() => null))?.scene || null;
+  await scene(unit.phase, undefined, place);
   if (token !== sim.token) return false;
   robot.home();
   viewer.dirty = true;
