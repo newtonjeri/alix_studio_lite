@@ -84,8 +84,21 @@ def _entries(units, steps: list[dict], which: str) -> list[dict]:
 def _file_entries(units, items: list[dict], only: str | None) -> list[dict]:
     """Single files, one after another on their arm (feedback v2, slide 11): ``{key, which}`` with
     ``which`` raw, version, version:vNNN or transition."""
+    from . import merges
+
     out = []
     for it in items[:50]:
+        if it.get("merge"):                              # a custom merge of one arm
+            side = str(it.get("side") or only or "")
+            if side not in ARMS:
+                raise UserError("Say which arm's merge: left or right.")
+            if only and side != only:
+                raise UserError(f"A {side.upper()} merge never runs on the {only.upper()} arm.", code="arm")
+            m = merges.get(units, side, it["merge"])
+            view = dict(key=None, display=m["name"], phase=None, later=False)
+            out.append(dict(step=None, task={side: view}, label=m["name"], rule="ONE BY ONE", wait=0.0,
+                            which=f"merge:{side}/{m['file']}", why=None))
+            continue
         key = str(it.get("key") or "")
         if key not in units.units:
             raise UserError(f"There is no region {key!r} in this project.")

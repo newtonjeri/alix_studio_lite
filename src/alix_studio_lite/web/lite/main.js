@@ -13,6 +13,7 @@ import { installBrand } from './brand.js';
 import { installFixes } from './fixes.js';
 import { installFolder } from './folder.js';
 import { installLayout } from './layout.js';
+import { installMerge } from './merge.js';
 import { installNotify } from './notify.js';
 import { installPictures } from './pictures.js';
 import { installPlacement } from './placement.js';
@@ -53,6 +54,7 @@ installRealTest();
 installAdvanced();
 installViewer();          // taught .txt files: upload, check, replay in 3D
 installSequence();        // Merge + Full Sequence: the full simulation in 3D, each arm step staged
+installMerge();            // the custom merge per arm: merged, renamed, downloaded, sent and run (feedback v2)
 installRun();              // ...what to run at the top, the simulation in the middle, the real machine below (feedback v2)
 installPictures();        // the single-arm merged simulation in 3D; the page's own region images elsewhere
 installActivity();        // last: the page's audit trail goes to the server, its Activity Logs page reads it

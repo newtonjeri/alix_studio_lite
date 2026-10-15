@@ -424,7 +424,21 @@ export function installSequence() {
     }
     // a run from 0 (or again after the end) can approve; a resumed run keeps what it was
     if (action === 'start' && !fullSimOverlayRunning && (fullSimOverlayElapsed <= 0 || fullSimOverlayElapsed >= seq.plan.total_s)) seq.clean = true;
+    if (action === 'start' && seq.req.mode !== 'both') {  // one arm, files, points: no two-arm order to confirm first
+      if (dualSafetyFaultLatched) { window.toast('Safety fault is latched. Press Reset before restarting.'); return; }
+      if (fullSimOverlayRunning) return;
+      window.fullSimSpeedChanged();
+      if (fullSimOverlayElapsed >= seq.plan.total_s) fullSimOverlayElapsed = 0;
+      fullSimOverlayRunning = true;
+      fullSimOverlayPaused = false;
+      fullSimOverlayStart = performance.now() - (fullSimOverlayElapsed / (fullSimSpeedPct / 100)) * 1000;
+      setStatus('Running…', 'ok');
+      if (fullSimOverlayRaf) cancelAnimationFrame(fullSimOverlayRaf);
+      fullSimOverlayRaf = requestAnimationFrame(window.updateFullSequenceOverlayFrame);
+      return;
+    }
     pageControl(action, announce);
+    $('fullSequenceSimModal')?.classList.remove('show');   // the page shows its window; the view is in the page now
     if (action === 'reset') {
       fullSimOverlayElapsed = 0;
       syncSlider();

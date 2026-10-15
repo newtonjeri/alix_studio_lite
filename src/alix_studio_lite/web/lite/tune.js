@@ -647,7 +647,7 @@ async function generate() {
   }
 }
 
-async function saveBlobAs(blob, name, types) {
+export async function saveBlobAs(blob, name, types) {
   if (typeof window.showSaveFilePicker === 'function') {
     try {
       const h = await window.showSaveFilePicker({ suggestedName: name, types });

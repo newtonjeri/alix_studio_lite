@@ -105,6 +105,12 @@ class LiteUnits(Project):
             if t.is_dir() and any(str(_read_json(m, {}).get("name") or "").casefold() == want
                                   for m in t.glob("*.source.json")):           # and the transition trajectories
                 return k
+        for side in ("left", "right"):                                          # and the merges
+            d = self.root / "merged" / side
+            for m in sorted(d.glob("*.source.json")) if d.is_dir() else []:
+                file = m.name[:-len(".source.json")] + ".txt"
+                if ("merge", f"{side}/{file}") != skip and str(_read_json(m, {}).get("name") or "").casefold() == want:
+                    return f"merge:{side}"
         return None
 
     def free_name(self, name: str) -> str:
@@ -117,6 +123,8 @@ class LiteUnits(Project):
         return cand
 
     def taken_text(self, name: str, owner: str) -> str:
+        if owner.startswith("merge:"):
+            return f"{Path(str(name)).name.strip()} is already the name of a {owner[6:].upper()} merge in this project"
         return f"{Path(str(name)).name.strip()} is already the name of a recording in this project ({display_name(self.units[owner])})"
 
     def current_recording(self, key: str) -> Path | None:

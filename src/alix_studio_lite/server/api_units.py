@@ -37,7 +37,7 @@ import threading
 import time
 from pathlib import Path
 
-from . import fixtures, placement, sequence, staging, workers
+from . import fixtures, merges, placement, sequence, staging, workers
 from .api_v2 import session
 from .app import MODE_TEXT, MODES, route
 from .jobs import Cancelled, UserError
@@ -104,6 +104,13 @@ def identity(units: LiteUnits, key: str, which: str) -> dict:
     """The file a step would execute (``raw``: the active recording; ``candidate``; ``version``)
     with the arm it was taught on and its stage. Refuses, saying why, when the file is of the
     other arm, or its arm or stage is not known: then it is never shown moving nor run."""
+    if which.startswith("merge:"):                     # a custom merge of one arm (merges.py)
+        side, _, file = which[6:].partition("/")
+        mm = merges.get(units, side, file)
+        st = staging.stage_from(mm.get("stage"))
+        if st is None:
+            raise UserError(f"The pole height and hand pose of {mm['name']} are not known.", "Merge it again.", code="stage")
+        return dict(path=Path(mm["path"]), name=mm["name"], taught_arm=side, stage=st)
     u = _unit(units, key)
     if which == "raw":
         rec = next((r for r in units.recordings(key) if r["file"] == (units.current_recording(key) or Path("")).name), None)
@@ -583,10 +590,16 @@ def post_sequence(app, q, body, m):
     elif not isinstance(steps, list) or not steps or len(steps) > 200:
         raise UserError("Include at least one step in the sequence.")
     p = _payload(app)
-    return sequence.plan(units, [s for s in steps if isinstance(s, dict)], source=str(body.get("source") or "version"),
-                         home=dict(p["home"]), rating={s: load_limits(s).rating_deg_s for s in ARMS},
-                         identity=identity, only=body.get("only") or None,
-                         items=None if items is None else [x for x in items if isinstance(x, dict)])
+    out = sequence.plan(units, [s for s in steps if isinstance(s, dict)], source=str(body.get("source") or "version"),
+                        home=dict(p["home"]), rating={s: load_limits(s).rating_deg_s for s in ARMS},
+                        identity=identity, only=body.get("only") or None,
+                        items=None if items is None else [x for x in items if isinstance(x, dict)])
+    for row in out["rows"]:                              # a merge's 3D frames come from its own route
+        for a in row["arms"].values():
+            if str(a.get("which") or "").startswith("merge:") and a.get("ready"):
+                side, _, file = a["which"][6:].partition("/")
+                a["timeline"] = dict(url=f"/api/projects/{m.group(1)}/merges/{side}/{file}/timeline", body=dict(start=a.get("start")))
+    return out
 
 
 POINT_SPEED_PCT = 20.0          # %: the control program's default for a global point (web/lite/points.js)
@@ -1208,6 +1221,113 @@ def post_transition_run(app, q, body, m):
     dry = mode != "real"
     return app.robot.run(u["arm"], pid, dry_run=dry, stage=info["stage"], mode=mode, alone=True,
                          title=f"{'Hardware sim' if dry else 'Real'} transition {u['arm'].upper()} ({key})").view()
+
+
+# ── custom merges, one arm at a time (feedback v2, slide 10; merges.py)
+
+M = P + r"/merges/(left|right)/([A-Za-z0-9_.\-]+)"
+
+
+@route("GET", P + "/merges")
+def get_merges(app, q, body, m):
+    units = units_of(app, m.group(1))
+    return {s: merges.listing(units, s) for s in ARMS}
+
+
+@route("POST", P + r"/merges/(left|right)")
+def post_merge(app, q, body, m):
+    """Merge files of one arm, in order: ``{name, files: [{name, content}], pole_mm, hand}``. Each must be
+    that arm's (by its name, or as said); the pole and hand are the merged program's, for all of it."""
+    import tempfile
+
+    from ..motion import track
+    from .library import detect_arm
+
+    units, side = units_of(app, m.group(1)), m.group(2)
+    files = body.get("files")
+    if not isinstance(files, list) or not files or len(files) > 50:
+        raise UserError("Choose 1 to 50 files to merge.")
+    if body.get("pole_mm") is None or body.get("hand") is None:
+        raise UserError("Say the pole height and hand pose the merged program runs with.", code="stage")
+    stage = staging.make_stage(body["pole_mm"], body["hand"], "stated for the merge")
+    parts = []
+    with tempfile.TemporaryDirectory() as td:
+        for i, f in enumerate(files):
+            name = Path(str((f or {}).get("name") or f"part_{i + 1}.txt")).name
+            content = (f or {}).get("content")
+            if not isinstance(content, str) or not content.strip():
+                raise UserError(f"{name} is empty.")
+            arm = detect_arm(name)
+            if arm and arm != side:
+                raise UserError(f"{name}'s name says the {arm.upper()} arm: it never merges into the {side.upper()} arm's file.", code="arm")
+            tmp = Path(td) / f"{i}_{name}"
+            tmp.write_text(content, encoding="utf-8")
+            try:
+                parts.append(dict(name=name, md=track.read_md(tmp)))
+            except ValueError as exc:
+                raise UserError(f"{name} is not a trajectory Lite can use: {exc}") from None
+    out = merges.save(units, side, str(body.get("name") or ""), parts, stage)
+    return {k: v for k, v in out.items() if k != "path"}
+
+
+@route("POST", M + "/name")
+def post_merge_name(app, q, body, m):
+    units = units_of(app, m.group(1))
+    out = merges.rename(units, m.group(2), m.group(3), body.get("name"))
+    return {k: v for k, v in out.items() if k != "path"}
+
+
+@route("GET", M + "/download")
+def get_merge_download(app, q, body, m):
+    from .app import RawResponse
+
+    mm = merges.get(units_of(app, m.group(1)), m.group(2), m.group(3))
+    return RawResponse(Path(mm["path"]).read_bytes(), "text/plain; charset=utf-8", mm["name"])
+
+
+@route("POST", M + "/timeline")
+def post_merge_timeline(app, q, body, m):
+    """A merge in 3D: staged first, then the file on the 5 ms clock (``start``: where the arm was left)."""
+    from ..motion import track
+    from ..motion.limits import load_limits
+    from .routes_robot import _mesh_links, _payload
+
+    units, side = units_of(app, m.group(1)), m.group(2)
+    info = identity(units, None, f"merge:{side}/{m.group(3)}")
+    p = _payload(app)
+    out = staging.execution_timeline(side, track.read_md(info["path"]), info["stage"],
+                                     home=staging.start_values(side, dict(p["home"]), sequence.check_start(body.get("start"))),
+                                     links=staging.staged_links(side, _mesh_links(p)), rating_deg_s=load_limits(side).rating_deg_s)
+    out["scene"] = scene_of(units, None, None, body.get("task"))
+    return out
+
+
+@route("POST", M + "/upload")
+def post_merge_upload(app, q, body, m):
+    """Send a merge to a Program ID (its limits checked on the bytes sent; ``replace`` as for Real Test)."""
+    units, side = units_of(app, m.group(1)), m.group(2)
+    require_robot_mode(app)
+    pid = _program_check(body.get("program_id"))
+    mm = merges.checked(units, side, m.group(3))
+    job = app.robot.upload(side, pid, Path(mm["path"]), Path(mm["name"]).stem[:32], mm["sha256"], bool(body.get("replace")),
+                           f"Upload {mm['name']} to program {pid}", stage=mm["stage"])
+    return {"unchanged": True, "program_id": pid} if job is None else job.view()
+
+
+@route("POST", M + "/run")
+def post_merge_run(app, q, body, m):
+    """Run a merge, once sent, on its arm alone (the other arm stays stopped)."""
+    units, side = units_of(app, m.group(1)), m.group(2)
+    mode = require_robot_mode(app)
+    require_confirmed(app, body, "The merged run")
+    pid = _program_check(body.get("program_id"))
+    mm = merges.checked(units, side, m.group(3))
+    prog = app.robot.arm(side).programs.get(pid)
+    if not prog or prog.get("sha256") != mm["sha256"]:
+        raise UserError(f"Program {pid} does not hold {mm['name']}.", "Upload it to the controller first.")
+    dry = mode != "real"
+    return app.robot.run(side, pid, dry_run=dry, stage=staging.stage_from(mm["stage"]), mode=mode, alone=True,
+                         title=f"{'Hardware sim' if dry else 'Real'} run of {mm['name']} ({side.upper()})").view()
 
 
 # ── single files and controller programs on one arm (feedback v2, slide 11)

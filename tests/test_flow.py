@@ -107,3 +107,55 @@ def test_one_arm_single_files_and_programs(lite):
     assert "empty" in call(lite, "POST", "/api/robots/left/programs/run", {"program_id": 77})["error"]
     j = wait(lite, call(lite, "POST", "/api/robots/left/programs/run", {"program_id": 12}))      # Real Test sent v001 there
     assert j["state"] == "done" and "program 12" in j["title"], j
+
+
+def _smooth(start_deg, j1_deg, lines=401):
+    import numpy as np
+
+    from alix_studio_lite.motion import track
+
+    s = (1 - np.cos(np.linspace(0, np.pi, lines))) / 2
+    q = np.repeat(np.asarray(start_deg, dtype=float)[None, :], lines, axis=0)
+    q[:, 0] += s * j1_deg
+    return track.track_bytes(np.round(q * 1000).astype(np.int64)).decode()
+
+
+def test_a_custom_merge_of_one_arm(lite):
+    """Feedback v2, slide 10: files of one arm merged in order, joined where they do not meet, kept in
+    the project (merged/<arm>/) under a name of its own; renamed, downloaded, played in 3D, sent to
+    the controller and run on that arm alone."""
+    P = "/api/projects/alix_fl"
+    end = unit(lite, "L-T01", "end")["joints_deg"]
+    a = _smooth(end, 4)
+    away = list(end)
+    away[1] += 6                                                     # the second part starts elsewhere: a join
+    b = _smooth(away, -3)
+    body = {"name": "L_lid_pass", "files": [{"name": "a.txt", "content": a}, {"name": "b.txt", "content": b}], "pole_mm": 200, "hand": "OPEN"}
+    assert call(lite, "POST", P + "/merges/left", {**body, "pole_mm": None})["code"] == "stage"
+    assert call(lite, "POST", P + "/merges/left", {**body, "files": [{"name": "R_x.txt", "content": a}]})["code"] == "arm"
+    mm = call(lite, "POST", P + "/merges/left", body)
+    assert mm["name"] == "L_lid_pass.txt" and [x["name"] for x in mm["parts"]] == ["a.txt", "b.txt"] and mm["limits_ok"], mm["limits_text"]
+    assert len(mm["joins"]) == 1 and mm["joins"][0]["gap_deg"] > 3 and mm["lines"] > 802
+    again = call(lite, "POST", P + "/merges/left", body)
+    assert again["name"] == "L_lid_pass_2.txt"                                       # one name per file in a project
+    assert call(lite, "POST", f"{P}/merges/left/{again['file']}/name", {"name": "FILE_10.1.txt"})["code"] == "name"
+    assert call(lite, "POST", f"{P}/merges/left/{again['file']}/name", {"name": "L_lid_pass_B"})["name"] == "L_lid_pass_B.txt"
+    listed = call(lite, "GET", P + "/merges")
+    assert {x["name"] for x in listed["left"]} == {"L_lid_pass.txt", "L_lid_pass_B.txt"} and listed["right"] == []
+    r = urllib.request.Request(f"{lite['base']}{P}/merges/left/{mm['file']}/download", headers={"X-Lite-Token": lite["tok"]})
+    with urllib.request.urlopen(r, timeout=30) as resp:
+        assert resp.read().count(b"\n") == mm["lines"] and "L_lid_pass.txt" in resp.headers.get("Content-Disposition", "")
+
+    plan = call(lite, "POST", P + "/sequence", {"source": "version", "only": "left", "items": [{"merge": mm["file"], "side": "left"}]})
+    act = plan["rows"][0]["arms"]["left"]
+    assert act["ready"] and act["timeline"]["url"].endswith(f"/merges/left/{mm['file']}/timeline")
+    assert call(lite, "POST", act["timeline"]["url"], act["timeline"]["body"])["lines"] == mm["lines"]
+
+    for arm in ("left", "right"):
+        call(lite, "POST", f"/api/robots/{arm}/connect", {})
+    call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})
+    assert "does not hold" in call(lite, "POST", f"{P}/merges/left/{mm['file']}/run", {"program_id": 30})["error"]
+    assert wait(lite, call(lite, "POST", f"{P}/merges/left/{mm['file']}/upload", {"program_id": 30}))["state"] == "done"
+    run = call(lite, "POST", f"{P}/merges/left/{mm['file']}/run", {"program_id": 30})
+    assert "alone" in call(lite, "POST", "/api/robots/right/pole", {"mm": 160})["error"]
+    assert wait(lite, run)["state"] == "done"

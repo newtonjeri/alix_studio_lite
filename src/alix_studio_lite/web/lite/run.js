@@ -25,6 +25,7 @@ const MODES = [
 ];
 const pick = { mode: 'both', side: 'left', files: [], points: [] };
 let flow = null;                                  // the project's files (flow-files), read when the page opens
+let merged = { left: [], right: [] };             // the project's custom merges (merge.js)
 let programs = { left: [], right: [] };
 let running = null;                               // {side, stop}: a robot run in progress
 
@@ -43,6 +44,10 @@ function files(side) {
     if (a.recording) opts.push({ value: `${a.key}|raw`, text: `Recording as taught · ${a.recording} (3D only)` });
     if (opts.length) out.push({ key: a.key, display: `${t.label} · ${a.display}`, opts });
   }
+  if ((merged[side] || []).length) {
+    out.push({ key: null, display: `${ARM(side)} merges`, opts: merged[side].map((m) => ({ value: `merge|${m.file}`,
+      text: `Merge · ${m.name}${m.limits_ok ? '' : ' · fails a limit'}`, sha: m.sha256 })) });
+  }
   return out;
 }
 
@@ -56,7 +61,7 @@ function chips(list, onRemove) {
 function request() {
   const m = pick.mode;
   if (['both', 'left', 'right'].includes(m)) return { mode: m };
-  if (m === 'file') return { mode: 'file', side: pick.side, items: pick.files.map((f) => ({ key: f.key, which: f.which })) };
+  if (m === 'file') return { mode: 'file', side: pick.side, items: pick.files.map((f) => (f.merge ? { merge: f.merge, side: pick.side } : { key: f.key, which: f.which })) };
   if (m === 'points') return { mode: 'points', side: pick.side, points: pick.points };
   const prog = programs[pick.side].find((p) => String(p.id) === String(pick.program));
   if (!prog) return { mode: 'program', side: pick.side, items: [], why: 'Choose a program on the controller.' };
@@ -102,7 +107,7 @@ function paintTop() {
       el('button', { class: 'btn light', type: 'button', text: '＋ Add', disabled: !groups.length, onclick: () => {
         const [key, which] = sel.value.split('|');
         const o = groups.flatMap((g) => g.opts.map((x) => ({ ...x, g }))).find((x) => x.value === sel.value);
-        pick.files.push({ key, which, label: `${o.g.display} · ${o.text.split(' · ')[0]}` });
+        pick.files.push(key === 'merge' ? { merge: which, label: o.text } : { key, which, label: `${o.g.display} · ${o.text.split(' · ')[0]}` });
         apply();
       } }),
       chips(pick.files, (i) => { pick.files.splice(i, 1); apply(); }));
@@ -155,6 +160,7 @@ function changed() {
 async function refreshFlow() {
   if (!ctx.pid) return;
   try { flow = await get(`/api/projects/${ctx.pid}/flow-files`); } catch (_) { /* the picker says there are no files */ }
+  try { merged = await get(`/api/projects/${ctx.pid}/merges`); } catch (_) { merged = { left: [], right: [] }; }
   paintTop();
   paintReal();
 }
@@ -251,9 +257,12 @@ async function runFiles(side, extra) {
   for (const [n, f] of pick.files.entries()) {
     if (running.stop) return;
     const label = `File ${n + 1} of ${pick.files.length} · ${f.label}`;
-    await watchOrThrow(await robotCall(unitUrl(f.key, 'file/upload'), { which: f.which, program_id: pid }, { what: `Sending ${f.label}` }), `${label} · sending`);
+    const base = f.merge ? `/api/projects/${ctx.pid}/merges/${side}/${f.merge}` : null;      // a merge has its own routes
+    await watchOrThrow(await robotCall(base ? `${base}/upload` : unitUrl(f.key, 'file/upload'), { which: f.which, program_id: pid },
+      { what: `Sending ${f.label}` }), `${label} · sending`);
     if (running.stop) return;
-    await watchOrThrow(await robotCall(unitUrl(f.key, 'file/run'), { which: f.which, program_id: pid, ...extra }, { what: `Running ${f.label}` }), `${label} · running`);
+    await watchOrThrow(await robotCall(base ? `${base}/run` : unitUrl(f.key, 'file/run'), { which: f.which, program_id: pid, ...extra },
+      { what: `Running ${f.label}` }), `${label} · running`);
   }
 }
 
@@ -332,5 +341,14 @@ export function installRun() {
   };
   document.addEventListener('lite:run-mode', (e) => { pick.mode = e.detail; if ($('liteRunMode')) $('liteRunMode').value = e.detail; paintTop(); paintReal(); });
   document.addEventListener('lite:run-plan', paintReal);
+  // the merge card's Simulate: that merge, as a single file, in the simulation
+  document.addEventListener('lite:run-merge', async (e) => {
+    const { side, file, name } = e.detail;
+    try { merged = await get(`/api/projects/${ctx.pid}/merges`); } catch (_) { /* as it was */ }
+    Object.assign(pick, { mode: 'file', side, files: [{ merge: file, label: `Merge · ${name}` }] });
+    if ($('liteRunMode')) $('liteRunMode').value = 'file';
+    apply();
+    $('liteRunSim')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   document.addEventListener('lite:points', () => { if (pick.mode === 'points') paintTop(); });
 }

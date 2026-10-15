@@ -455,3 +455,5 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 .lite-run-real .real-full-run { margin-top: 12px; }
 .lite-run-real .cta-row input { width: 130px; min-height: 44px; }
 #view-sequence .full-run-grid[hidden] { display: none !important; }   /* its view is in the page now (run.js) */
+.lite-merge-tools { display: grid; gap: 8px; margin: 8px 0; }
+.lite-merge-tools .inline input { flex: 1; min-width: 0; }
