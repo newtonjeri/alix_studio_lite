@@ -322,7 +322,11 @@ async function goStep(n, scroll = true) {
   if (n === 1) renderSource();
   if (n === 2) renderSetup();
   if (n === 3) await loadAnalysis(false);
-  if (n === 4) { place3d('liteReview3d'); await Promise.all([drawReview().catch(tell), loadSimulation('raw')]); }
+  if (n === 4) {                                         // the HTML analyses on load: Review shows its regions
+    if (!analysis || analysis.key !== unit.key || analysis.file !== unit.active) await loadAnalysis(false);
+    place3d('liteReview3d');
+    await Promise.all([drawReview().catch(tell), loadSimulation('raw')]);
+  }
   if (n === 5) { renderGenerate(); showResults(); }
   if (n === 6) { place3d('liteCompare3d'); await Promise.all([renderCompare().catch(tell), loadSimulation('candidate')]); }
 }
@@ -826,6 +830,7 @@ function renderGenerate(changed = null) {
   if (!box || !unit) return;
   const cand = unit.candidate, r = cand && cand.result, ready = fresh();
   for (const id of ['liteDlTxt', 'liteDlReport', 'liteDlPng']) if ($(id)) $(id).disabled = !ready;
+  if ($('liteGenerateBtn')) $('liteGenerateBtn').disabled = !unit.active;
   syncKeep();
   if (!unit.active) { setStatus(status, 'Load a file to begin.'); box.replaceChildren(); return; }
   if (!ready) {

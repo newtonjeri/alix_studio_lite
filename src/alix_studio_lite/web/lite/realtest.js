@@ -10,6 +10,7 @@ import { get, say } from './api.js';
 import { ctx, el, fmtS, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
 import { fillPointGroup, filterOptions, hasController, movePoint, pointControls } from './points.js';
 import { liteMode, standIn } from './status.js';
+import { refreshTasks } from './tasks.js';
 import { gateChips } from './tune.js';
 
 const $ = (id) => document.getElementById(id);
@@ -76,6 +77,47 @@ async function refresh() {
   let up = $('liteUploadFile');
   if (!up && btn) { up = el('div', { id: 'liteUploadFile', class: 'lite-upload-file mini-note' }); btn.before(up); }
   if (up) up.textContent = file ? `Sends ${file} (${v.version})` : 'No tuned file yet';
+  const next = teachAnotherButton();
+  if (next) {                                          // open once the file is on the controller (or its run completed)
+    const ready = !!v && ['uploaded', 'dryrun_ok', 'real_ok'].includes(u.status);
+    next.disabled = !ready;
+    next.title = ready ? `${file} is on the controller: let go of the ${s.arm.toUpperCase()} arm and start teaching another task at Prepare.`
+      : 'Opens once this region’s file is uploaded to the controller (or its test run has completed).';
+  }
+}
+
+// Teach another task (the owner, 15 Oct): greyed out until this region's file is on the controller,
+// uploaded or tested; then the arm is let go and teaching starts again at Prepare, where the next task
+// (Operator Journey) or the other arm is chosen. The file stays on its program; PASS still approves it.
+function teachAnotherButton() {
+  let b = $('liteTeachAnother');
+  const foot = $('stage-real')?.querySelector('.workspace-footer');
+  if (!b && foot) {
+    b = el('button', { class: 'btn green', id: 'liteTeachAnother', type: 'button', disabled: true, text: 'Teach another task →',
+      onclick: teachAnother });
+    foot.append(b);
+  }
+  return b;
+}
+
+async function teachAnother() {
+  const s = step();
+  if (!s || !ctx.pid || $('liteTeachAnother')?.disabled) return;
+  try {                                               // the page's own record of this task, as it stands
+    const rec = window.captureCurrentTaskRecord();
+    taskRecords[currentTask] = rec;
+    window.safeSaveTaskRecords();
+  } catch (_) { /* the page still works */ }
+  window.auditLog?.('TEACH', 'Teach another task', `${TASKS[currentTask]?.label || ''} · ${selectedArm.toUpperCase()} ARM · `
+    + 'left Real Test with its file on the controller', 'INFO', { arm: selectedArm });
+  armSelectionLocked = false;
+  window.updateArmLockUI();
+  window.resetWorkingTrajectoryState?.();
+  await refreshTasks().catch(() => {});              // the cards and the queue say where each file is now
+  await window.setStage('prepare');
+  window.setJourneyVisible?.(true, false);
+  document.getElementById('taskBoard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.toast(`${s.display} stays on the controller. Choose the next task in the Operator Journey, or the other arm, then prepare it.`);
 }
 
 // The upload as a horizontal bar with its percentage (the owner, 14 Oct), under the page's status

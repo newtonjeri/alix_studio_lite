@@ -590,27 +590,51 @@ class StandInRobot:
         emulated_stage(job, side, self.arm(side), stage, self.faults[side], emulated=mode != "real",
                        step=step, steps=steps)
 
-    def stage(self, side: str, stage: "staging.Stage", title: str, mode: str | None = None):
-        """Stage the pole and the hand only (Prepare's Apply)."""
+    @staticmethod
+    def _then(work, after):
+        """``work``, then ``after(its result)`` inside the job: the job is done only once that ran."""
+        if after is None:
+            return work
+
+        def run(job):
+            out = work(job)
+            after(out)
+            return out
+        return run
+
+    def stage(self, side: str, stage: "staging.Stage", title: str, mode: str | None = None, on_done=None):
+        """Stage the pole and the hand only (Prepare's Apply). ``on_done(result)`` runs before the job ends."""
         mode = mode or self.mode
 
         def work(job):
             self._stage(job, side, stage, mode)
             return dict(pole_mm=self.arm(side).pole_mm, hand=self.arm(side).hand)
 
-        return self._start("stage", title, work, side, mode)
+        return self._start("stage", title, self._then(work, on_done), side, mode)
 
-    def stage_part(self, side: str, stage: "staging.Stage", part: str, title: str, mode: str | None = None):
+    def stage_part(self, side: str, stage: "staging.Stage", part: str, title: str, mode: str | None = None,
+                   on_done=None):
         """Prepare's Apply beside the pole or beside the hand: that one alone (the owner, 15 Oct: "If I
         click apply for pole, hand apply automatically triggered"). A channel the stage holds keeps
-        the value it reads now."""
+        the value it reads now; what the hand reads after is what this pose left (as staging keeps it,
+        for a hand that settled short on the tool)."""
         if part == "pole":
-            return self.move_pole(side, stage.pole_mm, title, mode=mode)
+            return self.move_pole(side, stage.pole_mm, title, mode=mode, on_done=on_done)
         if part != "hand":
             raise UserError("Apply the pole or the hand.")
         now = self._measured(side)[1] or self.arm(side).hand
+        if any(t is None and h is None for h, t in zip(now, stage.hand)):
+            raise UserError(f"The {side.upper()} hand's reading is not known yet, so a channel left empty cannot be held.",
+                            "Try again in a moment, or set all six channels.")
         counts = [int(h if t is None else t) for h, t in zip(now, stage.hand)]
-        return self.set_hand(side, counts, title, mode=mode)
+
+        def after(out):
+            a = self.arm(side)
+            a.staged_hand = dict(target=list(stage.hand), read=list(a.hand))
+            if on_done is not None:
+                on_done(out)
+
+        return self.set_hand(side, counts, title, mode=mode, on_done=after)
 
     def in_stage(self, side: str, stage: "staging.Stage") -> bool:
         pole_mm, hand = self._measured(side)
@@ -624,7 +648,7 @@ class StandInRobot:
         return bool(last and last["target"] == list(stage.hand) and staging.same_hand(hand, last["read"]))
 
     # ── pole, hand, teach
-    def move_pole(self, side: str, pole_mm: float, title: str, mode: str | None = None):
+    def move_pole(self, side: str, pole_mm: float, title: str, mode: str | None = None, on_done=None):
         a = self.arm(side)
         mode = mode or self.mode
         if not 0 <= float(pole_mm) <= staging.POLE_MAX_MM:
@@ -650,9 +674,9 @@ class StandInRobot:
             job.log(f"Pole at {goal:.0f} mm ({self._how(mode)}).")
             return dict(pole_mm=goal)
 
-        return self._start("pole", title, work, side, mode)
+        return self._start("pole", title, self._then(work, on_done), side, mode)
 
-    def set_hand(self, side: str, counts: list, title: str, mode: str | None = None):
+    def set_hand(self, side: str, counts: list, title: str, mode: str | None = None, on_done=None):
         a = self.arm(side)
         mode = mode or self.mode
         vals = [int(v) for v in counts]
@@ -675,7 +699,7 @@ class StandInRobot:
             job.log(f"Hand set ({self._how(mode)}): " + ", ".join(map(str, vals)))
             return dict(hand=vals)
 
-        return self._start("hand", title, work, side, mode)
+        return self._start("hand", title, self._then(work, on_done), side, mode)
 
     def _how(self, mode: str | None = None) -> str:
         return "read back" if (mode or self.mode) == "real" else "emulated: Hardware sim moves nothing"

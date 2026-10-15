@@ -135,9 +135,6 @@ def test_each_apply_moves_its_own_part_and_the_cleaning_pose(lite):
     assert arm.hand == [1000, 1000, 1000, 1000, 0, 1000] and arm.pole_mm == 150   # nor the pole
     apply("hand", 150, [600, None, 600, 600, None, None])
     assert arm.hand == [600, 1000, 600, 600, 0, 1000]              # a held channel keeps what it reads
-    t0 = time.time()                                             # each Apply is marked once its move is done
-    while (done := call(lite, "GET", P + "/units/L-R02")["applied"]).get("hand", {}).get("hand") != [600, None, 600, 600, None, None]:
-        assert time.time() - t0 < 5, done
-        time.sleep(0.1)
-    assert done["pole"]["pole_mm"] == 150
+    done = call(lite, "GET", P + "/units/L-R02")["applied"]         # marked inside the move's job, before it ends:
+    assert done["hand"]["hand"] == [600, None, 600, 600, None, None] and done["pole"]["pole_mm"] == 150   # the page's "Applied"
     call(lite, "POST", "/api/robots/mode", {"mode": "visual"})

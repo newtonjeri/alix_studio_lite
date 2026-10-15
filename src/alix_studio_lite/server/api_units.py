@@ -456,27 +456,21 @@ def set_setup(app, q, body, m):
     stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "set in Prepare")
     kind = body.get("kind")                            # which Apply was pressed: pole | hand (it alone moves)
     mode, job = app.ui["mode"], None
-    if body.get("apply") and mode != "visual":         # confirmed and accepted by the robot first,
-        if kind == "pole":                             # so a refusal changes nothing
+    mark = lambda _out: units.mark_applied(key, kind, stage)     # noqa: E731  applied once the arm is in it (read back),
+    if body.get("apply") and mode != "visual":         # before its job reports done; confirmed and accepted by
+        if kind == "pole":                             # the robot first, so a refusal changes nothing
             require_confirmed(app, body, "Moving the pole")
-            job = app.robot.stage_part(u["arm"], stage, "pole", f"Pole {key}: {stage.pole_mm:g} mm", mode=mode)
+            job = app.robot.stage_part(u["arm"], stage, "pole", f"Pole {key}: {stage.pole_mm:g} mm", mode=mode, on_done=mark)
         elif kind == "hand":
             require_confirmed(app, body, "Moving the hand")
-            job = app.robot.stage_part(u["arm"], stage, "hand", f"Hand {key}: {staging.hand_words(stage.hand)}", mode=mode)
+            job = app.robot.stage_part(u["arm"], stage, "hand", f"Hand {key}: {staging.hand_words(stage.hand)}", mode=mode,
+                                       on_done=mark)
         else:
             require_confirmed(app, body, "Moving the pole and the hand")
-            job = app.robot.stage(u["arm"], stage, f"Stage {key}: {staging.describe(stage)}", mode=mode)
+            job = app.robot.stage(u["arm"], stage, f"Stage {key}: {staging.describe(stage)}", mode=mode, on_done=mark)
     units.set_setup(key, stage)
     if job is None:
         units.mark_applied(key, kind, stage)
-    else:
-        def watch():                                   # applied once the arm is in it (read back)
-            while job.state == "running":
-                time.sleep(0.2)
-            if job.state == "done":
-                units.mark_applied(key, kind, stage)
-
-        threading.Thread(target=watch, daemon=True).start()
     out = {"unit": unit_view(app, units, key)}
     if job is not None:
         out["job"] = job.view()

@@ -52,9 +52,32 @@ function showSetup(setup) {
 async function refresh() {
   regionPoints();
   const s = step();
-  if (!s || !ctx.pid || s.later) return;
-  if (s.key !== lastKey) { lastKey = s.key; showSetup(s.setup); }
-  try { const u = await loadUnit(s.key); showSetup(u.setup); } catch (_) { /* the page still works */ }
+  if (!s || !ctx.pid || s.later) { paintApplied({}); return; }
+  if (s.key !== lastKey) { lastKey = s.key; showSetup(s.setup); paintApplied({}); }
+  try { const u = await loadUnit(s.key); showSetup(u.setup); paintApplied(u.applied); } catch (_) { /* the page still works */ }
+}
+
+// Each Apply turns green, "✓ Applied", once its value is on the arm (the owner, 15 Oct), and is "Apply"
+// again as soon as the value on screen changes: the region's record of what each Apply applied (the
+// server marks it when the move is done and read back) against the pole and the hand shown.
+let appliedNow = {};
+const applyButtons = () => [['pole', document.querySelector(`#stage-prepare button[onclick="demoApply('Pole')"]`)],
+  ['hand', document.querySelector(`#stage-prepare button[onclick="demoApply('Hand')"]`)], ['custom', $('liteCustomHandApply')]];
+
+function paintApplied(applied = appliedNow, busy = null) {
+  appliedNow = applied || {};
+  const poleOk = !!appliedNow.pole && Math.abs(Number(appliedNow.pole.pole_mm) - Number($('poleHeight')?.value)) <= 0.5;
+  const handOk = !!appliedNow.hand && sameHand(appliedNow.hand.hand, handFromPage());
+  const ok = { pole: poleOk, hand: handOk, custom: handOk && $('handPreset')?.value === 'Custom' };
+  for (const [kind, b] of applyButtons()) {
+    if (!b) continue;
+    if (b.dataset.liteBase == null) b.dataset.liteBase = b.className;           // the page's own look, for "Apply"
+    const working = busy === kind || (busy === 'hand' && kind === 'custom');
+    b.className = ok[kind] && !working ? `${b.dataset.liteBase.replace(/\blight\b/, '')} green lite-applied`.trim() : b.dataset.liteBase;
+    b.textContent = working ? 'Applying…' : ok[kind] ? '✓ Applied' : 'Apply';
+    b.disabled = working;
+    b.title = ok[kind] ? `Applied on the arm (${appliedNow[kind === 'custom' ? 'hand' : kind].at}). Change the value to apply again.` : '';
+  }
 }
 
 // Back in Prepare after teaching (the owner, 14 Oct: what was forgotten is set here and carries on to
@@ -88,16 +111,19 @@ async function applySetup(kind) {
   const part = String(kind || '').toLowerCase();               // which Apply: it alone moves; teaching waits for both
   const body = { pole_mm: Number($('poleHeight').value), hand: handFromPage(), apply: mode === 'hwsim' || mode === 'real', kind: part };
   const what = part === 'pole' ? 'pole' : part === 'hand' ? 'hand' : 'pole and hand';
+  paintApplied(appliedNow, part);
   try {
     const out = await robotCall(unitUrl(s.key, 'setup'), body, { what: `Moving the ${s.arm.toUpperCase()} ${what}` });
     showSetup(out.unit.setup);
     if (!out.job) {
+      paintApplied(out.unit.applied);
       window.toast(`Setup kept for ${s.display}: ${out.unit.setup.text}. In Visual sim nothing moves.`);
       await afterTeaching(s, out.unit, body);
       return;
     }
     const done = await watchJob(out.job, (j) => { const n = $('liteSetupNote'); if (n) n.textContent = jobLine(j); });
     showSetup(out.unit.setup);
+    try { paintApplied((await loadUnit(s.key)).applied); } catch (_) { paintApplied(); }
     if (done.state !== 'done') {                       // the arm is NOT in its setup: say so where it shows
       const said = `Not staged: ${done.error || 'staging stopped.'} ${done.hint || ''}`;
       $('liteSetupNote').textContent = said;
@@ -110,7 +136,7 @@ async function applySetup(kind) {
       + `${out.unit.setup.text} ` + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).'));
     window.rcSyncGuidedValues();                       // the Advanced panel shows the same values (nothing is sent)
     await afterTeaching(s, out.unit, body);
-  } catch (err) { tell(err); }
+  } catch (err) { paintApplied(); tell(err); }
 }
 
 // ── Configuration Ready → Start Teaching waits for both Applies, with the values on screen, and the
@@ -132,7 +158,8 @@ async function missingForTeaching() {
 
 // ── the start poses as the controller's global points (the owner, 14 Oct): with the arm linked, its
 // start-pose list (Setup & Safety, and Redo Preparation, which copies it) holds the global points read
-// from its controller, a search field narrows it, and MoveJ or MoveL takes the arm there at 20 %.
+// from its controller, a search field narrows it, and MoveJ or MoveL takes the arm there at the
+// speed slider's % (the top bar, both arms).
 // The stand-in keeps the page's own profiles (it has no controller).
 
 const ownOptions = {};                           // each arm's list as the page made it
@@ -298,7 +325,10 @@ export function installPrepare() {
   preset?.addEventListener('change', () => {                    // a preset's six values shown in the channels
     const h = PRESETS[preset.value];
     if (h) fillHand(h);
+    paintApplied();
   });
+  $('poleHeight')?.addEventListener('input', () => paintApplied());     // another value: "Apply" again
+  fields?.addEventListener('input', () => paintApplied());
 
   // Move to the selected start pose. BOTH asks one confirmation in Real, then sends both arms, and
   // says what each arm did: one arm refused or stopped never hides that the other one moved.
