@@ -54,7 +54,7 @@ async function refresh() {
     note.textContent = st.mode === 'visual' || st.backend !== 'stand-in' || linked ? text
       : `${text} The robot is the stand-in: nothing is sent to a controller.`;
   }
-  const v = u.versions[u.versions.length - 1];
+  const v = u.versions.find((x) => x.version === u.version) || u.versions[u.versions.length - 1];     // the version it runs
   $('realTaskLabel').textContent = `${TASKS[currentTask].label} · ${s.display}`;
   const pid = u.settings_view.settings.program_id;
   if (pid && !$('programId').value) $('programId').value = pid;

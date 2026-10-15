@@ -176,7 +176,7 @@ def gates(app, units: LiteUnits, key: str, view: dict) -> list[dict]:
     is kept, the arm and the stage are the version's: it is the file every robot step runs."""
     u = units.units[key]
     out = []
-    ver = view["versions"][-1] if view["versions"] else None
+    ver = next((v for v in view["versions"] if v["version"] == view.get("version")), view["versions"][-1] if view["versions"] else None)
     rec = next((r for r in view["recordings"] if r["file"] == view["active"]), None)
     if ver is not None:
         rec = dict(taught_arm=ver.get("taught_arm"), stage=ver.get("stage"))
@@ -217,6 +217,7 @@ def unit_view(app, units: LiteUnits, key: str) -> dict:
     u["candidate_extra"] = {k: v for k, v in (extra or {}).items() if k in ("util", "progress", "made")} or None
     u["fresh"] = _fresh(units, key, extra)
     u["versions"] = _strip(units.versions(key))
+    u["version"] = (units.current_version(key) or {}).get("version")          # the one it runs
     ver = units.current_version(key)
     u["last_run"] = units.last_run(key, ver.get("sha256")) if ver else None
     u["results"] = units.results(key)["events"][-20:]
@@ -224,6 +225,43 @@ def unit_view(app, units: LiteUnits, key: str) -> dict:
     u["gates"] = gates(app, units, key, u)
     u["applied"] = units.applied(key)
     return u
+
+
+# ── the flow table's files (feedback v2, slide 8): each task's LEFT and RIGHT file, its versions, the upload
+
+def _flow_arm(app, units: LiteUnits, step: dict | None) -> dict | None:
+    if not step:
+        return None
+    key = step["key"]
+    cur = units.current_version(key)
+    held = app.robot.arm(units.units[key]["arm"]).programs
+    def uploaded(sha):
+        hit = [(pid, p) for pid, p in held.items() if sha and p.get("sha256") == sha]
+        return [dict(program_id=pid, name=p.get("stored_name") or p.get("name"), at=p.get("uploaded")) for pid, p in sorted(hit)]
+    vs = [dict(version=v["version"], name=v.get("name") or f"{key}_{v['version']}.txt", achieved_s=v.get("achieved_s"),
+               lines=v.get("lines"), uploadable=bool(v.get("uploadable")), uploaded=uploaded(v.get("sha256")))
+          for v in units.versions(key)]
+    rec = units.current_recording(key)
+    return dict(key=key, display=step["display"], later=step["later"], versions=vs, version=cur and cur["version"],
+                recording=_name_of(units, key, rec) if rec else None)
+
+
+@route("GET", P + "/flow-files")
+def get_flow_files(app, q, body, m):
+    """Each task's LEFT and RIGHT file for the flow table: the kept versions (name, time, limits), the
+    one each region runs, and the controller programs that hold it."""
+    units = units_of(app, m.group(1))
+    return {"tasks": [dict(label=t["label"], left=_flow_arm(app, units, t["left"]), right=_flow_arm(app, units, t["right"]))
+                      for t in task_list(units)]}
+
+
+@route("POST", U + "/version")
+def post_version(app, q, body, m):
+    """The kept version a region runs (Real Test, the full sequence): ``{version}``."""
+    units, key = units_of(app, m.group(1)), m.group(2)
+    _unit(units, key)
+    units.choose_version(key, str(body.get("version") or ""))
+    return unit_view(app, units, key)
 
 
 # ── the room, the commode in it, and each task's UGV placement (V32 feedback v2, slide 1)

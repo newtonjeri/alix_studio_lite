@@ -250,14 +250,38 @@ class LiteUnits(Project):
     # ── kept versions carry their recording's arm and stage
 
     def save_candidate(self, key: str) -> dict:
+        """Keep the candidate as the next version; it becomes the version the region runs."""
         import shutil
 
         with self.lock:
-            ver = super().save_candidate(key)
+            super().save_candidate(key)
+            newest = super().versions(key)[-1]
             extra = self.candidate_path(key).with_name("candidate.extra.json")
             if extra.is_file():
-                shutil.copyfile(extra, Path(ver["path"]).with_name(Path(ver["path"]).stem + ".extra.json"))
+                shutil.copyfile(extra, Path(newest["path"]).with_name(Path(newest["path"]).stem + ".extra.json"))
+            state = self._unit_state(key)
+            state["version"] = newest["version"]
+            self._write_state(key, state)
             return self.current_version(key)
+
+    def current_version(self, key: str) -> dict | None:
+        """The kept version the region runs (Real Test, the full sequence): the newest, unless another
+        was chosen in the flow table (the owner, 15 Oct)."""
+        vs = self.versions(key)
+        if not vs:
+            return None
+        chosen = self._unit_state(key).get("version")
+        return next((v for v in vs if v["version"] == chosen), vs[-1])
+
+    def choose_version(self, key: str, version: str) -> dict:
+        with self.lock:
+            v = next((v for v in self.versions(key) if v["version"] == version), None)
+            if v is None:
+                raise UserError(f"There is no version {version} of {key}.")
+            state = self._unit_state(key)
+            state["version"] = version
+            self._write_state(key, state)
+            return v
 
     def versions(self, key: str) -> list[dict]:
         out = super().versions(key)

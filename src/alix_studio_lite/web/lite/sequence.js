@@ -8,7 +8,7 @@
 // frames of each step are fetched as the clock reaches it. Only a run of kept versions with every
 // row ready, played from the start without skipping, can approve the sequence.
 
-import { post, say } from './api.js';
+import { get, post, say } from './api.js';
 import { ctx, el, fmtS, tell, unitUrl } from './ctx.js';
 import { ensure3D, release, say3d, scene } from './sim.js';
 
@@ -18,6 +18,53 @@ const SOURCES = [['version', 'Kept versions · what the robot runs'], ['recordin
 // clean: the run started at 0 and nothing was skipped (no slider move, no step that could not be shown)
 const seq = { plan: null, source: 'version', acts: { left: [], right: [] }, cache: new Map(), shown: { left: null, right: null },
   phase: null, loading: false, token: 0, ui: null, clean: false };
+
+// ── the flow table's files (feedback v2, slide 8): under each row's LEFT and RIGHT flow, the kept
+// version that arm step runs, chosen from its versions, with its time and limits, and the controller
+// programs that hold it
+
+let flowCall = 0;
+async function decorateFlow() {
+  if (!ctx.pid || !$('sequenceTableBody')) return;
+  const call = ++flowCall;
+  let flow;
+  try { flow = await get(`/api/projects/${ctx.pid}/flow-files`); } catch (_) { return; }
+  if (call !== flowCall) return;
+  const byLabel = new Map(flow.tasks.map((t) => [t.label, t]));
+  [...document.querySelectorAll('#sequenceTableBody tr')].forEach((tr, i) => {
+    const t = byLabel.get(sequenceConfig[i]?.label) || flow.tasks[i];
+    for (const side of ARMS) {
+      const cell = tr.querySelector(`.${side}-edit-flow`)?.closest('td');
+      if (!cell) continue;
+      cell.querySelector('.lite-flow-file')?.remove();
+      cell.append(fileBox(side, t && t[side]));
+    }
+  });
+}
+
+function fileBox(side, a) {
+  if (!a || a.later) return el('div', { class: 'lite-flow-file mini-note', text: a ? 'Later: not in Release 1.' : `No ${side.toUpperCase()} region in this task.` });
+  if (!a.versions.length) {
+    return el('div', { class: 'lite-flow-file lite-bad', text: a.recording ? `No kept version yet · recording ${a.recording}` : 'No recording yet' });
+  }
+  const sel = el('select', { class: 'lite-flow-version', 'aria-label': `${side.toUpperCase()} file of ${a.display}`,
+    onchange: (e) => chooseVersion(a, e.target.value) },
+  a.versions.map((v) => el('option', { value: v.version, selected: v.version === a.version,
+    text: `${v.version} · ${v.name} · ${fmtS(v.achieved_s)}${v.uploadable ? '' : ' · fails a limit'}` })));
+  const cur = a.versions.find((v) => v.version === a.version);
+  const up = cur && cur.uploaded.length;
+  return el('div', { class: 'lite-flow-file' }, sel, el('small', { class: up ? 'lite-ok' : 'mini-note',
+    text: up ? `Uploaded: ${cur.uploaded.map((u) => `program ${u.program_id}${u.name ? ` (“${u.name}”)` : ''}`).join(', ')}` : 'Not uploaded yet' }));
+}
+
+async function chooseVersion(a, version) {
+  try {
+    ctx.units[a.key] = await post(unitUrl(a.key, 'version'), { version });
+    window.toast(`${a.display} now runs ${version} (Real Test and the full sequence).`);
+    if (seq.plan) loadPlan();
+  } catch (err) { tell(err); }
+  decorateFlow();
+}
 
 // ── the plan
 
@@ -236,6 +283,13 @@ function build() {
 }
 
 export function installSequence() {
+  const pageRender = window.renderSequenceBuilder;
+  window.renderSequenceBuilder = function renderSequenceBuilder(...args) {
+    const out = pageRender.apply(this, args);
+    decorateFlow();
+    return out;
+  };
+
   const pageOpen = window.runFullSequenceSimulation;
   window.runFullSequenceSimulation = async function runFullSequenceSimulation() {
     pageOpen();

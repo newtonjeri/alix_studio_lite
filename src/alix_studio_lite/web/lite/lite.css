@@ -431,3 +431,8 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 /* the Different Start Pose window's J1-J7 stay inside it (the page's row ran past its right edge) */
 #poseModal .pose-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 #poseModal .pose-grid input { width: 100%; min-width: 0; }
+
+/* Merge + Full Sequence: each flow row's files (feedback v2, slide 8) */
+.lite-flow-file { display: grid; gap: 3px; margin-top: 6px; min-width: 220px; }
+.lite-flow-file select { font-size: 12px; padding: 5px 6px; }
+.lite-flow-file small { font-size: 11px; }
