@@ -267,7 +267,7 @@ def test_a_recording_without_its_stage_never_runs(lite):
     u = unit(lite, key, "recordings", {"source": "upload", "name": "L_P06P07.txt", "content": txt,
                                        "pole_mm": 150, "hand": "GRIP"})["unit"]
     file = u["active"]
-    src = lite["data"] / "projects/alix_loop/trajectories/left" / key / "raw" / file
+    src = lite["app"].store.folder("alix_loop") / "trajectories/left" / key / "raw" / file
     meta = json.loads(src.with_suffix(".source.json").read_text())
     meta.pop("stage")
     src.with_suffix(".source.json").write_text(json.dumps(meta))

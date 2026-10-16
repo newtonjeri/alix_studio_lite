@@ -14,3 +14,7 @@ incoming_ui/
 # to keep them on each computer instead, uncomment:
 # Resources/Logs/*
 # !Resources/Logs/README.md
+# The Lite UI's projects (server/store.py), one folder each, are not committed by Lite; to keep them
+# out of `git status`, uncomment:
+# Resources/Projects/*
+# !Resources/Projects/README.md

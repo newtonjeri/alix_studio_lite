@@ -60,14 +60,21 @@ MODE_TEXT = {"visual": "Visual sim: the 3D robot moves, no hardware",
 
 
 class LiteApp:
-    def __init__(self, project: Project, data_dir: Path, robot_link: str | None = None, log_dir: Path | None = None):
+    def __init__(self, project: Project, data_dir: Path, robot_link: str | None = None, log_dir: Path | None = None,
+                 projects_dir: Path | None = None):
         self.project = project
         self.data_dir = Path(data_dir)
         self.log = Logbook(Path(log_dir) if log_dir else self.data_dir / "logs")   # every activity, and the hardware's
         self.jobs = Jobs(on_end=self._job_ended)
         self.robot = StandInRobot(self.data_dir, self.jobs, link=robot_link, log=self.log)
         self.auth = Auth(self.data_dir)                       # both PINs, hashed (handoff section 19)
-        self.store = ProjectStore(self.data_dir / "projects")  # the Lite UI's projects
+        # the Lite UI's projects: in projects_dir (run_lite: Resources/Projects in the repository), each
+        # in a folder named as it was created; this computer's last project and trash in <data>/projects
+        home = self.data_dir / "projects"
+        self.store = ProjectStore(Path(projects_dir) if projects_dir else home, home=home)
+        self.adopted = self.store.adopt(home) if projects_dir else []   # kept by id there before: copied once
+        for p in self.adopted:
+            self.log.activity(f"project {p['id']} copied to {p['folder']}", detail=p)
         self.library = TaughtLibrary(self.data_dir)            # the Trajectory Viewer's files
         self.settings_path = self.data_dir / "settings.json"
         self.ui = {"mode": "visual", "role": "operator", "cubicle_mm": 1400, "theme": "light",

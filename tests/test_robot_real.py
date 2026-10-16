@@ -24,7 +24,7 @@ def server(tmp_path_factory):
         port = s.getsockname()[1]
     data = tmp_path_factory.mktemp("lite-real")
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
-                             "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs")],
+                             "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"), "--projects", str(data / "projects")],
                             cwd=str(vendor_paths.LITE_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ctx = {"base": f"http://127.0.0.1:{port}", "data": data}
     for _ in range(150):
@@ -86,7 +86,7 @@ def test_drag_teaching_records_on_the_controller(server):
     assert r["take"] is None and "50 % open" in r["stage"]["text"]
     rec = call(server, "GET", f"{U}/L-T01")["recordings"][-1]
     assert rec["source"] == "teach" and rec["taught_arm"] == "left" and rec["lines"] == POINTS
-    saved = next((server["data"] / "projects" / "alix_real").rglob(rec["file"]))
+    saved = next((server["data"] / "projects" / "Real").rglob(rec["file"]))
     raw = saved.read_bytes()                                     # as the SDK wrote it, CRLF and all
     assert raw.count(b"\r\n") == POINTS and raw.startswith(b'{"point":[')
 

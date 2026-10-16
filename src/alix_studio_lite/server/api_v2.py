@@ -82,6 +82,14 @@ def create_project(app, q, body, m):
     return out
 
 
+@route("POST", "/api/projects/name-check")
+def check_project_name(app, q, body, m):
+    """Whether a new project can take this name: it names the project's folder."""
+    session(app)
+    problem = app.store.name_problem(body.get("name"))
+    return {"ok": problem is None, "problem": problem, "folder": str(app.store.root)}
+
+
 @route("GET", r"/api/projects/([A-Za-z0-9_\-]+)")
 def get_project(app, q, body, m):
     session(app)

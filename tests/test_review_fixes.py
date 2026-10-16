@@ -115,7 +115,7 @@ def test_a_version_is_used_only_as_kept_and_imports_drop_evidence(lite):
     assert wait(lite, unit(lite, key, "optimise", {}))["state"] == "done"
     assert unit(lite, key, "keep", {})["versions"][-1]["version"] == "v001"
     call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})
-    kept = sorted((lite["data"] / "projects" / "alix_fix").rglob("versions/*.txt"))[-1]
+    kept = sorted(lite["app"].store.folder("alix_fix").rglob("versions/*.txt"))[-1]
     good = kept.read_bytes()
     kept.write_bytes(good.replace(b"\n", b"\n\n", 1))         # changed on disk after it was kept
     r = unit(lite, key, "upload", {"program_id": 9, "limits_seen": True})
@@ -131,7 +131,7 @@ def test_a_version_is_used_only_as_kept_and_imports_drop_evidence(lite):
     u = unit(lite, key, pid=imp["id"])
     assert u["versions"] == [] and u["last_run"] is None and u["results"] == []   # another computer's evidence
     assert u["active"] == unit(lite, key)["active"]                              # the recordings come along
-    assert not list((lite["data"] / "projects" / imp["id"]).rglob("versions/*"))
+    assert not list(lite["app"].store.folder(imp["id"]).rglob("versions/*"))
 
 
 def test_a_region_renames_only_its_own_files(lite):
@@ -189,7 +189,7 @@ def test_a_second_start_tells_this_lite_an_older_one_and_another_program(lite, t
     port = int(lite["base"].rsplit(":", 1)[1])
     me = _running_lite(port)
     assert me["code"] == code_id() and me["pid"] > 0
-    assert main(["--port", str(port), "--no-browser", "--data", str(tmp_path / "d1"), "--logs", str(tmp_path / "logs")]) == 0
+    assert main(["--port", str(port), "--no-browser", "--data", str(tmp_path / "d1"), "--logs", str(tmp_path / "logs"), "--projects", str(tmp_path / "d1" / "projects")]) == 0
     assert "already running" in capsys.readouterr().out
 
     class Old(BaseHTTPRequestHandler):                       # a Lite from before /api/lite/hello
@@ -209,7 +209,7 @@ def test_a_second_start_tells_this_lite_an_older_one_and_another_program(lite, t
         threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()   # shuts down at once
         try:
             assert _running_lite(srv.server_address[1]) == want
-            assert main(["--port", str(srv.server_address[1]), "--no-browser", "--data", str(tmp_path / "d2"), "--logs", str(tmp_path / "logs")]) == 2
+            assert main(["--port", str(srv.server_address[1]), "--no-browser", "--data", str(tmp_path / "d2"), "--logs", str(tmp_path / "logs"), "--projects", str(tmp_path / "d2" / "projects")]) == 2
             assert said in capsys.readouterr().err
         finally:
             srv.shutdown()

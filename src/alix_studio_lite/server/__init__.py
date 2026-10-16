@@ -125,6 +125,8 @@ def main(argv=None) -> int:
                     help="change the operator or engineer PIN (asks for it twice), then exit")
     ap.add_argument("--logs", type=Path, default=None,
                     help="where the logs go (default: Resources/Logs in the repository)")
+    ap.add_argument("--projects", type=Path, default=None,
+                    help="where the projects go, one folder each (default: Resources/Projects in the repository)")
     ap.add_argument("--robot", choices=("standin", "realman", "emulated"), default="standin",
                     help="standin (default): no hardware. realman: the real arms through ALIX's dispatch "
                          "(feedback of arm, pole and hand; staging, drag teaching, upload, Real and Hardware sim "
@@ -165,7 +167,9 @@ def main(argv=None) -> int:
         from .. import vendor_paths as _vp
 
         logs = a.logs or (_vp.LITE_ROOT / "Resources" / "Logs")
-        app = LiteApp(project, a.data, robot_link=None if a.robot == "standin" else a.robot, log_dir=logs)
+        projects = a.projects or (_vp.LITE_ROOT / "Resources" / "Projects")
+        app = LiteApp(project, a.data, robot_link=None if a.robot == "standin" else a.robot, log_dir=logs,
+                      projects_dir=projects)
     except RuntimeError as exc:                     # e.g. a damaged auth.json: never guess the PINs
         print(f"Lite cannot start: {exc}", file=sys.stderr, flush=True)
         return 2
@@ -188,6 +192,9 @@ def main(argv=None) -> int:
     print(f"ALIX Studio Lite running at {root}  (Ctrl+C to stop)", flush=True)
     print(f"Legacy Lite:  {root}legacy/", flush=True)
     print(f"Data folder:  {a.data}", flush=True)
+    print(f"Projects:  {app.store.root}", flush=True)
+    for p in app.adopted:
+        print(f"   copied from {app.store.home}: {p['name']}" + (f" (was “{p['renamed']}”)" if p["renamed"] else ""), flush=True)
     print(f"Logs:  {app.log.root}  (tail -f {app.log.root}/$(date +%F)/lite.log)", flush=True)
     print(f"Python:  {sys.executable}", flush=True)
     try:

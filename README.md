@@ -70,7 +70,7 @@ Lite opens at **http://127.0.0.1:8766/** in a Chrome window of its own (its own 
 - Log in with the operator PIN. Advanced Robot Controls ask for the engineer PIN.
 - Both PINs are **`1234`** until changed: `tools/run_lite.sh --set-pin operator`, or `--set-pin engineer`.
 - STOP BOTH always works, with or without a log-in, and acts like the E-stop: afterwards nothing moves until **Recover** (Robot & mode). When a window covers the top bar (the log-in screen, the Project Manager, a dialog), a second STOP BOTH stays at the bottom left.
-- Projects and settings live in `~/ALIX-Lite/`, outside the code, so updating never touches them.
+- Projects live in `Resources/Projects/`, one folder each, named as the project was named when it was created. They are not committed: keep a project file of any project you need. Settings, PINs and the projects' trash live in `~/ALIX-Lite/`.
 - A project file (`.alixproj`) from another computer brings its recordings and settings, but not its kept versions or test results: tune and keep again here before running on this robot.
 
 Other options:
@@ -79,7 +79,8 @@ Other options:
 |---|---|
 | `--no-browser` | Opens no browser: open the address yourself. |
 | `--port 8800` | Uses another port. The default 8766 runs beside ALIX Studio (8765). |
-| `--data DIR` | Keeps the projects and settings somewhere other than `~/ALIX-Lite/`. |
+| `--data DIR` | Keeps the settings, PINs and trash somewhere other than `~/ALIX-Lite/`. |
+| `--projects DIR` | Keeps the projects somewhere other than `Resources/Projects/`. |
 | `--ui legacy` | Opens Legacy Lite instead. |
 | `--robot realman` | Connects to the real arms: see below. |
 

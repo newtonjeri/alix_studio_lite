@@ -135,7 +135,7 @@ def test_send_to_tune_and_back_to_s1(lite):
     assert names.count("L_s1_merge_tuned.txt") == 1 and "L_s1_merge.txt" in names
 
     from alix_studio_lite.server.lite_units import LiteUnits                                  # it survives a restart
-    units = LiteUnits(lite["data"] / "projects" / PID, "commode_c")
+    units = LiteUnits(lite["app"].store.folder(PID), "commode_c")
     assert units.is_merge_unit(key) and units.units[key]["merge"]["name"] == "L_s1_merge.txt"
     assert key not in list(units.units) and units.name_owner("L_s1_merge_tuned.txt") == "merge:left"
 

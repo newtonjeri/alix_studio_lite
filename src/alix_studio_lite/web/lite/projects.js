@@ -2,7 +2,9 @@
 // instead of the browser's localStorage. The page reads and writes its project database through
 // two functions, loadProjectDatabase() and saveProjectDatabase(db); here they work on a copy of
 // the server's projects, and every change is sent to the server in order. Duplicate, delete,
-// export and import go to the server too, because a project now owns files.
+// export and import go to the server too, because a project now owns files. Each project's folder
+// (Resources/Projects/<name>/) is named as the project is when it is created, so a new project's
+// name must be one a folder can have and no folder has yet (a project renamed since keeps its).
 
 import { del, get, post, put, say } from './api.js';
 
@@ -50,8 +52,46 @@ function saveFile(blob, name, description, accept) {
   return Promise.resolve();
 }
 
+const clean = (v) => String(v || '').trim().replace(/\s+/g, ' ');
+
+// Why a new project cannot take `name` as far as the page knows, or ''.
+function folderProblem(name) {
+  if (/[\\/]/.test(name)) return 'A project name cannot have / or \\ in it: it is the name of the project\'s folder.';
+  if (name.startsWith('.')) return 'A project name cannot start with a dot: it is the name of the project\'s folder.';
+  const key = name.toLocaleLowerCase();
+  const p = Object.values(cache).find(r => String(r?.lite?.folder || '').toLocaleLowerCase() === key);
+  if (p) return `A project folder named “${p.lite.folder}” already exists${p.name !== p.lite.folder ? ` (project “${p.name}”, renamed since)` : ''}: choose another name.`;
+  return '';
+}
+
+function nameRefused(text) {
+  const input = document.getElementById('newProjectName'), msg = document.getElementById('newProjectNameMessage');
+  if (msg) { msg.textContent = text; msg.className = 'project-name-message error'; }
+  if (input) { input.classList.remove('project-name-ok'); input.classList.add('project-name-error'); }
+}
+
 export function installProjects() {
   window.loadProjectDatabase = () => clone(cache);
+
+  const pageValidate = window.validateNewProjectName;
+  window.validateNewProjectName = function validateNewProjectName() {
+    if (!pageValidate()) return false;
+    const why = folderProblem(clean(document.getElementById('newProjectName')?.value));
+    if (why) { nameRefused(why); return false; }
+    return true;
+  };
+
+  // Create asks the server too (it names the folder) before the page makes the project.
+  const pageCreateFromPanel = window.createNewProjectFromPanel;
+  window.createNewProjectFromPanel = async function createNewProjectFromPanel() {
+    if (!window.validateNewProjectName()) return;
+    const name = clean(document.getElementById('newProjectName')?.value) || window.defaultNewProjectName();
+    try {
+      const out = await post('/api/projects/name-check', { name });
+      if (!out.ok) { nameRefused(out.problem); window.toast(out.problem); return; }
+    } catch (err) { window.toast(`Could not check the project name: ${say(err)}`); return; }
+    pageCreateFromPanel();
+  };
 
   window.saveProjectDatabase = (db) => {
     for (const id of Object.keys(cache)) {

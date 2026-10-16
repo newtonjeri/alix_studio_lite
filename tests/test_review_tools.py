@@ -73,7 +73,7 @@ def test_trim_saves_as_a_new_recording_or_overwrites(lite):
     same = next(r for r in out["recordings"] if r["file"] == new["file"])
     assert same["lines"] == 1000 and same["name"] == "L_base_trimmed.txt" and same["sha256"] != new["sha256"]
     assert "trimmed to lines 1–1,000" in same["note"]
-    path = next((lite["data"] / "projects" / PID).rglob(new["file"]))
+    path = next(lite["app"].store.folder(PID).rglob(new["file"]))
     assert len(path.read_bytes().splitlines()) == 1000 and not path.stat().st_mode & 0o222   # still read-only
 
 

@@ -12,9 +12,11 @@
 Install once with ``python3 tools/setup_lite.py`` (Windows: ``py tools\\setup_lite.py``). This
 launcher then runs inside that environment (``.venv`` in this folder) by itself: no activation.
 
-Lite uses port 8766, so it can run beside ALIX Studio (8765). Data lives in ``~/ALIX-Lite``
-(``--data``), outside this folder: the Lite UI's projects in ``projects/``, Legacy Lite's in
-``legacy/projects/``; the logs in ``Resources/Logs`` (``--logs``). Without ``--robot`` the robot is a
+Lite uses port 8766, so it can run beside ALIX Studio (8765). The Lite UI's projects are in
+``Resources/Projects`` (``--projects``), one folder each named as the project was created; the logs
+in ``Resources/Logs`` (``--logs``). The rest lives in ``~/ALIX-Lite`` (``--data``), outside this
+folder: the last project and the projects' trash in ``projects/``, Legacy Lite's projects in
+``legacy/projects/``, the Viewer's files, the PINs and the settings. Without ``--robot`` the robot is a
 stand-in: every robot screen works and nothing moves. The page opens in a Chrome window of Lite's
 own (``--no-browser`` to open it yourself), which shows the 3D even where the graphics run in software.
 """

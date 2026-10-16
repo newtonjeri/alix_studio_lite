@@ -22,7 +22,7 @@ def test_ctrl_c_stops_lite_and_its_worker_cleanly(tmp_path):
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
     proc = subprocess.Popen([sys.executable, str(vendor_paths.LITE_ROOT / "tools" / "run_lite.py"), "--no-browser",
-                             "--port", str(port), "--data", str(tmp_path), "--logs", str(tmp_path / "logs")],
+                             "--port", str(port), "--data", str(tmp_path), "--logs", str(tmp_path / "logs"), "--projects", str(tmp_path / "projects")],
                             env=dict(os.environ, ALIX_LITE_NO_VENV="1"), start_new_session=True,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     base, tok = f"http://127.0.0.1:{port}", None

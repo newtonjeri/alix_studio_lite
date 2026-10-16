@@ -108,7 +108,7 @@ def wait(ctx, job, timeout=60):
 
 
 def work_dir(ctx, key, arm="left"):
-    return ctx["data"] / "projects" / ctx["pid"] / "trajectories" / arm / key / "work"
+    return ctx["app"].store.folder(ctx["pid"]) / "trajectories" / arm / key / "work"
 
 
 def load(ctx, key, file, name, pole_mm, hand, lines=None):

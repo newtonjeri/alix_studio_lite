@@ -251,7 +251,7 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     from alix_studio_lite.server import workflow
     from alix_studio_lite.server.lite_units import LiteUnits
 
-    units = LiteUnits(lite["data"] / "projects" / PID, "commode_c")
+    units = LiteUnits(lite["app"].store.folder(PID), "commode_c")
     run = workflow.plan_for(workflow._numbered(workflow.load(units)), "both", None)
     progs = {s: workflow.programs_known(lite["app"], units, s) for s in workflow.ARMS}
     same = workflow.identity_of(run, progs, {"left": None, "right": None}, int(lite["app"].robot.speed_pct))

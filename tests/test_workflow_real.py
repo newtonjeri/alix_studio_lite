@@ -27,7 +27,7 @@ def server(tmp_path_factory):
         port = s.getsockname()[1]
     data = tmp_path_factory.mktemp("lite-wf")
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
-                             "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs")],
+                             "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"), "--projects", str(data / "projects")],
                             cwd=str(vendor_paths.LITE_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     ctx = {"base": f"http://127.0.0.1:{port}", "data": data}
     for _ in range(150):

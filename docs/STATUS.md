@@ -28,9 +28,12 @@ cd alix_studio_lite/tools
 ```
 
 - Port 8766 is used, so Lite can run beside ALIX Studio (8765).
-- Data lives in `~/ALIX-Lite/` (outside the repository):
-  - the Lite UI's projects in `projects/<id>/`;
-  - Legacy Lite's projects in `legacy/projects/<fixture>/`. The first start of this version moves them there from `projects/`.
+- The Lite UI's projects are in `Resources/Projects/` in the repository (16 October; `--projects`), each in a folder named exactly as the project was named when it was created. A rename later keeps the folder's name.
+  - The first start of this version copies the projects kept by id in `~/ALIX-Lite/projects/<id>/` into it, once. The old folders stay where they are, as a backup.
+  - A copied project whose name cannot name a folder (`/` or `\`), or that another folder already has, gets a name that can (the start-up lines and the activity log say which).
+  - These folders are not committed: `git clean -x`, or deleting the clone, deletes them. Keep a project file (`.alixproj`) of any project you need, or commit them (see `.gitignore`).
+- Everything else Lite keeps stays in `~/ALIX-Lite/` (outside the repository): this computer's last project and the projects' trash (`projects/`), the Trajectory Viewer's files, the PINs and the settings;
+  - Legacy Lite's projects in `legacy/projects/<fixture>/`. The first start of an earlier version moved them there from `projects/`.
 - The operator PIN (log-in) and the engineer PIN (Advanced Robot Controls, and Legacy Lite's engineer role) are both `1234` until changed. They are stored hashed in `~/ALIX-Lite/auth.json`. Legacy Lite asks for the same operator PIN: every request but STOP needs the session, in both UIs.
 - Legacy Lite's first start creates the **Commode C (demo)** project. It holds the commode C test recordings, assigned to 8 left-arm regions.
 - The robot is a **stand-in** until robot I/O is built: every robot screen works and nothing moves. The Lite UI's status pill and Legacy Lite's grey line under the top bar say so.
