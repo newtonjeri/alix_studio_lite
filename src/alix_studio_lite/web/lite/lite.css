@@ -489,8 +489,24 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-rev3d-player, .lite-rev3d-block { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); }
 .lite-rev3d-player .lite-row { margin-top: 0; align-items: center; }
 .lite-rev3d-time { margin-left: auto; font-variant-numeric: tabular-nums; }
+/* Every view's timeline is one bar (the owner, 16 Oct: "combine the progress bar and the collision bar into
+   one"): the bar itself, the collision marks on it (view3d.js) and S2's checkpoints, the thumb riding over them;
+   a click anywhere on it is that moment. The marks start and end where the thumb's centre does. */
 .lite-rev3d-track { position: relative; margin-top: 10px; }
-.lite-rev3d-track input[type="range"] { width: 100%; }
+.lite-rev3d-track::before, .lite-rev3d-track > .lite-vtools-marks, .lite-rev3d-track > .lite-rev3d-marks {
+  content: ''; position: absolute; left: 9px; right: 9px; top: 50%; height: 10px; margin: 0; transform: translateY(-50%); border-radius: 5px; }
+.lite-rev3d-track::before { background: var(--line); }
+.lite-rev3d-track > .lite-vtools-marks, .lite-rev3d-track > .lite-rev3d-marks { background: transparent; pointer-events: none; }
+.lite-rev3d-track > input[type="range"] { position: relative; z-index: 1; display: block; width: 100%; height: 26px; margin: 0;
+  -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
+.lite-rev3d-track > input[type="range"]::-webkit-slider-runnable-track { height: 10px; background: transparent; }
+.lite-rev3d-track > input[type="range"]::-moz-range-track { height: 10px; background: transparent; }
+.lite-rev3d-track > input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -4px;
+  border-radius: 50%; background: var(--blue); border: 2px solid var(--card); box-shadow: 0 0 0 1px var(--blue); }
+.lite-rev3d-track > input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--blue);
+  border: 2px solid var(--card); }
+.lite-rev3d-track > input[type="range"]:disabled { cursor: default; }
+.lite-rev3d-track > input[type="range"]:disabled::-webkit-slider-thumb { background: var(--muted); box-shadow: none; }
 .lite-rev3d-marks { position: relative; height: 6px; margin-top: 2px; border-radius: 3px; background: var(--line); }
 .lite-rev3d-mark { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--red); }
 .lite-rev3d-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -518,7 +534,6 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-vtools-state.warn { color: var(--orange); }
 .lite-vtools-state.err { color: var(--red); }
 .lite-vtools-now { min-height: 1.3em; font-size: 13px; font-weight: 600; color: var(--red); }
-.lite-vtools-marks { position: relative; height: 6px; margin-top: 2px; border-radius: 3px; background: var(--line); }
 .lite-vtools-mark { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--red); }
 html[data-theme="dark"] .lite-vtools-state.ok { color: var(--lite-d-green); }
 html[data-theme="dark"] .lite-vtools-state.warn { color: var(--lite-d-orange); }

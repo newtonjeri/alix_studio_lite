@@ -769,6 +769,10 @@ function clickToSeek(div, kind) {
 
 function setCmp3d(v) {
   cmp3d = v === 'raw' ? 'raw' : 'candidate';
+  pause();
+  pb.at.compare = Math.min(pb.at.compare, totalFor('compare'));   // the cursor's range is the chosen file's
+  setTotals('compare');
+  showMoment('compare', false);
   if (currentStage === 'optimize' && unit && pipeStep === 6) loadSimulation(cmp3d);
 }
 
@@ -862,9 +866,13 @@ function renderRegions() {
 const rowAt = (lines, t) => Math.max(1, Math.min(lines || 1, 1 + Math.round(t / CYCLE_S)));
 const optLines = () => (external ? external.rows.length : (plotted.opt && plotted.opt.lines) || 0);
 
+// Compare's synchronized cursor runs over the file its simulation plays (the owner, 16 Oct: "Original selected:
+// the progress bar uses only the original file's time ... Processed selected: ... 0 to the processed file's
+// maximum"); the other plot's cursor stops at its own end.
 function totalFor(kind) {
   const raw = (plotted.raw && plotted.raw.lines) || (rec() && rec().lines) || 0;
-  return kind === 'review' ? dur(raw) : Math.max(dur(raw), dur(optLines()));
+  if (kind === 'review') return dur(raw);
+  return cmp3d === 'raw' || !optLines() ? dur(raw) : dur(optLines());
 }
 
 function setTotals(kind) {
