@@ -689,8 +689,14 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-s2-findings { display: grid; gap: 6px; }
 .lite-s2-findlist { margin: 0; padding-left: 18px; font-size: 12px; display: grid; gap: 4px; }
 .lite-s2-checkmark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--violet); }
-.lite-tune-merge { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lite-tune-merge { margin-bottom: 14px; padding: 14px 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); }
+.lite-tune-merge h2 { margin: 2px 0 4px; font-size: 20px; }
 .lite-tune-merge[hidden] { display: none; }
+/* a merge in Tune (tune.js mergeBanner): none of the region loop's marks */
+body.lite-merge-tune #view-teach > .section-head, body.lite-merge-tune #approvedEditBanner,
+body.lite-merge-tune #taskBoard .task-workspace-full > .card:has(> .robot-head), body.lite-merge-tune #pipeline,
+body.lite-merge-tune #liteSourceOther { display: none !important; }
 @media (max-width: 1100px) {
   .lite-s1-arms, .lite-s2-arms, .lite-s2-live, .lite-s1-sim-grid, .lite-s2-simgrid { grid-template-columns: minmax(0, 1fr); }
 }

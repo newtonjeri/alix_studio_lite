@@ -14,7 +14,7 @@
 //    keeps comes back here as a new merge.
 
 import { call, get, post, say } from './api.js';
-import { ctx, el, jobLine, robotCall, tell, watchJob } from './ctx.js';
+import { confirmDialog, ctx, el, jobLine, robotCall, tell, watchJob } from './ctx.js';
 import { borrow, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { saveBlobAs } from './tune.js';
@@ -293,15 +293,36 @@ async function upload(side) {
   } catch (err) { status(side, say(err), 'warn'); tell(err); }
 }
 
+// The files of a merge that were tuned already: kept versions, and merges kept from Tune (each in any project).
+function tunedParts(side, m) {
+  const merges = new Map(st[side].merges.map(x => [x.file, x]));
+  return (m.sources || []).filter((src) => {
+    const ref = String(src.ref || '').split('|').pop();
+    if (ref.startsWith('ver:')) return true;
+    if (ref.startsWith('merge:')) { const x = merges.get(ref.slice(6)); return !!(x && x.made_from); }
+    return false;
+  }).map(src => src.name);
+}
+
 async function toTune(side) {
   const m = selected(side);
   if (!m) return;
+  // parts tuned already (the owner, 16 Oct: "the user should be made aware, and decide how to proceed")
+  const tuned = tunedParts(side, m);
+  if (tuned.length) {
+    const all = tuned.length === (m.sources || []).length;
+    const yes = await confirmDialog({ title: `${m.name} has tuned files in it`, danger: false, ok: 'Tune it anyway',
+      body: `${all ? 'Every file' : `${tuned.length} of its ${(m.sources || []).length} files`} in ${m.name} ${tuned.length === 1 ? 'was' : 'were'} `
+        + 'tuned already. Tuning the merge times them again. Cancel keeps the merge as it is (it can be uploaded from S1 as it is).',
+      list: tuned });
+    if (!yes) return;
+  }
   stopS1();
   try {
     const u = await post(murl(side, m.file, 'tune'), {});
     ctx.units[u.key] = u;
     ctx.tuneKey = u.key;
-    ctx.tuneMerge = { side, file: m.file, name: m.name };
+    ctx.tuneMerge = { side, file: m.file, name: m.name, parts: m.parts, joins: m.joins, sources: m.sources };
     window.showView('teach');
     await window.setStage('optimize');
     if (currentStage !== 'optimize') {                     // the page did not open Tune (Setup & Safety first)

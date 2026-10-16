@@ -150,7 +150,7 @@ function addControls() {
     title('1. Source trajectory', 'Expected line format: {"point":[J1,J2,J3,J4,J5,J6,J7]}'),
     el('div', { class: 'lite-row' },
       el('div', { class: 'field lite-grow' }, el('label', { text: 'Original TXT / JSONL file' }), el('div', { id: 'liteSourceName', class: 'lite-source-name', text: '-' })),
-      el('button', { class: 'btn outline', text: 'Choose or load another (Save & Review)', onclick: () => window.setStage('review') }),
+      el('button', { id: 'liteSourceOther', class: 'btn outline', text: 'Choose or load another (Save & Review)', onclick: () => window.setStage('review') }),
       el('button', { class: 'btn light', id: 'liteReset', text: 'Reset', disabled: true, onclick: resetPipe })),
     statusLine('liteLoadStatus', 'No file loaded.'),
     el('div', { id: 'liteSourceMetrics', class: 'lite-metrics' }));
@@ -319,7 +319,7 @@ function renderPipe() {
     b.title = !ok && manualOnly(n) && unit && unit.active ? 'Time-optimal (TOPP-RA) takes none of the manual steps' : '';
   });
   if ($('litePipeSummary')) $('litePipeSummary').textContent = `Step ${pipeStep} of 6 - ${STEPS[pipeStep].name}`;
-  if ($('litePipeNote')) $('litePipeNote').textContent = STEPS[pipeStep].note;
+  if ($('litePipeNote')) $('litePipeNote').textContent = ctx.tuneKey && pipeStep === 1 ? 'The merge from S1, as it was merged there.' : STEPS[pipeStep].note;
   const back = $('litePipeBack'), next = $('litePipeNext');
   if (back) back.hidden = pipeStep <= 1;
   if (next) {
@@ -378,6 +378,7 @@ function renderSource() {
   activeTrajectoryRows = r.lines;
   activeTrajectoryName = r.name || activeTrajectoryName;
   window.updateActiveTrajectoryUI();
+  if (ctx.tuneKey && $('tuningTrajectoryMeta')) $('tuningTrajectoryMeta').textContent = `Merge from S1 · ${Number(r.lines).toLocaleString()} rows`;
   setStatus($('liteLoadStatus'), `Loaded ${r.name}: ${Number(r.lines).toLocaleString()} valid rows.`, 'ok');
   box.replaceChildren(metric('Valid rows', Number(r.lines).toLocaleString()), metric('Skipped / malformed lines', '0'),
     metric('Sample interval', '5 ms'), metric('Original file time', formatSeconds(dur(r.lines))),
@@ -1327,17 +1328,27 @@ export async function retune() {
 const SAVE_TO_S1 = 'Simulation Looks Good → Save to S1';
 let footerText = null;
 
+// A merge has a screen of its own (the owner, 16 Oct: "the merged file should not be confused by the region
+// tasks, so a different UI without the task marks should be used, but the pipeline and algorithms should be
+// the same"): the region loop's task board, region cards and stage strip give way to the merge's header; the
+// steps below are Tune's own.
 function mergeBanner() {
   const p = pane();
   if (!p) return;
   let b = $('liteTuneMerge');
-  if (!b) { b = el('div', { id: 'liteTuneMerge', class: 'notice lite-tune-merge' }); p.prepend(b); }
+  if (!b) { b = el('div', { id: 'liteTuneMerge', class: 'lite-tune-merge' }); p.prepend(b); }
   const m = ctx.tuneKey ? ctx.tuneMerge : null;
   b.hidden = !m;
+  document.body.classList.toggle('lite-merge-tune', !!m);
   if (m) {
-    b.replaceChildren(el('b', { text: `Tuning the ${m.side.toUpperCase()} merge ${m.name}` }),
-      ' from Merge + Full Sequence S1. What you keep here is saved back to S1 as a new merge (Real Test is for regions). ',
+    const parts = (m.parts || []).map(x => x.name);
+    b.replaceChildren(
+      el('div', {}, el('div', { class: 'eyebrow', text: '03 · Merge + Full Sequence · S1' }),
+        el('h2', { text: `Tune + Simulation · ${m.side.toUpperCase()} merge ${m.name}` }),
+        el('p', { class: 'mini-note', text: `${parts.length ? `Its files: ${parts.join(' → ')}${m.joins && m.joins.length ? ` (${m.joins.length} join${m.joins.length === 1 ? '' : 's'})` : ''}. ` : ''}`
+          + 'The same steps and algorithms as a region\u2019s file; what you keep goes back to S1 as a new merge, never to a region.' })),
       el('button', { class: 'btn light', type: 'button', text: 'Back to S1', onclick: () => backToS1(null) }));
+    document.querySelectorAll('.navbtn[data-view]').forEach(n => n.classList.toggle('active', n.dataset.view === 'sequence'));
   }
   const foot = p.querySelector('button[onclick="setStage(\'real\')"]');
   if (foot) {
