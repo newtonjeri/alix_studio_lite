@@ -228,3 +228,110 @@ def check(md_path: str, side: str, stage: dict, home: dict, scene: dict, fid: st
                 checked=dict(walls=made, commode=phase, other_arm=f"the {other.upper()} arm, standing",
                              links=everything.link_count, contact_depth_mm=CONTACT_DEPTH_MM),
                 seconds=round(time.monotonic() - t0, 2))
+
+
+def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, cubicle_mm: int = 1400,
+                 progress=None) -> dict:
+    """Merge + Full Sequence S2's check (feedback v5, slide 9: "Simulation Mode ... with the collision
+    check", the two arms against each other too): both arms through a run on one clock. ``times``: the
+    samples (s); ``arms``: {side: {pole: [n] mm, hand: [n][6] counts, q: [n][7] deg}} for the arms that
+    run (an arm not given stands at ``home``); ``phases``: the commode's lid/seat state at each sample.
+    Each running arm against the walls and the commode as ``check`` does (the hand on the commode is
+    contact, deeper than 20 mm reported), and the two arms against each other (the SRDF's disabled
+    pairs aside). Events say their first and last sample's time."""
+    from alix_studio_lite import vendor_paths
+
+    vendor_paths.activate()
+    from . import robot_model, staging
+
+    t0 = time.monotonic()
+    model = robot_model.fk_model()
+    times = [float(t) for t in times]
+    n = len(times)
+    sides = [s for s in ("left", "right") if s in arms]
+    data = {s: dict(pole=np.asarray(arms[s]["pole"], dtype=float), hand=np.asarray(arms[s]["hand"], dtype=float),
+                    q=np.radians(np.asarray(arms[s]["q"], dtype=float))) for s in sides}
+    joints = {s: [f"{staging.SIDE_PREFIX[s]}_joint{i}" for i in range(1, 8)] for s in ("left", "right")}
+    parts = {s: (_arm(s, "structure"), _arm(s, "hand")) for s in sides}
+    whole = {s: _arm(s) for s in ("left", "right")}
+    disabled = _disabled()
+    objects_by_phase, made = {}, None
+    for ph in sorted(set(phases)):
+        objects_by_phase[ph], made = _objects(scene, fid, int(cubicle_mm), ph)
+    contact = {s: dict(samples=0, first_t=None, deepest_mm=0.0) for s in sides}
+
+    def values_at(i):
+        v = dict(home)
+        for s in sides:
+            d = data[s]
+            v.update(staging.joint_values(s, d["pole"][i], [int(round(c)) for c in d["hand"][i]]))
+            v.update(zip(joints[s], d["q"][i].tolist()))
+        return v
+
+    hits, last_key, last_found = [], None, frozenset()
+    for i in range(n):
+        key = (phases[i], tuple(np.round(np.concatenate([np.concatenate([[data[s]["pole"][i]], data[s]["hand"][i], data[s]["q"][i]])
+                                                       for s in sides]), 6)))
+        if key == last_key:                    # nothing moved since the sample before: the same answer
+            found = last_found
+        else:
+            tf = model.link_world_transforms(values_at(i))
+            found = set()
+            for s in sides:
+                structure, hand = parts[s]
+                structure.pose(tf)
+                hand.pose(tf)
+                for kind, name, mgr in objects_by_phase[phases[i]]:
+                    if kind == "wall":
+                        if structure.mgr.in_collision_other(mgr) or hand.mgr.in_collision_other(mgr):
+                            found.add((s, "wall", name))
+                        continue
+                    if structure.mgr.in_collision_other(mgr):
+                        found.add((s, "commode", name))
+                    if hand.mgr.in_collision_other(mgr):
+                        depth = max([d for _, _, d in _pairs(hand, mgr)] or [0.0])
+                        c = contact[s]
+                        c["samples"] += 1
+                        c["first_t"] = c["first_t"] if c["first_t"] is not None else times[i]
+                        c["deepest_mm"] = max(c["deepest_mm"], depth)
+                        if depth > CONTACT_DEPTH_MM:
+                            found.add((s, "hand deep in the commode", name))
+            for s in ("left", "right"):
+                whole[s].pose(tf)
+            if whole["left"].mgr.in_collision_other(whole["right"].mgr) and _pairs(whole["left"], whole["right"].mgr, disabled):
+                found.add(("both", "the two arms", "LEFT and RIGHT arms"))
+            found = frozenset(found)
+            last_key, last_found = key, found
+        if found:
+            hits.append((i, found))
+        if progress is not None and i % 500 == 0:
+            progress(i, n)
+    events = []
+    for i, found in hits:
+        if events and events[-1]["_last"] == i - 1 and events[-1]["_found"] == found:
+            events[-1]["_last"] = i
+            continue
+        events.append(dict(_first=i, _last=i, _found=found))
+    out = []
+    for e in events[:MAX_EVENTS]:              # which links, how deep: at the event's first sample
+        tf = model.link_world_transforms(values_at(e["_first"]))
+        for s in ("left", "right"):
+            whole[s].pose(tf)
+        by_name = {name: mgr for _, name, mgr in objects_by_phase[phases[e["_first"]]]}
+        pairs = []
+        for s, what, name in sorted(e["_found"]):
+            if what == "the two arms":
+                for link, obj, depth in _pairs(whole["left"], whole["right"].mgr, disabled):
+                    pairs.append(dict(side="both", what=what, link=link, object=f"RIGHT arm {obj}", depth_mm=round(depth, 1)))
+                continue
+            for link, obj, depth in _pairs(whole[s], by_name[name]):
+                if what == "commode" and link.startswith(HAND_PREFIX[s]):
+                    continue                     # the hand's touch there is contact, said apart
+                pairs.append(dict(side=s, what=what, link=link, object=name, depth_mm=round(depth, 1)))
+        out.append(dict(first_t=round(times[e["_first"]], 3), last_t=round(times[e["_last"]], 3),
+                        sides=sorted({s for s, _, _ in e["_found"]}), what=sorted({w for _, w, _ in e["_found"]}), pairs=pairs))
+    return dict(ok=not events, samples=n, first=out[0] if out else None, events=out, more=max(0, len(events) - MAX_EVENTS),
+                colliding_samples=len(hits),
+                contact={s: dict(c, deepest_mm=round(c["deepest_mm"], 1)) for s, c in contact.items()},
+                checked=dict(walls=made, arms=sides, two_arms=True, contact_depth_mm=CONTACT_DEPTH_MM),
+                seconds=round(time.monotonic() - t0, 2))

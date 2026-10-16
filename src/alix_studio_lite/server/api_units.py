@@ -973,7 +973,7 @@ def post_keep(app, q, body, m):
                 and ver.get("taught_arm") == info["taught_arm"] and staging.same_stage(ver.get("stage"), info["stage"])):
             if name and name != ver.get("name"):
                 units.name_version(key, ver["version"], name)        # already kept: it gets the name
-            return unit_view(app, units, key)                        # already kept, with this arm and stage
+            return _kept_view(app, units, key)                       # already kept, with this arm and stage
         if name:
             name = name if name.lower().endswith(".txt") else name + ".txt"
             owner = units.name_owner(name)
@@ -985,7 +985,47 @@ def post_keep(app, q, body, m):
         ver = units.save_candidate(key)
         if name:
             units.name_version(key, ver["version"], name)
+    return _kept_view(app, units, key)
+
+
+def _kept_view(app, units: LiteUnits, key: str) -> dict:
+    if units.is_merge_unit(key):
+        return dict(unit_view(app, units, key), merge=_kept_to_s1(units, key))
     return unit_view(app, units, key)
+
+
+def _kept_to_s1(units: LiteUnits, key: str) -> dict:
+    """A merge's tuned file, once kept in Tune, back in S1 as a new merge of its own (the owner, 16 Oct),
+    with the source merge's stage, placement and phase; made once per kept version."""
+    from ..motion import track
+
+    u = units.units[key]
+    ver = units.current_version(key)
+    extra_p = Path(ver["path"]).with_name(Path(ver["path"]).stem + ".extra.json")
+    extra = _read(extra_p) or {}
+    with units.lock:
+        made = extra.get("s1_merge")
+        if made:
+            try:
+                out = merges.get(units, u["arm"], made)
+            except UserError:
+                out = None                                       # removed since: made again
+            if out is not None:
+                if ver.get("name") and ver["name"] != out["name"]:     # Save As in Tune after it was kept: its name
+                    try:
+                        out = merges.rename(units, u["arm"], made, ver["name"])
+                    except UserError:
+                        pass                                     # the name is another file's: the merge keeps its own
+                return {k: v for k, v in out.items() if k != "path"}
+        src = u["merge"]
+        name = ver.get("name") or f"{Path(src['name']).stem}_tuned.txt"
+        out = merges.save(units, u["arm"], name, [dict(name=name, md=track.read_md(Path(ver["path"])))],
+                          staging.stage_from(ver.get("stage")), placement=src.get("placement"), phase=u.get("phase"),
+                          sources=[dict(ref=f"tune:{key}/{ver['version']}", name=name, sha256=ver.get("sha256"))],
+                          made_from=dict(merge=src["name"], file=src["file"], version=ver["version"]))
+        extra["s1_merge"] = out["file"]
+        extra_p.write_text(json.dumps(extra, indent=1), encoding="utf-8")
+    return {k: v for k, v in out.items() if k != "path"}
 
 
 @route("GET", U + "/analysis")
@@ -1405,6 +1445,38 @@ def post_merge(app, q, body, m):
     return {k: v for k, v in out.items() if k != "path"}
 
 
+@route("POST", P + r"/merge-sources/(left|right)")
+def post_merge_sources(app, q, body, m):
+    """S1's files for an arm (feedback v5, slide 9): every recording and kept version of the arm's regions
+    and the arm's merges, each with its pole and hand and its UGV placement and room; against the first
+    file picked (``picked``: refs in order), whether each can join the merge and why not."""
+    units, side = units_of(app, m.group(1)), m.group(2)
+    picked = [str(x) for x in (body.get("picked") or []) if isinstance(x, str)][:50]
+    return {"side": side, "picked": picked, "tol_mm": placement.TOL_MM,
+            "items": merges.with_compatibility(merges.sources(units, side), picked)}
+
+
+@route("POST", P + r"/merges/(left|right)/from-project")
+def post_merge_from_project(app, q, body, m):
+    """S1's merge of the project's files, in order (``files``: refs from merge-sources): one pole and hand,
+    one UGV placement and room (each measurement within ±10 mm), or it is refused saying which differs."""
+    units, side = units_of(app, m.group(1)), m.group(2)
+    out = merges.from_project(units, side, str(body.get("name") or ""), body.get("files"))
+    return {k: v for k, v in out.items() if k != "path"}
+
+
+@route("POST", M + "/tune")
+def post_merge_tune(app, q, body, m):
+    """S1's "Send to Tune + Simulation": the merge as a unit of its own (its recording the merged file),
+    which Tune opens; what Tune keeps comes back to S1 as a new merge (post_keep)."""
+    units, side = units_of(app, m.group(1)), m.group(2)
+    mm = merges.checked(units, side, m.group(3))
+    if staging.stage_from(mm.get("stage")) is None:
+        raise UserError(f"The pole height and hand pose of {mm['name']} are not known.", "Merge it again.", code="stage")
+    key = units.tune_unit_for(mm)
+    return unit_view(app, units, key)
+
+
 @route("POST", M + "/name")
 def post_merge_name(app, q, body, m):
     units = units_of(app, m.group(1))
@@ -1434,7 +1506,11 @@ def post_merge_timeline(app, q, body, m):
                                      home=staging.start_values(side, dict(p["home"]), sequence.check_start(body.get("start"))),
                                      links=staging.staged_links(side, _mesh_links(p)), rating_deg_s=load_limits(side).rating_deg_s,
                                      move_pct=_move_pct(body.get("move_pct")))
-    out["scene"] = scene_of(units, None, None, body.get("task"))
+    kept = merges.get(units, side, m.group(3)).get("placement")      # S1: where its files were taught
+    if kept:
+        out["scene"] = dict(placement.scene(units.fixture, placement.load(units)["room"], kept), **{"from": "the merge"})
+    else:
+        out["scene"] = scene_of(units, None, None, body.get("task"))
     return out
 
 
@@ -1840,6 +1916,17 @@ def get_job(app, q, body, m):
     if not job:
         raise UserError("That job is no longer known.")
     return job.view(int((q.get("since") or ["0"])[0]))
+
+
+@route("POST", r"/api/jobs/([A-Za-z0-9_\-]+)/answer")
+def answer_job(app, q, body, m):
+    """The operator's answer to a job's question (S2: the waiting arm's start, the lid checkpoint)."""
+    session(app)
+    job = app.jobs.get(m.group(1))
+    if not job or job.state != "running":
+        raise UserError("That run has ended.")
+    job.answer(body.get("question") or 0, bool(body.get("yes")))
+    return job.view(10 ** 9)
 
 
 @route("POST", r"/api/jobs/([A-Za-z0-9_\-]+)/cancel")

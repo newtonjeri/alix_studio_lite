@@ -30,7 +30,8 @@ TASK_FIELDS = ("standoff_mm", "front_mm", "rear_mm", "left_mm", "right_mm")
 ROOM_TEXT = {"width_mm": "the room width", "length_mm": "the room length", "left_mm": "the left wall to the commode",
              "right_mm": "the commode to the right wall", "front_mm": "the commode's front to the front wall"}
 WALL_THICK_M, WALL_HEIGHT_M = 0.10, 2.0          # ALIX's cubicle meshes (assets/scene/cubicles)
-WIDTH_TOL_MM = 10.0                              # left + commode + right against the measured width
+TOL_MM = 10.0     # the owner, 16 Oct: "a tolerance of + or -10mm in all measurements on the total": each room
+                  # total against its parts, and two placements taken as the same (S1 merges)
 
 
 def _file(units) -> Path:
@@ -109,10 +110,92 @@ def for_task(units, label: str | None) -> dict | None:
     return {"task": label, **{k: task.get(k) for k in TASK_FIELDS}, "room": d["room"]}
 
 
+def _mm(v: float) -> str:
+    return f"{v:,.0f}"
+
+
+def totals(room: dict, commode_width_mm: float, commode_depth_mm: float) -> list[dict]:
+    """The room's totals against their parts, each within ±10 mm (the owner, 16 Oct: "right side from
+    wall to commode is x, left side to commode side, and the known commode distance should be within
+    +-10mm of the total measurement, also the other measurements, but warn of the exceeding values"):
+
+    - width: the left distance + the commode's width (ALIX's model) + the right distance;
+    - length: the commode's front distance + its depth (ALIX's model), the commode standing at the
+      wall behind it.
+
+    Each says its sum, the room's measure, the difference and, past the tolerance, a warning with the
+    values. Nothing is refused: the 3D builds the walls from what was entered."""
+    r = {k: float(room[k]) for k in ROOM_FIELDS}
+    rows = [("width", "Room width", "the left distance + the commode's width + the right distance",
+             [("left", r["left_mm"]), ("commode", commode_width_mm), ("right", r["right_mm"])], r["width_mm"]),
+            ("length", "Room length", "the front distance + the commode's depth",
+             [("front", r["front_mm"]), ("commode", commode_depth_mm)], r["length_mm"])]
+    out = []
+    for name, title, what, parts, whole in rows:
+        total = sum(v for _, v in parts)
+        diff = round(total - whole, 1)
+        ok = abs(diff) <= TOL_MM
+        sums = " + ".join(_mm(v) for _, v in parts)
+        warning = None
+        if not ok:
+            over = abs(diff) - TOL_MM
+            warning = (f"{title}: {what} make {sums} = {_mm(total)} mm, but the room {name} is {_mm(whole)} mm: "
+                       f"a difference of {_mm(abs(diff))} mm, {_mm(over)} mm past the ±{TOL_MM:.0f} mm tolerance.")
+            if name == "length" and diff > 0:
+                warning += " The wall behind would stand inside the commode."
+            elif name == "length":
+                warning += " Unless the commode stands that far off the wall behind it, check the length and the front distance."
+            else:
+                warning += " Check the three distances and the width."
+        out.append(dict(name=name, title=title, parts=[dict(name=n, mm=round(v, 1)) for n, v in parts],
+                        sum_mm=round(total, 1), room_mm=whole, diff_mm=diff, tol_mm=TOL_MM, ok=ok, warning=warning))
+    return out
+
+
+TASK_TEXT = {"standoff_mm": "UGV standoff", "front_mm": "UGV move front", "rear_mm": "UGV move rear",
+             "left_mm": "UGV move left", "right_mm": "UGV move right"}
+ROOM_SHORT = {"width_mm": "room width", "length_mm": "room length", "left_mm": "left wall to the commode",
+              "right_mm": "the commode to the right wall", "front_mm": "the commode's front to the front wall"}
+
+
+def differences(a: dict | None, b: dict | None) -> list[str]:
+    """Where two placements (``for_task``: a task's UGV placement with the room it was measured in)
+    are not the same within ±10 mm, each measurement on its own (the owner, 16 Oct: S1 merges only
+    files of the same pole, hand and "whole placement ... also the walls placement and the commode",
+    "a tolerance of + or -10mm in all measurements"): [] when they are. A move left empty is 0; a
+    placement or a room that was never recorded is never the same as one that was."""
+    if not a or not b:
+        return [] if not a and not b else ["one has no UGV placement recorded"]
+    out = []
+    for k, what in TASK_TEXT.items():
+        va, vb = float(a.get(k) or 0.0), float(b.get(k) or 0.0)
+        if abs(va - vb) > TOL_MM:
+            out.append(f"{what} {_mm(va)} mm vs {_mm(vb)} mm")
+    ra, rb = a.get("room"), b.get("room")
+    if bool(ra) != bool(rb):
+        out.append("the room was measured for one only")
+    elif ra and rb:
+        for k, what in ROOM_SHORT.items():
+            va, vb = float(ra.get(k) or 0.0), float(rb.get(k) or 0.0)
+            if abs(va - vb) > TOL_MM:
+                out.append(f"{what} {_mm(va)} mm vs {_mm(vb)} mm")
+    return out
+
+
+def words(pl: dict | None) -> str:
+    """A placement in a line: the standoff, its moves and the room."""
+    if not pl:
+        return "no UGV placement recorded"
+    moves = [f"{TASK_TEXT[k].split()[-1]} {_mm(float(pl[k]))}" for k in ("front_mm", "rear_mm", "left_mm", "right_mm") if pl.get(k)]
+    room = pl.get("room")
+    return (f"standoff {_mm(float(pl['standoff_mm']))} mm" + (f" (moves: {', '.join(moves)} mm)" if moves else "")
+            + (f"; room {_mm(float(room['width_mm']))} × {_mm(float(room['length_mm']))} mm" if room else "; room not measured"))
+
+
 def scene(fid: str, room: dict | None, task: dict | None) -> dict:
     """The scene for a placement, in the robot base frame (metres): the commode's offset from ALIX's
-    calibrated pose, the three walls (None without a measured room) and the front line, and what the
-    measurements say against each other (``notes``)."""
+    calibrated pose, the three walls (None without a measured room) and the front line, the room's
+    totals against their parts (``totals``) and what the measurements say (``notes``)."""
     from . import fixtures
 
     fp = fixtures.footprint(fid)
@@ -128,20 +211,16 @@ def scene(fid: str, room: dict | None, task: dict | None) -> dict:
     out = {"offset_m": [round(dx, 4), round(dy, 4)], "walls": None, "front_x": None, "notes": notes,
            "commode_width_mm": round((fp["left_y"] - fp["right_y"]) * 1000.0, 1),
            "standoff_mm": task.get("standoff_mm") if task else None}
+    out["commode_depth_mm"] = round((fp["back_x"] - fp["front_x"]) * 1000.0, 1)
     if not room:
         return out
+    out["totals"] = totals(room, out["commode_width_mm"], out["commode_depth_mm"])
+    notes.extend(t["warning"] for t in out["totals"] if not t["ok"])
     m = lambda k: float(room[k]) / 1000.0                             # noqa: E731
-    front_tip, back = fp["front_x"] + dx, fp["back_x"] + dx
+    front_tip = fp["front_x"] + dx
     left_y, right_y = fp["left_y"] + dy + m("left_mm"), fp["right_y"] + dy - m("right_mm")
     front_x = front_tip - m("front_mm")
     back_x = front_x + m("length_mm")
-    spanned = (left_y - right_y) * 1000.0
-    if abs(spanned - float(room["width_mm"])) > WIDTH_TOL_MM:
-        notes.append(f"The left and right distances with the commode's {out['commode_width_mm']:.0f} mm make "
-                     f"{spanned:.0f} mm, but the room width is {float(room['width_mm']):.0f} mm: check them.")
-    if back_x < back - 0.005:
-        notes.append(f"With this length and front distance the back wall is {(back - back_x) * 1000:.0f} mm inside "
-                     "the commode: check the length and the commode's front distance.")
     t, h = WALL_THICK_M, WALL_HEIGHT_M
     depth = back_x - front_x
     out["walls"] = [

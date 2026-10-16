@@ -157,6 +157,13 @@ def _printed_to(sink):
             sink(rest.rstrip())
 
 
+def _interrupt(tid: int, exc=KeyboardInterrupt) -> None:
+    """``exc`` raised in thread ``tid`` at its next Python step (None: forget one not yet raised)."""
+    import ctypes
+
+    ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_ulong(tid), None if exc is None else ctypes.py_object(exc))
+
+
 class RealArm:
     def __init__(self, link, log=None):
         self.link, self.log, self.side = link, log, link.side
@@ -573,6 +580,64 @@ class RealArm:
                  ret=rc, ok=rc == 0,
                  elapsed_s=time.monotonic() - t0, text=why)
         return dict(ok=rc == 0, why=why, seconds=round(time.monotonic() - t0, 2), lines=said.splitlines())
+
+    # ── Merge + Full Sequence S2: Page 02's steps through runner v14 (feedback v5, slide 9)
+    def run_workflow(self, steps: list, overall_pct: int, restore_pct: int, timeout_s: float = 300.0, on_line=None,
+                     stop_hook=None) -> dict:
+        """An arm's part of a Page 02 stage through runner v14's own ``run_workflow_sequence``, as V53
+        runs it in a process of its own: one connection; the slots read once (a missing one refuses it
+        all), the arm's errors and run state checked, the overall speed set, each step (Program, Pole,
+        Hand, Wait, Global Point) run and checked, the speed put back to ``restore_pct`` in its
+        ``finally``. ``stop_hook(fn)`` registers ``fn`` for STOP, which interrupts the runner as V53's
+        STOP does (Ctrl+C: its own slow stop of the arm, the pole stopped, the hand frozen)."""
+        rt = _runner()
+        norm = [rt.normalize_workflow_step(st) for st in steps]
+        a = SimpleNamespace(yes=True, side=self.side, workflow_overall_speed=int(overall_pct), restore_speed=int(restore_pct),
+                            timeout=float(timeout_s))
+        log = io.StringIO()
+        t0 = time.monotonic()
+
+        def line_out(line):
+            log.write(line + "\n")
+            self._runner_line(line)
+            if on_line is not None:
+                on_line(line)
+
+        tid, guard, state = threading.get_ident(), threading.Lock(), {"inside": False, "stopped": False}
+
+        def stop():
+            with guard:
+                state["stopped"] = True
+                if state["inside"]:
+                    _interrupt(tid)
+
+        if stop_hook is not None:
+            stop_hook(stop)
+        rc = 1
+        with self.link.busy(f"sequence of {len(norm)} step(s)"), _printed_to(line_out):
+            try:
+                try:
+                    with guard:
+                        if state["stopped"]:
+                            raise KeyboardInterrupt
+                        state["inside"] = True
+                    rc = rt.run_workflow_sequence(self.robot, a, self.link.ip, norm)
+                finally:
+                    with guard:
+                        state["inside"] = False
+                    _interrupt(tid, None)             # a stop that came as it ended is not raised later
+            except KeyboardInterrupt:                 # outside the runner's own handling (its checks before the steps)
+                rc = 1
+                line_out("** WORKFLOW STOP REQUESTED")
+            except Exception as exc:                  # noqa: BLE001 - the runner's own lines say the rest
+                rc = 1
+                line_out(f"** WORKFLOW FAILED: {exc}")
+        said = log.getvalue()
+        why = next((ln.strip(" *") for ln in reversed(said.splitlines()) if ln.strip().startswith("**")), None)
+        self._hw("workflow", args=dict(steps=len(norm), overall_speed=int(overall_pct), restore_speed=int(restore_pct)),
+                 ret=rc, ok=rc == 0, elapsed_s=time.monotonic() - t0, text=why)
+        return dict(ok=rc == 0, rc=rc, why=why, stopped=state["stopped"], seconds=round(time.monotonic() - t0, 2),
+                    lines=said.splitlines())
 
     # ── the controller's global points (the control program's runner v14)
     def global_points(self) -> list[dict]:

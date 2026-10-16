@@ -29,8 +29,13 @@ class Job:
         self.events: list[dict] = []
         self.reason: tuple[str, str | None] | None = None   # why it was stopped, when not by STOP (an E-stop)
         self.alone = False                                 # runs on its arm alone: the other arm stays stopped
+        self.extra: dict = {}                              # what a job shows besides its stage (S2: live status, a question)
         self._cancel = threading.Event()
         self._lock = threading.Lock()
+        self._on_cancel: list = []                         # called once when it is stopped (S2: the runner's own stop)
+        self._answered = threading.Event()
+        self._answer: bool | None = None
+        self._asked = 0
 
     def progress(self, stage: str, i: int = 0, n: int = 0) -> None:
         with self._lock:
@@ -48,7 +53,50 @@ class Job:
         with self._lock:
             if reason and self.reason is None:
                 self.reason = (reason, hint)
+            first = not self._cancel.is_set()
+            hooks = list(self._on_cancel) if first else []
         self._cancel.set()
+        for fn in hooks:
+            try:
+                fn()
+            except Exception:                                       # noqa: BLE001 - a stop never fails
+                traceback.print_exc()
+
+    def on_cancel(self, fn) -> None:
+        """``fn`` is called when the job is stopped (at once if it already is)."""
+        with self._lock:
+            self._on_cancel.append(fn)
+            now = self._cancel.is_set()
+        if now:
+            fn()
+
+    def set(self, **fields) -> None:
+        with self._lock:
+            self.extra.update(fields)
+
+    def ask(self, title: str, text: str, ok: str = "OK", cancel: str = "Cancel") -> bool:
+        """A question for the operator, shown by the page (``extra["question"]``) and answered with
+        ``answer``; STOP ends the wait (Cancelled). True when they said ``ok``."""
+        with self._lock:
+            self._asked += 1
+            self.extra["question"] = dict(id=self._asked, title=title, text=text, ok=ok, cancel=cancel)
+            self._answer = None
+            self._answered.clear()
+        try:
+            while not self._answered.wait(0.1):
+                self.check()
+            return bool(self._answer)
+        finally:
+            with self._lock:
+                self.extra["question"] = None
+
+    def answer(self, question: int, yes: bool) -> None:
+        with self._lock:
+            q = self.extra.get("question")
+            if not q or q["id"] != int(question):
+                raise UserError("That question is no longer asked.")
+            self._answer = bool(yes)
+        self._answered.set()
 
     @property
     def cancelled(self) -> bool:
@@ -68,7 +116,7 @@ class Job:
             return dict(id=self.id, kind=self.kind, title=self.title, unit=self.unit, arm=self.arm,
                         state=self.state, stage=self.stage, i=self.i, n=self.n,
                         elapsed_s=round((self.finished or time.time()) - self.started, 1),
-                        result=self.result, error=self.error, hint=self.hint,
+                        result=self.result, error=self.error, hint=self.hint, extra=dict(self.extra),
                         events=[e for e in self.events if e["seq"] >= since])
 
 

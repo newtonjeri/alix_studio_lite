@@ -43,16 +43,92 @@ LITE_DEFAULTS = dict(DEFAULT_SETTINGS, trim=True, smooth=True, smooth_window=101
 TIME_MODES = ("fastest", "target")
 
 
+class _Units(dict):
+    """The catalogue's arm steps by key, and the merges opened in Tune + Simulation (``extra``): a key
+    of either resolves, so every unit route works on a merge in Tune, but listing them (the task
+    queue, the summaries, the project's file names) gives the catalogue's alone."""
+
+    def __init__(self, catalogue: dict):
+        super().__init__(catalogue)
+        self.extra: dict = {}
+
+    def __getitem__(self, key):
+        return self.extra[key] if key in self.extra else super().__getitem__(key)
+
+    def __contains__(self, key):
+        return key in self.extra or super().__contains__(key)
+
+    def get(self, key, default=None):
+        return self.extra[key] if key in self.extra else super().get(key, default)
+
+
 class LiteUnits(Project):
     DEFAULTS = LITE_DEFAULTS
 
     def __init__(self, project_dir: Path, fixture: str):
         super().__init__(project_dir, fixture)
+        self.units = _Units(self.units)
+        self._load_tune_units()
 
     def unit_dir(self, key: str) -> Path:
         if key not in self.units:
             raise KeyError(f"no region {key!r} in this project's catalogue")
+        if key in self.units.extra:
+            return self.tune_dir() / key
         return self.root / "trajectories" / self.units[key]["arm"] / key
+
+    # ── a merge opened in Tune + Simulation (feedback v5, slide 9; the owner, 16 Oct: Tune opens the
+    # merged file as its source, and what is kept there goes back to S1 as a new merge). It is a unit
+    # of its own, kept with the merges (merged/tune/<KEY>/), its one recording the merged file with the
+    # merge's arm, pole and hand, and placement, so Tune's every step works on it as on a region.
+
+    def tune_dir(self) -> Path:
+        return self.root / "merged" / "tune"
+
+    def is_merge_unit(self, key: str) -> bool:
+        return key in self.units.extra
+
+    def _load_tune_units(self) -> None:
+        d = self.tune_dir()
+        for f in sorted(d.glob("*/merge.json")) if d.is_dir() else []:
+            m = _read_json(f, {})
+            if m.get("key") and m.get("side") in ("left", "right"):
+                self.units.extra[m["key"]] = self._tune_unit(m)
+
+    @staticmethod
+    def _tune_unit(m: dict) -> dict:
+        st = m.get("stage") or {}
+        return dict(key=m["key"], code="MERGE", name=Path(str(m["name"])).stem, arm=m["side"], step=None, deck_task=None,
+                    phase=m.get("phase"), first_release=True, type="merge", kind="merge", hand_preset=None,
+                    pole_mm=st.get("pole_mm"), hand_counts=st.get("hand"), target_s=None, picture=None,
+                    merge=dict(side=m["side"], file=m["file"], name=m["name"], sha256=m.get("sha256"),
+                               placement=m.get("placement")))
+
+    def tune_unit_for(self, merge: dict) -> str:
+        """The Tune unit of a merge (``merges.get``), made the first time it is opened there."""
+        side = merge["side"]
+        with self.lock:
+            for k, u in self.units.extra.items():
+                if u["merge"]["side"] == side and u["merge"]["file"] == merge["file"] and u["merge"]["sha256"] == merge["sha256"]:
+                    return k
+            prefix = f"MERGE-{side[0].upper()}-"
+            n = 1 + max([int(k[len(prefix):]) for k in self.units.extra if k.startswith(prefix) and k[len(prefix):].isdigit()]
+                        or [0])
+            key = f"{prefix}{n:03d}"
+            meta = dict(key=key, side=side, file=merge["file"], name=merge["name"], sha256=merge["sha256"],
+                        stage=merge["stage"], placement=merge.get("placement"), phase=merge.get("phase"),
+                        made=time.strftime("%Y-%m-%d %H:%M:%S"))
+            d = self.tune_dir() / key
+            d.mkdir(parents=True, exist_ok=True)
+            _atomic_write(d / "merge.json", json.dumps(meta, indent=1))
+            self.units.extra[key] = self._tune_unit(meta)
+            dst = self.add_recording(key, Path(merge["path"]), note=f"the {side.upper()} merge {merge['name']}", source="merge",
+                                     taught_arm=side, stage=merge["stage"], placement=merge.get("placement"))
+            self._update_source(dst, name=merge["name"])
+            state = self._unit_state(key)
+            state["setup"] = merge["stage"]
+            self._write_state(key, state)
+            return key
 
     # ── the active recording and the operator's file names
 

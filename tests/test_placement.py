@@ -38,7 +38,7 @@ def call(ctx, method, path, body=None):
 
 
 P = "/api/projects/alix_pl"
-ROOM = {"width_mm": 1400, "length_mm": 1950, "left_mm": 516, "right_mm": 516, "front_mm": 1400}
+ROOM = {"width_mm": 1400, "length_mm": 1940, "left_mm": 516, "right_mm": 516, "front_mm": 1400}
 
 
 def test_the_footprint_is_alixs():
@@ -66,16 +66,27 @@ def test_the_room_and_a_tasks_placement_are_checked_and_kept(lite):
     left_face = walls["left"]["center"][1] - 0.05
     assert abs(left_face - (0.1838 - 0.02 + 0.516)) < 0.001                    # the commode's left edge + 516 mm
     assert abs(s["front_x"] - (0.4703 + 0.10 - 1.4)) < 0.001                    # front tip - 1400 mm, with the UGV moved
-    assert abs((walls["back"]["center"][0] - 0.05) - (s["front_x"] + 1.95)) < 0.001
+    assert abs((walls["back"]["center"][0] - 0.05) - (s["front_x"] + 1.94)) < 0.001
     assert walls["left"]["size"][2] == 2.0 and walls["back"]["size"][0] == 0.1  # ALIX's cubicle walls
 
 
-def test_measurements_that_disagree_are_said(lite):
+def test_room_totals_within_10_mm_or_warned_with_the_values(lite):
+    """The owner, 16 Oct: left + the commode's width + right against the room width, and the other
+    totals, within ±10 mm, with the exceeding values in a warning (nothing refused)."""
+    v = call(lite, "POST", P + "/placement/room", ROOM)                     # 516 + 368 + 516; 1,400 + 538
+    t = {x["name"]: x for x in v["scene"]["totals"]}
+    assert t["width"]["ok"] and t["length"]["ok"] and abs(t["length"]["diff_mm"]) < 2
+    assert [p["name"] for p in t["width"]["parts"]] == ["left", "commode", "right"] and t["width"]["tol_mm"] == 10
+    v = call(lite, "POST", P + "/placement/room", {**ROOM, "width_mm": 1411})   # 11 mm off
+    w = {x["name"]: x for x in v["scene"]["totals"]}["width"]
+    assert not w["ok"] and w["diff_mm"] == -10.9 and "1 mm past the ±10 mm" in w["warning"] and w["warning"] in v["scene"]["notes"]
+    assert v["scene"]["walls"]                                              # warned, not refused
     v = call(lite, "POST", P + "/placement/room", {**ROOM, "width_mm": 1500, "length_mm": 1700})
     notes = " ".join(v["scene"]["notes"])
-    assert "room width is 1500 mm" in notes and "make 1400 mm" in notes
-    v = call(lite, "POST", P + "/placement/room", {**ROOM, "length_mm": 1500, "front_mm": 1400, "task": "TASK 1A"})
-    assert "back wall" in " ".join(v["scene"]["notes"])
+    assert "516 + 368 + 516 = 1,400 mm, but the room width is 1,500 mm" in notes
+    assert "1,400 + 538 = 1,938 mm, but the room length is 1,700 mm" in notes and "inside the commode" in notes
+    v = call(lite, "POST", P + "/placement/room", {**ROOM, "length_mm": 2400, "task": "TASK 1A"})
+    assert "off the wall behind it" in " ".join(v["scene"]["notes"])
     call(lite, "POST", P + "/placement/room", ROOM)
 
 

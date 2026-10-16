@@ -60,6 +60,7 @@ function roomCard() {
     el('div', { class: 'ugv-position-grid lite-room-grid' }, ROOM.map(([k, name, hint]) =>
       el('div', { class: 'field' }, el('label', { for: `liteRoom_${k}` }, `${name} (mm) `, el('span', { class: 'mandatory-star', text: '*' })),
         el('input', { id: `liteRoom_${k}`, type: 'number', min: '1', step: '1', placeholder: hint, title: hint })))),
+    el('div', { id: 'liteRoomTotals', class: 'lite-room-totals', hidden: true }),
     el('div', { class: 'ugv-position-footer' },
       el('span', { id: 'liteRoomNote', class: 'mini-note', text: 'Not measured yet: the 3D view shows ALIX’s standard cubicle.' }),
       el('button', { class: 'btn light', type: 'button', text: '💾 Save Room', onclick: saveRoom })));
@@ -101,10 +102,11 @@ function fill() {
   if (rn) {
     const roomNotes = notes.filter(n => !n.startsWith('No UGV standoff'));
     rn.textContent = !view.room ? 'Not measured yet: the 3D view shows ALIX’s standard cubicle.'
-      : roomNotes.length ? roomNotes.join(' ') : `Saved · ${view.room.width_mm} × ${view.room.length_mm} mm room; the commode `
+      : roomNotes.length ? `Warning: ${roomNotes.join(' ')}` : `Saved · ${view.room.width_mm} × ${view.room.length_mm} mm room; the commode `
         + `${view.room.left_mm} mm from the left wall, ${view.room.right_mm} mm from the right, ${view.room.front_mm} mm from the front.`;
-    rn.classList.toggle('lite-bad', roomNotes.length > 0);
+    rn.classList.toggle('lite-warn', roomNotes.length > 0);
   }
+  paintTotals(view.room ? view.scene.totals || [] : []);
   const un = $('ugvPositionSavedNote');
   if (un) {
     un.textContent = t ? `Saved for ${task()} · standoff ${t.standoff_mm} mm`
@@ -114,6 +116,23 @@ function fill() {
   }
   const badge = $('ugvPositionTaskBadge');
   if (badge) badge.textContent = task() || 'TASK';
+}
+
+// The room's totals against their parts, each within ±10 mm (the owner, 16 Oct): the values always,
+// in orange past the tolerance. A warning only: the 3D builds the walls from what was entered.
+function paintTotals(totals) {
+  const box = $('liteRoomTotals');
+  if (!box) return;
+  const mm = (v) => Math.round(v).toLocaleString('en-US');
+  box.hidden = !totals.length;
+  box.replaceChildren(...totals.map((t) => {
+    const sums = t.parts.map(p => (p.name === 'commode' ? `${mm(p.mm)} (commode)` : mm(p.mm))).join(' + ');
+    const off = Math.abs(t.diff_mm);
+    return el('div', { class: `lite-room-total ${t.ok ? 'ok' : 'warn'}` },
+      el('b', { text: `${t.title}: ` }), `${sums} = ${mm(t.sum_mm)} mm · measured ${mm(t.room_mm)} mm · `,
+      el('span', { class: t.ok ? 'lite-ok' : 'lite-warn',
+        text: t.ok ? `within ±${t.tol_mm} mm` : `${mm(off)} mm apart, ${mm(off - t.tol_mm)} mm past ±${t.tol_mm} mm` }));
+  }));
 }
 
 export async function refreshPlacement() {
@@ -132,7 +151,7 @@ async function saveRoom() {
     fill();
     changed();
     const notes = (view.scene.notes || []).filter(n => !n.startsWith('No UGV standoff'));
-    window.toast(notes.length ? `Room saved, but: ${notes.join(' ')}` : 'Room saved: the 3D view uses these walls.');
+    window.toast(notes.length ? `Room saved, with a warning: ${notes.join(' ')}` : 'Room saved: the 3D view uses these walls.');
   } catch (err) { tell(err); }
 }
 
@@ -189,6 +208,7 @@ const GUIDE_SVG = `
 
 function openGuide() {
   const width = view && view.scene ? Math.round(view.scene.commode_width_mm) : 368;
+  const depth = view && view.scene && view.scene.commode_depth_mm ? Math.round(view.scene.commode_depth_mm) : 538;
   const steps = [
     ['Room width', 'From the inside face of the left wall to the inside face of the right wall.'],
     ['Room length', 'From the wall behind the commode to the front wall (the door side).'],
@@ -208,8 +228,9 @@ function openGuide() {
           el('li', { class: 'lite-guide-moves' }, el('b', { text: 'Moves (only if this task needs them)' }),
             ' If the UGV must stand off that position: Front / Rear along the robot’s X (front is towards the commode), Left / Right along its Y. No rotation.'))),
       el('div', { class: 'notice lite-guide-check' },
-        `Lite checks the measurements against each other: the left distance + the commode’s ${width} mm + the right distance should make the `
-        + 'room width (within 10 mm), and the back wall must not cut through the commode. The commode, the UGV and their sizes are ALIX’s own.'),
+        `Lite checks the totals, each within ±10 mm: the left distance + the commode’s ${width} mm + the right distance should make the `
+        + `room width, and the front distance + the commode’s ${depth} mm depth the room length (the commode standing at the wall behind it). `
+        + 'Past that it warns with the values. The commode, the UGV and their sizes are ALIX’s own.'),
       el('div', { class: 'modal-actions' }, el('button', { class: 'btn', type: 'button', text: 'Close', onclick: () => box.remove() }))));
   box.querySelector('.lite-guide-figure').innerHTML = GUIDE_SVG;
   box.addEventListener('click', (e) => { if (e.target === box) box.remove(); });
