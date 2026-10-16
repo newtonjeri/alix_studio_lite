@@ -512,6 +512,7 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-sensitivity .mini-note { flex-basis: 100%; }
 
 /* Merge + Full Sequence: tabs S1 and S2 in place of the page's sections (fullseq.js; the owner, 16 Oct) */
+#view-sequence > [hidden] { display: none !important; }   /* the page's own sections, gone (its CSS shows them otherwise) */
 .lite-seq .section-head { margin-bottom: 12px; }
 .lite-tabs { display: flex; gap: 8px; margin: 0 0 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .lite-tab { border: 1px solid var(--line); border-bottom: 0; background: var(--bg); color: var(--muted); border-radius: 12px 12px 0 0;
@@ -606,3 +607,4 @@ html[data-theme="dark"] .lite-s2-arm.right .lite-s2-armhead { color: var(--lite-
 html[data-theme="dark"] .lite-s2-runtime { color: var(--lite-d-green); }
 html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); color: var(--lite-d-sunken); border-color: var(--lite-d-blue); }
 .lite-s2-table thead th, .lite-s1-files thead th, .lite-s1-merges thead th { position: sticky; top: 0; z-index: 1; }
+.lite-confirm .modal-card > p { white-space: pre-line; }   /* a question's lines as written (S2: V53's checkpoint) */
