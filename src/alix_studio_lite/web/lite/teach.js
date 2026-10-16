@@ -261,6 +261,20 @@ export function installTeach() {
     pageReset();
   };
 
+  // The timer is one take's (the owner, 16 Oct): once STOP DRAG has ended it, leaving Drag & Teach (Save
+  // & Review or any other stage, another view, another task or arm) sets it back to 00:00.0, so START
+  // there again starts at 0 (the page kept the time and its START went on from it). Reset still does it
+  // by hand in the tab. Nothing is reset while an arm is being taught or counted down.
+  const takeDone = () => { if (!timerInt && !counting && !teaching && elapsed > 0) pageReset(); };
+  document.addEventListener('lite:stage', (e) => { if (e.detail !== 'teach') takeDone(); });
+  document.addEventListener('lite:step', takeDone);
+  const pageShowView = window.showView;
+  window.showView = function showView(v, btn) {
+    const out = pageShowView(v, btn);
+    if (v !== 'teach') takeDone();
+    return out;
+  };
+
   window.demoSave = async function demoSave() {             // Save TXT: the operator's name for the active file
     const s = step();
     if (!s || !ctx.pid) return;
