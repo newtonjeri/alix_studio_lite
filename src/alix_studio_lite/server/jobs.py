@@ -56,11 +56,16 @@ class Job:
             first = not self._cancel.is_set()
             hooks = list(self._on_cancel) if first else []
             self._cancel.set()
+        raised = None
         for fn in hooks:
             try:
                 fn()
             except Exception:                                       # noqa: BLE001 - a stop never fails
                 traceback.print_exc()
+            except BaseException as exc:                            # noqa: BLE001 - a hook that interrupts this very
+                raised = raised or exc                              # thread (a runner's): every hook runs first
+        if raised is not None:
+            raise raised
 
     def on_cancel(self, fn) -> None:
         """``fn`` is called when the job is stopped (at once if it already is)."""

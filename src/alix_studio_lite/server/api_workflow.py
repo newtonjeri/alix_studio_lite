@@ -33,7 +33,9 @@ def get_workflow(app, q, body, m):
     """Both arms' steps, the last simulation (its stages, actions, findings and collisions) and the
     S2 run or simulation going on, if any (a page opened again follows it)."""
     out = workflow.summary(units_of(app, m.group(1)))
-    out["running"] = next((j.view(10 ** 9) for j in app.jobs.running() if j.title.startswith("S2 ")), None)
+    s2 = sorted((j for j in app.jobs.running() if j.title.startswith("S2 ") and j.kind in ("run", "simulate")),
+                key=lambda j: j.kind != "run")              # a run on the robot first; a collision check is not followed
+    out["running"] = s2[0].view(10 ** 9) if s2 else None
     return out
 
 

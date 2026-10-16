@@ -4,7 +4,7 @@
 // the visual confirmation and both full-run cards) are hidden; in their place two tabs:
 // - S1, Merge & Upload (s1.js): the project's files of each arm merged, saved, sent to the
 //   controller, reviewed in 3D, and sent to Tune + Simulation;
-// - S2, Full & Partial Sequence (s2.js): the control program's Page 02 (V53), in Simulation Mode or
+// - S2, Sequence (s2.js): the control program's Page 02 (V53), in Simulation Mode or
 //   on the real machine.
 
 import { el } from './ctx.js';
@@ -13,7 +13,7 @@ import { openS1, stopS1 } from './s1.js';
 import { openS2, stopS2 } from './s2.js';
 
 const $ = (id) => document.getElementById(id);
-const TABS = [['s1', 'S1', 'Merge & Upload'], ['s2', 'S2', 'Full & Partial Sequence']];
+const TABS = [['s1', 'S1', 'Merge & Upload'], ['s2', 'S2', 'Sequence']];   // S2 was Full & Partial Sequence (renamed: the owner, 16 Oct)
 let tab = 's1';
 let pending = {};                                           // what S1 shows when it opens (a merge back from Tune)
 try { tab = localStorage.getItem('liteSeqTab') === 's2' ? 's2' : 's1'; } catch (_) { /* no storage: S1 */ }

@@ -59,7 +59,7 @@ installRealTest();
 installAdvanced();
 installViewer();          // taught .txt files: upload, check, replay in 3D
 installDataManagement();  // what each arm's controller stores, as RealMan's web page lists it (the owner, 16 Oct)
-installFullSeq();         // Merge + Full Sequence: tabs S1 Merge & Upload, S2 Full & Partial Sequence (the owner, 16 Oct)
+installFullSeq();         // Merge + Full Sequence: tabs S1 Merge & Upload, S2 Sequence (the owner, 16 Oct)
 installVp();              // every 3D viewport the same: a maximized one given back when the view changes
 installActivity();        // last: the page's audit trail goes to the server, its Activity Logs page reads it
 document.documentElement.dataset.lite = 'ready';

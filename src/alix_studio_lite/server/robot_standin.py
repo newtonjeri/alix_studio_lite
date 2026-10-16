@@ -59,6 +59,9 @@ def _s(seconds: float) -> float:
 
 
 MOTION_KINDS = ("run", "prepare", "teach", "move", "playback", "pole", "hand", "stage")   # one at a time per arm
+#: jobs that hold an arm's controller connection: none of these starts while another runs on that arm (two
+#: commands would share the connection: an upload's rm_send_project beside a run, or two uploads at once)
+CONTROLLER_KINDS = MOTION_KINDS + ("upload",)
 ESTOP_STOP = ("INTERRUPTED — E-STOP: it did not finish.",
               "Release the E-stop and follow Recover. Nothing restarts by itself.")
 MODE_NAME = {"visual": "Visual sim", "hwsim": "Hardware sim", "real": "Real robot"}
@@ -181,6 +184,7 @@ class StandInRobot:
         self.links: dict = {}                           # side -> robot_link.ArmLink while connected
         self.test_estop: dict = {}                      # an engineer's E-stop test on emulated arms
         self.lock = threading.RLock()
+        self._send_lock = threading.Lock()              # an upload's check and its start together (a double click sends once)
         self.arms = {s: StandInArm(s, Path(data_dir) / "standin" / f"{s}_programs.json") for s in ARMS}
         self.faults = {s: set() for s in ARMS}         # engineer test: {"pole", "hand"} fail to arrive
         # the speed slider (the owner, 15 Oct): every MoveJ / MoveL Lite sends, both arms; and each arm's
@@ -248,24 +252,45 @@ class StandInRobot:
                 arm.teaching = False
                 if arm.recovery == "drag":
                     arm.recovery, arm.recovery_note = "held", "the E-stop was pressed in Arm Drag Mode"
+            raised = None
             for j in self.jobs.running():
                 if j.kind in MOTION_KINDS:
                     j.log(f"E-stop pressed on the {side.upper()} arm.", "error")
-                    j.cancel(*ESTOP_STOP)
+                    try:
+                        j.cancel(*ESTOP_STOP)
+                    except BaseException as exc:                # noqa: BLE001 - every job is stopped first
+                        raised = raised or exc
+            if raised is not None:
+                raise raised
 
-    def estop_check(self, side: str) -> bool:
+    def estop_check(self, side: str, on_press=None) -> bool:
         """IO3 read once by a command that holds a linked arm, between two of its steps, in its own
         thread (S2's runner: while a command runs the link does not read). A press is the E-stop's:
         latched, and every motion job on both arms stopped (their stop hooks interrupt the runners).
-        True when it was pressed. Only a press stops: an unreadable input is logged, as the link's
-        reading does not stop a running job either."""
+        True when it was pressed (``on_press`` is called first). Only a press stops: an unreadable
+        input is logged, as the link's reading does not stop a running job either.
+        The press is engaged from a thread of its own, the caller waiting for it: a stop hook interrupts
+        the runner's thread (robot_real._interrupt), which is the caller's, and run there it would cut
+        the stops short (the other arm's hook, the other jobs); the caller's interrupt comes once every
+        stop has been sent."""
         link = self.links.get(side)
         if link is None:
             return False
         live = "ENGAGED" if link.emulated and self.test_estop.get(side) else link.estop_now()
         if live == "ENGAGED":
-            with self.lock:
-                self._engage(side)
+            if on_press is not None:
+                on_press()
+            done = threading.Event()
+
+            def engage():
+                try:
+                    with self.lock:
+                        self._engage(side)
+                finally:
+                    done.set()
+
+            threading.Thread(target=engage, name=f"lite-estop-{side}", daemon=True).start()
+            done.wait(15)
             return True
         if live != "CLEAR" and self.log is not None:
             self.log.hardware(side, "estop check", ok=False, text=f"IO3 reads {live} between two steps")
@@ -396,7 +421,7 @@ class StandInRobot:
             raise UserError(f"The {held[0].side.upper()} arm is in Arm Drag Mode." if held[0].recovery == "drag"
                             else f"The {held[0].side.upper()} arm is held after Arm Drag Mode: {held[0].recovery_note}.",
                             "Press Normal Mode: nothing else moves until the arm is safe.")
-        busy = [j for s in sides for j in self.jobs.running(arm=s) if j.kind in MOTION_KINDS]
+        busy = [j for s in sides for j in self.jobs.running(arm=s) if j.kind in CONTROLLER_KINDS]
         if busy:
             raise UserError(f"The {busy[0].arm.upper()} arm is busy: {busy[0].title}.", "Wait, or press STOP.")
         lone = [j for j in self.jobs.running() if getattr(j, "alone", False) and j.arm not in sides]
@@ -1087,7 +1112,7 @@ class StandInRobot:
         if real is None:
             raise UserError(f"Global points are stored on the {side.upper()} arm's controller: the stand-in has none.",
                             "Start Lite with --robot realman and connect the arm.", code="connect")
-        moving = [j for j in self.jobs.running(arm=side) if j.kind in MOTION_KINDS]
+        moving = [j for j in self.jobs.running(arm=side) if j.kind in CONTROLLER_KINDS]
         if moving or self.arm(side).teaching:
             raise UserError(f"The {side.upper()} arm is busy ({moving[0].title if moving else 'drag teaching'}).",
                             "Save the point once the arm has stopped.")
@@ -1221,7 +1246,7 @@ class StandInRobot:
                              "--robot realman and connect the arm to read its controller.")
         if not a.connected:
             raise UserError(f"Connect the {side.upper()} arm to read its controller's data.", code="connect")
-        moving = [j for j in self.jobs.running(arm=side) if j.kind in MOTION_KINDS]
+        moving = [j for j in self.jobs.running(arm=side) if j.kind in CONTROLLER_KINDS]
         if moving or a.teaching:
             raise UserError(f"The {side.upper()} arm is busy ({moving[0].title if moving else 'drag teaching'}).",
                             "Its controller's data is read once it has stopped.", code="busy")
@@ -1243,12 +1268,17 @@ class StandInRobot:
     def upload(self, side: str, program_id: int, path: Path, name: str, sha256: str, replace: bool, title: str,
                stage: dict | None = None):
         """Store a file as program ``program_id``, with the stage it must run with (so a run by
-        number can stage it too). Never while the arm moves: a run (S2's included) would go on with a
-        program it was not checked with, and two commands would share the arm's connection."""
+        number can stage it too). Never while the arm moves or another upload runs on it: a run (S2's
+        included) would go on with a program it was not checked with, and two commands would share the
+        arm's connection. One upload is checked and started at a time (a double click sends once)."""
+        with self._send_lock:
+            return self._upload(side, program_id, path, name, sha256, replace, title, stage)
+
+    def _upload(self, side, program_id, path, name, sha256, replace, title, stage):
         a = self.arm(side)
         if not a.connected:
             raise UserError(f"The {side.upper()} arm is not connected.", "Connect it from the bar at the top.")
-        moving = [j for j in self.jobs.running(arm=side) if j.kind in MOTION_KINDS]
+        moving = [j for j in self.jobs.running(arm=side) if j.kind in CONTROLLER_KINDS]
         if moving:
             raise UserError(f"The {side.upper()} arm is busy: {moving[0].title}.", "Send the file once it has ended.",
                             code="busy")

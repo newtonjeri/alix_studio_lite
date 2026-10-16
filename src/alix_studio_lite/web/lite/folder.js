@@ -68,7 +68,7 @@ export function installFolder() {
           { schema: 'lite_s1_merges_v1', side, note: "S1 Merge & Upload: the merges Lite keeps in this folder.", merges: mg[side] || [] });
       }
       await window.fsWriteJson(await window.fsEnsurePath(root, ['sequence']), 'full_sequence.json', {
-        schema: 'lite_s2_sequence_v1', note: "S2 Full & Partial Sequence: each arm's steps as V53 saves them (sequence/s2.json is Lite's own copy).",
+        schema: 'lite_s2_sequence_v1', note: "S2 Sequence: each arm's steps as V53 saves them (sequence/s2.json is Lite's own copy).",
         left: { format: 'realman_workflow_sequence_v1', side: 'left', steps: wf.left || [] },
         right: { format: 'realman_workflow_sequence_v1', side: 'right', steps: wf.right || [] } });
       const manifest = { schema: 'alix_project_folder_v1', generated_at: new Date().toISOString(), project_id: id, project_name: project.name,

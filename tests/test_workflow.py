@@ -148,6 +148,18 @@ def test_a_single_task_a_dual_arm_task_or_the_sequences():
     with pytest.raises(UserError, match="not a dual-arm task"):
         workflow.plan_for(steps, "both", {"scope": "dual", "stage": check})
 
+    # the page says what it chose (the Program, the stage's Programs): a row or a stage that holds others since is
+    # refused, so the one confirmation never names another Program than the one that runs
+    assert workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 6, "id": 73})["pick"]["row"] == 6
+    with pytest.raises(UserError, match="LEFT row 6 holds Program 73 now, not Program 72") as e:
+        workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 6, "id": 72})
+    assert e.value.code == "pick"
+    ids = {side: [x["id"] for x in (full[later][side]["steps"]) if x["type"] == "program"] for side in ("left", "right")}
+    assert workflow.plan_for(steps, "both", {"scope": "dual", "stage": later, "ids": ids})["mode"] == "both"
+    with pytest.raises(UserError, match=f"Stage {later + 1} holds LEFT Program") as e:
+        workflow.plan_for(steps, "both", {"scope": "dual", "stage": later, "ids": dict(ids, left=[99])})
+    assert e.value.code == "pick"
+
 
 # ── Simulation Mode and the gate to Real Machine Mode, on the stand-in (no controller)
 

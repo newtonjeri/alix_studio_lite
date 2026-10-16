@@ -87,6 +87,45 @@ def test_an_estop_read_between_two_steps_stops_every_motion_job(tmp_path):
     assert robot.estop_check("left") is False
 
 
+def test_an_estop_read_by_a_runner_stops_both_arms_before_its_own_interrupt(tmp_path):
+    """The check runs in a runner's thread, and that runner's stop hook interrupts its own thread (robot_real's
+    stop): every other stop (the other arm's hook, the other arm's jobs) is still sent, then the runner stops."""
+    from alix_studio_lite.server.jobs import Jobs
+    from alix_studio_lite.server.robot_real import _interrupt
+    from alix_studio_lite.server.robot_standin import StandInRobot
+
+    robot = StandInRobot(tmp_path, Jobs())
+    robot.links["left"] = SimpleNamespace(emulated=False, estop_now=lambda: "ENGAGED", view=lambda: {"feedback": {}})
+    robot.arms["left"].connected = True
+    hooks, out = [], {}
+    run = robot.jobs.start("run", "S2 Real Machine: LEFT", lambda j: j.sleep(10), arm="left")
+    other = robot.jobs.start("run", "Real Test: RIGHT", lambda j: j.sleep(10), arm="right")
+
+    def runner():
+        me = threading.get_ident()
+        run.on_cancel(lambda: (hooks.append("left"), _interrupt(me)))      # this arm's stop: interrupts the runner
+        run.on_cancel(lambda: hooks.append("left 2"))
+        other.on_cancel(lambda: hooks.append("right"))
+        try:
+            robot.estop_check("left", on_press=lambda: out.setdefault("said", True))
+            for _ in range(100):                                             # the interrupt lands at its next step
+                time.sleep(0.01)
+            out["ran on"] = True
+        except KeyboardInterrupt:
+            out["interrupted"] = True
+
+    t = threading.Thread(target=runner)
+    t.start()
+    t.join(10)
+    for _ in range(100):
+        if run.state != "running" and other.state != "running":
+            break
+        time.sleep(0.02)
+    assert out == {"said": True, "interrupted": True}
+    assert sorted(hooks) == ["left", "left 2", "right"]
+    assert run.state == other.state == "failed" and "E-STOP" in other.error
+
+
 def test_a_simulation_with_nothing_to_watch_is_never_played(tmp_path):
     from alix_studio_lite import vendor_paths
 
@@ -104,3 +143,8 @@ def test_a_simulation_with_nothing_to_watch_is_never_played(tmp_path):
         workflow.played(units, "h1")
     f.write_text(json.dumps(dict(hash="h2", total_s=3.0, acts={"left": [dict(act, kind="pole", t1=3.0, drawn=None)], "right": []})))
     assert workflow.played(units, "h2")["completed"]
+    # a Global Point not drawn (its point not read) and a Wait: nothing moved, so never "played" (the owner's report)
+    f.write_text(json.dumps(dict(hash="h3", total_s=1.0, acts={"left": [dict(act, kind="global", t1=0.0), dict(act, kind="wait", t1=1.0, drawn=None)],
+                                                               "right": []})))
+    with pytest.raises(UserError, match="Nothing in this run can be shown"):
+        workflow.played(units, "h3")

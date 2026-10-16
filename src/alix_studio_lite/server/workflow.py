@@ -586,6 +586,9 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
         mine = steps[side]
         if not 1 <= row <= len(mine) or mine[row - 1]["type"] != "program":
             raise UserError(f"{side.upper()} row {row} is not a Program row.", "Choose a Program row of the arm.")
+        if pick.get("id") is not None and str(mine[row - 1]["id"]) != str(pick.get("id")):     # the page's word: what it showed
+            raise UserError(f"{side.upper()} row {row} holds Program {mine[row - 1]['id']} now, not Program {pick.get('id')}: "
+                            "the steps changed since the task was chosen.", "Choose the task again.", code="pick")
         picked = {side: _staged(mine, row) + [mine[row - 1]]}
         plan = [{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}]
         return dict(mode=side, pick=dict(scope="task", side=side, row=row), first_row={side: row}, steps=picked, plan=plan,
@@ -607,6 +610,11 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
             else {side: st[side]["steps"] for side in ARMS if st.get(side)}
         if set(parts) != set(ARMS) or not all(any(x["type"] == "program" for x in parts[side]) for side in ARMS):
             raise UserError("That stage is not a dual-arm task: it has no Program on both arms.", "Choose a stage with both arms' Programs.")
+        want = pick.get("ids")                              # the page's word: the Programs it showed for the stage
+        have = {side: [str(x["id"]) for x in parts[side] if x["type"] == "program"] for side in ARMS}
+        if isinstance(want, dict) and any([str(i) for i in (want.get(side) or [])] != have[side] for side in ARMS):
+            raise UserError(f"Stage {k + 1} holds LEFT Program {', '.join(have['left'])} and RIGHT Program {', '.join(have['right'])} now: "
+                            "the steps changed since the dual-arm task was chosen.", "Choose the dual-arm task again.", code="pick")
         picked = {side: _with_stage(steps[side], parts[side]) for side in ARMS}
         try:
             plan = build_plan(picked["left"], picked["right"])
@@ -1339,8 +1347,8 @@ def played(units, h: str) -> dict:
         sim = load_sim(units)
         if not sim or sim.get("hash") != h:
             raise UserError("That simulation is no longer the last one.", "Run it again in Simulation Mode.")
-        if not (sim.get("total_s") or 0) > 0 or not any(a.get("drawn") is not False and a["t1"] > a["t0"]
-                                                        for side in sim["acts"].values() for a in side):
+        if not (sim.get("total_s") or 0) > 0 or not any(a.get("drawn") is not False and a["t1"] > a["t0"] and a.get("kind") != "wait"
+                                                        for side in sim["acts"].values() for a in side):     # a Wait moves nothing
             raise UserError("Nothing in this run can be shown in 3D, so it cannot be checked in Simulation Mode.",
                             "Send its programs from Lite (S1 or Real Test), then simulate it again.", code="nothing")
         sim["completed"] = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -1367,11 +1375,12 @@ def _changed(sim: dict | None, ident: dict) -> str:
         return "it has not been simulated"
     old = sim.get("identity") or {}
     what = []
-    if old.get("mode") != ident["mode"] or old.get("pick") != ident["pick"]:
+    other_run = old.get("mode") != ident["mode"] or old.get("pick") != ident["pick"]
+    if other_run:
         what.append("what is run (the sequence, the task or the arms)")
     if old.get("steps") != ident["steps"]:
         what.append("its steps")
-    for side, u in ident["used"].items():
+    for side, u in ident["used"].items() if not other_run else ():   # another run uses other programs and points
         o = (old.get("used") or {}).get(side) or {}
         if o.get("programs") != u["programs"]:
             what.append(f"the {side.upper()} programs Lite sent")
@@ -1426,6 +1435,7 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
 
     robot = app.robot
     run = plan_for(_numbered(load(units)), mode, pick)
+    mode = run["mode"]                                      # the plan's arms (a task's, a dual task's), never the request's
     sides = list(run["steps"])
     if app.ui["mode"] != "real":
         raise UserError("Real Machine Mode runs the sequence on the robot, so Lite must be in Real robot mode.",
@@ -1513,8 +1523,7 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                         pass
                     # The E-stop between two steps (the link reads nothing while the runner holds the arm): a
                     # press latches and stops both arms (their stop hooks); the runner stops at once.
-                    if robot.estop_check(side):
-                        stopped_why[side] = f"the {side.upper()} E-stop was pressed"
+                    robot.estop_check(side, on_press=lambda: stopped_why.__setitem__(side, f"the {side.upper()} E-stop was pressed"))
                 m = _PROGRAM_RE.match(text)
                 if m:
                     current["slot"] = int(m.group(1))

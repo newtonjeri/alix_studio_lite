@@ -1,4 +1,4 @@
-// Merge + Full Sequence, S2: Full & Partial Sequence (feedback v5, slide 9; the owner, 16 Oct): the
+// Merge + Full Sequence, S2: Sequence (feedback v5, slide 9; the owner, 16 Oct; was Full & Partial Sequence): the
 // control program's Page 02 (V53 with runner v14) in Lite's style, its layout and its working as
 // they are (server/workflow.py):
 // - each arm's steps: PROGRAM (a stored program, its Start %: the controller's move to its first
@@ -253,9 +253,26 @@ async function refreshSources(said = false) {
 const edits = { left: 0, right: 0 };
 const queue = { left: Promise.resolve(), right: Promise.resolve() };
 
+// The task chosen (Single task, Dual-arm task) after an edit: a row or a stage that no longer holds the Programs
+// it was chosen with is cleared, and said, so the run and its one confirmation never name another Program.
+function recheckPick() {
+  const k = S.pick;
+  if (!k) return;
+  let still = true;
+  if (S.scope === 'task') {
+    const st = S.steps[k.side][k.row - 1];
+    still = !!st && st.type === 'program' && String(st.id) === String(k.id);
+  } else if (S.scope === 'dual') still = false;            // its stages are counted again: chosen again
+  if (still) return;
+  S.pick = null;
+  window.toast(S.scope === 'task' ? 'The steps changed: choose the task again (its row no longer holds that Program).'
+    : 'The steps changed: choose the dual-arm task again.');
+}
+
 function saveSteps(side) {
   edits[side] += 1;
   S.edited = true;                                           // not as simulated any more (the server says what changed)
+  recheckPick();
   clearTimeout(saving[side]);
   saving[side] = setTimeout(() => {
     saving[side] = null;
@@ -275,6 +292,7 @@ function saveSteps(side) {
 
 // Every edit on its way to the server, there (a run uses the steps the server has).
 async function saved() {
+  const failed = [];
   for (const side of ARMS) {
     if (saving[side]) {
       clearTimeout(saving[side]);
@@ -283,10 +301,11 @@ async function saved() {
       queue[side] = queue[side].then(async () => {
         const d = await put(`${base()}/${side}`, { steps: S.steps[side] });
         if (edits[side] === mine) S.steps[side] = d[side];
-      });
+      }).catch((err) => { failed.push(err); });           // said by the caller; the next save still goes
     }
   }
   await Promise.all(ARMS.map(side => queue[side]));
+  if (failed.length) throw failed[0];
 }
 
 // ── editing (V53's WorkflowSequencePanel)
@@ -397,6 +416,8 @@ async function loadFile(side, e) {
     const d = await post(`${base()}/${side}/load`, { document: await f.text() });
     S.steps[side] = d[side];
     S.sel[side] = S.steps[side].length ? 0 : null;
+    S.edited = true;                                         // not as simulated any more
+    recheckPick();
     window.toast(`${ARM(side)}: ${S.steps[side].length} step(s) loaded from ${f.name}.`);
   } catch (err) { window.toast(`Could not load sequence: ${say(err)}`); }
   paintAll();
@@ -469,8 +490,8 @@ function setScope(s) { S.scope = s; S.pick = null; paintAll(); }
 
 // What is run (workflow.plan_for): {mode, pick}. A sequence's mode is the button's (both, left, right).
 function what(mode) {
-  if (S.scope === 'task') return S.pick ? { mode: S.pick.side, pick: { scope: 'task', side: S.pick.side, row: S.pick.row } } : null;
-  if (S.scope === 'dual') return S.pick ? { mode: 'both', pick: { scope: 'dual', stage: S.pick.stage } } : null;
+  if (S.scope === 'task') return S.pick ? { mode: S.pick.side, pick: { scope: 'task', side: S.pick.side, row: S.pick.row, id: S.pick.id } } : null;
+  if (S.scope === 'dual') return S.pick ? { mode: 'both', pick: { scope: 'dual', stage: S.pick.stage, ids: S.pick.ids } } : null;
   return { mode, pick: null };
 }
 
@@ -493,7 +514,7 @@ async function chooseTask(anchor) {
     choose(anchor, groups, S.pick ? `${S.pick.side}:${S.pick.row}` : null, (v) => {
       const [side, row] = v.split(':');
       const st = S.steps[side][Number(row) - 1];
-      S.pick = { side, row: Number(row), text: label(st) };
+      S.pick = { side, row: Number(row), id: st.id, text: label(st) };
       paintAll();
     }, { placeholder: 'Search the Programs: row, ID or name' });
     return;
@@ -507,8 +528,9 @@ async function chooseTask(anchor) {
         : `Stage ${s.index + 1} · ${s.title || (/^\d+$/.test(s.label) ? `Program ${s.label}` : s.label || 'TIMELINE')} · LEFT + RIGHT together`,
       detail: `LEFT ${names('left', s)} · RIGHT ${names('right', s)}` }));
   choose(anchor, [{ label: `V53's plan · ${rows.length} dual-arm task${rows.length === 1 ? '' : 's'}`, rows }], S.pick ? String(S.pick.stage) : null, (v) => {
-    const r = rows.find(x => x.value === v);
-    S.pick = { stage: Number(v), text: r.text.replace(/^Stage \d+ · /, '') };
+    const r = rows.find(x => x.value === v), s = plan.stages.find(x => String(x.index) === v);
+    S.pick = { stage: Number(v), ids: { left: (s.programs.left || []).map(x => x.id), right: (s.programs.right || []).map(x => x.id) },
+      text: r.text.replace(/^Stage \d+ · /, '') };
     paintAll();
   }, { placeholder: 'Search the stages: Program ID or name' });
 }
@@ -595,8 +617,9 @@ async function runReal(w) {
 }
 
 async function follow(job) {
+  if (job.kind !== 'simulate' && job.kind !== 'run') return;   // S2's run or simulation only (a check is the view's)
   S.job = job;
-  if (job.kind !== 'simulate') S.mode = 'real';
+  if (job.kind === 'run') S.mode = 'real';
   paintAll();
   try {
     const done = await watch(job);
@@ -680,6 +703,9 @@ async function stop(which) {
 
 // ── Simulation Mode's 3D: each arm's part of each stage as frames, on the run's own clock
 
+// S2 on screen: its 3D can be watched (a run plays itself only then, and counts as played only then).
+const onScreen = () => { const h = $('liteS2Host'); return !!h && h.getClientRects().length > 0; };
+
 function setSim(sim, fresh) {
   S.sim = sim;
   view.token += 1;
@@ -702,7 +728,9 @@ function setSim(sim, fresh) {
   player.load(sim.total_s);
   if (fresh) {
     S.status = `PAGE 02 SIMULATION READY // ${sim.counts.stages} stage(s), ${fmt(sim.total_s)}`;
-    prefetch().then((ok) => { if (ok) playSim(true); });
+    // it plays itself only on screen; ended while S2 was not shown, it waits there for Play (never played unseen)
+    if (onScreen()) prefetch().then((ok) => { if (ok && onScreen()) playSim(true); });
+    else S.status += ' // press Play in S2 to watch it';
   }
   paintAll();
 }
@@ -775,7 +803,10 @@ async function showAt(g, playing = false) {
   paintMoment(g);
   const three = view.three;
   tools.at(g);
-  if (!three || three.viewer.host !== $('liteS2Host')) return;      // only while S2 has the 3D
+  if (!three || three.viewer.host !== $('liteS2Host') || !onScreen()) {   // only while S2 has the 3D, on screen
+    if (playing) { view.clean = false; player.pause(); }          // not watched: it does not count as played
+    return;
+  }
   const my = view.token;
   for (const side of ARMS) {
     const c = chunkAt(side, g);
@@ -841,21 +872,22 @@ async function simEnded() {
   }
   // what the 3D could not draw is said, never "complete" over it (the owner, 16 Oct: a run reported
   // complete while nothing moved on the view)
-  const missing = ARMS.flatMap(side => (sim.acts[side] || []).filter(a => a.kind === 'program' && a.drawn === false)
-    .map(a => `${ARM(side)} row ${a.row} (Program ${a.program})`));
+  const missing = ARMS.flatMap(side => (sim.acts[side] || []).filter(a => (a.kind === 'program' || a.kind === 'global') && a.drawn === false)
+    .map(a => `${ARM(side)} row ${a.row} (${a.kind === 'program' ? `Program ${a.program}` : a.text || 'Global Point'})`));
   try {
     const out = await post(`${base()}/played`, { hash: sim.hash });
     sim.completed = out.completed;
     if (missing.length) {
-      const text = `Played to its end, but ${missing.length} Program${missing.length === 1 ? ' was' : 's were'} not drawn (no file found for `
-        + `${missing.length === 1 ? 'it' : 'them'}): ${missing.join(', ')}. Real Machine Mode asks about ${missing.length === 1 ? 'it' : 'them'} before it runs.`;
+      const text = `Played to its end, but ${missing.length} step${missing.length === 1 ? ' was' : 's were'} not drawn (a Program with no file `
+        + `Lite has, or a Global Point not read from its controller): ${missing.join(', ')}. Real Machine Mode checks `
+        + `${missing.length === 1 ? 'it' : 'them'} on the controllers, and asks, before it runs.`;
       $('liteS2SimState').className = 'lite-status warn';
       $('liteS2SimState').textContent = text;
       window.toast(text);
     } else {
       $('liteS2SimState').className = 'lite-status ok';
-      $('liteS2SimState').textContent = 'Played to its end with every Program drawn: Real Machine Mode can run it as it is.';
-      window.toast('Simulation complete, every Program drawn: Real Machine Mode can run it as it is.');
+      $('liteS2SimState').textContent = 'Played to its end with every step drawn: Real Machine Mode can run it as it is.';
+      window.toast('Simulation complete, every step drawn: Real Machine Mode can run it as it is.');
     }
   } catch (err) { tell(err); }
   paintAll();
