@@ -15,6 +15,7 @@ import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, loadUnit, robotCall, step
 import { standoffSaved } from './placement.js';
 import { fillPointGroup, filterOptions, hasController, loadPoints, movePoint, pointControls } from './points.js';
 import { liteMode } from './status.js';
+import { PHASES, PHASE_WORDS } from './view3d.js';
 
 const $ = (id) => document.getElementById(id);
 const GRIP = [0, 0, 0, 0, 150, 1000], OPEN = [1000, 1000, 1000, 1000, 1000, 1000];
@@ -55,12 +56,52 @@ function showSetup(setup) {
   note.textContent = `Region setup: ${setup.text} (from ${setup.source}). Every run stages its recording's own pole and hand first; drag teaching starts only with the arm in this setup.`;
 }
 
+// The region's commode state (the owner, 16 Oct: "every region should have attached commode state"):
+// lid closed, lid open or seat open, preset from the region list and kept for the region when changed
+// here. Its 3D views start in it and its collision checks use it; a 3D view can show another state for
+// itself (view3d.js), never changing this one.
+function commodeField() {
+  let f = $('liteRegionPhase');
+  if (f) return f;
+  const sel = el('select', { id: 'liteRegionPhaseSel', onchange: () => setPhase(sel.value) },
+    PHASES.map(([v, n]) => el('option', { value: v, text: n })));
+  f = el('div', { id: 'liteRegionPhase', class: 'field lite-region-phase' },
+    el('label', { for: 'liteRegionPhaseSel', text: 'Commode state for this region' }), sel,
+    el('div', { id: 'liteRegionPhaseNote', class: 'mini-note' }));
+  ($('liteSetupNote') || $('stage-prepare')?.querySelector('.grid'))?.after(f);
+  return f;
+}
+
+function showPhase(u) {
+  const f = commodeField();
+  if (!f) return;
+  f.hidden = !u;
+  if (!u) return;
+  $('liteRegionPhaseSel').value = u.phase || 'lid_closed';
+  const preset = PHASE_WORDS[u.phase_attached] || 'lid closed';
+  $('liteRegionPhaseNote').textContent = `${u.display}: the commode ${PHASE_WORDS[u.phase] || 'lid closed'}`
+    + `${u.phase === u.phase_attached ? ', as the region list has it' : ` (the region list has it ${preset})`}. `
+    + 'The 3D views start in this state and the collision checks use it; each 3D view can show another state for itself.';
+}
+
+async function setPhase(v) {
+  const s = step();
+  if (!s || !ctx.pid) return;
+  try {
+    const u = await post(unitUrl(s.key, 'phase'), { phase: v });
+    ctx.units[s.key] = u;
+    Object.assign(s, { phase: u.phase, phase_attached: u.phase_attached });   // the task list's copy, which the views read
+    showPhase(u);
+    window.toast(`${u.display}: the commode is ${PHASE_WORDS[u.phase]} for this region.`);
+  } catch (err) { tell(err); refresh(); }
+}
+
 async function refresh() {
   regionPoints();
   const s = step();
-  if (!s || !ctx.pid || s.later) { paintApplied({}); return; }
+  if (!s || !ctx.pid || s.later) { paintApplied({}); showPhase(null); return; }
   if (s.key !== lastKey) { lastKey = s.key; showSetup(s.setup); paintApplied({}); }
-  try { const u = await loadUnit(s.key); showSetup(u.setup); paintApplied(u.applied); } catch (_) { /* the page still works */ }
+  try { const u = await loadUnit(s.key); showSetup(u.setup); paintApplied(u.applied); showPhase(u); } catch (_) { /* the page still works */ }
 }
 
 // Each Apply turns green, "✓ Applied", once its value is on the arm (the owner, 15 Oct), and is "Apply"

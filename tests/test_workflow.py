@@ -246,3 +246,19 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     run2 = workflow.plan_for(workflow._numbered(workflow.load(units)), "both", None)
     assert "its steps" in workflow._changed(workflow.load_sim(units), workflow.identity_of(run2, progs, {"left": None, "right": None},
                                                                                            same["overall"]))
+
+
+def test_a_simulation_is_checked_again_in_one_commode_state(lite):
+    """S2's 3D (view3d.js): a commode state chosen under the view checks the same run again with the commode in
+    that state throughout (the owner, 16 Oct: an override in the view only); the run and its own check stay."""
+    sim = call(lite, "GET", f"{P}/workflow")["sim"]
+    r = wait(lite, call(lite, "POST", f"{P}/workflow/collisions", {"hash": sim["hash"], "phase": "seat_open"}))
+    assert r["state"] == "done", r
+    out = r["result"]
+    assert out["phase"] == "seat_open" and out["hash"] == sim["hash"] and isinstance(out["spans"], list)
+    assert out["samples"] > 100 and set(out["checked"]["arms"]) == {"left", "right"}
+    for t0, t1, links in out["spans"]:
+        assert 0 <= t0 <= t1 <= sim["total_s"] + 0.05 and links
+    assert "no longer the last" in call(lite, "POST", f"{P}/workflow/collisions", {"hash": "x", "phase": "seat_open"})["error"]
+    assert "lid closed, lid open or seat open" in call(lite, "POST", f"{P}/workflow/collisions", {"hash": sim["hash"], "phase": "up"})["error"]
+    assert call(lite, "GET", f"{P}/workflow")["sim"]["hash"] == sim["hash"]

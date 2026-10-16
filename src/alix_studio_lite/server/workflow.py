@@ -1116,6 +1116,59 @@ def frames(app, units, side: str, stage: int, want_hash: str | None = None) -> d
                 phases=[], traj_t0=0.0, stage_info=None)
 
 
+_IN_STATE: dict = {}                     # the last simulation checked in one commode state, by what it was made of
+
+
+def check_in(app, units, want_hash: str, phase: str):
+    """The last simulation checked again with the commode in one state throughout (S2's 3D, its Commode
+    choice: the owner, 16 Oct, "for manual override of the preset state", in the view only; the run and
+    its own check stay as they are): the same moments, both arms, against the same walls. A job."""
+    from . import collision_check, staging, workers
+    from .lite_units import PHASES
+    from .routes_robot import _payload
+
+    if phase not in PHASES:
+        raise UserError("The commode's state is lid closed, lid open or seat open.")
+    sim = load_sim(units)
+    if not sim:
+        raise UserError("There is no simulation yet.", "Run the sequence in Simulation Mode.")
+    if want_hash and sim.get("hash") != want_hash:
+        raise UserError("That simulation is no longer the last one.", "Run it again in Simulation Mode.", code="stale")
+    cub = int(app.ui.get("cubicle_mm", 1400))
+    home = dict(_payload(app)["home"])
+    made_of = json.dumps([sim["hash"], sim.get("made"), phase, cub, sim.get("scene"), units.fixture], sort_keys=True)
+    words = phase.replace("_", " ")
+
+    def work(job):
+        import numpy as np
+
+        out = _IN_STATE.get(made_of)
+        if out is None:
+            total = float(sim.get("total_s") or 0.0)
+            dt = max(SAMPLE_S, total / MAX_SAMPLES)
+            times = np.arange(0.0, total + 1e-9, dt).tolist() if total > 0 else [0.0]
+            md_of = _md_reader()
+            arms = {}
+            for s in (ARMS if sim["mode"] == "both" else [sim["mode"]]):
+                pole, hand, q, known = sample(sim["acts"][s], times, sim["start"][s], md_of, with_known=True)
+                arms[s] = dict(pole=pole.tolist(), hand=hand.tolist(), q=q.tolist(), known=known.tolist())
+            base = dict(home)
+            for s in ARMS:
+                base = staging.start_values(s, base, sim["start"][s])
+            job.progress(f"Checking collisions with the {words}: {len(times):,} moments", 0, 1)
+            fut = workers.pool().submit(collision_check.check_states, times, arms, base, sim["scene"], units.fixture,
+                                        [phase] * len(times), cub)
+            while not fut.done():                     # STOP is heard while it checks
+                job.sleep(0.2)
+            out = fut.result()
+            if len(_IN_STATE) > 16:
+                _IN_STATE.pop(next(iter(_IN_STATE)))
+            _IN_STATE[made_of] = out
+        return dict(out, phase=phase, hash=sim["hash"])
+
+    return app.jobs.start("collisions", f"S2 simulation checked with the {words}", work)
+
+
 def played(units, h: str) -> dict:
     """The page played the simulation ``h`` to its end: Real Machine Mode may run that same sequence."""
     from .project import _atomic_write

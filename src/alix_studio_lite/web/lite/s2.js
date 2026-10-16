@@ -17,6 +17,7 @@ import { borrow, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { speedPct } from './status.js';
 import { saveBlobAs } from './tune.js';
+import { checkJob, spansOf, Tools } from './view3d.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
@@ -30,7 +31,7 @@ const S = {
   rows: { left: null, right: null },
 };
 const view = { frames: new Map(), shown: { left: null, right: null }, phase: null, three: null, clean: false, furthest: 0, token: 0 };
-let panel = null, built = false, player = null, saving = { left: null, right: null };
+let panel = null, built = false, player = null, saving = { left: null, right: null }, tools = null;
 
 const base = () => `/api/projects/${ctx.pid}/workflow`;
 const fmt = (s) => `${Number(s || 0).toFixed(1)} s`;
@@ -152,11 +153,9 @@ function build() {
     el('div', { class: 'lite-s2-arms' }, ARMS.map(armPanel)),
     el('div', { id: 'liteS2Sim', class: 'card lite-s2-sim' },
       el('div', { class: 'lite-section-title' },
-        el('h3', {}, 'Simulation · ', el('span', { id: 'liteS2SimName', text: 'press RUN in Simulation Mode' })),
-        el('div', { class: 'lite-rev3d-views', role: 'group', 'aria-label': 'View' },
-          [['default', 'Default'], ['front', 'Front'], ['side', 'Side'], ['top', 'Top']].map(([v, n]) => btn(n, () => setView(v), 'btn light lite-rev3d-view')))),
+        el('h3', {}, 'Simulation · ', el('span', { id: 'liteS2SimName', text: 'press RUN in Simulation Mode' }))),
       el('div', { class: 'lite-s2-simgrid' },
-        el('div', { id: 'liteS2Host', class: 'lite-rev3d-host' }),
+        el('div', { class: 'lite-rev3d-main' }, el('div', { id: 'liteS2Host', class: 'lite-rev3d-host' })),
         el('div', { class: 'lite-rev3d-side' },
           el('div', { class: 'lite-row' }, btn('Play', () => playSim(), 'btn'), btn('Pause', () => player.pause(), 'btn outline'),
             btn('Restart', () => restartSim()),
@@ -172,6 +171,21 @@ function build() {
           el('div', { id: 'liteS2Findings', class: 'lite-s2-findings' })))));
   player = new Player({ onTime: showAt, onEnd: simEnded });
   for (const side of ARMS) subtab(side, 'program');
+  // the view's tools (view3d.js): the commode as each Program's region has it, or one state chosen here
+  // (the run's own check stays the run's; another state is checked on demand), the links in red
+  tools = new Tools({
+    what: 'the sequence',
+    check: async (phase, progress) => {
+      if (!S.sim) throw new Error('Run the sequence in Simulation Mode first.');
+      if (!phase) return { result: S.sim.collisions, spans: spansOf(S.sim.collisions) };
+      const r = await checkJob(post, `${base()}/collisions`, { hash: S.sim.hash, phase }, progress);
+      return { result: r, spans: spansOf(r) };
+    },
+    seek: (t) => { player.pause(); seekSim(t); },
+    changed: () => { view.phase = null; showAt(player.t); },
+  }).mount($('liteS2Host'));
+  tools.track($('liteS2Timeline').parentElement);
+  tools.load(null, { phase: null, text: "each Program's region", enabled: false });
 }
 
 function subtab(side, id) {
@@ -619,6 +633,9 @@ function setSim(sim, fresh) {
     + `${Object.values(sim.ranges || {}).some(Boolean) ? ', partial' : ''} · ${sim.counts.stages} stage(s) · ${fmt(sim.total_s)}`
     + (sim.completed ? ' · played to its end' : '');
   $('liteS2Timeline').max = String(Math.round(sim.total_s * 1000));
+  tools.load(sim.hash, { phase: null, text: "each Program's region" });
+  tools.setLength(sim.total_s);
+  tools.provide(null, { result: sim.collisions, spans: spansOf(sim.collisions) });
   paintStages();
   paintFindings();
   player.load(sim.total_s);
@@ -692,7 +709,8 @@ async function showAt(g, playing = false) {
   $('liteS2SimTime').textContent = `${fmt(g)} / ${fmt(S.sim.total_s)}`;
   paintMoment(g);
   const three = view.three;
-  if (!three) return;
+  tools.at(g);
+  if (!three || three.viewer.host !== $('liteS2Host')) return;      // only while S2 has the 3D
   const my = view.token;
   for (const side of ARMS) {
     const c = chunkAt(side, g);
@@ -707,7 +725,7 @@ async function showAt(g, playing = false) {
     }
     three.robot.showTime(g, side);
   }
-  const ph = phaseAt(g);
+  const ph = tools.phase || phaseAt(g);                        // the commode chosen under the view, else each Program's
   if (ph !== view.phase) { view.phase = ph; scene(ph, undefined, S.sim.scene || null).catch(() => {}); }
   three.viewer.dirty = true;
 }
@@ -784,14 +802,8 @@ function paintFindings() {
     el('div', { class: 'mini-note', text: `Times are estimated: the moves at their speed % of each joint's rating, the programs on their stored 5 ms timing. `
       + `The arms start ${Object.values(sim.start_from || {}).includes('now') ? 'where they stand now' : 'from the standing pose'}. Nothing is blocked by this check: `
       + 'Real Machine Mode asks about what it found, once.' })].filter(Boolean));
-  const marks = $('liteS2Marks'), T = Math.max(1e-6, sim.total_s);
-  marks.replaceChildren(...col.events.map(e => el('span', { class: 'lite-rev3d-mark', title: `${fmt(e.first_t)}`,
-    style: `left:${(100 * e.first_t) / T}%;width:${Math.max(0.4, (100 * (e.last_t - e.first_t)) / T)}%` })),
-  ...sim.stages.filter(s => s.kind === 'checkpoint').map(s => el('span', { class: 'lite-s2-checkmark', title: s.label, style: `left:${(100 * s.t0) / T}%` })));
-}
-
-async function setView(name) {
-  try { const { ensure3D } = await import('./sim.js'); const { viewer } = await ensure3D(); viewer.setView(name); } catch (_) { /* no 3D */ }
+  const marks = $('liteS2Marks'), T = Math.max(1e-6, sim.total_s);          // the checkpoints (the collisions: the view's tools)
+  marks.replaceChildren(...sim.stages.filter(s => s.kind === 'checkpoint').map(s => el('span', { class: 'lite-s2-checkmark', title: s.label, style: `left:${(100 * s.t0) / T}%` })));
 }
 
 export function openS2(host) {

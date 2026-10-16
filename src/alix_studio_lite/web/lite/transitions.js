@@ -16,6 +16,7 @@
 import { get, post, say } from './api.js';
 import { ctx, el, jobLine, robotCall, stageDialog, step, armFromName, tell, unitUrl, watchJob } from './ctx.js';
 import * as sim from './sim.js';
+import { checkJob, spansOf, Tools } from './view3d.js';
 
 const ARM = (side) => side.toUpperCase();
 const views = {};                       // "<project>/<unit key>" -> the server's view of its transition (or null)
@@ -73,7 +74,8 @@ function pointName(side, name, fallback) {
   return typed || name || fallback;
 }
 
-// ── the 3D for ▶ Simulation (the page's one 3D view, in a window of its own)
+// ── the 3D for ▶ Simulation (the page's one 3D view, in a window of its own), with every view's tools
+// (view3d.js): the commode's state, the collision check on demand, its links in red, its timeline
 
 let box = null;
 async function simulate(side) {
@@ -84,36 +86,65 @@ async function simulate(side) {
   const host = el('div', { class: 'lite-transition-3d', 'aria-label': '3D simulation of the transition' });
   const line = el('div', { class: 'mini-note', text: 'Loading the 3D view…' });
   const play = el('button', { class: 'btn green', text: '▶ Play' });
+  const halt = el('button', { class: 'btn outline', text: 'Pause' });
   const again = el('button', { class: 'btn light', text: '↺ Restart' });
   const close = el('button', { class: 'btn outline', text: 'Close' });
-  play.disabled = again.disabled = true;                 // until the 3D has the file
+  const T = Math.max(0, (Number(tv.lines) - 1) * 0.005);
+  const bar = el('input', { type: 'range', min: '0', max: String(Math.round(T * 1000)), step: '5', value: '0', 'aria-label': 'Transition time',
+    oninput: () => { stopPlay(); seek(Number(bar.value) / 1000); } });
+  const track = el('div', { class: 'lite-rev3d-track lite-transition-track' }, bar);
+  play.disabled = again.disabled = halt.disabled = bar.disabled = true;     // until the 3D has the file
   const card = el('div', { class: 'modal-card accessible-modal lite-transition-card', role: 'dialog', 'aria-modal': 'true' },
     el('h3', { text: `${ARM(side)} transition · ${tv.name}` }),
     el('p', { class: 'mini-note', text: `${u.display}: the pole and the hand staged first (${tv.stage.text}), then the move to its first line, then the file at 5 ms per line (${tv.seconds.toFixed(2)} s). The other arm stays where it is.` }),
-    host, line, el('div', { class: 'modal-actions' }, again, play, close));
+    host, track, line, el('div', { class: 'modal-actions' }, again, halt, play, close));
   box = el('div', { class: 'modal show', id: 'liteTransitionSim' }, card);
   document.body.append(box);
-  const end = () => { sim.release(); box?.remove(); box = null; document.dispatchEvent(new CustomEvent('lite:viewer-closed')); };
+  const unitNow = { key: u.key, arm: side, phase: u.phase, display: u.display };
+  const tools = new Tools({
+    what: 'the transition',
+    check: async (phase, progress) => {
+      const r = await checkJob(post, unitUrl(u.key, 'collisions'), { which: 'transition', phase, task: TASKS[currentTask]?.label || null }, progress);
+      return { result: r, spans: spansOf(r) };
+    },
+    seek: (t) => { stopPlay(); seek(t); },
+    changed: (phase) => { sim.scene(phase || u.phase, undefined, sim.sim.place || null).catch(() => {}); },
+  }).mount(host);
+  tools.track(track, T);
+  tools.load(`transition|${u.key}|${tv.name}|${tv.lines}`, { phase: u.phase, text: "the region's" });
+  const end = () => { stopPlay(); sim.onMoment(null); sim.release(); box?.remove(); box = null; document.dispatchEvent(new CustomEvent('lite:viewer-closed')); };
   close.onclick = end;
+  let playing = false;
+  function stopPlay() { if (sim.sim.abort) sim.sim.abort(); playing = false; play.disabled = false; }
+  function seek(t) {
+    if (!sim.seekTo(t)) return;
+    bar.value = String(Math.round(Math.max(0, Math.min(T, t)) * 1000));
+    line.textContent = `At ${t.toFixed(3)} s of ${T.toFixed(3)} s: ▶ Play runs it again from the start.`;
+  }
   sim.invalidate();
   try {
-    await sim.showFile(host, { key: u.key, arm: side, phase: u.phase, display: u.display }, 'transition');
-  } catch (err) { line.textContent = say(err); play.disabled = again.disabled = true; return; }
+    await sim.showFile(host, unitNow, 'transition', null, undefined, tools.phase);
+  } catch (err) { line.textContent = say(err); return; }
   if (!box) return;                                        // closed while it loaded
+  sim.onMoment((t) => {
+    tools.at(t == null ? -1 : t);
+    if (t != null && document.activeElement !== bar) bar.value = String(Math.round(t * 1000));
+  });
   line.textContent = 'Ready: ▶ Play runs it once, as the robot would.';
-  play.disabled = again.disabled = false;
-  let playing = false;
+  play.disabled = again.disabled = halt.disabled = bar.disabled = false;
   const run = async () => {
     if (playing) return;
     playing = true;
     play.disabled = true;
+    bar.value = '0';
     const ok = await sim.playOnce((t) => { line.textContent = t; });
     if (ok) line.textContent = `Done: the ${ARM(side)} arm is at the transition's end.`;
     playing = false;
     play.disabled = false;
   };
   play.onclick = run;
-  again.onclick = () => { sim.rewind(); playing = false; play.disabled = false; line.textContent = 'At the start: ▶ Play.'; };
+  halt.onclick = () => { if (playing) { stopPlay(); line.textContent = 'Paused: drag the timeline, or ▶ Play from the start.'; } };
+  again.onclick = () => { stopPlay(); sim.rewind(); bar.value = '0'; line.textContent = 'At the start: ▶ Play.'; };
 }
 
 // ── ▶ <ARM> Real Arm: send it to a Program ID, then run it on that arm alone

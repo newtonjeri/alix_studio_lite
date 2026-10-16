@@ -113,6 +113,13 @@ def post_workflow_frames(app, q, body, m):
     return workflow.frames(app, units, side, stage, str(body.get("hash") or "") or None)
 
 
+@route("POST", W + "/collisions")
+def post_workflow_collisions(app, q, body, m):
+    """The last simulation checked with the commode in one state, for S2's 3D (``{hash, phase}``; a job)."""
+    units = units_of(app, m.group(1))
+    return workflow.check_in(app, units, str(body.get("hash") or ""), str(body.get("phase") or "")).view()
+
+
 @route("POST", W + "/played")
 def post_workflow_played(app, q, body, m):
     """The page played the simulation to its end (Real Machine Mode needs it)."""

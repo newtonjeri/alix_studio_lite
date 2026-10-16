@@ -260,10 +260,35 @@ export async function loadRobot() {
     for (const m of materials.values()) m.dispose();
   }
 
+  // ALIX Studio's collision highlight (editor.js dacHighlight): the links in collision at the moment shown
+  // turn red, and back to their own colours after. The meshes share one material per colour, so the red
+  // one is swapped in per mesh and the mesh's own put back.
+  let hit = null;
+  const lit = new Set();
+  // Returns whether any link changed colour.
+  function highlight(links) {
+    const want = new Set(links || []);
+    let changed = false;
+    for (const name of [...lit]) {
+      if (want.has(name)) continue;
+      linkObj[name]?.traverse((o) => { if (o.isMesh && o.userData.base) o.material = o.userData.base; });
+      lit.delete(name);
+      changed = true;
+    }
+    for (const name of want) {
+      if (lit.has(name) || !linkObj[name]) continue;
+      if (!hit) hit = new THREE.MeshStandardMaterial({ color: new THREE.Color(css('--vp-collision')), roughness: 0.6, metalness: 0, side: THREE.DoubleSide });
+      linkObj[name].traverse((o) => { if (o.isMesh) { if (!o.userData.base) o.userData.base = o.material; o.material = hit; } });
+      lit.add(name);
+      changed = true;
+    }
+    return changed;
+  }
+
   home();
   return {
     group, joints, groups: d.groups, setJoint, setJoints, getJoints, home, linkWorldMatrix,
-    setArmFromTrack, prepareTrack, loadFrames, loadTimeline, showTime, showTrackLine, clearTrack, dispose, stats: d.stats,
+    setArmFromTrack, prepareTrack, loadFrames, loadTimeline, showTime, showTrackLine, clearTrack, dispose, highlight, stats: d.stats,
   };
 }
 

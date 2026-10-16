@@ -2,24 +2,25 @@
 // - the recording selected in the list above, played in 3D as the robot runs it (staged first: the
 //   pole and the hand as it was taught), in the project's room with the commode where its task's UGV
 //   placement puts it; a choice of view, and no plot (slide 5);
-// - its collision check: every 5 ms line against the walls measured in Prepare, the commode in the
-//   region's lid and seat state and the other arm, standing, with ALIX's collision code
-//   (server/collision_check.py). The first colliding line is said, marked on the timeline and one
-//   click away, so the region can be taught again. It reports; it blocks nothing;
+// - its collision check, on demand (the owner, 16 Oct: "a button, to do the collision check, on every
+//   trajectory"): every 5 ms line against the walls measured in Prepare, the commode in the region's
+//   lid and seat state (or the one chosen under the view) and the other arm, standing, with ALIX's
+//   collision code (server/collision_check.py). The view's tools (view3d.js) mark the collisions on
+//   the timeline and turn the links red; the first ones are listed here, one click away, so the
+//   region can be taught again. It reports; it blocks nothing;
 // - Trim and save (slide 1, as the controller's Track clip): the first and the last moment kept,
 //   Save overwriting the recording (the owner's choice) or Save As a new one.
 
 import { post, say } from './api.js';
-import { confirmDialog, ctx, el, loadUnit, step, tell, unitUrl, watchJob } from './ctx.js';
-import { duration, elsewhere, ensure3D, invalidate, say3d, seekTo, showFile, sim } from './sim.js';
+import { confirmDialog, ctx, el, loadUnit, step, tell, unitUrl } from './ctx.js';
+import { duration, elsewhere, invalidate, onMoment, say3d, scene, seekTo, showFile, sim } from './sim.js';
+import { checkJob, spansOf, Tools } from './view3d.js';
 
 const CYCLE_S = 0.005;
-const PHASE_WORDS = { lid_closed: 'lid closed', lid_open: 'lid open', seat_open: 'seat open' };
 const $ = (id) => document.getElementById(id);
-let unit = null, rec = null, token = 0;
+let unit = null, rec = null, token = 0, tools = null;
 const pb = { playing: false, t: 0, start: 0, raf: 0 };
 const trim = { a: 0, b: 0 };                 // the first and the last moment kept (s)
-let checkKey = null, result = null;
 
 const fmt = (s) => `${Number(s).toFixed(3)} s`;
 const task = () => TASKS[currentTask]?.label || null;
@@ -33,26 +34,22 @@ function card() {
   const stage = $('stage-review');
   if (!stage) return null;
   const btn = (text, onclick, cls = 'btn light') => el('button', { class: cls, type: 'button', text, onclick });
-  const views = [['default', 'Default'], ['front', 'Front'], ['side', 'Side'], ['top', 'Top']];
   c = el('div', { id: 'liteRev3d', class: 'lite-rev3d' },
     el('div', { class: 'lite-section-title' },
       el('h3', {}, 'Simulation · ', el('span', { id: 'liteRev3dName', text: '-' })),
-      el('span', { class: 'mini-note', text: 'The recording selected above, staged first, in its room and UGV placement.' }),
-      el('div', { class: 'lite-rev3d-views', role: 'group', 'aria-label': 'View' },
-        views.map(([v, n]) => btn(n, () => setView(v), 'btn light lite-rev3d-view')))),
+      el('span', { class: 'mini-note', text: 'The recording selected above, staged first, in its room and UGV placement.' })),
     el('div', { class: 'lite-rev3d-grid' },
-      el('div', { id: 'liteRev3dHost', class: 'lite-rev3d-host' }),
+      el('div', { class: 'lite-rev3d-main' }, el('div', { id: 'liteRev3dHost', class: 'lite-rev3d-host' })),
       el('div', { class: 'lite-rev3d-side' },
         el('div', { class: 'lite-rev3d-player' },
           el('div', { class: 'lite-row' }, btn('Play', play, 'btn'), btn('Pause', pause, 'btn outline'), btn('Restart', () => { pause(); setT(0); }),
             el('b', { id: 'liteRev3dTime', class: 'lite-rev3d-time', text: '0.000 s / 0.000 s' })),
           el('div', { class: 'lite-rev3d-track' },
             el('input', { id: 'liteRev3dTimeline', type: 'range', min: '0', max: '0', step: '5', value: '0', 'aria-label': 'Recording time',
-              oninput: (e) => { pause(); setT(Number(e.target.value) / 1000); } }),
-            el('div', { id: 'liteRev3dMarks', class: 'lite-rev3d-marks', 'aria-hidden': 'true' }))),
+              oninput: (e) => { pause(); setT(Number(e.target.value) / 1000); } }))),
         el('div', { class: 'lite-rev3d-block' },
-          el('div', { class: 'lite-rev3d-head' }, el('h4', { text: 'Collision check' }), btn('Check again', () => runCheck(true))),
-          el('div', { id: 'liteRev3dCheck', class: 'lite-status', text: 'Select a recording above.' }),
+          el('div', { class: 'lite-rev3d-head' }, el('h4', { text: 'Collision check' })),
+          el('div', { id: 'liteRev3dCheck', class: 'mini-note', text: 'Check collisions under the view checks every line of the recording.' }),
           el('div', { id: 'liteRev3dEvents', class: 'lite-rev3d-events' }),
           el('div', { class: 'mini-note', text: 'Walls as measured in Prepare (a few millimetres out changes the result). The glove, pad '
             + 'and brush are not modelled, so a real contact comes some 20 mm earlier. Nothing is blocked by this check.' })),
@@ -76,6 +73,17 @@ function card() {
             Object.assign(btn('Save As', () => saveTrim(true), 'btn outline'), { id: 'liteTrimSaveAs' }))))));
   const anchor = $('liteRecordings') || stage.querySelector('.active-trajectory-bar');
   if ($('liteRecordings')) anchor.after(c); else if (anchor) anchor.before(c); else stage.append(c);
+  tools = new Tools({
+    what: 'the recording',
+    check: async (phase, progress) => {
+      const r = await checkJob(post, unitUrl(unit.key, 'collisions'), { which: 'raw', file: rec.file, task: task(), phase }, progress);
+      return { result: r, spans: spansOf(r) };
+    },
+    seek: (t) => { pause(); setT(t); },
+    changed: (phase) => { if (unit) scene(phase || unit.phase, undefined, sim.place || null).catch(() => {}); },
+    shown: paintCheck,
+  }).mount($('liteRev3dHost'));
+  tools.track(c.querySelector('.lite-rev3d-track'));
   return c;
 }
 
@@ -96,16 +104,19 @@ async function show() {
   unit = u; rec = r;
   $('liteRev3dName').textContent = r.name;
   pause();
+  tools.load(JSON.stringify([u.key, r.file, r.sha256, task()]), { phase: u.phase, text: "the region's" });
   const host = $('liteRev3dHost');
   if (elsewhere()) { invalidate(); return; }
   if (!host.querySelector('canvas')) say3d(host, 'Loading the 3D view…');
   try {
-    if (!(await showFile(host, u, 'raw', null, task())) || mine !== token) return;
+    if (!(await showFile(host, u, 'raw', null, task(), tools.phase)) || mine !== token) return;
   } catch (err) {
     say3d(host, `Nothing plays: ${say(err)}`, err);
     return;
   }
+  onMoment((t) => tools.at(t == null ? -1 : t));
   const T = total();
+  tools.setLength(T);
   for (const id of ['liteRev3dTimeline', 'liteTrimA', 'liteTrimB']) $(id).max = String(Math.round(T * 1000));
   setT(0);
   trimTo(0, T);
@@ -114,11 +125,6 @@ async function show() {
     $('liteTrimName').value = `${stem}_trimmed.txt`;
     $('liteTrimName').dataset.for = r.file;
   }
-  runCheck(false);
-}
-
-async function setView(name) {
-  try { const { viewer } = await ensure3D(); viewer.setView(name); } catch (_) { /* no 3D in this browser */ }
 }
 
 // ── the player: the recording's own time; the 3D at that moment, staged
@@ -148,67 +154,27 @@ function play() {
 
 function pause() { pb.playing = false; cancelAnimationFrame(pb.raf); pb.raf = 0; }
 
-// ── the collision check (server/collision_check.py)
-
-function status(text, cls = '') {
-  const s = $('liteRev3dCheck');
-  if (s) { s.className = `lite-status${cls ? ` ${cls}` : ''}`; s.textContent = text; }
-}
+// ── the collision check's findings (server/collision_check.py): the first collisions, one click away
 
 const pairText = (p) => `${p.link} – ${p.object}${p.depth_mm ? ` (${p.depth_mm} mm deep)` : ''}`;
 
-async function runCheck(force) {
-  if (!unit || !rec) return;
-  const k = JSON.stringify([unit.key, rec.file, rec.sha256, task()]);
-  if (!force && k === checkKey && result) { paintCheck(); return; }
-  checkKey = k;
-  result = null;
-  paintMarks();
-  $('liteRev3dEvents')?.replaceChildren();
-  status(`Checking all ${Number(rec.lines).toLocaleString()} lines for collisions…`);
-  try {
-    const job = await post(unitUrl(unit.key, 'collisions'), { file: rec.file, task: task() });
-    const done = await watchJob(job);
-    if (k !== checkKey) return;
-    if (done.state !== 'done') { status(`The collision check did not finish: ${done.error || 'stopped'}.`, 'warn'); return; }
-    result = done.result;
-    paintCheck();
-  } catch (err) { if (k === checkKey) status(`The collision check could not run: ${say(err)}`, 'warn'); }
-}
-
-function paintCheck() {
-  const r = result;
-  if (!r) return;
-  const against = `${r.checked.walls}, the commode (${PHASE_WORDS[r.checked.commode] || r.checked.commode}) and ${r.checked.other_arm}`;
+function paintCheck(r) {
+  const box = $('liteRev3dEvents'), note = $('liteRev3dCheck');
+  if (!box || !note) return;
+  if (!r) {
+    note.textContent = 'Check collisions under the view checks every line of the recording.';
+    box.replaceChildren();
+    return;
+  }
   const c = r.contact || {};
-  const touch = c.lines ? ` The hand touches the commode on ${c.lines.toLocaleString()} lines from line ${c.first_line.toLocaleString()} `
-    + `(deepest ${c.deepest_mm} mm; up to ${r.checked.contact_depth_mm} mm is the pad's give).` : '';
-  if (r.ok) {
-    status(`No collision: ${r.lines.toLocaleString()} lines checked against ${against}.${touch}`, 'ok');
-  } else {
-    const f = r.first;
-    status(`Collision at ${fmt((f.first_line - 1) * CYCLE_S)} (line ${f.first_line.toLocaleString()}): ${f.pairs.map(pairText).join('; ') || f.what.join(', ')}. `
-      + `${r.colliding_lines.toLocaleString()} of ${r.lines.toLocaleString()} lines collide. Checked against ${against}.${touch} `
-      + 'Teach the region again to correct it.', 'err');
-  }
-  const box = $('liteRev3dEvents');
-  if (box) {
-    box.replaceChildren(...r.events.slice(0, 6).map(e => el('div', { class: 'lite-rev3d-event' },
-      el('span', { text: `Lines ${e.first_line.toLocaleString()}–${e.last_line.toLocaleString()} (${fmt((e.first_line - 1) * CYCLE_S)}): `
-        + `${e.pairs.map(pairText).join('; ') || e.what.join(', ')}` }),
-      el('button', { class: 'btn light', type: 'button', text: 'Show', onclick: () => { pause(); setT((e.first_line - 1) * CYCLE_S); } }))),
-    r.ok ? '' : el('button', { class: 'btn', type: 'button', text: 'Teach again', onclick: () => window.setStage('teach') }));
-  }
-  paintMarks();
-}
-
-function paintMarks() {
-  const box = $('liteRev3dMarks');
-  if (!box) return;
-  const r = result, n = Math.max(1, ((r && r.lines) || 1) - 1);
-  box.replaceChildren(...(r ? r.events : []).map(e => el('span', { class: 'lite-rev3d-mark',
-    style: `left:${(100 * (e.first_line - 1)) / n}%;width:${Math.max(0.4, (100 * (e.last_line - e.first_line + 1)) / n)}%`,
-    title: `Lines ${e.first_line}–${e.last_line}` })));
+  note.textContent = (r.ok ? 'No collision.' : `${r.colliding_lines.toLocaleString()} of ${r.lines.toLocaleString()} lines collide.`)
+    + (c.lines ? ` The hand touches the commode on ${c.lines.toLocaleString()} lines from line ${c.first_line.toLocaleString()} `
+      + `(deepest ${c.deepest_mm} mm; up to ${r.checked.contact_depth_mm} mm is the pad's give).` : '');
+  box.replaceChildren(...r.events.slice(0, 6).map(e => el('div', { class: 'lite-rev3d-event' },
+    el('span', { text: `Lines ${e.first_line.toLocaleString()}–${e.last_line.toLocaleString()} (${fmt((e.first_line - 1) * CYCLE_S)}): `
+      + `${e.pairs.map(pairText).join('; ') || e.what.join(', ')}` }),
+    el('button', { class: 'btn light', type: 'button', text: 'Show', onclick: () => { pause(); setT((e.first_line - 1) * CYCLE_S); } }))),
+  r.ok ? '' : el('button', { class: 'btn', type: 'button', text: 'Teach again', onclick: () => window.setStage('teach') }));
 }
 
 // ── Trim: the first and the last moment kept
@@ -252,7 +218,6 @@ async function saveTrim(asNew) {
     ctx.units[unit.key] = out.unit;
     const now = out.unit.recordings.find(x => x.file === out.unit.active);
     invalidate();                                       // the 3D reads the file again (Save keeps its name)
-    checkKey = null;
     window.toast(asNew ? `Saved as ${now ? now.name : name}: ${(last - first + 1).toLocaleString()} lines. It is the selected recording.`
       : `${rec.name} is trimmed: ${(last - first + 1).toLocaleString()} lines kept.`);
     document.dispatchEvent(new CustomEvent('lite:recordings'));
@@ -263,6 +228,6 @@ export function installReview3d() {
   document.addEventListener('lite:stage', (e) => { if (e.detail === 'review') show(); else { pause(); token += 1; } });
   document.addEventListener('lite:step', () => { if (currentStage === 'review') show(); });
   document.addEventListener('lite:recordings', () => { if (currentStage === 'review') show(); });
-  document.addEventListener('lite:placement', () => { checkKey = null; });
+  document.addEventListener('lite:placement', () => { if (tools) tools.load(null, { phase: unit?.phase || 'lid_closed' }); });   // the room changed: checked again
   document.addEventListener('lite:viewer-closed', () => { if (currentStage === 'review') show(); });
 }

@@ -11,12 +11,14 @@
 import { del, get, post, say } from './api.js';
 import { ctx, el, fmtS, stageDialog, step, tell } from './ctx.js';
 import { ensure3D, release, say3d, scene } from './sim.js';
+import { checkJob, spansOf, Tools } from './view3d.js';
 
 const CYCLE = 0.005;
 const ARMS = ['left', 'right'];
 const slots = { left: null, right: null };          // {meta, r (timeline as sent), tl, track, checks}
 const asked = { left: 0, right: 0 };                 // the newest ▶ View per arm: an older answer is dropped
-let box = null, lib = null, phase = 'lid_closed';
+let box = null, lib = null, tools = null;
+const phase = () => (tools && tools.phase) || 'lid_closed';       // the commode as the view's tools show it
 let t = 0, playing = false, speed = 1, raf = 0, last = 0, said = '';   // t: the run clock, 0 = both arms standing
 let plotP = null;
 
@@ -160,7 +162,7 @@ async function view(f) {
   try {
     const { viewer, robot } = await ensure3D();
     await viewer.attach($('liteViewer3d'));
-    await scene(phase);
+    await scene(phase());
     const [r, track, checks] = await Promise.all([
       get(`/api/library/${f.id}/timeline?side=${side}`),       // refused unless the file is this arm's, with its stage
       get(`/api/library/${f.id}/track`),
@@ -169,6 +171,7 @@ async function view(f) {
     slots[side] = { meta: f, r, tl: robot.loadTimeline(side, r), track, checks };
     pause();
     t = 0; said = '';
+    retool();
     show();
     renderSlots(); renderChecks(); renderList();
     await drawPlot();
@@ -187,6 +190,7 @@ async function clearSlot(side) {
   slots[side] = null;
   t = Math.min(t, total());
   said = '';
+  retool();
   show();
   renderSlots(); renderChecks(); renderList(); drawPlot();
 }
@@ -201,13 +205,22 @@ function stagingLine() {
   }).join(' · ');
 }
 
+// The files loaded: the view's tools check them as they replay (both arms on the viewer's clock).
+function retool() {
+  if (!tools) return;
+  tools.load(JSON.stringify(ARMS.map(a => slots[a] && [slots[a].meta.id, slots[a].meta.stage])), {
+    phase: 'lid_closed', text: 'no region', enabled: loaded().length > 0 });
+  tools.setLength(total());
+}
+
 function show() {
   ensure3D().catch(() => null).then((v3) => {
-    if (!v3) return;                                  // no 3D in this browser: the times still show
+    if (!v3 || v3.viewer.host !== $('liteViewer3d')) return;   // no 3D in this browser, or another view has it: the times still show
     const { robot, viewer } = v3;
     for (const a of loaded()) robot.showTime(armTime(a, t), a);
     viewer.dirty = true;
   });
+  if (tools) tools.at(t);
   const T = start(), L = total() - T;
   if ($('liteViewerTime')) {
     $('liteViewerTime').textContent = !loaded().length ? '00:00.0 / 00:00.0'
@@ -378,9 +391,7 @@ function build() {
   folder.setAttribute('webkitdirectory', '');
   const speedSel = el('select', { id: 'liteViewerSpeed', 'aria-label': 'Speed', onchange: (e) => { speed = Number(e.target.value); if (playing) play(); } },
     [['0.25', '25 %'], ['0.5', '50 %'], ['1', '100 % (real time)'], ['2', '200 %']].map(([v, n]) => el('option', { value: v, text: n, selected: v === '1' })));
-  const phaseSel = el('select', { id: 'liteViewerPhase', 'aria-label': 'Toilet state', onchange: (e) => { phase = e.target.value; scene(phase); } },
-    [['lid_closed', 'Lid closed'], ['lid_open', 'Lid open'], ['seat_open', 'Seat open']].map(([v, n]) => el('option', { value: v, text: n })));
-  const slider = el('input', { id: 'liteViewerSlider', type: 'range', min: '0', max: '0', step: '5', value: '0',
+  const slider = el('input', { id: 'liteViewerSlider', type: 'range', min: '0', max: '0', step: '5', value: '0', 'aria-label': 'Replay time',
     oninput: (e) => { pause(); t = Number(e.target.value) / 1000; show(); said = ''; sayPhase(); } });
   box = el('div', { class: 'modal lite-viewer', id: 'liteViewer' },
     el('div', { class: 'modal-card lite-viewer-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Trajectory Viewer' },
@@ -390,7 +401,6 @@ function build() {
           el('p', { class: 'mini-note', text: 'Upload taught .txt files, then replay them as the robot runs them: the pole and the hand '
             + 'first, then the move to the start, then the trajectory at the 5 ms clock. Each file plays on its own arm only.' })),
         el('div', { class: 'cta-row' },
-          el('label', { class: 'lite-inline-field' }, 'Toilet ', phaseSel),
           el('button', { class: 'btn light', text: '✕ Close', onclick: () => close() }))),
       el('div', { class: 'lite-viewer-body' },
         el('aside', { class: 'lite-viewer-side' },
@@ -406,12 +416,28 @@ function build() {
             el('button', { class: 'btn green', text: '▶ Play', onclick: play }),
             el('button', { class: 'btn orange', text: 'Ⅱ Pause', onclick: () => { pause(); said = ''; status('Paused.'); } }),
             el('button', { class: 'btn light', text: '↺ Reset', onclick: reset }),
-            speedSel, slider, el('span', { id: 'liteViewerTime', class: 'lite-viewer-time', text: '00:00.0 / 00:00.0' })),
+            speedSel, el('div', { id: 'liteViewerTrack', class: 'lite-rev3d-track' }, slider),
+            el('span', { id: 'liteViewerTime', class: 'lite-viewer-time', text: '00:00.0 / 00:00.0' })),
           el('div', { class: 'lite-viewer-plot-wrap' }, el('div', { id: 'liteViewerPlot', class: 'lite-viewer-plot' }),
             el('div', { id: 'liteViewerPlayhead', class: 'lite-viewer-playhead' })),
           el('div', { id: 'liteViewerChecks', class: 'lite-viewer-checks' })))));
   document.body.append(box);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && box.classList.contains('show') && !document.querySelector('.lite-confirm')) close(); });
+  // the view's tools (view3d.js): the commode's state, the collision check of both files as they replay
+  // (each arm against the walls and the commode, and the two arms against each other), the links in red
+  tools = new Tools({
+    what: 'the files',
+    time: (at) => (at < start() ? `${at.toFixed(2)} s of the staging` : fmtT(at - start())),
+    check: async (ph, progress) => {
+      const r = await checkJob(post, '/api/library/collisions', { left: slots.left?.meta.id || null, right: slots.right?.meta.id || null,
+        phase: ph || 'lid_closed', pid: ctx.pid || null }, progress);
+      return { result: r, spans: spansOf(r) };
+    },
+    seek: (at) => { pause(); t = Math.max(0, Math.min(total(), at)); said = ''; show(); sayPhase(); },
+    changed: (ph) => { scene(ph || 'lid_closed').catch(() => {}); },
+  }).mount($('liteViewer3d'));
+  tools.track($('liteViewerTrack'));
+  retool();
 }
 
 export async function openViewer() {
@@ -431,7 +457,7 @@ export async function openViewer() {
   }
   const { viewer, robot } = v3;
   await viewer.attach($('liteViewer3d'));
-  await scene(phase);
+  await scene(phase());
   robot.home();
   for (const a of loaded()) slots[a].tl = robot.loadTimeline(a, slots[a].r);
   show();

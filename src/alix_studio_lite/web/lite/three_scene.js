@@ -4,8 +4,8 @@
 // attach(el) puts it in V19's simulation pane, the expanded view, Save & Review's player, the
 // Trajectory Viewer or Merge + Full Sequence's S1 and S2 (seq3d.js); a view that borrows it with a
 // camera of its own gets the camera back as it was at the next attach(). view() adds a renderer of
-// the SAME scene with its own camera and controls, for views shown side by side. Built from Legacy
-// Lite's scene.js.
+// the SAME scene with its own camera and controls, for views shown side by side. Every view has ALIX
+// Studio's view cube in its top-right corner (cube()). Built from Legacy Lite's scene.js.
 
 export function css(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -138,6 +138,54 @@ export function webglFail(el) {
     + '<span>' + webglHelpHtml() + '</span>';
 }
 
+// ALIX Studio's ViewCube (web_editor/editor.js initViewCube, viewCubeFaceTexture, snapDirection,
+// orbitMainCamera; the owner, 16 Oct: "the orientation cube ... so that the user can see the view port
+// at any camera angle offered by the cube"): its faces, labels and colours, the cube turning with the
+// camera. Lite draws it with the view's own renderer, in the view's top-right corner: a second WebGL
+// context would draw on the processor where the graphics run in software (the lab laptop).
+const CUBE_PX = 120, CUBE_GAP = 10;
+function cubeFace(THREE, text) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 128;
+  const g = canvas.getContext('2d');
+  g.fillStyle = css('--vp-cube-face');
+  g.fillRect(0, 0, 128, 128);
+  g.strokeStyle = css('--vp-cube-edge');
+  g.lineWidth = 6;
+  g.strokeRect(4, 4, 120, 120);
+  g.fillStyle = css('--vp-cube-text');
+  g.font = '600 21px Inter, sans-serif';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText(text, 64, 64);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 4;
+  return tex;
+}
+function makeCube(THREE) {
+  const scene = new THREE.Scene();
+  const cam = new THREE.OrthographicCamera(-1.45, 1.45, 1.45, -1.45, 0.1, 100);
+  scene.add(new THREE.HemisphereLight(new THREE.Color(css('--vp-sky')), new THREE.Color(css('--vp-cube-ground')), 1.3));
+  const sun = new THREE.DirectionalLight(new THREE.Color(css('--vp-sky')), 0.85);
+  sun.position.set(2, -3, 4);
+  scene.add(sun);
+  // BoxGeometry's faces: +X, -X, +Y, -Y, +Z, -Z (the robot's base frame: x towards the commode, y left, z up)
+  const faces = ['BACK', 'FRONT', 'LEFT', 'RIGHT', 'TOP', 'BOTTOM']
+    .map(text => new THREE.MeshStandardMaterial({ map: cubeFace(THREE, text), roughness: 0.7, metalness: 0 }));
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.5, 1.5), faces);
+  scene.add(mesh);
+  scene.add(new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), new THREE.LineBasicMaterial({ color: new THREE.Color(css('--vp-cube-edge')) })));
+  return { scene, cam, mesh, ray: new THREE.Raycaster(), at: new THREE.Vector2() };
+}
+// A point on the cube (its own frame) to a face, an edge or a corner: one of 26 directions.
+function snapDirection(THREE, local) {
+  const half = 0.75;
+  const snap = (v) => (Math.abs(v) > 0.45 * half ? Math.sign(v) : 0);
+  const d = new THREE.Vector3(snap(local.x), snap(local.y), snap(local.z));
+  if (d.lengthSq() === 0) d.set(Math.sign(local.x) || 1, 0, 0);
+  return d.normalize();
+}
+
 // The viewer: created once, attached to one host element at a time. ONE WebGL context for the
 // whole page: the pictures shown side by side (view()) are drawn by this same renderer and copied
 // into plain canvases, so the robot's meshes are held once (where the graphics run in software,
@@ -149,6 +197,7 @@ export function createViewer() {
   let room = null, roomKey = '', offset = [0, 0];          // the measured room, and the commode's offset for the UGV's placement
   const views = new Set();                       // the secondary views (view()), drawn by the same loop
   let lent = null, borrowed = null;              // the camera before a picture borrowed it; the picture's aim
+  let cube = null, cubeBox = null;                // the view cube's scene, and its overlay (pointer, Home View)
 
   v.ready = ensureThree().then(() => {
     const THREE = window.THREE;
@@ -190,6 +239,8 @@ export function createViewer() {
     const grid = new THREE.GridHelper(4, 40, col('--vp-grid'), col('--vp-grid-minor'));
     grid.rotation.x = Math.PI / 2; grid.position.x = 0.6; scene.add(grid);
     ro = new ResizeObserver(() => v.resize());
+    cube = makeCube(THREE);
+    cubeBox = cubeOverlay();
     // One loop draws every view of the scene: each when the scene changed, or its own camera or size.
     // The side-by-side views go first (each borrows the canvas at its size), the main view last.
     const loop = () => {
@@ -197,7 +248,7 @@ export function createViewer() {
         const changed = v.dirty || v.animating;
         let drawn = false, again = false;
         for (const w of views) if (w.frame(changed)) { drawn = true; again = true; }
-        if (v.host && (changed || again)) { renderer.render(scene, cam); drawn = true; }
+        if (v.host && (changed || again)) { draw(); drawn = true; }
         if (drawn) v.dirty = false;
       }
       requestAnimationFrame(loop);
@@ -206,6 +257,121 @@ export function createViewer() {
     Object.assign(v, { THREE, scene });
     return v;
   });
+
+  // The view, then the cube in its top-right corner, turned as the camera is (its own camera on the
+  // camera's line of sight), over the picture: only the depth is cleared there.
+  const draw = () => {
+    renderer.render(scene, cam);
+    const W = v.host ? v.host.clientWidth : 0, H = v.host ? v.host.clientHeight : 0;
+    const fits = !!cube && W >= CUBE_PX * 2 && H >= CUBE_PX + 4 * CUBE_GAP;   // a view too small for it goes without
+    if (cubeBox && cubeBox.hidden === fits) cubeBox.hidden = !fits;
+    if (!fits) return;
+    const dir = cam.position.clone().sub(controls.target).normalize();
+    cube.cam.position.copy(dir.multiplyScalar(5));
+    cube.cam.up.copy(cam.up);
+    cube.cam.lookAt(0, 0, 0);
+    const x = W - CUBE_PX - CUBE_GAP, y = H - CUBE_PX - CUBE_GAP;
+    const auto = renderer.autoClear;
+    renderer.autoClear = false;
+    renderer.setScissorTest(true);
+    renderer.setViewport(x, y, CUBE_PX, CUBE_PX);
+    renderer.setScissor(x, y, CUBE_PX, CUBE_PX);
+    renderer.clearDepth();
+    renderer.render(cube.scene, cube.cam);
+    renderer.setScissorTest(false);
+    renderer.setViewport(0, 0, W, H);
+    renderer.autoClear = auto;
+  };
+
+  // The cube's overlay: where the pointer meets the cube (a click looks from that face, edge or
+  // corner; a drag turns the camera round what it looks at), and ALIX Studio's Home View under it.
+  function cubeOverlay() {
+    const THREE = window.THREE;
+    const hit = document.createElement('div');
+    hit.className = 'lite-cube-hit';
+    hit.title = 'Click a face, an edge or a corner to look at the commode from there; drag to turn the view';
+    hit.setAttribute('role', 'img');
+    hit.setAttribute('aria-label', 'View cube');
+    const home = document.createElement('button');
+    home.type = 'button';
+    home.className = 'lite-cube-home';
+    home.textContent = 'Home View';
+    home.title = 'Back to the usual view of the cell';
+    home.addEventListener('click', () => v.home());
+    const box = document.createElement('div');
+    box.className = 'lite-cube';
+    box.append(hit, home);
+    let down = null, moved = false;
+    hit.addEventListener('pointerdown', (e) => {
+      down = { x: e.clientX, y: e.clientY };
+      moved = false;
+      hit.classList.add('dragging');
+      hit.setPointerCapture(e.pointerId);
+    });
+    hit.addEventListener('pointermove', (e) => {
+      if (!down) return;
+      const dx = e.clientX - down.x, dy = e.clientY - down.y;
+      if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+      if (moved) { orbit(-dx * 0.01, -dy * 0.01); down = { x: e.clientX, y: e.clientY }; }
+    });
+    const up = (e) => {
+      hit.classList.remove('dragging');
+      if (down && !moved && e.type === 'pointerup') {
+        const r = hit.getBoundingClientRect();
+        cube.at.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+        cube.ray.setFromCamera(cube.at, cube.cam);
+        const h = cube.ray.intersectObject(cube.mesh, false)[0];
+        if (h) v.lookFrom(snapDirection(THREE, cube.mesh.worldToLocal(h.point.clone())));
+      }
+      down = null;
+    };
+    hit.addEventListener('pointerup', up);
+    hit.addEventListener('pointercancel', up);
+    return box;
+  }
+
+  // The camera turned round what it looks at (ALIX Studio's orbitMainCamera), z up.
+  function orbit(dAzimuth, dPolar) {
+    const THREE = window.THREE;
+    const offset = cam.position.clone().sub(controls.target);
+    const radius = offset.length();
+    const theta = Math.atan2(offset.y, offset.x) + dAzimuth;
+    const phi = THREE.MathUtils.clamp(Math.acos(THREE.MathUtils.clamp(offset.z / radius, -1, 1)) + dPolar, 0.05, Math.PI - 0.05);
+    offset.set(radius * Math.sin(phi) * Math.cos(theta), radius * Math.sin(phi) * Math.sin(theta), radius * Math.cos(phi));
+    cam.position.copy(controls.target).add(offset);
+    cam.up.set(0, 0, 1);
+    cam.lookAt(controls.target);
+    controls.update();
+    fittedAspect = cam.aspect;                       // turned by hand: a small resize keeps it
+    v.dirty = true;
+  }
+
+  // The commode from `dir` (from it towards the camera), at a distance where it is whole with about the
+  // nearer half of the robot in view too (the owner, 16 Oct): the ball round the commode reaches the
+  // robot's base. Without a commode in the scene, only the camera's direction changes.
+  v.lookFrom = (dir) => {
+    const THREE = window.THREE;
+    const box = fixture ? new THREE.Box3().setFromObject(fixture) : null;
+    if (!box || box.isEmpty()) {
+      const d = cam.position.distanceTo(controls.target);
+      cam.up.set(0, 0, 1);
+      cam.position.copy(controls.target).addScaledVector(dir.clone().normalize(), d);
+      cam.lookAt(controls.target);
+      controls.update();
+    } else {
+      const c = box.getCenter(new THREE.Vector3());
+      const whole = box.getBoundingSphere(new THREE.Sphere()).radius * 1.1;
+      cam.up.set(0, 0, 1);
+      aim(cam, controls, { target: [c.x, c.y, c.z], dir: [dir.x, dir.y, dir.z], radius: Math.max(whole, Math.hypot(c.x, c.y) * 0.95) });
+    }
+    fittedAspect = cam.aspect;
+    v.dirty = true;
+  };
+  // ALIX Studio's Home View: the usual view of the cell (the robot and the cubicle).
+  v.home = () => {
+    if (borrowed) aim(cam, controls, borrowed); else v.fit(cam.aspect);
+    v.dirty = true;
+  };
 
   // A narrow pane sees less across, so the camera steps back along its line of sight until
   // the cell (robot to cubicle wall) fits as it does in a 4:3 pane.
@@ -219,29 +385,13 @@ export function createViewer() {
     cam.position.set(...HOME_TARGET.map((t, i) => t + HOME_OFFSET[i] * k));
     controls.update();
   };
-  // Fixed views of the cell (Save & Review's choice of view, the owner, 16 Oct): from behind the robot
-  // towards the commode, from its right side, from above; anything else is the usual view.
-  const VIEWS = {                                    // {target, dir, radius}: aim()
-    front: { target: [0.8, 0, 0.55], dir: [-0.55, 0, 1.0], radius: 1.0 },
-    side: { target: HOME_TARGET, dir: [0.1, -1, 0.3], radius: 1.15 },
-    top: { target: [0.6, 0, 0.6], dir: [0.02, 0, 1], radius: 1.2 },
-  };
-  v.setView = (name) => {
-    if (VIEWS[name]) {
-      aim(cam, controls, VIEWS[name]);
-      fittedAspect = cam.aspect;
-    } else {
-      v.fit(cam.aspect);
-    }
-    v.dirty = true;
-  };
   v.resize = () => {
     if (!renderer || !v.host) return;
     const W = v.host.clientWidth, H = v.host.clientHeight;
     if (!W || !H) return;
     renderer.setSize(W, H); cam.aspect = W / H; cam.updateProjectionMatrix();
     if (!fittedAspect || Math.abs(Math.log(cam.aspect / fittedAspect)) > 0.15) v.fit(cam.aspect);
-    renderer.render(scene, cam);                                         // resizing clears the canvas
+    draw();                                                              // resizing clears the canvas
   };
 
   const place = (el) => {
@@ -249,7 +399,9 @@ export function createViewer() {
     if (v.host) ro.unobserve(v.host);
     v.host = el;
     el.prepend(renderer.domElement);
+    renderer.domElement.after(cubeBox);                 // the view cube goes with the picture
     ro.observe(el);
+    if (v.onPlace) v.onPlace(el);                       // the view that had it lets go (sim.js: the robot's colours)
     v.resize();
     v.dirty = true;
   };

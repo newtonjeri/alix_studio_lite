@@ -66,4 +66,6 @@ export function installFullSeq() {
     }
   };
   document.addEventListener('lite:open-s1', (e) => { tab = 's1'; pending = e.detail || {}; window.showView('sequence'); });
+  // The Trajectory Viewer closed over S1 or S2: the tab on screen loads its 3D again.
+  document.addEventListener('lite:viewer-closed', () => { if (document.getElementById('view-sequence')?.classList.contains('active')) open(tab); });
 }

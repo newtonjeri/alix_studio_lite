@@ -16,7 +16,8 @@
 
 import { get, post, say } from './api.js';
 import { confirmDialog, ctx, el, loadUnit, step, tell, unitUrl, watchJob } from './ctx.js';
-import { elsewhere, invalidate, onPlayhead, release, say3d, seekTo, showFile, showStanding, sim, unload } from './sim.js';
+import { elsewhere, fileKey, invalidate, onMoment, onPlayhead, release, say3d, scene, seekTo, showFile, showStanding, sim, unload } from './sim.js';
+import { checkJob, spansOf, Tools } from './view3d.js';
 
 const CYCLE_S = 0.005;
 let unit = null;               // the server's view of the arm step on screen
@@ -114,8 +115,9 @@ function playBar(kind) {
     el('button', { class: 'btn light', text: 'Restart', onclick: () => restart(kind) }),
     el('div', { class: 'lite-timeline' },
       el('label', { for: `liteTimeline_${kind}`, text: compare ? 'Synchronized time cursor' : 'Trajectory timeline' }),
-      el('input', { id: `liteTimeline_${kind}`, type: 'range', min: '0', max: '0', step: '0.001', value: '0',
-        oninput: (e) => scrub(kind, Number(e.target.value)) })),
+      el('div', { id: `liteTrack_${kind}`, class: 'lite-rev3d-track' },
+        el('input', { id: `liteTimeline_${kind}`, type: 'range', min: '0', max: '0', step: '0.001', value: '0',
+          oninput: (e) => scrub(kind, Number(e.target.value)) }))),
     el('div', { class: 'lite-readout' },
       el('div', {}, el('b', { id: `liteNow_${kind}`, text: '0.000 s' }), ' / ', el('span', { id: `liteTotal_${kind}`, text: '0.000 s' })),
       compare ? null : el('div', { id: 'liteRegionLabel', class: 'mini-note', text: 'Current region: -' })));
@@ -850,6 +852,7 @@ function setTotals(kind) {
   const tl = $(`liteTimeline_${kind}`);
   if (tl) tl.max = String(total);
   if ($(`liteTotal_${kind}`)) $(`liteTotal_${kind}`).textContent = `${total.toFixed(3)} s`;
+  if (tools3d && kind === (pipeStep === REVIEW ? 'review' : 'compare') && $(`liteTrack_${kind}`)) tools3d.track($(`liteTrack_${kind}`), total, true);
 }
 
 // `seek`: move the 3D too (not when the 3D itself plays: the page's Re-run Simulation).
@@ -1231,21 +1234,48 @@ async function renderCompare() {
 
 // ── the simulation beside the plots
 
+// The 3D's tools (view3d.js): the commode's state shown, the collision check of the file playing (the
+// recording in Review; the processed file, or the original, in Compare), its links in red.
+let tools3d = null;
+function tools() {
+  const host = $('simulationViewport');
+  if (!tools3d && host) {
+    tools3d = new Tools({
+      what: 'the file in 3D',
+      check: async (phase, progress) => {
+        const which = sim.which || 'raw';
+        const r = await checkJob(post, unitUrl(unit.key, 'collisions'), { which, phase, task: TASKS[currentTask]?.label || null }, progress);
+        return { result: r, spans: spansOf(r) };
+      },
+      seek: (t) => scrub(pipeStep === REVIEW ? 'review' : 'compare', t),
+      changed: (phase) => { if (unit) scene(phase || unit.phase, undefined, sim.place || null).catch(() => {}); },
+    });
+  }
+  if (tools3d && host) tools3d.mount(host);
+  return tools3d;
+}
+
 async function loadSimulation(which) {
   const host = $('simulationViewport');
   if (!host || !unit) return;
+  const t3 = tools();
+  const whose = ctx.tuneKey ? "the merge's" : "the region's";
   if (elsewhere()) { invalidate(); return; }              // the Viewer, the full sequence or a picture has the 3D: later
   if (!unit.active || (which === 'candidate' && !fresh())) {
     unload(Object.assign(new Error(unit.active ? 'Generate first: the processed file is played once it is made.' : 'This region has no recording yet.'),
       { hint: unit.active ? 'Confirm & Generate in step 5.' : 'Record it, or use an existing or loaded file.', key: unit.key }));
-    await showStanding(host, unit).catch((err) => say3d(host, `The 3D view could not start: ${say(err)}`, err));
+    t3.load(`${unit.key}|standing`, { phase: unit.phase, text: whose, enabled: false });
+    await showStanding(host, unit, undefined, t3.phase).catch((err) => say3d(host, `The 3D view could not start: ${say(err)}`, err));
     return;
   }
   const progress = which === 'candidate' ? unit.candidate_extra && unit.candidate_extra.progress : null;
   if (!host.querySelector('canvas')) say3d(host, 'Loading the 3D view…');   // the first time: the robot's meshes come first
   const kind = pipeStep === REVIEW ? 'review' : 'compare', at = pb.at[kind];   // loading rewinds the 3D: the view keeps its moment
+  t3.load(fileKey(unit, which), { phase: unit.phase, text: whose });
   try {
-    if (!(await showFile(host, unit, which, progress))) return;     // another file was asked for meanwhile
+    if (!(await showFile(host, unit, which, progress, undefined, t3.phase))) return;     // another file was asked for meanwhile
+    onMoment((t) => t3.at(t == null ? -1 : t));
+    setTotals(kind);
     window.resetSimulationPlayback(false);
     pb.at[kind] = at;
     seekTo(at);

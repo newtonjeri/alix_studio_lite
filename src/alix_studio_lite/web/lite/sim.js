@@ -22,7 +22,10 @@ export const sim = { key: null, which: null, file: null, arm: null, lines: 0, tl
 let preRaf = 0, playRaf = 0;
 
 async function ensure() {
-  if (!viewer) viewer = createViewer();
+  if (!viewer) {
+    viewer = createViewer();
+    viewer.onPlace = () => { if (robot) robot.highlight([]); };   // another view: no link stays red from the last one
+  }
   if (!robotP) {
     robotP = loadRobot().then(async (r) => { robot = r; await viewer.add(r.group); return r; });
     robotP.catch(() => { robotP = null; });          // tried again next time (after a new log-in, say)
@@ -36,6 +39,9 @@ export async function ensure3D() {
   await ensure();
   return { viewer, robot };
 }
+
+// The 3D view and robot when a view has loaded them, else null (never loads them: view3d.js).
+export const loaded3D = () => (viewer && robot ? { viewer, robot } : null);
 
 // The project's room and a task's UGV placement as the scene shows them (server/placement.py), read
 // once per project and task until Prepare changes them ('lite:placement').
@@ -75,6 +81,9 @@ function fileOf(unit, which) {
     which === 'version' ? [ver.version, ver.sha256] : null]);
 }
 
+// What a step's file in 3D is made from, at a task's placement (a view's tools check that file).
+export const fileKey = (unit, which, task = TASKS[currentTask]?.label) => `${fileOf(unit, which)}|${task || ''}`;
+
 // Forgets the loaded file: nothing plays until the next one loads. `why`: the refusal to show.
 export function unload(why = null) {
   sim.token++;
@@ -86,7 +95,7 @@ export function unload(why = null) {
 // Loads unit `key`'s execution timeline (`which`: raw | candidate | version) into `host`, at its
 // start: the robot standing, before the pole moves. Resolves true when shown, false when a newer
 // request replaced it; throws the server's refusal (wrong arm, no stage), and then nothing plays.
-export async function showFile(host, unit, which, progress = null, task = TASKS[currentTask]?.label) {
+export async function showFile(host, unit, which, progress = null, task = TASKS[currentTask]?.label, phase = null) {
   const token = ++sim.token;
   if (sim.abort) sim.abort();                             // nothing of the previous file keeps playing
   host.classList.add('lite-3d');
@@ -94,7 +103,7 @@ export async function showFile(host, unit, which, progress = null, task = TASKS[
   await ensure();
   await viewer.attach(host);
   if (token !== sim.token) return false;
-  const file = fileOf(unit, which) + `|${task || ''}`;      // a region in two tasks plays at each task's placement
+  const file = fileKey(unit, which, task);                 // a region in two tasks plays at each task's placement
   if (sim.key !== unit.key || sim.file !== file || sim.stale) {
     let r;
     try {
@@ -108,7 +117,7 @@ export async function showFile(host, unit, which, progress = null, task = TASKS[
     sim.tl = robot.loadTimeline(unit.arm, r);
     Object.assign(sim, { key: unit.key, which, file, arm: unit.arm, lines: r.lines, stale: false, blocked: null, place: r.scene || null });
   }
-  await scene(unit.phase, undefined, sim.place || null);   // where its recording was taught: the room, the UGV's placement
+  await scene(phase || unit.phase, undefined, sim.place || null);   // where its recording was taught: the room, the UGV's placement
   if (token !== sim.token) return false;
   sim.progress = progress;
   rewind();
@@ -126,7 +135,7 @@ export async function showFile(host, unit, which, progress = null, task = TASKS[
 
 // Nothing to play (no recording yet, or the tuning still running): the pane shows the scene, the
 // robot standing in the region's toilet state, instead of the designer's picture. No file loads.
-export async function showStanding(host, unit, note = 'No recording yet: the arm stands. Record the region, or use an existing or loaded file.') {
+export async function showStanding(host, unit, note = 'No recording yet: the arm stands. Record the region, or use an existing or loaded file.', phase = null) {
   const token = ++sim.token;                              // the scene changes: whoever set it before sets it again
   host.classList.add('lite-3d');
   host.dataset.lite3d = 'loading';
@@ -134,7 +143,7 @@ export async function showStanding(host, unit, note = 'No recording yet: the arm
   if (token !== sim.token) return false;
   await viewer.attach(host);
   const place = (await placementOf(TASKS[currentTask]?.label).catch(() => null))?.scene || null;
-  await scene(unit.phase, undefined, place);
+  await scene(phase || unit.phase, undefined, place);
   if (token !== sim.token) return false;
   robot.home();
   viewer.dirty = true;
@@ -148,6 +157,11 @@ export async function showStanding(host, unit, note = 'No recording yet: the arm
   }
   return true;
 }
+
+// The view showing the file (Tune, Save & Review, the transition window) is told each moment shown:
+// the trajectory's time (s), or null while the arm stages (view3d.js colours the links in collision).
+let momentTo = null;
+export function onMoment(fn) { momentTo = fn; }
 
 export function invalidate() { sim.stale = true; }
 document.addEventListener('lite:speed', invalidate);      // a move to the start takes another time at the new speed
@@ -188,13 +202,16 @@ export function rewind() {
   if (sim.abort) sim.abort();
   sim.staged = false;
   if (robot && sim.tl) { robot.showTime(0, sim.arm); viewer.dirty = true; }
+  if (momentTo) momentTo(null);
 }
 
 // Line i (0-based) of the trajectory, after the staging.
 export function showLine(i) {
   if (!robot || !sim.tl) return;
-  robot.showTime(sim.tl.traj_t0 + Math.max(0, Math.min(sim.lines - 1, i)) * CYCLE_S, sim.arm);
+  const k = Math.max(0, Math.min(sim.lines - 1, i));
+  robot.showTime(sim.tl.traj_t0 + k * CYCLE_S, sim.arm);
   viewer.dirty = true;
+  if (momentTo) momentTo(k * CYCLE_S);
 }
 
 export const duration = () => (sim.lines > 1 ? (sim.lines - 1) * CYCLE_S : 0);
@@ -212,6 +229,7 @@ export function preRoll(sayLine) {
       const t = Math.min(end, (performance.now() - t0) / 1000);
       robot.showTime(t, sim.arm);
       viewer.dirty = true;
+      if (momentTo) momentTo(null);
       const ph = sim.tl.phases.find(p => t >= p.t0 && t < p.t1) || sim.tl.phases[sim.tl.phases.length - 1];
       if (ph && ph.text !== shown) { shown = ph.text; sayLine(`Staging · ${ph.text}`); }
       if (t >= end) { sim.staged = true; finish(true); return; }

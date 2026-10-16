@@ -16,6 +16,7 @@ import { ctx, el, jobLine, robotCall, tell, watchJob } from './ctx.js';
 import { borrow, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { saveBlobAs } from './tune.js';
+import { checkJob, spansOf, Tools } from './view3d.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
@@ -23,8 +24,8 @@ const ARM = (s) => s.toUpperCase();
 const KIND = { rec: 'Recording', ver: 'Kept version', merge: 'Merge' };
 const PHASE_WORDS = { lid_closed: 'lid closed', lid_open: 'lid open', seat_open: 'seat open' };
 const st = { left: { items: [], picked: [], merges: [], sel: null, busy: false }, right: { items: [], picked: [], merges: [], sel: null, busy: false } };
-const review = { side: null, file: null, total: 0, token: 0 };
-let panel = null, player = null, built = false;
+const review = { side: null, file: null, phase: null, scene: null, t0: 0, total: 0, token: 0 };
+let panel = null, player = null, built = false, tools = null;
 
 const base = () => `/api/projects/${ctx.pid}`;
 const murl = (side, file, verb) => `${base()}/merges/${side}/${encodeURIComponent(file)}/${verb}`;
@@ -76,20 +77,31 @@ function build() {
       el('div', { id: `liteS1Status_${side}`, class: 'lite-status' })))),
     el('div', { class: 'card lite-s1-sim' },
       el('div', { class: 'lite-section-title' },
-        el('h3', {}, 'Simulation · ', el('span', { id: 'liteS1SimName', text: 'choose a merged file, then Review in 3D' })),
-        el('div', { class: 'lite-rev3d-views', role: 'group', 'aria-label': 'View' },
-          [['default', 'Default'], ['front', 'Front'], ['side', 'Side'], ['top', 'Top']].map(([v, n]) => btn(n, () => setView(v), 'btn light lite-rev3d-view')))),
+        el('h3', {}, 'Simulation · ', el('span', { id: 'liteS1SimName', text: 'choose a merged file, then Review in 3D' }))),
       el('div', { class: 'lite-s1-sim-grid' },
-        el('div', { id: 'liteS1Host', class: 'lite-rev3d-host' }),
+        el('div', { class: 'lite-rev3d-main' }, el('div', { id: 'liteS1Host', class: 'lite-rev3d-host' })),
         el('div', { class: 'lite-rev3d-side' },
           el('div', { class: 'lite-row' }, btn('Play', () => player.play(), 'btn'), btn('Pause', () => player.pause(), 'btn outline'),
             btn('Restart', () => { player.pause(); player.seek(0); }), el('b', { id: 'liteS1Time', class: 'lite-rev3d-time', text: '0.00 s / 0.00 s' })),
-          el('input', { id: 'liteS1Timeline', type: 'range', min: '0', max: '0', step: '5', value: '0', 'aria-label': 'Merge time',
-            oninput: (e) => { player.pause(); player.seek(Number(e.target.value) / 1000); } }),
+          el('div', { id: 'liteS1Track', class: 'lite-rev3d-track' },
+            el('input', { id: 'liteS1Timeline', type: 'range', min: '0', max: '0', step: '5', value: '0', 'aria-label': 'Merge time',
+              oninput: (e) => { player.pause(); player.seek(Number(e.target.value) / 1000); } })),
           el('div', { id: 'liteS1SimNote', class: 'mini-note', text: 'The merged program as the robot runs it: the pole and the hand staged first, '
             + 'the move to its first line, then the file on the 5 ms clock, in the room and at the UGV placement its files were taught at.' }),
           el('div', { id: 'liteS1Phases', class: 'mini-note' })))));
   player = new Player({ onTime: showAt });
+  // the view's tools (view3d.js): the commode's state, the merge's collision check, its links in red
+  tools = new Tools({
+    what: 'the merge',
+    check: async (phase, progress) => {
+      const r = await checkJob(post, murl(review.side, review.file, 'collisions'), { phase }, progress);
+      return { result: r, spans: spansOf(r, review.t0) };
+    },
+    seek: (t) => { player.pause(); player.seek(t); },
+    changed: (phase) => { if (review.side) scene(phase || review.phase, undefined, review.scene).catch(() => {}); },
+  }).mount($('liteS1Host'));
+  tools.track($('liteS1Track'));
+  tools.load(null, { enabled: false, text: "the merge's" });
 }
 
 // ── data
@@ -279,14 +291,12 @@ async function toTune(side) {
 
 // ── the 3D review of a merge
 
-async function setView(name) {
-  try { const { ensure3D } = await import('./sim.js'); const { viewer } = await ensure3D(); viewer.setView(name); } catch (_) { /* no 3D */ }
-}
-
 let three = null;
-async function show3d(side) {
-  const m = selected(side);
+// `again`: the merge reviewed before another view had the 3D, back at the moment it was at.
+async function show3d(side, again = false) {
+  const m = again ? st[side].merges.find(x => x.file === review.file) : selected(side);
   if (!m) return;
+  const at = again ? player.t : 0;
   const my = ++review.token;
   const host = $('liteS1Host');
   $('liteS1SimName').textContent = `${m.name} (${ARM(side)} arm)`;
@@ -297,20 +307,26 @@ async function show3d(side) {
     three.robot.home();
     for (const s of ARMS) if (s !== side) three.robot.clearTrack(s);
     const tl = three.robot.loadTimeline(side, r);
-    await scene(m.phase || 'lid_closed', undefined, r.scene || null);
-    Object.assign(review, { side, file: m.file, total: tl.total_s });
+    Object.assign(review, { side, file: m.file, phase: m.phase || 'lid_closed', scene: r.scene || null, t0: tl.traj_t0, total: tl.total_s });
+    tools.load(`${side}|${m.file}|${m.sha256 || ''}`, { phase: review.phase, text: "the merge's" });
+    await scene(tools.phase || review.phase, undefined, review.scene);
     $('liteS1Timeline').max = String(Math.round(tl.total_s * 1000));
+    tools.setLength(tl.total_s);
     $('liteS1Phases').textContent = (tl.phases || []).map(p => `${fmt(p.t0)}: ${p.text}`).join(' · ')
       + ` · the commode ${PHASE_WORDS[m.phase] || m.phase || 'lid closed'}`;
     player.load(tl.total_s);
-    player.play();
+    if (again) player.seek(Math.min(at, tl.total_s)); else player.play();
   } catch (err) {
     if (my === review.token) { window.toast(`Nothing plays: ${say(err)}`); $('liteS1SimName').textContent = `${m.name}: nothing plays (${say(err)})`; }
   }
 }
 
 function showAt(t) {
-  if (three && review.side) { three.robot.showTime(t, review.side); three.viewer.dirty = true; }
+  if (three && review.side && three.viewer.host === $('liteS1Host')) {      // only while S1 has the 3D
+    three.robot.showTime(t, review.side);
+    three.viewer.dirty = true;
+  }
+  if (tools) tools.at(t);
   const tl = $('liteS1Timeline');
   if (tl && document.activeElement !== tl) tl.value = String(Math.round(t * 1000));
   if ($('liteS1Time')) $('liteS1Time').textContent = `${fmt(t)} / ${fmt(review.total)}`;
@@ -325,13 +341,18 @@ export function openS1(host, opts = {}) {
     shownFor = ctx.pid;
     for (const side of ARMS) Object.assign(st[side], { items: [], picked: [], merges: [], sel: null, busy: false });
     for (const side of ARMS) { const n = $(`liteS1Name_${side}`); if (n) n.value = ''; }
+    Object.assign(review, { side: null, file: null });
+    tools.load(null, { enabled: false, text: "the merge's" });
   }
   if (!ctx.pid) {
     for (const side of ARMS) status(side, 'Open a project first.', 'warn');
     return;
   }
   if (opts.side && opts.file) st[opts.side].sel = opts.file;
-  for (const side of ARMS) load(side);
+  Promise.all(ARMS.map(load)).then(() => {
+    // the merge in review before another view had the 3D comes back with the tab (each view loads when shown)
+    if (review.side && review.file && (!three || three.viewer.host !== $('liteS1Host'))) show3d(review.side, true);
+  });
 }
 
 // Leaving the page or the project: nothing of a merge keeps playing.

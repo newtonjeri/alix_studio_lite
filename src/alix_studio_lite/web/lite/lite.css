@@ -186,7 +186,7 @@ body:has(.operator-login-screen:not(.hidden)) .lite-stop-fixed { display: none; 
 .lite-viewer-3d { flex: 1 0 320px; min-height: 320px; border-radius: 14px; overflow: hidden; background: var(--lite-viewport-bg); }
 .lite-viewer-transport { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .lite-viewer-transport select { min-height: 48px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); }
-.lite-viewer-transport input[type=range] { flex: 1; min-width: 160px; }
+.lite-viewer-transport .lite-rev3d-track { flex: 1; min-width: 160px; margin-top: 0; }
 .lite-viewer-time { font-variant-numeric: tabular-nums; font-weight: 800; min-width: 130px; text-align: right; }
 .lite-viewer-plot-wrap { position: relative; height: 220px; flex: 0 0 220px; border: 1px solid var(--line); border-radius: 12px; }
 .lite-viewer-plot { position: absolute; inset: 0; }
@@ -458,8 +458,6 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-rev3d { margin: 14px 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
 .lite-rev3d[hidden] { display: none; }
 .lite-rev3d .lite-section-title { align-items: center; }
-.lite-rev3d-views { display: flex; gap: 6px; margin-left: auto; }
-.lite-rev3d-view { padding: 7px 11px; }
 .lite-rev3d-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 14px; }
 .lite-rev3d-host { position: relative; min-height: 420px; border-radius: 12px; overflow: hidden; background: var(--lite-viewport-bg); }
 .lite-rev3d-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
@@ -479,6 +477,40 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-dual-range input[type="range"]::-webkit-slider-thumb { pointer-events: auto; }
 .lite-dual-range input[type="range"]::-moz-range-thumb { pointer-events: auto; }
 @media (max-width: 1100px) { .lite-rev3d-grid { grid-template-columns: 1fr; } }
+
+/* Every 3D view's tools (view3d.js), under the view: the commode's state, Check collisions, Prev / Next,
+   what was found, and the links in collision at the moment shown; red marks under the view's timeline. */
+.lite-rev3d-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lite-vtools { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; padding: 10px 12px; border: 1px solid var(--line);
+  border-radius: 12px; background: var(--bg); }
+.lite-rev3d-main > .lite-vtools { margin: 0; }
+.lite-vtools-row { margin-top: 0; align-items: center; flex-wrap: wrap; gap: 8px; }
+.lite-vtools-field { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.lite-vtools-field select { min-height: 36px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); }
+.lite-vtools .btn { padding: 7px 11px; }
+.lite-vtools-state { font-size: 13px; color: var(--muted); }
+.lite-vtools-state.ok { color: var(--green); }
+.lite-vtools-state.warn { color: var(--orange); }
+.lite-vtools-state.err { color: var(--red); }
+.lite-vtools-now { min-height: 1.3em; font-size: 13px; font-weight: 600; color: var(--red); }
+.lite-vtools-marks { position: relative; height: 6px; margin-top: 2px; border-radius: 3px; background: var(--line); }
+.lite-vtools-mark { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--red); }
+html[data-theme="dark"] .lite-vtools-state.ok { color: var(--lite-d-green); }
+html[data-theme="dark"] .lite-vtools-state.warn { color: var(--lite-d-orange); }
+html[data-theme="dark"] .lite-vtools-state.err, html[data-theme="dark"] .lite-vtools-now { color: var(--lite-d-red); }
+
+/* The view cube (three_scene.js), as ALIX Studio's: in the top-right corner of every 3D view, Home View
+   under it; gone while the view says why nothing plays. */
+.lite-cube { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; flex-direction: column; gap: 6px; width: 120px; }
+.lite-cube[hidden], .lite-3d:has(> .lite-3d-msg) > .lite-cube { display: none; }
+.lite-cube-hit { width: 120px; height: 120px; cursor: grab; touch-action: none; }
+.lite-cube-hit.dragging { cursor: grabbing; }
+.lite-cube-home { padding: 5px 0; font-size: 12px; font-weight: 600; color: var(--vp-cube-text); background: var(--vp-cube-face);
+  border: 1px solid var(--vp-cube-edge); border-radius: 8px; cursor: pointer; }
+.lite-cube-home:hover, .lite-cube-home:focus-visible { filter: brightness(1.3); }
+.lite-transition-track { margin: 0 0 6px; }
+.lite-region-phase { max-width: 520px; margin-top: 10px; }
+.lite-region-phase[hidden] { display: none; }
 
 /* Arm Drag Mode and Normal Mode beside STOP BOTH, and the lock over the page while an arm is in it
    (recovery.js; the owner, 16 Oct): only Normal Mode and STOP BOTH stay above it */
