@@ -271,6 +271,16 @@ def unit_view(app, units: LiteUnits, key: str) -> dict:
     return u
 
 
+@route("POST", U + "/phase")
+def post_phase(app, q, body, m):
+    """The commode's state the region is taught and run in (Prepare; the owner, 16 Oct): lid_closed,
+    lid_open or seat_open. Its 3D views start there and its collision checks use it."""
+    units, key = units_of(app, m.group(1)), m.group(2)
+    _region(units, key)
+    units.set_phase(key, str(body.get("phase") or ""))
+    return unit_view(app, units, key)
+
+
 @route("POST", U + "/version")
 def post_version(app, q, body, m):
     """The kept version a region runs (Real Test, the full sequence): ``{version}``."""
@@ -436,47 +446,82 @@ def trim_recording(app, q, body, m):
 _COLLISIONS: dict = {}                  # a check's result, by what it was made from (file, stage, room, state)
 
 
-@route("POST", U + "/collisions")
-def post_collisions(app, q, body, m):
-    """Save & Review's collision check (feedback v5, slide 5) of one of the step's recordings (``file``,
-    else the active one): every 5 ms line against the walls measured in Prepare, the commode in the
-    region's lid and seat state and the other arm, standing (collision_check.py). A job, in the worker
-    process; the same file, stage, room, placement and state give the result kept."""
+def _phase_asked(body: dict, default: str) -> str:
+    """A 3D view's commode state (its selector, the owner, 16 Oct: an override in the view only), else the
+    region's own."""
+    from .lite_units import PHASES
+
+    asked = str(body.get("phase") or "")
+    if asked and asked not in PHASES:
+        raise UserError("The commode's state is lid closed, lid open or seat open.")
+    return asked or default
+
+
+def collision_job(app, units, *, title: str, path, side: str, stage, scene: dict, phase: str, sha: str, extra: dict,
+                  unit: str | None = None):
+    """One trajectory file checked for collisions on its arm (collision_check.check), on demand: every 5 ms
+    line, against the walls (Prepare's room, else ALIX's cubicle chosen), the commode in ``phase`` and the
+    other arm standing; with the robot's colliding links at every colliding line, for the 3D. A job in the
+    worker process; the same file, stage, room, placement and state give the result kept."""
     from . import collision_check
     from .routes_robot import _payload
 
-    units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
-    recs = units.recordings(key)
-    cur = units.current_recording(key)
-    f = str(body.get("file") or "") or (cur.name if cur else "")
-    rec = next((r for r in recs if r["file"] == f), None)
-    if rec is None:
-        raise UserError("There is no recording to check yet.", "Record the region, or load a file.")
-    if rec["taught_arm"] != u["arm"] or not rec["stage"]:
-        raise UserError(f"{rec['name']} must have its arm and its pole and hand known to be checked.", code="stage")
-    sc = placement.scene(units.fixture, placement.load(units)["room"], rec.get("placement") or placement.for_task(units, body.get("task")))
-    phase = units.units[key].get("phase") or "lid_closed"
     cub = int(app.ui.get("cubicle_mm", 1400))
-    stage = dict(pole_mm=rec["stage"]["pole_mm"], hand=rec["stage"]["hand"])
-    made_of = json.dumps([rec["sha256"], stage, sc.get("walls"), sc.get("front_x"), sc.get("offset_m"), phase, cub,
-                          units.fixture], sort_keys=True)
+    st = dict(pole_mm=stage["pole_mm"], hand=stage["hand"])
+    made_of = json.dumps([sha, st, scene.get("walls"), scene.get("front_x"), scene.get("offset_m"), phase, cub, units.fixture,
+                          side], sort_keys=True)
     home = dict(_payload(app)["home"])
 
     def work(job):
         out = _COLLISIONS.get(made_of)
         if out is None:
-            job.progress(f"Checking {rec['lines']:,} lines of {rec['name']} for collisions", 0, 1)
-            fut = workers.pool().submit(collision_check.check, rec["path"], u["arm"], stage, home, sc, units.fixture, phase, cub)
+            job.progress(title, 0, 1)
+            fut = workers.pool().submit(collision_check.check, str(path), side, st, home, scene, units.fixture, phase, cub)
             while not fut.done():
                 job.sleep(0.2)
             out = fut.result()
             if len(_COLLISIONS) > 64:
                 _COLLISIONS.pop(next(iter(_COLLISIONS)))
             _COLLISIONS[made_of] = out
-        return dict(out, file=rec["file"], name=rec["name"], scene_from="the recording" if rec.get("placement") else "the task")
+        return dict(out, **extra)
 
-    return app.jobs.start("collisions", f"Collision check: {rec['name']}", work, unit=key).view()
+    return app.jobs.start("collisions", title, work, unit=unit).view()
+
+
+@route("POST", U + "/collisions")
+def post_collisions(app, q, body, m):
+    """The collision check of a step's trajectory, on demand (the owner, 16 Oct: "a button ... on every
+    trajectory, the raw, and the optimized"): ``which`` raw (one of its recordings: ``file``, else the
+    active one), candidate (Tune's processed file), version, version:vNNN or transition; ``phase``: the
+    view's commode state, else the region's."""
+    units, key = units_of(app, m.group(1)), m.group(2)
+    u = _unit(units, key)
+    which = str(body.get("which") or "raw")
+    if which == "raw":
+        recs = units.recordings(key)
+        cur = units.current_recording(key)
+        f = str(body.get("file") or "") or (cur.name if cur else "")
+        rec = next((r for r in recs if r["file"] == f), None)
+        if rec is None:
+            raise UserError("There is no recording to check yet.", "Record the region, or load a file.")
+        if rec["taught_arm"] != u["arm"] or not rec["stage"]:
+            raise UserError(f"{rec['name']} must have its arm and its pole and hand known to be checked.", code="stage")
+        path, name, stage, sha, lines = rec["path"], rec["name"], rec["stage"], rec["sha256"], rec["lines"]
+        kept = rec.get("placement")
+        sc = placement.scene(units.fixture, placement.load(units)["room"], kept or placement.for_task(units, body.get("task")))
+        extra = dict(file=rec["file"], name=name, which=which, scene_from="the recording" if kept else "the task")
+    else:
+        from ..motion import track
+
+        info = identity(units, key, which)                 # the file a run would use, its arm and stage known
+        path, name, stage = info["path"], info["name"], info["stage"].as_dict()
+        sha = track.sha256_file(Path(path))
+        lines = len(Path(path).read_bytes().splitlines())
+        sc = scene_of(units, key, which, body.get("task"))
+        extra = dict(name=name, which=which, scene_from=sc.get("from"))
+    phase = _phase_asked(body, units.phase_of(key))
+    return collision_job(app, units, title=f"Checking {int(lines or 0):,} lines of {name} for collisions", path=path, side=u["arm"],
+                         stage=stage, scene=sc, phase=phase, sha=sha, extra=extra, unit=key)
 
 
 @route("POST", U + r"/recordings/([A-Za-z0-9_.\-]+)/hand")
@@ -886,7 +931,7 @@ def _kept_to_s1(units: LiteUnits, key: str, renamed: bool = False) -> dict:
         src = u["merge"]
         name = ver.get("name") or f"{Path(src['name']).stem}_tuned.txt"
         out = merges.save(units, u["arm"], name, [dict(name=name, md=track.read_md(Path(ver["path"])))],
-                          staging.stage_from(ver.get("stage")), placement=src.get("placement"), phase=u.get("phase"),
+                          staging.stage_from(ver.get("stage")), placement=src.get("placement"), phase=units.phase_of(key),
                           sources=[dict(ref=f"tune:{key}/{ver['version']}", name=name, sha256=ver.get("sha256"))],
                           made_from=dict(merge=src["name"], file=src["file"], version=ver["version"]))
         extra["s1_merge"] = out["file"]
@@ -1305,6 +1350,22 @@ def post_merge_tune(app, q, body, m):
         raise UserError(f"The pole height and hand pose of {mm['name']} are not known.", "Merge it again.", code="stage")
     key = units.tune_unit_for(mm)
     return unit_view(app, units, key)
+
+
+@route("POST", M + "/collisions")
+def post_merge_collisions(app, q, body, m):
+    """S1's collision check of a merge, on demand: at the placement and in the state its files were
+    taught at (``phase``: the view's own choice)."""
+    units, side = units_of(app, m.group(1)), m.group(2)
+    mm = merges.checked(units, side, m.group(3))
+    if not staging.stage_from(mm.get("stage")):
+        raise UserError(f"The pole height and hand pose of {mm['name']} are not known.", code="stage")
+    kept = mm.get("placement")
+    sc = placement.scene(units.fixture, placement.load(units)["room"], kept)
+    phase = _phase_asked(body, mm.get("phase") or "lid_closed")
+    return collision_job(app, units, title=f"Checking {int(mm['lines']):,} lines of {mm['name']} for collisions", path=mm["path"],
+                         side=side, stage=mm["stage"], scene=sc, phase=phase, sha=mm["sha256"],
+                         extra=dict(name=mm["name"], which="merge", scene_from="the merge" if kept else None))
 
 
 @route("POST", M + "/name")

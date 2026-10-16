@@ -78,6 +78,79 @@ def get_timeline(app, q, body, m):
                                       rating_deg_s=load_limits(side).rating_deg_s)
 
 
+@route("POST", "/api/library/collisions")
+def post_pair_collisions(app, q, body, m):
+    """The Trajectory Viewer's collision check, on demand (the owner, 16 Oct): its LEFT and RIGHT files
+    (either may be left out) as it replays them, each arm staging its pole and hand, the arm ready first
+    waiting at its start, both trajectories starting on one tick; every 20 ms, each arm against the walls
+    and the commode in ``phase`` (the viewer's choice), and the two arms against each other
+    (collision_check.check_states). ``pid``: the open project, whose room is used (else ALIX's cubicle).
+    Times are on the viewer's clock (0 = both arms standing)."""
+    import numpy as np
+
+    from ..motion import track
+    from ..motion.limits import load_limits
+    from . import collision_check, placement, workflow
+    from .lite_units import PHASES
+    from .routes_robot import _payload
+
+    session(app)
+    metas = {s: app.library.require_ready(str(body[s]), s) for s in ("left", "right") if body.get(s)}
+    if not metas:
+        raise UserError("Load a LEFT or a RIGHT file first.")
+    phase = str(body.get("phase") or "lid_closed")
+    if phase not in PHASES:
+        raise UserError("The commode's state is lid closed, lid open or seat open.")
+    home = dict(_payload(app)["home"])
+    fid, room = "commode_c", None
+    if body.get("pid"):
+        units = units_of(app, str(body["pid"]))
+        fid, room = units.fixture, placement.load(units)["room"]
+    clocks = {}
+    for side, meta in metas.items():
+        md = track.read_md(Path(meta["path"]))
+        st = staging.stage_from(meta["stage"])
+        clocks[side] = (meta, md, st, staging.execution_times(side, md.astype(float) / 1000.0, st, home, load_limits(side).rating_deg_s))
+    T = max(c[3]["traj_t0"] for c in clocks.values())          # both trajectories start here
+    acts, starts, total = {}, {}, 0.0
+    for side, (meta, md, st, c) in clocks.items():
+        arm0 = [float(v) for v in c["arm0"]]
+        first, last = (md[0] / 1000.0).tolist(), (md[-1] / 1000.0).tolist()
+        pole0, hand0, hand1, P = float(c["pole0"]), list(c["hand0"]), list(c["hand1"]), float(st.pole_mm)
+        t1, t2, t3 = c["t_pole"], c["t_pole"] + c["t_hand"], c["traj_t0"]
+        a = [dict(kind="pole", t0=0.0, t1=t1, pole0=pole0, pole1=P, hand0=hand0, hand1=hand0, q0=arm0, q1=arm0),
+             dict(kind="hand", t0=t1, t1=t2, pole0=P, pole1=P, hand0=hand0, hand1=hand1, q0=arm0, q1=arm0),
+             dict(kind="global", drawn=True, move_s=c["t_move"], t0=t2, t1=t3, pole0=P, pole1=P, hand0=hand1, hand1=hand1, q0=arm0, q1=first)]
+        if T > t3:
+            a.append(dict(kind="wait", t0=t3, t1=T, pole0=P, pole1=P, hand0=hand1, hand1=hand1, q0=first, q1=first))
+        a.append(dict(kind="program", drawn=True, file=meta["path"], t0=T, t1=T + c["traj_s"], traj_t0=T, pole0=P, pole1=P,
+                      hand0=hand1, hand1=hand1, q0=first, q1=last))
+        acts[side], starts[side] = a, dict(pole_mm=pole0, hand=hand0, q_deg=arm0)
+        total = max(total, T + c["traj_s"])
+    times = np.arange(0.0, total + 1e-9, workflow.SAMPLE_S).tolist()
+    md_of = workflow._md_reader()
+    arms = {}
+    for side in acts:
+        pole, hand, qq = workflow.sample(acts[side], times, starts[side], md_of)
+        arms[side] = dict(pole=pole.tolist(), hand=hand.tolist(), q=qq.tolist())
+    base = dict(home)
+    for side in acts:
+        base = staging.start_values(side, base, starts[side])
+    scene = placement.scene(fid, room, None)
+    cub = int(app.ui.get("cubicle_mm", 1400))
+    names = " and ".join(f"{s.upper()} {clocks[s][0]['name']}" for s in clocks)
+
+    def work(job):
+        job.progress(f"Checking {names}: {len(times):,} moments", 0, 1)
+        fut = workers.pool().submit(collision_check.check_states, times, arms, base, scene, fid, [phase] * len(times), cub)
+        while not fut.done():
+            job.sleep(0.2)
+        return dict(fut.result(), start_s=round(T, 4), total_s=round(total, 4), phase=phase,
+                    files={s: clocks[s][0]["name"] for s in clocks})
+
+    return app.jobs.start("collisions", f"Collision check: {names}", work).view()
+
+
 @route("GET", L + "/checks")
 def get_checks(app, q, body, m):
     session(app)

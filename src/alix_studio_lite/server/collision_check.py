@@ -35,6 +35,9 @@ import numpy as np
 
 HAND_PREFIX = {"left": "ILH_", "right": "IRH_"}
 CONTACT_DEPTH_MM = 20.0           # ALIX's pad compliance (alix_taskgen.body_collision.PAD_COMPLIANCE_MM)
+LINK_EVERY = 4                    # the colliding links read again every 4th line (20 ms, the 3D's own step) in one collision
+DEPTH_EVERY_S = 0.1               # while the hand stays on the commode its depth is measured every 0.1 s (FCL gathers
+                                  # thousands of contact points for it), at once when a contact starts
 WALL_T_M, WALL_H_M = 0.10, 2.0    # the front wall as a box like the others (placement.WALL_*)
 MAX_EVENTS = 50
 
@@ -147,6 +150,35 @@ def _pairs(arm, other, disabled=frozenset()) -> list[tuple[str, str, float]]:
     return [(a, b, d) for (a, b), d in out.items()]
 
 
+def _names(arm, other, disabled=frozenset()) -> set:
+    """The link names of ``arm`` touching ``other``'s objects, with the other's (a link of the other
+    arm, or a wall's or the commode's name): names only, no contact data, so cheap enough for every
+    colliding line (the 3D turns those links red at that moment)."""
+    hit, pairs = arm.mgr.in_collision_other(other, return_names=True)
+    out = set()
+    if not hit:
+        return out
+    mine = {name for name, _, _ in arm.entries}
+    for a, b in pairs:
+        a, b = (a, b) if a in mine else (b, a)
+        a, b = a.split("#", 1)[0], b.split("#", 1)[0]
+        if frozenset((a, b)) not in disabled:
+            out.add((a, b))
+    return out
+
+
+def _spans(hits: list) -> list:
+    """[(index, links)] of the colliding moments as runs [first, last, sorted links], one per run of
+    consecutive moments with the same links."""
+    out = []
+    for i, links in hits:
+        if out and out[-1][1] == i - 1 and out[-1][2] == links:
+            out[-1][1] = i
+        else:
+            out.append([i, i, links])
+    return [[a, b, sorted(links)] for a, b, links in out]
+
+
 def check(md_path: str, side: str, stage: dict, home: dict, scene: dict, fid: str, phase: str = "lid_closed",
           cubicle_mm: int = 1400) -> dict:
     """Every line of a recording (``md_path``) against the walls, the commode and the other arm,
@@ -174,32 +206,57 @@ def check(md_path: str, side: str, stage: dict, home: dict, scene: dict, fid: st
     q = np.radians(np.asarray(md, dtype=float) / 1000.0)
     contact = dict(lines=0, first_line=None, deepest_mm=0.0)
     hits = []                                  # (line, frozenset of (what, object))
+    lit = []                                   # (line, frozenset of the robot's links colliding then)
+    named = (None, -LINK_EVERY, frozenset())   # (what collided, at which line its links were read, the links)
+    depth_at = {}                              # commode part -> (last line in contact, line measured, depth)
+    DEPTH_LINES = max(1, int(round(DEPTH_EVERY_S / 0.005)))
     for i in range(q.shape[0]):
         values.update(zip(joints, q[i].tolist()))
         tf = model.link_world_transforms(values)
         structure.pose(tf)
         hand.pose(tf)
-        found = set()
-        for kind, name, mgr in objects:          # yes / no first: the details only where an event starts
+        found, hit_with = set(), []              # yes / no first: the names only where something collides
+        for kind, name, mgr in objects:
             if kind == "wall":
                 if structure.mgr.in_collision_other(mgr) or hand.mgr.in_collision_other(mgr):
                     found.add(("wall", name))
+                    hit_with += [(structure, mgr), (hand, mgr)]
                 continue
             if structure.mgr.in_collision_other(mgr):
                 found.add(("commode", name))
+                hit_with.append((structure, mgr))
             if hand.mgr.in_collision_other(mgr):  # cleaning touches the commode: deeper than the pad's 20 mm is reported
-                depth = max([d for _, _, d in _pairs(hand, mgr)] or [0.0])
+                was = depth_at.get(name)
+                if was is None or was[0] != i - 1 or i - was[1] >= DEPTH_LINES:
+                    depth = max([d for _, _, d in _pairs(hand, mgr)] or [0.0])
+                    depth_at[name] = (i, i, depth)
+                else:
+                    depth = was[2]
+                    depth_at[name] = (i, was[1], depth)
                 contact["lines"] += 1
                 contact["first_line"] = contact["first_line"] or i + 1
                 contact["deepest_mm"] = max(contact["deepest_mm"], depth)
                 if depth > CONTACT_DEPTH_MM:
                     found.add(("hand deep in the commode", name))
+                    hit_with.append((hand, mgr))
+        touching = set()
         if structure.mgr.in_collision_other(partner.mgr) or hand.mgr.in_collision_other(partner.mgr):
             everything.pose(tf)
-            if _pairs(everything, partner.mgr, disabled):
+            touching = _names(everything, partner.mgr, disabled)
+            if touching:
                 found.add(("other arm", f"the {other.upper()} arm"))
         if found:
-            hits.append((i + 1, frozenset(found)))
+            found = frozenset(found)
+            if named[0] == found and i - named[1] < LINK_EVERY:
+                links = named[2]                 # the same collision a moment later: its links as read then
+            else:
+                links = set()
+                for arm, mgr in hit_with:
+                    links |= {a for a, _ in _names(arm, mgr)}
+                links = frozenset(links | {a for a, _ in touching} | {b for _, b in touching})
+                named = (found, i, links)
+            hits.append((i + 1, found))
+            lit.append((i + 1, links))
     events = []
     for line, found in hits:
         if events and events[-1]["last_line"] == line - 1 and events[-1]["_found"] == found:
@@ -223,7 +280,7 @@ def check(md_path: str, side: str, stage: dict, home: dict, scene: dict, fid: st
     for e in events[MAX_EVENTS:]:
         e.pop("_found", None)
     return dict(ok=not events, lines=int(q.shape[0]), first=events[0] if events else None, events=events[:MAX_EVENTS],
-                more=max(0, len(events) - MAX_EVENTS), colliding_lines=len(hits),
+                more=max(0, len(events) - MAX_EVENTS), colliding_lines=len(hits), spans=_spans(lit), phase=phase,
                 contact=dict(contact, deepest_mm=round(contact["deepest_mm"], 1)),
                 checked=dict(walls=made, commode=phase, other_arm=f"the {other.upper()} arm, standing",
                              links=everything.link_count, contact_depth_mm=CONTACT_DEPTH_MM),
@@ -269,16 +326,19 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
             v.update(zip(joints[s], d["q"][i].tolist()))
         return v
 
-    hits, last_key, last_found = [], None, frozenset()
+    hits, lit, last_key, last_found, last_links = [], [], None, frozenset(), frozenset()
+    depth_at = {}                              # (arm, commode part) -> (last sample in contact, sample measured, depth)
     for i in range(n):
         key = (phases[i], tuple(bool(data[s]["known"][i]) for s in sides),
                tuple(np.round(np.concatenate([np.concatenate([[data[s]["pole"][i]], data[s]["hand"][i], data[s]["q"][i]])
                                               for s in sides]), 6)))
         if key == last_key:                    # nothing moved since the sample before: the same answer
-            found = last_found
+            found, links = last_found, last_links
         else:
             tf = model.link_world_transforms(values_at(i))
-            found = set()
+            found, links = set(), set()
+            for s in ("left", "right"):
+                whole[s].pose(tf)
             for s in sides:
                 if not data[s]["known"][i]:                # where the arm is is not known (a step not drawn)
                     continue
@@ -289,27 +349,37 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
                     if kind == "wall":
                         if structure.mgr.in_collision_other(mgr) or hand.mgr.in_collision_other(mgr):
                             found.add((s, "wall", name))
+                            links |= {a for a, _ in _names(whole[s], mgr)}
                         continue
                     if structure.mgr.in_collision_other(mgr):
                         found.add((s, "commode", name))
+                        links |= {a for a, _ in _names(structure, mgr)}
                     if hand.mgr.in_collision_other(mgr):
-                        depth = max([d for _, _, d in _pairs(hand, mgr)] or [0.0])
+                        was = depth_at.get((s, name))
+                        if was is None or was[0] != i - 1 or times[i] - times[was[1]] >= DEPTH_EVERY_S - 1e-9:
+                            depth = max([d for _, _, d in _pairs(hand, mgr)] or [0.0])
+                            depth_at[(s, name)] = (i, i, depth)
+                        else:
+                            depth = was[2]
+                            depth_at[(s, name)] = (i, was[1], depth)
                         c = contact[s]
                         c["samples"] += 1
                         c["first_t"] = c["first_t"] if c["first_t"] is not None else times[i]
                         c["deepest_mm"] = max(c["deepest_mm"], depth)
                         if depth > CONTACT_DEPTH_MM:
                             found.add((s, "hand deep in the commode", name))
-            for s in ("left", "right"):
-                whole[s].pose(tf)
+                            links |= {a for a, _ in _names(hand, mgr)}
             both_known = all(data[s]["known"][i] for s in sides)
-            if both_known and whole["left"].mgr.in_collision_other(whole["right"].mgr) \
-                    and _pairs(whole["left"], whole["right"].mgr, disabled):
-                found.add(("both", "the two arms", "LEFT and RIGHT arms"))
-            found = frozenset(found)
-            last_key, last_found = key, found
+            if both_known and whole["left"].mgr.in_collision_other(whole["right"].mgr):
+                touching = _names(whole["left"], whole["right"].mgr, disabled)
+                if touching:
+                    found.add(("both", "the two arms", "LEFT and RIGHT arms"))
+                    links |= {a for a, _ in touching} | {b for _, b in touching}
+            found, links = frozenset(found), frozenset(links)
+            last_key, last_found, last_links = key, found, links
         if found:
             hits.append((i, found))
+            lit.append((i, links))
         if progress is not None and i % 500 == 0:
             progress(i, n)
     events = []
@@ -336,8 +406,9 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
                 pairs.append(dict(side=s, what=what, link=link, object=name, depth_mm=round(depth, 1)))
         out.append(dict(first_t=round(times[e["_first"]], 3), last_t=round(times[e["_last"]], 3),
                         sides=sorted({s for s, _, _ in e["_found"]}), what=sorted({w for _, w, _ in e["_found"]}), pairs=pairs))
+    spans = [[round(times[a], 3), round(times[b], 3), links] for a, b, links in _spans(lit)]
     return dict(ok=not events, samples=n, first=out[0] if out else None, events=out, more=max(0, len(events) - MAX_EVENTS),
-                colliding_samples=len(hits),
+                colliding_samples=len(hits), spans=spans, dt=round(times[1] - times[0], 4) if n > 1 else 0.0,
                 contact={s: dict(c, deepest_mm=round(c["deepest_mm"], 1)) for s, c in contact.items()},
                 checked=dict(walls=made, arms=sides, two_arms=True, contact_depth_mm=CONTACT_DEPTH_MM),
                 seconds=round(time.monotonic() - t0, 2))

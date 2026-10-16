@@ -195,7 +195,7 @@ def sources(units, side: str) -> list[dict]:
         by_file = {r["file"]: r for r in recs}
         for r in recs:
             out.append(_item(units, side, "rec", key, r["file"], display_name(u), r["name"], r.get("lines"), r.get("taught_arm"),
-                             r.get("stage"), r.get("placement"), u.get("phase"), r.get("sha256"), r.get("taken")))
+                             r.get("stage"), r.get("placement"), units.phase_of(key), r.get("sha256"), r.get("taken")))
         for v in units.versions(key):
             extra_p = Path(v["path"]).with_name(Path(v["path"]).stem + ".extra.json")
             try:
@@ -204,7 +204,7 @@ def sources(units, side: str) -> list[dict]:
                 extra = {}
             behind = by_file.get(extra.get("raw_file")) or {}
             out.append(_item(units, side, "ver", key, v["version"], display_name(u), v.get("name") or f"{display_name(u)} {v['version']}",
-                             v.get("lines"), v.get("taught_arm"), v.get("stage"), behind.get("placement"), u.get("phase"),
+                             v.get("lines"), v.get("taught_arm"), v.get("stage"), behind.get("placement"), units.phase_of(key),
                              v.get("sha256"), v.get("saved")))
     for m in listing(units, side):
         out.append(_item(units, side, "merge", None, m["file"], "Merges", m["name"], m.get("lines"), m.get("taught_arm"),

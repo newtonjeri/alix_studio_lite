@@ -608,17 +608,17 @@ def _project_files(units, side: str) -> dict:
         recs = units.recordings(key)
         by_file = {r["file"]: r for r in recs}
         for r in recs:
-            add(r.get("sha256"), r["path"], r["name"], r.get("stage"), u.get("phase"), r.get("placement"), display_name(u))
+            add(r.get("sha256"), r["path"], r["name"], r.get("stage"), units.phase_of(key), r.get("placement"), display_name(u))
         for v in units.versions(key):
             try:
                 extra = json.loads(Path(v["path"]).with_name(Path(v["path"]).stem + ".extra.json").read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 extra = {}
-            add(v.get("sha256"), v["path"], v.get("name") or f"{display_name(u)} {v['version']}", v.get("stage"), u.get("phase"),
+            add(v.get("sha256"), v["path"], v.get("name") or f"{display_name(u)} {v['version']}", v.get("stage"), units.phase_of(key),
                 (by_file.get(extra.get("raw_file")) or {}).get("placement"), display_name(u))
         tv = units.transition(key)
         if tv:
-            add(tv.get("sha256"), tv["path"], tv["name"], tv.get("stage"), u.get("phase"), None, display_name(u))
+            add(tv.get("sha256"), tv["path"], tv["name"], tv.get("stage"), units.phase_of(key), None, display_name(u))
     return out
 
 

@@ -75,8 +75,15 @@ def _alix():
     return peripherals, backends
 
 
+_HAND_UNITS = None
+
+
 def hand_units():
-    return _alix()[1]._load_hand_units()
+    """ALIX's hand unit conversions, loaded once (a check reads them for every moment it poses)."""
+    global _HAND_UNITS
+    if _HAND_UNITS is None:
+        _HAND_UNITS = _alix()[1]._load_hand_units()
+    return _HAND_UNITS
 
 
 @dataclass(frozen=True)

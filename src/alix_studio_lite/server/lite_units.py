@@ -43,6 +43,27 @@ LITE_DEFAULTS = dict(DEFAULT_SETTINGS, trim=True, smooth=True, smooth_window=101
 TIME_MODES = ("fastest", "target")
 
 
+PHASES = ("lid_closed", "lid_open", "seat_open")
+
+
+def phase_default(u: dict) -> str:
+    """A region's commode state as attached (the owner, 16 Oct: "every region should have attached
+    commode state"): the catalogue's; for the lid and seat operations, which it leaves without one, the
+    state the robot meets at their start; the glove tasks, lid closed."""
+    if u.get("phase") in PHASES:
+        return u["phase"]
+    name = str(u.get("name") or "").upper()
+    if "OPEN LID" in name:
+        return "lid_closed"
+    if "CLOSE SEAT ONLY" in name:
+        return "seat_open"
+    if "OPEN SEAT" in name:
+        return "lid_open"
+    if "CLOSE SEAT" in name and "LID" in name:
+        return "seat_open"
+    return "lid_closed"
+
+
 class _Units(dict):
     """The catalogue's arm steps by key, and the merges opened in Tune + Simulation (``extra``): a key
     of either resolves, so every unit route works on a merge in Tune, but listing them (the task
@@ -76,6 +97,20 @@ class LiteUnits(Project):
         if key in self.units.extra:
             return self.tune_dir() / key
         return self.root / "trajectories" / self.units[key]["arm"] / key
+
+    # ── the commode's state a region is taught and run in: attached (phase_default), set in Prepare
+    def phase_of(self, key: str) -> str:
+        st = self._unit_state(key).get("phase")
+        return st if st in PHASES else phase_default(self.units[key])
+
+    def set_phase(self, key: str, phase: str) -> str:
+        if phase not in PHASES:
+            raise UserError("The commode's state is lid closed, lid open or seat open.")
+        with self.lock:
+            state = self._unit_state(key)
+            state["phase"] = phase
+            self._write_state(key, state)
+        return phase
 
     # ── a merge opened in Tune + Simulation (feedback v5, slide 9; the owner, 16 Oct: Tune opens the
     # merged file as its source, and what is kept there goes back to S1 as a new merge). It is a unit
@@ -556,7 +591,8 @@ class LiteUnits(Project):
         setup = self.setup(key)
         return dict(key=key, code=u["code"], part=u.get("part"), name=u["name"], display=display_name(u),
                     arm=u["arm"], later=not u.get("first_release", True), type=u.get("type"), kind=u.get("kind"),
-                    phase=u.get("phase"), pole_mm=setup and setup["pole_mm"], hand_preset=u.get("hand_preset"),
+                    phase=self.phase_of(key), phase_attached=phase_default(u), pole_mm=setup and setup["pole_mm"],
+                    hand_preset=u.get("hand_preset"),
                     hand_counts=setup and setup["hand"], setup=setup, target_s=u.get("target_s"),
                     picture=u.get("picture"), status=st["status"], status_label=st["label"],
                     recordings=st["recordings"], version=st["version"], library=self.library_file(key) is not None)
