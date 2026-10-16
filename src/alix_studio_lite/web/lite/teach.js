@@ -17,6 +17,7 @@ import { SOURCE } from './tasks.js';
 
 const $ = (id) => document.getElementById(id);
 const COUNTDOWN_S = 5;         // after START, time to walk to the arm (the owner, 16 Oct)
+let takeOf = null;                 // {pid, key}: the region of the last take the timer shows
 let teaching = null;           // the drag teaching running: {pid, key, arm}, where its take is saved
 let counting = null;           // the countdown's job while it runs
 
@@ -208,14 +209,18 @@ export function installTeach() {
         try { done = await countDown(r.job, arm); } finally { counting = null; }
         if (done.state !== 'done') {                   // cancelled, STOP or the E-stop: it never started
           teaching = null;
+          elapsed = 0;
           $('startTeachBtn').disabled = false;
           $('timer').textContent = '00:00.0';
+          $('timerProgress').style.width = '0%';
           $('timerResult').textContent = `Drag teaching did not start${done.error ? `: ${done.error}` : ''}. Nothing was recorded.`;
           return;
         }
       }
     }
-    pageStart();
+    takeOf = { pid: ctx.pid, key: s ? s.key : null };
+    elapsed = 0;                                       // every take starts at 0.0 (the owner, 16 Oct): the page's
+    pageStart();                                       // START went on from the time a stopped take had left
   };
 
   // STOP DRAG saves the take in the region it was started in, whatever is on screen by then. When
@@ -267,7 +272,9 @@ export function installTeach() {
   // by hand in the tab. Nothing is reset while an arm is being taught or counted down.
   const takeDone = () => { if (!timerInt && !counting && !teaching && elapsed > 0) pageReset(); };
   document.addEventListener('lite:stage', (e) => { if (e.detail !== 'teach') takeDone(); });
-  document.addEventListener('lite:step', takeDone);
+  document.addEventListener('lite:step', () => {          // another task or arm (the same card clicked again is not)
+    if (!takeOf || takeOf.pid !== ctx.pid || takeOf.key !== (step() || {}).key) takeDone();
+  });
   const pageShowView = window.showView;
   window.showView = function showView(v, btn) {
     const out = pageShowView(v, btn);

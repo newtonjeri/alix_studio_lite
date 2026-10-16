@@ -122,6 +122,10 @@ def save(units, side: str, name: str, parts: list[dict], stage: "staging.Stage",
         d.mkdir(parents=True, exist_ok=True)
         stem = re.sub(r"[^A-Za-z0-9_.\-]+", "_", Path(name).stem)[:60] or "merge"
         dst = d / f"{time.strftime('%Y%m%d_%H%M%S')}_{stem}.txt"
+        n = 2
+        while dst.exists():                         # two merges in one second whose names clean to the same stem
+            dst = dst.with_name(f"{time.strftime('%Y%m%d_%H%M%S')}_{stem}_{n}.txt")
+            n += 1
         track.write_md(dst, md)
         n = int(md.shape[0])
         meta = dict(name=name, side=side, taught_arm=side, stage=stage.as_dict(), lines=n, seconds=round((n - 1) * staging.CYCLE_S, 3),

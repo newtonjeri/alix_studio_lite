@@ -116,7 +116,7 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})
     first = call(server, "POST", f"{P}/workflow/run", {"mode": "both"})
     assert first["code"] in ("warnings", "confirm")
-    job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": True})
+    job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     j = wait(server, job)
     assert j["state"] == "done", j
     assert j["extra"]["live"] == {"left": "SEQUENCE COMPLETE", "right": "SEQUENCE COMPLETE"}
@@ -129,7 +129,7 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     assert any("WORKFLOW SPEED RESTORE" in (r["text"] or "") for r in hw if r["verb"] == "runner v14")
 
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps(tail=[{"type": "wait", "seconds": 1}])})     # changed after
-    again = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": True})
+    again = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     assert again["code"] == "simulate" and "its steps" in again["error"]
 
 
@@ -140,8 +140,8 @@ def test_the_lid_checkpoint_asks_and_stop_interrupts_the_runner(server):
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps(lid, tail=[long_wait])})
     plan = call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})
     assert [s["label"] for s in plan["stages"]] == ["LID-PREP-1", "LID-CHECK-1", "TIMELINE-1", ""]
-    simulated(server)
-    job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": True})
+    sim = simulated(server)
+    job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     j = wait(server, job, until=lambda j: j["extra"].get("question"))
     q = j["extra"]["question"]
     assert q["title"] == "MANUAL LID COVER CHECKPOINT" and "Open the toilet lid cover manually" in q["text"]
@@ -149,6 +149,9 @@ def test_the_lid_checkpoint_asks_and_stop_interrupts_the_runner(server):
     call(server, "POST", f"/api/jobs/{job['id']}/answer", {"question": q["id"], "yes": True})
     j = wait(server, job, until=lambda j: "FINAL AUX" in j["extra"]["live"]["left"] and "Wait 60 s" in j["extra"]["live"]["left"])
     assert j["state"] == "running", j
+    m = next(x for x in call(server, "GET", f"{P}/merges")["left"])                 # nothing is sent to an arm that runs
+    busy = call(server, "POST", f"{P}/merges/left/{m['file']}/upload", {"program_id": 72, "confirmed": True, "limits_seen": True})
+    assert busy["code"] == "busy" and "S2 Real Machine" in busy["error"]
     t0 = time.time()
     call(server, "POST", "/api/robots/stop-both", {}, tok=False)
     j = wait(server, job, limit=15)

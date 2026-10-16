@@ -250,7 +250,8 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
     n = len(times)
     sides = [s for s in ("left", "right") if s in arms]
     data = {s: dict(pole=np.asarray(arms[s]["pole"], dtype=float), hand=np.asarray(arms[s]["hand"], dtype=float),
-                    q=np.radians(np.asarray(arms[s]["q"], dtype=float))) for s in sides}
+                    q=np.radians(np.asarray(arms[s]["q"], dtype=float)),
+                    known=np.asarray(arms[s].get("known") or [True] * n, dtype=bool)) for s in sides}
     joints = {s: [f"{staging.SIDE_PREFIX[s]}_joint{i}" for i in range(1, 8)] for s in ("left", "right")}
     parts = {s: (_arm(s, "structure"), _arm(s, "hand")) for s in sides}
     whole = {s: _arm(s) for s in ("left", "right")}
@@ -270,14 +271,17 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
 
     hits, last_key, last_found = [], None, frozenset()
     for i in range(n):
-        key = (phases[i], tuple(np.round(np.concatenate([np.concatenate([[data[s]["pole"][i]], data[s]["hand"][i], data[s]["q"][i]])
-                                                       for s in sides]), 6)))
+        key = (phases[i], tuple(bool(data[s]["known"][i]) for s in sides),
+               tuple(np.round(np.concatenate([np.concatenate([[data[s]["pole"][i]], data[s]["hand"][i], data[s]["q"][i]])
+                                              for s in sides]), 6)))
         if key == last_key:                    # nothing moved since the sample before: the same answer
             found = last_found
         else:
             tf = model.link_world_transforms(values_at(i))
             found = set()
             for s in sides:
+                if not data[s]["known"][i]:                # where the arm is is not known (a step not drawn)
+                    continue
                 structure, hand = parts[s]
                 structure.pose(tf)
                 hand.pose(tf)
@@ -298,7 +302,9 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
                             found.add((s, "hand deep in the commode", name))
             for s in ("left", "right"):
                 whole[s].pose(tf)
-            if whole["left"].mgr.in_collision_other(whole["right"].mgr) and _pairs(whole["left"], whole["right"].mgr, disabled):
+            both_known = all(data[s]["known"][i] for s in sides)
+            if both_known and whole["left"].mgr.in_collision_other(whole["right"].mgr) \
+                    and _pairs(whole["left"], whole["right"].mgr, disabled):
                 found.add(("both", "the two arms", "LEFT and RIGHT arms"))
             found = frozenset(found)
             last_key, last_found = key, found

@@ -9,12 +9,13 @@
 
 import { el } from './ctx.js';
 import { hadIt } from './seq3d.js';
-import { openS1 } from './s1.js';
-import { openS2 } from './s2.js';
+import { openS1, stopS1 } from './s1.js';
+import { openS2, stopS2 } from './s2.js';
 
 const $ = (id) => document.getElementById(id);
 const TABS = [['s1', 'S1', 'Merge & Upload'], ['s2', 'S2', 'Full & Partial Sequence']];
 let tab = 's1';
+let pending = {};                                           // what S1 shows when it opens (a merge back from Tune)
 try { tab = localStorage.getItem('liteSeqTab') === 's2' ? 's2' : 's1'; } catch (_) { /* no storage: S1 */ }
 
 function build() {
@@ -40,6 +41,7 @@ function build() {
 export function open(id, opts = {}) {
   if (!build()) return;
   tab = id === 's2' ? 's2' : 's1';
+  if (tab === 's1') stopS2(); else stopS1();               // the other tab's playback stops with it
   try { localStorage.setItem('liteSeqTab', tab); } catch (_) { /* a convenience only */ }
   for (const [t] of TABS) {
     const on = t === tab;
@@ -55,11 +57,13 @@ export function installFullSeq() {
   const pageShow = window.showView;
   window.showView = function showView(v, btn) {
     pageShow(v, btn);
-    if (v === 'sequence') { open(tab); return; }
+    if (v === 'sequence') { const o = pending; pending = {}; open(tab, o); return; }
+    stopS1();                                              // nothing of S1 or S2 plays on another view
+    stopS2();
     // Back in the region loop after S1 or S2 had the 3D view: Tune or Save & Review loads its file again.
     if (hadIt() && !projectRestoreInProgress && document.querySelector('.view.active')?.id === 'view-teach') {
       document.dispatchEvent(new CustomEvent('lite:viewer-closed'));
     }
   };
-  document.addEventListener('lite:open-s1', (e) => { window.showView('sequence'); open('s1', e.detail || {}); });
+  document.addEventListener('lite:open-s1', (e) => { tab = 's1'; pending = e.detail || {}; window.showView('sequence'); });
 }

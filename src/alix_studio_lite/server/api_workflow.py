@@ -110,7 +110,7 @@ def post_workflow_frames(app, q, body, m):
         stage = int(body.get("stage"))
     except (TypeError, ValueError):
         raise UserError("Say which stage.") from None
-    return workflow.frames(app, units, side, stage)
+    return workflow.frames(app, units, side, stage, str(body.get("hash") or "") or None)
 
 
 @route("POST", W + "/played")

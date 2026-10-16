@@ -122,12 +122,14 @@ function paint(side) {
   const pickedSet = new Set(s.picked);
   body.replaceChildren(...(s.items.length ? s.items.map((it) => {
     const n = s.picked.indexOf(it.ref) + 1;
-    const off = it.why || (!pickedSet.has(it.ref) && it.differs && it.differs.length ? `Differs: ${it.differs.join('; ')}` : '');
+    const differs = it.differs && it.differs.length ? `Differs from the first file: ${it.differs.join('; ')}` : '';
+    const off = it.why || (!pickedSet.has(it.ref) ? differs : '');
+    const clash = pickedSet.has(it.ref) && n > 1 ? differs : '';              // picked, then the order changed
     return el('tr', { class: `${off ? 'lite-off' : ''}${n ? ' lite-picked' : ''}`, title: off || '' },
       el('td', {}, n ? el('button', { class: 'btn outline', type: 'button', text: `Remove (${n})`, onclick: () => unpick(side, it.ref) })
         : el('button', { class: 'btn light', type: 'button', text: 'Add', disabled: !!off, onclick: () => pick(side, it.ref) })),
       el('td', {}, el('b', { text: it.name }), el('div', { class: 'mini-note', text: `${KIND[it.kind]} · ${it.region}` }),
-        off ? el('div', { class: 'lite-warn lite-s1-why', text: off }) : null),
+        off || clash ? el('div', { class: 'lite-warn lite-s1-why', text: off || clash }) : null),
       el('td', { text: fmt(it.seconds) }),
       el('td', { text: it.stage_text }),
       el('td', { text: it.placement_text }));
@@ -192,8 +194,12 @@ function move(side, i, d) {
 
 async function merge(side) {
   const s = st[side];
+  if (s.busy) return;                                      // one merge at a time (a double click makes one)
   if (!s.picked.length) { window.toast(`Add the ${ARM(side)} files to merge first.`); return; }
+  const off = s.picked.slice(1).map(r => s.items.find(it => it.ref === r)).filter(it => it && it.differs && it.differs.length);
+  if (off.length) { window.toast(`${off[0].name} differs from the first file: ${off[0].differs.join('; ')}.`); return; }
   const name = ($(`liteS1Name_${side}`)?.value || '').trim();
+  s.busy = true;
   status(side, 'Merging…');
   try {
     const m = await post(`${base()}/merges/${side}/from-project`, { name, files: s.picked });
@@ -204,6 +210,7 @@ async function merge(side) {
       + `${fmt(m.seconds)}${m.limits_ok ? ', within L1–L4.' : `; it breaks ${m.limits_text}: shown, not enforced (sending it asks once).`}`,
     m.limits_ok ? 'ok' : 'warn');
   } catch (err) { status(side, say(err), 'warn'); tell(err); }
+  s.busy = false;
   await load(side);
 }
 
@@ -253,6 +260,7 @@ async function upload(side) {
 async function toTune(side) {
   const m = selected(side);
   if (!m) return;
+  stopS1();
   try {
     const u = await post(murl(side, m.file, 'tune'), {});
     ctx.units[u.key] = u;
@@ -260,8 +268,13 @@ async function toTune(side) {
     ctx.tuneMerge = { side, file: m.file, name: m.name };
     window.showView('teach');
     await window.setStage('optimize');
+    if (currentStage !== 'optimize') {                     // the page did not open Tune (Setup & Safety first)
+      ctx.tuneKey = null;
+      ctx.tuneMerge = null;
+      return;
+    }
     window.toast(`${m.name} is open in Tune + Simulation. What you keep there comes back to S1 as a new merge.`);
-  } catch (err) { tell(err); }
+  } catch (err) { ctx.tuneKey = null; ctx.tuneMerge = null; tell(err); }
 }
 
 // ── the 3D review of a merge
@@ -303,9 +316,16 @@ function showAt(t) {
   if ($('liteS1Time')) $('liteS1Time').textContent = `${fmt(t)} / ${fmt(review.total)}`;
 }
 
+let shownFor = null;
+
 export function openS1(host, opts = {}) {
   if (panel !== host) { panel = host; built = false; }
   build();
+  if (shownFor !== ctx.pid) {                              // another project: its own files, nothing picked
+    shownFor = ctx.pid;
+    for (const side of ARMS) Object.assign(st[side], { items: [], picked: [], merges: [], sel: null, busy: false });
+    for (const side of ARMS) { const n = $(`liteS1Name_${side}`); if (n) n.value = ''; }
+  }
   if (!ctx.pid) {
     for (const side of ARMS) status(side, 'Open a project first.', 'warn');
     return;

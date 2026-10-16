@@ -215,7 +215,8 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     assert not la[4]["drawn"]                                    # program 72: Lite never sent it
     assert ra[1]["t0"] == ra[0]["t1"] and ra[2]["kind"] == "wait" and ra[2]["stage"] == 1   # the tail, after TIMELINE-1
     texts = " | ".join(f["text"] for f in sim["findings"])
-    assert "LEFT row 5, program 72: not drawn (Lite has not sent this program)" in texts
+    assert "LEFT row 5: program 72 is not drawn (Lite has not sent this program)" in texts
+    assert "From here the arm's pose is not known" in texts             # the check leaves that arm out after it
     assert "RIGHT row 2, program 71: taught at pole 50 mm, hand grip, but the pole is at 200 mm here" in texts
     assert "hand" in texts and "no Hand step before it" in texts   # the right arm's hand was never set in this run
     col = sim["collisions"]

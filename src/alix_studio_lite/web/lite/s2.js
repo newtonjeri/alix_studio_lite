@@ -27,7 +27,7 @@ const S = {
   steps: { left: [], right: [] }, sources: { left: { programs: [], points: [] }, right: { programs: [], points: [] } },
   sel: { left: null, right: null }, mode: 'sim', scope: 'full', confirmEach: true,
   sim: null, job: null, live: { left: 'IDLE', right: 'IDLE' }, status: 'PAGE 02 READY // Build LEFT and RIGHT sequences', runtime: 0,
-  rows: { left: null, right: null }, asked: 0,
+  rows: { left: null, right: null },
 };
 const view = { frames: new Map(), shown: { left: null, right: null }, phase: null, three: null, clean: false, furthest: 0, token: 0 };
 let panel = null, built = false, player = null, saving = { left: null, right: null };
@@ -212,18 +212,44 @@ async function refreshSources(said = false) {
   }
 }
 
-async function saveSteps(side) {
+// Each arm's steps go to the server as they are edited, one save at a time; the server's reply (its checked
+// form) is taken only when nothing was edited since, so a slow reply never undoes a newer edit.
+const edits = { left: 0, right: 0 };
+const queue = { left: Promise.resolve(), right: Promise.resolve() };
+
+function saveSteps(side) {
+  edits[side] += 1;
   clearTimeout(saving[side]);
-  saving[side] = setTimeout(async () => {
-    try {
-      const d = await put(`${base()}/${side}`, { steps: S.steps[side] });
-      S.steps[side] = d[side];
-    } catch (err) {
-      tell(err);
-      try { S.steps[side] = (await get(base()))[side]; } catch (_) { /* as it was */ }
-    }
-    paintAll();
+  saving[side] = setTimeout(() => {
+    saving[side] = null;
+    const mine = edits[side];
+    queue[side] = queue[side].then(async () => {
+      try {
+        const d = await put(`${base()}/${side}`, { steps: S.steps[side] });
+        if (edits[side] === mine) S.steps[side] = d[side];
+      } catch (err) {
+        tell(err);
+        try { if (edits[side] === mine) S.steps[side] = (await get(base()))[side]; } catch (_) { /* as it was */ }
+      }
+      paintAll();
+    });
   }, 250);
+}
+
+// Every edit on its way to the server, there (a run uses the steps the server has).
+async function saved() {
+  for (const side of ARMS) {
+    if (saving[side]) {
+      clearTimeout(saving[side]);
+      saving[side] = null;
+      const mine = edits[side];
+      queue[side] = queue[side].then(async () => {
+        const d = await put(`${base()}/${side}`, { steps: S.steps[side] });
+        if (edits[side] === mine) S.steps[side] = d[side];
+      });
+    }
+  }
+  await Promise.all(ARMS.map(side => queue[side]));
 }
 
 // ── editing (V53's WorkflowSequencePanel)
@@ -346,10 +372,21 @@ function paintArm(side) {
   if (!body) return;
   const list = S.steps[side];
   const now = S.rows[side];
+  const pick = (i, focus) => {
+    S.sel[side] = i;
+    paintArm(side);
+    if (focus) body.querySelector(`tr[data-i="${i}"]`)?.focus();          // the row keeps the keyboard's focus
+  };
   body.replaceChildren(...list.map((step, i) => {
     const [type, target, options] = row({ ...step, _side: side });
     const tr = el('tr', { class: `${S.sel[side] === i ? 'lite-picked' : ''}${now === i + 1 ? ' lite-s2-now' : ''}`, tabindex: '0',
-      onclick: () => { S.sel[side] = i; paintArm(side); }, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { S.sel[side] = i; paintArm(side); } } },
+      'data-i': String(i), 'aria-selected': String(S.sel[side] === i),
+      onclick: () => pick(i, false),
+      onkeydown: (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(i, true); }
+        if (e.key === 'ArrowDown' && i + 1 < list.length) { e.preventDefault(); pick(i + 1, true); }
+        if (e.key === 'ArrowUp' && i > 0) { e.preventDefault(); pick(i - 1, true); }
+      } },
     el('td', { text: String(i + 1) }), el('td', { text: type }), el('td', { text: target }), el('td', { text: options }));
     return tr;
   }));
@@ -383,12 +420,16 @@ function paintAll() {
   $('liteS2Runtime').textContent = fmt(S.runtime);
   for (const side of ARMS) $(`liteS2Live_${side}`).textContent = `${ARM(side)} // ${S.live[side]}`;
   const busy = !!S.job;
-  for (const id of ['liteS2RunBoth', 'liteS2Run_left', 'liteS2Run_right']) $(id).disabled = busy;
+  for (const id of ['liteS2RunBoth', 'liteS2Run_left', 'liteS2Run_right', 'liteS2Mode_sim', 'liteS2Mode_real']) $(id).disabled = busy;
   $('liteS2Sim').hidden = S.mode !== 'sim' && !S.sim;
   gate();
 }
 
-function setMode(m) { S.mode = m; paintAll(); }
+function setMode(m) {
+  if (S.job) { window.toast('The mode stays as it is while a sequence or a simulation runs.'); return; }
+  S.mode = m;
+  paintAll();
+}
 function setScope(s) { S.scope = s; paintAll(); }
 
 function ranges(mode) {
@@ -432,6 +473,7 @@ function gate() {
 async function run(mode) {
   if (!ctx.pid) { window.toast('Open a project first.'); return; }
   if (S.job) { window.toast('A sequence is already running.'); return; }
+  try { await saved(); } catch (err) { tell(err); return; }
   if (mode === 'both' && (!S.steps.left.length || !S.steps.right.length)) { window.toast('Build or load BOTH LEFT and RIGHT sequences first.'); return; }
   if (mode !== 'both' && !S.steps[mode].length) { window.toast(`${ARM(mode)} sequence is empty.`); return; }
   if (S.mode === 'sim') simulate(mode);
@@ -474,16 +516,21 @@ async function runReal(mode) {
         + 'Confirm both work areas are clear and both hardware E-stops are accessible.',
       list: REAL_CHECKS });
     if (!yes) { window.toast('Cancelled: nothing was sent to the robot.'); return; }
-    try { job = await post(`${base()}/run`, { ...body, confirmed: true, warnings_seen: true }); } catch (e2) { tell(e2); return; }
+    try { job = await post(`${base()}/run`, { ...body, confirmed: true, warnings_seen: S.sim && S.sim.hash }); } catch (e2) { tell(e2); return; }
   }
   follow(job);
 }
 
 async function follow(job) {
   S.job = job;
+  if (job.kind !== 'simulate') S.mode = 'real';
   paintAll();
   try {
     const done = await watch(job);
+    if (job.kind === 'simulate') {                           // a simulation followed after a reload
+      if (done.state === 'done') { const sim = (await get(base())).sim; S.job = null; setSim(sim, true); }
+      return;
+    }
     if (done.state === 'done') window.toast(`Sequence complete (${fmt(done.elapsed_s)}).`);
     else if (done.state === 'cancelled') window.toast('The sequence was stopped.');
     else tell(Object.assign(new Error(done.error || 'The sequence did not finish.'), { hint: done.hint }));
@@ -497,18 +544,25 @@ async function follow(job) {
 
 // Polls a job, painting its live status and asking its questions (the lid checkpoint, the waiting arm).
 async function watch(job) {
-  let j = job;
+  let j = job, misses = 0, asked = 0;                       // a job's questions are numbered from 1: per job
   for (;;) {
     paintJob(j);
     if (j.state !== 'running') return j;
     const q = j.extra && j.extra.question;
-    if (q && q.id > S.asked) {
-      S.asked = q.id;
+    if (q && q.id > asked) {
+      asked = q.id;
       const yes = await confirmDialog({ title: q.title, body: q.text, ok: q.ok, danger: true });
       try { j = await post(`/api/jobs/${j.id}/answer`, { question: q.id, yes }); continue; } catch (err) { tell(err); }
     }
     await new Promise(r => setTimeout(r, 300));
-    j = await get(`/api/jobs/${j.id}`);
+    try {
+      j = await get(`/api/jobs/${j.id}`);
+      misses = 0;
+    } catch (err) {                                          // a network blip: the run goes on, keep following it
+      misses += 1;
+      if (misses >= 20 || err.code === 'login') throw err;
+      await new Promise(r => setTimeout(r, 700));
+    }
   }
 }
 
@@ -534,14 +588,17 @@ function paintBar() {
   for (const id of ['liteS2RunBoth', 'liteS2Run_left', 'liteS2Run_right']) $(id).disabled = busy;
 }
 
+// STOP goes by what is running, never by the mode on screen: a run on the robot always gets the robot's
+// STOP (Lite's: it holds the arms until Recover); a simulation is cancelled and its playback paused.
 async function stop(which) {
-  if (S.mode === 'sim' || (S.job && S.job.kind === 'simulate')) {
-    player.pause();
-    if (S.job && S.job.kind === 'simulate') { try { await post(`/api/jobs/${S.job.id}/cancel`, {}); } catch (_) { /* it ends by itself */ } }
+  player.pause();
+  if (S.job && S.job.kind === 'simulate') {
+    try { await post(`/api/jobs/${S.job.id}/cancel`, {}); } catch (_) { /* it ends by itself */ }
     S.status = 'PAGE 02 SIMULATION // stopped';
     paintAll();
-    if (S.mode === 'sim') return;
+    return;
   }
+  if (!S.job && S.mode === 'sim') { S.status = 'PAGE 02 SIMULATION // paused'; paintAll(); return; }
   S.status = which === 'both' ? 'PAGE 02 STOP REQUESTED // LEFT + RIGHT' : `${ARM(which)} // STOP REQUESTED`;
   for (const side of (which === 'both' ? ARMS : [which])) S.live[side] = 'STOP REQUESTED';
   paintAll();
@@ -582,8 +639,8 @@ const chunkAt = (side, g) => { let c = null; for (const x of chunks(side)) { if 
 async function frames(side, stage) {
   const k = `${side}:${stage}`;
   if (!view.frames.has(k)) {
-    const p = post(`${base()}/frames`, { side, stage });
-    p.catch(() => view.frames.delete(k));
+    const p = post(`${base()}/frames`, { side, stage, hash: S.sim && S.sim.hash });   // this simulation's, no other's
+    p.catch(() => setTimeout(() => { if (view.frames.get(k) === p) view.frames.delete(k); }, 2000));   // asked again later
     view.frames.set(k, p);
   }
   return view.frames.get(k);
@@ -742,8 +799,22 @@ export function openS2(host) {
   build();
   if (!ctx.pid) { S.status = 'PAGE 02 // open a project first'; paintAll(); return; }
   load().then(() => refreshSources(false)).then(async () => {
-    if (S.sim && S.mode === 'sim' && !view.three) { if (await prefetch()) showAt(player.t); }
+    if (S.sim) {                                            // the 3D back from wherever it was (S1, Tune, Review)
+      view.three = null;
+      view.shown = { left: null, right: null };
+      view.phase = null;
+      if (await prefetch()) showAt(player.t);
+    }
   });
+}
+
+// Leaving S2 (the S1 tab, another view): its playback stops and takes the robot no further; a played run
+// is "played to its end" only when watched through, so a stop here also counts as a skip.
+export function stopS2() {
+  if (!player) return;
+  if (player.playing) view.clean = false;
+  player.pause();
+  view.token += 1;
 }
 
 document.addEventListener('lite:speed', () => { if (built) paintAll(); });

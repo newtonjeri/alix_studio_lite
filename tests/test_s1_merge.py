@@ -72,8 +72,8 @@ def sources(ctx, side, picked=()):
 
 def test_s1_merges_only_files_of_one_stage_and_placement(lite):
     call(lite, "POST", P + "/placement/task", {"task": "TASK 1A", "standoff_mm": 380})
-    call(lite, "POST", P + "/placement/task", {"task": "TASK 2", "standoff_mm": 386, "front_mm": 4})   # within 10 mm
-    call(lite, "POST", P + "/placement/task", {"task": "TASK 3", "standoff_mm": 391})                # 11 mm off
+    call(lite, "POST", P + "/placement/task", {"task": "TASK 2", "standoff_mm": 385, "front_mm": 10})  # 5 mm and 10 mm: in
+    call(lite, "POST", P + "/placement/task", {"task": "TASK 3", "standoff_mm": 385.1})              # the standoff ±5 mm
     upload(lite, "L-R01", "L_s1_a.txt", "TASK 1A")
     upload(lite, "L-R02", "L_s1_b.txt", "TASK 2", start=3.0)
     upload(lite, "L-R03", "L_s1_far.txt", "TASK 3")
@@ -85,12 +85,12 @@ def test_s1_merges_only_files_of_one_stage_and_placement(lite):
     assert a["placement"]["room"]["width_mm"] == 1400 and "standoff 380 mm" in a["placement_text"] and not a["why"]
     assert not any(it["taught_arm"] == "right" for it in items.values())          # the LEFT arm's files only
     picked = sources(lite, "left", [a["ref"]])
-    assert picked["L_s1_b.txt"]["compatible"]                                     # 6 mm and 4 mm: within 10 mm
-    assert picked["L_s1_far.txt"]["differs"] == ["UGV standoff 380 mm vs 391 mm"]
+    assert picked["L_s1_b.txt"]["compatible"]                                     # the standoff 5 mm off, a move 10 mm
+    assert picked["L_s1_far.txt"]["differs"] == ["UGV standoff 380 mm vs 385.1 mm (±5 mm)"]
     assert picked["L_s1_pole.txt"]["differs"] == ["pole 150 mm vs 50 mm"]
 
     bad = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_bad", "files": [a["ref"], picked["L_s1_far.txt"]["ref"]]})
-    assert bad["code"] == "mismatch" and "UGV standoff 380 mm vs 391 mm" in bad["error"]
+    assert bad["code"] == "mismatch" and "UGV standoff 380 mm vs 385.1 mm (±5 mm)" in bad["error"]
     assert "same pole, hand, UGV placement and room" in bad["hint"]
 
     m = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_s1_merge", "files": [a["ref"], picked["L_s1_b.txt"]["ref"]]})
@@ -106,7 +106,7 @@ def test_s1_merges_only_files_of_one_stage_and_placement(lite):
     call(lite, "POST", P + "/placement/task", {"task": "TASK 4", "standoff_mm": 380})
     upload(lite, "L-R06", "L_s1_room.txt", "TASK 4")
     picked = sources(lite, "left", [a["ref"]])
-    assert picked["L_s1_room.txt"]["differs"] == ["room width 1,400 mm vs 1,420 mm"]
+    assert picked["L_s1_room.txt"]["differs"] == ["room width 1,400 mm vs 1,420 mm (±10 mm)"]
     assert sources(lite, "left")["L_s1_merge.txt"]["kind"] == "merge"             # a merge merges again
     call(lite, "POST", P + "/placement/room", ROOM)
 

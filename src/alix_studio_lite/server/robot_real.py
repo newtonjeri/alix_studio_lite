@@ -625,10 +625,15 @@ class RealArm:
                 finally:
                     with guard:
                         state["inside"] = False
-                    _interrupt(tid, None)             # a stop that came as it ended is not raised later
+                        stopped = state["stopped"]
+                    if stopped:                       # a stop that came as it ended is not raised later (cleared
+                        _interrupt(tid, None)         # only then: clearing leaves CPython's flag up, slowing the server)
             except KeyboardInterrupt:                 # outside the runner's own handling (its checks before the steps)
                 rc = 1
                 line_out("** WORKFLOW STOP REQUESTED")
+            except SystemExit as exc:                 # the runner exits when the program list does not answer
+                rc = 1
+                line_out(f"** WORKFLOW FAILED: {exc}")
             except Exception as exc:                  # noqa: BLE001 - the runner's own lines say the rest
                 rc = 1
                 line_out(f"** WORKFLOW FAILED: {exc}")

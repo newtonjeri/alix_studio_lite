@@ -240,7 +240,8 @@ class ProjectStore:
                 # evidence made on another computer is not trusted here: the tuned versions, the
                 # work in progress and the robot results go; the recordings and settings stay, and
                 # each region is tuned (and so checked against every limit) again on this computer
-                for unit in (u for u in (folder / "trajectories").glob("*/*") if u.is_dir()):
+                for unit in (u for u in [*(folder / "trajectories").glob("*/*"), *(folder / "merged" / "tune").glob("*")]
+                             if u.is_dir()):
                     for made in ("versions", "work"):
                         shutil.rmtree(unit / made, ignore_errors=True)
                     (unit / "results.json").unlink(missing_ok=True)

@@ -72,6 +72,16 @@ def _unit(units: LiteUnits, key: str) -> dict:
     return units.units[key]
 
 
+def _region(units: LiteUnits, key: str) -> dict:
+    """A region of the catalogue, never a merge opened in Tune: what only a region does (teach, set up,
+    Real Test, its transition) is refused for a merge, which is sent from S1."""
+    u = _unit(units, key)
+    if units.is_merge_unit(key):
+        raise UserError(f"{u['merge']['name']} is a merge opened in Tune: it is sent and run from S1, "
+                        "Merge + Full Sequence.", code="merge")
+    return u
+
+
 def _strip(rows: list[dict]) -> list[dict]:
     return [{k: v for k, v in r.items() if k != "path"} for r in rows]
 
@@ -489,7 +499,7 @@ def set_setup(app, q, body, m):
     """The region's pole and hand (Prepare): kept for teaching it, and in Hardware sim or Real
     also staged on the robot (pole, then hand, read back). ``{pole_mm, hand, apply}``."""
     units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
+    u = _region(units, key)
     stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "set in Prepare")
     kind = body.get("kind")                            # which Apply was pressed: pole | hand (it alone moves)
     mode, job = app.ui["mode"], None
@@ -816,11 +826,19 @@ def post_keep(app, q, body, m):
                             or "See the limits under the results, then change the tuning and re-run the simulation.")
         ver = units.current_version(key)
         name = str(body.get("name") or "").strip()                    # V32's "Save Tuned File As…"
-        if (ver and ver.get("sha256") == made.get("track_sha256")
-                and ver.get("taught_arm") == info["taught_arm"] and staging.same_stage(ver.get("stage"), info["stage"])):
-            if name and name != ver.get("name"):
-                units.name_version(key, ver["version"], name)        # already kept: it gets the name
-            return _kept_view(app, units, key)                       # already kept, with this arm and stage
+
+        def same(v):
+            return (v and v.get("sha256") == made.get("track_sha256") and v.get("taught_arm") == info["taught_arm"]
+                    and staging.same_stage(v.get("stage"), info["stage"]))
+        # a merge in Tune: any version already kept with these bytes is the one (its S1 merge too), never a copy
+        kept = next((v for v in reversed(units.versions(key)) if same(v)), None) if units.is_merge_unit(key) \
+            else (ver if same(ver) else None)
+        if kept:
+            if kept is not ver:
+                units.choose_version(key, kept["version"])
+            if name and name != kept.get("name"):
+                units.name_version(key, kept["version"], name)       # already kept: it gets the name
+            return _kept_view(app, units, key, renamed=bool(name))   # already kept, with this arm and stage
         if name:
             name = name if name.lower().endswith(".txt") else name + ".txt"
             owner = units.name_owner(name)
@@ -832,25 +850,26 @@ def post_keep(app, q, body, m):
         ver = units.save_candidate(key)
         if name:
             units.name_version(key, ver["version"], name)
-    return _kept_view(app, units, key)
+    return _kept_view(app, units, key, renamed=bool(name))
 
 
-def _kept_view(app, units: LiteUnits, key: str) -> dict:
+def _kept_view(app, units: LiteUnits, key: str, renamed: bool = False) -> dict:
     if units.is_merge_unit(key):
-        return dict(unit_view(app, units, key), merge=_kept_to_s1(units, key))
+        return dict(unit_view(app, units, key), merge=_kept_to_s1(units, key, renamed))
     return unit_view(app, units, key)
 
 
-def _kept_to_s1(units: LiteUnits, key: str) -> dict:
+def _kept_to_s1(units: LiteUnits, key: str, renamed: bool = False) -> dict:
     """A merge's tuned file, once kept in Tune, back in S1 as a new merge of its own (the owner, 16 Oct),
-    with the source merge's stage, placement and phase; made once per kept version."""
+    with the source merge's stage, placement and phase; made once per kept version. ``renamed``: the
+    keep named it (Save As), so the S1 merge takes that name; a name given in S1 otherwise stays."""
     from ..motion import track
 
     u = units.units[key]
-    ver = units.current_version(key)
-    extra_p = Path(ver["path"]).with_name(Path(ver["path"]).stem + ".extra.json")
-    extra = _read(extra_p) or {}
     with units.lock:
+        ver = units.current_version(key)
+        extra_p = Path(ver["path"]).with_name(Path(ver["path"]).stem + ".extra.json")
+        extra = _read(extra_p) or {}
         made = extra.get("s1_merge")
         if made:
             try:
@@ -858,7 +877,7 @@ def _kept_to_s1(units: LiteUnits, key: str) -> dict:
             except UserError:
                 out = None                                       # removed since: made again
             if out is not None:
-                if ver.get("name") and ver["name"] != out["name"]:     # Save As in Tune after it was kept: its name
+                if renamed and ver.get("name") and ver["name"] != out["name"]:   # Save As in Tune after it was kept
                     try:
                         out = merges.rename(units, u["arm"], made, ver["name"])
                     except UserError:
@@ -951,7 +970,7 @@ def require_confirmed(app, body, what: str) -> None:
 @route("POST", U + r"/teach/(start|stop|cancel)")
 def post_teach(app, q, body, m):
     units, key, verb = units_of(app, m.group(1)), m.group(2), m.group(3)
-    u = _unit(units, key)
+    u = _region(units, key)
     side = u["arm"]
     if u.get("first_release") is False:
         raise UserError("This step is not in Release 1.", "It will be added later.")
@@ -1004,7 +1023,7 @@ def _name_of(units: LiteUnits, key: str, path: Path) -> str:
 @route("POST", U + "/move-start")
 def post_move_start(app, q, body, m):
     units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
+    u = _region(units, key)
     mode = require_robot_mode(app)
     require_confirmed(app, body, "Moving the arm")
     which = body.get("which") or "raw"
@@ -1018,7 +1037,7 @@ def post_move_start(app, q, body, m):
 @route("POST", U + "/playback")
 def post_playback(app, q, body, m):
     units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
+    u = _region(units, key)
     mode = require_robot_mode(app)
     if mode == "real":
         raise UserError("A recording as taught never runs on the real arms.",
@@ -1045,7 +1064,7 @@ def post_upload(app, q, body, m):
     """Upload the kept version to a Program ID (1–100, checked here, not only on the page).
     A slot holding another program needs ``replace`` (the page asks first)."""
     units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
+    u = _region(units, key)
     require_robot_mode(app)
     pid = _program_check(body.get("program_id"))
     info = identity(units, key, "version")         # never send another arm's trajectory to this arm
@@ -1077,7 +1096,7 @@ def post_upload(app, q, body, m):
 @route("POST", U + "/run")
 def post_run(app, q, body, m):
     units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
+    u = _region(units, key)
     mode = require_robot_mode(app)
     require_confirmed(app, body, "A run")
     pid = units.settings(key).get("program_id")
@@ -1112,7 +1131,7 @@ def post_verdict(app, q, body, m):
     """PASS approves the arm step only after a completed run of its current version; Needs
     Tuning and Record Again are recorded as they are."""
     units, key = units_of(app, m.group(1)), m.group(2)
-    _unit(units, key)
+    _region(units, key)
     v = body.get("verdict")
     if v not in ("pass", "tune", "again"):
         raise UserError("Choose PASS, Needs Tuning or Record Again.")
@@ -1142,7 +1161,7 @@ def _transition_view(units: LiteUnits, key: str) -> dict | None:
 @route("GET", U + "/transition")
 def get_transition(app, q, body, m):
     units, key = units_of(app, m.group(1)), m.group(2)
-    _unit(units, key)
+    _region(units, key)
     return {"transition": _transition_view(units, key)}
 
 
@@ -1158,7 +1177,7 @@ def post_transition(app, q, body, m):
     from .library import detect_arm
 
     units, key = units_of(app, m.group(1)), m.group(2)
-    _unit(units, key)
+    _region(units, key)
     content = body.get("content")
     if not isinstance(content, str) or not content.strip():
         raise UserError("The file is empty.")
@@ -1215,7 +1234,7 @@ def post_transition_upload(app, q, body, m):
     arm and stage checked, its limits checked on the bytes sent; a slot holding another program
     needs ``replace``. ``{unchanged: true}`` when the slot already holds it."""
     units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
+    u = _region(units, key)
     require_robot_mode(app)
     pid = _program_check(body.get("program_id"))
     info = identity(units, key, "transition")
@@ -1231,7 +1250,7 @@ def post_transition_run(app, q, body, m):
     while it runs (V32: "the opposite arm must remain stopped"), the pole and hand staged first; in
     Hardware sim the controller's SIM mode, in Real confirmed."""
     units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
+    u = _region(units, key)
     mode = require_robot_mode(app)
     require_confirmed(app, body, "The transition")
     pid = _program_check(body.get("program_id"))

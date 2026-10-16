@@ -236,6 +236,16 @@ class ArmLink:
             counts = self._hand.read()
         return counts
 
+    def estop_now(self) -> str:
+        """IO3 read once, by the caller that holds the connection (a command's own thread, between two of
+        its steps: never alongside it): ENGAGED, CLEAR, NOT_CONFIGURED or UNKNOWN, failing closed."""
+        robot = self.handle.robot if self.handle is not None else None
+        if robot is None:
+            return "UNKNOWN"
+        if hasattr(robot, "rm_get_io_state"):
+            return estop_state(lambda: robot.rm_get_io_state(ESTOP_IO), self.estop_active)[0]
+        return "CLEAR" if self.emulated else "UNKNOWN"          # ALIX's emulator models no IO
+
     def read_once(self) -> dict:
         with self._read_lock:
             return self._read_all()

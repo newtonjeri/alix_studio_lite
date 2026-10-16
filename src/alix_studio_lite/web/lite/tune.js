@@ -1057,7 +1057,7 @@ function syncKeep() {
   if (btn) btn.disabled = !fresh();
   if (note) {
     note.textContent = !fresh() ? 'Generate first: the processed file is kept once it is made.'
-      : ver ? `Kept as ${ver.version}: ${ver.name || ''}. Real Test sends this file.`
+      : ver ? `Kept as ${ver.version}: ${ver.name || ''}. ${ctx.tuneKey ? 'It is a merge in S1 now: S1 sends it.' : 'Real Test sends this file.'}`
         : 'Not kept yet. “Simulation Looks Good” in Compare keeps it too.';
   }
   tuningSourceFileName = (rec() && rec().name) || tuningSourceFileName;
@@ -1327,7 +1327,10 @@ function backToS1(merge) {
   const m = ctx.tuneMerge;
   leaveMerge();
   pause();
+  unload();                                              // the merge's file never plays for the region
+  unit = null;
   document.dispatchEvent(new CustomEvent('lite:open-s1', { detail: merge ? { side: merge.side, file: merge.file } : (m || {}) }));
+  if (currentStage === 'optimize') enter();              // Tune is the region's again when it is next shown
 }
 
 async function enter() {

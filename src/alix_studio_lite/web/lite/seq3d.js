@@ -43,9 +43,12 @@ export class Player {
     this.playing = true;
     this.t0 = this.t;
     this.w0 = performance.now();
+    this.last = this.w0;
     cancelAnimationFrame(this.raf);
     const tick = (now) => {
       if (!this.playing) return;
+      if (now - this.last > 250) this.w0 += now - this.last - 16;          // a hidden tab: the clock waited too
+      this.last = now;
       const t = Math.min(this.total, this.t0 + ((now - this.w0) / 1000) * this.speed);
       this.t = t;
       this.onTime(t, true);
@@ -77,7 +80,7 @@ export class Player {
 
   seek(t) {
     this.t = Math.max(0, Math.min(this.total, Number(t) || 0));
-    if (this.playing) { this.t0 = this.t; this.w0 = performance.now(); }
+    if (this.playing) { this.t0 = this.t; this.w0 = this.last = performance.now(); }
     this.onTime(this.t, false);
   }
 }

@@ -208,8 +208,9 @@ export async function loadRobot() {
   // hand move, the move to the start and the trajectory. Resolves to its phases and clock.
   function loadTimeline(side, r) {
     const s = sideOf(side);
+    if (!r.framesF32) r.framesF32 = new Float32Array(decode(r.frames).buffer);    // decoded once per timeline
     track = tracks[s] = { side: s, names: armNames(s), q: null, times: r.times, rest: restOf(s), byKey: new Map(),
-      linkNames: r.links, links: r.links.map(l => linkObj[l] || null), frames: new Float32Array(decode(r.frames).buffer),
+      linkNames: r.links, links: r.links.map(l => linkObj[l] || null), frames: r.framesF32,
       lines: null, every: 1, total: r.times.length };
     return { phases: r.phases, traj_t0: r.traj_t0, total_s: r.total_s, lines: r.lines, stage: r.stage };
   }

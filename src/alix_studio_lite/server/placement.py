@@ -32,6 +32,7 @@ ROOM_TEXT = {"width_mm": "the room width", "length_mm": "the room length", "left
 WALL_THICK_M, WALL_HEIGHT_M = 0.10, 2.0          # ALIX's cubicle meshes (assets/scene/cubicles)
 TOL_MM = 10.0     # the owner, 16 Oct: "a tolerance of + or -10mm in all measurements on the total": each room
                   # total against its parts, and two placements taken as the same (S1 merges)
+STANDOFF_TOL_MM = 5.0   # the owner, 16 Oct (S1): "the UGV standoff use +-5mm, but for other measurements +-10mm"
 
 
 def _file(units) -> Path:
@@ -114,6 +115,16 @@ def _mm(v: float) -> str:
     return f"{v:,.0f}"
 
 
+def _mm1(v: float) -> str:
+    """A difference: whole millimetres, or one decimal where that is what decides."""
+    r = round(float(v), 1)
+    return f"{r:,.0f}" if r == round(r) else f"{r:,.1f}"
+
+
+def _apart(va: float, vb: float, tol: float) -> bool:
+    return round(abs(float(va) - float(vb)), 1) > tol
+
+
 def totals(room: dict, commode_width_mm: float, commode_depth_mm: float) -> list[dict]:
     """The room's totals against their parts, each within ±10 mm (the owner, 16 Oct: "right side from
     wall to commode is x, left side to commode side, and the known commode distance should be within
@@ -134,13 +145,13 @@ def totals(room: dict, commode_width_mm: float, commode_depth_mm: float) -> list
     for name, title, what, parts, whole in rows:
         total = sum(v for _, v in parts)
         diff = round(total - whole, 1)
-        ok = abs(diff) <= TOL_MM
+        ok = abs(diff) <= TOL_MM                    # compared at 0.1 mm
         sums = " + ".join(_mm(v) for _, v in parts)
         warning = None
         if not ok:
             over = abs(diff) - TOL_MM
             warning = (f"{title}: {what} make {sums} = {_mm(total)} mm, but the room {name} is {_mm(whole)} mm: "
-                       f"a difference of {_mm(abs(diff))} mm, {_mm(over)} mm past the ±{TOL_MM:.0f} mm tolerance.")
+                       f"a difference of {_mm1(abs(diff))} mm, {_mm1(over)} mm past the ±{TOL_MM:.0f} mm tolerance.")
             if name == "length" and diff > 0:
                 warning += " The wall behind would stand inside the commode."
             elif name == "length":
@@ -160,25 +171,27 @@ ROOM_SHORT = {"width_mm": "room width", "length_mm": "room length", "left_mm": "
 
 def differences(a: dict | None, b: dict | None) -> list[str]:
     """Where two placements (``for_task``: a task's UGV placement with the room it was measured in)
-    are not the same within ±10 mm, each measurement on its own (the owner, 16 Oct: S1 merges only
-    files of the same pole, hand and "whole placement ... also the walls placement and the commode",
-    "a tolerance of + or -10mm in all measurements"): [] when they are. A move left empty is 0; a
+    are not the same, each measurement on its own: the standoff within ±5 mm, the moves and the room
+    within ±10 mm (the owner, 16 Oct: S1 merges only files of the same pole, hand and "whole placement
+    ... also the walls placement and the commode"; "the UGV standoff use +-5mm, but for other
+    measurements +-10mm"), compared at 0.1 mm: [] when they are. A move left empty is 0; a
     placement or a room that was never recorded is never the same as one that was."""
     if not a or not b:
         return [] if not a and not b else ["one has no UGV placement recorded"]
     out = []
     for k, what in TASK_TEXT.items():
         va, vb = float(a.get(k) or 0.0), float(b.get(k) or 0.0)
-        if abs(va - vb) > TOL_MM:
-            out.append(f"{what} {_mm(va)} mm vs {_mm(vb)} mm")
+        tol = STANDOFF_TOL_MM if k == "standoff_mm" else TOL_MM
+        if _apart(va, vb, tol):
+            out.append(f"{what} {_mm1(va)} mm vs {_mm1(vb)} mm (±{tol:.0f} mm)")
     ra, rb = a.get("room"), b.get("room")
     if bool(ra) != bool(rb):
         out.append("the room was measured for one only")
     elif ra and rb:
         for k, what in ROOM_SHORT.items():
             va, vb = float(ra.get(k) or 0.0), float(rb.get(k) or 0.0)
-            if abs(va - vb) > TOL_MM:
-                out.append(f"{what} {_mm(va)} mm vs {_mm(vb)} mm")
+            if _apart(va, vb, TOL_MM):
+                out.append(f"{what} {_mm1(va)} mm vs {_mm1(vb)} mm (±{TOL_MM:.0f} mm)")
     return out
 
 

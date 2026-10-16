@@ -50,12 +50,12 @@ class Job:
     def cancel(self, reason: str | None = None, hint: str | None = None) -> None:
         """Stop the job at its next check. With ``reason`` (an E-stop), it ends as failed with that
         text, never as a plain "Stopped."; the first reason given is the one kept."""
-        with self._lock:
-            if reason and self.reason is None:
+        with self._lock:                                   # the flag and the hooks together: a hook added
+            if reason and self.reason is None:             # meanwhile is either run here or sees the flag
                 self.reason = (reason, hint)
             first = not self._cancel.is_set()
             hooks = list(self._on_cancel) if first else []
-        self._cancel.set()
+            self._cancel.set()
         for fn in hooks:
             try:
                 fn()
@@ -151,7 +151,7 @@ class Jobs:
             except UserError as exc:
                 job.state, job.error, job.hint = "failed", str(exc), exc.hint
                 job.log(str(exc), "error")
-            except Exception as exc:                                # noqa: BLE001
+            except BaseException as exc:                            # noqa: BLE001 - even an exit ends the job
                 job.state, job.error = "failed", f"{type(exc).__name__}: {exc}"
                 job.hint = "Details are in the server log."
                 job.log(job.error, "error")

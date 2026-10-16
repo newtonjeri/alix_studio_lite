@@ -79,7 +79,7 @@ def test_room_totals_within_10_mm_or_warned_with_the_values(lite):
     assert [p["name"] for p in t["width"]["parts"]] == ["left", "commode", "right"] and t["width"]["tol_mm"] == 10
     v = call(lite, "POST", P + "/placement/room", {**ROOM, "width_mm": 1411})   # 11 mm off
     w = {x["name"]: x for x in v["scene"]["totals"]}["width"]
-    assert not w["ok"] and w["diff_mm"] == -10.9 and "1 mm past the ±10 mm" in w["warning"] and w["warning"] in v["scene"]["notes"]
+    assert not w["ok"] and w["diff_mm"] == -10.9 and "10.9 mm, 0.9 mm past the ±10 mm" in w["warning"] and w["warning"] in v["scene"]["notes"]
     assert v["scene"]["walls"]                                              # warned, not refused
     v = call(lite, "POST", P + "/placement/room", {**ROOM, "width_mm": 1500, "length_mm": 1700})
     notes = " ".join(v["scene"]["notes"])

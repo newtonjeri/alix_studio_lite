@@ -25,6 +25,8 @@ Every file Lite keeps for this project is in this folder, as Lite's server holds
 - trajectories/<arm>/<step>/unit.json    the step's settings and its active recording
 - trajectories/<arm>/<step>/results.json uploads, runs and verdicts, tied to each file's sha256
 - trajectories/transitions/<arm>/<step>  the transition trajectories, with their records
+- merged/<arm>                           S1's merges, each with its record; merged/tune the merges opened in Tune
+- sequence/s2.json, s2_sim.json          S2's steps of both arms and its last simulation
 - logs/audit_log.json, audit_log.csv     the project's audit trail from Lite's logs
 `;
 
@@ -58,6 +60,17 @@ export function installFolder() {
       await window.fsWriteJson(logsDir, 'audit_log.json', { schema: 'asl_activity_log_v1', exportedAt: new Date().toISOString(),
         projectId: id, projectName: project.name, source: "Lite's logs", eventCount: rows.length, events: rows });
       await writeFile(logsDir, 'audit_log.csv', window.auditEventsToCSV(rows));
+      // The page's own manifests for the sections Merge + Full Sequence no longer has (its flow table and
+      // its merge list) would sit beside S1's merges and S2's sequence: they say what Lite keeps instead.
+      const [mg, wf] = await Promise.all([get(`/api/projects/${id}/merges`), get(`/api/projects/${id}/workflow`)]);
+      for (const side of ['left', 'right']) {
+        await window.fsWriteJson(await window.fsEnsurePath(root, ['merged', side]), 'merge_manifest.json',
+          { schema: 'lite_s1_merges_v1', side, note: "S1 Merge & Upload: the merges Lite keeps in this folder.", merges: mg[side] || [] });
+      }
+      await window.fsWriteJson(await window.fsEnsurePath(root, ['sequence']), 'full_sequence.json', {
+        schema: 'lite_s2_sequence_v1', note: "S2 Full & Partial Sequence: each arm's steps as V53 saves them (sequence/s2.json is Lite's own copy).",
+        left: { format: 'realman_workflow_sequence_v1', side: 'left', steps: wf.left || [] },
+        right: { format: 'realman_workflow_sequence_v1', side: 'right', steps: wf.right || [] } });
       const manifest = { schema: 'alix_project_folder_v1', generated_at: new Date().toISOString(), project_id: id, project_name: project.name,
         resume: window.currentResumeDescription(project.state), completed_tasks: window.projectProgress(project.state), total_tasks: TASKS.length,
         note: "Written by ALIX Studio Lite: the trajectory files and their records are the ones Lite's server keeps for this project.",

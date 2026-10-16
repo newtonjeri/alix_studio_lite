@@ -112,6 +112,19 @@ class StandInArm:
                     recovery=self.recovery, recovery_note=self.recovery_note)
 
 
+def ended_early(seconds, lines, scale: float = 1.0, share: float = 0.9) -> str | None:
+    """Whether a program's run took less time than its own points need ((lines - 1) x 5 ms, as the
+    controller never plays them faster; ``scale``: an emulator's time scale): then it was stopped, an
+    E-stop raising no error code. Says how short, or None."""
+    try:
+        need = max(int(lines) - 1, 0) * 0.005 / max(float(scale), 1e-6)
+    except (TypeError, ValueError):
+        return None
+    if need < 1.0 or float(seconds) >= share * need:
+        return None
+    return f"after {float(seconds):.1f} s of the {need:.1f} s its points take"
+
+
 def emulated_stage(job, side: str, a, stage: "staging.Stage", faults=(), *, emulated: bool = True,
                    step: int = 1, steps: int = 1) -> None:
     """The pole to the stage height, then the hand to the stage pose, on ALIX's measured times,
@@ -239,6 +252,36 @@ class StandInRobot:
                 if j.kind in MOTION_KINDS:
                     j.log(f"E-stop pressed on the {side.upper()} arm.", "error")
                     j.cancel(*ESTOP_STOP)
+
+    def estop_check(self, side: str) -> bool:
+        """IO3 read once by a command that holds a linked arm, between two of its steps, in its own
+        thread (S2's runner: while a command runs the link does not read). A press is the E-stop's:
+        latched, and every motion job on both arms stopped (their stop hooks interrupt the runners).
+        True when it was pressed. Only a press stops: an unreadable input is logged, as the link's
+        reading does not stop a running job either."""
+        link = self.links.get(side)
+        if link is None:
+            return False
+        live = "ENGAGED" if link.emulated and self.test_estop.get(side) else link.estop_now()
+        if live == "ENGAGED":
+            with self.lock:
+                self._engage(side)
+            return True
+        if live != "CLEAR" and self.log is not None:
+            self.log.hardware(side, "estop check", ok=False, text=f"IO3 reads {live} between two steps")
+        return False
+
+    def emulator_scale(self, side: str) -> float:
+        """How much faster than real time a linked emulated arm plays (ALIX's emulator time scale); 1 on hardware."""
+        link = self.links.get(side)
+        if link is None or not link.emulated:
+            return 1.0
+        try:
+            from alix_emulator import rm_emulator
+
+            return max(1e-6, float(rm_emulator._time_scale))
+        except Exception:                                                       # noqa: BLE001
+            return 1.0
 
     def _sync(self, side: str) -> None:
         """The arm's E-stop chip from the live IO3 reading, failing closed (unreadable, stale, not in
@@ -1127,6 +1170,10 @@ class StandInRobot:
         if not out["ok"]:
             raise UserError(f"The run did not complete: {out['why'] or 'see the hardware log'}.",
                             "Check the arm and the controller's errors, then run it again.")
+        short = None if dry_run else ended_early(out["seconds"], prog.get("lines"), self.emulator_scale(side))
+        if short:                                       # the controller stopped it (an E-stop gives no error code)
+            raise UserError(f"Program {pid} ended {short}: it was stopped on the controller (an E-stop, or its pendant), "
+                            "not completed.", "Check the arm and its E-stop, then run it again.")
         job.log(f"Finished: the controller completed program {pid} ({out['seconds']:.1f} s with the move to the start).")
         res = dict(program_id=pid, dry_run=dry_run, seconds=out["seconds"])
         if on_done:
@@ -1160,10 +1207,15 @@ class StandInRobot:
     def upload(self, side: str, program_id: int, path: Path, name: str, sha256: str, replace: bool, title: str,
                stage: dict | None = None):
         """Store a file as program ``program_id``, with the stage it must run with (so a run by
-        number can stage it too)."""
+        number can stage it too). Never while the arm moves: a run (S2's included) would go on with a
+        program it was not checked with, and two commands would share the arm's connection."""
         a = self.arm(side)
         if not a.connected:
             raise UserError(f"The {side.upper()} arm is not connected.", "Connect it from the bar at the top.")
+        moving = [j for j in self.jobs.running(arm=side) if j.kind in MOTION_KINDS]
+        if moving:
+            raise UserError(f"The {side.upper()} arm is busy: {moving[0].title}.", "Send the file once it has ended.",
+                            code="busy")
         pid = int(program_id)
         if not 1 <= pid <= 100:
             raise UserError("Program numbers are 1 to 100.")
