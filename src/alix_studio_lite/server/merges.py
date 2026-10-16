@@ -137,6 +137,83 @@ def save(units, side: str, name: str, parts: list[dict], stage: "staging.Stage",
     return dict(meta, file=dst.name, path=str(dst))
 
 
+def loaded_folder(units, side: str) -> Path:
+    return folder(units, side) / "loaded"
+
+
+MAX_LOADED_BYTES = 20 * 1024 * 1024
+
+
+def load_file(units, side: str, name: str, content, pole_mm, hand, path: str | None = None) -> dict:
+    """A trajectory file loaded into S1 from this computer (the owner, 16 Oct: "a browse option to load from
+    the computer folder but warn the user that we do not know the pole and hand states for those tasks that
+    are not taught in the lite app"): checked as a track and kept in the project to merge, with the pole and
+    hand the operator says it was taught with (the guards need them); the arm is the card's, and a name or
+    folder that says the other arm is refused. No UGV placement or room is known for it: it merges only with
+    files that have none (``placement.differences``)."""
+    import hashlib
+    import tempfile
+
+    from ..motion import track
+    from .library import detect_arm
+
+    name = Path(str(name or "")).name.strip()[:120]
+    if not name:
+        raise UserError("A file name is needed.")
+    if not name.lower().endswith(".txt"):
+        raise UserError(f"{name} is not a .txt trajectory file.")
+    if not isinstance(content, str) or not content.strip():
+        raise UserError(f"{name} is empty.")
+    if len(content.encode("utf-8")) > MAX_LOADED_BYTES:
+        raise UserError(f"{name} is too large for a trajectory (over 20 MB).")
+    said = detect_arm(path or name)
+    if said and said != side:
+        raise UserError(f"{name}: its name says the {said.upper()} arm, so it is never merged on the {side.upper()} arm.", code="arm")
+    stage = staging.make_stage(pole_mm, hand, "stated when it was loaded into S1 (not taught in Lite)")
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td) / name
+        tmp.write_text(content, encoding="utf-8")
+        try:
+            md = track.read_md(tmp)
+        except ValueError as exc:
+            raise UserError(f"{name} is not a trajectory Lite can use: {str(exc).replace(str(tmp), name)}",
+                            "A trajectory has one line per 5 ms: {\"point\":[7 whole numbers]}.") from None
+        data = tmp.read_bytes()
+    sha = hashlib.sha256(data).hexdigest()
+    with units.lock:
+        d = loaded_folder(units, side)
+        for m in sorted(d.glob("*.source.json")) if d.is_dir() else []:   # the same bytes again: the one kept
+            meta = _meta(m.with_name(m.name[:-len(".source.json")] + ".txt"))
+            if meta.get("sha256") == sha:
+                return dict(meta, file=m.name[:-len(".source.json")] + ".txt", again=True)
+        if units.name_owner(name):
+            name = units.free_name(name)
+        d.mkdir(parents=True, exist_ok=True)
+        stem = re.sub(r"[^A-Za-z0-9_.\-]+", "_", Path(name).stem)[:60] or "loaded"
+        dst = d / f"{time.strftime('%Y%m%d_%H%M%S')}_{stem}.txt"
+        n = 2
+        while dst.exists():
+            dst = dst.with_name(f"{time.strftime('%Y%m%d_%H%M%S')}_{stem}_{n}.txt")
+            n += 1
+        dst.write_bytes(data)
+        lines = int(md.shape[0])
+        meta = dict(name=name, side=side, taught_arm=side, stage=stage.as_dict(), lines=lines,
+                    seconds=round((lines - 1) * staging.CYCLE_S, 3), sha256=sha, loaded=time.strftime("%Y-%m-%d %H:%M:%S"),
+                    folder=str(Path(path).parent) if path and Path(path).parent != Path(".") else "")
+        dst.with_suffix(".source.json").write_text(json.dumps(meta, indent=1), encoding="utf-8")
+    return dict(meta, file=dst.name)
+
+
+def loaded(units, side: str) -> list[dict]:
+    d = loaded_folder(units, side)
+    out = []
+    for m in sorted(d.glob("*.source.json")) if d.is_dir() else []:
+        f = m.with_name(m.name[:-len(".source.json")] + ".txt")
+        if f.is_file():
+            out.append(dict(_meta(f), file=f.name, path=str(f)))
+    return out
+
+
 def rename(units, side: str, file: str, name: str) -> dict:
     m = get(units, side, file)
     name = Path(str(name or "").strip()).name[:120]
@@ -209,6 +286,9 @@ def sources(units, side: str) -> list[dict]:
     for m in listing(units, side):
         out.append(_item(units, side, "merge", None, m["file"], "Merges", m["name"], m.get("lines"), m.get("taught_arm"),
                          m.get("stage"), m.get("placement"), m.get("phase"), m.get("sha256"), m.get("made")))
+    for m in loaded(units, side):                          # loaded from this computer: not taught in Lite
+        out.append(_item(units, side, "file", None, m["file"], "Loaded from this computer", m["name"], m.get("lines"),
+                         m.get("taught_arm"), m.get("stage"), None, None, m.get("sha256"), m.get("loaded")))
     for it in out:
         it["placement_text"] = pl.words(it["placement"])
     return out
@@ -304,6 +384,13 @@ def _path_of(units, side: str, it: dict) -> Path:
     kind, rest = it["ref"].split("|", 1)[-1].split(":", 1)       # another project's: "p:<id>|<its ref>"
     if kind == "merge":
         return Path(checked(units, side, rest)["path"])
+    if kind == "file":
+        path = loaded_folder(units, side) / Path(rest).name
+        if not path.is_file():
+            raise UserError(f"{it['name']} is no longer in the project.", "Load it again.")
+        if it.get("sha256") and track.sha256_file(path) != it["sha256"]:
+            raise UserError(f"{it['name']} is not the file that was loaded: its bytes have changed.")
+        return path
     key, _, which = rest.partition("/")
     if kind == "rec":
         rec = next((r for r in units.recordings(key) if r["file"] == which), None)

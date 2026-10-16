@@ -1350,6 +1350,17 @@ def post_merge_sources(app, q, body, m):
             "items": merges.with_compatibility(items, picked)}
 
 
+@route("POST", P + r"/merge-files/(left|right)")
+def post_merge_file(app, q, body, m):
+    """S1's Load from this computer: a .txt trajectory kept in the project to merge (``{name, content, path,
+    pole_mm, hand}``: the pole and hand it was taught with, which Lite does not know for a file it did not
+    record)."""
+    units, side = units_of(app, m.group(1)), m.group(2)
+    out = merges.load_file(units, side, body.get("name"), body.get("content"), body.get("pole_mm"), body.get("hand"),
+                           str(body.get("path") or "") or None)
+    return {k: v for k, v in out.items() if k != "path"}
+
+
 @route("POST", P + r"/merges/(left|right)/from-project")
 def post_merge_from_project(app, q, body, m):
     """S1's merge of the files, in order (``files``: refs from merge-sources; another project's with

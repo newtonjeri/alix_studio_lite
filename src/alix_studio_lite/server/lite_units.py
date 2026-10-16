@@ -224,6 +224,9 @@ class LiteUnits(Project):
                 file = m.name[:-len(".source.json")] + ".txt"
                 if ("merge", f"{side}/{file}") != skip and str(_read_json(m, {}).get("name") or "").casefold() == want:
                     return f"merge:{side}"
+            for m in sorted((d / "loaded").glob("*.source.json")) if (d / "loaded").is_dir() else []:   # and S1's loaded files
+                if str(_read_json(m, {}).get("name") or "").casefold() == want:
+                    return f"loaded:{side}"
         return None
 
     def free_name(self, name: str) -> str:
@@ -236,6 +239,8 @@ class LiteUnits(Project):
         return cand
 
     def taken_text(self, name: str, owner: str) -> str:
+        if owner.startswith("loaded:"):
+            return f"{Path(str(name)).name.strip()} is already the name of a {owner[7:].upper()} file loaded into S1 in this project"
         if owner.startswith("merge:"):
             return f"{Path(str(name)).name.strip()} is already the name of a {owner[6:].upper()} merge in this project"
         return f"{Path(str(name)).name.strip()} is already the name of a recording in this project ({display_name(self.units[owner])})"

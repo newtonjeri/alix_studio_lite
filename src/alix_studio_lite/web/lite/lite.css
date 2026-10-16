@@ -626,6 +626,8 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-s1-head { display: flex; gap: 10px; align-items: center; }
 .lite-s1-pickrow { margin-top: 0; align-items: flex-end; }
 .lite-s1-pickrow select { min-height: 44px; }
+.lite-s1-loadrow { margin-top: 6px; }
+.lite-s1-loadrow .btn { padding: 6px 10px; min-height: 34px; }
 .lite-s1-merges { max-height: 260px; overflow: auto; }
 .lite-s1-why { font-size: 12px; margin-top: 2px; }
 .lite-s1-merges td:nth-child(3) { white-space: nowrap; }

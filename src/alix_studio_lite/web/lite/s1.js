@@ -14,7 +14,7 @@
 //    keeps comes back here as a new merge.
 
 import { call, get, post, say } from './api.js';
-import { confirmDialog, ctx, el, jobLine, robotCall, tell, watchJob } from './ctx.js';
+import { armFromName, confirmDialog, ctx, el, jobLine, robotCall, stageDialog, tell, watchJob } from './ctx.js';
 import { borrow, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { saveBlobAs } from './tune.js';
@@ -24,7 +24,12 @@ import { choose } from './picker.js';
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
 const ARM = (s) => s.toUpperCase();
-const KIND = { rec: 'Recording', ver: 'Kept version', merge: 'Merge' };
+const KIND = { rec: 'Recording', ver: 'Kept version', merge: 'Merge', file: 'Loaded file' };
+// what Lite says before a file it did not record joins a merge (the owner, 16 Oct: "warn the user that we do not know
+// the pole and hand states for those tasks that are not taught in the lite app")
+const LOAD_WARNING = 'Lite does not know the pole height and hand pose these files were taught with: they were not taught in Lite. '
+  + 'Say them as the robot had them when they were taught. A merge stages them before it runs, so a wrong value runs it at the wrong '
+  + 'height or with the wrong hand. Lite has no UGV placement or room for them either: they merge only with files that have none.';
 const PHASE_WORDS = { lid_closed: 'lid closed', lid_open: 'lid open', seat_open: 'seat open' };
 const fresh = () => ({ items: [], picked: [], merges: [], sel: null, busy: false, scope: 'project' });
 const st = { left: fresh(), right: fresh() };
@@ -62,6 +67,13 @@ function build() {
           el('button', { id: `liteS1Add_${side}`, class: 'lite-picker-btn', type: 'button', 'aria-haspopup': 'listbox', 'aria-expanded': 'false',
             onclick: (e) => chooseFile(side, e.currentTarget) }, el('span', { class: 'lite-picker-value', text: 'Choose a file to add…' })))),
       el('div', { id: `liteS1Count_${side}`, class: 'mini-note' }),
+      el('div', { class: 'lite-row lite-s1-loadrow' },
+        btn('Load files from this computer…', () => $(`liteS1Load_${side}`).click()),
+        btn('Load a folder…', () => $(`liteS1LoadDir_${side}`).click()),
+        el('input', { id: `liteS1Load_${side}`, type: 'file', accept: '.txt,text/plain', multiple: true, hidden: true,
+          onchange: (e) => loadFiles(side, e.target) }),
+        el('input', { id: `liteS1LoadDir_${side}`, type: 'file', multiple: true, hidden: true, webkitdirectory: '',
+          onchange: (e) => loadFiles(side, e.target) })),
       el('h4', { text: '2 · Merge order' }),
       el('ol', { id: `liteS1Order_${side}`, class: 'lite-s1-order' }),
       el('div', { class: 'lite-row' },
@@ -133,6 +145,34 @@ async function repick(side) {
     st[side].items = src.items;
   } catch (err) { tell(err); }
   paint(side);
+}
+
+// Files from this computer (a folder too) kept in the project to merge, with the pole and hand the operator says
+// they were taught with, after the warning; a file named for the other arm is left out (server/merges.py).
+async function loadFiles(side, input) {
+  const files = [...(input.files || [])].filter(f => /\.txt$/i.test(f.name));
+  input.value = '';
+  if (!files.length) { window.toast('Choose .txt trajectory files.'); return; }
+  const where = (f) => f.webkitRelativePath || f.name;
+  const other = files.filter(f => { const a = armFromName(where(f)); return a && a !== side; });
+  const mine = files.filter(f => !other.includes(f));
+  const otherArm = ARM(side === 'left' ? 'right' : 'left');
+  if (!mine.length) { window.toast(`${other.length === 1 ? `${other[0].name} is` : 'These files are'} named for the ${otherArm} arm: never merged on the ${ARM(side)} arm.`); return; }
+  const said = await stageDialog({ title: `Load ${mine.length === 1 ? mine[0].name : `${mine.length} files`} into the ${ARM(side)} merges`,
+    body: LOAD_WARNING, arm: side });
+  if (!said) { status(side, 'Nothing loaded: without their pole and hand, files cannot be checked against the others.', 'warn'); return; }
+  let ok = 0;
+  const refused = [];
+  for (const f of mine) {
+    try {
+      await post(`${base()}/merge-files/${side}`, { name: f.name, path: where(f), content: await f.text(), pole_mm: said.pole_mm, hand: said.hand });
+      ok += 1;
+    } catch (err) { refused.push(`${f.name}: ${say(err)}`); }
+  }
+  status(side, `${ok} file${ok === 1 ? '' : 's'} loaded: in the list under Loaded from this computer.`
+    + (other.length ? ` ${other.length} named for the ${otherArm} arm left out.` : '') + (refused.length ? ` Refused: ${refused.join('; ')}` : ''),
+  refused.length || other.length ? 'warn' : 'ok');
+  await load(side);
 }
 
 // The files to add as a searchable list (picker.js): by project and region; a file that cannot join is

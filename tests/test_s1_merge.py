@@ -195,3 +195,25 @@ def test_the_files_of_all_projects_can_be_merged(lite):
     assert any(x["file"] == m["file"] for x in call(lite, "GET", f"{P}/merges")["left"])           # kept in this project
     refused = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_away.txt", "files": [away["ref"]]})
     assert "another commode" in refused["error"]
+
+
+def test_a_file_from_this_computer_is_loaded_with_the_pole_and_hand_said(lite):
+    """S1's Load from this computer (the owner, 16 Oct): Lite does not know the pole and hand of a file it did not
+    record, so they are said when it is loaded; it is kept in the project and merges like the others, the guards
+    the same (no UGV placement: only with files that have none); a file named for the other arm is refused."""
+    from alix_studio_lite.motion import track
+
+    t = np.linspace(0.0, 1.0, 200)[:, None]
+    md = np.round((np.array([[0, -60, 0, 90, 0, 30, 0]]) + 3.0 * np.sin(2 * np.pi * t)) * 1000).astype(np.int64)
+    text = track.track_bytes(md).decode()
+    out = call(lite, "POST", f"{P}/merge-files/left", {"name": "L_from_pc.txt", "content": text, "pole_mm": 150, "hand": "GRIP"})
+    assert out["name"] == "L_from_pc.txt" and out["stage"]["pole_mm"] == 150 and out["lines"] == 200
+    again = call(lite, "POST", f"{P}/merge-files/left", {"name": "L_copy.txt", "content": text, "pole_mm": 150, "hand": "GRIP"})
+    assert again["again"] and again["file"] == out["file"]                                          # the same bytes: one copy
+    assert "never merged on the LEFT arm" in call(lite, "POST", f"{P}/merge-files/left",
+                                                  {"name": "R_other.txt", "content": text, "pole_mm": 150, "hand": "GRIP"})["error"]
+    assert "pole height" in call(lite, "POST", f"{P}/merge-files/left", {"name": "L_x.txt", "content": text, "hand": "GRIP"})["error"]
+    item = next(it for it in call(lite, "POST", f"{P}/merge-sources/left", {"picked": []})["items"] if it["kind"] == "file")
+    assert item["region"] == "Loaded from this computer" and not item["why"] and item["placement"] is None
+    m = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_with_pc.txt", "files": [item["ref"]]})
+    assert m["stage"]["pole_mm"] == 150 and m["parts"][0]["name"] == "L_from_pc.txt"
