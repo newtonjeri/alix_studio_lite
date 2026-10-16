@@ -138,3 +138,21 @@ def test_send_to_tune_and_back_to_s1(lite):
     units = LiteUnits(lite["data"] / "projects" / PID, "commode_c")
     assert units.is_merge_unit(key) and units.units[key]["merge"]["name"] == "L_s1_merge.txt"
     assert key not in list(units.units) and units.name_owner("L_s1_merge_tuned.txt") == "merge:left"
+
+
+def test_a_merge_is_renamed_downloaded_and_sent(lite):
+    m = next(x for x in call(lite, "GET", f"{P}/merges")["left"] if x["name"] == "L_s1_merge.txt")
+    taken = call(lite, "POST", f"{P}/merges/left/{m['file']}/name", {"name": "L_s1_a.txt"})          # a recording's name
+    assert taken["code"] == "name"
+    assert call(lite, "POST", f"{P}/merges/left/{m['file']}/name", {"name": "L_s1_lid"})["name"] == "L_s1_lid.txt"
+    r = urllib.request.Request(f"{lite['base']}{P}/merges/left/{m['file']}/download", headers={"X-Lite-Token": lite["tok"]})
+    with urllib.request.urlopen(r, timeout=30) as resp:
+        assert resp.read().count(b"\n") == m["lines"] and "L_s1_lid.txt" in resp.headers.get("Content-Disposition", "")
+    for arm in ("left", "right"):
+        call(lite, "POST", f"/api/robots/{arm}/connect", {})
+    call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})
+    job = call(lite, "POST", f"{P}/merges/left/{m['file']}/upload", {"program_id": 30, "limits_seen": True})
+    assert wait(lite, job)["state"] == "done"
+    held = lite["app"].robot.arm("left").programs[30]
+    assert held["sha256"] == m["sha256"] and held["stage"]["pole_mm"] == 150                        # sent with its stage
+    call(lite, "POST", "/api/robots/mode", {"mode": "visual"})

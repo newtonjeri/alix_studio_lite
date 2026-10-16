@@ -106,14 +106,11 @@
 .lite-3d-msg { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; padding: 24px; text-align: center;
   color: var(--vp-text); font-weight: 700; line-height: 1.5; }
 /* ALIX Studio's notice when the browser gives no WebGL (editor.css .webgl-fail), in the 3D panes and pictures */
-.lite-3d-msg.webgl-fail, .lite-pic-msg.webgl-fail { display: flex; flex-direction: column; align-items: center; justify-content: center;
+.lite-3d-msg.webgl-fail { display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 10px; overflow: auto; font-weight: 400; }
 .webgl-fail strong { color: var(--lite-d-orange); font-size: 18px; }
 .webgl-fail span { max-width: 560px; font-size: 13px; line-height: 1.5; }
 .webgl-fail code { color: var(--lite-d-blue); font-family: "JetBrains Mono", ui-monospace, monospace; }
-.lite-pic-msg.webgl-fail { z-index: 3; justify-content: flex-start; }
-.lite-pic-msg.webgl-fail strong { font-size: 15px; }
-.lite-pic-msg.webgl-fail span { font-size: 12px; }
 /* in the simulation pane, between its caption (top) and its playback controls (bottom); it scrolls there */
 .simulation-placeholder.lite-3d > .lite-3d-msg.webgl-fail { inset: 62px 0 208px; padding: 4px 20px; gap: 6px; justify-content: safe center; }
 .simulation-placeholder.lite-3d > .lite-3d-msg.webgl-fail strong { font-size: 16px; }
@@ -124,16 +121,6 @@
    Record Again and the preview area) is removed (the owner, 14 Oct). */
 #stage-review .active-trajectory-bar + .cta-row, #stage-review .playback-preview { display: none !important; }
 
-/* The single-arm merged simulation in 3D (pictures.js): the designer's frame stays; inside it, the
-   canvas and a status line, the reference image hidden. Elsewhere the page shows its own images. */
-.lite-pic { position: relative; overflow: hidden; isolation: isolate; background: var(--lite-viewport-bg) !important; }
-.lite-pic > .single-arm-sim-image { display: none !important; }
-.lite-pic > .lite-3d-canvas { cursor: grab; }
-.lite-pic > .lite-3d-canvas:active { cursor: grabbing; }
-.lite-pic-msg { position: absolute; inset: 0; z-index: 0; display: grid; place-items: center; padding: 12px; text-align: center;
-  font-size: 13px; font-weight: 700; color: var(--vp-text); }
-.single-arm-sim-viewport.lite-pic .single-arm-sim-status, .single-arm-sim-viewport.lite-pic .single-arm-sim-controls { z-index: 3; }
-.lite-single-note { margin: 4px 0 0; }
 #visualRefCounter { white-space: nowrap; flex-shrink: 0; }
 
 /* Robot & mode */
@@ -247,36 +234,6 @@ html[data-theme="dark"] .lite-limit.warn { color: var(--lite-d-orange); }
 html[data-theme="dark"] .lite-status.ok, html[data-theme="dark"] .lite-badge.fast, html[data-theme="dark"] .lite-pipe-done { color: var(--lite-d-green); }
 html[data-theme="dark"] .lite-status.warn, html[data-theme="dark"] .lite-badge.slow, html[data-theme="dark"] .lite-warn { color: var(--lite-d-orange); }
 html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
-
-/* Merge + Full Sequence: the full simulation in 3D (sequence.js) */
-.lite-seq-scene .full-sim-reference-image, .lite-seq-scene .full-sim-image-caption { display: none !important; }
-.lite-seq-scene { background: var(--lite-viewport-bg); }
-.lite-seq-status { flex: 1 1 100%; text-align: center; font-size: 13px; font-weight: 700; color: var(--ink); }
-.lite-seq-status.warn { color: var(--orange); }
-.lite-seq-status.ok { color: var(--green); }
-.lite-seq-slider { flex: 1 1 100%; display: flex; }
-.lite-seq-slider input { flex: 1; }
-.lite-seq-source select { min-height: 36px; margin-left: 4px; }
-/* the page laid its overlays over a picture; over a live robot they get rows of their own */
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-viewport { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px;
-  grid-template-rows: auto auto minmax(0, 1fr) auto; grid-template-areas: "progress" "arms" "scene" "controls"; place-items: stretch; }
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-progress,
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-arm-status-grid,
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-overlay-controls { position: static !important; transform: none; width: auto; inset: auto; }
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-progress { grid-area: progress; padding: 6px 10px; }
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-arm-status-grid { grid-area: arms; }
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-arm-status { padding: 6px 10px; gap: 2px; box-shadow: none; }
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-scene { grid-area: scene; position: relative !important; inset: auto !important; border-radius: 12px; min-height: 200px; }
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .dual-interlock { grid-area: scene; position: static; transform: none; align-self: start; justify-self: center;
-  margin-top: 8px; width: min(92%, 860px); }
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-overlay-controls { grid-area: controls; padding: 8px; gap: 6px; }
-:is(#fullSequenceSimModal, #liteRunSim).lite-seq .full-sim-overlay-controls .btn { min-height: 40px; padding: 6px 14px; }
-.lite-seq-plan { grid-area: scene; align-self: start; justify-self: end; z-index: 6; margin: 52px 8px 8px 0; width: min(460px, 46%);
-  max-height: calc(100% - 64px); overflow: auto; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-  padding: 8px 10px; box-shadow: var(--shadow); }
-.lite-seq-plan summary { cursor: pointer; font-weight: 800; font-size: 13px; }
-.lite-seq-row { border-top: 1px solid var(--line); padding: 6px 0; display: grid; gap: 2px; font-size: 12px; }
-.lite-seq-row small { color: var(--muted); }
 
 /* ALIX's brand mark in place of the page's "AX" tiles (brand.js), bare as ALIX Studio shows it */
 .lite-brand { background: none !important; box-shadow: none !important; padding: 0; }
@@ -488,32 +445,6 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 #poseModal .pose-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 #poseModal .pose-grid input { width: 100%; min-width: 0; }
 
-/* Merge + Full Sequence: each flow row's files (feedback v2, slide 8) */
-.lite-flow-file { display: grid; gap: 3px; margin-top: 6px; min-width: 220px; }
-.lite-flow-file select { font-size: 12px; padding: 5px 6px; }
-.lite-flow-file small { font-size: 11px; }
-
-/* Merge + Full Sequence: what to run, the simulation at full width, the real machine (feedback v2) */
-.lite-run { display: grid; gap: 14px; margin: 14px 0; }
-.lite-run .card { margin: 0; }
-.lite-run-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-.lite-run-row > .field { margin: 0; min-width: 240px; }
-.lite-run-pick { display: flex; flex: 1 1 520px; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
-.lite-run-pick .field { margin: 0; }
-.lite-run-pick .mini-note { flex: 1 1 100%; }
-.lite-run-grow { flex: 1 1 280px; }
-.lite-run-grow select { width: 100%; }
-.lite-run-chips { display: flex; flex: 1 1 100%; flex-wrap: wrap; gap: 6px; }
-.lite-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 10px; border: 1px solid var(--line);
-  border-radius: 999px; background: var(--bg); font-size: 12px; font-weight: 700; color: var(--ink); }
-.lite-chip-x { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; padding: 2px 4px; }
-#liteRunSim .full-sim-viewport { height: min(80vh, 780px); position: relative; border-radius: 14px; }
-.lite-run-real .real-full-run { margin-top: 12px; }
-.lite-run-real .cta-row input { width: 130px; min-height: 44px; }
-#view-sequence .full-run-grid[hidden] { display: none !important; }   /* its view is in the page now (run.js) */
-.lite-merge-tools { display: grid; gap: 8px; margin: 8px 0; }
-.lite-merge-tools .inline input { flex: 1; min-width: 0; }
-
 /* Compare: what the simulation plays (the owner, 16 Oct); a click on a plot is that moment */
 .lite-cmp3d { align-items: center; gap: 10px; margin-top: 8px; }
 .lite-cmp3d-head { font-size: 13px; font-weight: 800; color: var(--ink); }
@@ -579,3 +510,99 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-sensitivity input[type="range"] { flex: 1 1 220px; accent-color: var(--blue); }
 .lite-sens-val { min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
 .lite-sensitivity .mini-note { flex-basis: 100%; }
+
+/* Merge + Full Sequence: tabs S1 and S2 in place of the page's sections (fullseq.js; the owner, 16 Oct) */
+.lite-seq .section-head { margin-bottom: 12px; }
+.lite-tabs { display: flex; gap: 8px; margin: 0 0 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.lite-tab { border: 1px solid var(--line); border-bottom: 0; background: var(--bg); color: var(--muted); border-radius: 12px 12px 0 0;
+  padding: 10px 18px; font-weight: 700; margin-bottom: -1px; }
+.lite-tab b { color: var(--blue); margin-right: 4px; }
+.lite-tab.active { background: var(--card); color: var(--ink); border-color: var(--line); box-shadow: 0 -2px 0 var(--blue) inset; }
+.lite-seq-panel[hidden] { display: none; }
+.lite-seq h4 { margin: 14px 0 6px; font-size: 13px; }
+.lite-grow { flex: 1 1 200px; min-width: 0; }
+.lite-off td { opacity: .55; }
+.lite-off td:first-child { opacity: 1; }
+.lite-picked { background: var(--blue2); }
+.lite-picked td { opacity: 1; }
+
+/* S1, Merge & Upload (s1.js) */
+.lite-s1-hint { margin-bottom: 12px; }
+.lite-s1-arms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.lite-s1-arm { margin: 0; min-width: 0; }
+.lite-s1-head { display: flex; gap: 10px; align-items: center; }
+.lite-s1-files { max-height: 340px; overflow: auto; }
+.lite-s1-merges { max-height: 260px; overflow: auto; }
+.lite-s1-why { font-size: 12px; margin-top: 2px; }
+.lite-s1-files td:nth-child(3), .lite-s1-merges td:nth-child(3) { white-space: nowrap; }
+#liteS2Speedup { min-height: 40px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); }
+.lite-s1-order { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.lite-s1-order li { display: flex; gap: 8px; align-items: center; justify-content: space-between; font-size: 13px; }
+.lite-s1-order .lite-s1-empty { list-style: none; margin-left: -22px; }
+.lite-s1-order-tools { display: flex; gap: 4px; }
+.lite-s1-order-tools .btn, .lite-s1-files .btn { padding: 4px 10px; min-height: 30px; }
+.lite-s1-tools { display: grid; gap: 8px; margin-top: 10px; }
+.lite-s1-tools[hidden] { display: none; }
+.lite-s1-tools .field { margin: 0; }
+.lite-s1-tools input[type="number"] { width: 110px; }
+.lite-s1-sim { margin-top: 14px; }
+.lite-s1-sim-grid, .lite-s2-simgrid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 14px; }
+.lite-s1-sim-grid .lite-rev3d-host, .lite-s2-simgrid .lite-rev3d-host { min-height: 420px; }
+.lite-s1-sim-grid input[type="range"], .lite-s2-simgrid input[type="range"] { width: 100%; }
+
+/* S2, Full & Partial Sequence: V53's Page 02 in the page's style (s2.js) */
+.lite-s2-header { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; }
+.lite-s2-header h3 { margin: 4px 0; }
+.lite-s2-exec, .lite-s2-control { margin: 0 0 12px; display: grid; gap: 10px; }
+.lite-s2-modes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lite-s2-modes > b { min-width: 120px; font-size: 13px; }
+.lite-s2-mode.active { background: var(--blue); color: var(--card); border-color: var(--blue); }
+.lite-s2-ranges { display: inline-flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.lite-s2-ranges[hidden] { display: none; }
+.lite-s2-range { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
+.lite-s2-range input { width: 72px; }
+.lite-s2-kicker { font-size: 12px; font-weight: 800; letter-spacing: .06em; color: var(--blue); margin: 4px 0; }
+.lite-s2-check { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 700; }
+.lite-s2-speed { font-size: 13px; font-weight: 700; }
+.lite-s2-statustext { font-size: 13px; color: var(--muted); }
+.lite-s2-runtime { font-variant-numeric: tabular-nums; color: var(--green); }
+.lite-s2-live { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.lite-s2-livearm { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 10px 14px; font-weight: 800; font-size: 13px; }
+.lite-s2-arms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.lite-s2-arm { margin: 0; min-width: 0; display: grid; gap: 8px; align-content: start; }
+.lite-s2-armhead { font-size: 13px; color: var(--blue); }
+.lite-s2-arm.right .lite-s2-armhead { color: var(--orange); }
+.lite-s2-subtabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.lite-s2-subtab { border: 1px solid var(--line); background: var(--bg); color: var(--muted); border-radius: 10px; padding: 7px 12px; font-size: 12px; font-weight: 800; }
+.lite-s2-subtab.active { background: var(--card); color: var(--blue); border-color: var(--blue); }
+.lite-s2-add { border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: grid; gap: 6px; }
+.lite-s2-add[hidden] { display: none; }
+.lite-s2-add .field { margin: 0; }
+.lite-s2-add input[type="number"] { width: 82px; }
+.lite-s2-hand input[type="number"] { width: 66px; }
+.lite-s2-table { max-height: 330px; overflow: auto; }
+.lite-s2-table tr { cursor: pointer; }
+.lite-s2-table tr:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.lite-s2-now { box-shadow: inset 4px 0 0 var(--green); }
+.lite-s2-now td { font-weight: 800; }
+.lite-s2-tools .btn { padding: 6px 12px; min-height: 34px; }
+.lite-s2-runbar .btn { min-height: 42px; }
+.lite-s2-sim { margin-top: 14px; }
+.lite-s2-sim[hidden] { display: none; }
+.lite-s2-stages { display: grid; gap: 4px; }
+.lite-s2-stage { text-align: left; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 6px 8px; font-size: 12px; }
+.lite-s2-stage.active { border-color: var(--blue); background: var(--blue2); font-weight: 800; }
+.lite-s2-findings { display: grid; gap: 6px; }
+.lite-s2-findlist { margin: 0; padding-left: 18px; font-size: 12px; display: grid; gap: 4px; }
+.lite-s2-checkmark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--violet); }
+.lite-tune-merge { margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lite-tune-merge[hidden] { display: none; }
+@media (max-width: 1100px) {
+  .lite-s1-arms, .lite-s2-arms, .lite-s2-live, .lite-s1-sim-grid, .lite-s2-simgrid { grid-template-columns: minmax(0, 1fr); }
+}
+html[data-theme="dark"] .lite-tab b, html[data-theme="dark"] .lite-s2-kicker, html[data-theme="dark"] .lite-s2-armhead,
+html[data-theme="dark"] .lite-s2-subtab.active { color: var(--lite-d-blue); }
+html[data-theme="dark"] .lite-s2-arm.right .lite-s2-armhead { color: var(--lite-d-orange); }
+html[data-theme="dark"] .lite-s2-runtime { color: var(--lite-d-green); }
+html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); color: var(--lite-d-sunken); border-color: var(--lite-d-blue); }
+.lite-s2-table thead th, .lite-s1-files thead th, .lite-s1-merges thead th { position: sticky; top: 0; z-index: 1; }

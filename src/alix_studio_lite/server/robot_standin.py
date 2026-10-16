@@ -1133,40 +1133,6 @@ class StandInRobot:
             on_done(res)
         return res
 
-    def run_foreign(self, side: str, program_id: int, *, stage: "staging.Stage", mode: str, title: str):
-        """A program on a linked controller that Lite did not send (feedback v2, slide 11): its pole and
-        hand as the operator states them, staged first; then the control program's own run, which
-        lets the controller move the arm to the program's first point in its own joint move. On this
-        arm alone: the other arm stays stopped."""
-        real = self._real(side)
-        if real is None:
-            raise UserError("The stand-in holds only the programs Lite sent.", code="connect")
-        pid, dry = int(program_id), mode != "real"
-
-        def work(job):
-            self._stage(job, side, stage, mode)
-            self._same_mode(mode, "the pole and the hand were staged, but the program did not start")
-            want = "SIM" if dry else "REAL"
-            originals = real.set_run_mode(want)
-            try:
-                self.arm(side).controller_mode = want
-                job.log(f"Controller mode {want} (read back).")
-                job.progress(f"Running program {pid}: the controller first moves the arm to its first point"
-                             + (" (the controller's SIM mode: the arm stays still)" if dry else ""), 0, 1)
-                out = real.run(pid, None, None,
-                               on_line=lambda ln: job.log(ln.strip()) if ln.strip().startswith(("running", "RUN", "!!", "**")) else None,
-                               speed=self.speed_pct, restore_pct=self.found_speed(side))
-            finally:
-                real.restore_run_mode(originals)
-            job.check()
-            if not out["ok"]:
-                raise UserError(f"Program {pid} did not complete: {out['why'] or 'see the hardware log'}.",
-                                "Check the arm and the controller's errors.")
-            job.log(f"Finished: the controller completed program {pid} ({out['seconds']:.1f} s).")
-            return dict(program_id=pid, dry_run=dry, seconds=out["seconds"])
-
-        return self._start("run", title, work, side, mode, alone=True)
-
     # ── programs
     def programs(self, side: str) -> list[dict]:
         """Programs 1-100: a linked arm's as its controller lists them (with Lite's record of the

@@ -22,8 +22,11 @@ def _run_args(body: dict) -> tuple[str, dict | None]:
 
 @route("GET", W)
 def get_workflow(app, q, body, m):
-    """Both arms' steps and the last simulation (its stages, actions, findings and collisions)."""
-    return workflow.summary(units_of(app, m.group(1)))
+    """Both arms' steps, the last simulation (its stages, actions, findings and collisions) and the
+    S2 run or simulation going on, if any (a page opened again follows it)."""
+    out = workflow.summary(units_of(app, m.group(1)))
+    out["running"] = next((j.view(10 ** 9) for j in app.jobs.running() if j.title.startswith("S2 ")), None)
+    return out
 
 
 @route("PUT", W + r"/(left|right)")

@@ -1,10 +1,11 @@
 // The 3D view of the Lite UI: the project's fixture in a region's lid/seat state inside the cubicle,
 // in the robot's base frame (x forward, y left, z up), with the robot (robot3d.js) posed by ALIX's FK.
 // One scene and one robot for the page, so the robot model is loaded once. Its renderer moves:
-// attach(el) puts it in V19's simulation pane, the expanded view or the review preview; a picture
-// of the page (pictures.js) borrows it with a camera of its own, and the next attach() gives the
-// camera back as it was. Where pictures show side by side (the two arm cards), view() adds a
-// renderer of the SAME scene with its own camera and controls. Built from Legacy Lite's scene.js.
+// attach(el) puts it in V19's simulation pane, the expanded view, Save & Review's player, the
+// Trajectory Viewer or Merge + Full Sequence's S1 and S2 (seq3d.js); a view that borrows it with a
+// camera of its own gets the camera back as it was at the next attach(). view() adds a renderer of
+// the SAME scene with its own camera and controls, for views shown side by side. Built from Legacy
+// Lite's scene.js.
 
 export function css(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -291,7 +292,7 @@ export function createViewer() {
 
   // A secondary view: a plain canvas with its own camera and controls, showing this same scene (no
   // second robot, no second WebGL context): the one renderer draws it at its size and the picture
-  // is copied in. For pictures shown side by side; pictures.js keeps two and reuses them.
+  // is copied in. For views shown side by side, each kept and reused by its caller.
   // `paused()`: true while another window has the scene (the view keeps its last picture). `paths`:
   // 'left' or 'right', that arm's region path shows too.
   const kept = { x: 0, y: 0 };

@@ -12,10 +12,9 @@ import { installAuth } from './auth.js';
 import { installBrand } from './brand.js';
 import { installFixes } from './fixes.js';
 import { installFolder } from './folder.js';
+import { installFullSeq } from './fullseq.js';
 import { installLayout } from './layout.js';
-import { installMerge } from './merge.js';
 import { installNotify } from './notify.js';
-import { installPictures } from './pictures.js';
 import { installPlacement } from './placement.js';
 import { installPrepare } from './prepare.js';
 import { installProjects } from './projects.js';
@@ -23,9 +22,7 @@ import { installRealTest } from './realtest.js';
 import { installRecovery } from './recovery.js';
 import { installReview3d } from './review3d.js';
 import { installRobotPanel } from './robotpanel.js';
-import { installRun } from './run.js';
 import { installSafety } from './safety.js';
-import { installSequence } from './sequence.js';
 import { installSim } from './sim.js';
 import { installStatus } from './status.js';
 import { installSummary } from './summary.js';
@@ -49,8 +46,8 @@ installAlerts();          // hardware errors and failures, bottom right, until c
 installRobotPanel();      // Visual sim / Hardware sim / Real, connections, E-stop (D30, R4)
 installTasks();           // the 22 tasks tied to the region catalogue (D35), fixtures (D29)
 installPrepare();
-installSummary();
-installReview3d();         // Save & Review: the recording in 3D, its collision check, Trim (the owner, 16 Oct)          // the project summary's Approved Setup: pole, hand, start pose, UGV, room (the owner, 16 Oct)
+installSummary();         // the project summary's Approved Setup: pole, hand, start pose, UGV, room (the owner, 16 Oct)
+installReview3d();        // Save & Review: the recording in 3D, its collision check, Trim (the owner, 16 Oct)
 installPlacement();       // the room, the commode in it and each task's UGV placement (V32 feedback v2)
 installTransitions();     // Prepare's transition trajectories and task start points (V32)
 installTeach();           // existing recordings first (D31), drag teach, Save & Review
@@ -59,9 +56,6 @@ installTune();            // tuning with the optimiser, limits, target time (D24
 installRealTest();
 installAdvanced();
 installViewer();          // taught .txt files: upload, check, replay in 3D
-installSequence();        // Merge + Full Sequence: the full simulation in 3D, each arm step staged
-installMerge();            // the custom merge per arm: merged, renamed, downloaded, sent and run (feedback v2)
-installRun();              // ...what to run at the top, the simulation in the middle, the real machine below (feedback v2)
-installPictures();        // the single-arm merged simulation in 3D; the page's own region images elsewhere
+installFullSeq();         // Merge + Full Sequence: tabs S1 Merge & Upload, S2 Full & Partial Sequence (the owner, 16 Oct)
 installActivity();        // last: the page's audit trail goes to the server, its Activity Logs page reads it
 document.documentElement.dataset.lite = 'ready';

@@ -170,12 +170,10 @@ export function say3d(host, text, err = null) {
   }
 }
 
-// Whether the Trajectory Viewer, the full sequence or one of the page's pictures (pictures.js: Home,
-// Setup & Safety, the arm cards in Prepare, Drag & Teach and Real Test) has the 3D: the region's
-// simulation waits, and loads again when Tune shows it.
-let pictureHolds = false;
-export function pictureHas(on) { pictureHolds = !!on; }
-export const elsewhere = () => pictureHolds || !!document.querySelector('#liteViewer.show, #fullSequenceSimModal.show, #liteTransitionSim.show');
+// Whether the Trajectory Viewer, Merge + Full Sequence (S1's review, S2's simulation: seq3d.js) or
+// Prepare's transition window has the 3D: the region's simulation waits, and loads again when Tune
+// or Save & Review shows it.
+export const elsewhere = () => !!document.querySelector('#liteViewer.show, #view-sequence.active, #liteTransitionSim.show');
 
 // The stage is left, or another view takes the 3D (`stale`: it replaces the robot's tracks, so the
 // file loads again when it is shown next): nothing of the region's file keeps playing.
@@ -319,7 +317,7 @@ export function installSim() {
     const warn = (text) => { if (status) { status.textContent = text; status.className = 'statusbar warn'; } };
     if (action === 'start') {
       // only the step on screen's own file plays (never the page's stand-in timer, nor another step's file)
-      const s = ctx.pid ? step() : null;
+      const s = ctx.pid ? (ctx.tuneKey ? { key: ctx.tuneKey } : step()) : null;     // a merge from S1 in Tune
       if (!sim.tl || !s || sim.key !== s.key) {
         const why = sim.blocked && s && sim.blocked.key === s.key ? `Nothing plays: ${say(sim.blocked)}`
           : !s ? 'Open a project and choose a region first.' : 'The simulation is still loading: press ▶ Start again in a moment.';

@@ -1290,8 +1290,49 @@ export async function retune() {
   return tuning;
 }
 
+// A merge sent from Merge + Full Sequence S1 (the owner, 16 Oct: "transfer the file to the Tune +
+// Simulation Workspace"): Tune opens the merged file as its source (a unit of its own on the
+// server), says so above its steps, and what is kept goes back to S1 as a new merge, never to Real
+// Test. Choosing a task, an arm or another stage goes back to the region.
+const SAVE_TO_S1 = 'Simulation Looks Good → Save to S1';
+let footerText = null;
+
+function mergeBanner() {
+  const p = pane();
+  if (!p) return;
+  let b = $('liteTuneMerge');
+  if (!b) { b = el('div', { id: 'liteTuneMerge', class: 'notice lite-tune-merge' }); p.prepend(b); }
+  const m = ctx.tuneKey ? ctx.tuneMerge : null;
+  b.hidden = !m;
+  if (m) {
+    b.replaceChildren(el('b', { text: `Tuning the ${m.side.toUpperCase()} merge ${m.name}` }),
+      ' from Merge + Full Sequence S1. What you keep here is saved back to S1 as a new merge (Real Test is for regions). ',
+      el('button', { class: 'btn light', type: 'button', text: 'Back to S1', onclick: () => backToS1(null) }));
+  }
+  const foot = p.querySelector('button[onclick="setStage(\'real\')"]');
+  if (foot) {
+    if (footerText === null) footerText = foot.innerHTML;
+    if (m) foot.textContent = SAVE_TO_S1; else foot.innerHTML = footerText;
+  }
+}
+
+function leaveMerge() {
+  if (!ctx.tuneKey) return;
+  ctx.tuneKey = null;
+  ctx.tuneMerge = null;
+  mergeBanner();
+}
+
+function backToS1(merge) {
+  const m = ctx.tuneMerge;
+  leaveMerge();
+  pause();
+  document.dispatchEvent(new CustomEvent('lite:open-s1', { detail: merge ? { side: merge.side, file: merge.file } : (m || {}) }));
+}
+
 async function enter() {
-  const s = step();
+  const s = ctx.tuneKey ? { key: ctx.tuneKey } : step();
+  mergeBanner();
   if (!s || !ctx.pid) return;
   await flushPush();                                     // the step left keeps what was typed there
   addControls();
@@ -1315,13 +1356,28 @@ async function enter() {
 
 export function installTune() {
   onPlayhead(moveHead);
+  document.addEventListener('lite:step', () => {                // another task or arm: the region again
+    if (!ctx.tuneKey) return;
+    leaveMerge();
+    if (currentStage === 'optimize') enter();
+  });
 
   const pageSetStage = window.setStage;
   window.setStage = async function setStage(s, scroll = true) {
+    if (s === 'real' && currentStage === 'optimize' && ctx.tuneKey && ctx.pid) {     // a merge goes back to S1
+      const ok = await keep();
+      if (!ok) return;
+      let back = null;
+      try { back = (await post(unitUrl(ctx.tuneKey, 'keep'), {})).merge; } catch (err) { tell(err); return; }
+      window.toast(`${back.name} is saved in S1 as a new ${back.side.toUpperCase()} merge.`);
+      backToS1(back);
+      return;
+    }
     if (s === 'real' && currentStage === 'optimize' && step() && ctx.pid) {
       const ok = await keep();
       if (!ok) return;
     }
+    if (ctx.tuneKey && s !== 'optimize' && s !== 'simulate') leaveMerge();
     const was = currentStage;
     // Prepare stays open to the arm being taught (the owner, 14 Oct: what was forgotten there is set
     // there and carries on). The page refuses it once the arm is locked, its own Record Again
@@ -1353,6 +1409,7 @@ export function installTune() {
     const typed = !!$('liteKeepName')?.dataset.typed;
     try { await keepAs(name, !typed); } catch (err) { tell(err); return; }
     const ver = keptVersion();
+    if (ctx.tuneKey && unit.merge) { window.toast(`${unit.merge.name} is saved in S1 as a new ${unit.merge.side.toUpperCase()} merge.`); return; }
     window.toast(`${(ver && ver.name) || name} is kept in the project: Real Test uploads it.`);
   };
 

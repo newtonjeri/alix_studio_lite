@@ -261,25 +261,6 @@ def test_the_current_pose_is_saved_as_a_global_point(server):
     assert {"add global point", "update global point"} <= {r["verb"] for r in hw}
 
 
-def test_global_points_play_in_3d(server):
-    """Feedback v2, slide 11: the controller's global points as a one-step plan, the arm going from
-    point to point at the speed slider's % of each joint's rating, with the 3D frames to show it."""
-    names = ["STP_HOME", "STP_LID_OPEN", "CLEAN_A"]
-    call(server, "POST", "/api/robots/speed", {"pct": 20})
-    plan = call(server, "POST", "/api/projects/alix_real/points-plan", {"side": "left", "points": names})
-    a = plan["rows"][0]["arms"]["left"]
-    assert a["ready"] and a["lines"] > 100 and a["timeline"]["url"] == "/api/projects/alix_real/points-timeline"
-    assert a["file"] == "3 global points at 20 %"
-    fast = call(server, "POST", "/api/robots/speed", {"pct": 80}) and call(server, "POST", "/api/projects/alix_real/points-plan",
-                                                                            {"side": "left", "points": names})
-    assert fast["rows"][0]["arms"]["left"]["lines"] < a["lines"]          # the slider moves the 3D too
-    assert plan["total_s"] == a["end_at"] and "joint by joint" in plan["rows"][0]["note"] and plan["move_pct"] == 20
-    tl = call(server, "POST", a["timeline"]["url"], a["timeline"]["body"])          # the slider at 80 % now: the frames
-    assert tl["lines"] == a["lines"] and tl["traj_t0"] == a["traj_t0"] and tl["move_pct"] == 20 and "scene" in tl   # keep the plan's clock
-    call(server, "POST", "/api/robots/speed", {"pct": 20})
-    assert "no global point NOPE" in call(server, "POST", "/api/projects/alix_real/points-plan", {"side": "left", "points": ["NOPE"]})["error"]
-
-
 def test_the_speed_slider_moves_both_arms_and_each_controller_gets_its_speed_back(server):
     """Feedback v3 (15 Oct): one speed for every MoveJ / MoveL of both arms. On connecting, Lite reads the
     controller's global speed (the emulated arms report it; the real ones do not, then 50 % is taken, as

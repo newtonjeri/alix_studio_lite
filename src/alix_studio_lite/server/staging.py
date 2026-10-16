@@ -333,3 +333,20 @@ def execution_timeline(side: str, md: np.ndarray, stage: Stage, *, home: dict, l
             dict(name="trajectory", t0=round(traj_t0, 3), t1=round(traj_t0 + (n - 1) * CYCLE_S, 3),
                  text=f"Trajectory: {n:,} lines at 5 ms"),
         ])
+
+
+def check_start(start) -> dict | None:
+    """A start state from the page ({pole_mm, hand[6], q_deg[7]}: where an earlier execution left the arm),
+    checked; None = the standing pose."""
+    if start is None:
+        return None
+    try:
+        pole = float(start["pole_mm"])
+        hand = [None if c is None else int(c) for c in start["hand"]]
+        q = [float(v) for v in start["q_deg"]]
+    except (KeyError, TypeError, ValueError, OverflowError):
+        raise UserError("A start state is {pole_mm, hand: 6 counts, q_deg: 7 joints}.") from None
+    if (not 0 <= pole <= POLE_MAX_MM or len(hand) != 6 or len(q) != 7 or not all(np.isfinite(q))
+            or any(c is not None and not 0 <= c <= 1000 for c in hand)):
+        raise UserError("That start state is out of range.")
+    return dict(pole_mm=pole, hand=hand, q_deg=q)

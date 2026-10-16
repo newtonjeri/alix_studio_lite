@@ -1198,8 +1198,9 @@ def run_real(app, units, mode: str, ranges: dict | None, confirm_each: bool, bod
 
     def work(job):
         live = {s: "READY" for s in ARMS}
+        rows = {s: None for s in ARMS}
         job.set(live=dict(live), status=f"PAGE 02 PROGRAM RULES // {len(run['plan'])} coordinated stage(s)", stage=None,
-                question=None, counts=run["counts"])
+                question=None, counts=run["counts"], rows=dict(rows), mode=run["mode"])
         reals = {s: robot._real(s) for s in sides}
         originals = {}
 
@@ -1215,6 +1216,8 @@ def run_real(app, units, mode: str, ranges: dict | None, confirm_each: bool, bod
                 if text.startswith("WORKFLOW STEP START"):
                     try:
                         k = int(text.split()[3].split("/")[0])
+                        rows[side] = steps[k - 1].get("_row")
+                        job.set(rows=dict(rows))
                         say(**{side: f"{label} // {k}/{len(steps)} {_step_words(steps[k - 1])} // RUNNING"})
                     except (IndexError, ValueError):
                         pass

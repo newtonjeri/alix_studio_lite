@@ -1,7 +1,7 @@
 """Regression tests for the execution gates' fixes: a stopped tune never becomes the candidate,
 a restated stage is a new recording and a new version, every robot step keeps the mode it was
 asked in, a region's MAX DEV reaches L5, the gates show the stage a run uses, a library file
-keeps its arm and stage, and the smaller refusals (sequence rows, hand text, previews, setup,
+keeps its arm and stage, and the smaller refusals (hand text, setup,
 stated stages, the worker pool).
 
 The optimiser is replaced by a fake single-worker pool (the tuned file is the recording's bytes),
@@ -274,31 +274,7 @@ def test_loading_a_library_file_again_never_changes_it_silently(tmp_path):
     assert m["arm"] == "left" and m["stage"]["pole_mm"] == 140
 
 
-# ── the smaller ones: #7 and #10 sequence rows, #8 setup, #9 hand text, #11 pool, #12 stated stage
-
-def test_sequence_rows_never_guess_and_a_preview_never_approves(tmp_path):
-    from alix_studio_lite.motion.limits import load_limits
-    from alix_studio_lite.server import sequence, staging
-    from alix_studio_lite.server.lite_units import LiteUnits, task_list
-
-    units = LiteUnits(tmp_path / "p", "commode_c")
-    n = next(i for i, t in enumerate(task_list(units), 1) if t["left"] and t["left"]["key"] == "L-T01")
-
-    def identity(units, key, which):
-        return dict(path=TAUGHT / "FILE_10.1.txt", name=key, taught_arm="left" if key.startswith("L") else "right",
-                    stage=staging.make_stage(200, "50% open"))
-
-    def plan(rows, source="version"):
-        return sequence.plan(units, rows, source=source, home={}, identity=identity,
-                             rating={s: load_limits(s).rating_deg_s for s in ("left", "right")})
-
-    for row, why in (({"step": n, "rule": "RUN FIRST"}, "is not a rule"), ({"step": "3A"}, "is not a task number")):
-        p = plan([row])
-        assert not p["ready"] and p["rows"][0]["arms"] == {} and why in p["rows"][0]["note"] and p["blocking"]
-    assert plan([{"step": n, "rule": "left run first"}])["ready"]
-    p = plan([{"step": n}], source="recording")
-    assert p["playable"] and not p["ready"]
-
+# ── the smaller ones: #8 setup, #9 hand text, #11 pool, #12 stated stage
 
 def test_setup_is_kept_only_once_the_robot_accepts_it(lite):
     key = "R-R01_PART1"
@@ -311,7 +287,7 @@ def test_setup_is_kept_only_once_the_robot_accepts_it(lite):
 
 
 def test_hand_text_and_counts_are_refused_plainly(lite):
-    from alix_studio_lite.server import sequence, staging
+    from alix_studio_lite.server import staging
     from alix_studio_lite.server.jobs import UserError
 
     for hand in ("150% open", [float("inf"), 0, 0, 0, 0, 0], ["1e999", 0, 0, 0, 0, 0]):
@@ -321,7 +297,7 @@ def test_hand_text_and_counts_are_refused_plainly(lite):
     r = unit(lite, "L-R01", "setup", {"pole_mm": 150, "hand": "150% open"})
     assert "cannot be 150 % open" in r["error"]
     with pytest.raises(UserError):
-        sequence.check_start({"pole_mm": 100, "hand": [5000] * 6, "q_deg": [0] * 7})
+        staging.check_start({"pole_mm": 100, "hand": [5000] * 6, "q_deg": [0] * 7})
 
 
 def test_two_first_tunes_make_one_pool(monkeypatch):
