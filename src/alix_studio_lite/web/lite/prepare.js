@@ -20,6 +20,12 @@ const $ = (id) => document.getElementById(id);
 const GRIP = [0, 0, 0, 0, 150, 1000], OPEN = [1000, 1000, 1000, 1000, 1000, 1000];
 const CLEANING = [1000, 1000, 1000, 1000, 0, 1000];          // Cleaning Pose (the owner, 15 Oct)
 const PRESETS = { 'Grip / Cleaning': GRIP, 'All Open': OPEN, 'Cleaning Pose': CLEANING };
+
+// The preset a hand pose is, by its six values ("Custom" for any other, or with a channel held).
+export function handPresetName(hand) {
+  const k = JSON.stringify((hand || []).map(v => (v == null ? null : Number(v))));
+  return Object.keys(PRESETS).find(n => JSON.stringify(PRESETS[n]) === k) || 'Custom';
+}
 let lastKey = null;
 let lastMoveError = null;
 

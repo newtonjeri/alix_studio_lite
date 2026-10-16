@@ -25,24 +25,30 @@
 .rc-backend-state[data-lite="visual"] .dot,
 .rc-backend-state[data-lite="hwsim"] .dot { background: var(--green); }
 
-/* The page's top bar needs about 1,610 px; below that STOP BOTH left the screen. Labels collapse
-   to their icons step by step, so STOP BOTH and the status stay visible down to 900 px. */
-.topbar .emstop, .topbar .mode-pill { flex-shrink: 0; white-space: nowrap; }
-@media (max-width: 1700px) {
-  .topbar { gap: 10px; padding: 0 14px; }
-  .topbar .brand { min-width: 0; }
-  .topbar .brand small, .topbar .mode-pill .lite-label, .topbar .robot-control-toggle .lite-long { display: none; }
-}
-@media (max-width: 1460px) {
-  .topbar .journey-toggle .journey-label, .topbar .project-save-btn .lite-label,
-  .topbar .project-manager-btn .lite-label, .topbar .top-tour-btn .lite-label,
-  .topbar .top-lock-btn .lite-label { display: none; }
-  .topbar .current-project-chip { min-width: 150px; max-width: 190px; }
-  .topbar .journey-toggle { min-width: 0; }
-}
-@media (max-width: 1200px) {
-  .topbar .brand > div:not(.logo) { display: none; }
-}
+/* The top bar fits the window at any width (the owner, 16 Oct: everything, STOP included, visible
+   without scrolling sideways). layout.js measures it and gives way one level at a time (lite-fit-1
+   to lite-fit-6), so whatever the bar holds, STOP BOTH and the status stay on the screen. */
+.topbar { min-width: 0; }
+.topbar > * { flex-shrink: 0; }                    /* nothing is squeezed: too wide shows, and the bar gives way */
+.topbar .emstop, .topbar .mode-pill { white-space: nowrap; }
+.topbar .current-project-chip { flex-shrink: 1; min-width: 96px; overflow: hidden; }
+.topbar.lite-fit-1 { gap: 10px; padding: 0 14px; }
+.topbar.lite-fit-1 .brand { min-width: 0; }
+.topbar.lite-fit-1 .brand small, .topbar.lite-fit-1 .mode-pill .lite-label,
+.topbar.lite-fit-1 .robot-control-toggle .lite-long { display: none; }
+.topbar.lite-fit-2 .journey-toggle .journey-label, .topbar.lite-fit-2 .project-save-btn .lite-label,
+.topbar.lite-fit-2 .project-manager-btn .lite-label, .topbar.lite-fit-2 .top-tour-btn .lite-label,
+.topbar.lite-fit-2 .top-lock-btn .lite-label { display: none; }
+.topbar.lite-fit-2 .current-project-chip { min-width: 150px; max-width: 190px; }
+.topbar.lite-fit-2 .journey-toggle { min-width: 0; }
+.topbar.lite-fit-3 .lite-speed-head { display: none; }
+.topbar.lite-fit-3 .lite-speed input { width: 80px; }
+.topbar.lite-fit-4 .brand > div:not(.logo) { display: none; }
+.topbar.lite-fit-5 .robot-control-toggle .lite-label { display: none; }
+.topbar.lite-fit-5 .current-project-chip { min-width: 110px; max-width: 140px; }
+.topbar.lite-fit-6 { gap: 6px; padding: 0 8px; }
+.topbar.lite-fit-6 .lite-speed input { width: 56px; }
+.topbar.lite-fit-6 .project-save-status { display: none; }
 /* The content column keeps to the screen: a wide table (Activity Logs: 1,780 px) scrolls in its own
    box instead of widening the whole page past the window. */
 .shell > .main { min-width: 0; }
@@ -505,3 +511,12 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 #view-sequence .full-run-grid[hidden] { display: none !important; }   /* its view is in the page now (run.js) */
 .lite-merge-tools { display: grid; gap: 8px; margin: 8px 0; }
 .lite-merge-tools .inline input { flex: 1; min-width: 0; }
+
+/* Compare: what the simulation plays (the owner, 16 Oct); a click on a plot is that moment */
+.lite-cmp3d { align-items: center; gap: 10px; margin-top: 8px; }
+.lite-cmp3d-head { font-size: 13px; font-weight: 800; color: var(--ink); }
+.lite-viewer-plot { cursor: pointer; }
+
+/* The project summary's Approved Setup: the pole first, then the hand, start pose, UGV and room */
+.lite-approved-setup > div:not(:first-child) { font-weight: 600; }
+.lite-approved-setup > .mini-note { font-weight: 400; }

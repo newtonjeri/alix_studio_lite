@@ -3,7 +3,8 @@
 // Drag & Teach: when the region already has a recording (the fixture's existing taught set, or an
 // earlier one), using it is offered first (D31); recording a new one stays available. START and
 // STOP go to the robot (the stand-in until robot I/O exists), and a stopped recording is saved in
-// the project with the page's file name. Save & Review: every recording of the region is listed and
+// the project with the page's file name. START counts down 5 s first, so the operator can walk to
+// the arm; drag teaching and the timer start at 0 (the owner, 16 Oct). Save & Review: every recording of the region is listed and
 // one is active; a file loaded from this computer is added and never replaces the new recording.
 // Every file name in a project is used once (the owner, 14 Oct): Save TXT refuses one already used,
 // and a take or a loaded file gets a numbered name. Save & Review has no playback: the
@@ -15,7 +16,9 @@ import { liteMode } from './status.js';
 import { SOURCE } from './tasks.js';
 
 const $ = (id) => document.getElementById(id);
+const COUNTDOWN_S = 5;         // after START, time to walk to the arm (the owner, 16 Oct)
 let teaching = null;           // the drag teaching running: {pid, key, arm}, where its take is saved
+let counting = null;           // the countdown's job while it runs
 
 async function current() {
   const s = step();
@@ -37,6 +40,28 @@ function syncActive(u) {
 }
 
 // ── Drag & Teach
+
+// START's countdown: 5, 4, 3, 2, 1 on the timer (and by voice when it is on) while the server's job
+// counts; at 0 the arm is in drag teaching and the timer starts. Reset, STOP or the E-stop end it,
+// and nothing is recorded. Resolves the job as it ended.
+async function countDown(job, arm) {
+  const t0 = performance.now();
+  let said = 0;
+  const tick = () => {
+    const n = Math.ceil(Math.max(0, COUNTDOWN_S - (performance.now() - t0) / 1000));
+    if (n > 0) {
+      $('timer').textContent = String(n);
+      $('timerResult').textContent = `Drag teaching starts in ${n} s: go to the ${arm} arm. Reset cancels it.`;
+      if (n !== said) { said = n; window.speakEnglish(String(n), true); }
+    } else {
+      $('timerResult').textContent = `Starting drag teaching on the ${arm} arm…`;
+    }
+  };
+  $('startTeachBtn').disabled = true;
+  tick();
+  const iv = setInterval(tick, 100);
+  try { return await watchJob(job); } finally { clearInterval(iv); }
+}
 
 async function refreshTeach() {
   const host = $('stage-teach');
@@ -127,14 +152,28 @@ export function installTeach() {
   const pageStart = window.startTeach;
   window.startTeach = async function startTeach() {
     if (!isSetupReady()) { window.toast('Complete Setup & Safety first.'); return; }
-    if (timerInt) return;
+    if (timerInt || counting) return;
     const s = step();
     if (s && ctx.pid && !s.later) {
-      $('timerResult').textContent = `Starting drag teaching on the ${selectedArm.toUpperCase()} arm…`;
+      const arm = selectedArm.toUpperCase();
+      $('timerResult').textContent = `Starting drag teaching on the ${arm} arm…`;
+      let r;
       try {
-        await robotCall(unitUrl(s.key, 'teach/start'), {}, { what: 'Drag teaching' });
+        r = await robotCall(unitUrl(s.key, 'teach/start'), { delay_s: COUNTDOWN_S }, { what: 'Drag teaching' });
       } catch (err) { $('timerResult').textContent = say(err); tell(err); return; }
       teaching = { pid: ctx.pid, key: s.key, arm: s.arm, task: TASKS[currentTask]?.label };     // the task: its UGV placement is kept with the recording
+      if (r.job) {
+        counting = r.job;
+        let done;
+        try { done = await countDown(r.job, arm); } finally { counting = null; }
+        if (done.state !== 'done') {                   // cancelled, STOP or the E-stop: it never started
+          teaching = null;
+          $('startTeachBtn').disabled = false;
+          $('timer').textContent = '00:00.0';
+          $('timerResult').textContent = `Drag teaching did not start${done.error ? `: ${done.error}` : ''}. Nothing was recorded.`;
+          return;
+        }
+      }
     }
     pageStart();
   };

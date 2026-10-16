@@ -91,6 +91,29 @@ def test_drag_teaching_records_on_the_controller(server):
     assert raw.count(b"\r\n") == POINTS and raw.startswith(b'{"point":[')
 
 
+def test_start_counts_down_before_drag_teaching(server):
+    """START counts down first (the owner, 16 Oct: time to walk to the arm): every check is made at once,
+    nothing else moves meanwhile, drag teaching starts at 0; a cancel during it records nothing."""
+    from emulated_lite import POINTS
+
+    r = call(server, "POST", f"{U}/L-T01/teach/start", {"confirmed": True, "delay_s": 0.6})
+    assert r["job"]["state"] == "running" and not r["arm"]["teaching"]
+    busy = call(server, "POST", "/api/robots/left/pole", {"mm": 120, "confirmed": True})
+    assert "busy" in busy["error"] and "Drag teaching on the LEFT arm" in busy["error"]
+    assert "0 to 30 seconds" in call(server, "POST", f"{U}/L-T01/teach/start", {"confirmed": True, "delay_s": 99})["error"]
+    j = wait(server, r["job"])
+    assert j["state"] == "done" and j["result"]["teaching"], j
+    assert call(server, "GET", "/api/robots/status")["arms"]["left"]["teaching"]
+    assert call(server, "POST", f"{U}/L-T01/teach/stop", {"name": "after_countdown.txt"})["unit"]["recordings"][-1]["lines"] == POINTS
+
+    r = call(server, "POST", f"{U}/L-T01/teach/start", {"confirmed": True, "delay_s": 5})
+    call(server, "POST", f"{U}/L-T01/teach/cancel", {})                 # Reset during the countdown
+    assert wait(server, r["job"])["state"] == "cancelled"
+    assert not call(server, "GET", "/api/robots/status")["arms"]["left"]["teaching"]
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    assert sum(1 for x in hw if x["verb"] == "rm_start_drag_teach") == 2          # the first test's, and this one's once
+
+
 def test_upload_and_runs_on_the_controller(server):
     u = call(server, "GET", f"{U}/L-T01")
     lib = next(x for x in u["recordings"] if x["source"] == "library")

@@ -341,6 +341,20 @@ async function drawPlot() {
     yaxis: { ticksuffix: '°', fixedrange: true, color: ink, gridcolor: ink, gridwidth: 0.3, zeroline: false },
     legend: { orientation: 'v', x: 1.01, y: 1, font: { size: 11, color: ink } }, showlegend: true,
   }, { staticPlot: true, responsive: true, displayModeBar: false });
+  if (!div.dataset.liteClick) {                       // a click on the plot is that moment (the owner, 16 Oct)
+    div.dataset.liteClick = '1';
+    div.addEventListener('click', (e) => {
+      const xa = div._fullLayout && div._fullLayout.xaxis;
+      if (!xa || !loaded().length) return;
+      const x = xa.p2l(e.clientX - div.getBoundingClientRect().left - xa._offset);
+      if (!Number.isFinite(x)) return;
+      pause();
+      t = Math.max(0, Math.min(total(), start() + x));
+      said = '';
+      show();
+      sayPhase();
+    });
+  }
   placePlayhead();
 }
 

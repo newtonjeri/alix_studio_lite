@@ -33,6 +33,7 @@ It follows the real rules the backend must keep:
 from __future__ import annotations
 
 import json
+import math
 import os
 import threading
 import time
@@ -428,6 +429,9 @@ class StandInRobot:
             real.restore_speed(self.found_speed(side))
 
     def _refuse_if_busy(self, side: str, what: str) -> None:
+        if self.arm(side).teaching:                      # its controller would be left in drag teaching
+            raise UserError(f"The {side.upper()} arm is in drag teaching. It stays connected.",
+                            f"Press STOP DRAG, or STOP, then {what}.", code="busy")
         busy = [j for j in self.jobs.running(arm=side) if not j.cancelled]
         if busy:
             raise UserError(f"The {side.upper()} arm is busy: {busy[0].title}. It stays connected.",
@@ -733,41 +737,85 @@ class StandInRobot:
         mode now), with the arm in the region's setup (read back), so the recording's stage is
         what the robot really held. In Hardware sim the pole and the hand are only emulated, so a
         recording's stage could not be known."""
-        mode = mode or self.mode
+        mode = self._teach_mode(mode, setup)
+        a = self.arm(side)
+        with self.lock:
+            self._same_mode(mode)
+            self.require_motion(side)
+            self._teach_ready(side, setup)
+            a.teaching, a.teach_started = True, time.time()
+            a.teach_stage = setup
+        self._teach_on(side)
+        return a.view()
+
+    def teach_countdown(self, side: str, setup: "staging.Stage | None", delay_s: float, mode: str | None = None):
+        """Drag teaching after a countdown (the owner, 16 Oct: after START, time to walk to the arm).
+        Every check is made at once, so a refusal comes before the countdown; the countdown is a job
+        that STOP, the E-stop or a cancel ends, and then nothing is recorded; at its end the checks are
+        made again and the arm goes into drag teaching, as ``teach_start``. Returns the job."""
+        mode = self._teach_mode(mode, setup)
+        a = self.arm(side)
+        with self.lock:
+            self._same_mode(mode)
+            self._teach_ready(side, setup)
+
+        def work(job):
+            t_end = time.monotonic() + float(delay_s)
+            while (left := t_end - time.monotonic()) > 0:
+                job.progress(f"Drag teaching starts in {math.ceil(left)} s: go to the {side.upper()} arm", 0, 1)
+                job.sleep(min(0.1, left))
+            with self.lock:
+                self._same_mode(mode, "drag teaching did not start")
+                why = self.motion_block()
+                if why:
+                    raise UserError(why, "Release the E-stop button, then press Recover.")
+                self._teach_ready(side, setup)
+                a.teaching, a.teach_started = True, time.time()
+                a.teach_stage = setup
+            self._teach_on(side)
+            job.progress("Drag teaching", 1, 1)
+            job.log(f"Drag teaching on the {side.upper()} arm: guide it along the region, then press STOP DRAG.")
+            return dict(teaching=True, started=a.teach_started)
+
+        return self._start("teach", f"Drag teaching on the {side.upper()} arm in {float(delay_s):g} s", work, side, mode)
+
+    @staticmethod
+    def _teach_mode(mode, setup) -> str:
         if mode != "real":
             raise UserError("Drag teaching uses the real arm, pole and hand, so it needs Real robot.",
                             "In Hardware sim nothing moves: the pole and the hand are only emulated, so the "
                             "recording would not know its true stage. Choose Real robot in the status pill.",
                             code="mode")
-        a = self.arm(side)
         if setup is None:
             raise UserError("This region has no pole height and hand pose to teach with.",
                             "Set them in Prepare first.", code="stage")
-        with self.lock:
-            self._same_mode(mode)
-            self.require_motion(side)
-            if not self.in_stage(side, setup):
-                pole_mm, hand = self._measured(side)
-                raise UserError(f"The {side.upper()} arm is not in this region's setup ({staging.describe(setup)}): "
-                                f"it reads pole {'?' if pole_mm is None else f'{pole_mm:.0f}'} mm, hand "
-                                f"{'?' if hand is None else ', '.join(map(str, hand))}.",
-                                "Press Apply in Prepare for the pole and the hand, then start again.", code="stage")
-            a.teaching, a.teach_started = True, time.time()
-            a.teach_stage = setup
+        return mode
+
+    def _teach_ready(self, side: str, setup: "staging.Stage") -> None:
+        """The arm in the region's setup (read back), so the recording's stage is what the robot held."""
+        if not self.in_stage(side, setup):
+            pole_mm, hand = self._measured(side)
+            raise UserError(f"The {side.upper()} arm is not in this region's setup ({staging.describe(setup)}): "
+                            f"it reads pole {'?' if pole_mm is None else f'{pole_mm:.0f}'} mm, hand "
+                            f"{'?' if hand is None else ', '.join(map(str, hand))}.",
+                            "Press Apply in Prepare for the pole and the hand, then start again.", code="stage")
+
+    def _teach_on(self, side: str) -> None:
         real = self._real(side)
         if real is not None:
             try:
                 real.teach_start()                      # the controller records, as the control program has it do
-            except UserError:
-                a.teaching = False
+            except Exception:
+                self.arm(side).teaching = False
                 raise
-        return a.view()
 
     def teach_stop(self, side: str, save_to: Path | None = None) -> dict:
         """End drag teaching. A linked arm's controller saves its recording (``file``: written by
         the SDK, as the control program's are); the stand-in has none (``file`` None)."""
         a = self.arm(side)
         if not a.teaching:
+            if self.jobs.cancel_arm(side, kinds=("teach",)):    # STOP DRAG during the countdown: it never started
+                raise UserError("Drag teaching had not started yet: nothing was recorded.")
             raise UserError("Teaching is not running on this arm.")
         a.teaching = False
         secs = time.time() - (a.teach_started or time.time())
@@ -784,6 +832,7 @@ class StandInRobot:
     def teach_cancel(self, side: str) -> dict:
         """Drop the recording being taught: nothing is saved; a linked arm leaves drag teaching."""
         a = self.arm(side)
+        self.jobs.cancel_arm(side, kinds=("teach",))     # a countdown ends: drag teaching never starts
         was, a.teaching = a.teaching, False
         if was:
             self._leave_drag(side)
@@ -792,8 +841,8 @@ class StandInRobot:
     def move_to(self, side: str, what: str, title: str, seconds: float = 2.5, stage: "staging.Stage | None" = None,
                 mode: str | None = None, target_millideg: list | None = None):
         """Move the arm to a pose (a start pose, a file's first line), staging the pole and hand
-        first when the pose belongs to a trajectory. The real backend sweeps the joint-space line
-        for collisions first (R4); the stand-in only takes the time."""
+        first when the pose belongs to a trajectory: a linked arm by ALIX's park move, read back;
+        the stand-in only takes the time."""
         a = self.arm(side)
         mode = mode or self.mode
         if side in self.links and target_millideg is None:

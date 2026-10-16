@@ -26,6 +26,7 @@ import { installSafety } from './safety.js';
 import { installSequence } from './sequence.js';
 import { installSim } from './sim.js';
 import { installStatus } from './status.js';
+import { installSummary } from './summary.js';
 import { installTasks } from './tasks.js';
 import { installTeach } from './teach.js';
 import { installTransitions } from './transitions.js';
@@ -45,6 +46,7 @@ installAlerts();          // hardware errors and failures, bottom right, until c
 installRobotPanel();      // Visual sim / Hardware sim / Real, connections, E-stop (D30, R4)
 installTasks();           // the 22 tasks tied to the region catalogue (D35), fixtures (D29)
 installPrepare();
+installSummary();          // the project summary's Approved Setup: pole, hand, start pose, UGV, room (the owner, 16 Oct)
 installPlacement();       // the room, the commode in it and each task's UGV placement (V32 feedback v2)
 installTransitions();     // Prepare's transition trajectories and task start points (V32)
 installTeach();           // existing recordings first (D31), drag teach, Save & Review

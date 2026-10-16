@@ -6,10 +6,11 @@
 // decides), the tuned file kept in the project for Real Test, Analyze's optimised time, and the other
 // tuning, Time-optimal (TOPP-RA), which takes none of the HTML's steps.
 //
+// Its steps, Review before Analyze (the owner, 16 Oct: the original first, in the simulation view):
 //   1 Source    the region's recording (the HTML's upload: another is chosen or loaded in Save & Review)
 //   2 Setup     the HTML's parameters and processing stages, or Time-optimal's time
-//   3 Analyze   the HTML's automatic analysis (optimise/analysis.py); fitted to an optimised time after Trim
-//   4 Review    the recording played in real time on its plot and in 3D; scale regions by box-select or rows
+//   3 Review    the recording played in real time on its plot and in 3D; scale regions by box-select or rows
+//   4 Analyze   the HTML's automatic analysis (optimise/analysis.py); fitted to an optimised time after Trim
 //   5 Generate  the HTML's processing, on the server (optimise/manual.py), its figures and its three downloads
 //   6 Compare   original vs optimized on one synchronized time cursor (or an external file), the tuned file in 3D
 
@@ -31,6 +32,7 @@ const tracks = new Map();      // the plotted files (the file's own joint values
 let analysis = null;           // {key, file, data}: the automatic analysis of the active recording
 let regions = [];              // the scale regions on screen: {start, end, scalePct}, original rows
 let external = null;           // Compare's optional optimized file: {name, rows, skipped}
+let cmp3d = 'candidate';       // what Compare's 3D plays: the processed file or the original (the owner, 16 Oct)
 const plotted = { raw: null, opt: null };   // the files on the plots now
 const pb = { playing: false, at: { review: 0, compare: 0 }, startPerf: 0, raf: 0, kind: null };   // the HTML's real-time
 let lastChange = null;         // playbacks, each at its own moment; the last settings change, for Generate's status
@@ -44,12 +46,14 @@ const fresh = () => !!(unit && unit.candidate && unit.fresh);
 const report = () => (fresh() && unit.candidate.recipe && unit.candidate.recipe.report) || null;
 const dur = (rows) => Math.max(0, Number(rows) - 1) * CYCLE_S;          // Lite's one clock: N rows last (N - 1) x 5 ms
 
-// The HTML's own wording of the steps (its PIPELINE_META); step 1 is the region's recording.
+// The HTML's own wording of the steps (its PIPELINE_META); step 1 is the region's recording. Review
+// comes before Analyze (the owner, 16 Oct); both are manual tuning's only.
+const REVIEW = 3, ANALYZE = 4;
 const STEPS = [null,
   { title: 'Source', sub: 'Source file', name: 'Source trajectory', note: 'The region’s recording: choose or load another in Save & Review.' },
   { title: 'Setup', sub: 'Parameters', name: 'Processing setup', note: 'Choose Trim / Mean Smooth / Scale and review processing parameters.' },
-  { title: 'Analyze', sub: 'Suggestions', name: 'Automatic analysis', note: 'Review motion regions and optimization recommendations.' },
   { title: 'Review', sub: 'Fine-tune', name: 'Playback & fine-tune', note: 'Play the source trajectory and manually adjust scaling regions if needed.' },
+  { title: 'Analyze', sub: 'Suggestions', name: 'Automatic analysis', note: 'Review motion regions and optimization recommendations.' },
   { title: 'Generate', sub: 'Save output', name: 'Generate & save', note: 'Create the optimized output, then save TXT / report / plot.' },
   { title: 'Compare', sub: 'Validate', name: 'Compare & validate', note: 'Compare original and optimized timing and review modified regions.' },
 ];
@@ -195,8 +199,8 @@ function addControls() {
       el('div', { id: 'liteToppraNote', class: 'lite-status' })));
 
   // 3 Analyze: the HTML's automatic speed optimisation analysis
-  const analyze = el('div', { id: 'liteAnalysis', class: 'lite-step-card', 'data-lite-steps': '3' },
-    title('3. Automatic speed optimization analysis', 'Section B1/B2 - motion analysis and region-based recommendations'),
+  const analyze = el('div', { id: 'liteAnalysis', class: 'lite-step-card', 'data-lite-steps': String(ANALYZE) },
+    title(`${ANALYZE}. Automatic speed optimization analysis`, 'Section B1/B2 - motion analysis and region-based recommendations'),
     el('div', { class: 'lite-hint', text: 'After a trajectory is loaded, Lite automatically analyzes joint-motion intensity, direction-change activity '
       + 'and peak motion. It divides the trajectory into review regions and suggests whether each region should be shorter/faster, longer/slower or unchanged.' }),
     el('div', { class: 'lite-note' }, el('b', { text: 'Important:' }), ' The uploaded trajectory contains joint positions only. Lite can identify '
@@ -216,8 +220,8 @@ function addControls() {
       el('tbody'))));
 
   // 4 Review: playback and the manual scaling regions, the 3D beside the plot
-  const review = el('div', { id: 'liteReview', class: 'lite-step-card', 'data-lite-steps': '4' },
-    title('4. Original trajectory - playback & manual scaling regions', 'Play the trajectory in real time or manually select/adjust scaling regions.'),
+  const review = el('div', { id: 'liteReview', class: 'lite-step-card', 'data-lite-steps': String(REVIEW) },
+    title(`${REVIEW}. Original trajectory - playback & manual scaling regions`, 'Play the trajectory in real time or manually select/adjust scaling regions.'),
     el('div', { class: 'lite-hint' }, 'Selection is made on the ', el('b', { text: 'original row numbers' }), '. Each selected region is added to the '
       + 'table below. Enter an independent scale percentage for every region. Regions may not overlap. If ', el('b', { text: 'Scale' }),
       ' is unchecked, these regions are retained but ignored during generation.'),
@@ -263,6 +267,10 @@ function addControls() {
     statusLine('liteCompareStatus', 'Comparison uses the generated optimized trajectory unless an external optimized file is loaded.'),
     el('div', { id: 'liteCompareMetrics', class: 'lite-metrics' }),
     playBar('compare'),
+    el('div', { class: 'lite-row lite-cmp3d', role: 'radiogroup', 'aria-label': 'What the simulation plays' },
+      el('span', { class: 'lite-cmp3d-head', text: 'Simulation plays' }),
+      [['raw', 'Original'], ['candidate', 'Processed']].map(([v, n]) => el('label', { class: 'lite-stage-option lite-cmp3d-option' },
+        el('input', { type: 'radio', name: 'liteCmp3d', value: v, checked: v === cmp3d, onchange: () => setCmp3d(v) }), el('span', { text: n })))),
     el('div', { class: 'lite-view-grid' }, el('div', { class: 'lite-view-3d', id: 'liteCompare3d' }),
       el('div', { class: 'lite-compare-stack' },
         el('div', { class: 'lite-plot-host small' }, el('div', { id: 'liteCmpOrig', class: 'lite-plot-box' })),
@@ -271,7 +279,7 @@ function addControls() {
     el('div', { class: 'lite-table-scroll' }, el('table', { class: 'lite-table', id: 'liteCompareRegions' },
       thead(['#', 'Original rows', 'Scale (%)', 'Input rows', 'Output rows', 'Effect']), el('tbody'))));
 
-  pipe.after(source, setup, analyze, review, generateCard, compare);
+  pipe.after(source, setup, review, analyze, generateCard, compare);
   compare.after(el('div', { id: 'litePipeNav', class: 'lite-pipe-nav' },
     el('button', { class: 'btn outline', id: 'litePipeBack', text: '← Back', onclick: () => goStep(prevStep(pipeStep)) }),
     el('div', { class: 'mini-note', id: 'litePipeNote' }),
@@ -284,12 +292,13 @@ function addControls() {
 function unlocked(n) {
   if (n <= 1) return true;
   if (!unit || !unit.active) return false;
-  if ((n === 3 || n === 4) && !isManual()) return false;
+  if (manualOnly(n) && !isManual()) return false;
   if (n <= 5) return true;
   return fresh() || !!external;
 }
-const nextStep = (n) => { let k = n + 1; while (k < 6 && (k === 3 || k === 4) && !isManual()) k += 1; return k; };
-const prevStep = (n) => { let k = n - 1; while (k > 1 && (k === 3 || k === 4) && !isManual()) k -= 1; return k; };
+const manualOnly = (n) => n === REVIEW || n === ANALYZE;
+const nextStep = (n) => { let k = n + 1; while (k < 6 && manualOnly(k) && !isManual()) k += 1; return k; };
+const prevStep = (n) => { let k = n - 1; while (k > 1 && manualOnly(k) && !isManual()) k -= 1; return k; };
 
 function renderPipe() {
   const p = pane();
@@ -302,7 +311,7 @@ function renderPipe() {
     b.classList.toggle('locked', !ok);
     b.disabled = !ok;
     b.setAttribute('aria-selected', String(n === pipeStep));
-    b.title = !ok && (n === 3 || n === 4) && unit && unit.active ? 'Time-optimal (TOPP-RA) takes none of the manual steps' : '';
+    b.title = !ok && manualOnly(n) && unit && unit.active ? 'Time-optimal (TOPP-RA) takes none of the manual steps' : '';
   });
   if ($('litePipeSummary')) $('litePipeSummary').textContent = `Step ${pipeStep} of 6 - ${STEPS[pipeStep].name}`;
   if ($('litePipeNote')) $('litePipeNote').textContent = STEPS[pipeStep].note;
@@ -322,7 +331,7 @@ async function goStep(n, scroll = true) {
   n = Math.max(1, Math.min(6, Number(n) || 1));
   if (!unlocked(n)) {
     window.toast(n === 6 ? 'Generate first: Compare opens once the processed file is made from these settings.'
-      : (n === 3 || n === 4) && unit && unit.active ? 'Time-optimal (TOPP-RA) takes none of the manual steps: choose Manual tuning in Setup.'
+      : manualOnly(n) && unit && unit.active ? 'Time-optimal (TOPP-RA) takes none of the manual steps: choose Manual tuning in Setup.'
         : 'This region has no recording yet: record it, or load a file in Save & Review.');
     return;
   }
@@ -334,14 +343,14 @@ async function goStep(n, scroll = true) {
   if (scroll) $('litePipe')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   if (n === 1) renderSource();
   if (n === 2) renderSetup();
-  if (n === 3) await loadAnalysis(false);
-  if (n === 4) {                                         // the HTML analyses on load: Review shows its regions
+  if (n === ANALYZE) await loadAnalysis(false);
+  if (n === REVIEW) {                                    // the HTML analyses on load: Review shows its regions
     if (!analysis || analysis.key !== unit.key || analysis.file !== unit.active) await loadAnalysis(false);
     place3d('liteReview3d');
     await Promise.all([drawReview().catch(tell), loadSimulation('raw')]);
   }
   if (n === 5) { renderGenerate(); showResults(); }
-  if (n === 6) { place3d('liteCompare3d'); await Promise.all([renderCompare().catch(tell), loadSimulation('candidate')]); }
+  if (n === 6) { place3d('liteCompare3d'); await Promise.all([renderCompare().catch(tell), loadSimulation(cmp3d)]); }
 }
 
 // V32's 3D pane (the robot, its status line) beside Review's or Compare's plots.
@@ -502,7 +511,7 @@ function afterSettings(label = null) {
   writeControls(settingsOf(unit));
   if (label == null || TRIM_LABELS.includes(label)) dropFit();   // the fit was "after Trim" with the earlier values
   renderPipe();
-  if (pipeStep === 4) refreshShapes();
+  if (pipeStep === REVIEW) refreshShapes();
   if (pipeStep === 5) { renderGenerate(label); showResults(); }
   if (unit.candidate && !unit.fresh) {        // the HTML's invalidateProcessed: Compare waits for a new output
     if (pipeStep === 6 && !external) goStep(5, false);
@@ -622,7 +631,8 @@ async function applySuggestions() {
   $('liteMode_manual').checked = true;                     // the suggestions are manual tuning's Scale
   syncing = false;
   await push('Automatic suggestions');
-  setStatus(status, `${chosen.length} selected suggestion(s) were copied to the Scale regions. You can still edit every scale value manually before generation.`, 'ok');
+  setStatus(status, `${chosen.length} selected suggestion(s) were copied to the Scale regions. You can still edit every scale value manually before generation `
+    + `(step ${REVIEW}, Review).`, 'ok');
 }
 
 // ── the plots (the HTML's plotTrajectory: the file's own joint values against the row number)
@@ -708,6 +718,7 @@ async function drawReview() {
     });
     for (const t of ['pointerdown', 'pointermove', 'pointerup']) div.addEventListener(t, (e) => e.stopPropagation());
   }
+  clickToSeek(div, 'review');
   setTotals('review');
   showMoment('review', false);
 }
@@ -716,6 +727,23 @@ function refreshShapes() {
   const div = $('liteOrigPlot');
   if (!div || !div.data || !unit) return;
   window.Plotly.relayout(div, { shapes: reviewShapes() }).catch(() => {});
+}
+
+// A click on a plot is that moment (the owner, 16 Oct): the 3D goes to that frame, and the plot's
+// cursor, the time and the play bar's timeline with it; Play goes on from there. The row clicked is
+// that file's line, on the one time axis (Compare's two files share it).
+function clickToSeek(div, kind) {
+  if (!div || div.dataset.liteClick) return;
+  div.dataset.liteClick = '1';
+  div.on('plotly_click', (ev) => {
+    const x = ev && ev.points && ev.points[0] && Number(ev.points[0].x);
+    if (Number.isFinite(x)) scrub(kind, Math.max(0, x - 1) * CYCLE_S);
+  });
+}
+
+function setCmp3d(v) {
+  cmp3d = v === 'raw' ? 'raw' : 'candidate';
+  if (currentStage === 'optimize' && unit && pipeStep === 6) loadSimulation(cmp3d);
 }
 
 // The moment on a plot: a thin line laid over it, moved without redrawing the plot (the owner,
@@ -840,7 +868,7 @@ function showMoment(kind, seek = true) {
   } else {
     cursorAt($('liteCmpOrig'), rowAt(raw, t));
     cursorAt($('liteCmpProc'), rowAt(optLines(), t));
-    if (seek && !external && sim.key === unit?.key && sim.which === 'candidate') seekTo(t);
+    if (seek && sim.key === unit?.key && sim.which === cmp3d && (cmp3d === 'raw' || !external)) seekTo(t);
   }
 }
 
@@ -875,8 +903,8 @@ function scrub(kind, t) { pause(); pb.kind = kind; pb.at[kind] = Math.max(0, Mat
 
 // The 3D playing on its own (V32's Re-run Simulation): the plots follow it.
 function moveHead(line) {
-  if (pb.playing || (pipeStep !== 4 && pipeStep !== 6)) return;
-  const kind = pipeStep === 4 ? 'review' : 'compare';
+  if (pb.playing || (pipeStep !== REVIEW && pipeStep !== 6)) return;
+  const kind = pipeStep === REVIEW ? 'review' : 'compare';
   pb.kind = kind;
   pb.at[kind] = Math.max(0, line - 1) * CYCLE_S;
   showMoment(kind, false);
@@ -1180,6 +1208,7 @@ async function renderCompare() {
   for (const [id, tr, t] of [['liteCmpOrig', orig, `Original - ${(r && r.name) || ''}`], ['liteCmpProc', opt, `Optimized - ${optName}`]]) {
     const fig = figure(tr, t, { yRange });
     await window.Plotly.react($(id), fig.data, fig.layout, PLOT_CONFIG);
+    clickToSeek($(id), 'compare');
   }
   const tbody = $('liteCompareRegions')?.querySelector('tbody');
   if (tbody) {
@@ -1210,13 +1239,13 @@ async function loadSimulation(which) {
   }
   const progress = which === 'candidate' ? unit.candidate_extra && unit.candidate_extra.progress : null;
   if (!host.querySelector('canvas')) say3d(host, 'Loading the 3D view…');   // the first time: the robot's meshes come first
-  const kind = which === 'raw' ? 'review' : 'compare', at = pb.at[kind];   // loading rewinds the 3D: the view keeps its moment
+  const kind = pipeStep === REVIEW ? 'review' : 'compare', at = pb.at[kind];   // loading rewinds the 3D: the view keeps its moment
   try {
     if (!(await showFile(host, unit, which, progress))) return;     // another file was asked for meanwhile
     window.resetSimulationPlayback(false);
     pb.at[kind] = at;
     seekTo(at);
-    if (pipeStep === (kind === 'review' ? 4 : 6)) showMoment(kind, false);
+    if (pipeStep === (kind === 'review' ? REVIEW : 6)) showMoment(kind, false);
     $('simStatus').textContent = (which === 'candidate' ? 'The processed file' : 'The recording as taught')
       + ` in 3D, staged first (${sim.tl.stage.text}): Play / Pause / Restart and the timeline above move it with the plot.`;
     $('simStatus').className = 'statusbar ok';
@@ -1341,17 +1370,17 @@ export function installTune() {
   });
 
   document.addEventListener('lite:speed', () => {           // the move to the start at the new speed: the 3D again
-    if (currentStage === 'optimize' && unit && (pipeStep === 4 || pipeStep === 6)) loadSimulation(pipeStep === 6 ? 'candidate' : 'raw');
+    if (currentStage === 'optimize' && unit && (pipeStep === REVIEW || pipeStep === 6)) loadSimulation(pipeStep === 6 ? cmp3d : 'raw');
   });
 
   document.addEventListener('lite:viewer-closed', () => {   // the 3D view is back from the Trajectory Viewer
-    if (currentStage === 'optimize' && unit && (pipeStep === 4 || pipeStep === 6)) loadSimulation(pipeStep === 6 ? 'candidate' : 'raw');
+    if (currentStage === 'optimize' && unit && (pipeStep === REVIEW || pipeStep === 6)) loadSimulation(pipeStep === 6 ? cmp3d : 'raw');
   });
 
   const pageTheme = window.toggleTheme;
   window.toggleTheme = function toggleTheme() {
     pageTheme();
-    if (currentStage === 'optimize' && pipeStep === 4) drawReview().catch(() => {});
+    if (currentStage === 'optimize' && pipeStep === REVIEW) drawReview().catch(() => {});
     if (currentStage === 'optimize' && pipeStep === 6) renderCompare().catch(() => {});
   };
 }

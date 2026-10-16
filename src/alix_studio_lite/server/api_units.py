@@ -1006,6 +1006,16 @@ def post_teach(app, q, body, m):
         mode = require_robot_mode(app)
         require_confirmed(app, body, "Drag teaching")
         setup = staging.stage_from(units.setup(key))
+        delay = body.get("delay_s")                     # a countdown first: time to walk to the arm (the owner, 16 Oct)
+        if delay:
+            try:
+                delay = float(delay)
+            except (TypeError, ValueError):
+                raise UserError("The countdown is 0 to 30 seconds.") from None
+            if not 0 < delay <= 30:
+                raise UserError("The countdown is 0 to 30 seconds.")
+            job = app.robot.teach_countdown(side, setup, delay, mode=mode)
+            return {"arm": app.robot.arm(side).view(), "job": job.view()}
         return {"arm": app.robot.teach_start(side, setup, mode=mode)}
     if verb == "cancel":
         return {"arm": app.robot.teach_cancel(side)}
