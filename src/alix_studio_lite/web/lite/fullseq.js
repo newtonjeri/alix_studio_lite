@@ -27,8 +27,8 @@ function build() {
       el('div', {},
         el('div', { class: 'eyebrow', text: '03 · Standalone Project Workflow' }),
         el('h2', {}, 'Merge + Full Sequence ', el('span', { class: 'mandatory-star', text: '*' })),
-        el('p', { text: 'S1 merges and uploads the trajectory files of each arm. S2 builds and runs the full or a partial LEFT / RIGHT '
-          + 'sequence, in simulation first, then on the real machine.' })),
+        el('p', { text: 'S1 merges and uploads the trajectory files of each arm. S2 builds the LEFT / RIGHT sequences and runs them, '
+          + 'a single task or a dual-arm task, in simulation first, then on the real machine.' })),
       el('span', { class: 'badge violet', text: 'DUAL-ARM PROJECT FLOW' })),
     el('div', { class: 'lite-tabs', role: 'tablist', 'aria-label': 'Merge + Full Sequence' },
       TABS.map(([id, code, name]) => el('button', { id: `liteSeqTab_${id}`, class: 'lite-tab', type: 'button', role: 'tab',

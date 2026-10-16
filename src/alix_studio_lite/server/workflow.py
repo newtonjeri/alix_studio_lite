@@ -538,30 +538,86 @@ def from_document(side: str, data) -> list[dict]:
     return check_steps(steps, side)
 
 
-def rows(steps: list, rng) -> tuple[list, int]:
-    """An arm's steps for a run: all of them, or the rows ``rng`` = [first, last] (1-based, both
-    included: Partial). Returns the steps and the first row's number."""
-    if rng in (None, "", []):
-        return list(steps), 1
-    try:
-        a, b = int(rng[0]), int(rng[1])
-    except (TypeError, ValueError, IndexError):
-        raise UserError("A partial run is a first and a last row.") from None
-    if not 1 <= a <= b <= len(steps):
-        raise UserError(f"Rows {a} to {b} are not in a sequence of {len(steps)} step(s).", "Choose rows inside it.")
-    return list(steps[a - 1:b]), a
+def _staged(steps: list, upto: int) -> list:
+    """The Pole and Hand steps in force before row ``upto`` (1-based): the last of each above it, in their
+    order, so a Program run on its own starts at the pole and hand the sequence puts it at (V53 stages
+    nothing itself: its own Pole and Hand steps do)."""
+    pole = hand = None
+    for st in steps[:max(0, upto - 1)]:
+        if st["type"] == "pole":
+            pole = st
+        elif st["type"] == "hand":
+            hand = st
+    return sorted([x for x in (pole, hand) if x is not None], key=lambda x: x.get("_row") or 0)
 
 
-def plan_for(steps: dict, mode: str, ranges: dict | None) -> dict:
-    """What a run does: ``mode`` both (V53's RUN BOTH, its plan), left or right (V53's RUN LEFT / RIGHT
-    SEQUENCE: that arm's steps in one runner call), over all the rows or a range per arm."""
+def _with_stage(steps: list, part: list) -> list:
+    """``part`` (an arm's rows of one stage, numbered) with the Pole and Hand in force before it, when it
+    does not set them itself before its first Program."""
+    first = min(x.get("_row") or 1 for x in part)
+    head = []
+    for x in part:
+        if x["type"] == "program":
+            break
+        head.append(x["type"])
+    return [x for x in _staged(steps, first) if x["type"] not in head] + list(part)
+
+
+def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
+    """What a run does (the owner, 16 Oct: "options to play a single task arm, dual arm task and sequences in
+    both simulation and real"):
+    - a sequence: ``mode`` both (V53's RUN BOTH, its plan) or left / right (V53's RUN LEFT / RIGHT SEQUENCE:
+      that arm's steps in one runner call), every row;
+    - a single task: ``pick`` {scope: task, side, row}, that Program row alone on its arm, with the Pole and
+      Hand in force before it;
+    - a dual-arm task: ``pick`` {scope: dual, stage}, one coordinated stage of V53's plan of both arms (its
+      TOGETHER Programs, or its RUN FIRST / WAIT OTHER pair), each arm with the Pole and Hand in force
+      before its part.
+    Steps are numbered (``_row``)."""
+    scope = str((pick or {}).get("scope") or "sequence")
+    if scope == "task":
+        side, row = str(pick.get("side") or ""), pick.get("row")
+        if side not in ARMS:
+            raise UserError("Say which arm the task is on.")
+        try:
+            row = int(row)
+        except (TypeError, ValueError):
+            raise UserError("Choose the task: a Program row of the arm.") from None
+        mine = steps[side]
+        if not 1 <= row <= len(mine) or mine[row - 1]["type"] != "program":
+            raise UserError(f"{side.upper()} row {row} is not a Program row.", "Choose a Program row of the arm.")
+        picked = {side: _staged(mine, row) + [mine[row - 1]]}
+        plan = [{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}]
+        return dict(mode=side, pick=dict(scope="task", side=side, row=row), first_row={side: row}, steps=picked, plan=plan,
+                    counts=counts(plan))
+    if scope == "dual":
+        if not steps["left"] or not steps["right"]:
+            raise UserError("Build or load BOTH LEFT and RIGHT sequences first.")
+        try:
+            full = build_plan(steps["left"], steps["right"])
+            k = int(pick.get("stage"))
+        except ValueError as exc:
+            raise UserError(f"Cannot start dual sequence: {exc}", code="plan") from None
+        except TypeError:
+            raise UserError("Choose the dual-arm task: a stage of the plan.") from None
+        if not 0 <= k < len(full) or full[k]["kind"] not in ("parallel", "serial"):
+            raise UserError("That stage is not a dual-arm task.", "Choose a TOGETHER or RUN FIRST / WAIT OTHER stage.")
+        st = full[k]
+        parts = {x["side"]: x["steps"] for x in (st["first"], st["second"])} if st["kind"] == "serial" \
+            else {side: st[side]["steps"] for side in ARMS if st.get(side)}
+        if set(parts) != set(ARMS) or not all(any(x["type"] == "program" for x in parts[side]) for side in ARMS):
+            raise UserError("That stage is not a dual-arm task: it has no Program on both arms.", "Choose a stage with both arms' Programs.")
+        picked = {side: _with_stage(steps[side], parts[side]) for side in ARMS}
+        try:
+            plan = build_plan(picked["left"], picked["right"])
+        except ValueError as exc:
+            raise UserError(f"Cannot start the dual-arm task: {exc}", code="plan") from None
+        first = {side: min(x.get("_row") or 1 for x in parts[side]) for side in ARMS}
+        return dict(mode="both", pick=dict(scope="dual", stage=k, label=st.get("program_id") or st.get("title")), first_row=first,
+                    steps=picked, plan=plan, counts=counts(plan))
     if mode not in ("both", *ARMS):
         raise UserError("Run both arms, or the left or the right arm.")
-    ranges = ranges or {}
-    picked, first = {}, {}
-    for side in ARMS:
-        if mode in ("both", side):
-            picked[side], first[side] = rows(steps[side], ranges.get(side))
+    picked = {side: list(steps[side]) for side in ARMS if mode in ("both", side)}
     if mode == "both":
         if not picked["left"] or not picked["right"]:
             raise UserError("Build or load BOTH LEFT and RIGHT sequences first.")
@@ -573,7 +629,7 @@ def plan_for(steps: dict, mode: str, ranges: dict | None) -> dict:
         if not picked[mode]:
             raise UserError(f"{mode.upper()} sequence is empty.")
         plan = [{"kind": "single", "program_id": None, mode: {"side": mode, "steps": picked[mode]}}]
-    return dict(mode=mode, ranges={s: (ranges.get(s) or None) for s in picked}, first_row=first, steps=picked, plan=plan,
+    return dict(mode=mode, pick=dict(scope="sequence"), first_row={side: 1 for side in picked}, steps=picked, plan=plan,
                 counts=counts(plan))
 
 
@@ -738,7 +794,7 @@ def identity_of(run: dict, programs: dict, points: dict, overall: int) -> dict:
         pts = (points.get(side) or {}).get("points") or {}
         used[side] = dict(programs={str(p): _fingerprint(programs[side].get(p)) for p in pids},
                           points={n: [round(float(v), 2) for v in pts[n]] if n in pts else None for n in names})
-    return dict(mode=run["mode"], ranges=run["ranges"], steps={s: [{k: v for k, v in st.items() if k != "_row"} for st in steps]
+    return dict(mode=run["mode"], pick=run["pick"], steps={s: [{k: v for k, v in st.items() if k != "_row"} for st in steps]
                                                                for s, steps in run["steps"].items()},
                 used=used, overall=int(overall))
 
@@ -1088,7 +1144,7 @@ def _phase_at(changes, t: float) -> str:
     return ph
 
 
-def simulate(app, units, mode: str, ranges: dict | None):
+def simulate(app, units, mode: str, pick: dict | None):
     """Simulation Mode: the run (``plan_for``) through V53's plan on one clock, both arms, in the
     room and at the UGV placement its Programs were taught at; the collision check over all of it; and
     what would not be right on the robot (``findings``). Kept as the project's last simulation, with
@@ -1097,7 +1153,7 @@ def simulate(app, units, mode: str, ranges: dict | None):
     from ..motion.limits import load_limits
     from .routes_robot import _payload
 
-    run = plan_for(_numbered(load(units)), mode, ranges)
+    run = plan_for(_numbered(load(units)), mode, pick)
     overall = int(app.robot.speed_pct)
     home = dict(_payload(app)["home"])
     cub = int(app.ui.get("cubicle_mm", 1400))         # the cubicle chosen, when the room is not measured
@@ -1145,7 +1201,7 @@ def simulate(app, units, mode: str, ranges: dict | None):
         for e in check["events"]:                         # where in the sequence: each arm's row and line then
             e["at"] = [_where(acts[s], e["first_t"]) for s in (ARMS if "both" in e["sides"] else e["sides"]) if s in acts]
         out = dict(made=time.strftime("%Y-%m-%d %H:%M:%S"), hash=digest(ident), identity=ident, completed=False,
-                   mode=run["mode"], ranges=run["ranges"], overall=overall, counts=run["counts"], stages=stages,
+                   mode=run["mode"], pick=run["pick"], overall=overall, counts=run["counts"], stages=stages,
                    total_s=round(total, 3), acts=acts, start=starts, start_from=start_how,
                    findings=findings, collisions=check, scene=scene, phases=changes,
                    programs={s: {str(k): {kk: v.get(kk) for kk in ("name", "sent", "file_name", "region", "gone", "lines")}
@@ -1311,8 +1367,8 @@ def _changed(sim: dict | None, ident: dict) -> str:
         return "it has not been simulated"
     old = sim.get("identity") or {}
     what = []
-    if old.get("mode") != ident["mode"] or old.get("ranges") != ident["ranges"]:
-        what.append("the arms or the rows chosen")
+    if old.get("mode") != ident["mode"] or old.get("pick") != ident["pick"]:
+        what.append("what is run (the sequence, the task or the arms)")
     if old.get("steps") != ident["steps"]:
         what.append("its steps")
     for side, u in ident["used"].items():
@@ -1357,7 +1413,7 @@ def _step_words(step: dict) -> str:
     return f"{step['move'].upper()} {step['name']}"
 
 
-def run_real(app, units, mode: str, ranges: dict | None, confirm_each: bool, body: dict):
+def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body: dict):
     """Real Machine Mode (V53's RUN BOTH / RUN LEFT / RUN RIGHT): only in Real robot mode, on linked
     controllers, after the same run completed in Simulation; every Program slot and global point it
     uses checked on its controller before anything moves; what the simulation found asked about once,
@@ -1369,7 +1425,7 @@ def run_real(app, units, mode: str, ranges: dict | None, confirm_each: bool, bod
     import threading
 
     robot = app.robot
-    run = plan_for(_numbered(load(units)), mode, ranges)
+    run = plan_for(_numbered(load(units)), mode, pick)
     sides = list(run["steps"])
     if app.ui["mode"] != "real":
         raise UserError("Real Machine Mode runs the sequence on the robot, so Lite must be in Real robot mode.",

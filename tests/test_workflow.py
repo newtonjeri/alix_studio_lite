@@ -1,9 +1,10 @@
 """Merge + Full Sequence S2 (feedback v5, slide 9): V53's Page 02 ported as it is. Its planner is
 V53's own code: run here against V53's methods (read from the reference file, not imported: it is a
 Tk program) on the owner's V6 files and on many generated sequences; the steps are checked as runner
-v14 checks them; V53's JSON loads per arm and never into the other arm; Partial is a row range per
-arm; Simulation Mode times both arms through the plan, says what would not be right on the robot and
-checks collisions; Real Machine Mode only after the same run completed in Simulation."""
+v14 checks them; V53's JSON loads per arm and never into the other arm; a run is a single task, a
+dual-arm task or the sequences (Full and Partial are gone: the owner, 16 Oct); Simulation Mode times both
+arms through the plan, says what would not be right on the robot and checks collisions; Real Machine Mode
+only after the same run completed in Simulation."""
 import ast
 import json
 import random
@@ -117,21 +118,35 @@ def test_steps_are_checked_and_v53s_json_loads_per_arm():
             workflow.check_steps([bad], "left")
 
 
-def test_partial_is_a_row_range_per_arm():
+def test_a_single_task_a_dual_arm_task_or_the_sequences():
+    """What is run (the owner, 16 Oct: "options to play a single task arm, dual arm task and sequences in both
+    simulation and real"): a Program row alone on its arm with the Pole and Hand in force before it; one
+    coordinated stage of V53's plan with both arms' Programs, each arm staged the same way; or the sequences."""
     from alix_studio_lite.server import workflow
     from alix_studio_lite.server.jobs import UserError
 
     left, right = (workflow.check_steps(s, side) for s, side in zip(v6(), ("left", "right")))
-    steps = {"left": left, "right": right}
-    run = workflow.plan_for(steps, "both", {"left": [9, 12], "right": [11, 14]})        # Program 76 to Program 80 on both
-    assert run["first_row"] == {"left": 9, "right": 11}
-    assert [s["kind"] for s in run["plan"]] == ["parallel", "serial", "serial", "parallel"]
-    one = workflow.plan_for(steps, "right", {"right": [1, 4]})
-    assert [st["type"] for st in one["plan"][0]["right"]["steps"]] == ["pole", "hand", "pole", "program"] and "left" not in one["steps"]
-    with pytest.raises(UserError, match="Rows 3 to 99 are not in a sequence of 14"):
-        workflow.plan_for(steps, "both", {"left": [3, 99]})
-    with pytest.raises(UserError, match="Cannot start dual sequence: RUN FIRST / WAIT OTHER serial handoffs must use the same"):
-        workflow.plan_for(steps, "both", {"left": [10, 10], "right": [13, 13]})            # 78 RUN FIRST vs 80 TOGETHER... refused as V53
+    steps = workflow._numbered({"left": left, "right": right})
+    task = workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 6})     # Program 73: hand (row 2), pole 50 (row 5)
+    assert task["mode"] == "left" and task["pick"] == {"scope": "task", "side": "left", "row": 6} and "right" not in task["steps"]
+    assert [(st["type"], st["_row"]) for st in task["steps"]["left"]] == [("hand", 2), ("pole", 5), ("program", 6)]
+    assert task["plan"][0]["kind"] == "single" and task["plan"][0]["program_id"] == 73
+    with pytest.raises(UserError, match="LEFT row 1 is not a Program row"):
+        workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 1})
+
+    full = workflow.build_plan(steps["left"], steps["right"])
+    assert [st["kind"] for st in workflow.plan_for(steps, "both")["plan"]] == [st["kind"] for st in full]   # the sequences, every row
+    later = next(i for i, st in enumerate(full) if st["kind"] == "parallel" and i > 2)                     # after the lid checkpoint
+    dual = workflow.plan_for(steps, "both", {"scope": "dual", "stage": later})
+    assert dual["mode"] == "both" and [st["kind"] for st in dual["plan"]] == ["parallel"]
+    for side in ("left", "right"):                                     # the pole and hand in force, then the stage's own rows
+        kinds = [st["type"] for st in dual["steps"][side]]
+        assert "program" in kinds and kinds.index("program") > 0 and {"pole", "hand"} <= set(kinds[:kinds.index("program")])
+    serial = next(i for i, st in enumerate(full) if st["kind"] == "serial")
+    assert [st["kind"] for st in workflow.plan_for(steps, "both", {"scope": "dual", "stage": serial})["plan"]] == ["serial"]
+    check = next(i for i, st in enumerate(full) if st["kind"] == "checkpoint")
+    with pytest.raises(UserError, match="not a dual-arm task"):
+        workflow.plan_for(steps, "both", {"scope": "dual", "stage": check})
 
 
 # ── Simulation Mode and the gate to Real Machine Mode, on the stand-in (no controller)

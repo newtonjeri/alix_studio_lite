@@ -15,9 +15,17 @@ W = P + "/workflow"
 
 
 def _run_args(body: dict) -> tuple[str, dict | None]:
+    """``mode`` (both, left, right) and ``pick``: what is run (workflow.plan_for: the sequence, a single task, a
+    dual-arm task)."""
     mode = str(body.get("mode") or "both")
-    ranges = body.get("ranges") if isinstance(body.get("ranges"), dict) else None
-    return mode, ranges
+    pick = body.get("pick") if isinstance(body.get("pick"), dict) else None
+    return mode, pick
+
+
+def _stage_programs(s: dict) -> dict:
+    parts = [s["first"], s["second"]] if s["kind"] == "serial" else [s.get(x) for x in workflow.ARMS if s.get(x)]
+    return {x["side"]: [dict(id=int(st["id"]), row=st.get("_row"), name=st.get("name")) for st in x["steps"] if st["type"] == "program"]
+            for x in parts}
 
 
 @route("GET", W)
@@ -83,20 +91,21 @@ def get_workflow_sources(app, q, body, m):
 def post_workflow_plan(app, q, body, m):
     """V53's validation before anything moves: the plan's stages and counts, or why it cannot run."""
     units = units_of(app, m.group(1))
-    mode, ranges = _run_args(body)
-    run = workflow.plan_for(workflow.load(units), mode, ranges)
-    stages = [dict(index=i, kind=s["kind"], label=str(s.get("program_id") or ""), **(
+    mode, pick = _run_args(body)
+    run = workflow.plan_for(workflow._numbered(workflow.load(units)), mode, pick)
+    stages = [dict(index=i, kind=s["kind"], label=str(s.get("program_id") or ""), title=s.get("title"),
+                   programs=_stage_programs(s) if s["kind"] in ("parallel", "serial", "single") else {}, **(
         {"first": s["first"]["side"], "second": s["second"]["side"]} if s["kind"] == "serial" else {}))
         for i, s in enumerate(run["plan"])]
-    return dict(mode=run["mode"], ranges=run["ranges"], counts=run["counts"], stages=stages)
+    return dict(mode=run["mode"], pick=run["pick"], counts=run["counts"], stages=stages)
 
 
 @route("POST", W + "/simulate")
 def post_workflow_simulate(app, q, body, m):
     """Simulation Mode: the run in 3D with the collision check (a job)."""
     units = units_of(app, m.group(1))
-    mode, ranges = _run_args(body)
-    return workflow.simulate(app, units, mode, ranges).view()
+    mode, pick = _run_args(body)
+    return workflow.simulate(app, units, mode, pick).view()
 
 
 @route("POST", W + "/frames")
@@ -131,5 +140,5 @@ def post_workflow_run(app, q, body, m):
     """Real Machine Mode: the run on the robot (a job), once simulated as it is."""
     session(app)
     units = units_of(app, m.group(1))
-    mode, ranges = _run_args(body)
-    return workflow.run_real(app, units, mode, ranges, bool(body.get("confirm_each", True)), body).view()
+    mode, pick = _run_args(body)
+    return workflow.run_real(app, units, mode, pick, bool(body.get("confirm_each", True)), body).view()

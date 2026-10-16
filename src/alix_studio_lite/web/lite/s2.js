@@ -7,9 +7,12 @@
 //   refused); RUN and STOP per arm;
 // - RUN BOTH // SAFE TIMELINE (V53's plan), STOP BOTH, Confirm before waiting arm, the overall
 //   speed (the speed slider at the top), the status and the live status of each arm.
-// What Lite adds: Simulation Mode or Real Machine Mode; the full sequence or rows of it (Partial,
-// a range per arm); Simulation Mode plays the run in 3D with the collision check and says what would
-// not be right on the robot; Real Machine Mode runs only what completed in Simulation as it is.
+// What Lite adds: Simulation Mode or Real Machine Mode; what to run (the owner, 16 Oct: "options to play
+// a single task arm, dual arm task and sequences in both simulation and real"; Full and Partial are gone):
+// the sequences, a single task (a Program row on its arm, with the Pole and Hand in force before it) or a
+// dual-arm task (one stage of V53's plan with both arms' Programs); Simulation Mode plays the run in 3D with
+// the collision check and says what would not be right on the robot; Real Machine Mode runs only what
+// completed in Simulation as it is.
 
 import { call, get, post, put, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, tell } from './ctx.js';
@@ -24,11 +27,12 @@ const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
 const ARM = (s) => s.toUpperCase();
 const RULES = ['TOGETHER', 'RUN FIRST', 'WAIT OTHER'];
+const SCOPES = [['sequence', 'Sequences'], ['task', 'Single task'], ['dual', 'Dual-arm task']];
 const GRIP = [0, 0, 0, 0, 150, 1000], OPEN = [1000, 1000, 1000, 1000, 1000, 1000];
 const CLEANING = [1000, 1000, 1000, 1000, 0, 1000];          // the Cleaning Pose (the owner, 15 Oct; Prepare's preset)
 const S = {
   steps: { left: [], right: [] }, sources: { left: { programs: [], points: [] }, right: { programs: [], points: [] } },
-  sel: { left: null, right: null }, mode: 'sim', scope: 'full', confirmEach: true,
+  sel: { left: null, right: null }, mode: 'sim', scope: 'sequence', pick: null, edited: false, confirmEach: true,
   sim: null, job: null, live: { left: 'IDLE', right: 'IDLE' }, status: 'PAGE 02 READY // Build LEFT and RIGHT sequences', runtime: 0,
   rows: { left: null, right: null },
 };
@@ -135,15 +139,11 @@ function build() {
         btn('Simulation Mode', () => setMode('sim'), 'btn light lite-s2-mode', { id: 'liteS2Mode_sim', role: 'radio' }),
         btn('Real Machine Mode', () => setMode('real'), 'btn light lite-s2-mode', { id: 'liteS2Mode_real', role: 'radio' }),
         el('span', { id: 'liteS2Gate', class: 'lite-status' })),
-      el('div', { class: 'lite-s2-modes', role: 'radiogroup', 'aria-label': 'Sequence' },
-        el('b', { text: 'Sequence' }),
-        btn('Full Sequence', () => setScope('full'), 'btn light lite-s2-mode', { id: 'liteS2Scope_full', role: 'radio' }),
-        btn('Partial Sequence', () => setScope('partial'), 'btn light lite-s2-mode', { id: 'liteS2Scope_partial', role: 'radio' }),
-        el('span', { id: 'liteS2Ranges', class: 'lite-s2-ranges', hidden: true },
-          ARMS.map(side => el('span', { class: 'lite-s2-range' }, el('b', { text: `${ARM(side)} rows` }),
-            el('input', { id: `liteS2From_${side}`, type: 'number', min: '1', step: '1', 'aria-label': `${ARM(side)} first row`, onchange: gate }),
-            ' to ',
-            el('input', { id: `liteS2To_${side}`, type: 'number', min: '1', step: '1', 'aria-label': `${ARM(side)} last row`, onchange: gate })))))),
+      el('div', { class: 'lite-s2-modes', role: 'radiogroup', 'aria-label': 'What to run' },
+        el('b', { text: 'What to run' }),
+        ...SCOPES.map(([id, name]) => btn(name, () => setScope(id), 'btn light lite-s2-mode', { id: `liteS2Scope_${id}`, role: 'radio' })),
+        el('button', { id: 'liteS2Pick', class: 'lite-picker-btn lite-s2-pick', type: 'button', hidden: true, 'aria-haspopup': 'listbox',
+          'aria-expanded': 'false', onclick: (e) => chooseTask(e.currentTarget) }, el('span', { id: 'liteS2PickText', class: 'lite-picker-value' })))),
     el('div', { class: 'card lite-s2-control' },
       el('div', { class: 'lite-s2-kicker', text: 'DUAL SEQUENCE CONTROL' }),
       el('div', { class: 'lite-row' },
@@ -254,6 +254,7 @@ const queue = { left: Promise.resolve(), right: Promise.resolve() };
 
 function saveSteps(side) {
   edits[side] += 1;
+  S.edited = true;                                           // not as simulated any more (the server says what changed)
   clearTimeout(saving[side]);
   saving[side] = setTimeout(() => {
     saving[side] = null;
@@ -434,28 +435,26 @@ function paintArm(side) {
   }
   const st = $(`liteS2ArmStatus_${side}`);
   if (st) st.textContent = `${ARM(side)} // ${list.length} sequence step(s)`;
-  for (const id of ['From', 'To']) {
-    const inp = $(`liteS2${id}_${side}`);
-    if (!inp) continue;
-    inp.max = String(Math.max(1, list.length));
-    if (!inp.value || Number(inp.value) > list.length) inp.value = String(id === 'From' ? 1 : Math.max(1, list.length));
-  }
 }
 
 function paintAll() {
   if (!built) return;
   for (const side of ARMS) paintArm(side);
   for (const m of ['sim', 'real']) $(`liteS2Mode_${m}`).classList.toggle('active', S.mode === m);
-  for (const m of ['full', 'partial']) $(`liteS2Scope_${m}`).classList.toggle('active', S.scope === m);
+  for (const [m] of SCOPES) $(`liteS2Scope_${m}`).classList.toggle('active', S.scope === m);
   for (const m of ['sim', 'real']) $(`liteS2Mode_${m}`).setAttribute('aria-checked', String(S.mode === m));
-  for (const m of ['full', 'partial']) $(`liteS2Scope_${m}`).setAttribute('aria-checked', String(S.scope === m));
-  $('liteS2Ranges').hidden = S.scope !== 'partial';
+  for (const [m] of SCOPES) $(`liteS2Scope_${m}`).setAttribute('aria-checked', String(S.scope === m));
+  $('liteS2Pick').hidden = S.scope === 'sequence';
+  $('liteS2PickText').textContent = pickText() || (S.scope === 'task' ? 'Choose the task: a Program row…' : 'Choose the dual-arm task: a stage…');
+  $('liteS2RunBoth').textContent = S.scope === 'task' ? 'RUN TASK' : S.scope === 'dual' ? 'RUN DUAL-ARM TASK' : 'RUN BOTH // SAFE TIMELINE';
+  for (const side of ARMS) $(`liteS2Run_${side}`).hidden = S.scope !== 'sequence';     // an arm's own sequence: Sequences only
   $('liteS2Speed').textContent = String(speedPct());
   $('liteS2StatusText').textContent = S.status;
   $('liteS2Runtime').textContent = fmt(S.runtime);
   for (const side of ARMS) $(`liteS2Live_${side}`).textContent = `${ARM(side)} // ${S.live[side]}`;
   const busy = !!S.job;
-  for (const id of ['liteS2RunBoth', 'liteS2Run_left', 'liteS2Run_right', 'liteS2Mode_sim', 'liteS2Mode_real']) $(id).disabled = busy;
+  for (const id of ['liteS2RunBoth', 'liteS2Run_left', 'liteS2Run_right', 'liteS2Mode_sim', 'liteS2Mode_real', 'liteS2Pick',
+    ...SCOPES.map(([m]) => `liteS2Scope_${m}`)]) $(id).disabled = busy;
   $('liteS2Sim').hidden = S.mode !== 'sim' && !S.sim;
   gate();
 }
@@ -465,42 +464,74 @@ function setMode(m) {
   S.mode = m;
   paintAll();
 }
-function setScope(s) { S.scope = s; paintAll(); }
+function setScope(s) { S.scope = s; S.pick = null; paintAll(); }
 
-function ranges(mode) {
-  if (S.scope !== 'partial') return null;
-  const out = {};
-  for (const side of ARMS) {
-    if (mode !== 'both' && mode !== side) continue;
-    out[side] = [Number($(`liteS2From_${side}`).value), Number($(`liteS2To_${side}`).value)];
-  }
-  return out;
+// What is run (workflow.plan_for): {mode, pick}. A sequence's mode is the button's (both, left, right).
+function what(mode) {
+  if (S.scope === 'task') return S.pick ? { mode: S.pick.side, pick: { scope: 'task', side: S.pick.side, row: S.pick.row } } : null;
+  if (S.scope === 'dual') return S.pick ? { mode: 'both', pick: { scope: 'dual', stage: S.pick.stage } } : null;
+  return { mode, pick: null };
 }
 
-// Whether Real Machine Mode can run what is chosen: the last simulation is this run, played to its end
-// (the server checks it again, with the programs and the points on the controllers, when it starts).
-function simulatedNow(mode) {
-  const sim = S.sim;
-  if (!sim || !sim.completed || sim.mode !== mode) return false;
-  const r = ranges(mode) || {};
-  for (const side of Object.keys(sim.steps || {})) {
-    const want = (sim.ranges || {})[side] || null, have = r[side] || null;
-    if (JSON.stringify(want) !== JSON.stringify(have)) return false;
-    const strip = (x) => JSON.stringify(x.map(({ _row, ...rest }) => rest));
-    const lo = have ? have[0] - 1 : 0, hi = have ? have[1] : S.steps[side].length;
-    if (strip(S.steps[side].slice(lo, hi)) !== strip(sim.steps[side])) return false;
+function pickText() {
+  const k = S.pick;
+  if (!k) return '';
+  if (S.scope === 'task') return `${ARM(k.side)} row ${k.row} · ${k.text}`;
+  return `Stage ${k.stage + 1} · ${k.text}`;
+}
+
+// The task as a searchable list (picker.js): each arm's Program rows (Single task), or the stages of V53's
+// plan with both arms' Programs (Dual-arm task).
+async function chooseTask(anchor) {
+  try { await saved(); } catch (err) { tell(err); return; }
+  const label = (st) => `Program ${st.id}${st.name ? ` // ${st.name}` : ''}`;
+  if (S.scope === 'task') {
+    const groups = ARMS.map(side => ({ label: `${ARM(side)} arm`, rows: S.steps[side].map((st, i) => (st.type !== 'program' ? null
+      : { value: `${side}:${i + 1}`, text: `Row ${i + 1} · ${label(st)}`, detail: `${st.dual_rule || 'TOGETHER'} · Start ${st.transit_speed || 30} %`,
+        search: ARM(side) })).filter(Boolean) }));
+    choose(anchor, groups, S.pick ? `${S.pick.side}:${S.pick.row}` : null, (v) => {
+      const [side, row] = v.split(':');
+      const st = S.steps[side][Number(row) - 1];
+      S.pick = { side, row: Number(row), text: label(st) };
+      paintAll();
+    }, { placeholder: 'Search the Programs: row, ID or name' });
+    return;
   }
+  let plan;
+  try { plan = await post(`${base()}/plan`, { mode: 'both' }); } catch (err) { tell(err); return; }
+  const names = (side, s) => (s.programs[side] || []).map(x => `${x.id}${x.name ? ` ${x.name}` : ''}`).join(', ');
+  const rows = plan.stages.filter(s => (s.kind === 'parallel' || s.kind === 'serial') && (s.programs.left || []).length && (s.programs.right || []).length)
+    .map(s => ({ value: String(s.index),
+      text: s.kind === 'serial' ? `Stage ${s.index + 1} · Program ${s.label} · one arm at a time (${ARM(s.first)} first)`
+        : `Stage ${s.index + 1} · ${s.title || (/^\d+$/.test(s.label) ? `Program ${s.label}` : s.label || 'TIMELINE')} · LEFT + RIGHT together`,
+      detail: `LEFT ${names('left', s)} · RIGHT ${names('right', s)}` }));
+  choose(anchor, [{ label: `V53's plan · ${rows.length} dual-arm task${rows.length === 1 ? '' : 's'}`, rows }], S.pick ? String(S.pick.stage) : null, (v) => {
+    const r = rows.find(x => x.value === v);
+    S.pick = { stage: Number(v), text: r.text.replace(/^Stage \d+ · /, '') };
+    paintAll();
+  }, { placeholder: 'Search the stages: Program ID or name' });
+}
+
+// Whether Real Machine Mode can run what is chosen: the last simulation is this run, played to its end, and
+// nothing edited since (the server checks it again, with the programs and the points on the controllers).
+function simulatedNow(mode) {
+  const sim = S.sim, w = what(mode);
+  if (!sim || !sim.completed || !w || sim.mode !== w.mode || S.edited) return false;
+  if (JSON.stringify(sim.pick || { scope: 'sequence' }) !== JSON.stringify(w.pick || { scope: 'sequence' })
+    && !(w.pick && sim.pick && ['scope', 'side', 'row', 'stage'].every(k => sim.pick[k] === w.pick[k]))) return false;
   return sim.overall === speedPct();
 }
 
 function gate() {
   const g = $('liteS2Gate');
   if (!g) return;
-  if (S.mode === 'sim') { g.className = 'lite-status'; g.textContent = 'RUN plays the sequence in 3D with the collision check. Nothing moves.'; return; }
-  const ok = ['both', 'left', 'right'].filter(simulatedNow);
+  if (S.mode === 'sim') { g.className = 'lite-status'; g.textContent = 'RUN plays it in 3D with the collision check. Nothing moves.'; return; }
+  const modes = S.scope === 'sequence' ? ['both', 'left', 'right'] : [null];
+  const ok = modes.filter(simulatedNow);
+  const says = (m) => (S.scope === 'task' ? 'RUN TASK' : S.scope === 'dual' ? 'RUN DUAL-ARM TASK' : m === 'both' ? 'RUN BOTH' : `RUN ${ARM(m)}`);
   g.className = `lite-status ${ok.length ? 'ok' : 'warn'}`;
-  g.textContent = ok.length ? `Simulated as it is, played to its end: ${ok.map(m => (m === 'both' ? 'RUN BOTH' : `RUN ${ARM(m)}`)).join(', ')} can run on the robot.`
-    : 'Real Machine Mode runs only a sequence that completed in Simulation Mode as it is now: run it there first.';
+  g.textContent = ok.length ? `Simulated as it is, played to its end: ${ok.map(says).join(', ')} can run on the robot.`
+    : 'Real Machine Mode runs only what completed in Simulation Mode as it is now: run it there first.';
 }
 
 // ── running: Simulation Mode or Real Machine Mode
@@ -509,17 +540,20 @@ async function run(mode) {
   if (!ctx.pid) { window.toast('Open a project first.'); return; }
   if (S.job) { window.toast('A sequence is already running.'); return; }
   try { await saved(); } catch (err) { tell(err); return; }
-  if (mode === 'both' && (!S.steps.left.length || !S.steps.right.length)) { window.toast('Build or load BOTH LEFT and RIGHT sequences first.'); return; }
-  if (mode !== 'both' && !S.steps[mode].length) { window.toast(`${ARM(mode)} sequence is empty.`); return; }
-  if (S.mode === 'sim') simulate(mode);
-  else runReal(mode);
+  const w = what(mode);
+  if (!w) { window.toast(S.scope === 'task' ? 'Choose the task first: a Program row.' : 'Choose the dual-arm task first: a stage of the plan.'); return; }
+  if (w.mode === 'both' && (!S.steps.left.length || !S.steps.right.length)) { window.toast('Build or load BOTH LEFT and RIGHT sequences first.'); return; }
+  if (w.mode !== 'both' && !S.steps[w.mode].length) { window.toast(`${ARM(w.mode)} sequence is empty.`); return; }
+  if (S.mode === 'sim') simulate(w);
+  else runReal(w);
 }
 
-async function simulate(mode) {
+async function simulate(w) {
+  const mode = w.mode;
   player.pause();
-  S.status = `PAGE 02 SIMULATION // ${mode === 'both' ? 'LEFT + RIGHT' : ARM(mode)} // timing the stages and checking collisions`;
+  S.status = `PAGE 02 SIMULATION // ${pickText() || (mode === 'both' ? 'LEFT + RIGHT' : ARM(mode))} // timing the stages and checking collisions`;
   try {
-    const job = await post(`${base()}/simulate`, { mode, ranges: ranges(mode) });
+    const job = await post(`${base()}/simulate`, { mode, pick: w.pick });
     S.job = job;
     paintAll();
     const done = await watch(job);
@@ -530,8 +564,9 @@ async function simulate(mode) {
   } catch (err) { S.status = `PAGE 02 // ${say(err)}`; tell(err); } finally { S.job = null; paintAll(); }
 }
 
-async function runReal(mode) {
-  const body = { mode, ranges: ranges(mode), confirm_each: S.confirmEach };
+async function runReal(w) {
+  const mode = w.mode;
+  const body = { mode, pick: w.pick, confirm_each: S.confirmEach };
   let job;
   try {
     job = await post(`${base()}/run`, body);
@@ -541,11 +576,13 @@ async function runReal(mode) {
     let warns = [];
     if (err.code === 'warnings') warns = [err.message.replace(/^Before it runs on the robot: /, '')];
     let plan = null;
-    try { plan = await post(`${base()}/plan`, { mode, ranges: ranges(mode) }); } catch (_) { /* the server says it again */ }
+    try { plan = await post(`${base()}/plan`, { mode, pick: w.pick }); } catch (_) { /* the server says it again */ }
     const c = plan && plan.counts;
-    const what = mode === 'both' ? 'DUAL SAFE-TIMELINE EXECUTION' : `${ARM(mode)} ROBOT ARM WILL MOVE`;
-    const yes = await confirmDialog({ title: mode === 'both' ? 'Run Dual Sequences' : `Run ${ARM(mode)} Sequence`, ok: 'Start on the robot',
-      body: `${what}. ${c ? (mode === 'both' ? `Coordinated timeline/serial stages: ${c.coordinated}; TOGETHER timeline blocks: ${c.together}; `
+    const moves = mode === 'both' ? 'DUAL SAFE-TIMELINE EXECUTION' : `${ARM(mode)} ROBOT ARM WILL MOVE`;
+    const title = S.scope === 'task' ? `Run the task: ${pickText()}` : S.scope === 'dual' ? `Run the dual-arm task: ${pickText()}`
+      : mode === 'both' ? 'Run Dual Sequences' : `Run ${ARM(mode)} Sequence`;
+    const yes = await confirmDialog({ title, ok: 'Start on the robot',
+      body: `${moves}. ${c ? (mode === 'both' ? `Coordinated timeline/serial stages: ${c.coordinated}; TOGETHER timeline blocks: ${c.together}; `
         + `one-arm-at-a-time stages: ${c.one_arm}; manual safety checkpoints: ${c.checkpoints}. ` : '') : ''}`
         + `Overall controller speed: ${speedPct()}%. ${warns.length ? `The simulation found: ${warns.join(' ')} ` : ''}`
         + 'Confirm both work areas are clear and both hardware E-stops are accessible.',
@@ -650,9 +687,11 @@ function setSim(sim, fresh) {
   view.phase = null;
   view.clean = false;
   view.furthest = 0;
-  $('liteS2SimName').textContent = `${sim.mode === 'both' ? 'both arms' : `${ARM(sim.mode)} arm`}`
-    + `${Object.values(sim.ranges || {}).some(Boolean) ? ', partial' : ''} · ${sim.counts.stages} stage(s) · ${fmt(sim.total_s)}`
+  const k = sim.pick || {};
+  $('liteS2SimName').textContent = `${k.scope === 'task' ? `${ARM(k.side)} task, row ${k.row}` : k.scope === 'dual' ? `dual-arm task, stage ${k.stage + 1}`
+    : sim.mode === 'both' ? 'both arms' : `${ARM(sim.mode)} arm`} · ${sim.counts.stages} stage(s) · ${fmt(sim.total_s)}`
     + (sim.completed ? ' · played to its end' : '');
+  if (fresh) S.edited = false;                               // this simulation is of the steps as they are
   $('liteS2Timeline').max = String(Math.round(sim.total_s * 1000));
   tools.load(sim.hash, { phase: null, text: "each Program's region" });
   tools.setLength(sim.total_s);
@@ -814,8 +853,8 @@ async function simEnded() {
       window.toast(text);
     } else {
       $('liteS2SimState').className = 'lite-status ok';
-      $('liteS2SimState').textContent = 'Played to its end with every Program drawn: Real Machine Mode can run this sequence as it is.';
-      window.toast('Simulation complete, every Program drawn: Real Machine Mode can run this sequence as it is.');
+      $('liteS2SimState').textContent = 'Played to its end with every Program drawn: Real Machine Mode can run it as it is.';
+      window.toast('Simulation complete, every Program drawn: Real Machine Mode can run it as it is.');
     }
   } catch (err) { tell(err); }
   paintAll();

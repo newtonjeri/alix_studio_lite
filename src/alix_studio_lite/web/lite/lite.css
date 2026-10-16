@@ -651,10 +651,8 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-s2-modes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .lite-s2-modes > b { min-width: 120px; font-size: 13px; }
 .lite-s2-mode.active { background: var(--blue); color: var(--card); border-color: var(--blue); }
-.lite-s2-ranges { display: inline-flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-.lite-s2-ranges[hidden] { display: none; }
-.lite-s2-range { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
-.lite-s2-range input { width: 72px; }
+.lite-s2-pick { flex: 1 1 280px; max-width: 560px; }
+.lite-s2-pick[hidden] { display: none; }
 .lite-s2-kicker { font-size: 12px; font-weight: 800; letter-spacing: .06em; color: var(--blue); margin: 4px 0; }
 .lite-s2-check { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 700; }
 .lite-s2-speed { font-size: 13px; font-weight: 700; }
