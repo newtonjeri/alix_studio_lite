@@ -141,7 +141,7 @@
 /* STOP BOTH on top of everything while an overlay covers the top bar's (safety.js) */
 .lite-stop-fixed { display: none; position: fixed; left: 16px; bottom: 16px; z-index: 2147483000; }
 body:has(.modal.show, .project-manager-screen.show) .lite-stop-fixed,
-body.simulation-expanded .lite-stop-fixed { display: block; }
+body.simulation-expanded .lite-stop-fixed, body:has(.lite-vp-max) .lite-stop-fixed { display: block; }   /* a maximized 3D view covers the bar */
 body:has(.operator-login-screen:not(.hidden)) .lite-stop-fixed { display: none; }   /* never on the log-in screen (owner, 14 Oct) */
 .lite-estop { font-size: 13px; font-weight: 800; border-radius: 999px; padding: 5px 10px; border: 1px solid var(--line); color: var(--muted); }
 .lite-estop.CLEAR { color: var(--green); border-color: var(--green); background: var(--green2); }
@@ -558,6 +558,7 @@ html[data-theme="dark"] .lite-vtools-state.err, html[data-theme="dark"] .lite-vt
 .lite-vp.lite-vp-max { position: fixed !important; left: 5vw; top: 5vh; width: 90vw !important; height: 90vh !important; aspect-ratio: auto;
   max-width: none; margin: 0; z-index: 19500; box-shadow: 0 30px 80px -24px var(--lite-scrim); }
 .lite-vp-scrim { position: fixed; inset: 0; z-index: 19499; background: var(--lite-scrim); }
+body:has(.lite-vp-max) #toast { z-index: 19600; }                       /* what Lite says stays in view over a maximized 3D */
 .lite-vp-hole { max-width: 100%; }
 .lite-vp > .lite-vp-title { position: absolute !important; left: 2.2cqw !important; top: 2.2cqw !important; right: auto !important; bottom: auto !important;
   z-index: 3; max-width: 58%; padding: .55em .8em !important; border-radius: .7em !important; text-align: left; pointer-events: none;
@@ -694,7 +695,7 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-s1-sim-grid .lite-rev3d-host, .lite-s2-simgrid .lite-rev3d-host { min-height: 420px; }
 .lite-s1-sim-grid input[type="range"], .lite-s2-simgrid input[type="range"] { width: 100%; }
 
-/* S2, Full & Partial Sequence: V53's Page 02 in the page's style (s2.js) */
+/* S2, Sequence: V53's Page 02 in the page's style (s2.js) */
 .lite-s2-header { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; }
 .lite-s2-header h3 { margin: 4px 0; }
 .lite-s2-exec, .lite-s2-control { margin: 0 0 12px; display: grid; gap: 10px; }

@@ -51,7 +51,9 @@ export async function watchJob(job, onProgress = null) {
 export const jobLine = (j) => (j.n ? `${j.stage} (${Math.round(100 * j.i / Math.max(1, j.n))} %)` : j.stage || j.title);
 
 // A confirmation in the page's modal style. Cancel has the focus, so Enter never moves a robot.
-export function confirmDialog({ title, body, ok = 'Continue', danger = true, list = [], cancelText = 'Cancel' }) {
+// `escape`: what Escape answers (false: as Cancel; null: neither, e.g. stay where you are); `focus`: the
+// button focused first ('cancel' or 'ok').
+export function confirmDialog({ title, body, ok = 'Continue', danger = true, list = [], cancelText = 'Cancel', escape = false, focus = 'cancel' }) {
   return new Promise((resolve) => {
     const cancel = el('button', { class: 'btn outline', text: cancelText });
     const yes = el('button', { class: danger ? 'btn red' : 'btn green', text: ok });
@@ -61,12 +63,12 @@ export function confirmDialog({ title, body, ok = 'Continue', danger = true, lis
       el('div', { class: 'modal-actions' }, cancel, yes));
     const box = el('div', { class: 'modal show lite-confirm' }, card);
     const done = (v) => { box.remove(); document.removeEventListener('keydown', key, true); resolve(v); };
-    const key = (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } };
+    const key = (e) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); done(escape); } };   // this Escape is the question's alone
     cancel.onclick = () => done(false);
     yes.onclick = () => done(true);
     document.addEventListener('keydown', key, true);
     document.body.append(box);
-    cancel.focus();
+    (focus === 'ok' ? yes : cancel).focus();
   });
 }
 

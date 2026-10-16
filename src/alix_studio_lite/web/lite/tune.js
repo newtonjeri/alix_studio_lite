@@ -334,22 +334,30 @@ function renderPipe() {
   if ($('liteReset')) $('liteReset').disabled = !(unit && unit.active);
 }
 
+// Suggestions refitted or edited in Analyze and not applied would leave what comes after on the earlier result
+// (the owner, 16 Oct: "Changing an earlier step should invalidate or refresh everything downstream"): asked
+// before any step that uses the scale regions, from wherever it is reached. Apply them (the processed file is
+// then made again), Not now (the scale regions as they are), or Escape: stay here. {go, applied}.
+async function settleSuggestions(uses) {
+  if (!(suggestionsPending && isManual() && analysisNow())) return { go: true, applied: false };
+  const t = analysis.data.target;
+  const yes = await confirmDialog({ title: 'Apply the suggestions first?', danger: false, ok: 'Apply them', cancelText: 'Not now',
+    escape: null, focus: 'ok',
+    body: `The suggestions shown in Analyze${t ? ` (fitted to ${formatSeconds(t.target_s)})` : ''} are not in the scale regions yet, `
+      + `and ${uses}. Apply them now? The processed file is then made again from them. (Escape: stay here.)` });
+  if (yes === null) return { go: false, applied: false };
+  suggestionsPending = false;
+  if (yes) await applySuggestions(true);
+  return { go: true, applied: !!yes };
+}
+
 async function goStep(n, scroll = true) {
   n = Math.max(1, Math.min(6, Number(n) || 1));
   await flushPush();                                       // a change typed a moment ago counts before the step decides
-  // A later step uses the scale regions: suggestions refitted or edited in Analyze and not applied would leave
-  // Generate and Compare on the earlier result (the owner, 16 Oct: "Changing an earlier step should invalidate
-  // or refresh everything downstream").
-  if (pipeStep === ANALYZE && n > ANALYZE && suggestionsPending && isManual() && analysisNow()) {
-    const t = analysis.data.target;
-    const yes = await confirmDialog({ title: 'Apply the suggestions first?', danger: false, ok: 'Apply them', cancelText: 'Not now',
-      body: `The suggestions shown in Analyze${t ? ` (fitted to ${formatSeconds(t.target_s)})` : ''} are not in the scale regions yet, `
-        + 'and Generate and Compare use the scale regions. Apply them now? The processed file is then made again from them.' });
-    suggestionsPending = false;
-    if (yes) {
-      await applySuggestions(true);
-      if (n === 6 && !unlocked(6)) n = 5;                  // the earlier processed file no longer stands: Generate it
-    }
+  if (n >= 5) {                                            // Generate and Compare use the scale regions
+    const s = await settleSuggestions('Generate and Compare use the scale regions');
+    if (!s.go) return;
+    if (s.applied && n === 6 && !unlocked(6)) n = 5;       // the earlier processed file no longer stands: Generate it
   }
   if (!unlocked(n)) {
     window.toast(n === 6 ? 'Generate first: Compare opens once the processed file is made from these settings.'
@@ -872,12 +880,15 @@ const optLines = () => (external ? external.rows.length : (plotted.opt && plotte
 // maximum"); the other plot's cursor stops at its own end.
 function totalFor(kind) {
   const raw = (plotted.raw && plotted.raw.lines) || (rec() && rec().lines) || 0;
-  if (kind === 'review') return dur(raw);
-  return cmp3d === 'raw' || !optLines() ? dur(raw) : dur(optLines());
+  if (kind === 'review' || cmp3d === 'raw') return dur(raw);
+  // Processed: the file the 3D plays, the one made here; an external file is only plotted beside it
+  const made = external && fresh() ? Number(unit.candidate?.result?.lines) || 0 : 0;
+  return dur(made || optLines() || raw);
 }
 
 function setTotals(kind) {
   const total = totalFor(kind);
+  pb.at[kind] = Math.min(pb.at[kind], total);              // a shorter file made since: the moment stays inside it
   const tl = $(`liteTimeline_${kind}`);
   if (tl) tl.max = String(total);
   if ($(`liteTotal_${kind}`)) $(`liteTotal_${kind}`).textContent = `${total.toFixed(3)} s`;
@@ -905,7 +916,7 @@ function showMoment(kind, seek = true) {
   } else {
     cursorAt($('liteCmpOrig'), rowAt(raw, t));
     cursorAt($('liteCmpProc'), rowAt(optLines(), t));
-    if (seek && sim.key === unit?.key && sim.which === cmp3d && (cmp3d === 'raw' || !external)) seekTo(t);
+    if (seek && sim.key === unit?.key && sim.which === cmp3d) seekTo(t);
   }
 }
 
@@ -1307,8 +1318,8 @@ async function loadSimulation(which) {
     onMoment((t) => t3.at(t == null ? -1 : t));
     setTotals(kind);
     window.resetSimulationPlayback(false);
-    pb.at[kind] = at;
-    seekTo(at);
+    pb.at[kind] = Math.min(at, totalFor(kind));
+    seekTo(pb.at[kind]);
     if (pipeStep === (kind === 'review' ? REVIEW : 6)) showMoment(kind, false);
     $('simStatus').textContent = (which === 'candidate' ? 'The processed file' : 'The recording as taught')
       + ` in 3D, staged first (${sim.tl.stage.text}): Play / Pause / Restart and the timeline above move it with the plot.`;
@@ -1414,7 +1425,7 @@ async function enter() {
   if (!analysis || analysis.key !== unit.key) analysis = null;
   external = null;
   lastChange = null;
-  suggestionsPending = false;
+  if (!analysis) suggestionsPending = false;              // kept with its analysis: still asked before Generate, Compare, Real Test
   pause();
   pb.at.review = pb.at.compare = 0;
   plotted.raw = plotted.opt = null;
@@ -1525,6 +1536,8 @@ export function installTune() {
 async function keep() {
   if (!unit) return true;
   await flushPush();
+  const s = await settleSuggestions('the file Real Test gets is made from the scale regions');
+  if (!s.go) return false;
   if (!fresh()) {
     const ok = await retune();
     if (!ok) return false;

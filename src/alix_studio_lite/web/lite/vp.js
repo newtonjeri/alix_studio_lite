@@ -8,14 +8,16 @@
 import { el } from './ctx.js';
 
 const frames = new WeakMap();
-let open = null;                                 // the viewport maximized now: {host, hole, scrim}
+let open = null;                                 // the viewport maximized now: {host, hole, scrim, btn, inert}
 
 function restore() {
   if (!open) return;
-  const { host, hole, scrim, btn } = open;
+  const { host, hole, scrim, btn, inert } = open;
   open = null;
   host.classList.remove('lite-vp-max');
-  hole.replaceWith(host);
+  for (const n of inert) n.inert = false;
+  if (hole.isConnected) hole.replaceWith(host);
+  else host.remove();                             // its view was closed meanwhile (a window removed): it goes with it
   scrim.remove();
   btn.title = 'Maximize the view (90 % of the screen)';
   btn.setAttribute('aria-label', btn.title);
@@ -28,19 +30,22 @@ function onKey(e) {
 }
 
 // The maximized viewport leaves a hole of its size where it was (the page does not move) and sits on a
-// scrim, above the page and the windows, below the questions Lite asks.
+// scrim, above the page and the windows, below the questions Lite asks. What is behind it cannot be
+// reached by the keyboard either (inert); the fixed STOP BOTH (safety.js) and what Lite says stay in reach.
 function maximize(host, btn) {
   if (open) { const was = open.host; restore(); if (was === host) return; }
   const r = host.getBoundingClientRect();
   const hole = el('div', { class: 'lite-vp-hole', 'aria-hidden': 'true', style: `width:${r.width}px;height:${r.height}px` });
   const scrim = el('div', { class: 'lite-vp-scrim', 'aria-hidden': 'true', onclick: restore });
   host.replaceWith(hole);
+  const inert = [...document.body.children].filter(n => !n.inert && !n.matches('.lite-stop-fixed, #toast, script, style'));
+  for (const n of inert) n.inert = true;
   document.body.append(scrim, host);
   host.classList.add('lite-vp-max');
   btn.title = 'Back to the page';
   btn.setAttribute('aria-label', btn.title);
   btn.setAttribute('aria-pressed', 'true');
-  open = { host, hole, scrim, btn };
+  open = { host, hole, scrim, btn, inert };
   document.addEventListener('keydown', onKey, true);
 }
 
