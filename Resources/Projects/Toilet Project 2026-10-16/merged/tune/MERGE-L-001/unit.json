@@ -1,0 +1,17 @@
+{
+ "active": "20261016_194926_MERGE-L-001.txt",
+ "setup": {
+  "pole_mm": 140.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   null,
+   null
+  ],
+  "source": "the taught set's record",
+  "text": "pole 140 mm, fingers 100 % open, thumb held",
+  "hand_text": "fingers 100 % open, thumb held"
+ }
+}

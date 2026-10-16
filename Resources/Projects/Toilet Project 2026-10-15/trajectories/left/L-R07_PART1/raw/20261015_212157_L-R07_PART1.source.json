@@ -1,0 +1,35 @@
+{
+ "unit": "L-R07_PART1",
+ "arm": "left",
+ "taken": "2026-10-15 21:21",
+ "lines": 9636,
+ "sha256": "b739cb016b714b31ab131550f59fbf43bd33b334225beda636a002c4bde4d6bf",
+ "note": "existing recording FILE_04.txt: RIM TOP CLEANING",
+ "source": "library",
+ "original": "FILE_04.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 140.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   null,
+   null
+  ],
+  "source": "the taught set's record",
+  "text": "pole 140 mm, fingers 100 % open, thumb held",
+  "hand_text": "fingers 100 % open, thumb held"
+ },
+ "name": "FILE_04.txt"
+}

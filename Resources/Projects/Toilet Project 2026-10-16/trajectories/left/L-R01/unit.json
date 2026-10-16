@@ -1,0 +1,260 @@
+{
+ "setup": {
+  "pole_mm": 50.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "applied": {
+  "pole": {
+   "pole_mm": 50.0,
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "at": "2026-10-16 18:59:39"
+  },
+  "hand": {
+   "pole_mm": 50.0,
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "at": "2026-10-16 19:00:31"
+  }
+ },
+ "active": "20261016_212712_L-R01.txt",
+ "settings": {
+  "optimiser": "manual",
+  "target_s": null,
+  "segments": [
+   {
+    "start": 1,
+    "end": 1716,
+    "pct": 61.0
+   },
+   {
+    "start": 1717,
+    "end": 3433,
+    "pct": 86.0
+   },
+   {
+    "start": 3434,
+    "end": 5150,
+    "pct": 69.0
+   },
+   {
+    "start": 5151,
+    "end": 6867,
+    "pct": 94.0
+   },
+   {
+    "start": 6868,
+    "end": 8584,
+    "pct": 61.0
+   }
+  ],
+  "smooth_window": 101,
+  "program_id": 20,
+  "max_dev_mm": null,
+  "trim": true,
+  "smooth": true,
+  "scale": true,
+  "time_mode": "fastest",
+  "idle_window": 11,
+  "idle_threshold_md": 8.0,
+  "idle_min_run": 20
+ },
+ "history": [
+  {
+   "label": "Start",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   }
+  },
+  {
+   "label": "Automatic suggestions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1873,
+      "pct": 75.0
+     },
+     {
+      "start": 1874,
+      "end": 3747,
+      "pct": 105.0
+     },
+     {
+      "start": 3748,
+      "end": 5621,
+      "pct": 80.0
+     },
+     {
+      "start": 5622,
+      "end": 7495,
+      "pct": 115.0
+     },
+     {
+      "start": 7496,
+      "end": 9369,
+      "pct": 75.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792166936.4369435
+  },
+  {
+   "label": "Scale regions cleared: another recording (FILE_01.1.txt)",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792170389.8649
+  },
+  {
+   "label": "Automatic suggestions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1716,
+      "pct": 61.0
+     },
+     {
+      "start": 1717,
+      "end": 3433,
+      "pct": 86.0
+     },
+     {
+      "start": 3434,
+      "end": 5150,
+      "pct": 69.0
+     },
+     {
+      "start": 5151,
+      "end": 6867,
+      "pct": 94.0
+     },
+     {
+      "start": 6868,
+      "end": 8584,
+      "pct": 61.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792175467.260597
+  },
+  {
+   "label": "Program ID 20",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1716,
+      "pct": 61.0
+     },
+     {
+      "start": 1717,
+      "end": 3433,
+      "pct": 86.0
+     },
+     {
+      "start": 3434,
+      "end": 5150,
+      "pct": 69.0
+     },
+     {
+      "start": 5151,
+      "end": 6867,
+      "pct": 94.0
+     },
+     {
+      "start": 6868,
+      "end": 8584,
+      "pct": 61.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 20,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792175569.6551342
+  }
+ ],
+ "cursor": 4,
+ "version": "v003"
+}

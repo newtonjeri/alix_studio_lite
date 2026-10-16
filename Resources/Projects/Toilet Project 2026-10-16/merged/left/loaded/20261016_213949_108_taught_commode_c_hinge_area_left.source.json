@@ -1,0 +1,24 @@
+{
+ "name": "108_taught_commode_c_hinge_area_left.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 50 mm, hand open",
+  "hand_text": "open"
+ },
+ "lines": 4436,
+ "seconds": 22.175,
+ "sha256": "d4f904e0fa741e377a4ef27a6224a2c3f20f2964f175e46dfe819a0624e88bb8",
+ "loaded": "2026-10-16 21:39:49",
+ "folder": ""
+}

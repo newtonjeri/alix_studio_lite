@@ -1,0 +1,413 @@
+{
+ "id": "alix_mv6rod78_nj8fa",
+ "name": "Toilet Project 2026-10-13",
+ "createdAt": "2026-10-13T14:19:06.068Z",
+ "updatedAt": "2026-10-15T18:21:50.621Z",
+ "archived": false,
+ "state": {
+  "currentView": "teach",
+  "currentTask": 0,
+  "selectedArm": "left",
+  "currentStage": "optimize",
+  "armDone": {
+   "left": false,
+   "right": false
+  },
+  "armSelectionLocked": true,
+  "completed": {},
+  "taskRecords": {
+   "0": {
+    "taskLabel": "TASK 1A",
+    "step": 1,
+    "type": "clean",
+    "leftRegion": "L-R01 BASE LEFT",
+    "rightRegion": "R-R01 LID TOP PART 1",
+    "selectedArm": "left",
+    "workflowStage": "optimize",
+    "targetSeconds": 30,
+    "poleHeightMm": 50,
+    "handChannels": {
+     "Little": 0,
+     "Ring": 0,
+     "Middle": 0,
+     "Index": 0,
+     "Thumb Bend": 150,
+     "Thumb Rotate": 1000
+    },
+    "leftStartPose": "Default Start Pose",
+    "rightStartPose": "Saved Pose A",
+    "trajectoryFileName": "L_TASK_1A_trajectory.txt",
+    "programId": null,
+    "leftApproved": false,
+    "rightApproved": false,
+    "completed": false,
+    "lastUpdated": "2026-10-15T18:21:50.621Z",
+    "tuning": {
+     "processing": {
+      "trim": true,
+      "smooth": true,
+      "scale": true,
+      "smoothWindow": 9
+     },
+     "scaleRegions": [],
+     "trimRegions": [],
+     "activeTrajectoryName": "FILE_04.txt",
+     "activeTrajectoryRows": 9636,
+     "tuningApplied": true,
+     "tuningSourceFileName": "FILE_04.txt",
+     "tunedOutputFileName": null
+    },
+    "startPoints": {
+     "left": [],
+     "right": []
+    },
+    "selectedStartPoint": {
+     "left": "",
+     "right": ""
+    },
+    "transitionTrajectories": {
+     "left": null,
+     "right": null
+    },
+    "prepareSetupByArm": {
+     "left": {
+      "arm": "left",
+      "poleHeightMm": 50,
+      "handPreset": "Grip / Cleaning",
+      "handChannels": {
+       "Little": 0,
+       "Ring": 0,
+       "Middle": 0,
+       "Index": 0,
+       "Thumb Bend": 150,
+       "Thumb Rotate": 1000
+      },
+      "startPose": "Default Start Pose",
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "savedAt": "2026-10-15T18:21:50.621Z"
+     }
+    },
+    "ugvPositionByArm": {
+     "left": {
+      "frontMm": null,
+      "rearMm": null,
+      "leftMm": null,
+      "rightMm": null
+     }
+    }
+   }
+  },
+  "setupChecks": [
+   true,
+   true,
+   true,
+   true,
+   true
+  ],
+  "targetSec": 30,
+  "poleHeight": 50,
+  "handPreset": "Grip / Cleaning",
+  "handValues": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "leftPose": "Default Start Pose",
+  "rightPose": "Saved Pose A",
+  "programId": "",
+  "fileName": "L_TASK_1A_trajectory.txt",
+  "activeTrajectorySource": "previous",
+  "activeTrajectoryName": "FILE_04.txt",
+  "activeTrajectoryRows": 9636,
+  "tuningApplied": true,
+  "tunedOutputFileName": "",
+  "tuningSourceFileName": "FILE_04.txt",
+  "manualScaleRegions": [],
+  "manualTrimRegions": [],
+  "sequenceConfig": [
+   {
+    "step": 1,
+    "label": "TASK 1A",
+    "left": "L-R01 BASE LEFT",
+    "right": "R-R01 LID TOP PART 1",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 2,
+    "label": "TASK 2A",
+    "left": "L-R02 SIDE EXTERIOR LEFT",
+    "right": "R-R01 LID TOP PART 2",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 3,
+    "label": "TASK 1C",
+    "left": "L-R03 PEDESTAL UPPER LEFT",
+    "right": "R-R02 RIGHT HINGE",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 4,
+    "label": "TASK 2",
+    "left": "L-R04 LEFT HINGE",
+    "right": "R-R03 SIDE EXTERIOR RIGHT",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 5,
+    "label": "TASK 3",
+    "left": "L-T01 OPEN LID + SEAT (MASTER)",
+    "right": "R-T01 OPEN LID + SEAT (SUPPORT)",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 6,
+    "label": "TASK 4",
+    "left": "L-T02 CLOSE SEAT ONLY (MASTER)",
+    "right": "R-T02 CLOSE SEAT ONLY (SUPPORT)",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 7,
+    "label": "TASK 5A",
+    "left": "L-R05 SEAT TOP PART 1",
+    "right": "R-R04 LID UNDERSIDE RIGHT HALF",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 8,
+    "label": "TASK 5B",
+    "left": "L-R05 SEAT TOP PART 2",
+    "right": "R-R05 PEDESTAL UPPER RIGHT",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 9,
+    "label": "TASK 6",
+    "left": "L-R06 LID UNDERSIDE LEFT HALF",
+    "right": "R-R06 BASE RIGHT",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 10,
+    "label": "TASK 7",
+    "left": "L-T03 OPEN SEAT (MASTER)",
+    "right": "R-T03 OPEN SEAT (SUPPORT)",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 11,
+    "label": "TASK 8A",
+    "left": "L-R07 RIM TOP PART 1",
+    "right": "R-R07 SEAT UNDERSIDE RIGHT HALF",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 12,
+    "label": "TASK 8B",
+    "left": "L-R07 RIM TOP PART 2",
+    "right": "R-R08 FLOOR SPILLAGE RIGHT PART 1",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 13,
+    "label": "TASK 9",
+    "left": "L-R08 SEAT UNDERSIDE LEFT HALF",
+    "right": "R-R08 FLOOR SPILLAGE RIGHT PART 2",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 14,
+    "label": "TASK 10A",
+    "left": "L-R09 INNER RIM PART 1",
+    "right": "R-T04 PICK DRAIN BRUSH",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 15,
+    "label": "TASK 10B",
+    "left": "L-R09 INNER RIM PART 2",
+    "right": "R-T04 PICK DRAIN BRUSH",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 16,
+    "label": "TASK 11A",
+    "left": "L-R10 BOWL INSIDE PART 1",
+    "right": "R-T10 HOLD BRUSH OUTSIDE",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 17,
+    "label": "TASK 11B",
+    "left": "L-R10 BOWL INSIDE PART 2",
+    "right": "R-T10 HOLD BRUSH OUTSIDE",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 18,
+    "label": "TASK 12A",
+    "left": "L-R11 FLOOR SPILLAGE LEFT PART 1",
+    "right": "R-T05 CLEAN DRAIN HOLE PART 1",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 19,
+    "label": "TASK 12B",
+    "left": "L-R11 FLOOR SPILLAGE LEFT PART 2",
+    "right": "R-T05 CLEAN DRAIN HOLE PART 2",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 20,
+    "label": "TASK 13",
+    "left": "L-T06 DROP GLOVE",
+    "right": "R-T06 RETURN DRAIN BRUSH AND DROP GLOVE",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "PROCEDURE",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 21,
+    "label": "TASK 14",
+    "left": "L-T04 LEFT GLOVE CHANGE",
+    "right": "R-T07 RIGHT GLOVE CHANGE",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "PROCEDURE",
+    "checkpointWait": 0,
+    "include": true
+   },
+   {
+    "step": 22,
+    "label": "TASK 15",
+    "left": "L-T05 CLOSE SEAT + LID (MASTER)",
+    "right": "R-T09 CLOSE SEAT + LID (SUPPORT)",
+    "leftProgramId": null,
+    "rightProgramId": null,
+    "rule": "TOGETHER",
+    "checkpointWait": 0,
+    "include": true
+   }
+  ],
+  "sequenceConfigLoaded": true,
+  "mergeSelections": {
+   "left": [],
+   "right": [],
+   "both": []
+  },
+  "engineerSteps": {
+   "left": [],
+   "right": []
+  },
+  "overallSequenceSpeed": 100,
+  "confirmWaitingArm": false,
+  "sequenceVisualConfirmed": true,
+  "fullSimulationApproved": false,
+  "elapsed": 0,
+  "savedAt": "2026-10-15T18:21:50.621Z"
+ },
+ "lastSaveReason": "Workflow updated",
+ "lite": {
+  "store": 1,
+  "fixture": "commode_c",
+  "library_imported": "2026-10-13 17:19",
+  "library_units": [
+   "L-R05_PART1",
+   "L-R07_PART1",
+   "L-R10_PART1",
+   "L-R09_PART1",
+   "L-R10_PART2",
+   "L-R04",
+   "L-T01",
+   "L-T02"
+  ],
+  "folder": "Toilet Project 2026-10-13"
+ }
+}

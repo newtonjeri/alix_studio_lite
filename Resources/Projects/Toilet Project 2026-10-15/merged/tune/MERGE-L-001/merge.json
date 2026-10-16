@@ -1,0 +1,32 @@
+{
+ "key": "MERGE-L-001",
+ "side": "left",
+ "file": "20261016_171255_L_merge_1.txt",
+ "name": "L_merge_1.txt",
+ "sha256": "9bb7afb98200264c8833a8067e0d4ea3a596cd86a5e321ff7cf0ae76ffa9f003",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "stated when it was loaded",
+  "text": "pole 50 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 1A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": null
+ },
+ "phase": "lid_closed",
+ "made": "2026-10-16 17:13:06"
+}

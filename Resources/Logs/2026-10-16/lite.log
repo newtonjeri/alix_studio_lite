@@ -11262,3 +11262,550 @@ Next RIGHT Program: None
 20:19:24.470 [activity] operator:f44fee PUT /api/projects/alix_mvb5inxs_ylr7t
 20:19:24.476 [activity] operator:f44fee page: SYSTEM · Browser closing
 20:19:24.477 [activity] operator:f44fee page: SYSTEM · Application hidden
+21:24:56.199 [activity] - project alix_mv6rod78_nj8fa copied to /home/newtonjeri/alix_studio_lite_ws/alix_studio_lite/Resources/Projects/Toilet Project 2026-10-13
+21:24:56.199 [activity] - project alix_mv9v8doo_lv7mp copied to /home/newtonjeri/alix_studio_lite_ws/alix_studio_lite/Resources/Projects/Toilet Project 2026-10-15
+21:24:56.199 [activity] - project alix_mvb5inxs_ylr7t copied to /home/newtonjeri/alix_studio_lite_ws/alix_studio_lite/Resources/Projects/Toilet Project 2026-10-16
+21:24:58.736 [activity] - page: NAVIGATION · Open screen
+21:24:58.736 [activity] - page: SYSTEM · ASL frontend initialized
+21:25:09.283 [activity] - POST /api/auth/login -> REFUSED: Incorrect operator PIN. Please try again.
+21:25:10.043 [activity] - page: UI · Button action
+21:25:10.043 [activity] - page: AUTH · Operator login attempt -> REFUSED: Incorrect PIN entered · PIN value not stored
+21:25:14.081 [activity] - POST /api/auth/login -> REFUSED: Incorrect operator PIN. Please try again.
+21:25:14.845 [activity] - page: UI · Button action
+21:25:14.845 [activity] - page: AUTH · Operator login attempt -> REFUSED: Incorrect PIN entered · PIN value not stored
+21:25:23.426 [activity] - POST /api/auth/login
+21:25:23.452 [activity] operator:d6d5b7 page: UI · Button action
+21:25:24.242 [activity] operator:d6d5b7 page: AUTH · Operator login
+21:25:24.243 [activity] operator:d6d5b7 page: NAVIGATION · Open screen
+21:25:46.019 [activity] operator:d6d5b7 page: UI · Button action
+21:25:46.860 [activity] operator:d6d5b7 page: NAVIGATION · Task loaded
+21:25:46.860 [activity] operator:d6d5b7 page: SETUP · Arm selected
+21:25:46.860 [activity] operator:d6d5b7 page: NAVIGATION · Teaching stage changed
+21:25:46.860 [activity] operator:d6d5b7 page: SETUP · Arm selected
+21:25:46.860 [activity] operator:d6d5b7 page: NAVIGATION · Open screen
+21:25:53.405 [activity] operator:d6d5b7 page: SETUP · Button action
+21:25:53.405 [activity] operator:d6d5b7 page: NAVIGATION · Open screen
+21:25:53.608 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:25:54.267 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:25:56.808 [activity] operator:d6d5b7 page: TEACH · Button action
+21:25:56.808 [activity] operator:d6d5b7 page: NAVIGATION · Open screen
+21:25:56.808 [activity] operator:d6d5b7 page: NAVIGATION · Task loaded
+21:25:56.808 [activity] operator:d6d5b7 page: SETUP · Arm selected
+21:25:56.809 [activity] operator:d6d5b7 page: NAVIGATION · Teaching stage changed
+21:25:57.012 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:00.543 [activity] operator:d6d5b7 page: TEACH · Button action
+21:26:00.543 [activity] operator:d6d5b7 page: NAVIGATION · Teaching stage changed
+21:26:00.745 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:01.506 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:26:08.883 [activity] operator:d6d5b7 page: TEACH · Button action
+21:26:08.929 [activity] operator:d6d5b7 page: NAVIGATION · Teaching stage changed
+21:26:09.189 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:11.898 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:26:18.067 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:19.777 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:23.656 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:24.257 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:26:24.785 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:26.858 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:28.034 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:34.909 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:41.571 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:42.368 [activity] operator:d6d5b7 page: UI · Input updated
+21:26:42.656 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:43.454 [activity] operator:d6d5b7 page: UI · Input updated
+21:26:51.577 [activity] operator:d6d5b7 page: UI · Setting changed
+21:26:51.577 [activity] operator:d6d5b7 page: UI · Input updated
+21:26:51.790 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:54.259 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:26:57.116 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:57.913 [activity] operator:d6d5b7 page: UI · Input updated
+21:26:58.910 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:26:59.709 [activity] operator:d6d5b7 page: UI · Input updated
+21:27:01.228 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:02.026 [activity] operator:d6d5b7 page: UI · Input updated
+21:27:02.949 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:03.747 [activity] operator:d6d5b7 page: UI · Input updated
+21:27:04.869 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:05.667 [activity] operator:d6d5b7 page: UI · Input updated
+21:27:07.113 [activity] operator:d6d5b7 page: UI · Setting changed
+21:27:07.113 [activity] operator:d6d5b7 page: UI · Input updated
+21:27:07.325 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:12.512 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/recordings/20261016_200629_L-R01.txt/trim
+21:27:13.241 [activity] operator:d6d5b7 page: UI · Button action
+21:27:13.424 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:22.038 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:27:24.264 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:27:28.438 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:27:34.999 [activity] operator:d6d5b7 page: SIMULATION · Button action
+21:27:35.000 [activity] operator:d6d5b7 page: NAVIGATION · Teaching stage changed
+21:27:35.202 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:38.075 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:27:44.546 [activity] operator:d6d5b7 page: SETUP · Button action
+21:27:44.749 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:46.589 [activity] operator:d6d5b7 page: TRAJECTORY · Button action
+21:27:46.592 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:47.592 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:27:54.255 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:27:54.411 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:55.148 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:27:55.775 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:59.043 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:27:59.923 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:28:01.107 [activity] operator:d6d5b7 page: NAVIGATION · Button action
+21:28:01.310 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:28:10.708 [activity] operator:d6d5b7 page: UI · Button action
+21:28:10.708 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:28:10.958 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:28:24.255 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:28:51.279 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:28:54.256 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:28:55.183 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:28:55.474 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/collisions
+21:28:56.272 [activity] operator:d6d5b7 page: SAFETY · Button action
+21:28:56.475 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:29:00.146 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:29:06.683 [activity] - job collisions done: Checking 8,584 lines of FILE_01.1_trimmed.txt for collisions
+21:29:10.186 [activity] operator:d6d5b7 page: UI · Setting changed
+21:29:10.186 [activity] operator:d6d5b7 page: UI · Input updated
+21:29:10.411 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:29:13.604 [activity] operator:d6d5b7 page: UI · Setting changed
+21:29:13.604 [activity] operator:d6d5b7 page: UI · Input updated
+21:29:13.604 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:29:13.816 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:29:15.068 [activity] operator:d6d5b7 page: UI · Setting changed
+21:29:16.613 [activity] operator:d6d5b7 page: UI · Setting changed
+21:29:16.613 [activity] operator:d6d5b7 page: UI · Input updated
+21:29:16.825 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:29:19.159 [activity] operator:d6d5b7 page: UI · Setting changed
+21:29:19.159 [activity] operator:d6d5b7 page: UI · Input updated
+21:29:19.373 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:29:23.089 [activity] operator:d6d5b7 page: UI · Button action
+21:29:23.089 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:29:23.291 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:29:24.257 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:29:44.284 [activity] operator:d6d5b7 page: UI · Button action
+21:29:44.486 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:29:47.313 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:29:49.097 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:29:51.343 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:29:54.261 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:29:57.188 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:30:02.635 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/optimise
+21:30:03.337 [activity] - job optimise done: Tune L-R01 (breaks L3 Joint acceleration 8323 deg/s^2 (limit 612 deg/s^2), shown, not enforced)
+21:30:03.423 [activity] operator:d6d5b7 page: UI · Button action
+21:30:03.626 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:06.455 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:30:12.289 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:30:18.006 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/keep
+21:30:18.771 [activity] operator:d6d5b7 page: UI · Button action
+21:30:18.973 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:24.264 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:30:24.528 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/keep
+21:30:25.308 [activity] operator:d6d5b7 page: UI · Button action
+21:30:25.511 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:28.120 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:29.171 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:30.084 [activity] operator:d6d5b7 page: UI · Button action
+21:30:30.597 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:33.640 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:30:35.218 [activity] operator:d6d5b7 page: UI · Setting changed
+21:30:35.218 [activity] operator:d6d5b7 page: UI · Input updated
+21:30:35.432 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:36.835 [activity] operator:d6d5b7 page: UI · Setting changed
+21:30:36.835 [activity] operator:d6d5b7 page: UI · Input updated
+21:30:37.036 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:40.250 [activity] operator:d6d5b7 page: UI · Button action
+21:30:40.453 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:41.286 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:30:51.186 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:54.255 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:30:56.492 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:57.683 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:30:58.481 [activity] operator:d6d5b7 page: UI · Input updated
+21:30:59.978 [activity] operator:d6d5b7 page: UI · Setting changed
+21:30:59.979 [activity] operator:d6d5b7 page: UI · Button action
+21:31:00.368 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:31:02.592 [activity] operator:d6d5b7 page: UI · Button action
+21:31:02.795 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:31:07.278 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/settings
+21:31:08.049 [activity] operator:d6d5b7 page: UI · Button action
+21:31:08.251 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:31:11.112 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:31:15.908 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/optimise
+21:31:16.310 [activity] - job optimise done: Tune L-R01 (breaks L2 Joint speed 1.02 x limit (limit 1 x limit); L3 Joint acceleration 8201 deg/s^2 (limit 612 deg/s^2), shown, not enforced)
+21:31:16.695 [activity] operator:d6d5b7 page: UI · Button action
+21:31:16.898 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:31:19.726 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:31:23.567 [activity] operator:d6d5b7 page: UI · Button action
+21:31:23.567 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:31:23.769 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:31:26.631 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:31:27.607 [activity] operator:d6d5b7 page: UI · Button action
+21:31:27.818 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:31:54.254 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:32:02.482 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/collisions
+21:32:02.893 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:32:02.893 [activity] operator:d6d5b7 page: SAFETY · Button action
+21:32:03.482 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:08.186 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:32:09.886 [activity] - job collisions done: Checking 6,007 lines of the tuned trajectory for collisions
+21:32:11.818 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:32:14.009 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:16.525 [activity] operator:d6d5b7 page: UI · Setting changed
+21:32:16.525 [activity] operator:d6d5b7 page: UI · Input updated
+21:32:16.525 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:32:16.738 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:18.756 [activity] operator:d6d5b7 page: UI · Setting changed
+21:32:18.757 [activity] operator:d6d5b7 page: UI · Input updated
+21:32:18.939 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:20.996 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/keep
+21:32:21.759 [activity] operator:d6d5b7 page: SIMULATION · Button action
+21:32:21.759 [activity] operator:d6d5b7 page: NAVIGATION · Teaching stage changed
+21:32:21.962 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:22.926 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:32:24.257 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:32:26.360 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:32:30.396 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:31.917 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:32.973 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:33.771 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:32:33.845 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:34.643 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:32:35.908 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/upload -> REFUSED: Lite is in Visual sim, so it does not use the robot.
+21:32:36.527 [activity] operator:d6d5b7 page: ROBOT · Setting changed
+21:32:36.527 [activity] operator:d6d5b7 page: TRAJECTORY · Button action
+21:32:36.527 [activity] operator:d6d5b7 page: ROBOT · Robot & mode opened
+21:32:36.910 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:39.224 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 50 %
+21:32:39.225 [activity] operator:d6d5b7 POST /api/robots/left/connect
+21:32:39.624 [activity] operator:d6d5b7 page: UI · Button action
+21:32:39.626 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 50 %
+21:32:39.627 [activity] operator:d6d5b7 POST /api/robots/right/connect
+21:32:39.827 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:41.423 [activity] operator:d6d5b7 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+21:32:42.223 [activity] operator:d6d5b7 page: ROBOT · Button action
+21:32:42.429 [activity] operator:d6d5b7 POST /api/robots/mode
+21:32:42.444 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:43.216 [activity] operator:d6d5b7 page: ROBOT · Button action
+21:32:43.419 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:45.463 [activity] operator:d6d5b7 page: UI · Button action
+21:32:45.666 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:46.850 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/upload -> REFUSED: FILE_01.1_trimmed_trim_mean_scale_processed_2.txt breaks L2 Joint speed 1.02 x limit (limit 1 x limit); L3 Joint acceleration 8201 deg/s^2 (limit 612 deg/s^2). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+21:32:47.647 [activity] operator:d6d5b7 page: TRAJECTORY · Button action
+21:32:47.849 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:49.656 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/upload
+21:32:50.465 [activity] operator:d6d5b7 page: UI · Button action
+21:32:50.650 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:32:54.257 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:32:57.670 [activity] - job upload done: Upload L-R01 to program 20
+21:32:58.482 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:33:14.719 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:33:22.516 [activity] operator:d6d5b7 page: TRAJECTORY · Button action
+21:33:22.719 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:33:24.258 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:33:25.444 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:33:27.804 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/move-start -> REFUSED: Moving the arm on the real robot needs your confirmation.
+21:33:28.603 [activity] operator:d6d5b7 page: ROBOT · Button action
+21:33:28.806 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:33:29.684 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/move-start
+21:33:30.469 [activity] operator:d6d5b7 page: ROBOT · Button action
+21:33:30.671 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:33:31.838 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/run -> REFUSED: A run on the real robot needs your confirmation.
+21:33:32.637 [activity] operator:d6d5b7 page: UI · Button action
+21:33:32.840 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:33:33.865 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/run -> REFUSED: The LEFT arm is busy: LEFT to the tuned trajectory's start (L-R01).
+21:33:34.649 [activity] operator:d6d5b7 page: ROBOT · Button action
+21:33:34.852 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:33:35.391 [activity] - job move done: LEFT to the tuned trajectory's start (L-R01)
+21:33:50.910 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:33:52.217 [activity] operator:d6d5b7 page: TEACH · Button action
+21:33:52.218 [activity] operator:d6d5b7 page: TEACH · Teach another task
+21:33:52.434 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:33:53.060 [activity] operator:d6d5b7 page: NAVIGATION · Teaching stage changed
+21:33:54.275 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:33:56.196 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:33:59.497 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:34:02.683 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:34:04.816 [activity] operator:d6d5b7 page: NAVIGATION · Task loaded
+21:34:04.816 [activity] operator:d6d5b7 page: SETUP · Arm selected
+21:34:04.816 [activity] operator:d6d5b7 page: NAVIGATION · Teaching stage changed
+21:34:04.816 [activity] operator:d6d5b7 page: NAVIGATION · Open screen
+21:34:05.019 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:07.920 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:34:24.257 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:34:39.191 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:34:40.110 [activity] operator:d6d5b7 page: TRAJECTORY · Button action
+21:34:40.318 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:45.255 [activity] operator:d6d5b7 page: UI · Button action
+21:34:45.458 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:48.469 [activity] operator:d6d5b7 page: UI · Button action
+21:34:48.673 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:51.481 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:52.190 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:53.088 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:54.257 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:34:56.201 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:57.398 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:58.589 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:34:59.519 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:01.057 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:02.590 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:04.095 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:06.722 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:08.248 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:11.721 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:13.198 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:14.610 [activity] operator:d6d5b7 page: NAVIGATION · Button action
+21:35:14.813 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:19.936 [activity] operator:d6d5b7 page: UI · Button action
+21:35:20.148 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:24.281 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:35:24.281 [activity] operator:d6d5b7 page: NAVIGATION · Button action
+21:35:24.921 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:31.762 [activity] operator:d6d5b7 page: ROBOT · Button action
+21:35:31.970 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:32.729 [activity] operator:d6d5b7 page: ROBOT · Button action
+21:35:32.931 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:37.401 [activity] operator:d6d5b7 page: UI · Button action
+21:35:37.626 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:46.487 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:35:47.340 [activity] operator:d6d5b7 page: NAVIGATION · Button action
+21:35:47.340 [activity] operator:d6d5b7 page: NAVIGATION · Open screen
+21:35:47.543 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:50.212 [activity] operator:d6d5b7 page: UI · Button action
+21:35:50.415 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:52.613 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:53.351 [activity] operator:d6d5b7 page: ROBOT · Button action
+21:35:53.562 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:54.259 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:35:54.259 [activity] operator:d6d5b7 page: UI · Button action
+21:35:54.481 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:56.039 [activity] operator:d6d5b7 page: UI · Button action
+21:35:56.242 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:35:57.651 [activity] operator:d6d5b7 page: UI · Button action
+21:35:57.854 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:36:03.814 [activity] operator:d6d5b7 page: PROJECT · Button action
+21:36:03.814 [activity] operator:d6d5b7 page: NAVIGATION · Open screen
+21:36:04.017 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:36:09.170 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:36:15.122 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:36:22.931 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:36:24.273 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:36:26.232 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:36:29.544 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:36:32.739 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:36:33.734 [activity] operator:d6d5b7 page: UI · Button action
+21:36:33.734 [activity] operator:d6d5b7 page: NAVIGATION · Task loaded
+21:36:33.734 [activity] operator:d6d5b7 page: SETUP · Arm selected
+21:36:33.734 [activity] operator:d6d5b7 page: NAVIGATION · Teaching stage changed
+21:36:33.734 [activity] operator:d6d5b7 page: NAVIGATION · Open screen
+21:36:33.932 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:36:37.425 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:36:38.501 [activity] operator:d6d5b7 page: UI · Button action
+21:36:38.704 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:36:44.321 [activity] operator:d6d5b7 page: NAVIGATION · Button action
+21:36:44.524 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:36:46.132 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:36:47.527 [activity] operator:d6d5b7 page: UI · Button action
+21:36:47.730 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:36:50.210 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/right
+21:36:50.216 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/left
+21:36:50.968 [activity] operator:d6d5b7 page: SEQUENCE · Button action
+21:36:50.969 [activity] operator:d6d5b7 page: NAVIGATION · Open screen
+21:36:51.171 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:36:54.272 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:36:56.280 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:36:59.461 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/left
+21:37:00.246 [activity] operator:d6d5b7 page: UI · Setting changed
+21:37:00.246 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:37:00.246 [activity] operator:d6d5b7 page: UI · Input updated
+21:37:00.468 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:37:01.137 [activity] operator:d6d5b7 page: UI · Button action
+21:37:01.340 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:37:05.275 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:37:06.754 [activity] operator:d6d5b7 page: UI · Button action
+21:37:06.974 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:37:24.270 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:37:54.273 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:38:05.687 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:38:05.835 [activity] operator:d6d5b7 page: TRAJECTORY · Setting changed
+21:38:05.835 [activity] operator:d6d5b7 page: UI · Input updated
+21:38:20.242 [activity] operator:d6d5b7 page: UI · Button action
+21:38:20.477 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:38:24.272 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:38:25.554 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/right
+21:38:26.350 [activity] operator:d6d5b7 page: UI · Setting changed
+21:38:26.351 [activity] operator:d6d5b7 page: UI · Input updated
+21:38:26.351 [activity] operator:d6d5b7 page: UI · Button action
+21:38:26.563 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:38:27.266 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:38:28.585 [activity] operator:d6d5b7 page: UI · Button action
+21:38:28.808 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:38:29.749 [activity] operator:d6d5b7 page: UI · Button action
+21:38:29.937 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:38:30.875 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:38:31.406 [activity] operator:d6d5b7 page: UI · Button action
+21:38:31.612 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:38:54.264 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:39:02.547 [activity] operator:d6d5b7 page: UI · Button action
+21:39:02.749 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:21.963 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:22.102 [activity] operator:d6d5b7 page: TRAJECTORY · Setting changed
+21:39:22.102 [activity] operator:d6d5b7 page: UI · Input updated
+21:39:24.250 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:24.262 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:39:27.653 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:33.893 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:34.612 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:34.691 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:39:34.691 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:39:37.181 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:39:37.181 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:39:37.758 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:38.039 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:39:38.039 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:39:39.616 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:39.763 [activity] operator:d6d5b7 page: ROBOT · Setting changed
+21:39:48.590 [activity] operator:d6d5b7 page: ROBOT · Setting changed
+21:39:48.591 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:39:48.804 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:49.071 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-files/left
+21:39:49.093 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-files/left
+21:39:49.105 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/left
+21:39:49.823 [activity] operator:d6d5b7 page: UI · Button action
+21:39:50.027 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:39:54.272 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:40:00.330 [activity] operator:d6d5b7 page: UI · Button action
+21:40:00.533 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:04.370 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:04.517 [activity] operator:d6d5b7 page: TRAJECTORY · Setting changed
+21:40:04.517 [activity] operator:d6d5b7 page: UI · Input updated
+21:40:06.202 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:06.996 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:07.950 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:08.520 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:40:08.520 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:40:09.181 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:09.329 [activity] operator:d6d5b7 page: ROBOT · Setting changed
+21:40:16.800 [activity] operator:d6d5b7 page: ROBOT · Setting changed
+21:40:16.800 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:40:17.012 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:17.312 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-files/left
+21:40:17.324 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/left
+21:40:18.057 [activity] operator:d6d5b7 page: UI · Button action
+21:40:18.260 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:23.978 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:40:23.979 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:40:28.112 [activity] operator:d6d5b7 page: UI · Button action
+21:40:28.318 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:29.037 [activity] operator:d6d5b7 page: UI · Button action
+21:40:29.240 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:34.074 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:40:34.405 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:39.599 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:40:42.212 [activity] operator:d6d5b7 page: UI · Button action
+21:40:42.415 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:43.312 [activity] operator:d6d5b7 page: UI · Button action
+21:40:43.515 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:49.377 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:40:51.448 [activity] operator:d6d5b7 page: UI · Button action
+21:40:51.652 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:54.259 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:40:58.352 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:40:58.500 [activity] operator:d6d5b7 page: TRAJECTORY · Setting changed
+21:40:58.500 [activity] operator:d6d5b7 page: UI · Input updated
+21:40:59.915 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:02.679 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:03.097 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:41:03.097 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:41:20.826 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:20.973 [activity] operator:d6d5b7 page: ROBOT · Setting changed
+21:41:23.389 [activity] operator:d6d5b7 page: ROBOT · Setting changed
+21:41:23.389 [activity] operator:d6d5b7 page: ROBOT · Input updated
+21:41:23.600 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:23.829 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-files/left
+21:41:23.841 [activity] operator:d6d5b7 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/left
+21:41:24.258 [activity] operator:d6d5b7 page: SYSTEM · Session active
+21:41:24.258 [activity] operator:d6d5b7 page: UI · Button action
+21:41:24.788 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:29.746 [activity] operator:d6d5b7 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:29.771 [activity] operator:d6d5b7 page: NAVIGATION · Scrolled view
+21:41:29.771 [activity] operator:d6d5b7 page: SYSTEM · Browser closing
+21:41:29.820 [activity] operator:d6d5b7 page: SYSTEM · Application hidden
+21:41:31.144 [activity] - page: NAVIGATION · Open screen
+21:41:31.144 [activity] - page: SYSTEM · ASL frontend initialized
+21:41:34.858 [activity] - POST /api/auth/login
+21:41:34.862 [activity] operator:ee2f83 page: UI · Button action
+21:41:35.663 [activity] operator:ee2f83 page: AUTH · Operator login
+21:41:35.664 [activity] operator:ee2f83 page: NAVIGATION · Open screen
+21:41:46.338 [activity] operator:ee2f83 page: UI · Button action
+21:41:46.409 [activity] operator:ee2f83 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/right
+21:41:46.434 [activity] operator:ee2f83 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/left
+21:41:47.156 [activity] operator:ee2f83 page: NAVIGATION · Task loaded
+21:41:47.157 [activity] operator:ee2f83 page: SETUP · Arm selected
+21:41:47.157 [activity] operator:ee2f83 page: NAVIGATION · Teaching stage changed
+21:41:47.157 [activity] operator:ee2f83 page: SETUP · Arm selected
+21:41:47.157 [activity] operator:ee2f83 page: NAVIGATION · Open screen
+21:41:50.176 [activity] operator:ee2f83 page: UI · Button action
+21:41:50.379 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:51.621 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:51.768 [activity] operator:ee2f83 page: TRAJECTORY · Setting changed
+21:41:51.769 [activity] operator:ee2f83 page: UI · Input updated
+21:41:53.586 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:54.481 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:55.278 [activity] operator:ee2f83 page: ROBOT · Input updated
+21:41:55.693 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:56.490 [activity] operator:ee2f83 page: ROBOT · Input updated
+21:41:57.481 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:57.754 [activity] operator:ee2f83 page: ROBOT · Input updated
+21:41:57.754 [activity] operator:ee2f83 page: ROBOT · Input updated
+21:41:57.754 [activity] operator:ee2f83 page: ROBOT · Input updated
+21:41:58.757 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:41:58.905 [activity] operator:ee2f83 page: ROBOT · Setting changed
+21:42:03.007 [activity] operator:ee2f83 page: ROBOT · Setting changed
+21:42:03.013 [activity] operator:ee2f83 page: ROBOT · Input updated
+21:42:03.013 [activity] operator:ee2f83 page: UI · Button action
+21:42:03.017 [activity] operator:ee2f83 POST /api/projects/alix_mvb5inxs_ylr7t/merge-files/left
+21:42:03.029 [activity] operator:ee2f83 POST /api/projects/alix_mvb5inxs_ylr7t/merge-sources/left
+21:42:03.219 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:42:03.972 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:42:05.678 [activity] operator:ee2f83 page: SYSTEM · Session active
+21:42:10.092 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:42:11.327 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:42:15.987 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:42:35.668 [activity] operator:ee2f83 page: SYSTEM · Session active
+21:42:35.668 [activity] operator:ee2f83 page: UI · Button action
+21:42:35.889 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:42:44.249 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:42:47.850 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:42:52.000 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:42:57.966 [activity] operator:ee2f83 page: SEQUENCE · Button action
+21:42:58.168 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:42:59.496 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:43:02.779 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:43:05.184 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:43:05.666 [activity] operator:ee2f83 page: SYSTEM · Session active
+21:43:06.801 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:43:07.813 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:43:16.059 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:43:16.806 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:43:35.668 [activity] operator:ee2f83 page: SYSTEM · Session active
+21:44:05.667 [activity] operator:ee2f83 page: SYSTEM · Session active
+21:44:23.877 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:44:27.134 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:44:29.324 [activity] operator:ee2f83 page: UI · Button action
+21:44:29.526 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:44:30.939 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:44:33.392 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:44:35.297 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:44:35.666 [activity] operator:ee2f83 page: SYSTEM · Session active
+21:44:36.557 [activity] operator:ee2f83 page: NAVIGATION · Button action
+21:44:36.760 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:44:38.616 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:44:42.866 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:44:45.892 [activity] operator:ee2f83 page: NAVIGATION · Scrolled view
+21:45:05.678 [activity] operator:ee2f83 page: SYSTEM · Session active
+21:45:35.679 [activity] operator:ee2f83 page: SYSTEM · Session active
+21:45:36.528 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
+21:45:36.560 [activity] operator:ee2f83 page: SYSTEM · Browser closing
+21:45:36.561 [activity] operator:ee2f83 page: SYSTEM · Application hidden

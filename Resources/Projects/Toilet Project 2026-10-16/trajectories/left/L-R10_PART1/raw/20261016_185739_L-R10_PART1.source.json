@@ -1,0 +1,35 @@
+{
+ "unit": "L-R10_PART1",
+ "arm": "left",
+ "taken": "2026-10-16 18:57",
+ "lines": 9632,
+ "sha256": "8e42acd301b5b6311206131272000f02ceff7bdb9e162757f6067c29e174fddb",
+ "note": "existing recording FILE_6.txt: BOWL INSIDE CLEAN",
+ "source": "library",
+ "original": "FILE_6.txt",
+ "pole_mm": 50,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   null,
+   null
+  ],
+  "source": "the taught set's record",
+  "text": "pole 200 mm, fingers 100 % open, thumb held",
+  "hand_text": "fingers 100 % open, thumb held"
+ },
+ "name": "FILE_6.txt"
+}

@@ -1,0 +1,51 @@
+{
+ "unit": "MERGE-L-001",
+ "arm": "left",
+ "taken": "2026-10-16 19:49",
+ "lines": 17712,
+ "sha256": "6e90a4ac9d716bc56e953aaa0ec18a6283c2053b9b0f257e52bf7e74e115e8d5",
+ "note": "the LEFT merge L_merge_1.txt",
+ "source": "merge",
+ "original": "20261016_194610_L_merge_1.txt",
+ "pole_mm": 140.0,
+ "hand_counts": [
+  1000,
+  1000,
+  1000,
+  1000,
+  null,
+  null
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 140.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   null,
+   null
+  ],
+  "source": "the taught set's record",
+  "text": "pole 140 mm, fingers 100 % open, thumb held",
+  "hand_text": "fingers 100 % open, thumb held"
+ },
+ "placement": {
+  "task": "TASK 1A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1060.0,
+   "at": "2026-10-16 19:02:27"
+  }
+ },
+ "name": "L_merge_1.txt"
+}

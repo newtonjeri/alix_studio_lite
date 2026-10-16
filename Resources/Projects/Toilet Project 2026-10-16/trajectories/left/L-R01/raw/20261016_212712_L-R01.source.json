@@ -1,0 +1,35 @@
+{
+ "unit": "L-R01",
+ "arm": "left",
+ "taken": "2026-10-16 21:27",
+ "lines": 8584,
+ "sha256": "73f8d42954fe32551e218556fb981512030f60b513a745db6b0c4d3df14eebcf",
+ "note": "trimmed to lines 2,111\u201310,694 of 12,429 (42.915 s)",
+ "source": "trim",
+ "original": "FILE_01.1_trimmed.txt",
+ "pole_mm": 50,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 140.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   null,
+   null
+  ],
+  "source": "the taught set's record",
+  "text": "pole 140 mm, fingers 100 % open, thumb held",
+  "hand_text": "fingers 100 % open, thumb held"
+ },
+ "name": "FILE_01.1_trimmed.txt"
+}

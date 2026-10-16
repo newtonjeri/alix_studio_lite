@@ -1,0 +1,24 @@
+{
+ "name": "L_P10P12.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 50 mm, hand open",
+  "hand_text": "open"
+ },
+ "lines": 10214,
+ "seconds": 51.065,
+ "sha256": "458c8969b45df5f94bca6b10c66b4a8d3c2555ec1cee0ae4e2a3410c520694d4",
+ "loaded": "2026-10-16 19:45:37",
+ "folder": ""
+}

@@ -1,0 +1,20 @@
+{
+ "unit": "L-R07_PART1",
+ "arm": "left",
+ "taken": "2026-10-13 17:19",
+ "lines": 9636,
+ "sha256": "b739cb016b714b31ab131550f59fbf43bd33b334225beda636a002c4bde4d6bf",
+ "note": "existing recording FILE_04.txt: RIM TOP CLEANING",
+ "source": "library",
+ "original": "FILE_04.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "name": "FILE_04.txt"
+}

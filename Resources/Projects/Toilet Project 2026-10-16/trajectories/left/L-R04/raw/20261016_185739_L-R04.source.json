@@ -1,0 +1,35 @@
+{
+ "unit": "L-R04",
+ "arm": "left",
+ "taken": "2026-10-16 18:57",
+ "lines": 13194,
+ "sha256": "0d06fe5f363c51aef3b905434f5cb4daabfdbd569fa8fe146b84fcf126e2e215",
+ "note": "existing recording FILE_09.txt: HINGE AREA",
+ "source": "library",
+ "original": "FILE_09.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   500,
+   500,
+   500,
+   500,
+   null,
+   null
+  ],
+  "source": "the taught set's record",
+  "text": "pole 200 mm, fingers 50 % open, thumb held",
+  "hand_text": "fingers 50 % open, thumb held"
+ },
+ "name": "FILE_09.txt"
+}
