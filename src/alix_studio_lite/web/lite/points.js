@@ -5,6 +5,7 @@
 
 import { get } from './api.js';
 import { el, robotCall, watchJob } from './ctx.js';
+import { pointPicker } from './picker.js';
 import { speedPct } from './status.js';
 
 const lists = { left: null, right: null };      // {at, data}: the last list read from each controller
@@ -54,20 +55,25 @@ export function filterOptions(sel, q) {
   if (sel.selectedOptions[0]?.hidden && first) sel.value = first.value;
 }
 
-// A search field above a list of global points and the motion beside it, made once (`${id}Search`,
-// `${id}Motion`); shown only while the arm has a controller (`show`).
+// A list of global points as a field that opens a searchable list (picker.js, the owner, 16 Oct), with
+// the motion beside it, made once (`${id}Motion`, shown only while the arm has a controller: `show`).
 export function pointControls(sel, id, show = true) {
   if (!sel) return;
-  if (!document.getElementById(`${id}Search`)) {
-    const search = el('input', { type: 'search', id: `${id}Search`, class: 'lite-point-search', placeholder: 'Search the global points',
-      'aria-label': 'Search the global points', oninput: (e) => filterOptions(sel, e.target.value) });
+  pointPicker(sel);
+  if (!document.getElementById(`${id}Motion`)) {
     const motion = el('select', { id: `${id}Motion`, class: 'lite-point-motion', 'aria-label': 'Motion to the point',
       title: 'How the arm moves to a global point (at the speed slider’s %, top bar)' },
     el('option', { value: 'movej', text: 'MoveJ' }), el('option', { value: 'movel', text: 'MoveL' }));
-    (sel.closest('.inline') || sel).before(search);
     sel.after(motion);
   }
-  for (const k of ['Search', 'Motion']) { const e = document.getElementById(`${id}${k}`); if (e) e.hidden = !show; }
+  const m = document.getElementById(`${id}Motion`);
+  if (m) m.hidden = !show;
+}
+
+// What a point is, under its name in the lists: its joints and its frames.
+export function pointDetail(pt) {
+  const j = Array.isArray(pt.joints) && pt.joints.length ? `J1–J7 ${pt.joints.map(v => Number(v).toFixed(1)).join(', ')}°` : '';
+  return [j, [pt.work_frame, pt.tool_frame].filter(Boolean).join(' / ')].filter(Boolean).join(' · ');
 }
 
 // The arm's global points as a group at the end of a page's own list (its own options stay first):
@@ -79,6 +85,6 @@ export async function fillPointGroup(sel, side) {
   const d = await loadPoints(side);
   clear();                                       // after the read: refreshes that overlap leave one group
   sel.append(el('optgroup', { class: 'lite-points', label: `${side.toUpperCase()} controller · ${d.points.length} global points` },
-    d.points.map((pt) => el('option', { value: `gp:${pt.name}`, text: pt.name }))));
+    d.points.map((pt) => el('option', { value: `gp:${pt.name}`, text: pt.name, 'data-detail': pointDetail(pt) }))));
   return d.points.length;
 }

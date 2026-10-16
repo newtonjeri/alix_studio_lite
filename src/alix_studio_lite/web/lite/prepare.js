@@ -13,7 +13,7 @@
 import { get, post, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
 import { standoffSaved } from './placement.js';
-import { fillPointGroup, filterOptions, hasController, loadPoints, movePoint, pointControls } from './points.js';
+import { fillPointGroup, filterOptions, hasController, loadPoints, movePoint, pointControls, pointDetail } from './points.js';
 import { liteMode } from './status.js';
 import { PHASES, PHASE_WORDS } from './view3d.js';
 
@@ -224,7 +224,7 @@ async function fillPoses(side) {
     const keep = sel.value;
     sel.replaceChildren(d.points.length
       ? el('optgroup', { class: 'lite-points', label: `${side.toUpperCase()} controller · ${d.points.length} global points` },
-        d.points.map(pt => el('option', { value: `gp:${pt.name}`, text: pt.name })))
+        d.points.map(pt => el('option', { value: `gp:${pt.name}`, text: pt.name, 'data-detail': pointDetail(pt) })))
       : el('optgroup', { class: 'lite-points', label: d.note || 'No global points on this controller' }));
     if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
     filterOptions(sel, $(`lite_${side}_poseSearch`)?.value);

@@ -18,6 +18,7 @@ import { scene } from './sim.js';
 import { speedPct } from './status.js';
 import { saveBlobAs } from './tune.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
+import { choose } from './picker.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
@@ -68,7 +69,9 @@ function armPanel(side) {
     el('div', { id: `liteS2Add_${side}_program`, class: 'lite-s2-add' },
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_prog`, text: 'Stored Program' }),
-          el('input', { id: `liteS2_${side}_prog`, type: 'text', list: `liteS2Progs_${side}`, autocomplete: 'off', placeholder: 'ID, e.g. 71' }),
+          el('div', { class: 'inline' },
+            el('input', { id: `liteS2_${side}_prog`, type: 'text', list: `liteS2Progs_${side}`, autocomplete: 'off', placeholder: 'ID, e.g. 71' }),
+            btn('Choose', (e) => pickInto(side, 'prog', e.currentTarget), 'btn light')),
           el('datalist', { id: `liteS2Progs_${side}` })),
         el('div', { class: 'field' }, el('label', { for: `liteS2_${side}_start`, text: 'Start %' }), num('start', 30, { min: '1', max: '100', step: '1' })),
         el('div', { class: 'field' }, el('label', { for: `liteS2_${side}_rule`, text: 'Dual Rule' }),
@@ -79,7 +82,9 @@ function armPanel(side) {
     el('div', { id: `liteS2Add_${side}_global`, class: 'lite-s2-add', hidden: true },
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_point`, text: 'Global Point' }),
-          el('input', { id: `liteS2_${side}_point`, type: 'text', list: `liteS2Points_${side}`, autocomplete: 'off' }),
+          el('div', { class: 'inline' },
+            el('input', { id: `liteS2_${side}_point`, type: 'text', list: `liteS2Points_${side}`, autocomplete: 'off' }),
+            btn('Choose', (e) => pickInto(side, 'point', e.currentTarget), 'btn light')),
           el('datalist', { id: `liteS2Points_${side}` })),
         el('div', { class: 'field' }, el('label', { for: `liteS2_${side}_move`, text: 'Move' }),
           el('select', { id: `liteS2_${side}_move` }, el('option', { value: 'movej', text: 'MoveJ' }), el('option', { value: 'movel', text: 'MoveL' }))),
@@ -208,6 +213,20 @@ async function load() {
     if (d.running && (!S.job || S.job.id !== d.running.id)) follow(d.running);
   } catch (err) { tell(err); }
   paintAll();
+}
+
+// The arm's stored programs and its controller's global points as a searchable list (picker.js, the
+// owner, 16 Oct): the choice fills the field, which can still be typed in.
+function pickInto(side, what, anchor) {
+  const input = $(`liteS2_${side}_${what}`), src = S.sources[side];
+  const label = (p) => `${p.id}${p.name ? ` // ${p.name}` : ''}`;
+  const groups = what === 'point'
+    ? [{ label: src.points_read ? `${ARM(side)} controller · ${src.points.length} global points (read ${src.points_read})`
+      : `${ARM(side)}: global points not read (connect the arm, then refresh)`, rows: src.points.map(n => ({ value: n, text: n })) }]
+    : [{ label: `${ARM(side)} · ${src.programs.length} stored programs`, rows: src.programs.map(p => ({ value: label(p), text: label(p),
+      detail: p.sent ? `sent by Lite${p.file_name ? `: ${p.file_name}` : ''}` : p.gone ? 'no longer on the controller' : 'on the controller' })) }];
+  choose(anchor, groups, input.value, (v) => { input.value = v; input.focus(); },
+    { placeholder: what === 'point' ? 'Search the global points' : 'Search the programs: ID or name' });
 }
 
 async function refreshSources(said = false) {

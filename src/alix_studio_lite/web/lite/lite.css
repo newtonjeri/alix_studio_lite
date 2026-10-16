@@ -388,9 +388,32 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-rc-table tbody tr:hover, .lite-rc-table tbody tr:focus { background: var(--blue2); outline: none; }
 
 /* the start-pose lists as the controller's global points (prepare.js) */
-.lite-point-search { width: 100%; margin: 0 0 6px; }
-.lite-point-search[hidden], .lite-point-motion[hidden] { display: none; }
+.lite-point-motion[hidden] { display: none; }
 .lite-point-motion { flex: 0 0 auto; max-width: 96px; }
+
+/* The searchable lists (picker.js; the owner, 16 Oct: the global points dropdown was hard to use): a field
+   that opens a list with its own search, the page's own select hidden behind it. */
+.lite-picker-native { display: none !important; }
+.lite-picker-btn { flex: 1 1 220px; min-width: 0; min-height: 44px; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer; }
+.lite-picker-btn::after { content: ''; flex: none; margin-top: 5px; border: 5px solid transparent; border-top-color: var(--muted); }
+.lite-picker-btn:hover, .lite-picker-btn[aria-expanded="true"] { border-color: var(--blue); }
+.lite-picker-btn:disabled { opacity: .55; cursor: not-allowed; }
+.lite-picker-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lite-picker-panel { position: fixed; z-index: 21000; display: flex; flex-direction: column; gap: 6px; padding: 10px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); box-shadow: 0 18px 40px -14px var(--lite-scrim); }
+.lite-picker-search { min-height: 42px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+.lite-picker-count { font-size: 12px; color: var(--muted); }
+.lite-picker-list { display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; }
+.lite-picker-group { position: sticky; top: 0; z-index: 1; padding: 6px 8px; background: var(--card); color: var(--muted);
+  font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.lite-picker-row { display: flex; flex-direction: column; gap: 2px; padding: 9px 10px; border-radius: 8px; cursor: pointer; }
+.lite-picker-row b { font-weight: 600; overflow-wrap: anywhere; }
+.lite-picker-row small { color: var(--muted); font-size: 12px; }
+.lite-picker-row.current b::after { content: '  (chosen now)'; color: var(--muted); font-weight: 400; font-size: 12px; }
+.lite-picker-row.active { background: var(--blue2); outline: 1px solid var(--blue); }
+.lite-picker-none { padding: 10px; color: var(--muted); font-size: 13px; }
 
 /* Prepare's transition trajectories (V32): the Program ID beside the run buttons, the 3D window */
 .transition-run-actions .lite-transition-program { width: 130px; min-height: 44px; }
