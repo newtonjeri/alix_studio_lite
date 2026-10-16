@@ -83,6 +83,26 @@ def _rmu():
 _RUNNER = None
 
 
+_DAC = None
+
+
+def _dac():
+    """The operator's error tools, butterfli-realman-alix's dual-arm concept code vendored as it is
+    (``dual_arm_common``): every error the controller exposes for an arm (``error_state``), and the
+    controller web GUI's Clear Error buttons (``clear_errors``: the system's, then each joint's)."""
+    global _DAC
+    if _DAC is None:
+        from .. import vendor_paths
+
+        src = str(vendor_paths.ALIX / "external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        import dual_arm_common
+
+        _DAC = dual_arm_common
+    return _DAC
+
+
 def _runner():
     """vendor/control_app/rm_upload_fast_v14_safe_transit.py, loaded once: its global points are
     listed and moved to as the control program does (global_waypoints, move_global_waypoint)."""
@@ -295,6 +315,127 @@ class RealArm:
                 self._call("rm_stop_drag_teach", self.robot.rm_stop_drag_teach)
         except Exception:                                                           # noqa: BLE001
             pass
+
+    # ── Arm Drag Mode, for recovery and never for recording, and the controller's errors (feedback v5,
+    #    slide 8; the owner, 16 Oct: "Lite should be able to clear errors of any kind, similar to how the
+    #    vendor web GUI does, we have scripts implemented to do that")
+    def _sdk(self, name: str):
+        fn = getattr(self.robot, name, None)
+        if fn is None:
+            raise UserError(f"The {self.SIDE} controller does not answer {name} (ALIX's emulator has no such call).")
+        return fn
+
+    def errors(self) -> dict:
+        """Every error the controller exposes for this arm, as the operator's tools read them
+        (``dual_arm_common.error_state``): system codes, joint error flags, the lift driver and the
+        joints not enabled, each with its meaning (``error_codes``, from RealMan's own tables)."""
+        dac = _dac()
+        with self.link.busy("reading the errors"):
+            st = dac.error_state(self)
+        return self._errors_view(st)
+
+    def _errors_view(self, st: dict) -> dict:
+        from error_codes import describe_joint_err, describe_system_err
+
+        dac = _dac()
+        return dict(readable=bool(st["readable"]), clean=bool(st["readable"] and dac.error_state_clean(st)),
+                    text=dac.describe_error_state(st), system=[describe_system_err(c) for c in st["sys"]],
+                    joints=[dict(joint=j, text=describe_joint_err(f)) for j, f in st["joints"]],
+                    lift=st.get("lift_err") or None, disabled=list(st.get("disabled") or []))
+
+    def clear_errors(self) -> dict:
+        """The controller web GUI's Clear Error, as the operator's tools do it (``dual_arm_common.clear_errors``):
+        the system's errors, then every flagged joint's own clear (the system clear leaves those set), read
+        back. Nothing moves."""
+        dac = _dac()
+        with self.link.busy("clearing the errors"), _printed_to(lambda line: self._hw("clear errors", text=line.strip())):
+            ok = dac.clear_errors(self)
+            st = dac.error_state(self)
+        out = self._errors_view(st)
+        self._hw("clear errors", ok=bool(ok), text=out["text"])
+        return dict(out, ok=bool(ok))
+
+    def read_sensitivity(self) -> int | None:
+        """The drag sensitivity, 0-100 % (higher: the arm moves more easily by hand; the controller's own
+        default is 100), or None when the controller does not answer it."""
+        try:
+            with self.link.busy("reading the drag sensitivity"):
+                ret, grade = self._sdk("rm_get_drag_teach_sensitivity")()
+        except Exception as exc:                                                    # noqa: BLE001
+            self._hw("read drag sensitivity", ok=False, text=str(exc))
+            return None
+        ok = ret == 0 and isinstance(grade, int) and not isinstance(grade, bool) and 0 <= grade <= 100
+        self._hw("read drag sensitivity", ret=ret, ok=ok, text=f"{grade} %" if ok else "not reported")
+        return int(grade) if ok else None
+
+    def set_sensitivity(self, pct: int) -> int:
+        """Sets the drag sensitivity and reads it back. Raises when the controller refuses it or reads
+        another value."""
+        with self.link.busy("setting the drag sensitivity"):
+            ret = self._call("rm_set_drag_teach_sensitivity", self._sdk("rm_set_drag_teach_sensitivity"), int(pct))
+        if ret != 0:
+            raise UserError(f"The {self.SIDE} controller refused the drag sensitivity {pct} % "
+                            f"({return_text(ret, 'rm_set_drag_teach_sensitivity')}).", "Try again, or set it on its pendant.")
+        back = self.read_sensitivity()
+        if back != int(pct):
+            raise UserError(f"The {self.SIDE} controller reads a drag sensitivity of {back} % after it was set to {pct} %.",
+                            "Try again, or check it on its pendant.")
+        return back
+
+    def drag_ready(self) -> list[str]:
+        """What stops Drag Mode on this arm: a joint not enabled (its brake releases and it drops: ALIX's
+        F21a), or a program running or paused on the controller (a later continue would start from an arm
+        moved by hand)."""
+        with self.link.busy("checking the arm before drag mode"):
+            es = _dac().error_state(self)
+            ret, st = self.robot.rm_get_program_run_state()
+        out = []
+        if es.get("disabled"):
+            js = ", ".join(f"J{j}" for j in es["disabled"])
+            out.append(f"{js} {'is' if len(es['disabled']) == 1 else 'are'} not enabled (a brake would release and the joint drop)")
+        if ret == 0 and (st or {}).get("run_state") not in (0, None):
+            out.append("a program is running or paused on the controller")
+        return out
+
+    def drag_on(self) -> None:
+        """Drag Mode: the controller's drag teaching with recording OFF (``rm_start_drag_teach(0)``; the
+        control program calls it with 1 to record): the arm moves by hand and nothing is recorded."""
+        with self.link.busy("drag mode"):
+            ret = self._call("rm_start_drag_teach", self._sdk("rm_start_drag_teach"), 0)
+        if ret != 0:
+            raise UserError(f"The {self.SIDE} controller refused drag mode ({return_text(ret, 'rm_start_drag_teach')}).",
+                            "It refuses while an error is latched: read and clear the errors, then try again.", code="errors")
+
+    def drag_off(self) -> bool:
+        """Leaves Drag Mode (``rm_stop_drag_teach``). Never raises: False when the controller did not confirm."""
+        try:
+            with self.link.busy("leaving drag mode"):
+                return self._call("rm_stop_drag_teach", self._sdk("rm_stop_drag_teach")) == 0
+        except Exception:                                                           # noqa: BLE001
+            return False
+
+    def safe_state(self) -> dict:
+        """After Drag Mode (Normal Mode): the arm at rest, no program running or paused, no error latched
+        and every joint enabled. ``problems``: what is not, in plain words."""
+        from alix_dispatch import track
+
+        problems = []
+        with self.link.busy("checking the arm after drag mode"):
+            rest = track.wait_until_at_rest(self.robot, timeout_s=3.0)
+            ret, st = self.robot.rm_get_program_run_state()
+            es = _dac().error_state(self)
+        view = self._errors_view(es)
+        if not rest.get("at_rest"):
+            problems.append(f"the arm is still moving ({float(rest.get('peak_deg_s') or 0.0):.1f} °/s)")
+        if ret != 0:
+            problems.append("its program state cannot be read")
+        elif (st or {}).get("run_state") not in (0, None):
+            problems.append("a program is running or paused on the controller")
+        if not view["readable"]:
+            problems.append("its errors cannot be read")
+        elif not view["clean"]:
+            problems.append(f"the controller reports {view['text']}")
+        return dict(ok=not problems, problems=problems, errors=view)
 
     # ── programs
     def _slots(self) -> dict:

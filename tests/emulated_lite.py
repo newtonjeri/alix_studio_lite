@@ -1,5 +1,6 @@
 """Lite on ALIX's emulated arms (``--robot emulated``), for tests/test_robot_real.py. ALIX's emulator
-has no drag teaching, so the three SDK calls the control program uses for it are added here: the
+has no drag teaching, so the three SDK calls the control program uses for it are added here (and the
+drag sensitivity's getter and setter, 100 % as the controller ships): the
 recording is written by "the SDK" itself, as on the robot (one {"point":[...]} line of integer
 millidegrees per 5 ms sample, CRLF), starting from where the arm stands. Nor has it global points:
 three are stored here, made from where the arm stands at the first list (reachable by MoveJ and
@@ -28,6 +29,17 @@ def save(self, path):
     lines = [json.dumps({"point": [q[0] + 20 * i] + q[1:]}, separators=(",", ":")) for i in range(POINTS)]
     Path(path).write_bytes(("\r\n".join(lines) + "\r\n").encode())
     return 0, POINTS
+
+
+def sensitivity(self):
+    return 0, getattr(self, "_lite_sens", 100)
+
+
+def set_sensitivity(self, grade):
+    if not 0 <= int(grade) <= 100:
+        return 1
+    self._lite_sens = int(grade)
+    return 0
 
 
 def _points(self):
@@ -85,6 +97,8 @@ if __name__ == "__main__":                  # Lite's tuning workers import the m
     rm_emulator.RoboticArm.rm_start_drag_teach = start
     rm_emulator.RoboticArm.rm_stop_drag_teach = stop
     rm_emulator.RoboticArm.rm_save_trajectory = save
+    rm_emulator.RoboticArm.rm_get_drag_teach_sensitivity = sensitivity
+    rm_emulator.RoboticArm.rm_set_drag_teach_sensitivity = set_sensitivity
     rm_emulator.RoboticArm.rm_get_global_waypoints_list = waypoints
     rm_emulator.RoboticArm.rm_get_given_global_waypoint = waypoint
     rm_emulator.RoboticArm.rm_add_global_waypoint = add_point

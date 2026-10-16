@@ -3936,6 +3936,27 @@
       "origin": "alix",
       "sha256": "0b320fd96bdac43740cb81d931dc355239f38ea068ae7e55bd466e87d528121e",
       "bytes": 2791
+    },
+    {
+      "dest": "vendor/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/dual_arm_common.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/dual_arm_common.py",
+      "origin": "alix",
+      "sha256": "60142b49c33a874a7d21d3bf854c004482438a2594196ad6484d168f367d5beb",
+      "bytes": 73098
+    },
+    {
+      "dest": "vendor/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/error_codes.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/error_codes.py",
+      "origin": "alix",
+      "sha256": "66b031d397ca454ebd607f8bd3fa12f1e2790bc26715bf0361d04957b6e8918c",
+      "bytes": 34876
+    },
+    {
+      "dest": "vendor/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/log_utils.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/log_utils.py",
+      "origin": "alix",
+      "sha256": "042f1a179cb543a4475a314688c82fd29fe193e528ebe6767e8f402fbdbbad8b",
+      "bytes": 3024
     }
   ],
   "missing": []

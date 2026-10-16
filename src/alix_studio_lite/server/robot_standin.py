@@ -85,6 +85,8 @@ class StandInArm:
         self.teach_started = None
         self.teach_stage = None
         self.staged_hand = None                 # {target, read}: where the last real staging left the hand
+        self.recovery = None                    # Arm Drag Mode: "drag" (by hand), "held" (left it, not yet safe)
+        self.recovery_note = None               # why it is held, in plain words
         self.estop_latched = False              # pressed (or STOPped) since the last Recover
         self.stop_latched = False               # held by STOP rather than by the E-stop button
         self.button_pressed = False             # the stand-in's own button (an engineer's test)
@@ -106,7 +108,8 @@ class StandInArm:
                     estop_text="Stopped by STOP: press Recover" if by_stop else ESTOP_TEXT[self.estop],
                     estop_io="IO3", controller_mode=self.controller_mode,
                     pole_mm=round(self.pole_mm), hand=list(self.hand), teaching=self.teaching,
-                    teach_s=round(time.time() - self.teach_started, 1) if self.teaching else None)
+                    teach_s=round(time.time() - self.teach_started, 1) if self.teaching else None,
+                    recovery=self.recovery, recovery_note=self.recovery_note)
 
 
 def emulated_stage(job, side: str, a, stage: "staging.Stage", faults=(), *, emulated: bool = True,
@@ -172,6 +175,8 @@ class StandInRobot:
         self.speed_pct = staging.SPEED_FOUND_PCT
         staging.set_move_pct(self.speed_pct)
         self.speed_found = {s: None for s in ARMS}      # side -> the global speed found (None: not reported)
+        self.sens_found = {s: None for s in ARMS}       # side -> the drag sensitivity found (None: not reported)
+        self.sens_now = {s: None for s in ARMS}         # side -> the drag sensitivity Lite set
 
     @property
     def read_only(self) -> bool:
@@ -225,9 +230,11 @@ class StandInRobot:
             self._alert("warn", side, "E-stop pressed: robot motion is blocked on both arms.",
                         "Make the cell safe, release the button, then press Recover.", "estop")
             for arm in self.arms.values():
-                if arm.teaching and arm.side in self.links:
+                if (arm.teaching or arm.recovery == "drag") and arm.side in self.links:
                     threading.Thread(target=self._leave_drag, args=(arm.side,), daemon=True).start()
                 arm.teaching = False
+                if arm.recovery == "drag":
+                    arm.recovery, arm.recovery_note = "held", "the E-stop was pressed in Arm Drag Mode"
             for j in self.jobs.running():
                 if j.kind in MOTION_KINDS:
                     j.log(f"E-stop pressed on the {side.upper()} arm.", "error")
@@ -321,6 +328,9 @@ class StandInRobot:
         for a in self.arms.values():
             if a.teaching:
                 return f"drag teaching on the {a.side.upper()} arm"
+            if a.recovery:
+                return f"Arm Drag Mode on the {a.side.upper()} arm" if a.recovery == "drag" else \
+                    f"the {a.side.upper()} arm held after Arm Drag Mode"
         jobs = [j for j in self.jobs.running() if j.kind in MOTION_KINDS]
         return jobs[0].title if jobs else None
 
@@ -338,6 +348,11 @@ class StandInRobot:
         if teaching:
             raise UserError(f"Drag teaching is running on the {teaching[0].upper()} arm.",
                             "Stop the teaching first: nothing else moves while an arm is being guided by hand.")
+        held = [a for a in self.arms.values() if a.recovery]
+        if held:
+            raise UserError(f"The {held[0].side.upper()} arm is in Arm Drag Mode." if held[0].recovery == "drag"
+                            else f"The {held[0].side.upper()} arm is held after Arm Drag Mode: {held[0].recovery_note}.",
+                            "Press Normal Mode: nothing else moves until the arm is safe.")
         busy = [j for s in sides for j in self.jobs.running(arm=s) if j.kind in MOTION_KINDS]
         if busy:
             raise UserError(f"The {busy[0].arm.upper()} arm is busy: {busy[0].title}.", "Wait, or press STOP.")
@@ -374,12 +389,13 @@ class StandInRobot:
         leaves it first, and every controller gets the global speed it had when it was connected, once
         the jobs STOP ended have ended (their own ``finally`` runs on a link still open)."""
         for side, a in self.arms.items():
-            if a.teaching:
-                a.teaching = False
+            if a.teaching or a.recovery == "drag":
+                a.teaching, a.recovery = False, None
                 self._leave_drag(side)
         for side in list(self.links):
             self._settle(side)
             self._give_back_speed(side)
+            self._give_back_sensitivity(side)
         with self.lock:
             links, self.links = list(self.links.values()), {}
         for link in links:
@@ -432,6 +448,9 @@ class StandInRobot:
         if self.arm(side).teaching:                      # its controller would be left in drag teaching
             raise UserError(f"The {side.upper()} arm is in drag teaching. It stays connected.",
                             f"Press STOP DRAG, or STOP, then {what}.", code="busy")
+        if self.arm(side).recovery:                      # or in drag mode, or not yet safe after it
+            raise UserError(f"The {side.upper()} arm is in Arm Drag Mode. It stays connected.",
+                            f"Press Normal Mode, then {what}.", code="busy")
         busy = [j for j in self.jobs.running(arm=side) if not j.cancelled]
         if busy:
             raise UserError(f"The {side.upper()} arm is busy: {busy[0].title}. It stays connected.",
@@ -442,6 +461,115 @@ class StandInRobot:
         t_end = time.monotonic() + timeout_s
         while self.jobs.running(arm=side) and time.monotonic() < t_end:
             time.sleep(0.05)
+
+    # ── the drag sensitivity (feedback v5, slide 2): read on connecting, set from Drag & Teach, and the
+    #    controller's own given back when Lite lets go, as the speed
+    def _read_sensitivity(self, side: str) -> None:
+        real = self._real(side)
+        self.sens_found[side] = self.sens_now[side] = real.read_sensitivity() if real is not None else None
+
+    def _give_back_sensitivity(self, side: str) -> None:
+        real, found = self._real(side), self.sens_found.get(side)
+        if real is not None and found is not None and self.sens_now.get(side) not in (None, found):
+            try:
+                real.set_sensitivity(found)
+                self.sens_now[side] = found
+            except UserError:
+                pass
+
+    def sensitivity_view(self) -> dict:
+        return {s: dict(pct=self.sens_now[s], found=self.sens_found[s], linked=s in self.links) for s in ARMS}
+
+    def set_sensitivity(self, side: str, pct) -> dict:
+        """The arm's drag sensitivity, 0-100 % (higher: easier to move by hand), set on its controller and
+        read back. Not while the arm is being guided by hand."""
+        try:
+            v = int(round(float(pct)))
+        except (TypeError, ValueError):
+            raise UserError("The drag sensitivity is 0 to 100 %.") from None
+        if not 0 <= v <= 100:
+            raise UserError("The drag sensitivity is 0 to 100 %.")
+        a, real = self.arm(side), self._real(side)
+        if real is None:
+            raise UserError(f"The drag sensitivity is the {side.upper()} controller's: connect the arm with its link.",
+                            "Start Lite with --robot realman and connect the arm.", code="connect")
+        if a.teaching or a.recovery or self.jobs.running(arm=side, kind="teach"):
+            raise UserError(f"The {side.upper()} arm is being guided by hand: its drag sensitivity changes after.", code="busy")
+        self.sens_now[side] = real.set_sensitivity(v)
+        return self.sensitivity_view()[side]
+
+    # ── Arm Drag Mode and Normal Mode (feedback v5, slide 8): one arm free to be moved by hand, for
+    #    recovery after a collision or an unexpected stop, never for recording
+    def drag_mode(self, side: str, on: bool, mode: str | None = None) -> dict:
+        """Drag Mode needs Real, the arm linked, its E-stop button released, nothing running on it, no
+        program running or paused on its controller and every joint enabled (a disabled joint drops when
+        its brake releases); it is allowed while STOP holds the arm, as recovering from a stop is what it
+        is for. While an arm is in it, nothing else moves on either arm. Normal Mode leaves it and checks
+        the arm is safe: at rest, no program, no error latched, every joint enabled; until then the arm
+        stays held (``recovery`` "held", with why) and nothing moves."""
+        a, real = self.arm(side), self._real(side)
+        mode = mode or self.mode
+        if on:
+            if a.recovery == "drag":
+                return a.view()
+            if mode != "real":
+                raise UserError("Arm Drag Mode frees the real arm, so it needs Real robot.",
+                                "Choose Real robot in the status pill.", code="mode")
+            if real is None:
+                raise UserError(f"The {side.upper()} arm is not connected to its controller.",
+                                "Start Lite with --robot realman and connect the arm.", code="connect")
+            self._sync(side)
+            if a.estop == "ENGAGED" or a.button_pressed:
+                raise UserError(f"The {side.upper()} arm's E-stop button is pressed.", "Release it, then try again.")
+            busy = [j for j in self.jobs.running(arm=side) if j.kind in MOTION_KINDS]
+            if a.teaching or busy:
+                raise UserError(f"The {side.upper()} arm is busy: {'drag teaching' if a.teaching else busy[0].title}.",
+                                "Press STOP first.", code="busy")
+            why = real.drag_ready()
+            if why:
+                raise UserError(f"Arm Drag Mode is refused on the {side.upper()} arm: {'; '.join(why)}.",
+                                "Check the arm on its pendant.")
+            real.drag_on()
+            a.recovery, a.recovery_note = "drag", None
+            if self.log is not None:
+                self.log.activity(f"{side.upper()} arm in Arm Drag Mode (recovery, nothing recorded)", detail=dict(side=side))
+            return a.view()
+        if not a.recovery:
+            return dict(a.view(), check=None)
+        if real is not None and a.recovery == "drag" and not real.drag_off():
+            a.recovery, a.recovery_note = "drag", "the controller did not confirm it left drag mode"
+            raise UserError(f"The {side.upper()} arm may still be in drag mode.",
+                            "Press Normal Mode again, or STOP, before anyone lets go of the arm.")
+        a.recovery = "held"
+        check = real.safe_state() if real is not None else dict(ok=True, problems=[], errors=None)
+        a.recovery, a.recovery_note = (None, None) if check["ok"] else ("held", "; ".join(check["problems"]))
+        if self.log is not None:
+            self.log.activity(f"{side.upper()} arm: Normal Mode" + ("" if check["ok"] else f", held: {a.recovery_note}"),
+                              detail=dict(side=side, check=check))
+        return dict(a.view(), check=check)
+
+    def errors(self, side: str) -> dict:
+        real = self._real(side)
+        if real is None:
+            raise UserError(f"The {side.upper()} arm's errors are its controller's: connect it with its link.", code="connect")
+        return real.errors()
+
+    def clear_errors(self, side: str) -> dict:
+        """The controller's errors cleared, as its web GUI's Clear Error buttons do (nothing moves). An arm
+        held after Arm Drag Mode is checked again."""
+        real = self._real(side)
+        if real is None:
+            raise UserError(f"The {side.upper()} arm's errors are its controller's: connect it with its link.", code="connect")
+        out = real.clear_errors()
+        a = self.arm(side)
+        if a.recovery == "held":
+            check = real.safe_state()
+            a.recovery, a.recovery_note = (None, None) if check["ok"] else ("held", "; ".join(check["problems"]))
+            out["check"] = check
+        if self.log is not None:
+            self.log.activity(f"{side.upper()} controller: errors cleared" + ("" if out["clean"] else f", still {out['text']}"),
+                              detail=dict(side=side, errors=out))
+        return out
 
     # ── connection and safety
     def connect(self, side: str, ip: str | None = None) -> dict:
@@ -463,6 +591,7 @@ class StandInRobot:
                 old.close()
             self._sync(side)
             self._read_speed(side)
+            self._read_sensitivity(side)
             return self.view()[side]
         time.sleep(_s(0.4))
         self._read_speed(side)
@@ -480,6 +609,7 @@ class StandInRobot:
             self._refuse_if_busy(side, "disconnect")
             self._settle(side)                           # a job STOP ended finishes on the open link
             self._give_back_speed(side)                  # the controller's own speed, as found on connecting
+            self._give_back_sensitivity(side)            # and its drag sensitivity
         with self.lock:
             self.jobs.cancel_arm(side)
             link = self.links.pop(side, None)
@@ -547,7 +677,7 @@ class StandInRobot:
         snap = dict(self.links)
         links = {s: snap[s] for s in sides if s in snap}
         sent: dict = {}
-        teaching = {s for s in links if self.arms[s].teaching}
+        teaching = {s for s in links if self.arms[s].teaching or self.arms[s].recovery == "drag"}
 
         def one(s, link):
             if s in teaching:
@@ -563,6 +693,8 @@ class StandInRobot:
             for s in sides:
                 a = self.arms[s]
                 a.teaching = False
+                if a.recovery == "drag":
+                    a.recovery, a.recovery_note = "held", "STOP was pressed in Arm Drag Mode"
                 if a.connected:
                     held_by_button = a.estop == "ENGAGED" or (a.estop == "RECOVERING" and not a.stop_latched)
                     a.estop_latched = True

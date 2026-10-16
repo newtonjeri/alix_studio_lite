@@ -20,6 +20,7 @@ import { installPlacement } from './placement.js';
 import { installPrepare } from './prepare.js';
 import { installProjects } from './projects.js';
 import { installRealTest } from './realtest.js';
+import { installRecovery } from './recovery.js';
 import { installReview3d } from './review3d.js';
 import { installRobotPanel } from './robotpanel.js';
 import { installRun } from './run.js';
@@ -36,6 +37,7 @@ import { installViewer } from './viewer.js';
 
 installSafety();          // first: STOP must reach the robot before and without a log-in
 installLayout();          // ...and stay on the screen (the page's top bar needs 1,610 px)
+installRecovery();        // Arm Drag Mode / Normal Mode beside STOP BOTH (the owner, 16 Oct)
 installBrand();           // ALIX's brand mark, as ALIX Studio draws it
 installNotify();          // notifications stay 15 s (the owner, 14 Oct)
 installFixes();

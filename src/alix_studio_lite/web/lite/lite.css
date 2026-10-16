@@ -546,3 +546,34 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-dual-range input[type="range"]::-webkit-slider-thumb { pointer-events: auto; }
 .lite-dual-range input[type="range"]::-moz-range-thumb { pointer-events: auto; }
 @media (max-width: 1100px) { .lite-rev3d-grid { grid-template-columns: 1fr; } }
+
+/* Arm Drag Mode and Normal Mode beside STOP BOTH, and the lock over the page while an arm is in it
+   (recovery.js; the owner, 16 Oct): only Normal Mode and STOP BOTH stay above it */
+.topbar .lite-drag-btn, .topbar .lite-normal-btn { white-space: nowrap; border-radius: 11px; padding: 10px 12px; font-weight: 800;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+.topbar .lite-drag-btn.lite-active { background: var(--orange2); border-color: var(--orange); color: var(--orange); }
+.topbar .lite-normal-btn:not(:disabled) { background: var(--green2); border-color: var(--green); color: var(--green); }
+.topbar .lite-normal-btn:disabled { opacity: .45; cursor: not-allowed; }
+.topbar.lite-fit-3 .lite-drag-btn .lite-long, .topbar.lite-fit-3 .lite-normal-btn .lite-long { display: none; }
+.lite-drag-menu { position: fixed; z-index: 80; width: 290px; display: flex; flex-direction: column; gap: 6px; padding: 10px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); }
+.lite-drag-menu-head { font-size: 12px; font-weight: 800; color: var(--muted); }
+.lite-drag-menu .btn { text-align: left; }
+.lite-drag-lock { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 90px 16px 16px; background: var(--lite-scrim); }
+body.lite-drag-locked .topbar { z-index: 50; }
+body.lite-drag-locked .topbar > *:not(.emstop):not(#liteNormalBtn) { opacity: .35; }
+body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .emstop { position: relative; z-index: 60; box-shadow: 0 0 0 3px var(--card); }
+.lite-drag-lock-card { width: min(560px, 100%); max-height: calc(100vh - 120px); overflow: auto; padding: 20px; border-radius: 16px;
+  border: 2px solid var(--orange); background: var(--card); box-shadow: var(--shadow); }
+.lite-drag-lock-card h3 { margin: 0 0 6px; }
+.lite-drag-lock-arm { margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); }
+.lite-drag-lock-arm.drag { border-color: var(--orange); }
+.lite-drag-lock-arm.held { border-color: var(--red); }
+.lite-drag-lock-arm p { margin: 6px 0; font-size: 13px; }
+
+/* Drag & Teach: the arm's drag sensitivity (teach.js; the owner, 16 Oct) */
+.lite-sensitivity { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 12px 0; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.lite-sensitivity input[type="range"] { flex: 1 1 220px; accent-color: var(--blue); }
+.lite-sens-val { min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
+.lite-sensitivity .mini-note { flex-basis: 100%; }

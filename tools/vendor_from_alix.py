@@ -57,6 +57,10 @@ ALIX_FILES = [
     "core/python/alix_taskgen/src/alix_taskgen/config/glove_frames.yaml",
     "core/python/alix_taskgen/src/alix_taskgen/config/ik_frames.yaml",
     "core/python/alix_taskgen/src/alix_taskgen/config/ik_frame_pairs.yaml",
+    # the operator's error state and error clearing, as the controller's web GUI's buttons do them
+    # (butterfli-realman-alix's dual-arm concept tools; the owner, 16 Oct: "we have scripts implemented to do that")
+    *[f"external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/{m}.py" for m in (
+        "dual_arm_common", "error_codes", "log_utils")],
     # alix_core: only what alix_dispatch and the emulator import
     "core/python/src/alix_core/__init__.py",
     "core/python/src/alix_core/sdk/__init__.py",

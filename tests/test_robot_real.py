@@ -359,3 +359,49 @@ def test_a_linked_arm_is_not_let_go_while_a_job_runs_on_it(server):
     assert [r for r in hardware(server) if r["verb"] == "restore global speed"][-1]["side"] == "right"
     assert call(server, "POST", "/api/robots/right/connect", {})["connected"]
     assert call(server, "POST", "/api/robots/right/recover", {})["estop"] == "CLEAR"
+
+
+def test_arm_drag_mode_frees_one_arm_and_holds_everything_else(server):
+    """Arm Drag Mode (feedback v5, slide 8): the arm free to be moved by hand for recovery, nothing
+    recorded; every other motion of both arms refused until Normal Mode, which checks the arm is safe;
+    STOP in Drag Mode leaves it, and the arm stays held until Normal Mode."""
+    call(server, "POST", "/api/robots/mode", {"mode": "hwsim"})
+    assert call(server, "POST", "/api/robots/left/drag-mode", {"on": True})["code"] == "mode"
+    call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
+    assert call(server, "POST", "/api/robots/left/drag-mode", {"on": True})["code"] == "confirm"
+    assert call(server, "POST", "/api/robots/left/drag-mode", {"on": True, "confirmed": True})["recovery"] == "drag"
+    assert call(server, "GET", "/api/robots/status")["arms"]["left"]["recovery"] == "drag"
+    for side in ("left", "right"):
+        r = call(server, "POST", f"/api/robots/{side}/pole", {"mm": 150, "confirmed": True})
+        assert "Arm Drag Mode" in r["error"], r
+    assert call(server, "POST", "/api/robots/left/disconnect", {})["code"] == "busy"
+    assert [x for x in hardware(server) if x["verb"] == "rm_start_drag_teach"][-1]["args"] == [0]     # recording off
+    back = call(server, "POST", "/api/robots/left/drag-mode", {"on": False})
+    assert back["recovery"] is None and back["check"]["ok"], back
+    assert [x for x in hardware(server) if x["verb"] == "rm_stop_drag_teach"]
+
+    call(server, "POST", "/api/robots/left/drag-mode", {"on": True, "confirmed": True})
+    call(server, "POST", "/api/robots/left/stop", {})
+    held = call(server, "GET", "/api/robots/status")["arms"]["left"]
+    assert held["recovery"] == "held" and "STOP" in held["recovery_note"]
+    assert call(server, "POST", "/api/robots/right/pole", {"mm": 150, "confirmed": True})["error"]     # held, and STOP's hold
+    assert call(server, "POST", "/api/robots/left/drag-mode", {"on": False})["recovery"] is None
+    assert call(server, "POST", "/api/robots/left/recover", {})["estop"] == "CLEAR"
+
+
+def test_drag_sensitivity_is_read_set_and_given_back_and_errors_cleared(server):
+    """The drag sensitivity (feedback v5, slide 2): read when the arm is connected, set and read back,
+    and the controller's own given back when Lite lets go; its errors read and cleared (nothing moves)."""
+    sv = call(server, "GET", "/api/robots/sensitivity")
+    assert sv["left"]["found"] == 100 and sv["left"]["pct"] == 100 and sv["left"]["linked"]
+    assert "0 to 100" in call(server, "POST", "/api/robots/left/sensitivity", {"pct": 101})["error"]
+    assert call(server, "POST", "/api/robots/left/sensitivity", {"pct": 60})["pct"] == 60
+    assert call(server, "GET", "/api/robots/status")["sensitivity"]["left"]["pct"] == 60
+    call(server, "POST", "/api/robots/left/disconnect", {})
+    sets = [x["args"] for x in hardware(server) if x["verb"] == "rm_set_drag_teach_sensitivity"]
+    assert sets[-2:] == [[60], [100]]                                     # set, then given back on letting go
+    assert call(server, "POST", "/api/robots/left/connect", {})["connected"]
+    e = call(server, "GET", "/api/robots/left/errors")
+    assert e["readable"] and e["clean"] and e["text"] == "clean"
+    c = call(server, "POST", "/api/robots/left/clear-errors", {})
+    assert c["ok"] and c["clean"]

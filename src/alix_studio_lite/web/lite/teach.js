@@ -90,6 +90,46 @@ function useExisting() {
   window.setJourneyVisible(false, false);
 }
 
+// The arm's drag sensitivity (feedback v5, slide 2; the controller's Drag Settings): 0-100 %, higher is
+// easier to move by hand; read from its controller when it is connected, set here and read back, and
+// the controller's own given back when Lite lets go of the arm. Not while the arm is being guided.
+let sensBusy = false, lastStatus = null;
+function sensitivity(st = lastStatus) {
+  lastStatus = st || lastStatus;
+  st = lastStatus;
+  const host = $('stage-teach');
+  if (!host) return;
+  let card = $('liteSensitivity');
+  if (!card) {
+    const range = el('input', { id: 'liteSensRange', type: 'range', min: '0', max: '100', step: '1', value: '100', 'aria-label': 'Drag sensitivity (%)',
+      oninput: (e) => { $('liteSensVal').textContent = `${e.target.value} %`; }, onchange: (e) => setSensitivity(Number(e.target.value)) });
+    card = el('div', { id: 'liteSensitivity', class: 'lite-sensitivity' },
+      el('b', { id: 'liteSensHead', text: 'Drag sensitivity' }), range, el('b', { id: 'liteSensVal', class: 'lite-sens-val', text: '-' }),
+      el('small', { id: 'liteSensNote', class: 'mini-note' }));
+    (host.querySelector('.voice-panel') || host.firstElementChild)?.after(card);
+  }
+  const side = selectedArm, v = st && st.sensitivity && st.sensitivity[side];
+  const range = $('liteSensRange');
+  $('liteSensHead').textContent = `Drag sensitivity · ${side.toUpperCase()} arm`;
+  const guiding = !!(timerInt || counting || (st && st.arms[side] && (st.arms[side].teaching || st.arms[side].recovery)));
+  range.disabled = !v || !v.linked || v.pct == null || guiding || sensBusy;
+  if (v && v.pct != null && document.activeElement !== range && !sensBusy) { range.value = String(v.pct); $('liteSensVal').textContent = `${v.pct} %`; }
+  if (!v || !v.linked) $('liteSensVal').textContent = '-';
+  $('liteSensNote').textContent = !v || !v.linked ? 'Read from the arm\'s controller once it is connected (Real robot with its link).'
+    : v.pct == null ? 'The controller does not report it.'
+      : `Higher: the arm moves more easily by hand. Found on the controller: ${v.found} %, given back when Lite lets go of the arm.`
+        + (guiding ? ' It changes once the arm is no longer being guided.' : '');
+}
+
+async function setSensitivity(pct) {
+  const side = selectedArm;
+  sensBusy = true;
+  try {
+    const out = await post(`/api/robots/${side}/sensitivity`, { pct });
+    window.toast(`${side.toUpperCase()} drag sensitivity ${out.pct} % (read back on its controller).`);
+  } catch (err) { tell(err); } finally { sensBusy = false; }
+}
+
 // ── Save & Review
 
 async function refreshReview() {
@@ -282,7 +322,7 @@ export function installTeach() {
   };
 
   document.addEventListener('lite:stage', (e) => {
-    if (e.detail === 'teach') refreshTeach();
+    if (e.detail === 'teach') { refreshTeach(); sensitivity(); }
     if (e.detail === 'review') refreshReview();
   });
   document.addEventListener('lite:step', () => {
@@ -290,4 +330,5 @@ export function installTeach() {
     if (currentStage === 'review') refreshReview();
   });
   document.addEventListener('lite:recordings', () => { if (currentStage === 'review') refreshReview(); });
+  document.addEventListener('lite:status', (e) => { lastStatus = e.detail; if (currentStage === 'teach') sensitivity(e.detail); });
 }

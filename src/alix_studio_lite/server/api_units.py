@@ -1648,6 +1648,47 @@ def post_connect(app, q, body, m):
     return out
 
 
+@route("POST", r"/api/robots/(left|right)/drag-mode")
+def post_drag_mode(app, q, body, m):
+    """Arm Drag Mode and Normal Mode (feedback v5, slide 8): ``{on}``. The arm free to be moved by hand,
+    for recovery, nothing recorded; on needs Real and a confirmation. Normal Mode answers the checks
+    made before the arm is let go (``check``)."""
+    session(app)
+    side = _arm(m)
+    on = bool(body.get("on"))
+    if on:
+        require_confirmed(app, body, "Arm Drag Mode")
+    return app.robot.drag_mode(side, on, mode=app.ui["mode"])
+
+
+@route("GET", r"/api/robots/(left|right)/errors")
+def get_errors(app, q, body, m):
+    """Every error the arm's controller exposes, with its meaning (robot_real.RealArm.errors)."""
+    session(app)
+    return app.robot.errors(_arm(m))
+
+
+@route("POST", r"/api/robots/(left|right)/clear-errors")
+def post_clear_errors(app, q, body, m):
+    """The controller's errors cleared as its web GUI's Clear Error buttons do (the owner, 16 Oct: "Lite
+    should be able to clear errors of any kind"). Nothing moves; STOP's hold still needs Recover."""
+    session(app)
+    return app.robot.clear_errors(_arm(m))
+
+
+@route("GET", r"/api/robots/sensitivity")
+def get_sensitivity(app, q, body, m):
+    session(app)
+    return app.robot.sensitivity_view()
+
+
+@route("POST", r"/api/robots/(left|right)/sensitivity")
+def post_sensitivity(app, q, body, m):
+    """The arm's drag sensitivity (feedback v5, slide 2): ``{pct}``, 0-100 %, set and read back."""
+    session(app)
+    return app.robot.set_sensitivity(_arm(m), body.get("pct"))
+
+
 @route("POST", r"/api/robots/(left|right)/pole")
 def post_pole(app, q, body, m):
     session(app)

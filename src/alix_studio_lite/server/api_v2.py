@@ -180,6 +180,7 @@ def robots_status(app, q, body, m):
     return {"mode": app.ui["mode"], "mode_text": MODE_TEXT[app.ui["mode"]], "arms": app.robot.view(),
             "backend": app.robot.backend, "label": app.robot.label, "motion_block": app.robot.motion_block(),
             "jobs": [j.view() for j in app.jobs.running()], "speed": app.robot.speed_view(),
+            "sensitivity": app.robot.sensitivity_view(),
             "alerts": app.log.alerts_view(), "instance": app.log.instance}
 
 

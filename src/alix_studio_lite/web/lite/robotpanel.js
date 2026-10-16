@@ -17,6 +17,20 @@ const ESTOP = { CLEAR: 'Clear', ENGAGED: 'E-STOP PRESSED', RECOVERING: 'Released
   NOT_CONFIGURED: 'IO3 not in E-stop mode: motion blocked', NOT_CONNECTED: 'Not connected' };
 
 let box = null, timer = null;
+const errSaid = { left: '', right: '' };          // each controller's errors as last read or cleared here
+
+// A linked arm's controller errors, read and cleared as its web GUI's Clear Error buttons do (the owner,
+// 16 Oct: "Lite should be able to clear errors of any kind"). Nothing moves; STOP's hold still needs Recover.
+async function errors(side, clear) {
+  errSaid[side] = clear ? 'Clearing…' : 'Reading…';
+  render();
+  try {
+    const e = clear ? await post(`/api/robots/${side}/clear-errors`, {}) : await get(`/api/robots/${side}/errors`);
+    errSaid[side] = (clear ? (e.clean ? 'Errors cleared: ' : 'Cleared what can be cleared; still: ') : 'Errors: ')
+      + (e.clean ? 'none' : e.text) + '.';
+  } catch (err) { errSaid[side] = ''; tell(err); }
+  render();
+}
 
 // The live feedback of a linked arm (robot_link.py): the arm, the pole and the hand, and IO3.
 function liveRows(link) {
@@ -58,7 +72,10 @@ async function render() {
         a.connected
           ? el('button', { class: 'btn light', text: 'Disconnect', onclick: () => act(`/api/robots/${side}/disconnect`) })
           : el('button', { class: 'btn', text: 'Connect', onclick: (e) => act(`/api/robots/${side}/connect`,
-            { ip: e.target.closest('.lite-arm-row').querySelector('.lite-ip')?.value.trim() || undefined }) })),
+            { ip: e.target.closest('.lite-arm-row').querySelector('.lite-ip')?.value.trim() || undefined }) }),
+        a.link ? el('button', { class: 'btn light', text: 'Read errors', onclick: () => errors(side, false) }) : null,
+        a.link ? el('button', { class: 'btn light', text: 'Clear errors', onclick: () => errors(side, true) }) : null),
+      a.link && errSaid[side] ? el('small', { class: 'lite-arm-errors', text: errSaid[side] }) : null,
       a.link ? liveRows(a.link) : null);
   }));
   // both arms at once (the owner, 14 Oct); each still uses the address in its own row
