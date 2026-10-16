@@ -15,8 +15,10 @@ let open = null;                                    // the list open now: {close
 const words = (q) => String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
 const fits = (text, ws) => { const t = String(text).toLowerCase(); return ws.every(w => t.includes(w)); };
 
-// Opens the list under `anchor`: `groups` [{label, rows: [{value, text, detail}]}], `current` the value
-// chosen now; `pick(value)` when one is chosen.
+// Opens the list under `anchor`: `groups` [{label, rows: [{value, text, detail, search, disabled, note}]}]
+// (the search looks in a row's text, its `search` words and its group's label), `current`
+// the value chosen now; `pick(value)` when one is chosen. A disabled row is shown greyed with its note (why
+// it cannot be chosen) and is never chosen.
 export function choose(anchor, groups, current, pick, { placeholder = 'Search the global points' } = {}) {
   if (open) open.close();
   const all = groups.flatMap(g => g.rows);
@@ -46,11 +48,11 @@ export function choose(anchor, groups, current, pick, { placeholder = 'Search th
   };
   const mark = (i) => {
     active = i;
-    list.querySelectorAll('.lite-picker-row').forEach((n, k) => {
+    list.querySelectorAll('.lite-picker-row:not(.disabled)').forEach((n, k) => {
       n.classList.toggle('active', k === i);
       n.setAttribute('aria-selected', String(k === i));
     });
-    const n = list.querySelectorAll('.lite-picker-row')[i];
+    const n = list.querySelectorAll('.lite-picker-row:not(.disabled)')[i];
     if (!n) { search.removeAttribute('aria-activedescendant'); return; }
     search.setAttribute('aria-activedescendant', n.id);
     if (n.offsetTop < list.scrollTop) list.scrollTop = n.offsetTop;              // the list scrolls, never the page
@@ -61,21 +63,28 @@ export function choose(anchor, groups, current, pick, { placeholder = 'Search th
     shown = [];
     const kids = [];
     for (const g of groups) {
-      const rows = g.rows.filter(r => fits(r.text, ws));
+      const rows = g.rows.filter(r => fits(`${r.text} ${r.search || ''} ${g.label || ''}`, ws));
       if (!rows.length) continue;
       if (g.label) kids.push(el('div', { class: 'lite-picker-group', role: 'presentation', text: g.label }));
       for (const r of rows) {
+        if (r.disabled) {
+          kids.push(el('div', { class: 'lite-picker-row disabled', role: 'option', 'aria-disabled': 'true' },
+            el('b', { text: r.text }), r.detail ? el('small', { text: r.detail }) : null, r.note ? el('small', { class: 'lite-picker-note', text: r.note }) : null));
+          continue;
+        }
         const k = shown.length;
         shown.push(r);
         kids.push(el('div', { class: `lite-picker-row${r.value === current ? ' current' : ''}`, role: 'option', id: `${list.id}_${k}`,
           onmousemove: () => { if (active !== k) mark(k); }, onclick: () => done(r.value) },
-        el('b', { text: r.text }), r.detail ? el('small', { text: r.detail }) : null));
+        el('b', { text: r.text }), r.detail ? el('small', { text: r.detail }) : null, r.note ? el('small', { class: 'lite-picker-note', text: r.note }) : null));
       }
     }
     list.replaceChildren(...(kids.length ? kids : [el('div', { class: 'lite-picker-none', text: all.length ? 'No point matches the search.' : 'Nothing to choose yet.' })]));
-    count.textContent = ws.length ? `${shown.length} of ${all.length} shown` : `${all.length} to choose from`;
+    const can = all.filter(r => !r.disabled).length;
+    count.textContent = (ws.length ? `${shown.length} of ${can} shown` : `${can} to choose from`)
+      + (can < all.length ? ` (${all.length - can} greyed: they cannot be chosen now)` : '');
     const at = shown.findIndex(r => r.value === current);
-    mark(ws.length ? (shown.length ? 0 : -1) : at);
+    mark(ws.length || at < 0 ? (shown.length ? 0 : -1) : at);     // the one chosen now, else the first: Enter takes it
   };
   const close = () => {
     panel.remove();

@@ -242,6 +242,21 @@ def differences(a: dict, b: dict) -> list[str]:
     return out + pl.differences(a.get("placement"), b.get("placement"))
 
 
+def sources_all(units, side: str, others: list | None = None) -> list[dict]:
+    """The files S1 can merge: this project's (``sources``), then, for "All projects" (the owner, 16 Oct:
+    "all projects taught files, so that user has access to all projects"), every other project's
+    (``others``: [(project id, its name, its units)]), each named with its project. The guards stay: a file
+    of a project on another commode cannot join (the commode is part of the setup a merge runs in)."""
+    out = sources(units, side)
+    for pid, pname, other in others or []:
+        for it in sources(other, side):
+            it.update(ref=f"p:{pid}|{it['ref']}", project_id=pid, project=pname)
+            if other.fixture != units.fixture and not it["why"]:
+                it["why"] = f"taught on another commode ({other.fixture})"
+            out.append(it)
+    return out
+
+
 def with_compatibility(items: list[dict], picked: list[str]) -> list[dict]:
     """``items`` with, against the first file picked, whether each can join the merge (``compatible``)
     and why not (``differs``)."""
@@ -252,15 +267,17 @@ def with_compatibility(items: list[dict], picked: list[str]) -> list[dict]:
     return items
 
 
-def from_project(units, side: str, name: str, refs: list) -> dict:
-    """S1's merge: the project's files ``refs`` (from ``sources``), in that order, each of ``side`` with
-    its pole and hand known, all of one stage and one placement (each measurement within ±10 mm).
-    The merge keeps the first file's stage, placement and phase."""
+def from_project(units, side: str, name: str, refs: list, others: list | None = None) -> dict:
+    """S1's merge: the files ``refs`` (from ``sources_all``: this project's, and with ``others`` every other
+    project's), in that order, each of ``side`` with its pole and hand known, all of one stage and one
+    placement (each measurement within ±10 mm). The merge, kept in this project, keeps the first file's
+    stage, placement and phase."""
     from ..motion import track
 
     if not isinstance(refs, list) or not refs or len(refs) > 50:
         raise UserError("Choose 1 to 50 files to merge.")
-    items = {it["ref"]: it for it in sources(units, side)}
+    items = {it["ref"]: it for it in sources_all(units, side, others)}
+    owner = {pid: other for pid, _, other in others or []}
     chosen = []
     for r in refs:
         it = items.get(str(r))
@@ -276,7 +293,7 @@ def from_project(units, side: str, name: str, refs: list) -> dict:
             raise UserError(f"{it['name']} cannot be merged with {first['name']}: {'; '.join(why)}.",
                             "Only files with the same pole, hand, UGV placement and room merge (each measurement within ±10 mm).",
                             code="mismatch")
-    parts = [dict(name=it["name"], md=track.read_md(_path_of(units, side, it))) for it in chosen]
+    parts = [dict(name=it["name"], md=track.read_md(_path_of(owner.get(it.get("project_id"), units), side, it))) for it in chosen]
     return save(units, side, name, parts, staging.stage_from(first["stage"]), placement=first["placement"], phase=first["phase"],
                 sources=[dict(ref=it["ref"], name=it["name"], sha256=it["sha256"]) for it in chosen])
 
@@ -284,7 +301,7 @@ def from_project(units, side: str, name: str, refs: list) -> dict:
 def _path_of(units, side: str, it: dict) -> Path:
     from ..motion import track
 
-    kind, rest = it["ref"].split(":", 1)
+    kind, rest = it["ref"].split("|", 1)[-1].split(":", 1)       # another project's: "p:<id>|<its ref>"
     if kind == "merge":
         return Path(checked(units, side, rest)["path"])
     key, _, which = rest.partition("/")

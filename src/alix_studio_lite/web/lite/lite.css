@@ -414,6 +414,8 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-picker-row.current b::after { content: '  (chosen now)'; color: var(--muted); font-weight: 400; font-size: 12px; }
 .lite-picker-row.active { background: var(--blue2); outline: 1px solid var(--blue); }
 .lite-picker-none { padding: 10px; color: var(--muted); font-size: 13px; }
+.lite-picker-row.disabled { cursor: not-allowed; opacity: .6; }
+.lite-picker-row .lite-picker-note { color: var(--orange); }
 
 /* Prepare's transition trajectories (V32): the Program ID beside the run buttons, the 3D window */
 .transition-run-actions .lite-transition-program { width: 130px; min-height: 44px; }
@@ -622,16 +624,17 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-s1-arms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .lite-s1-arm { margin: 0; min-width: 0; }
 .lite-s1-head { display: flex; gap: 10px; align-items: center; }
-.lite-s1-files { max-height: 340px; overflow: auto; }
+.lite-s1-pickrow { margin-top: 0; align-items: flex-end; }
+.lite-s1-pickrow select { min-height: 44px; }
 .lite-s1-merges { max-height: 260px; overflow: auto; }
 .lite-s1-why { font-size: 12px; margin-top: 2px; }
-.lite-s1-files td:nth-child(3), .lite-s1-merges td:nth-child(3) { white-space: nowrap; }
+.lite-s1-merges td:nth-child(3) { white-space: nowrap; }
 #liteS2Speedup { min-height: 40px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); }
 .lite-s1-order { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
 .lite-s1-order li { display: flex; gap: 8px; align-items: center; justify-content: space-between; font-size: 13px; }
 .lite-s1-order .lite-s1-empty { list-style: none; margin-left: -22px; }
 .lite-s1-order-tools { display: flex; gap: 4px; }
-.lite-s1-order-tools .btn, .lite-s1-files .btn { padding: 4px 10px; min-height: 30px; }
+.lite-s1-order-tools .btn { padding: 4px 10px; min-height: 30px; }
 .lite-s1-tools { display: grid; gap: 8px; margin-top: 10px; }
 .lite-s1-tools[hidden] { display: none; }
 .lite-s1-tools .field { margin: 0; }
@@ -696,5 +699,5 @@ html[data-theme="dark"] .lite-s2-subtab.active { color: var(--lite-d-blue); }
 html[data-theme="dark"] .lite-s2-arm.right .lite-s2-armhead { color: var(--lite-d-orange); }
 html[data-theme="dark"] .lite-s2-runtime { color: var(--lite-d-green); }
 html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); color: var(--lite-d-sunken); border-color: var(--lite-d-blue); }
-.lite-s2-table thead th, .lite-s1-files thead th, .lite-s1-merges thead th { position: sticky; top: 0; z-index: 1; }
+.lite-s2-table thead th, .lite-s1-merges thead th { position: sticky; top: 0; z-index: 1; }
 .lite-confirm .modal-card > p { white-space: pre-line; }   /* a question's lines as written (S2: V53's checkpoint) */

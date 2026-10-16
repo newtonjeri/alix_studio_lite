@@ -156,3 +156,42 @@ def test_a_merge_is_renamed_downloaded_and_sent(lite):
     held = lite["app"].robot.arm("left").programs[30]
     assert held["sha256"] == m["sha256"] and held["stage"]["pole_mm"] == 150                        # sent with its stage
     call(lite, "POST", "/api/robots/mode", {"mode": "visual"})
+
+
+def test_the_files_of_all_projects_can_be_merged(lite):
+    """S1's "All projects" (the owner, 16 Oct: "current project (default), and all projects taught files"): every
+    other project's files too, named with their project; the guards stay, and a file of a project on another
+    commode cannot join. The merge is kept in this project."""
+    from alix_studio_lite.motion import track
+
+    def first_left(pid):
+        for t in call(lite, "GET", f"/api/projects/{pid}/tasks")["tasks"]:
+            u = t.get("left") or {}
+            if u.get("key") and not u.get("later"):
+                return u["key"]
+        raise AssertionError(pid)
+
+    def teach(pid, name, fixture=None):
+        call(lite, "PUT", f"/api/projects/{pid}" + (f"?fixture={fixture}" if fixture else ""),
+             {"id": pid, "name": name, "archived": False, "state": {"currentTask": 0}, "last": False})
+        t = np.linspace(0.0, 1.0, 300)[:, None]
+        md = np.round((np.array([[0, -60, 0, 90, 0, 30, 0]]) + 4.0 * np.sin(2 * np.pi * t)) * 1000).astype(np.int64)
+        out = call(lite, "POST", f"/api/projects/{pid}/units/{first_left(pid)}/recordings",
+                   {"source": "upload", "name": f"L_{pid}_take.txt", "content": track.track_bytes(md).decode(), "pole_mm": 150, "hand": "GRIP"})
+        assert "error" not in out, out
+
+    teach("alix_s1_other", "Other room")
+    teach("alix_s1_away", "Away", fixture="commode_a")
+    here = call(lite, "POST", f"{P}/merge-sources/left", {"picked": []})
+    assert here["scope"] == "project" and not any(it.get("project") for it in here["items"])
+    every = call(lite, "POST", f"{P}/merge-sources/left", {"picked": [], "scope": "all"})["items"]
+    other = next(it for it in every if it.get("project") == "Other room")
+    away = next(it for it in every if it.get("project") == "Away")
+    assert other["ref"].startswith("p:alix_s1_other|rec:") and not other["why"]
+    assert away["why"] == "taught on another commode (commode_a)"
+
+    m = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_from_other.txt", "files": [other["ref"]]})
+    assert m["name"] == "L_from_other.txt" and m["sources"][0]["ref"] == other["ref"]
+    assert any(x["file"] == m["file"] for x in call(lite, "GET", f"{P}/merges")["left"])           # kept in this project
+    refused = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_away.txt", "files": [away["ref"]]})
+    assert "another commode" in refused["error"]

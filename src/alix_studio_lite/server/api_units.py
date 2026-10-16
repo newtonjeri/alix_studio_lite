@@ -1320,23 +1320,45 @@ def get_merges(app, q, body, m):
     return {s: merges.listing(units, s) for s in ARMS}
 
 
+def _other_projects(app, pid: str, body: dict) -> list:
+    """[(id, name, units)] of every other project, for S1's "All projects" (``scope: all``); none otherwise.
+    Archived projects and ones that cannot be read are left out."""
+    if str(body.get("scope") or "project") != "all":
+        return []
+    out = []
+    for rec in app.store.list():
+        oid = str(rec.get("id") or "")
+        if not oid or oid == pid or rec.get("archived"):
+            continue
+        try:
+            out.append((oid, str(rec.get("name") or oid), units_of(app, oid)))
+        except (UserError, OSError, ValueError):
+            continue
+    return out
+
+
 @route("POST", P + r"/merge-sources/(left|right)")
 def post_merge_sources(app, q, body, m):
     """S1's files for an arm (feedback v5, slide 9): every recording and kept version of the arm's regions
-    and the arm's merges, each with its pole and hand and its UGV placement and room; against the first
-    file picked (``picked``: refs in order), whether each can join the merge and why not."""
+    and the arm's merges, each with its pole and hand and its UGV placement and room; with ``scope: all``,
+    every other project's too; against the first file picked (``picked``: refs in order), whether each can
+    join the merge and why not."""
     units, side = units_of(app, m.group(1)), m.group(2)
     picked = [str(x) for x in (body.get("picked") or []) if isinstance(x, str)][:50]
-    return {"side": side, "picked": picked, "tol_mm": placement.TOL_MM,
-            "items": merges.with_compatibility(merges.sources(units, side), picked)}
+    items = merges.sources_all(units, side, _other_projects(app, m.group(1), body))
+    return {"side": side, "picked": picked, "tol_mm": placement.TOL_MM, "scope": "all" if body.get("scope") == "all" else "project",
+            "items": merges.with_compatibility(items, picked)}
 
 
 @route("POST", P + r"/merges/(left|right)/from-project")
 def post_merge_from_project(app, q, body, m):
-    """S1's merge of the project's files, in order (``files``: refs from merge-sources): one pole and hand,
-    one UGV placement and room (each measurement within ±10 mm), or it is refused saying which differs."""
+    """S1's merge of the files, in order (``files``: refs from merge-sources; another project's with
+    ``scope: all``): one pole and hand, one UGV placement and room (each measurement within ±10 mm), or it is
+    refused saying which differs. The merge is kept in this project."""
     units, side = units_of(app, m.group(1)), m.group(2)
-    out = merges.from_project(units, side, str(body.get("name") or ""), body.get("files"))
+    files = body.get("files")
+    others = _other_projects(app, m.group(1), dict(body, scope="all" if any(str(f).startswith("p:") for f in files or []) else "project"))
+    out = merges.from_project(units, side, str(body.get("name") or ""), files, others)
     return {k: v for k, v in out.items() if k != "path"}
 
 

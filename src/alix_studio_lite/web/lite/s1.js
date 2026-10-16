@@ -1,9 +1,11 @@
 // Merge + Full Sequence, S1: Merge & Upload, LEFT and RIGHT side by side (feedback v5, slide 9; the
 // owner, 16 Oct). For each arm:
-// 1. the project's files of that arm (every region's recordings and kept versions, and the arm's
-//    merges), picked in order. Only files with the same pole, hand, UGV placement and room (each
-//    measurement within ±10 mm) merge: once one is picked, the files that differ are greyed out
-//    with what differs (server/merges.py says it, and refuses a merge that differs);
+// 1. the files of that arm (every region's recordings and kept versions, and the arm's merges), of this
+//    project or of all projects (the owner, 16 Oct: "current project (default), and all projects taught
+//    files"), picked in order from a searchable list (picker.js, as the global points are). Only files
+//    with the same pole, hand, UGV placement and room (each measurement within ±10 mm; the standoff
+//    ±5 mm) merge: once one is picked, the files that differ are greyed out in the list with what
+//    differs (server/merges.py says it, and refuses a merge that differs);
 // 2. merged and saved under a name, the files joined where one ends away from where the next
 //    begins (merges.py), the merge keeping their pole, hand, placement and phase;
 // 3. each merge renamed, downloaded, sent to a Program ID on the arm's controller, reviewed in 3D
@@ -17,13 +19,15 @@ import { borrow, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { saveBlobAs } from './tune.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
+import { choose } from './picker.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
 const ARM = (s) => s.toUpperCase();
 const KIND = { rec: 'Recording', ver: 'Kept version', merge: 'Merge' };
 const PHASE_WORDS = { lid_closed: 'lid closed', lid_open: 'lid open', seat_open: 'seat open' };
-const st = { left: { items: [], picked: [], merges: [], sel: null, busy: false }, right: { items: [], picked: [], merges: [], sel: null, busy: false } };
+const fresh = () => ({ items: [], picked: [], merges: [], sel: null, busy: false, scope: 'project' });
+const st = { left: fresh(), right: fresh() };
 const review = { side: null, file: null, phase: null, scene: null, t0: 0, total: 0, token: 0 };
 let panel = null, player = null, built = false, tools = null;
 
@@ -49,10 +53,15 @@ function build() {
     el('div', { class: 'lite-s1-arms' }, ARMS.map((side) => el('div', { class: `card lite-s1-arm ${side}` },
       el('div', { class: 'lite-s1-head' }, el('span', { class: `badge ${side === 'left' ? 'blue' : 'orange'}`, text: `${ARM(side)} ARM` }),
         el('b', { text: `Merge the ${ARM(side)} arm's files` })),
-      el('h4', { text: '1 · Project files, picked in order' }),
-      el('div', { class: 'lite-table-scroll lite-s1-files' }, el('table', { class: 'lite-table' },
-        el('thead', {}, el('tr', {}, ['', 'File', 'Time', 'Pole and hand', 'UGV placement and room'].map(h => el('th', { text: h })))),
-        el('tbody', { id: `liteS1Files_${side}` }))),
+      el('h4', { text: '1 · Files, picked in order' }),
+      el('div', { class: 'lite-row lite-s1-pickrow' },
+        el('div', { class: 'field' }, el('label', { for: `liteS1Scope_${side}`, text: 'Files from' }),
+          el('select', { id: `liteS1Scope_${side}`, onchange: (e) => { st[side].scope = e.target.value; load(side); } },
+            el('option', { value: 'project', text: 'This project' }), el('option', { value: 'all', text: 'All projects' }))),
+        el('div', { class: 'field lite-grow' }, el('label', { for: `liteS1Add_${side}`, text: 'Add a file' }),
+          el('button', { id: `liteS1Add_${side}`, class: 'lite-picker-btn', type: 'button', 'aria-haspopup': 'listbox', 'aria-expanded': 'false',
+            onclick: (e) => chooseFile(side, e.currentTarget) }, el('span', { class: 'lite-picker-value', text: 'Choose a file to add…' })))),
+      el('div', { id: `liteS1Count_${side}`, class: 'mini-note' }),
       el('h4', { text: '2 · Merge order' }),
       el('ol', { id: `liteS1Order_${side}`, class: 'lite-s1-order' }),
       el('div', { class: 'lite-row' },
@@ -108,7 +117,8 @@ function build() {
 
 async function load(side) {
   try {
-    const [src, all] = await Promise.all([post(`${base()}/merge-sources/${side}`, { picked: st[side].picked }), get(`${base()}/merges`)]);
+    const [src, all] = await Promise.all([post(`${base()}/merge-sources/${side}`, { picked: st[side].picked, scope: st[side].scope }),
+      get(`${base()}/merges`)]);
     st[side].items = src.items;
     st[side].picked = st[side].picked.filter(r => src.items.some(it => it.ref === r));
     st[side].merges = all[side] || [];
@@ -119,44 +129,58 @@ async function load(side) {
 
 async function repick(side) {
   try {
-    const src = await post(`${base()}/merge-sources/${side}`, { picked: st[side].picked });
+    const src = await post(`${base()}/merge-sources/${side}`, { picked: st[side].picked, scope: st[side].scope });
     st[side].items = src.items;
   } catch (err) { tell(err); }
   paint(side);
+}
+
+// The files to add as a searchable list (picker.js): by project and region; a file that cannot join is
+// greyed, with why (another pole, hand, placement or room than the first file; its arm or stage unknown).
+function chooseFile(side, anchor) {
+  const s = st[side];
+  const groups = new Map();
+  for (const it of s.items) {
+    if (s.picked.includes(it.ref)) continue;                 // in the order already
+    const label = `${it.project ? `${it.project} · ` : s.scope === 'all' ? 'This project · ' : ''}${it.region}`;
+    if (!groups.has(label)) groups.set(label, []);
+    const differs = it.differs && it.differs.length ? `Differs from the first file: ${it.differs.join('; ')}` : '';
+    groups.get(label).push({ value: it.ref, text: it.name, search: `${KIND[it.kind]} ${it.region} ${it.project || ''}`,
+      detail: `${KIND[it.kind]} · ${fmt(it.seconds)} · ${it.stage_text} · ${it.placement_text}`,
+      disabled: !!(it.why || differs), note: it.why ? `Cannot be merged: ${it.why}` : differs });
+  }
+  choose(anchor, [...groups].map(([label, rows]) => ({ label, rows })), null, (ref) => pick(side, ref),
+    { placeholder: 'Search the files: name, region or project' });
 }
 
 // ── painting
 
 function paint(side) {
   const s = st[side];
-  const body = $(`liteS1Files_${side}`);
-  if (!body) return;
-  const pickedSet = new Set(s.picked);
-  body.replaceChildren(...(s.items.length ? s.items.map((it) => {
-    const n = s.picked.indexOf(it.ref) + 1;
-    const differs = it.differs && it.differs.length ? `Differs from the first file: ${it.differs.join('; ')}` : '';
-    const off = it.why || (!pickedSet.has(it.ref) ? differs : '');
-    const clash = pickedSet.has(it.ref) && n > 1 ? differs : '';              // picked, then the order changed
-    return el('tr', { class: `${off ? 'lite-off' : ''}${n ? ' lite-picked' : ''}`, title: off || '' },
-      el('td', {}, n ? el('button', { class: 'btn outline', type: 'button', text: `Remove (${n})`, onclick: () => unpick(side, it.ref) })
-        : el('button', { class: 'btn light', type: 'button', text: 'Add', disabled: !!off, onclick: () => pick(side, it.ref) })),
-      el('td', {}, el('b', { text: it.name }), el('div', { class: 'mini-note', text: `${KIND[it.kind]} · ${it.region}` }),
-        off || clash ? el('div', { class: 'lite-warn lite-s1-why', text: off || clash }) : null),
-      el('td', { text: fmt(it.seconds) }),
-      el('td', { text: it.stage_text }),
-      el('td', { text: it.placement_text }));
-  }) : [el('tr', {}, el('td', { colspan: '5', class: 'mini-note', text: `The project has no ${ARM(side)} files yet: teach or load them in the region loop.` }))]));
+  const count = $(`liteS1Count_${side}`);
+  if (!count) return;
+  $(`liteS1Scope_${side}`).value = s.scope;
+  const free = s.items.filter(it => !s.picked.includes(it.ref));
+  const can = free.filter(it => !it.why && !(it.differs && it.differs.length)).length;
+  count.textContent = s.items.length
+    ? `${s.items.length} ${ARM(side)} file${s.items.length === 1 ? '' : 's'} ${s.scope === 'all' ? 'in all projects' : 'in this project'}: `
+      + `${can} can be added now${free.length > can ? `, ${free.length - can} greyed in the list with why` : ''}.`
+    : `${s.scope === 'all' ? 'No project has' : 'The project has no'} ${ARM(side)} files yet: teach or load them in the region loop`
+      + `${s.scope === 'all' ? '.' : ', or choose All projects.'}`;
 
   const order = $(`liteS1Order_${side}`);
   const byRef = new Map(s.items.map(it => [it.ref, it]));
   order.replaceChildren(...(s.picked.length ? s.picked.map((ref, i) => {
     const it = byRef.get(ref) || { name: ref, seconds: 0 };
-    return el('li', {}, el('span', { text: `${it.name} · ${fmt(it.seconds)}` }),
+    const clash = i > 0 && it.differs && it.differs.length ? `Differs from the first file: ${it.differs.join('; ')}` : '';   // the order changed
+    return el('li', {}, el('span', {}, el('b', { text: it.name }), ` · ${fmt(it.seconds)}`,
+      el('small', { class: 'mini-note', text: ` ${KIND[it.kind] || ''} · ${it.project ? `${it.project} · ` : ''}${it.region || ''}` }),
+      clash ? el('div', { class: 'lite-warn lite-s1-why', text: clash }) : null),
       el('span', { class: 'lite-s1-order-tools' },
         el('button', { class: 'btn light', type: 'button', text: 'Up', disabled: i === 0, onclick: () => move(side, i, -1) }),
         el('button', { class: 'btn light', type: 'button', text: 'Down', disabled: i === s.picked.length - 1, onclick: () => move(side, i, 1) }),
         el('button', { class: 'btn outline', type: 'button', text: 'Remove', onclick: () => unpick(side, ref) })));
-  }) : [el('li', { class: 'mini-note lite-s1-empty', text: 'Add files above, in the order they run.' })]));
+  }) : [el('li', { class: 'mini-note lite-s1-empty', text: 'Add files above (Choose a file to add), in the order they run.' })]));
   const name = $(`liteS1Name_${side}`);
   if (name && !name.value) name.value = `${ARM(side)[0]}_merge_${s.merges.length + 1}.txt`;
 
@@ -339,7 +363,7 @@ export function openS1(host, opts = {}) {
   build();
   if (shownFor !== ctx.pid) {                              // another project: its own files, nothing picked
     shownFor = ctx.pid;
-    for (const side of ARMS) Object.assign(st[side], { items: [], picked: [], merges: [], sel: null, busy: false });
+    for (const side of ARMS) Object.assign(st[side], fresh());
     for (const side of ARMS) { const n = $(`liteS1Name_${side}`); if (n) n.value = ''; }
     Object.assign(review, { side: null, file: null });
     tools.load(null, { enabled: false, text: "the merge's" });
