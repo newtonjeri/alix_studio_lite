@@ -2,18 +2,18 @@
  "id": "alix_mvb5inxs_ylr7t",
  "name": "Toilet Project 2026-10-16",
  "createdAt": "2026-10-16T15:57:39.376Z",
- "updatedAt": "2026-10-16T18:45:36.524Z",
+ "updatedAt": "2026-10-16T20:19:55.545Z",
  "archived": false,
  "state": {
-  "currentView": "sequence",
+  "currentView": "teach",
   "currentTask": 0,
   "selectedArm": "left",
-  "currentStage": "prepare",
+  "currentStage": "teach",
   "armDone": {
    "left": false,
    "right": false
   },
-  "armSelectionLocked": false,
+  "armSelectionLocked": true,
   "completed": {},
   "taskRecords": {
    "0": {
@@ -35,7 +35,7 @@
     "leftRegion": "L-R01 BASE LEFT",
     "rightRegion": "R-R01 LID TOP PART 1",
     "selectedArm": "left",
-    "workflowStage": "prepare",
+    "workflowStage": "teach",
     "targetSeconds": 30,
     "prepareSetupByArm": {
      "left": {
@@ -57,7 +57,7 @@
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-16T18:45:36.524Z"
+      "savedAt": "2026-10-16T20:19:55.545Z"
      }
     },
     "ugvPositionByArm": {
@@ -85,12 +85,12 @@
     },
     "leftStartPose": "Default Start Pose",
     "rightStartPose": "Saved Pose A",
-    "trajectoryFileName": "L_TASK_1A_trajectory.txt",
+    "trajectoryFileName": "FILE_01.1_trimmed.txt",
     "programId": 20,
     "leftApproved": false,
     "rightApproved": false,
     "completed": false,
-    "lastUpdated": "2026-10-16T18:45:36.524Z",
+    "lastUpdated": "2026-10-16T20:19:55.545Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -100,10 +100,10 @@
      },
      "scaleRegions": [],
      "trimRegions": [],
-     "activeTrajectoryName": "L_TASK_1A_trajectory.txt",
-     "activeTrajectoryRows": 10000,
+     "activeTrajectoryName": "FILE_01.1_trimmed.txt",
+     "activeTrajectoryRows": 8584,
      "tuningApplied": false,
-     "tuningSourceFileName": "L_TASK_1A_trajectory.txt",
+     "tuningSourceFileName": "FILE_01.1_trimmed.txt",
      "tunedOutputFileName": null
     },
     "ugvStandoffMm": 250,
@@ -217,13 +217,13 @@
   "leftPose": "Default Start Pose",
   "rightPose": "Saved Pose A",
   "programId": "20",
-  "fileName": "L_TASK_1A_trajectory.txt",
+  "fileName": "FILE_01.1_trimmed.txt",
   "activeTrajectorySource": "recorded",
-  "activeTrajectoryName": "L_TASK_1A_trajectory.txt",
-  "activeTrajectoryRows": 10000,
+  "activeTrajectoryName": "FILE_01.1_trimmed.txt",
+  "activeTrajectoryRows": 8584,
   "tuningApplied": false,
   "tunedOutputFileName": "",
-  "tuningSourceFileName": "L_TASK_1A_trajectory.txt",
+  "tuningSourceFileName": "FILE_01.1_trimmed.txt",
   "manualScaleRegions": [],
   "manualTrimRegions": [],
   "sequenceConfig": [
@@ -507,7 +507,7 @@
   "sequenceVisualConfirmed": true,
   "fullSimulationApproved": false,
   "elapsed": 0,
-  "savedAt": "2026-10-16T18:45:36.524Z"
+  "savedAt": "2026-10-16T20:19:55.545Z"
  },
  "lastSaveReason": "Browser closing",
  "lite": {

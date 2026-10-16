@@ -11809,3 +11809,285 @@ Next RIGHT Program: None
 21:45:36.528 [activity] operator:ee2f83 PUT /api/projects/alix_mvb5inxs_ylr7t
 21:45:36.560 [activity] operator:ee2f83 page: SYSTEM · Browser closing
 21:45:36.561 [activity] operator:ee2f83 page: SYSTEM · Application hidden
+22:54:58.162 [activity] - page: NAVIGATION · Open screen
+22:54:58.162 [activity] - page: SYSTEM · ASL frontend initialized
+22:55:01.753 [activity] - POST /api/auth/login
+22:55:01.758 [activity] operator:12e29a page: UI · Button action
+22:55:02.559 [activity] operator:12e29a page: AUTH · Operator login
+22:55:02.559 [activity] operator:12e29a page: NAVIGATION · Open screen
+22:55:04.742 [activity] operator:12e29a page: UI · Button action
+22:55:05.550 [activity] operator:12e29a page: NAVIGATION · Task loaded
+22:55:05.550 [activity] operator:12e29a page: SETUP · Arm selected
+22:55:05.550 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:55:05.550 [activity] operator:12e29a page: SETUP · Arm selected
+22:55:05.551 [activity] operator:12e29a page: NAVIGATION · Open screen
+22:55:08.610 [activity] operator:12e29a page: UI · Button action
+22:55:08.815 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:12.705 [activity] operator:12e29a page: TEACH · Button action
+22:55:12.705 [activity] operator:12e29a page: NAVIGATION · Open screen
+22:55:12.907 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:16.737 [activity] operator:12e29a page: TEACH · Button action
+22:55:16.737 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:55:16.738 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:55:16.939 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:20.841 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:55:23.412 [activity] operator:12e29a page: TEACH · Button action
+22:55:23.412 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:55:23.615 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:26.433 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:55:28.030 [activity] operator:12e29a page: UI · Button action
+22:55:28.232 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:29.837 [activity] operator:12e29a page: SETUP · Button action
+22:55:29.837 [activity] operator:12e29a page: NAVIGATION · Open screen
+22:55:30.039 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:32.317 [activity] operator:12e29a page: TEACH · Button action
+22:55:32.317 [activity] operator:12e29a page: NAVIGATION · Open screen
+22:55:32.317 [activity] operator:12e29a page: NAVIGATION · Task loaded
+22:55:32.317 [activity] operator:12e29a page: SETUP · Arm selected
+22:55:32.318 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:55:32.318 [activity] operator:12e29a page: SYSTEM · Session active
+22:55:32.539 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:34.980 [activity] operator:12e29a page: TEACH · Button action
+22:55:34.980 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:55:35.183 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:36.121 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: Lite is in Visual sim, so it does not use the robot.
+22:55:36.779 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:55:36.779 [activity] operator:12e29a page: TEACH · Button action
+22:55:36.779 [activity] operator:12e29a page: ROBOT · Robot & mode opened
+22:55:37.123 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:38.519 [activity] operator:12e29a POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+22:55:39.319 [activity] operator:12e29a page: ROBOT · Button action
+22:55:39.319 [activity] operator:12e29a page: ROBOT · Robot & mode opened
+22:55:39.522 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:39.767 [activity] operator:12e29a POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+22:55:40.568 [activity] operator:12e29a page: ROBOT · Button action
+22:55:40.568 [activity] operator:12e29a page: ROBOT · Robot & mode opened
+22:55:40.770 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:41.401 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 50 %
+22:55:41.401 [activity] operator:12e29a POST /api/robots/left/connect
+22:55:41.800 [activity] operator:12e29a page: UI · Button action
+22:55:41.803 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 50 %
+22:55:41.803 [activity] operator:12e29a POST /api/robots/right/connect
+22:55:42.004 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:47.718 [activity] operator:12e29a page: UI · Button action
+22:55:47.921 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:48.078 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: Lite is in Visual sim, so it does not use the robot.
+22:55:48.878 [activity] operator:12e29a page: TEACH · Button action
+22:55:48.878 [activity] operator:12e29a page: ROBOT · Robot & mode opened
+22:55:49.083 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:49.790 [activity] operator:12e29a POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+22:55:50.590 [activity] operator:12e29a page: ROBOT · Button action
+22:55:50.792 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:50.943 [activity] operator:12e29a POST /api/robots/mode
+22:55:51.733 [activity] operator:12e29a page: ROBOT · Button action
+22:55:51.936 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:53.315 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:53.755 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+22:55:54.555 [activity] operator:12e29a page: TEACH · Button action
+22:55:54.758 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:55.109 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 50 mm, hand grip): it reads pole 300 mm, hand 1000, 1000, 1000, 1000, 1000, 1000.
+22:55:55.900 [activity] operator:12e29a page: ROBOT · Button action
+22:55:56.103 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:58.060 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+22:55:58.860 [activity] operator:12e29a page: TEACH · Button action
+22:55:59.062 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:55:59.628 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 50 mm, hand grip): it reads pole 300 mm, hand 1000, 1000, 1000, 1000, 1000, 1000.
+22:56:00.413 [activity] operator:12e29a page: ROBOT · Button action
+22:56:00.617 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+22:56:10.957 [activity] operator:12e29a page: UI · Button action
+22:56:11.161 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:15.578 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+22:56:16.378 [activity] operator:12e29a page: TEACH · Button action
+22:56:16.581 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:16.982 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 50 mm, hand grip): it reads pole 300 mm, hand 1000, 1000, 1000, 1000, 1000, 1000.
+22:56:17.772 [activity] operator:12e29a page: ROBOT · Button action
+22:56:17.975 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:27.091 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:28.687 [activity] operator:12e29a POST /api/robots/left/disconnect
+22:56:29.487 [activity] operator:12e29a page: UI · Button action
+22:56:29.689 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:31.084 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 50 %
+22:56:31.084 [activity] operator:12e29a POST /api/robots/left/connect
+22:56:31.483 [activity] operator:12e29a page: UI · Button action
+22:56:31.686 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+22:56:34.046 [activity] operator:12e29a POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+22:56:34.846 [activity] operator:12e29a page: ROBOT · Button action
+22:56:35.048 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:35.344 [activity] operator:12e29a POST /api/robots/mode
+22:56:36.135 [activity] operator:12e29a page: ROBOT · Button action
+22:56:36.337 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:37.709 [activity] operator:12e29a page: UI · Button action
+22:56:37.912 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:38.122 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+22:56:38.922 [activity] operator:12e29a page: TEACH · Button action
+22:56:39.124 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:41.666 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 50 mm, hand grip): it reads pole 300 mm, hand 1000, 1000, 1000, 1000, 1000, 1000.
+22:56:42.457 [activity] operator:12e29a page: ROBOT · Button action
+22:56:42.660 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:53.089 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:56:53.089 [activity] operator:12e29a page: ROBOT · Button action
+22:56:53.089 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:56:53.607 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:56:56.485 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:57:00.078 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/setup -> REFUSED: Moving the pole on the real robot needs your confirmation.
+22:57:00.878 [activity] operator:12e29a page: UI · Button action
+22:57:01.081 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:01.713 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/setup
+22:57:02.480 [activity] operator:12e29a page: ROBOT · Button action
+22:57:02.480 [activity] operator:12e29a page: SYSTEM · Session active
+22:57:02.685 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:02.865 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/setup -> REFUSED: Moving the hand on the real robot needs your confirmation.
+22:57:03.664 [activity] operator:12e29a page: UI · Button action
+22:57:03.867 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:04.355 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/setup -> REFUSED: The LEFT arm is busy: Pole L-R01: 50 mm.
+22:57:05.142 [activity] operator:12e29a page: ROBOT · Button action
+22:57:05.355 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:06.600 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/placement/room
+22:57:07.399 [activity] operator:12e29a page: UI · Button action
+22:57:07.601 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:08.585 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/placement/task
+22:57:09.387 [activity] operator:12e29a page: SETUP · Button action
+22:57:09.586 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:10.756 [activity] operator:12e29a page: TEACH · Button action
+22:57:10.756 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:57:10.959 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:11.708 [activity] - job pole done: Pole L-R01: 50 mm
+22:57:12.293 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+22:57:13.093 [activity] operator:12e29a page: TEACH · Button action
+22:57:13.093 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:57:13.295 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:13.752 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 50 mm, hand grip): it reads pole 50 mm, hand 1000, 1000, 1000, 1000, 1000, 1000.
+22:57:14.542 [activity] operator:12e29a page: ROBOT · Button action
+22:57:14.755 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:23.630 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:57:27.633 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+22:57:32.560 [activity] operator:12e29a page: ROBOT · Button action
+22:57:32.560 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:57:32.560 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:57:33.290 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:36.231 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:57:41.443 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:57:43.731 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:44.455 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:57:44.986 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:47.497 [activity] operator:12e29a page: UI · Button action
+22:57:47.700 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:50.383 [activity] operator:12e29a page: TEACH · Button action
+22:57:50.383 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:57:50.585 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:52.159 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+22:57:52.959 [activity] operator:12e29a page: TEACH · Button action
+22:57:52.959 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:57:53.161 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:54.072 [activity] operator:12e29a POST /api/projects/alix_mvb5inxs_ylr7t/units/L-R01/teach/start -> REFUSED: The LEFT arm is not in this region's setup (pole 50 mm, hand grip): it reads pole 50 mm, hand 1000, 1000, 1000, 1000, 1000, 1000.
+22:57:54.859 [activity] operator:12e29a page: ROBOT · Button action
+22:57:55.061 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:57:57.347 [activity] operator:12e29a page: UI · Button action
+22:57:57.550 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:02.605 [activity] operator:12e29a page: SYSTEM · Session active
+22:58:02.605 [activity] operator:12e29a page: SEQUENCE · Button action
+22:58:02.606 [activity] operator:12e29a page: NAVIGATION · Open screen
+22:58:03.549 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:05.912 [activity] operator:12e29a page: UI · Button action
+22:58:05.912 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:58:06.114 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:10.128 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:12.899 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:14.302 [activity] operator:12e29a page: NAVIGATION · Button action
+22:58:14.505 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:16.463 [activity] operator:12e29a page: UI · Button action
+22:58:16.666 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:22.429 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:58:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+22:58:34.996 [activity] operator:12e29a page: UI · Button action
+22:58:35.199 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:38.130 [activity] operator:12e29a page: TEACH · Button action
+22:58:38.130 [activity] operator:12e29a page: NAVIGATION · Open screen
+22:58:38.332 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:41.186 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:58:41.192 [activity] operator:12e29a page: TEACH · Button action
+22:58:41.279 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:58:41.958 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:44.823 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:58:46.892 [activity] operator:12e29a page: SIMULATION · Button action
+22:58:46.892 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:58:47.066 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:50.350 [activity] operator:12e29a page: UI · Button action
+22:58:50.351 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:58:50.353 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:53.013 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:58:53.014 [activity] operator:12e29a page: SIMULATION · Button action
+22:58:53.014 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:58:53.640 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:58:56.476 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:59:01.412 [activity] operator:12e29a page: TEACH · Button action
+22:59:01.412 [activity] operator:12e29a page: TEACH · Teach another task
+22:59:01.613 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:59:02.240 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:59:02.241 [activity] operator:12e29a page: SYSTEM · Session active
+22:59:05.316 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:59:15.303 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:59:19.459 [activity] operator:12e29a page: TEACH · Button action
+22:59:19.460 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:59:19.670 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:59:22.525 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:59:22.525 [activity] operator:12e29a page: TRAJECTORY · Button action
+22:59:22.525 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+22:59:22.809 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+22:59:25.688 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+22:59:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:00:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:00:13.369 [activity] operator:12e29a page: TEACH · Button action
+23:00:13.369 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+23:00:13.369 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+23:00:13.586 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+23:00:14.996 [activity] operator:12e29a page: TEACH · Button action
+23:00:14.996 [activity] operator:12e29a page: NAVIGATION · Teaching stage changed
+23:00:15.198 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+23:00:16.703 [activity] operator:12e29a page: NAVIGATION · Scrolled view
+23:00:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:01:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:01:32.561 [activity] operator:12e29a page: SYSTEM · Session active
+23:01:57.120 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+23:02:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:02:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:03:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:03:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:04:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:04:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:05:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:05:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:06:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:06:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:07:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:07:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:08:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:08:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:09:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:09:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:10:02.562 [activity] operator:12e29a page: SYSTEM · Session active
+23:10:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:11:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:11:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:12:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:12:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:13:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:13:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:14:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:14:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:15:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:15:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:16:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:16:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:17:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:17:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:18:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:18:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:19:02.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:19:32.559 [activity] operator:12e29a page: SYSTEM · Session active
+23:19:55.558 [activity] operator:12e29a PUT /api/projects/alix_mvb5inxs_ylr7t
+23:19:55.559 [activity] operator:12e29a page: SYSTEM · Browser closing
+23:19:55.559 [activity] operator:12e29a page: SYSTEM · Application hidden
