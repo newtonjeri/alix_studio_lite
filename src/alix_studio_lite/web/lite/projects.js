@@ -55,9 +55,12 @@ function saveFile(blob, name, description, accept) {
 const clean = (v) => String(v || '').trim().replace(/\s+/g, ' ');
 
 // Why a new project cannot take `name` as far as the page knows, or ''.
+const DEVICES = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;  // names Windows keeps (the folders go between computers)
 function folderProblem(name) {
-  if (/[\\/]/.test(name)) return 'A project name cannot have / or \\ in it: it is the name of the project\'s folder.';
+  if (/[\\/:*?"<>|]/.test(name)) return 'A project name cannot have / \\ : * ? " < > | in it: it is the name of the project\'s folder, on every computer.';
   if (name.startsWith('.')) return 'A project name cannot start with a dot: it is the name of the project\'s folder.';
+  if (/[. ]$/.test(name)) return 'A project name cannot end with a dot or a space: it is the name of the project\'s folder.';
+  if (DEVICES.test(name.split('.')[0].trim())) return `“${name}” cannot name a folder on Windows: choose another name.`;
   const key = name.toLocaleLowerCase();
   const p = Object.values(cache).find(r => String(r?.lite?.folder || '').toLocaleLowerCase() === key);
   if (p) return `A project folder named “${p.lite.folder}” already exists${p.name !== p.lite.folder ? ` (project “${p.name}”, renamed since)` : ''}: choose another name.`;

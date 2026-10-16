@@ -214,3 +214,47 @@ def test_projects_kept_by_id_are_copied_once(tmp_path):
     store.set_last("alix_b2")
     assert json.loads((home / "last.json").read_text()) == {"id": "alix_b2"} and store.last_id == "alix_b2"
     assert not (root / "last.json").exists() and not (root / ".trash").exists()
+
+
+def test_project_folders_hold_on_every_computer_and_to_their_project(tmp_path, monkeypatch):
+    """A project's folder name must be one Windows can have too (the folders go between computers with the
+    repository); a folder copied or swapped by hand never takes another project's place; a copy cut short
+    leaves no project behind, and is made again at the next start."""
+    from alix_studio_lite.server import store as st
+    from alix_studio_lite.server.jobs import UserError
+
+    s = st.ProjectStore(tmp_path / "Projects", home=tmp_path / "home")
+    for bad in ("Room: 3", "a|b", 'q"x', "<x>", "Test?", "CON", "com1.txt", "Trailing.", "Trailing "):
+        assert st.folder_problem(bad), bad
+        with pytest.raises(UserError, match="folder"):
+            s.put("alix_bad", page_record("alix_bad", bad))
+    assert st.usable("Room: 3?") == "Room- 3-" and st.usable("CON") == "CON project" and st.usable("Ends. ") == "Ends"
+    assert not list((tmp_path / "Projects").glob(".making-*"))
+
+    s.put("alix_one", page_record("alix_one", "Toilet 01"))
+    s.put("alix_two", page_record("alix_two", "Toilet 02"))
+    import shutil
+    shutil.copytree(tmp_path / "Projects/Toilet 01", tmp_path / "Projects/A backup of Toilet 01")   # by hand, sorting first
+    s.list()
+    assert s.folder("alix_one").name == "Toilet 01"
+    fresh = st.ProjectStore(tmp_path / "Projects", home=tmp_path / "home")          # a restart: the one its record names
+    assert fresh.folder("alix_one").name == "Toilet 01"
+    shutil.rmtree(tmp_path / "Projects/A backup of Toilet 01")
+    (tmp_path / "Projects/Toilet 01").rename(tmp_path / "Projects/swap")             # the two swapped by hand
+    (tmp_path / "Projects/Toilet 02").rename(tmp_path / "Projects/Toilet 01")
+    (tmp_path / "Projects/swap").rename(tmp_path / "Projects/Toilet 02")
+    assert s.get("alix_one")["id"] == "alix_one" and s.folder("alix_one").name == "Toilet 02"
+    assert s.get("alix_two")["name"] == "Toilet 02" and s.folder("alix_two").name == "Toilet 01"
+
+    old = tmp_path / "home"                                                           # copied once, even when cut short
+    (old / "alix_old1" / "trajectories/left").mkdir(parents=True)
+    (old / "alix_old1/trajectories/left/L.txt").write_text("x")
+    (old / "alix_old1/project.json").write_text(json.dumps(page_record("alix_old1", "Old one")))
+    real = shutil.copytree
+    monkeypatch.setattr(st.shutil, "copytree", lambda *a, **k: (_ for _ in ()).throw(OSError("No space left on device")))
+    out = s.adopt(old)
+    assert out == [{"id": "alix_old1", "name": "Old one", "error": "No space left on device"}]
+    assert not s.exists("alix_old1") and not (tmp_path / "Projects/Old one").exists()
+    assert not list((tmp_path / "Projects").glob(".making-*"))
+    monkeypatch.setattr(st.shutil, "copytree", real)
+    assert [p["name"] for p in s.adopt(old)] == ["Old one"] and s.folder("alix_old1").name == "Old one"

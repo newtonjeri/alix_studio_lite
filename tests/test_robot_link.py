@@ -70,8 +70,9 @@ def test_the_end_of_a_long_command_is_not_a_link_that_stopped_reading():
 
     link = ArmLink("left", "127.0.0.1")
     link.handle = None                                        # no reading follows here: the moment after the end
-    link.feedback = {"t": time.time() - 20.0, "estop": "CLEAR", "busy": None}
+    link.feedback = {"t": time.time(), "estop": "CLEAR", "busy": None}         # fresh as the command begins
     with link.busy("running program 81"):
+        link.feedback["t"] -= 20.0                            # ... and 20 s long: nothing is read meanwhile
         fb = link.view()["feedback"]
         assert not fb["stale"] and fb["estop"] == "CLEAR" and fb["busy"] == "running program 81"
     fb = link.view()["feedback"]
@@ -82,6 +83,11 @@ def test_the_end_of_a_long_command_is_not_a_link_that_stopped_reading():
     link.feedback = {"t": time.time() - 3.0, "estop": "CLEAR", "busy": None}
     link._freed = 0.0
     assert link.view()["feedback"]["stale"]                   # no command at all: stale after STALE_S as before
+    link.feedback = {"t": time.time() - 120.0, "estop": "CLEAR", "busy": None}     # stale before a short command
+    with link.busy("reading the program list"):
+        pass
+    fb = link.view()["feedback"]
+    assert fb["stale"] and fb["estop"] == "UNKNOWN"           # a command never makes a stale link fresh
 
 
 @pytest.fixture(scope="module")

@@ -74,7 +74,8 @@ class LiteApp:
         self.store = ProjectStore(Path(projects_dir) if projects_dir else home, home=home)
         self.adopted = self.store.adopt(home) if projects_dir else []   # kept by id there before: copied once
         for p in self.adopted:
-            self.log.activity(f"project {p['id']} copied to {p['folder']}", detail=p)
+            self.log.activity(f"project {p['id']} not copied: {p['error']}" if p.get("error") else f"project {p['id']} copied to {p['folder']}",
+                              detail=p, ok=not p.get("error"))
         self.library = TaughtLibrary(self.data_dir)            # the Trajectory Viewer's files
         self.settings_path = self.data_dir / "settings.json"
         self.ui = {"mode": "visual", "role": "operator", "cubicle_mm": 1400, "theme": "light",

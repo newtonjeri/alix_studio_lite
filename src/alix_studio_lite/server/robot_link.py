@@ -112,6 +112,7 @@ class ArmLink:
         self._stopping = threading.Event()          # a STOP is being sent: no new reading starts
         self._busy: list = []                       # commands running (robot_real.py): no reading meanwhile
         self._freed = 0.0                           # when the last command ended (its reading follows at once)
+        self._fresh_before = False                  # the reading was fresh as the commands began (their grace is due)
         self._read_lock = threading.Lock()          # one reading at a time
         self._stop = threading.Event()
         self._lock = threading.Lock()
@@ -169,6 +170,9 @@ class ArmLink:
         read, so two callers never compete for it. The panel shows what is running, with the last
         reading; everything is read again as the command ends."""
         with self._lock:
+            if not self._busy:                      # how fresh the reading is as a command takes the connection
+                t, now = self.feedback.get("t"), time.time()
+                self._fresh_before = bool(t) and min(now - t, now - self._freed) <= STALE_S
             self._busy.append(what)
             self.feedback = dict(self.feedback, busy=what)
         with self._read_lock:                       # a reading already under way ends before the command starts
@@ -179,8 +183,8 @@ class ArmLink:
             with self._lock:
                 self._busy.remove(what)
                 idle = not self._busy
-                if idle:
-                    self._freed = time.time()
+                if idle:                            # the grace for the reading that follows: only for a link that was fresh
+                    self._freed = time.time() if self._fresh_before else 0.0
             if idle and self.handle is not None:    # what the command left, read at once (not 0.2 s later)
                 try:
                     self.read_once()

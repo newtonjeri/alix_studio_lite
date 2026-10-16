@@ -47,7 +47,10 @@ SUBDIRS = ("trajectories/left", "trajectories/right", "merged/left", "merged/rig
 MAX_RECORD = 4 * 1024 * 1024                # one project.json
 MAX_UNZIPPED = 1024 * 1024 * 1024           # everything inside an imported project file
 MAX_MEMBERS = 20_000
-NOT_IN_A_NAME = re.compile(r"[/\\\x00-\x1f\x7f]")   # what cannot be in a folder's name
+NOT_IN_A_NAME = re.compile(r'[/\\\x00-\x1f\x7f<>:"|?*]')   # what cannot be in a folder's name, here or on Windows
+#: names Windows keeps for its devices (a folder cannot have them, with or without an extension): the folders
+#: go between computers with the repository
+DEVICE_NAMES = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
 
 
 def _now() -> str:
@@ -70,9 +73,13 @@ def folder_problem(name) -> str | None:
     if not isinstance(name, str) or not name.strip() or len(name) > 120:
         return "A project needs a name of 1 to 120 characters."
     if NOT_IN_A_NAME.search(name):
-        return "A project name cannot have / or \\ in it: it is the name of the project's folder."
+        return 'A project name cannot have / \\ : * ? " < > | in it: it is the name of the project\'s folder, on every computer.'
     if name.startswith("."):
         return "A project name cannot start with a dot: it is the name of the project's folder."
+    if name != name.rstrip(" ."):
+        return "A project name cannot end with a dot or a space: it is the name of the project's folder."
+    if name.split(".")[0].strip().upper() in DEVICE_NAMES:
+        return f"“{name}” cannot name a folder on Windows: choose another name."
     if len(name.encode("utf-8")) > 240:
         return "This project name is too long to name its folder."
     return None
@@ -80,9 +87,11 @@ def folder_problem(name) -> str | None:
 
 def usable(name: str) -> str:
     """A name Lite chose (a copy's, an import's, a project kept before) made fit to name a folder."""
-    out = NOT_IN_A_NAME.sub("-", str(name or "")).strip().lstrip(".").strip()[:120]
+    out = NOT_IN_A_NAME.sub("-", str(name or "")).strip().lstrip(".").strip()[:120].rstrip(" .")
     while len(out.encode("utf-8")) > 240:
-        out = out[:-1]
+        out = out[:-1].rstrip(" .")
+    if out.split(".")[0].strip().upper() in DEVICE_NAMES:
+        out = f"{out} project"
     return out or "Project"
 
 
@@ -92,7 +101,7 @@ class ProjectStore:
         self.home = Path(home) if home is not None else self.root   # this computer's: last.json, .trash, .import
         self.default_fixture = default_fixture
         self._lock = threading.RLock()
-        self._where: dict[str, Path] = {}                   # id -> its folder, as last found
+        self._where: dict[str, tuple] = {}                  # id -> (its folder, the folder's inode), as last found
 
     # ── paths
 
@@ -110,14 +119,28 @@ class ProjectStore:
                 if isinstance(pid, str) and ID_RE.match(pid):
                     yield d, rec
 
+    def _remember(self, pid: str, d: Path) -> None:
+        try:
+            self._where[pid] = (d, d.stat().st_ino)
+        except OSError:
+            self._where.pop(pid, None)
+
     def _find(self, pid: str) -> Path | None:
+        """The project's folder: the one last found, while it is still that folder (the same inode: not
+        another one renamed into its place), else looked for again."""
         if not isinstance(pid, str) or not ID_RE.match(pid):
             raise UserError("That is not a valid project id.")
-        d = self._where.get(pid)
-        if d is not None and (d / "project.json").is_file():
-            return d
+        hit = self._where.get(pid)
+        if hit is not None:
+            d, ino = hit
+            try:
+                if d.stat().st_ino == ino and (d / "project.json").is_file():
+                    return d
+            except OSError:
+                pass
         self.list()                                         # a folder renamed, added or gone: look again
-        return self._where.get(pid)
+        hit = self._where.get(pid)
+        return hit[0] if hit else None
 
     def folder(self, pid: str) -> Path:
         d = self._find(pid)
@@ -149,14 +172,24 @@ class ProjectStore:
             return f"A project folder named “{taken}” is already in {self.root}{whose}: choose another name."
         return None
 
-    def _claim(self, name: str) -> Path:
-        """A new project's folder, named ``name``."""
+    def _fill(self, name: str, fill) -> Path:
+        """A new project's folder named ``name``: ``fill(path)`` makes it (its files and its project.json)
+        under a hidden name first, then it takes its name (a copy cut short leaves no project behind)."""
         problem = self.name_problem(name)
         if problem:
             raise UserError(problem)
-        d = self.root / name
-        d.mkdir(parents=True)
-        return d
+        self.root.mkdir(parents=True, exist_ok=True)
+        tmp = self.root / f".making-{uuid.uuid4().hex[:12]}"
+        try:
+            fill(tmp)
+            dest = self.root / name
+            if dest.parent != self.root or self._taken(name):
+                raise UserError(f"A project folder named “{name}” is already in {self.root}: choose another name.")
+            tmp.rename(dest)
+        except BaseException:
+            shutil.rmtree(tmp, ignore_errors=True)
+            raise
+        return dest
 
     def _free(self, name: str) -> str:
         """``name``, or the first of ``name 2``, ``name 3`` ... no folder has (a name Lite chose)."""
@@ -171,11 +204,21 @@ class ProjectStore:
     # ── read
 
     def list(self) -> list[dict]:
-        out, where = [], {}
+        found: dict[str, list] = {}
         for d, rec in self._records():
-            if rec["id"] not in where:                      # a folder copied by hand: the first one counts
-                where[rec["id"]] = d
-                out.append(rec)
+            found.setdefault(rec["id"], []).append((d, rec))
+        out, where = [], {}
+        for pid, cands in found.items():
+            # two folders with one id (one copied by hand): the one Lite knew, else the one named as its record
+            # says (lite.folder), else the first
+            known = (self._where.get(pid) or (None,))[0]
+            d, rec = next((c for c in cands if c[0] == known), None) \
+                or next((c for c in cands if (c[1].get("lite") or {}).get("folder") == c[0].name), None) or cands[0]
+            try:
+                where[pid] = (d, d.stat().st_ino)
+            except OSError:
+                continue
+            out.append(rec)
         self._where = where
         out.sort(key=lambda p: str(p.get("updatedAt") or ""), reverse=True)
         return out
@@ -219,12 +262,14 @@ class ProjectStore:
             raise UserError("This project's saved state is too large.")
         with self._lock:
             folder = self._find(pid)
-            old = self.get(pid) if folder is not None else None
             if folder is None:                              # a new project: its folder takes its name
-                folder = self._claim(name)
-            return self._save(folder, pid, record, old, fixture)
+                made = {}
+                dest = self._fill(name, lambda tmp: made.update(rec=self._save(tmp, pid, record, None, fixture, named=name)))
+                self._remember(pid, dest)
+                return made["rec"]
+            return self._save(folder, pid, record, self.get(pid), fixture)
 
-    def _save(self, folder: Path, pid: str, record: dict, old: dict | None, fixture: str | None) -> dict:
+    def _save(self, folder: Path, pid: str, record: dict, old: dict | None, fixture: str | None, *, named: str | None = None) -> dict:
         rec = dict(record)
         rec["id"] = pid
         rec.setdefault("createdAt", (old or {}).get("createdAt") or _now())
@@ -233,12 +278,12 @@ class ProjectStore:
         lite = dict((old or {}).get("lite") or {})
         lite.setdefault("store", STORE_VERSION)
         lite.setdefault("fixture", fixture or self.default_fixture)
-        lite["folder"] = folder.name
+        lite["folder"] = named or folder.name
         rec["lite"] = lite
         for sub in SUBDIRS:
             (folder / sub).mkdir(parents=True, exist_ok=True)
         _write_json(folder / "project.json", rec)
-        self._where[pid] = folder
+        self._remember(pid, folder)
         return rec
 
     def set_lite(self, pid: str, **fields) -> dict:
@@ -266,13 +311,15 @@ class ProjectStore:
         with self._lock:
             src, source = self.get(pid), self.folder(pid)
             new = name if name else self._free(usable(f"{src.get('name', 'Project')} – Copy"))
-            folder = self._claim(new)
-            shutil.copytree(source, folder, dirs_exist_ok=True)
             now = _now()
             rec = dict(src, id=new_id(), name=new, createdAt=now, updatedAt=now, archived=False)
-            rec["lite"] = dict(src.get("lite") or {}, folder=folder.name)
-            _write_json(folder / "project.json", rec)
-            self._where[rec["id"]] = folder
+            rec["lite"] = dict(src.get("lite") or {}, folder=new)
+
+            def fill(tmp):
+                shutil.copytree(source, tmp)
+                _write_json(tmp / "project.json", rec)
+
+            self._remember(rec["id"], self._fill(new, fill))
             return rec
 
     # ── project files
@@ -334,22 +381,29 @@ class ProjectStore:
         nid = new_id()
         with self._lock:
             name = self._free(usable(f"{incoming.get('name') or stem or 'Project'} – Imported"))
-            folder = self._claim(name)
-            if folder_from is not None:
-                shutil.copytree(folder_from, folder, dirs_exist_ok=True)
-                (folder / "project.json").unlink(missing_ok=True)
-                # evidence made on another computer is not trusted here: the tuned versions, the
-                # work in progress and the robot results go; the recordings and settings stay, and
-                # each region is tuned (and so checked against every limit) again on this computer
-                for unit in (u for u in [*(folder / "trajectories").glob("*/*"), *(folder / "merged" / "tune").glob("*")]
-                             if u.is_dir()):
-                    for made in ("versions", "work"):
-                        shutil.rmtree(unit / made, ignore_errors=True)
-                    (unit / "results.json").unlink(missing_ok=True)
             fixture = ((incoming.get("lite") or {}).get("fixture")) or self.default_fixture
             rec = {k: v for k, v in incoming.items() if k != "lite"}
             rec.update(id=nid, name=name, updatedAt=_now(), archived=False)
-            return self._save(folder, nid, rec, None, fixture)
+            made = {}
+
+            def fill(tmp):
+                if folder_from is not None:
+                    shutil.copytree(folder_from, tmp)
+                    (tmp / "project.json").unlink(missing_ok=True)
+                    # evidence made on another computer is not trusted here: the tuned versions, the
+                    # work in progress and the robot results go; the recordings and settings stay, and
+                    # each region is tuned (and so checked against every limit) again on this computer
+                    for unit in (u for u in [*(tmp / "trajectories").glob("*/*"), *(tmp / "merged" / "tune").glob("*")]
+                                 if u.is_dir()):
+                        for kept in ("versions", "work"):
+                            shutil.rmtree(unit / kept, ignore_errors=True)
+                        (unit / "results.json").unlink(missing_ok=True)
+                else:
+                    tmp.mkdir(parents=True)
+                made["rec"] = self._save(tmp, nid, rec, None, fixture, named=name)
+
+            self._remember(nid, self._fill(name, fill))
+            return made["rec"]
 
     # ── projects kept by id before
 
@@ -358,7 +412,9 @@ class ProjectStore:
         into this store, each in a folder named as the project is now, once (``copied.json`` in
         ``home`` remembers them, so one deleted here is not copied again). The old folders are left
         as they are. A name that cannot name a folder, or that one has already, is changed to one
-        that can (the project's name with it). Returns [{id, name, folder, renamed}]."""
+        that can (the project's name with it). A project that cannot be copied (a disk full, a file
+        that cannot be read) is left for the next start, with nothing of it here. Returns
+        [{id, name, folder, renamed}] and, for one not copied, [{id, name, error}]."""
         old = Path(old)
         if not old.is_dir() or old.resolve() == self.root.resolve():
             return []
@@ -369,6 +425,8 @@ class ProjectStore:
             done = {}
         out = []
         with self._lock:
+            for left in self.root.glob(".making-*") if self.root.is_dir() else []:
+                shutil.rmtree(left, ignore_errors=True)    # a copy cut short at a start before: made again below
             for d in sorted(old.iterdir()):
                 if not (d.is_dir() and ID_RE.match(d.name) and d.name not in done and (d / "project.json").is_file()):
                     continue
@@ -385,12 +443,19 @@ class ProjectStore:
                     continue
                 was = str(rec.get("name") or d.name)
                 name = self._free(usable(was))
-                folder = self._claim(name)
-                shutil.copytree(d, folder, dirs_exist_ok=True)
                 rec["name"] = name
                 rec["lite"] = dict(rec.get("lite") or {}, folder=name)
-                _write_json(folder / "project.json", rec)
-                self._where[d.name] = folder
+
+                def fill(tmp, src=d, rec=rec):
+                    shutil.copytree(src, tmp)
+                    _write_json(tmp / "project.json", rec)
+
+                try:
+                    folder = self._fill(name, fill)
+                except (OSError, UserError) as exc:
+                    out.append({"id": d.name, "name": was, "error": str(exc)})
+                    continue
+                self._remember(d.name, folder)
                 done[d.name] = str(folder)
                 out.append({"id": d.name, "name": name, "folder": str(folder), "renamed": was if was != name else None})
             if out or not mark.is_file():

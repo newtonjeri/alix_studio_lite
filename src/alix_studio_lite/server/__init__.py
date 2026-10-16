@@ -194,7 +194,10 @@ def main(argv=None) -> int:
     print(f"Data folder:  {a.data}", flush=True)
     print(f"Projects:  {app.store.root}", flush=True)
     for p in app.adopted:
-        print(f"   copied from {app.store.home}: {p['name']}" + (f" (was “{p['renamed']}”)" if p["renamed"] else ""), flush=True)
+        if p.get("error"):
+            print(f"   NOT copied from {app.store.home}: {p['name']}: {p['error']} (tried again at the next start)", flush=True)
+        else:
+            print(f"   copied from {app.store.home}: {p['name']}" + (f" (was “{p['renamed']}”)" if p["renamed"] else ""), flush=True)
     print(f"Logs:  {app.log.root}  (tail -f {app.log.root}/$(date +%F)/lite.log)", flush=True)
     print(f"Python:  {sys.executable}", flush=True)
     try:
