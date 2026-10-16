@@ -61,7 +61,7 @@ def units_of(app, pid: str) -> LiteUnits:
         raise UserError("Project not found.", "Open it again from the Project Manager.")
     with _LOCK:
         u = _UNITS.get(pid)
-        if u is None or not u.root.is_dir():
+        if u is None or Path(u.root) != app.store.folder(pid):   # its folder moved or was put back by hand: open it again
             u = _UNITS[pid] = open_units(app.store, pid)
         return u
 
@@ -364,7 +364,7 @@ def add_recording(app, q, body, m):
     from .library import detect_arm
 
     units, key = units_of(app, m.group(1)), m.group(2)
-    u = _unit(units, key)
+    u = _region(units, key)                                       # a merge in Tune has its one file: never another
     if body.get("source") == "library":
         f = units.library_file(key)
         if not f:
@@ -414,7 +414,7 @@ def add_recording(app, q, body, m):
 def state_recording_stage(app, q, body, m):
     """The pole and hand of a recording that has none recorded (kept before stages were)."""
     units, key, file = units_of(app, m.group(1)), m.group(2), m.group(3)
-    _unit(units, key)
+    _region(units, key)
     stage = staging.make_stage(body.get("pole_mm"), body.get("hand"), "stated for this recording")
     try:
         units.set_recording_stage(key, file, stage, body.get("arm"))
@@ -428,7 +428,7 @@ def trim_recording(app, q, body, m):
     """Save & Review's Trim (feedback v5, slide 1): ``{start, end}`` the first and the last line kept
     (1-based); ``name``: Save As, a new recording, else the recording is overwritten (Save)."""
     units, key, file = units_of(app, m.group(1)), m.group(2), m.group(3)
-    _unit(units, key)
+    _region(units, key)
     try:
         start, end = int(body.get("start")), int(body.get("end"))
     except (TypeError, ValueError):
@@ -529,7 +529,7 @@ def change_recording_hand(app, q, body, m):
     """The hand a recording runs with, changed in Prepare after teaching, on the operator's word: every
     run then stages that hand (its tuning is made again before it is kept). ``{hand, confirmed}``."""
     units, key, file = units_of(app, m.group(1)), m.group(2), m.group(3)
-    _unit(units, key)
+    _region(units, key)
     if not body.get("confirmed"):
         raise UserError("Changing the hand of a recording needs your confirmation.", code="confirm")
     try:
@@ -572,7 +572,7 @@ def set_setup(app, q, body, m):
 @route("POST", U + "/active")
 def set_active(app, q, body, m):
     units, key = units_of(app, m.group(1)), m.group(2)
-    _unit(units, key)
+    _region(units, key)
     units.set_active(key, str(body.get("file", "")))
     return unit_view(app, units, key)
 
@@ -930,10 +930,12 @@ def _kept_to_s1(units: LiteUnits, key: str, renamed: bool = False) -> dict:
                 return {k: v for k, v in out.items() if k != "path"}
         src = u["merge"]
         name = ver.get("name") or f"{Path(src['name']).stem}_tuned.txt"
+        tasks = merges.classify(units, u["arm"], f"merge:{src['file']}")[0]          # the tasks of the merge it was tuned from
         out = merges.save(units, u["arm"], name, [dict(name=name, md=track.read_md(Path(ver["path"])))],
                           staging.stage_from(ver.get("stage")), placement=src.get("placement"), phase=units.phase_of(key),
-                          sources=[dict(ref=f"tune:{key}/{ver['version']}", name=name, sha256=ver.get("sha256"))],
-                          made_from=dict(merge=src["name"], file=src["file"], version=ver["version"]))
+                          sources=[dict(ref=f"tune:{key}/{ver['version']}", name=name, sha256=ver.get("sha256"), tasks=tasks,
+                                        grade="processed")],
+                          made_from=dict(merge=src["name"], file=src["file"], version=ver["version"]), tasks=tasks, grade="processed")
         extra["s1_merge"] = out["file"]
         extra_p.write_text(json.dumps(extra, indent=1), encoding="utf-8")
     return {k: v for k, v in out.items() if k != "path"}
@@ -1394,11 +1396,17 @@ def post_merge_collisions(app, q, body, m):
     if not staging.stage_from(mm.get("stage")):
         raise UserError(f"The pole height and hand pose of {mm['name']} are not known.", code="stage")
     kept = mm.get("placement")
-    sc = placement.scene(units.fixture, placement.load(units)["room"], kept)
+    sc = placement.scene(units.fixture, _merge_room(units, kept), kept)
     phase = _phase_asked(body, mm.get("phase") or "lid_closed")
     return collision_job(app, units, title=f"Checking {int(mm['lines']):,} lines of {mm['name']} for collisions", path=mm["path"],
                          side=side, stage=mm["stage"], scene=sc, phase=phase, sha=mm["sha256"],
                          extra=dict(name=mm["name"], which="merge", scene_from="the merge" if kept else None))
+
+
+def _merge_room(units, kept: dict | None) -> dict | None:
+    """The room a merge is shown and checked in: the one its files were taught in (a merge of another
+    project's files, or of files taught before the room was measured again), else this project's."""
+    return (kept or {}).get("room") or placement.load(units)["room"]
 
 
 @route("POST", M + "/name")
@@ -1424,15 +1432,16 @@ def post_merge_timeline(app, q, body, m):
     from .routes_robot import _mesh_links, _payload
 
     units, side = units_of(app, m.group(1)), m.group(2)
+    mm = merges.checked(units, side, m.group(3))                 # its bytes still the ones merged, as for a send
     info = identity(units, None, f"merge:{side}/{m.group(3)}")
     p = _payload(app)
     out = staging.execution_timeline(side, track.read_md(info["path"]), info["stage"],
                                      home=staging.start_values(side, dict(p["home"]), staging.check_start(body.get("start"))),
                                      links=staging.staged_links(side, _mesh_links(p)), rating_deg_s=load_limits(side).rating_deg_s,
                                      move_pct=_move_pct(body.get("move_pct")))
-    kept = merges.get(units, side, m.group(3)).get("placement")      # S1: where its files were taught
+    kept = mm.get("placement")                                   # S1: where its files were taught
     if kept:
-        out["scene"] = dict(placement.scene(units.fixture, placement.load(units)["room"], kept), **{"from": "the merge"})
+        out["scene"] = dict(placement.scene(units.fixture, _merge_room(units, kept), kept), **{"from": "the merge"})
     else:
         out["scene"] = scene_of(units, None, None, body.get("task"))
     return out

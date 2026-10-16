@@ -45,12 +45,30 @@ def _meta(path: Path) -> dict:
 
 
 def listing(units, side: str) -> list[dict]:
+    """The arm's merges, each with the files in it that were tuned already (``tuned``: S1's Send to Tune
+    says them first)."""
     d = folder(units, side)
     out = []
     for p in sorted(d.glob("*.txt")) if d.is_dir() else []:
         m = _meta(p)
         if m:
             out.append(dict(m, file=p.name))
+    by = {m["file"]: m for m in out}
+    for m in out:
+        m["tuned"] = _tuned(units, side, m, by)
+    return out
+
+
+def _tuned(units, side: str, m: dict, by: dict) -> list[str]:
+    """The files of merge ``m`` that were tuned already (kept versions, merges kept from Tune, at any depth and
+    from any project), or the merge itself when Tune kept it."""
+    if m.get("made_from"):
+        return [f"{m['name']} itself (kept from Tune, tuned from {(m.get('made_from') or {}).get('merge') or 'a merge'})"]
+    out = []
+    for x in m.get("sources") or []:
+        g = x.get("grade") or _class(units, side, str(x.get("ref") or ""), by)[1]
+        if g in ("processed", "mixed"):
+            out.append(str(x.get("name") or x.get("ref")))
     return out
 
 
@@ -96,10 +114,12 @@ def build(parts: list[np.ndarray], rating_deg_s, acc_deg_s2: float = 600.0) -> t
 
 
 def save(units, side: str, name: str, parts: list[dict], stage: "staging.Stage", *, placement: dict | None = None,
-         phase: str | None = None, sources: list | None = None, made_from: dict | None = None) -> dict:
+         phase: str | None = None, sources: list | None = None, made_from: dict | None = None,
+         tasks: list | None = None, grade: str | None = None) -> dict:
     """Merge ``parts`` ({name, md}) for ``side`` under ``name`` (numbered when the project has it), with
-    the UGV placement and phase its parts were taught at, what it was made of (``sources``) and, for
-    one kept in Tune, the merge it was tuned from (``made_from``)."""
+    the UGV placement and phase its parts were taught at, what it was made of (``sources``, each with its
+    tasks and grade), for one kept in Tune the merge it was tuned from (``made_from``), and what S1's rules
+    read of it (``tasks``: every task in it, ``grade``: raw or processed), kept as they were when it was made."""
     from dataclasses import asdict
 
     from ..motion import track
@@ -132,7 +152,7 @@ def save(units, side: str, name: str, parts: list[dict], stage: "staging.Stage",
                     sha256=track.sha256_file(dst), parts=[dict(name=p["name"], lines=int(p["md"].shape[0])) for p in parts],
                     joins=joins, limits_ok=not bad, limits_text=failures_text({"checks": bad}),
                     placement=placement, phase=phase, sources=sources or [], made_from=made_from,
-                    made=time.strftime("%Y-%m-%d %H:%M:%S"))
+                    made=time.strftime("%Y-%m-%d %H:%M:%S"), **({"tasks": list(tasks or []), "grade": grade} if grade else {}))
         dst.with_suffix(".source.json").write_text(json.dumps(meta, indent=1), encoding="utf-8")
     return dict(meta, file=dst.name, path=str(dst))
 
@@ -150,7 +170,8 @@ def load_file(units, side: str, name: str, content, pole_mm, hand, path: str | N
     are not taught in the lite app"): checked as a track and kept in the project to merge, with the pole and
     hand the operator says it was taught with (the guards need them); the arm is the card's, and a name or
     folder that says the other arm is refused. No UGV placement or room is known for it: it merges only with
-    files that have none (``placement.differences``)."""
+    files that have none (``placement.differences``). The same bytes loaded again are the file kept; stated
+    with another pole or hand, the latest statement is the file's (``was``: the one before)."""
     import hashlib
     import tempfile
 
@@ -166,9 +187,10 @@ def load_file(units, side: str, name: str, content, pole_mm, hand, path: str | N
         raise UserError(f"{name} is empty.")
     if len(content.encode("utf-8")) > MAX_LOADED_BYTES:
         raise UserError(f"{name} is too large for a trajectory (over 20 MB).")
-    said = detect_arm(path or name)
-    if said and said != side:
-        raise UserError(f"{name}: its name says the {said.upper()} arm, so it is never merged on the {side.upper()} arm.", code="arm")
+    for where in filter(None, (path, name)):                 # the folder and the name: either may say the arm
+        said = detect_arm(where)
+        if said and said != side:
+            raise UserError(f"{name}: its name says the {said.upper()} arm, so it is never merged on the {side.upper()} arm.", code="arm")
     stage = staging.make_stage(pole_mm, hand, "stated when it was loaded into S1 (not taught in Lite)")
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td) / name
@@ -183,9 +205,18 @@ def load_file(units, side: str, name: str, content, pole_mm, hand, path: str | N
     with units.lock:
         d = loaded_folder(units, side)
         for m in sorted(d.glob("*.source.json")) if d.is_dir() else []:   # the same bytes again: the one kept
-            meta = _meta(m.with_name(m.name[:-len(".source.json")] + ".txt"))
-            if meta.get("sha256") == sha:
-                return dict(meta, file=m.name[:-len(".source.json")] + ".txt", again=True)
+            kept = m.with_name(m.name[:-len(".source.json")] + ".txt")
+            meta = _meta(kept)
+            if meta.get("sha256") != sha:
+                continue
+            if staging.same_stage(meta.get("stage"), stage):
+                return dict(meta, file=kept.name, again=True)
+            # stated again with another pole or hand: the latest statement is the file's (a merge made from it
+            # before keeps the stage it was made with)
+            was = staging.stage_from(meta.get("stage"))
+            meta.update(stage=stage.as_dict(), restated=time.strftime("%Y-%m-%d %H:%M:%S"))
+            m.write_text(json.dumps(meta, indent=1), encoding="utf-8")
+            return dict(meta, file=kept.name, again=True, was=staging.describe(was) if was else "pole and hand not known")
         if units.name_owner(name):
             name = units.free_name(name)
         d.mkdir(parents=True, exist_ok=True)
@@ -292,37 +323,69 @@ def sources(units, side: str) -> list[dict]:
     merges_by_file = {m["file"]: m for m in listing(units, side)}
     for it in out:
         it["placement_text"] = pl.words(it["placement"])
-        it["tasks"], it["grade"] = _class(units, side, it["ref"], merges_by_file)
+        tasks, it["grade"] = _class(units, side, it["ref"], merges_by_file)
+        it["tasks"] = list(dict.fromkeys(tasks))
+        if it["kind"] == "merge" and not it["why"]:
+            it["why"] = _broken(tasks, it["grade"])
     # each arm's files in its own panel only (the owner, 16 Oct: "A right-arm trajectory should never be available
     # in the left-arm panel"): a file taught on the other arm is not listed at all
     return [it for it in out if it["taught_arm"] not in ("left", "right") or it["taught_arm"] == side]
 
 
-GRADE_WORDS = {"raw": "a recording (raw)", "processed": "a tuned, kept version (processed)", "mixed": "a merge of raw and processed files"}
+GRADE_WORDS = {"raw": "a recording (raw)", "processed": "a tuned, kept version (processed)", "mixed": "a merge of raw and processed files",
+               "unknown": "a merge whose files are not known"}
 
 
 def _class(units, side: str, ref: str, merges_by_file: dict, depth: int = 0) -> tuple[list, str]:
-    """What a file is for S1's guards (the owner, 16 Oct): the tasks (regions) in it and its grade, raw (a
-    recording, a file loaded into S1) or processed (a kept version, a merge kept from Tune); a merge has its
-    files' tasks, and their grade ("mixed" when they differ)."""
+    """What a file is for S1's guards (the owner, 16 Oct): the tasks (regions) in it, a task as often as it is
+    in it, and its grade: raw (a recording, a file loaded into S1), processed (a kept version, a merge kept
+    from Tune), "mixed" (a merge of both) or "unknown" (a merge made before Lite kept what a merge is made
+    of). A merge made since 16 Oct says both itself, as they were when it was made (its files may be another
+    project's, or gone); an older one is read from its files."""
     kind, rest = ref.split("|", 1)[-1].split(":", 1)
     if kind in ("rec", "ver"):
         return [rest.partition("/")[0]], ("raw" if kind == "rec" else "processed")
     if kind == "file":
         return [], "raw"
-    m = merges_by_file.get(rest) if "|" not in ref else None
+    if kind == "tune":                                       # a merge's file kept in Tune (its merge says the tasks)
+        return [], "processed"
+    m = merges_by_file.get(rest) if kind == "merge" and "|" not in ref else None
     if m is None or depth > 8:
-        return [], "raw"
+        return [], "unknown"
+    if m.get("grade"):
+        return list(m.get("tasks") or []), str(m["grade"])
     if m.get("made_from"):                                   # kept from Tune: processed, with the tasks of what it was made from
         src = merges_by_file.get(str((m.get("made_from") or {}).get("file") or ""))
         tasks = _class(units, side, f"merge:{src['file']}", merges_by_file, depth + 1)[0] if src else []
         return tasks, "processed"
+    if not m.get("sources"):
+        return [], "unknown"
     tasks, grades = [], set()
-    for x in m.get("sources") or []:
-        t, g = _class(units, side, str(x.get("ref") or ""), merges_by_file, depth + 1)
-        tasks += [k for k in t if k not in tasks]
+    for x in m["sources"]:
+        t, g = (list(x.get("tasks") or []), str(x["grade"])) if x.get("grade") else \
+            _class(units, side, str(x.get("ref") or ""), merges_by_file, depth + 1)
+        tasks += t
         grades.add(g)
-    return tasks, (grades.pop() if len(grades) == 1 else "mixed" if grades else "raw")
+    return tasks, ("unknown" if "unknown" in grades else grades.pop() if len(grades) == 1 else "mixed")
+
+
+def _broken(tasks: list, grade: str) -> str | None:
+    """Why a merge made before S1's rules (16 Oct) cannot go into another merge: the rules hold for what is
+    in it too."""
+    if grade == "unknown":
+        return "what it is made of is not known (merged before 16 Oct): merge its files again"
+    if grade == "mixed":
+        return "it has recordings and tuned versions in it (merged before 16 Oct): all raw or all processed"
+    twice = sorted({t for t in tasks if tasks.count(t) > 1})
+    if twice:
+        return f"it has {', '.join(twice)} more than once (merged before 16 Oct): one version per task"
+    return None
+
+
+def classify(units, side: str, ref: str) -> tuple[list, str]:
+    """``_class`` of one file of this project, its tasks once each."""
+    tasks, grade = _class(units, side, ref, {m["file"]: m for m in listing(units, side)})
+    return list(dict.fromkeys(tasks)), grade
 
 
 def _item(units, side, kind, key, which, region, name, lines, arm, stage, placement, phase, sha, when) -> dict:
@@ -373,6 +436,8 @@ def with_compatibility(items: list[dict], picked: list[str]) -> list[dict]:
     (``differs``): the first file's pole, hand, UGV placement and room; one version per task (the owner, 16 Oct:
     "The same task's trajectories can't be merged with each other"); all raw or all processed ("either all raw
     or all optimized"). A file picked is held against the ones picked before it."""
+    from . import placement as pl
+
     by = {it["ref"]: it for it in items}
     chosen = [by[r] for r in picked if r in by]
     first = chosen[0] if chosen else None
@@ -382,6 +447,12 @@ def with_compatibility(items: list[dict], picked: list[str]) -> list[dict]:
         else:
             earlier = chosen[:chosen.index(it)] if it in chosen else chosen
             why = differences(first, it)
+            if not why:                                      # within its tolerance of every file before it, not only the first
+                for e in earlier[1:]:
+                    d = pl.differences(e.get("placement"), it.get("placement"))
+                    if d:
+                        why += [f"{x}, against {e['name']}" for x in d]
+                        break
             for t in it.get("tasks") or []:
                 had = next((e for e in earlier if t in (e.get("tasks") or [])), None)
                 if had:
@@ -424,8 +495,11 @@ def from_project(units, side: str, name: str, refs: list, others: list | None = 
                             "One version per task, all raw or all processed, with the same pole, hand, UGV placement and room "
                             "(each measurement within ±10 mm).", code="mismatch")
     parts = [dict(name=it["name"], md=track.read_md(_path_of(owner.get(it.get("project_id"), units), side, it))) for it in chosen]
+    grades = {it.get("grade") for it in chosen}
     return save(units, side, name, parts, staging.stage_from(first["stage"]), placement=first["placement"], phase=first["phase"],
-                sources=[dict(ref=it["ref"], name=it["name"], sha256=it["sha256"]) for it in chosen])
+                sources=[dict(ref=it["ref"], name=it["name"], sha256=it["sha256"], tasks=list(it.get("tasks") or []), grade=it.get("grade"))
+                         for it in chosen],
+                tasks=[t for it in chosen for t in it.get("tasks") or []], grade=grades.pop() if len(grades) == 1 else "mixed")
 
 
 def _path_of(units, side: str, it: dict) -> Path:

@@ -134,8 +134,14 @@ async function load(side) {
   try {
     const [src, all] = await Promise.all([post(`${base()}/merge-sources/${side}`, { picked: st[side].picked, scope: st[side].scope }),
       get(`${base()}/merges`)]);
+    const was = new Map(st[side].items.map(it => [it.ref, it]));
     st[side].items = src.items;
+    const gone = st[side].picked.filter(r => !src.items.some(it => it.ref === r));
     st[side].picked = st[side].picked.filter(r => src.items.some(it => it.ref === r));
+    if (gone.length) {                                       // e.g. another project's files, with Files from: This project
+      status(side, `Taken out of the merge order (not in the list now: ${st[side].scope === 'all' ? 'gone' : 'Files from: This project'}): `
+        + `${gone.map(r => (was.get(r) || { name: r }).name).join(', ')}.`, 'warn');
+    }
     st[side].merges = all[side] || [];
     if (st[side].sel && !st[side].merges.some(m => m.file === st[side].sel)) st[side].sel = null;
   } catch (err) { status(side, `The files could not be read: ${say(err)}`, 'warn'); }
@@ -151,12 +157,18 @@ async function repick(side) {
 }
 
 // Files from this computer (a folder too) kept in the project to merge, with the pole and hand the operator says
-// they were taught with, after the warning; a file named for the other arm is left out (server/merges.py).
+// they were taught with, after the warning; a file named for the other arm is left out (server/merges.py). The
+// files loaded go into the merge order (step 2: the owner, 16 Oct, loaded a file and did not find it there), after
+// the files in it, in name order (a folder's 2 before its 10), each that can join the merge; one that cannot stays
+// in the list, greyed with why, and the line under the card says why.
+const MAX_PARTS = 50;                                      // a merge's files at most (server/merges.py)
+
 async function loadFiles(side, input) {
   const files = [...(input.files || [])].filter(f => /\.txt$/i.test(f.name));
   input.value = '';
   if (!files.length) { window.toast('Choose .txt trajectory files.'); return; }
   const where = (f) => f.webkitRelativePath || f.name;
+  files.sort((a, b) => where(a).localeCompare(where(b), undefined, { numeric: true, sensitivity: 'base' }));
   const other = files.filter(f => { const a = armFromName(where(f)); return a && a !== side; });
   const mine = files.filter(f => !other.includes(f));
   const otherArm = ARM(side === 'left' ? 'right' : 'left');
@@ -164,18 +176,50 @@ async function loadFiles(side, input) {
   const said = await stageDialog({ title: `Load ${mine.length === 1 ? mine[0].name : `${mine.length} files`} into the ${ARM(side)} merges`,
     body: LOAD_WARNING, arm: side });
   if (!said) { status(side, 'Nothing loaded: without their pole and hand, files cannot be checked against the others.', 'warn'); return; }
-  let ok = 0;
-  const refused = [];
+  const refused = [], loadedRefs = [], restated = [];
   for (const f of mine) {
     try {
-      await post(`${base()}/merge-files/${side}`, { name: f.name, path: where(f), content: await f.text(), pole_mm: said.pole_mm, hand: said.hand });
-      ok += 1;
+      const out = await post(`${base()}/merge-files/${side}`, { name: f.name, path: where(f), content: await f.text(), pole_mm: said.pole_mm, hand: said.hand });
+      loadedRefs.push(`file:${out.file}`);
+      if (out.was) restated.push(`${out.name}: loaded before with ${out.was}, now ${out.stage.text}`);
     } catch (err) { refused.push(`${f.name}: ${say(err)}`); }
   }
-  status(side, `${ok} file${ok === 1 ? '' : 's'} loaded: in the list under Loaded from this computer.`
-    + (other.length ? ` ${other.length} named for the ${otherArm} arm left out.` : '') + (refused.length ? ` Refused: ${refused.join('; ')}` : ''),
-  refused.length || other.length ? 'warn' : 'ok');
+  const ok = loadedRefs.length;
+  const { added, left } = await intoOrder(side, loadedRefs);
+  const otherWords = other.length ? ` ${other.length} named for the ${otherArm} arm left out.` : '';
+  const refusedWords = refused.length ? ` Refused: ${refused.join('; ')}` : '';
+  const restatedWords = restated.length ? ` Pole and hand changed: ${restated.join('; ')} (a merge made from it before keeps its own).` : '';
+  const addedWords = !ok ? '' : added === ok ? ` ${ok === 1 ? 'It is' : 'They are'} in the merge order (2 · Merge order).`
+    : `${added ? ` ${added} added to the merge order (2 · Merge order).` : ''} Not added to the merge order (in the list under Loaded from this computer, `
+      + `greyed with why): ${left.join('; ')}.`;
+  status(side, `${ok} file${ok === 1 ? '' : 's'} loaded.${restatedWords}${addedWords}${otherWords}${refusedWords}`,
+    refused.length || other.length || added < ok ? 'warn' : 'ok');
   await load(side);
+}
+
+// `refs` (files just loaded) after the merge order's files, each that can join it; returns how many were added
+// and why the others were not ([name: why]).
+async function intoOrder(side, refs) {
+  const s = st[side];
+  const news = refs.filter((r, i) => !s.picked.includes(r) && refs.indexOf(r) === i);
+  const left = [];
+  if (!news.length) return { added: 0, left };
+  let src;
+  try {
+    src = await post(`${base()}/merge-sources/${side}`, { picked: [...s.picked, ...news], scope: s.scope });
+  } catch (err) { return { added: 0, left: [`the merge order could not be checked: ${say(err)}`] }; }
+  const by = new Map(src.items.map(it => [it.ref, it]));
+  let added = 0;
+  for (const r of news) {
+    const it = by.get(r);
+    if (!it) continue;
+    const why = it.why ? `cannot be merged: ${it.why}` : it.differs && it.differs.length ? `cannot join this merge: ${it.differs.join('; ')}`
+      : s.picked.length >= MAX_PARTS ? `a merge takes ${MAX_PARTS} files at most` : '';
+    if (why) { left.push(`${it.name}: ${why}`); continue; }
+    s.picked.push(r);
+    added += 1;
+  }
+  return { added, left };
 }
 
 // The files to add as a searchable list (picker.js): by project and region; a file that cannot join is
@@ -187,7 +231,7 @@ function chooseFile(side, anchor) {
     if (s.picked.includes(it.ref)) continue;                 // in the order already
     const label = `${it.project ? `${it.project} · ` : s.scope === 'all' ? 'This project · ' : ''}${it.region}`;
     if (!groups.has(label)) groups.set(label, []);
-    const differs = it.differs && it.differs.length ? `Differs from the first file: ${it.differs.join('; ')}` : '';
+    const differs = it.differs && it.differs.length ? `Cannot join this merge: ${it.differs.join('; ')}` : '';
     groups.get(label).push({ value: it.ref, text: it.name, search: `${KIND[it.kind]} ${it.grade} ${it.region} ${it.project || ''}`,
       detail: `${KIND[it.kind]} (${it.grade}) · ${fmt(it.seconds)} · ${it.stage_text} · ${it.placement_text}`,
       disabled: !!(it.why || differs), note: it.why ? `Cannot be merged: ${it.why}` : differs });
@@ -215,7 +259,7 @@ function paint(side) {
   const byRef = new Map(s.items.map(it => [it.ref, it]));
   order.replaceChildren(...(s.picked.length ? s.picked.map((ref, i) => {
     const it = byRef.get(ref) || { name: ref, seconds: 0 };
-    const clash = i > 0 && it.differs && it.differs.length ? `Differs from the first file: ${it.differs.join('; ')}` : '';   // the order changed
+    const clash = i > 0 && it.differs && it.differs.length ? `Cannot join this merge: ${it.differs.join('; ')}` : '';   // the order changed
     return el('li', {}, el('span', {}, el('b', { text: it.name }), ` · ${fmt(it.seconds)}`,
       el('small', { class: 'mini-note', text: ` ${KIND[it.kind] || ''} · ${it.project ? `${it.project} · ` : ''}${it.region || ''}` }),
       clash ? el('div', { class: 'lite-warn lite-s1-why', text: clash }) : null),
@@ -223,7 +267,7 @@ function paint(side) {
         el('button', { class: 'btn light', type: 'button', text: 'Up', disabled: i === 0, onclick: () => move(side, i, -1) }),
         el('button', { class: 'btn light', type: 'button', text: 'Down', disabled: i === s.picked.length - 1, onclick: () => move(side, i, 1) }),
         el('button', { class: 'btn outline', type: 'button', text: 'Remove', onclick: () => unpick(side, ref) })));
-  }) : [el('li', { class: 'mini-note lite-s1-empty', text: 'Add files above (Choose a file to add), in the order they run.' })]));
+  }) : [el('li', { class: 'mini-note lite-s1-empty', text: 'Add files above (Choose a file to add, or load them from this computer), in the order they run.' })]));
   const name = $(`liteS1Name_${side}`);
   if (name && !name.value) name.value = `${ARM(side)[0]}_merge_${s.merges.length + 1}.txt`;
 
@@ -276,7 +320,7 @@ async function merge(side) {
   if (s.busy) return;                                      // one merge at a time (a double click makes one)
   if (!s.picked.length) { window.toast(`Add the ${ARM(side)} files to merge first.`); return; }
   const off = s.picked.slice(1).map(r => s.items.find(it => it.ref === r)).filter(it => it && it.differs && it.differs.length);
-  if (off.length) { window.toast(`${off[0].name} differs from the first file: ${off[0].differs.join('; ')}.`); return; }
+  if (off.length) { window.toast(`${off[0].name} cannot join this merge: ${off[0].differs.join('; ')}.`); return; }
   const name = ($(`liteS1Name_${side}`)?.value || '').trim();
   s.busy = true;
   status(side, 'Merging…');
@@ -324,8 +368,12 @@ async function download(side) {
 async function upload(side) {
   const m = selected(side);
   if (!m) return;
+  if (st[side].sending) { window.toast(`${ARM(side)}: a file is being sent. Send the next one once it is on the controller.`); return; }
   const inp = $(`liteS1Pid_${side}`), pid = Number(inp.value);
   if (!(Number.isInteger(pid) && pid >= 1 && pid <= 100)) { inp.focus(); window.toast(`Enter the ${ARM(side)} Program ID (1 to 100).`); return; }
+  st[side].sending = true;                                   // one send at a time (a double click sends once; the server holds it too)
+  const btn = [...($(`liteS1Tools_${side}`)?.querySelectorAll('button') || [])].find(b => b.textContent === 'Upload to controller');
+  if (btn) btn.disabled = true;
   try {
     const job = await robotCall(murl(side, m.file, 'upload'), { program_id: pid }, { what: `Sending ${m.name}`, replacing: `program ${pid}` });
     if (job && job.id) {
@@ -333,19 +381,15 @@ async function upload(side) {
       if (done.state !== 'done') throw Object.assign(new Error(done.error || 'The upload did not finish.'), { hint: done.hint });
     }
     status(side, `${m.name} is on the ${ARM(side)} controller as program ${pid} (its name and size read back).`, 'ok');
-  } catch (err) { status(side, say(err), 'warn'); tell(err); }
+  } catch (err) { status(side, say(err), 'warn'); tell(err); } finally {
+    st[side].sending = false;
+    if (btn) btn.disabled = false;
+  }
 }
 
-// The files of a merge that were tuned already: kept versions, and merges kept from Tune (each in any project).
-function tunedParts(side, m) {
-  const merges = new Map(st[side].merges.map(x => [x.file, x]));
-  return (m.sources || []).filter((src) => {
-    const ref = String(src.ref || '').split('|').pop();
-    if (ref.startsWith('ver:')) return true;
-    if (ref.startsWith('merge:')) { const x = merges.get(ref.slice(6)); return !!(x && x.made_from); }
-    return false;
-  }).map(src => src.name);
-}
+// The files of a merge that were tuned already, as the server reads them (merges.py: kept versions, merges kept
+// from Tune, at any depth and from any project), or the merge itself when Tune kept it.
+const tunedParts = (side, m) => m.tuned || [];
 
 async function toTune(side) {
   const m = selected(side);
