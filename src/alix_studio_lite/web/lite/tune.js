@@ -18,6 +18,7 @@ import { get, post, say } from './api.js';
 import { confirmDialog, ctx, el, loadUnit, step, tell, unitUrl, watchJob } from './ctx.js';
 import { elsewhere, fileKey, invalidate, onMoment, onPlayhead, release, say3d, scene, seekTo, showFile, showStanding, sim, unload } from './sim.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
+import { frame } from './vp.js';
 
 const CYCLE_S = 0.005;
 let unit = null;               // the server's view of the arm step on screen
@@ -887,6 +888,7 @@ function setTotals(kind) {
 function showMoment(kind, seek = true) {
   const t = pb.at[kind];
   if ($(`liteNow_${kind}`)) $(`liteNow_${kind}`).textContent = `${t.toFixed(3)} s`;
+  if ($('simulationViewport')) frame($('simulationViewport')).time(`${t.toFixed(3)} s / ${totalFor(kind).toFixed(3)} s`);
   const tl = $(`liteTimeline_${kind}`);
   if (tl && document.activeElement !== tl) tl.value = String(t);
   const raw = (plotted.raw && plotted.raw.lines) || 0;
@@ -1279,7 +1281,7 @@ function tools() {
       changed: (phase) => { if (unit) scene(phase || unit.phase, undefined, sim.place || null).catch(() => {}); },
     });
   }
-  if (tools3d && host) tools3d.mount(host);
+  if (tools3d && host) { tools3d.mount(host); frame(host); }       // V32's caption is its title; the time in the view
   return tools3d;
 }
 

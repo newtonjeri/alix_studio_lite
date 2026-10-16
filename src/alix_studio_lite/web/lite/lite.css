@@ -360,7 +360,7 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-timeline input[type="range"] { width: 100%; }
 .lite-readout { min-width: 190px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card);
   font-variant-numeric: tabular-nums; }
-.lite-view-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 12px; margin-top: 12px; align-items: start; }
+.lite-view-grid { display: grid; grid-template-columns: min(50vw, 100%) minmax(0, 1fr); gap: 12px; margin-top: 12px; align-items: start; }
 @media (max-width: 1100px) { .lite-view-grid { grid-template-columns: minmax(0, 1fr); } }
 .lite-view-3d > #simulationPane { margin: 0; }
 .lite-plot-host { position: relative; height: 600px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); }
@@ -483,7 +483,7 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-rev3d { margin: 14px 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
 .lite-rev3d[hidden] { display: none; }
 .lite-rev3d .lite-section-title { align-items: center; }
-.lite-rev3d-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 14px; }
+.lite-rev3d-grid { display: grid; grid-template-columns: min(50vw, 100%) minmax(0, 1fr); gap: 14px; align-items: start; }
 .lite-rev3d-host { position: relative; min-height: 420px; border-radius: 12px; overflow: hidden; background: var(--lite-viewport-bg); }
 .lite-rev3d-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .lite-rev3d-player, .lite-rev3d-block { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); }
@@ -541,14 +541,47 @@ html[data-theme="dark"] .lite-vtools-state.err, html[data-theme="dark"] .lite-vt
 
 /* The view cube (three_scene.js), as ALIX Studio's: in the top-right corner of every 3D view, Home View
    under it; gone while the view says why nothing plays. */
-.lite-cube { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; flex-direction: column; gap: 6px; width: 120px; }
+.lite-cube { position: absolute; top: var(--cube-gap, 10px); right: var(--cube-gap, 10px); z-index: 3; display: flex; flex-direction: column;
+  gap: calc(var(--cube, 120px) * .05); width: var(--cube, 120px); }
 .lite-cube[hidden], .lite-3d:has(> .lite-3d-msg) > .lite-cube { display: none; }
-.lite-cube-hit { width: 120px; height: 120px; cursor: grab; touch-action: none; }
+.lite-cube-hit { width: var(--cube, 120px); height: var(--cube, 120px); cursor: grab; touch-action: none; }
 .lite-cube-hit.dragging { cursor: grabbing; }
-.lite-cube-home { padding: 5px 0; font-size: 12px; font-weight: 600; color: var(--vp-cube-text); background: var(--vp-cube-face);
-  border: 1px solid var(--vp-cube-edge); border-radius: 8px; cursor: pointer; }
+.lite-cube-home { padding: calc(var(--cube, 120px) * .045) 0; font-size: calc(var(--cube, 120px) * .1); font-weight: 600; color: var(--vp-cube-text);
+  background: var(--vp-cube-face); border: 1px solid var(--vp-cube-edge); border-radius: calc(var(--cube, 120px) * .07); cursor: pointer; }
 .lite-cube-home:hover, .lite-cube-home:focus-visible { filter: brightness(1.3); }
 .lite-transition-track { margin: 0 0 6px; }
+
+/* Every 3D viewport (vp.js; the owner, 16 Oct): a square half the screen wide, maximized to 90 % of the screen;
+   the title top-left, the time bottom-right, maximize bottom-left, the cube top-right; all sized with it. */
+.lite-vp { position: relative; width: min(50vw, 100%); max-width: 100%; aspect-ratio: 1 / 1; height: auto !important; min-height: 0 !important;
+  container-type: inline-size; overflow: hidden; border-radius: 12px; background: var(--lite-viewport-bg); }
+.lite-vp.lite-vp-max { position: fixed !important; left: 5vw; top: 5vh; width: 90vw !important; height: 90vh !important; aspect-ratio: auto;
+  max-width: none; margin: 0; z-index: 19500; box-shadow: 0 30px 80px -24px var(--lite-scrim); }
+.lite-vp-scrim { position: fixed; inset: 0; z-index: 19499; background: var(--lite-scrim); }
+.lite-vp-hole { max-width: 100%; }
+.lite-vp > .lite-vp-title { position: absolute !important; left: 2.2cqw !important; top: 2.2cqw !important; right: auto !important; bottom: auto !important;
+  z-index: 3; max-width: 58%; padding: .55em .8em !important; border-radius: .7em !important; text-align: left; pointer-events: none;
+  font-size: clamp(10px, 1.75cqw, 16px) !important; line-height: 1.3; color: var(--vp-cube-text) !important;
+  background: var(--vp-cube-face) !important; border: 1px solid var(--vp-cube-edge) !important; box-shadow: none !important; }
+.lite-vp > .lite-vp-title[hidden] { display: none !important; }
+.lite-vp > .lite-vp-title strong { display: block; font-size: 1em; color: inherit !important; }
+.lite-vp > .lite-vp-title span { display: block; margin-top: .2em; font-size: .85em; color: inherit !important; opacity: .78; }
+.lite-vp > .lite-vp-time { position: absolute; right: 2.2cqw; bottom: 2.2cqw; z-index: 3; padding: .35em .7em; border-radius: .6em; pointer-events: none;
+  font-size: clamp(11px, 1.9cqw, 18px); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--vp-cube-text);
+  background: var(--vp-cube-face); border: 1px solid var(--vp-cube-edge); }
+.lite-vp > .lite-vp-time[hidden] { display: none; }
+.lite-vp > .lite-vp-maxbtn { position: absolute; left: 2.2cqw; bottom: 2.2cqw; z-index: 3; width: clamp(30px, 6.5cqw, 54px); height: clamp(30px, 6.5cqw, 54px);
+  display: grid; place-items: center; padding: 0; border-radius: clamp(7px, 1.2cqw, 12px); color: var(--vp-cube-text); background: var(--vp-cube-face);
+  border: 1px solid var(--vp-cube-edge); cursor: pointer; }
+.lite-vp > .lite-vp-maxbtn svg { width: 56%; height: 56%; }
+.lite-vp > .lite-vp-maxbtn:hover, .lite-vp > .lite-vp-maxbtn:focus-visible { filter: brightness(1.3); }
+.lite-vp > .sim-controls-overlay { display: none !important; }          /* Tune: V32's timer chip and Expand 90 %: the frame's own instead */
+.lite-3d:has(> .lite-3d-msg) > .lite-vp-time { display: none; }
+.lite-rev3d-host.lite-vp, .lite-s1-sim-grid .lite-rev3d-host.lite-vp, .lite-s2-simgrid .lite-rev3d-host.lite-vp { min-height: 0; }
+/* in a window, the square is no taller than the window has room for: all of it, its maximize button too, in view */
+.lite-viewer-3d.lite-vp { flex: 0 0 auto; width: min(50vw, 100%, calc(94vh - 200px)); }
+.lite-transition-3d.lite-vp { margin: 10px 0; width: min(50vw, 100%, calc(94vh - 180px)); }
+.lite-transition-card { max-height: 94vh; overflow: auto; }
 .lite-region-phase { max-width: 520px; margin-top: 10px; }
 .lite-region-phase[hidden] { display: none; }
 
@@ -657,7 +690,7 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-s1-tools .field { margin: 0; }
 .lite-s1-tools input[type="number"] { width: 110px; }
 .lite-s1-sim { margin-top: 14px; }
-.lite-s1-sim-grid, .lite-s2-simgrid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 14px; }
+.lite-s1-sim-grid, .lite-s2-simgrid { display: grid; grid-template-columns: min(50vw, 100%) minmax(0, 1fr); gap: 14px; align-items: start; }
 .lite-s1-sim-grid .lite-rev3d-host, .lite-s2-simgrid .lite-rev3d-host { min-height: 420px; }
 .lite-s1-sim-grid input[type="range"], .lite-s2-simgrid input[type="range"] { width: 100%; }
 

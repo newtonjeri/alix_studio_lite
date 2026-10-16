@@ -12,6 +12,7 @@ import { del, get, post, say } from './api.js';
 import { ctx, el, fmtS, stageDialog, step, tell } from './ctx.js';
 import { ensure3D, release, say3d, scene } from './sim.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
+import { frame } from './vp.js';
 
 const CYCLE = 0.005;
 const ARMS = ['left', 'right'];
@@ -222,10 +223,9 @@ function show() {
   });
   if (tools) tools.at(t);
   const T = start(), L = total() - T;
-  if ($('liteViewerTime')) {
-    $('liteViewerTime').textContent = !loaded().length ? '00:00.0 / 00:00.0'
-      : t < T ? `Staging ${t.toFixed(1)} / ${T.toFixed(1)} s` : `${fmtT(t - T)} / ${fmtT(L)}`;
-  }
+  frame($('liteViewer3d')).time(!loaded().length ? '' : t < T ? `Staging ${t.toFixed(1)} / ${T.toFixed(1)} s` : `${fmtT(t - T)} / ${fmtT(L)}`);
+  frame($('liteViewer3d')).title(loaded().length ? loaded().map(a => `${a.toUpperCase()} ${slots[a].meta.name}`).join(' · ') : 'The robot at home',
+    loaded().length ? 'As the robot runs them: staged first, then the 5 ms clock' : 'Choose a file with View');
   const sl = $('liteViewerSlider');
   if (sl && document.activeElement !== sl) { sl.max = String(Math.round(total() * 1000)); sl.value = String(Math.round(t * 1000)); }
   placePlayhead();
@@ -416,8 +416,7 @@ function build() {
             el('button', { class: 'btn green', text: '▶ Play', onclick: play }),
             el('button', { class: 'btn orange', text: 'Ⅱ Pause', onclick: () => { pause(); said = ''; status('Paused.'); } }),
             el('button', { class: 'btn light', text: '↺ Reset', onclick: reset }),
-            speedSel, el('div', { id: 'liteViewerTrack', class: 'lite-rev3d-track' }, slider),
-            el('span', { id: 'liteViewerTime', class: 'lite-viewer-time', text: '00:00.0 / 00:00.0' })),
+            speedSel, el('div', { id: 'liteViewerTrack', class: 'lite-rev3d-track' }, slider)),
           el('div', { class: 'lite-viewer-plot-wrap' }, el('div', { id: 'liteViewerPlot', class: 'lite-viewer-plot' }),
             el('div', { id: 'liteViewerPlayhead', class: 'lite-viewer-playhead' })),
           el('div', { id: 'liteViewerChecks', class: 'lite-viewer-checks' })))));

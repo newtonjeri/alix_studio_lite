@@ -22,6 +22,7 @@ import { speedPct } from './status.js';
 import { saveBlobAs } from './tune.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
 import { choose } from './picker.js';
+import { frame } from './vp.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
@@ -160,15 +161,14 @@ function build() {
     el('div', { class: 'lite-s2-arms' }, ARMS.map(armPanel)),
     el('div', { id: 'liteS2Sim', class: 'card lite-s2-sim' },
       el('div', { class: 'lite-section-title' },
-        el('h3', {}, 'Simulation · ', el('span', { id: 'liteS2SimName', text: 'press RUN in Simulation Mode' }))),
+        el('h3', { text: 'Simulation' })),
       el('div', { class: 'lite-s2-simgrid' },
         el('div', { class: 'lite-rev3d-main' }, el('div', { id: 'liteS2Host', class: 'lite-rev3d-host' })),
         el('div', { class: 'lite-rev3d-side' },
           el('div', { class: 'lite-row' }, btn('Play', () => playSim(), 'btn'), btn('Pause', () => player.pause(), 'btn outline'),
             btn('Restart', () => restartSim()),
             el('select', { id: 'liteS2Speedup', 'aria-label': 'Replay speed', onchange: (e) => player.setSpeed(Number(e.target.value)) },
-              [1, 2, 4].map(x => el('option', { value: String(x), text: `${x}x` }))),
-            el('b', { id: 'liteS2SimTime', class: 'lite-rev3d-time', text: '0.0 s / 0.0 s' })),
+              [1, 2, 4].map(x => el('option', { value: String(x), text: `${x}x` })))),
           el('div', { class: 'lite-rev3d-track' },
             el('input', { id: 'liteS2Timeline', type: 'range', min: '0', max: '0', step: '10', value: '0', 'aria-label': 'Sequence time',
               oninput: (e) => { player.pause(); seekSim(Number(e.target.value) / 1000); } }),
@@ -192,6 +192,7 @@ function build() {
     changed: () => { view.phase = null; showAt(player.t); },
   }).mount($('liteS2Host'));
   tools.track($('liteS2Timeline').parentElement);
+  frame($('liteS2Host')).title('The robot at home', 'Run the sequence in Simulation Mode to play it here');
   tools.load(null, { phase: null, text: "each Program's region", enabled: false });
 }
 
@@ -688,9 +689,9 @@ function setSim(sim, fresh) {
   view.clean = false;
   view.furthest = 0;
   const k = sim.pick || {};
-  $('liteS2SimName').textContent = `${k.scope === 'task' ? `${ARM(k.side)} task, row ${k.row}` : k.scope === 'dual' ? `dual-arm task, stage ${k.stage + 1}`
-    : sim.mode === 'both' ? 'both arms' : `${ARM(sim.mode)} arm`} · ${sim.counts.stages} stage(s) · ${fmt(sim.total_s)}`
-    + (sim.completed ? ' · played to its end' : '');
+  frame($('liteS2Host')).title(k.scope === 'task' ? `${ARM(k.side)} task, row ${k.row}` : k.scope === 'dual' ? `Dual-arm task, stage ${k.stage + 1}`
+    : sim.mode === 'both' ? 'Both arms' : `${ARM(sim.mode)} arm`, `${sim.counts.stages} stage(s) · ${fmt(sim.total_s)}`
+    + (sim.completed ? ' · played to its end' : ''));
   if (fresh) S.edited = false;                               // this simulation is of the steps as they are
   $('liteS2Timeline').max = String(Math.round(sim.total_s * 1000));
   tools.load(sim.hash, { phase: null, text: "each Program's region" });
@@ -770,7 +771,7 @@ async function showAt(g, playing = false) {
   if (playing && g > view.furthest) view.furthest = g;
   const tl = $('liteS2Timeline');
   if (tl && document.activeElement !== tl) tl.value = String(Math.round(g * 1000));
-  $('liteS2SimTime').textContent = `${fmt(g)} / ${fmt(S.sim.total_s)}`;
+  frame($('liteS2Host')).time(`${fmt(g)} / ${fmt(S.sim.total_s)}`);
   paintMoment(g);
   const three = view.three;
   tools.at(g);

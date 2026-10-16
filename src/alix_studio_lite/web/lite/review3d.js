@@ -15,10 +15,11 @@ import { post, say } from './api.js';
 import { confirmDialog, ctx, el, loadUnit, step, tell, unitUrl } from './ctx.js';
 import { duration, elsewhere, invalidate, onMoment, say3d, scene, seekTo, showFile, sim } from './sim.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
+import { frame } from './vp.js';
 
 const CYCLE_S = 0.005;
 const $ = (id) => document.getElementById(id);
-let unit = null, rec = null, token = 0, tools = null;
+let unit = null, rec = null, token = 0, tools = null, vp = null;
 const pb = { playing: false, t: 0, start: 0, raf: 0 };
 const trim = { a: 0, b: 0 };                 // the first and the last moment kept (s)
 
@@ -36,14 +37,13 @@ function card() {
   const btn = (text, onclick, cls = 'btn light') => el('button', { class: cls, type: 'button', text, onclick });
   c = el('div', { id: 'liteRev3d', class: 'lite-rev3d' },
     el('div', { class: 'lite-section-title' },
-      el('h3', {}, 'Simulation · ', el('span', { id: 'liteRev3dName', text: '-' })),
+      el('h3', { text: 'Simulation' }),
       el('span', { class: 'mini-note', text: 'The recording selected above, staged first, in its room and UGV placement.' })),
     el('div', { class: 'lite-rev3d-grid' },
       el('div', { class: 'lite-rev3d-main' }, el('div', { id: 'liteRev3dHost', class: 'lite-rev3d-host' })),
       el('div', { class: 'lite-rev3d-side' },
         el('div', { class: 'lite-rev3d-player' },
-          el('div', { class: 'lite-row' }, btn('Play', play, 'btn'), btn('Pause', pause, 'btn outline'), btn('Restart', () => { pause(); setT(0); }),
-            el('b', { id: 'liteRev3dTime', class: 'lite-rev3d-time', text: '0.000 s / 0.000 s' })),
+          el('div', { class: 'lite-row' }, btn('Play', play, 'btn'), btn('Pause', pause, 'btn outline'), btn('Restart', () => { pause(); setT(0); })),
           el('div', { class: 'lite-rev3d-track' },
             el('input', { id: 'liteRev3dTimeline', type: 'range', min: '0', max: '0', step: '5', value: '0', 'aria-label': 'Recording time',
               oninput: (e) => { pause(); setT(Number(e.target.value) / 1000); } }))),
@@ -84,6 +84,7 @@ function card() {
     shown: paintCheck,
   }).mount($('liteRev3dHost'));
   tools.track(c.querySelector('.lite-rev3d-track'));
+  vp = frame($('liteRev3dHost'));                         // the title and the time in the view, as in every view
   return c;
 }
 
@@ -102,7 +103,7 @@ async function show() {
   c.hidden = !r;
   if (!r) return;
   unit = u; rec = r;
-  $('liteRev3dName').textContent = r.name;
+  vp.title(r.name, 'The recording as taught, staged first');
   pause();
   tools.load(JSON.stringify([u.key, r.file, r.sha256, task()]), { phase: u.phase, text: "the region's" });
   const host = $('liteRev3dHost');
@@ -133,7 +134,7 @@ function setT(t, seek = true) {
   pb.t = Math.max(0, Math.min(total(), Number(t) || 0));
   const tl = $('liteRev3dTimeline');
   if (tl && document.activeElement !== tl) tl.value = String(Math.round(pb.t * 1000));
-  if ($('liteRev3dTime')) $('liteRev3dTime').textContent = `${fmt(pb.t)} / ${fmt(total())}`;
+  if (vp) vp.time(`${fmt(pb.t)} / ${fmt(total())}`);
   if (seek && sim.tl) seekTo(pb.t);
 }
 

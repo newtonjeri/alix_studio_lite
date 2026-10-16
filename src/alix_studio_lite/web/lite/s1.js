@@ -20,6 +20,7 @@ import { scene } from './sim.js';
 import { saveBlobAs } from './tune.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
 import { choose } from './picker.js';
+import { frame } from './vp.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
@@ -99,12 +100,12 @@ function build() {
       el('div', { id: `liteS1Status_${side}`, class: 'lite-status' })))),
     el('div', { class: 'card lite-s1-sim' },
       el('div', { class: 'lite-section-title' },
-        el('h3', {}, 'Simulation · ', el('span', { id: 'liteS1SimName', text: 'choose a merged file, then Review in 3D' }))),
+        el('h3', { text: 'Simulation' })),
       el('div', { class: 'lite-s1-sim-grid' },
         el('div', { class: 'lite-rev3d-main' }, el('div', { id: 'liteS1Host', class: 'lite-rev3d-host' })),
         el('div', { class: 'lite-rev3d-side' },
           el('div', { class: 'lite-row' }, btn('Play', () => player.play(), 'btn'), btn('Pause', () => player.pause(), 'btn outline'),
-            btn('Restart', () => { player.pause(); player.seek(0); }), el('b', { id: 'liteS1Time', class: 'lite-rev3d-time', text: '0.00 s / 0.00 s' })),
+            btn('Restart', () => { player.pause(); player.seek(0); })),
           el('div', { id: 'liteS1Track', class: 'lite-rev3d-track' },
             el('input', { id: 'liteS1Timeline', type: 'range', min: '0', max: '0', step: '5', value: '0', 'aria-label': 'Merge time',
               oninput: (e) => { player.pause(); player.seek(Number(e.target.value) / 1000); } })),
@@ -124,6 +125,7 @@ function build() {
   }).mount($('liteS1Host'));
   tools.track($('liteS1Track'));
   tools.load(null, { enabled: false, text: "the merge's" });
+  frame($('liteS1Host')).title('The robot at home', 'Choose a merged file, then Review in 3D');
 }
 
 // ── data
@@ -385,7 +387,7 @@ async function show3d(side, again = false) {
   const at = again ? player.t : 0;
   const my = ++review.token;
   const host = $('liteS1Host');
-  $('liteS1SimName').textContent = `${m.name} (${ARM(side)} arm)`;
+  frame(host).title(m.name, `${ARM(side)} arm · the merge as the robot runs it, staged first`);
   try {
     three = await borrow(host);
     const r = await post(murl(side, m.file, 'timeline'), {});
@@ -403,7 +405,7 @@ async function show3d(side, again = false) {
     player.load(tl.total_s);
     if (again) player.seek(Math.min(at, tl.total_s)); else player.play();
   } catch (err) {
-    if (my === review.token) { window.toast(`Nothing plays: ${say(err)}`); $('liteS1SimName').textContent = `${m.name}: nothing plays (${say(err)})`; }
+    if (my === review.token) { window.toast(`Nothing plays: ${say(err)}`); frame(host).title(m.name, `Nothing plays: ${say(err)}`); }
   }
 }
 
@@ -415,7 +417,7 @@ function showAt(t) {
   if (tools) tools.at(t);
   const tl = $('liteS1Timeline');
   if (tl && document.activeElement !== tl) tl.value = String(Math.round(t * 1000));
-  if ($('liteS1Time')) $('liteS1Time').textContent = `${fmt(t)} / ${fmt(review.total)}`;
+  frame($('liteS1Host')).time(`${fmt(t)} / ${fmt(review.total)}`);
 }
 
 let shownFor = null;

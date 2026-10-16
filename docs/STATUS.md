@@ -178,6 +178,7 @@ All times are true time: a file of N lines lasts (N − 1) × 5 ms. Every hard l
 
 ## Findings to carry forward
 
+- **From the lab's logs (16 October).** Real playback took about 5.7 ms a line (5 ms asked). Uploads ran at about 31 kB/s. The controller answered 4105 after some runs that broke L2. Runs at 1 % speed were refused. The hand's thumb channel stopped on the tool (counted as done: settled). The LEFT controller held 183–187 global points and 79 programs, the RIGHT 68 points.
 - **G5 cannot be a hard limit.** ALIX's predicted-departure model reads 33–109 mm on the raw commode C recordings themselves, which ran fine on the robot. Lite shows it as a warning (C1). A region's MAX DEV tightens the path-accuracy limit (L5) instead.
 - **TOPP-RA moved the end pose.** ALIX's 30 mm arc-length smoothing moves the last pose by up to 0.06°. Lite pins both ends back to the recording over the last 30 mm, so L6 (0.05°) holds.
 - **Controller speed envelope (for robot I/O).** The controller's TCP speed settings default to 0.25 m/s. ALIX raised them to 1.5 m/s for its replays and restored them after (`vendor/alix/.../alix_dispatch/limits.py`, `guard`). Runner v14 never touches them. TOPP-RA files move the hand at up to about 0.9 m/s. This must be checked on the robot before fast files are run.

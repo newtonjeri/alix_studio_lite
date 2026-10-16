@@ -143,7 +143,12 @@ export function webglFail(el) {
 // at any camera angle offered by the cube"): its faces, labels and colours, the cube turning with the
 // camera. Lite draws it with the view's own renderer, in the view's top-right corner: a second WebGL
 // context would draw on the processor where the graphics run in software (the lab laptop).
-const CUBE_PX = 120, CUBE_GAP = 10;
+// Its size follows the view's (the owner, 16 Oct: "Their size scales with the viewport's size"): 16 % of
+// the view's width, 64 to 200 px, its gap to the corner 8 % of that.
+const cubeSize = (W) => Math.round(Math.max(64, Math.min(200, W * 0.16)));
+// The zoom is held between these camera distances (m) to what it looks at (the owner, 16 Oct: zooming out
+// had no limit and the robot disappeared; zooming in a limit to match).
+const NEAREST_M = 0.5, FARTHEST_M = 5.0;
 function cubeFace(THREE, text) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = 128;
@@ -230,6 +235,8 @@ export function createViewer() {
     cam.up.set(0, 0, 1);
     cam.position.set(1.15, -1.95, 1.55);                                  // side view: robot left, fixture right
     controls = new THREE.OrbitControls(cam, renderer.domElement);
+    controls.minDistance = NEAREST_M;
+    controls.maxDistance = FARTHEST_M;
     controls.target.set(0.45, 0, 0.72);
     controls.update();
     controls.addEventListener('change', () => { v.dirty = true; });
@@ -263,9 +270,15 @@ export function createViewer() {
   const draw = () => {
     renderer.render(scene, cam);
     const W = v.host ? v.host.clientWidth : 0, H = v.host ? v.host.clientHeight : 0;
+    const CUBE_PX = cubeSize(W), CUBE_GAP = Math.round(CUBE_PX * 0.08);
     const fits = !!cube && W >= CUBE_PX * 2 && H >= CUBE_PX + 4 * CUBE_GAP;   // a view too small for it goes without
     if (cubeBox && cubeBox.hidden === fits) cubeBox.hidden = !fits;
     if (!fits) return;
+    if (cubeBox.dataset.px !== String(CUBE_PX)) {                         // its overlay the same size and place
+      cubeBox.dataset.px = String(CUBE_PX);
+      cubeBox.style.setProperty('--cube', `${CUBE_PX}px`);
+      cubeBox.style.setProperty('--cube-gap', `${CUBE_GAP}px`);
+    }
     const dir = cam.position.clone().sub(controls.target).normalize();
     cube.cam.position.copy(dir.multiplyScalar(5));
     cube.cam.up.copy(cam.up);

@@ -17,6 +17,7 @@ import { get, post, say } from './api.js';
 import { ctx, el, jobLine, robotCall, stageDialog, step, armFromName, tell, unitUrl, watchJob } from './ctx.js';
 import * as sim from './sim.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
+import { frame } from './vp.js';
 
 const ARM = (side) => side.toUpperCase();
 const views = {};                       // "<project>/<unit key>" -> the server's view of its transition (or null)
@@ -111,6 +112,9 @@ async function simulate(side) {
     changed: (phase) => { sim.scene(phase || u.phase, undefined, sim.sim.place || null).catch(() => {}); },
   }).mount(host);
   tools.track(track, T);
+  const vp = frame(host);
+  vp.title(`${ARM(side)} transition · ${tv.name}`, `${u.display}: staged first, then the 5 ms clock`);
+  vp.time(`0.000 s / ${T.toFixed(3)} s`);
   tools.load(`transition|${u.key}|${tv.name}|${tv.lines}`, { phase: u.phase, text: "the region's" });
   const end = () => { stopPlay(); sim.onMoment(null); sim.release(); box?.remove(); box = null; document.dispatchEvent(new CustomEvent('lite:viewer-closed')); };
   close.onclick = end;
@@ -119,6 +123,7 @@ async function simulate(side) {
   function seek(t) {
     if (!sim.seekTo(t)) return;
     bar.value = String(Math.round(Math.max(0, Math.min(T, t)) * 1000));
+    vp.time(`${Math.max(0, Math.min(T, t)).toFixed(3)} s / ${T.toFixed(3)} s`);
     line.textContent = `At ${t.toFixed(3)} s of ${T.toFixed(3)} s: ▶ Play runs it again from the start.`;
   }
   sim.invalidate();
@@ -129,6 +134,7 @@ async function simulate(side) {
   sim.onMoment((t) => {
     tools.at(t == null ? -1 : t);
     if (t != null && document.activeElement !== bar) bar.value = String(Math.round(t * 1000));
+    vp.time(t == null ? `Staging · 0.000 s / ${T.toFixed(3)} s` : `${t.toFixed(3)} s / ${T.toFixed(3)} s`);
   });
   line.textContent = 'Ready: ▶ Play runs it once, as the robot would.';
   play.disabled = again.disabled = halt.disabled = bar.disabled = false;
