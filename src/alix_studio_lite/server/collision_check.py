@@ -289,7 +289,7 @@ def check(md_path: str, side: str, stage: dict, home: dict, scene: dict, fid: st
 
 def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, cubicle_mm: int = 1400,
                  progress=None) -> dict:
-    """Merge + Full Sequence S2's check (feedback v5, slide 9: "Simulation Mode ... with the collision
+    """Merge + Sequence S2's check (feedback v5, slide 9: "Simulation Mode ... with the collision
     check", the two arms against each other too): both arms through a run on one clock. ``times``: the
     samples (s); ``arms``: {side: {pole: [n] mm, hand: [n][6] counts, q: [n][7] deg}} for the arms that
     run (an arm not given stands at ``home``); ``phases``: the commode's lid/seat state at each sample.

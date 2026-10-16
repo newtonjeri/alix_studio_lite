@@ -184,7 +184,7 @@ export function say3d(host, text, err = null) {
   }
 }
 
-// Whether the Trajectory Viewer, Merge + Full Sequence (S1's review, S2's simulation: seq3d.js) or
+// Whether the Trajectory Viewer, Merge + Sequence (S1's review, S2's simulation: seq3d.js) or
 // Prepare's transition window has the 3D: the region's simulation waits, and loads again when Tune
 // or Save & Review shows it.
 export const elsewhere = () => !!document.querySelector('#liteViewer.show, #view-sequence.active, #liteTransitionSim.show');

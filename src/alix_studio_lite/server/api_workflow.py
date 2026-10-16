@@ -1,4 +1,4 @@
-"""Merge + Full Sequence S2, Full & Partial Sequence (feedback v5, slide 9): V53's Page 02 on Lite's
+"""Merge + Sequence S2, Sequence (feedback v5, slide 9): V53's Page 02 on Lite's
 server (workflow.py). Each arm's steps are kept in the project as they are edited; V53's JSON is
 saved and loaded per arm; RUN in Simulation Mode simulates, in Real Machine Mode runs on the robot."""
 from __future__ import annotations

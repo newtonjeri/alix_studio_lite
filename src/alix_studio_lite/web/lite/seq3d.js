@@ -1,4 +1,4 @@
-// The page's one 3D view, borrowed by Merge + Full Sequence (S1's review of a merge, S2's
+// The page's one 3D view, borrowed by Merge + Sequence (S1's review of a merge, S2's
 // simulation of a run), and the player both use: Play / Pause / Restart on the run's own clock, at
 // 1x unless a faster replay is chosen. Taking the view makes the region's simulation (Tune, Save &
 // Review) load its file again when it is shown next (sim.invalidate; fullseq.js tells it on the way

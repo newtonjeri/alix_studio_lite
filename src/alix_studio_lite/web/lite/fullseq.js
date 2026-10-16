@@ -1,4 +1,4 @@
-// Merge + Full Sequence (feedback v5, slide 9; the owner, 16 Oct): "remove the all existing controls
+// Merge + Sequence (feedback v5, slide 9; the owner, 16 Oct; was Merge + Full Sequence): "remove the all existing controls
 // and section ... and implement as above 2 sections (provide as like below tabs) S1, S2". The page's
 // own sections (the guide, the sequence file, the flow table, the custom merge, the step editor,
 // the visual confirmation and both full-run cards) are hidden; in their place two tabs:
@@ -14,6 +14,8 @@ import { openS2, stopS2 } from './s2.js';
 
 const $ = (id) => document.getElementById(id);
 const TABS = [['s1', 'S1', 'Merge & Upload'], ['s2', 'S2', 'Sequence']];   // S2 was Full & Partial Sequence (renamed: the owner, 16 Oct)
+const TITLE = 'Merge + Sequence', WAS = 'Merge + Full Sequence';            // 03's name (the owner, 16 Oct)
+const renamed = (s) => (typeof s === 'string' ? s.split(WAS).join(TITLE) : s);
 let tab = 's1';
 let pending = {};                                           // what S1 shows when it opens (a merge back from Tune)
 try { tab = localStorage.getItem('liteSeqTab') === 's2' ? 's2' : 's1'; } catch (_) { /* no storage: S1 */ }
@@ -26,11 +28,11 @@ function build() {
     el('div', { class: 'section-head' },
       el('div', {},
         el('div', { class: 'eyebrow', text: '03 · Standalone Project Workflow' }),
-        el('h2', {}, 'Merge + Full Sequence ', el('span', { class: 'mandatory-star', text: '*' })),
+        el('h2', {}, `${TITLE} `, el('span', { class: 'mandatory-star', text: '*' })),
         el('p', { text: 'S1 merges and uploads the trajectory files of each arm. S2 builds the LEFT / RIGHT sequences and runs them, '
           + 'a single task or a dual-arm task, in simulation first, then on the real machine.' })),
       el('span', { class: 'badge violet', text: 'DUAL-ARM PROJECT FLOW' })),
-    el('div', { class: 'lite-tabs', role: 'tablist', 'aria-label': 'Merge + Full Sequence' },
+    el('div', { class: 'lite-tabs', role: 'tablist', 'aria-label': TITLE },
       TABS.map(([id, code, name]) => el('button', { id: `liteSeqTab_${id}`, class: 'lite-tab', type: 'button', role: 'tab',
         'aria-controls': `liteSeqPanel_${id}`, onclick: () => open(id) }, el('b', { text: code }), ` ${name}`))),
     TABS.map(([id]) => el('div', { id: `liteSeqPanel_${id}`, class: 'lite-seq-panel', role: 'tabpanel', 'aria-labelledby': `liteSeqTab_${id}` })));
@@ -53,7 +55,22 @@ export function open(id, opts = {}) {
   else openS2($('liteSeqPanel_s2'), opts);
 }
 
+// The page's own words for 03 follow its name: its button in the menu, the line saying where a project was
+// left, the tour's step, and the toast at the end of the region loop.
+function rename() {
+  for (const b of document.querySelectorAll('[data-view="sequence"]')) {
+    const walk = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) n.nodeValue = renamed(n.nodeValue);
+  }
+  const resume = window.currentResumeDescription;
+  if (typeof resume === 'function') window.currentResumeDescription = function currentResumeDescription(...a) { return renamed(resume(...a)); };
+  try { for (const s of OPERATOR_TOUR_STEPS) if (s && s.view === 'sequence') s.title = renamed(s.title); } catch (_) { /* no tour */ }
+  const toast = window.toast;
+  window.toast = function toast2(msg, ...a) { return toast(renamed(msg), ...a); };
+}
+
 export function installFullSeq() {
+  rename();
   const pageShow = window.showView;
   window.showView = function showView(v, btn) {
     pageShow(v, btn);

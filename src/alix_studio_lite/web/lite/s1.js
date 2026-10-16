@@ -1,4 +1,4 @@
-// Merge + Full Sequence, S1: Merge & Upload, LEFT and RIGHT side by side (feedback v5, slide 9; the
+// Merge + Sequence, S1: Merge & Upload, LEFT and RIGHT side by side (feedback v5, slide 9; the
 // owner, 16 Oct). For each arm:
 // 1. the files of that arm (every region's recordings and kept versions, and the arm's merges), of this
 //    project or of all projects (the owner, 16 Oct: "current project (default), and all projects taught
@@ -54,7 +54,7 @@ function build() {
   const btn = (text, onclick, cls = 'btn light') => el('button', { class: cls, type: 'button', text, onclick });
   panel.replaceChildren(
     el('div', { class: 'notice lite-s1-hint' }, el('b', { text: 'Which files merge: ' }),
-      'one version per task, all raw (recordings) or all processed (tuned versions), with the same pole, hand, UGV placement and room '
+      'one version per task, all raw (recordings) or all processed (tuned in Lite, or auto optimized: TOPP-RA), with the same pole, hand, UGV placement and room '
       + '(each measurement within ±10 mm, the standoff ±5 mm). Pick the first file: the files that cannot join it are greyed out, with why. '
       + 'The merged program runs from one UGV position, with one pole and hand.'),
     el('div', { class: 'lite-s1-arms' }, ARMS.map((side) => el('div', { class: `card lite-s1-arm ${side}` },
@@ -232,8 +232,8 @@ function chooseFile(side, anchor) {
     const label = `${it.project ? `${it.project} · ` : s.scope === 'all' ? 'This project · ' : ''}${it.region}`;
     if (!groups.has(label)) groups.set(label, []);
     const differs = it.differs && it.differs.length ? `Cannot join this merge: ${it.differs.join('; ')}` : '';
-    groups.get(label).push({ value: it.ref, text: it.name, search: `${KIND[it.kind]} ${it.grade} ${it.region} ${it.project || ''}`,
-      detail: `${KIND[it.kind]} (${it.grade}) · ${fmt(it.seconds)} · ${it.stage_text} · ${it.placement_text}`,
+    groups.get(label).push({ value: it.ref, text: it.name, search: `${KIND[it.kind]} ${it.grade} ${it.grade_text || ''} ${it.region} ${it.project || ''}`,
+      detail: `${KIND[it.kind]} · ${it.grade_text || it.grade} · ${fmt(it.seconds)} · ${it.stage_text} · ${it.placement_text}`,
       disabled: !!(it.why || differs), note: it.why ? `Cannot be merged: ${it.why}` : differs });
   }
   choose(anchor, [...groups].map(([label, rows]) => ({ label, rows })), null, (ref) => pick(side, ref),
@@ -261,7 +261,7 @@ function paint(side) {
     const it = byRef.get(ref) || { name: ref, seconds: 0 };
     const clash = i > 0 && it.differs && it.differs.length ? `Cannot join this merge: ${it.differs.join('; ')}` : '';   // the order changed
     return el('li', {}, el('span', {}, el('b', { text: it.name }), ` · ${fmt(it.seconds)}`,
-      el('small', { class: 'mini-note', text: ` ${KIND[it.kind] || ''} · ${it.project ? `${it.project} · ` : ''}${it.region || ''}` }),
+      el('small', { class: 'mini-note', text: ` ${KIND[it.kind] || ''}${it.grade_text ? ` · ${it.grade_text}` : ''} · ${it.project ? `${it.project} · ` : ''}${it.region || ''}` }),
       clash ? el('div', { class: 'lite-warn lite-s1-why', text: clash }) : null),
       el('span', { class: 'lite-s1-order-tools' },
         el('button', { class: 'btn light', type: 'button', text: 'Up', disabled: i === 0, onclick: () => move(side, i, -1) }),

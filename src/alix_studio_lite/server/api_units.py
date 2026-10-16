@@ -11,7 +11,7 @@
     GET  units/<KEY>/timeline                 the execution in 3D: pole, hand, move to start, trajectory
     POST units/<KEY>/timeline                 the same from a start state {which, start}
     POST merge-sources/<side> | merges/<side>/from-project | merges/<side>/<FILE>/name|download|timeline|upload|tune
-                                              Merge + Full Sequence S1, Merge & Upload (merges.py); S2 is api_workflow.py
+                                              Merge + Sequence S1, Merge & Upload (merges.py); S2 is api_workflow.py
     POST units/<KEY>/settings | undo | redo   tuning settings, one undo step per change
     POST units/<KEY>/optimise                 a job: the tuned candidate, with every limit checked
     POST units/<KEY>/keep                     keep the candidate as the version to upload
@@ -78,7 +78,7 @@ def _region(units: LiteUnits, key: str) -> dict:
     u = _unit(units, key)
     if units.is_merge_unit(key):
         raise UserError(f"{u['merge']['name']} is a merge opened in Tune: it is sent and run from S1, "
-                        "Merge + Full Sequence.", code="merge")
+                        "Merge + Sequence.", code="merge")
     return u
 
 
@@ -1311,7 +1311,7 @@ def post_transition_run(app, q, body, m):
                          title=f"{'Hardware sim' if dry else 'Real'} transition {u['arm'].upper()} ({key})").view()
 
 
-# ── merges, one arm at a time: Merge + Full Sequence S1, Merge & Upload (feedback v5, slide 9; merges.py)
+# ── merges, one arm at a time: Merge + Sequence S1, Merge & Upload (feedback v5, slide 9; merges.py)
 
 M = P + r"/merges/(left|right)/([A-Za-z0-9_.\-]+)"
 

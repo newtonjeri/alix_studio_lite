@@ -1,4 +1,4 @@
-"""Trajectory merges, one arm at a time: Merge + Full Sequence's S1, Merge & Upload (feedback v5,
+"""Trajectory merges, one arm at a time: Merge + Sequence's S1, Merge & Upload (feedback v5,
 slide 9; before it, feedback v2, slide 10: download, upload to the controller, rename).
 
 S1 merges the project's own files (``sources``: every region's recordings and kept versions of the
@@ -314,17 +314,20 @@ def sources(units, side: str) -> list[dict]:
             out.append(_item(units, side, "ver", key, v["version"], display_name(u), v.get("name") or f"{display_name(u)} {v['version']}",
                              v.get("lines"), v.get("taught_arm"), v.get("stage"), behind.get("placement"), units.phase_of(key),
                              v.get("sha256"), v.get("saved")))
+            out[-1]["auto"] = v.get("optimiser") == "toppra"            # made by Tune's Time-optimal (TOPP-RA)
     for m in listing(units, side):
         out.append(_item(units, side, "merge", None, m["file"], "Merges", m["name"], m.get("lines"), m.get("taught_arm"),
                          m.get("stage"), m.get("placement"), m.get("phase"), m.get("sha256"), m.get("made")))
     for m in loaded(units, side):                          # loaded from this computer: not taught in Lite
         out.append(_item(units, side, "file", None, m["file"], "Loaded from this computer", m["name"], m.get("lines"),
                          m.get("taught_arm"), m.get("stage"), None, None, m.get("sha256"), m.get("loaded")))
+        out[-1]["auto"] = auto_optimized(m["name"])
     merges_by_file = {m["file"]: m for m in listing(units, side)}
     for it in out:
         it["placement_text"] = pl.words(it["placement"])
         tasks, it["grade"] = _class(units, side, it["ref"], merges_by_file)
         it["tasks"] = list(dict.fromkeys(tasks))
+        it["grade_text"] = "Auto optimized (TOPP-RA)" if it.get("auto") else GRADE_SHORT.get(it["grade"], it["grade"])
         if it["kind"] == "merge" and not it["why"]:
             it["why"] = _broken(tasks, it["grade"])
     # each arm's files in its own panel only (the owner, 16 Oct: "A right-arm trajectory should never be available
@@ -332,8 +335,15 @@ def sources(units, side: str) -> list[dict]:
     return [it for it in out if it["taught_arm"] not in ("left", "right") or it["taught_arm"] == side]
 
 
-GRADE_WORDS = {"raw": "a recording (raw)", "processed": "a tuned, kept version (processed)", "mixed": "a merge of raw and processed files",
+GRADE_WORDS = {"raw": "a recording (raw)", "processed": "an optimized file (processed)", "mixed": "a merge of raw and processed files",
                "unknown": "a merge whose files are not known"}
+GRADE_SHORT = {"raw": "raw", "processed": "processed", "mixed": "raw and processed", "unknown": "not known"}
+
+
+def auto_optimized(name: str) -> bool:
+    """A file made by TOPP-RA (ALIX's processed files are named so, e.g. ``…_toppra30mm_rate0_95_left.txt``): it
+    reads as Auto optimized and counts as processed (the owner, 16 Oct), even when loaded from this computer."""
+    return "toppra" in str(name or "").lower()
 
 
 def _class(units, side: str, ref: str, merges_by_file: dict, depth: int = 0) -> tuple[list, str]:
@@ -345,8 +355,8 @@ def _class(units, side: str, ref: str, merges_by_file: dict, depth: int = 0) -> 
     kind, rest = ref.split("|", 1)[-1].split(":", 1)
     if kind in ("rec", "ver"):
         return [rest.partition("/")[0]], ("raw" if kind == "rec" else "processed")
-    if kind == "file":
-        return [], "raw"
+    if kind == "file":                                       # loaded from this computer (its stored name keeps the name it had)
+        return [], ("processed" if auto_optimized(rest) else "raw")
     if kind == "tune":                                       # a merge's file kept in Tune (its merge says the tasks)
         return [], "processed"
     m = merges_by_file.get(rest) if kind == "merge" and "|" not in ref else None
@@ -458,8 +468,9 @@ def with_compatibility(items: list[dict], picked: list[str]) -> list[dict]:
                 if had:
                     why.append(f"{t} is in the merge already ({had['name']}): one version per task")
             if it.get("grade") != first.get("grade"):
-                why.append(f"{GRADE_WORDS.get(it.get('grade'), it.get('grade'))}, and the merge is of "
-                           f"{'recordings (raw)' if first.get('grade') == 'raw' else 'tuned versions (processed)' if first.get('grade') == 'processed' else 'mixed files'}: "
+                words = "an auto-optimized file (TOPP-RA, processed)" if it.get("auto") else GRADE_WORDS.get(it.get("grade"), it.get("grade"))
+                why.append(f"{words}, and the merge is of "
+                           f"{'recordings (raw)' if first.get('grade') == 'raw' else 'optimized files (processed)' if first.get('grade') == 'processed' else 'mixed files'}: "
                            "all raw or all processed")
             it["differs"] = why
         it["compatible"] = not it["why"] and not it["differs"]

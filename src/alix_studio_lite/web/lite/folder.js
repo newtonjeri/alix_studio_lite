@@ -60,7 +60,7 @@ export function installFolder() {
       await window.fsWriteJson(logsDir, 'audit_log.json', { schema: 'asl_activity_log_v1', exportedAt: new Date().toISOString(),
         projectId: id, projectName: project.name, source: "Lite's logs", eventCount: rows.length, events: rows });
       await writeFile(logsDir, 'audit_log.csv', window.auditEventsToCSV(rows));
-      // The page's own manifests for the sections Merge + Full Sequence no longer has (its flow table and
+      // The page's own manifests for the sections Merge + Sequence no longer has (its flow table and
       // its merge list) would sit beside S1's merges and S2's sequence: they say what Lite keeps instead.
       const [mg, wf] = await Promise.all([get(`/api/projects/${id}/merges`), get(`/api/projects/${id}/workflow`)]);
       for (const side of ['left', 'right']) {

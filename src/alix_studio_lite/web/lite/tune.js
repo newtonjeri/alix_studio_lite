@@ -1361,7 +1361,7 @@ export async function retune() {
   return tuning;
 }
 
-// A merge sent from Merge + Full Sequence S1 (the owner, 16 Oct: "transfer the file to the Tune +
+// A merge sent from Merge + Sequence S1 (the owner, 16 Oct: "transfer the file to the Tune +
 // Simulation Workspace"): Tune opens the merged file as its source (a unit of its own on the
 // server), says so above its steps, and what is kept goes back to S1 as a new merge, never to Real
 // Test. Choosing a task, an arm or another stage goes back to the region.
@@ -1383,7 +1383,7 @@ function mergeBanner() {
   if (m) {
     const parts = (m.parts || []).map(x => x.name);
     b.replaceChildren(
-      el('div', {}, el('div', { class: 'eyebrow', text: '03 · Merge + Full Sequence · S1' }),
+      el('div', {}, el('div', { class: 'eyebrow', text: '03 · Merge + Sequence · S1' }),
         el('h2', { text: `Tune + Simulation · ${m.side.toUpperCase()} merge ${m.name}` }),
         el('p', { class: 'mini-note', text: `${parts.length ? `Its files: ${parts.join(' → ')}${m.joins && m.joins.length ? ` (${m.joins.length} join${m.joins.length === 1 ? '' : 's'})` : ''}. ` : ''}`
           + 'The same steps and algorithms as a region\u2019s file; what you keep goes back to S1 as a new merge, never to a region.' })),

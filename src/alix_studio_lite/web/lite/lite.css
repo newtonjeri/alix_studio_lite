@@ -652,7 +652,7 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-sens-val { min-width: 48px; text-align: right; font-variant-numeric: tabular-nums; }
 .lite-sensitivity .mini-note { flex-basis: 100%; }
 
-/* Merge + Full Sequence: tabs S1 and S2 in place of the page's sections (fullseq.js; the owner, 16 Oct) */
+/* Merge + Sequence: tabs S1 and S2 in place of the page's sections (fullseq.js; the owner, 16 Oct) */
 #view-sequence > [hidden] { display: none !important; }   /* the page's own sections, gone (its CSS shows them otherwise) */
 .lite-seq .section-head { margin-bottom: 12px; }
 .lite-tabs { display: flex; gap: 8px; margin: 0 0 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }

@@ -2,7 +2,7 @@
 // in the robot's base frame (x forward, y left, z up), with the robot (robot3d.js) posed by ALIX's FK.
 // One scene and one robot for the page, so the robot model is loaded once. Its renderer moves:
 // attach(el) puts it in V19's simulation pane, the expanded view, Save & Review's player, the
-// Trajectory Viewer or Merge + Full Sequence's S1 and S2 (seq3d.js); a view that borrows it with a
+// Trajectory Viewer or Merge + Sequence's S1 and S2 (seq3d.js); a view that borrows it with a
 // camera of its own gets the camera back as it was at the next attach(). view() adds a renderer of
 // the SAME scene with its own camera and controls, for views shown side by side. Every view has ALIX
 // Studio's view cube in its top-right corner (cube()). Built from Legacy Lite's scene.js.

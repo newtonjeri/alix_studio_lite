@@ -1,4 +1,4 @@
-"""Merge + Full Sequence, S1: Merge & Upload (feedback v5, slide 9; the owner, 16 Oct). The project's
+"""Merge + Sequence, S1: Merge & Upload (feedback v5, slide 9; the owner, 16 Oct). The project's
 own files of one arm merge by reference, in order, only when they share the pole, the hand, the UGV
 placement and the room (each measurement within ±10 mm); the merge keeps them and plays there. "Send
 to Tune + Simulation" opens a merge in Tune as a unit of its own, and what Tune keeps comes back to S1
@@ -376,3 +376,41 @@ def test_a_merge_plays_in_its_own_room_with_its_bytes_and_a_merge_in_tune_takes_
     assert first["state"] == "running" and second["code"] == "busy" and "Upload" in second["error"]
     assert wait(lite, first)["state"] == "done"
     call(lite, "POST", "/api/robots/mode", {"mode": "visual"})
+
+
+def test_toppra_files_read_as_auto_optimized(lite):
+    """A TOPP-RA file reads as Auto optimized and counts as processed (the owner, 16 Oct: "toppra files should read
+    as Auto optimized"): one loaded from this computer (ALIX names them …_toppra…), and a version kept from Tune's
+    Time-optimal; all raw or all processed holds between them and the raw files."""
+    from alix_studio_lite.motion import track
+
+    t = np.linspace(0.0, 1.0, 240)[:, None]
+    def text(k):
+        md = np.round((np.array([[0, -60, 0, 90, 0, 30, 0]]) + 2.0 * k + 3.0 * np.sin(2 * np.pi * t)) * 1000).astype(np.int64)
+        return track.track_bytes(md).decode()
+    raw = call(lite, "POST", f"{P}/merge-files/left", {"name": "52_bwl_out_left.txt", "content": text(1), "pole_mm": 120, "hand": "OPEN"})
+    auto = call(lite, "POST", f"{P}/merge-files/left", {"name": "53_bwl_out_toppra30mm_rate0_95_left.txt", "content": text(2),
+                                                        "pole_mm": 120, "hand": "OPEN"})
+    auto2 = call(lite, "POST", f"{P}/merge-files/left", {"name": "58_bwl_out_v3_toppra_left.txt", "content": text(3),
+                                                         "pole_mm": 120, "hand": "OPEN"})
+    items = sources(lite, "left")
+    assert items[raw["name"]]["grade"] == "raw" and items[raw["name"]]["grade_text"] == "raw"
+    assert items[auto["name"]]["grade"] == "processed" and items[auto["name"]]["grade_text"] == "Auto optimized (TOPP-RA)"
+    with_raw = sources(lite, "left", [items[raw["name"]]["ref"]])
+    assert any("an auto-optimized file (TOPP-RA, processed)" in d and "all raw or all processed" in d for d in with_raw[auto["name"]]["differs"])
+    with_auto = sources(lite, "left", [items[auto["name"]]["ref"]])
+    assert with_auto[auto2["name"]]["compatible"] and not with_auto[raw["name"]]["compatible"]
+    m = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_auto_pair", "files": [items[auto["name"]]["ref"], items[auto2["name"]]["ref"]]})
+    listed = next(x for x in call(lite, "GET", f"{P}/merges")["left"] if x["file"] == m["file"])
+    assert m["grade"] == "processed" and len(listed["tuned"]) == 2                       # Send to Tune says they were
+
+    upload(lite, "L-R11_PART1", "L_auto_src.txt", "TASK 1A", start=9.0)
+    out = call(lite, "POST", f"{P}/units/L-R11_PART1/settings", {"changes": {"optimiser": "toppra"}})   # Tune's Time-optimal, kept
+    assert "error" not in out, out
+    job = call(lite, "POST", f"{P}/units/L-R11_PART1/optimise", {})
+    assert job.get("id"), job
+    assert wait(lite, job)["state"] == "done"
+    kept = call(lite, "POST", f"{P}/units/L-R11_PART1/keep", {})
+    assert "error" not in kept, kept
+    ver = next(it for it in sources(lite, "left").values() if it["kind"] == "ver" and it["tasks"] == ["L-R11_PART1"])
+    assert ver["grade"] == "processed" and ver["grade_text"] == "Auto optimized (TOPP-RA)"

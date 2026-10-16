@@ -1,4 +1,4 @@
-"""Merge + Full Sequence, S2: Full & Partial Sequence (feedback v5, slide 9; the owner, 16 Oct).
+"""Merge + Sequence, S2: Sequence (feedback v5, slide 9; the owner, 16 Oct).
 
 The control program's Page 02 (``rm_trajectory_ui_v53_safe_lid_checkpoint.py``, run by runner v14),
 ported as it is: each arm's ordered steps (Program, Global Point, Pole, Hand, Wait), each Program with
@@ -563,6 +563,26 @@ def _with_stage(steps: list, part: list) -> list:
     return [x for x in _staged(steps, first) if x["type"] not in head] + list(part)
 
 
+def _items(st: dict) -> list:
+    """(side, steps) of each arm's part of a stage of V53's plan."""
+    if st["kind"] == "serial":
+        return [(x["side"], x["steps"]) for x in (st["first"], st["second"])]
+    return [(side, st[side]["steps"]) for side in ARMS if isinstance(st.get(side), dict)]
+
+
+def _lid_check_before(full: list, k: int) -> dict | None:
+    """The manual lid cover checkpoint a task picked from stage ``k`` of V53's plan comes after (the last one
+    before it), as the first stage of the task's own run (the owner, 16 Oct: a task after the checkpoint asks,
+    as the sequence does): its pre-lid sections are not part of that run, so the operator says the lid is open
+    and the paths are clear before it starts. In Simulation it is the pause the sequence has there."""
+    check = next((st for st in reversed(full[:k]) if st["kind"] == "checkpoint"), None)
+    if check is None:
+        return None
+    asks = str(check.get("message") or "").split("\n\n", 1)[-1]
+    return dict(check, message="This task comes after the manual lid cover checkpoint of the sequence, and the "
+                               "sections before the checkpoint are not part of this run.\n\n" + asks)
+
+
 def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
     """What a run does (the owner, 16 Oct: "options to play a single task arm, dual arm task and sequences in
     both simulation and real"):
@@ -591,6 +611,14 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
                             "the steps changed since the task was chosen.", "Choose the task again.", code="pick")
         picked = {side: _staged(mine, row) + [mine[row - 1]]}
         plan = [{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}]
+        try:                                                 # where the row is in V53's plan of both arms
+            full = build_plan(steps["left"], steps["right"]) if steps["left"] and steps["right"] else []
+        except ValueError:
+            full = []
+        k = next((i for i, st in enumerate(full) for s, part in _items(st) if s == side and any(x.get("_row") == row for x in part)), None)
+        check = _lid_check_before(full, k) if k is not None else None
+        if check:
+            plan = [check] + plan
         return dict(mode=side, pick=dict(scope="task", side=side, row=row), first_row={side: row}, steps=picked, plan=plan,
                     counts=counts(plan))
     if scope == "dual":
@@ -620,6 +648,9 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
             plan = build_plan(picked["left"], picked["right"])
         except ValueError as exc:
             raise UserError(f"Cannot start the dual-arm task: {exc}", code="plan") from None
+        check = _lid_check_before(full, k)
+        if check:
+            plan = [check] + plan
         first = {side: min(x.get("_row") or 1 for x in parts[side]) for side in ARMS}
         return dict(mode="both", pick=dict(scope="dual", stage=k, label=st.get("program_id") or st.get("title")), first_row=first,
                     steps=picked, plan=plan, counts=counts(plan))
@@ -1601,16 +1632,13 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                 job.set(stage=i)
                 job.progress(f"Stage {i + 1} of {len(run['plan'])}", i, len(run["plan"]))
                 kind, pid = st["kind"], st.get("program_id")
-                if kind == "checkpoint":
-                    say("SAFE TIMELINE // MANUAL LID COVER CHECKPOINT // ROBOTS PAUSED", left="PAUSED // MANUAL LID CHECK",
-                        right="PAUSED // MANUAL LID CHECK")
+                if kind == "checkpoint":                    # the arms of this run pause (a task's: its own arm or both)
+                    say("SAFE TIMELINE // MANUAL LID COVER CHECKPOINT // ROBOTS PAUSED", **{x: "PAUSED // MANUAL LID CHECK" for x in sides})
                     if not job.ask(st["title"], st["message"], ok="OK", cancel="Cancel"):
-                        say("SAFE TIMELINE CANCELLED // MANUAL CHECKPOINT NOT CONFIRMED", left="IDLE // CHECKPOINT CANCELLED",
-                            right="IDLE // CHECKPOINT CANCELLED")
+                        say("SAFE TIMELINE CANCELLED // MANUAL CHECKPOINT NOT CONFIRMED", **{x: "IDLE // CHECKPOINT CANCELLED" for x in sides})
                         raise UserError("The manual checkpoint was not confirmed: the sequence ended there.",
                                         "Nothing ran after it.")
-                    say("SAFE TIMELINE // MANUAL LID CONFIRMED // RESUMING", left="READY // LID CONFIRMED",
-                        right="READY // LID CONFIRMED")
+                    say("SAFE TIMELINE // MANUAL LID CONFIRMED // RESUMING", **{x: "READY // LID CONFIRMED" for x in sides})
                 elif kind == "parallel":
                     together(st, f"Program {pid}", f"PROGRAM RULES // Program {pid} // LEFT + RIGHT TOGETHER")
                 elif kind == "tail" and st.get("left") and st.get("right"):

@@ -161,3 +161,29 @@ def test_the_lid_checkpoint_asks_and_stop_interrupts_the_runner(server):
     assert st["left"]["estop"] == "RECOVERING" and st["right"]["estop"] == "RECOVERING"     # latched until Recover
     for side in ("left", "right"):
         assert call(server, "POST", f"/api/robots/{side}/recover", {})["estop"] == "CLEAR"
+
+
+def test_a_task_after_the_lid_checkpoint_asks_it_before_anything_moves(server):
+    """A Single task picked after V53's manual lid cover checkpoint runs without the sequence's sections before
+    it, so it asks the checkpoint first (the owner, 16 Oct): Cancel ends it with nothing run on the arm."""
+    lid = {"type": "wait", "seconds": 0.5}
+    call(server, "PUT", f"{P}/workflow/left", {"steps": steps(lid)})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": steps(lid)})
+    left = call(server, "GET", f"{P}/workflow")["left"]
+    row = next(i + 1 for i, st in enumerate(left) if st["type"] == "program")
+    pick = {"scope": "task", "side": "left", "row": row, "id": 71}
+    plan = call(server, "POST", f"{P}/workflow/plan", {"mode": "left", "pick": pick})
+    assert [s["kind"] for s in plan["stages"]] == ["checkpoint", "single"]
+    j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "left", "pick": pick}))
+    assert j["state"] == "done", j
+    call(server, "POST", f"{P}/workflow/played", {"hash": j["result"]["hash"]})
+    job = call(server, "POST", f"{P}/workflow/run", {"mode": "left", "pick": pick, "confirmed": True, "warnings_seen": j["result"]["hash"]})
+    j = wait(server, job, until=lambda j: j["extra"].get("question"))
+    q = j["extra"]["question"]
+    assert q["title"] == "MANUAL LID COVER CHECKPOINT" and q["text"].startswith("This task comes after the manual lid")
+    live = j["extra"]["live"]
+    assert live["left"] == "PAUSED // MANUAL LID CHECK" and live.get("right") != "PAUSED // MANUAL LID CHECK"   # the task's arm only
+    call(server, "POST", f"/api/jobs/{job['id']}/answer", {"question": q["id"], "yes": False})
+    j = wait(server, job)
+    assert j["state"] == "failed" and "checkpoint was not confirmed" in j["error"]
+    assert "WORKFLOW STEP START" not in events(j)                                       # nothing ran on the arm

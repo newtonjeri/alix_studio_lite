@@ -1,4 +1,4 @@
-"""Merge + Full Sequence S2 (feedback v5, slide 9): V53's Page 02 ported as it is. Its planner is
+"""Merge + Sequence S2 (feedback v5, slide 9): V53's Page 02 ported as it is. Its planner is
 V53's own code: run here against V53's methods (read from the reference file, not imported: it is a
 Tk program) on the owner's V6 files and on many generated sequences; the steps are checked as runner
 v14 checks them; V53's JSON loads per arm and never into the other arm; a run is a single task, a
@@ -138,12 +138,21 @@ def test_a_single_task_a_dual_arm_task_or_the_sequences():
     assert [st["kind"] for st in workflow.plan_for(steps, "both")["plan"]] == [st["kind"] for st in full]   # the sequences, every row
     later = next(i for i, st in enumerate(full) if st["kind"] == "parallel" and i > 2)                     # after the lid checkpoint
     dual = workflow.plan_for(steps, "both", {"scope": "dual", "stage": later})
-    assert dual["mode"] == "both" and [st["kind"] for st in dual["plan"]] == ["parallel"]
+    # after the manual lid cover checkpoint: the task's run asks it first (the owner, 16 Oct), as the sequence does
+    assert dual["mode"] == "both" and [st["kind"] for st in dual["plan"]] == ["checkpoint", "parallel"]
+    check = dual["plan"][0]
+    assert check["title"] == "MANUAL LID COVER CHECKPOINT" and check["message"].startswith("This task comes after the manual lid")
+    assert "Lid cover is fully open" in check["message"] and dual["counts"]["checkpoints"] == 1
+    row = next(x["_row"] for x in full[later]["left"]["steps"] if x["type"] == "program")
+    alone = workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": row})
+    assert [st["kind"] for st in alone["plan"]] == ["checkpoint", "single"] and alone["mode"] == "left"
+    assert [st["kind"] for st in task["plan"]] == ["single"]                                          # before it: no question
     for side in ("left", "right"):                                     # the pole and hand in force, then the stage's own rows
         kinds = [st["type"] for st in dual["steps"][side]]
         assert "program" in kinds and kinds.index("program") > 0 and {"pole", "hand"} <= set(kinds[:kinds.index("program")])
     serial = next(i for i, st in enumerate(full) if st["kind"] == "serial")
-    assert [st["kind"] for st in workflow.plan_for(steps, "both", {"scope": "dual", "stage": serial})["plan"]] == ["serial"]
+    asks = [["checkpoint"]] if any(st["kind"] == "checkpoint" for st in full[:serial]) else [[]]
+    assert [st["kind"] for st in workflow.plan_for(steps, "both", {"scope": "dual", "stage": serial})["plan"]] == asks[0] + ["serial"]
     check = next(i for i, st in enumerate(full) if st["kind"] == "checkpoint")
     with pytest.raises(UserError, match="not a dual-arm task"):
         workflow.plan_for(steps, "both", {"scope": "dual", "stage": check})

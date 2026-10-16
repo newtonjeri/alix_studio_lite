@@ -1,4 +1,4 @@
-// Merge + Full Sequence, S2: Sequence (feedback v5, slide 9; the owner, 16 Oct; was Full & Partial Sequence): the
+// Merge + Sequence, S2: Sequence (feedback v5, slide 9; the owner, 16 Oct; was Full & Partial Sequence): the
 // control program's Page 02 (V53 with runner v14) in Lite's style, its layout and its working as
 // they are (server/workflow.py):
 // - each arm's steps: PROGRAM (a stored program, its Start %: the controller's move to its first
@@ -502,15 +502,22 @@ function pickText() {
   return `Stage ${k.stage + 1} · ${k.text}`;
 }
 
+// A task after V53's manual lid cover checkpoint asks it first, in Real (its pause in Simulation): said in the list.
+const LID = ' · after the lid checkpoint: it asks first';
+
 // The task as a searchable list (picker.js): each arm's Program rows (Single task), or the stages of V53's
 // plan with both arms' Programs (Dual-arm task).
 async function chooseTask(anchor) {
   try { await saved(); } catch (err) { tell(err); return; }
   const label = (st) => `Program ${st.id}${st.name ? ` // ${st.name}` : ''}`;
+  let full = null;                                           // V53's plan of both arms (none with one arm's steps)
+  try { full = await post(`${base()}/plan`, { mode: 'both' }); } catch (_) { /* no checkpoint to say */ }
+  const afterCheck = (s) => !!s && !!full && full.stages.some(x => x.kind === 'checkpoint' && x.index < s.index);
   if (S.scope === 'task') {
+    const stageOf = (side, row) => full && full.stages.find(x => ((x.programs || {})[side] || []).some(p => p.row === row));
     const groups = ARMS.map(side => ({ label: `${ARM(side)} arm`, rows: S.steps[side].map((st, i) => (st.type !== 'program' ? null
-      : { value: `${side}:${i + 1}`, text: `Row ${i + 1} · ${label(st)}`, detail: `${st.dual_rule || 'TOGETHER'} · Start ${st.transit_speed || 30} %`,
-        search: ARM(side) })).filter(Boolean) }));
+      : { value: `${side}:${i + 1}`, text: `Row ${i + 1} · ${label(st)}`, search: ARM(side),
+        detail: `${st.dual_rule || 'TOGETHER'} · Start ${st.transit_speed || 30} %${afterCheck(stageOf(side, i + 1)) ? LID : ''}` })).filter(Boolean) }));
     choose(anchor, groups, S.pick ? `${S.pick.side}:${S.pick.row}` : null, (v) => {
       const [side, row] = v.split(':');
       const st = S.steps[side][Number(row) - 1];
@@ -519,14 +526,16 @@ async function chooseTask(anchor) {
     }, { placeholder: 'Search the Programs: row, ID or name' });
     return;
   }
-  let plan;
-  try { plan = await post(`${base()}/plan`, { mode: 'both' }); } catch (err) { tell(err); return; }
+  if (!full) {
+    try { full = await post(`${base()}/plan`, { mode: 'both' }); } catch (err) { tell(err); return; }
+  }
+  const plan = full;
   const names = (side, s) => (s.programs[side] || []).map(x => `${x.id}${x.name ? ` ${x.name}` : ''}`).join(', ');
   const rows = plan.stages.filter(s => (s.kind === 'parallel' || s.kind === 'serial') && (s.programs.left || []).length && (s.programs.right || []).length)
     .map(s => ({ value: String(s.index),
       text: s.kind === 'serial' ? `Stage ${s.index + 1} · Program ${s.label} · one arm at a time (${ARM(s.first)} first)`
         : `Stage ${s.index + 1} · ${s.title || (/^\d+$/.test(s.label) ? `Program ${s.label}` : s.label || 'TIMELINE')} · LEFT + RIGHT together`,
-      detail: `LEFT ${names('left', s)} · RIGHT ${names('right', s)}` }));
+      detail: `LEFT ${names('left', s)} · RIGHT ${names('right', s)}${afterCheck(s) ? LID : ''}` }));
   choose(anchor, [{ label: `V53's plan · ${rows.length} dual-arm task${rows.length === 1 ? '' : 's'}`, rows }], S.pick ? String(S.pick.stage) : null, (v) => {
     const r = rows.find(x => x.value === v), s = plan.stages.find(x => String(x.index) === v);
     S.pick = { stage: Number(v), ids: { left: (s.programs.left || []).map(x => x.id), right: (s.programs.right || []).map(x => x.id) },

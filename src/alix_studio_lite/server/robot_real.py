@@ -621,7 +621,7 @@ class RealArm:
                  elapsed_s=time.monotonic() - t0, text=why)
         return dict(ok=rc == 0, why=why, seconds=round(time.monotonic() - t0, 2), lines=said.splitlines())
 
-    # ── Merge + Full Sequence S2: Page 02's steps through runner v14 (feedback v5, slide 9)
+    # ── Merge + Sequence S2: Page 02's steps through runner v14 (feedback v5, slide 9)
     def run_workflow(self, steps: list, overall_pct: int, restore_pct: int, timeout_s: float = 300.0, on_line=None,
                      stop_hook=None) -> dict:
         """An arm's part of a Page 02 stage through runner v14's own ``run_workflow_sequence``, as V53
