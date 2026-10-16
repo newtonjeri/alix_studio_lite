@@ -386,3 +386,38 @@ def test_drag_sensitivity_is_read_set_and_given_back_and_errors_cleared(server):
     assert e["readable"] and e["clean"] and e["text"] == "clean"
     c = call(server, "POST", "/api/robots/left/clear-errors", {})
     assert c["ok"] and c["clean"]
+
+
+def test_data_management_lists_what_each_controller_stores(server):
+    """Data Management (the owner, 16 Oct): each arm's controller as RealMan's own web page lists it, read only:
+    its programs (slot, name, size, stored speed; Lite's record of the ones it sent, named by the project's
+    file of those bytes), the program its IO starts, its global points and its tracks (a 4th-generation call:
+    -4 on the lab's controllers); never while the arm moves."""
+    call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
+    u = call(server, "GET", f"{U}/L-T01")
+    if not u["versions"]:                                  # as test_upload_and_runs_on_the_controller leaves it
+        lib = next(x for x in u["recordings"] if x["source"] == "library")
+        call(server, "POST", f"{U}/L-T01/active", {"file": lib["file"]})
+        assert wait(server, call(server, "POST", f"{U}/L-T01/optimise", {}))["state"] == "done"
+        call(server, "POST", f"{U}/L-T01/keep", {})
+    if not {p["id"]: p for p in call(server, "GET", "/api/robots/left/programs")["programs"]}.get(9, {}).get("sha256"):
+        j = wait(server, call(server, "POST", f"{U}/L-T01/upload", {"program_id": 9, "confirmed": True, "limits_seen": True}))
+        assert j["state"] == "done", j
+    d = call(server, "GET", "/api/robots/left/data?pid=alix_real")
+    assert d["linked"] and d["connected"] and d["ip"] and d["read"]
+    progs = {p["num"]: p for p in d["programs"]}
+    assert progs[9]["name"] == "9_L-T01_v001.txt" and progs[9]["bytes"] > 0 and "speed" in progs[9]
+    assert progs[9]["lite"]["sent"] and progs[9]["lite"]["project_file"] and progs[9]["lite"]["lines"] > 0
+    assert d["default_program"] == 0
+    assert [p["name"] for p in d["points"]][:3] == ["STP_HOME", "STP_LID_OPEN", "CLEAN_A"] and len(d["points"][0]["joints"]) == 7
+    assert not d["tracks"]["available"] and "4th-generation" in d["tracks"]["why"]
+    assert set(d["not_in_api"]) == {"script", "models"}
+    assert call(server, "GET", "/api/robots/right/data")["programs"] is not None
+
+    job = call(server, "POST", f"{U}/L-T01/run", {"confirmed": True})
+    time.sleep(0.3)
+    busy = call(server, "GET", "/api/robots/left/data")
+    assert busy.get("code") == "busy" and "busy" in busy["error"], busy
+    wait(server, job, 300)
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    assert "controller data" in {r["verb"] for r in hw}

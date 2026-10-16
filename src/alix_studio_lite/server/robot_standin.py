@@ -1197,6 +1197,42 @@ class StandInRobot:
                             **({k: mine[k] for k in ("sha256", "stage", "lines", "uploaded")} if ours else {})))
         return out
 
+    def controller_data(self, side: str, files: dict | None = None) -> dict:
+        """Data Management (the owner, 16 Oct: the controller's stored data as RealMan's own web page lists
+        it, per arm, display only): a linked arm's programs (Graphical Program), global points and tracks,
+        with Lite's record of each program it sent (when; which project file, by its bytes, from ``files``:
+        {sha256: the project's file}); the stand-in's programs, as Lite sent them. Read only, and never
+        while the arm moves or teaches (the link reads nothing then)."""
+        a = self.arm(side)
+        real = self._real(side)
+        out = dict(side=side, connected=a.connected, linked=real is not None, read=time.strftime("%Y-%m-%d %H:%M:%S"), ip=None)
+
+        def lite(mine):
+            f = (files or {}).get(mine.get("sha256")) or {}
+            return dict(sent=mine.get("uploaded"), file=mine.get("name"), lines=mine.get("lines"),
+                        project_file=f.get("name"), region=f.get("region"))
+
+        if real is None:
+            progs = [dict(num=i, name=r.get("stored_name") or r.get("name"), bytes=r.get("bytes"), speed=None, lite=lite(r))
+                     for i, r in sorted(a.programs.items())]
+            return dict(out, programs=progs, default_program=None, points=None,
+                        tracks=dict(available=False, list=[], why="The stand-in robot has no controller."),
+                        note="The stand-in robot has no controller: the programs Lite sent to it are listed. Start Lite with "
+                             "--robot realman and connect the arm to read its controller.")
+        if not a.connected:
+            raise UserError(f"Connect the {side.upper()} arm to read its controller's data.", code="connect")
+        moving = [j for j in self.jobs.running(arm=side) if j.kind in MOTION_KINDS]
+        if moving or a.teaching:
+            raise UserError(f"The {side.upper()} arm is busy ({moving[0].title if moving else 'drag teaching'}).",
+                            "Its controller's data is read once it has stopped.", code="busy")
+        d = real.controller_data()
+        progs = []
+        for x in d["programs"]:
+            mine = a.programs.get(int(x["num"]))
+            ours = bool(mine) and self._same_program(mine, dict(size=x["bytes"]))
+            progs.append(dict(x, lite=lite(mine) if ours else None))
+        return dict(out, ip=d["ip"], programs=progs, default_program=d["default_program"], points=d["points"], tracks=d["tracks"])
+
     @staticmethod
     def _same_program(mine: dict, held: dict) -> bool:
         """Whether the controller's program is the one Lite sent (its stored size, as read back at upload)."""

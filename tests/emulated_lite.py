@@ -5,7 +5,9 @@ recording is written by "the SDK" itself, as on the robot (one {"point":[...]} l
 millidegrees per 5 ms sample, CRLF), starting from where the arm stands. Nor has it global points:
 three are stored here, made from where the arm stands at the first list (reachable by MoveJ and
 MoveL), answered as the SDK answers (a page of the list, or one point by name), and saved as the SDK
-saves them (rm_add_global_waypoint, rm_update_global_waypoint with its rm_waypoint_t)."""
+saves them (rm_add_global_waypoint, rm_update_global_waypoint with its rm_waypoint_t). Data Management's
+two other reads answer as the lab's 3rd-generation controllers do: no IO default program, and -4 for the
+tracks list (a 4th-generation call)."""
 import json
 import sys
 import time
@@ -87,6 +89,14 @@ def update_point(self, wp):
     return 0
 
 
+def default_program(self):
+    return 0, 0                             # the program the controller's IO starts: none
+
+
+def tracks(self, page, size, search):
+    return -4, {}                           # RealMan's tracks list: 4th-generation controllers only
+
+
 if __name__ == "__main__":                  # Lite's tuning workers import the main module again
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
     from alix_studio_lite import vendor_paths
@@ -103,6 +113,8 @@ if __name__ == "__main__":                  # Lite's tuning workers import the m
     rm_emulator.RoboticArm.rm_get_given_global_waypoint = waypoint
     rm_emulator.RoboticArm.rm_add_global_waypoint = add_point
     rm_emulator.RoboticArm.rm_update_global_waypoint = update_point
+    rm_emulator.RoboticArm.rm_get_default_run_program = default_program
+    rm_emulator.RoboticArm.rm_get_trajectory_file_list = tracks
     emulator_install = rm_emulator.install
 
     def install():                          # the SDK's waypoint structure beside the emulated arm

@@ -96,3 +96,10 @@ def test_a_merge_and_the_viewers_two_files_are_checked(lite):
     one = wait(lite, call(lite, "POST", "/api/library/collisions", {"right": right["id"]}))["result"]
     assert one["checked"]["arms"] == ["right"] and "cubicle" in one["checked"]["walls"]
     assert "Load a LEFT or a RIGHT file" in call(lite, "POST", "/api/library/collisions", {})["error"]
+
+
+def test_data_management_on_the_stand_in(lite):
+    """The stand-in has no controller: Data Management lists what Lite sent to it, and says so."""
+    d = call(lite, "GET", f"/api/robots/left/data?pid={PID}")
+    assert not d["linked"] and d["points"] is None and "stand-in" in d["note"] and not d["tracks"]["available"]
+    assert isinstance(d["programs"], list) and set(d["not_in_api"]) == {"script", "models"}

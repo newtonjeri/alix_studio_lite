@@ -10,6 +10,7 @@ import { installAdvanced } from './advanced.js';
 import { installAlerts } from './alerts.js';
 import { installAuth } from './auth.js';
 import { installBrand } from './brand.js';
+import { installDataManagement } from './datamgmt.js';
 import { installFixes } from './fixes.js';
 import { installFolder } from './folder.js';
 import { installFullSeq } from './fullseq.js';
@@ -56,6 +57,7 @@ installTune();            // tuning with the optimiser, limits, target time (D24
 installRealTest();
 installAdvanced();
 installViewer();          // taught .txt files: upload, check, replay in 3D
+installDataManagement();  // what each arm's controller stores, as RealMan's web page lists it (the owner, 16 Oct)
 installFullSeq();         // Merge + Full Sequence: tabs S1 Merge & Upload, S2 Full & Partial Sequence (the owner, 16 Oct)
 installActivity();        // last: the page's audit trail goes to the server, its Activity Logs page reads it
 document.documentElement.dataset.lite = 'ready';

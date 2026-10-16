@@ -1648,6 +1648,28 @@ def get_points(app, q, body, m):
     return {"arm": side, "total": len(pts), "points": [p for p in pts if want in p["name"].casefold()]}
 
 
+@route("GET", r"/api/robots/(left|right)/data")
+def get_robot_data(app, q, body, m):
+    """Data Management: what the arm's controller stores, read only (``robot.controller_data``); ``pid``:
+    the open project, whose files name the programs Lite sent."""
+    session(app)
+    side = _arm(m)
+    files = None
+    pid = str((q.get("pid") or [""])[0])
+    if pid:
+        from . import workflow
+
+        try:
+            files = workflow._project_files(units_of(app, pid), side)
+        except UserError:
+            files = None
+    out = app.robot.controller_data(side, files)
+    out["not_in_api"] = {
+        "script": "RealMan's API has no call that lists the script programs: the arm's own web page (Data Management) shows them.",
+        "models": "RealMan's API has no call that lists the model warehouse: the arm's own web page (Data Management) shows it."}
+    return out
+
+
 @route("POST", r"/api/robots/(left|right)/points/save")
 def post_point_save(app, q, body, m):
     """The arm's pose now, saved on its controller as a global point (feedback v2, slide 14):

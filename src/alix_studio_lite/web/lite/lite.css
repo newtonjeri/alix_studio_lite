@@ -543,6 +543,41 @@ html[data-theme="dark"] .lite-vtools-state.err, html[data-theme="dark"] .lite-vt
 .topbar .lite-normal-btn:not(:disabled) { background: var(--green2); border-color: var(--green); color: var(--green); }
 .topbar .lite-normal-btn:disabled { opacity: .45; cursor: not-allowed; }
 .topbar.lite-fit-3 .lite-drag-btn .lite-long, .topbar.lite-fit-3 .lite-normal-btn .lite-long { display: none; }
+
+/* Data Management (datamgmt.js): the top bar's button ("Data" when the bar is narrow), and its window:
+   each arm's controller as RealMan's own web page lists it (tabs, sortable columns, a search, pages) */
+.topbar .lite-data-btn { white-space: nowrap; border-radius: 11px; padding: 10px 12px; font-weight: 800; cursor: pointer;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+.topbar .lite-data-btn:hover { background: var(--soft); }
+.topbar.lite-fit-2 .lite-data-btn .lite-long { display: none; }
+.lite-dm-card { width: min(1320px, 96vw); }
+.lite-dm-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 10px; }
+.lite-dm-bar .lite-status { margin-top: 0; }
+.lite-dm-arms { display: inline-flex; gap: 6px; }
+.lite-dm-tabsrow { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px; }
+.lite-dm-tabsrow .lite-tabs { margin: 0; flex: 1; }
+.lite-dm-search { min-width: 220px; min-height: 40px; margin-bottom: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--card); color: var(--ink); font: inherit; }
+.lite-dm-tablebox { flex: 1; min-height: 160px; overflow: auto; margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; }
+.lite-dm-table { margin: 0; }
+.lite-dm-table thead th { position: sticky; top: 0; z-index: 1; background: var(--card); white-space: nowrap; }
+.lite-dm-sort { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.lite-dm-sort::after { content: ''; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 5px solid var(--muted); opacity: .45; }
+.lite-dm-sort.asc::after { border-bottom-color: var(--blue); opacity: 1; }
+.lite-dm-sort.desc::after { border-bottom: 0; border-top: 5px solid var(--blue); opacity: 1; }
+.lite-dm-name b { overflow-wrap: anywhere; }
+.lite-dm-name small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+.lite-dm-badge { margin-left: 6px; padding: 1px 6px; border-radius: 6px; background: var(--blue2); color: var(--blue); font-size: 11px; font-weight: 700; }
+.lite-dm-num { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lite-dm-empty { padding: 18px; color: var(--muted); line-height: 1.5; }
+.lite-dm-none { text-align: center; color: var(--muted); }
+.lite-dm-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+.lite-dm-pager:empty { display: none; }
+.lite-dm-pager select, .lite-dm-goto input { min-height: 36px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); }
+.lite-dm-goto input { width: 72px; margin-left: 4px; }
+.lite-dm-page { min-width: 40px; padding: 6px 10px; }
+.lite-dm-page.active { border-color: var(--blue); color: var(--blue); }
+.lite-dm-gap { color: var(--muted); }
 .lite-drag-menu { position: fixed; z-index: 80; width: 290px; display: flex; flex-direction: column; gap: 6px; padding: 10px;
   border: 1px solid var(--line); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); }
 .lite-drag-menu-head { font-size: 12px; font-weight: 800; color: var(--muted); }

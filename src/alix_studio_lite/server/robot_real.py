@@ -469,6 +469,46 @@ class RealArm:
     def _printed(self, line: str) -> None:
         self._hw("rm_upload", text=line)
 
+    # ── what the controller stores (Data Management; the owner, 16 Oct), read only
+    def controller_data(self) -> dict:
+        """Its programs as RealMan's program list gives them (slot, name: cut to 31 characters by its API,
+        size in bytes, stored speed), the program its IO starts (``rm_get_default_run_program``, 0: none),
+        its tracks list (``rm_get_trajectory_file_list``: RealMan's API answers it on 4th-generation
+        controllers only) and its global points. Nothing is written."""
+        with self.link.busy("reading the controller's data"), _printed_to(self._printed):
+            held = self._slots()
+            try:
+                ret, default = self.robot.rm_get_default_run_program()
+            except Exception as exc:                                                # noqa: BLE001
+                ret, default = None, None
+                self._hw("IO default program", ok=False, text=str(exc))
+            tracks = self._tracks()
+        self._hw("controller data", ok=True, text=f"{len(held)} programs; IO default {default if ret == 0 else 'not read'}; "
+                 f"tracks {'read' if tracks['available'] else 'not available'}")
+        return dict(programs=[dict(num=k, name=v[0], bytes=v[1], speed=v[2]) for k, v in sorted(held.items())],
+                    default_program=int(default) if ret == 0 and default is not None else None,
+                    default_ret=ret, tracks=tracks, points=self.global_points(), ip=self.link.ip)
+
+    def _tracks(self) -> dict:
+        """The drag-teaching tracks the controller keeps, a page of 10 at a time (a long page overflowed the
+        SDK's buffer on the program list: alix_dispatch.track)."""
+        out = []
+        for page in range(1, 101):
+            try:
+                ret, d = self.robot.rm_get_trajectory_file_list(page, 10, "")
+            except Exception as exc:                                                # noqa: BLE001
+                return dict(available=False, list=[], why=f"RealMan's API could not read it here ({exc}).")
+            if ret == -4:
+                return dict(available=False, list=[], ret=ret, why="RealMan's API reads the tracks list on 4th-generation "
+                            "controllers only; this one is 3rd generation (it answers -4). The arm's own web page lists them.")
+            if ret != 0:
+                return dict(available=False, list=out, ret=ret, why=f"The controller did not give its tracks list (ret {ret}).")
+            batch = d.get("tra_list") or []
+            out += [dict(name=t.get("name"), points=t.get("point_num"), created=t.get("create_time")) for t in batch]
+            if len(batch) < 10 or len(out) >= int(d.get("total_size") or 0):
+                break
+        return dict(available=True, list=out)
+
     def upload(self, path: Path, program_id: int, name: str) -> dict:
         """Store a track file as program ``program_id`` with rm_upload.upload (the project file, store
         only, then the stored size read back); the read-back is tried again if the controller does
