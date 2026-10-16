@@ -4,7 +4,7 @@
 // Review) load its file again when it is shown next (sim.invalidate; fullseq.js tells it on the way
 // back).
 
-import { ensure3D, invalidate, say3d } from './sim.js';
+import { ensure3D, invalidate, say3d, scene } from './sim.js';
 
 let held = false;
 
@@ -16,6 +16,17 @@ export async function borrow(host) {
   held = true;
   say3d(host, null);
   return { viewer, robot };
+}
+
+// The view with nothing loaded yet: the robot at home in the room, the commode lid closed (the owner, 16 Oct:
+// "The robot should be visible by default at its home state, even before any merge is applied").
+export async function home3d(host) {
+  const three = await borrow(host);
+  three.robot.home();
+  for (const side of ['left', 'right']) three.robot.clearTrack(side);
+  await scene('lid_closed');
+  three.viewer.dirty = true;
+  return three;
 }
 
 // Whether S1 or S2 had the view (the region's simulation must load its file again), once.

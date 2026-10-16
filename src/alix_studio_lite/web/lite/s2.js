@@ -16,7 +16,7 @@
 
 import { call, get, post, put, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, tell } from './ctx.js';
-import { borrow, Player } from './seq3d.js';
+import { borrow, home3d, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { speedPct } from './status.js';
 import { saveBlobAs } from './tune.js';
@@ -903,6 +903,8 @@ export function openS2(host) {
       view.shown = { left: null, right: null };
       view.phase = null;
       if (await prefetch()) showAt(player.t);
+    } else {                                                // nothing simulated yet: the robot at home
+      try { view.three = await home3d($('liteS2Host')); } catch (_) { /* no 3D in this browser */ }
     }
   });
 }

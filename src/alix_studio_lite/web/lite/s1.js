@@ -15,7 +15,7 @@
 
 import { call, get, post, say } from './api.js';
 import { armFromName, confirmDialog, ctx, el, jobLine, robotCall, stageDialog, tell, watchJob } from './ctx.js';
-import { borrow, Player } from './seq3d.js';
+import { borrow, home3d, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { saveBlobAs } from './tune.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
@@ -53,8 +53,9 @@ function build() {
   const btn = (text, onclick, cls = 'btn light') => el('button', { class: cls, type: 'button', text, onclick });
   panel.replaceChildren(
     el('div', { class: 'notice lite-s1-hint' }, el('b', { text: 'Which files merge: ' }),
-      'only files with the same pole, hand, UGV placement and room (each measurement within ±10 mm). Pick the first file: the files that '
-      + 'differ from it are greyed out, with what differs. The merged program runs from one UGV position, with one pole and hand.'),
+      'one version per task, all raw (recordings) or all processed (tuned versions), with the same pole, hand, UGV placement and room '
+      + '(each measurement within ±10 mm, the standoff ±5 mm). Pick the first file: the files that cannot join it are greyed out, with why. '
+      + 'The merged program runs from one UGV position, with one pole and hand.'),
     el('div', { class: 'lite-s1-arms' }, ARMS.map((side) => el('div', { class: `card lite-s1-arm ${side}` },
       el('div', { class: 'lite-s1-head' }, el('span', { class: `badge ${side === 'left' ? 'blue' : 'orange'}`, text: `${ARM(side)} ARM` }),
         el('b', { text: `Merge the ${ARM(side)} arm's files` })),
@@ -185,8 +186,8 @@ function chooseFile(side, anchor) {
     const label = `${it.project ? `${it.project} · ` : s.scope === 'all' ? 'This project · ' : ''}${it.region}`;
     if (!groups.has(label)) groups.set(label, []);
     const differs = it.differs && it.differs.length ? `Differs from the first file: ${it.differs.join('; ')}` : '';
-    groups.get(label).push({ value: it.ref, text: it.name, search: `${KIND[it.kind]} ${it.region} ${it.project || ''}`,
-      detail: `${KIND[it.kind]} · ${fmt(it.seconds)} · ${it.stage_text} · ${it.placement_text}`,
+    groups.get(label).push({ value: it.ref, text: it.name, search: `${KIND[it.kind]} ${it.grade} ${it.region} ${it.project || ''}`,
+      detail: `${KIND[it.kind]} (${it.grade}) · ${fmt(it.seconds)} · ${it.stage_text} · ${it.placement_text}`,
       disabled: !!(it.why || differs), note: it.why ? `Cannot be merged: ${it.why}` : differs });
   }
   choose(anchor, [...groups].map(([label, rows]) => ({ label, rows })), null, (ref) => pick(side, ref),
@@ -435,8 +436,11 @@ export function openS1(host, opts = {}) {
   }
   if (opts.side && opts.file) st[opts.side].sel = opts.file;
   Promise.all(ARMS.map(load)).then(() => {
-    // the merge in review before another view had the 3D comes back with the tab (each view loads when shown)
-    if (review.side && review.file && (!three || three.viewer.host !== $('liteS1Host'))) show3d(review.side, true);
+    // the merge in review before another view had the 3D comes back with the tab (each view loads when shown);
+    // with none, the robot at home
+    if (three && three.viewer.host === $('liteS1Host')) return;
+    if (review.side && review.file) show3d(review.side, true);
+    else home3d($('liteS1Host')).then((x) => { three = x; }).catch(() => {});
   });
 }
 

@@ -217,3 +217,35 @@ def test_a_file_from_this_computer_is_loaded_with_the_pole_and_hand_said(lite):
     assert item["region"] == "Loaded from this computer" and not item["why"] and item["placement"] is None
     m = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_with_pc.txt", "files": [item["ref"]]})
     assert m["stage"]["pole_mm"] == 150 and m["parts"][0]["name"] == "L_from_pc.txt"
+
+
+def test_one_version_per_task_all_raw_or_all_processed(lite):
+    """S1's guards (the owner, 16 Oct): a task's (region's) files never merge with each other, its raw and its
+    processed one included; a merge is of recordings (raw) or of tuned versions (processed), never both; a merge
+    used again carries its tasks and its grade."""
+    call(lite, "POST", P + "/placement/task", {"task": "TASK 1A", "standoff_mm": 380})
+    call(lite, "POST", P + "/placement/task", {"task": "TASK 2", "standoff_mm": 380})
+    upload(lite, "L-R01", "L_g_a1.txt", "TASK 1A")
+    upload(lite, "L-R01", "L_g_a2.txt", "TASK 1A", start=1.0)                    # the same task again
+    upload(lite, "L-R02", "L_g_b.txt", "TASK 2", start=2.0)
+    items = sources(lite, "left")
+    a1, a2, b = items["L_g_a1.txt"], items["L_g_a2.txt"], items["L_g_b.txt"]
+    assert a1["tasks"] == ["L-R01"] and a1["grade"] == "raw" and b["tasks"] == ["L-R02"]
+    picked = sources(lite, "left", [a1["ref"]])
+    assert any("L-R01 is in the merge already (L_g_a1.txt): one version per task" in d for d in picked["L_g_a2.txt"]["differs"])
+    assert picked["L_g_b.txt"]["compatible"]
+    bad = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_g_bad", "files": [a1["ref"], a2["ref"]]})
+    assert bad["code"] == "mismatch" and "one version per task" in bad["error"]
+
+    assert wait(lite, call(lite, "POST", f"{P}/units/L-R02/optimise", {}))["state"] == "done"
+    call(lite, "POST", f"{P}/units/L-R02/keep", {})
+    ver = next(it for it in sources(lite, "left", [a1["ref"]]).values() if it["kind"] == "ver" and it["tasks"] == ["L-R02"])
+    assert ver["grade"] == "processed" and any("all raw or all processed" in d for d in ver["differs"])
+    bad = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_g_mixed", "files": [a1["ref"], ver["ref"]]})
+    assert bad["code"] == "mismatch" and "all raw or all processed" in bad["error"]
+
+    m = call(lite, "POST", f"{P}/merges/left/from-project", {"name": "L_g_ok", "files": [a1["ref"], b["ref"]]})
+    again = sources(lite, "left", [a2["ref"]])["L_g_ok.txt"]
+    assert again["tasks"] == ["L-R01", "L-R02"] and again["grade"] == "raw"
+    assert any("L-R01 is in the merge already" in d for d in again["differs"])          # its tasks count too
+    assert m["name"] == "L_g_ok.txt"

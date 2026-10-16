@@ -289,9 +289,40 @@ def sources(units, side: str) -> list[dict]:
     for m in loaded(units, side):                          # loaded from this computer: not taught in Lite
         out.append(_item(units, side, "file", None, m["file"], "Loaded from this computer", m["name"], m.get("lines"),
                          m.get("taught_arm"), m.get("stage"), None, None, m.get("sha256"), m.get("loaded")))
+    merges_by_file = {m["file"]: m for m in listing(units, side)}
     for it in out:
         it["placement_text"] = pl.words(it["placement"])
-    return out
+        it["tasks"], it["grade"] = _class(units, side, it["ref"], merges_by_file)
+    # each arm's files in its own panel only (the owner, 16 Oct: "A right-arm trajectory should never be available
+    # in the left-arm panel"): a file taught on the other arm is not listed at all
+    return [it for it in out if it["taught_arm"] not in ("left", "right") or it["taught_arm"] == side]
+
+
+GRADE_WORDS = {"raw": "a recording (raw)", "processed": "a tuned, kept version (processed)", "mixed": "a merge of raw and processed files"}
+
+
+def _class(units, side: str, ref: str, merges_by_file: dict, depth: int = 0) -> tuple[list, str]:
+    """What a file is for S1's guards (the owner, 16 Oct): the tasks (regions) in it and its grade, raw (a
+    recording, a file loaded into S1) or processed (a kept version, a merge kept from Tune); a merge has its
+    files' tasks, and their grade ("mixed" when they differ)."""
+    kind, rest = ref.split("|", 1)[-1].split(":", 1)
+    if kind in ("rec", "ver"):
+        return [rest.partition("/")[0]], ("raw" if kind == "rec" else "processed")
+    if kind == "file":
+        return [], "raw"
+    m = merges_by_file.get(rest) if "|" not in ref else None
+    if m is None or depth > 8:
+        return [], "raw"
+    if m.get("made_from"):                                   # kept from Tune: processed, with the tasks of what it was made from
+        src = merges_by_file.get(str((m.get("made_from") or {}).get("file") or ""))
+        tasks = _class(units, side, f"merge:{src['file']}", merges_by_file, depth + 1)[0] if src else []
+        return tasks, "processed"
+    tasks, grades = [], set()
+    for x in m.get("sources") or []:
+        t, g = _class(units, side, str(x.get("ref") or ""), merges_by_file, depth + 1)
+        tasks += [k for k in t if k not in tasks]
+        grades.add(g)
+    return tasks, (grades.pop() if len(grades) == 1 else "mixed" if grades else "raw")
 
 
 def _item(units, side, kind, key, which, region, name, lines, arm, stage, placement, phase, sha, when) -> dict:
@@ -338,11 +369,28 @@ def sources_all(units, side: str, others: list | None = None) -> list[dict]:
 
 
 def with_compatibility(items: list[dict], picked: list[str]) -> list[dict]:
-    """``items`` with, against the first file picked, whether each can join the merge (``compatible``)
-    and why not (``differs``)."""
-    first = next((it for it in items if picked and it["ref"] == picked[0]), None)
+    """``items`` with, against the files picked, whether each can join the merge (``compatible``) and why not
+    (``differs``): the first file's pole, hand, UGV placement and room; one version per task (the owner, 16 Oct:
+    "The same task's trajectories can't be merged with each other"); all raw or all processed ("either all raw
+    or all optimized"). A file picked is held against the ones picked before it."""
+    by = {it["ref"]: it for it in items}
+    chosen = [by[r] for r in picked if r in by]
+    first = chosen[0] if chosen else None
     for it in items:
-        it["differs"] = [] if first is None or it is first else differences(first, it)
+        if first is None or it is first:
+            it["differs"] = []
+        else:
+            earlier = chosen[:chosen.index(it)] if it in chosen else chosen
+            why = differences(first, it)
+            for t in it.get("tasks") or []:
+                had = next((e for e in earlier if t in (e.get("tasks") or [])), None)
+                if had:
+                    why.append(f"{t} is in the merge already ({had['name']}): one version per task")
+            if it.get("grade") != first.get("grade"):
+                why.append(f"{GRADE_WORDS.get(it.get('grade'), it.get('grade'))}, and the merge is of "
+                           f"{'recordings (raw)' if first.get('grade') == 'raw' else 'tuned versions (processed)' if first.get('grade') == 'processed' else 'mixed files'}: "
+                           "all raw or all processed")
+            it["differs"] = why
         it["compatible"] = not it["why"] and not it["differs"]
     return items
 
@@ -367,12 +415,14 @@ def from_project(units, side: str, name: str, refs: list, others: list | None = 
             raise UserError(f"{it['name']} cannot be merged: {it['why']}.", code="arm" if "arm" in it["why"] else "stage")
         chosen.append(it)
     first = chosen[0]
+    if len({it["ref"] for it in chosen}) != len(chosen):
+        raise UserError("A file is in the merge twice.", "Each file once: one version per task.", code="task")
+    with_compatibility(chosen, [it["ref"] for it in chosen])
     for it in chosen[1:]:
-        why = differences(first, it)
-        if why:
-            raise UserError(f"{it['name']} cannot be merged with {first['name']}: {'; '.join(why)}.",
-                            "Only files with the same pole, hand, UGV placement and room merge (each measurement within ±10 mm).",
-                            code="mismatch")
+        if it["differs"]:
+            raise UserError(f"{it['name']} cannot be merged with {first['name']}: {'; '.join(it['differs'])}.",
+                            "One version per task, all raw or all processed, with the same pole, hand, UGV placement and room "
+                            "(each measurement within ±10 mm).", code="mismatch")
     parts = [dict(name=it["name"], md=track.read_md(_path_of(owner.get(it.get("project_id"), units), side, it))) for it in chosen]
     return save(units, side, name, parts, staging.stage_from(first["stage"]), placement=first["placement"], phase=first["phase"],
                 sources=[dict(ref=it["ref"], name=it["name"], sha256=it["sha256"]) for it in chosen])
