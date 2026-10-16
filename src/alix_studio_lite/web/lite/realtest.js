@@ -81,15 +81,29 @@ async function refresh() {
   const next = teachAnotherButton();
   if (next) {                                          // open once the file is on the controller (or its run completed)
     const ready = !!v && ['uploaded', 'dryrun_ok', 'real_ok'].includes(u.status);
+    const n = nextTask(currentTask, selectedArm);
     next.disabled = !ready;
-    next.title = ready ? `${file} is on the controller: let go of the ${s.arm.toUpperCase()} arm and start teaching another task at Prepare.`
+    next.title = ready ? `${file} is on the controller: let go of the ${s.arm.toUpperCase()} arm and go on to `
+      + `${n ? `${TASKS[n.i].label}, ${n.arm.toUpperCase()} arm` : 'another task'} at Prepare.`
       : 'Opens once this region’s file is uploaded to the controller (or its test run has completed).';
   }
 }
 
-// Teach another task (the owner, 15 Oct): greyed out until this region's file is on the controller,
-// uploaded or tested; then the arm is let go and teaching starts again at Prepare, where the next task
-// (Operator Journey) or the other arm is chosen. The file stays on its program; PASS still approves it.
+// Teach another task (the owner, 15 Oct; 16 Oct: "should progress to the next task in the sequence"): greyed
+// out until this region's file is on the controller, uploaded or tested; then the arm is let go and the next
+// task of the queue opens at Prepare, on the same arm when that task uses it (else on its other arm); a task
+// with nothing to teach in Release 1 is passed. After the queue's last task, Prepare of this task, to choose.
+// The file stays on its program; PASS still approves it.
+function nextTask(from, arm) {
+  const other = arm === 'left' ? 'right' : 'left';
+  for (let i = from + 1; i < TASKS.length; i += 1) {
+    const t = TASKS[i], can = (a) => !!(t && t.lite && t.lite[a] && !t.lite[a].later);
+    if (can(arm)) return { i, arm };
+    if (can(other)) return { i, arm: other };
+  }
+  return null;
+}
+
 function teachAnotherButton() {
   let b = $('liteTeachAnother');
   const foot = $('stage-real')?.querySelector('.workspace-footer');
@@ -109,16 +123,28 @@ async function teachAnother() {
     taskRecords[currentTask] = rec;
     window.safeSaveTaskRecords();
   } catch (_) { /* the page still works */ }
+  const next = nextTask(currentTask, selectedArm);
   window.auditLog?.('TEACH', 'Teach another task', `${TASKS[currentTask]?.label || ''} · ${selectedArm.toUpperCase()} ARM · `
-    + 'left Real Test with its file on the controller', 'INFO', { arm: selectedArm });
+    + `left Real Test with its file on the controller${next ? ` · next: ${TASKS[next.i].label} · ${next.arm.toUpperCase()} ARM` : ''}`,
+  'INFO', { arm: selectedArm });
   armSelectionLocked = false;
   window.updateArmLockUI();
+  if (next) {
+    selectedArm = next.arm;                            // the task opens on this arm (loadTask selects it)
+    window.loadTask(next.i);
+    await refreshTasks().catch(() => {});            // the cards and the queue say where each file is now
+    if (currentStage !== 'prepare') await window.setStage('prepare');
+    document.getElementById('taskBoard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.toast(`${s.display} stays on the controller. Next: ${TASKS[next.i].label}, ${next.arm.toUpperCase()} arm: prepare it.`);
+    return;
+  }
   window.resetWorkingTrajectoryState?.();
-  await refreshTasks().catch(() => {});              // the cards and the queue say where each file is now
+  await refreshTasks().catch(() => {});
   await window.setStage('prepare');
   window.setJourneyVisible?.(true, false);
   document.getElementById('taskBoard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  window.toast(`${s.display} stays on the controller. Choose the next task in the Operator Journey, or the other arm, then prepare it.`);
+  window.toast(`${s.display} stays on the controller. ${TASKS[currentTask]?.label || 'This'} is the last task in the queue: `
+    + 'choose a task in the Operator Journey, or the other arm, then prepare it.');
 }
 
 // The upload as a horizontal bar with its percentage (the owner, 14 Oct), under the page's status

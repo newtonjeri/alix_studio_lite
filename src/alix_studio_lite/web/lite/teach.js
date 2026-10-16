@@ -14,9 +14,14 @@ import { post, say } from './api.js';
 import { armFromName, ctx, el, fmtS, loadUnit, robotCall, stageDialog, step, tell, unitUrl, watchJob } from './ctx.js';
 import { liteMode } from './status.js';
 import { SOURCE } from './tasks.js';
+import { countDown as sayCountDown, countUp, stopCount } from './voice.js';
 
 const $ = (id) => document.getElementById(id);
 const COUNTDOWN_S = 5;         // after START, time to walk to the arm (the owner, 16 Oct)
+// The timer in seconds (the owner, 16 Oct: "the countdown should be in seconds"), as the target is and as the
+// voice counts them: the countdown "5 s" … "1 s", then the take "12.3 s".
+const secs = (t) => `${Math.max(0, t).toFixed(1)} s`;
+const ZERO = secs(0);
 let takeOf = null;                 // {pid, key}: the region of the last take the timer shows
 let teaching = null;           // the drag teaching running: {pid, key, arm}, where its take is saved
 let counting = null;           // the countdown's job while it runs
@@ -42,26 +47,25 @@ function syncActive(u) {
 
 // ── Drag & Teach
 
-// START's countdown: 5, 4, 3, 2, 1 on the timer (and by voice when it is on) while the server's job
-// counts; at 0 the arm is in drag teaching and the timer starts. Reset, STOP or the E-stop end it,
-// and nothing is recorded. Resolves the job as it ended.
+// START's countdown: 5, 4, 3, 2, 1 s on the timer (and by voice when it is on, each number on its second:
+// voice.js) while the server's job counts; at 0 the arm is in drag teaching and the timer starts. Reset,
+// STOP or the E-stop end it, and nothing is recorded. Resolves the job as it ended.
 async function countDown(job, arm) {
   const t0 = performance.now();
-  let said = 0;
   const tick = () => {
     const n = Math.ceil(Math.max(0, COUNTDOWN_S - (performance.now() - t0) / 1000));
     if (n > 0) {
-      $('timer').textContent = String(n);
+      $('timer').textContent = `${n} s`;
       $('timerResult').textContent = `Drag teaching starts in ${n} s: go to the ${arm} arm. Reset cancels it.`;
-      if (n !== said) { said = n; window.speakEnglish(String(n), true); }
     } else {
       $('timerResult').textContent = `Starting drag teaching on the ${arm} arm…`;
     }
   };
   $('startTeachBtn').disabled = true;
   tick();
+  sayCountDown(COUNTDOWN_S, t0);
   const iv = setInterval(tick, 100);
-  try { return await watchJob(job); } finally { clearInterval(iv); }
+  try { return await watchJob(job); } finally { clearInterval(iv); stopCount(); }
 }
 
 async function refreshTeach() {
@@ -175,20 +179,17 @@ async function choose(key, file) {
 }
 
 export function installTeach() {
-  // The voice timer counts every second until STOP DRAG, past the target, and never says "Target
-  // time reached" (the owner, 15 Oct: it stopped speaking at 30 s). The screen still shows the target.
+  // The screen's timer, in seconds. The voice counts every second until STOP DRAG, past the target, and never
+  // says "Target time reached" (the owner, 15 Oct: it stopped speaking at 30 s), on a clock of its own
+  // (voice.js), not from this 0.1 s refresh. The screen still shows the target.
   window.updateTimer = function updateTimer() {
     elapsed = (performance.now() - timerStart) / 1000;
     const target = Math.max(1, Number($('targetSec')?.value) || 30);
-    $('timer').textContent = fmt(elapsed);
+    $('timer').textContent = secs(elapsed);
     $('timerProgress').style.width = `${Math.min(100, (elapsed / target) * 100)}%`;
-    const whole = Math.floor(elapsed);
-    if (whole >= 1 && whole !== lastSpokenSecond) {
-      lastSpokenSecond = whole;
-      window.speakEnglish(String(whole), true);
-    }
     if (elapsed >= target) $('timerResult').textContent = 'Target time reached. Finish safely and press STOP when the region/action is complete.';
   };
+  if (!timerInt && $('timer')) $('timer').textContent = secs(elapsed || 0);
 
   const pageStart = window.startTeach;
   window.startTeach = async function startTeach() {
@@ -211,7 +212,7 @@ export function installTeach() {
           teaching = null;
           elapsed = 0;
           $('startTeachBtn').disabled = false;
-          $('timer').textContent = '00:00.0';
+          $('timer').textContent = ZERO;
           $('timerProgress').style.width = '0%';
           $('timerResult').textContent = `Drag teaching did not start${done.error ? `: ${done.error}` : ''}. Nothing was recorded.`;
           return;
@@ -221,6 +222,7 @@ export function installTeach() {
     takeOf = { pid: ctx.pid, key: s ? s.key : null };
     elapsed = 0;                                       // every take starts at 0.0 (the owner, 16 Oct): the page's
     pageStart();                                       // START went on from the time a stopped take had left
+    if (timerInt) countUp(timerStart, () => !!timerInt);   // the take's seconds, said each on its second
   };
 
   // STOP DRAG saves the take in the region it was started in, whatever is on screen by then. When
@@ -264,13 +266,14 @@ export function installTeach() {
       post(`/api/projects/${t.pid}/units/${t.key}/teach/cancel`, {}).catch(() => {});
     }
     pageReset();
+    $('timer').textContent = ZERO;
   };
 
   // The timer is one take's (the owner, 16 Oct): once STOP DRAG has ended it, leaving Drag & Teach (Save
-  // & Review or any other stage, another view, another task or arm) sets it back to 00:00.0, so START
+  // & Review or any other stage, another view, another task or arm) sets it back to 0.0 s, so START
   // there again starts at 0 (the page kept the time and its START went on from it). Reset still does it
   // by hand in the tab. Nothing is reset while an arm is being taught or counted down.
-  const takeDone = () => { if (!timerInt && !counting && !teaching && elapsed > 0) pageReset(); };
+  const takeDone = () => { if (!timerInt && !counting && !teaching && elapsed > 0) { pageReset(); $('timer').textContent = ZERO; } };
   document.addEventListener('lite:stage', (e) => { if (e.detail !== 'teach') takeDone(); });
   document.addEventListener('lite:step', () => {          // another task or arm (the same card clicked again is not)
     if (!takeOf || takeOf.pid !== ctx.pid || takeOf.key !== (step() || {}).key) takeDone();
