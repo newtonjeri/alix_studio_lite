@@ -61,6 +61,29 @@ def test_a_command_waits_for_a_reading_under_way_and_none_starts_meanwhile():
     assert len(reads) == 2                                    # read again as the command ended
 
 
+def test_the_end_of_a_long_command_is_not_a_link_that_stopped_reading():
+    """The lab's logs (16 Oct): after every long command (a program run, an upload, a saved take) "No fresh
+    reading" was raised in the moment between the command's end and the reading that follows it, and the
+    E-stop shown UNKNOWN. The end of a command counts as fresh for STALE_S; a controller that then stays
+    silent is stale as before."""
+    from alix_studio_lite.server.robot_link import STALE_S, ArmLink
+
+    link = ArmLink("left", "127.0.0.1")
+    link.handle = None                                        # no reading follows here: the moment after the end
+    link.feedback = {"t": time.time() - 20.0, "estop": "CLEAR", "busy": None}
+    with link.busy("running program 81"):
+        fb = link.view()["feedback"]
+        assert not fb["stale"] and fb["estop"] == "CLEAR" and fb["busy"] == "running program 81"
+    fb = link.view()["feedback"]
+    assert fb["age_s"] > 19 and not fb["stale"] and fb["estop"] == "CLEAR"          # just ended: its reading is coming
+    link._freed -= STALE_S + 0.1                              # ... and none came
+    fb = link.view()["feedback"]
+    assert fb["stale"] and fb["estop"] == "UNKNOWN"
+    link.feedback = {"t": time.time() - 3.0, "estop": "CLEAR", "busy": None}
+    link._freed = 0.0
+    assert link.view()["feedback"]["stale"]                   # no command at all: stale after STALE_S as before
+
+
 @pytest.fixture(scope="module")
 def server(tmp_path_factory):
     """Lite with a live link to ALIX's emulated arms, in its own process (the emulator replaces

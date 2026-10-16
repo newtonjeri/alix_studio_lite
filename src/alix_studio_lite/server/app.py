@@ -96,7 +96,7 @@ class LiteApp:
                     if link is not None:
                         fb = link.view()["feedback"]
                         rec.update({k: fb.get(k) for k in ("joints_deg", "errors", "run_mode", "pole_mm", "hand", "io3",
-                                                           "age_s", "busy")})
+                                                           "age_s", "busy", "stale")})
                     else:
                         rec.update(pole_mm=round(a.pole_mm, 1), hand=list(a.hand), stand_in=True)
                     arms[side] = rec

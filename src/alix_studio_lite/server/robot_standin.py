@@ -330,7 +330,7 @@ class StandInRobot:
                    "The controller reports " + "; ".join(error_text(c) for c in errs) + ".",
                    "Check the arm and its pendant; clear the error there before running.")
         age = fb.get("age_s")
-        stale = (age is None or age > STALE_S) and not fb.get("busy")      # a command owns the connection
+        stale = fb["stale"] if "stale" in fb else (age is None or age > STALE_S) and not fb.get("busy")   # robot_link.view
         self._once(side, "link", "stale" if stale else None, "warn",
                    "No fresh reading from the controller: robot motion is blocked.",
                    "Check the controller's power and cable; Lite reconnects by itself when it answers.")

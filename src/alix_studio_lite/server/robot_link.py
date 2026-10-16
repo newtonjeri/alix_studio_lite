@@ -111,6 +111,7 @@ class ArmLink:
         self._modbus_set = False
         self._stopping = threading.Event()          # a STOP is being sent: no new reading starts
         self._busy: list = []                       # commands running (robot_real.py): no reading meanwhile
+        self._freed = 0.0                           # when the last command ended (its reading follows at once)
         self._read_lock = threading.Lock()          # one reading at a time
         self._stop = threading.Event()
         self._lock = threading.Lock()
@@ -178,6 +179,8 @@ class ArmLink:
             with self._lock:
                 self._busy.remove(what)
                 idle = not self._busy
+                if idle:
+                    self._freed = time.time()
             if idle and self.handle is not None:    # what the command left, read at once (not 0.2 s later)
                 try:
                     self.read_once()
@@ -293,8 +296,15 @@ class ArmLink:
         with self._lock:
             fb = dict(self.feedback)
             fb["busy"] = self._busy[-1] if self._busy else None
-        age = time.time() - fb["t"] if fb.get("t") else None
-        if (age is None or age > STALE_S) and not fb["busy"]:
+            freed = self._freed
+        now = time.time()
+        age = now - fb["t"] if fb.get("t") else None
+        # Stale: no reading for STALE_S, counted from the end of the last command too: while a command owns
+        # the connection nothing is read, and the reading it is followed by takes a moment to land (on the lab's
+        # arms, 16 Oct, every long run, upload or saved take raised "No fresh reading" in that moment).
+        since = None if age is None else min(age, now - freed)
+        fb["stale"] = (since is None or since > STALE_S) and not fb["busy"]
+        if fb["stale"]:
             fb["estop"] = "UNKNOWN"                                      # no fresh reading: fail closed
         fb["age_s"] = None if age is None else round(age, 2)
         fb.pop("t", None)
