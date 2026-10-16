@@ -25,6 +25,7 @@ const ARMS = ['left', 'right'];
 const ARM = (s) => s.toUpperCase();
 const RULES = ['TOGETHER', 'RUN FIRST', 'WAIT OTHER'];
 const GRIP = [0, 0, 0, 0, 150, 1000], OPEN = [1000, 1000, 1000, 1000, 1000, 1000];
+const CLEANING = [1000, 1000, 1000, 1000, 0, 1000];          // the Cleaning Pose (the owner, 15 Oct; Prepare's preset)
 const S = {
   steps: { left: [], right: [] }, sources: { left: { programs: [], points: [] }, right: { programs: [], points: [] } },
   sel: { left: null, right: null }, mode: 'sim', scope: 'full', confirmEach: true,
@@ -101,6 +102,7 @@ function armPanel(side) {
         ['L', 'R', 'M', 'I', 'TB', 'TR'].map((n, i) => el('div', { class: 'field' }, el('label', { for: `liteS2_${side}_h${i}`, text: n }),
           num(`h${i}`, 1000, { min: '0', max: '1000', step: '1' }))),
         btn('GRIP', () => setHand(side, GRIP), 'btn orange'), btn('OPEN', () => setHand(side, OPEN), 'btn green'),
+        btn('CLEANING POSE', () => setHand(side, CLEANING), 'btn violet'),
         btn('+ ADD HAND', () => addHand(side), 'btn green'))),
     el('div', { class: 'lite-table-scroll lite-s2-table' }, el('table', { class: 'lite-table' },
       el('thead', {}, el('tr', {}, ['#', 'TYPE', 'TARGET', 'OPTIONS'].map(h => el('th', { text: h })))),
@@ -703,6 +705,10 @@ async function prefetch() {
 function playSim(fromStart = false) {
   if (!S.sim) { window.toast('Run the sequence in Simulation Mode first.'); return; }
   if (!(S.sim.total_s > 0)) { view.clean = true; simEnded(); return; }   // nothing that takes time: it is at its end
+  if (!view.three || view.three.viewer.host !== $('liteS2Host')) {     // the 3D first: a run with nothing shown is not played
+    prefetch().then((ok) => { if (ok) playSim(fromStart); });
+    return;
+  }
   if (fromStart || player.t >= player.total - 1e-3) restartSim(false);
   if (player.t === 0) { view.clean = true; view.furthest = 0; }
   player.play();
@@ -737,7 +743,12 @@ async function showAt(g, playing = false) {
     const k = `${side}:${c.stage}`;
     if (view.shown[side] !== k) {
       let r;
-      try { r = await frames(side, c.stage); } catch (_) { continue; }
+      try { r = await frames(side, c.stage); } catch (err) {
+        view.clean = false;                                    // not shown: the run does not count as played
+        $('liteS2SimState').className = 'lite-status warn';
+        $('liteS2SimState').textContent = `The 3D could not show the ${ARM(side)} arm's part of stage ${c.stage + 1}: ${say(err)}`;
+        continue;
+      }
       if (my !== view.token) return;
       three.robot.loadTimeline(side, r);
       view.shown[side] = k;
@@ -781,13 +792,31 @@ function paintMoment(g) {
 
 async function simEnded() {
   const sim = S.sim;
-  if (!sim || !view.clean) { $('liteS2SimState').className = 'lite-status warn'; $('liteS2SimState').textContent = 'Played with a skip: play it from the start to the end for Real Machine Mode.'; return; }
+  if (!sim || !view.clean) {
+    $('liteS2SimState').className = 'lite-status warn';
+    $('liteS2SimState').textContent = /could not show/.test($('liteS2SimState').textContent)
+      ? `${$('liteS2SimState').textContent} Not counted as played: play it again from the start once the 3D shows it.`
+      : 'Played with a skip: play it from the start to the end for Real Machine Mode.';
+    return;
+  }
+  // what the 3D could not draw is said, never "complete" over it (the owner, 16 Oct: a run reported
+  // complete while nothing moved on the view)
+  const missing = ARMS.flatMap(side => (sim.acts[side] || []).filter(a => a.kind === 'program' && a.drawn === false)
+    .map(a => `${ARM(side)} row ${a.row} (Program ${a.program})`));
   try {
     const out = await post(`${base()}/played`, { hash: sim.hash });
     sim.completed = out.completed;
-    $('liteS2SimState').className = 'lite-status ok';
-    $('liteS2SimState').textContent = 'Played to its end: Real Machine Mode can run this sequence as it is.';
-    window.toast('Simulation complete: Real Machine Mode can run this sequence as it is.');
+    if (missing.length) {
+      const text = `Played to its end, but ${missing.length} Program${missing.length === 1 ? ' was' : 's were'} not drawn (no file found for `
+        + `${missing.length === 1 ? 'it' : 'them'}): ${missing.join(', ')}. Real Machine Mode asks about ${missing.length === 1 ? 'it' : 'them'} before it runs.`;
+      $('liteS2SimState').className = 'lite-status warn';
+      $('liteS2SimState').textContent = text;
+      window.toast(text);
+    } else {
+      $('liteS2SimState').className = 'lite-status ok';
+      $('liteS2SimState').textContent = 'Played to its end with every Program drawn: Real Machine Mode can run this sequence as it is.';
+      window.toast('Simulation complete, every Program drawn: Real Machine Mode can run this sequence as it is.');
+    }
   } catch (err) { tell(err); }
   paintAll();
 }

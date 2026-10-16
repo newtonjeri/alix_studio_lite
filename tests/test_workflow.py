@@ -10,6 +10,7 @@ import random
 import threading
 import time
 import urllib.request
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -215,7 +216,7 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     assert not la[4]["drawn"]                                    # program 72: Lite never sent it
     assert ra[1]["t0"] == ra[0]["t1"] and ra[2]["kind"] == "wait" and ra[2]["stage"] == 1   # the tail, after TIMELINE-1
     texts = " | ".join(f["text"] for f in sim["findings"])
-    assert "LEFT row 5: program 72 is not drawn (Lite has not sent this program)" in texts
+    assert "LEFT row 5: program 72 is not drawn (Lite has not sent this program; no file of its name in the project" in texts
     assert "From here the arm's pose is not known" in texts             # the check leaves that arm out after it
     assert "RIGHT row 2, program 71: taught at pole 50 mm, hand grip, but the pole is at 200 mm here" in texts
     assert "hand" in texts and "no Hand step before it" in texts   # the right arm's hand was never set in this run
@@ -262,3 +263,50 @@ def test_a_simulation_is_checked_again_in_one_commode_state(lite):
     assert "no longer the last" in call(lite, "POST", f"{P}/workflow/collisions", {"hash": "x", "phase": "seat_open"})["error"]
     assert "lid closed, lid open or seat open" in call(lite, "POST", f"{P}/workflow/collisions", {"hash": sim["hash"], "phase": "up"})["error"]
     assert call(lite, "GET", f"{P}/workflow")["sim"]["hash"] == sim["hash"]
+
+
+def test_a_program_lite_did_not_send_is_drawn_from_its_file_found_by_name(lite):
+    """The owner (16 Oct): the sequence must play in the simulation. A Program the control program sent (not
+    Lite) is drawn from the file of the name the sequence gives it (V53's JSON), here the Trajectory Viewer's
+    V6 package, and said so; a name found nowhere is said too."""
+    left = [{"type": "pole", "mm": 150}, {"type": "hand", "values": [0, 0, 0, 0, 150, 1000]},
+            {"type": "program", "id": 81, "name": "L_P01P02.txt", "transit_speed": 30, "dual_rule": "TOGETHER"},
+            {"type": "program", "id": 82, "name": "L_NO_SUCH_FILE.txt", "transit_speed": 30, "dual_rule": "TOGETHER"}]
+    call(lite, "PUT", f"{P}/workflow/left", {"steps": left})
+    j = wait(lite, call(lite, "POST", f"{P}/workflow/simulate", {"mode": "left"}))
+    assert j["state"] == "done", j
+    acts = [a for a in j["result"]["acts"]["left"] if a["kind"] == "program"]
+    assert acts[0]["drawn"] and acts[0]["by_name"] and acts[0]["file_name"] == "L_P01P02.txt" and acts[0]["lines"] > 100
+    assert not acts[1]["drawn"]
+    texts = " | ".join(f["text"] for f in j["result"]["findings"])
+    assert "program 81: drawn from L_P01P02.txt (the Trajectory Viewer's" in texts and "found by its name; not compared" in texts
+    assert "program 82 is not drawn (Lite has not sent this program; no file of its name (L_NO_SUCH_FILE.txt)" in texts
+    fr = call(lite, "POST", f"{P}/workflow/frames", {"side": "left", "stage": 0, "hash": j["result"]["hash"]})
+    assert len(fr["times"]) > 10                                   # the 3D has its motion
+
+
+def test_a_file_found_by_name_is_compared_with_the_controllers_program():
+    """A Program on a linked controller that Lite did not send: the file found by name is checked against the
+    size the controller holds (the bytes the control program's upload makes of it); a controller's name cut
+    to 31 characters is matched by its start."""
+    vendor_paths.activate()
+    from alix_studio_lite.server import library, workflow
+
+    f = library.builtin_by_name("L_P01P02.txt")
+    named = {"l_p01p02.txt": [dict(path=f["path"], name=f["name"], stage=f["stage"], phase=None, placement=None, region=None,
+                                   source="the V6 package")]}
+    size = workflow.proj_bytes(f["path"])
+    assert size and size > Path(f["path"]).stat().st_size                 # CRLF, the header and the Folder line
+
+    sim = workflow._ArmSim("left", {"pole_mm": 150, "hand": [0, 0, 0, 0, 150, 1000], "q_deg": [0] * 7}, [180] * 7, 50,
+                           {}, None, workflow._md_reader(), [], named)
+    same = sim._found(81, {"id": 81}, {"name": "81_L_P01P02.txt", "size": size})
+    assert same["name"] == "L_P01P02.txt" and same["how"] == "its bytes make the size the controller holds"
+    other = sim._found(81, {"id": 81}, {"name": "81_L_P01P02.txt", "size": size // 2})
+    assert other["differs"] and "they may differ" in other["how"]
+    cut = sim._found(81, {"id": 81}, {"name": "81_L_P01P0", "size": None})
+    assert cut is None                                                     # short and not cut: no match by its start
+    named["l_p01p02_with_a_very_long_name_for_it.txt"] = named["l_p01p02.txt"]
+    held = "81_L_P01P02_with_a_very_long_name_for_it.txt"[:31]               # RealMan's API: 31 characters at most
+    long = sim._found(81, {"id": 81}, {"name": held, "size": None})
+    assert long is not None and long["differs"] is None

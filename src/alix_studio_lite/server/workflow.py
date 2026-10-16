@@ -650,6 +650,60 @@ def programs_known(app, units, side: str) -> dict:
     return out
 
 
+_UPLOAD = None
+
+
+def proj_bytes(path) -> int | None:
+    """The bytes a controller stores for a track file: the control program's project file built from it
+    (vendor/control_app/rm_upload.py: read_track, write_project; the module's file builders need no SDK), so
+    a program on the controller can be compared with a file by its size. None: not a track file."""
+    import importlib.util
+    import tempfile
+
+    from .. import vendor_paths
+
+    global _UPLOAD
+    if _UPLOAD is None:
+        spec = importlib.util.spec_from_file_location("lite_rm_upload_files", vendor_paths.RM_UPLOAD)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _UPLOAD = mod
+    try:
+        lines = _UPLOAD.read_track(Path(path))
+    except (SystemExit, OSError):
+        return None
+    with tempfile.TemporaryDirectory() as tmp:
+        return int(_UPLOAD.write_project(lines, Path(tmp) / "track.proj"))
+
+
+def files_by_name(app, units, side: str) -> dict:
+    """The arm's track files by name (lower case), for a Program Lite did not send (the control program
+    sent it): the project's own first (its merges, the regions' recordings and kept versions, the
+    transitions), then the Trajectory Viewer's library (the operator's files, then the built-in sets).
+    {name: [{path, name, stage, phase, placement, region, source}, ...]}, in that order."""
+    from . import library
+
+    out: dict = {}
+
+    def add(name, f):
+        out.setdefault(str(name).lower(), []).append(f)
+
+    for sha, f in _project_files(units, side).items():
+        add(f["name"], dict(f, sha256=sha, source="the project"))
+    lib = getattr(app, "library", None)
+    if lib is not None:
+        for m in lib.uploads():
+            if m.get("arm") == side:
+                add(m["name"], dict(path=str(lib.root / f"{m['id']}.txt"), name=m["name"], stage=m.get("stage"), phase=None,
+                                    placement=None, region=None, sha256=m.get("sha256"), source="your files in the Trajectory Viewer"))
+    for st in library.builtin_sets():
+        for f in st["files"]:
+            if f.get("arm") == side:
+                add(f["name"], dict(path=f["path"], name=f["name"], stage=f.get("stage"), phase=None, placement=None, region=None,
+                                    sha256=f.get("sha256"), source=f"the Trajectory Viewer's {st['name']}"))
+    return out
+
+
 def points_known(app, side: str) -> dict | None:
     """The global points of a linked arm's controller, read now when the arm is idle, else as last read."""
     if app.robot._real(side) is not None and app.robot.arm(side).connected and not app.jobs.running(arm=side):
@@ -717,10 +771,11 @@ def _move_s(q0, q1, pct: float, rating) -> float:
 class _ArmSim:
     """One arm through its steps: what each step does and when (its actions), from a start state."""
 
-    def __init__(self, side, start, rating, overall, programs, points, md_of, findings):
+    def __init__(self, side, start, rating, overall, programs, points, md_of, findings, named=None):
         self.side, self.rating, self.overall = side, rating, overall
         self.pole, self.hand, self.q = float(start["pole_mm"]), [int(c) for c in start["hand"]], [float(v) for v in start["q_deg"]]
         self.programs, self.points, self.md_of, self.findings = programs, points, md_of, findings
+        self.named = named or {}                     # the arm's files by name (files_by_name)
         self.acts: list[dict] = []
         self.set_pole = self.set_hand = False        # a Pole / Hand step ran in this run
         self.known = True                            # where the arm is, as far as the simulation can tell
@@ -788,12 +843,60 @@ class _ArmSim:
             t += dur
         return t
 
+    def _found(self, pid: int, step: dict, info: dict) -> dict | None:
+        """A Program Lite did not send (the control program, or V53, sent it), found by its file's name (the
+        owner, 16 Oct: the sequence must play in the simulation): the name the sequence gives it (V53's JSON),
+        else the controller's ("<slot>_<file>", cut to 31 characters by RealMan's API). With the controller's
+        stored size known, the file whose project file has that size; else the first found, said so."""
+        import re
+
+        sha = info.get("sent") and info.get("sha256")
+        if sha:                                      # Lite sent it: the file of those very bytes, wherever it is now
+            for fs in self.named.values():
+                for f in fs:
+                    if f.get("sha256") == sha:
+                        return dict(f, how="the very bytes Lite sent to the controller", differs=False)
+        names = [str(step["name"])] if step.get("name") else []
+        held = str(info.get("name") or "")
+        if held:
+            names.append(re.sub(rf"^{pid}_", "", held))
+        cands = []
+        for n in names:
+            low = n.lower()
+            hit = self.named.get(low) or self.named.get(low + ".txt") or []
+            if not hit and held and len(held) >= 31 and n is names[-1]:     # cut to 31 characters: its start
+                hit = [f for k, fs in self.named.items() if k.startswith(low) for f in fs]
+            cands += [f for f in hit if f not in cands]
+        if not cands:
+            return None
+        if sha:
+            return dict(cands[0], how="Lite sent other bytes to this slot: they may differ", differs=True)
+        size = info.get("size")
+        if size:
+            for f in cands:
+                b = proj_bytes(f["path"])
+                if b is not None and abs(int(size) - b) <= max(64, b // 1000):
+                    return dict(f, how="its bytes make the size the controller holds")
+            b = proj_bytes(cands[0]["path"])
+            return dict(cands[0], how=f"the controller's program is {int(size):,} bytes, this file makes {b or 0:,}: they may differ",
+                        differs=True)
+        return dict(cands[0], how="not compared with the controller's program (connect the arm to compare)", differs=None)
+
     def _program(self, step, t, stage) -> dict:
         from . import staging
 
         S, pid = self.side.upper(), int(step["id"])
         info = self.programs.get(pid) or {}
         label = f"Program {pid}" + (f" // {info.get('name') or step.get('name')}" if (info.get("name") or step.get("name")) else "")
+        found = None
+        if not info.get("file") and not info.get("gone"):        # no file of its own in the project
+            found = self._found(pid, step, info)
+            if found is not None:                    # its file as found; the stage it was taught with is that file's
+                info = dict(info, file=found["path"], file_name=found["name"], stage=found.get("stage"), phase=found.get("phase"),
+                            placement=found.get("placement"))
+                level = "warn" if found.get("differs") else "note"
+                self._say(level, step, f"{S} row {step.get('_row')}, program {pid}: drawn from {found['name']} ({found['source']}), "
+                          f"found by its name; {found['how']}.")
         st = staging.stage_from(info.get("stage"))
         if st is not None:                           # V53 stages nothing itself: its own Pole and Hand steps must match
             off = []
@@ -806,9 +909,11 @@ class _ArmSim:
                           + " and ".join(off) + ".")
         md = self.md_of(info.get("file")) if info.get("file") and not info.get("gone") else None
         if md is None:
+            named = step.get("name") or info.get("name")
+            nowhere = f"; no file of its name{f' ({named})' if named else ''} in the project or the Trajectory Viewer's library"
             why = ("the controller no longer holds the program Lite sent" if info.get("gone")
-                   else "the controller holds a program Lite did not send" if info and not info.get("sent")
-                   else "Lite has not sent this program" if not info
+                   else "the controller holds a program Lite did not send" + nowhere if info and not info.get("sent")
+                   else "Lite has not sent this program" + nowhere if not info
                    else "its file is no longer in the project")
             lines = int(info.get("lines") or 0)
             dur = max(lines - 1, 0) * CYCLE_S
@@ -820,7 +925,7 @@ class _ArmSim:
         traj = (md.shape[0] - 1) * CYCLE_S
         a = self._act(stage, step, "program", t, transit + traj, label, program=pid, drawn=True, file=info["file"],
                       file_name=info.get("file_name"), lines=int(md.shape[0]), traj_t0=round(t + transit, 4), phase=info.get("phase"),
-                      placement=info.get("placement"))
+                      placement=info.get("placement"), by_name=bool(found))
         self.q = (md[-1] / 1000.0).tolist()
         self.known = True                            # on the program's own lines: known again (its move to them is not)
         return a
@@ -1009,7 +1114,8 @@ def simulate(app, units, mode: str, ranges: dict | None):
         starts, start_how, sims = {}, {}, {}
         for s in ARMS:
             starts[s], start_how[s] = _start_state(app, s, home)
-            sims[s] = _ArmSim(s, starts[s], load_limits(s).rating_deg_s, overall, programs[s], points[s], md_of, findings)
+            sims[s] = _ArmSim(s, starts[s], load_limits(s).rating_deg_s, overall, programs[s], points[s], md_of, findings,
+                              files_by_name(app, units, s))
         job.progress("Timing the stages", 1, 3)
         stages, total = schedule(run, sims)
         acts = {s: sims[s].acts for s in ARMS}
