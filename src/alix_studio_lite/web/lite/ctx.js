@@ -51,9 +51,9 @@ export async function watchJob(job, onProgress = null) {
 export const jobLine = (j) => (j.n ? `${j.stage} (${Math.round(100 * j.i / Math.max(1, j.n))} %)` : j.stage || j.title);
 
 // A confirmation in the page's modal style. Cancel has the focus, so Enter never moves a robot.
-export function confirmDialog({ title, body, ok = 'Continue', danger = true, list = [] }) {
+export function confirmDialog({ title, body, ok = 'Continue', danger = true, list = [], cancelText = 'Cancel' }) {
   return new Promise((resolve) => {
-    const cancel = el('button', { class: 'btn outline', text: 'Cancel' });
+    const cancel = el('button', { class: 'btn outline', text: cancelText });
     const yes = el('button', { class: danger ? 'btn red' : 'btn green', text: ok });
     const card = el('div', { class: 'modal-card accessible-modal', role: 'alertdialog', 'aria-modal': 'true' },
       el('h3', { text: title }), el('p', { text: body }),

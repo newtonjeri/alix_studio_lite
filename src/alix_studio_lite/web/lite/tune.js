@@ -37,6 +37,7 @@ let cmp3d = 'candidate';       // what Compare's 3D plays: the processed file or
 const plotted = { raw: null, opt: null };   // the files on the plots now
 const pb = { playing: false, at: { review: 0, compare: 0 }, startPerf: 0, raf: 0, kind: null };   // the HTML's real-time
 let lastChange = null;         // playbacks, each at its own moment; the last settings change, for Generate's status
+let suggestionsPending = false; // Analyze's suggestions refitted or edited and not applied to the scale regions yet
 
 const pane = () => document.getElementById('stage-optimize');
 const $ = (id) => document.getElementById(id);
@@ -334,6 +335,21 @@ function renderPipe() {
 
 async function goStep(n, scroll = true) {
   n = Math.max(1, Math.min(6, Number(n) || 1));
+  await flushPush();                                       // a change typed a moment ago counts before the step decides
+  // A later step uses the scale regions: suggestions refitted or edited in Analyze and not applied would leave
+  // Generate and Compare on the earlier result (the owner, 16 Oct: "Changing an earlier step should invalidate
+  // or refresh everything downstream").
+  if (pipeStep === ANALYZE && n > ANALYZE && suggestionsPending && isManual() && analysisNow()) {
+    const t = analysis.data.target;
+    const yes = await confirmDialog({ title: 'Apply the suggestions first?', danger: false, ok: 'Apply them', cancelText: 'Not now',
+      body: `The suggestions shown in Analyze${t ? ` (fitted to ${formatSeconds(t.target_s)})` : ''} are not in the scale regions yet, `
+        + 'and Generate and Compare use the scale regions. Apply them now? The processed file is then made again from them.' });
+    suggestionsPending = false;
+    if (yes) {
+      await applySuggestions(true);
+      if (n === 6 && !unlocked(6)) n = 5;                  // the earlier processed file no longer stands: Generate it
+    }
+  }
   if (!unlocked(n)) {
     window.toast(n === 6 ? 'Generate first: Compare opens once the processed file is made from these settings.'
       : manualOnly(n) && unit && unit.active ? 'Time-optimal (TOPP-RA) takes none of the manual steps: choose Manual tuning in Setup.'
@@ -540,6 +556,7 @@ async function loadAnalysis(again, withTarget = false) {
     try {
       const data = await get(unitUrl(unit.key, 'analysis') + (target ? `?target_s=${target}` : ''));
       analysis = { key: unit.key, file: unit.active, sha: (rec() || {}).sha256, data };
+      if (withTarget) suggestionsPending = true;            // fitted to a new time: not in the scale regions yet
     } catch (err) {
       setStatus(status, `Automatic analysis failed: ${say(err)}`, 'err');
       return;
@@ -567,13 +584,14 @@ function renderAnalysis() {
         r.action = v < 100 ? 'Shorter / faster' : v > 100 ? 'Longer / slower' : 'Unchanged';
         time.textContent = formatSeconds(r.estimated_s);
         act.replaceChildren(badge(r));
+        suggestionsPending = true;
         dropFit();
         analysisMetrics();
         refreshShapes();
       } });
     return el('tr', {},
       el('td', {}, el('input', { type: 'checkbox', checked: r.selected, 'aria-label': `Use region ${i + 1}`,
-        onchange: (e) => { r.selected = e.target.checked; dropFit(); analysisMetrics(); } })),
+        onchange: (e) => { r.selected = e.target.checked; suggestionsPending = true; dropFit(); analysisMetrics(); } })),
       el('td', { text: String(i + 1) }), el('td', { text: `${r.start.toLocaleString()} - ${r.end.toLocaleString()}` }),
       el('td', { text: formatSeconds(r.original_s) }), el('td', { text: r.motion_type }), el('td', { text: r.peak_guidance }),
       act, el('td', {}, input), time, el('td', { class: 'lite-reason', text: r.reason }));
@@ -621,12 +639,12 @@ function analysisMetrics() {
     metric('Estimated change', `${saved >= 0 ? '-' : '+'}${Math.abs(saved).toFixed(3)} s (${Math.abs(pct).toFixed(1)}%)`));
 }
 
-async function applySuggestions() {
+async function applySuggestions(asked = false) {
   if (!unit || !analysis) return;
   const chosen = analysis.data.regions.filter(r => r.selected);
   const status = $('liteAnalysisStatus');
   if (!chosen.length) { setStatus(status, 'No suggestions are selected. Tick at least one region to apply.', 'warn'); return; }
-  if (regions.length) {
+  if (regions.length && asked !== true) {
     const yes = await confirmDialog({ title: 'Replace the scale regions?', danger: false, ok: 'Replace them',
       body: 'Replace the current manual scaling regions with the selected automatic suggestions?' });
     if (!yes) return;
@@ -637,6 +655,7 @@ async function applySuggestions() {
   $('liteMode_manual').checked = true;                     // the suggestions are manual tuning's Scale
   syncing = false;
   await push('Automatic suggestions');
+  suggestionsPending = false;
   setStatus(status, `${chosen.length} selected suggestion(s) were copied to the Scale regions. You can still edit every scale value manually before generation `
     + `(step ${REVIEW}, Review).`, 'ok');
 }
@@ -1385,6 +1404,7 @@ async function enter() {
   if (!analysis || analysis.key !== unit.key) analysis = null;
   external = null;
   lastChange = null;
+  suggestionsPending = false;
   pause();
   pb.at.review = pb.at.compare = 0;
   plotted.raw = plotted.opt = null;
