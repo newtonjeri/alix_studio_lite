@@ -70,7 +70,7 @@ export async function scene(phase, fixture = ctx.fixture || 'commode_c', place =
 function fileOf(unit, which) {
   const rec = (unit.recordings || []).find(r => r.file === unit.active) || {};
   const ver = (unit.versions || []).find(v => v.version === unit.version) || (unit.versions || [])[(unit.versions || []).length - 1] || {};
-  return JSON.stringify([which, unit.active, rec.taught_arm, rec.stage && rec.stage.text,
+  return JSON.stringify([which, unit.active, rec.sha256, rec.taught_arm, rec.stage && rec.stage.text,
     which === 'candidate' ? unit.candidate_extra && unit.candidate_extra.made : null,
     which === 'version' ? [ver.version, ver.sha256] : null]);
 }

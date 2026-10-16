@@ -7,8 +7,8 @@
 // the arm; drag teaching and the timer start at 0 (the owner, 16 Oct). Save & Review: every recording of the region is listed and
 // one is active; a file loaded from this computer is added and never replaces the new recording.
 // Every file name in a project is used once (the owner, 14 Oct): Save TXT refuses one already used,
-// and a take or a loaded file gets a numbered name. Save & Review has no playback: the
-// recorded motion is seen in Tune's 3D simulation and in the Trajectory Viewer.
+// and a take or a loaded file gets a numbered name. The recording selected plays in Save & Review's
+// own 3D, with its collision check and Trim (review3d.js).
 
 import { post, say } from './api.js';
 import { armFromName, ctx, el, fmtS, loadUnit, robotCall, stageDialog, step, tell, unitUrl, watchJob } from './ctx.js';
@@ -130,7 +130,7 @@ async function stateStage(u, rec) {
 
 async function choose(key, file) {
   try { const u = await post(unitUrl(key, 'active'), { file }); ctx.units[key] = u; } catch (err) { tell(err); }
-  refreshReview();
+  document.dispatchEvent(new CustomEvent('lite:recordings'));       // the list again, and Save & Review's 3D plays the one chosen
 }
 
 export function installTeach() {
@@ -230,7 +230,7 @@ export function installTeach() {
       tuningApplied = false; tunedOutputFileName = ''; tuningSourceFileName = name;   // V32: a new source to tune
       window.toast(`Saved in the project as ${name}.`);
     } catch (err) { tell(err); }
-    refreshReview();
+    document.dispatchEvent(new CustomEvent('lite:recordings'));
   };
 
   window.handlePreviousTrajectory = async function handlePreviousTrajectory(event) {
@@ -260,7 +260,7 @@ export function installTeach() {
         + (rec.name !== file.name ? ` (${file.name} is already used in this project, so this one is ${rec.name}.)` : '');
       st.className = 'statusbar ok';
       window.resetPlotSelection();
-      refreshReview();
+      document.dispatchEvent(new CustomEvent('lite:recordings'));
     } catch (err) {
       st.textContent = say(err);
       st.className = 'statusbar warn';
@@ -289,4 +289,5 @@ export function installTeach() {
     if (currentStage === 'teach') refreshTeach();
     if (currentStage === 'review') refreshReview();
   });
+  document.addEventListener('lite:recordings', () => { if (currentStage === 'review') refreshReview(); });
 }

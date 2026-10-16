@@ -186,6 +186,41 @@ class LiteUnits(Project):
             self._regions_cleared(key, dst.name)
             return dst
 
+    def trim_recording(self, key: str, file: str, start: int, end: int, name: str | None = None) -> Path:
+        """Save & Review's Trim (feedback v5, slide 1; the controller's Track clip): keep lines ``start``
+        to ``end`` (1-based, both kept) of a recording. With ``name``, a new recording (Save As) that
+        keeps the original's arm, stage and placement and becomes the active one; without it the
+        recording itself is overwritten (Save: the owner's choice, 16 Oct), its record updated. Either
+        way its scale regions are cleared: they were rows of the lines before."""
+        import os
+        import tempfile
+
+        from ..motion import track
+
+        rec = next((r for r in self.recordings(key) if r["file"] == file), None)
+        if rec is None:
+            raise KeyError(f"no recording {file!r} for {key}")
+        md = track.read_md(rec["path"])
+        n, a, b = int(md.shape[0]), int(start), int(end)
+        if not 1 <= a < b <= n:
+            raise UserError(f"Keep lines 1 to {n:,} of {rec['name']}: the first before the last, two lines at least.")
+        kept = md[a - 1:b]
+        note = f"trimmed to lines {a:,}–{b:,} of {n:,} ({(b - a) * 0.005:.3f} s)"
+        with self.lock:
+            if name:
+                tmp = Path(tempfile.mkdtemp(prefix="lite-trim-")) / Path(name).name
+                track.write_md(tmp, kept)
+                return self.add_recording(key, tmp, note=note, source="trim", name=name, taught_arm=rec["taught_arm"],
+                                          stage=rec["stage"], placement=rec.get("placement"))
+            path = Path(rec["path"])
+            track.write_md(path, kept)                      # replaced whole: the read-only file is never edited
+            os.chmod(path, 0o444)
+            self._update_source(path, lines=int(kept.shape[0]), sha256=track.sha256_file(path), note=note,
+                                trimmed=dict(first=a, last=b, of=n, at=time.strftime("%Y-%m-%d %H:%M:%S")))
+            if self.settings(key).get("segments"):
+                self.update_settings(key, {"segments": []}, f"Scale regions cleared: {rec['name']} was trimmed")
+            return path
+
     def _update_source(self, path: Path, **fields) -> None:
         meta = path.with_suffix(".source.json")
         d = _read_json(meta, {})

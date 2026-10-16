@@ -14,7 +14,7 @@ const ORIGINAL = JSON.parse(JSON.stringify(TASKS));       // the designer's list
 let quiet = false;
 let fixtures = null;
 
-const SOURCE = { library: 'existing recording', upload: 'loaded file', teach: 'taught' };
+const SOURCE = { library: 'existing recording', upload: 'loaded file', teach: 'taught', trim: 'trimmed' };
 
 export function applyTasks(d) {
   Object.assign(ctx, { fixture: d.fixture, fixtureName: d.fixture_name || d.fixture, hasDeck: d.has_deck });

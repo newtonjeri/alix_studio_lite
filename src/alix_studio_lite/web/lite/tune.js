@@ -41,6 +41,9 @@ const pane = () => document.getElementById('stage-optimize');
 const $ = (id) => document.getElementById(id);
 const settingsOf = (u) => u.settings_view.settings;
 const rec = () => unit && unit.recordings.find(r => r.file === unit.active);
+// The analysis on screen is the active recording's, as it is now (Save & Review's Trim can overwrite it).
+const analysisNow = () => !!(analysis && unit && analysis.key === unit.key && analysis.file === unit.active
+  && analysis.sha === (rec() || {}).sha256);
 const isManual = () => !unit || settingsOf(unit).optimiser !== 'toppra';
 const fresh = () => !!(unit && unit.candidate && unit.fresh);
 const report = () => (fresh() && unit.candidate.recipe && unit.candidate.recipe.report) || null;
@@ -345,7 +348,7 @@ async function goStep(n, scroll = true) {
   if (n === 2) renderSetup();
   if (n === ANALYZE) await loadAnalysis(false);
   if (n === REVIEW) {                                    // the HTML analyses on load: Review shows its regions
-    if (!analysis || analysis.key !== unit.key || analysis.file !== unit.active) await loadAnalysis(false);
+    if (!analysisNow()) await loadAnalysis(false);
     place3d('liteReview3d');
     await Promise.all([drawReview().catch(tell), loadSimulation('raw')]);
   }
@@ -528,12 +531,12 @@ async function loadAnalysis(again, withTarget = false) {
   if (!unit || !unit.active) { setStatus(status, 'Load a file to run automatic analysis.'); return; }
   const target = withTarget ? Number($('liteAnalysisTarget')?.value) : null;
   if (withTarget && !(target > 0)) { window.toast('Type the optimised time in seconds first, e.g. 20.'); $('liteAnalysisTarget')?.focus(); return; }
-  if (again || !analysis || analysis.key !== unit.key || analysis.file !== unit.active) {
+  if (again || !analysisNow()) {
     setStatus(status, 'Analysing…');
     if ($('liteApplySuggest')) $('liteApplySuggest').disabled = true;
     try {
       const data = await get(unitUrl(unit.key, 'analysis') + (target ? `?target_s=${target}` : ''));
-      analysis = { key: unit.key, file: unit.active, data };
+      analysis = { key: unit.key, file: unit.active, sha: (rec() || {}).sha256, data };
     } catch (err) {
       setStatus(status, `Automatic analysis failed: ${say(err)}`, 'err');
       return;
@@ -639,7 +642,8 @@ async function applySuggestions() {
 
 function trackData(which) {
   const c = unit.candidate_extra || {};
-  const id = which === 'raw' ? `${unit.key}|raw|${unit.active}` : `${unit.key}|candidate|${c.made || ''}|${unit.candidate?.result?.lines || ''}`;
+  const id = which === 'raw' ? `${unit.key}|raw|${unit.active}|${(rec() || {}).sha256 || ''}`
+    : `${unit.key}|candidate|${c.made || ''}|${unit.candidate?.result?.lines || ''}`;
   if (!tracks.has(id)) {
     const p = get(`${unitUrl(unit.key, 'track')}?which=${which}&units=counts`);
     p.catch(() => tracks.delete(id));
@@ -683,7 +687,7 @@ const rect = (a, b, colour, opacity) => ({ type: 'rect', xref: 'x', yref: 'paper
 // The HTML's analysisShapes (the review regions, by their suggestion), and the scale regions set.
 function reviewShapes() {
   const pal = palette(), out = [];
-  if (analysis && unit && analysis.key === unit.key && analysis.file === unit.active) {
+  if (analysisNow()) {
     for (const r of analysis.data.regions) out.push(rect(r.start, r.end, r.scale_pct < 100 ? pal.green : r.scale_pct > 100 ? pal.orange : pal.blue, 0.07));
   }
   for (const r of regions) out.push(rect(r.start, r.end, pal.violet, 0.12));
@@ -860,7 +864,7 @@ function showMoment(kind, seek = true) {
     cursorAt($('liteOrigPlot'), row);
     const lab = $('liteRegionLabel');
     if (lab) {
-      const i = analysis && unit && analysis.key === unit.key && analysis.file === unit.active
+      const i = analysisNow()
         ? analysis.data.regions.findIndex(x => row >= x.start && row <= x.end) : -1;
       lab.textContent = i >= 0 ? `Current region: ${i + 1} - ${analysis.data.regions[i].motion_type}` : 'Current region: -';
     }

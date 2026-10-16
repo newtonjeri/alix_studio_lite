@@ -433,6 +433,72 @@ def state_recording_stage(app, q, body, m):
     return unit_view(app, units, key)
 
 
+@route("POST", U + r"/recordings/([A-Za-z0-9_.\-]+)/trim")
+def trim_recording(app, q, body, m):
+    """Save & Review's Trim (feedback v5, slide 1): ``{start, end}`` the first and the last line kept
+    (1-based); ``name``: Save As, a new recording, else the recording is overwritten (Save)."""
+    units, key, file = units_of(app, m.group(1)), m.group(2), m.group(3)
+    _unit(units, key)
+    try:
+        start, end = int(body.get("start")), int(body.get("end"))
+    except (TypeError, ValueError):
+        raise UserError("Say the first and the last line to keep.") from None
+    name = str(body.get("name") or "").strip() or None
+    if name and not name.lower().endswith(".txt"):
+        name += ".txt"
+    try:
+        units.trim_recording(key, file, start, end, name)
+    except KeyError:
+        raise UserError("That recording is not in this region.") from None
+    return {"unit": unit_view(app, units, key)}
+
+
+_COLLISIONS: dict = {}                  # a check's result, by what it was made from (file, stage, room, state)
+
+
+@route("POST", U + "/collisions")
+def post_collisions(app, q, body, m):
+    """Save & Review's collision check (feedback v5, slide 5) of one of the step's recordings (``file``,
+    else the active one): every 5 ms line against the walls measured in Prepare, the commode in the
+    region's lid and seat state and the other arm, standing (collision_check.py). A job, in the worker
+    process; the same file, stage, room, placement and state give the result kept."""
+    from . import collision_check
+    from .routes_robot import _payload
+
+    units, key = units_of(app, m.group(1)), m.group(2)
+    u = _unit(units, key)
+    recs = units.recordings(key)
+    cur = units.current_recording(key)
+    f = str(body.get("file") or "") or (cur.name if cur else "")
+    rec = next((r for r in recs if r["file"] == f), None)
+    if rec is None:
+        raise UserError("There is no recording to check yet.", "Record the region, or load a file.")
+    if rec["taught_arm"] != u["arm"] or not rec["stage"]:
+        raise UserError(f"{rec['name']} must have its arm and its pole and hand known to be checked.", code="stage")
+    sc = placement.scene(units.fixture, placement.load(units)["room"], rec.get("placement") or placement.for_task(units, body.get("task")))
+    phase = units.units[key].get("phase") or "lid_closed"
+    cub = int(app.ui.get("cubicle_mm", 1400))
+    stage = dict(pole_mm=rec["stage"]["pole_mm"], hand=rec["stage"]["hand"])
+    made_of = json.dumps([rec["sha256"], stage, sc.get("walls"), sc.get("front_x"), sc.get("offset_m"), phase, cub,
+                          units.fixture], sort_keys=True)
+    home = dict(_payload(app)["home"])
+
+    def work(job):
+        out = _COLLISIONS.get(made_of)
+        if out is None:
+            job.progress(f"Checking {rec['lines']:,} lines of {rec['name']} for collisions", 0, 1)
+            fut = workers.pool().submit(collision_check.check, rec["path"], u["arm"], stage, home, sc, units.fixture, phase, cub)
+            while not fut.done():
+                job.sleep(0.2)
+            out = fut.result()
+            if len(_COLLISIONS) > 64:
+                _COLLISIONS.pop(next(iter(_COLLISIONS)))
+            _COLLISIONS[made_of] = out
+        return dict(out, file=rec["file"], name=rec["name"], scene_from="the recording" if rec.get("placement") else "the task")
+
+    return app.jobs.start("collisions", f"Collision check: {rec['name']}", work, unit=key).view()
+
+
 @route("POST", U + r"/recordings/([A-Za-z0-9_.\-]+)/hand")
 def change_recording_hand(app, q, body, m):
     """The hand a recording runs with, changed in Prepare after teaching, on the operator's word: every

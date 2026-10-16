@@ -520,3 +520,29 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 /* The project summary's Approved Setup: the pole first, then the hand, start pose, UGV and room */
 .lite-approved-setup > div:not(:first-child) { font-weight: 600; }
 .lite-approved-setup > .mini-note { font-weight: 400; }
+
+/* Save & Review: the recording in 3D, its collision check and Trim (review3d.js; the owner, 16 Oct) */
+.lite-rev3d { margin: 14px 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+.lite-rev3d[hidden] { display: none; }
+.lite-rev3d .lite-section-title { align-items: center; }
+.lite-rev3d-views { display: flex; gap: 6px; margin-left: auto; }
+.lite-rev3d-view { padding: 7px 11px; }
+.lite-rev3d-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 14px; }
+.lite-rev3d-host { position: relative; min-height: 420px; border-radius: 12px; overflow: hidden; background: var(--lite-viewport-bg); }
+.lite-rev3d-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.lite-rev3d-player, .lite-rev3d-block { border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--bg); }
+.lite-rev3d-player .lite-row { margin-top: 0; align-items: center; }
+.lite-rev3d-time { margin-left: auto; font-variant-numeric: tabular-nums; }
+.lite-rev3d-track { position: relative; margin-top: 10px; }
+.lite-rev3d-track input[type="range"] { width: 100%; }
+.lite-rev3d-marks { position: relative; height: 6px; margin-top: 2px; border-radius: 3px; background: var(--line); }
+.lite-rev3d-mark { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--red); }
+.lite-rev3d-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lite-rev3d-head h4 { margin: 0; }
+.lite-rev3d-events { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.lite-rev3d-event { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+.lite-dual-range { position: relative; height: 28px; margin-top: 8px; }
+.lite-dual-range input[type="range"] { position: absolute; inset: 0; width: 100%; pointer-events: none; background: none; }
+.lite-dual-range input[type="range"]::-webkit-slider-thumb { pointer-events: auto; }
+.lite-dual-range input[type="range"]::-moz-range-thumb { pointer-events: auto; }
+@media (max-width: 1100px) { .lite-rev3d-grid { grid-template-columns: 1fr; } }

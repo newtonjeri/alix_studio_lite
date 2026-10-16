@@ -20,6 +20,7 @@ import { installPlacement } from './placement.js';
 import { installPrepare } from './prepare.js';
 import { installProjects } from './projects.js';
 import { installRealTest } from './realtest.js';
+import { installReview3d } from './review3d.js';
 import { installRobotPanel } from './robotpanel.js';
 import { installRun } from './run.js';
 import { installSafety } from './safety.js';
@@ -46,7 +47,8 @@ installAlerts();          // hardware errors and failures, bottom right, until c
 installRobotPanel();      // Visual sim / Hardware sim / Real, connections, E-stop (D30, R4)
 installTasks();           // the 22 tasks tied to the region catalogue (D35), fixtures (D29)
 installPrepare();
-installSummary();          // the project summary's Approved Setup: pole, hand, start pose, UGV, room (the owner, 16 Oct)
+installSummary();
+installReview3d();         // Save & Review: the recording in 3D, its collision check, Trim (the owner, 16 Oct)          // the project summary's Approved Setup: pole, hand, start pose, UGV, room (the owner, 16 Oct)
 installPlacement();       // the room, the commode in it and each task's UGV placement (V32 feedback v2)
 installTransitions();     // Prepare's transition trajectories and task start points (V32)
 installTeach();           // existing recordings first (D31), drag teach, Save & Review

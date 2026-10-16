@@ -218,6 +218,22 @@ export function createViewer() {
     cam.position.set(...HOME_TARGET.map((t, i) => t + HOME_OFFSET[i] * k));
     controls.update();
   };
+  // Fixed views of the cell (Save & Review's choice of view, the owner, 16 Oct): from behind the robot
+  // towards the commode, from its right side, from above; anything else is the usual view.
+  const VIEWS = {                                    // {target, dir, radius}: aim()
+    front: { target: [0.8, 0, 0.55], dir: [-0.55, 0, 1.0], radius: 1.0 },
+    side: { target: HOME_TARGET, dir: [0.1, -1, 0.3], radius: 1.15 },
+    top: { target: [0.6, 0, 0.6], dir: [0.02, 0, 1], radius: 1.2 },
+  };
+  v.setView = (name) => {
+    if (VIEWS[name]) {
+      aim(cam, controls, VIEWS[name]);
+      fittedAspect = cam.aspect;
+    } else {
+      v.fit(cam.aspect);
+    }
+    v.dirty = true;
+  };
   v.resize = () => {
     if (!renderer || !v.host) return;
     const W = v.host.clientWidth, H = v.host.clientHeight;
