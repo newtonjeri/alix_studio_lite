@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-10-13T08:52:31+00:00",
+  "generated_utc": "2026-10-17T21:39:59+00:00",
   "alix_root": "/home/newtonjeri/alix_ws/src/alix",
   "alix_git": {
     "commit": "842c0e59797242f548fb1378a3097506c939fce0",
@@ -476,6 +476,251 @@
       "origin": "workspace",
       "sha256": "b3fe21edb4a6a8fa8bbaa7490da868b77876c90e464e7c98849aad14fe07dafe",
       "bytes": 85047
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/README.md",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/README.md",
+      "origin": "alix",
+      "sha256": "176720e4cf83b72e2e6fbfc95505be6802e187a278e5683f5310ba35c8a2dc26",
+      "bytes": 5442
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_close_right_toppra.g0.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_close_right_toppra.g0.json",
+      "origin": "alix",
+      "sha256": "e4db06dd6cbd9e514662cd1c6ae0e13678548c97a50a76231d452c42982e3882",
+      "bytes": 3067
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_close_right_toppra.g0.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_close_right_toppra.g0.proj",
+      "origin": "alix",
+      "sha256": "5ed76d988691e0cdfee960c066fd0b5da29ff8388dcca21a1cd1d78ad0e34b5b",
+      "bytes": 42877
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_close_right_toppra.g0.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_close_right_toppra.g0.txt",
+      "origin": "alix",
+      "sha256": "7e0eb734045167bf1a52f019d45bca96021cecf3e9185478c7b69bad187406c8",
+      "bytes": 42024
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_close_right_toppra.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_close_right_toppra.json",
+      "origin": "alix",
+      "sha256": "c724d4e89109c8984415d4b5a4fdab56580552dcd6e842965141ee8e7e8375d9",
+      "bytes": 444048
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g0.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g0.json",
+      "origin": "alix",
+      "sha256": "e8439033fe0993416db0de9498e1318f8f0e6112eef863fa105354a6f401b2d5",
+      "bytes": 3087
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g0.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g0.proj",
+      "origin": "alix",
+      "sha256": "6ae4b7144d931b4010296ae00b3e1a8908a27b5fc813cd4766d92e3db762c088",
+      "bytes": 17134
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g0.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g0.txt",
+      "origin": "alix",
+      "sha256": "8039085aee29a8880e6239f4d988c8be5b884b4bcf8529ddc328ba1ec320011e",
+      "bytes": 16755
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g1.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g1.json",
+      "origin": "alix",
+      "sha256": "36b89d09064f23498fa3e39c177d82f981675670117129b7942b796771ac2b70",
+      "bytes": 3079
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g1.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g1.proj",
+      "origin": "alix",
+      "sha256": "8a8dde026c041a77a02a3a7e2a2828769e6c661640a437282ca464c627163223",
+      "bytes": 27316
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g1.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g1.txt",
+      "origin": "alix",
+      "sha256": "677e79111017b616d0b7f3b766832ac5b6f991ef1e8f318862ce88bb290e4266",
+      "bytes": 26736
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_toppra.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_toppra.json",
+      "origin": "alix",
+      "sha256": "7d91bac426896fa039d9228dcec507537ee82bf98d726eda32c5fedf2568bb5f",
+      "bytes": 593806
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung1.g0.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung1.g0.json",
+      "origin": "alix",
+      "sha256": "98baec5b8d9e99fa6fad99c75eef467e390fdf7e28607aff5c9286b9f732ff33",
+      "bytes": 3092
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung1.g0.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung1.g0.proj",
+      "origin": "alix",
+      "sha256": "4f57170916b09e97f1cc940cd500a8bf12a64a972169a2d54572421285ab44f0",
+      "bytes": 16522
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung1.g0.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung1.g0.txt",
+      "origin": "alix",
+      "sha256": "f71c727dad17fbf27a0960bfc760d3212ed7e89ce406720e30d0936065ec6991",
+      "bytes": 16147
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung1.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung1.json",
+      "origin": "alix",
+      "sha256": "893fd592950af331c4c28952be1ccaeca7ff0c9bcccd6b547ca8e6a958374454",
+      "bytes": 160814
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung2.g0.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung2.g0.json",
+      "origin": "alix",
+      "sha256": "c4e8359cfef1a2bc94a6b83231a3682fdeb48d3d8c274cd8d9798e8bf5fba3a9",
+      "bytes": 3132
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung2.g0.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung2.g0.proj",
+      "origin": "alix",
+      "sha256": "b1a18e4ce7a41ba587b93e6a834bd38b7e7263b50792485ce4a429a3c0c210e9",
+      "bytes": 16556
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung2.g0.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung2.g0.txt",
+      "origin": "alix",
+      "sha256": "7ebcda3852390e87eab0994071eceae51e919040594fec4c45da534b897c9900",
+      "bytes": 16184
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung2.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung2.json",
+      "origin": "alix",
+      "sha256": "be08fb5175cfbdbe8831d79f2612c95c50a7533a71d3151c9cbee7798c380498",
+      "bytes": 158600
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung3.g0.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung3.g0.json",
+      "origin": "alix",
+      "sha256": "6196e4ce5089aa208a334ffd045df75c1fa138dfbca3a0c305eab0af07884044",
+      "bytes": 3079
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung3.g0.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung3.g0.proj",
+      "origin": "alix",
+      "sha256": "a5dacda871d6aa8d89e6dbc33b09e4f6e0c3d8e61be3025dcc83529446c4ed0a",
+      "bytes": 16442
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung3.g0.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung3.g0.txt",
+      "origin": "alix",
+      "sha256": "14a843091c6ec76ce748266e8a6438cf68e75f5d2d610026f6d727f977862080",
+      "bytes": 16072
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung3.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung3.json",
+      "origin": "alix",
+      "sha256": "cc8b7aaa2d68e8bb60359f556abb9449ac92e22f5e49804df2f6c52080322fae",
+      "bytes": 161808
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_close_right_toppra.g0.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_close_right_toppra.g0.json",
+      "origin": "alix",
+      "sha256": "c1a89678d3343b0a32d27edce920c229e3f6b1c49e6291437c021faaa2b24995",
+      "bytes": 3116
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_close_right_toppra.g0.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_close_right_toppra.g0.proj",
+      "origin": "alix",
+      "sha256": "0b4c32dd49affcd046dc6d2ebf8988f5d593e4a42d12692b92dcf903daaa094b",
+      "bytes": 35957
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_close_right_toppra.g0.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_close_right_toppra.g0.txt",
+      "origin": "alix",
+      "sha256": "338eb81d33b61ecce3aeb935e397fe96bb628732b726742711fc2310e0b3a1e6",
+      "bytes": 35231
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_close_right_toppra.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_close_right_toppra.json",
+      "origin": "alix",
+      "sha256": "797c99fc88ea3db83ec1ebf7ef42403096cc48a3efe181bd70e56ffa34236d9d",
+      "bytes": 374784
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.json",
+      "origin": "alix",
+      "sha256": "ae8f240f6f042f4bb49a2b52fd0f497ffd0f328c6c206a406f91bad0bfbadc03",
+      "bytes": 3113
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.proj",
+      "origin": "alix",
+      "sha256": "1d062ef3f39a74ea0668601a7baec36bcf86d060341016687defd29bad6d13ec",
+      "bytes": 23884
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.txt",
+      "origin": "alix",
+      "sha256": "074b512d15f726ed8a07392d4198671ae55a4a21dc83794753d5722f4590ef56",
+      "bytes": 23385
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.json",
+      "origin": "alix",
+      "sha256": "06f44ddd4a53d430352b9b785d6fe88896669270f42e8fca722c933490977a7c",
+      "bytes": 3101
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.proj",
+      "origin": "alix",
+      "sha256": "e7ee5c5f3444ca95e7f3373a040e7595bdb49eb902813076d19d2654cf956aaa",
+      "bytes": 22043
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.txt",
+      "origin": "alix",
+      "sha256": "ed2459541ef45bbbfce1dff5fcf5046d68621f73e9b324b6c3a61d54182cfacd",
+      "bytes": 21562
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.json",
+      "origin": "alix",
+      "sha256": "c753b3d69ab86aafb418c864a99c4ca80d86e87f6c21ae2fe0dd820a46d537fa",
+      "bytes": 689030
     },
     {
       "dest": "vendor/alix/Resource/tracks/taught/EXECUTION_MODEL.json",
@@ -1012,20 +1257,6 @@
       "bytes": 273
     },
     {
-      "dest": "vendor/alix/core/python/src/alix_core/sdk/__init__.py",
-      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/src/alix_core/sdk/__init__.py",
-      "origin": "alix",
-      "sha256": "cf1e57a2c986f4eac5efefac817c07be15c40fccb0419d8639c6530da03eb945",
-      "bytes": 712
-    },
-    {
-      "dest": "vendor/alix/core/python/src/alix_core/sdk/endpoints.py",
-      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/src/alix_core/sdk/endpoints.py",
-      "origin": "alix",
-      "sha256": "1cad4bb39e14646a818ba5c5bfad404345a0f065fe3e68202dc15eb0d1215b6d",
-      "bytes": 6227
-    },
-    {
       "dest": "vendor/alix/core/python/src/alix_core/diagnostics/__init__.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/src/alix_core/diagnostics/__init__.py",
       "origin": "alix",
@@ -1038,6 +1269,20 @@
       "origin": "alix",
       "sha256": "66b031d397ca454ebd607f8bd3fa12f1e2790bc26715bf0361d04957b6e8918c",
       "bytes": 34876
+    },
+    {
+      "dest": "vendor/alix/core/python/src/alix_core/sdk/__init__.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/src/alix_core/sdk/__init__.py",
+      "origin": "alix",
+      "sha256": "cf1e57a2c986f4eac5efefac817c07be15c40fccb0419d8639c6530da03eb945",
+      "bytes": 712
+    },
+    {
+      "dest": "vendor/alix/core/python/src/alix_core/sdk/endpoints.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/src/alix_core/sdk/endpoints.py",
+      "origin": "alix",
+      "sha256": "1cad4bb39e14646a818ba5c5bfad404345a0f065fe3e68202dc15eb0d1215b6d",
+      "bytes": 6227
     },
     {
       "dest": "vendor/alix/core/python/src/alix_emulator/__init__.py",
@@ -1171,6 +1416,27 @@
       "origin": "alix",
       "sha256": "b1a2a6e8933d671b7637b91be5c13d1941a04177c46cc43555436f3e4909ddac",
       "bytes": 17995
+    },
+    {
+      "dest": "vendor/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/dual_arm_common.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/dual_arm_common.py",
+      "origin": "alix",
+      "sha256": "60142b49c33a874a7d21d3bf854c004482438a2594196ad6484d168f367d5beb",
+      "bytes": 73098
+    },
+    {
+      "dest": "vendor/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/error_codes.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/error_codes.py",
+      "origin": "alix",
+      "sha256": "66b031d397ca454ebd607f8bd3fa12f1e2790bc26715bf0361d04957b6e8918c",
+      "bytes": 34876
+    },
+    {
+      "dest": "vendor/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/log_utils.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/log_utils.py",
+      "origin": "alix",
+      "sha256": "042f1a179cb543a4475a314688c82fd29fe193e528ebe6767e8f402fbdbbad8b",
+      "bytes": 3024
     },
     {
       "dest": "vendor/alix/external/butterfli-realman-alix/Python/Robotic_Arm/__init__.py",
@@ -3308,11 +3574,25 @@
       "bytes": 755884
     },
     {
+      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/BinRail.mtl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/BinRail.mtl",
+      "origin": "alix",
+      "sha256": "3cb444f92ecfe0bd6c48e8856334374f08579f37b479264f978a8a3382265e1b",
+      "bytes": 276
+    },
+    {
       "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/BinRail.obj",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/BinRail.obj",
       "origin": "alix",
       "sha256": "cb387bd0033b252e33a6cdaacbaa2e4cc3bbca5f2a1c602a1fcec09f9ca75e6f",
       "bytes": 135737
+    },
+    {
+      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/BinShort.mtl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/BinShort.mtl",
+      "origin": "alix",
+      "sha256": "8fb97dff8375f31bdbd37f1139c04d98f435dbb6cc0a0c61dfbd2206fbc12294",
+      "bytes": 3253
     },
     {
       "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/BinShort.obj",
@@ -3329,11 +3609,25 @@
       "bytes": 3985098
     },
     {
+      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_lever_arm.mtl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_lever_arm.mtl",
+      "origin": "alix",
+      "sha256": "29234fc1bd0fc51c070f1bcb23ba6c3ff1e72483f5f366e8389e53ba1830813d",
+      "bytes": 728
+    },
+    {
       "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_lever_arm.obj",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_lever_arm.obj",
       "origin": "alix",
       "sha256": "3f335ca1e88e1e93f6b5d755af0fa8c51da13fd490e020957229856324938e28",
       "bytes": 434565
+    },
+    {
+      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_unit.mtl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_unit.mtl",
+      "origin": "alix",
+      "sha256": "af6067fe39d632d94b92553f3051f5a0d41189de484e5295678b243a7ae0b0d8",
+      "bytes": 2319
     },
     {
       "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_unit.obj",
@@ -3348,6 +3642,13 @@
       "origin": "alix",
       "sha256": "4a3d15a81a91525be65a65ce77facaca91cdc949228ad85340f52907e344fd26",
       "bytes": 400413
+    },
+    {
+      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/ugv_cover.mtl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/ugv_cover.mtl",
+      "origin": "alix",
+      "sha256": "0b320fd96bdac43740cb81d931dc355239f38ea068ae7e55bd466e87d528121e",
+      "bytes": 2791
     },
     {
       "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/ugv_cover.obj",
@@ -3595,6 +3896,76 @@
       "bytes": 3330
     },
     {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/closed.stl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/closed.stl",
+      "origin": "alix",
+      "sha256": "8440d7bb03cb488c944f2f492850e5a8de8766f5be4276b7ec56e19b92bd1883",
+      "bytes": 2029684
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/lid_open.stl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/lid_open.stl",
+      "origin": "alix",
+      "sha256": "07bc19aeb56f5a0d824eaed493b01aa00c38f9b8ddf2bd20dd7417b21a663f87",
+      "bytes": 2258884
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/lid_seat_open.stl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/lid_seat_open.stl",
+      "origin": "alix",
+      "sha256": "75a0e44b7c19fadcea5bbcc160cdc7b3bcecd36318ab180116230843775211a0",
+      "bytes": 2523384
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/regions.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/regions.yaml",
+      "origin": "alix",
+      "sha256": "a5aa2128e02f56c90a25d129514c8815288c8b5b8ecc7325d93899551b11f540",
+      "bytes": 492
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/scene.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/scene.yaml",
+      "origin": "alix",
+      "sha256": "81b9d6fcb8a4e794fdb33d661831d7064a7d01b0faa8666c2f8e11b0f91cdd03",
+      "bytes": 2896
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/body.stl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/body.stl",
+      "origin": "alix",
+      "sha256": "c9a3be21128ab27e78e70077b95c7a8c6add3aa0937332dec3c078524c1f7834",
+      "bytes": 2259484
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/lid.stl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/lid.stl",
+      "origin": "alix",
+      "sha256": "305de2064e708ae112a9478ff41471f93e1ea8d3349122b4573f7a641dfcab81",
+      "bytes": 400084
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/regions.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/regions.yaml",
+      "origin": "alix",
+      "sha256": "01cc86c2ce6f9249bdc5f713d5a6a50714613e56dbda4177bb0dd3e365c3ef41",
+      "bytes": 488
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/seat.stl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/seat.stl",
+      "origin": "alix",
+      "sha256": "1f754487f823aa1d2367904f0a3c050158dbb1dea1cd49c8536f2f4dacbf0601",
+      "bytes": 401784
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/scene.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/scene.yaml",
+      "origin": "alix",
+      "sha256": "9a09b40947555d248e43b39127742d9dd0eb298ca3f0e10b90e92e953babc12c",
+      "bytes": 4358
+    },
+    {
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/body.stl",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/body.stl",
       "origin": "alix",
@@ -3607,6 +3978,13 @@
       "origin": "alix",
       "sha256": "d42904a9c949913c6f4b49a90ac6ad74d61693e696b766fe9aa782eb7bbe2566",
       "bytes": 400684
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/regions.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/regions.yaml",
+      "origin": "alix",
+      "sha256": "f38ffb29997240c87df7586b91757bc940989c4f0de03a25b4cc7a42c2efefa8",
+      "bytes": 66170
     },
     {
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/seat.stl",
@@ -3637,6 +4015,41 @@
       "bytes": 14948
     },
     {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/lid_close_right.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/lid_close_right.yaml",
+      "origin": "alix",
+      "sha256": "b4b84416acef1dfdab6748bedc01688ed2a11fb93583308c2252c6b6f2c5431c",
+      "bytes": 8167
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/lid_open.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/lid_open.yaml",
+      "origin": "alix",
+      "sha256": "de2b3884b45901a846c560ab7c12e430829c983d706d93b4319e92282a392525",
+      "bytes": 23604
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/seat_close_right.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/seat_close_right.yaml",
+      "origin": "alix",
+      "sha256": "e7f80bff6052fbe09a04c072375f8ab4219db2246ad22141ac267f3a2d0423d2",
+      "bytes": 7495
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/seat_open.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/seat_open.yaml",
+      "origin": "alix",
+      "sha256": "5f76302a51020173f17c282bafbab6a2a6536ef989507e34a774de5d561df7e0",
+      "bytes": 28104
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/task_parameters_defaults.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/task_parameters_defaults.yaml",
+      "origin": "alix",
+      "sha256": "0937404fad0b21dd62fdceb60ceff8de482bc3a1f4c9657d5899ca5fdc96ea6d",
+      "bytes": 5492
+    },
+    {
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/scene/washroom_800mm_wide_scene.yaml",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/scene/washroom_800mm_wide_scene.yaml",
       "origin": "alix",
@@ -3644,11 +4057,74 @@
       "bytes": 1604
     },
     {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/fixtures.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/fixtures.yaml",
+      "origin": "alix",
+      "sha256": "616dfdb8f32e4e31d6f23ab8935a0500f1c2f6c8488460f8acba868dc40dc21d",
+      "bytes": 729
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/models/regions.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/models/regions.yaml",
+      "origin": "alix",
+      "sha256": "166cfa1e87bac6557b3ec8838f6d75ee955305ada3ddbfd249b98d99576b9cee",
+      "bytes": 564
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/models/urinal.stl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/models/urinal.stl",
+      "origin": "alix",
+      "sha256": "8c1392c0a994112859d63831200729ba5d5baa2424b79060363d5022b0bdaf2f",
+      "bytes": 1249984
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/scene.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/scene.yaml",
+      "origin": "alix",
+      "sha256": "1583043d285497365436ccb623f70b722944de3128d74bff0c4abdf4efca83be",
+      "bytes": 969
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/models/regions.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/models/regions.yaml",
+      "origin": "alix",
+      "sha256": "c7a9be5827f1d77a8558e847ea0faf0b77398caa84d2579b38757fb0f42f9eff",
+      "bytes": 766
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/models/washbasin.stl",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/models/washbasin.stl",
+      "origin": "alix",
+      "sha256": "1212307013725325d1140515ac97558fb74ff927184e40d3a3ebbe932a3be9ee",
+      "bytes": 765684
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/scene.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/scene.yaml",
+      "origin": "alix",
+      "sha256": "7c75f53c8d31a614a508b6ba6c6b0ea5bb445f9a572a2018d9f87c215e8f2de2",
+      "bytes": 1414
+    },
+    {
       "dest": "vendor/alix/ros/orchestration/alix_tasks/package.xml",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/package.xml",
       "origin": "alix",
       "sha256": "8d346b6f063945f8d483257feb0430e91b1bdbce96c2364737251263bccd3cc3",
       "bytes": 2633
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/scripts/lift_check.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/scripts/lift_check.py",
+      "origin": "alix",
+      "sha256": "4a9bfb646df2408ddd4e2cb7b93af6f5b89e158f513bc16855607c41cabf61b9",
+      "bytes": 8211
+    },
+    {
+      "dest": "vendor/alix/ros/perception/alix_perception/config/perception.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/perception/alix_perception/config/perception.yaml",
+      "origin": "alix",
+      "sha256": "6ef442e8488cb1d51c72ca8a6acda702d2672a91a6592b9a7fbefd6a6c6034de",
+      "bytes": 14168
     },
     {
       "dest": "vendor/alix/tools/ament_index_shim.py",
@@ -3677,6 +4153,13 @@
       "origin": "alix",
       "sha256": "d2abacaea9ac0500c254e7723d5f50d9d2d7f5a3e15f8e8b82ad718acdf0e694",
       "bytes": 191519
+    },
+    {
+      "dest": "vendor/alix/tools/meshes/bake_visual_overlay.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/tools/meshes/bake_visual_overlay.py",
+      "origin": "alix",
+      "sha256": "03165cab6db7a610a722b0581ce803e5530f2e7e30c5b9f015098fa15fac9d7e",
+      "bytes": 8553
     },
     {
       "dest": "vendor/alix/tools/plan_min_time.py",
@@ -3749,13 +4232,6 @@
       "bytes": 375502
     },
     {
-      "dest": "vendor/control_app/rm_upload_fast_v14_safe_transit.py",
-      "source": "/home/newtonjeri/alix_studio_lite_ws/upload_channel/rm_upload_fast_v14_safe_transit.py",
-      "origin": "workspace",
-      "sha256": "581c23e5387ed0fdf78a2f24310771a3a0a7bcfb85b4742795c345dc091ddcc4",
-      "bytes": 91105
-    },
-    {
       "dest": "vendor/control_app/rm_upload.py",
       "source": "/home/newtonjeri/alix_studio_lite_ws/upload_channel/upload/rm_upload.py",
       "origin": "workspace",
@@ -3763,200 +4239,18 @@
       "bytes": 16697
     },
     {
+      "dest": "vendor/control_app/rm_upload_fast_v14_safe_transit.py",
+      "source": "/home/newtonjeri/alix_studio_lite_ws/upload_channel/rm_upload_fast_v14_safe_transit.py",
+      "origin": "workspace",
+      "sha256": "581c23e5387ed0fdf78a2f24310771a3a0a7bcfb85b4742795c345dc091ddcc4",
+      "bytes": 91105
+    },
+    {
       "dest": "vendor/control_app/usage.py",
       "source": "/home/newtonjeri/alix_studio_lite_ws/upload_channel/usage.py",
       "origin": "workspace",
       "sha256": "84a4740d31b77ddf932d0c50936229b27dc0a053de28e4c4c7ac7a90fcc951b3",
       "bytes": 8087
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/scene.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/scene.yaml",
-      "origin": "alix",
-      "sha256": "81b9d6fcb8a4e794fdb33d661831d7064a7d01b0faa8666c2f8e11b0f91cdd03",
-      "bytes": 2896
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/regions.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/regions.yaml",
-      "origin": "alix",
-      "sha256": "a5aa2128e02f56c90a25d129514c8815288c8b5b8ecc7325d93899551b11f540",
-      "bytes": 492
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/closed.stl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/closed.stl",
-      "origin": "alix",
-      "sha256": "8440d7bb03cb488c944f2f492850e5a8de8766f5be4276b7ec56e19b92bd1883",
-      "bytes": 2029684
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/lid_open.stl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/lid_open.stl",
-      "origin": "alix",
-      "sha256": "07bc19aeb56f5a0d824eaed493b01aa00c38f9b8ddf2bd20dd7417b21a663f87",
-      "bytes": 2258884
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/lid_seat_open.stl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/lid_seat_open.stl",
-      "origin": "alix",
-      "sha256": "75a0e44b7c19fadcea5bbcc160cdc7b3bcecd36318ab180116230843775211a0",
-      "bytes": 2523384
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/scene.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/scene.yaml",
-      "origin": "alix",
-      "sha256": "9a09b40947555d248e43b39127742d9dd0eb298ca3f0e10b90e92e953babc12c",
-      "bytes": 4358
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/regions.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/regions.yaml",
-      "origin": "alix",
-      "sha256": "01cc86c2ce6f9249bdc5f713d5a6a50714613e56dbda4177bb0dd3e365c3ef41",
-      "bytes": 488
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/body.stl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/body.stl",
-      "origin": "alix",
-      "sha256": "c9a3be21128ab27e78e70077b95c7a8c6add3aa0937332dec3c078524c1f7834",
-      "bytes": 2259484
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/lid.stl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/lid.stl",
-      "origin": "alix",
-      "sha256": "305de2064e708ae112a9478ff41471f93e1ea8d3349122b4573f7a641dfcab81",
-      "bytes": 400084
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/seat.stl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_b/models/seat.stl",
-      "origin": "alix",
-      "sha256": "1f754487f823aa1d2367904f0a3c050158dbb1dea1cd49c8536f2f4dacbf0601",
-      "bytes": 401784
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/scene.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/scene.yaml",
-      "origin": "alix",
-      "sha256": "1583043d285497365436ccb623f70b722944de3128d74bff0c4abdf4efca83be",
-      "bytes": 969
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/models/regions.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/models/regions.yaml",
-      "origin": "alix",
-      "sha256": "166cfa1e87bac6557b3ec8838f6d75ee955305ada3ddbfd249b98d99576b9cee",
-      "bytes": 564
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/models/urinal.stl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/urinal_a/models/urinal.stl",
-      "origin": "alix",
-      "sha256": "8c1392c0a994112859d63831200729ba5d5baa2424b79060363d5022b0bdaf2f",
-      "bytes": 1249984
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/scene.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/scene.yaml",
-      "origin": "alix",
-      "sha256": "7c75f53c8d31a614a508b6ba6c6b0ea5bb445f9a572a2018d9f87c215e8f2de2",
-      "bytes": 1414
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/models/regions.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/models/regions.yaml",
-      "origin": "alix",
-      "sha256": "c7a9be5827f1d77a8558e847ea0faf0b77398caa84d2579b38757fb0f42f9eff",
-      "bytes": 766
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/models/washbasin.stl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/washtub_cleaning/washtub_a/models/washbasin.stl",
-      "origin": "alix",
-      "sha256": "1212307013725325d1140515ac97558fb74ff927184e40d3a3ebbe932a3be9ee",
-      "bytes": 765684
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/fixtures.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/urinal_cleaning/fixtures.yaml",
-      "origin": "alix",
-      "sha256": "616dfdb8f32e4e31d6f23ab8935a0500f1c2f6c8488460f8acba868dc40dc21d",
-      "bytes": 729
-    },
-    {
-      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/regions.yaml",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/regions.yaml",
-      "origin": "alix",
-      "sha256": "f38ffb29997240c87df7586b91757bc940989c4f0de03a25b4cc7a42c2efefa8",
-      "bytes": 66170
-    },
-    {
-      "dest": "vendor/alix/tools/meshes/bake_visual_overlay.py",
-      "source": "/home/newtonjeri/alix_ws/src/alix/tools/meshes/bake_visual_overlay.py",
-      "origin": "alix",
-      "sha256": "03165cab6db7a610a722b0581ce803e5530f2e7e30c5b9f015098fa15fac9d7e",
-      "bytes": 8553
-    },
-    {
-      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/BinRail.mtl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/BinRail.mtl",
-      "origin": "alix",
-      "sha256": "3cb444f92ecfe0bd6c48e8856334374f08579f37b479264f978a8a3382265e1b",
-      "bytes": 276
-    },
-    {
-      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/BinShort.mtl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/BinShort.mtl",
-      "origin": "alix",
-      "sha256": "8fb97dff8375f31bdbd37f1139c04d98f435dbb6cc0a0c61dfbd2206fbc12294",
-      "bytes": 3253
-    },
-    {
-      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_lever_arm.mtl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_lever_arm.mtl",
-      "origin": "alix",
-      "sha256": "29234fc1bd0fc51c070f1bcb23ba6c3ff1e72483f5f366e8389e53ba1830813d",
-      "bytes": 728
-    },
-    {
-      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_unit.mtl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/glove_wearing_unit.mtl",
-      "origin": "alix",
-      "sha256": "af6067fe39d632d94b92553f3051f5a0d41189de484e5295678b243a7ae0b0d8",
-      "bytes": 2319
-    },
-    {
-      "dest": "vendor/alix/ros/description/ugv_description/meshes/visuals/ugv_cover.mtl",
-      "source": "/home/newtonjeri/alix_ws/src/alix/ros/description/ugv_description/meshes/visuals/ugv_cover.mtl",
-      "origin": "alix",
-      "sha256": "0b320fd96bdac43740cb81d931dc355239f38ea068ae7e55bd466e87d528121e",
-      "bytes": 2791
-    },
-    {
-      "dest": "vendor/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/dual_arm_common.py",
-      "source": "/home/newtonjeri/alix_ws/src/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/dual_arm_common.py",
-      "origin": "alix",
-      "sha256": "60142b49c33a874a7d21d3bf854c004482438a2594196ad6484d168f367d5beb",
-      "bytes": 73098
-    },
-    {
-      "dest": "vendor/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/error_codes.py",
-      "source": "/home/newtonjeri/alix_ws/src/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/error_codes.py",
-      "origin": "alix",
-      "sha256": "66b031d397ca454ebd607f8bd3fa12f1e2790bc26715bf0361d04957b6e8918c",
-      "bytes": 34876
-    },
-    {
-      "dest": "vendor/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/log_utils.py",
-      "source": "/home/newtonjeri/alix_ws/src/alix/external/butterfli-realman-alix/Demo/RMDemo_Python/RMDemo_DualArmConcept/src/log_utils.py",
-      "origin": "alix",
-      "sha256": "042f1a179cb543a4475a314688c82fd29fe193e528ebe6767e8f402fbdbbad8b",
-      "bytes": 3024
     }
   ],
   "missing": []

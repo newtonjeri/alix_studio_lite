@@ -11,3 +11,8 @@ toppra==0.6.10
 meshoptimizer==0.2.30a0
 # The bake tool's deviation check (trimesh proximity queries); wheels for every platform.
 rtree==1.4.1
+# The right wrist's RealSense D435, read by Lite itself for the lid and seat tasks' camera checks
+# (server/camera_d435.py): the librealsense version ALIX's camera node was built on (realsense-ros 4.57.7).
+# PyPI has wheels for Linux x86-64 and Windows. Without it the lid and seat tasks still simulate and run in
+# Hardware sim; Real refuses their checks (fail-closed), so nothing is lifted unseen.
+pyrealsense2==2.57.7.10387

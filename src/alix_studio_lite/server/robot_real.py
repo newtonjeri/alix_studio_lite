@@ -24,13 +24,14 @@ from __future__ import annotations
 
 import io
 import sys
+import tempfile
 import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 
-from .jobs import UserError
+from .jobs import Cancelled, UserError
 from .robot_link import CLOSE_WAIT_S, return_text
 
 POLE_SPEED_PCT = 50       # the pole in Real (the owner's choice, 14 Oct; ALIX itself ran it at 100 %)
@@ -41,6 +42,8 @@ HAND_SPEED_SET = 500      # the hand's SPEED_SET, of 1000: 50 %
 # move at the slider's %, then the global speed put back to the one found when the arm was connected.
 RESTORE_PCT = 50          # the global speed put back when the controller did not say which it had
 CHECK_TRIES = 4           # the read-back after an upload: tries, 1 s apart, before it is called failed
+CANFD_PERIOD_S = 0.005    # the lid and the seat's streams: one line every 5 ms (Lite's clock, D26; ALIX's CanFD default)
+UDP_PORT = {"left": 8089, "right": 8090}    # each controller's 5 ms push to this computer, a port of its own
 
 
 def _words(code: str | None) -> str:
@@ -155,6 +158,66 @@ def _printed_to(sink):
         out.sinks.pop(tid, None)
         if rest.strip():
             sink(rest.rstrip())
+
+
+class _StopWatch:
+    """ALIX's CanfdWatch with Lite's STOP: the stream's stop check also trips when STOP was pressed."""
+
+    def __new__(cls, rows, period_s, stop):
+        from alix_dispatch import track
+
+        class Watch(track.CanfdWatch):
+            def check(self, now, i_sent):
+                if stop.is_set() and self.tripped is None:
+                    self.tripped = {"why": "stop", "t_mono": now, "line": i_sent, "detail": "STOP was pressed"}
+                return self.tripped if self.tripped is not None else super().check(now, i_sent)
+
+        return Watch(rows, period_s)
+
+
+class _EmulatedCapture:
+    """The 5 ms capture of an EMULATED arm only (``--robot emulated``): ALIX's emulator cannot push over UDP (it
+    hands its frames to the SDK's callback), so its arm's own joints are read every 5 ms and fed to the stream's
+    watch, as ALIX's own test of this lane does (alix_dispatch test_track_canfd_channel.py, ``_NoCapture``), and
+    written to the capture file, marked emulated. A real arm's capture is always ALIX's UdpRecorder."""
+
+    def __init__(self, out_path, host_ip, port=None, log=print, **_):
+        self.out_path, self.frames, self.monitor = Path(out_path), 0, None
+        self._stop, self._th, self._fh = threading.Event(), None, None
+
+    def attach_monitor(self, monitor) -> None:
+        self.monitor = monitor
+
+    def start(self, robot) -> None:
+        import json
+
+        inner = getattr(robot, "_emulated_inner", robot)
+        self._fh = open(self.out_path, "w", encoding="utf-8")
+
+        def feed():
+            while not self._stop.wait(0.005):
+                try:
+                    st = inner.rm_get_current_arm_state()[1]
+                    frame = {"emulated": True, "err": [0], "arm_current_status": "run",
+                             "joint_status": {"joint_position": [int(round(v * 1000)) for v in st["joint"]],
+                                              "joint_err_code": [0] * 7}}
+                except Exception:                                                   # noqa: BLE001
+                    continue
+                t = time.monotonic()
+                self._fh.write(json.dumps({"t_mono": t, "frame": frame}, separators=(",", ":")) + "\n")
+                self.frames += 1
+                if self.monitor is not None:
+                    self.monitor.on_frame(t, frame)
+
+        self._th = threading.Thread(target=feed, name="lite-emulated-capture", daemon=True)
+        self._th.start()
+
+    def stop(self, robot) -> None:
+        self._stop.set()
+        if self._th is not None:
+            self._th.join(timeout=1.0)
+        if self._fh is not None:
+            self._fh.close()
 
 
 def _interrupt(tid: int, exc=KeyboardInterrupt) -> None:
@@ -819,6 +882,107 @@ class RealArm:
 
     def _runner_line(self, line: str) -> None:
         self._hw("runner v14", text=line)
+
+    # ── ALIX's CanFD lane: a lid or seat plan's arm move, streamed from this computer, one line every 5 ms
+    def stream(self, rows_millideg: list, label: str, *, speed: int = 50, restore_pct: int = RESTORE_PCT,
+               bridge_speed: int | None = None, stop_hook=None, records: Path | None = None) -> dict:
+        """One arm move of ALIX's lid and seat plans (mechanism.py), as ALIX's ROS-free lane plays a track
+        (cleaning_tracks.run_one): the controller's 5 ms push captured on this computer (``track.UdpRecorder``, a
+        port per arm) and watched (``CanfdWatch``: a stop code, or an arm that does not follow, stops the
+        stream); refused when no frame comes or a stop code is live; then ``track.run_verified(channel="canfd")``:
+        the lines checked against the pass-through's limits (the per-joint gate), the arm at the first line
+        (within one frame's step) or, with ``bridge_speed``, brought there by ALIX's explicit MoveJ at that speed,
+        then one ``rm_movej_canfd`` per line on absolute 5 ms deadlines, and the arm left at rest. STOP
+        (``stop_hook``) stops the sending at once (the watch, and the thread interrupted); the arm holds the last
+        line it took, and Lite's STOP stops it on its controller. The capture is kept in ``records``."""
+        from alix_dispatch import track
+
+        rows = [[int(v) for v in r] for r in rows_millideg]
+        n = len(rows)
+        if n == 0:
+            raise UserError(f"{label}: no lines to stream.")
+        h = self.handle
+        folder = Path(records) if records else Path(tempfile.gettempdir()) / "lite-canfd"
+        folder.mkdir(parents=True, exist_ok=True)
+        slug = "".join(ch if ch.isalnum() else "_" for ch in label)[:60]
+        cap = folder / f"{time.strftime('%Y%m%d_%H%M%S')}_{slug}.frames.jsonl"
+        stop = threading.Event()
+        watch = _StopWatch(rows, CANFD_PERIOD_S, stop)
+        tid, guard, state = threading.get_ident(), threading.Lock(), {"inside": False}
+
+        def on_stop():
+            stop.set()
+            with guard:
+                if state["inside"]:
+                    _interrupt(tid)
+
+        if stop_hook is not None:
+            stop_hook(on_stop)
+        alog = self._alix_log()
+
+        def log(*parts):
+            alog(" ".join(str(p) for p in parts))
+
+        t0 = time.monotonic()
+        out: dict = {}
+        with self.link.busy(f"streaming {label}", expect_s=n * CANFD_PERIOD_S + 60):
+            capture = _EmulatedCapture if self.link.emulated else track.UdpRecorder
+            rec = capture(cap, h.host_ip, port=UDP_PORT[self.side], log=log)
+            rec.attach_monitor(watch)
+            try:
+                rec.start(self.robot)
+            except Exception as exc:                                                # noqa: BLE001
+                self._hw("canfd capture", ok=False, text=f"refused: {exc}")
+                raise UserError(f"The {self.SIDE} controller's 5 ms feed to this computer could not be set up ({exc}), so "
+                                "nothing was streamed.", "Check that nothing else (ALIX's driver) takes the controller's push.") from None
+            try:
+                t_end = time.monotonic() + 1.0
+                while watch.n_frames == 0 and time.monotonic() < t_end:
+                    time.sleep(0.02)
+                if watch.n_frames == 0:
+                    raise UserError(f"No 5 ms frame came from the {self.SIDE} controller to {h.host_ip}:{UDP_PORT[self.side]}, so "
+                                    "nothing was streamed (the stream's stop check would be blind).",
+                                    "Check that this computer is on the robot's network, then try again.")
+                if watch.stop_codes:
+                    code = next(iter(watch.stop_codes))
+                    raise UserError(f"The {self.SIDE} controller reports {code}, so nothing was streamed.",
+                                    "Clear the error (Robot & mode), then run it again.")
+                try:
+                    with guard:
+                        if stop.is_set():
+                            raise Cancelled()
+                        state["inside"] = True
+                    out = track.run_verified(
+                        self.robot, save_id=0, band_s=track.expected_band_s(n), first_row_millideg=rows[0], points=n,
+                        speed=int(speed), restore_pct=int(restore_pct), start_tolerance_deg=2.0,
+                        require_at_start=bridge_speed is None, movej_speed=bridge_speed, log=log, settle_after=True,
+                        channel="canfd", track_rows_millideg=rows, canfd_watch=watch,
+                        canfd={"period_s": CANFD_PERIOD_S, "rate_gate": "per_joint", "follow": True,
+                               "trajectory_mode": 0, "radio": 0})
+                finally:
+                    with guard:
+                        state["inside"] = False
+                    if stop.is_set():                 # a stop that came as it ended is not raised later
+                        _interrupt(tid, None)
+            except KeyboardInterrupt:
+                out = dict(out, interrupted=True)
+            finally:
+                rec.stop(self.robot)
+        cs = out.get("canfd") or {}
+        sent, ok = int(cs.get("lines_sent") or 0), bool(out.get("ok")) and not out.get("restore_failed")
+        bridged = out.get("gap_deg") if out.get("movej_ret") == 0 else None
+        why = out.get("cut_reason") or cs.get("aborted") or ("STOP" if stop.is_set() else None)
+        self._hw("canfd stream", args=dict(label=label, lines=n, period_ms=CANFD_PERIOD_S * 1000, rate_gate="per_joint",
+                                           bridge_speed=bridge_speed, capture=cap.name),
+                 ret=out.get("verdict"), ok=ok, elapsed_s=time.monotonic() - t0,
+                 text=f"{sent}/{n} lines" + (f", bridged {bridged:.2f} deg" if bridged else "") + (f"; {why}" if why and not ok else ""))
+        if stop.is_set():
+            raise Cancelled()
+        if not ok:
+            raise UserError(f"{label}: the stream did not complete ({why or out.get('verdict') or 'no verdict'}; {sent} of {n} lines sent).",
+                            "The arm holds where it stopped: check it, then press STOP or run the task again.")
+        return dict(lines=n, lines_sent=sent, seconds=round(float(cs.get("replay_s") or 0.0), 3), bridged_deg=bridged,
+                    capture=str(cap), verdict=out.get("verdict"))
 
     def move_to(self, target_millideg: list, speed: int = RESTORE_PCT, restore_pct: int = RESTORE_PCT) -> dict:
         """A MoveJ to a joint pose at ``speed`` % (the speed slider), ALIX's park move (the global speed at

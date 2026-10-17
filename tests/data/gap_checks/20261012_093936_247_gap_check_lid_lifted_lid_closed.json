@@ -1,0 +1,109 @@
+{
+  "class": "lid_closed",
+  "success": true,
+  "confidence": 0.9825699030021581,
+  "passes_expectation": false,
+  "part": "lid",
+  "height_m": 0.4618887161214053,
+  "closed_top_m": 0.46223731806136215,
+  "nominal_top_m": 0.45,
+  "color_used": true,
+  "color_note": "",
+  "registration_m": 0.012237318061362135,
+  "registration_source": "lid",
+  "registration_pose": "",
+  "rise_m": -0.0003486019399568385,
+  "roi_valid": 1.0,
+  "median_range_m": 0.456,
+  "message": "lid surface median z 0.462 m in base_link (closed top 0.462 = nominal 0.450 registered +12 mm by the lid, rise -0 mm vs 50 mm bar); 100 % of the ROI valid, median range 0.456 m; native depth /camera/camera/depth/image_rect_raw, camera_depth_optical_frame; opening visible 0 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); models: no state from - at 0.00",
+  "models": {
+    "fused_state": "",
+    "state_source": "",
+    "confidence": 0.0,
+    "fusion": "",
+    "colour_state": "",
+    "depth_state": "",
+    "contradiction": false
+  },
+  "decision_wall_s": 1791769176.224,
+  "depth_header_stamp_s": 1791769175.762556,
+  "color_header_stamp_s": 1791769175.795915,
+  "color_minus_depth_s": 0.0334,
+  "depth_age_s": 0.002,
+  "color_age_s": 0.003,
+  "depth_frame_id": "camera_depth_optical_frame",
+  "source": "native depth /camera/camera/depth/image_rect_raw",
+  "frame": "camera_depth_optical_frame",
+  "world_frame": "base_link",
+  "camera_to_world": [
+    [
+      0.481687,
+      -0.81388,
+      0.324925,
+      0.554334
+    ],
+    [
+      -0.876291,
+      -0.443255,
+      0.188787,
+      -0.125227
+    ],
+    [
+      -0.009625,
+      -0.375665,
+      -0.926706,
+      0.885661
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "params": {
+    "gap_lid_top_z": 0.45,
+    "gap_seat_top_z": 0.44,
+    "gap_lift_m": 0.05,
+    "gap_roi": [
+      0.4,
+      0.6,
+      0.4,
+      0.6
+    ],
+    "gap_seat_roi": [
+      0.58,
+      0.78,
+      0.3,
+      0.7
+    ],
+    "gap_seat_band_z": [
+      0.38,
+      0.47
+    ],
+    "gap_seat_min_band": 0.03,
+    "gap_seat_absent_m": 0.012,
+    "gap_hand_mask_m": 0.14,
+    "gap_lid_closed_tol_m": 0.02,
+    "gap_lid_open_m": 0.05,
+    "gap_lid_wide_roi": [
+      0.3,
+      0.75,
+      0.3,
+      0.7
+    ],
+    "gap_lid_deep_m": 0.1,
+    "gap_lid_hole_min": 0.08,
+    "gap_lid_top_rows": 0.35,
+    "gap_lid_standing_range_m": 0.35,
+    "gap_lid_standing_min": 0.1
+  },
+  "stamp": "20261012_093936_247",
+  "mode": "gap_check",
+  "expect": "lid_lifted",
+  "files": {
+    "depth_npy": "20261012_093936_247_gap_check_lid_lifted_lid_closed_depth.npy",
+    "depth_png": "20261012_093936_247_gap_check_lid_lifted_lid_closed_depth.png",
+    "color_png": "20261012_093936_247_gap_check_lid_lifted_lid_closed_color.png"
+  }
+}

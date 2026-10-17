@@ -1,0 +1,200 @@
+# =============================================================================
+# alix_perception — node parameters
+# =============================================================================
+perception_node:
+  ros__parameters:
+
+    # ── Camera ───────────────────────────────────────────────────────
+    image_topic: "/camera/camera/color/image_raw"
+    camera_info_topic: "/camera/camera/color/camera_info"
+    # Aligned depth: pixel (u,v) means the same thing in both images. Needs
+    # align_depth.enable:=true on the real driver; Isaac's --camera publishes it
+    # by rendering depth from the colour camera, so alignment there is exact.
+    depth_image_topic: "/camera/camera/aligned_depth_to_color/image_raw"
+    use_depth_image: true
+
+    # ── Frames ───────────────────────────────────────────────────────
+    # Output frame. Every cleaning config is expressed in it.
+    target_frame: "alix_ref_frame"
+    camera_frame: "camera_color_optical_frame"
+    # Gravity-aligned frame the image ROLL is measured against. It must have
+    # +Z up, which alix_ref_frame does not reliably have — it is parented to
+    # R_Pole and rides the pole. Do not set this to the target frame.
+    world_frame: "base_link"
+
+    # ── Inference ────────────────────────────────────────────────────
+    # Local is the default and the priority: models are developed in-house and a
+    # customer washroom has no network guarantee. There is no fallback to a
+    # cloud backend — a missing model is an error that says so.
+    inference_backend: "local"
+
+    # Path to the model manifest. EMPTY USES THE PACKAGED DEFAULT, which
+    # declares both models ported from butterfli — so the node works with no
+    # configuration. Their measured quality is poor (76 false positives over 13
+    # clean images; see the manifest header) and that is a model problem to fix
+    # by retraining, not a reason for the pipeline to refuse to run.
+    # Set this, or export ALIX_PERCEPTION_MODELS, to use your own.
+    models_manifest: ""
+
+    # ── Fixture ──────────────────────────────────────────────────────
+    # Which fixture model's regions.yaml defines the region vocabulary. Regions
+    # are validated against it, so a detector cannot report a region this
+    # fixture does not have or cannot be showing in the state it is in.
+    fixture_type: "commode"
+    fixture_model: "commode_c"
+
+    # ── Gates ────────────────────────────────────────────────────────
+    # State classification below this is reported but not acted on.
+    confidence_threshold: 0.65
+
+    # Smallest stain worth reporting, MILLIMETRES on the surface — not pixels.
+    # This is the gate against the known false positive: the ~8-10 mm fiducial
+    # dots on the test fixture. A pixel threshold cannot express a physical
+    # size; this one survives a range, resolution or model change.
+    min_stain_mm: 15.0
+
+    # Range used when depth is missing or invalid at the sample point. 0.9 m is
+    # the measured inspection-pose range to the bowl interior (0.892-1.032 m
+    # over 8 field runs), not a guess.
+    fallback_depth_m: 0.9
+
+    # De-rotate the image by the measured camera roll before inference. The
+    # camera is rigid to the wrist ROLL (R_joint7), so alix's inspection_pose_1
+    # (the colour viewpoint, 2026-10-08) delivers the scene -87 degrees over and
+    # the retired poses 1-3 sat at 64-106, while every reference image and every
+    # model trained on upright crops assumes 0.
+    # Detections are mapped back to original pixels before projection.
+    derotate: true
+    # What points UP after de-rotation, in world_frame: up (+Z) and away from
+    # the robot toward the fixture (+X). Gravity alone is undefined when the
+    # camera looks straight down (inspection_pose_4). [0, 0, 1] = gravity only.
+    canonical_up_world: [1.0, 0.0, 1.0]
+    # Regions from the fixture's own region meshes (core.region3d) with the
+    # fixture pose from scene.yaml + TF, instead of region_bands.yaml.
+    # ugv_standoff_m < 0 = the scene's default standoff.
+    # The depth decides the state only at these named poses (the arm's joint
+    # states matched to the MoveIt group states); elsewhere colour decides.
+    # [''] = at any pose where depth and TF exist (Newton, 2026-10-08 evening: both
+    # instruments answer everywhere); [inspection_pose_4] restores the pose-4 gate.
+    depth_state_poses: ['']
+    depth_state_pose_tolerance_rad: 0.1
+    # The real fixture's calibration (core config/fixtures/<model>_calibration.yaml): auto =
+    # the measured file on the robot, NONE under simulated time (`use_sim_time`, forwarded
+    # by the Isaac bringup; the simulator's fixture is the model); none; or a path.
+    fixture_calibration: auto
+    # Learn the session's registration (how much higher the real fixture sits than its
+    # nominal pose, per named pose) from confident closed decisions and apply it to the
+    # frames that follow: the depth then decides the open states at pose 4 as well.
+    depth_registration_learn: true
+    # The state policy: depth and colour both answer; agreement = the state, surer than
+    # either; one alone = that one; disagreement = no state ("uncertain"), re-checked by
+    # the executive from another pole height. false = the depth overrides the colour.
+    state_fusion: true
+    joint_states_topic: /joint_states
+    route_by_mesh: true
+    fixture_scene_yaml: ""
+    fixture_venue_yaml: ""     # "" = the default washroom venue (its yaw turns the fixture to face the robot)
+    ugv_standoff_m: -1.0
+
+    tf_timeout_s: 2.0
+
+    # ── Inference cost ───────────────────────────────────────────────
+    # Downscale the frame before inference; 0 = off, use the native resolution.
+    # The colour stream is 1920x1080 and both shipped models were trained at
+    # 640, so this is the one parameter that changes response time materially
+    # (inference cost is roughly pixel count). The INTRINSICS are scaled with
+    # the image, so 3D positions are unaffected — resizing one without the other
+    # is the classic way to produce positions wrong by the scale factor that
+    # look entirely plausible. 640 is a sensible value; measure before setting.
+    inference_max_width: 0
+
+    # ── Frame traceability ───────────────────────────────────────────
+    # Write the frame that was analysed, and the annotated version showing what
+    # was found, rejected and deliberately left. OFF by default: this writes on
+    # every request, and a robot cleaning all day fills a disk.
+    #
+    # Turn them on during development, during a field trial, and whenever a
+    # result is disputed. The 294-frame `used_frames` corpus that butterfli
+    # accumulated is the only labelled data either workspace has, and it exists
+    # only because the equivalent switch was on.
+    #
+    # `create_new_file` in the AnalyzeScene request decides the filename:
+    # false overwrites <mode>_latest.png, true writes a timestamped capture.
+    save_frames: false
+    save_annotated: false
+    # Empty = Resource/captures/<date>/. Deliberately NOT Resource/Data, which
+    # holds the labelled evaluation corpus — dropping live frames in there would
+    # contaminate the data the model scores are measured against.
+    capture_dir: ""
+    save_check_frames: true              # Newton 2026-10-07: every gap_check / status_check keeps the frame it decided on,
+                                        # with the decision: <capture_dir>/checks/<stamp>_<mode>_<expect>_<class>.json + _depth.npy
+                                        # + _depth.png (ROIs drawn) + _color.png; capture_dir empty = Resource/captures/<date>/
+
+    # How long to wait for a camera frame before refusing the request. This
+    # replaces butterfli's retry-the-whole-analysis-twice-with-a-2 s-sleep,
+    # which was built for a flaky network call to Gemini: local inference is
+    # deterministic, so re-running it on the same array gives the same answer
+    # and the same exception. A frame that has not arrived yet is the one
+    # transient failure on this path, so it is the one thing worth waiting on.
+    frame_wait_s: 2.0
+    # A frame is used only if it arrived within this of the request: the frame the
+    # executive asked for is the one at its pose, not the last one the stream produced
+    # before it stalled (hardware 2026-10-09: a 56-165 s old colour frame of the commode
+    # side was recorded for every check of two runs). A stale depth refuses the check.
+    frame_max_age_s: 0.5
+    # Lift check (P20, 2026-10-05): mode 'gap_check' — geometry from depth, no model.
+    # The central ROI of the depth frame is deprojected into world_frame and its
+    # median height compared with the part's CLOSED top; lifted iff gap_lift_m
+    # higher. commode_c in base_link: lid top 0.45 m, seat top 0.44 m (P20 probe).
+    # Isaac, inspection_pose_4 at pole half: closed 0.45 m, lifted to -30 deg 0.61 m.
+    # The closed lid read within this of the nominal top (no opening, no standing lid) IS
+    # closed and teaches the session's placement: its offset becomes the registration at
+    # that pose and every later lid/seat top carries it (hardware 2026-10-09: +21 mm, which
+    # the 20 mm closed tolerance alone had refused as "between").
+    gap_register_m: 0.04
+    # The seat learns its OWN placement from a well-populated ring reading (band >= this
+    # fraction of the ROI) that lies within gap_seat_register_tol_m of the lid's offset; the
+    # lid's offset alone put the seat top 7 mm too high on the robot (2026-10-10).
+    gap_seat_register_min_band: 0.15
+    gap_seat_register_tol_m: 0.012
+    # A band thinner than this may call the seat ABSENT only at two absent-margins below the top.
+    gap_seat_absent_min_band: 0.10
+    # A ring this far below the registered seat top is still a fully confident closed ring.
+    gap_seat_closed_tol_m: 0.006
+    gap_lid_top_z: 0.45
+    gap_seat_top_z: 0.44
+    gap_lift_m: 0.05
+    gap_roi: [0.40, 0.60, 0.40, 0.60]   # rows r0 r1, cols c0 c1, fractions of the frame
+    gap_depth_source: "depth"           # "depth" = the wrist D435's native depth stream + its camera_info and optical
+                                        # frame (default); "aligned" = the depth aligned to colour (depended on the colour
+                                        # camera; carried no valid pixel on the Isaac bringup of 2026-10-05 16:21)
+    gap_seat_roi: [0.58, 0.78, 0.30, 0.70]  # the seat is a RING and the centre looks through its opening: the ROI is the FRONT ring
+                                        # region from inspection_pose_4, which a lid held at -30 never covers
+    gap_seat_absent_m: 0.012             # seat_lifted also when the ring is ABSENT from its closed place (the bowl rim, 17-22 mm
+    gap_lid_closed_tol_m: 0.02           # lid_closed when the centre ROI's median is within this of the closed top (0.447 measured)
+    gap_lid_open_m: 0.05                 # lid_open when it is this far BELOW the top: the lid is absent and the bowl shows (0.274 at -110)
+    gap_lid_wide_roi: [0.30, 0.75, 0.30, 0.70]  # lid open/closed is structural (hardware 2026-10-07: the centre ROI read the closed SEAT as a closed lid):
+    gap_lid_deep_m: 0.10                 #   open when >= gap_lid_hole_min of the wide ROI lies this far below the top (the seat opening / bowl shows)
+    gap_lid_hole_min: 0.08               #   ... or when the lid stands near the camera in the top rows (range < gap_lid_standing_range_m)
+    gap_lid_top_rows: 0.35
+    gap_lid_standing_range_m: 0.35
+    gap_lid_standing_min: 0.10           #   closed = centre median within gap_lid_closed_tol_m of the top AND no opening visible
+    # The 'bowl shows' cue counts pixels at least gap_lid_deep_m below the lid top AND above
+    # this height: the floor beyond the lid's far edge is not the bowl (2026-10-08: a closed
+    # lid was called open on floor pixels).
+    gap_lid_bowl_floor_m: 0.12
+    # A rise between gap_lift_m and this is 'lifted' whatever the top rows show: the
+    # standing-lid cue also fires for a lid at -30 deg (2026-10-08: a 148 mm lift failed).
+    gap_lid_lifted_max_m: 0.30
+    # Cross-check a closed/open gap class with the fused state (colour + registered depth):
+    # a confident contradiction answers 'uncertain', which proves nothing (fail-closed).
+    gap_cross_check: true
+                                        # below the seat top, shows instead): the seat went up with the lid
+    gap_seat_band_z: [0.38, 0.47]        # heights (m, world_frame) that are ring (0.44) or rim (0.42); a lid held at -30 and the
+                                        # lifting hand sit at 0.55-0.79 m in this ROI and are excluded by the band itself
+    gap_seat_min_band: 0.03              # refuse when less of the ROI lies in the band after masking the hands (6 % with the lid held at -30)
+    gap_hand_mask_m: 0.14                # points within this radius of a hand frame are not the seat (the lifting fingers hover at 0.6-0.8 m)
+    gap_hand_frames: ["ILH_plam", "ILH_left_index_1", "ILH_left_index_tip", "ILH_left_middle_1", "ILH_left_middle_tip",
+                      "ILH_left_ring_1", "ILH_left_ring_tip", "ILH_left_little_1", "ILH_left_little_tip",
+                      "ILH_left_thumb_1", "ILH_left_thumb_tip", "IRH_plam", "IRH_right_index_tip",
+                      "IRH_right_middle_tip", "IRH_right_ring_tip", "IRH_right_little_tip", "IRH_right_thumb_tip"]

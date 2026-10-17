@@ -121,6 +121,20 @@ ALIX_FILES = [
     "ros/description/alix_description/models/meshes/washroom_1000mm_planning_scene.stl",
     # design tokens (ALIX Studio theme)
     "design/_tokens.css",
+    # the lid and the seat (the owner, 17-18 Oct: ALIX's mechanism tasks, pre-recorded, run by Lite with no ROS):
+    # commode C's four hardware plans with their 5 ms track groups and lid_open's pre-planned re-lift rungs, the
+    # check policy (ROS-free), each plan's config (what it does, its checks) and the gap check's parameters
+    "Resource/plans/README.md",
+    *[f"Resource/plans/commode_c/hardware/{p}_toppra{s}"
+      for p, groups in (("lid_open", 2), ("seat_open", 2), ("lid_close_right", 1), ("seat_close_right", 1))
+      for s in [".json"] + [f".g{k}{e}" for k in range(groups) for e in (".json", ".proj", ".txt")]],
+    *[f"Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung{k}{e}"
+      for k in (1, 2, 3) for e in (".json", ".g0.json", ".g0.proj", ".g0.txt")],
+    "ros/orchestration/alix_tasks/scripts/lift_check.py",
+    "ros/orchestration/alix_tasks/config/mechanism_tasks/task_parameters_defaults.yaml",
+    *[f"ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/{p}.yaml"
+      for p in ("lid_open", "seat_open", "lid_close_right", "seat_close_right")],
+    "ros/perception/alix_perception/config/perception.yaml",
 ]
 URDF_IN_TREE = "core/python/alix_workspace/src/alix_workspace/urdf/alix.urdf"
 EXTRA_PACKAGE_ROOTS = ["../vendor"]          # realsense2_description lives beside the ALIX repo
@@ -347,7 +361,7 @@ def main() -> None:
             "alix_root": str(alix), "alix_git": alix_commit(alix), "workspace_root": str(ws),
             "files": sorted(c.entries, key=lambda e: e["dest"]), "missing": c.missing,
         }
-        (LITE / "vendor" / "MANIFEST.json").write_text(json.dumps(manifest, indent=1), encoding="utf-8")
+        (LITE / "vendor" / "MANIFEST.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     total = sum(e["bytes"] for e in c.entries)
     print(f"{'would copy' if args.dry_run else 'copied'} {len(c.entries)} files, {total / 1e6:.1f} MB")

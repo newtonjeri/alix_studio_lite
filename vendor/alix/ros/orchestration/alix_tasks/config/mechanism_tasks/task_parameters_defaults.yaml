@@ -1,0 +1,102 @@
+# =============================================================================
+# MECHANISM TASKS — CATEGORY-LEVEL DEFAULT TASK PARAMETERS
+# =============================================================================
+# Common parameters shared by ALL mechanism task YAMLs (commode_a, commode_c, ...).
+# Per-task YAML values OVERRIDE these defaults.
+# =============================================================================
+
+task_parameters:
+  # ---------------------------------------------------------------------------
+  # Frames (cross-arm)
+  # ---------------------------------------------------------------------------
+  reference_frame: "alix_ref_frame"
+  vector_frame_id: "alix_ref_frame"
+
+  # ---------------------------------------------------------------------------
+  # Visualization & MTC topic
+  # ---------------------------------------------------------------------------
+  mtc_plan_view_topic: "/Mechanism_Tasks/solution"
+  enable_visualization: true
+
+  # ---------------------------------------------------------------------------
+  # Motion / interpolation
+  # ---------------------------------------------------------------------------
+  enable_interpolation: true
+  cleaning_path_mode: "toppra"   # VALID: ruckig_on_s | totg_ruckig | cartesian_per_segment | toppra
+                                      # (toppra: pointwise time-optimal, no jerk bound — upload channel)
+                                      # REMOVED and rejected by the loader AND the launch file:
+                                      #   ruckig_pro_only (Ruckig Pro licence ended 2026-08 — Pro is
+                                      #   NOT in this codebase), totg_only, ruckig_only, pilz_lin
+                                      #   (dropped 2026-08-25, exp02 audit F97)
+  step_size: 0.02
+
+  # ---------------------------------------------------------------------------
+  # Velocity / acceleration scaling (cross-arm; per-task YAML overrides)
+  # ---------------------------------------------------------------------------
+  # TUNED 2026-08-17: 0.5 -> 0.7 on transit, measured on all six commode_c
+  # mechanism tasks. Why it is safe to raise, and why only this far:
+  #   * These are FREE-SPACE moves (pre_start / start / retract / rest). The
+  #     contact motion is `execute_path`, which is governed separately by
+  #     start_pose_* below and by the per-move Cartesian speed.
+  #   * Scaling bounds joint rate as a fraction of the joint limit, so 0.7
+  #     puts the worst joint at 70 % of its limit — inside the <=90 % screen
+  #     that CLEANING_MOTION_SPEC §0 item 1 gates on, with margin.
+  #   * H63 keys on dwell at >=98 % of a limit. At 0.7 that band is
+  #     unreachable by construction, so this cannot create an H63 exposure.
+  # Going higher was NOT taken: 0.9 would sit on the §0 screen threshold with
+  # no margin for the controller's own tracking error, and mechanism motion
+  # moves a grasped fixture — the wrong place to spend the last 20 %.
+  max_velocity_scaling: 0.7                    # Velocity scaling for arm movements
+  # Contract C3 motion-class speed table (2026-08-18): ABSOLUTE
+  # velocity/acceleration scalings, adjustable HERE (config, not code).
+  # Stages opt in via `speed_class:` in stage_sequence.
+  speed_classes:
+    freespace: 0.8   # free-space moves
+    approach: 0.2    # approach to grasp/contact, retract to release
+    carry: 0.5       # carrying the seat / lid / bin
+  max_acceleration_scaling: 0.7              # Acceleration scaling for arm movements
+  # max_jerk_scaling: 0.35   # REMOVED 2026-08 — fed Ruckig Pro only. Jerk is now
+  #                        # bounded by max_jerk in joint_limits.yaml.
+  # DELIBERATELY LEFT AT 0.5 — this governs the approach onto the fixture and
+  # the traced opening arc, where the hand is in contact with a moving part.
+  start_pose_velocity_scaling: 0.5
+  start_pose_acceleration_scaling: 0.5
+
+  # ---------------------------------------------------------------------------
+  # Pole scaling (mechanism tasks share full-speed pole motion)
+  # ---------------------------------------------------------------------------
+  pole_max_velocity_scaling: 1.0
+  pole_max_acceleration_scaling: 1.0
+
+  # ---------------------------------------------------------------------------
+  # Hand (finger) scaling — full speed by default: the Inspire fingers profile
+  # their own speed/force internally, so scaling below 1.0 only stretches the
+  # nominal trajectory time. Per-task YAML can override.
+  # ---------------------------------------------------------------------------
+  hand_max_velocity_scaling: 1.0
+  hand_max_acceleration_scaling: 1.0
+
+  # ---------------------------------------------------------------------------
+  # Execution control
+  # ---------------------------------------------------------------------------
+  plan_only: true
+  enable_washroom_scene: true
+  enable_washroom_structure: true
+  record_trajectory: true
+
+# =============================================================================
+# ARM-SPECIFIC DEFAULTS
+# =============================================================================
+arm_defaults:
+  left:
+    task_parameters:
+      primary_planning_group: "rm75_arm_left"
+      hand_group: "inspire_hand_left"
+      pole_group: "pole_left"
+      ik_frame: "L_tip_frame"
+  right:
+    task_parameters:
+      primary_planning_group: "rm75_arm_right"
+      hand_group: "inspire_hand_right"
+      pole_group: "pole_right"
+      ik_frame: "R_tip_frame"
