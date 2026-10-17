@@ -126,13 +126,21 @@ def test_upload_and_runs_on_the_controller(server):
     progs = {p["id"]: p for p in call(server, "GET", "/api/robots/left/programs")["programs"]}
     assert progs[9]["name"] == "9_L-T01_v001.txt" and progs[9]["sha256"]
 
+    # Real Test's step 4 opens once this version has run to its end in Hardware sim (the owner, 17 Oct)
+    refused = call(server, "POST", f"{U}/L-T01/run", {"confirmed": True})
+    assert refused["code"] == "hwsim" and "Hardware sim first" in refused["error"]
+    assert not call(server, "GET", f"{U}/L-T01")["hwsim_passed"]
+    switched = call(server, "POST", "/api/robots/mode", {"mode": "hwsim"})
+    assert switched["mode"] == "hwsim" and switched["controllers"] == {"left": "SIM", "right": "SIM"}   # the controllers follow
+    j = wait(server, call(server, "POST", f"{U}/L-T01/run", {}), 300)
+    assert j["state"] == "done" and "Controller mode SIM (read back)" in text(j) and "emulated" in text(j), j
+    assert call(server, "GET", f"{U}/L-T01")["hwsim_passed"]["kind"] == "dryrun_ok"
+
+    switched = call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
+    assert switched["controllers"] == {"left": "REAL", "right": "REAL"}
     j = wait(server, call(server, "POST", f"{U}/L-T01/run", {"confirmed": True}), 300)
     assert j["state"] == "done" and "Controller mode REAL (read back)" in text(j) and "read back on the controller" in text(j), j
     assert call(server, "GET", f"{U}/L-T01")["last_run"]["kind"] == "real_ok"
-
-    assert call(server, "POST", "/api/robots/mode", {"mode": "hwsim"})["mode"] == "hwsim"
-    j = wait(server, call(server, "POST", f"{U}/L-T01/run", {}), 300)
-    assert j["state"] == "done" and "Controller mode SIM (read back)" in text(j) and "emulated" in text(j), j
 
 
 def test_stop_ends_a_run_on_the_controller(server):

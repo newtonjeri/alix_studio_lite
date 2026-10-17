@@ -588,6 +588,11 @@ class LiteUnits(Project):
                 if e["kind"] in ("dryrun_ok", "real_ok", "run_failed") and e.get("sha256") == sha256]
         return runs[-1] if runs else None
 
+    def passed(self, key: str, kind: str, sha256: str | None) -> dict | None:
+        """The last ``kind`` result (dryrun_ok: run to its end in Hardware sim) of these bytes, or None."""
+        hits = [e for e in self.results(key)["events"] if e["kind"] == kind and sha256 and e.get("sha256") == sha256]
+        return hits[-1] if hits else None
+
     # ── the page's view of one arm step
 
     def step_view(self, key: str) -> dict:

@@ -270,12 +270,18 @@ class RealArm:
 
     # ── the controller's run mode
     def set_run_mode(self, mode: str) -> dict:
-        """SIM or REAL, read back. Returns what to hand to ``restore_run_mode``."""
+        """SIM or REAL, read back. Returns what to hand to ``restore_run_mode``. A controller that does not
+        take it is asked once more a second later (the lab, 17 Oct: the RIGHT controller refused REAL right
+        after a busy moment, its global point list unanswered, and took it seconds later); the read back
+        stays the gate."""
         from alix_dispatch import runmode
 
+        target = runmode.SIMULATION if mode == "SIM" else runmode.REAL
         with self.link.busy(f"switching to {mode}"):
-            originals = runmode.apply_run_mode(runmode.SIMULATION if mode == "SIM" else runmode.REAL,
-                                               {self.side: self.robot})
+            originals = runmode.apply_run_mode(target, {self.side: self.robot})
+            if originals is None:
+                time.sleep(1.0)
+                originals = runmode.apply_run_mode(target, {self.side: self.robot})
         self._hw(f"run mode {mode}", ok=originals is not None, text=None if originals is not None else "not taken (read back)")
         if originals is None:
             raise UserError(f"The {self.SIDE} controller did not switch to its {mode} mode (read back), so nothing ran.",
@@ -315,9 +321,13 @@ class RealArm:
                             "Record the region again.")
         return n
 
-    def teach_cancel(self) -> None:
-        """Leave drag teaching without saving (STOP, an E-stop, a cancel, Lite closing). Never raises."""
+    def teach_cancel(self, at_once: bool = False) -> None:
+        """Leave drag teaching without saving (STOP, an E-stop, a cancel, Lite closing). ``at_once``: as
+        STOP is sent, without waiting for a command that holds the controller. Never raises."""
         try:
+            if at_once:
+                self._call("rm_stop_drag_teach", self.robot.rm_stop_drag_teach)
+                return
             with self.link.busy("leaving drag teaching"):
                 self._call("rm_stop_drag_teach", self.robot.rm_stop_drag_teach)
         except Exception:                                                           # noqa: BLE001

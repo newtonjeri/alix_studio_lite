@@ -23,15 +23,33 @@ document.addEventListener('lite:status', (e) => {
   }
 });
 
+// The controller was read again (Data Management, S2's Refresh, S1): every list of its points follows.
+document.addEventListener('lite:controller', (e) => {
+  const side = e.detail && e.detail.side;
+  for (const s of side ? [side] : ['left', 'right']) {
+    lists[s] = null;
+    document.dispatchEvent(new CustomEvent('lite:points', { detail: s }));
+  }
+});
+
 export const hasController = (side) => reach[side];
 
-// The arm's global points, read again when `force` or after a minute: {points, note, total}.
+// The arm's global points as Data Management's content has them (server/content.py), read from the controller
+// again when `force` (a Refresh: completely): {points, note, total, read}.
 export async function loadPoints(side, force = false) {
   const c = lists[side];
-  if (!force && c && Date.now() - c.at < 60000) return c.data;
-  const data = await get(`/api/robots/${side}/points`);
+  if (!force && c && Date.now() - c.at < 30000) return c.data;
+  const data = await get(`/api/robots/${side}/points${force ? '?refresh=1' : ''}`);
   lists[side] = { at: Date.now(), data };
   return data;
+}
+
+// After a list is filled again: a choice of a point the controller no longer holds is cleared, and said.
+export function dropGone(sel, was, side) {
+  if (!sel || !String(was).startsWith('gp:') || [...sel.options].some(o => o.value === was)) return false;
+  sel.dispatchEvent(new Event('change', { bubbles: true }));
+  window.toast(`“${String(was).slice(3)}” is no longer on the ${side.toUpperCase()} controller: its choice was cleared.`);
+  return true;
 }
 
 // MoveJ / MoveL to a global point; resolves the finished job. `extra`: {confirmed} when asked already.
@@ -83,8 +101,11 @@ export async function fillPointGroup(sel, side) {
   const clear = () => sel.querySelectorAll('optgroup.lite-points').forEach((g) => g.remove());
   if (!hasController(side)) { clear(); return 0; }
   const d = await loadPoints(side);
+  const was = sel.value;
   clear();                                       // after the read: refreshes that overlap leave one group
   sel.append(el('optgroup', { class: 'lite-points', label: `${side.toUpperCase()} controller · ${d.points.length} global points` },
     d.points.map((pt) => el('option', { value: `gp:${pt.name}`, text: pt.name, 'data-detail': pointDetail(pt) }))));
+  if ([...sel.options].some(o => o.value === was)) sel.value = was;
+  else dropGone(sel, was, side);
   return d.points.length;
 }

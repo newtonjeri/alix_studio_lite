@@ -37,6 +37,8 @@ ESTOP_MODE = 5                     # the controller's "input emergency stop" mod
 # and reads 0. So 0 is the E-stop (decided 14 Oct, after reading both controllers).
 ESTOP_PRESSED_LEVEL = 0
 STALE_S = 1.0                      # no fresh reading for this long: the E-stop is UNKNOWN
+CMD_WAIT_S = 5.0                   # a command waits this long for the one before it on its controller, then is refused
+CLOSE_WAIT_S = 30.0                # a closed link's handle is deleted once the calls still running on it have ended
 
 
 def estop_state(read, active_level: int = ESTOP_PRESSED_LEVEL) -> tuple[str, dict]:
@@ -114,6 +116,10 @@ class ArmLink:
         self._freed = 0.0                           # when the last command ended (its reading follows at once)
         self._fresh_before = False                  # the reading was fresh as the commands began (their grace is due)
         self._read_lock = threading.Lock()          # one reading at a time
+        self._cmd = threading.RLock()               # one command at a time (busy)
+        self._stop_lock = threading.Lock()          # one STOP at a time
+        self._stop_hard = False                     # the STOP being sent is the E-stop's way
+        self._stop_last: dict | None = None         # its answer, for a press that came while it was sent
         self._stop = threading.Event()
         self._lock = threading.Lock()
         self._thread = None
@@ -161,35 +167,70 @@ class ArmLink:
                 except Exception:                                        # noqa: BLE001 - keep reading
                     pass
         finally:
-            connect.close_arm(self.handle)
+            # The handle is deleted once no call runs on it, a command's or a STOP's on another thread; one
+            # still running after CLOSE_WAIT_S keeps it (never deleted under a call: the lab, 17 Oct, closed
+            # both links while their STOPs went unanswered, and no Connect answered after)
+            cmd = self._cmd.acquire(timeout=CLOSE_WAIT_S)
+            stop = self._stop_lock.acquire(timeout=CLOSE_WAIT_S if cmd else 0)
+            try:
+                if cmd and stop:
+                    connect.close_arm(self.handle)
+            finally:
+                if stop:
+                    self._stop_lock.release()
+                if cmd:
+                    self._cmd.release()
             self.handle = None
+
+    def _take(self) -> None:
+        """This controller for one command: the one before it ends first (at most CMD_WAIT_S), else it is refused."""
+        if not self._cmd.acquire(timeout=CMD_WAIT_S):
+            with self._lock:
+                now = self._busy[-1] if self._busy else "another command"
+            raise UserError(f"The {self.side.upper()} controller is busy: {now}.", "Try again once it has finished.",
+                            code="busy")
 
     @contextmanager
     def busy(self, what: str):
         """A command runs on this controller (robot_real.py): meanwhile the reading loop does not
-        read, so two callers never compete for it. The panel shows what is running, with the last
-        reading; everything is read again as the command ends."""
-        with self._lock:
-            if not self._busy:                      # how fresh the reading is as a command takes the connection
-                t, now = self.feedback.get("t"), time.time()
-                self._fresh_before = bool(t) and min(now - t, now - self._freed) <= STALE_S
-            self._busy.append(what)
-            self.feedback = dict(self.feedback, busy=what)
-        with self._read_lock:                       # a reading already under way ends before the command starts
-            pass
+        read, and no other command starts: it waits for this one (at most CMD_WAIT_S), then is
+        refused, saying what holds the controller (the lab, 17 Oct: three MoveJ's switched the RIGHT
+        controller's run mode while it saved a 24 s recording, each read back "not taken", and a
+        global point list read in those seconds answered -2). STOP never waits (stop()). The panel
+        shows what is running, with the last reading; everything is read again as the command ends."""
+        self._take()
         try:
-            yield
-        finally:
             with self._lock:
-                self._busy.remove(what)
-                idle = not self._busy
-                if idle:                            # the grace for the reading that follows: only for a link that was fresh
-                    self._freed = time.time() if self._fresh_before else 0.0
-            if idle and self.handle is not None:    # what the command left, read at once (not 0.2 s later)
-                try:
-                    self.read_once()
-                except Exception:                                                # noqa: BLE001
-                    pass
+                if not self._busy:                  # how fresh the reading is as a command takes the connection
+                    t, now = self.feedback.get("t"), time.time()
+                    self._fresh_before = bool(t) and min(now - t, now - self._freed) <= STALE_S
+                self._busy.append(what)
+                self.feedback = dict(self.feedback, busy=what)
+            with self._read_lock:                   # a reading already under way ends before the command starts
+                pass
+            try:
+                yield
+            finally:
+                with self._lock:
+                    self._busy.remove(what)
+                    idle = not self._busy
+                    if idle:                        # the grace for the reading that follows: only for a link that was fresh
+                        self._freed = time.time() if self._fresh_before else 0.0
+                if idle and self.handle is not None:    # what the command left, read at once (not 0.2 s later)
+                    try:
+                        self.read_once()
+                    except Exception:                                            # noqa: BLE001
+                        pass
+        finally:
+            self._cmd.release()
+
+    def read_fresh(self) -> dict:
+        """One reading now, as a command takes the controller: never alongside one (Capture)."""
+        self._take()
+        try:
+            return self.read_once()
+        finally:
+            self._cmd.release()
 
     def stop(self, hard: bool = True) -> dict:
         """STOP this controller as ALIX stops one (``staging.stop_devices``): the arm, the E-stop's
@@ -197,7 +238,30 @@ class ArmLink:
         is refused); the pole (``rm_set_lift_speed(0)``); the hand frozen where it is. Then ALIX's
         check (``track.stop_program``) that the arm is still, a program running on the controller
         included, escalating until it is. ``ok``: the arm and the pole took the stop and the arm
-        is proven still. Never raises."""
+        is proven still. Never raises; never waits for a command.
+
+        One STOP at a time: a press while one is being sent waits for its answer instead of sending
+        a second alongside it (the lab, 17 Oct: three STOP BOTH presses in 40 s, two controllers each
+        sent stop after stop at once, none confirmed, and the links did not recover); a STOP BOTH that
+        comes during one arm's STOP still stops that arm the E-stop's way at once (one call)."""
+        if not self._stop_lock.acquire(blocking=False):
+            h = self.handle
+            if hard and not self._stop_hard and h is not None:
+                try:
+                    h.robot.rm_set_arm_stop()
+                except Exception:                                                # noqa: BLE001
+                    pass
+            with self._stop_lock:
+                return dict(self._stop_last or dict(ok=False, text=f"{self.side.upper()}: STOP not confirmed"))
+        try:
+            self._stop_hard = hard
+            self._stop_last = self._stop_now(hard)
+            return dict(self._stop_last)
+        finally:
+            self._stop_hard = False
+            self._stop_lock.release()
+
+    def _stop_now(self, hard: bool) -> dict:
         from alix_dispatch import peripherals, staging, track
 
         side, h = self.side.upper(), self.handle

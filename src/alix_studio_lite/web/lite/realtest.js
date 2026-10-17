@@ -6,19 +6,199 @@
 // shown, and PASS is accepted only after a completed run (tasks.js). Until Lite's robot commands
 // exist the robot is the stand-in, and the screens say that nothing reached a controller.
 
-import { get, say } from './api.js';
-import { ctx, el, fmtS, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
+import { get, post, say } from './api.js';
+import { REAL_CHECKS, confirmDialog, ctx, el, fmtS, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
 import { fillPointGroup, filterOptions, hasController, movePoint, pointControls } from './points.js';
+import { borrow, Player } from './seq3d.js';
+import { scene } from './sim.js';
 import { liteMode, standIn } from './status.js';
 import { refreshTasks } from './tasks.js';
 import { gateChips } from './tune.js';
+import { frame } from './vp.js';
 
 const $ = (id) => document.getElementById(id);
 
 const MODE_NOTE = {
-  visual: ['notice', 'Visual sim: nothing is sent to the robot. Choose Hardware sim or Real robot in the status pill at the top to test on the controller.'],
+  visual: ['notice', 'Visual sim: nothing is sent to the robot. Step 3 switches to Hardware sim, step 4 to Real robot, by themselves.'],
   hwsim: ['notice', 'Hardware sim: nothing moves. The controller runs the program in its SIM mode (the arm stays still); the pole and the hand are emulated.'],
   real: ['notice warn', 'REAL ROBOT: the arm, the pole and the hand move. Keep the area clear and the red E-stop buttons within reach. Each move asks for confirmation.'],
+};
+
+// ── the test run in two steps (the owner, 17 Oct): 3, the program in Hardware sim (the controller's SIM mode),
+// passed once it has run to its end, whatever the arm reported on the way (each report a pop-up, bottom right,
+// as the vendor's sim mode reports it); 4, the program on the real arm, greyed out until step 3 has passed for
+// this version. Each step switches the mode first (Hardware sim; Real robot, which asks to confirm). Below the
+// steps, the run as the robot runs it (runView).
+
+async function switchMode(mode) {
+  if ((await liteMode()) === mode) return true;
+  try {
+    await post('/api/robots/mode', { mode });
+  } catch (err) {
+    if (err.code !== 'confirm') { tell(err); return false; }
+    const yes = await confirmDialog({ title: 'Switch to the real robot?', ok: 'Yes, use the real robot', list: REAL_CHECKS,
+      body: 'Step 4 runs the trajectory on the physical arm: Lite switches to Real robot, and the controller to its REAL mode.' });
+    if (!yes) { window.toast('Not switched: nothing was run.'); return false; }
+    try { await post('/api/robots/mode', { mode, confirmed: true }); } catch (e2) { tell(e2); return false; }
+  }
+  document.dispatchEvent(new CustomEvent('lite:mode'));
+  return true;
+}
+
+function stepCards() {
+  const grid = $('stage-real')?.querySelector('.grid.grid-3, .grid.lite-real-steps');
+  if (!grid) return {};
+  grid.classList.remove('grid-3');
+  grid.classList.add('lite-real-steps');
+  const three = grid.querySelector('button[onclick*="simulateRealRun"]')?.closest('.card');
+  if (three && !three.dataset.lite) {
+    three.dataset.lite = 'hwsim';
+    const h = three.querySelector('h3');
+    if (h) h.firstChild.textContent = 'Test run on Hardware sim ';
+    const b = three.querySelector('button');
+    b.textContent = '▶ Run on Hardware sim';
+    b.className = 'btn';
+    $('realRunStatus').textContent = 'Switches to Hardware sim and runs the program in the controller’s SIM mode.';
+  }
+  let four = $('liteRealStep4');
+  if (!four) {
+    four = el('div', { id: 'liteRealStep4', class: 'card' },
+      el('span', { class: 'badge', text: '4' }),
+      el('h3', { style: 'margin-top:8px' }, 'Run on real ', el('span', { class: 'mandatory-star', text: '*' })),
+      el('button', { id: 'liteRealRunBtn', class: 'btn orange', type: 'button', text: '▶ Run on the real robot', disabled: true,
+        onclick: () => runStep('real') }),
+      el('div', { id: 'liteRealRunStatus', class: 'mini-note', style: 'margin-top:8px', text: 'Opens once step 3 has passed.' }));
+    grid.append(four);
+  }
+  return { three, four };
+}
+
+async function runStep(kind) {
+  const s = step();
+  if (!s || !ctx.pid) return;
+  const hw = kind === 'hwsim';
+  const status = hw ? $('realRunStatus') : $('liteRealRunStatus');
+  if (!hw && $('liteRealRunBtn')?.disabled) { window.toast('Step 4 opens once step 3 has run this version to its end in Hardware sim.'); return; }
+  if (!(await switchMode(hw ? 'hwsim' : 'real'))) { status.textContent = 'Not run: the mode was not switched.'; return; }
+  try {
+    const u = await loadUnit(s.key);
+    await runView.load(u, hw);
+    const job = await robotCall(unitUrl(s.key, 'run'), {}, { what: hw ? 'The Hardware sim run' : 'The real run' });
+    status.className = 'mini-note';
+    runView.start(job);
+    const done = await watchJob(job, (j) => { status.textContent = jobLine(j); runView.follow(j); });
+    runView.end(done);
+    const said = (done.result && done.result.reported) || [];
+    const how = `${hw ? 'Hardware sim' : 'real robot'}${standIn() ? ', stand-in robot: nothing reached a controller' : ''}`;
+    status.textContent = done.state === 'done'
+      ? (hw ? `Passed ✓ (${how}): it ran to its end${said.length ? `, the arm reported ${said.map(r => r.codes).join('; ')}` : ''}. Step 4 is open.`
+        : `Test complete ✓ (${how}) — choose PASS, Needs Tuning or Record Again.`)
+      : `${hw ? 'Not passed' : 'Stopped'}: ${done.error || 'the run did not finish.'} ${done.hint || ''}`;
+    status.className = done.state === 'done' ? 'mini-note lite-ok' : 'mini-note lite-bad';
+  } catch (err) { status.textContent = say(err); status.className = 'mini-note lite-bad'; tell(err); }
+  refresh();
+}
+
+// The run as the robot runs it, below the steps (the owner, 17 Oct: "a viewport that visualizes both stage 3 and
+// stage 4"): the version's execution (the pole and the hand staged first, the move to its first line, then the
+// file on the 5 ms clock) on the run's own clock, set back on it when the control program starts the program;
+// what the arm reported marked where it came. While a run holds the controller Lite cannot read the arm, so this
+// is the run as planned, kept in step with the controller's own lines.
+const runView = {
+  three: null, tl: null, key: null, total: 0, start: 0, marks: [], seen: -1, player: null,
+
+  build() {
+    let card = $('liteRealView');
+    if (card) return card;
+    const grid = $('stage-real')?.querySelector('.lite-real-steps');
+    if (!grid) return null;
+    card = el('div', { id: 'liteRealView', class: 'card lite-real-view' },
+      el('div', { class: 'lite-section-title' }, el('h3', { text: 'The run' }),
+        el('span', { class: 'mini-note', text: 'Steps 3 and 4 as the robot runs them: staged first, the move to the first line, then the file.' })),
+      el('div', { class: 'lite-s1-sim-grid' },
+        el('div', { class: 'lite-rev3d-main' }, el('div', { id: 'liteRealHost', class: 'lite-rev3d-host' })),
+        el('div', { class: 'lite-rev3d-side' },
+          el('div', { id: 'liteRealTrack', class: 'lite-rev3d-track' },
+            el('input', { id: 'liteRealTimeline', type: 'range', min: '0', max: '0', step: '10', value: '0', 'aria-label': 'Run time',
+              oninput: (e) => { this.player?.pause(); this.player?.seek(Number(e.target.value) / 1000); } })),
+          el('div', { id: 'liteRealPhases', class: 'mini-note' }),
+          el('div', { id: 'liteRealReports', class: 'mini-note' }))));
+    grid.after(card);
+    this.player = new Player({ onTime: (t) => this.show(t) });
+    frame($('liteRealHost')).title('The run', 'Step 3 or 4 plays it here');
+    return card;
+  },
+
+  async load(u, hw) {
+    if (!this.build()) return;
+    const host = $('liteRealHost');
+    const v = u.versions.find(x => x.version === u.version) || u.versions[u.versions.length - 1];
+    frame(host).title(`${hw ? 'Hardware sim' : 'Real'} run · ${u.display || u.key} ${v ? v.version : ''}`,
+      hw ? 'The controller’s SIM mode: the arm stays still' : 'The physical arm');
+    this.three = await borrow(host);
+    const r = await get(`${unitUrl(u.key, 'timeline')}?which=version`);
+    this.three.robot.home();
+    for (const side of ['left', 'right']) if (side !== u.arm) this.three.robot.clearTrack(side);
+    this.tl = this.three.robot.loadTimeline(u.arm, r);
+    this.key = u.key; this.arm = u.arm; this.total = this.tl.total_s;
+    await scene(u.phase || 'lid_closed', undefined, r.scene || null).catch(() => {});
+    $('liteRealTimeline').max = String(Math.round(this.total * 1000));
+    $('liteRealPhases').textContent = (this.tl.phases || []).map(p => `${fmtS(p.t0)}: ${p.text}`).join(' · ');
+    this.marks = []; this.paintMarks();
+    $('liteRealReports').textContent = '';
+    this.player.load(this.total);
+  },
+
+  // the moment the control program starts the program: the end of the staging (the move to the first line)
+  runStart() {
+    const ph = (this.tl && this.tl.phases) || [];
+    const move = ph.find(p => /start|first/i.test(p.text) && !/trajectory:/i.test(p.text));
+    return move ? move.t0 : (this.tl ? Math.max(0, this.tl.traj_t0 - 1) : 0);
+  },
+
+  start(job) { this.seen = -1; this.player?.seek(0); this.player?.play(); this.follow(job); },
+
+  follow(j) {
+    for (const e of j.events || []) {
+      if (e.seq <= this.seen) continue;
+      this.seen = e.seq;
+      const text = String(e.text || '');
+      if (/^run slot /.test(text)) this.player.seek(this.runStart());                 // the program starts now
+      const rep = /^!! the arm reports (.+) at ([\d.]+) s$/.exec(text);
+      if (rep) {                                       // its time is the control program's, from the program's start
+        this.marks.push({ t: this.runStart() + Number(rep[2]), at: Number(rep[2]), warn: /a warning/.test(rep[1]), text: rep[1] });
+        this.paintMarks();
+        $('liteRealReports').textContent = `The arm reported: ${this.marks.map(m => `${m.text}, ${fmtS(m.at)} into the program `
+          + `(${fmtS(m.t)} on this timeline)`).join('; ')}.`;
+      }
+    }
+  },
+
+  end(done) {
+    this.player?.pause();
+    if (done.state === 'done') this.player?.seek(this.total);
+  },
+
+  paintMarks() {
+    const box = $('liteRealTrack');
+    if (!box) return;
+    let layer = box.querySelector('.lite-vtools-marks');
+    if (!layer) { layer = el('div', { class: 'lite-vtools-marks', 'aria-hidden': 'true' }); box.append(layer); }
+    const T = Math.max(1e-6, this.total);
+    layer.replaceChildren(...this.marks.map(m => el('span', { class: `lite-vtools-mark${m.warn ? ' warn' : ''}`, title: m.text,
+      style: `left:${Math.min(100, (100 * m.t) / T)}%;width:0.6%` })));
+  },
+
+  show(t) {
+    const three = this.three;
+    if (three && this.arm && three.viewer.host === $('liteRealHost')) {
+      three.robot.showTime(t, this.arm);
+      three.viewer.dirty = true;
+    }
+    const tl = $('liteRealTimeline');
+    if (tl && document.activeElement !== tl) tl.value = String(Math.round(t * 1000));
+    frame($('liteRealHost')).time(`${fmtS(t)} / ${fmtS(this.total)}`);
+  },
 };
 
 // Move to start (feedback v2, slide 7): the tuned trajectory's first line, as before, or one of the
@@ -78,6 +258,19 @@ async function refresh() {
   if (!up && btn) { up = el('div', { id: 'liteUploadFile', class: 'lite-upload-file mini-note' }); btn.before(up); }
   // the controller keeps a program under a short name of its own (api_units: <region>_<version>, 32 characters)
   if (up) up.textContent = file ? `Sends ${file} (${v.version}), named “${`${s.key}_${v.version}`.slice(0, 32)}” on the controller` : 'No tuned file yet';
+  stepCards();
+  runView.build();
+  const four = $('liteRealRunBtn');                    // step 4: open once step 3 has passed for this version
+  if (four) {
+    const ok = !!(v && u.hwsim_passed);
+    four.disabled = !ok;
+    four.title = ok ? `${v.version} ran to its end in Hardware sim (${u.hwsim_passed.at || 'passed'}): run it on the real arm.`
+      : 'Opens once step 3 (Hardware sim) has run this version to its end.';
+    const st = $('liteRealRunStatus');
+    if (st && !st.classList.contains('lite-ok') && !st.classList.contains('lite-bad')) {
+      st.textContent = ok ? `Open: ${v.version} passed in Hardware sim.` : 'Opens once step 3 has passed.';
+    }
+  }
   const next = teachAnotherButton();
   if (next) {                                          // open once the file is on the controller (or its run completed)
     const ready = !!v && ['uploaded', 'dryrun_ok', 'real_ok'].includes(u.status);
@@ -199,22 +392,8 @@ export function installRealTest() {
     refresh();
   };
 
-  window.simulateRealRun = async function simulateRealRun() {
-    const s = step();
-    if (!s || !ctx.pid) return;
-    const status = $('realRunStatus');
-    try {
-      const job = await robotCall(unitUrl(s.key, 'run'), {}, { what: 'Running the test' });
-      status.className = 'mini-note';
-      const done = await watchJob(job, (j) => { status.textContent = jobLine(j); });
-      const how = `${done.result && done.result.dry_run ? 'Hardware sim' : 'real robot'}${standIn() ? ', stand-in robot: nothing reached a controller' : ''}`;
-      status.textContent = done.state === 'done'
-        ? `Test complete ✓ (${how}) — choose PASS, Needs Tuning or Record Again.`
-        : `Stopped: ${done.error || 'the run did not finish.'} ${done.hint || ''}`;
-      status.className = done.state === 'done' ? 'mini-note lite-ok' : 'mini-note lite-bad';
-    } catch (err) { status.textContent = err.message; status.className = 'mini-note lite-bad'; tell(err); }
-    refresh();
-  };
+  // the page's Test run button is step 3: the program in Hardware sim
+  window.simulateRealRun = function simulateRealRun() { return runStep('hwsim'); };
 
   const pageAction = window.demoAction;
   window.demoAction = async function demoAction(x) {

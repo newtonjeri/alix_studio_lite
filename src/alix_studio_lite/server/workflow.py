@@ -681,18 +681,25 @@ def digest(obj) -> str:
 _POINTS: dict = {}                     # side -> {"read": when, "points": {name: joints deg}}: the last read
 
 
-def _project_files(units, side: str) -> dict:
+def _project_files(units, side: str, every: bool = False) -> dict:
     """The project's files of an arm by sha256: every region's recordings and kept versions, its
     transitions, the merges and the merges' tuned versions; each with its name, stage, phase (the
-    commode's lid/seat state its region needs) and the UGV placement it was taught at."""
+    commode's lid/seat state its region needs) and the UGV placement it was taught at. ``every``: each
+    also lists the project's other files of the same bytes ("also"), so that the one a program was sent
+    as is named (content.file_for)."""
     from . import merges
     from .lite_units import display_name
 
     out = {}
 
     def add(sha, path, name, stage, phase, place, region):
-        if sha and sha not in out:
-            out[sha] = dict(path=str(path), name=name, stage=stage, phase=phase, placement=place, region=region)
+        if not sha:
+            return
+        f = dict(path=str(path), name=name, stage=stage, phase=phase, placement=place, region=region)
+        if sha not in out:
+            out[sha] = f
+        elif every:
+            out[sha].setdefault("also", []).append(f)
 
     for m in merges.listing(units, side):                 # first: a program sent from S1 is named as the merge is now
         add(m.get("sha256"), merges.folder(units, side) / m["file"], m["name"], m.get("stage"), m.get("phase"), m.get("placement"),
@@ -722,10 +729,12 @@ def programs_known(app, units, side: str) -> dict:
     lines, sha256, stage) with the project's file of those bytes, when it is still there. On a linked
     controller, the slots it holds now too: a program Lite did not send, or one that replaced Lite's,
     is known by its name only (``sent`` False)."""
-    files = _project_files(units, side)
+    from .content import file_for
+
+    files = _project_files(units, side, every=True)
     out = {}
     for pid, r in app.robot.arm(side).programs.items():
-        f = files.get(r.get("sha256")) or {}
+        f = file_for(files, r.get("sha256"), r.get("name"))
         out[int(pid)] = dict(id=int(pid), name=r.get("name"), lines=r.get("lines"), sha256=r.get("sha256"), stage=r.get("stage"),
                              sent=True, file=f.get("path"), file_name=f.get("name"), phase=f.get("phase"),
                              placement=f.get("placement"), region=f.get("region"))
@@ -735,6 +744,11 @@ def programs_known(app, units, side: str) -> dict:
             held = {int(x["id"]): x for x in app.robot.programs(side) if x.get("name")}
         except UserError:
             held = None
+        if held is not None:                              # the lists Lite offers follow this read too (content.py)
+            from . import content
+
+            content.store(side, programs=[dict(id=pid, name=x["name"], bytes=x.get("bytes"), sent=bool(x.get("sha256")),
+                                               sha256=x.get("sha256")) for pid, x in sorted(held.items())])
     if held is not None:
         for pid, x in held.items():
             if not x.get("sha256"):                       # the controller's own, not what Lite sent
@@ -805,6 +819,9 @@ def points_known(app, side: str) -> dict | None:
         try:
             pts = app.robot.global_points(side) or []
             _POINTS[side] = dict(read=time.strftime("%Y-%m-%d %H:%M:%S"), points={p["name"]: p["joints"] for p in pts})
+            from . import content
+
+            content.store(side, points=pts)
         except UserError:
             pass
     return _POINTS.get(side)
@@ -1468,9 +1485,10 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
     run = plan_for(_numbered(load(units)), mode, pick)
     mode = run["mode"]                                      # the plan's arms (a task's, a dual task's), never the request's
     sides = list(run["steps"])
-    if app.ui["mode"] != "real":
-        raise UserError("Real Machine Mode runs the sequence on the robot, so Lite must be in Real robot mode.",
-                        "Choose Real robot in the status pill at the top, or run it in Simulation Mode.", code="mode")
+    if app.ui["mode"] != "real":                    # the owner, 17 Oct: a run on the real hardware says the mode it found
+        now = {"visual": "Visual sim", "hwsim": "Hardware sim"}.get(app.ui["mode"], app.ui["mode"])
+        raise UserError(f"The robot is in {now}, not Real: Real Machine Mode runs the sequence on the physical arms.",
+                        "Choose Real robot in the status pill at the top (it asks to confirm), or run it in Simulation Mode.", code="mode")
     for s in sides:
         if robot._real(s) is None or not robot.arm(s).connected:
             raise UserError(f"The {s.upper()} arm's controller is not connected: Real Machine Mode runs the sequence with the "

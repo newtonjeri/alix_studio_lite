@@ -200,6 +200,9 @@ def test_a_run_never_starts_after_the_mode_changed(lite, monkeypatch):
     monkeypatch.setattr(api_units, "checked_version", passthrough)
     robot_ready(lite, "real")
     assert wait(lite, unit(lite, key, "upload", {"program_id": 4}))["state"] == "done"
+    robot_ready(lite, "hwsim")                                  # Real Test's step 3 first: the real run opens on it
+    assert wait(lite, unit(lite, key, "run", {}))["state"] == "done"
+    robot_ready(lite, "real")
     time.sleep(0.3)
 
     def switch_meanwhile(units, k, arm):                        # the mode changes while the request works
@@ -209,7 +212,7 @@ def test_a_run_never_starts_after_the_mode_changed(lite, monkeypatch):
     monkeypatch.setattr(api_units, "checked_version", switch_meanwhile)
     r = unit(lite, key, "run", {"confirmed": True})
     assert r["code"] == "mode" and "nothing was staged or moved" in r["error"]
-    assert call(lite, "GET", "/api/robots/status")["jobs"] == [] and unit(lite, key)["last_run"] is None
+    assert call(lite, "GET", "/api/robots/status")["jobs"] == [] and unit(lite, key)["last_run"]["kind"] == "dryrun_ok"
 
     real_identity = api_units.identity
 

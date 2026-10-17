@@ -264,6 +264,7 @@ def unit_view(app, units: LiteUnits, key: str) -> dict:
     u["version"] = (units.current_version(key) or {}).get("version")          # the one it runs
     ver = units.current_version(key)
     u["last_run"] = units.last_run(key, ver.get("sha256")) if ver else None
+    u["hwsim_passed"] = units.passed(key, "dryrun_ok", ver.get("sha256")) if ver else None   # Real Test's step 4 opens on it
     u["results"] = units.results(key)["events"][-20:]
     u["toppra"] = app.toppra()
     u["gates"] = gates(app, units, key, u)
@@ -1155,6 +1156,11 @@ def post_run(app, q, body, m):
     if not prog or prog.get("sha256") != ver["sha256"]:
         raise UserError(f"Program {pid} does not hold this region's current version.", "Upload it again.")
     dry = mode != "real"
+    # Real Test's step 4 (the owner, 17 Oct): the real run opens once this version has run to its end in
+    # Hardware sim (step 3), whatever the arm reported there
+    if not dry and not units.passed(key, "dryrun_ok", ver["sha256"]):
+        raise UserError(f"Run {ver['version']} in Hardware sim first (step 3): the real run opens once it has run to "
+                        "its end there.", "Press Test run on Hardware sim.", code="hwsim")
 
     def done(out):
         units.add_result(key, "dryrun_ok" if dry else "real_ok", ver["sha256"], True, out)
@@ -1530,6 +1536,8 @@ def post_mode(app, q, body, m):
     if mode not in MODES:
         raise UserError("Unknown mode.")
     with app.robot.lock:                          # the robot starts no motion between this check and the switch
+        if app.robot.switching:
+            raise UserError(f"The controllers are switching to {app.robot.switching}.", "Try again in a moment.", code="busy")
         moving = app.robot.busy()
         if moving and mode != app.ui["mode"]:
             raise UserError(f"Something is running on the robot: {moving}.",
@@ -1542,8 +1550,21 @@ def post_mode(app, q, body, m):
                 raise UserError(why, "Release the E-stop and press Recover.")
             if mode == "real" and not body.get("confirmed"):
                 raise UserError("Switching to the real robot needs your confirmation.", code="confirm")
+        app.robot.switching = MODE_TEXT[mode].split(":")[0]
+    # Each linked controller follows (the owner, 17 Oct): Hardware sim its SIM mode, Real its REAL mode, read
+    # back; one that does not take it leaves Lite's mode as it was. Not under the robot's lock: a switch waits
+    # for its link's reading to end, and a reading ends under that lock (the two waited for each other); no
+    # motion starts meanwhile (robot.switching)
+    try:
+        try:
+            switched = app.robot.set_controller_modes(mode)
+        except UserError as exc:
+            raise UserError(f"Lite stays in {MODE_TEXT[app.ui['mode']].split(':')[0]}: {exc}.", exc.hint, code="runmode") from None
         app.set_mode(mode)
-    return {"mode": mode, "mode_text": MODE_TEXT[mode]}
+    finally:
+        with app.robot.lock:
+            app.robot.switching = None
+    return {"mode": mode, "mode_text": MODE_TEXT[mode], "controllers": switched}
 
 
 @route("POST", r"/api/robots/(left|right)/(connect|disconnect)")
@@ -1677,17 +1698,42 @@ def post_recover(app, q, body, m):
 
 @route("GET", r"/api/robots/(left|right)/points")
 def get_points(app, q, body, m):
-    """The global points stored on a linked arm's controller (``search``: part of the name, any
-    case). The stand-in has none: ``points`` is empty and ``note`` says why."""
+    """The global points stored on a linked arm's controller (``search``: part of the name, any case), as
+    Data Management's content has them (content.py); ``refresh=1`` reads the controller again. The
+    stand-in has none: ``points`` is empty and ``note`` says why."""
+    from . import content
+
     session(app)
     side = _arm(m)
+    if app.robot._real(side) is None:
+        return {"arm": side, "points": [], "note": "The stand-in robot has no controller, so no global points."}
     if not app.robot.arm(side).connected:
         return {"arm": side, "points": [], "note": f"Connect the {side.upper()} arm to read its global points."}
-    pts = app.robot.global_points(side)
-    if pts is None:
-        return {"arm": side, "points": [], "note": "The stand-in robot has no controller, so no global points."}
+    c = content.content(app, side, refresh=str((q.get("refresh") or [""])[0]) in ("1", "true"))
+    pts = c["points"]
     want = str((q.get("search") or [""])[0]).strip().casefold()
-    return {"arm": side, "total": len(pts), "points": [p for p in pts if want in p["name"].casefold()]}
+    return {"arm": side, "total": len(pts), "read": c["read"], "note": c["note"],
+            "points": [p for p in pts if want in p["name"].casefold()]}
+
+
+@route("GET", r"/api/robots/(left|right)/content")
+def get_content(app, q, body, m):
+    """What the arm's controller holds, as Data Management lists it (content.py): its programs (each Lite sent
+    named with the open project's file, ``pid``) and its global points; ``refresh=1`` reads it again."""
+    from . import content
+
+    session(app)
+    side = _arm(m)
+    files = None
+    pid = str((q.get("pid") or [""])[0])
+    if pid:
+        from . import workflow
+
+        try:
+            files = workflow._project_files(units_of(app, pid), side, every=True)
+        except UserError:
+            files = None
+    return content.content(app, side, refresh=str((q.get("refresh") or [""])[0]) in ("1", "true"), files=files)
 
 
 @route("GET", r"/api/robots/(left|right)/data")
@@ -1702,10 +1748,18 @@ def get_robot_data(app, q, body, m):
         from . import workflow
 
         try:
-            files = workflow._project_files(units_of(app, pid), side)
+            files = workflow._project_files(units_of(app, pid), side, every=True)
         except UserError:
             files = None
     out = app.robot.controller_data(side, files)
+    if out.get("linked"):                           # every list Lite offers follows this read (content.py)
+        from . import content
+
+        mine = app.robot.arm(side).programs
+        content.store(side, programs=[dict(id=int(p["num"]), name=p.get("name"), bytes=p.get("bytes"), sent=bool(p.get("lite")),
+                                           sha256=(mine.get(int(p["num"])) or {}).get("sha256") if p.get("lite") else None)
+                                      for p in out.get("programs") or [] if p.get("name")],
+                      points=out.get("points") or [])
     out["not_in_api"] = {
         "script": "RealMan's API has no call that lists the script programs: the arm's own web page (Data Management) shows them.",
         "models": "RealMan's API has no call that lists the model warehouse: the arm's own web page (Data Management) shows it."}

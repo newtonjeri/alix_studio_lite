@@ -535,6 +535,7 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-vtools-state.err { color: var(--red); }
 .lite-vtools-now { min-height: 1.3em; font-size: 13px; font-weight: 600; color: var(--red); }
 .lite-vtools-mark { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--red); }
+.lite-vtools-mark.warn { background: var(--orange); }             /* a code the control program counts a warning (4105) */
 html[data-theme="dark"] .lite-vtools-state.ok { color: var(--lite-d-green); }
 html[data-theme="dark"] .lite-vtools-state.warn { color: var(--lite-d-orange); }
 html[data-theme="dark"] .lite-vtools-state.err, html[data-theme="dark"] .lite-vtools-now { color: var(--lite-d-red); }
@@ -756,3 +757,12 @@ html[data-theme="dark"] .lite-s2-runtime { color: var(--lite-d-green); }
 html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); color: var(--lite-d-sunken); border-color: var(--lite-d-blue); }
 .lite-s2-table thead th, .lite-s1-merges thead th { position: sticky; top: 0; z-index: 1; }
 .lite-confirm .modal-card > p { white-space: pre-line; }   /* a question's lines as written (S2: V53's checkpoint) */
+
+/* Real Test's four steps (the owner, 17 Oct): Upload, Move to start, Test run on Hardware sim, Run on real; and the run below them */
+#stage-real .lite-real-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 12px; }
+@media (max-width: 1200px) { #stage-real .lite-real-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { #stage-real .lite-real-steps { grid-template-columns: 1fr; } }
+#stage-real .lite-real-view { margin-top: 12px; }
+#stage-real #liteRealRunBtn:disabled { opacity: .5; cursor: not-allowed; }
+/* S2: a step whose program or global point its controller no longer holds (the owner, 17 Oct) */
+.lite-s2-table tr.lite-s2-gone td { color: var(--red); background: var(--red2); }

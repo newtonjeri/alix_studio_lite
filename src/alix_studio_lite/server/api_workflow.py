@@ -77,16 +77,17 @@ def get_workflow_download(app, q, body, m):
 
 @route("GET", W + r"/(left|right)/sources")
 def get_workflow_sources(app, q, body, m):
-    """V53's refresh_sources: the programs and the global points to choose from. Programs: what the
-    controller holds when it is linked and idle, else the ones Lite sent; points: read from a linked
-    controller, else as last read."""
+    """V53's refresh_sources: the programs and the global points to choose from, as the controller holds them
+    (content.py: Data Management's content, the owner, 17 Oct). ``refresh=1``: read the controller again,
+    completely; otherwise as last read when that was within content.FRESH_S. The stand-in: what Lite sent."""
+    from . import content
+
     units, side = units_of(app, m.group(1)), m.group(2)
-    progs = workflow.programs_known(app, units, side)
-    pts = workflow.points_known(app, side)
-    return {"side": side,
-            "programs": [dict(id=p["id"], name=p.get("name"), sent=p.get("sent"), file_name=p.get("file_name"), gone=p.get("gone"))
-                         for p in sorted(progs.values(), key=lambda p: p["id"])],
-            "points": sorted((pts or {}).get("points", {})), "points_read": (pts or {}).get("read")}
+    c = content.content(app, side, refresh=str((q.get("refresh") or [""])[0]) in ("1", "true"),
+                        files=workflow._project_files(units, side, every=True))
+    return {"side": side, "read": c["read"], "live": c["live"], "standin": c["standin"], "note": c["note"],
+            "programs": [dict(id=p["id"], name=p.get("name"), sent=p.get("sent"), file_name=p.get("file_name")) for p in c["programs"]],
+            "points": sorted(p["name"] for p in c["points"]), "points_read": c["read"] if c["points"] or c["live"] else None}
 
 
 @route("POST", W + "/plan")
