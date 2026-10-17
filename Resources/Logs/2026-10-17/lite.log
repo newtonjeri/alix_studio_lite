@@ -4260,3 +4260,6 @@
 15:04:12.930 [activity] operator:adb85b page: SYSTEM · Session active
 15:04:42.930 [activity] operator:adb85b page: SYSTEM · Session active
 15:05:12.930 [activity] operator:adb85b page: SYSTEM · Session active
+15:05:42.930 [activity] operator:adb85b page: SYSTEM · Session active
+15:06:11.842 [LEFT] restore global speed {"pct": 50} ret=0
+15:06:12.007 [RIGHT] restore global speed {"pct": 50} ret=0
