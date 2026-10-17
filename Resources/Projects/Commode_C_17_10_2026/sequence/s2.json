@@ -1,9 +1,55 @@
 {
  "left": [
   {
+   "type": "hand",
+   "values": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ]
+  },
+  {
+   "type": "pole",
+   "mm": 50.0
+  },
+  {
+   "type": "global",
+   "name": "L_HME_POS",
+   "move": "movej",
+   "speed": 20,
+   "wait_s": 0.0
+  },
+  {
+   "type": "program",
+   "id": 1,
+   "name": "1_L-R01_v001.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "program",
+   "id": 2,
+   "name": "2_L-R02_v001.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
    "type": "program",
    "id": 3,
-   "name": "L-R03_v001",
+   "name": "3_L-R03_v001.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "program",
+   "id": 4,
+   "name": "4_L-R04_v001.txt",
    "speed": 100,
    "transit_speed": 30,
    "dual_rule": "TOGETHER"
@@ -11,13 +57,59 @@
  ],
  "right": [
   {
+   "type": "pole",
+   "mm": 200.0
+  },
+  {
+   "type": "hand",
+   "values": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ]
+  },
+  {
+   "type": "global",
+   "name": "R_HME_POS",
+   "move": "movej",
+   "speed": 20,
+   "wait_s": 0.0
+  },
+  {
+   "type": "program",
+   "id": 1,
+   "name": "1_R-R01_PART1_v003.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
    "type": "program",
    "id": 2,
-   "name": "R-R01_PART2_v001",
+   "name": "2_R-R01_PART2_v001.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "program",
+   "id": 3,
+   "name": "3_R-R02_v001.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "program",
+   "id": 4,
+   "name": "4_R-R03_v002.txt",
    "speed": 100,
    "transit_speed": 30,
    "dual_rule": "TOGETHER"
   }
  ],
- "updated": "2026-10-17 18:27:21"
+ "updated": "2026-10-17 20:33:22"
 }

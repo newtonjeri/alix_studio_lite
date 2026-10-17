@@ -50,6 +50,17 @@
     "dry_run": false,
     "seconds": 33.32
    }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "3fb563f25e79e9493db638524aa43e96a03e5658b16ff85b91ae2156589a1b60",
+   "ok": true,
+   "at": "2026-10-17 19:17:31",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
   }
  ]
 }
