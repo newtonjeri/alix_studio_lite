@@ -1479,6 +1479,7 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
     ``confirm_each`` (V53's CONFIRM BEFORE WAITING ARM), then runs it; a checkpoint waits for the
     operator's OK; a failed part ends the run there. STOP (any) interrupts the runner as V53's STOP does
     and latches the arms as Lite's STOP always does."""
+    import contextlib
     import threading
 
     robot = app.robot
@@ -1601,15 +1602,24 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
             barrier, results = threading.Barrier(2), {}
 
             def go(side):
+                # each arm's controller taken before the two meet, so neither waits for its own after the
+                # other has started (a command still holding it: neither starts)
+                link = getattr(reals[side], "link", None)
                 try:
-                    barrier.wait(timeout=10)
-                except threading.BrokenBarrierError:
-                    results[side] = dict(ok=False, rc=1, why="the other arm did not start")
+                    with link.reserved() if link is not None else contextlib.nullcontext():
+                        try:
+                            barrier.wait(timeout=10)
+                        except threading.BrokenBarrierError:
+                            results[side] = dict(ok=False, rc=1, why="the other arm did not start")
+                            return
+                        try:
+                            results[side] = part(side, stage[side], label)
+                        except BaseException as exc:                       # noqa: BLE001 - said below
+                            results[side] = dict(ok=False, rc=1, why=str(exc) or type(exc).__name__)
+                except UserError as exc:                                   # its controller is busy: neither starts
+                    barrier.abort()
+                    results[side] = dict(ok=False, rc=1, why=str(exc))
                     return
-                try:
-                    results[side] = part(side, stage[side], label)
-                except BaseException as exc:                               # noqa: BLE001 - said below
-                    results[side] = dict(ok=False, rc=1, why=str(exc) or type(exc).__name__)
                 if not results[side].get("ok"):     # the owner (16 Oct): one arm failing stops the other as well
                     other = "right" if side == "left" else "left"
                     fn = stops.get(other)

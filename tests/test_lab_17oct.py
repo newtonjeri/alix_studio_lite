@@ -155,7 +155,10 @@ def test_a_stop_confirmed_after_the_wait_is_said_when_it_comes(tmp_path, monkeyp
     monkeypatch.setattr(robot_standin, "STOP_WAIT_S", 0.2)
 
     class Slow:
-        def stop(self, hard=True):
+        def stop_in_progress(self):
+            return False
+
+        def stop(self, hard=True, drag=False):
             time.sleep(0.6)
             return dict(ok=True, text="LEFT: stopped on its controller (rm_set_arm_stop), the pole stopped; the arm is still")
 

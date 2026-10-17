@@ -247,12 +247,12 @@ class StandInRobot:
         fb = link.view()["feedback"]
         return fb.get("pole_mm"), fb.get("hand")
 
-    def _leave_drag(self, side: str, at_once: bool = False) -> None:
-        """A linked arm in drag teaching leaves it (STOP, an E-stop, a cancel, Lite closing); ``at_once``
-        (STOP, an E-stop): without waiting for a command that holds its controller."""
+    def _leave_drag(self, side: str, at_once: bool = False) -> bool:
+        """A linked arm in drag teaching leaves it (an E-stop, a cancel, Lite closing; STOP leaves it within
+        its own stop); ``at_once`` (an E-stop): without waiting for a command that holds its controller.
+        True when its controller took it (the stand-in has none)."""
         real = self._real(side)
-        if real is not None:
-            real.teach_cancel(at_once)
+        return True if real is None else real.teach_cancel(at_once)
 
     def _engage(self, side: str) -> None:
         """An E-stop press: latched until Recover; every motion job on BOTH arms ends as
@@ -608,6 +608,8 @@ class StandInRobot:
             if real is None:
                 raise UserError(f"The {side.upper()} arm is not connected to its controller.",
                                 "Start Lite with --robot realman and connect the arm.", code="connect")
+            if self.switching:
+                raise UserError(f"The controllers are switching to {self.switching}.", "Try again in a moment.", code="busy")
             self._sync(side)
             if a.estop == "ENGAGED" or a.button_pressed:
                 raise UserError(f"The {side.upper()} arm's E-stop button is pressed.", "Release it, then try again.")
@@ -745,12 +747,16 @@ class StandInRobot:
                 continue
             try:
                 originals = real.set_run_mode(want)
-            except UserError:
+            except UserError as exc:
                 for s, orig in done:
                     try:
                         self._real(s).restore_run_mode(orig)
                     except Exception:                                           # noqa: BLE001 - said by its own alert
                         pass
+                if exc.code == "busy":
+                    why = str(exc).split("busy: ", 1)[-1].rstrip(".")
+                    raise UserError(f"the {side.upper()} controller did not switch to its {want} mode: it is busy ({why})",
+                                    exc.hint, code="runmode") from None
                 raise UserError(f"the {side.upper()} controller did not switch to its {want} mode (read back)",
                                 "Check its errors on the pendant, then choose the mode again.", code="runmode") from None
             done.append((side, originals))
@@ -836,12 +842,14 @@ class StandInRobot:
         links = {s: snap[s] for s in sides if s in snap}
         got: dict = {}                                  # what each controller confirmed, written by its thread
         teaching = {s for s in links if self.arms[s].teaching or self.arms[s].recovery == "drag"}
+        already = {s for s, link in links.items() if link.stop_in_progress()}   # a STOP being sent: waited for
         t_sent = time.time()
 
         def one(s, link):
-            if s in teaching:
-                self._leave_drag(s, at_once=True)       # drag teaching ends first, then the stop
-            got[s] = link.stop(hard=every)
+            r = link.stop(hard=every, drag=s in teaching)  # drag teaching ends first, within the stop
+            if s in teaching and self.log is not None and r.get("drag") is not None:
+                self.log.hardware(s, "rm_stop_drag_teach", ret=r["drag"], ok=r["drag"] == 0, text="STOP: drag teaching left first")
+            got[s] = r
 
         threads = [threading.Thread(target=one, args=(s, l), name=f"lite-stop-{s}", daemon=True) for s, l in links.items()]
         for t in threads:
@@ -870,7 +878,9 @@ class StandInRobot:
         # logged and shown when it comes
         late = [s for s in links if s not in sent]
         for s in late:
-            sent[s] = dict(ok=False, text=f"{s.upper()}: STOP sent, not confirmed by its controller within {STOP_WAIT_S:g} s")
+            sent[s] = dict(ok=False, text=f"{s.upper()}: a STOP was already being sent to it, its answer not come within "
+                           f"{STOP_WAIT_S:g} s" if s in already
+                           else f"{s.upper()}: STOP sent, not confirmed by its controller within {STOP_WAIT_S:g} s")
         if late:
             threading.Thread(target=self._stop_confirmed_late, args=(late, threads, got, t_sent), name="lite-stop-late",
                              daemon=True).start()
@@ -1142,7 +1152,12 @@ class StandInRobot:
 
         path = Path(save_to) if save_to else Path(tempfile.mkdtemp(prefix="lite-teach-")) / \
             f"{side}_drag_{time.strftime('%Y%m%d_%H%M%S')}.txt"
-        points = real.teach_stop(path)
+        try:
+            points = real.teach_stop(path)
+        except UserError as exc:
+            if exc.code == "drag":                  # it may still be in drag teaching: so it stays for Lite (STOP leaves it)
+                a.teaching = True
+            raise
         return dict(seconds=secs, file=path, points=points, stage=a.teach_stage)
 
     def teach_cancel(self, side: str) -> dict:
@@ -1150,8 +1165,10 @@ class StandInRobot:
         a = self.arm(side)
         self.jobs.cancel_arm(side, kinds=("teach",))     # a countdown ends: drag teaching never starts
         was, a.teaching = a.teaching, False
-        if was:
-            self._leave_drag(side)
+        if was and not self._leave_drag(side):
+            a.teaching = True                       # it may still be in drag teaching: so it stays for Lite (STOP leaves it)
+            raise UserError(f"The {side.upper()} arm may still be in drag teaching: its controller did not confirm leaving it.",
+                            "Press STOP, or the red E-stop button, before anyone lets go of the arm.", code="drag")
         return a.view()
 
     def move_to(self, side: str, what: str, title: str, seconds: float = 2.5, stage: "staging.Stage | None" = None,
@@ -1309,8 +1326,8 @@ class StandInRobot:
             if s.startswith(("running", "run slot", "RUN", "!!", "**")):
                 job.log(s)
             if s.startswith("running"):                 # the controller has started it (no count: it says no more)
-                job.progress(f"Program {pid} running on the {side.upper()} controller"
-                             + (" (its SIM mode: the arm stays still)" if dry_run else ""))
+                job.say(f"Program {pid} running on the {side.upper()} controller"
+                        + (" (its SIM mode: the arm stays still)" if dry_run else ""))
             rep = arm_report(s)
             if rep:                                     # a pop-up at once (the owner, 17 Oct), not only after the run
                 reported.append(rep)

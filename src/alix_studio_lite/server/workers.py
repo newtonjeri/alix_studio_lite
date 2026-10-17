@@ -44,6 +44,18 @@ def shutdown() -> None:
             _POOL = None
 
 
+def kill_now() -> None:
+    """Lite is quitting at once (a second Ctrl+C, or its exit past its limit): the tuning worker is ended
+    without waiting for any lock (a signal handler calls this). It ignores Ctrl+C, so it would outlive Lite,
+    holding the terminal open."""
+    pool = _POOL
+    for p in list((getattr(pool, "_processes", None) or {}).values()) if pool is not None else []:
+        try:
+            p.kill()
+        except Exception:                                                   # noqa: BLE001
+            pass
+
+
 def _maxpool(u: np.ndarray, buckets: int = 1500) -> list[float]:
     u = np.asarray(u, dtype=float)
     if u.shape[0] <= buckets:

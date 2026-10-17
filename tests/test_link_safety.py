@@ -10,6 +10,7 @@ import sys
 import threading
 import time
 from contextlib import redirect_stderr
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -64,7 +65,7 @@ def test_one_stop_at_a_time_and_stop_both_acts_at_once():
     k, sent, arm_stops = link(), [], []
     k.handle = SimpleNamespace(robot=SimpleNamespace(rm_set_arm_stop=lambda: arm_stops.append("rm_set_arm_stop")))
 
-    def stop_now(hard):
+    def stop_now(hard, drag=False):
         sent.append(hard)
         time.sleep(0.4)
         return dict(ok=True, text="RIGHT: stopped on its controller; the arm is still")
@@ -188,9 +189,11 @@ def test_lite_always_closes(monkeypatch):
     """Its exit is bounded: past EXIT_LIMIT_S it quits as it is (what each thread was doing written first), and
     once STOP is out a second Ctrl+C quits at once."""
     from alix_studio_lite import server
+    from alix_studio_lite.server import workers
 
     exits, handlers, dumps = [], {}, []
     monkeypatch.setattr(server, "EXIT_LIMIT_S", 0.3)
+    monkeypatch.setattr(workers, "kill_now", lambda: exits.append("worker ended"))       # never left behind
     monkeypatch.setattr(server.os, "_exit", lambda code: exits.append(code))
     monkeypatch.setattr(server, "_dump_threads", lambda root: dumps.append(root) or "threads-120000.txt")
     import signal
@@ -202,7 +205,163 @@ def test_lite_always_closes(monkeypatch):
     out = io.StringIO()
     monkeypatch.setattr(sys, "stdout", out)
     server._close(app, SimpleNamespace(server_close=lambda: None))
-    assert stopped == ["all"] and exits == [1] and dumps == ["/logs"]               # the close that hung: quit
+    assert stopped == ["all"] and exits == ["worker ended", 1] and dumps == ["/logs"]   # the close that hung: quit
     assert "did not close within 0.3 s, so it quits now (what each thread was doing: threads-120000.txt)" in out.getvalue()
     handlers[signal.SIGINT](signal.SIGINT, None)                                    # Ctrl+C again, STOP being out
-    assert exits == [1, 130] and "Quitting now" in out.getvalue()
+    assert exits == ["worker ended", 1, "worker ended", 130] and "Quitting now" in out.getvalue()
+
+
+class Arm:
+    """A linked arm's controller for drag teaching, its calls counted."""
+    def __init__(self, drag_ret=0):
+        self.calls, self.drag_ret = [], drag_ret
+
+    def rm_stop_drag_teach(self):
+        self.calls.append("rm_stop_drag_teach")
+        return self.drag_ret
+
+    def rm_save_trajectory(self, path):
+        self.calls.append("rm_save_trajectory")
+        Path(path).write_text("{}\n")
+        return 0, 1
+
+
+def held(k, what, seconds):
+    """Another caller's command on the controller, for ``seconds``."""
+    on = threading.Event()
+
+    def run():
+        with k.busy(what):
+            on.set()
+            time.sleep(seconds)
+
+    threading.Thread(target=run, daemon=True).start()
+    on.wait(2)
+
+
+def test_leaving_drag_teaching_is_never_refused(tmp_path, monkeypatch):
+    """The review of 17 Oct: STOP DRAG refused as "busy" left the controller in drag teaching while Lite
+    counted the arm as not teaching (its interlock gone, and STOP no longer left it)."""
+    from alix_studio_lite.server import robot_real
+    from alix_studio_lite.server.jobs import Jobs, UserError
+    from alix_studio_lite.server.robot_standin import StandInRobot
+
+    monkeypatch.setattr(robot_real, "CLOSE_WAIT_S", 0.3)
+    log = SimpleNamespace(hardware=lambda *a, **k: None, alert=lambda *a, **k: None, activity=lambda *a, **k: None)
+    r = StandInRobot(tmp_path, Jobs(), log=log)
+    k = link("left")
+    arm = Arm()
+    k.handle = SimpleNamespace(robot=arm)
+    r.links["left"], r.arms["left"].connected, r.arms["left"].teaching = k, True, True
+    held(k, "reading the errors", 1.0)
+    with pytest.raises(UserError, match="left drag teaching, but its recording could not be saved"):
+        r.teach_stop("left", save_to=tmp_path / "take.txt")
+    assert arm.calls == ["rm_stop_drag_teach"] and not r.arms["left"].teaching       # left at once, as STOP leaves it
+    arm.drag_ret, arm.calls = 1, []                                                   # the controller does not confirm it
+    r.arms["left"].teaching = True
+    time.sleep(1.0)
+    with pytest.raises(UserError) as exc:
+        r.teach_stop("left", save_to=tmp_path / "take.txt")
+    assert exc.value.code == "drag" and r.arms["left"].teaching                       # still teaching for Lite: STOP leaves it
+    with pytest.raises(UserError, match="may still be in drag teaching"):
+        r.teach_cancel("left")
+    assert r.arms["left"].teaching and arm.calls[-1] == "rm_stop_drag_teach"
+
+
+def test_a_jobs_cleanup_never_replaces_its_ending(monkeypatch):
+    from alix_studio_lite.server import robot_real
+    from alix_studio_lite.server.robot_real import RealArm
+
+    monkeypatch.setattr(robot_real, "CLOSE_WAIT_S", 0.3)
+    alerts = []
+    k = link("left")
+    k.handle = SimpleNamespace(robot=object())
+    real = RealArm(k, SimpleNamespace(hardware=lambda *a, **kw: None, alert=lambda *a, **kw: alerts.append(a[1])))
+    held(k, "reading the controller's data", 1.0)
+    real.restore_run_mode({"left": 1})                                              # never raises in a job's finally
+    assert alerts and "could not be set back" in alerts[0] and "busy" in alerts[0]
+
+
+def test_commands_wait_for_a_stop_and_a_stop_never_meets_a_reading(monkeypatch):
+    from alix_studio_lite.server import robot_link
+    from alix_studio_lite.server.jobs import UserError
+
+    k = link("left")
+    k._stopping.set()                                         # a STOP being sent
+    threading.Timer(0.3, k._stopping.clear).start()
+    t0 = time.monotonic()
+    with k.busy("restoring the run mode"):
+        waited = time.monotonic() - t0
+    assert 0.25 < waited < 1.0                                # after the STOP, not alongside it
+    monkeypatch.setattr(robot_link, "CMD_WAIT_S", 0.2)
+    k._stopping.set()
+    with pytest.raises(UserError, match="busy: sending STOP"):
+        with k.busy("clearing the errors"):
+            pass
+    k._stopping.clear()
+    order = []
+    k.handle = SimpleNamespace(robot=SimpleNamespace(rm_stop_drag_teach=lambda: order.append(("drag", k._stopping.is_set())) or 0))
+
+    def reading():
+        with k._read_lock:
+            time.sleep(0.15)
+            order.append(("read ended", None))
+
+    threading.Thread(target=reading, daemon=True).start()
+    time.sleep(0.03)
+    assert k.leave_drag() == 0 and order == [("read ended", None), ("drag", True)] and not k._stopping.is_set()
+
+
+def test_a_reserved_controller_is_taken_at_once_by_its_holder(monkeypatch):
+    from alix_studio_lite.server import robot_link
+    from alix_studio_lite.server.jobs import UserError
+
+    monkeypatch.setattr(robot_link, "CMD_WAIT_S", 0.2)
+    k, got = link("left"), []
+    with k.reserved():
+        t0 = time.monotonic()
+        with k.busy("sequence of 3 step(s)"):                 # the same caller: no wait
+            got.append(time.monotonic() - t0)
+
+        def other():
+            try:
+                with k.busy("reading the global points"):
+                    got.append("ran")
+            except UserError as exc:
+                got.append(exc.code)
+
+        t = threading.Thread(target=other)
+        t.start()
+        t.join(2)
+    assert got[0] < 0.05 and got[1] == "busy"
+
+
+def test_a_press_while_a_stop_is_sent_says_so(tmp_path, monkeypatch):
+    from alix_studio_lite.server import robot_standin
+    from alix_studio_lite.server.jobs import Jobs
+
+    monkeypatch.setattr(robot_standin, "STOP_WAIT_S", 0.2)
+    r = robot_standin.StandInRobot(tmp_path, Jobs(), log=SimpleNamespace(alert=lambda *a, **k: None, hardware=lambda *a, **k: None))
+
+    class Busy:
+        def stop_in_progress(self):
+            return True
+
+        def stop(self, hard=True, drag=False):
+            time.sleep(0.5)
+            return dict(ok=True, text="LEFT: stopped on its controller; the arm is still", joined=True)
+
+    r.links["left"], r.arms["left"].connected = Busy(), True
+    out = r.stop("left")
+    assert out["controllers"]["left"]["text"] == "LEFT: a STOP was already being sent to it, its answer not come within 0.2 s"
+
+
+def test_a_runs_own_line_never_raises_after_a_stop():
+    from alix_studio_lite.server.jobs import Cancelled, Job
+
+    j = Job("run-1", "run", "Real run L-R01")
+    j.cancel()
+    j.say("Program 50 running on the LEFT controller")         # inside the control program's run: never raises
+    assert j.view()["stage"] == "Program 50 running on the LEFT controller"
+    with pytest.raises(Cancelled):
+        j.progress("next")

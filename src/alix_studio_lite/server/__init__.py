@@ -233,6 +233,7 @@ def _close(app, srv) -> None:
     def again(signum, frame):
         if sent.is_set():
             print("\nQuitting now: the controllers' global speed may not be back where Lite found it.", flush=True)
+            workers.kill_now()
             os._exit(130)
 
     def watchdog():
@@ -241,18 +242,20 @@ def _close(app, srv) -> None:
         where = _dump_threads(app.log.root)
         print(f"\nLite did not close within {EXIT_LIMIT_S:g} s, so it quits now"
               + (f" (what each thread was doing: {where})." if where else "."), flush=True)
+        workers.kill_now()
         os._exit(1)
 
     signal.signal(signal.SIGINT, again)
     signal.signal(signal.SIGTERM, again)
     threading.Thread(target=watchdog, name="lite-exit", daemon=True).start()
-    try:
-        app.robot.stop("all")
-        sent.set()
-        app.robot.close()                           # the live links, if any
+    try:                                            # each step is tried; none keeps Lite from quitting
+        for step in (lambda: app.robot.stop("all"), sent.set, app.robot.close, srv.server_close, workers.shutdown):
+            try:
+                step()
+            except Exception as exc:                                        # noqa: BLE001
+                print(f"Closing: {exc!r}", flush=True)
     finally:
-        srv.server_close()
-        workers.shutdown()
+        sent.set()
         ended.set()
 
 
