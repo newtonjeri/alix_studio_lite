@@ -1,0 +1,28 @@
+{
+ "room": {
+  "width_mm": 800.0,
+  "length_mm": 1600.0,
+  "left_mm": 220.0,
+  "right_mm": 220.0,
+  "front_mm": 1062.0,
+  "at": "2026-10-17 14:20:53"
+ },
+ "tasks": {
+  "TASK 1A": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-17 12:32:08"
+  },
+  "TASK 2A": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-17 14:20:57"
+  }
+ }
+}

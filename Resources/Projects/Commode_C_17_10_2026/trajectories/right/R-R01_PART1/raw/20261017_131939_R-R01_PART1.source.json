@@ -1,0 +1,51 @@
+{
+ "unit": "R-R01_PART1",
+ "arm": "right",
+ "taken": "2026-10-17 13:19",
+ "lines": 9293,
+ "sha256": "f469305ee0b611f65c65224f68bf7d615175cc571e3f8eca93ca339393824fce",
+ "note": "drag-taught on the RIGHT arm: 9293 points in 48 s, at pole 200 mm, hand cleaning pose",
+ "source": "teach",
+ "original": "right_drag_20261017_131924.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 1A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-17 12:32:03"
+  }
+ },
+ "name": "LID_TOP_P1_3_2_2_2_2.txt"
+}

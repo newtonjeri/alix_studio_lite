@@ -1,0 +1,26 @@
+{
+ "left": [],
+ "right": [
+  {
+   "type": "program",
+   "id": 1,
+   "name": "R-R01_PART1_v003",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "program",
+   "id": 80,
+   "name": "R-R01_PART1_v002",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "pole",
+   "mm": 300.0
+  }
+ ],
+ "updated": "2026-10-17 14:58:10"
+}

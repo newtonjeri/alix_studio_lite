@@ -1,0 +1,51 @@
+{
+ "unit": "R-R01_PART2",
+ "arm": "right",
+ "taken": "2026-10-17 14:30",
+ "lines": 753,
+ "sha256": "8dfdef7d13dfd644c74d02ff9d34fb13823baaf2aa49bb4b9b2549f3ecf78217",
+ "note": "drag-taught on the RIGHT arm: 753 points in 100 s, at pole 200 mm, hand cleaning pose",
+ "source": "teach",
+ "original": "right_drag_20261017_143026.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 2A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-17 14:20:53"
+  }
+ },
+ "name": "LD_TP_P2_2_2_2.txt"
+}

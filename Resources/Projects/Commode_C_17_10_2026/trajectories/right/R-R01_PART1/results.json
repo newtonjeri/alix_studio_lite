@@ -1,0 +1,85 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "077af53c2fe781db4c2ae59c0d8cea5aa3560ecde4eee3bf40a081eac39def53",
+   "ok": true,
+   "at": "2026-10-17 13:04:10",
+   "detail": {
+    "program_id": 1
+   }
+  },
+  {
+   "kind": "run_failed",
+   "sha256": "077af53c2fe781db4c2ae59c0d8cea5aa3560ecde4eee3bf40a081eac39def53",
+   "ok": false,
+   "at": "2026-10-17 13:04:27",
+   "detail": {
+    "state": "failed",
+    "error": "INTERRUPTED \u2014 E-STOP: it did not finish."
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "2f138343e2127760e11ce1ae97d16933f07ed811e2288ba8ac9070ecf89df735",
+   "ok": true,
+   "at": "2026-10-17 13:07:47",
+   "detail": {
+    "program_id": 1
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "2f138343e2127760e11ce1ae97d16933f07ed811e2288ba8ac9070ecf89df735",
+   "ok": true,
+   "at": "2026-10-17 13:08:43",
+   "detail": {
+    "program_id": 1,
+    "dry_run": false,
+    "seconds": 20.4
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "2f138343e2127760e11ce1ae97d16933f07ed811e2288ba8ac9070ecf89df735",
+   "ok": true,
+   "at": "2026-10-17 13:09:32",
+   "detail": {
+    "program_id": 1,
+    "dry_run": false,
+    "seconds": 20.36
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "8ea10ae74c21577e37d85c6d45eb7a74f69cdd6c91b54198451fe63a5f6d1eab",
+   "ok": true,
+   "at": "2026-10-17 14:19:29",
+   "detail": {
+    "program_id": 1
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "8ea10ae74c21577e37d85c6d45eb7a74f69cdd6c91b54198451fe63a5f6d1eab",
+   "ok": true,
+   "at": "2026-10-17 14:20:18",
+   "detail": {
+    "program_id": 1,
+    "dry_run": false,
+    "seconds": 19.67
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "8ea10ae74c21577e37d85c6d45eb7a74f69cdd6c91b54198451fe63a5f6d1eab",
+   "ok": true,
+   "at": "2026-10-17 14:20:22",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}
