@@ -138,6 +138,42 @@ The Lite UI is the designer's **ASL FINAL Template V32** (product name ASL): one
   - `kill -USR1 <process>` (the start-up lines give the number) prints what each thread is doing, for a Lite that stops answering.
   - A page gone before its answer (a reload) no longer prints a BrokenPipeError traceback.
 
+**The owner's seven revisions of 17 October, evening, and the lab's logs of that afternoon and evening:**
+
+- **The 3D's lag** (the owner: the simulation "lags a lot" in the browser, "traced to the browser cache"; probably the same as the count that lags, then runs faster to catch up).
+  - Measured here: when Chrome draws the 3D in software (no GPU in use), each frame holds the page about 130 ms (7 frames a second), and every timer waits behind it, the Drag & Teach count's too (late, then catching up). With a GPU a frame takes a few ms. Chrome falls back to software when its GPU process fails, and stays there until it starts again. A damaged GPU cache in its profile is a known cause.
+  - Lite clears the GPU and shader caches of its own Chrome window's profile each time it opens that window, never while it is open (`server/__init__.py`). The rest of the profile stays.
+  - The page logs the device the 3D is drawn with (Activity Logs, SYSTEM, "3D device"). In software it says so in a toast, with what to do: close Lite's Chrome window and open Lite again, and restart the computer if it stays. In software the 3D is drawn at a pixel ratio of 1, without antialiasing.
+  - A minute in which the page was held often (30 tasks over 50 ms, or one over half a second) is logged ("Page slow") with the 3D's device, so a slow session shows in the lab's logs (`web/lite/perf.js`).
+  - Ruled out: the page's stored state (about 30 kB) and repeated plays (no growth).
+- **Advanced Robot Controls moves the arms in all three modes** (the owner: the global points and the saved programs did not run, only the pole and the hand did).
+  - Global points: MoveJ / MoveL and the point sequence run in Hardware sim and Real (Real after its confirmation). In Visual sim they play in 3D in the panel, each move from where the last one ended, and nothing is sent.
+  - Programs: Run Stored runs any slot of the controller, by number or by the name the controller lists, as the control program runs it. Upload Only, Upload + Run and Run Only send the chosen .txt to the chosen slot (asking before replacing another file) and run it. Run Both Stored runs both arms' programs. In Visual sim each plays in 3D (`server/api_advanced.py`, `web/lite/advanced.js`).
+  - Run Stored does not stage the pole and the hand first; the control program does not either.
+  - Not connected yet, and said so when pressed, with nothing sent: Multi Upload, Multi Run, Load Sequence, Run Both .TXT.
+- **S2 runs on the robot without a simulation, once confirmed** (the owner: remove the run-order restriction, with a double confirmation).
+  - Real Machine Mode no longer refuses a run that was not simulated as it is now. A pop-up says so, says what changed since the last simulation, and that its collision check has not been made. Yes leads to the robot's own confirmation, as before; No sends nothing. The job's log says the run was not simulated.
+  - The line under the buttons reads "Not simulated as it is now: it can still run on the robot, after a confirmation that it was not simulated first."
+  - Real Test is unchanged: its step 4 (Run on real) still waits for step 3 (Hardware sim).
+- **The speed starts at 15 %** (the owner). Connecting an arm no longer moves the slider to the controller's own speed.
+- **One indicator per arm**, L and R beside STOP BOTH (the owner: green a good connection, yellow a weak one, red none; they must react when a cable is pulled).
+  - Green: readings every 0.2 s, answered in time.
+  - Yellow: a reading unanswered among the last ten, one that took over 0.5 s, or none for 0.8 s. Also a command holding the controller longer than it should: 60 s, or what the command says it may take (a MoveJ 2 min, sending a program 5 min, a program its own length).
+  - Red: no answered reading for 3 s (a cable pulled, the controller off), not connected, or the Lite server not answering.
+  - The hover says why. Tested on ALIX's emulated arms: a reading that fails turns the arm red within 5 s and green again once it is answered; a slow one turns it yellow.
+- **No horizontal scrollbar at any width** (the owner: the GUI should adapt to any screen size, the Summary a clear example; keep the arrangement and the look). Checked on every page, modal and Tune step from 700 to 2,560 px.
+  - The top bar compacts, then wraps onto two rows, with STOP BOTH at the right. The sidebar narrows (300, 260, 220 px) and goes above the page under 760 px.
+  - The tables take the width they have. Words wrap whole; only long tokens (paths, session ids, file names, the logs' details) break inside. Under 1,100 px the Summary's pictures, badges and buttons are a size smaller. Under 780 px, as a last resort, any cell's text may break inside a word.
+  - Tune's charts are drawn again to their box whenever it changes size, including after the page was hidden (Plotly follows only the window).
+- **The lid and the seat with the camera** (the owner: open and close them using the camera, streamed over CanFD instead of uploading a file): not built; the owner's answers come first.
+  - What ALIX has: its lid and seat motions are offline plans (`Resource/plans/commode_c/hardware/*_toppra.json`); the camera (a RealSense D435) is read in ALIX's ROS perception node, for its gap check, and nothing turns a camera image into a trajectory. The CanFD stream (ALIX's `track.stream_track`, with its preflight and watch) is already in Lite's vendored code.
+  - Open: where the camera is connected; what it decides (a check of a fixed plan, or the plan itself); whether ALIX's plans may run as they are (seat open is not proven on the robot, lid close right only in simulation, the approach is not collision-checked, the RIGHT arm not proven at 5 ms); which rate limit applies to a stream (ALIX's per joint, or Lite's single one); the hand-eye calibration, never run.
+- **From the lab's logs:**
+  - 20:02, after an E-stop (19:58) and Recover: both arms' MoveJ to their home point got no answer from their controllers. The control program printed nothing; the calls held both controllers 881 s, until Lite was restarted (20:16). STOP BOTH at 20:08 was sent and never confirmed (130 s), and later presses waited for it.
+  - The same, shorter: saving global points at 12:07 (157 s and 138 s), and LEFT running program 1 at 16:05 (1,047 s).
+  - Lite cannot end a call the SDK is waiting in. The indicator now shows it ("no answer for N s from the controller (MoveJ to L_HME_POS)").
+  - 21:23: both arms' "No fresh reading", then Connects refused ("cannot reach"): the cable test. That is what turns the indicators red.
+
 This file states, screen by screen, what the page needs from the backend, what is connected today, and what is still the designer's template. It also lists what reviewing the page found: defects, data issues, gaps against the requirements, and the decisions that are open.
 
 ## How the page is connected
