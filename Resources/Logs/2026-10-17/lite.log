@@ -5701,3 +5701,2022 @@
 16:27:46.753 [activity] operator:69f76f page: SYSTEM · Session active
 16:27:55.419 [LEFT] restore global speed {"pct": 50} ret=0
 16:27:55.571 [RIGHT] restore global speed {"pct": 50} ret=0
+16:36:03.885 [activity] - page: NAVIGATION · Open screen
+16:36:03.885 [activity] - page: SYSTEM · ASL frontend initialized
+16:36:06.942 [activity] - POST /api/auth/login
+16:36:08.606 [activity] operator:b95a1f page: AUTH · Operator login
+16:36:08.606 [activity] operator:b95a1f page: NAVIGATION · Open screen
+16:36:08.606 [activity] operator:b95a1f page: AUTH · Setting changed
+16:36:09.519 [activity] operator:b95a1f page: UI · Button action
+16:36:11.960 [activity] operator:b95a1f page: NAVIGATION · Task loaded
+16:36:11.962 [activity] operator:b95a1f page: SETUP · Arm selected
+16:36:11.962 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:36:11.963 [activity] operator:b95a1f page: SETUP · Arm selected
+16:36:11.963 [activity] operator:b95a1f page: NAVIGATION · Open screen
+16:36:11.963 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:36:14.705 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/setup
+16:36:15.486 [activity] operator:b95a1f page: UI · Button action
+16:36:15.636 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/setup
+16:36:15.699 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:16.389 [activity] operator:b95a1f page: UI · Button action
+16:36:16.389 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:36:16.700 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:19.059 [activity] operator:b95a1f page: ROBOT · Setting changed
+16:36:19.059 [activity] operator:b95a1f page: ROBOT · Input updated
+16:36:19.352 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:20.307 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/setup
+16:36:21.076 [activity] operator:b95a1f page: UI · Button action
+16:36:21.294 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:23.122 [activity] operator:b95a1f POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+16:36:23.169 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:23.922 [activity] operator:b95a1f page: ROBOT · Button action
+16:36:23.922 [activity] operator:b95a1f page: ROBOT · Robot & mode opened
+16:36:23.922 [activity] operator:b95a1f page: UI · Button action
+16:36:24.041 [LEFT] read global speed ret=0 · not reported
+16:36:24.041 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 50 %
+16:36:24.158 [LEFT] read drag sensitivity ret=0 · 100 %
+16:36:24.160 [activity] operator:b95a1f POST /api/robots/left/connect
+16:36:24.322 [LEFT] global points · 1 point(s)
+16:36:24.450 [LEFT] global points · 1 point(s)
+16:36:24.707 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:24.756 [RIGHT] read global speed ret=0 · not reported
+16:36:24.759 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 50 %
+16:36:24.841 [RIGHT] read drag sensitivity ret=0 · 100 %
+16:36:24.842 [activity] operator:b95a1f POST /api/robots/right/connect
+16:36:25.007 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:36:25.070 [RIGHT] global points · 2 point(s)
+16:36:25.580 [activity] operator:b95a1f POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+16:36:26.371 [activity] operator:b95a1f page: ROBOT · Button action
+16:36:26.588 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:26.713 [activity] operator:b95a1f POST /api/robots/mode
+16:36:27.480 [activity] operator:b95a1f page: ROBOT · Button action
+16:36:27.481 [activity] operator:b95a1f page: UI · Button action
+16:36:28.389 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:29.011 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/setup -> REFUSED: Moving the pole on the real robot needs your confirmation.
+16:36:29.807 [activity] operator:b95a1f page: UI · Button action
+16:36:30.021 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:30.229 [LEFT] alix · pole: 50 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)
+16:36:30.236 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/setup
+16:36:30.298 [LEFT] alix · pole: at 50 mm after 0.06 s (verified_by=no_op, moved 0 mm through 1 distinct readings)
+16:36:30.389 [LEFT] pole move {"mm": 50.0, "speed_pct": 50} ret=0 (0.061 s) · final 0.05 m, verified by no_op
+16:36:30.392 [activity] - job pole done: Pole L-R02: 50 mm
+16:36:30.950 [activity] operator:b95a1f page: ROBOT · Button action
+16:36:30.952 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:36:31.164 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:31.275 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/setup -> REFUSED: Moving the hand on the real robot needs your confirmation.
+16:36:32.073 [activity] operator:b95a1f page: UI · Button action
+16:36:32.325 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/setup
+16:36:32.400 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:32.597 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+16:36:32.673 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+16:36:32.727 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)
+16:36:33.055 [activity] operator:b95a1f page: ROBOT · Button action
+16:36:33.262 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:33.368 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 546, 986] after 0.56 s (per-channel travel [0, 0, 0, 0, 0, 1])
+16:36:33.369 [LEFT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 986]. Either that channel is dead or the readback is not the device.
+16:36:33.464 [LEFT] hand move {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500} ret=0 (0.564 s) · read back [1000, 1000, 1000, 1000, 546, 986] (settled short of the target: stopped on force)
+16:36:33.466 [activity] - job hand done: Hand L-R02: cleaning pose
+16:36:36.543 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:36:37.756 [activity] operator:b95a1f page: SYSTEM · Session active
+16:36:38.393 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/placement/room
+16:36:38.692 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:39.186 [activity] operator:b95a1f page: UI · Button action
+16:36:39.336 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/placement/task
+16:36:40.233 [activity] operator:b95a1f page: SETUP · Button action
+16:36:40.341 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:41.764 [activity] operator:b95a1f page: TEACH · Button action
+16:36:41.764 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:36:41.977 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:44.810 [activity] operator:b95a1f page: ROBOT · Button action
+16:36:44.810 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:36:44.810 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:36:45.017 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:46.967 [activity] operator:b95a1f page: SETUP · Button action
+16:36:47.167 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:48.084 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:36:52.373 [LEFT] capture pose {"joints_deg": [-112.394, -13.955, 160.22, 15.426, -53.062, 66.33, 104.249], "pose": [0.696682, 0.146198, -0.238391, 2.99, 0.005, 1.769], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}
+16:36:53.017 [LEFT] capture pose {"joints_deg": [-112.392, -13.955, 160.219, 15.426, -53.062, 66.33, 104.25], "pose": [0.696683, 0.1462, -0.238389, 2.99, 0.005, 1.769], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}
+16:36:53.081 [activity] operator:b95a1f page: UI · Button action
+16:36:53.081 [activity] operator:b95a1f page: UI · Button action
+16:36:53.934 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:36:55.077 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+16:37:13.854 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:37:19.014 [activity] operator:b95a1f page: UI · Button action
+16:37:19.218 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:20.726 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:37:20.727 [activity] operator:b95a1f page: ROBOT · Button action
+16:37:21.152 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:24.448 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:25.425 [activity] operator:b95a1f page: SETUP · Button action
+16:37:25.549 [LEFT] capture pose {"joints_deg": [-112.394, -13.955, 160.217, 15.424, -53.063, 66.33, 104.251], "pose": [0.69669, 0.146183, -0.23839, 2.99, 0.005, 1.769], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}
+16:37:25.704 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:26.249 [activity] operator:b95a1f page: UI · Button action
+16:37:26.488 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:28.030 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:30.448 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:31.239 [activity] operator:b95a1f page: UI · Input updated
+16:37:32.925 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:33.712 [activity] operator:b95a1f page: UI · Input updated
+16:37:34.272 [LEFT] add global point {"name": "L_BSL_STP", "joints_deg": [-112.394, -13.956, 160.22, 15.426, -53.062, 66.332, 104.251], "pose": [0.69667, 0.14621, -0.2384, 2.99, 0.005, 1.769], "work_frame": "World", "tool_frame": "Arm_Tip"} ret=0 (0.300 s) · read back: 0.001 deg
+16:37:34.272 [activity] operator:b95a1f POST /api/robots/left/points/save
+16:37:34.484 [LEFT] global points · 2 point(s)
+16:37:34.682 [activity] operator:b95a1f page: UI · Setting changed
+16:37:34.686 [activity] operator:b95a1f page: UI · Button action
+16:37:34.987 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:37.479 [activity] operator:b95a1f page: UI · Button action
+16:37:37.480 [activity] operator:b95a1f page: SYSTEM · Session active
+16:37:37.702 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:41.511 [activity] operator:b95a1f page: TEACH · Button action
+16:37:41.511 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:37:41.700 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:44.642 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:37:47.781 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:37:51.223 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+16:37:52.028 [activity] operator:b95a1f page: TEACH · Button action
+16:37:52.246 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:53.268 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/teach/start
+16:37:54.038 [activity] operator:b95a1f page: ROBOT · Button action
+16:37:54.269 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:37:58.305 [LEFT] rm_start_drag_teach [1] ret=0 (0.035 s)
+16:37:58.444 [activity] - job teach done: Drag teaching on the LEFT arm in 5 s
+16:37:59.309 [activity] operator:b95a1f page: TEACH · Drag recording started
+16:38:07.848 [activity] operator:b95a1f page: SYSTEM · Session active
+16:38:32.287 [LEFT] rm_stop_drag_teach [] ret=0 (0.004 s)
+16:38:33.082 [activity] operator:b95a1f page: TEACH · Button action
+16:38:33.287 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:37.758 [activity] operator:b95a1f page: SYSTEM · Session active
+16:38:42.041 [LEFT] rm_save_trajectory ["/tmp/lite-teach-frh7rjos/left_drag_20261017_163832.txt"] ret=0 (9.752 s)
+16:38:42.300 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/teach/stop
+16:38:42.543 [activity] operator:b95a1f page: TEACH · Button action
+16:38:42.544 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:38:42.776 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:45.619 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:38:50.852 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:51.647 [activity] operator:b95a1f page: TRAJECTORY · Input updated
+16:38:51.845 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:52.755 [activity] operator:b95a1f page: TRAJECTORY · Input updated
+16:38:53.988 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:54.775 [activity] operator:b95a1f page: TRAJECTORY · Input updated
+16:38:55.770 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:56.561 [activity] operator:b95a1f page: TRAJECTORY · Input updated
+16:38:57.587 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:58.391 [activity] operator:b95a1f page: TRAJECTORY · Input updated
+16:38:58.887 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:59.681 [activity] operator:b95a1f page: TRAJECTORY · Input updated
+16:39:00.820 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:01.662 [activity] operator:b95a1f page: TRAJECTORY · Input updated
+16:39:02.210 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/name
+16:39:02.809 [activity] operator:b95a1f page: TRAJECTORY · Setting changed
+16:39:02.813 [activity] operator:b95a1f page: UI · Button action
+16:39:03.212 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:06.898 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:39:07.765 [activity] operator:b95a1f page: SYSTEM · Session active
+16:39:10.845 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:39:14.435 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:16.283 [activity] operator:b95a1f page: UI · Button action
+16:39:16.500 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:17.614 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:39:18.092 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:22.976 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:35.930 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:37.660 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/collisions
+16:39:37.828 [activity] operator:b95a1f page: SYSTEM · Session active
+16:39:37.831 [activity] operator:b95a1f page: SAFETY · Button action
+16:39:38.702 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:39.554 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:39:54.342 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:39:55.941 [activity] - job collisions done: Checking 6,557 lines of L_SD_EXT.txt for collisions
+16:39:58.453 [activity] operator:b95a1f page: SIMULATION · Button action
+16:39:58.454 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:39:58.455 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:39:58.668 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:01.744 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:40:01.744 [activity] operator:b95a1f page: SETUP · Button action
+16:40:02.176 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:04.588 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:05.074 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:40:05.444 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:07.772 [activity] operator:b95a1f page: SYSTEM · Session active
+16:40:30.020 [activity] operator:b95a1f page: TRAJECTORY · Button action
+16:40:32.387 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:32.980 [activity] operator:b95a1f page: UI · Button action
+16:40:32.981 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:40:33.311 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:35.513 [activity] operator:b95a1f page: UI · Button action
+16:40:35.889 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:37.651 [activity] operator:b95a1f page: UI · Button action
+16:40:37.657 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:39.392 [activity] operator:b95a1f page: SYSTEM · Session active
+16:40:42.493 [activity] operator:b95a1f page: UI · Button action
+16:40:42.494 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:40:42.704 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:45.053 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:46.846 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:47.665 [activity] operator:b95a1f page: UI · Input updated
+16:40:47.668 [activity] operator:b95a1f page: UI · Setting changed
+16:40:47.668 [activity] operator:b95a1f page: UI · Button action
+16:40:48.582 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:53.906 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/settings
+16:40:54.658 [activity] operator:b95a1f page: TUNING · Button action
+16:40:54.880 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:56.025 [activity] operator:b95a1f page: UI · Button action
+16:40:56.233 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:40:59.112 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:41:01.582 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/optimise
+16:41:02.343 [activity] operator:b95a1f page: UI · Button action
+16:41:02.556 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:41:03.118 [activity] - job optimise done: Tune L-R02 (breaks L1 Joint limits 0.32 deg (limit 0.5 deg); L3 Joint acceleration 2312 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 15.26 mm (limit 10 mm), shown, not enforced)
+16:41:04.539 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:41:05.512 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:41:06.930 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:41:07.918 [activity] operator:b95a1f page: SYSTEM · Session active
+16:41:13.568 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:41:14.350 [activity] operator:b95a1f page: PROJECT · Input updated
+16:41:19.461 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/keep
+16:41:19.929 [activity] operator:b95a1f page: PROJECT · Setting changed
+16:41:19.930 [activity] operator:b95a1f page: UI · Button action
+16:41:20.291 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:41:23.658 [activity] operator:b95a1f page: UI · Button action
+16:41:24.328 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:41:27.443 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:41:27.444 [activity] operator:b95a1f page: UI · Button action
+16:41:28.079 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:41:32.185 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:41:37.756 [activity] operator:b95a1f page: SYSTEM · Session active
+16:41:47.163 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:41:50.242 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:41:52.864 [LEFT] global points · 2 point(s)
+16:41:53.090 [LEFT] global points · 2 point(s)
+16:41:53.315 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:41:53.317 [activity] operator:b95a1f page: SIMULATION · Button action
+16:41:53.317 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:41:53.653 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:41:56.539 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:41:56.804 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:41:57.603 [activity] operator:b95a1f page: ROBOT · Input updated
+16:41:58.476 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/upload -> REFUSED: L_SD_EXT_15S.txt breaks L1 Joint limits 0.32 deg (limit 0.5 deg); L3 Joint acceleration 2312 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 15.26 mm (limit 10 mm). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+16:41:59.084 [activity] operator:b95a1f page: ROBOT · Setting changed
+16:41:59.088 [activity] operator:b95a1f page: TRAJECTORY · Button action
+16:41:59.467 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:42:01.196 [LEFT] program list · 1 programs
+16:42:01.198 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/upload
+16:42:01.205 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:42:01.205 [activity] operator:b95a1f page: UI · Button action
+16:42:01.366 [LEFT] rm_upload · upload L-R02_v001.txt: 2999 points, 174.3 KB -> slot 2 on 192.168.1.10
+16:42:01.367 [LEFT] rm_upload ·   slot 2 now: empty
+16:42:02.011 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:42:06.210 [LEFT] rm_upload ·   sent: ret=0 err_line=-1
+16:42:06.320 [LEFT] rm_upload ·   VERIFIED: slot 2 holds '2_L-R02_v001.txt', 178504 bytes (sent 178504)
+16:42:06.480 [LEFT] upload {"program_id": 2, "file": "v001.txt", "bytes": 178504} ret=0 (5.282 s)
+16:42:06.640 [activity] - job upload done: Upload L-R02 to program 2
+16:42:07.467 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:42:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+16:42:09.963 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:42:17.275 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/move-start -> REFUSED: Moving the arm on the real robot needs your confirmation.
+16:42:18.081 [activity] operator:b95a1f page: ROBOT · Button action
+16:42:18.300 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:42:18.655 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/move-start
+16:42:19.007 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+16:42:19.081 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+16:42:19.090 [LEFT] alix · pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)
+16:42:19.091 [LEFT] alix · hand: None (the state the stroke was planned with)
+16:42:19.159 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 986]; law 0.52 s)
+16:42:19.411 [activity] operator:b95a1f page: ROBOT · Button action
+16:42:19.660 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:42:19.798 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 546, 987] after 0.57 s (per-channel travel [0, 0, 0, 0, 0, 1])
+16:42:19.799 [LEFT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 987]. Either that channel is dead or the readback is not the device.
+16:42:19.799 [LEFT] alix · ** left: the hand read back [1000, 1000, 1000, 1000, 546, 987] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band
+16:42:19.891 [LEFT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 546, 987] (on the tool): done, as the control program takes it
+16:42:19.893 [LEFT] stage {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 987]
+16:42:20.002 [LEFT] run mode REAL
+16:42:20.003 [LEFT] alix · rest: movej to the plan's caller at speed 50 of a 100 % global ratio
+16:42:20.882 [LEFT] alix · global speed restored to 50 (ret=0)
+16:42:20.999 [LEFT] move to pose {"deg": [-112.4, -13.95, 160.22, 15.42, -53.11, 66.33, 104.25], "speed": 50, "restore_speed": 50} · gap 0.3240002899169916 deg
+16:42:21.117 [activity] - job move done: LEFT to the tuned trajectory's start (L-R02)
+16:42:23.302 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/run -> REFUSED: A run on the real robot needs your confirmation.
+16:42:24.102 [activity] operator:b95a1f page: UI · Button action
+16:42:24.310 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/run
+16:42:24.386 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:42:24.605 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+16:42:24.695 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+16:42:24.703 [LEFT] alix · pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)
+16:42:24.704 [LEFT] alix · hand: None (the state the stroke was planned with)
+16:42:24.768 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 986]; law 0.52 s)
+16:42:25.053 [activity] operator:b95a1f page: ROBOT · Button action
+16:42:25.260 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:42:25.430 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 546, 986] after 0.57 s (per-channel travel [0, 0, 0, 0, 0, 1])
+16:42:25.431 [LEFT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 986]. Either that channel is dead or the readback is not the device.
+16:42:25.431 [LEFT] alix · ** left: the hand read back [1000, 1000, 1000, 1000, 546, 986] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band
+16:42:25.522 [LEFT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 546, 986] (on the tool): done, as the control program takes it
+16:42:25.524 [LEFT] stage {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 986]
+16:42:25.677 [LEFT] program list · 2 programs
+16:42:25.953 [LEFT] run mode REAL
+16:42:26.062 [LEFT] rm_upload · run slot 2 (2_L-R02_v001.txt) on 192.168.1.10; transit speed 50 %
+16:42:26.063 [LEFT] rm_upload ·   the controller first moves the arm to the program's first point: up to 0.0 deg on J5
+16:42:26.292 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:42:28.148 [LEFT] rm_upload ·   running (2.1 s)
+16:42:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+16:42:45.842 [LEFT] rm_upload ·   global speed restored to 50 % (ret=0)
+16:42:45.855 [LEFT] rm_upload ·   RUN COMPLETE: 19.8 s, no error
+16:42:45.941 [LEFT] run {"program_id": 2, "points": 2999, "transit_speed": 50, "restore_speed": 50} ret=0 (19.987 s)
+16:42:46.055 [activity] - job run done: Real run L-R02
+16:42:51.451 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R02/verdict
+16:42:51.622 [RIGHT] global points · 2 point(s)
+16:42:51.804 [RIGHT] global points · 2 point(s)
+16:42:52.202 [activity] operator:b95a1f page: UI · Button action
+16:42:52.203 [activity] operator:b95a1f page: TEACH · Operator decision
+16:42:52.213 [activity] operator:b95a1f page: SETUP · Arm selected
+16:42:52.215 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:42:52.458 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:42:55.690 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:42:59.553 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:42:59.553 [activity] operator:b95a1f page: TEACH · Button action
+16:42:59.553 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:42:59.901 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:03.043 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:43:06.539 [activity] operator:b95a1f page: TEACH · Button action
+16:43:06.548 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:43:06.549 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:43:06.964 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:07.800 [activity] operator:b95a1f page: SYSTEM · Session active
+16:43:09.334 [activity] operator:b95a1f page: SIMULATION · Button action
+16:43:09.335 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:43:09.550 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:10.942 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:43:10.949 [activity] operator:b95a1f page: UI · Button action
+16:43:13.830 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:15.150 [activity] operator:b95a1f page: SIMULATION · Button action
+16:43:15.150 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:43:15.151 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:43:15.310 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:17.238 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R01_PART2/verdict
+16:43:18.070 [LEFT] global points · 2 point(s)
+16:43:18.238 [activity] operator:b95a1f page: UI · Button action
+16:43:18.269 [activity] operator:b95a1f page: TEACH · Operator decision
+16:43:18.269 [activity] operator:b95a1f page: NAVIGATION · Task loaded
+16:43:18.269 [activity] operator:b95a1f page: SETUP · Arm selected
+16:43:18.270 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:43:18.270 [activity] operator:b95a1f page: NAVIGATION · Open screen
+16:43:18.270 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:43:18.268 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:18.545 [LEFT] global points · 2 point(s)
+16:43:18.847 [LEFT] global points · 2 point(s)
+16:43:22.131 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:43:32.300 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:43:35.456 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:43:37.758 [activity] operator:b95a1f page: SYSTEM · Session active
+16:43:38.444 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/setup -> REFUSED: Moving the pole on the real robot needs your confirmation.
+16:43:39.239 [activity] operator:b95a1f page: UI · Button action
+16:43:39.467 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:39.767 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/setup
+16:43:39.804 [LEFT] alix · pole: 50 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)
+16:43:39.890 [LEFT] alix · pole: at 50 mm after 0.07 s (verified_by=no_op, moved 0 mm through 1 distinct readings)
+16:43:39.985 [LEFT] pole move {"mm": 50.0, "speed_pct": 50} ret=0 (0.066 s) · final 0.05 m, verified by no_op
+16:43:39.986 [activity] - job pole done: Pole L-R03: 50 mm
+16:43:40.500 [activity] operator:b95a1f page: ROBOT · Button action
+16:43:40.703 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:42.213 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/setup -> REFUSED: Moving the hand on the real robot needs your confirmation.
+16:43:42.519 [activity] operator:b95a1f page: ROBOT · Setting changed
+16:43:42.519 [activity] operator:b95a1f page: UI · Button action
+16:43:42.520 [activity] operator:b95a1f page: ROBOT · Input updated
+16:43:43.123 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/setup
+16:43:43.264 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:43.477 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+16:43:43.563 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+16:43:43.629 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)
+16:43:43.931 [activity] operator:b95a1f page: ROBOT · Button action
+16:43:44.144 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:43:44.253 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 546, 986] after 0.55 s (per-channel travel [0, 0, 0, 0, 0, 1])
+16:43:44.254 [LEFT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 986]. Either that channel is dead or the readback is not the device.
+16:43:44.447 [LEFT] hand move {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500} ret=0 (0.546 s) · read back [1000, 1000, 1000, 1000, 546, 986] (settled short of the target: stopped on force)
+16:43:44.449 [activity] - job hand done: Hand L-R03: cleaning pose
+16:43:47.583 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:44:07.767 [activity] operator:b95a1f page: SYSTEM · Session active
+16:44:37.758 [activity] operator:b95a1f page: SYSTEM · Session active
+16:45:07.762 [activity] operator:b95a1f page: SYSTEM · Session active
+16:45:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+16:46:07.758 [activity] operator:b95a1f page: SYSTEM · Session active
+16:46:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+16:47:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+16:47:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+16:48:07.756 [activity] operator:b95a1f page: SYSTEM · Session active
+16:48:37.757 [activity] operator:b95a1f page: SYSTEM · Session active
+16:49:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+16:49:18.186 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:49:19.032 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:19.829 [activity] operator:b95a1f page: UI · Input updated
+16:49:21.556 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/placement/task
+16:49:22.204 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/placement/room
+16:49:22.270 [activity] operator:b95a1f page: UI · Setting changed
+16:49:22.270 [activity] operator:b95a1f page: SETUP · Button action
+16:49:22.271 [activity] operator:b95a1f page: UI · Button action
+16:49:23.216 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:26.750 [activity] operator:b95a1f page: ROBOT · Button action
+16:49:26.957 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:27.607 [activity] operator:b95a1f page: ROBOT · Button action
+16:49:27.853 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:29.315 [activity] operator:b95a1f page: SETUP · Button action
+16:49:29.529 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:30.392 [LEFT] capture pose {"joints_deg": [-94.276, 1.039, 164.895, 47.977, -64.915, 87.08, 110.545], "pose": [0.594765, 0.141248, -0.206023, -2.883, -0.116, 1.956], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}
+16:49:31.092 [activity] operator:b95a1f page: UI · Button action
+16:49:31.094 [activity] operator:b95a1f page: UI · Button action
+16:49:31.098 [LEFT] capture pose {"joints_deg": [-94.275, 1.04, 164.897, 47.977, -64.915, 87.079, 110.547], "pose": [0.594771, 0.141257, -0.206013, -2.883, -0.116, 1.956], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}
+16:49:31.296 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:32.032 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:35.655 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:49:37.756 [activity] operator:b95a1f page: SYSTEM · Session active
+16:49:37.779 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:38.563 [activity] operator:b95a1f page: UI · Input updated
+16:49:41.834 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:42.627 [activity] operator:b95a1f page: UI · Input updated
+16:49:43.725 [LEFT] capture pose {"joints_deg": [-94.276, 1.038, 164.895, 47.975, -64.915, 87.081, 110.548], "pose": [0.594763, 0.141252, -0.206022, -2.883, -0.116, 1.956], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}
+16:49:44.267 [activity] operator:b95a1f page: UI · Setting changed
+16:49:44.271 [activity] operator:b95a1f page: UI · Button action
+16:49:44.271 [activity] operator:b95a1f page: UI · Button action
+16:49:44.380 [LEFT] add global point {"name": "SD_EXT_STP", "joints_deg": [-94.275, 1.038, 164.896, 47.978, -64.915, 87.08, 110.547], "pose": [0.59476, 0.14127, -0.20602, -2.883, -0.116, 1.956], "work_frame": "World", "tool_frame": "Arm_Tip"} ret=0 (0.331 s) · read back: 0.001 deg
+16:49:44.381 [activity] operator:b95a1f POST /api/robots/left/points/save
+16:49:44.542 [LEFT] global points · 3 point(s)
+16:49:45.060 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:48.517 [activity] operator:b95a1f page: UI · Button action
+16:49:48.728 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:52.472 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:50:05.471 [activity] operator:b95a1f page: ROBOT · Button action
+16:50:05.686 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+16:50:09.862 [activity] operator:b95a1f page: SETUP · Setting changed
+16:50:10.083 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:10.420 [activity] operator:b95a1f POST /api/robots/left/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+16:50:11.227 [activity] operator:b95a1f page: ROBOT · Button action
+16:50:11.342 [activity] operator:b95a1f POST /api/robots/left/points/move
+16:50:11.492 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:11.557 [LEFT] run mode REAL
+16:50:11.635 [LEFT] runner v14 · GLOBAL MOVE START: SD_EXT_STP // MOVEJ // speed 50%
+16:50:11.847 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: SD_EXT_STP // MOVEJ
+16:50:11.877 [LEFT] alix · global speed restored to 50 (ret=0)
+16:50:11.994 [LEFT] movej global point {"name": "SD_EXT_STP", "speed": 50, "wait_s": 0.0} ret=0 (0.437 s) · gap 0.08 deg
+16:50:12.118 [activity] - job move done: LEFT MoveJ to SD_EXT_STP
+16:50:12.265 [activity] operator:b95a1f page: ROBOT · Button action
+16:50:12.425 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:15.264 [activity] operator:b95a1f page: TEACH · Button action
+16:50:15.264 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:50:15.399 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:18.445 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:50:37.758 [activity] operator:b95a1f page: SYSTEM · Session active
+16:51:07.765 [activity] operator:b95a1f page: SYSTEM · Session active
+16:51:15.002 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+16:51:15.804 [activity] operator:b95a1f page: TEACH · Button action
+16:51:16.032 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:51:17.984 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/teach/start
+16:51:18.771 [activity] operator:b95a1f page: ROBOT · Button action
+16:51:19.101 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:51:23.082 [LEFT] rm_start_drag_teach [1] ret=0 (0.030 s)
+16:51:23.193 [activity] - job teach done: Drag teaching on the LEFT arm in 5 s
+16:51:24.681 [activity] operator:b95a1f page: TEACH · Drag recording started
+16:51:37.807 [activity] operator:b95a1f page: SYSTEM · Session active
+16:51:59.044 [LEFT] rm_stop_drag_teach [] ret=0 (0.013 s)
+16:51:59.796 [activity] operator:b95a1f page: TEACH · Button action
+16:52:00.013 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:52:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+16:52:09.902 [LEFT] rm_save_trajectory ["/tmp/lite-teach-0nc8grh7/left_drag_20261017_165158.txt"] ret=0 (10.858 s)
+16:52:10.126 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/teach/stop
+16:52:17.552 [activity] operator:b95a1f page: TEACH · Button action
+16:52:17.564 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:52:18.208 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:52:21.129 [activity] operator:b95a1f page: UI · Button action
+16:52:21.130 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:52:21.544 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:52:24.850 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:52:29.624 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:52:37.588 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:52:37.766 [activity] operator:b95a1f page: SYSTEM · Session active
+16:52:44.556 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/collisions
+16:52:45.383 [activity] operator:b95a1f page: SAFETY · Button action
+16:52:45.573 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:52:46.636 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:52:49.878 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:52:53.473 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:52:56.602 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:53:00.816 [activity] - job collisions done: Checking 6,943 lines of L_TASK_1C_trajectory.txt for collisions
+16:53:03.442 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:53:06.578 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:53:06.579 [activity] operator:b95a1f page: SIMULATION · Button action
+16:53:06.579 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:53:07.415 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:53:07.811 [activity] operator:b95a1f page: SYSTEM · Session active
+16:53:10.547 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:53:13.009 [activity] operator:b95a1f page: SETUP · Button action
+16:53:13.308 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:53:15.887 [activity] operator:b95a1f page: TRAJECTORY · Button action
+16:53:16.032 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:53:16.897 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:53:21.662 [activity] operator speed slider at 41 % (MoveJ / MoveL, both arms)
+16:53:21.662 [activity] operator:b95a1f POST /api/robots/speed
+16:53:22.653 [activity] operator:b95a1f page: ROBOT · Setting changed
+16:53:22.668 [activity] operator:b95a1f page: ROBOT · Input updated
+16:53:22.668 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:53:24.364 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:53:24.726 [activity] operator speed slider at 14 % (MoveJ / MoveL, both arms)
+16:53:24.759 [activity] operator:b95a1f POST /api/robots/speed
+16:53:25.100 [activity] operator:b95a1f page: ROBOT · Input updated
+16:53:25.105 [activity] operator:b95a1f page: ROBOT · Setting changed
+16:53:25.851 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:53:37.757 [activity] operator:b95a1f page: SYSTEM · Session active
+16:54:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+16:54:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+16:55:07.768 [activity] operator:b95a1f page: SYSTEM · Session active
+16:55:37.758 [activity] operator:b95a1f page: SYSTEM · Session active
+16:56:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+16:56:14.195 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:56:15.720 [activity] operator:b95a1f page: UI · Button action
+16:56:15.980 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:17.426 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:56:17.427 [activity] operator:b95a1f page: UI · Button action
+16:56:17.909 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:18.553 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/settings
+16:56:19.318 [activity] operator:b95a1f page: TUNING · Button action
+16:56:19.526 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:22.742 [activity] operator:b95a1f page: UI · Button action
+16:56:22.903 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:23.655 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/optimise
+16:56:24.262 [activity] - job optimise done: Tune L-R03 (breaks L3 Joint acceleration 2530 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 19.61 mm (limit 10 mm), shown, not enforced)
+16:56:24.432 [activity] operator:b95a1f page: UI · Button action
+16:56:24.671 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:25.825 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:56:29.935 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:56:37.810 [activity] operator:b95a1f page: SYSTEM · Session active
+16:56:38.306 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:39.194 [activity] operator:b95a1f page: PROJECT · Input updated
+16:56:39.799 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:40.637 [activity] operator:b95a1f page: PROJECT · Input updated
+16:56:41.439 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/keep
+16:56:41.890 [activity] operator:b95a1f page: PROJECT · Setting changed
+16:56:41.891 [activity] operator:b95a1f page: UI · Button action
+16:56:42.243 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:44.216 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:46.726 [activity] operator:b95a1f page: UI · Button action
+16:56:47.780 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:48.623 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:56:51.726 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:57:03.948 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:57:07.190 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:57:07.190 [activity] operator:b95a1f page: SYSTEM · Session active
+16:57:09.480 [activity] operator:b95a1f page: UI · Button action
+16:57:09.719 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:10.841 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:57:14.248 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:57:27.766 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:57:27.925 [LEFT] global points · 3 point(s)
+16:57:28.151 [LEFT] global points · 3 point(s)
+16:57:28.762 [activity] operator:b95a1f page: SIMULATION · Button action
+16:57:28.763 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:57:28.912 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:31.369 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:31.705 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:57:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+16:57:51.431 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:53.119 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:53.916 [activity] operator:b95a1f page: ROBOT · Input updated
+16:57:54.788 [activity] operator:b95a1f page: ROBOT · Setting changed
+16:57:55.188 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:58.176 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/upload -> REFUSED: L_TASK_1C_15S.txt breaks L3 Joint acceleration 2530 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 19.61 mm (limit 10 mm). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+16:57:58.962 [activity] operator:b95a1f page: TRAJECTORY · Button action
+16:57:59.186 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:59.919 [LEFT] program list · 2 programs
+16:57:59.929 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/upload
+16:58:00.098 [LEFT] rm_upload · upload L-R03_v001.txt: 3005 points, 167.1 KB -> slot 3 on 192.168.1.10
+16:58:00.099 [LEFT] rm_upload ·   slot 3 now: empty
+16:58:00.434 [activity] operator:b95a1f page: UI · Button action
+16:58:00.643 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:04.660 [LEFT] rm_upload ·   sent: ret=0 err_line=-1
+16:58:04.694 [LEFT] rm_upload ·   VERIFIED: slot 3 holds '3_L-R03_v001.txt', 171065 bytes (sent 171065)
+16:58:04.801 [LEFT] upload {"program_id": 3, "file": "v001.txt", "bytes": 171065} ret=0 (4.872 s)
+16:58:04.839 [activity] - job upload done: Upload L-R03 to program 3
+16:58:05.510 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:07.757 [activity] operator:b95a1f page: SYSTEM · Session active
+16:58:09.452 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/move-start -> REFUSED: Moving the arm on the real robot needs your confirmation.
+16:58:10.251 [activity] operator:b95a1f page: ROBOT · Button action
+16:58:10.456 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:12.283 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/move-start
+16:58:12.597 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+16:58:12.681 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+16:58:12.688 [LEFT] alix · pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)
+16:58:12.689 [LEFT] alix · hand: None (the state the stroke was planned with)
+16:58:12.748 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)
+16:58:13.050 [activity] operator:b95a1f page: ROBOT · Button action
+16:58:13.263 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:13.405 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 546, 988] after 0.58 s (per-channel travel [0, 0, 0, 0, 0, 1])
+16:58:13.407 [LEFT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 988]. Either that channel is dead or the readback is not the device.
+16:58:13.407 [LEFT] alix · ** left: the hand read back [1000, 1000, 1000, 1000, 546, 988] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band
+16:58:13.552 [LEFT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 546, 988] (on the tool): done, as the control program takes it
+16:58:13.553 [LEFT] stage {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 988]
+16:58:13.758 [LEFT] run mode REAL
+16:58:13.759 [LEFT] alix · rest: movej to the plan's caller at speed 14 of a 100 % global ratio
+16:58:18.949 [LEFT] alix · global speed restored to 50 (ret=0)
+16:58:19.052 [LEFT] move to pose {"deg": [-94.27, 1.03, 164.89, 47.98, -65.0, 87.12, 110.55], "speed": 14, "restore_speed": 50} · gap 0.09299963378906284 deg
+16:58:19.168 [activity] - job move done: LEFT to the tuned trajectory's start (L-R03)
+16:58:20.762 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/run -> REFUSED: A run on the real robot needs your confirmation.
+16:58:21.560 [activity] operator:b95a1f page: UI · Button action
+16:58:21.840 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:21.921 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/run
+16:58:22.188 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+16:58:22.280 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+16:58:22.287 [LEFT] alix · pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)
+16:58:22.287 [LEFT] alix · hand: None (the state the stroke was planned with)
+16:58:22.336 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)
+16:58:22.694 [activity] operator:b95a1f page: ROBOT · Button action
+16:58:22.880 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:22.965 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 546, 987] after 0.57 s (per-channel travel [0, 0, 0, 0, 0, 1])
+16:58:22.966 [LEFT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 987]. Either that channel is dead or the readback is not the device.
+16:58:22.966 [LEFT] alix · ** left: the hand read back [1000, 1000, 1000, 1000, 546, 987] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band
+16:58:23.072 [LEFT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 546, 987] (on the tool): done, as the control program takes it
+16:58:23.074 [LEFT] stage {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 987]
+16:58:23.204 [LEFT] program list · 3 programs
+16:58:23.453 [LEFT] run mode REAL
+16:58:23.673 [LEFT] rm_upload · run slot 3 (3_L-R03_v001.txt) on 192.168.1.10; transit speed 14 %
+16:58:23.674 [LEFT] rm_upload ·   the controller first moves the arm to the program's first point: up to 0.0 deg on J5
+16:58:25.517 [LEFT] rm_upload ·   running (1.8 s)
+16:58:37.781 [activity] operator:b95a1f page: SYSTEM · Session active
+16:58:43.633 [LEFT] rm_upload ·   global speed restored to 50 % (ret=0)
+16:58:43.646 [LEFT] rm_upload ·   RUN COMPLETE: 20.0 s, no error
+16:58:43.788 [LEFT] run {"program_id": 3, "points": 3005, "transit_speed": 14, "restore_speed": 50} ret=0 (20.334 s)
+16:58:43.989 [activity] - job run done: Real run L-R03
+16:58:44.404 [LEFT] global points · 3 point(s)
+16:58:52.144 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/run -> REFUSED: A run on the real robot needs your confirmation.
+16:58:52.942 [activity] operator:b95a1f page: UI · Button action
+16:58:53.169 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/run
+16:58:53.211 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:53.703 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+16:58:53.783 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+16:58:53.790 [LEFT] alix · pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)
+16:58:53.791 [LEFT] alix · hand: None (the state the stroke was planned with)
+16:58:53.853 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 986]; law 0.52 s)
+16:58:53.919 [activity] operator:b95a1f page: ROBOT · Button action
+16:58:54.170 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:54.477 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 546, 986] after 0.55 s (per-channel travel [0, 0, 0, 0, 0, 1])
+16:58:54.478 [LEFT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 986]. Either that channel is dead or the readback is not the device.
+16:58:54.478 [LEFT] alix · ** left: the hand read back [1000, 1000, 1000, 1000, 546, 986] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band
+16:58:54.568 [LEFT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 546, 986] (on the tool): done, as the control program takes it
+16:58:54.568 [LEFT] stage {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 986]
+16:58:54.705 [LEFT] program list · 3 programs
+16:58:54.816 [LEFT] run mode REAL
+16:58:54.874 [LEFT] rm_upload · run slot 3 (3_L-R03_v001.txt) on 192.168.1.10; transit speed 14 %
+16:58:54.875 [LEFT] rm_upload ·   the controller first moves the arm to the program's first point: up to 142.2 deg on J3 — keep that path clear
+16:58:55.686 [LEFT] rm_upload ·   running (0.8 s)
+16:59:07.769 [activity] operator:b95a1f page: SYSTEM · Session active
+16:59:36.712 [LEFT] rm_upload ·   global speed restored to 50 % (ret=0)
+16:59:36.738 [LEFT] rm_upload ·   RUN COMPLETE: 41.9 s, no error
+16:59:36.838 [LEFT] run {"program_id": 3, "points": 3005, "transit_speed": 14, "restore_speed": 50} ret=0 (42.021 s)
+16:59:36.981 [activity] - job run done: Real run L-R03
+16:59:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+16:59:42.832 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R03/verdict
+16:59:43.008 [RIGHT] global points · 2 point(s)
+16:59:43.174 [RIGHT] global points · 2 point(s)
+16:59:43.611 [activity] operator:b95a1f page: UI · Button action
+16:59:43.621 [activity] operator:b95a1f page: TEACH · Operator decision
+16:59:43.621 [activity] operator:b95a1f page: SETUP · Arm selected
+16:59:43.621 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+16:59:43.981 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+16:59:47.058 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:59:50.224 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+16:59:58.520 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:00:03.647 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:00:07.757 [activity] operator:b95a1f page: SYSTEM · Session active
+17:00:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:01:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+17:01:37.763 [activity] operator:b95a1f page: SYSTEM · Session active
+17:02:07.758 [activity] operator:b95a1f page: SYSTEM · Session active
+17:02:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+17:03:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+17:03:22.062 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:03:24.708 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:25.119 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:03:25.120 [activity] operator:b95a1f page: ROBOT · Input updated
+17:03:25.329 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/setup -> REFUSED: Moving the pole on the real robot needs your confirmation.
+17:03:25.965 [activity] operator:b95a1f page: ROBOT · Setting changed
+17:03:25.965 [activity] operator:b95a1f page: UI · Button action
+17:03:26.341 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:26.614 [RIGHT] alix · pole: 200 mm -> 200 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)
+17:03:26.633 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/setup
+17:03:26.695 [RIGHT] alix · pole: at 200 mm after 0.06 s (verified_by=no_op, moved 0 mm through 1 distinct readings)
+17:03:26.797 [RIGHT] pole move {"mm": 200.0, "speed_pct": 50} ret=0 (0.059 s) · final 0.2 m, verified by no_op
+17:03:26.800 [activity] - job pole done: Pole R-R02: 200 mm
+17:03:27.374 [activity] operator:b95a1f page: ROBOT · Button action
+17:03:27.587 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:30.435 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/setup -> REFUSED: Moving the hand on the real robot needs your confirmation.
+17:03:30.554 [activity] operator:b95a1f page: ROBOT · Setting changed
+17:03:30.555 [activity] operator:b95a1f page: ROBOT · Input updated
+17:03:30.555 [activity] operator:b95a1f page: UI · Button action
+17:03:31.448 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:31.763 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/setup
+17:03:32.155 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:03:32.238 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:03:32.306 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 60, 964]; law 0.16 s)
+17:03:32.505 [activity] operator:b95a1f page: ROBOT · Button action
+17:03:32.595 [RIGHT] alix · hand: settled at [1000, 1000, 1000, 1000, 60, 987] after 0.22 s (per-channel travel [0, 0, 0, 0, 0, 24])
+17:03:32.596 [RIGHT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 60, 987]. Either that channel is dead or the readback is not the device.
+17:03:32.678 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:32.712 [RIGHT] hand move {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500} ret=0 (0.219 s) · read back [1000, 1000, 1000, 1000, 60, 987] (settled short of the target: stopped on force)
+17:03:32.713 [activity] - job hand done: Hand R-R02: cleaning pose
+17:03:37.757 [activity] operator:b95a1f page: SYSTEM · Session active
+17:03:38.775 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:03:47.798 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/placement/room
+17:03:48.600 [activity] operator:b95a1f page: UI · Button action
+17:03:48.735 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/placement/task
+17:03:49.537 [activity] operator:b95a1f page: SETUP · Button action
+17:03:49.743 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:51.828 [activity] operator:b95a1f page: TEACH · Button action
+17:03:51.829 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:03:52.049 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:53.245 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:03:54.876 [RIGHT] global points · 2 point(s)
+17:03:55.555 [activity] operator:b95a1f page: ROBOT · Button action
+17:03:55.556 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:03:55.874 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:56.557 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:03:59.656 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:04:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:04:18.176 [activity] operator:b95a1f POST /api/auth/engineer/lock
+17:04:18.511 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:18.975 [activity] operator:b95a1f page: UI · Button action
+17:04:19.256 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:21.057 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:22.857 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:24.664 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:25.129 [activity] engineer:b95a1f POST /api/auth/engineer
+17:04:29.795 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:32.670 [activity] engineer:b95a1f page: UI · Button action
+17:04:32.887 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:35.802 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:37.758 [activity] engineer:b95a1f page: SYSTEM · Session active
+17:04:41.904 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:43.272 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:43.338 [activity] engineer:b95a1f page: NAVIGATION · Scrolled view
+17:04:47.318 [activity] engineer:b95a1f page: NAVIGATION · Scrolled view
+17:04:52.155 [LEFT] program list · 3 programs
+17:04:52.824 [activity] engineer:b95a1f page: UI · Button action
+17:04:53.067 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:54.152 [RIGHT] program list · 2 programs
+17:04:54.688 [activity] engineer:b95a1f page: NAVIGATION · Scrolled view
+17:04:54.690 [activity] engineer:b95a1f page: UI · Button action
+17:04:55.092 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:57.221 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:58.423 [activity] engineer:b95a1f page: NAVIGATION · Scrolled view
+17:04:58.531 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:59.430 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:05:01.405 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:05:59.470 [activity] engineer:b95a1f page: UI · Button action
+17:05:59.472 [activity] engineer:b95a1f page: SYSTEM · Session active
+17:06:00.204 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:07.760 [activity] engineer:b95a1f page: SYSTEM · Session active
+17:06:15.459 [activity] engineer:b95a1f page: UI · Button action
+17:06:16.125 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:20.314 [activity] engineer:b95a1f page: NAVIGATION · Scrolled view
+17:06:23.343 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:23.905 [activity] operator:b95a1f POST /api/auth/engineer/lock
+17:06:24.743 [activity] operator:b95a1f page: UI · Button action
+17:06:25.056 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:06:38.741 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:42.040 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:06:42.545 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:43.102 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/setup -> REFUSED: Moving the pole on the real robot needs your confirmation.
+17:06:43.334 [activity] operator:b95a1f page: ROBOT · Input updated
+17:06:43.335 [activity] operator:b95a1f page: ROBOT · Setting changed
+17:06:43.340 [activity] operator:b95a1f page: UI · Button action
+17:06:44.121 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:44.609 [RIGHT] alix · pole: 200 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.53 s, timeout 7.6 s)
+17:06:44.644 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/setup
+17:06:45.348 [activity] operator:b95a1f page: ROBOT · Button action
+17:06:45.549 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:46.329 [RIGHT] alix · pole: at 151 mm after 1.71 s (verified_by=getter, moved 49 mm through 24 distinct readings)
+17:06:46.432 [RIGHT] pole move {"mm": 150.0, "speed_pct": 50} ret=0 (1.708 s) · final 0.151 m, verified by getter
+17:06:46.436 [activity] - job pole done: Pole R-R02: 150 mm
+17:06:48.478 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:50.027 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:50.797 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/setup -> REFUSED: Moving the pole on the real robot needs your confirmation.
+17:06:50.911 [activity] operator:b95a1f page: ROBOT · Input updated
+17:06:50.915 [activity] operator:b95a1f page: ROBOT · Setting changed
+17:06:50.916 [activity] operator:b95a1f page: UI · Button action
+17:06:51.859 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:52.379 [RIGHT] alix · pole: 150 mm -> 200 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 3.19 s, timeout 9.6 s)
+17:06:52.413 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/setup
+17:06:53.093 [activity] operator:b95a1f page: ROBOT · Button action
+17:06:53.413 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:54.071 [RIGHT] alix · pole: at 198 mm after 1.68 s (verified_by=getter, moved 48 mm through 25 distinct readings)
+17:06:54.185 [RIGHT] pole move {"mm": 200.0, "speed_pct": 50} ret=0 (1.685 s) · final 0.198 m, verified by getter
+17:06:54.188 [activity] - job pole done: Pole R-R02: 200 mm
+17:06:57.364 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:06:57.366 [activity] operator:b95a1f page: UI · Button action
+17:06:58.252 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:07:05.139 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:07:07.852 [activity] operator:b95a1f page: SYSTEM · Session active
+17:07:07.856 [activity] operator:b95a1f page: UI · Button action
+17:07:08.735 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:07:08.981 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:07:12.563 [activity] operator:b95a1f page: ROBOT · Button action
+17:07:12.901 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:07:21.690 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:07:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+17:08:07.766 [activity] operator:b95a1f page: SYSTEM · Session active
+17:08:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:09:07.764 [activity] operator:b95a1f page: SYSTEM · Session active
+17:09:37.756 [activity] operator:b95a1f page: SYSTEM · Session active
+17:10:07.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:10:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:11:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+17:11:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:12:07.764 [activity] operator:b95a1f page: SYSTEM · Session active
+17:12:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:12:51.318 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:12:51.318 [activity] operator:b95a1f page: UI · Button action
+17:12:52.197 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:12:57.508 [activity] operator:b95a1f page: TRAJECTORY · Button action
+17:12:58.177 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:07.767 [activity] operator:b95a1f page: SYSTEM · Session active
+17:13:09.592 [activity] operator:b95a1f page: UI · Button action
+17:13:09.866 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:13.881 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:17.473 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:19.034 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:21.067 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:22.060 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:22.838 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:13:22.856 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:24.355 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:32.524 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:13:34.252 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:35.565 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:13:37.764 [activity] operator:b95a1f page: SYSTEM · Session active
+17:13:39.677 [activity] operator:b95a1f page: SEQUENCE · Button action
+17:13:39.678 [activity] operator:b95a1f page: NAVIGATION · Open screen
+17:13:39.759 [LEFT] program list · 3 programs
+17:13:39.839 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:39.844 [RIGHT] program list · 2 programs
+17:13:40.018 [LEFT] global points · 3 point(s)
+17:13:40.105 [RIGHT] global points · 2 point(s)
+17:13:40.519 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:13:40.571 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:13:42.498 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:13:44.634 [activity] operator:b95a1f page: UI · Button action
+17:13:44.634 [activity] operator:b95a1f page: UI · Button action
+17:13:44.634 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:13:44.635 [activity] operator:b95a1f page: UI · Button action
+17:13:45.253 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:45.965 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:13:46.394 [activity] operator:b95a1f page: UI · Button action
+17:13:47.176 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:47.829 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:13:48.327 [activity] operator:b95a1f page: UI · Button action
+17:13:49.184 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:13:49.194 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:49.730 [activity] operator:b95a1f page: UI · Button action
+17:13:50.418 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:53.735 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:13:54.028 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:55.540 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:57.923 [LEFT] program list · 3 programs
+17:13:57.975 [RIGHT] program list · 2 programs
+17:13:58.121 [RIGHT] global points · 2 point(s)
+17:13:58.172 [LEFT] global points · 3 point(s)
+17:13:58.532 [activity] operator:b95a1f page: ROBOT · Button action
+17:13:58.533 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:13:58.749 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:13:59.038 [LEFT] program list · 3 programs
+17:13:59.059 [RIGHT] program list · 2 programs
+17:13:59.156 [LEFT] global points · 3 point(s)
+17:13:59.177 [RIGHT] global points · 2 point(s)
+17:13:59.631 [activity] operator:b95a1f page: UI · Button action
+17:13:59.983 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:02.835 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:04.188 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:14:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+17:14:09.411 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:09.547 [activity] operator:b95a1f page: ROBOT · Setting changed
+17:14:09.549 [activity] operator:b95a1f page: ROBOT · Input updated
+17:14:10.470 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:14:10.892 [activity] operator:b95a1f page: ROBOT · Button action
+17:14:11.017 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:14.968 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:14:14.968 [activity] operator:b95a1f page: UI · Button action
+17:14:15.535 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:17.600 [LEFT] program list · 3 programs
+17:14:17.852 [RIGHT] program list · 2 programs
+17:14:17.988 [LEFT] global points · 3 point(s)
+17:14:18.127 [RIGHT] global points · 2 point(s)
+17:14:18.131 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run is not the one simulated: changed since it was simulated: its steps, the RIGHT programs Lite sent, the speed (simulated at 18 %, now 14 %).
+17:14:18.468 [activity] operator:b95a1f page: SEQUENCE · Button action
+17:14:18.469 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:14:18.484 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+17:14:40.064 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:14:41.708 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/simulate
+17:14:42.140 [LEFT] program list · 3 programs
+17:14:42.360 [RIGHT] program list · 2 programs
+17:14:42.484 [LEFT] global points · 3 point(s)
+17:14:42.505 [activity] operator:b95a1f page: SEQUENCE · Button action
+17:14:42.506 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:14:42.659 [RIGHT] global points · 2 point(s)
+17:14:42.754 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:46.217 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:14:48.173 [activity] operator:b95a1f page: UI · Button action
+17:14:48.376 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:49.290 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:14:53.965 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:14:55.323 [activity] operator:b95a1f page: UI · Button action
+17:14:55.500 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:57.330 [activity] - job simulate done: S2 simulation (RIGHT arm)
+17:14:57.832 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:14:58.134 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:14:59.010 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:15:03.329 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:15:06.642 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:15:07.777 [activity] operator:b95a1f page: SYSTEM · Session active
+17:15:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:15:54.520 [activity] operator:b95a1f page: UI · Button action
+17:15:54.742 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:16:00.327 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:16:03.412 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:16:03.414 [activity] operator:b95a1f page: UI · Button action
+17:16:04.319 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:16:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:16:07.766 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:16:12.270 [LEFT] program list · 3 programs
+17:16:12.491 [RIGHT] program list · 2 programs
+17:16:12.648 [LEFT] global points · 3 point(s)
+17:16:12.777 [RIGHT] global points · 2 point(s)
+17:16:12.779 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: The simulation of this run has not been played to its end.
+17:16:13.001 [activity] operator:b95a1f page: SEQUENCE · Button action
+17:16:13.019 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:16:14.176 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:16:22.468 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:16:22.469 [activity] operator:b95a1f page: SEQUENCE · Setting changed
+17:16:23.433 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:16:23.660 [activity] operator:b95a1f page: SEQUENCE · Input updated
+17:16:26.394 [activity] operator:b95a1f page: UI · Button action
+17:16:26.396 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:16:26.718 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:16:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:17:07.827 [activity] operator:b95a1f page: SYSTEM · Session active
+17:17:37.763 [activity] operator:b95a1f page: SYSTEM · Session active
+17:17:37.767 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:17:41.262 [activity] operator:b95a1f page: UI · Button action
+17:17:41.263 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:17:41.476 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:17:46.389 [LEFT] program list · 3 programs
+17:17:46.456 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:17:46.457 [activity] operator:b95a1f page: SEQUENCE · Button action
+17:17:46.676 [RIGHT] program list · 2 programs
+17:17:46.803 [LEFT] global points · 3 point(s)
+17:17:47.072 [RIGHT] global points · 2 point(s)
+17:17:47.075 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: The simulation of this run has not been played to its end.
+17:17:47.317 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:17:52.795 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/simulate
+17:17:52.954 [LEFT] program list · 3 programs
+17:17:53.149 [RIGHT] program list · 2 programs
+17:17:53.293 [LEFT] global points · 3 point(s)
+17:17:53.431 [RIGHT] global points · 2 point(s)
+17:17:53.598 [activity] operator:b95a1f page: SEQUENCE · Button action
+17:17:53.811 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:17:59.021 [activity] - job simulate done: S2 simulation (RIGHT arm)
+17:17:59.281 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:17:59.819 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:18:00.689 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:18:01.916 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:18:06.634 [activity] operator:b95a1f POST /api/auth/engineer/lock
+17:18:07.436 [activity] operator:b95a1f page: UI · Button action
+17:18:07.436 [activity] operator:b95a1f page: SYSTEM · Session active
+17:18:07.708 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:14.699 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:17.001 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:18.263 [activity] engineer:b95a1f POST /api/auth/engineer
+17:18:18.785 [activity] engineer:b95a1f page: AUTH · Setting changed
+17:18:18.786 [activity] engineer:b95a1f page: UI · Button action
+17:18:19.546 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:37.761 [activity] engineer:b95a1f page: SYSTEM · Session active
+17:18:53.742 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:54.179 [activity] engineer:b95a1f page: NAVIGATION · Scrolled view
+17:18:54.985 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:56.075 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:56.853 [RIGHT] program list · 2 programs
+17:18:57.275 [RIGHT] program list · 2 programs
+17:18:57.520 [activity] engineer:b95a1f page: UI · Button action
+17:18:57.522 [activity] engineer:b95a1f page: UI · Button action
+17:18:58.152 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:59.959 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:19:03.779 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:19:08.063 [activity] engineer:b95a1f page: UI · Button action
+17:19:08.604 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:19:08.869 [activity] engineer:b95a1f page: SYSTEM · Session active
+17:19:12.795 [activity] engineer:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/played
+17:19:14.349 [activity] engineer:b95a1f page: NAVIGATION · Scrolled view
+17:19:24.525 [activity] operator:b95a1f POST /api/auth/engineer/lock
+17:19:25.328 [activity] operator:b95a1f page: UI · Button action
+17:19:25.546 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:19:29.954 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:19:29.957 [activity] operator:b95a1f page: UI · Button action
+17:19:30.483 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:19:32.245 [LEFT] program list · 3 programs
+17:19:32.419 [RIGHT] program list · 2 programs
+17:19:32.558 [LEFT] global points · 3 point(s)
+17:19:32.719 [RIGHT] global points · 2 point(s)
+17:19:32.733 [activity] operator:b95a1f page: SEQUENCE · Button action
+17:19:32.845 [RIGHT] program list · 2 programs
+17:19:32.846 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Before it runs on the robot: The simulation found 6 collision event(s), the first at 2.44 s: R_ConnectorLink with commode lid. RIGHT row 1, program 2: taught at pole 200 mm, hand cleaning pose, but the hand is 1000, 1000, 1000, 1000, 60, 987 here (as the arm stands: no Hand step before it).
+17:19:32.854 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/plan
+17:19:33.006 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:19:34.034 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:19:36.224 [LEFT] program list · 3 programs
+17:19:36.423 [RIGHT] program list · 2 programs
+17:19:36.600 [LEFT] global points · 3 point(s)
+17:19:36.656 [activity] operator:b95a1f page: ROBOT · Button action
+17:19:36.735 [RIGHT] global points · 2 point(s)
+17:19:36.962 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:19:37.019 [RIGHT] program list · 2 programs
+17:19:37.020 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+17:19:37.129 [RIGHT] run mode REAL
+17:19:37.131 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 14%
+17:19:37.135 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+17:19:37.316 [RIGHT] runner v14 ·   01. PROGRAM: Program 2 2_R-R01_PART2_v001.txt // start/transit 30% // stored trajectory timing
+17:19:37.358 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 14% // ret=0
+17:19:37.359 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: PROGRAM
+17:19:37.429 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/1: slot 2 (2_R-R01_PART2_v001.txt) // START/TRANSIT 30% // stored trajectory timing // overall 14%
+17:19:37.877 [activity] operator:b95a1f page: SYSTEM · Session active
+17:19:39.172 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 1/1: slot 2 // start ack 1.734 s
+17:20:02.708 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/1: 23.545 s
+17:20:02.711 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 1/1: 0.130 s
+17:20:02.712 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: PROGRAM
+17:20:02.712 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 25.4 s
+17:20:02.742 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+17:20:02.833 [RIGHT] workflow {"steps": 1, "overall_speed": 14, "restore_speed": 50} ret=0 (25.703 s)
+17:20:03.154 [RIGHT] restore global speed {"pct": 50} ret=0
+17:20:03.155 [activity] - job run done: S2 Real Machine: RIGHT sequence
+17:20:07.861 [activity] operator:b95a1f page: SYSTEM · Session active
+17:20:37.793 [activity] operator:b95a1f page: SYSTEM · Session active
+17:21:07.800 [activity] operator:b95a1f page: SYSTEM · Session active
+17:21:37.798 [activity] operator:b95a1f page: SYSTEM · Session active
+17:22:07.818 [activity] operator:b95a1f page: SYSTEM · Session active
+17:22:37.801 [activity] operator:b95a1f page: SYSTEM · Session active
+17:23:07.811 [activity] operator:b95a1f page: SYSTEM · Session active
+17:23:37.788 [activity] operator:b95a1f page: SYSTEM · Session active
+17:24:07.782 [activity] operator:b95a1f page: SYSTEM · Session active
+17:24:37.795 [activity] operator:b95a1f page: SYSTEM · Session active
+17:24:59.489 [activity] operator:b95a1f page: UI · Button action
+17:24:59.706 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:03.995 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:25:07.841 [activity] operator:b95a1f page: SYSTEM · Session active
+17:25:11.944 [activity] operator:b95a1f page: TEACH · Button action
+17:25:11.945 [activity] operator:b95a1f page: NAVIGATION · Open screen
+17:25:12.447 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:15.327 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:25:21.441 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:25:21.443 [activity] operator:b95a1f page: SETUP · Button action
+17:25:22.256 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:24.861 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:28.847 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:29.659 [activity] operator:b95a1f page: UI · Input updated
+17:25:30.266 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:31.043 [activity] operator:b95a1f page: UI · Input updated
+17:25:32.354 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:33.196 [activity] operator:b95a1f page: UI · Input updated
+17:25:34.110 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:34.898 [activity] operator:b95a1f page: UI · Input updated
+17:25:36.405 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:37.179 [activity] operator:b95a1f page: UI · Input updated
+17:25:37.182 [activity] operator:b95a1f page: SYSTEM · Session active
+17:25:37.737 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:38.519 [activity] operator:b95a1f page: UI · Input updated
+17:25:39.788 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:40.580 [activity] operator:b95a1f page: UI · Input updated
+17:25:42.384 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:43.180 [activity] operator:b95a1f page: UI · Input updated
+17:25:44.351 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:45.185 [activity] operator:b95a1f page: UI · Input updated
+17:25:45.861 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:46.691 [activity] operator:b95a1f page: UI · Input updated
+17:25:47.400 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:48.188 [activity] operator:b95a1f page: UI · Input updated
+17:25:50.956 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:51.746 [activity] operator:b95a1f page: UI · Input updated
+17:25:52.256 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:53.029 [activity] operator:b95a1f page: UI · Input updated
+17:25:53.891 [RIGHT] capture pose {"joints_deg": [5.126, -24.325, -17.07, 76.517, 15.207, 9.841, 81.944], "pose": [0.673118, -0.082855, -0.197729, 2.633, 0.084, 1.362], "pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 60, 995]}
+17:25:54.464 [activity] operator:b95a1f page: UI · Setting changed
+17:25:54.466 [activity] operator:b95a1f page: UI · Button action
+17:25:54.875 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:55.928 [RIGHT] add global point {"name": "LD_TP_STP_P2", "joints_deg": [5.126, -24.32, -17.071, 76.517, 15.206, 9.841, 81.944], "pose": [0.6731, -0.08286, -0.19776, 2.633, 0.084, 1.362], "work_frame": "World", "tool_frame": "Arm_Tip"} ret=0 (0.391 s) · read back: 0.001 deg
+17:25:55.929 [activity] operator:b95a1f POST /api/robots/right/points/save
+17:25:56.192 [RIGHT] global points · 3 point(s)
+17:25:56.337 [activity] operator:b95a1f page: UI · Button action
+17:25:56.555 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:25:58.337 [activity] operator:b95a1f page: UI · Button action
+17:25:58.558 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:26:07.763 [activity] operator:b95a1f page: SYSTEM · Session active
+17:26:12.074 [activity] operator:b95a1f page: ROBOT · Button action
+17:26:12.298 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:26:22.946 [activity] operator:b95a1f page: SETUP · Setting changed
+17:26:23.048 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:26:27.045 [activity] operator:b95a1f POST /api/robots/right/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+17:26:27.843 [activity] operator:b95a1f page: ROBOT · Button action
+17:26:28.055 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:26:28.294 [activity] operator:b95a1f POST /api/robots/right/points/move
+17:26:28.509 [RIGHT] run mode REAL
+17:26:28.791 [RIGHT] runner v14 · GLOBAL MOVE START: LD_TP_STP_P2 // MOVEJ // speed 14%
+17:26:29.024 [activity] operator:b95a1f page: ROBOT · Button action
+17:26:29.308 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:26:29.660 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: LD_TP_STP_P2 // MOVEJ
+17:26:29.695 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:26:29.833 [RIGHT] movej global point {"name": "LD_TP_STP_P2", "speed": 14, "wait_s": 0.0} ret=0 (1.323 s) · gap 0.09 deg
+17:26:29.954 [activity] - job move done: RIGHT MoveJ to LD_TP_STP_P2
+17:26:37.790 [activity] operator:b95a1f page: SYSTEM · Session active
+17:27:07.799 [activity] operator:b95a1f page: SYSTEM · Session active
+17:27:37.803 [activity] operator:b95a1f page: SYSTEM · Session active
+17:28:07.795 [activity] operator:b95a1f page: SYSTEM · Session active
+17:28:37.789 [activity] operator:b95a1f page: SYSTEM · Session active
+17:29:07.793 [activity] operator:b95a1f page: SYSTEM · Session active
+17:29:25.161 [activity] operator:b95a1f POST /api/robots/right/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+17:29:25.958 [activity] operator:b95a1f page: ROBOT · Button action
+17:29:26.174 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:29:26.632 [activity] operator:b95a1f POST /api/robots/right/points/move
+17:29:26.777 [RIGHT] run mode REAL
+17:29:26.878 [RIGHT] runner v14 · GLOBAL MOVE START: LD_TP_STP_P2 // MOVEJ // speed 14%
+17:29:26.940 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: LD_TP_STP_P2 // MOVEJ
+17:29:26.971 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:29:27.129 [RIGHT] movej global point {"name": "LD_TP_STP_P2", "speed": 14, "wait_s": 0.0} ret=0 (0.352 s) · gap 0.00 deg
+17:29:27.291 [activity] - job move done: RIGHT MoveJ to LD_TP_STP_P2
+17:29:27.479 [activity] operator:b95a1f page: ROBOT · Button action
+17:29:27.683 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:29:28.913 [activity] operator:b95a1f page: TEACH · Button action
+17:29:28.914 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:29:29.119 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:29:32.246 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:29:37.793 [activity] operator:b95a1f page: SYSTEM · Session active
+17:30:02.381 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+17:30:03.185 [activity] operator:b95a1f page: TEACH · Button action
+17:30:03.395 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:30:04.090 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/teach/start
+17:30:04.924 [activity] operator:b95a1f page: ROBOT · Button action
+17:30:05.140 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:30:08.113 [activity] operator:b95a1f page: SYSTEM · Session active
+17:30:09.133 [RIGHT] rm_start_drag_teach [1] ret=0 (0.038 s)
+17:30:09.263 [activity] - job teach done: Drag teaching on the RIGHT arm in 5 s
+17:30:10.655 [activity] operator:b95a1f page: TEACH · Drag recording started
+17:30:38.092 [activity] operator:b95a1f page: SYSTEM · Session active
+17:30:44.707 [RIGHT] rm_stop_drag_teach [] ret=0 (0.013 s)
+17:30:45.468 [activity] operator:b95a1f page: TEACH · Button action
+17:30:45.691 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:30:52.408 [activity] operator:b95a1f page: TEACH · Button action
+17:30:52.408 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:30:52.736 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:30:54.976 [RIGHT] rm_save_trajectory ["/tmp/lite-teach-yv7kpme8/right_drag_20261017_173044.txt"] ret=0 (10.267 s)
+17:30:55.274 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/teach/stop
+17:30:55.722 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:31:07.808 [activity] operator:b95a1f page: SYSTEM · Session active
+17:31:12.544 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/name
+17:31:13.268 [activity] operator:b95a1f page: UI · Button action
+17:31:13.269 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:31:13.541 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:31:16.280 [activity] operator:b95a1f page: UI · Button action
+17:31:16.604 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:31:17.820 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:31:28.710 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:31:37.829 [activity] operator:b95a1f page: SYSTEM · Session active
+17:31:44.265 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/collisions
+17:31:45.122 [activity] operator:b95a1f page: SAFETY · Button action
+17:31:45.652 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:31:46.495 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:31:55.486 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:31:58.672 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:32:07.894 [activity] operator:b95a1f page: SYSTEM · Session active
+17:32:12.960 [activity] - job collisions done: Checking 6,871 lines of R_TASK_1C_trajectory.txt for collisions
+17:32:31.979 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:32:35.936 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:32:37.562 [activity] operator:b95a1f page: SIMULATION · Button action
+17:32:37.563 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:32:37.564 [activity] operator:b95a1f page: SYSTEM · Session active
+17:32:37.830 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:41.380 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:32:45.373 [activity] operator:b95a1f page: SETUP · Button action
+17:32:45.593 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:48.615 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:32:50.960 [activity] operator:b95a1f page: TRAJECTORY · Button action
+17:32:50.975 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:54.388 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:32:57.600 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:33:01.175 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:33:02.145 [activity] operator:b95a1f page: UI · Button action
+17:33:02.504 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:33:04.550 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:33:06.857 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:33:07.826 [activity] operator:b95a1f page: SYSTEM · Session active
+17:33:07.832 [activity] operator:b95a1f page: UI · Button action
+17:33:07.833 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:33:08.382 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:33:10.540 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/settings
+17:33:11.292 [activity] operator:b95a1f page: TUNING · Button action
+17:33:11.505 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:33:16.186 [activity] operator:b95a1f page: UI · Button action
+17:33:16.400 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:33:18.821 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/optimise
+17:33:19.316 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:33:19.318 [activity] operator:b95a1f page: UI · Button action
+17:33:19.533 [activity] - job optimise done: Tune R-R02 (breaks L2 Joint speed 1.31 x limit (limit 1 x limit); L3 Joint acceleration 1781 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 11.92 mm (limit 10 mm), shown, not enforced)
+17:33:19.784 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:33:22.701 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:33:23.962 [activity] operator:b95a1f page: UI · Button action
+17:33:24.961 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:33:28.685 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:33:31.736 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:33:36.183 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:33:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:34:01.155 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:34:03.218 [activity] operator:b95a1f page: UI · Button action
+17:34:03.872 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:34:05.006 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:34:07.763 [activity] operator:b95a1f page: SYSTEM · Session active
+17:34:27.455 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:34:28.423 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/keep
+17:34:28.583 [RIGHT] global points · 3 point(s)
+17:34:28.801 [RIGHT] global points · 3 point(s)
+17:34:29.040 [activity] operator:b95a1f page: SIMULATION · Button action
+17:34:29.042 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:34:29.298 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:34:30.568 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:34:32.758 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:34:37.763 [activity] operator:b95a1f page: SYSTEM · Session active
+17:35:07.764 [activity] operator:b95a1f page: SYSTEM · Session active
+17:35:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:36:07.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:36:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+17:37:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:37:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:38:07.769 [activity] operator:b95a1f page: SYSTEM · Session active
+17:38:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+17:38:41.486 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/move-start -> REFUSED: Moving the arm on the real robot needs your confirmation.
+17:38:42.286 [activity] operator:b95a1f page: ROBOT · Button action
+17:38:42.507 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:38:44.725 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/move-start
+17:38:44.982 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:38:45.045 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:38:45.054 [RIGHT] alix · pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)
+17:38:45.055 [RIGHT] alix · hand: None (the state the stroke was planned with)
+17:38:45.118 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 61, 991]; law 0.16 s)
+17:38:45.421 [RIGHT] alix · hand: settled at [1000, 1000, 1000, 1000, 61, 990] after 0.23 s (per-channel travel [0, 0, 0, 0, 0, 1])
+17:38:45.422 [RIGHT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 61, 990]. Either that channel is dead or the readback is not the device.
+17:38:45.423 [RIGHT] alix · ** right: the hand read back [1000, 1000, 1000, 1000, 61, 990] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 61 counts out, past its 25-count staging band
+17:38:45.461 [activity] operator:b95a1f page: ROBOT · Button action
+17:38:45.533 [RIGHT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 61, 990] (on the tool): done, as the control program takes it
+17:38:45.534 [RIGHT] stage {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 200 mm, hand [1000, 1000, 1000, 1000, 61, 990]
+17:38:45.678 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:38:45.708 [RIGHT] run mode REAL
+17:38:45.833 [RIGHT] alix · rest: movej to the plan's caller at speed 14 of a 100 % global ratio
+17:38:46.831 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:38:46.969 [RIGHT] move to pose {"deg": [5.13, -24.32, -17.05, 76.5, 15.21, 9.84, 81.94], "speed": 14, "restore_speed": 50} · gap 0.10500065612793108 deg
+17:38:47.219 [activity] - job move done: RIGHT to the tuned trajectory's start (R-R02)
+17:38:49.416 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/run -> REFUSED: A run on the real robot needs your confirmation.
+17:38:50.214 [activity] operator:b95a1f page: UI · Button action
+17:38:50.432 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:38:50.703 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/run -> REFUSED: Upload the trajectory first.
+17:38:50.989 [RIGHT] global points · 3 point(s)
+17:38:51.444 [activity] operator:b95a1f page: ROBOT · Button action
+17:38:51.703 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:39:03.416 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/upload -> REFUSED: R_TASK_1C_trajectory_trim_mean_scale_processed.txt breaks L2 Joint speed 1.31 x limit (limit 1 x limit); L3 Joint acceleration 1781 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 11.92 mm (limit 10 mm). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+17:39:04.208 [activity] operator:b95a1f page: TRAJECTORY · Button action
+17:39:04.428 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:39:05.453 [RIGHT] program list · 2 programs
+17:39:05.460 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/upload
+17:39:05.543 [RIGHT] rm_upload · upload R-R02_v001.txt: 3005 points, 158.9 KB -> slot 3 on 192.168.1.103
+17:39:05.544 [RIGHT] rm_upload ·   slot 3 now: empty
+17:39:05.997 [activity] operator:b95a1f page: UI · Button action
+17:39:06.267 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:39:07.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:39:10.094 [RIGHT] rm_upload ·   sent: ret=0 err_line=-1
+17:39:10.286 [RIGHT] rm_upload ·   VERIFIED: slot 3 holds '3_R-R02_v001.txt', 162739 bytes (sent 162739)
+17:39:10.533 [RIGHT] upload {"program_id": 3, "file": "v001.txt", "bytes": 162739} ret=0 (5.073 s)
+17:39:10.685 [activity] - job upload done: Upload R-R02 to program 3
+17:39:11.540 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:39:12.248 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/run -> REFUSED: A run on the real robot needs your confirmation.
+17:39:13.043 [activity] operator:b95a1f page: UI · Button action
+17:39:13.256 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:39:14.677 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/run
+17:39:14.991 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:39:15.079 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:39:15.091 [RIGHT] alix · pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)
+17:39:15.092 [RIGHT] alix · hand: None (the state the stroke was planned with)
+17:39:15.155 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 60, 990]; law 0.16 s)
+17:39:15.409 [activity] operator:b95a1f page: ROBOT · Button action
+17:39:15.443 [RIGHT] alix · hand: settled at [1000, 1000, 1000, 1000, 61, 991] after 0.21 s (per-channel travel [0, 0, 0, 0, 2, 1])
+17:39:15.444 [RIGHT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 61, 991]. Either that channel is dead or the readback is not the device.
+17:39:15.445 [RIGHT] alix · ** right: the hand read back [1000, 1000, 1000, 1000, 61, 991] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 61 counts out, past its 25-count staging band
+17:39:15.578 [RIGHT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 61, 991] (on the tool): done, as the control program takes it
+17:39:15.583 [RIGHT] stage {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 200 mm, hand [1000, 1000, 1000, 1000, 61, 991]
+17:39:15.625 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:39:15.983 [RIGHT] program list · 3 programs
+17:39:16.105 [RIGHT] run mode REAL
+17:39:16.216 [RIGHT] rm_upload · run slot 3 (3_R-R02_v001.txt) on 192.168.1.103; transit speed 14 %
+17:39:16.217 [RIGHT] rm_upload ·   the controller first moves the arm to the program's first point: up to 0.0 deg on J5
+17:39:18.046 [RIGHT] rm_upload ·   running (1.8 s)
+17:39:18.630 [RIGHT] rm_upload ·   !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 2.4 s
+17:39:35.723 [RIGHT] rm_upload ·   global speed restored to 50 % (ret=0)
+17:39:35.731 [RIGHT] rm_upload ·   RUN COMPLETE: 19.5 s, no error
+17:39:35.831 [RIGHT] run {"program_id": 3, "points": 3005, "transit_speed": 14, "restore_speed": 50} ret=0 (19.725 s)
+17:39:35.939 [activity] - job run done: Real run R-R02
+17:39:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+17:39:42.505 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R02/verdict
+17:39:43.341 [LEFT] global points · 3 point(s)
+17:39:43.617 [activity] operator:b95a1f page: UI · Button action
+17:39:43.627 [activity] operator:b95a1f page: TEACH · Operator decision
+17:39:43.628 [activity] operator:b95a1f page: NAVIGATION · Task loaded
+17:39:43.667 [activity] operator:b95a1f page: SETUP · Arm selected
+17:39:43.694 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:39:43.625 [LEFT] global points · 3 point(s)
+17:39:43.693 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:39:43.706 [activity] operator:b95a1f page: NAVIGATION · Open screen
+17:39:43.763 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:39:43.960 [LEFT] global points · 3 point(s)
+17:39:47.672 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:39:55.018 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:40:07.758 [activity] operator:b95a1f page: SYSTEM · Session active
+17:40:37.765 [activity] operator:b95a1f page: SYSTEM · Session active
+17:41:07.758 [activity] operator:b95a1f page: SYSTEM · Session active
+17:41:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+17:42:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+17:42:37.763 [activity] operator:b95a1f page: SYSTEM · Session active
+17:42:43.322 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:42:51.839 [RIGHT] global points · 3 point(s)
+17:42:52.427 [activity] operator:b95a1f page: SETUP · Arm selected
+17:42:52.678 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:42:53.927 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:42:55.223 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/setup -> REFUSED: Moving the pole on the real robot needs your confirmation.
+17:42:56.027 [activity] operator:b95a1f page: UI · Button action
+17:42:56.240 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:42:56.850 [RIGHT] alix · pole: 200 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 4.59 s, timeout 13.8 s)
+17:42:56.878 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/setup
+17:42:57.464 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:42:57.466 [activity] operator:b95a1f page: ROBOT · Button action
+17:42:57.864 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:00.525 [RIGHT] alix · pole: at 51 mm after 3.66 s (verified_by=getter, moved 149 mm through 59 distinct readings)
+17:43:00.611 [RIGHT] pole move {"mm": 50.0, "speed_pct": 50} ret=0 (3.661 s) · final 0.051 m, verified by getter
+17:43:00.614 [activity] - job pole done: Pole R-R03: 50 mm
+17:43:02.600 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:03.393 [activity] operator:b95a1f page: ROBOT · Input updated
+17:43:03.582 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/setup -> REFUSED: Moving the pole on the real robot needs your confirmation.
+17:43:04.251 [activity] operator:b95a1f page: ROBOT · Setting changed
+17:43:04.253 [activity] operator:b95a1f page: UI · Button action
+17:43:04.599 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:04.904 [RIGHT] alix · pole: 50 mm -> 200 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 6.58 s, timeout 19.8 s)
+17:43:04.941 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/setup
+17:43:05.745 [activity] operator:b95a1f page: ROBOT · Button action
+17:43:05.866 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:07.829 [activity] operator:b95a1f page: SYSTEM · Session active
+17:43:08.607 [RIGHT] alix · pole: at 198 mm after 3.70 s (verified_by=getter, moved 148 mm through 56 distinct readings)
+17:43:08.711 [RIGHT] pole move {"mm": 200.0, "speed_pct": 50} ret=0 (3.699 s) · final 0.198 m, verified by getter
+17:43:08.713 [activity] - job pole done: Pole R-R03: 200 mm
+17:43:12.081 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/setup -> REFUSED: Moving the hand on the real robot needs your confirmation.
+17:43:12.508 [activity] operator:b95a1f page: ROBOT · Setting changed
+17:43:12.519 [activity] operator:b95a1f page: UI · Button action
+17:43:12.520 [activity] operator:b95a1f page: ROBOT · Input updated
+17:43:13.180 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:13.908 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/setup
+17:43:14.210 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:43:14.281 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:43:14.348 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 61, 992]; law 0.16 s)
+17:43:14.603 [activity] operator:b95a1f page: ROBOT · Button action
+17:43:14.649 [RIGHT] alix · hand: settled at [1000, 1000, 1000, 1000, 61, 992] after 0.23 s (per-channel travel [0, 0, 0, 0, 1, 0])
+17:43:14.650 [RIGHT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 61, 992]. Either that channel is dead or the readback is not the device.
+17:43:14.733 [RIGHT] hand move {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500} ret=0 (0.226 s) · read back [1000, 1000, 1000, 1000, 61, 992] (settled short of the target: stopped on force)
+17:43:14.735 [activity] - job hand done: Hand R-R03: cleaning pose
+17:43:14.822 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:16.895 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:43:19.014 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:19.794 [activity] operator:b95a1f page: UI · Input updated
+17:43:19.794 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:43:20.631 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/placement/task
+17:43:21.293 [activity] operator:b95a1f page: UI · Setting changed
+17:43:21.294 [activity] operator:b95a1f page: SETUP · Button action
+17:43:21.642 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:25.095 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:43:25.975 [activity] operator:b95a1f page: ROBOT · Button action
+17:43:26.209 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+17:43:41.951 [activity] operator:b95a1f page: SETUP · Button action
+17:43:42.213 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:42.864 [RIGHT] capture pose {"joints_deg": [6.078, -13.179, -17.784, 72.126, 14.399, 4.939, 92.848], "pose": [0.665757, -0.078587, -0.260266, 2.652, 0.039, 1.241], "pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 62, 992]}
+17:43:43.589 [activity] operator:b95a1f page: UI · Button action
+17:43:43.797 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:46.980 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:47.769 [activity] operator:b95a1f page: UI · Input updated
+17:43:48.857 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:49.681 [activity] operator:b95a1f page: UI · Input updated
+17:43:52.494 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:53.286 [activity] operator:b95a1f page: UI · Input updated
+17:43:54.555 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:55.408 [activity] operator:b95a1f page: UI · Input updated
+17:43:56.513 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:57.299 [activity] operator:b95a1f page: UI · Input updated
+17:43:58.581 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:59.381 [activity] operator:b95a1f page: UI · Input updated
+17:44:00.209 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:00.993 [activity] operator:b95a1f page: UI · Input updated
+17:44:01.400 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:02.189 [activity] operator:b95a1f page: UI · Input updated
+17:44:03.192 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:03.981 [activity] operator:b95a1f page: UI · Input updated
+17:44:04.213 [RIGHT] capture pose {"joints_deg": [6.079, -13.18, -17.788, 72.125, 14.399, 4.941, 92.846], "pose": [0.665766, -0.078605, -0.26025, 2.652, 0.039, 1.241], "pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 62, 992]}
+17:44:04.824 [activity] operator:b95a1f page: UI · Setting changed
+17:44:04.825 [activity] operator:b95a1f page: UI · Button action
+17:44:05.142 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:05.274 [RIGHT] add global point {"name": "R_HNG_STP", "joints_deg": [6.079, -13.183, -17.785, 72.125, 14.399, 4.941, 92.848], "pose": [0.66578, -0.07859, -0.26023, 2.652, 0.038, 1.241], "work_frame": "World", "tool_frame": "Arm_Tip"} ret=0 (0.347 s) · read back: 0.001 deg
+17:44:05.276 [activity] operator:b95a1f POST /api/robots/right/points/save
+17:44:05.543 [RIGHT] global points · 4 point(s)
+17:44:05.730 [activity] operator:b95a1f page: UI · Button action
+17:44:05.947 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:07.783 [activity] operator:b95a1f page: SYSTEM · Session active
+17:44:07.783 [activity] operator:b95a1f page: UI · Button action
+17:44:08.121 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:11.016 [activity] operator:b95a1f page: ROBOT · Button action
+17:44:11.241 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:13.980 [activity] operator:b95a1f page: SETUP · Setting changed
+17:44:14.192 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:14.862 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:44:21.428 [activity] operator:b95a1f POST /api/robots/right/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+17:44:22.228 [activity] operator:b95a1f page: ROBOT · Button action
+17:44:22.439 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:23.000 [activity] operator:b95a1f POST /api/robots/right/points/move
+17:44:23.132 [RIGHT] run mode REAL
+17:44:23.319 [RIGHT] runner v14 · GLOBAL MOVE START: R_HNG_STP // MOVEJ // speed 14%
+17:44:23.738 [activity] operator:b95a1f page: ROBOT · Button action
+17:44:23.985 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:24.085 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HNG_STP // MOVEJ
+17:44:24.108 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:44:24.205 [RIGHT] movej global point {"name": "R_HNG_STP", "speed": 14, "wait_s": 0.0} ret=0 (1.071 s) · gap 0.09 deg
+17:44:24.351 [activity] - job move done: RIGHT MoveJ to R_HNG_STP
+17:44:37.809 [activity] operator:b95a1f page: SYSTEM · Session active
+17:45:07.799 [activity] operator:b95a1f page: SYSTEM · Session active
+17:45:20.940 [activity] operator:b95a1f page: TEACH · Button action
+17:45:20.941 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:45:21.309 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:45:24.304 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:45:27.494 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:45:30.621 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:45:37.801 [activity] operator:b95a1f page: SYSTEM · Session active
+17:46:07.790 [activity] operator:b95a1f page: SYSTEM · Session active
+17:46:37.801 [activity] operator:b95a1f page: SYSTEM · Session active
+17:47:07.783 [activity] operator:b95a1f page: SYSTEM · Session active
+17:47:25.841 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/teach/start -> REFUSED: Drag teaching on the real robot needs your confirmation.
+17:47:26.636 [activity] operator:b95a1f page: TEACH · Button action
+17:47:26.860 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:47:27.418 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/teach/start
+17:47:28.271 [activity] operator:b95a1f page: ROBOT · Button action
+17:47:28.499 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:47:32.432 [RIGHT] rm_start_drag_teach [1] ret=0 (0.011 s)
+17:47:32.545 [activity] - job teach done: Drag teaching on the RIGHT arm in 5 s
+17:47:34.035 [activity] operator:b95a1f page: TEACH · Drag recording started
+17:47:37.911 [activity] operator:b95a1f page: SYSTEM · Session active
+17:48:08.093 [activity] operator:b95a1f page: SYSTEM · Session active
+17:48:28.249 [RIGHT] rm_stop_drag_teach [] ret=0 (0.007 s)
+17:48:29.038 [activity] operator:b95a1f page: TEACH · Button action
+17:48:29.359 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:48:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:48:43.847 [RIGHT] rm_save_trajectory ["/tmp/lite-teach-n0kl42sj/right_drag_20261017_174828.txt"] ret=0 (15.597 s)
+17:48:44.193 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/teach/stop
+17:48:50.655 [activity] operator:b95a1f page: TEACH · Button action
+17:48:50.657 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:48:51.343 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:48:54.449 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:48:58.160 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:48:58.562 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:49:02.379 [activity] operator:b95a1f page: SIMULATION · Button action
+17:49:02.380 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:49:02.598 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:49:05.929 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:49:05.930 [activity] operator:b95a1f page: TEACH · Button action
+17:49:05.930 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:49:06.515 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:49:07.930 [activity] operator:b95a1f page: SYSTEM · Session active
+17:49:09.652 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:49:10.435 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/collisions
+17:49:11.239 [activity] operator:b95a1f page: SAFETY · Button action
+17:49:11.563 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:49:13.290 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:49:18.373 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:49:21.570 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:49:37.787 [activity] operator:b95a1f page: SYSTEM · Session active
+17:49:47.297 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:49:50.808 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:50:00.613 [activity] - job collisions done: Checking 10,775 lines of R_TASK_2_trajectory.txt for collisions
+17:50:07.803 [activity] operator:b95a1f page: SYSTEM · Session active
+17:50:32.747 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:50:36.725 [activity] operator:b95a1f page: UI · Button action
+17:50:36.944 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:38.033 [activity] operator:b95a1f page: SYSTEM · Session active
+17:50:38.966 [activity] operator:b95a1f page: UI · Button action
+17:50:39.082 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:41.085 [activity] operator:b95a1f page: UI · Button action
+17:50:41.302 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:42.927 [activity] operator:b95a1f page: UI · Button action
+17:50:43.161 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:44.660 [activity] operator:b95a1f page: UI · Button action
+17:50:44.882 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:46.829 [activity] operator:b95a1f page: UI · Button action
+17:50:46.830 [activity] operator:b95a1f page: UI · Button action
+17:50:47.054 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:47.713 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:50.061 [activity] operator:b95a1f page: SIMULATION · Button action
+17:50:50.061 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:50:50.335 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:51.618 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:51:02.342 [activity] operator:b95a1f page: SETUP · Button action
+17:51:02.625 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:05.684 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:51:07.803 [activity] operator:b95a1f page: SYSTEM · Session active
+17:51:13.318 [activity] operator:b95a1f page: TRAJECTORY · Button action
+17:51:14.490 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:17.537 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:51:20.867 [activity] operator:b95a1f page: UI · Button action
+17:51:20.868 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:51:21.106 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:29.716 [activity] operator:b95a1f page: UI · Button action
+17:51:30.015 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:37.821 [activity] operator:b95a1f page: SYSTEM · Session active
+17:51:39.312 [activity] operator:b95a1f page: UI · Button action
+17:51:39.458 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:41.507 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/settings
+17:51:42.299 [activity] operator:b95a1f page: UI · Button action
+17:51:42.504 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:44.330 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/optimise
+17:51:45.041 [activity] - job optimise done: Tune R-R03 (breaks L1 Joint limits -7.22 deg (limit 0.5 deg); L2 Joint speed 1.44 x limit (limit 1 x limit); L3 Joint acceleration 2622 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 16.68 mm (limit 10 mm), shown, not enforced)
+17:51:45.139 [activity] operator:b95a1f page: UI · Button action
+17:51:45.140 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:51:45.720 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:51.540 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:51:51.561 [activity] operator:b95a1f page: UI · Button action
+17:51:52.890 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:55.502 [activity] operator:b95a1f page: UI · Button action
+17:51:55.524 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:56.722 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:51:59.952 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:52:07.850 [activity] operator:b95a1f page: SYSTEM · Session active
+17:52:15.539 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:52:16.033 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/keep
+17:52:16.200 [RIGHT] global points · 4 point(s)
+17:52:16.429 [RIGHT] global points · 4 point(s)
+17:52:16.708 [activity] operator:b95a1f page: SIMULATION · Button action
+17:52:16.710 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:52:16.907 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:18.628 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:52:20.707 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:21.493 [activity] operator:b95a1f page: ROBOT · Input updated
+17:52:26.152 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:26.283 [activity] operator:b95a1f page: ROBOT · Setting changed
+17:52:26.491 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/upload -> REFUSED: R_TASK_2_trajectory_trim_mean_scale_processed.txt breaks L1 Joint limits -7.22 deg (limit 0.5 deg); L2 Joint speed 1.44 x limit (limit 1 x limit); L3 Joint acceleration 2622 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 16.68 mm (limit 10 mm). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+17:52:27.279 [activity] operator:b95a1f page: TRAJECTORY · Button action
+17:52:27.494 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:28.225 [RIGHT] program list · 3 programs
+17:52:28.229 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/upload
+17:52:28.296 [RIGHT] rm_upload · upload R-R03_v001.txt: 2992 points, 162.5 KB -> slot 4 on 192.168.1.103
+17:52:28.297 [RIGHT] rm_upload ·   slot 4 now: empty
+17:52:28.837 [activity] operator:b95a1f page: UI · Button action
+17:52:29.061 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:33.017 [RIGHT] rm_upload ·   sent: ret=0 err_line=-1
+17:52:33.102 [RIGHT] rm_upload ·   VERIFIED: slot 4 holds '4_R-R03_v001.txt', 166438 bytes (sent 166438)
+17:52:33.213 [RIGHT] upload {"program_id": 4, "file": "v001.txt", "bytes": 166438} ret=0 (4.975 s)
+17:52:33.251 [activity] - job upload done: Upload R-R03 to program 4
+17:52:33.949 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:52:43.455 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/move-start -> REFUSED: Moving the arm on the real robot needs your confirmation.
+17:52:44.256 [activity] operator:b95a1f page: ROBOT · Button action
+17:52:44.473 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:45.044 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/move-start
+17:52:45.488 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:52:45.579 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:52:45.585 [RIGHT] alix · pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)
+17:52:45.587 [RIGHT] alix · hand: None (the state the stroke was planned with)
+17:52:45.649 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 57, 996]; law 0.16 s)
+17:52:45.790 [activity] operator:b95a1f page: ROBOT · Button action
+17:52:45.936 [RIGHT] alix · hand: settled at [1000, 1000, 1000, 1000, 59, 984] after 0.22 s (per-channel travel [0, 0, 0, 0, 2, 12])
+17:52:45.938 [RIGHT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 59, 984]. Either that channel is dead or the readback is not the device.
+17:52:45.938 [RIGHT] alix · ** right: the hand read back [1000, 1000, 1000, 1000, 59, 984] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 59 counts out, past its 25-count staging band
+17:52:46.004 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:46.041 [RIGHT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 59, 984] (on the tool): done, as the control program takes it
+17:52:46.043 [RIGHT] stage {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 200 mm, hand [1000, 1000, 1000, 1000, 59, 984]
+17:52:46.256 [RIGHT] run mode REAL
+17:52:46.257 [RIGHT] alix · rest: movej to the plan's caller at speed 14 of a 100 % global ratio
+17:52:49.785 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:52:49.896 [RIGHT] move to pose {"deg": [6.08, -13.18, -17.78, 72.12, 14.4, 4.94, 92.84], "speed": 14, "restore_speed": 50} · gap 0.039000389099120625 deg
+17:52:50.023 [activity] - job move done: RIGHT to the tuned trajectory's start (R-R03)
+17:52:50.795 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/run -> REFUSED: A run on the real robot needs your confirmation.
+17:52:51.592 [activity] operator:b95a1f page: UI · Button action
+17:52:51.844 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:52.299 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/run
+17:52:52.569 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:52:52.651 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:52:52.657 [RIGHT] alix · pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)
+17:52:52.657 [RIGHT] alix · hand: None (the state the stroke was planned with)
+17:52:52.707 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 57, 984]; law 0.16 s)
+17:52:52.996 [RIGHT] alix · hand: settled at [1000, 1000, 1000, 1000, 57, 986] after 0.23 s (per-channel travel [0, 0, 0, 0, 0, 2])
+17:52:52.998 [RIGHT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 57, 986]. Either that channel is dead or the readback is not the device.
+17:52:52.999 [RIGHT] alix · ** right: the hand read back [1000, 1000, 1000, 1000, 57, 986] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 57 counts out, past its 25-count staging band
+17:52:53.021 [activity] operator:b95a1f page: ROBOT · Button action
+17:52:53.096 [RIGHT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 57, 986] (on the tool): done, as the control program takes it
+17:52:53.096 [RIGHT] stage {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 200 mm, hand [1000, 1000, 1000, 1000, 57, 986]
+17:52:53.214 [RIGHT] program list · 4 programs
+17:52:53.326 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:53.332 [RIGHT] run mode REAL
+17:52:53.377 [RIGHT] rm_upload · run slot 4 (4_R-R03_v001.txt) on 192.168.1.103; transit speed 14 %
+17:52:53.378 [RIGHT] rm_upload ·   the controller first moves the arm to the program's first point: up to 0.0 deg on J5
+17:52:54.540 [RIGHT] rm_upload ·   running (1.1 s)
+17:52:55.652 [RIGHT] rm_upload ·   !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 2.2 s
+17:53:07.795 [activity] operator:b95a1f page: SYSTEM · Session active
+17:53:12.869 [RIGHT] rm_upload ·   global speed restored to 50 % (ret=0)
+17:53:12.876 [RIGHT] rm_upload ·   RUN COMPLETE: 19.5 s, no error
+17:53:12.996 [RIGHT] run {"program_id": 4, "points": 2992, "transit_speed": 14, "restore_speed": 50} ret=0 (19.663 s)
+17:53:13.196 [activity] - job run done: Real run R-R03
+17:53:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:54:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+17:54:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+17:55:07.764 [activity] operator:b95a1f page: SYSTEM · Session active
+17:55:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:55:53.745 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/verdict
+17:55:54.157 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:55.196 [activity] operator:b95a1f page: TUNING · Button action
+17:55:55.219 [activity] operator:b95a1f page: TEACH · Operator decision
+17:55:55.240 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:55:55.242 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:00.241 [activity] operator:b95a1f page: UI · Button action
+17:56:00.241 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:56:00.413 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:02.831 [activity] operator:b95a1f page: UI · Button action
+17:56:03.068 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:07.245 [activity] operator:b95a1f page: UI · Button action
+17:56:07.246 [activity] operator:b95a1f page: SYSTEM · Session active
+17:56:07.571 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:09.631 [activity] operator:b95a1f page: UI · Button action
+17:56:09.870 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:15.462 [activity] operator:b95a1f page: UI · Button action
+17:56:15.675 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:16.909 [activity] operator:b95a1f page: UI · Button action
+17:56:17.124 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:18.726 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:19.811 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:20.486 [activity] operator:b95a1f page: UI · Button action
+17:56:20.692 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:23.484 [activity] operator:b95a1f page: UI · Button action
+17:56:23.703 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:27.721 [activity] operator:b95a1f page: UI · Button action
+17:56:27.983 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:28.986 [activity] operator:b95a1f page: UI · Button action
+17:56:29.204 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:35.848 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:37.057 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:37.769 [activity] operator:b95a1f page: SYSTEM · Session active
+17:56:37.772 [activity] operator:b95a1f page: UI · Button action
+17:56:38.174 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:52.211 [activity] operator:b95a1f page: UI · Button action
+17:56:52.444 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:53.904 [activity] operator:b95a1f page: UI · Button action
+17:56:54.195 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:55.695 [activity] operator:b95a1f page: UI · Button action
+17:56:55.867 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:56.904 [activity] operator:b95a1f page: UI · Button action
+17:56:57.195 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:01.186 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:03.224 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:03.836 [activity] operator:b95a1f page: TUNING · Input updated
+17:57:03.836 [activity] operator:b95a1f page: TUNING · Input updated
+17:57:05.859 [activity] operator:b95a1f page: TUNING · Setting changed
+17:57:06.228 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:07.866 [activity] operator:b95a1f page: SYSTEM · Session active
+17:57:07.867 [activity] operator:b95a1f page: TUNING · Input updated
+17:57:08.008 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:08.800 [activity] operator:b95a1f page: TUNING · Input updated
+17:57:10.757 [activity] operator:b95a1f page: TUNING · Setting changed
+17:57:12.232 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:12.517 [activity] operator:b95a1f page: TUNING · Input updated
+17:57:12.520 [activity] operator:b95a1f page: TUNING · Input updated
+17:57:14.108 [activity] operator:b95a1f page: TUNING · Setting changed
+17:57:14.459 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:15.560 [activity] operator:b95a1f page: TUNING · Button action
+17:57:15.839 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:16.224 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/settings
+17:57:16.892 [activity] operator:b95a1f page: UI · Button action
+17:57:17.110 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:19.525 [activity] operator:b95a1f page: UI · Button action
+17:57:19.689 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:20.470 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/optimise
+17:57:21.275 [activity] operator:b95a1f page: UI · Button action
+17:57:21.284 [activity] - job optimise done: Tune R-R03 (breaks L1 Joint limits -3.66 deg (limit 0.5 deg); L2 Joint speed 1.44 x limit (limit 1 x limit); L3 Joint acceleration 3200 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 16.68 mm (limit 10 mm), shown, not enforced)
+17:57:21.441 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:22.573 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:57:28.800 [activity] operator:b95a1f page: UI · Button action
+17:57:29.821 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:30.604 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:57:34.586 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/keep
+17:57:34.739 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:57:34.741 [activity] operator:b95a1f page: SIMULATION · Button action
+17:57:34.930 [RIGHT] global points · 4 point(s)
+17:57:35.273 [RIGHT] global points · 4 point(s)
+17:57:35.379 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:35.591 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+17:57:37.487 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/run -> REFUSED: A run on the real robot needs your confirmation.
+17:57:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:57:37.765 [activity] operator:b95a1f page: UI · Button action
+17:57:38.503 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:38.674 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/run -> REFUSED: Program 4 does not hold this region's current version.
+17:57:38.840 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+17:57:38.841 [activity] operator:b95a1f page: ROBOT · Button action
+17:57:39.626 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:43.516 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/upload -> REFUSED: R_TASK_2_trajectory_trim_mean_scale_processed_2.txt breaks L1 Joint limits -3.66 deg (limit 0.5 deg); L2 Joint speed 1.44 x limit (limit 1 x limit); L3 Joint acceleration 3200 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 16.68 mm (limit 10 mm). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+17:57:44.300 [activity] operator:b95a1f page: TRAJECTORY · Button action
+17:57:44.517 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:48.331 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/upload -> REFUSED: Program 4 on the RIGHT controller already holds “R-R03_v001”.
+17:57:49.058 [activity] operator:b95a1f page: UI · Button action
+17:57:49.279 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:51.541 [RIGHT] program list · 4 programs
+17:57:51.543 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/upload
+17:57:51.593 [RIGHT] rm_upload · upload R-R03_v002.txt: 2935 points, 159.4 KB -> slot 4 on 192.168.1.103
+17:57:51.593 [RIGHT] rm_upload ·   slot 4 now: 4_R-R03_v001.txt (162.5 KB) — it will be REPLACED
+17:57:52.070 [activity] operator:b95a1f page: UI · Button action
+17:57:52.338 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:56.083 [RIGHT] rm_upload ·   sent: ret=0 err_line=-1
+17:57:56.185 [RIGHT] rm_upload ·   VERIFIED: slot 4 holds '4_R-R03_v002.txt', 163226 bytes (sent 163226)
+17:57:56.298 [RIGHT] upload {"program_id": 4, "file": "v002.txt", "bytes": 163226} ret=0 (4.754 s)
+17:57:56.378 [activity] - job upload done: Upload R-R03 to program 4
+17:57:57.350 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:59.268 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/run -> REFUSED: A run on the real robot needs your confirmation.
+17:58:00.069 [activity] operator:b95a1f page: UI · Button action
+17:58:00.290 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:00.744 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/R-R03/run
+17:58:01.018 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:58:01.093 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:58:01.102 [RIGHT] alix · pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)
+17:58:01.102 [RIGHT] alix · hand: None (the state the stroke was planned with)
+17:58:01.153 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 59, 982]; law 0.16 s)
+17:58:01.426 [RIGHT] alix · hand: settled at [1000, 1000, 1000, 1000, 57, 982] after 0.21 s (per-channel travel [0, 0, 0, 0, 2, 1])
+17:58:01.427 [RIGHT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 57, 982]. Either that channel is dead or the readback is not the device.
+17:58:01.427 [RIGHT] alix · ** right: the hand read back [1000, 1000, 1000, 1000, 57, 982] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 57 counts out, past its 25-count staging band
+17:58:01.503 [activity] operator:b95a1f page: ROBOT · Button action
+17:58:01.519 [RIGHT] hand settled {"target": [1000, 1000, 1000, 1000, 0, 1000]} · stopped at [1000, 1000, 1000, 1000, 57, 982] (on the tool): done, as the control program takes it
+17:58:01.520 [RIGHT] stage {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50} · pole 200 mm, hand [1000, 1000, 1000, 1000, 57, 982]
+17:58:01.633 [RIGHT] program list · 4 programs
+17:58:01.705 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:01.743 [RIGHT] run mode REAL
+17:58:01.778 [RIGHT] rm_upload · run slot 4 (4_R-R03_v002.txt) on 192.168.1.103; transit speed 14 %
+17:58:01.779 [RIGHT] rm_upload ·   the controller first moves the arm to the program's first point: up to 69.1 deg on J2 — keep that path clear
+17:58:03.489 [RIGHT] rm_upload ·   running (1.7 s)
+17:58:07.812 [activity] operator:b95a1f page: SYSTEM · Session active
+17:58:08.825 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:18.580 [RIGHT] rm_upload ·   !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 16.8 s
+17:58:34.963 [RIGHT] rm_upload ·   global speed restored to 50 % (ret=0)
+17:58:34.972 [RIGHT] rm_upload ·   RUN COMPLETE: 33.2 s, no error
+17:58:35.065 [RIGHT] run {"program_id": 4, "points": 2935, "transit_speed": 14, "restore_speed": 50} ret=0 (33.321 s)
+17:58:35.174 [activity] - job run done: Real run R-R03
+17:58:35.618 [RIGHT] global points · 4 point(s)
+17:58:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+17:59:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+17:59:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:00:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:00:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:01:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+18:01:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:01:45.464 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:01:47.209 [RIGHT] global points · 4 point(s)
+18:01:47.378 [RIGHT] global points · 4 point(s)
+18:01:47.839 [activity] operator:b95a1f page: TEACH · Button action
+18:01:47.848 [activity] operator:b95a1f page: TEACH · Teach another task
+18:01:47.849 [activity] operator:b95a1f page: NAVIGATION · Task loaded
+18:01:47.849 [activity] operator:b95a1f page: SETUP · Arm selected
+18:01:47.849 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+18:01:48.265 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:51.479 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:01:54.595 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:02:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:02:10.184 [activity] operator:b95a1f page: UI · Button action
+18:02:10.400 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:12.599 [activity] operator:b95a1f page: NAVIGATION · Task loaded
+18:02:12.601 [activity] operator:b95a1f page: SETUP · Arm selected
+18:02:12.602 [activity] operator:b95a1f page: NAVIGATION · Teaching stage changed
+18:02:12.602 [activity] operator:b95a1f page: NAVIGATION · Open screen
+18:02:12.874 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:15.460 [LEFT] global points · 3 point(s)
+18:02:16.039 [activity] operator:b95a1f page: SETUP · Arm selected
+18:02:16.310 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:22.725 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:02:22.818 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:23.715 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R04/setup -> REFUSED: Moving the pole on the real robot needs your confirmation.
+18:02:23.819 [activity] operator:b95a1f page: ROBOT · Input updated
+18:02:23.820 [activity] operator:b95a1f page: ROBOT · Setting changed
+18:02:23.820 [activity] operator:b95a1f page: UI · Button action
+18:02:25.275 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:27.281 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R04/setup
+18:02:27.302 [LEFT] alix · pole: 50 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)
+18:02:27.449 [LEFT] alix · pole: at 50 mm after 0.13 s (verified_by=no_op, moved 0 mm through 1 distinct readings)
+18:02:27.548 [LEFT] pole move {"mm": 50.0, "speed_pct": 50} ret=0 (0.130 s) · final 0.05 m, verified by no_op
+18:02:27.554 [activity] - job pole done: Pole L-R04: 50 mm
+18:02:28.046 [activity] operator:b95a1f page: ROBOT · Button action
+18:02:28.231 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:30.245 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R04/setup -> REFUSED: Moving the hand on the real robot needs your confirmation.
+18:02:30.551 [activity] operator:b95a1f page: ROBOT · Setting changed
+18:02:30.552 [activity] operator:b95a1f page: UI · Button action
+18:02:30.553 [activity] operator:b95a1f page: ROBOT · Input updated
+18:02:31.266 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:32.085 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R04/setup
+18:02:32.363 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+18:02:32.445 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+18:02:32.513 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)
+18:02:32.786 [activity] operator:b95a1f page: ROBOT · Button action
+18:02:33.005 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:33.145 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 546, 987] after 0.56 s (per-channel travel [0, 0, 0, 0, 0, 1])
+18:02:33.146 [LEFT] alix · ** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 987]. Either that channel is dead or the readback is not the device.
+18:02:33.258 [LEFT] hand move {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500} ret=0 (0.561 s) · read back [1000, 1000, 1000, 1000, 546, 987] (settled short of the target: stopped on force)
+18:02:33.260 [activity] - job hand done: Hand L-R04: cleaning pose
+18:02:36.825 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:02:37.568 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/placement/task
+18:02:37.818 [activity] operator:b95a1f page: SYSTEM · Session active
+18:02:37.819 [activity] operator:b95a1f page: SETUP · Button action
+18:02:38.623 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:39.255 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/placement/room
+18:02:40.051 [activity] operator:b95a1f page: UI · Button action
+18:02:40.054 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:02:40.278 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:02:41.673 [activity] operator:b95a1f page: ROBOT · Button action
+18:02:41.893 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:03:14.126 [LEFT] controller data · 3 programs; IO default 0; tracks not available
+18:03:14.246 [LEFT] global points · 3 point(s)
+18:03:14.746 [activity] operator:b95a1f page: UI · Button action
+18:03:15.010 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:16.442 [activity] operator:b95a1f page: UI · Button action
+18:03:17.064 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:18.209 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:19.829 [activity] operator:b95a1f POST /api/auth/engineer/lock
+18:03:20.628 [activity] operator:b95a1f page: UI · Button action
+18:03:20.848 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:30.211 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:32.295 [activity] operator:b95a1f page: UI · Button action
+18:03:32.296 [activity] operator:b95a1f page: UI · Button action
+18:03:33.400 [activity] operator:b95a1f page: UI · Button action
+18:03:33.402 [activity] operator:b95a1f page: UI · Button action
+18:03:33.622 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:33.961 [activity] engineer:b95a1f POST /api/auth/engineer
+18:03:34.684 [activity] engineer:b95a1f page: UI · Button action
+18:03:34.956 [activity] engineer:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:37.758 [activity] engineer:b95a1f page: SYSTEM · Session active
+18:03:40.313 [activity] engineer:b95a1f page: NAVIGATION · Scrolled view
+18:03:42.705 [activity] operator:b95a1f POST /api/auth/engineer/lock
+18:03:43.504 [activity] operator:b95a1f page: UI · Button action
+18:03:43.723 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:46.726 [RIGHT] program list · 4 programs
+18:03:46.744 [LEFT] program list · 3 programs
+18:03:46.865 [RIGHT] global points · 4 point(s)
+18:03:46.947 [LEFT] global points · 3 point(s)
+18:03:47.231 [activity] operator:b95a1f page: SEQUENCE · Button action
+18:03:47.235 [activity] operator:b95a1f page: NAVIGATION · Open screen
+18:03:47.251 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:48.122 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:03:51.831 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:04:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:04:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:05:07.758 [activity] operator:b95a1f page: SYSTEM · Session active
+18:05:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+18:06:07.758 [activity] operator:b95a1f page: SYSTEM · Session active
+18:06:37.764 [activity] operator:b95a1f page: SYSTEM · Session active
+18:07:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:07:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:08:07.765 [activity] operator:b95a1f page: SYSTEM · Session active
+18:08:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+18:09:07.762 [activity] operator:b95a1f page: SYSTEM · Session active
+18:09:37.763 [activity] operator:b95a1f page: SYSTEM · Session active
+18:10:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:10:37.767 [activity] operator:b95a1f page: SYSTEM · Session active
+18:11:07.812 [activity] operator:b95a1f page: SYSTEM · Session active
+18:11:37.758 [activity] operator:b95a1f page: SYSTEM · Session active
+18:12:07.758 [activity] operator:b95a1f page: SYSTEM · Session active
+18:12:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:13:07.758 [activity] operator:b95a1f page: SYSTEM · Session active
+18:13:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:14:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:14:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:15:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+18:15:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:16:07.764 [activity] operator:b95a1f page: SYSTEM · Session active
+18:16:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+18:17:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+18:17:37.763 [activity] operator:b95a1f page: SYSTEM · Session active
+18:18:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:18:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:19:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+18:19:37.764 [activity] operator:b95a1f page: SYSTEM · Session active
+18:20:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:20:37.762 [activity] operator:b95a1f page: SYSTEM · Session active
+18:21:03.971 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:21:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:21:18.179 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:21:37.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:22:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+18:22:37.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:23:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:23:37.765 [activity] operator:b95a1f page: SYSTEM · Session active
+18:24:07.764 [activity] operator:b95a1f page: SYSTEM · Session active
+18:24:37.764 [activity] operator:b95a1f page: SYSTEM · Session active
+18:25:07.761 [activity] operator:b95a1f page: SYSTEM · Session active
+18:25:37.758 [activity] operator:b95a1f page: SYSTEM · Session active
+18:26:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:26:35.211 [activity] operator:b95a1f POST /api/auth/engineer/lock
+18:26:36.022 [activity] operator:b95a1f page: UI · Button action
+18:26:36.229 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:26:36.977 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:26:37.756 [activity] operator:b95a1f page: PROJECT · Button action
+18:26:37.758 [activity] operator:b95a1f page: SYSTEM · Session active
+18:26:37.970 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:26:40.048 [activity] operator:b95a1f page: PROJECT · Button action
+18:26:40.384 [LEFT] controller data · 3 programs; IO default 0; tracks not available
+18:26:40.498 [LEFT] global points · 3 point(s)
+18:26:41.008 [activity] operator:b95a1f page: UI · Button action
+18:26:41.252 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:26:42.328 [LEFT] controller data · 3 programs; IO default 0; tracks not available
+18:26:42.496 [LEFT] global points · 3 point(s)
+18:26:43.083 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:26:43.758 [LEFT] controller data · 3 programs; IO default 0; tracks not available
+18:26:43.899 [LEFT] global points · 3 point(s)
+18:26:44.498 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:26:51.958 [RIGHT] controller data · 4 programs; IO default 0; tracks not available
+18:26:52.097 [RIGHT] global points · 4 point(s)
+18:26:52.353 [activity] operator:b95a1f page: UI · Button action
+18:26:52.569 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:26:53.690 [activity] operator:b95a1f page: UI · Button action
+18:26:53.907 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:27:06.383 [activity] operator:b95a1f page: UI · Button action
+18:27:06.606 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:27:07.820 [activity] operator:b95a1f page: SYSTEM · Session active
+18:27:11.447 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:27:15.508 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:27:17.445 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:27:18.742 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:27:19.596 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:27:19.766 [activity] operator:b95a1f page: ROBOT · Setting changed
+18:27:19.767 [activity] operator:b95a1f page: ROBOT · Input updated
+18:27:21.582 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+18:27:22.127 [activity] operator:b95a1f page: ROBOT · Button action
+18:27:22.361 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:27:23.723 [LEFT] program list · 3 programs
+18:27:23.990 [RIGHT] program list · 4 programs
+18:27:24.111 [LEFT] global points · 3 point(s)
+18:27:24.268 [activity] operator:b95a1f page: SEQUENCE · Button action
+18:27:24.285 [RIGHT] global points · 4 point(s)
+18:27:24.287 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run is not the one simulated: changed since it was simulated: what is run (the sequence, the task or the arms), its steps.
+18:27:24.557 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:27:28.757 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:27:31.797 [activity] operator:b95a1f page: UI · Button action
+18:27:31.799 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:27:32.189 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:27:35.605 [activity] operator:b95a1f page: UI · Button action
+18:27:35.738 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:27:37.856 [activity] operator:b95a1f page: SYSTEM · Session active
+18:27:38.973 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/simulate
+18:27:39.167 [LEFT] program list · 3 programs
+18:27:39.558 [RIGHT] program list · 4 programs
+18:27:39.694 [LEFT] global points · 3 point(s)
+18:27:39.769 [activity] operator:b95a1f page: SEQUENCE · Button action
+18:27:39.770 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:27:39.888 [RIGHT] global points · 4 point(s)
+18:27:40.096 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:27:44.887 [activity] - job simulate done: S2 simulation (LEFT arm)
+18:27:45.525 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:27:46.210 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:27:46.332 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:27:48.134 [activity] operator:b95a1f page: UI · Button action
+18:27:48.291 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:28:07.758 [activity] operator:b95a1f page: SYSTEM · Session active
+18:28:10.740 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:28:30.206 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:28:37.765 [activity] operator:b95a1f page: SYSTEM · Session active
+18:28:39.190 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:28:42.598 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:28:47.853 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:28:55.543 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:29:07.766 [activity] operator:b95a1f page: SYSTEM · Session active
+18:29:37.764 [activity] operator:b95a1f page: SYSTEM · Session active
+18:29:55.751 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:29:59.013 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:30:02.248 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:30:05.853 [activity] operator:b95a1f page: UI · Setting changed
+18:30:05.856 [activity] operator:b95a1f page: UI · Input updated
+18:30:06.513 [activity] operator:b95a1f PUT /api/projects/alix_mvbvk1fk_zti6s
+18:30:07.759 [activity] operator:b95a1f page: SYSTEM · Session active
+18:30:10.444 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:30:37.757 [activity] operator:b95a1f page: SYSTEM · Session active
+18:31:03.083 [activity] operator:b95a1f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/played
+18:31:07.762 [activity] operator:b95a1f page: SYSTEM · Session active
+18:31:37.761 [activity] operator:b95a1f page: SYSTEM · Session active
+18:32:07.760 [activity] operator:b95a1f page: SYSTEM · Session active
+18:32:28.689 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:32:32.160 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:32:37.758 [activity] operator:b95a1f page: SYSTEM · Session active
+18:32:38.764 [activity] operator:b95a1f page: NAVIGATION · Scrolled view
+18:33:07.886 [activity] operator:b95a1f page: SYSTEM · Session active
+18:33:37.757 [activity] operator:b95a1f page: SYSTEM · Session active
+18:34:14.740 [LEFT] ALERT ERROR · LEFT: no answer from its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)
+18:34:14.740 [RIGHT] ALERT ERROR · RIGHT: no answer from its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)
+18:34:14.892 [LEFT] restore global speed {"pct": 50} ret=0
+18:34:15.010 [RIGHT] restore global speed {"pct": 50} ret=0

@@ -30,6 +30,17 @@
     "note": "",
     "mode": "real"
    }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "4321dc3d296178ee4be33046404d8397d2d57a1af14e1006dfeeed3f5e836b28",
+   "ok": true,
+   "at": "2026-10-17 16:43:17",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
   }
  ]
 }

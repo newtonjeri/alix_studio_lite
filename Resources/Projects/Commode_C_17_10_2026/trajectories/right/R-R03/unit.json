@@ -1,0 +1,241 @@
+{
+ "setup": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "applied": {
+  "pole": {
+   "pole_mm": 200.0,
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "at": "2026-10-17 17:43:08"
+  },
+  "hand": {
+   "pole_mm": 200.0,
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "at": "2026-10-17 17:43:14"
+  }
+ },
+ "active": "20261017_174844_R-R03.txt",
+ "settings": {
+  "optimiser": "manual",
+  "target_s": null,
+  "segments": [
+   {
+    "start": 1,
+    "end": 2155,
+    "pct": 29.0
+   },
+   {
+    "start": 2156,
+    "end": 4310,
+    "pct": 40.0
+   },
+   {
+    "start": 4311,
+    "end": 6465,
+    "pct": 40.0
+   },
+   {
+    "start": 6466,
+    "end": 8620,
+    "pct": 31.0
+   },
+   {
+    "start": 8621,
+    "end": 10775,
+    "pct": 45.0
+   }
+  ],
+  "smooth_window": 101,
+  "program_id": 4,
+  "max_dev_mm": null,
+  "trim": true,
+  "smooth": true,
+  "scale": true,
+  "time_mode": "fastest",
+  "idle_window": 11,
+  "idle_threshold_md": 8.0,
+  "idle_min_run": 20
+ },
+ "history": [
+  {
+   "label": "Start",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   }
+  },
+  {
+   "label": "Automatic suggestions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2155,
+      "pct": 29.0
+     },
+     {
+      "start": 2156,
+      "end": 4310,
+      "pct": 45.0
+     },
+     {
+      "start": 4311,
+      "end": 6465,
+      "pct": 45.0
+     },
+     {
+      "start": 6466,
+      "end": 8620,
+      "pct": 31.0
+     },
+     {
+      "start": 8621,
+      "end": 10775,
+      "pct": 29.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792230701.4454165
+  },
+  {
+   "label": "Program ID 4",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2155,
+      "pct": 29.0
+     },
+     {
+      "start": 2156,
+      "end": 4310,
+      "pct": 45.0
+     },
+     {
+      "start": 4311,
+      "end": 6465,
+      "pct": 45.0
+     },
+     {
+      "start": 6466,
+      "end": 8620,
+      "pct": 31.0
+     },
+     {
+      "start": 8621,
+      "end": 10775,
+      "pct": 29.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792230748.1109223
+  },
+  {
+   "label": "Automatic suggestions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2155,
+      "pct": 29.0
+     },
+     {
+      "start": 2156,
+      "end": 4310,
+      "pct": 40.0
+     },
+     {
+      "start": 4311,
+      "end": 6465,
+      "pct": 40.0
+     },
+     {
+      "start": 6466,
+      "end": 8620,
+      "pct": 31.0
+     },
+     {
+      "start": 8621,
+      "end": 10775,
+      "pct": 45.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792231036.157339
+  }
+ ],
+ "cursor": 3,
+ "version": "v002"
+}

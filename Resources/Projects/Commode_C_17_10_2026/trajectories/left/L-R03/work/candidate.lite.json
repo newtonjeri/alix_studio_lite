@@ -1,0 +1,429 @@
+{
+  "lite_sidecar": 1,
+  "written_utc": "2026-10-17T08:56:24+00:00",
+  "track_sha256": "0a543e75eb44ea0935168e760320a2a4ba42139ddfaa3a9e9cba832ac274984c",
+  "result": {
+    "optimiser": "manual",
+    "side": "left",
+    "target_s": null,
+    "achieved_s": 15.02,
+    "lines": 3005,
+    "t_min_s": null,
+    "lines_min": null,
+    "recorded_s": 34.71,
+    "met": true,
+    "uploadable": true,
+    "limits_ok": false,
+    "enforced": false,
+    "limits_text": "L3 Joint acceleration 2530 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 19.61 mm (limit 10 mm)",
+    "message": "Generated successfully.\nStages applied: Trim + Mean Smooth + Scale\nTrim: ON \u2014 8 idle region(s), 412 point(s) removed\nMean Smooth: ON \u2014 101-point centered moving mean\nScale: ON \u2014 5 region(s) applied\nFinal rows: 3005\nFinal time @ 5 ms/row: 15.020 s\nLimits (shown, not enforced: the hardware decides): L3 Joint acceleration 2530 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 19.61 mm (limit 10 mm).",
+    "hints": [],
+    "binding": []
+  },
+  "checks": {
+    "passed": false,
+    "checks": [
+      {
+        "id": "L1",
+        "name": "Joint limits",
+        "hard": true,
+        "passed": true,
+        "value": 1.91,
+        "limit": 0.5,
+        "unit": "deg",
+        "detail": "closest approach 13.1 deg (joint 3); after the predicted overshoot at turns, 1.9 deg",
+        "joint": 3,
+        "line": 1,
+        "speed_fixes": null
+      },
+      {
+        "id": "L2",
+        "name": "Joint speed",
+        "hard": true,
+        "passed": true,
+        "value": 0.934,
+        "limit": 1.0,
+        "unit": "x limit",
+        "detail": "fastest: joint 1 at 163 deg/s (limit 175) at line 151",
+        "joint": 1,
+        "line": 151,
+        "speed_fixes": null
+      },
+      {
+        "id": "L3",
+        "name": "Joint acceleration",
+        "hard": true,
+        "passed": false,
+        "value": 2530.2,
+        "limit": 612.0,
+        "unit": "deg/s^2",
+        "detail": "highest: joint 5 at 2530 deg/s^2 (20 Hz band-limited) around line 2616 (hardware limit 600 deg/s^2)",
+        "joint": 5,
+        "line": 2616,
+        "speed_fixes": true
+      },
+      {
+        "id": "L4",
+        "name": "Step size",
+        "hard": true,
+        "passed": true,
+        "value": 1.005,
+        "limit": 10.0,
+        "unit": "deg",
+        "detail": "largest: joint 5, 1.005 deg between lines 2631 and 2632",
+        "joint": 5,
+        "line": 2632,
+        "speed_fixes": null
+      },
+      {
+        "id": "L5",
+        "name": "Path accuracy",
+        "hard": true,
+        "passed": false,
+        "value": 19.61,
+        "limit": 10.0,
+        "unit": "mm",
+        "detail": "the hand stays within 19.6 mm of the taught path (p95 11.3 mm)",
+        "joint": null,
+        "line": null,
+        "speed_fixes": false
+      },
+      {
+        "id": "L6",
+        "name": "Start and end poses",
+        "hard": true,
+        "passed": true,
+        "value": 0.0,
+        "limit": 0.05,
+        "unit": "deg",
+        "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording",
+        "joint": null,
+        "line": null,
+        "speed_fixes": null
+      },
+      {
+        "id": "C1",
+        "name": "Predicted path departure (estimate)",
+        "hard": false,
+        "passed": false,
+        "value": 46.61,
+        "limit": 10.0,
+        "unit": "mm",
+        "detail": "ALIX's upload model predicts up to 47 mm (p95 26 mm). It over-reads on taught paths, so it is shown, not enforced.",
+        "joint": null,
+        "line": null,
+        "speed_fixes": null
+      },
+      {
+        "id": "C2",
+        "name": "Jerk",
+        "hard": false,
+        "passed": false,
+        "value": 1.42,
+        "limit": 1.0,
+        "unit": "x reference",
+        "detail": "peak 122037 deg/s^3 against the 1500 rad/s^3 reference (reported only)",
+        "joint": null,
+        "line": null,
+        "speed_fixes": null
+      },
+      {
+        "id": "C3",
+        "name": "Hand speed",
+        "hard": false,
+        "passed": true,
+        "value": 1.148,
+        "limit": null,
+        "unit": "m/s",
+        "detail": "top speed 1.15 m/s, typical 0.33 m/s",
+        "joint": null,
+        "line": null,
+        "speed_fixes": null
+      },
+      {
+        "id": "C4",
+        "name": "Raw line speed",
+        "hard": false,
+        "passed": true,
+        "value": 0.0,
+        "limit": 0.0,
+        "unit": "lines",
+        "detail": "no line steps faster than a joint rating",
+        "joint": null,
+        "line": null,
+        "speed_fixes": null
+      }
+    ],
+    "notes": []
+  },
+  "recipe": {
+    "optimiser": "manual",
+    "side": "left",
+    "cycle_s": 0.005,
+    "report": {
+      "sourceFile": "L_TASK_1C_trajectory.txt",
+      "generatedAt": "2026-10-17T08:56:23.730Z",
+      "selectedStages": {
+        "trim": true,
+        "meanSmooth": true,
+        "scale": true
+      },
+      "selectedStageLabel": "Trim + Mean Smooth + Scale",
+      "parameters": {
+        "sampleMs": 5.0,
+        "idleWindow": 11,
+        "idleThreshold": 8.0,
+        "idleMinRun": 20,
+        "smoothWindow": 101
+      },
+      "sourceValidRows": 6943,
+      "skippedSourceLines": [],
+      "idleRegions": [
+        {
+          "originalStartRow": 5009,
+          "originalEndRow": 5035,
+          "transitions": 26,
+          "removedPoints": 25
+        },
+        {
+          "originalStartRow": 6005,
+          "originalEndRow": 6045,
+          "transitions": 40,
+          "removedPoints": 39
+        },
+        {
+          "originalStartRow": 6086,
+          "originalEndRow": 6169,
+          "transitions": 83,
+          "removedPoints": 82
+        },
+        {
+          "originalStartRow": 6271,
+          "originalEndRow": 6298,
+          "transitions": 27,
+          "removedPoints": 26
+        },
+        {
+          "originalStartRow": 6468,
+          "originalEndRow": 6495,
+          "transitions": 27,
+          "removedPoints": 26
+        },
+        {
+          "originalStartRow": 6503,
+          "originalEndRow": 6548,
+          "transitions": 45,
+          "removedPoints": 44
+        },
+        {
+          "originalStartRow": 6586,
+          "originalEndRow": 6667,
+          "transitions": 81,
+          "removedPoints": 80
+        },
+        {
+          "originalStartRow": 6724,
+          "originalEndRow": 6815,
+          "transitions": 91,
+          "removedPoints": 90
+        }
+      ],
+      "idlePointsRemoved": 412,
+      "rowsAfterTrim": 6531,
+      "rowsAfterMeanSmooth": 6531,
+      "scalingRegions": [
+        {
+          "originalStartRow": 1,
+          "originalEndRow": 1388,
+          "trimmedStartRow": 1,
+          "trimmedEndRow": 1388,
+          "scalePct": 39,
+          "inputRows": 1388,
+          "outputRows": 542
+        },
+        {
+          "originalStartRow": 1389,
+          "originalEndRow": 2777,
+          "trimmedStartRow": 1389,
+          "trimmedEndRow": 2777,
+          "scalePct": 41,
+          "inputRows": 1389,
+          "outputRows": 570
+        },
+        {
+          "originalStartRow": 2778,
+          "originalEndRow": 4165,
+          "trimmedStartRow": 2778,
+          "trimmedEndRow": 4165,
+          "scalePct": 60,
+          "inputRows": 1388,
+          "outputRows": 833
+        },
+        {
+          "originalStartRow": 4166,
+          "originalEndRow": 5554,
+          "trimmedStartRow": 4166,
+          "trimmedEndRow": 5529,
+          "scalePct": 49,
+          "inputRows": 1364,
+          "outputRows": 669
+        },
+        {
+          "originalStartRow": 5555,
+          "originalEndRow": 6943,
+          "trimmedStartRow": 5530,
+          "trimmedEndRow": 6531,
+          "scalePct": 39,
+          "inputRows": 1002,
+          "outputRows": 391
+        }
+      ],
+      "skippedRegions": [],
+      "automaticOptimizationAnalysis": {
+        "generatedAt": "2026-10-17T08:56:23.730Z",
+        "method": "Motion-only heuristic using joint step magnitude and acceleration/change activity",
+        "contactDataAvailable": false,
+        "suggestions": [
+          {
+            "start": 1,
+            "end": 1388,
+            "avgStep": 287.66676721248024,
+            "maxStep": 1119.7669400370776,
+            "avgAccel": 109.44408935567763,
+            "originalSec": 6.94,
+            "motionType": "Approach candidate",
+            "action": "Shorter / faster",
+            "peakGuidance": "Can increase carefully",
+            "scalePct": 75,
+            "selected": true,
+            "estimatedSec": 5.205,
+            "reason": "Beginning transition candidate; typically less accuracy-sensitive than the cleaning path."
+          },
+          {
+            "start": 1389,
+            "end": 2777,
+            "avgStep": 218.0247713896385,
+            "maxStep": 581.8633860280263,
+            "avgAccel": 85.58715472329942,
+            "originalSec": 6.945,
+            "motionType": "Slow / possibly redundant",
+            "action": "Shorter / review for trim",
+            "peakGuidance": "Can increase after review",
+            "scalePct": 80,
+            "selected": true,
+            "estimatedSec": 5.556,
+            "reason": "Low average movement may contain dwell or redundant motion; review together with Trim results."
+          },
+          {
+            "start": 2778,
+            "end": 4165,
+            "avgStep": 354.15944994625664,
+            "maxStep": 998.9889889283064,
+            "avgAccel": 126.9319632330876,
+            "originalSec": 6.94,
+            "motionType": "Direction-change / high-dynamic region",
+            "action": "Longer / slower",
+            "peakGuidance": "Limit peak speed",
+            "scalePct": 115,
+            "selected": true,
+            "estimatedSec": 7.981,
+            "reason": "High acceleration/deceleration activity suggests a direction change or dynamic transition."
+          },
+          {
+            "start": 4166,
+            "end": 5554,
+            "avgStep": 293.4614655646342,
+            "maxStep": 802.6369042101167,
+            "avgAccel": 105.9380218121762,
+            "originalSec": 6.945,
+            "motionType": "General continuous motion",
+            "action": "Slightly shorter",
+            "peakGuidance": "Keep moderate",
+            "scalePct": 95,
+            "selected": true,
+            "estimatedSec": 6.59775,
+            "reason": "Balanced motion region; use a conservative reduction and review in simulation."
+          },
+          {
+            "start": 5555,
+            "end": 6943,
+            "avgStep": 99.81102963345161,
+            "maxStep": 918.9107682468413,
+            "avgAccel": 37.09792989762334,
+            "originalSec": 6.945,
+            "motionType": "Exit candidate",
+            "action": "Shorter / faster",
+            "peakGuidance": "Can increase carefully",
+            "scalePct": 75,
+            "selected": true,
+            "estimatedSec": 5.20875,
+            "reason": "End transition candidate; move away from the work area efficiently."
+          }
+        ]
+      },
+      "finalRows": 3005,
+      "originalTimeSeconds": 34.71,
+      "afterTrimTimeSeconds": 32.65,
+      "afterMeanSmoothTimeSeconds": 32.65,
+      "finalTimeSeconds": 15.02,
+      "endpointPreserved": {
+        "first": true,
+        "last": true
+      },
+      "outputName": "L_TASK_1C_trajectory_trim_mean_scale_processed.txt"
+    },
+    "enforced": false,
+    "plan": {
+      "kept_lines": 6531,
+      "trimmed_lines": 412,
+      "smooth_window": 101,
+      "segments": [
+        {
+          "originalStartRow": 1,
+          "originalEndRow": 1388,
+          "trimmedStartRow": 1,
+          "trimmedEndRow": 1388,
+          "scalePct": 39,
+          "inputRows": 1388,
+          "outputRows": 542
+        },
+        {
+          "originalStartRow": 1389,
+          "originalEndRow": 2777,
+          "trimmedStartRow": 1389,
+          "trimmedEndRow": 2777,
+          "scalePct": 41,
+          "inputRows": 1389,
+          "outputRows": 570
+        },
+        {
+          "originalStartRow": 2778,
+          "originalEndRow": 4165,
+          "trimmedStartRow": 2778,
+          "trimmedEndRow": 4165,
+          "scalePct": 60,
+          "inputRows": 1388,
+          "outputRows": 833
+        },
+        {
+          "originalStartRow": 4166,
+          "originalEndRow": 5554,
+          "trimmedStartRow": 4166,
+          "trimmedEndRow": 5529,
+          "scalePct": 49,
+          "inputRows": 1364,
+          "outputRows": 669
+        },
+        {
+          "originalStartRow": 5555,
+          "originalEndRow": 6943,
+          "trimmedStartRow": 5530,
+          "trimmedEndRow": 6531,
+          "scalePct": 39,
+          "inputRows": 1002,
+          "outputRows": 391
+        }
+      ]
+    }
+  }
+}

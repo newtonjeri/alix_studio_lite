@@ -874,3 +874,425 @@
 {"t": 1792225557.2007737, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "1 point(s)"}
 {"t": 1792225675.419241, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1792225675.5711107, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792226184.0414267, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792226184.1585877, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792226184.3220549, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "1 point(s)"}
+{"t": 1792226184.4503903, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "1 point(s)"}
+{"t": 1792226184.756684, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792226184.8415537, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792226185.0706367, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792226190.2297242, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 50 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)"}
+{"t": 1792226190.2980769, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 50 mm after 0.06 s (verified_by=no_op, moved 0 mm through 1 distinct readings)"}
+{"t": 1792226190.3897448, "side": "left", "verb": "pole move", "args": {"mm": 50.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 0.061, "text": "final 0.05 m, verified by no_op"}
+{"t": 1792226192.5976276, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792226192.673668, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792226192.7273188, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)"}
+{"t": 1792226193.3685029, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 546, 986] after 0.56 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792226193.3696349, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 986]. Either that channel is dead or the readback is not the device."}
+{"t": 1792226193.4644678, "side": "left", "verb": "hand move", "args": {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.564, "text": "read back [1000, 1000, 1000, 1000, 546, 986] (settled short of the target: stopped on force)"}
+{"t": 1792226212.3736904, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-112.394, -13.955, 160.22, 15.426, -53.062, 66.33, 104.249], "pose": [0.696682, 0.146198, -0.238391, 2.99, 0.005, 1.769], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792226213.01786, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-112.392, -13.955, 160.219, 15.426, -53.062, 66.33, 104.25], "pose": [0.696683, 0.1462, -0.238389, 2.99, 0.005, 1.769], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792226245.5491638, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-112.394, -13.955, 160.217, 15.424, -53.063, 66.33, 104.251], "pose": [0.69669, 0.146183, -0.23839, 2.99, 0.005, 1.769], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792226254.2724211, "side": "left", "verb": "add global point", "args": {"name": "L_BSL_STP", "joints_deg": [-112.394, -13.956, 160.22, 15.426, -53.062, 66.332, 104.251], "pose": [0.69667, 0.14621, -0.2384, 2.99, 0.005, 1.769], "work_frame": "World", "tool_frame": "Arm_Tip"}, "ret": 0, "ok": true, "elapsed_s": 0.3, "text": "read back: 0.001 deg"}
+{"t": 1792226254.484065, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792226278.305376, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.035, "text": null}
+{"t": 1792226312.287424, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.004, "text": null}
+{"t": 1792226322.0410144, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-frh7rjos/left_drag_20261017_163832.txt"], "ret": 0, "ok": true, "elapsed_s": 9.752, "text": null}
+{"t": 1792226512.8642292, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792226513.0901213, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792226521.1963298, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "1 programs"}
+{"t": 1792226521.366948, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload L-R02_v001.txt: 2999 points, 174.3 KB -> slot 2 on 192.168.1.10"}
+{"t": 1792226521.3673944, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 2 now: empty"}
+{"t": 1792226526.210597, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792226526.3204634, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 2 holds '2_L-R02_v001.txt', 178504 bytes (sent 178504)"}
+{"t": 1792226526.4809291, "side": "left", "verb": "upload", "args": {"program_id": 2, "file": "v001.txt", "bytes": 178504}, "ret": 0, "ok": true, "elapsed_s": 5.282, "text": null}
+{"t": 1792226539.0074615, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792226539.0817218, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792226539.0904613, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)"}
+{"t": 1792226539.0912814, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792226539.1598365, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 986]; law 0.52 s)"}
+{"t": 1792226539.7986183, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 546, 987] after 0.57 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792226539.7991028, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 987]. Either that channel is dead or the readback is not the device."}
+{"t": 1792226539.7995133, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** left: the hand read back [1000, 1000, 1000, 1000, 546, 987] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band"}
+{"t": 1792226539.8917818, "side": "left", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 546, 987] (on the tool): done, as the control program takes it"}
+{"t": 1792226539.8933077, "side": "left", "verb": "stage", "args": {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 987]"}
+{"t": 1792226540.0029871, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792226540.0037925, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 50 of a 100 % global ratio"}
+{"t": 1792226540.8827431, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792226540.9997203, "side": "left", "verb": "move to pose", "args": {"deg": [-112.4, -13.95, 160.22, 15.42, -53.11, 66.33, 104.25], "speed": 50, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.3240002899169916 deg"}
+{"t": 1792226544.605592, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792226544.6954618, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792226544.7033105, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)"}
+{"t": 1792226544.704076, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792226544.768762, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 986]; law 0.52 s)"}
+{"t": 1792226545.4302416, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 546, 986] after 0.57 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792226545.4310246, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 986]. Either that channel is dead or the readback is not the device."}
+{"t": 1792226545.4316552, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** left: the hand read back [1000, 1000, 1000, 1000, 546, 986] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band"}
+{"t": 1792226545.5229683, "side": "left", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 546, 986] (on the tool): done, as the control program takes it"}
+{"t": 1792226545.5244603, "side": "left", "verb": "stage", "args": {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 986]"}
+{"t": 1792226545.677185, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792226545.953343, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792226546.0625377, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 2 (2_L-R02_v001.txt) on 192.168.1.10; transit speed 50 %"}
+{"t": 1792226546.0632408, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.0 deg on J5"}
+{"t": 1792226548.1486583, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (2.1 s)"}
+{"t": 1792226565.842163, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792226565.8557038, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 19.8 s, no error"}
+{"t": 1792226565.9416633, "side": "left", "verb": "run", "args": {"program_id": 2, "points": 2999, "transit_speed": 50, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 19.987, "text": null}
+{"t": 1792226571.6222801, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792226571.8044076, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792226598.0706437, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792226598.545463, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792226598.8472211, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792226619.8049088, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 50 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)"}
+{"t": 1792226619.8903985, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 50 mm after 0.07 s (verified_by=no_op, moved 0 mm through 1 distinct readings)"}
+{"t": 1792226619.985257, "side": "left", "verb": "pole move", "args": {"mm": 50.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 0.066, "text": "final 0.05 m, verified by no_op"}
+{"t": 1792226623.4774334, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792226623.5633621, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792226623.6296463, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)"}
+{"t": 1792226624.2534964, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 546, 986] after 0.55 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792226624.2540529, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 986]. Either that channel is dead or the readback is not the device."}
+{"t": 1792226624.4478629, "side": "left", "verb": "hand move", "args": {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.546, "text": "read back [1000, 1000, 1000, 1000, 546, 986] (settled short of the target: stopped on force)"}
+{"t": 1792226970.3924708, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-94.276, 1.039, 164.895, 47.977, -64.915, 87.08, 110.545], "pose": [0.594765, 0.141248, -0.206023, -2.883, -0.116, 1.956], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792226971.0980816, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-94.275, 1.04, 164.897, 47.977, -64.915, 87.079, 110.547], "pose": [0.594771, 0.141257, -0.206013, -2.883, -0.116, 1.956], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792226983.7258039, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-94.276, 1.038, 164.895, 47.975, -64.915, 87.081, 110.548], "pose": [0.594763, 0.141252, -0.206022, -2.883, -0.116, 1.956], "pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 546, 987]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792226984.380682, "side": "left", "verb": "add global point", "args": {"name": "SD_EXT_STP", "joints_deg": [-94.275, 1.038, 164.896, 47.978, -64.915, 87.08, 110.547], "pose": [0.59476, 0.14127, -0.20602, -2.883, -0.116, 1.956], "work_frame": "World", "tool_frame": "Arm_Tip"}, "ret": 0, "ok": true, "elapsed_s": 0.331, "text": "read back: 0.001 deg"}
+{"t": 1792226984.5426528, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792227011.5574179, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792227011.6356895, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: SD_EXT_STP // MOVEJ // speed 50%"}
+{"t": 1792227011.8474555, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: SD_EXT_STP // MOVEJ"}
+{"t": 1792227011.8774233, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792227011.9948852, "side": "left", "verb": "movej global point", "args": {"name": "SD_EXT_STP", "speed": 50, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 0.437, "text": "gap 0.08 deg"}
+{"t": 1792227083.0823088, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.03, "text": null}
+{"t": 1792227119.0440521, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.013, "text": null}
+{"t": 1792227129.9026024, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-0nc8grh7/left_drag_20261017_165158.txt"], "ret": 0, "ok": true, "elapsed_s": 10.858, "text": null}
+{"t": 1792227447.9257004, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792227448.151222, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792227479.919826, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792227480.0989008, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload L-R03_v001.txt: 3005 points, 167.1 KB -> slot 3 on 192.168.1.10"}
+{"t": 1792227480.0993223, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 3 now: empty"}
+{"t": 1792227484.6601233, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792227484.694465, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 3 holds '3_L-R03_v001.txt', 171065 bytes (sent 171065)"}
+{"t": 1792227484.8016887, "side": "left", "verb": "upload", "args": {"program_id": 3, "file": "v001.txt", "bytes": 171065}, "ret": 0, "ok": true, "elapsed_s": 4.872, "text": null}
+{"t": 1792227492.5974095, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792227492.6813626, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792227492.688656, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)"}
+{"t": 1792227492.6892014, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792227492.7486804, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)"}
+{"t": 1792227493.4057238, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 546, 988] after 0.58 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792227493.407078, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 988]. Either that channel is dead or the readback is not the device."}
+{"t": 1792227493.4073992, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** left: the hand read back [1000, 1000, 1000, 1000, 546, 988] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band"}
+{"t": 1792227493.5528245, "side": "left", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 546, 988] (on the tool): done, as the control program takes it"}
+{"t": 1792227493.553787, "side": "left", "verb": "stage", "args": {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 988]"}
+{"t": 1792227493.7587223, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792227493.759798, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 14 of a 100 % global ratio"}
+{"t": 1792227498.9493806, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792227499.052108, "side": "left", "verb": "move to pose", "args": {"deg": [-94.27, 1.03, 164.89, 47.98, -65.0, 87.12, 110.55], "speed": 14, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.09299963378906284 deg"}
+{"t": 1792227502.188687, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792227502.2808595, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792227502.2870204, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)"}
+{"t": 1792227502.2877908, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792227502.3364627, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)"}
+{"t": 1792227502.9657714, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 546, 987] after 0.57 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792227502.966259, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 987]. Either that channel is dead or the readback is not the device."}
+{"t": 1792227502.966557, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** left: the hand read back [1000, 1000, 1000, 1000, 546, 987] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band"}
+{"t": 1792227503.0728872, "side": "left", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 546, 987] (on the tool): done, as the control program takes it"}
+{"t": 1792227503.074484, "side": "left", "verb": "stage", "args": {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 987]"}
+{"t": 1792227503.204102, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792227503.4539206, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792227503.6736434, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 3 (3_L-R03_v001.txt) on 192.168.1.10; transit speed 14 %"}
+{"t": 1792227503.6743727, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.0 deg on J5"}
+{"t": 1792227505.517498, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.8 s)"}
+{"t": 1792227523.633991, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792227523.6464844, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 20.0 s, no error"}
+{"t": 1792227523.7885945, "side": "left", "verb": "run", "args": {"program_id": 3, "points": 3005, "transit_speed": 14, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 20.334, "text": null}
+{"t": 1792227524.4046364, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792227533.7038782, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792227533.783222, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792227533.7904553, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)"}
+{"t": 1792227533.7912748, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792227533.8536167, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 986]; law 0.52 s)"}
+{"t": 1792227534.477882, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 546, 986] after 0.55 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792227534.4783237, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 986]. Either that channel is dead or the readback is not the device."}
+{"t": 1792227534.4785285, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** left: the hand read back [1000, 1000, 1000, 1000, 546, 986] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 546 counts out, past its 25-count staging band"}
+{"t": 1792227534.5684297, "side": "left", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 546, 986] (on the tool): done, as the control program takes it"}
+{"t": 1792227534.5688922, "side": "left", "verb": "stage", "args": {"pole_mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 50 mm, hand [1000, 1000, 1000, 1000, 546, 986]"}
+{"t": 1792227534.705356, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792227534.816548, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792227534.8748693, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 3 (3_L-R03_v001.txt) on 192.168.1.10; transit speed 14 %"}
+{"t": 1792227534.8752732, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 142.2 deg on J3 — keep that path clear"}
+{"t": 1792227535.68646, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (0.8 s)"}
+{"t": 1792227576.7129736, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792227576.7382243, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 41.9 s, no error"}
+{"t": 1792227576.8384812, "side": "left", "verb": "run", "args": {"program_id": 3, "points": 3005, "transit_speed": 14, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 42.021, "text": null}
+{"t": 1792227583.0088112, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792227583.1740215, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792227806.614394, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 200 mm -> 200 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)"}
+{"t": 1792227806.6958084, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 200 mm after 0.06 s (verified_by=no_op, moved 0 mm through 1 distinct readings)"}
+{"t": 1792227806.7970014, "side": "right", "verb": "pole move", "args": {"mm": 200.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 0.059, "text": "final 0.2 m, verified by no_op"}
+{"t": 1792227812.1554167, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792227812.238622, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792227812.3061426, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 60, 964]; law 0.16 s)"}
+{"t": 1792227812.5955791, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 60, 987] after 0.22 s (per-channel travel [0, 0, 0, 0, 0, 24])"}
+{"t": 1792227812.596057, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 60, 987]. Either that channel is dead or the readback is not the device."}
+{"t": 1792227812.7120857, "side": "right", "verb": "hand move", "args": {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.219, "text": "read back [1000, 1000, 1000, 1000, 60, 987] (settled short of the target: stopped on force)"}
+{"t": 1792227834.8768213, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792227892.1552627, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792227894.1526413, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228004.6095905, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 200 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.53 s, timeout 7.6 s)"}
+{"t": 1792228006.3293939, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 151 mm after 1.71 s (verified_by=getter, moved 49 mm through 24 distinct readings)"}
+{"t": 1792228006.432994, "side": "right", "verb": "pole move", "args": {"mm": 150.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 1.708, "text": "final 0.151 m, verified by getter"}
+{"t": 1792228012.3795397, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 150 mm -> 200 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 3.19 s, timeout 9.6 s)"}
+{"t": 1792228014.07161, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 198 mm after 1.68 s (verified_by=getter, moved 48 mm through 25 distinct readings)"}
+{"t": 1792228014.185654, "side": "right", "verb": "pole move", "args": {"mm": 200.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 1.685, "text": "final 0.198 m, verified by getter"}
+{"t": 1792228419.7599282, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228419.844654, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228420.0185947, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228420.105106, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228437.9230373, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228437.9759016, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228438.1216195, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228438.17207, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228439.0386827, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228439.059529, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228439.1566265, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228439.1773965, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228457.6006308, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228457.8524587, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228457.9885747, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228458.127318, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228482.140555, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228482.360049, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228482.4840546, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228482.6596599, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228572.2703807, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228572.4914913, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228572.6481535, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228572.7773771, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228666.3891466, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228666.676583, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228666.8037672, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228667.0726817, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228672.9543955, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228673.1494477, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228673.2932618, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228673.4315429, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228736.853773, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228737.275331, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228772.245658, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228772.419229, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228772.5589821, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228772.7193854, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228772.8452163, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228776.2245133, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792228776.4233358, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228776.6009552, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792228776.7359111, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 point(s)"}
+{"t": 1792228777.0195358, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792228777.1294625, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792228777.1313667, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 14%"}
+{"t": 1792228777.1357026, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1792228777.3164213, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. PROGRAM: Program 2 2_R-R01_PART2_v001.txt // start/transit 30% // stored trajectory timing"}
+{"t": 1792228777.3580604, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 14% // ret=0"}
+{"t": 1792228777.3596601, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/1: PROGRAM"}
+{"t": 1792228777.4294717, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 1/1: slot 2 (2_R-R01_PART2_v001.txt) // START/TRANSIT 30% // stored trajectory timing // overall 14%"}
+{"t": 1792228779.1724808, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 1/1: slot 2 // start ack 1.734 s"}
+{"t": 1792228802.7089825, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 1/1: 23.545 s"}
+{"t": 1792228802.711839, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 1/1: 0.130 s"}
+{"t": 1792228802.7121994, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/1: PROGRAM"}
+{"t": 1792228802.7125108, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 1/1 step(s), 25.4 s"}
+{"t": 1792228802.7424712, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1792228802.8338716, "side": "right", "verb": "workflow", "args": {"steps": 1, "overall_speed": 14, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 25.703, "text": null}
+{"t": 1792228803.1546898, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792229153.8912637, "side": "right", "verb": "capture pose", "args": {"joints_deg": [5.126, -24.325, -17.07, 76.517, 15.207, 9.841, 81.944], "pose": [0.673118, -0.082855, -0.197729, 2.633, 0.084, 1.362], "pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 60, 995]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792229155.9288778, "side": "right", "verb": "add global point", "args": {"name": "LD_TP_STP_P2", "joints_deg": [5.126, -24.32, -17.071, 76.517, 15.206, 9.841, 81.944], "pose": [0.6731, -0.08286, -0.19776, 2.633, 0.084, 1.362], "work_frame": "World", "tool_frame": "Arm_Tip"}, "ret": 0, "ok": true, "elapsed_s": 0.391, "text": "read back: 0.001 deg"}
+{"t": 1792229156.1922932, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792229188.5095515, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792229188.791702, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: LD_TP_STP_P2 // MOVEJ // speed 14%"}
+{"t": 1792229189.6600394, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: LD_TP_STP_P2 // MOVEJ"}
+{"t": 1792229189.695759, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792229189.8334925, "side": "right", "verb": "movej global point", "args": {"name": "LD_TP_STP_P2", "speed": 14, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.323, "text": "gap 0.09 deg"}
+{"t": 1792229366.7772255, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792229366.878486, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: LD_TP_STP_P2 // MOVEJ // speed 14%"}
+{"t": 1792229366.9404476, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: LD_TP_STP_P2 // MOVEJ"}
+{"t": 1792229366.971704, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792229367.1298707, "side": "right", "verb": "movej global point", "args": {"name": "LD_TP_STP_P2", "speed": 14, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 0.352, "text": "gap 0.00 deg"}
+{"t": 1792229409.133156, "side": "right", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.038, "text": null}
+{"t": 1792229444.7077396, "side": "right", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.013, "text": null}
+{"t": 1792229454.9766135, "side": "right", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-yv7kpme8/right_drag_20261017_173044.txt"], "ret": 0, "ok": true, "elapsed_s": 10.267, "text": null}
+{"t": 1792229668.5833838, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792229668.8017013, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792229924.982071, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792229925.0455513, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792229925.0548303, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)"}
+{"t": 1792229925.055439, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792229925.1186147, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 61, 991]; law 0.16 s)"}
+{"t": 1792229925.4217036, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 61, 990] after 0.23 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792229925.4222598, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 61, 990]. Either that channel is dead or the readback is not the device."}
+{"t": 1792229925.4230182, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** right: the hand read back [1000, 1000, 1000, 1000, 61, 990] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 61 counts out, past its 25-count staging band"}
+{"t": 1792229925.533661, "side": "right", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 61, 990] (on the tool): done, as the control program takes it"}
+{"t": 1792229925.5341315, "side": "right", "verb": "stage", "args": {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 200 mm, hand [1000, 1000, 1000, 1000, 61, 990]"}
+{"t": 1792229925.7084491, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792229925.8331778, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 14 of a 100 % global ratio"}
+{"t": 1792229926.8314488, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792229926.969749, "side": "right", "verb": "move to pose", "args": {"deg": [5.13, -24.32, -17.05, 76.5, 15.21, 9.84, 81.94], "speed": 14, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.10500065612793108 deg"}
+{"t": 1792229930.9898212, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792229945.4536474, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "2 programs"}
+{"t": 1792229945.5436835, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload R-R02_v001.txt: 3005 points, 158.9 KB -> slot 3 on 192.168.1.103"}
+{"t": 1792229945.5442703, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 3 now: empty"}
+{"t": 1792229950.0945876, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792229950.2867286, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 3 holds '3_R-R02_v001.txt', 162739 bytes (sent 162739)"}
+{"t": 1792229950.5332615, "side": "right", "verb": "upload", "args": {"program_id": 3, "file": "v001.txt", "bytes": 162739}, "ret": 0, "ok": true, "elapsed_s": 5.073, "text": null}
+{"t": 1792229954.9911401, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792229955.0797744, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792229955.0917284, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)"}
+{"t": 1792229955.092242, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792229955.155189, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 60, 990]; law 0.16 s)"}
+{"t": 1792229955.4434967, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 61, 991] after 0.21 s (per-channel travel [0, 0, 0, 0, 2, 1])"}
+{"t": 1792229955.444677, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 61, 991]. Either that channel is dead or the readback is not the device."}
+{"t": 1792229955.4455059, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** right: the hand read back [1000, 1000, 1000, 1000, 61, 991] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 61 counts out, past its 25-count staging band"}
+{"t": 1792229955.5787923, "side": "right", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 61, 991] (on the tool): done, as the control program takes it"}
+{"t": 1792229955.5832565, "side": "right", "verb": "stage", "args": {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 200 mm, hand [1000, 1000, 1000, 1000, 61, 991]"}
+{"t": 1792229955.983694, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792229956.1059964, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792229956.2169697, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 3 (3_R-R02_v001.txt) on 192.168.1.103; transit speed 14 %"}
+{"t": 1792229956.2178538, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.0 deg on J5"}
+{"t": 1792229958.0468616, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.8 s)"}
+{"t": 1792229958.6304555, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 2.4 s"}
+{"t": 1792229975.7236362, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792229975.7314277, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 19.5 s, no error"}
+{"t": 1792229975.8312306, "side": "right", "verb": "run", "args": {"program_id": 3, "points": 3005, "transit_speed": 14, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 19.725, "text": null}
+{"t": 1792229983.3411536, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792229983.6254506, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792229983.9605794, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792230171.839564, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792230176.8500578, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 200 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 4.59 s, timeout 13.8 s)"}
+{"t": 1792230180.5257778, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 51 mm after 3.66 s (verified_by=getter, moved 149 mm through 59 distinct readings)"}
+{"t": 1792230180.611509, "side": "right", "verb": "pole move", "args": {"mm": 50.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 3.661, "text": "final 0.051 m, verified by getter"}
+{"t": 1792230184.9043372, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 50 mm -> 200 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 6.58 s, timeout 19.8 s)"}
+{"t": 1792230188.6075528, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 198 mm after 3.70 s (verified_by=getter, moved 148 mm through 56 distinct readings)"}
+{"t": 1792230188.7118149, "side": "right", "verb": "pole move", "args": {"mm": 200.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 3.699, "text": "final 0.198 m, verified by getter"}
+{"t": 1792230194.210035, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792230194.2815204, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792230194.348747, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 61, 992]; law 0.16 s)"}
+{"t": 1792230194.6497607, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 61, 992] after 0.23 s (per-channel travel [0, 0, 0, 0, 1, 0])"}
+{"t": 1792230194.6504204, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 61, 992]. Either that channel is dead or the readback is not the device."}
+{"t": 1792230194.733216, "side": "right", "verb": "hand move", "args": {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.226, "text": "read back [1000, 1000, 1000, 1000, 61, 992] (settled short of the target: stopped on force)"}
+{"t": 1792230222.8642895, "side": "right", "verb": "capture pose", "args": {"joints_deg": [6.078, -13.179, -17.784, 72.126, 14.399, 4.939, 92.848], "pose": [0.665757, -0.078587, -0.260266, 2.652, 0.039, 1.241], "pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 62, 992]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792230244.2138314, "side": "right", "verb": "capture pose", "args": {"joints_deg": [6.079, -13.18, -17.788, 72.125, 14.399, 4.941, 92.846], "pose": [0.665766, -0.078605, -0.26025, 2.652, 0.039, 1.241], "pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 62, 992]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792230245.2746348, "side": "right", "verb": "add global point", "args": {"name": "R_HNG_STP", "joints_deg": [6.079, -13.183, -17.785, 72.125, 14.399, 4.941, 92.848], "pose": [0.66578, -0.07859, -0.26023, 2.652, 0.038, 1.241], "work_frame": "World", "tool_frame": "Arm_Tip"}, "ret": 0, "ok": true, "elapsed_s": 0.347, "text": "read back: 0.001 deg"}
+{"t": 1792230245.5430925, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792230263.1329858, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792230263.3190167, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_HNG_STP // MOVEJ // speed 14%"}
+{"t": 1792230264.0851314, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_HNG_STP // MOVEJ"}
+{"t": 1792230264.1083884, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792230264.2050993, "side": "right", "verb": "movej global point", "args": {"name": "R_HNG_STP", "speed": 14, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.071, "text": "gap 0.09 deg"}
+{"t": 1792230452.4323287, "side": "right", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.011, "text": null}
+{"t": 1792230508.2495067, "side": "right", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.007, "text": null}
+{"t": 1792230523.8471148, "side": "right", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-n0kl42sj/right_drag_20261017_174828.txt"], "ret": 0, "ok": true, "elapsed_s": 15.597, "text": null}
+{"t": 1792230736.2003732, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792230736.4296932, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792230748.2255871, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792230748.2964847, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload R-R03_v001.txt: 2992 points, 162.5 KB -> slot 4 on 192.168.1.103"}
+{"t": 1792230748.2973888, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 4 now: empty"}
+{"t": 1792230753.0174334, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792230753.102691, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 4 holds '4_R-R03_v001.txt', 166438 bytes (sent 166438)"}
+{"t": 1792230753.2138982, "side": "right", "verb": "upload", "args": {"program_id": 4, "file": "v001.txt", "bytes": 166438}, "ret": 0, "ok": true, "elapsed_s": 4.975, "text": null}
+{"t": 1792230765.4885437, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792230765.5799634, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792230765.5859208, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)"}
+{"t": 1792230765.5875046, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792230765.6492875, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 57, 996]; law 0.16 s)"}
+{"t": 1792230765.9368513, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 59, 984] after 0.22 s (per-channel travel [0, 0, 0, 0, 2, 12])"}
+{"t": 1792230765.9381464, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 59, 984]. Either that channel is dead or the readback is not the device."}
+{"t": 1792230765.9384844, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** right: the hand read back [1000, 1000, 1000, 1000, 59, 984] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 59 counts out, past its 25-count staging band"}
+{"t": 1792230766.0417771, "side": "right", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 59, 984] (on the tool): done, as the control program takes it"}
+{"t": 1792230766.0434654, "side": "right", "verb": "stage", "args": {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 200 mm, hand [1000, 1000, 1000, 1000, 59, 984]"}
+{"t": 1792230766.256608, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792230766.2573228, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 14 of a 100 % global ratio"}
+{"t": 1792230769.7857742, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792230769.8967242, "side": "right", "verb": "move to pose", "args": {"deg": [6.08, -13.18, -17.78, 72.12, 14.4, 4.94, 92.84], "speed": 14, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.039000389099120625 deg"}
+{"t": 1792230772.5697105, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792230772.6514, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792230772.6573453, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)"}
+{"t": 1792230772.6579392, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792230772.7078123, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 57, 984]; law 0.16 s)"}
+{"t": 1792230772.9967155, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 57, 986] after 0.23 s (per-channel travel [0, 0, 0, 0, 0, 2])"}
+{"t": 1792230772.9985256, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 57, 986]. Either that channel is dead or the readback is not the device."}
+{"t": 1792230772.9992356, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** right: the hand read back [1000, 1000, 1000, 1000, 57, 986] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 57 counts out, past its 25-count staging band"}
+{"t": 1792230773.096084, "side": "right", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 57, 986] (on the tool): done, as the control program takes it"}
+{"t": 1792230773.096707, "side": "right", "verb": "stage", "args": {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 200 mm, hand [1000, 1000, 1000, 1000, 57, 986]"}
+{"t": 1792230773.2144315, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 programs"}
+{"t": 1792230773.3327074, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792230773.3774793, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 4 (4_R-R03_v001.txt) on 192.168.1.103; transit speed 14 %"}
+{"t": 1792230773.3786488, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.0 deg on J5"}
+{"t": 1792230774.540867, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.1 s)"}
+{"t": 1792230775.6527116, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 2.2 s"}
+{"t": 1792230792.8696039, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792230792.8767295, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 19.5 s, no error"}
+{"t": 1792230792.9963336, "side": "right", "verb": "run", "args": {"program_id": 4, "points": 2992, "transit_speed": 14, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 19.663, "text": null}
+{"t": 1792231054.9307327, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792231055.2735229, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792231071.5411544, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 programs"}
+{"t": 1792231071.5930104, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload R-R03_v002.txt: 2935 points, 159.4 KB -> slot 4 on 192.168.1.103"}
+{"t": 1792231071.5932999, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 4 now: 4_R-R03_v001.txt (162.5 KB) — it will be REPLACED"}
+{"t": 1792231076.083244, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792231076.185864, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 4 holds '4_R-R03_v002.txt', 163226 bytes (sent 163226)"}
+{"t": 1792231076.2982948, "side": "right", "verb": "upload", "args": {"program_id": 4, "file": "v002.txt", "bytes": 163226}, "ret": 0, "ok": true, "elapsed_s": 4.754, "text": null}
+{"t": 1792231081.0186925, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792231081.0935693, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792231081.1024065, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 200 mm, the plan's 200 mm (within 5 mm, read from the getter)"}
+{"t": 1792231081.1029062, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792231081.1530375, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 59, 982]; law 0.16 s)"}
+{"t": 1792231081.4263422, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 57, 982] after 0.21 s (per-channel travel [0, 0, 0, 0, 2, 1])"}
+{"t": 1792231081.4271362, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 57, 982]. Either that channel is dead or the readback is not the device."}
+{"t": 1792231081.4275393, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** right: the hand read back [1000, 1000, 1000, 1000, 57, 982] against a commanded [1000, 1000, 1000, 1000, 0, 1000] — channel 5 is 57 counts out, past its 25-count staging band"}
+{"t": 1792231081.5196066, "side": "right", "verb": "hand settled", "args": {"target": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [1000, 1000, 1000, 1000, 57, 982] (on the tool): done, as the control program takes it"}
+{"t": 1792231081.5204868, "side": "right", "verb": "stage", "args": {"pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 200 mm, hand [1000, 1000, 1000, 1000, 57, 982]"}
+{"t": 1792231081.6338909, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 programs"}
+{"t": 1792231081.7434323, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792231081.7781794, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 4 (4_R-R03_v002.txt) on 192.168.1.103; transit speed 14 %"}
+{"t": 1792231081.7797296, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 69.1 deg on J2 — keep that path clear"}
+{"t": 1792231083.4890935, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.7 s)"}
+{"t": 1792231098.5807602, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 16.8 s"}
+{"t": 1792231114.9634764, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792231114.9727826, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 33.2 s, no error"}
+{"t": 1792231115.0656738, "side": "right", "verb": "run", "args": {"program_id": 4, "points": 2935, "transit_speed": 14, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 33.321, "text": null}
+{"t": 1792231115.6189117, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792231307.2096815, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792231307.3787181, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792231335.4609509, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792231347.302096, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 50 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)"}
+{"t": 1792231347.4497247, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 50 mm after 0.13 s (verified_by=no_op, moved 0 mm through 1 distinct readings)"}
+{"t": 1792231347.5486968, "side": "left", "verb": "pole move", "args": {"mm": 50.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 0.13, "text": "final 0.05 m, verified by no_op"}
+{"t": 1792231352.3634272, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792231352.4452806, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792231352.5134964, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 546, 987]; law 0.52 s)"}
+{"t": 1792231353.145784, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 546, 987] after 0.56 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792231353.1469178, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [1000, 1000, 1000, 1000, 0, 1000], readback [1000, 1000, 1000, 1000, 546, 987]. Either that channel is dead or the readback is not the device."}
+{"t": 1792231353.2587054, "side": "left", "verb": "hand move", "args": {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.561, "text": "read back [1000, 1000, 1000, 1000, 546, 987] (settled short of the target: stopped on force)"}
+{"t": 1792231394.1263962, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs; IO default 0; tracks not available"}
+{"t": 1792231394.2466633, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792231426.7268639, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 programs"}
+{"t": 1792231426.7446163, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792231426.8651268, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792231426.9477012, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792232800.384163, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs; IO default 0; tracks not available"}
+{"t": 1792232800.4985142, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792232802.3281453, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs; IO default 0; tracks not available"}
+{"t": 1792232802.4960694, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792232803.7587783, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs; IO default 0; tracks not available"}
+{"t": 1792232803.8997838, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792232811.9584665, "side": "right", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 programs; IO default 0; tracks not available"}
+{"t": 1792232812.0975933, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792232843.7236407, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792232843.9906788, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 programs"}
+{"t": 1792232844.111574, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792232844.2855818, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792232859.1671457, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 programs"}
+{"t": 1792232859.5584333, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 programs"}
+{"t": 1792232859.694778, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "3 point(s)"}
+{"t": 1792232859.8881588, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "4 point(s)"}
+{"t": 1792233254.7400744, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT: no answer from its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792233254.7404494, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: no answer from its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792233254.8924618, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792233255.0107162, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}

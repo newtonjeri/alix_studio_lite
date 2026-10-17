@@ -1,3 +1,43 @@
 {
- "active": "20261017_120634_L-R04.txt"
+ "active": "20261017_120634_L-R04.txt",
+ "setup": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "applied": {
+  "pole": {
+   "pole_mm": 50.0,
+   "hand": [
+    500,
+    500,
+    500,
+    500,
+    null,
+    null
+   ],
+   "at": "2026-10-17 18:02:27"
+  },
+  "hand": {
+   "pole_mm": 50.0,
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "at": "2026-10-17 18:02:33"
+  }
+ }
 }

@@ -1,26 +1,23 @@
 {
- "left": [],
+ "left": [
+  {
+   "type": "program",
+   "id": 3,
+   "name": "L-R03_v001",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  }
+ ],
  "right": [
   {
    "type": "program",
-   "id": 1,
-   "name": "R-R01_PART1_v003",
+   "id": 2,
+   "name": "R-R01_PART2_v001",
    "speed": 100,
    "transit_speed": 30,
    "dual_rule": "TOGETHER"
-  },
-  {
-   "type": "program",
-   "id": 80,
-   "name": "R-R01_PART1_v002",
-   "speed": 100,
-   "transit_speed": 30,
-   "dual_rule": "TOGETHER"
-  },
-  {
-   "type": "pole",
-   "mm": 300.0
   }
  ],
- "updated": "2026-10-17 14:58:10"
+ "updated": "2026-10-17 18:27:21"
 }
