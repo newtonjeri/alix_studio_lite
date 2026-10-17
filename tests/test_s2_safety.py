@@ -36,7 +36,7 @@ class FakeLink:
         self.side, self.ip, self.handle = "left", "192.168.1.10", SimpleNamespace(robot=robot)
 
     @contextmanager
-    def busy(self, what):
+    def busy(self, what, wait_s=None, expect_s=None):
         yield
 
 

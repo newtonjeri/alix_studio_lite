@@ -205,7 +205,7 @@ class StandInRobot:
         self.faults = {s: set() for s in ARMS}         # engineer test: {"pole", "hand"} fail to arrive
         # the speed slider (the owner, 15 Oct): every MoveJ / MoveL Lite sends, both arms; and each arm's
         # controller speed found when it was connected, put back after every move and when Lite lets go
-        self.speed_pct = staging.SPEED_FOUND_PCT
+        self.speed_pct = staging.DEFAULT_MOVE_PCT        # 15 % until the operator moves the slider (the owner, 17 Oct)
         staging.set_move_pct(self.speed_pct)
         self.speed_found = {s: None for s in ARMS}      # side -> the global speed found (None: not reported)
         self.sens_found = {s: None for s in ARMS}       # side -> the drag sensitivity found (None: not reported)
@@ -388,6 +388,10 @@ class StandInRobot:
             out[s] = a.view() | {"faults": sorted(self.faults[s])}
             if s in self.links:
                 out[s]["link"] = self.links[s].view()
+                out[s]["quality"] = out[s]["link"]["quality"]
+            else:                                       # the arm indicator (the owner, 17 Oct): no controller linked
+                out[s]["quality"] = dict(level="none", text="not connected to its controller" if self.link_kind or not a.connected
+                                         else "the stand-in robot: no controller")
         return out
 
     def arm(self, side: str) -> StandInArm:
@@ -515,15 +519,13 @@ class StandInRobot:
         return self.speed_view()
 
     def _read_speed(self, side: str) -> None:
-        """On connecting: the controller's global speed, when it says (the slider starts there when it
-        is the first arm connected); else the 50 % that ALIX and the runner leave."""
+        """On connecting: the controller's global speed, when it says, else the 50 % that ALIX and the
+        runner leave; it is what the controller gets back after each move. The slider stays where it is
+        (15 % when Lite starts: the owner, 17 Oct)."""
         real = self._real(side)
         got = real.read_speed() if real is not None else None
-        first = not any(self.arms[o].connected for o in ARMS if o != side)
         with self.lock:
             self.speed_found[side] = got
-            if first:
-                self.set_speed(self.found_speed(side))
         if self.log is not None:
             self.log.activity(f"{side.upper()} global speed " + (f"read: {got} %" if got is not None else
                               f"not reported by the controller: taken as {staging.SPEED_FOUND_PCT} %")
@@ -1277,6 +1279,39 @@ class StandInRobot:
 
         return self._start("move", title, work, side, mode)
 
+    def run_stored(self, side: str, program_id: int, title: str, mode: str | None = None):
+        """A program the arm's controller holds, run as the control program's RUN runs a slot (Advanced
+        Robot Controls; the owner, 17 Oct: "running a saved program ... a project in a certain slot"): the
+        controller moves the arm to the program's first point, then plays it; the pole and the hand stay as
+        they are (nothing is staged). Any program in the slot, sent by Lite or not; in Hardware sim the
+        controller runs it in its SIM mode (the arm stays still), in Real on the arm."""
+        mode = mode or self.mode
+        pid, a, S = int(program_id), self.arm(side), side.upper()
+        if not 1 <= pid <= 100:
+            raise UserError("Program numbers are 1 to 100.")
+        dry = mode != "real"
+
+        def work(job):
+            self._same_mode(mode, "the program did not start")
+            real = self._real(side)
+            if real is None:                            # the stand-in: what Lite sent to it
+                prog = a.programs.get(pid)
+                if not prog:
+                    raise UserError(f"Program {pid} is empty on the {S} arm.", "Upload a file to it first.")
+                dur = max(int(prog.get("lines") or 2) - 1, 0) * 0.005
+                t0, wall = time.time(), _s(dur)
+                while (el := time.time() - t0) < wall:
+                    job.progress(f"Running program {pid}" + (" (Hardware sim: the arm stays still)" if dry else ""),
+                                 int(1000 * el / wall), 1000)
+                    job.sleep(min(0.1, wall))
+                return dict(program_id=pid, dry_run=dry, seconds=round(dur, 1))
+            mine = a.programs.get(pid)                  # Lite's record, when it sent this very program: its length is known
+            held = next((x for x in real.programs() if int(x["id"]) == pid and x.get("name")), None)
+            prog = dict(mine) if mine and held and self._same_program(mine, held) else dict(lines=None, first_row=None)
+            return self._run_real(job, real, side, pid, prog, dry, None, stored=True)
+
+        return self._start("run", title, work, side, mode)
+
     def playback(self, side: str, lines: int, *, dry_run: bool, title: str, stage: "staging.Stage",
                  mode: str | None = None):
         """Stage the pole and hand, move to a recording's start, then replay it: (lines - 1) x 5 ms."""
@@ -1304,7 +1339,7 @@ class StandInRobot:
 
         return self._start("playback", title, work, side, mode)
 
-    def _run_real(self, job, real, side: str, pid: int, prog: dict, dry_run: bool, on_done) -> dict:
+    def _run_real(self, job, real, side: str, pid: int, prog: dict, dry_run: bool, on_done, stored: bool = False) -> dict:
         """A stored program on a linked controller: it must hold the program Lite sent; then its
         SIM or REAL mode (read back), then the control program's own run (rm_upload.run: the move to
         the first point, the program, its error codes); the mode it had is put back after."""
@@ -1312,10 +1347,10 @@ class StandInRobot:
         if held is None or not held.get("name"):        # deleted on the controller (the lab, 17 Oct: program 80)
             raise UserError(f"The {side.upper()} controller no longer holds program {pid}: it was deleted there.",
                             "Upload it again.")
-        if not self._same_program(prog, held):
+        if not stored and not self._same_program(prog, held):     # ``stored``: any program the slot holds (Advanced)
             raise UserError(f"Program {pid} on the {side.upper()} controller is not the one Lite sent "
                             f"(it holds “{held.get('name')}”).", "Upload it again.")
-        if not prog.get("first_row"):
+        if not stored and not prog.get("first_row"):
             raise UserError(f"Lite has no first line recorded for program {pid}.", "Upload it again.")
         want = "SIM" if dry_run else "REAL"
         how = "Hardware sim" if dry_run else "Real"

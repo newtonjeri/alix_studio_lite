@@ -14,6 +14,7 @@
   --png-j1:#1f77b4; --png-j2:#ff7f0e; --png-j3:#2ca02c; --png-j4:#d62728; --png-j5:#9467bd; --png-j6:#8c564b;
   --png-j7:#e377c2; --png-bg:#ffffff; --png-ink:#444444; --png-grid:#eeeeee;
   --lite-scrim:rgba(15,23,42,.62);   /* Arm Drag Mode's lock over the page (recovery.js), both themes */
+  --lite-weak:#EAB308;               /* an arm indicator's weak connection (yellow; the owner, 17 Oct), both themes */
 }
 :root {
   --lite-brand:#2F96EE; --lite-brand-strong:#1B7FD4; --lite-brand-seam:#12558F;

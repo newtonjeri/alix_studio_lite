@@ -215,7 +215,22 @@ export function createViewer() {
       catch (err) { console.warn('[ALIX Studio Lite] WebGLRenderer failed for', opts, err); }
     }
     if (!renderer) throw Object.assign(new Error(NO_WEBGL), { code: 'webgl' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // What draws the 3D (the owner, 17 Oct: the simulation "lags a lot" at times, and clearing the browser's
+    // cache cured it). In software (no GPU: Chrome's fallback after its GPU process failed, or a GPU it does
+    // not use) a frame of the robot's 358,000 triangles takes about 130 ms and holds the page's thread: the
+    // 3D at 7 frames a second, the drag timer's voice late, then catching up. Then it draws without
+    // antialiasing at one pixel per CSS pixel, and the page says so (perf.js) and logs it.
+    const device = (r) => {
+      const gl = r.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
+      return String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    };
+    v.device = device(renderer);
+    v.software = /swiftshader|llvmpipe|softpipe|software|basic render|microsoft basic/i.test(v.device);
+    if (v.software) {
+      try { const lean = new THREE.WebGLRenderer({ antialias: false }); renderer.dispose(); renderer = lean; } catch (_) { /* keep the first */ }
+    }
+    renderer.setPixelRatio(v.software ? 1 : Math.min(window.devicePixelRatio || 1, 2));
+    document.dispatchEvent(new CustomEvent('lite:3d-device', { detail: { device: v.device, software: v.software } }));
     renderer.domElement.className = 'lite-3d-canvas';
     // a lost context (the GPU reset) comes back by itself when the browser restores it
     renderer.domElement.addEventListener('webglcontextlost', (e) => {

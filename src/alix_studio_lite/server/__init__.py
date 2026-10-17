@@ -41,12 +41,32 @@ def _open_browser(url: str) -> None:
 
     try:
         CHROME_PROFILE.mkdir(parents=True, exist_ok=True)
+        _fresh_caches(CHROME_PROFILE)
         subprocess.Popen([chrome, f"--user-data-dir={CHROME_PROFILE}", "--ignore-gpu-blocklist", "--no-first-run",
                           "--no-default-browser-check", "--new-window", url],
                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                          start_new_session=True)        # as webbrowser does: Ctrl+C here leaves the window open
     except OSError:
         webbrowser.open(url)
+
+
+# Chrome's GPU, shader and page caches in Lite's own profile: rebuilt by Chrome as it needs them
+_CACHES = ("GPUCache", "GrShaderCache", "ShaderCache", "GPUPersistentCache", "DawnCache", "DawnGraphiteCache",
+           "DawnWebGPUCache", "Default/GPUCache", "Default/DawnCache", "Default/DawnGraphiteCache", "Default/DawnWebGPUCache",
+           "Default/Cache", "Default/Code Cache")
+
+
+def _fresh_caches(profile: Path) -> None:
+    """Lite's Chrome window starts with its caches cleared (the owner, 17 Oct: the simulation lagged at
+    times, and clearing the browser's cache cured it): a GPU or shader cache left by a GPU process that
+    failed can keep Chrome drawing in software. Only while that Chrome is not running (its SingletonLock):
+    a window already open is left as it is."""
+    import shutil
+
+    if (profile / "SingletonLock").is_symlink() or (profile / "SingletonLock").exists():
+        return
+    for name in _CACHES:
+        shutil.rmtree(profile / name, ignore_errors=True)
 
 
 def _running_lite(port: int) -> dict | None:

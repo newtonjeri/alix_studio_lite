@@ -1472,7 +1472,9 @@ def _step_words(step: dict) -> str:
 
 def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body: dict):
     """Real Machine Mode (V53's RUN BOTH / RUN LEFT / RUN RIGHT): only in Real robot mode, on linked
-    controllers, after the same run completed in Simulation; every Program slot and global point it
+    controllers; a run not completed in Simulation as it is now asks first (``unsimulated_ok``; the owner,
+    17 Oct: "a user can run on the hardware without having run in simulation first", with a confirmation
+    that says so, before the real-robot one); every Program slot and global point it
     uses checked on its controller before anything moves; what the simulation found asked about once,
     with the real-robot confirmation. Then V53's stages: a TOGETHER stage starts both arms' parts at
     once and waits for both; a serial stage runs the first arm, asks before the waiting arm when
@@ -1501,13 +1503,13 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
     points = {s: points_known(app, s) for s in ARMS}
     ident = identity_of(run, programs, points, overall)
     sim = load_sim(units)
-    if not sim or sim.get("hash") != digest(ident):
-        raise UserError(f"This run is not the one simulated: {_changed(sim, ident)}.",
-                        "Run it in Simulation Mode first: Real Machine Mode runs only the sequence that completed there.",
-                        code="simulate")
-    if not sim.get("completed"):
-        raise UserError("The simulation of this run has not been played to its end.",
-                        "Play it to the end in Simulation Mode, then run it on the robot.", code="simulate")
+    same = bool(sim and sim.get("hash") == digest(ident))
+    simulated = same and bool(sim.get("completed"))
+    if not simulated and not body.get("unsimulated_ok"):
+        why = _changed(sim, ident) if not same else "its simulation was not played to its end"
+        raise UserError(f"This run has not been run in Simulation Mode as it is now: {why}.",
+                        "Run it on the real robot without simulating it first, or simulate it first: Simulation Mode "
+                        "plays it in 3D and checks the two arms' collisions.", code="unsimulated")
     missing = []
     for s in sides:                                        # every slot and point, before anything moves
         held = {int(x["id"]) for x in robot.programs(s) if x.get("name")}
@@ -1520,8 +1522,8 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
     if missing:
         raise UserError("Not on the controllers: " + "; ".join(missing) + ". Nothing moved.",
                         "Upload the programs or save the points, simulate again, then run it.", code="missing")
-    warns = [f["text"] for f in sim["findings"] if f["level"] == "warn"]
-    col = sim["collisions"]
+    warns = [f["text"] for f in sim["findings"] if f["level"] == "warn"] if simulated else []
+    col = sim["collisions"] if simulated else {"ok": True}
     if not col["ok"]:
         first = col["first"]
         warns.insert(0, f"The simulation found {len(col['events']) + col['more']} collision event(s), the first at "
@@ -1543,6 +1545,8 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
         rows = {s: None for s in ARMS}
         job.set(live=dict(live), status=f"PAGE 02 PROGRAM RULES // {len(run['plan'])} coordinated stage(s)", stage=None,
                 question=None, counts=run["counts"], rows=dict(rows), mode=run["mode"])
+        if not simulated:
+            job.log("Run on the robot without a simulation of it, as confirmed.", "warn")
         reals = {s: robot._real(s) for s in sides}
         originals = {}
 

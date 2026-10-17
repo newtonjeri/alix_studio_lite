@@ -766,3 +766,91 @@ html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); c
 #stage-real #liteRealRunBtn:disabled { opacity: .5; cursor: not-allowed; }
 /* S2: a step whose program or global point its controller no longer holds (the owner, 17 Oct) */
 .lite-s2-table tr.lite-s2-gone td { color: var(--red); background: var(--red2); }
+
+/* The arm indicators beside STOP BOTH (status.js; the owner, 17 Oct): green good, yellow weak, red none */
+.topbar .lite-arm-dots { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.topbar .lite-arm-dot { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; color: var(--muted); cursor: help; }
+.topbar .lite-arm-dot-led { width: 14px; height: 14px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 2px var(--card); outline: 1px solid var(--line); }
+.topbar .lite-arm-dot[data-level="good"] .lite-arm-dot-led { background: var(--green); }
+.topbar .lite-arm-dot[data-level="weak"] .lite-arm-dot-led { background: var(--lite-weak); }
+.topbar .lite-arm-dot[data-level="none"] .lite-arm-dot-led { background: var(--red); }
+
+/* Advanced Robot Controls' Simulation view (advanced.js): the arm moves in 3D in Visual sim */
+#robotControlModal .lite-rc-sim { margin: 12px 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+#robotControlModal .lite-rc-sim-host { height: 340px; }
+#robotControlModal .lite-rc-sim input[type="range"] { width: 100%; margin-top: 8px; }
+
+/* ── Responsive: no horizontal scrollbar at any width (the owner, 17 Oct: "the GUI should adapt to any screen
+   size, especially the width. There should be no horizontal scrollbars at any width ... standardize this
+   across the whole application ... maintain the current arrangement"). Measured from 800 to 2560 px wide:
+   the top bar needed 1,192 px (layout.js: two more levels, the last one wrapping it onto two rows), the
+   Project Summary 1,940 px (the designer's V23 minimum), the Activity Logs 1,780 px, S1's merge list and
+   Tune's steps a little more than they had. The tables now take the width they have and wrap their text,
+   the Summary's region pictures scale with the screen, and the sidebar narrows on smaller screens; the
+   arrangement stays as it is. */
+.topbar.lite-fit-7 { gap: 4px; padding: 0 6px; }
+.topbar.lite-fit-7 .lite-drag-btn, .topbar.lite-fit-7 .lite-normal-btn { padding: 8px; }
+.topbar.lite-fit-7 .mode-pill { padding-left: 8px; padding-right: 8px; }
+.topbar.lite-fit-7 .lite-speed { padding: 4px 8px; gap: 4px; }
+.topbar.lite-fit-7 .lite-speed input { width: 44px; }
+.topbar.lite-fit-7 .current-project-chip { min-width: 80px; max-width: 110px; }
+.topbar.lite-fit-7 .emstop { padding-left: 10px; padding-right: 10px; }
+.topbar.lite-fit-8 { flex-wrap: wrap; height: auto; min-height: 72px; row-gap: 6px; padding-top: 6px; padding-bottom: 6px; }
+.topbar.lite-fit-8 .emstop { margin-left: auto; }             /* STOP BOTH stays at the right end */
+.shell { grid-template-columns: 300px minmax(0, 1fr); min-height: calc(100vh - var(--lite-topbar-h, 72px)); }
+.sidebar { top: var(--lite-topbar-h, 72px); height: calc(100vh - var(--lite-topbar-h, 72px)); }
+@media (max-width: 1440px) { .shell { grid-template-columns: 260px minmax(0, 1fr); } }
+@media (max-width: 1200px) { .shell { grid-template-columns: 220px minmax(0, 1fr); } .main { padding-left: 16px; padding-right: 16px; } }
+@media (max-width: 760px) { .shell { grid-template-columns: minmax(0, 1fr); } }
+.visual-summary-table, .summary-table, .audit-table, .engineer-table, .sequence-table { min-width: 0 !important; width: 100%; }
+.visual-summary-table th:nth-child(3), .visual-summary-table th:nth-child(7) { min-width: 0 !important; }
+/* Words wrap whole: a column is at least its longest word, so nothing breaks inside a word ("O p e n") while the
+   table has room. A long token with no space in it (a path, a session id, a file name, the details' JSON) breaks
+   inside, and only there; below 760 px any cell may (the last resort, further down). */
+.summary-table td, .audit-table td, .engineer-table td { overflow-wrap: break-word; }
+.audit-table td:nth-child(2), .audit-table .audit-event-cell, .audit-table .audit-detail-cell { overflow-wrap: anywhere; word-break: normal; }
+.summary-table th, .audit-table th { overflow-wrap: normal; word-break: normal; }
+.summary-region-thumb { width: clamp(72px, 10vw, 205px) !important; height: auto !important; aspect-ratio: 205 / 142; }
+.approved-setup { min-width: 0 !important; }
+.audit-time-cell, .audit-project-cell, .audit-task-cell, .audit-page-cell { min-width: 0 !important; white-space: normal !important; }
+.audit-table .audit-event-cell { min-width: 0; }
+@media (max-width: 1100px) {                        /* the Summary's twelve columns: pictures, badges and buttons a size smaller */
+  .summary-region-thumb { width: clamp(48px, 7vw, 205px) !important; }
+  .summary-table .badge { font-size: 10px; padding: 4px 7px; }
+  .summary-table .btn { padding: 7px 10px; font-size: 12px; }
+  .summary-table .arm-task-status { min-width: 0; }
+}
+@media (max-width: 1440px) { .summary-table th, .summary-table td, .audit-table th, .audit-table td { padding: 8px 6px; font-size: 12px; } }
+.lite-s1-merges table { width: 100%; }
+.lite-s1-merges td:nth-child(3) { white-space: normal; }
+.lite-s1-merges td:nth-child(2) { overflow-wrap: anywhere; }      /* the merge's file name */
+.lite-pipe-track { grid-template-columns: repeat(6, minmax(0, 1fr)); overflow-x: visible; }
+.lite-pipe-track > * { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 960px) {
+  .summary-table th, .summary-table td, .audit-table th, .audit-table td { padding: 6px 4px; font-size: 11px; }
+}
+@media (max-width: 860px) {
+  .summary-region-thumb { width: clamp(44px, 6vw, 205px) !important; }
+  .summary-table th, .summary-table td { font-size: 10px; }
+  .summary-table .badge { padding: 3px 5px; }
+}
+/* Charts and grids shrink with the window (ctx.js fitPlot): a grid's cell no longer holds a chart drawn wider */
+.lite-view-grid > *, .lite-rev3d-grid > *, .lite-s1-sim-grid > *, .lite-s2-simgrid > * { min-width: 0; }
+.lite-plot-box { overflow: hidden; }          /* no max-width: Plotly sizes a hidden chart from it */
+#liteSuggestions { width: 100%; }
+.lite-table td.lite-reason { overflow-wrap: anywhere; }            /* "acceleration/deceleration" */
+@media (max-width: 1200px) { .lite-table .lite-reason { min-width: 0; } }
+@media (max-width: 960px) {                         /* Analyze's ten columns in a 584 px card (700 px window) */
+  .lite-table th, .lite-table td { padding: 6px 4px; font-size: 12px; }
+  .lite-table .lite-badge { white-space: normal; }
+  .lite-table td input[type="number"] { width: 64px; }
+}
+/* The last resort, under 780 px: a cell's text may break inside a word, a header's below 640 px; buttons and
+   badges stay whole */
+@media (max-width: 780px) {
+  .summary-table td, .audit-table td, .engineer-table td, .lite-table td { overflow-wrap: anywhere; }
+  .summary-table td .btn, .summary-table td .badge, .lite-table td .lite-badge { overflow-wrap: normal; }
+  .summary-table .btn { padding: 5px 6px; font-size: 11px; }
+  .summary-table th, .summary-table td { padding: 5px 3px; }
+}
+@media (max-width: 640px) { .summary-table th, .audit-table th, .lite-table th { overflow-wrap: anywhere; } }

@@ -1,15 +1,15 @@
 // The top bar fits the window at any width (the owner, 16 Oct: "fit 100% of the available screen
 // width, ensuring that all controls, including the Stop button, are fully visible without horizontal
 // scrolling"). Its buttons get their labels in a span here, and the bar is measured: when it is wider
-// than the window, it gives way one level at a time (lite.css: lite-fit-1 to lite-fit-6, labels to
-// icons, then narrower), however many controls it holds. It is measured again when the window or
+// than the window, it gives way one level at a time (lite.css: lite-fit-1 to lite-fit-8, labels to
+// icons, then narrower, at last onto two rows), however many controls it holds. It is measured again when the window or
 // anything in the bar changes (the status, the project's name, the speed).
 
 const BUTTONS = ['.project-save-btn', '.project-manager-btn', '.robot-control-toggle', '.top-tour-btn', '.top-lock-btn'];
 
 const span = (className, text) => Object.assign(document.createElement('span'), { className, textContent: text });
 
-const LEVELS = 6;
+const LEVELS = 8;              // the last one wraps the bar onto two rows (the owner, 17 Oct: no horizontal scrollbar)
 let fitting = 0;
 
 export function fitTopbar() {
@@ -17,6 +17,8 @@ export function fitTopbar() {
   if (!bar) return;
   for (let i = 1; i <= LEVELS; i += 1) bar.classList.remove(`lite-fit-${i}`);
   for (let level = 1; level <= LEVELS && bar.scrollWidth > bar.clientWidth + 1; level += 1) bar.classList.add(`lite-fit-${level}`);
+  // the sidebar keeps below the bar, however tall it is (lite.css)
+  document.documentElement.style.setProperty('--lite-topbar-h', `${Math.round(bar.getBoundingClientRect().height)}px`);
 }
 
 function fitSoon() {

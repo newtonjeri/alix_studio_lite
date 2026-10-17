@@ -365,3 +365,25 @@ def test_a_runs_own_line_never_raises_after_a_stop():
     assert j.view()["stage"] == "Program 50 running on the LEFT controller"
     with pytest.raises(Cancelled):
         j.progress("next")
+
+
+def test_each_arms_indicator_grades_its_connection(monkeypatch):
+    """The arm indicators (the owner, 17 Oct): green a good connection, yellow a weak one, red none."""
+    from alix_studio_lite.server import robot_link
+
+    k = link("left")
+    assert k.quality()["level"] == "none"                                        # nothing read yet
+    now = time.time()
+    k.feedback = {"t": now}
+    k._recent.extend([(now - 0.2 * i, True, 0.08) for i in range(10)])
+    assert k.quality()["level"] == "good" and "answered in 80 ms" in k.quality()["text"]
+    k._recent.append((now, False, 1.6))                                          # one unanswered, slow reading
+    q = k.quality()
+    assert q["level"] == "weak" and "1 of the last 10 readings unanswered" in q["text"] and "took 1.6 s" in q["text"]
+    k._recent.clear()
+    k._recent.extend([(now - 5.0, True, 0.1), (now - 1.0, False, 1.5)])          # the cable out: no answer for 5 s
+    assert k.quality()["level"] == "none" and "for 5 s" in k.quality()["text"]
+    with k.busy("MoveJ to L_HME_POS"):
+        assert k.quality() == {"level": "good", "text": "connected; busy: MoveJ to L_HME_POS"}
+        k._busy_since -= robot_link.HELD_S + 10                                  # a command that does not end
+        assert k.quality()["level"] == "weak" and "no answer for 70 s" in k.quality()["text"]

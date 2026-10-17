@@ -24,6 +24,7 @@ controller emulator, which has no IO, so its E-stop reads as clear.
 """
 from __future__ import annotations
 
+import collections
 import threading
 import time
 from contextlib import contextmanager
@@ -40,6 +41,12 @@ STALE_S = 1.0                      # no fresh reading for this long: the E-stop 
 CMD_WAIT_S = 5.0                   # a command waits this long for the one before it on its controller, then is refused
 CLOSE_WAIT_S = 30.0                # a closed link's handle is deleted once the calls still running on it have ended
 READ_WAIT_S = 0.3                  # a STOP waits this long at most for a reading under way (their replies never meet)
+# The arm indicators (the owner, 17 Oct: green a good connection, yellow a weak one, red none): a reading
+# normally lands every 0.2-0.45 s and takes about 0.1 s (the lab's logs, 16-17 Oct)
+LATE_S = 0.8                       # no reading for this long: weak
+SLOW_S = 0.5                       # a reading that took this long, among the last ten: weak
+LOST_S = 3.0                       # no reading answered for this long: none
+HELD_S = 60.0                      # a command that has not ended in this long (unless it says it takes longer): weak
 
 
 def estop_state(read, active_level: int = ESTOP_PRESSED_LEVEL) -> tuple[str, dict]:
@@ -114,6 +121,8 @@ class ArmLink:
         self._modbus_set = False
         self._stopping = threading.Event()          # a STOP is being sent: no new reading starts
         self._busy: list = []                       # commands running (robot_real.py): no reading meanwhile
+        self._busy_since, self._busy_expect = 0.0, HELD_S   # when the command took the link, and how long it may take
+        self._recent: collections.deque = collections.deque(maxlen=10)   # (when, answered, seconds) of the last readings
         self._freed = 0.0                           # when the last command ended (its reading follows at once)
         self._fresh_before = False                  # the reading was fresh as the commands began (their grace is due)
         self._read_lock = threading.Lock()          # one reading at a time
@@ -196,7 +205,7 @@ class ArmLink:
                             code="busy")
 
     @contextmanager
-    def busy(self, what: str, wait_s: float | None = None):
+    def busy(self, what: str, wait_s: float | None = None, expect_s: float | None = None):
         """A command runs on this controller (robot_real.py): meanwhile the reading loop does not
         read, and no other command starts: it waits for this one (at most CMD_WAIT_S, or ``wait_s``),
         then is refused, saying what holds the controller (the lab, 17 Oct: three MoveJ's switched the
@@ -210,6 +219,7 @@ class ArmLink:
                 if not self._busy:                  # how fresh the reading is as a command takes the connection
                     t, now = self.feedback.get("t"), time.time()
                     self._fresh_before = bool(t) and min(now - t, now - self._freed) <= STALE_S
+                    self._busy_since, self._busy_expect = now, max(HELD_S, float(expect_s or 0))
                 self._busy.append(what)
                 self.feedback = dict(self.feedback, busy=what)
             with self._read_lock:                   # a reading already under way ends before the command starts
@@ -385,6 +395,7 @@ class ArmLink:
 
         robot = self.handle.robot
         fb: dict = {"t": time.time()}
+        t0 = time.monotonic()
         try:
             ret, st = robot.rm_get_current_arm_state()
         except Exception:                                                # noqa: BLE001
@@ -404,9 +415,10 @@ class ArmLink:
             fb["estop"], fb["io3"] = "CLEAR", {"emulated": True}
         else:
             fb["estop"], fb["io3"] = "UNKNOWN", {}
-        fb["busy"] = None
+        fb["busy"], fb["ok"] = None, ok
         with self._lock:
             self.feedback = fb
+            self._recent.append((fb["t"], ok, time.monotonic() - t0))
         if self.on_read is not None:
             self.on_read()
         return fb
@@ -427,4 +439,32 @@ class ArmLink:
             fb["estop"] = "UNKNOWN"                                      # no fresh reading: fail closed
         fb["age_s"] = None if age is None else round(age, 2)
         fb.pop("t", None)
-        return dict(ip=self.ip, port=self.port, emulated=self.emulated, feedback=fb)
+        return dict(ip=self.ip, port=self.port, emulated=self.emulated, feedback=fb, quality=self.quality())
+
+    def quality(self) -> dict:
+        """The connection as the arm's indicator shows it (the owner, 17 Oct: "green a good connection,
+        yellow a weak connection, red no connection"): ``good``, readings answered and fresh; ``weak``,
+        readings late, slow or failing now and then, or a command that has held the controller longer than
+        it takes; ``none``, no reading answered for LOST_S (a cable out, the controller off or not
+        answering). ``text`` says why."""
+        now = time.time()
+        with self._lock:
+            busy, since, expect = list(self._busy), self._busy_since, self._busy_expect
+            recent, t = list(self._recent), self.feedback.get("t")
+        if busy:                                    # a command holds it: nothing is read meanwhile, by design
+            held = now - since
+            if held > expect:
+                return dict(level="weak", text=f"no answer for {held:.0f} s from the controller ({busy[-1]})")
+            return dict(level="good", text=f"connected; busy: {busy[-1]}")
+        answered = [w for w, ok, _ in recent if ok]
+        if not answered or now - answered[-1] > LOST_S:
+            gone = now - answered[-1] if answered else None
+            return dict(level="none", text="no answer from the controller" + (f" for {gone:.0f} s" if gone else ""))
+        failed = sum(1 for _, ok, _ in recent if not ok)
+        slow = max(dt for _, _, dt in recent)
+        late = now - (t or 0)
+        if failed or slow > SLOW_S or late > LATE_S:
+            why = ([f"{failed} of the last {len(recent)} readings unanswered"] if failed else []) \
+                + ([f"a reading took {slow:.1f} s"] if slow > SLOW_S else []) + ([f"no reading for {late:.1f} s"] if late > LATE_S else [])
+            return dict(level="weak", text=", ".join(why))
+        return dict(level="good", text=f"readings every {self.period_s:g} s, answered in {slow * 1000:.0f} ms at most")

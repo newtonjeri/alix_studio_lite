@@ -6,7 +6,8 @@
 // template. Each install function keeps the page's own screen updates and adds the backend call.
 
 import { installActivity } from './activity.js';
-import { installAdvanced } from './advanced.js';
+import { installAdvanced, installAdvancedRuns } from './advanced.js';
+import { installPerf } from './perf.js';
 import { installAlerts } from './alerts.js';
 import { installAuth } from './auth.js';
 import { installBrand } from './brand.js';
@@ -59,6 +60,8 @@ installSim();             // the 3D robot in the simulation pane, on the 5 ms cl
 installTune();            // tuning with the optimiser, limits, target time (D24, D36)
 installRealTest();
 installAdvanced();
+installAdvancedRuns();
+installPerf();
 installViewer();          // taught .txt files: upload, check, replay in 3D
 installDataManagement();  // what each arm's controller stores, as RealMan's web page lists it (the owner, 16 Oct)
 installFullSeq();         // Merge + Sequence: tabs S1 Merge & Upload, S2 Sequence (the owner, 16 Oct)

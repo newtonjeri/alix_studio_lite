@@ -74,6 +74,25 @@ export function confirmDialog({ title, body, ok = 'Continue', danger = true, lis
 
 export const REAL_CHECKS = ['The work area around the arm is clear of people.', 'The red E-stop buttons are within reach.'];
 
+// A Plotly chart kept to its box (the owner, 17 Oct: no horizontal scrollbar at any width). Plotly's own
+// responsive mode follows only the window's resize, and a chart resized while its page is hidden keeps the size
+// it had (its box measures nothing then): Tune's Compare stayed 906 px wide in a 510 px box at 1280 px. The box
+// is watched instead, as it is shown again too, and the chart drawn again whenever its size is not the box's.
+export function fitPlot(div) {
+  if (!div || div.dataset.liteFit) return;
+  div.dataset.liteFit = '1';
+  let raf = 0;
+  new ResizeObserver(() => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const w = div.clientWidth, h = div.clientHeight, drawn = div._fullLayout;
+      if (!w || !h || !drawn || !window.Plotly) return;                       // hidden, or not drawn yet
+      if (Math.abs(w - drawn.width) <= 1 && Math.abs(h - drawn.height) <= 1) return;
+      window.Plotly.Plots.resize(div).catch(() => { /* hidden meanwhile: drawn again when it is shown */ });
+    });
+  }).observe(div);
+}
+
 // A robot request. The server answers code "confirm" (Real needs a yes), "replace" (a program
 // slot holds another file) or "mode" (Visual sim uses no robot); this asks and retries once.
 export async function robotCall(url, body = {}, { what = 'This move', replacing = 'the program' } = {}) {

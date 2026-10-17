@@ -15,7 +15,7 @@
 //   6 Compare   original vs optimized on one synchronized time cursor (or an external file), the tuned file in 3D
 
 import { get, post, say } from './api.js';
-import { confirmDialog, ctx, el, loadUnit, step, tell, unitUrl, watchJob } from './ctx.js';
+import { confirmDialog, ctx, el, fitPlot, loadUnit, step, tell, unitUrl, watchJob } from './ctx.js';
 import { elsewhere, fileKey, invalidate, onMoment, onPlayhead, release, say3d, scene, seekTo, showFile, showStanding, sim, unload } from './sim.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
 import { frame } from './vp.js';
@@ -739,6 +739,7 @@ async function drawReview() {
   const fig = figure(tr, `Original — ${(r && r.name) || ''}`, { selectable: true, yRange: yRangeFor(tr) });
   fig.layout.shapes = reviewShapes();
   await window.Plotly.react(div, fig.data, fig.layout, PLOT_CONFIG);
+  fitPlot(div);
   if (!div.dataset.liteSel) {
     div.dataset.liteSel = '1';
     div.on('plotly_selected', (ev) => {                   // the HTML's box-select of rows: a region at 100 %
@@ -1256,6 +1257,7 @@ async function renderCompare() {
   for (const [id, tr, t] of [['liteCmpOrig', orig, `Original - ${(r && r.name) || ''}`], ['liteCmpProc', opt, `Optimized - ${optName}`]]) {
     const fig = figure(tr, t, { yRange });
     await window.Plotly.react($(id), fig.data, fig.layout, PLOT_CONFIG);
+    fitPlot($(id));
     clickToSeek($(id), 'compare');
   }
   const tbody = $('liteCompareRegions')?.querySelector('tbody');

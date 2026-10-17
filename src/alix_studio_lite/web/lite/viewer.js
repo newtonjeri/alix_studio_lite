@@ -9,7 +9,7 @@
 // Nothing here sends anything to the robot.
 
 import { del, get, post, say } from './api.js';
-import { ctx, el, fmtS, stageDialog, step, tell } from './ctx.js';
+import { ctx, el, fitPlot, fmtS, stageDialog, step, tell } from './ctx.js';
 import { ensure3D, release, say3d, scene } from './sim.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
 import { frame } from './vp.js';
@@ -354,6 +354,7 @@ async function drawPlot() {
     yaxis: { ticksuffix: '°', fixedrange: true, color: ink, gridcolor: ink, gridwidth: 0.3, zeroline: false },
     legend: { orientation: 'v', x: 1.01, y: 1, font: { size: 11, color: ink } }, showlegend: true,
   }, { staticPlot: true, responsive: true, displayModeBar: false });
+  fitPlot(div);
   if (!div.dataset.liteClick) {                       // a click on the plot is that moment (the owner, 16 Oct)
     div.dataset.liteClick = '1';
     div.addEventListener('click', (e) => {

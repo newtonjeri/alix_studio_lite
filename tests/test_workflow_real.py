@@ -104,7 +104,8 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     call(server, "PUT", f"{P}/workflow/left", {"steps": steps({"type": "global", "name": "STP_HOME", "move": "movej", "speed": 30,
                                                                 "wait_s": 0})})
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps()})
-    assert call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True})["code"] == "simulate"
+    first = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True})
+    assert first["code"] == "unsimulated" and "it has not been simulated" in first["error"]     # asked, not refused (17 Oct)
     j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "both"}))
     sim = j["result"]
     assert sim["start_from"] == {"left": "now", "right": "now"} and sim["points"]["left"]          # read from the controllers
@@ -112,7 +113,7 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     assert [a["kind"] for a in la] == ["pole", "hand", "global", "program"] and la[2]["drawn"] and la[3]["drawn"]
     assert not [f for f in sim["findings"] if "program 71" in f["text"]]                         # its stage is the steps'
     refused = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True})
-    assert refused["code"] == "simulate" and "not been played to its end" in refused["error"]
+    assert refused["code"] == "unsimulated" and "not played to its end" in refused["error"]
     call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})
     first = call(server, "POST", f"{P}/workflow/run", {"mode": "both"})
     assert first["code"] in ("warnings", "confirm")
@@ -130,7 +131,12 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
 
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps(tail=[{"type": "wait", "seconds": 1}])})     # changed after
     again = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
-    assert again["code"] == "simulate" and "its steps" in again["error"]
+    assert again["code"] == "unsimulated" and "its steps" in again["error"]
+    asked = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "unsimulated_ok": True})        # the first answer given
+    assert asked["code"] == "confirm"                                                         # then the real-robot one
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "unsimulated_ok": True, "confirmed": True}))
+    assert j["state"] == "done", j
+    assert "without a simulation of it, as confirmed" in events(j)
 
 
 def test_the_lid_checkpoint_asks_and_stop_interrupts_the_runner(server):

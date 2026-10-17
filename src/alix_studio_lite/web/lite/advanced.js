@@ -1,15 +1,19 @@
-// Advanced Robot Controls (engineer PIN, server-checked). Connected so far: the controller's run
-// mode per arm (SIM / REAL / CHECK), the hand and the pole, the controller's program list (RUN), and
-// its global points (GLOBAL POINTS: the list read from the controller, found by name, MoveJ / MoveL
-// and a sequence of them, by the control program's runner v14). Uploading any file, stored-program
-// runs and the arm's own drag teach keep the page's template behaviour (docs/UI_CONTRACT.md).
-// With the live link they command the controllers (the pole and the hand at 50 % speed, the run
-// mode read back); without it, the stand-in.
+// Advanced Robot Controls (engineer PIN, server-checked). Connected: the controller's run mode per arm
+// (SIM / REAL / CHECK), the hand and the pole, the controller's program list, its global points (the list
+// read from the controller, found by name, MoveJ / MoveL and a sequence of them, by the control program's
+// runner v14), and the arm moves of the RUN tab (the owner, 17 Oct: "running a saved program, meaning an
+// uploaded .txt file (a project in a certain slot) ... in all three run modes"): Run Stored and Run Only
+// (a slot, as the control program runs it), Upload Only and Upload + Run (a .txt from this computer),
+// Run Both Stored. In Visual sim nothing is sent: those moves, and the global points, are shown in 3D in the
+// panel (server/api_advanced.py). Multi Upload, Multi Run, Load Sequence, Run Both .TXT and the arm's own
+// drag teach are not connected: they say so (they used to report COMPLETE with nothing sent).
 
-import { get, say } from './api.js';
-import { el, jobLine, robotCall, tell, watchJob } from './ctx.js';
+import { get, post, say } from './api.js';
+import { ctx, el, jobLine, robotCall, tell, watchJob } from './ctx.js';
 import { loadPoints, matches, movePoint } from './points.js';
-import { speedPct, standIn } from './status.js';
+import { borrow, Player } from './seq3d.js';
+import { liteMode, speedPct, standIn } from './status.js';
+import { frame } from './vp.js';
 
 const S = (side) => (side === 'left' ? 'LEFT' : 'RIGHT');
 const readBack = () => (standIn() ? 'stand-in robot: nothing reached a controller' : 'read back');
@@ -20,6 +24,88 @@ async function job(side, url, body, what) {
   window.rcSetStatus(side, done.state === 'done' ? `${what}: done ✓` : (done.error || `${what} stopped`), false);
   window.rcAppend(side, `${what} // ${done.state.toUpperCase()}${done.error ? ' // ' + done.error : ''}`);
 }
+
+// Visual sim: the arm moves shown in the panel in 3D, nothing sent (the owner, 17 Oct: "in all three run
+// modes"); each from where the arm stands (a linked arm), else its standing pose.
+const simView = {
+  player: null, three: null, sides: [], total: 0, done: null,
+  build() {
+    let card = document.getElementById('liteRcSim');
+    if (card) return card;
+    const after = document.querySelector('#robotControlModal .rc-dual-toolbar');
+    if (!after) return null;
+    card = el('div', { id: 'liteRcSim', class: 'lite-rc-sim' },
+      el('div', { class: 'lite-section-title' }, el('h3', { text: 'Simulation' }),
+        el('span', { class: 'mini-note', text: 'Visual sim: the arm moves are shown here in 3D, and nothing is sent to the robot.' })),
+      el('div', { id: 'liteRcSimHost', class: 'lite-rev3d-host lite-rc-sim-host' }),
+      el('input', { id: 'liteRcSimTime', type: 'range', min: '0', max: '0', step: '10', value: '0', 'aria-label': 'Simulation time',
+        oninput: (e) => { this.player?.pause(); this.player?.seek(Number(e.target.value) / 1000); } }),
+      el('div', { id: 'liteRcSimSays', class: 'mini-note' }));
+    after.after(card);
+    this.player = new Player({ onTime: (t) => this.show(t), onEnd: () => { const f = this.done; this.done = null; if (f) f(); } });
+    frame(document.getElementById('liteRcSimHost')).title('Simulation', 'Visual sim: nothing is sent');
+    return card;
+  },
+  async play(timelines, says) {                 // {side: timeline}, on one clock
+    if (!this.build()) return;
+    const host = document.getElementById('liteRcSimHost');
+    this.three = await borrow(host);
+    this.three.robot.home();
+    for (const s of ['left', 'right']) if (!timelines[s]) this.three.robot.clearTrack(s);
+    this.sides = Object.keys(timelines);
+    this.total = Math.max(0, ...Object.entries(timelines).map(([s, r]) => this.three.robot.loadTimeline(s, r).total_s));
+    document.getElementById('liteRcSimTime').max = String(Math.round(this.total * 1000));
+    document.getElementById('liteRcSimSays').textContent = says;
+    frame(host).title(`Simulation · ${says}`, 'Visual sim: nothing is sent');
+    host.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    this.player.load(this.total);
+    await new Promise((resolve) => { this.done = resolve; this.player.play(); });
+  },
+  show(t) {
+    const host = document.getElementById('liteRcSimHost');
+    if (this.three && this.three.viewer.host === host) {
+      for (const s of this.sides) this.three.robot.showTime(t, s);
+      this.three.viewer.dirty = true;
+    }
+    const bar = document.getElementById('liteRcSimTime');
+    if (bar && document.activeElement !== bar) bar.value = String(Math.round(t * 1000));
+    frame(host).time(`${t.toFixed(2)} s / ${this.total.toFixed(2)} s`);
+  },
+};
+
+const visualSim = async () => (await liteMode()) === 'visual';
+const shape = (side, body) => post(`/api/robots/${side}/simulate-move`, { ...body, pid: ctx.pid || null });
+
+// One arm's move shown in 3D (Visual sim).
+async function showMove(side, body, says) {
+  const r = await shape(side, body);
+  window.rcSetStatus(side, `SIMULATION // ${says}`, true);
+  window.rcAppend(side, `SIMULATION // ${says} // from ${r.start_from === 'now' ? 'where the arm stands' : 'its standing pose'} // nothing sent`);
+  await simView.play({ [side]: r }, says);
+  window.rcSetStatus(side, `SIMULATION // ${says}: shown ✓ (nothing sent)`, false);
+  return r;
+}
+
+// A slot run as the control program runs it (Hardware sim: the controller's SIM mode; Real: the arm).
+async function runSlot(side, program) {
+  const what = `RUN // program ${program}`;
+  const j = await robotCall(`/api/robots/${side}/programs/run`, { program },
+    { what: `Program ${program} runs as it is stored: the controller first moves the arm to its first point, then plays it; `
+      + 'the pole and the hand stay as they are (set them in HAND / POLE first)' });
+  const done = await watchJob(j, (v) => window.rcSetStatus(side, jobLine(v), true));
+  window.rcSetStatus(side, done.state === 'done' ? `${what}: done ✓` : (done.error || `${what} stopped`), false);
+  window.rcAppend(side, `${what} // ${done.state.toUpperCase()}${done.error ? ' // ' + done.error : ''}`);
+  if (done.state !== 'done') window.toast(`${done.error || 'The program stopped.'} ${done.hint || ''}`);
+  return done;
+}
+
+const fileOf = (side) => document.getElementById(`rc${S(side)}Track`)?.files?.[0] || null;
+const slotOf = (side) => {
+  const f = document.getElementById(`rc${S(side)}Slot`), id = Number(f?.value);
+  if (!Number.isInteger(id) || id < 1 || id > 100) { window.toast(`${S(side)} Program ID must be 1 to 100.`); f?.focus(); return null; }
+  return id;
+};
+const notConnected = (what) => window.toast(`${what} is not connected yet: nothing was sent. Run each program with Run Stored.`);
 
 export function installAdvanced() {
   window.rcSetMode = async function rcSetMode(side, mode) {
@@ -180,4 +266,93 @@ function table(heads, rows) {
     el('thead', {}, el('tr', {}, heads.map(h => el('th', { text: h })))),
     el('tbody', {}, rows.map(r => el('tr', { tabindex: '0', title: 'Use this one', onclick: r.pick,
       onkeydown: (e) => { if (e.key === 'Enter') r.pick(); } }, r.cells.map(c => el('td', { text: c }))))));
+}
+
+// The RUN tab's arm moves (the page's template said COMPLETE after a timer and sent nothing).
+export function installAdvancedRuns() {
+  window.rcProgramAction = async function rcProgramAction(side, action) {
+    if (action !== 'RUN STORED') { notConnected(action === 'MULTI RUN' ? 'Multi Run' : 'Load Sequence'); return; }
+    const program = (document.getElementById(`rc${S(side)}StoredProgram`)?.value || '').trim();
+    if (!program) { window.toast('Enter a Program ID or a program name first.'); return; }
+    try {
+      if (await visualSim()) await showMove(side, { program }, `program ${program}`);
+      else await runSlot(side, program);
+    } catch (err) { tell(err); window.rcAppend(side, `RUN // program ${program} // ${say(err)}`); }
+  };
+
+  window.rcTrajectoryAction = async function rcTrajectoryAction(side, action) {
+    const id = slotOf(side);
+    if (!id) return;
+    const file = fileOf(side);
+    if (action !== 'RUN ONLY' && !file) { window.toast(`Choose a ${S(side)} trajectory .txt file first.`); return; }
+    try {
+      if (await visualSim()) {                  // nothing is sent: the file, or the slot's program, shown in 3D
+        if (action === 'UPLOAD ONLY') { window.toast('Visual sim sends nothing: choose Hardware sim or Real robot to upload.'); return; }
+        await (action === 'RUN ONLY' ? showMove(side, { program: String(id) }, `program ${id}`)
+          : showMove(side, { name: file.name, content: await file.text() }, file.name));
+        return;
+      }
+      if (action !== 'RUN ONLY') {
+        const j = await robotCall(`/api/robots/${side}/programs/upload`, { program_id: id, name: file.name, content: await file.text() },
+          { what: `Upload of ${file.name}`, replacing: `program ${id}` });
+        const note = document.getElementById(`rc${S(side)}UploadNote`);
+        if (j.unchanged) {
+          if (note) note.textContent = `Program ${id} already holds ${file.name} ✓`;
+        } else {
+          const done = await watchJob(j, (v) => window.rcSetStatus(side, jobLine(v), true));
+          if (note) note.textContent = done.state === 'done' ? `${file.name} is program ${id} on the ${S(side)} controller ✓ (read back)`
+            : (done.error || 'The upload did not finish.');
+          window.rcAppend(side, `UPLOAD // ${file.name} → program ${id} // ${done.state.toUpperCase()}${done.error ? ' // ' + done.error : ''}`);
+          if (done.state !== 'done') { window.rcSetStatus(side, done.error || 'Upload stopped', false); return; }
+        }
+        window.rcSetStatus(side, `UPLOAD // ${file.name} → program ${id}: done ✓`, false);
+        if (action === 'UPLOAD ONLY') return;
+      }
+      await runSlot(side, String(id));
+    } catch (err) { tell(err); window.rcAppend(side, `${action} // ${say(err)}`); }
+  };
+
+  window.rcRunDualStored = async function rcRunDualStored() {
+    const l = (document.getElementById('rcDualLeftProgram')?.value || '').trim();
+    const r = (document.getElementById('rcDualRightProgram')?.value || '').trim();
+    if (!l || !r) { window.toast('Enter both LEFT and RIGHT stored programs.'); return; }
+    try {
+      if (await visualSim()) {
+        const [tl, tr] = await Promise.all([shape('left', { program: l }), shape('right', { program: r })]);
+        for (const [side, p] of [['left', l], ['right', r]]) window.rcSetStatus(side, `SIMULATION // program ${p}`, true);
+        await simView.play({ left: tl, right: tr }, `LEFT program ${l} and RIGHT program ${r}, together`);
+        for (const [side, p] of [['left', l], ['right', r]]) window.rcSetStatus(side, `SIMULATION // program ${p}: shown ✓ (nothing sent)`, false);
+        return;
+      }
+      await Promise.all([runSlot('left', l), runSlot('right', r)]);
+    } catch (err) { tell(err); }
+  };
+
+  window.rcMultiUpload = function rcMultiUpload() { notConnected('Multi Upload'); };
+  window.rcOpenDualTxt = function rcOpenDualTxt() { notConnected('Run Both .TXT'); };
+
+  // the global points: in Visual sim the move is shown in 3D, from where the arm stands
+  const pointMove = window.rcPointMove;
+  window.rcPointMove = async function rcPointMove(side, motion) {
+    if (!(await visualSim())) { await pointMove(side, motion); return; }
+    const name = (document.getElementById(`rc${S(side)}PointSearch`)?.value || '').trim();
+    if (!name) { window.toast('Enter or choose a Global Point name first.'); return; }
+    try { await showMove(side, { point: name, move: String(motion).toLowerCase() }, `${motion} to ${name}`); } catch (err) { tell(err); }
+  };
+  const pointSequence = window.rcRunPointSequence;
+  window.rcRunPointSequence = async function rcRunPointSequence(side) {
+    if (!(await visualSim())) { await pointSequence(side); return; }
+    const steps = robotControlState[side].pointSequence;
+    if (!steps.length) { window.toast('Add one or more Global Points first.'); return; }
+    let start = null;
+    try {
+      for (const [i, st] of steps.entries()) {          // each step from where the one before left the arm
+        const r = await shape(side, { point: st.name, move: String(st.motion).toLowerCase(), start });
+        window.rcSetStatus(side, `SIMULATION // step ${i + 1} of ${steps.length}: ${st.motion} to ${st.name}`, true);
+        await simView.play({ [side]: r }, `step ${i + 1} of ${steps.length}: ${st.motion} to ${st.name}`);
+        start = r.end;
+      }
+      window.rcSetStatus(side, `SIMULATION // global point sequence shown ✓ (${steps.length} steps, nothing sent)`, false);
+    } catch (err) { tell(err); }
+  };
 }

@@ -598,7 +598,7 @@ function gate() {
   const says = (m) => (S.scope === 'task' ? 'RUN TASK' : S.scope === 'dual' ? 'RUN DUAL-ARM TASK' : m === 'both' ? 'RUN BOTH' : `RUN ${ARM(m)}`);
   g.className = `lite-status ${ok.length ? 'ok' : 'warn'}`;
   g.textContent = ok.length ? `Simulated as it is, played to its end: ${ok.map(says).join(', ')} can run on the robot.`
-    : 'Real Machine Mode runs only what completed in Simulation Mode as it is now: run it there first.';
+    : 'Not simulated as it is now: it can still run on the robot, after a confirmation that it was not simulated first.';
 }
 
 // ── running: Simulation Mode or Real Machine Mode
@@ -636,9 +636,20 @@ async function runReal(w) {
   const body = { mode, pick: w.pick, confirm_each: S.confirmEach };
   let job;
   try {
-    job = await post(`${base()}/run`, body);
+    try {
+      job = await post(`${base()}/run`, body);
+    } catch (err) {
+      // not run in Simulation Mode as it is now (the owner, 17 Oct): it may run, once the operator says so,
+      // and the real-robot confirmation follows
+      if (err.code !== 'unsimulated') throw err;
+      const go = await confirmDialog({ title: 'Run it without simulating it first?', ok: 'Yes, run it on the real robot',
+        body: `${err.message} It has not been played in Simulation Mode, so its collision check has not been made. `
+          + 'Do you want to run it on the real hardware without simulating it first?' });
+      if (!go) { window.toast('Not run: nothing was sent to the robot. Simulation Mode plays it in 3D first.'); return; }
+      body.unsimulated_ok = true;
+      job = await post(`${base()}/run`, body);
+    }
   } catch (err) {
-    if (err.code === 'simulate') { tell(err); setMode('sim'); return; }
     if (err.code !== 'warnings' && err.code !== 'confirm') { tell(err); return; }
     let warns = [];
     if (err.code === 'warnings') warns = [err.message.replace(/^Before it runs on the robot: /, '')];

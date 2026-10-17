@@ -21,7 +21,7 @@ export async function liteMode() {
 export const standIn = () => !last || last.backend === 'stand-in';
 export const linked = () => !!last && Object.values(last.arms || {}).some((a) => a.link);
 // The speed slider's %: MoveJ / MoveL, both arms.
-export const speedPct = () => (last && last.speed ? last.speed.pct : 50);
+export const speedPct = () => (last && last.speed ? last.speed.pct : 15);
 
 // Each linked controller's own run mode as it reads (the owner, 17 Oct: Hardware sim puts the controllers in their
 // SIM mode, Real in their REAL mode); one that differs from the mode chosen (changed on its pendant) is named.
@@ -63,9 +63,9 @@ function speedSlider() {
   if (box) return box;
   const pill = document.querySelector('.topbar .mode-pill');
   if (!pill) return null;
-  const input = Object.assign(document.createElement('input'), { type: 'range', min: '1', max: '100', step: '1', value: '50', id: 'liteSpeedRange' });
+  const input = Object.assign(document.createElement('input'), { type: 'range', min: '1', max: '100', step: '1', value: '15', id: 'liteSpeedRange' });
   input.setAttribute('aria-label', 'MoveJ / MoveL speed, both arms (%)');
-  const val = el('b', 'lite-speed-val', '50 %');
+  const val = el('b', 'lite-speed-val', '15 %');
   box = Object.assign(document.createElement('label'), { id: 'liteSpeed', className: 'lite-speed' });
   box.append(el('span', 'lite-speed-head', 'Speed'), input, val);
   input.addEventListener('input', () => { speedBusy = true; val.textContent = `${input.value} %`; });
@@ -93,6 +93,35 @@ function showSpeed(sp) {
       : 'Connect an arm: Lite reads its speed and gives it back after every move.');
 }
 
+// The arm indicators, top right (the owner, 17 Oct): one circle per arm, green a good connection, yellow a
+// weak one, red none (a cable out, the controller off or not answering); the server grades each link
+// (robot_link.ArmLink.quality) and says why in the circle's title.
+const LEVEL = { good: 'Good connection', weak: 'Weak connection', none: 'No connection' };
+function armDots(arms, offline) {
+  let box = document.getElementById('liteArmDots');
+  if (!box) {
+    const stop = document.querySelector('.topbar .emstop');
+    if (!stop) return;
+    box = el('div', 'lite-arm-dots', '');
+    box.id = 'liteArmDots';
+    box.setAttribute('role', 'status');
+    for (const side of ['left', 'right']) {
+      const dot = el('span', 'lite-arm-dot', '');
+      dot.dataset.side = side;
+      dot.append(el('i', 'lite-arm-dot-led', ''), el('b', '', side === 'left' ? 'L' : 'R'));
+      box.append(dot);
+    }
+    stop.before(box);
+  }
+  for (const dot of box.querySelectorAll('.lite-arm-dot')) {
+    const side = dot.dataset.side, q = offline ? { level: 'none', text: 'the Lite server is not answering' }
+      : ((arms || {})[side] || {}).quality || { level: 'none', text: 'not connected' };
+    dot.dataset.level = q.level;
+    dot.title = `${side.toUpperCase()} arm: ${LEVEL[q.level] || q.level} (${q.text})`;
+    dot.setAttribute('aria-label', dot.title);
+  }
+}
+
 async function poll() {
   if (!session.token) return;
   try {
@@ -102,9 +131,10 @@ async function poll() {
     document.dispatchEvent(new CustomEvent('lite:status', { detail: st }));      // alerts.js, and anyone else
     const p = pillText(st);
     show(p.state, p.head, p.text, st.mode_text);
+    armDots(st.arms, false);
   } catch (err) {
     last = null;
-    if (err.code === 'offline') show('offline', 'NO SERVER', 'restart ALIX Studio Lite');
+    if (err.code === 'offline') { show('offline', 'NO SERVER', 'restart ALIX Studio Lite'); armDots(null, true); }
   }
 }
 

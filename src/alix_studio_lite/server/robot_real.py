@@ -319,7 +319,7 @@ class RealArm:
         still be in drag teaching raises ``code="drag"``."""
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         try:
-            with self.link.busy("saving the recording", wait_s=CLOSE_WAIT_S):
+            with self.link.busy("saving the recording", wait_s=CLOSE_WAIT_S, expect_s=120):
                 ret = self._call("rm_stop_drag_teach", self.robot.rm_stop_drag_teach)
                 out = self._call("rm_save_trajectory", self.robot.rm_save_trajectory, str(path))
         except UserError as exc:
@@ -553,7 +553,7 @@ class RealArm:
         rmu = _rmu()
         pid = int(program_id)
         t0 = time.monotonic()
-        with self.link.busy(f"sending program {pid}"), _printed_to(self._printed):
+        with self.link.busy(f"sending program {pid}", expect_s=300), _printed_to(self._printed):
             try:
                 lines = rmu.read_track(Path(path))
             except SystemExit as exc:
@@ -643,7 +643,7 @@ class RealArm:
             if on_line is not None:
                 on_line(line)
 
-        with self.link.busy(f"running program {pid}"), _printed_to(line_out):
+        with self.link.busy(f"running program {pid}", expect_s=timeout), _printed_to(line_out):
             try:
                 rc = rmu.run(self.robot, a, self.link.ip, pid, None if first_row_millideg is None else list(first_row_millideg))
             except SystemExit as exc:                     # its program list did not answer
@@ -689,7 +689,7 @@ class RealArm:
         if stop_hook is not None:
             stop_hook(stop)
         rc = 1
-        with self.link.busy(f"sequence of {len(norm)} step(s)"), _printed_to(line_out):
+        with self.link.busy(f"sequence of {len(norm)} step(s)", expect_s=float(timeout_s) * max(1, len(norm))), _printed_to(line_out):
             try:
                 try:
                     with guard:
@@ -748,7 +748,7 @@ class RealArm:
         rt = _runner()
         move = "movel" if str(move).lower() == "movel" else "movej"
         t0, gap, why = time.monotonic(), None, None
-        with self.link.busy(f"{'MoveL' if move == 'movel' else 'MoveJ'} to {name}"), _printed_to(self._runner_line):
+        with self.link.busy(f"{'MoveL' if move == 'movel' else 'MoveJ'} to {name}", expect_s=120), _printed_to(self._runner_line):
             try:
                 with track.global_speed_guard(self.robot, int(restore_pct), log=self._alix_log()):
                     track.set_global_speed(self.robot, 100)
@@ -827,7 +827,7 @@ class RealArm:
         from alix_dispatch import track
 
         deg = [v / 1000.0 for v in target_millideg]
-        with self.link.busy("moving to the start"):
+        with self.link.busy("moving to the start", expect_s=120):
             out = alix_staging.park_arm(self.handle, {}, rest_deg=deg, rest_speed=int(speed), restore_speed=int(restore_pct),
                                         log=self._alix_log())
             gap = track.start_gap_deg(self.robot, list(target_millideg))

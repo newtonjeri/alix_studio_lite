@@ -967,4 +967,4 @@ def make_server(app: LiteApp, port: int) -> ThreadingHTTPServer:
 
 
 # Routes kept in their own modules register themselves on import (after ROUTES exists).
-from . import api_library, api_units, api_v2, api_workflow, routes_robot  # noqa: E402,F401
+from . import api_advanced, api_library, api_units, api_v2, api_workflow, routes_robot  # noqa: E402,F401
