@@ -13,7 +13,7 @@
 import { get, post, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, loadUnit, robotCall, step, tell, unitUrl, watchJob } from './ctx.js';
 import { standoffSaved } from './placement.js';
-import { fillPointGroup, filterOptions, hasController, loadPoints, movePoint, pointControls, pointDetail } from './points.js';
+import { dropGone, fillPointGroup, filterOptions, hasController, loadPoints, movePoint, pointControls, pointDetail } from './points.js';
 import { liteMode } from './status.js';
 import { PHASES, PHASE_WORDS } from './view3d.js';
 
@@ -227,6 +227,7 @@ async function fillPoses(side) {
         d.points.map(pt => el('option', { value: `gp:${pt.name}`, text: pt.name, 'data-detail': pointDetail(pt) })))
       : el('optgroup', { class: 'lite-points', label: d.note || 'No global points on this controller' }));
     if ([...sel.options].some(o => o.value === keep)) sel.value = keep;
+    else dropGone(sel, keep, side);
     filterOptions(sel, $(`lite_${side}_poseSearch`)?.value);
   } catch (err) {
     const e = $(`${side}PoseStatus`);
@@ -392,9 +393,12 @@ export function installPrepare() {
       extra = { confirmed: true };
     }
     lastMoveError = null;
-    const results = await Promise.allSettled(arms.map((arm) => {
+    const results = await Promise.allSettled(arms.map(async (arm) => {
       const value = $(`${arm}PoseSelect`)?.value || 'Default Start Pose';
-      const point = value.startsWith('gp:') ? value.slice(3) : null;           // a global point of the controller
+      let point = value.startsWith('gp:') ? value.slice(3) : null;             // a global point of the controller
+      if (!point && hasController(arm)) {       // a start pose of the page's own, named as one of the controller's points
+        try { if ((await loadPoints(arm)).points.some(p => p.name === value)) point = value; } catch (_) { /* as it is */ }
+      }                                           // (the lab, 17 Oct: R_HME_POS refused as a name the controller does not store)
       const motion = $(`lite_${arm}_poseMotion`)?.value || 'movej';
       const status = $(`${arm}PoseStatus`);
       const go = point

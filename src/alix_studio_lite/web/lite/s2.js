@@ -232,20 +232,49 @@ function pickInto(side, what, anchor) {
     { placeholder: what === 'point' ? 'Search the global points' : 'Search the programs: ID or name' });
 }
 
+// The programs and the global points to choose from are the controller's, as Data Management lists them (the
+// owner, 17 Oct): a program or a point deleted on the controller is gone from them at the next read. Refresh
+// (`said`) reads the controllers again, completely; a field that names something no longer on its controller is
+// cleared, and a step that uses one is marked in its table (it is kept: the sequence is the operator's).
 async function refreshSources(said = false) {
+  const cleared = [];
   await Promise.all(ARMS.map(async (side) => {
-    try { S.sources[side] = await get(`${base()}/${side}/sources`); } catch (_) { /* the lists stay */ }
+    try { S.sources[side] = await get(`${base()}/${side}/sources${said ? '?refresh=1' : ''}`); } catch (_) { /* the lists stay */ }
+    const src = S.sources[side];
     const pl = $(`liteS2Progs_${side}`);
-    if (pl) pl.replaceChildren(...S.sources[side].programs.map(p => el('option', { value: `${p.id}${p.name ? ` // ${p.name}` : ''}`,
-      text: p.sent ? 'sent by Lite' : (p.gone ? 'no longer on the controller' : 'on the controller') })));
+    if (pl) pl.replaceChildren(...src.programs.map(p => el('option', { value: `${p.id}${p.name ? ` // ${p.name}` : ''}`,
+      text: p.sent ? `sent by Lite${p.file_name ? `: ${p.file_name}` : ''}` : 'on the controller' })));
     const pp = $(`liteS2Points_${side}`);
-    if (pp) pp.replaceChildren(...S.sources[side].points.map(n => el('option', { value: n })));
+    if (pp) pp.replaceChildren(...src.points.map(n => el('option', { value: n })));
+    if (!known(side)) return;                                  // nothing read yet: nothing is judged
+    const prog = $(`liteS2_${side}_prog`), pid = /^\s*(\d+)/.exec(prog?.value || '');
+    if (pid && !src.programs.some(p => p.id === Number(pid[1]))) { cleared.push(`${ARM(side)} Program ${pid[1]}`); prog.value = ''; }
+    const point = $(`liteS2_${side}_point`), name = (point?.value || '').trim();
+    if (name && !src.points.includes(name)) { cleared.push(`${ARM(side)} global point ${name}`); point.value = ''; }
   }));
   paintAll();
   if (said) {
-    window.toast(`Programs: LEFT ${S.sources.left.programs.length}, RIGHT ${S.sources.right.programs.length}. Global points: `
-      + ARMS.map(s => (S.sources[s].points_read ? `${ARM(s)} ${S.sources[s].points.length}` : `${ARM(s)} not read (connect the arm)`)).join(', ') + '.');
+    for (const side of ARMS) document.dispatchEvent(new CustomEvent('lite:controller', { detail: { side, from: 's2' } }));
+    const gone = ARMS.flatMap(side => missing(side).map(m => `${ARM(side)} row ${m.row} (${m.what})`));
+    window.toast(`Read from the controllers: programs LEFT ${S.sources.left.programs.length}, RIGHT ${S.sources.right.programs.length}; global points `
+      + ARMS.map(s => (S.sources[s].points_read ? `${ARM(s)} ${S.sources[s].points.length}` : `${ARM(s)} not read (connect the arm)`)).join(', ') + '.'
+      + (cleared.length ? ` Cleared (no longer on the controller): ${cleared.join(', ')}.` : '')
+      + (gone.length ? ` Not on the controller: ${gone.join(', ')}.` : ''));
   }
+}
+
+// Whether the arm's controller list was read (live, or as last read): only then is a step judged missing.
+const known = (side) => !!(S.sources[side] && (S.sources[side].read || S.sources[side].standin));
+
+// The steps of an arm that use a program or a global point its controller no longer holds.
+function missing(side) {
+  if (!known(side)) return [];
+  const src = S.sources[side], out = [];
+  S.steps[side].forEach((st, i) => {
+    if (st.type === 'program' && !src.programs.some(p => p.id === Number(st.id))) out.push({ row: i + 1, what: `Program ${st.id}` });
+    if (st.type === 'global' && src.points_read && !src.points.includes(st.name)) out.push({ row: i + 1, what: `global point ${st.name}` });
+  });
+  return out;
 }
 
 // Each arm's steps go to the server as they are edited, one save at a time; the server's reply (its checked
@@ -435,9 +464,12 @@ function paintArm(side) {
     paintArm(side);
     if (focus) body.querySelector(`tr[data-i="${i}"]`)?.focus();          // the row keeps the keyboard's focus
   };
+  const gone = new Set(missing(side).map(m => m.row));
   body.replaceChildren(...list.map((step, i) => {
     const [type, target, options] = row({ ...step, _side: side });
-    const tr = el('tr', { class: `${S.sel[side] === i ? 'lite-picked' : ''}${now === i + 1 ? ' lite-s2-now' : ''}`, tabindex: '0',
+    const off = gone.has(i + 1);
+    const tr = el('tr', { class: `${S.sel[side] === i ? 'lite-picked' : ''}${now === i + 1 ? ' lite-s2-now' : ''}${off ? ' lite-s2-gone' : ''}`, tabindex: '0',
+      title: off ? `Not on the ${ARM(side)} controller (as read ${S.sources[side].read || ''}): replace or remove this step.` : '',
       'data-i': String(i), 'aria-selected': String(S.sel[side] === i),
       onclick: () => pick(i, false),
       onkeydown: (e) => {
@@ -445,7 +477,8 @@ function paintArm(side) {
         if (e.key === 'ArrowDown' && i + 1 < list.length) { e.preventDefault(); pick(i + 1, true); }
         if (e.key === 'ArrowUp' && i > 0) { e.preventDefault(); pick(i - 1, true); }
       } },
-    el('td', { text: String(i + 1) }), el('td', { text: type }), el('td', { text: target }), el('td', { text: options }));
+    el('td', { text: String(i + 1) }), el('td', { text: type }), el('td', { text: target }),
+    el('td', { text: off ? `${options}${options ? ' · ' : ''}not on the controller` : options }));
     return tr;
   }));
   const cur = now ? body.querySelector('.lite-s2-now') : null;          // the row in view inside its table, the page left where it is
@@ -511,7 +544,9 @@ async function chooseTask(anchor) {
   try { await saved(); } catch (err) { tell(err); return; }
   const label = (st) => `Program ${st.id}${st.name ? ` // ${st.name}` : ''}`;
   let full = null;                                           // V53's plan of both arms (none with one arm's steps)
-  try { full = await post(`${base()}/plan`, { mode: 'both' }); } catch (_) { /* no checkpoint to say */ }
+  if (S.steps.left.length && S.steps.right.length) {
+    try { full = await post(`${base()}/plan`, { mode: 'both' }); } catch (_) { /* no checkpoint to say */ }
+  }
   const afterCheck = (s) => !!s && !!full && full.stages.some(x => x.kind === 'checkpoint' && x.index < s.index);
   if (S.scope === 'task') {
     const stageOf = (side, row) => full && full.stages.find(x => ((x.programs || {})[side] || []).some(p => p.row === row));
@@ -934,6 +969,9 @@ function paintFindings() {
   const marks = $('liteS2Marks'), T = Math.max(1e-6, sim.total_s);          // the checkpoints (the collisions: the view's tools)
   marks.replaceChildren(...sim.stages.filter(s => s.kind === 'checkpoint').map(s => el('span', { class: 'lite-s2-checkmark', title: s.label, style: `left:${(100 * s.t0) / T}%` })));
 }
+
+// Data Management read a controller again (or S1, or a start-pose list): the lists here follow it.
+document.addEventListener('lite:controller', (e) => { if (built && ctx.pid && (e.detail || {}).from !== 's2') refreshSources(false); });
 
 export function openS2(host) {
   if (panel !== host) { panel = host; built = false; }

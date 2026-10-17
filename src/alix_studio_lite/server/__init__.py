@@ -12,6 +12,7 @@ DEFAULT_PORT = 8766                     # ALIX Studio uses 8765, so both can run
 DEFAULT_DATA = Path(os.environ.get("ALIX_LITE_DATA", Path.home() / "ALIX-Lite"))
 # Lite's own Chrome profile (_open_browser): a separate Chrome, so its switches apply even while another is open
 CHROME_PROFILE = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "alix-studio-lite" / "chrome"
+EXIT_LIMIT_S = 30.0                     # Lite's exit (STOP, then each controller's speed back) ends by then, else it quits
 
 
 def _chrome() -> str | None:
@@ -200,17 +201,76 @@ def main(argv=None) -> int:
             print(f"   copied from {app.store.home}: {p['name']}" + (f" (was “{p['renamed']}”)" if p["renamed"] else ""), flush=True)
     print(f"Logs:  {app.log.root}  (tail -f {app.log.root}/$(date +%F)/lite.log)", flush=True)
     print(f"Python:  {sys.executable}", flush=True)
+    if hasattr(signal, "SIGUSR1"):              # what each thread is doing, on demand, for a Lite that stops answering
+        import faulthandler
+
+        faulthandler.register(signal.SIGUSR1, all_threads=True)
+        print(f"Process:  {os.getpid()}  (if Lite stops answering: kill -USR1 {os.getpid()} prints what each "
+              "thread is doing)", flush=True)
     try:
         srv.serve_forever(poll_interval=0.25)
     except KeyboardInterrupt:
-        print("\nShutting down.", flush=True)
+        print(f"\nShutting down: STOP to the arms, then each controller's speed back (at most {EXIT_LIMIT_S:g} s; "
+              "Ctrl+C again once STOP is sent quits at once).", flush=True)
     finally:
-        signal.signal(signal.SIGINT, signal.SIG_IGN)       # a second Ctrl+C must not cut the shutdown short
-        try:
-            app.robot.stop("all")
-            app.robot.close()                       # the live links, if any
-        finally:
-            srv.server_close()
-            workers.shutdown()
+        _close(app, srv)
     print("ALIX Studio Lite stopped.", flush=True)
-    return 0
+    sys.stderr.flush()
+    os._exit(0)                 # nothing left behind holds the process: a job still on its thread, the SDK's own threads
+
+
+def _close(app, srv) -> None:
+    """Lite's exit, bounded: STOP to every arm, then each controller's global speed back and the links let
+    go. It never hangs (the lab, 17 Oct: Ctrl+C did not end Lite; it took the system monitor): once STOP is
+    out, a second Ctrl+C (or the system monitor's End) quits at once, and after EXIT_LIMIT_S Lite quits as it
+    is, first writing what each thread was doing to the day's log folder (and the terminal)."""
+    import signal
+
+    from . import workers
+
+    sent, ended = threading.Event(), threading.Event()
+
+    def again(signum, frame):
+        if sent.is_set():
+            print("\nQuitting now: the controllers' global speed may not be back where Lite found it.", flush=True)
+            workers.kill_now()
+            os._exit(130)
+
+    def watchdog():
+        if ended.wait(EXIT_LIMIT_S):
+            return
+        where = _dump_threads(app.log.root)
+        print(f"\nLite did not close within {EXIT_LIMIT_S:g} s, so it quits now"
+              + (f" (what each thread was doing: {where})." if where else "."), flush=True)
+        workers.kill_now()
+        os._exit(1)
+
+    signal.signal(signal.SIGINT, again)
+    signal.signal(signal.SIGTERM, again)
+    threading.Thread(target=watchdog, name="lite-exit", daemon=True).start()
+    try:                                            # each step is tried; none keeps Lite from quitting
+        for step in (lambda: app.robot.stop("all"), sent.set, app.robot.close, srv.server_close, workers.shutdown):
+            try:
+                step()
+            except Exception as exc:                                        # noqa: BLE001
+                print(f"Closing: {exc!r}", flush=True)
+    finally:
+        sent.set()
+        ended.set()
+
+
+def _dump_threads(root) -> str | None:
+    """Every thread's stack, to threads-HHMMSS.txt in the day's log folder and to the terminal."""
+    import faulthandler
+    import time
+
+    try:
+        d = Path(root) / time.strftime("%Y-%m-%d")
+        d.mkdir(parents=True, exist_ok=True)
+        p = d / f"threads-{time.strftime('%H%M%S')}.txt"
+        with open(p, "w", encoding="utf-8") as f:
+            faulthandler.dump_traceback(file=f, all_threads=True)
+        faulthandler.dump_traceback(file=sys.stderr, all_threads=True)
+        return str(p)
+    except Exception:                                                       # noqa: BLE001
+        return None

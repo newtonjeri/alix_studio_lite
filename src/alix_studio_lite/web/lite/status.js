@@ -23,13 +23,19 @@ export const linked = () => !!last && Object.values(last.arms || {}).some((a) =>
 // The speed slider's %: MoveJ / MoveL, both arms.
 export const speedPct = () => (last && last.speed ? last.speed.pct : 50);
 
+// Each linked controller's own run mode as it reads (the owner, 17 Oct: Hardware sim puts the controllers in their
+// SIM mode, Real in their REAL mode); one that differs from the mode chosen (changed on its pendant) is named.
 function pillText(st) {
   if (st.motion_block) return { state: 'estop', head: 'E-STOP', text: st.motion_block };
-  const arms = Object.values(st.arms || {});
-  const linked = arms.filter((a) => a.connected && a.link).map((a) => a.side.toUpperCase());
-  const robot = linked.length ? `${linked.join(' + ')} live`
+  const arms = Object.values(st.arms || {}).filter((a) => a.connected && a.link);
+  const linked = arms.map((a) => a.side.toUpperCase());
+  const run = (a) => (a.link && a.link.feedback && a.link.feedback.run_mode) || null;
+  const want = st.mode === 'hwsim' ? 'SIM' : st.mode === 'real' ? 'REAL' : null;
+  const modes = [...new Set(arms.map(run).filter(Boolean))];
+  const off = want ? arms.filter((a) => run(a) && run(a) !== want).map((a) => `${a.side.toUpperCase()} controller ${run(a)}`) : [];
+  const robot = linked.length ? `${linked.join(' + ')} live${off.length ? ` · ${off.join(', ')}` : modes.length === 1 ? ` · ${modes[0]}` : ''}`
     : st.backend === 'stand-in' ? 'stand-in robot, no hardware' : 'robot not connected';
-  return { state: st.mode, head: MODE[st.mode] || st.mode, text: robot };
+  return { state: off.length ? 'estop' : st.mode, head: MODE[st.mode] || st.mode, text: robot };
 }
 
 const el = (tag, className, text) => Object.assign(document.createElement(tag), { className, textContent: text });

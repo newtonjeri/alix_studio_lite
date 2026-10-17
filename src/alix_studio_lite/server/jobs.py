@@ -42,6 +42,12 @@ class Job:
             self.stage, self.i, self.n = stage, int(i), int(n)
         self.check()
 
+    def say(self, stage: str) -> None:
+        """What the job is doing now, without the stop check of ``progress``: from a callback inside a
+        command that must end its own way (the control program's run prints its lines through one)."""
+        with self._lock:
+            self.stage, self.i, self.n = stage, 0, 0
+
     def log(self, text: str, level: str = "info") -> None:
         with self._lock:
             self.events.append(dict(seq=len(self.events), t=round(time.time() - self.started, 2),

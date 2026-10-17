@@ -35,6 +35,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import threading
 import time
 from pathlib import Path
@@ -115,6 +116,20 @@ class StandInArm:
                     recovery=self.recovery, recovery_note=self.recovery_note)
 
 
+_REPORTS_RE = re.compile(r"^!! the arm reports (.+) at ([\d.]+) s$")
+STOP_WAIT_S = 5.0                     # how long STOP's answer waits for each controller's confirmation
+CONNECT_WAIT_S = 20.0                 # a controller that has not answered a Connect by then is said not to
+
+
+def arm_report(line: str) -> dict | None:
+    """What the control program's run says the arm reported, as it comes ("!! the arm reports 4105 (0x1009:
+    joint speed over its limit (a warning; the run goes on)) at 2.3 s"): {codes, at_s, warn}, or None."""
+    m = _REPORTS_RE.match(str(line).strip())
+    if not m:
+        return None
+    return dict(codes=m.group(1), at_s=float(m.group(2)), warn="a warning" in m.group(1))
+
+
 def ended_early(seconds, lines, scale: float = 1.0, share: float = 0.9) -> str | None:
     """Whether a program's run took less time than its own points need ((lines - 1) x 5 ms, as the
     controller never plays them faster; ``scale``: an emulator's time scale): then it was stopped, an
@@ -180,6 +195,7 @@ class StandInRobot:
         self.log = log                                  # logbook.Logbook: the hardware log and its alerts
         self._seen: dict = {}                           # side -> what was last reported (errors, link, E-stop)
         self.mode = "visual"                            # visual | hwsim | real, set by LiteApp.set_mode
+        self.switching: str | None = None               # the mode the controllers are being switched to: no motion meanwhile
         self.link_kind = link
         self.links: dict = {}                           # side -> robot_link.ArmLink while connected
         self.test_estop: dict = {}                      # an engineer's E-stop test on emulated arms
@@ -231,11 +247,12 @@ class StandInRobot:
         fb = link.view()["feedback"]
         return fb.get("pole_mm"), fb.get("hand")
 
-    def _leave_drag(self, side: str) -> None:
-        """A linked arm in drag teaching leaves it (STOP, an E-stop, a cancel, Lite closing)."""
+    def _leave_drag(self, side: str, at_once: bool = False) -> bool:
+        """A linked arm in drag teaching leaves it (an E-stop, a cancel, Lite closing; STOP leaves it within
+        its own stop); ``at_once`` (an E-stop): without waiting for a command that holds its controller.
+        True when its controller took it (the stand-in has none)."""
         real = self._real(side)
-        if real is not None:
-            real.teach_cancel()
+        return True if real is None else real.teach_cancel(at_once)
 
     def _engage(self, side: str) -> None:
         """An E-stop press: latched until Recover; every motion job on BOTH arms ends as
@@ -248,7 +265,7 @@ class StandInRobot:
                         "Make the cell safe, release the button, then press Recover.", "estop")
             for arm in self.arms.values():
                 if (arm.teaching or arm.recovery == "drag") and arm.side in self.links:
-                    threading.Thread(target=self._leave_drag, args=(arm.side,), daemon=True).start()
+                    threading.Thread(target=self._leave_drag, args=(arm.side, True), daemon=True).start()
                 arm.teaching = False
                 if arm.recovery == "drag":
                     arm.recovery, arm.recovery_note = "held", "the E-stop was pressed in Arm Drag Mode"
@@ -412,6 +429,8 @@ class StandInRobot:
         why = self.motion_block()
         if why:
             raise UserError(why, "Release the E-stop button, then press Recover.")
+        if self.switching:
+            raise UserError(f"The controllers are switching to {self.switching}.", "Try again in a moment.", code="busy")
         teaching = [a.side for a in self.arms.values() if a.teaching]
         if teaching:
             raise UserError(f"Drag teaching is running on the {teaching[0].upper()} arm.",
@@ -462,8 +481,11 @@ class StandInRobot:
                 self._leave_drag(side)
         for side in list(self.links):
             self._settle(side)
-            self._give_back_speed(side)
-            self._give_back_sensitivity(side)
+            try:
+                self._give_back_speed(side)
+                self._give_back_sensitivity(side)
+            except UserError:                           # its controller still busy: every link is let go all the same
+                pass
         with self.lock:
             links, self.links = list(self.links.values()), {}
         for link in links:
@@ -586,6 +608,8 @@ class StandInRobot:
             if real is None:
                 raise UserError(f"The {side.upper()} arm is not connected to its controller.",
                                 "Start Lite with --robot realman and connect the arm.", code="connect")
+            if self.switching:
+                raise UserError(f"The controllers are switching to {self.switching}.", "Try again in a moment.", code="busy")
             self._sync(side)
             if a.estop == "ENGAGED" or a.button_pressed:
                 raise UserError(f"The {side.upper()} arm's E-stop button is pressed.", "Release it, then try again.")
@@ -640,6 +664,40 @@ class StandInRobot:
         return out
 
     # ── connection and safety
+    def _open_link(self, link):
+        """``link`` opened on a thread of its own, so a controller that does not answer is said after
+        CONNECT_WAIT_S instead of holding the request with no answer at all (the lab, 17 Oct: after STOPs
+        that went unanswered, four Connects got no answer, each press one more connection). A link that
+        opens after that is closed at once."""
+        box, lock, done = {}, threading.Lock(), threading.Event()
+
+        def work():
+            try:
+                got = link.open()
+            except BaseException as exc:                                                 # noqa: BLE001
+                with lock:
+                    box["error"] = exc
+                done.set()
+                return
+            with lock:
+                box["link"], late = got, box.get("late")
+            done.set()
+            if late:
+                got.close()
+
+        threading.Thread(target=work, name=f"lite-connect-{link.side}", daemon=True).start()
+        if not done.wait(CONNECT_WAIT_S):
+            with lock:
+                late = "link" not in box and "error" not in box
+                box["late"] = late
+            if late:
+                raise UserError(f"The {link.side.upper()} controller did not answer within {CONNECT_WAIT_S:g} s, so the "
+                                "arm is not connected.", "Check its power and cable. If it still does not answer, restart "
+                                "its controller, then Lite.")
+        if "error" in box:
+            raise box["error"]
+        return box["link"]
+
     def connect(self, side: str, ip: str | None = None) -> dict:
         a = self.arm(side)
         target = (ip or a.ip).strip()
@@ -650,7 +708,7 @@ class StandInRobot:
                 self._refuse_if_busy(side, "connect again")
             # the new link first: when it cannot open, the arm keeps its old link (or stays
             # disconnected), never "connected" without a reading behind its E-stop chip
-            new = ArmLink(side, target, on_read=lambda: self._sync(side)).open()
+            new = self._open_link(ArmLink(side, target, on_read=lambda: self._sync(side)))
             with self.lock:
                 old = self.links.get(side)
                 self.links[side] = new
@@ -660,6 +718,11 @@ class StandInRobot:
             self._sync(side)
             self._read_speed(side)
             self._read_sensitivity(side)
+            if self.mode in ("hwsim", "real"):          # connected in Hardware sim or Real: its controller follows
+                try:
+                    self.set_controller_modes(self.mode, [side])
+                except UserError as exc:
+                    self._alert("warn", side, f"{side.upper()} connected, but {exc}", "Check its mode on the pendant.", "runmode")
             return self.view()[side]
         time.sleep(_s(0.4))
         self._read_speed(side)
@@ -667,6 +730,39 @@ class StandInRobot:
             a.ip, a.connected = target, True
             a.estop = "ENGAGED" if a.button_pressed else "RECOVERING" if a.estop_latched else "CLEAR"
         return a.view()
+
+    def set_controller_modes(self, mode: str, sides=None) -> dict:
+        """Hardware sim puts each linked controller in its SIM mode and Real in its REAL mode, read back (the
+        owner, 17 Oct: "When Hardware Sim is selected, the controller moves to sim mode"; the lab's controllers
+        had stayed in REAL, one put in SIM by hand on its pendant). Visual sim leaves them as they are. All or
+        none: a controller that does not take it puts back the ones switched, and the error says which.
+        Returns {side: "SIM" | "REAL"} for the controllers switched."""
+        if mode not in ("hwsim", "real"):
+            return {}
+        want = "SIM" if mode == "hwsim" else "REAL"
+        done, out = [], {}
+        for side in (sides or ARMS):
+            real = self._real(side)
+            if real is None or not self.arm(side).connected:
+                continue
+            try:
+                originals = real.set_run_mode(want)
+            except UserError as exc:
+                for s, orig in done:
+                    try:
+                        self._real(s).restore_run_mode(orig)
+                    except Exception:                                           # noqa: BLE001 - said by its own alert
+                        pass
+                if exc.code == "busy":
+                    why = str(exc).split("busy: ", 1)[-1].rstrip(".")
+                    raise UserError(f"the {side.upper()} controller did not switch to its {want} mode: it is busy ({why})",
+                                    exc.hint, code="runmode") from None
+                raise UserError(f"the {side.upper()} controller did not switch to its {want} mode (read back)",
+                                "Check its errors on the pendant, then choose the mode again.", code="runmode") from None
+            done.append((side, originals))
+            self.arm(side).controller_mode = want
+            out[side] = want
+        return out
 
     def disconnect(self, side: str) -> dict:
         """A linked arm lets go only once nothing runs on it: its controller's own speed is put back,
@@ -744,13 +840,16 @@ class StandInRobot:
         sides = [s for s in (ARMS if every else (side,)) if s in self.arms]
         snap = dict(self.links)
         links = {s: snap[s] for s in sides if s in snap}
-        sent: dict = {}
+        got: dict = {}                                  # what each controller confirmed, written by its thread
         teaching = {s for s in links if self.arms[s].teaching or self.arms[s].recovery == "drag"}
+        already = {s for s, link in links.items() if link.stop_in_progress()}   # a STOP being sent: waited for
+        t_sent = time.time()
 
         def one(s, link):
-            if s in teaching:
-                self._leave_drag(s)                     # drag teaching ends first, then the stop
-            sent[s] = link.stop(hard=every)
+            r = link.stop(hard=every, drag=s in teaching)  # drag teaching ends first, within the stop
+            if s in teaching and self.log is not None and r.get("drag") is not None:
+                self.log.hardware(s, "rm_stop_drag_teach", ret=r["drag"], ok=r["drag"] == 0, text="STOP: drag teaching left first")
+            got[s] = r
 
         threads = [threading.Thread(target=one, args=(s, l), name=f"lite-stop-{s}", daemon=True) for s, l in links.items()]
         for t in threads:
@@ -771,9 +870,20 @@ class StandInRobot:
                         a.estop = "RECOVERING"
                     held.append(s)
         for t in threads:
-            t.join(timeout=5.0)
-        for s in links:
-            sent.setdefault(s, dict(ok=False, text=f"{s.upper()}: no answer from its controller within 5 s"))
+            t.join(timeout=STOP_WAIT_S)
+        sent = dict(got)
+        # ALIX's whole stop (the arm, the pole, the hand frozen through Modbus, then the proof that the arm is
+        # still) can take more than 5 s while the controller answers (the lab, 17 Oct: "no answer" from both, which
+        # took Recover and Clear errors in those same seconds): said as not confirmed yet, and its own result is
+        # logged and shown when it comes
+        late = [s for s in links if s not in sent]
+        for s in late:
+            sent[s] = dict(ok=False, text=f"{s.upper()}: a STOP was already being sent to it, its answer not come within "
+                           f"{STOP_WAIT_S:g} s" if s in already
+                           else f"{s.upper()}: STOP sent, not confirmed by its controller within {STOP_WAIT_S:g} s")
+        if late:
+            threading.Thread(target=self._stop_confirmed_late, args=(late, threads, got, t_sent), name="lite-stop-late",
+                             daemon=True).start()
         ok = all(r["ok"] for r in sent.values())
         for s, r in sent.items():
             if not r["ok"]:
@@ -783,6 +893,22 @@ class StandInRobot:
             f" Nothing moves until you press Recover on the {names} arm{'s' if len(held) > 1 else ''} (Robot & mode)."
             if held else "")
         return dict(stopped=n, side="all" if every else side, controllers=sent, ok=ok, held=held, text=text.strip())
+
+    def _stop_confirmed_late(self, late: list, threads: list, got: dict, t_sent: float) -> None:
+        """What a controller confirmed of STOP after the 5 s the request waits for: logged, and shown."""
+        for t in threads:
+            t.join(timeout=60.0)
+        for s in late:
+            r = got.get(s)
+            took = time.time() - t_sent
+            if r is None:
+                self._alert("error", s, f"{s.upper()}: its controller has not confirmed STOP after {took:.0f} s.",
+                            "Press the red E-stop button on the robot if it is still moving.", "stop")
+            else:
+                if self.log is not None:
+                    self.log.hardware(s, "stop confirmed late", ok=bool(r.get("ok")), elapsed_s=took, text=r.get("text"))
+                self._alert("warn" if r.get("ok") else "error", s, f"{r.get('text')} (confirmed after {took:.1f} s).",
+                            None if r.get("ok") else "Press the red E-stop button on the robot if it is still moving.", "stop")
 
     # ── staging: pole, then hand, each read back; nothing moves the arm unless both arrived
     def set_fault(self, side: str, pole: bool | None = None, hand: bool | None = None) -> dict:
@@ -1026,7 +1152,12 @@ class StandInRobot:
 
         path = Path(save_to) if save_to else Path(tempfile.mkdtemp(prefix="lite-teach-")) / \
             f"{side}_drag_{time.strftime('%Y%m%d_%H%M%S')}.txt"
-        points = real.teach_stop(path)
+        try:
+            points = real.teach_stop(path)
+        except UserError as exc:
+            if exc.code == "drag":                  # it may still be in drag teaching: so it stays for Lite (STOP leaves it)
+                a.teaching = True
+            raise
         return dict(seconds=secs, file=path, points=points, stage=a.teach_stage)
 
     def teach_cancel(self, side: str) -> dict:
@@ -1034,8 +1165,10 @@ class StandInRobot:
         a = self.arm(side)
         self.jobs.cancel_arm(side, kinds=("teach",))     # a countdown ends: drag teaching never starts
         was, a.teaching = a.teaching, False
-        if was:
-            self._leave_drag(side)
+        if was and not self._leave_drag(side):
+            a.teaching = True                       # it may still be in drag teaching: so it stays for Lite (STOP leaves it)
+            raise UserError(f"The {side.upper()} arm may still be in drag teaching: its controller did not confirm leaving it.",
+                            "Press STOP, or the red E-stop button, before anyone lets go of the arm.", code="drag")
         return a.view()
 
     def move_to(self, side: str, what: str, title: str, seconds: float = 2.5, stage: "staging.Stage | None" = None,
@@ -1089,10 +1222,7 @@ class StandInRobot:
         if link is None:
             raise UserError(f"The stand-in robot has no {side.upper()} controller to read the pose from.",
                             "Start Lite with --robot realman and connect the arm.", code="connect")
-        if link.view()["feedback"].get("busy"):
-            raise UserError(f"The {side.upper()} controller is busy ({link.view()['feedback']['busy']}).",
-                            "Capture the pose when the arm has stopped.")
-        fb = link.read_once()
+        fb = link.read_fresh()                          # never alongside a command (busy: said, with what holds it)
         if not fb.get("joints_deg") or len(fb["joints_deg"]) < 7:
             raise UserError(f"The {side.upper()} controller did not answer with the arm's joints.", "Try again.")
         return dict(arm=side, joints_deg=fb["joints_deg"][:7], pose=fb.get("pose"), pole_mm=fb.get("pole_mm"),
@@ -1116,7 +1246,12 @@ class StandInRobot:
         if moving or self.arm(side).teaching:
             raise UserError(f"The {side.upper()} arm is busy ({moving[0].title if moving else 'drag teaching'}).",
                             "Save the point once the arm has stopped.")
-        return real.save_global_point(name, expect_deg, replace)
+        from . import content
+
+        try:
+            return real.save_global_point(name, expect_deg, replace)
+        finally:
+            content.forget(side)                        # the controller's lists are read again at their next use
 
     def move_point(self, side: str, name: str, move: str, speed: int, wait_s: float, title: str, mode: str | None = None):
         """MoveJ or MoveL to a global point of a linked arm: in Real the arm moves, in Hardware sim
@@ -1174,33 +1309,73 @@ class StandInRobot:
         SIM or REAL mode (read back), then the control program's own run (rm_upload.run: the move to
         the first point, the program, its error codes); the mode it had is put back after."""
         held = next((x for x in real.programs() if int(x["id"]) == pid), None)
-        if held is None or not self._same_program(prog, held):
+        if held is None or not held.get("name"):        # deleted on the controller (the lab, 17 Oct: program 80)
+            raise UserError(f"The {side.upper()} controller no longer holds program {pid}: it was deleted there.",
+                            "Upload it again.")
+        if not self._same_program(prog, held):
             raise UserError(f"Program {pid} on the {side.upper()} controller is not the one Lite sent "
-                            f"(it holds “{(held or {}).get('name')}”).", "Upload it again.")
+                            f"(it holds “{held.get('name')}”).", "Upload it again.")
         if not prog.get("first_row"):
             raise UserError(f"Lite has no first line recorded for program {pid}.", "Upload it again.")
         want = "SIM" if dry_run else "REAL"
+        how = "Hardware sim" if dry_run else "Real"
+        reported = []                                   # what the arm reported during the run, said as it comes
+
+        def line(ln):
+            s = ln.strip()
+            if s.startswith(("running", "run slot", "RUN", "!!", "**")):
+                job.log(s)
+            if s.startswith("running"):                 # the controller has started it (no count: it says no more)
+                job.say(f"Program {pid} running on the {side.upper()} controller"
+                        + (" (its SIM mode: the arm stays still)" if dry_run else ""))
+            rep = arm_report(s)
+            if rep:                                     # a pop-up at once (the owner, 17 Oct), not only after the run
+                reported.append(rep)
+                job.set(reported=list(reported))
+                self._alert("warn" if rep["warn"] else "error", side,
+                            f"{side.upper()} {how} run of program {pid}: the arm reports {rep['codes']} at {rep['at_s']:.1f} s.",
+                            "In Hardware sim the run goes on to its end; its report is the controller's own." if dry_run
+                            else "Check the arm; a code that stops the program ends the run.", "run")
+
         originals = real.set_run_mode(want)
         try:
             self.arm(side).controller_mode = want
             job.log(f"Controller mode {want} (read back).")
             job.progress(f"Moving to the start ({self.speed_pct} %), then running program {pid}"
-                         + (" (the controller's SIM mode: the arm stays still)" if dry_run else ""), 0, prog["lines"])
-            out = real.run(pid, prog["first_row"], prog["lines"],      # its own lines, as they come
-                           on_line=lambda ln: job.log(ln.strip()) if ln.strip().startswith(("running", "RUN", "!!", "**")) else None,
+                         + (" (the controller's SIM mode: the arm stays still)" if dry_run else ""))
+            out = real.run(pid, prog["first_row"], prog["lines"], on_line=line,       # its own lines, as they come
                            speed=self.speed_pct, restore_pct=self.found_speed(side))
         finally:
             real.restore_run_mode(originals)
         job.check()                                     # STOP or an E-stop ended it
-        if not out["ok"]:
-            raise UserError(f"The run did not complete: {out['why'] or 'see the hardware log'}.",
-                            "Check the arm and the controller's errors, then run it again.")
-        short = None if dry_run else ended_early(out["seconds"], prog.get("lines"), self.emulator_scale(side))
-        if short:                                       # the controller stopped it (an E-stop gives no error code)
-            raise UserError(f"Program {pid} ended {short}: it was stopped on the controller (an E-stop, or its pendant), "
-                            "not completed.", "Check the arm and its E-stop, then run it again.")
-        job.log(f"Finished: the controller completed program {pid} ({out['seconds']:.1f} s with the move to the start).")
-        res = dict(program_id=pid, dry_run=dry_run, seconds=out["seconds"])
+        lines = [str(x).strip() for x in out.get("lines") or []]
+        codes = "; ".join(f"{r['codes']} at {r['at_s']:.1f} s" for r in reported)
+        said = f" The arm reported {codes}." if reported else ""
+        short = ended_early(out["seconds"], prog.get("lines"), self.emulator_scale(side))
+        if dry_run:
+            # The Hardware sim test (the owner, 17 Oct): it passes once the program has run to its end in the
+            # controller's SIM mode, whatever the arm reported on the way (said here and in the pop-ups). Its
+            # length is the judge: the control program says "RUN COMPLETE" of a program the controller cut short
+            # (the lab, 17 Oct: 4105 counted a warning, program 50 over after 3.8 s of its 10 s).
+            started = any(x.startswith("running") for x in lines)
+            cut = next((x.strip(" *") for x in lines if "did not start within" in x or "still running after" in x), None)
+            if not started or cut or short:
+                why = cut or (f"it ended {short}" if short else "it did not start")
+                raise UserError(f"The Hardware sim run of program {pid} did not run to its end: {why}.{said}",
+                                "Look at what the arm reported; a file faster than the arm allows is tuned slower in Tune.")
+        else:
+            if not out["ok"]:
+                raise UserError(f"The run did not complete: {out['why'] or 'see the hardware log'}.{said}",
+                                "Check the arm and the controller's errors, then run it again.")
+            if short:                                   # the controller stopped it
+                cause = (f"the controller stopped it after the arm reported {codes}" if reported
+                         else "it was stopped on the controller (an E-stop, or its pendant)")
+                raise UserError(f"Program {pid} ended {short}: {cause}, not completed.",
+                                "A file faster than the arm allows is tuned slower in Tune (its L2 and L3 limits say so)."
+                                if reported else "Check the arm and its E-stop, then run it again.")
+        job.log(f"Finished: the controller completed program {pid} ({out['seconds']:.1f} s with the move to the start)."
+                + (f" The arm reported {codes} on the way." if reported else ""))
+        res = dict(program_id=pid, dry_run=dry_run, seconds=out["seconds"], reported=reported)
         if on_done:
             on_done(res)
         return res
@@ -1228,12 +1403,14 @@ class StandInRobot:
         with Lite's record of each program it sent (when; which project file, by its bytes, from ``files``:
         {sha256: the project's file}); the stand-in's programs, as Lite sent them. Read only, and never
         while the arm moves or teaches (the link reads nothing then)."""
+        from .content import file_for
+
         a = self.arm(side)
         real = self._real(side)
         out = dict(side=side, connected=a.connected, linked=real is not None, read=time.strftime("%Y-%m-%d %H:%M:%S"), ip=None)
 
         def lite(mine):
-            f = (files or {}).get(mine.get("sha256")) or {}
+            f = file_for(files, mine.get("sha256"), mine.get("name"))
             return dict(sent=mine.get("uploaded"), file=mine.get("name"), lines=mine.get("lines"),
                         project_file=f.get("name"), region=f.get("region"))
 
@@ -1333,6 +1510,9 @@ class StandInRobot:
                                        controller_bytes=out["bytes"], stored_name=out["stored_name"],
                                        uploaded=time.strftime("%Y-%m-%d %H:%M"))
                 a.save()
+                from . import content
+
+                content.forget(side)                    # the controller's lists are read again at their next use
                 job.log(f"Stored as program {pid} on the {side.upper()} controller as “{out['stored_name']}”; "
                         f"{out['bytes']} bytes read back.")
                 return dict(program_id=pid, lines=lines, bytes=size, seconds=out["seconds"])

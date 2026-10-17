@@ -17,6 +17,7 @@ import json
 import mimetypes
 import os
 import re
+import sys
 import threading
 import time
 import traceback
@@ -949,11 +950,20 @@ class Handler(BaseHTTPRequestHandler):
         self._dispatch("DELETE")
 
 
+class _Server(ThreadingHTTPServer):
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):
+        """A page that went away before its answer (a reload, a closed window) is nothing to report: the
+        lab's terminal filled with BrokenPipeError tracebacks for it (17 Oct). Anything else is printed."""
+        if isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)):
+            return
+        super().handle_error(request, client_address)
+
+
 def make_server(app: LiteApp, port: int) -> ThreadingHTTPServer:
     Handler.app = app
-    srv = ThreadingHTTPServer(("127.0.0.1", int(port)), Handler)
-    srv.daemon_threads = True
-    return srv
+    return _Server(("127.0.0.1", int(port)), Handler)
 
 
 # Routes kept in their own modules register themselves on import (after ROUTES exists).

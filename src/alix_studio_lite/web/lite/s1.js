@@ -93,10 +93,14 @@ function build() {
           btn('Rename', () => rename(side)), btn('Download', () => download(side), 'btn outline')),
         el('div', { class: 'lite-row' },
           el('div', { class: 'field' }, el('label', { for: `liteS1Pid_${side}`, text: 'Program ID' }),
-            el('input', { id: `liteS1Pid_${side}`, type: 'number', min: '1', max: '100', step: '1', placeholder: '1–100' })),
+            el('input', { id: `liteS1Pid_${side}`, type: 'number', min: '1', max: '100', step: '1', placeholder: '1–100',
+              list: `liteS1Slots_${side}`, oninput: () => slotLine(side) }),
+            el('datalist', { id: `liteS1Slots_${side}` })),
+          btn('Read the controller', () => readSlots(side, true), 'btn light'),
           btn('Upload to controller', () => upload(side), 'btn'),
           btn('Review in 3D', () => show3d(side), 'btn green'),
-          btn('Send to Tune + Simulation', () => toTune(side), 'btn outline'))),
+          btn('Send to Tune + Simulation', () => toTune(side), 'btn outline')),
+        el('div', { id: `liteS1Slot_${side}`, class: 'mini-note' })),
       el('div', { id: `liteS1Status_${side}`, class: 'lite-status' })))),
     el('div', { class: 'card lite-s1-sim' },
       el('div', { class: 'lite-section-title' },
@@ -340,6 +344,7 @@ async function merge(side) {
 function select(side, file) {
   st[side].sel = file;
   paint(side);
+  if (!slots[side]) readSlots(side, false);                // the controller's programs, for its Program ID
 }
 
 const selected = (side) => st[side].merges.find(m => m.file === st[side].sel) || null;
@@ -381,11 +386,54 @@ async function upload(side) {
       if (done.state !== 'done') throw Object.assign(new Error(done.error || 'The upload did not finish.'), { hint: done.hint });
     }
     status(side, `${m.name} is on the ${ARM(side)} controller as program ${pid} (its name and size read back).`, 'ok');
+    readSlots(side, false);                                  // its slot, as the controller holds it now
   } catch (err) { status(side, say(err), 'warn'); tell(err); } finally {
     st[side].sending = false;
     if (btn) btn.disabled = false;
   }
 }
+
+// The controller's programs, as Data Management lists them (the owner, 17 Oct: the Program ID's choices come from
+// the controller, a program deleted there gone from them; "Read the controller" reads it again, completely, and
+// every other list follows): offered under the Program ID, and what the slot typed holds said below it.
+const slots = { left: null, right: null };
+
+async function readSlots(side, refresh = false) {
+  if (!ctx.pid) return;
+  try {
+    slots[side] = await get(`/api/robots/${side}/content?pid=${encodeURIComponent(ctx.pid)}${refresh ? '&refresh=1' : ''}`);
+  } catch (err) { if (refresh) tell(err); return; }
+  const dl = $(`liteS1Slots_${side}`);
+  if (dl) dl.replaceChildren(...slots[side].programs.map(p => el('option', { value: String(p.id),
+    label: `${p.name}${p.sent ? ` (sent by Lite${p.file_name ? `: ${p.file_name}` : ''})` : ''}` })));
+  slotLine(side);
+  if (refresh) {
+    window.toast(`${ARM(side)} controller: ${slots[side].programs.length} programs${slots[side].read ? `, read ${slots[side].read}` : ''}.`
+      + (slots[side].note ? ` ${slots[side].note}` : ''));
+    document.dispatchEvent(new CustomEvent('lite:controller', { detail: { side, from: 's1' } }));
+  }
+}
+
+function slotLine(side) {
+  const line = $(`liteS1Slot_${side}`), c = slots[side];
+  if (!line) return;
+  const id = Number($(`liteS1Pid_${side}`)?.value);
+  if (!c) { line.textContent = ''; return; }
+  if (!c.read && !c.standin) { line.textContent = c.note || `The ${ARM(side)} controller has not been read.`; return; }
+  if (!(Number.isInteger(id) && id >= 1 && id <= 100)) {
+    line.textContent = `The ${ARM(side)} controller holds ${c.programs.length} programs${c.read ? ` (read ${c.read})` : ''}: type a Program ID, or choose one.`;
+    return;
+  }
+  const p = c.programs.find(x => x.id === id);
+  line.textContent = p ? `Program ${id} holds “${p.name}”${p.sent ? ', sent by Lite' : ''}: Upload replaces it (it asks first).`
+    : `Program ${id} is free on the ${ARM(side)} controller${c.read ? ` (read ${c.read})` : ''}.`;
+}
+
+document.addEventListener('lite:controller', (e) => {
+  const d = e.detail || {};
+  if (d.from === 's1' || !built) return;
+  for (const side of d.side ? [d.side] : ARMS) readSlots(side, false);
+});
 
 // The files of a merge that were tuned already, as the server reads them (merges.py: kept versions, merges kept
 // from Tune, at any depth and from any project), or the merge itself when Tune kept it.

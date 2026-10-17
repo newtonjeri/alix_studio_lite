@@ -31,7 +31,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from .jobs import UserError
-from .robot_link import return_text
+from .robot_link import CLOSE_WAIT_S, return_text
 
 POLE_SPEED_PCT = 50       # the pole in Real (the owner's choice, 14 Oct; ALIX itself ran it at 100 %)
 HAND_SPEED_SET = 500      # the hand's SPEED_SET, of 1000: 50 %
@@ -270,12 +270,18 @@ class RealArm:
 
     # ── the controller's run mode
     def set_run_mode(self, mode: str) -> dict:
-        """SIM or REAL, read back. Returns what to hand to ``restore_run_mode``."""
+        """SIM or REAL, read back. Returns what to hand to ``restore_run_mode``. A controller that does not
+        take it is asked once more a second later (the lab, 17 Oct: the RIGHT controller refused REAL right
+        after a busy moment, its global point list unanswered, and took it seconds later); the read back
+        stays the gate."""
         from alix_dispatch import runmode
 
+        target = runmode.SIMULATION if mode == "SIM" else runmode.REAL
         with self.link.busy(f"switching to {mode}"):
-            originals = runmode.apply_run_mode(runmode.SIMULATION if mode == "SIM" else runmode.REAL,
-                                               {self.side: self.robot})
+            originals = runmode.apply_run_mode(target, {self.side: self.robot})
+            if originals is None:
+                time.sleep(1.0)
+                originals = runmode.apply_run_mode(target, {self.side: self.robot})
         self._hw(f"run mode {mode}", ok=originals is not None, text=None if originals is not None else "not taken (read back)")
         if originals is None:
             raise UserError(f"The {self.SIDE} controller did not switch to its {mode} mode (read back), so nothing ran.",
@@ -283,10 +289,16 @@ class RealArm:
         return originals
 
     def restore_run_mode(self, originals: dict) -> None:
+        """The run mode the controller had, put back (a job's ``finally``): it waits for a command or a STOP
+        still holding the controller (at most CLOSE_WAIT_S) and never raises, so the job's own ending is
+        what is said."""
         from alix_dispatch import runmode
 
-        with self.link.busy("restoring the run mode"):
-            failed = runmode.restore_run_modes(originals, {self.side: self.robot})
+        try:
+            with self.link.busy("restoring the run mode", wait_s=CLOSE_WAIT_S):
+                failed = runmode.restore_run_modes(originals, {self.side: self.robot})
+        except Exception as exc:                                                    # noqa: BLE001
+            failed = [f"{self.side}: not restored ({exc})"]
         if failed and self.log is not None:
             self.log.alert("warn", f"The controller's run mode could not be set back ({', '.join(map(str, failed))}).",
                            hint="Check its mode on the pendant before the next run.", side=self.side, source="runmode")
@@ -301,27 +313,50 @@ class RealArm:
 
     def teach_stop(self, path: Path) -> int | None:
         """Leave drag teaching and save the controller's recording at ``path`` (written by the
-        SDK, as the control program's files are). Returns its number of points."""
+        SDK, as the control program's files are). Returns its number of points. Leaving it is never
+        refused: a command or a STOP holding the controller is waited for (at most CLOSE_WAIT_S), and
+        then drag teaching is left at once, as STOP leaves it, without the recording. An arm that may
+        still be in drag teaching raises ``code="drag"``."""
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        with self.link.busy("saving the recording"):
-            ret = self._call("rm_stop_drag_teach", self.robot.rm_stop_drag_teach)
-            out = self._call("rm_save_trajectory", self.robot.rm_save_trajectory, str(path))
+        try:
+            with self.link.busy("saving the recording", wait_s=CLOSE_WAIT_S):
+                ret = self._call("rm_stop_drag_teach", self.robot.rm_stop_drag_teach)
+                out = self._call("rm_save_trajectory", self.robot.rm_save_trajectory, str(path))
+        except UserError as exc:
+            if exc.code != "busy":
+                raise
+            ret = self._call("rm_stop_drag_teach", self.link.leave_drag)
+            if ret != 0:
+                raise UserError(f"The {self.SIDE} arm may still be in drag teaching ({return_text(ret, 'rm_stop_drag_teach')}).",
+                                "Press STOP, or the red E-stop button, before anyone lets go of the arm.", code="drag") from None
+            raise UserError(f"The {self.SIDE} arm left drag teaching, but its recording could not be saved. {exc}",
+                            "Record the region again.") from None
         if ret != 0:
             raise UserError(f"The {self.SIDE} arm may still be in drag teaching ({return_text(ret, 'rm_stop_drag_teach')}).",
-                            "Press STOP, or the red E-stop button, before anyone lets go of the arm.")
+                            "Press STOP, or the red E-stop button, before anyone lets go of the arm.", code="drag")
         r, n = out if isinstance(out, tuple) else (out, None)
         if r != 0 or not Path(path).is_file() or Path(path).stat().st_size == 0:
             raise UserError(f"The {self.SIDE} controller did not save the recording ({return_text(r, 'rm_save_trajectory')}).",
                             "Record the region again.")
         return n
 
-    def teach_cancel(self) -> None:
-        """Leave drag teaching without saving (STOP, an E-stop, a cancel, Lite closing). Never raises."""
+    def teach_cancel(self, at_once: bool = False) -> bool:
+        """Leave drag teaching without saving (an E-stop, a cancel, Lite closing). Never refused: a
+        command holding the controller is waited for (at most CLOSE_WAIT_S), then it is sent as STOP
+        sends its calls; ``at_once`` (an E-stop): so at once. Never raises; True when the controller
+        took it."""
         try:
-            with self.link.busy("leaving drag teaching"):
-                self._call("rm_stop_drag_teach", self.robot.rm_stop_drag_teach)
+            if not at_once:
+                try:
+                    with self.link.busy("leaving drag teaching", wait_s=CLOSE_WAIT_S):
+                        out = self._call("rm_stop_drag_teach", self.robot.rm_stop_drag_teach)
+                    return (out[0] if isinstance(out, tuple) else out) == 0
+                except UserError as exc:
+                    if exc.code != "busy":
+                        raise
+            return self._call("rm_stop_drag_teach", self.link.leave_drag) == 0
         except Exception:                                                           # noqa: BLE001
-            pass
+            return False
 
     # ── Arm Drag Mode, for recovery and never for recording, and the controller's errors (feedback v5,
     #    slide 8; the owner, 16 Oct: "Lite should be able to clear errors of any kind, similar to how the
@@ -582,7 +617,7 @@ class RealArm:
         from alix_dispatch import track
 
         try:
-            with self.link.busy("putting the global speed back"):
+            with self.link.busy("putting the global speed back", wait_s=CLOSE_WAIT_S):
                 ret = track.set_global_speed(self.robot, int(pct))
         except Exception as exc:                                                    # noqa: BLE001
             self._hw("restore global speed", args=dict(pct=int(pct)), ok=False, text=f"raised {exc!r}")

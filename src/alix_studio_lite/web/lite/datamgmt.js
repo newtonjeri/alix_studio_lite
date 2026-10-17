@@ -206,6 +206,9 @@ async function read(s = side) {
   try {
     const d = await get(`/api/robots/${s}/data${ctx.pid ? `?pid=${encodeURIComponent(ctx.pid)}` : ''}`);
     data[s] = d;
+    // every list Lite offers (S2's programs and points, the start poses, S1's Program ID) follows this read
+    // (the owner, 17 Oct: "so the application and the controller stay in sync at all times")
+    if (d.linked) document.dispatchEvent(new CustomEvent('lite:controller', { detail: { side: s } }));
   } catch (err) {
     failed[s] = err;
   } finally {
