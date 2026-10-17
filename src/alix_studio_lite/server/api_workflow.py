@@ -98,7 +98,8 @@ def post_workflow_plan(app, q, body, m):
     run = workflow.plan_for(workflow._numbered(workflow.load(units)), mode, pick)
     stages = [dict(index=i, kind=s["kind"], label=str(s.get("program_id") or ""), title=s.get("title"),
                    programs=_stage_programs(s) if s["kind"] in ("parallel", "serial", "single") else {}, **(
-        {"first": s["first"]["side"], "second": s["second"]["side"]} if s["kind"] == "serial" else {}))
+        {"first": s["first"]["side"], "second": s["second"]["side"]} if s["kind"] == "serial" else {}),
+                   **({"task": s["task"], "rows": s.get("rows")} if s["kind"] == "mechanism" else {}))
         for i, s in enumerate(run["plan"])]
     return dict(mode=run["mode"], pick=run["pick"], counts=run["counts"], stages=stages)
 

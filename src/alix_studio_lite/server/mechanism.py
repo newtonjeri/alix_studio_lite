@@ -279,6 +279,17 @@ class Plan:
                                  if (m := re.fullmatch(re.escape(self.path.stem) + r"\.rung(\d+)\.json", p.name))))
 
 
+@lru_cache(maxsize=8)
+def cached(name: str) -> "Plan":
+    """A plan read once (ALIX's files do not change while Lite runs: tools/vendor_from_alix.py replaces them)."""
+    return Plan(name)
+
+
+def digest(name: str) -> str:
+    """The plan file's sha256: what the simulation's identity holds, so another plan is another run."""
+    return _sha256(cached(name).path)
+
+
 def reverse_block(block: list) -> list:
     """The way back along a lift that did not take (seat_open has no pre-planned rung): the lifting arm's moves of
     the block in reverse order, each played backwards on its own timing (ALIX planned a restore with MoveIt)."""
@@ -566,9 +577,10 @@ class DryExec(_Exec):
 class RealExec(_Exec):
     """Real: the arms move. Streams, the pole and the hand, the camera."""
 
-    def __init__(self, job, robot, arms: dict, kit, log=None):
+    def __init__(self, job, robot, arms: dict, kit, log=None, live=None):
         super().__init__(job, log)
         self.robot, self.arms, self.kit = robot, arms, kit
+        self.live = live or (lambda side, text: None)   # S2's live line of each arm
 
     def _arm(self, side):
         a = self.arms.get(side)
@@ -597,6 +609,7 @@ class RealExec(_Exec):
     def move(self, e, bridge=False):
         arm = self._arm(e.side)
         self.job.progress(f"{e.label()}: {e.seconds:.2f} s")
+        self.live(e.side, f"{e.stage}{f' ({e.note})' if e.note else ''} // RUNNING")
         if e.kind == "pole":
             arm.pole_to(e.last()[0] * 1000.0)
         elif e.kind == "hand":
@@ -614,6 +627,7 @@ class RealExec(_Exec):
 
         self.check_stop()
         self.job.progress(f"{action.get('stage')}: asking the camera ({expect})")
+        self.live("right", f"CAMERA // {action.get('stage')}: {expect}?")
         scripted = self.kit.scripted(expect)
         if scripted is not None:                    # a test harness only (LITE_CHECK_SCRIPT): never on the robot
             return scripted
@@ -626,6 +640,13 @@ class RealExec(_Exec):
         except UserError as exc:
             frame = None
             self.say(f"camera: {exc}", "error")
+            if not observe:
+                # ALIX reads an unanswered check as NOT, and a NOT before lid_open is "skip: it is open already". With
+                # no camera at all that is a guess: the task stops and a person looks (the second question keeps
+                # ALIX's rule: its follow-up asks again)
+                raise UserError(f"{action.get('stage')}: the wrist camera did not answer ({exc}), so {expect} could not be "
+                                "checked.", "A person must look at the commode; check the camera's cable, then run it again.",
+                                code="escalate") from None
         else:
             frame = DepthFrame(depth=shot.depth, intrinsics=shot.intrinsics, cam_to_base=robot_fk.camera_to_base(readings),
                                hands=robot_fk.hand_positions(readings, self.kit.gap.p["gap_hand_frames"]),
@@ -660,9 +681,10 @@ class Kit:
         from .gap_check import Answer
 
         with _KIT_LOCK:
-            if self._script is None:
-                self._script = list(json.loads(Path(path).read_text(encoding="utf-8")))
-            state = self._script.pop(0) if self._script else None
+            stamp = Path(path).stat().st_mtime_ns
+            if self._script is None or self._script[0] != stamp:      # a new script: its answers from the first
+                self._script = (stamp, list(json.loads(Path(path).read_text(encoding="utf-8"))))
+            state = self._script[1].pop(0) if self._script[1] else None
         return Answer(success=state is not None, fixture_state=state or "not_lifted", state_confidence=1.0 if state else 0.0,
                       message=f"scripted ({path}): {state}", recommendation="pass" if state == expect else "re-clean")
 
@@ -685,6 +707,19 @@ def kit(robot) -> Kit:
         return k
 
 
+def camera_ready(robot) -> dict:
+    """The wrist camera, plugged in and readable, before a Real run with a lid or seat task: refused otherwise
+    (its checks would be guesses). The test harness's scripted answers stand in for it (LITE_CHECK_SCRIPT)."""
+    if os.environ.get("LITE_CHECK_SCRIPT"):
+        return dict(ok=True, scripted=True)
+    have = kit(robot).camera.available()
+    if not have["ok"]:
+        raise UserError(f"The lid and seat tasks check with the wrist camera, and it cannot be read: {have['why']}. Nothing moved.",
+                        "Plug the D435 into this computer (USB 3) and install pyrealsense2 (tools/setup_lite.py), then run it.",
+                        code="camera")
+    return have
+
+
 def run(robot, name: str, mode: str | None = None):
     """A lid or seat task as a job on both arms, in ``mode`` (the robot's own by default): Real moves the arms and
     asks the camera, Hardware sim checks it all and sends nothing, Visual sim and the stand-in take its time."""
@@ -702,6 +737,7 @@ def run(robot, name: str, mode: str | None = None):
             raise UserError(f"{plan.title} uses both arms: the {' and '.join(gone)} arm is not linked to its controller.",
                             "Connect both arms, then run it again.")
         if mode == "real" and all(linked.values()):
+            camera_ready(robot)
             k = kit(robot)
             ex = RealExec(job, robot, linked, k, say)
             try:

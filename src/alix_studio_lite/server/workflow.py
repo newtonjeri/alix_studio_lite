@@ -447,10 +447,40 @@ def build_plan(left_steps: list, right_steps: list) -> list[dict]:
 
 
 def counts(plan: list[dict]) -> dict:
-    """What V53's RUN BOTH dialog says before it starts."""
-    n = {k: sum(1 for s in plan if s.get("kind") == k) for k in ("parallel", "serial", "checkpoint", "tail")}
+    """What V53's RUN BOTH dialog says before it starts (and Lite's lid and seat tasks)."""
+    n = {k: sum(1 for s in plan if s.get("kind") == k) for k in ("parallel", "serial", "checkpoint", "tail", "mechanism")}
     return dict(coordinated=n["parallel"] + n["serial"], together=n["parallel"], one_arm=n["serial"],
-                checkpoints=n["checkpoint"], tail=n["tail"], stages=len(plan))
+                checkpoints=n["checkpoint"], tail=n["tail"], mechanisms=n["mechanism"], stages=len(plan))
+
+
+def build_full(left_steps: list, right_steps: list) -> list[dict]:
+    """V53's plan with Lite's lid and seat tasks in it (the owner, 18 Oct: pre-recorded "tasks that are available
+    to be injected at a point in the sequence"). A task uses both arms, so it is on both arms' lists, the same tasks
+    in the same order; each list is cut at them, each part between them is planned by V53 as it is (``build_plan``,
+    its rules and its checkpoints), and each task is a stage of its own between the parts (``kind`` mechanism): both
+    arms finish what comes before it, it runs (mechanism.py), then both go on."""
+    from . import mechanism
+
+    lists = {"left": left_steps, "right": right_steps}
+    cuts = {s: [i for i, st in enumerate(lists[s]) if st["type"] == "mechanism"] for s in ARMS}
+    tasks = {s: [lists[s][i]["task"] for i in cuts[s]] for s in ARMS}
+    if tasks["left"] != tasks["right"]:
+        words = {s: ", ".join(mechanism.TASKS[t]["title"] for t in tasks[s]) or "none" for s in ARMS}
+        raise ValueError("A lid or seat task uses both arms: it must be on both arms' lists, the same tasks in the same "
+                         f"order. LEFT has {words['left']}; RIGHT has {words['right']}.")
+    plan, lp, rp = [], 0, 0
+    bounds = list(zip(cuts["left"], cuts["right"]))
+    for k, (li, ri) in enumerate(bounds + [(len(left_steps), len(right_steps))]):
+        part_l, part_r = left_steps[lp:li], right_steps[rp:ri]
+        if part_l or part_r:
+            plan += build_plan(part_l, part_r)
+        if k < len(bounds):
+            task = left_steps[li]["task"]
+            plan.append({"kind": "mechanism", "task": task, "program_id": mechanism.TASKS[task]["short"],
+                         "title": mechanism.TASKS[task]["title"],
+                         "rows": {"left": left_steps[li].get("_row"), "right": right_steps[ri].get("_row")}})
+            lp, rp = li + 1, ri + 1
+    return plan
 
 
 # ── the steps: checked as runner v14 checks them, kept in the project, saved and loaded as V53's JSON
@@ -471,6 +501,18 @@ def check_steps(steps, side: str) -> list[dict]:
     rt = _runner()
     out = []
     for i, raw in enumerate(steps, 1):
+        if isinstance(raw, dict) and raw.get("type") == "mechanism":   # a lid or seat task of ALIX's (mechanism.py)
+            from . import mechanism
+
+            task = str(raw.get("task") or "")
+            if task not in mechanism.TASKS:
+                raise UserError(f"{side.upper()} row {i}: {task or 'no task'} is not a lid or seat task.",
+                                f"One of: {', '.join(t['title'] for t in mechanism.TASKS.values())}.", code="step")
+            step = {"type": "mechanism", "task": task}
+            if raw.get("note"):
+                step["note"] = str(raw["note"])[:200]
+            out.append(step)
+            continue
         try:
             norm = rt.normalize_workflow_step(raw)
         except (TypeError, ValueError, KeyError) as exc:
@@ -612,7 +654,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
         picked = {side: _staged(mine, row) + [mine[row - 1]]}
         plan = [{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}]
         try:                                                 # where the row is in V53's plan of both arms
-            full = build_plan(steps["left"], steps["right"]) if steps["left"] and steps["right"] else []
+            full = build_full(steps["left"], steps["right"]) if steps["left"] and steps["right"] else []
         except ValueError:
             full = []
         k = next((i for i, st in enumerate(full) for s, part in _items(st) if s == side and any(x.get("_row") == row for x in part)), None)
@@ -625,15 +667,21 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
         if not steps["left"] or not steps["right"]:
             raise UserError("Build or load BOTH LEFT and RIGHT sequences first.")
         try:
-            full = build_plan(steps["left"], steps["right"])
+            full = build_full(steps["left"], steps["right"])
             k = int(pick.get("stage"))
         except ValueError as exc:
             raise UserError(f"Cannot start dual sequence: {exc}", code="plan") from None
         except TypeError:
             raise UserError("Choose the dual-arm task: a stage of the plan.") from None
-        if not 0 <= k < len(full) or full[k]["kind"] not in ("parallel", "serial"):
-            raise UserError("That stage is not a dual-arm task.", "Choose a TOGETHER or RUN FIRST / WAIT OTHER stage.")
+        if not 0 <= k < len(full) or full[k]["kind"] not in ("parallel", "serial", "mechanism"):
+            raise UserError("That stage is not a dual-arm task.", "Choose a TOGETHER or RUN FIRST / WAIT OTHER stage, or a lid or seat task.")
         st = full[k]
+        if st["kind"] == "mechanism":                       # one lid or seat task on its own: both arms, its own plan
+            if pick.get("task") and pick.get("task") != st["task"]:
+                raise UserError(f"Stage {k + 1} is {st['title']} now: the steps changed since it was chosen.", "Choose it again.",
+                                code="pick")
+            return dict(mode="both", pick=dict(scope="dual", stage=k, label=st["program_id"]), first_row=dict(st["rows"]),
+                        steps={"left": [], "right": []}, plan=[st], counts=counts([st]))
         parts = {x["side"]: x["steps"] for x in (st["first"], st["second"])} if st["kind"] == "serial" \
             else {side: st[side]["steps"] for side in ARMS if st.get(side)}
         if set(parts) != set(ARMS) or not all(any(x["type"] == "program" for x in parts[side]) for side in ARMS):
@@ -657,11 +705,14 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
     if mode not in ("both", *ARMS):
         raise UserError("Run both arms, or the left or the right arm.")
     picked = {side: list(steps[side]) for side in ARMS if mode in ("both", side)}
+    if mode != "both" and any(st["type"] == "mechanism" for st in picked[mode]):
+        raise UserError(f"The {mode.upper()} sequence has a lid or seat task, which uses both arms.",
+                        "Run both arms (RUN BOTH), or remove the task from the list.", code="plan")
     if mode == "both":
         if not picked["left"] or not picked["right"]:
             raise UserError("Build or load BOTH LEFT and RIGHT sequences first.")
         try:
-            plan = build_plan(picked["left"], picked["right"])
+            plan = build_full(picked["left"], picked["right"])
         except ValueError as exc:
             raise UserError(f"Cannot start dual sequence: {exc}", code="plan") from None
     else:
@@ -850,6 +901,11 @@ def identity_of(run: dict, programs: dict, points: dict, overall: int) -> dict:
         pts = (points.get(side) or {}).get("points") or {}
         used[side] = dict(programs={str(p): _fingerprint(programs[side].get(p)) for p in pids},
                           points={n: [round(float(v), 2) for v in pts[n]] if n in pts else None for n in names})
+    tasks = sorted({st["task"] for st in run["plan"] if st.get("kind") == "mechanism"})
+    if tasks:                                       # ALIX's plan files as they are: another plan is another run
+        from . import mechanism
+
+        used["mechanisms"] = {t: mechanism.digest(t) for t in tasks}
     return dict(mode=run["mode"], pick=run["pick"], steps={s: [{k: v for k, v in st.items() if k != "_row"} for st in steps]
                                                                for s, steps in run["steps"].items()},
                 used=used, overall=int(overall))
@@ -1043,6 +1099,88 @@ class _ArmSim:
         return a
 
 
+def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> float:
+    """A lid or seat task in the simulation, as Lite runs it (mechanism.py) with its checks answered as expected (no
+    camera here): each arm to the plan's start (its pole and hand, then the MoveJ at the speed slider's speed), then the
+    plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
+    hand as Lite moves them, a hold where the plan holds, a moment where the camera is asked. The commode is in the
+    task's end state from its end."""
+    from . import mechanism, staging
+
+    plan = mechanism.cached(st["task"])
+    title, rows = plan.title, st.get("rows") or {}
+    mark = {s: {"_row": rows.get(s)} for s in ARMS}
+
+    def act(side, kind, dur, text, **more):
+        sim = sims[side]
+        a = sim._act(stage, mark[side], kind, T, dur, text, mechanism=plan.name, **more)
+        return sim, a
+
+    def done(sim, a):
+        a.update(pole1=sim.pole, hand1=list(sim.hand), q1=list(sim.q))
+
+    targets = plan.targets("start")
+    for side in plan.sides():
+        tg, sim = targets[side], sims[side]
+        if "pole_mm" in tg:
+            dur = staging.pole_travel_s(sim.pole, tg["pole_mm"])
+            sim, a = act(side, "pole", dur, f"{title}: pole {tg['pole_mm']:g} mm (its start)")
+            sim.pole = float(tg["pole_mm"])
+            done(sim, a)
+            T += dur
+        if "hand" in tg:
+            vals = [int(c) if c is not None else int(h) for c, h in zip(tg["hand"], sim.hand)]
+            dur = staging.hand_move_s(sim.hand, vals)
+            sim, a = act(side, "hand", dur, f"{title}: hand " + ",".join(str(v) for v in vals) + " (its start)")
+            sim.hand = vals
+            done(sim, a)
+            T += dur
+        if "arm_deg" in tg:
+            mv = _move_s(sim.q, tg["arm_deg"], float(overall), sim.rating)
+            sim, a = act(side, "global", mv, f"{title}: MoveJ to its start ({overall} %)", move_s=round(mv, 4), drawn=True)
+            sim.q, sim.known = [float(v) for v in tg["arm_deg"]], True
+            done(sim, a)
+            T += mv
+    camera = "right"                                 # the D435 rides the right wrist
+    for e in plan.entries:
+        for pa in e.pre_actions:
+            if pa.get("type") == "hold_pose" and float(pa.get("seconds") or 0) > 0:
+                dur = float(pa["seconds"])
+                sim, a = act(e.side, "wait", dur, f"{title}: {pa.get('stage') or 'hold'} {dur:g} s")
+                done(sim, a)
+                T += dur
+            elif pa.get("type") == "check_fixture_state":
+                sim, a = act(camera, "check", CHECK_S, f"{title}: the camera checks {pa.get('expect')} (assumed here)",
+                             expect=pa.get("expect"))
+                done(sim, a)
+                T += CHECK_S
+        sim = sims[e.side]
+        if e.kind == "arm":
+            sim, a = act(e.side, "stream", e.seconds, f"{title}: {e.stage}", file=f"mechanism:{plan.name}:{e.i}", drawn=True,
+                         lines=len(e.rows), traj_t0=round(T, 4))
+            sim.q, sim.known = [v / 1000.0 for v in e.rows[-1]], True
+            dur = e.seconds
+        elif e.kind == "pole":
+            mm = round(e.last()[0] * 1000.0, 1)
+            dur = staging.pole_travel_s(sim.pole, mm)
+            sim, a = act(e.side, "pole", dur, f"{title}: {e.stage} (pole {mm:g} mm)")
+            sim.pole = mm
+        else:
+            vals = [int(c) if c is not None else int(h) for c, h in zip(e.hand_counts(), sim.hand)]
+            dur = staging.hand_move_s(sim.hand, vals)
+            sim, a = act(e.side, "hand", dur, f"{title}: {e.stage} (hand " + ",".join(str(v) for v in vals) + ")")
+            sim.hand = vals
+        done(sim, a)
+        T += dur
+    sim, a = act(plan.sides()[0], "wait", 0.0, f"{title}: done, {mechanism.TASKS[plan.name]['end']}",
+                 phase=mechanism.PHASE_AFTER[plan.name])
+    done(sim, a)
+    return T
+
+
+CHECK_S = 0.5                    # a camera question, in the simulation (a frame, the check)
+
+
 def _start_state(app, side: str, home: dict) -> tuple[dict, str]:
     """Where an arm starts: as it stands now (a linked arm's live reading), else the standing pose."""
     from . import staging
@@ -1057,16 +1195,20 @@ def _start_state(app, side: str, home: dict) -> tuple[dict, str]:
     return dict(pole_mm=float(pole0), hand=[int(c) for c in hand0], q_deg=q_home), "standing"
 
 
-def schedule(run: dict, sims: dict) -> tuple[list[dict], float]:
+def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], float]:
     """V53's plan on one clock: a TOGETHER (parallel) stage starts both arms' parts at once and ends
     when both have; a serial stage runs the waiting arm when the first has finished; a checkpoint is a
-    moment (in Real the robots stop there for the operator); a single arm's run is one part."""
+    moment (in Real the robots stop there for the operator); a single arm's run is one part; a lid or seat
+    task (Lite's) takes both arms, after both have finished what came before it."""
     T, out = 0.0, []
     for i, st in enumerate(run["plan"]):
         kind = st["kind"]
         row = dict(index=i, kind=kind, label=str(st.get("program_id") or ("FINAL AUX STEPS" if kind == "tail" else "")), t0=round(T, 4))
         if kind == "checkpoint":
             row.update(t1=round(T, 4), title=st["title"], message=st["message"])
+        elif kind == "mechanism":
+            T = _sim_mechanism(st, sims, T, i, overall)
+            row.update(t1=round(T, 4), title=st["title"], task=st["task"])
         elif kind == "serial":
             first, second = st["first"], st["second"]
             mid = sims[first["side"]].run(first["steps"], T, i)
@@ -1118,7 +1260,7 @@ def sample(acts: list[dict], times, start: dict, md_of, with_known: bool = False
 def _known_after(a: dict) -> bool:
     if a.get("drawn") is False:
         return False
-    if a["kind"] == "program":
+    if a["kind"] in ("program", "stream"):
         return True
     return bool(a.get("known", True))
 
@@ -1137,6 +1279,10 @@ def _inside(a: dict, t: float, md_of):
     if a["kind"] == "global" and a.get("drawn"):
         g = (t - a["t0"]) / max(1e-9, a["move_s"])
         return p0, h0, q0 + float(_ease(g)) * (q1 - q0)
+    if a["kind"] == "stream":                    # a lid or seat plan's arm move: its own 5 ms lines
+        md = md_of(a["file"])
+        i = int(round((t - a["t0"]) / CYCLE_S))
+        return p0, h0, md[max(0, min(md.shape[0] - 1, i))] / 1000.0
     if a["kind"] == "program" and a.get("drawn"):
         md = md_of(a["file"])
         if t < a["traj_t0"]:
@@ -1173,6 +1319,11 @@ def _md_reader():
     def md_of(path):
         if not path:
             return None
+        if path not in cache and str(path).startswith("mechanism:"):     # mechanism:<task>:<entry>: ALIX's plan, its lines
+            from . import mechanism
+
+            _, task, i = str(path).split(":")
+            cache[path] = np.asarray(mechanism.cached(task).entries[int(i)].rows, dtype=float)
         if path not in cache:
             try:
                 cache[path] = np.asarray(track.read_md(Path(path)), dtype=float)
@@ -1186,7 +1337,7 @@ def _md_reader():
 def _phase_changes(acts: dict) -> list[tuple[float, str]]:
     """The commode's lid/seat state through the run: each drawn Program's region's, from its start."""
     out = sorted((a["t0"], a["phase"]) for side in acts.values() for a in side
-                 if a["kind"] == "program" and a.get("drawn") and a.get("phase"))
+                 if a.get("phase") and (a.get("mechanism") or (a["kind"] == "program" and a.get("drawn"))))
     return out or [(0.0, "lid_closed")]
 
 
@@ -1229,13 +1380,23 @@ def simulate(app, units, mode: str, pick: dict | None):
             sims[s] = _ArmSim(s, starts[s], load_limits(s).rating_deg_s, overall, programs[s], points[s], md_of, findings,
                               files_by_name(app, units, s))
         job.progress("Timing the stages", 1, 3)
-        stages, total = schedule(run, sims)
+        stages, total = schedule(run, sims, overall)
         acts = {s: sims[s].acts for s in ARMS}
         places = [a.get("placement") for s in sides for a in acts[s] if a["kind"] == "program" and a.get("drawn")]
         place = next((p for p in places if p), None)
         if any(p and placement.differences(place, p) for p in places):
             findings.append(dict(level="warn", side=None, row=None, text="The Programs were taught at different UGV placements: "
                                  f"the 3D and the check use the first one's ({placement.words(place)})."))
+        if any(row["kind"] == "mechanism" for row in stages):
+            from . import mechanism
+
+            plans_at = {"standoff_mm": float(mechanism.STANDOFF_MM), "front_mm": 0.0, "rear_mm": 0.0, "left_mm": 0.0, "right_mm": 0.0}
+            off = sorted({placement.words(p) for p in places
+                          if p and placement.differences(plans_at, {k: v for k, v in p.items() if k != "room"})})
+            findings.append(dict(level="warn" if off else "note", side=None, row=None, text=(
+                f"The lid and seat tasks are ALIX's plans, made with the UGV at {mechanism.STANDOFF_MM} mm from the commode and no "
+                "offset" + (f"; Programs of this run were taught at {'; '.join(off)}: the UGV cannot be at both, so one of them will "
+                            "be off its commode." if off else ": place the UGV there for them (Lite cannot see the placement)."))))
         scene = placement.scene(units.fixture, placement.load(units)["room"], place)
         base = dict(home)
         for s in ARMS:
@@ -1244,9 +1405,17 @@ def simulate(app, units, mode: str, pick: dict | None):
         dt = max(SAMPLE_S, total / MAX_SAMPLES)
         times = np.arange(0.0, total + 1e-9, dt).tolist() if total > 0 else [0.0]
         arms = {}
+        spans = [(row["t0"], row["t1"], row["title"]) for row in stages if row["kind"] == "mechanism"]
         for s in sides:
             pole, hand, q, known = sample(acts[s], times, starts[s], md_of, with_known=True)
+            for t0, t1, _title in spans:           # ALIX's planner checked these moves, the hands on the lid by design
+                known[(np.asarray(times) >= t0) & (np.asarray(times) <= t1)] = False
             arms[s] = dict(pole=pole.tolist(), hand=hand.tolist(), q=q.tolist(), known=known.tolist())
+        for t0, t1, title in spans:
+            findings.append(dict(level="note", side=None, row=None, text=f"{title} ({t0:.1f}-{t1:.1f} s) is ALIX's plan: its "
+                                 "hands hold the lid and the seat by design, so it is left out of this collision check (ALIX's "
+                                 "planner checked it with the commode's contact allowances); its camera checks are assumed "
+                                 "here, and asked of the camera in Real."))
         job.progress(f"Checking collisions: {len(times):,} moments, both arms", 2, 3)
         phases = [_phase_at(changes, t) for t in times]
         fut = workers.pool().submit(collision_check.check_states, times, arms, base, scene, units.fixture, phases, cub)
@@ -1280,8 +1449,10 @@ def _where(acts: list[dict], t: float) -> dict | None:
     if a is None:
         return None
     out = dict(side=a["side"], row=a["row"], kind=a["kind"], text=a["text"], stage=a["stage"])
-    if a["kind"] == "program" and a.get("drawn") and t >= a["traj_t0"]:
+    if a["kind"] in ("program", "stream") and a.get("drawn") and t >= a["traj_t0"]:
         out["line"] = 1 + int(round((t - a["traj_t0"]) / CYCLE_S))
+    if a.get("mechanism"):
+        out["mechanism"] = a["mechanism"]
     return out
 
 
@@ -1522,6 +1693,10 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
     if missing:
         raise UserError("Not on the controllers: " + "; ".join(missing) + ". Nothing moved.",
                         "Upload the programs or save the points, simulate again, then run it.", code="missing")
+    if any(st["kind"] == "mechanism" for st in run["plan"]):
+        from . import mechanism as mech
+
+        mech.camera_ready(robot)                    # the lid and seat checks need the wrist camera: refused before anything moves
     warns = [f["text"] for f in sim["findings"] if f["level"] == "warn"] if simulated else []
     col = sim["collisions"] if simulated else {"ok": True}
     if not col["ok"]:
@@ -1671,6 +1846,24 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                         raise UserError("The manual checkpoint was not confirmed: the sequence ended there.",
                                         "Nothing ran after it.")
                     say("SAFE TIMELINE // MANUAL LID CONFIRMED // RESUMING", **{x: "READY // LID CONFIRMED" for x in sides})
+                elif kind == "mechanism":                   # a lid or seat task: ALIX's plan on both arms, the camera's checks
+                    from . import mechanism as mech
+
+                    say(f"LID / SEAT // {st['title']} // ALIX's plan, the wrist camera's checks",
+                        **{x: f"{pid} // RUNNING" for x in ARMS})
+                    kit = mech.kit(robot)
+                    hw = getattr(robot, "log", None)
+                    ex = mech.RealExec(job, robot, {x: reals.get(x) or robot._real(x) for x in ARMS}, kit,
+                                       (lambda text: hw.hardware(None, "mechanism", text=text)) if hw is not None else None,
+                                       live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}))
+                    try:
+                        out = mech.Runner(ex, ex.say).run(st["task"])
+                    finally:
+                        kit.camera.close()
+                    did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
+                                    for p in out["plans"])
+                    say(f"LID / SEAT // {st['title']} // DONE", **{x: f"{pid} // COMPLETE" for x in ARMS})
+                    job.log(f"{st['title']}: {did}.")
                 elif kind == "parallel":
                     together(st, f"Program {pid}", f"PROGRAM RULES // Program {pid} // LEFT + RIGHT TOGETHER")
                 elif kind == "tail" and st.get("left") and st.get("right"):

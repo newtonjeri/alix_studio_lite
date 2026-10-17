@@ -85,7 +85,7 @@ def test_the_planner_is_v53s_own():
     assert mine == theirs(left, right)
     assert [s["kind"] for s in mine] == ["parallel", "parallel", "checkpoint", "parallel", "serial", "serial", "parallel"]
     assert [s["program_id"] for s in mine] == ["TIMELINE-1", "LID-PREP-1", "LID-CHECK-1", "TIMELINE-2", 78, 79, "TIMELINE-3"]
-    assert workflow.counts(mine) == dict(coordinated=6, together=4, one_arm=2, checkpoints=1, tail=0, stages=7)
+    assert workflow.counts(mine) == dict(coordinated=6, together=4, one_arm=2, checkpoints=1, tail=0, mechanisms=0, stages=7)
     rng, refused = random.Random(53), 0
     for _ in range(3000):
         a, b = generated(rng), generated(rng)

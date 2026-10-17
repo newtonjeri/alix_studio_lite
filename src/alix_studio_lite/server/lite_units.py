@@ -605,7 +605,17 @@ class LiteUnits(Project):
                     hand_preset=u.get("hand_preset"),
                     hand_counts=setup and setup["hand"], setup=setup, target_s=u.get("target_s"),
                     picture=u.get("picture"), status=st["status"], status_label=st["label"],
-                    recordings=st["recordings"], version=st["version"], library=self.library_file(key) is not None)
+                    recordings=st["recordings"], version=st["version"], library=self.library_file(key) is not None,
+                    mechanism=_mechanism_of(u))
+
+
+def _mechanism_of(u: dict) -> dict | None:
+    """The lid or seat task an arm step runs (mechanism.ROWS): ALIX's plan, pre-recorded, never taught (the owner,
+    18 Oct), or None."""
+    from .mechanism import ROWS, TASKS
+
+    task = ROWS.get(u.get("code"))
+    return None if task is None else dict(task=task, title=TASKS[task]["title"], short=TASKS[task]["short"])
 
 
 def display_name(u: dict) -> str:

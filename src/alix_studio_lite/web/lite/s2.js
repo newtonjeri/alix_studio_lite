@@ -35,7 +35,7 @@ const S = {
   steps: { left: [], right: [] }, sources: { left: { programs: [], points: [] }, right: { programs: [], points: [] } },
   sel: { left: null, right: null }, mode: 'sim', scope: 'sequence', pick: null, edited: false, confirmEach: true,
   sim: null, job: null, live: { left: 'IDLE', right: 'IDLE' }, status: 'PAGE 02 READY // Build LEFT and RIGHT sequences', runtime: 0,
-  rows: { left: null, right: null },
+  rows: { left: null, right: null }, mechanisms: {},
 };
 const view = { frames: new Map(), shown: { left: null, right: null }, phase: null, three: null, clean: false, furthest: 0, token: 0 };
 let panel = null, built = false, player = null, saving = { left: null, right: null }, tools = null;
@@ -56,6 +56,10 @@ function row(step) {
   if (k === 'pole') return ['POLE', `${Number(step.mm)} mm`, ''];
   if (k === 'hand') return ['HAND', step.values.join(','), 'L,R,M,I,TB,TR'];
   if (k === 'wait') return ['WAIT', `${Number(step.seconds)} s`, step.note || ''];
+  if (k === 'mechanism') {                                   // a lid or seat task of ALIX's (mechanism.py), on both arms
+    const t = S.mechanisms[step.task] || {};
+    return ['LID / SEAT', `${t.short || step.task} // ${t.title || ''}`, 'Pre-recorded (ALIX) // both arms // camera checks'];
+  }
   return ['GLOBAL', step.name, `${String(step.move).toUpperCase()} // Speed ${step.speed}% // Wait ${Number(step.wait_s)}s`];
 }
 
@@ -71,7 +75,8 @@ function armPanel(side) {
   const num = (id, value, attrs = {}) => el('input', { id: `liteS2_${side}_${id}`, type: 'number', value: String(value), ...attrs });
   return el('div', { class: `card lite-s2-arm ${side}` },
     el('div', { class: 'lite-s2-armhead' }, el('b', { text: `${ARM(side)} ARM // SEQUENCE` })),
-    el('div', { class: 'lite-s2-subtabs', role: 'tablist' }, tab('program', 'PROGRAM'), tab('global', 'GLOBAL POINT'), tab('aux', 'HAND / POLE / WAIT')),
+    el('div', { class: 'lite-s2-subtabs', role: 'tablist' }, tab('program', 'PROGRAM'), tab('global', 'GLOBAL POINT'), tab('aux', 'HAND / POLE / WAIT'),
+      tab('lid', 'LID / SEAT')),
     el('div', { id: `liteS2Add_${side}_program`, class: 'lite-s2-add' },
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_prog`, text: 'Stored Program' }),
@@ -109,6 +114,12 @@ function armPanel(side) {
         btn('GRIP', () => setHand(side, GRIP), 'btn orange'), btn('OPEN', () => setHand(side, OPEN), 'btn green'),
         btn('CLEANING POSE', () => setHand(side, CLEANING), 'btn violet'),
         btn('+ ADD HAND', () => addHand(side), 'btn green'))),
+    el('div', { id: `liteS2Add_${side}_lid`, class: 'lite-s2-add', hidden: true },
+      el('div', { class: 'lite-row' },
+        el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_task`, text: 'Lid or seat task (pre-recorded)' }),
+          el('select', { id: `liteS2_${side}_task`, onchange: () => paintTask(side) })),
+        btn('+ ADD TO BOTH ARMS', () => addMechanism(side), 'btn green')),
+      el('div', { id: `liteS2TaskNote_${side}`, class: 'mini-note' })),
     el('div', { class: 'lite-table-scroll lite-s2-table' }, el('table', { class: 'lite-table' },
       el('thead', {}, el('tr', {}, ['#', 'TYPE', 'TARGET', 'OPTIONS'].map(h => el('th', { text: h })))),
       el('tbody', { id: `liteS2Rows_${side}` }))),
@@ -197,7 +208,7 @@ function build() {
 }
 
 function subtab(side, id) {
-  for (const t of ['program', 'global', 'aux']) {
+  for (const t of ['program', 'global', 'aux', 'lid']) {
     $(`liteS2Add_${side}_${t}`).hidden = t !== id;
     $(`liteS2Tab_${side}_${t}`).classList.toggle('active', t === id);
     $(`liteS2Tab_${side}_${t}`).setAttribute('aria-selected', String(t === id));
@@ -206,7 +217,33 @@ function subtab(side, id) {
 
 // ── data
 
+// The lid and seat tasks (ALIX's, pre-recorded: the owner, 18 Oct, "not subjected to teaching procedure ... tasks
+// that are available to be injected at a point in the sequence"): what each does, for the LID / SEAT tab.
+async function loadMechanisms() {
+  if (Object.keys(S.mechanisms).length) return;
+  try {
+    const d = await get('/api/mechanism');
+    S.mechanisms = Object.fromEntries(d.tasks.map(t => [t.name, t]));
+    for (const side of ARMS) {
+      const sel = $(`liteS2_${side}_task`);
+      if (sel) sel.replaceChildren(...d.tasks.map(t => el('option', { value: t.name, text: `${t.short} // ${t.title}` })));
+      paintTask(side);
+    }
+    paintAll();
+  } catch (err) { tell(err); }
+}
+
+function paintTask(side) {
+  const t = S.mechanisms[$(`liteS2_${side}_task`)?.value];
+  const note = $(`liteS2TaskNote_${side}`);
+  if (!note || !t) return;
+  note.textContent = `${t.does} From ${t.start} to ${t.end}; about ${Math.round(t.seconds)} s of motion. ALIX's plan, made with the UGV at `
+    + `${t.standoff_mm} mm from the commode and no offset. It uses both arms: it is added to both lists, and both arms finish what is `
+    + 'before it, then it runs. In Real the wrist camera checks the lid and the seat; in Simulation the checks are assumed.';
+}
+
 async function load() {
+  loadMechanisms();
   try {
     const d = await get(base());
     S.steps.left = d.left;
@@ -391,6 +428,22 @@ function addHand(side) {
   append(side, { type: 'hand', values });
 }
 
+function addMechanism(side) {
+  const task = $(`liteS2_${side}_task`)?.value, t = S.mechanisms[task];
+  if (!t) { window.toast('Choose a lid or seat task.'); return; }
+  for (const s of ARMS) {
+    S.steps[s].push({ type: 'mechanism', task });
+    S.sel[s] = S.steps[s].length - 1;
+    paintArm(s);
+    saveSteps(s);
+  }
+  window.toast(`${t.title}: added at the end of both arms' lists (UP / DOWN place it in each).`);
+}
+
+// A lid or seat task is on both arms: the k-th of one arm's is the k-th of the other's.
+const nthTask = (side, i) => S.steps[side].slice(0, i + 1).filter(x => x.type === 'mechanism').length - 1;
+const taskAt = (side, k) => S.steps[side].reduce((at, x, i) => (x.type === 'mechanism' && k-- === 0 ? i : at), -1);
+
 function moveSel(side, d) {
   const i = S.sel[side], list = S.steps[side];
   if (i == null || i + d < 0 || i + d >= list.length) return;
@@ -403,6 +456,7 @@ function moveSel(side, d) {
 function duplicate(side) {
   const i = S.sel[side];
   if (i == null) return;
+  if (S.steps[side][i].type === 'mechanism') { window.toast('A lid or seat task is added to both arms from the LID / SEAT tab.'); return; }
   S.steps[side].splice(i + 1, 0, JSON.parse(JSON.stringify(S.steps[side][i])));
   S.sel[side] = i + 1;
   paintArm(side);
@@ -412,6 +466,16 @@ function duplicate(side) {
 function remove(side) {
   const i = S.sel[side];
   if (i == null) return;
+  if (S.steps[side][i].type === 'mechanism') {                // and its pair on the other arm
+    const other = side === 'left' ? 'right' : 'left', j = taskAt(other, nthTask(side, i));
+    if (j >= 0 && S.steps[other][j].task === S.steps[side][i].task) {
+      S.steps[other].splice(j, 1);
+      S.sel[other] = S.steps[other].length ? Math.min(j, S.steps[other].length - 1) : null;
+      paintArm(other);
+      saveSteps(other);
+      window.toast(`${(S.mechanisms[S.steps[side][i].task] || {}).title || 'The task'}: removed from both arms.`);
+    }
+  }
   S.steps[side].splice(i, 1);
   S.sel[side] = S.steps[side].length ? Math.min(i, S.steps[side].length - 1) : null;
   paintArm(side);
@@ -524,7 +588,8 @@ function setScope(s) { S.scope = s; S.pick = null; paintAll(); }
 // What is run (workflow.plan_for): {mode, pick}. A sequence's mode is the button's (both, left, right).
 function what(mode) {
   if (S.scope === 'task') return S.pick ? { mode: S.pick.side, pick: { scope: 'task', side: S.pick.side, row: S.pick.row, id: S.pick.id } } : null;
-  if (S.scope === 'dual') return S.pick ? { mode: 'both', pick: { scope: 'dual', stage: S.pick.stage, ids: S.pick.ids } } : null;
+  if (S.scope === 'dual') return S.pick ? { mode: 'both', pick: { scope: 'dual', stage: S.pick.stage, ids: S.pick.ids,
+    ...(S.pick.task ? { task: S.pick.task } : {}) } } : null;
   return { mode, pick: null };
 }
 
@@ -566,15 +631,20 @@ async function chooseTask(anchor) {
   }
   const plan = full;
   const names = (side, s) => (s.programs[side] || []).map(x => `${x.id}${x.name ? ` ${x.name}` : ''}`).join(', ');
+  const tasks = plan.stages.filter(s => s.kind === 'mechanism').map(s => ({ value: String(s.index),
+    text: `Stage ${s.index + 1} · ${s.label} · ${s.title} (both arms, pre-recorded)`,
+    detail: `ALIX's plan · LEFT row ${(s.rows || {}).left} · RIGHT row ${(s.rows || {}).right}${afterCheck(s) ? LID : ''}` }));
   const rows = plan.stages.filter(s => (s.kind === 'parallel' || s.kind === 'serial') && (s.programs.left || []).length && (s.programs.right || []).length)
     .map(s => ({ value: String(s.index),
       text: s.kind === 'serial' ? `Stage ${s.index + 1} · Program ${s.label} · one arm at a time (${ARM(s.first)} first)`
         : `Stage ${s.index + 1} · ${s.title || (/^\d+$/.test(s.label) ? `Program ${s.label}` : s.label || 'TIMELINE')} · LEFT + RIGHT together`,
       detail: `LEFT ${names('left', s)} · RIGHT ${names('right', s)}${afterCheck(s) ? LID : ''}` }));
-  choose(anchor, [{ label: `V53's plan · ${rows.length} dual-arm task${rows.length === 1 ? '' : 's'}`, rows }], S.pick ? String(S.pick.stage) : null, (v) => {
-    const r = rows.find(x => x.value === v), s = plan.stages.find(x => String(x.index) === v);
+  const groups = [{ label: `V53's plan · ${rows.length} dual-arm task${rows.length === 1 ? '' : 's'}`, rows }];
+  if (tasks.length) groups.push({ label: `Lid and seat · ${tasks.length} task${tasks.length === 1 ? '' : 's'}`, rows: tasks });
+  choose(anchor, groups, S.pick ? String(S.pick.stage) : null, (v) => {
+    const r = [...rows, ...tasks].find(x => x.value === v), s = plan.stages.find(x => String(x.index) === v);
     S.pick = { stage: Number(v), ids: { left: (s.programs.left || []).map(x => x.id), right: (s.programs.right || []).map(x => x.id) },
-      text: r.text.replace(/^Stage \d+ · /, '') };
+      text: r.text.replace(/^Stage \d+ · /, ''), ...(s.kind === 'mechanism' ? { task: s.task } : {}) };
     paintAll();
   }, { placeholder: 'Search the stages: Program ID or name' });
 }
@@ -950,7 +1020,8 @@ async function simEnded() {
 
 function paintStages() {
   const sim = S.sim, box = $('liteS2Stages');
-  const words = { parallel: 'LEFT + RIGHT together', serial: 'one arm at a time', checkpoint: 'manual checkpoint', tail: 'final steps', single: 'one arm' };
+  const words = { parallel: 'LEFT + RIGHT together', serial: 'one arm at a time', checkpoint: 'manual checkpoint', tail: 'final steps', single: 'one arm',
+    mechanism: 'lid / seat, both arms (ALIX\'s plan)' };
   box.replaceChildren(el('h4', { text: 'Stages (V53\'s SAFE TIMELINE plan)' }), ...sim.stages.map(s => el('button', {
     class: 'lite-s2-stage', type: 'button', 'data-i': String(s.index), onclick: () => { player.pause(); seekSim(s.t0); },
     text: `${s.index + 1}. ${s.kind === 'serial' ? `Program ${s.label}` : s.label || s.kind.toUpperCase()} · ${words[s.kind] || s.kind}${s.kind === 'serial' ? ` (${ARM(s.first)} first)` : ''} · ${fmt(s.t0)}–${fmt(s.t1)}` })));

@@ -14,6 +14,9 @@ import pytest
 
 from alix_studio_lite import vendor_paths
 
+PID = "alix_lid"
+P = f"/api/projects/{PID}"
+
 
 @pytest.fixture(scope="module")
 def server(tmp_path_factory):
@@ -37,6 +40,8 @@ def server(tmp_path_factory):
             break
         except OSError:
             time.sleep(0.2)
+    ctx["script"] = script
+    call(ctx, "PUT", P, {"id": PID, "name": "Lid", "archived": False, "state": {"currentTask": 0}})
     for side in ("left", "right"):
         assert call(ctx, "POST", f"/api/robots/{side}/connect", {})["connected"]
     assert call(ctx, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})["mode"] == "real"
@@ -115,3 +120,28 @@ def test_stop_in_the_middle_of_a_stream_stops_sending(server):
     assert not last["ok"] and int(last["text"].split("/")[0]) < last["args"]["lines"]
     for side in ("left", "right"):                               # STOP holds the arms until Recover, as everywhere
         call(server, "POST", f"/api/robots/{side}/recover", {})
+
+
+def test_s2_runs_a_lid_open_put_in_its_sequence(server):
+    """The owner, 18 Oct: a pre-recorded task injected at a point in the sequence: Open the lid on both arms' lists,
+    simulated (its stage on the run's clock, the lid open after it, left out of the collision check and said so), then
+    run in Real by S2 on the emulated arms."""
+    lid = {"type": "mechanism", "task": "lid_open"}
+    wait_1 = {"type": "wait", "seconds": 1}
+    call(server, "PUT", f"{P}/workflow/left", {"steps": [lid, wait_1]})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": [lid]})
+    j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "both"}))
+    assert j["state"] == "done", j
+    sim = j["result"]
+    assert [s["kind"] for s in sim["stages"]] == ["mechanism", "tail"] and sim["counts"]["mechanisms"] == 1
+    kinds = {a["kind"] for side in ("left", "right") for a in sim["acts"][side]}
+    assert {"stream", "pole", "hand", "global", "check"} <= kinds
+    assert sim["phases"][-1][1] == "lid_open"
+    assert any("left out of this collision check" in f["text"] for f in sim["findings"])
+    assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
+    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "seat_closed"]))
+    job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
+    done = wait(server, job)
+    assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])
+    said = " | ".join(e["text"] for e in done["events"])
+    assert "Open the lid: Open the lid done." in said and "CHECK verify_lid_lifted" in said

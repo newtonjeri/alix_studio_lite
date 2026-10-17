@@ -47,6 +47,31 @@ export async function refreshTasks() {
 
 const later = (t, arm) => !t || !t.lite || !t.lite[arm] || t.lite[arm].later;
 const bothLater = (t) => later(t, 'left') && later(t, 'right');
+// A lid or seat task (mechanism.py): ALIX's plan, pre-recorded, not taught (the owner, 18 Oct: "not subjected to
+// teaching procedure ... tasks that are available to be injected at a point in the sequence").
+const preRecorded = (t) => (t && t.lite && ((t.lite.left || {}).mechanism || (t.lite.right || {}).mechanism)) || null;
+
+// The Teach page of a pre-recorded task says what it is and where it goes, instead of the teaching it does not need.
+function mechanismNotice() {
+  const t = TASKS[currentTask], m = preRecorded(t);
+  let box = document.getElementById('liteMechNotice');
+  const anchor = document.getElementById('procedureNotice');
+  if (!box && anchor && m) {
+    box = el('div', { id: 'liteMechNotice', class: 'notice lite-mech-notice' });
+    anchor.after(box);
+  }
+  document.getElementById('view-teach')?.classList.toggle('lite-prerecorded', !!m);   // no teaching stages: it is not taught
+  if (!box) return;
+  box.hidden = !m;
+  if (!m) return;
+  const next = TASKS.findIndex((x, j) => j > currentTask && !completed[j] && !preRecorded(x));
+  box.replaceChildren(el('b', { text: `Pre-recorded: ${m.title} (${m.short}).` }),
+    ` ALIX's plan for both arms, with the wrist camera's checks: it is not taught. Put it in the sequence in Merge + Sequence, S2, `
+    + 'its LID / SEAT tab (added to both arms\' lists at once); it runs there in Simulation and on the robot.',
+    el('button', { class: 'btn light', type: 'button', text: 'Open S2',
+      onclick: () => { window.showView('sequence'); setTimeout(() => document.getElementById('liteSeqTab_s2')?.click(), 300); } }),
+    next >= 0 ? el('button', { class: 'btn', type: 'button', text: `Go on to ${TASKS[next].label}`, onclick: () => window.jumpTask(next) }) : '');
+}
 
 // The arm cards: LATER / NOT USED, and each step's status under its name.
 function relabel() {
@@ -64,10 +89,13 @@ function relabel() {
     if (!line && name) { line = el('div', { id: `lite${arm}Status`, class: 'lite-step-status' }); name.after(line); }
     if (line) {
       line.textContent = !s ? '' : s.later ? 'Not in Release 1: added later.'
-        : [s.status_label, s.recordings ? `${s.recordings} recording${s.recordings > 1 ? 's' : ''}` : 'no recording yet',
-          s.version ? `tuned ${s.version}` : ''].filter(Boolean).join(' · ');
+        : s.mechanism ? `Pre-recorded: ALIX's ${s.mechanism.title} plan, run in S2 (not taught).`
+          : [s.status_label, s.recordings ? `${s.recordings} recording${s.recordings > 1 ? 's' : ''}` : 'no recording yet',
+            s.version ? `tuned ${s.version}` : ''].filter(Boolean).join(' · ');
     }
+    if (s && s.mechanism && state && !isLater) state.textContent = 'PRE-RECORDED';
   }
+  mechanismNotice();
 }
 
 function markLater() {
@@ -96,6 +124,30 @@ async function addFixtureField() {
 }
 
 export function installTasks() {
+  // the queue and the Summary say PRE-RECORDED for a lid or seat task (an approval or the current task first)
+  const pageQueueStatus = window.taskQueueStatus;
+  window.taskQueueStatus = function taskQueueStatus(i, t) {
+    const own = pageQueueStatus(i, t);
+    return own.cls === 'pending' && preRecorded(t) ? { label: 'PRE-RECORDED', cls: 'lite-prerecorded' } : own;
+  };
+  const pageArmStatus = window.armTaskStatusInfo;
+  window.armTaskStatusInfo = function armTaskStatusInfo(i, side) {
+    const own = pageArmStatus(i, side), s = TASKS[i] && TASKS[i].lite && TASKS[i].lite[side];
+    return own.label === 'PENDING' && s && s.mechanism ? { label: 'PRE-RECORDED', cls: 'violet' } : own;
+  };
+
+  // the Summary's count: the pre-recorded tasks are not taught, so they are said apart
+  const pageSummary = window.renderSummary;
+  window.renderSummary = function renderSummary() {
+    pageSummary();
+    const pre = TASKS.filter((t, i) => preRecorded(t) && !completed[i]).length;
+    const badge = document.getElementById('projectBadge');
+    if (pre && badge) {
+      const done = Object.keys(completed).filter(k => completed[k]).length;
+      badge.textContent = `${done} / ${TASKS.length - pre} tasks complete · ${pre} pre-recorded`;
+    }
+  };
+
   const pageLoadTask = window.loadTask;
   window.loadTask = function loadTask(i) {
     quiet = true;

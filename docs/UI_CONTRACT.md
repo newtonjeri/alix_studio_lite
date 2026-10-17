@@ -165,9 +165,40 @@ The Lite UI is the designer's **ASL FINAL Template V32** (product name ASL): one
   - The top bar compacts, then wraps onto two rows, with STOP BOTH at the right. The sidebar narrows (300, 260, 220 px) and goes above the page under 760 px.
   - The tables take the width they have. Words wrap whole; only long tokens (paths, session ids, file names, the logs' details) break inside. Under 1,100 px the Summary's pictures, badges and buttons are a size smaller. Under 780 px, as a last resort, any cell's text may break inside a word.
   - Tune's charts are drawn again to their box whenever it changes size, including after the page was hidden (Plotly follows only the window).
-- **The lid and the seat with the camera** (the owner: open and close them using the camera, streamed over CanFD instead of uploading a file): not built; the owner's answers come first.
-  - What ALIX has: its lid and seat motions are offline plans (`Resource/plans/commode_c/hardware/*_toppra.json`); the camera (a RealSense D435) is read in ALIX's ROS perception node, for its gap check, and nothing turns a camera image into a trajectory. The CanFD stream (ALIX's `track.stream_track`, with its preflight and watch) is already in Lite's vendored code.
-  - Open: where the camera is connected; what it decides (a check of a fixed plan, or the plan itself); whether ALIX's plans may run as they are (seat open is not proven on the robot, lid close right only in simulation, the approach is not collision-checked, the RIGHT arm not proven at 5 ms); which rate limit applies to a stream (ALIX's per joint, or Lite's single one); the hand-eye calibration, never run.
+- **The lid and the seat: ALIX's mechanism tasks, run by Lite with no ROS** (the owner, 17-18 Oct: open and close them using the camera, streamed over CanFD instead of uploading a file; implemented and working in ALIX, on the robot and in Isaac Sim; "pre-trained or recorded, so they are not subjected to teaching procedure ... tasks that are available to be injected at a point in the sequence"; Lite stays ROS 2 independent).
+  - **What runs is ALIX's own.** Commode C's four hardware plans, vendored unchanged (`vendor/alix/Resource/plans/commode_c/hardware/`, planned with the UGV at 250 mm from the commode and no offset), with their 5 ms track files and lid_open's three pre-planned re-lift rungs:
+    - Open the lid (`lid_open`, LID OPEN);
+    - Close the seat (`seat_close_right`, SEAT CLOSE);
+    - Open the seat (`seat_open`, SEAT OPEN);
+    - Close the lid (`lid_close_right`, LID CLOSE).
+  - **The rows they run for:** TASK 3 OPEN LID + SEAT runs Open the lid (and Close the seat after it, if the seat came up with the lid); TASK 4 CLOSE SEAT ONLY runs Close the seat (which skips itself when the seat is down); TASK 7 runs Open the seat; TASK 15 runs Close the lid (which closes the seat first when it is up).
+  - **How they run** (`server/mechanism.py`): ALIX's `arm_trajectory_sender.py` ported, with ROS replaced.
+    - The order: one entry after the other, each done before the next (the two arms never move at the same time inside a plan).
+    - Each check before the entry that carries it, and its policy: skip, run the prerequisite plan then this one again, re-lift from the next rung, or stop for a person. A seat that came up with the lid is closed after.
+    - Each arm move is streamed over the controller's CanFD pass-through, a line every 5 ms, by ALIX's ROS-free lane (`alix_dispatch` `track.run_verified(channel="canfd")`: the controller's 5 ms push captured on this computer and watched, the per-joint rate gate). The lifts and pushes use the plans' own 5 ms tracks (sha256 checked); the other moves are resampled by ALIX's law. On the robot, ROS's driver streamed the same moves every 10 ms.
+    - The pole and the hand as Lite moves them everywhere (read back).
+  - **The camera** (`server/gap_check.py`, `server/camera_d435.py`, `server/robot_fk.py`): ALIX's gap check (`perception_node.py`), ported line for line, with the same parameters (the vendored `perception.yaml`), the same registration learned from a closed lid and seat, and the same fail-closed refusals. The robot's own checks of 10 and 12 October, replayed through it, give the same answers.
+    - The D435 is read directly (pyrealsense2, its native 848 x 480 depth), on the computer Lite runs on. ALIX's ROS camera node must not be running at the same time.
+    - The camera's pose and the hands' 17 frames come from forward kinematics on ALIX's URDF with the arms' own readings. At pose 4 this is within 0.3 mm of the robot's TF.
+    - Each check is kept in `Resources/Logs/<day>/checks/`: its decision, the depth it used and its pictures.
+  - **Where they are:**
+    - In the task list, these tasks are marked PRE-RECORDED (queue, Summary). Opening one says what it is, hides the teaching stages, and offers S2 or the next task to teach.
+    - In S2, the LID / SEAT tab adds a task to both arms' lists at once (removing it removes both). S2 cuts the sequence at it: both arms finish what comes before it, it runs, then both go on; each part is planned by V53 as it is.
+    - One can be run alone as a Dual-arm task.
+    - `POST /api/mechanism/<task>/run` runs one in the mode Lite is in.
+  - **Modes:**
+    - **Simulation:** the plan in 3D on the run's clock, its checks assumed. It is left out of the collision check (its hands hold the lid by design; ALIX's planner checked it with the commode's contact allowances), and a finding says so. A warning names any Program of the run taught at another UGV placement.
+    - **Hardware sim:** every move checked as the stream would check it, nothing sent. Nothing shows that a controller's SIM mode holds a CanFD stream.
+    - **Real:** the arms move and the camera checks. Real refuses to start without a readable D435.
+  - **Where Lite differs from ALIX's runs, and why:**
+    - **Plan start, and park after a skip:** the pole and the hand, then the controller's MoveJ at the speed slider's speed, where ALIX planned with MoveIt. Not collision-checked; the operator confirms the area is clear, as for every Real run.
+    - **After a re-lift:** the lifting arm's next move starts where the original lift ended (7.7, 15.3 or 24.3 degrees away after rung 1, 2 or 3; ROS's driver jumped it at its speed limit). It is bridged by ALIX's explicit MoveJ at the slider's speed.
+    - **seat_open's re-lift** (no pre-planned rung) first goes back along the lift it made, in reverse, where ALIX planned a restore with MoveIt.
+    - **A camera that gives no frame at all** stops the task for a person, where ALIX reads an unanswered check as NOT. Before Open the lid, NOT means "skip, it is open already", which with no camera would leave the lid closed under the next tasks.
+  - **Open:**
+    - whether the controllers' SIM mode holds a CanFD stream (then Hardware sim can stream);
+    - the RIGHT arm at 5 ms in this lane has not been run on the robot yet (ALIX ran it at 5.5545 ms);
+    - the colour models' cross-check is not installed (on the robot it never contributed: the geometry answered alone).
 - **From the lab's logs:**
   - 20:02, after an E-stop (19:58) and Recover: both arms' MoveJ to their home point got no answer from their controllers. The control program printed nothing; the calls held both controllers 881 s, until Lite was restarted (20:16). STOP BOTH at 20:08 was sent and never confirmed (130 s), and later presses waited for it.
   - The same, shorter: saving global points at 12:07 (157 s and 138 s), and LEFT running program 1 at 16:05 (1,047 s).
