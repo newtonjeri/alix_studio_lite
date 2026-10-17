@@ -1,0 +1,55 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "5fac826c3576fa7a451038e836f3a8a8285356d668aadf29be62b8f5a285174c",
+   "ok": true,
+   "at": "2026-10-17 15:30:22",
+   "detail": {
+    "program_id": 1
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "5fac826c3576fa7a451038e836f3a8a8285356d668aadf29be62b8f5a285174c",
+   "ok": true,
+   "at": "2026-10-17 16:00:26",
+   "detail": {
+    "program_id": 1,
+    "unchanged": true
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "5fac826c3576fa7a451038e836f3a8a8285356d668aadf29be62b8f5a285174c",
+   "ok": true,
+   "at": "2026-10-17 16:25:06",
+   "detail": {
+    "program_id": 1,
+    "unchanged": true
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "5fac826c3576fa7a451038e836f3a8a8285356d668aadf29be62b8f5a285174c",
+   "ok": true,
+   "at": "2026-10-17 16:25:56",
+   "detail": {
+    "program_id": 1,
+    "dry_run": false,
+    "seconds": 19.41
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "5fac826c3576fa7a451038e836f3a8a8285356d668aadf29be62b8f5a285174c",
+   "ok": true,
+   "at": "2026-10-17 16:26:01",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}

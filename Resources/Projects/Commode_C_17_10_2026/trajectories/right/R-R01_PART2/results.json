@@ -1,0 +1,35 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "4321dc3d296178ee4be33046404d8397d2d57a1af14e1006dfeeed3f5e836b28",
+   "ok": true,
+   "at": "2026-10-17 15:14:06",
+   "detail": {
+    "program_id": 2
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "4321dc3d296178ee4be33046404d8397d2d57a1af14e1006dfeeed3f5e836b28",
+   "ok": true,
+   "at": "2026-10-17 15:15:10",
+   "detail": {
+    "program_id": 2,
+    "dry_run": false,
+    "seconds": 19.19
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "4321dc3d296178ee4be33046404d8397d2d57a1af14e1006dfeeed3f5e836b28",
+   "ok": true,
+   "at": "2026-10-17 15:15:42",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}

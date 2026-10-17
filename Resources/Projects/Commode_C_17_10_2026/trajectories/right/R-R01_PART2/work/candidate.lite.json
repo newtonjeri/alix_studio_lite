@@ -1,6 +1,6 @@
 {
   "lite_sidecar": 1,
-  "written_utc": "2026-10-17T06:37:11+00:00",
+  "written_utc": "2026-10-17T07:10:59+00:00",
   "track_sha256": "4321dc3d296178ee4be33046404d8397d2d57a1af14e1006dfeeed3f5e836b28",
   "result": {
     "optimiser": "manual",
@@ -162,7 +162,7 @@
     "cycle_s": 0.005,
     "report": {
       "sourceFile": "LD_TP_P2_3.txt",
-      "generatedAt": "2026-10-17T06:37:10.914Z",
+      "generatedAt": "2026-10-17T07:10:58.479Z",
       "selectedStages": {
         "trim": true,
         "meanSmooth": true,
@@ -262,7 +262,7 @@
       ],
       "skippedRegions": [],
       "automaticOptimizationAnalysis": {
-        "generatedAt": "2026-10-17T06:37:10.914Z",
+        "generatedAt": "2026-10-17T07:10:58.479Z",
         "method": "Motion-only heuristic using joint step magnitude and acceleration/change activity",
         "contactDataAvailable": false,
         "suggestions": [

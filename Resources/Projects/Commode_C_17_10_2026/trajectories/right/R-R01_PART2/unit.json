@@ -71,7 +71,7 @@
    }
   ],
   "smooth_window": 101,
-  "program_id": null,
+  "program_id": 2,
   "max_dev_mm": null,
   "trim": true,
   "smooth": true,
@@ -144,8 +144,53 @@
     "idle_min_run": 20
    },
    "at": 1792219009.101169
+  },
+  {
+   "label": "Program ID 2",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1269,
+      "pct": 43.0
+     },
+     {
+      "start": 1270,
+      "end": 2539,
+      "pct": 67.0
+     },
+     {
+      "start": 2540,
+      "end": 3808,
+      "pct": 46.0
+     },
+     {
+      "start": 3809,
+      "end": 5078,
+      "pct": 67.0
+     },
+     {
+      "start": 5079,
+      "end": 6348,
+      "pct": 43.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 2,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792221242.0440397
   }
  ],
- "cursor": 1,
+ "cursor": 2,
  "version": "v001"
 }
