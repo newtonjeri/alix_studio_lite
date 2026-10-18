@@ -8,7 +8,7 @@ works (the test suite).
 
     python3 tools/setup_lite.py                 # make .venv, install, check
     python3 tools/setup_lite.py --check         # only check what is there
-    python3 tools/setup_lite.py --no-optional   # skip toppra and meshoptimizer
+    python3 tools/setup_lite.py --no-optional   # skip toppra, meshoptimizer, the camera and its models
     python3 tools/setup_lite.py --no-tests      # skip the test suite at the end
 
 On Windows, use ``py tools\\setup_lite.py``. Afterwards ``tools/run_lite.sh`` (Windows:
@@ -160,7 +160,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Install ALIX Studio Lite into a virtual environment.",
                                  formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     ap.add_argument("--check", action="store_true", help="only check the existing environment")
-    ap.add_argument("--no-optional", action="store_true", help="skip toppra and meshoptimizer")
+    ap.add_argument("--no-optional", action="store_true", help="skip toppra, meshoptimizer, the wrist camera (pyrealsense2) and its colour models (ultralytics)")
     ap.add_argument("--no-tests", action="store_true", help="skip the test suite at the end")
     a = ap.parse_args(argv)
     if a.check:
