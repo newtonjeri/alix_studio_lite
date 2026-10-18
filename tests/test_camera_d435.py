@@ -43,10 +43,19 @@ class FakeRS:
     stream = SimpleNamespace(depth="depth", color="color")
     format = SimpleNamespace(z16="z16", bgr8="bgr8")
     camera_info = SimpleNamespace(name="name", serial_number="serial")
+    option = SimpleNamespace(enable_auto_exposure="auto_exposure")
 
     def __init__(self):
         self.applied, self.resets, self.n = [], 0, 0
+        self.streams, self.options = [], []
         rs = self
+
+        class Sensor:
+            def supports(self, opt):
+                return opt == "auto_exposure"
+
+            def set_option(self, opt, value):
+                rs.options.append((opt, value))
 
         class Device:
             def get_info(self, what):
@@ -57,6 +66,9 @@ class FakeRS:
 
             def first_depth_sensor(self):
                 return SimpleNamespace(get_depth_scale=lambda: 0.001)
+
+            def query_sensors(self):
+                return [Sensor(), Sensor()]                     # the depth module and the RGB camera
 
         def intr(w, h, f):
             return SimpleNamespace(fx=f, fy=f, ppx=w / 2, ppy=h / 2, width=w, height=h)
@@ -100,7 +112,7 @@ class FakeRS:
                 return _Set(_Frame(np.full((720, 1280), int(fs.depth.arr[0, 0]), dtype=np.uint16), fs.depth.ts), fs.colour)
 
         self.pipeline = Pipeline
-        self.config = lambda: SimpleNamespace(enable_device=lambda s: None, enable_stream=lambda *a: None)
+        self.config = lambda: SimpleNamespace(enable_device=lambda s: None, enable_stream=lambda *a: rs.streams.append(a))
         self.context = lambda: SimpleNamespace(query_devices=lambda: [Device()])
         self.spatial_filter, self.temporal_filter, self.align = filt("spatial"), filt("temporal"), Align
 
@@ -113,6 +125,8 @@ def test_the_depth_as_it_comes_and_aligned_to_the_colour_filtered_as_alixs_drive
     with cam.using():
         first = cam.shot()
         assert rs.resets == 1                                   # once, as ALIX's bringup (initial_reset)
+        assert rs.streams == [("depth", 848, 480, "z16", 30), ("color", 1280, 720, "bgr8", 30)]   # the spec's profiles
+        assert rs.options == [("auto_exposure", 1.0)] * 2       # auto exposure on both sensors, as the spec asks
         assert first.depth.shape == (480, 848) and first.depth[0, 0] < 1000          # native: not filtered
         assert first.aligned.shape == (720, 1280) and first.aligned[0, 0] == first.depth[0, 0] + 2000   # spatial + temporal
         assert first.colour.shape == (720, 1280, 3)
@@ -128,6 +142,26 @@ def test_the_depth_as_it_comes_and_aligned_to_the_colour_filtered_as_alixs_drive
     with cam.using():
         cam.shot()
     assert rs.resets == 1                                      # not reset again in the session
+
+
+def test_the_profiles_and_settings_are_alix_s_camera_specification():
+    """What Lite starts the camera with is what ALIX's bringup starts it with: the specification's active profiles
+    and its hardware extra_args (read through ALIX's own loader, not copied)."""
+    import yaml
+
+    from alix_studio_lite import vendor_paths
+    from alix_studio_lite.server.camera_d435 import spec
+
+    doc = yaml.safe_load((vendor_paths.ALIX / "core/python/alix_perception_core/src/alix_perception_core/config/cameras/d435.yaml").read_text())
+    s = spec()
+    assert s["depth"] == tuple(doc["streams"]["depth"]["active_profile"])
+    assert s["colour"] == tuple(doc["streams"]["color"]["active_profile"])
+    extra = doc["targets"]["hardware"]["extra_args"]
+    assert (s["reset"], s["align"], s["spatial"], s["temporal"]) == tuple(
+        extra[k] == "true" for k in ("initial_reset", "align_depth.enable", "spatial_filter.enable", "temporal_filter.enable"))
+    assert s["auto_exposure"] == (extra["rgb_camera.enable_auto_exposure"] == "true")
+    assert s["args"] == {k: str(v) for k, v in extra.items()} | {
+        "depth_module.depth_profile": "%dx%dx%d" % s["depth"], "rgb_camera.color_profile": "%dx%dx%d" % s["colour"]}
 
 
 def test_no_frame_in_time_is_said(monkeypatch):

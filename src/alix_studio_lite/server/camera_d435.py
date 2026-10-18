@@ -1,10 +1,13 @@
 """The right wrist's RealSense D435, read by Lite itself (pyrealsense2), with no ROS.
 
 The owner, 18 Oct: the camera is plugged into the computer Lite runs on, and Lite is ROS 2 independent.
-ALIX's bringup reads it with the realsense2_camera node, configured by ALIX's alix_perception_core
-(config/cameras/d435.yaml): depth 848 x 480 z16 and colour 1280 x 720 at 30 fps, a hardware reset at start,
-the spatial and temporal filters on, the depth aligned to the colour frame. Lite opens the same streams and
-does the same, frame by frame, on a thread of its own while the camera is open:
+ALIX's bringup reads it with the realsense2_camera node (librealsense), started with the arguments ALIX's
+camera specification gives (alix_perception_core/config/cameras/d435.yaml, the single source of truth, through
+its own `CameraModel.rs_launch_args()`): depth 848 x 480 z16 and colour 1280 x 720 at 30 fps, a hardware reset
+at start, the spatial and temporal filters on, the depth aligned to the colour frame, auto exposure. Lite reads
+that specification itself (``spec()``, the vendored copy) and opens the same streams with the same settings
+through librealsense's own Python binding, frame by frame, on a thread of its own while the camera is open
+(the node's enable_sync, enable_rgbd and pointcloud are its topics: the pipeline hands each moment as one set):
 
 - the NATIVE depth, as it comes (the driver publishes the unfiltered original on depth/image_rect_raw when
   it aligns): what the gap check measures (gap_check.py, the node's `gap_depth_source: depth`);
@@ -24,12 +27,34 @@ from contextlib import contextmanager
 
 import numpy as np
 
+from .. import vendor_paths                                 # noqa: F401 - ALIX's vendored packages on sys.path
 from .gap_check import Intrinsics
 from .jobs import UserError
 
-DEPTH = (848, 480, 30)                 # ALIX's d435.yaml: the native depth profile
-COLOUR = (1280, 720, 30)               # colour at 720p since 2026-10-10 (USB frame corruption at 1080p)
+MODEL = "d435"                         # the camera on the right wrist (ALIX's camera_config.DEFAULT_MODEL)
 WARM_UP_S = 1.0                        # auto exposure settles before the first check is answered
+
+
+def spec(model: str = MODEL) -> dict:
+    """How ALIX's bringup starts this camera, from ALIX's camera specification (config/cameras/<model>.yaml): the
+    two profiles and the settings its rs_launch.py is given (`CameraModel.rs_launch_args()`), read here instead
+    of being spelled out again. {depth, colour: (w, h, fps); reset, align, spatial, temporal, auto_exposure; args}."""
+    from alix_perception_core.camera_config import load_camera   # noqa: PLC0415 - vendored; imports only yaml
+
+    args = load_camera(model).rs_launch_args()
+
+    def profile(key):
+        w, h, fps = (int(x) for x in str(args[key]).lower().split("x"))
+        return (w, h, fps)
+
+    def flag(key):
+        return str(args.get(key, "false")).lower() == "true"
+
+    return dict(depth=profile("depth_module.depth_profile"), colour=profile("rgb_camera.color_profile"),
+                reset=flag("initial_reset"), align=flag("align_depth.enable"),
+                spatial=flag("spatial_filter.enable"), temporal=flag("temporal_filter.enable"),
+                auto_exposure=flag("rgb_camera.enable_auto_exposure") or flag("depth_module.enable_auto_exposure"),
+                args=dict(args))
 
 
 class Shot:
@@ -55,6 +80,7 @@ class D435:
         self.serial = serial
         self._log = log or (lambda _t: None)
         self._rs = rs                                    # pyrealsense2, or a stand-in in the tests
+        self._spec = None                                # ALIX's camera specification, read on first use
         self._pipe = None
         self._intr: Intrinsics | None = None
         self._cintr: Intrinsics | None = None
@@ -99,13 +125,15 @@ class D435:
             if self._pipe is not None:
                 return
             rs = self._module()
-            if not self._reset_done:                    # once per session, as ALIX's bringup (initial_reset)
+            s = self.spec
+            if s["reset"] and not self._reset_done:      # once per session, as ALIX's bringup (initial_reset)
                 self._hardware_reset(rs)
             pipe, cfg = rs.pipeline(), rs.config()
             if self.serial:
                 cfg.enable_device(self.serial)
-            cfg.enable_stream(rs.stream.depth, DEPTH[0], DEPTH[1], rs.format.z16, DEPTH[2])
-            cfg.enable_stream(rs.stream.color, COLOUR[0], COLOUR[1], rs.format.bgr8, COLOUR[2])
+            (dw, dh, dfps), (cw, ch, cfps) = s["depth"], s["colour"]
+            cfg.enable_stream(rs.stream.depth, dw, dh, rs.format.z16, dfps)
+            cfg.enable_stream(rs.stream.color, cw, ch, rs.format.bgr8, cfps)
             try:
                 try:
                     profile = pipe.start(cfg)
@@ -125,13 +153,31 @@ class D435:
             c = profile.get_stream(rs.stream.color).as_video_stream_profile().get_intrinsics()
             self._cintr = Intrinsics(float(c.fx), float(c.fy), float(c.ppx), float(c.ppy), int(c.width), int(c.height))
             self.device = dict(name=dev.get_info(rs.camera_info.name), serial=dev.get_info(rs.camera_info.serial_number))
+            if s["auto_exposure"]:
+                self._auto_exposure(rs, dev)
             self._pipe, self._opened_at, self._error = pipe, time.monotonic(), None
             self._stop.clear()
             self._thread = threading.Thread(target=self._run, args=(rs, pipe), name="lite-d435", daemon=True)
             self._thread.start()
-            self._log(f"camera open: {self.device['name']} {self.device['serial']}, depth {DEPTH[0]}x{DEPTH[1]} "
-                      f"(fx {self._intr.fx:.1f}, scale {self._scale * 1000:g} mm), colour {COLOUR[0]}x{COLOUR[1]} "
-                      f"(fx {self._cintr.fx:.1f}); spatial + temporal filters, depth aligned to colour")
+            on = [f"{k} filter" for k in ("spatial", "temporal") if s[k]] + (["depth aligned to colour"] if s["align"] else [])
+            self._log(f"camera open: {self.device['name']} {self.device['serial']}, depth {dw}x{dh} "
+                      f"(fx {self._intr.fx:.1f}, scale {self._scale * 1000:g} mm), colour {cw}x{ch} "
+                      f"(fx {self._cintr.fx:.1f}); {', '.join(on) or 'no filters'} (ALIX's {MODEL}.yaml)")
+
+    @property
+    def spec(self) -> dict:
+        if self._spec is None:
+            self._spec = spec()
+        return self._spec
+
+    def _auto_exposure(self, rs, dev) -> None:
+        """rgb_camera / depth_module enable_auto_exposure, as the specification passes them to ALIX's driver."""
+        try:
+            for sensor in dev.query_sensors():
+                if sensor.supports(rs.option.enable_auto_exposure):
+                    sensor.set_option(rs.option.enable_auto_exposure, 1.0)
+        except Exception as exc:                                                    # noqa: BLE001 - the device's default is on
+            self._log(f"camera: auto exposure could not be set ({exc})")
 
     def _hardware_reset(self, rs) -> None:
         devs = [d for d in rs.context().query_devices()
@@ -149,7 +195,10 @@ class D435:
     def _run(self, rs, pipe) -> None:
         """Every frameset, as the driver processes it: the native depth kept as it is; the depth filtered (spatial,
         temporal) and aligned to the colour frame; the newest kept for shot()."""
-        spatial, temporal, align = rs.spatial_filter(), rs.temporal_filter(), rs.align(rs.stream.color)
+        s = self.spec
+        spatial = rs.spatial_filter() if s["spatial"] else None
+        temporal = rs.temporal_filter() if s["temporal"] else None
+        align = rs.align(rs.stream.color) if s["align"] else None
         while not self._stop.is_set():
             try:
                 ok, frames = pipe.try_wait_for_frames(1000)
@@ -164,13 +213,18 @@ class D435:
                     depth = depth.astype(np.float64) * self._scale
                 colour = aligned = None
                 try:
-                    f = spatial.process(frames).as_frameset()
-                    f = temporal.process(f).as_frameset()
-                    a = align.process(f)
-                    ad, ac = a.get_depth_frame(), a.get_color_frame()
-                    if ad and ac:
-                        aligned = np.array(ad.get_data(), copy=True)
+                    f = frames
+                    if spatial is not None:
+                        f = spatial.process(f).as_frameset()
+                    if temporal is not None:
+                        f = temporal.process(f).as_frameset()
+                    a = align.process(f) if align is not None else None
+                    ac = (a if a is not None else f).get_color_frame()
+                    ad = a.get_depth_frame() if a is not None else None
+                    if ac:
                         colour = np.array(ac.get_data(), copy=True)
+                    if ad:
+                        aligned = np.array(ad.get_data(), copy=True)
                 except Exception as exc:                                            # noqa: BLE001 - the native depth still serves
                     self._error = f"the aligned depth could not be made ({exc})"
                 shot = Shot(depth, self._intr, colour, aligned, self._cintr, arrived, arrived, float(d.get_timestamp()))
