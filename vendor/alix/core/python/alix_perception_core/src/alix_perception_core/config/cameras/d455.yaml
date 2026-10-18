@@ -1,0 +1,129 @@
+# =============================================================================
+# Intel RealSense D455 — a second camera model, and the proof the config is real
+# =============================================================================
+# This file is not speculative. It exists because "swappable" is only true if a
+# second model is actually expressible, and because the D455 is the swap that
+# would most plausibly be considered (wider baseline, longer range).
+#
+# WHAT A D435 -> D455 SWAP ACTUALLY DOES, computed from the two vendor xacros:
+#
+#   depth_to_color_offset   +0.015 -> -0.059   the colour optical centre moves
+#                                              44.0 mm in camera_link Y, and it
+#                                              changes SIGN — colour sits on the
+#                                              other side of the depth sensor.
+#   baseline                 0.050 ->  0.095   MinZ nearly doubles.
+#   depth_optical py        0.0175 ->  0.0475
+#   body width               0.090 ->  0.124
+#
+# Against a hand-eye budget where 1 deg is 15.7 mm at 0.9 m, a 44 mm shift is
+# not a detail. And the MinZ consequence is disqualifying for this robot:
+#
+#       D455 MinZ    1280x720 -> 509 mm        848x480 -> 337 mm
+#       tool sits at 186-271 mm in front of the lens
+#
+# so a D455 is blind to the ENTIRE tool range at every profile. That is exactly
+# the kind of fact a config is supposed to make visible before the part is
+# ordered, rather than after it is bolted on. `test_camera_config.py` asserts it.
+#
+# NOT YET VERIFIED against the Intel D455 datasheet with the same care as
+# d435.yaml: the mechanical block below is read out of the vendor xacro (which
+# is authoritative for geometry), but the `spec:` block carries the published
+# figures and should be checked against the datasheet before anyone fits one.
+# =============================================================================
+
+model: d455
+family: D400
+description: Intel RealSense Depth Camera D455 — NOT FITTED; carried to prove the config is model-agnostic
+
+spec:
+  depth:
+    fov_deg: [87.0, 58.0]       # D455 depth FOV matches D435; the baseline differs
+    fov_tolerance_deg: 3.0
+    baseline_m: 0.095
+    max_resolution: [1280, 720]
+    max_fps: 90
+    min_z_at_max_resolution_m: 0.52
+    ideal_range_m: [0.6, 6.0]
+  color:
+    fov_deg: [90.0, 65.0]       # wider than the D435's 69.4 x 42.5
+    max_resolution: [1280, 800]
+    max_fps: 30
+  shutter: global
+
+asic:
+  max_disparity: 126
+  subpixel_accuracy: 0.08
+
+mechanical:
+  body_size_m: [0.026, 0.124, 0.029]
+  mount_from_center_offset_m: 0.0158
+  depth_optical_offset_m: [0.0158, 0.0475, 0.0145]
+  depth_to_color_offset_m: -0.059       # NEGATIVE — the sign flip vs the D435
+  depth_to_infra1_offset_m: 0.0
+  depth_to_infra2_offset_m: -0.095
+  mass_kg: 0.110
+
+streams:
+  color:
+    frame_id: camera_color_optical_frame
+    active_profile: [1280, 800, 30]
+    supported:
+      - [1280, 800, 30]
+      - [1280, 720, 30]
+      - [848, 480, 30]
+      - [640, 480, 30]
+      - [424, 240, 30]
+  depth:
+    frame_id: camera_depth_optical_frame
+    active_profile: [848, 480, 30]
+    recommended_profile: [848, 480, 30]
+    recommended_reason: >-
+      Lowest MinZ of the practical profiles — but still 337 mm, which does not
+      clear alix's 186 mm tool. This camera cannot do close-range work on this arm.
+    supported:
+      - [1280, 720, 30]
+      - [848, 480, 90]
+      - [848, 480, 30]
+      - [640, 480, 90]
+      - [640, 480, 30]
+      - [480, 270, 90]
+  aligned_depth:
+    frame_id: camera_color_optical_frame
+    follows: color
+    enabled: true
+  infra1: { frame_id: camera_infra1_optical_frame, follows: depth, enabled: false }
+  infra2: { frame_id: camera_infra2_optical_frame, follows: depth, enabled: false }
+  pointcloud: { enabled: false }
+
+# Identical to the D435's: the driver's topic names do not vary by model, which
+# is the point — a swap must not move a topic.
+topics:
+  namespace: /camera/camera
+  color:          { image: color/image_raw,                   info: color/camera_info }
+  depth:          { image: depth/image_rect_raw,              info: depth/camera_info }
+  aligned_depth:  { image: aligned_depth_to_color/image_raw,  info: aligned_depth_to_color/camera_info }
+  infra1:         { image: infra1/image_raw,                  info: infra1/camera_info }
+  infra2:         { image: infra2/image_raw,                  info: infra2/camera_info }
+  pointcloud:     { points: depth/color/points }
+
+frames:
+  base: camera_link
+  bottom_screw: camera_bottom_screw_frame
+  color:  { frame: camera_color_frame,  optical: camera_color_optical_frame }
+  depth:  { frame: camera_depth_frame,  optical: camera_depth_optical_frame }
+  infra1: { frame: camera_infra1_frame, optical: camera_infra1_optical_frame }
+  infra2: { frame: camera_infra2_frame, optical: camera_infra2_optical_frame }
+
+targets:
+  hardware:
+    extra_args:
+      align_depth.enable: "true"
+      enable_sync: "true"
+      pointcloud.enable: "false"
+  isaac:
+    near_clip_m: 0.01
+    far_clip_m: 10.0
+    simulates_min_z: false
+  gazebo:
+    near_clip_m: 0.1
+    far_clip_m: 10.0

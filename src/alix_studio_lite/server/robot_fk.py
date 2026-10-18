@@ -19,6 +19,8 @@ from .. import vendor_paths
 URDF = vendor_paths.ALIX / "core" / "python" / "alix_workspace" / "src" / "alix_workspace" / "urdf" / "alix.urdf"
 HAND_UNITS = vendor_paths.ALIX / "ros" / "hw" / "alix_hw" / "scripts" / "hand_units.py"
 CAMERA = "camera_depth_optical_frame"
+COLOUR = "camera_color_optical_frame"          # the colour models' camera (status_check, the gap check's cross-check)
+REF = "alix_ref_frame"                         # the node's target frame: the fixture's pose and the regions are in it
 PREFIX = {"right": "R", "left": "L"}
 
 
@@ -75,6 +77,17 @@ def camera_to_base(readings: dict) -> np.ndarray | None:
     if {"arm", "pole"} & set(missing.get("right", [])):
         return None
     return model().link_world_transforms(values)[CAMERA]
+
+
+def camera_frames(readings: dict) -> dict | None:
+    """The transforms the perception node had from TF, all in base_link: ``depth`` (base_link <- the depth optical
+    frame), ``colour`` (base_link <- the colour optical frame) and ``ref`` (base_link <- alix_ref_frame); None when the
+    right arm or its pole was not read."""
+    values, missing = joint_values(readings)
+    if {"arm", "pole"} & set(missing.get("right", [])):
+        return None
+    links = model().link_world_transforms(values)
+    return dict(depth=links[CAMERA], colour=links[COLOUR], ref=links[REF])
 
 
 def hand_positions(readings: dict, names) -> dict:

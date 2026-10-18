@@ -1,0 +1,173 @@
+# =============================================================================
+# LOCAL INFERENCE MODEL MANIFEST — the shipped default
+# =============================================================================
+# Local is the default and priority backend (Newton, 2026-09-08). These are the
+# two models ported from butterfli_perception, byte-identical to their originals:
+#
+#   commode_status_classifier_v1.pt   yolov8n,     5 classes, trained 2026-05-29
+#   commode_stain_segmenter_v1.pt     yolov8n-seg, 2 classes, trained 2026-04-30
+#
+# They are the current perception of the robot. Point ALIX_PERCEPTION_MODELS at
+# your own file, or set the node's `models_manifest` parameter, to use others.
+#
+# -----------------------------------------------------------------------------
+# MEASURED QUALITY — read this before trusting an output
+# -----------------------------------------------------------------------------
+# Re-run 2026-10-03 over Resource/Data/corpus.yaml (16 labelled images), at
+# exactly the thresholds below:
+#
+#     fixture state correct    7/14
+#     clean images             13
+#     false positives (raw)    76      (5.85 per clean image)
+#     false positives (gated)  76      (5.85 per clean image)
+#
+# THE GATED NUMBER WAS 68 ON 2026-09-08 AND IS 76 NOW. Nothing about the models
+# changed. The CAMERA SPECIFICATION did: the colour field of view was carried as
+# 62.2 deg and the D435 datasheet says 69.4 deg (corrected 2026-10-03,
+# config/cameras/d435.yaml). A wider true FOV means a shorter focal length, which
+# means each pixel subtends MORE millimetres, which means the 15 mm gate is
+# reached at 14.4 px where it used to need 16.6 px. The eight detections that sat
+# between those two sizes now pass.
+#
+# So `min_stain_mm` recovers NOTHING on this corpus. It is not broken — it is a
+# physical threshold doing exactly what it says against an assumed 0.90 m range,
+# and these are phone photographs taken far closer than that, so every detection
+# in them is over-stated in millimetres. The lesson is the one the evaluator
+# already prints: the RAW column is the honest one here, and the gate's real
+# value can only be measured on frames taken at a known range. Do not "fix" this
+# by raising the threshold — that would also drop the real small stains the gate
+# was never meant to touch.
+#
+# The diagnosis is in the split: the UNMARKED domestic toilet in
+# Resource/Data/images scores ZERO false positives, and the dot-marked
+# commode_c in InferenceImages scores 8-16 EACH. The stain model fires on
+# "small smooth blob on porcelain" — which on our own test fixture is a
+# fiducial dot. The status model calls several of our reference images
+# `wash_basin`.
+#
+# WHAT THE MODELS WERE TRAINED ON — read from the checkpoints (2026-10-05,
+# `torch.load(...)['train_args']` / `['train_metrics']`), NOT from this
+# corpus. An earlier version of this comment said the stain model was trained
+# on the painted-ellipse images; Newton corrected that (2026-10-05): those are
+# EVALUATION images only, and this file now says what the weights say:
+#
+#   stain  (commode_stain_segmenter_v1.pt, 2026-04-30, yolov8n-seg, 100 epochs,
+#          imgsz 640): data = /home/renga-alai/AGA/augumantation/dataset/data.yaml
+#          — an "augmentation" dataset on a machine we do not have, contents
+#          unknown here. Its OWN validation set scored precision 0.52, box
+#          recall 0.28, mask recall 0.14, mAP50(mask) 0.16.
+#   status (commode_status_classifier_v1.pt, 2026-05-29, yolov8n, 100 epochs,
+#          imgsz 640): data = .../Alix_restroom_model/config/all_dataset.yaml,
+#          same situation. Own validation: precision 0.58, recall 0.52,
+#          mAP50 0.52.
+#
+# Those validation numbers are the ceiling: a stain model that finds 14% of the
+# stain masks in its own validation images is not going to find more in ours.
+#
+# So: these run, they are wired, and they are the default — and they are not yet
+# good enough to act on unsupervised. `min_stain_mm` below is not currently a
+# defence at all on this corpus (see above); it is a net sized for real ranges,
+# and this corpus has none. The two things that would fix the models are a
+# retrain on real D435 frames of the real fixture, and removing the fiducial dots
+# from the rig before capture.
+#
+# Re-measure any candidate the same way, and do it before changing this file:
+#
+#     tools/perception/eval_models.py --manifest <manifest> \
+#                                     --corpus Resource/Data/corpus.yaml
+#
+# -----------------------------------------------------------------------------
+# FORMAT
+# -----------------------------------------------------------------------------
+# min_stain_mm  Smallest stain worth reporting, MILLIMETRES on the surface — not
+#               pixels. A pixel threshold changes meaning with range and
+#               resolution; a physical one survives a new inspection pose and a
+#               retrained model. 15 mm is set by the ~8-10 mm fiducial dots.
+#
+# models:
+#   <key>:
+#     task        status | stain — exactly one model per task
+#     runtime     ultralytics (.pt) | onnx (.onnx), imported lazily
+#     weights     path; relative resolves against this file, then the repo root
+#     confidence  detector threshold for this model
+#     classes     WHAT EACH CLASS MEANS. This is what makes a retrained model a
+#                 config change rather than a code change.
+#                   kind: fixture | status | stain | permanent | escalate | ignore
+#                   fixture_type / fixture_state  (status and fixture classes)
+#                   region: <optional>            (pins a stain class to a region)
+#                   severity: <optional>          (overrides the confidence grade)
+#
+#                 WHAT EACH KIND BUYS:
+#                   fixture    locates the fixture; its box is the denominator
+#                              every region band is measured against
+#                   status     locates it AND names its state; implies `fixture`
+#                   stain      cleanable; counted, routed, drives a re-clean
+#                   permanent  real and not removable: recorded, never cleaned,
+#                              and never allowed to drive a re-clean (a mark that
+#                              survives a perfect clean would loop the robot)
+#                   escalate   a person must look; outranks every other
+#                              recommendation and is NOT size-gated
+#                   ignore     detected on purpose and meaningless (branding,
+#                              fiducials)
+#
+#                 `kind:` may be omitted when something else implies it, which is
+#                 why the two models below still read correctly: a class naming a
+#                 fixture_state is `status`, one naming only a fixture_type is
+#                 `fixture`, `is_stain: false` is `ignore`, and anything else on
+#                 a stain model is `stain`.
+#
+#                 An unmapped class is SKIPPED on a stain model and an ERROR on a
+#                 status model — a state you cannot name is not one to act on.
+#                 With no `region:`, the region is resolved from the class NAME
+#                 if it carries one (`stain_seat_ring` -> seat_ring, longest
+#                 match wins), and otherwise from WHERE the detection falls on
+#                 the fixture box (region_map.py + config/region_bands.yaml). If
+#                 no fixture box was found the detection stays unrouted and is
+#                 reported as such rather than guessed.
+#
+# default_fixture_state
+#               Optional. The state assumed per fixture type when the models have
+#               NO state-classification class at all. Defaults to commode:
+#               closed, which routes nothing onto a bowl interior. The result
+#               carries `state_is_default`, so a caller can tell "this model
+#               cannot answer that" from "it answered and was unsure".
+# =============================================================================
+
+min_stain_mm: 15.0
+
+models:
+
+  status:
+    task: status
+    runtime: ultralytics
+    weights: ../../../models/commode_status_classifier_v1.pt
+    # butterfli's production value. Note it is low, and the model has NO
+    # negative class — it names a fixture in an empty room — so a caller must
+    # treat a low-confidence answer as "unknown", which the confidence gate in
+    # analysis.py does.
+    confidence: 0.25
+    classes:
+      # The model's own class names, mapped onto alix's fixture taxonomy.
+      # `toilet_lid_open_seat_down` = lid raised, seat still down, so the seat
+      # ring is what you see: alix calls that `lid_open`. `..._seat_up` = both
+      # raised, bare porcelain rim: `lid_seat_open`.
+      toilet_lid_closed:         {fixture_type: commode, fixture_state: closed}
+      toilet_lid_open_seat_down: {fixture_type: commode, fixture_state: lid_open}
+      toilet_lid_open_seat_up:   {fixture_type: commode, fixture_state: lid_seat_open}
+      urinal:                    {fixture_type: urinal,  fixture_state: default}
+      wash_basin:                {fixture_type: washtab, fixture_state: default}
+
+  stain:
+    task: stain
+    runtime: ultralytics
+    weights: ../../../models/commode_stain_segmenter_v1.pt
+    # butterfli's production threshold. On the real marked fixture it passes
+    # 8-16 dots per frame. Raising it is not the answer — the dots score
+    # 0.45-0.75, overlapping real detections.
+    confidence: 0.45
+    classes:
+      # `strains` is the model's own spelling of "stains" — its label, kept
+      # verbatim because it is what the weights emit.
+      strains:          {is_stain: true}
+      # Printed text/branding on the porcelain. Detected, deliberately not a stain.
+      toilet-labelling: {is_stain: false}

@@ -145,7 +145,7 @@ def check(vpy: Path, tests: bool) -> bool:
              "bad = vendor_paths.assert_independent()\n"
              "print(f'   Lite {__version__}; numpy {numpy.__version__}, scipy {scipy.__version__}, trimesh {trimesh.__version__}')\n"
              "print('   vendored ALIX code imports from this folder only' if not bad else f'** outside: {bad}')\n"
-             "for m, what in (('toppra', 'Time-optimal optimiser'), ('meshoptimizer', 're-baking the robot overlay'), ('pyrealsense2', 'the wrist camera (lid and seat checks)')):\n"
+             "for m, what in (('toppra', 'Time-optimal optimiser'), ('meshoptimizer', 're-baking the robot overlay'), ('pyrealsense2', 'the wrist camera (lid and seat checks)'), ('ultralytics', 'the wrist camera colour models')):\n"
              "    print(f\"   {what}: {'available' if u.find_spec(m) else 'not installed'}\")\n"
              "sys.exit(1 if bad else 0)\n")
     ok = run([vpy, "-c", probe], check=False, label=f"{vpy.name} -c <import check>") == 0

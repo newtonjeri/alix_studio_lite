@@ -859,3 +859,4 @@ html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); c
 html[data-theme="dark"] .queue-status.lite-prerecorded { border-color: var(--lite-d-violet-edge); color: var(--lite-d-violet); }
 .lite-mech-notice { margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 #view-teach.lite-prerecorded #pipeline, #view-teach.lite-prerecorded .stage { display: none !important; }
+.lite-s2-camera-img { display: block; max-width: 100%; margin-top: 8px; border-radius: 8px; border: 1px solid var(--line); }

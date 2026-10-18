@@ -118,8 +118,10 @@ function armPanel(side) {
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_task`, text: 'Lid or seat task (pre-recorded)' }),
           el('select', { id: `liteS2_${side}_task`, onchange: () => paintTask(side) })),
-        btn('+ ADD TO BOTH ARMS', () => addMechanism(side), 'btn green')),
-      el('div', { id: `liteS2TaskNote_${side}`, class: 'mini-note' })),
+        btn('+ ADD TO BOTH ARMS', () => addMechanism(side), 'btn green'),
+        btn('CHECK THE CAMERA', () => cameraCheck(side), 'btn light')),
+      el('div', { id: `liteS2TaskNote_${side}`, class: 'mini-note' }),
+      el('div', { id: `liteS2Camera_${side}`, class: 'lite-s2-camera' })),
     el('div', { class: 'lite-table-scroll lite-s2-table' }, el('table', { class: 'lite-table' },
       el('thead', {}, el('tr', {}, ['#', 'TYPE', 'TARGET', 'OPTIONS'].map(h => el('th', { text: h })))),
       el('tbody', { id: `liteS2Rows_${side}` }))),
@@ -426,6 +428,24 @@ function addHand(side) {
   const values = [0, 1, 2, 3, 4, 5].map(i => Math.trunc(Number(val(side, `h${i}`))));
   if (values.some(v => !Number.isFinite(v) || v < 0 || v > 1000)) { window.toast('All six Hand values must be 0-1000.'); return; }
   append(side, { type: 'hand', values });
+}
+
+// What the wrist camera sees now, as ALIX's perception node's status_check answers it (the colour model of the
+// commode's state, the depth state deciding when its margin is clear): nothing moves (mechanism.camera_check).
+async function cameraCheck(side) {
+  const box = $(`liteS2Camera_${side}`);
+  box.replaceChildren(el('div', { class: 'mini-note', text: 'Asking the wrist camera...' }));
+  try {
+    const r = await post('/api/mechanism/camera/check', {});
+    const words = (x) => (x ? String(x).replace(/_/g, ' ') : 'none');
+    const said = r.ok
+      ? `The camera sees: ${words(r.state)} (${Math.round(r.confidence * 100)} %, decided by ${r.source || 'nothing'}; `
+        + `colour model: ${words(r.colour_state)}, depth state: ${words(r.depth_state)}).`
+      : `The camera could not tell: ${r.message}`;
+    box.replaceChildren(el('div', { class: `lite-status ${r.ok ? 'ok' : 'warn'}`,
+      text: said + (r.posed ? '' : ' The right arm is not linked, so the colour model answers alone (no depth state).') }),
+    r.picture ? el('img', { src: r.picture, alt: 'What the wrist camera sees', class: 'lite-s2-camera-img' }) : '');
+  } catch (err) { box.replaceChildren(); tell(err); }
 }
 
 function addMechanism(side) {

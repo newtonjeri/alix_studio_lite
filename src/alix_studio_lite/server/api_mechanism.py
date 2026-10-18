@@ -5,6 +5,8 @@
   placement the camera has learned this session.
 - ``POST /api/mechanism/<task>/run`` ``{confirmed}``: one task as a job on both arms; Real needs the real
   robot's confirmation, as every motion does.
+- ``POST /api/mechanism/camera/check``: what the wrist camera sees now, as the perception node's status_check
+  answers it (the colour model, the depth state); nothing moves.
 """
 from __future__ import annotations
 
@@ -32,6 +34,13 @@ def post_mechanism_run(app, q, body, m):
     plan = mechanism.Plan(name)
     require_confirmed(app, body, f"{plan.title} (ALIX's plan; the wrist camera checks the lid and the seat)")
     return mechanism.run(app.robot, name, app.ui["mode"]).view()
+
+
+@route("POST", r"/api/mechanism/camera/check")
+def post_mechanism_camera(app, q, body, m):
+    """What the wrist camera sees now (the node's status_check: the colour model, the depth state); nothing moves."""
+    session(app)
+    return mechanism.camera_check(app.robot)
 
 
 @route("POST", r"/api/mechanism/placement/forget")

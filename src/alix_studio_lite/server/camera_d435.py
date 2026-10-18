@@ -1,18 +1,26 @@
 """The right wrist's RealSense D435, read by Lite itself (pyrealsense2), with no ROS.
 
 The owner, 18 Oct: the camera is plugged into the computer Lite runs on, and Lite is ROS 2 independent.
-ALIX's bringup reads it with the realsense2_camera node (ALIX's alix_perception_core
-config/cameras/d435.yaml: depth 848 x 480 z16 at 30 fps, colour 1280 x 720 at 30 fps, a hardware
-reset at start); the gap check uses the NATIVE depth stream with its own intrinsics. Lite opens the
-same two streams. Only one program can hold the camera: ALIX's camera node must not be running.
+ALIX's bringup reads it with the realsense2_camera node, configured by ALIX's alix_perception_core
+(config/cameras/d435.yaml): depth 848 x 480 z16 and colour 1280 x 720 at 30 fps, a hardware reset at start,
+the spatial and temporal filters on, the depth aligned to the colour frame. Lite opens the same streams and
+does the same, frame by frame, on a thread of its own while the camera is open:
 
-``shot()`` answers with a frame that arrived AFTER it was asked (the node's ``frame_max_age_s`` rule: a
-frame from before the question is not the pose the question is about), waiting at most ``wait_s``.
+- the NATIVE depth, as it comes (the driver publishes the unfiltered original on depth/image_rect_raw when
+  it aligns): what the gap check measures (gap_check.py, the node's `gap_depth_source: depth`);
+- the colour frame (BGR) and the depth FILTERED (spatial, then temporal: it keeps a history, so it runs on
+  every frame) and ALIGNED to the colour frame: what the colour models and the depth state are asked with
+  (the node's status_check and the gap check's cross-check).
+
+Only one program can hold the camera: ALIX's camera node must not be running. ``shot()`` answers with the
+first frames that arrive AFTER it was asked (the node's ``frame_max_age_s`` rule: a frame from before the
+question is not the pose the question is about), waiting at most ``wait_s``.
 """
 from __future__ import annotations
 
 import threading
 import time
+from contextlib import contextmanager
 
 import numpy as np
 
@@ -25,11 +33,14 @@ WARM_UP_S = 1.0                        # auto exposure settles before the first 
 
 
 class Shot:
-    """One frameset: the depth (z16 millimetres, or metres when the unit's scale is not 1 mm), its intrinsics,
-    the colour frame (BGR), when they arrived and how old they were when used."""
+    """One moment of the camera: the native depth (z16 mm, or metres when the unit's scale is not 1 mm) with its
+    intrinsics; the colour frame (BGR) and the depth aligned to it (z16 mm, the colour frame's size) with the colour
+    intrinsics; when they arrived. The colour and the aligned depth may be missing (None)."""
 
-    def __init__(self, depth, intrinsics: Intrinsics, colour, arrived: float, asked: float, camera_ms: float | None):
-        self.depth, self.intrinsics, self.colour = depth, intrinsics, colour
+    def __init__(self, depth, intrinsics: Intrinsics, colour, aligned, colour_intrinsics: Intrinsics | None,
+                 arrived: float, asked: float, camera_ms: float | None):
+        self.depth, self.intrinsics = depth, intrinsics
+        self.colour, self.aligned, self.colour_intrinsics = colour, aligned, colour_intrinsics
         self.arrived, self.asked, self.camera_ms = arrived, asked, camera_ms
 
     @property
@@ -46,10 +57,18 @@ class D435:
         self._rs = rs                                    # pyrealsense2, or a stand-in in the tests
         self._pipe = None
         self._intr: Intrinsics | None = None
+        self._cintr: Intrinsics | None = None
         self._scale = 0.001
         self._opened_at = 0.0
         self._reset_done = False
-        self._lock = threading.Lock()
+        self._lock = threading.Lock()                    # open / close
+        self._new = threading.Condition()                # a new moment, for shot()
+        self._latest: Shot | None = None
+        self._seq = 0
+        self._thread = None
+        self._stop = threading.Event()
+        self._error: str | None = None
+        self._users = 0                                  # a task, a camera check: open while any of them uses it
         self.device = None                              # name and serial, for the page and the logs
 
     def _module(self):
@@ -103,10 +122,16 @@ class D435:
             self._scale = float(dev.first_depth_sensor().get_depth_scale())
             i = profile.get_stream(rs.stream.depth).as_video_stream_profile().get_intrinsics()
             self._intr = Intrinsics(float(i.fx), float(i.fy), float(i.ppx), float(i.ppy), int(i.width), int(i.height))
+            c = profile.get_stream(rs.stream.color).as_video_stream_profile().get_intrinsics()
+            self._cintr = Intrinsics(float(c.fx), float(c.fy), float(c.ppx), float(c.ppy), int(c.width), int(c.height))
             self.device = dict(name=dev.get_info(rs.camera_info.name), serial=dev.get_info(rs.camera_info.serial_number))
-            self._pipe, self._opened_at = pipe, time.monotonic()
+            self._pipe, self._opened_at, self._error = pipe, time.monotonic(), None
+            self._stop.clear()
+            self._thread = threading.Thread(target=self._run, args=(rs, pipe), name="lite-d435", daemon=True)
+            self._thread.start()
             self._log(f"camera open: {self.device['name']} {self.device['serial']}, depth {DEPTH[0]}x{DEPTH[1]} "
-                      f"(fx {self._intr.fx:.1f}, scale {self._scale * 1000:g} mm), colour {COLOUR[0]}x{COLOUR[1]}")
+                      f"(fx {self._intr.fx:.1f}, scale {self._scale * 1000:g} mm), colour {COLOUR[0]}x{COLOUR[1]} "
+                      f"(fx {self._cintr.fx:.1f}); spatial + temporal filters, depth aligned to colour")
 
     def _hardware_reset(self, rs) -> None:
         devs = [d for d in rs.context().query_devices()
@@ -121,38 +146,81 @@ class D435:
             time.sleep(0.25)
         self._reset_done = True
 
+    def _run(self, rs, pipe) -> None:
+        """Every frameset, as the driver processes it: the native depth kept as it is; the depth filtered (spatial,
+        temporal) and aligned to the colour frame; the newest kept for shot()."""
+        spatial, temporal, align = rs.spatial_filter(), rs.temporal_filter(), rs.align(rs.stream.color)
+        while not self._stop.is_set():
+            try:
+                ok, frames = pipe.try_wait_for_frames(1000)
+                if not ok:
+                    continue
+                arrived = time.time()
+                d = frames.get_depth_frame()
+                if not d:
+                    continue
+                depth = np.array(d.get_data(), copy=True)
+                if abs(self._scale - 0.001) > 1e-9:
+                    depth = depth.astype(np.float64) * self._scale
+                colour = aligned = None
+                try:
+                    f = spatial.process(frames).as_frameset()
+                    f = temporal.process(f).as_frameset()
+                    a = align.process(f)
+                    ad, ac = a.get_depth_frame(), a.get_color_frame()
+                    if ad and ac:
+                        aligned = np.array(ad.get_data(), copy=True)
+                        colour = np.array(ac.get_data(), copy=True)
+                except Exception as exc:                                            # noqa: BLE001 - the native depth still serves
+                    self._error = f"the aligned depth could not be made ({exc})"
+                shot = Shot(depth, self._intr, colour, aligned, self._cintr, arrived, arrived, float(d.get_timestamp()))
+                with self._new:
+                    self._latest, self._seq = shot, self._seq + 1
+                    self._new.notify_all()
+            except Exception as exc:                                                # noqa: BLE001
+                self._error = str(exc)
+                time.sleep(0.1)
+
     def shot(self, wait_s: float = 2.0) -> Shot:
-        """The first frameset that arrives after this call (stale ones are dropped), within ``wait_s``."""
+        """The first frames that arrive after this call, within ``wait_s``."""
         self.open()
         asked = time.time()
         settle = WARM_UP_S - (time.monotonic() - self._opened_at)
         if settle > 0:
             time.sleep(settle)
-        with self._lock:
-            pipe = self._pipe
-            while pipe.poll_for_frames():                # whatever waited in the queue is from before the question
-                pass
+        with self._new:
+            seen = self._seq
             t_end = time.monotonic() + max(0.1, float(wait_s))
-            while True:
+            while self._seq == seen:
                 left = t_end - time.monotonic()
                 if left <= 0:
-                    raise UserError(f"The wrist camera sent no frame within {wait_s:g} s.", "Check its USB cable, then try again.")
-                ok, frames = pipe.try_wait_for_frames(int(left * 1000))
-                if ok:
-                    break
-            arrived = time.time()
-            d, c = frames.get_depth_frame(), frames.get_color_frame()
-            if not d:
-                raise UserError("The wrist camera's frame carried no depth.", "Try again.")
-            depth = np.array(d.get_data(), copy=True)    # z16, in the unit's depth scale
-            if abs(self._scale - 0.001) > 1e-9:
-                depth = depth.astype(np.float64) * self._scale
-            colour = np.array(c.get_data(), copy=True) if c else None
-            return Shot(depth, self._intr, colour, arrived, asked, float(d.get_timestamp()))
+                    raise UserError(f"The wrist camera sent no frame within {wait_s:g} s"
+                                    + (f" ({self._error})" if self._error else "") + ".", "Check its USB cable, then try again.")
+                self._new.wait(left)
+            s = self._latest
+        return Shot(s.depth, s.intrinsics, s.colour, s.aligned, s.colour_intrinsics, s.arrived, asked, s.camera_ms)
+
+    @contextmanager
+    def using(self):
+        """The camera open for the caller (a lid or seat task, a camera check) and closed after the last of them."""
+        with self._lock:
+            self._users += 1
+        try:
+            yield self
+        finally:
+            with self._lock:
+                self._users -= 1
+                last = self._users == 0
+            if last:
+                self.close()
 
     def close(self) -> None:
         with self._lock:
             pipe, self._pipe = self._pipe, None
+            self._stop.set()
+            thread, self._thread = self._thread, None
+        if thread is not None:
+            thread.join(timeout=2.0)
         if pipe is not None:
             try:
                 pipe.stop()

@@ -1,0 +1,171 @@
+# =============================================================================
+# WASTE CLASSES — things found in a washroom that are OBJECTS, not marks
+# =============================================================================
+# Read by `alix_perception_core.sdg.waste` and by the analysis stage. A stain is
+# soil ON a surface and the response is to wipe it. Waste is a THING on a
+# surface and the response is to pick it up — which is why it is a separate
+# taxonomy from `soil_classes.yaml` with a separate action.
+#
+# Newton, 2026-10-05: "to be able to detect and command an action of detected
+# and identified waste on the floor or on the fixture being cleaned, e.g. tissue,
+# and other waste categories that are commonly found in the toilets or
+# washrooms." And, the same day, on the first draft of this table, which sent
+# sanitary waste and sharps to a person: "Sanitary waste and sharps should also
+# be handled by the robot." So EVERY class below is the robot's job.
+#
+#   action     what the robot is told to do when it sees one:
+#                clear     pick it up / move it — the robot handles it
+#                escalate  a person handles it; the robot stops here. No
+#                          shipped class uses it. It stays in the vocabulary
+#                          because `action_for()` returns it for a label this
+#                          table does not know, and because a deployment may
+#                          add a class it wants a person for.
+#   hazard     true for anything that needs the hazard handling rather than
+#              the ordinary pick-up. It does NOT change the action — the robot
+#              still clears it — it travels with the detection (`ROI3D.hazard`)
+#              so the orchestrator can route the item.
+#   handling   the route the hazard handling must take, from the regulations
+#              (research pass 2026-10-05, verified sources in the report):
+#                sharps_container   BS EN ISO 23907-1 lidded sharps box, sharp
+#                                   end first, NEVER recapped or detached,
+#                                   never into a general bin or the toilet
+#                                   (HSE HSIS7 / Sharps Regulations 2013;
+#                                   HTM 07-01; Oxford City Council guidance)
+#                offensive_waste    yellow-and-black tiger-stripe bag (EWC
+#                                   18 01 04 / 20 01 99), never mixed with
+#                                   sharps (HTM 07-01); the duty of care under
+#                                   EPA 1990 s.34 means a picked-up item is
+#                                   "kept and carried" by the operator and must
+#                                   be sealed, not left loose on the robot
+#   surfaces   where the placer may put one: floor | fixture | both
+#   size_mm    [min, max] longest dimension, for the placer and the size gate
+#   color      linear RGB for the procedural asset
+#   palette    optional list of colours the generator draws from instead
+#   material   rendering hints (UsdPreviewSurface roughness, metallic, clearcoat)
+#
+# Dimensions marked `src:` are from manufacturer specifications or standards
+# (see the research report); the rest are assumptions.
+# =============================================================================
+
+classes:
+
+  tissue:
+    description: toilet paper, crumpled or draped; on the floor, the seat, in the bowl
+    action: clear
+    hazard: false
+    surfaces: both
+    # src: sheets 90–93 x 110–117 mm (Velvet Care professional) to ~115 x 135 mm
+    #      (England, Wikipedia); a crumpled wad of several sheets 40–150 mm; a
+    #      draped strip can exceed 300 mm (not modelled — the asset is a wad)
+    size_mm: [40, 150]
+    color: [0.96, 0.95, 0.93]
+    material: {roughness: 0.85, metallic: 0.0, clearcoat: 0.0}
+    # wet tissue keeps ~8 % of its dry tensile strength (1.7–33 vs 107–358 N/m,
+    # PMC6909099): on a wet rim it tears and clings rather than lifting whole
+
+  paper_towel:
+    description: hand towel from the dispenser; floor, basin surround, bin overflow — the most common washroom litter
+    action: clear
+    hazard: false
+    surfaces: both
+    # src: C-fold 230 x 310 mm (UK) / 257 x 334 mm; multifold 234 x 239 mm,
+    #      81 mm folded (Tork H2 241 x 213 mm, 1 ply, white)
+    size_mm: [80, 340]
+    color: [0.92, 0.92, 0.90]
+    material: {roughness: 0.9, metallic: 0.0, clearcoat: 0.0}
+
+  wrapper:
+    description: packaging — soap, sanitary product, food, tampon applicator tube; floor and basin surround
+    action: clear
+    hazard: false
+    surfaces: both
+    size_mm: [30, 140]           # applicator tubes 70–140 mm (US6355011)
+    color: [0.55, 0.60, 0.70]
+    palette: [[0.75, 0.12, 0.10], [0.12, 0.30, 0.70], [0.80, 0.80, 0.82], [0.95, 0.75, 0.10], [0.30, 0.65, 0.30]]
+    material: {roughness: 0.25, metallic: 0.5, clearcoat: 0.3}
+
+  cigarette_end:
+    description: cigarette butt — the filter plus a short stub; floor, urinal, basin
+    action: clear
+    hazard: false
+    surfaces: both
+    # src: filters 20–30 mm, cigarette ~8 mm diameter (Polk Water Atlas); a
+    #      whole dropped cigarette is 70–120 mm (not modelled)
+    size_mm: [20, 40]
+    color: [0.75, 0.62, 0.45]
+    material: {roughness: 0.8, metallic: 0.0, clearcoat: 0.0}
+
+  hair:
+    description: hair clump; basin, floor around the basin
+    action: clear
+    hazard: false
+    surfaces: both
+    size_mm: [20, 80]
+    color: [0.15, 0.12, 0.10]
+    palette: [[0.08, 0.06, 0.05], [0.25, 0.16, 0.10], [0.45, 0.35, 0.22]]
+    material: {roughness: 0.45, metallic: 0.0, clearcoat: 0.2}
+
+  sanitary_waste:
+    description: sanitary pad, tampon, nappy; floor, bin overflow, fixture. Hazard handling (offensive waste stream)
+    action: clear
+    hazard: true
+    handling: offensive_waste
+    surfaces: both
+    # src: pads 180–300 mm long, 60–100 mm wide (UNICEF spec / ES 6345:2018),
+    #      230–320 mm on a manufacturer list; tampon 20–60 mm (+80 mm string,
+    #      US6355011 / UNICEF); a used pad folded is ~80–120 mm; an open nappy
+    #      core is ~450 mm (US5217803) — nappies need their own asset
+    size_mm: [45, 320]
+    color: [0.93, 0.92, 0.92]    # src: white over most of the area (UNICEF); soiled patches in the asset
+    material: {roughness: 0.8, metallic: 0.0, clearcoat: 0.0}
+
+  sharps:
+    description: needle, razor blade, broken glass. Hazard handling, never a bare pad, never recapped
+    action: clear
+    hazard: true
+    handling: sharps_container
+    surfaces: both
+    # src: hypodermic needles 13–70 mm long and 0.45–1.6 mm across (Nipro); on
+    #      a syringe ~100–150 mm; double-edge blade 43 x 22 x 0.10 mm (Fortis).
+    #      A bare needle is thinner than a field cell and a few pixels wide at
+    #      0.5 m: a sub-cell detector problem, stated here, not solved
+    size_mm: [13, 150]
+    color: [0.70, 0.72, 0.75]
+    material: {roughness: 0.2, metallic: 0.9, clearcoat: 0.0}
+
+  glove:
+    description: a discarded disposable glove; cleared with the hazard handling (used PPE is offensive waste)
+    action: clear
+    hazard: true
+    handling: offensive_waste
+    surfaces: both
+    # src: EN 455-2 examination gloves >= 240 mm long, palm 70–120 mm by size
+    size_mm: [230, 300]
+    color: [0.45, 0.65, 0.85]
+    palette: [[0.30, 0.50, 0.80], [0.85, 0.85, 0.80], [0.20, 0.20, 0.22]]
+    material: {roughness: 0.55, metallic: 0.0, clearcoat: 0.1}
+
+  face_mask:
+    description: a discarded mask; cleared with the hazard handling (used PPE is offensive waste)
+    action: clear
+    hazard: true
+    handling: offensive_waste
+    surfaces: both
+    # src: EN 14683 Type IIR mask 175 x 95 mm flat, 3-ply, blue, ear loops;
+    #      tender spec 190 x 100 mm with 420 mm straps — up to ~350 mm with
+    #      loops stretched
+    size_mm: [175, 350]
+    color: [0.60, 0.75, 0.90]
+    palette: [[0.55, 0.72, 0.90], [0.90, 0.90, 0.88], [0.15, 0.15, 0.17]]
+    material: {roughness: 0.85, metallic: 0.0, clearcoat: 0.0}
+
+  bottle:
+    description: drinks bottle or can; floor, basin surround
+    action: clear
+    hazard: false
+    surfaces: floor
+    # src: 500 ml PET 178 x 67 mm (Amcor) to 216.5 x 65 mm (Petainer); clear PET
+    size_mm: [120, 240]
+    color: [0.80, 0.85, 0.90]
+    palette: [[0.80, 0.85, 0.90], [0.30, 0.50, 0.40], [0.20, 0.35, 0.70]]
+    material: {roughness: 0.15, metallic: 0.0, clearcoat: 0.8}

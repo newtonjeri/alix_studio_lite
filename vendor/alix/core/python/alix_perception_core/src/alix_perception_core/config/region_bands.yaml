@@ -1,0 +1,94 @@
+# =============================================================================
+# REGION BANDS — where on the fixture a detection has to fall to be called a region
+# =============================================================================
+# Ported from butterfli_perception/scripts/ai_client.py `_COMMODE_REGION_RULES`,
+# which held them as a class attribute. They are data here because they are a
+# hand-tuned geometric guess about ONE fixture seen from ONE camera pose, and
+# they are the first numbers that will need to move when either changes.
+#
+# There is NO copy of this table in code. If this file is unreadable the mapper
+# routes nothing and every detection is reported as `unrouted_no_region` — which
+# is visible and countable. A built-in fallback would be a second source for
+# numbers whose whole purpose is to be re-tuned, and the two would drift the
+# first time someone edited one.
+#
+# -----------------------------------------------------------------------------
+# HOW A ROW IS READ
+# -----------------------------------------------------------------------------
+#   [y_min, y_max, x_min, x_max, region]
+#
+# The four numbers are fractions of the FIXTURE'S BOUNDING BOX, not of the image.
+# That is the part worth keeping from butterfli: the fixture box comes from the
+# status model's own detection, so a band survives the camera moving closer,
+# further, or a little to the side. An image-relative band does not — it means a
+# different surface at every standoff.
+#
+# Rows are matched IN ORDER and the first hit wins, so order the specific before
+# the general. A position matching no row returns "" (unrouted), never a
+# fallback region: butterfli's `_map_to_region` returned `commode_side` for
+# anything unmatched, which silently routes an unrecognised position to a real
+# cleanable surface and sends an arm there.
+#
+# y runs top (0.0) to bottom (1.0) of the fixture box, x left to right, with the
+# image upright — the core de-rotates by the measured image roll before
+# inference, so that assumption holds.
+#
+# -----------------------------------------------------------------------------
+# WHAT THESE NUMBERS ARE, HONESTLY
+# -----------------------------------------------------------------------------
+# Hand-set, authored against butterfli's camera pose, NOT measured. They assume
+# the fixture is seen roughly face-on. They are a reasonable starting point and
+# not a substitute for ray-casting against the labelled region meshes, which
+# needs a measured fixture pose — see
+# `Resource/reports/2026-09-08_perception_port` §6.1.
+#
+# Region names below are butterfli's. `regions.canonical()` folds
+# commode_front / commode_side / commode_top onto alix's front / side / top, so
+# both spellings resolve; anything else must be a name the fixture model's own
+# regions.yaml declares, or `analysis.py` drops it with a reason.
+# =============================================================================
+
+bands:
+
+  commode:
+
+    # Lid down over the seat. Only the lid top and the pedestal are visible.
+    closed:
+      - [0.00, 0.65, 0.05, 0.95, toplid]
+      - [0.65, 1.00, 0.10, 0.90, commode_front]
+      - [0.00, 1.00, 0.00, 0.05, commode_side]
+      - [0.00, 1.00, 0.95, 1.00, commode_side]
+
+    # Lid raised, seat still down: the lid's UNDERSIDE and the seat ring.
+    lid_open:
+      - [0.00, 0.40, 0.05, 0.95, bottomlid]
+      - [0.40, 0.70, 0.12, 0.88, seat_ring]
+      - [0.70, 1.00, 0.10, 0.90, commode_front]
+      - [0.00, 1.00, 0.00, 0.12, commode_side]
+      - [0.00, 1.00, 0.88, 1.00, commode_side]
+
+    # Both raised: bare porcelain rim and the bowl interior.
+    lid_seat_open:
+      - [0.00, 0.25, 0.12, 0.88, commode_top]
+      - [0.25, 0.45, 0.12, 0.88, bowl_inside_ring]
+      - [0.25, 0.45, 0.00, 0.12, seat_ring_bottom]
+      - [0.25, 0.45, 0.88, 1.00, seat_ring_bottom]
+      - [0.45, 0.65, 0.12, 0.88, bowl_inside_front]
+      - [0.65, 1.00, 0.12, 0.88, bowl_inside_back]
+      - [0.00, 1.00, 0.00, 0.12, commode_side]
+      - [0.00, 1.00, 0.88, 1.00, commode_side]
+
+  # Not yet tuned against real frames of either fixture: alix ships no urinal or
+  # washtab models, and these are the coarse split butterfli carried. Treat a
+  # routing from them as provisional.
+  urinal:
+    default:
+      - [0.00, 0.50, 0.00, 1.00, urinal_top]
+      - [0.50, 1.00, 0.00, 1.00, urinal_side]
+
+  washtab:
+    default:
+      - [0.00, 0.30, 0.00, 1.00, tap_area]
+      - [0.30, 1.00, 0.00, 0.15, basin_rim]
+      - [0.30, 1.00, 0.85, 1.00, basin_rim]
+      - [0.30, 1.00, 0.15, 0.85, basin_inside]

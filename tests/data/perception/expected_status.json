@@ -1,0 +1,155 @@
+{
+ "source": "ALIX's own alix_perception_core, run in place (~/alix_ws, commit 842c0e59) with the robot bringup's models_synthetic_real_v10.yaml, as perception_node.py builds it, on D435 frames the robot recorded on 8 Oct 2026 (Resource/Data/d435_frames_2026-10-08: colour, the depth aligned to it, the camera's TF)",
+ "frames": [
+  {
+   "file": "inspect_inspection_pose_1_full_length_closed_20261008_173408_00.jpg",
+   "declared": "closed",
+   "state": "closed",
+   "conf": 0.966,
+   "source": "colour",
+   "colour": "closed",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_1_full_length_closed_20261008_173409_01.jpg",
+   "declared": "closed",
+   "state": "closed",
+   "conf": 0.961,
+   "source": "colour",
+   "colour": "closed",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_1_full_length_lid_open_20261008_174328_00.jpg",
+   "declared": "lid_open",
+   "state": "lid_open",
+   "conf": 0.96,
+   "source": "colour",
+   "colour": "lid_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_1_full_length_lid_open_20261008_174328_01.jpg",
+   "declared": "lid_open",
+   "state": "lid_open",
+   "conf": 0.952,
+   "source": "colour",
+   "colour": "lid_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_1_full_length_lid_seat_open_20261008_175106_02.jpg",
+   "declared": "lid_seat_open",
+   "state": "lid_seat_open",
+   "conf": 0.966,
+   "source": "colour",
+   "colour": "lid_seat_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_1_full_length_lid_seat_open_20261008_175107_03.jpg",
+   "declared": "lid_seat_open",
+   "state": "lid_seat_open",
+   "conf": 0.965,
+   "source": "colour",
+   "colour": "lid_seat_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_4_full_length_lid_open_20261008_174502_00.jpg",
+   "declared": "lid_open",
+   "state": "lid_open",
+   "conf": 0.888,
+   "source": "colour",
+   "colour": "lid_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_4_full_length_lid_open_20261008_174502_01.jpg",
+   "declared": "lid_open",
+   "state": "lid_open",
+   "conf": 0.889,
+   "source": "colour",
+   "colour": "lid_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_4_full_length_lid_open_20261008_174503_02.jpg",
+   "declared": "lid_open",
+   "state": "lid_open",
+   "conf": 0.881,
+   "source": "colour",
+   "colour": "lid_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_4_full_length_lid_seat_open_20261008_175241_00.jpg",
+   "declared": "lid_seat_open",
+   "state": "lid_seat_open",
+   "conf": 0.871,
+   "source": "colour",
+   "colour": "lid_seat_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_4_full_length_lid_seat_open_20261008_175241_01.jpg",
+   "declared": "lid_seat_open",
+   "state": "lid_seat_open",
+   "conf": 0.845,
+   "source": "colour",
+   "colour": "lid_seat_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_4_full_length_lid_seat_open_20261008_175242_02.jpg",
+   "declared": "lid_seat_open",
+   "state": "lid_seat_open",
+   "conf": 0.854,
+   "source": "colour",
+   "colour": "lid_seat_open",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_4_half_length_closed_20261008_173506_03.jpg",
+   "declared": "closed",
+   "state": "closed",
+   "conf": 0.917,
+   "source": "colour",
+   "colour": "closed",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_4_half_length_closed_20261008_173507_04.jpg",
+   "declared": "closed",
+   "state": "closed",
+   "conf": 0.919,
+   "source": "colour",
+   "colour": "closed",
+   "depth": "",
+   "fusion": "colour"
+  },
+  {
+   "file": "inspect_inspection_pose_4_half_length_closed_20261008_173508_05.jpg",
+   "declared": "closed",
+   "state": "closed",
+   "conf": 0.916,
+   "source": "colour",
+   "colour": "closed",
+   "depth": "",
+   "fusion": "colour"
+  }
+ ]
+}

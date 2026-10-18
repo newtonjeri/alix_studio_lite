@@ -30,6 +30,7 @@ SYS_PATHS = [
     ALIX / "core/python/alix_workspace/src",
     ALIX / "core/python/alix_taskgen/src",
     ALIX / "core/python/alix_dispatch/src",
+    ALIX / "core/python/alix_perception_core/src",               # the wrist camera's perception (lid and seat checks)
     ALIX / "core/python/src",                                   # alix_core, alix_emulator
     ALIX / "tools",                                             # taught_tracks, plan_min_time, ...
     ALIX / "experiments/exp01_teach_trajectory_reverse_engineering/src",  # local_speed, teachlab, ...

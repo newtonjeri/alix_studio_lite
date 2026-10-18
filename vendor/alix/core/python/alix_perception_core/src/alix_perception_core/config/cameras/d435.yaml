@@ -1,0 +1,255 @@
+# =============================================================================
+# Intel RealSense D435 — THE CAMERA SPECIFICATION, and the single source of truth
+# =============================================================================
+# Newton, 2026-10-03: "we only have one source of truth, the camera
+# specifications; resolution just can be adjusted provided it is supported by
+# the camera; the depth topic and other topics should be consistent."
+#
+# So this file carries what the DATASHEET says, the profiles the camera actually
+# supports, and which of those we choose to run. Every consumer reads it:
+#
+#   core/python/alix_perception_core/camera.py   intrinsics, MinZ, noise model
+#   ros/simulation/isaacsim/scripts/camera_rig.py  the Isaac RTX cameras
+#   ros/bringup/alix_bringup/launch/*.launch.py    the real rs_launch arguments
+#   ros/description/.../realsense_d435_gazebo_plugins.xacro   (gated, see tests)
+#
+# Before this file those four disagreed. Measured 2026-10-03:
+#   * Gazebo declared a depth HFOV of 1.3962634 rad = 80.0 deg. The spec is 87.
+#   * Gazebo's depth intrinsics (fx 277.1, cx 160.5, cy 120.5) describe a
+#     ~321x241 image inside an <image> block that declares 1280x720.
+#   * Colour FOV was 62.2 deg in Gazebo, in the Isaac rig and in the perception
+#     fallback. All three trace to ONE unsourced `camera_fx: 1591.41` in
+#     butterfli's perception_params.yaml. The spec is 69.4 deg (fx 1386.4).
+#   * The real robot launches depth at 1280x720 (MinZ 268 mm) while the sim ran
+#     848x480 (MinZ 177 mm) — a different camera in the one place it matters.
+#
+# -----------------------------------------------------------------------------
+# WHAT IS SPEC, WHAT IS PER-UNIT, AND WHY THAT DISTINCTION IS LOAD-BEARING
+# -----------------------------------------------------------------------------
+# librealsense ships NO per-model FOV table. `rs2_fov()` computes FOV from the
+# intrinsics the device reports, which come from that unit's factory calibration
+# EEPROM. The datasheet FOV is nominal, +/-3 deg.
+#
+# Therefore:
+#   * On HARDWARE the live `camera_info` is the authority. The perception core
+#     already prefers it (`Intrinsics.from_camera_info_k`) and only falls back
+#     to this file when the driver is not up — which is a fault to report, not
+#     a mode to run in.
+#   * In SIMULATION there is no unit to calibrate, so this file IS the camera.
+#
+# A number here is `spec:` (datasheet), `mechanical:` (the vendor's CAD, which
+# the URDF also encodes) or `tuning:` (our choice). Nothing here is measured
+# from our own unit; when it is, add `calibrated:` beside `spec:` and say which
+# serial it came from.
+# =============================================================================
+
+model: d435
+family: D400
+description: Intel RealSense Depth Camera D435 — the wrist camera on alix's right arm
+
+# --- what the datasheet publishes ------------------------------------------
+# Source: Intel RealSense D400 Series Datasheet (Doc 337029) and the D435
+# product page. Quoted, not recomputed.
+spec:
+  depth:
+    fov_deg: [87.0, 58.0]       # H x V, +/-3
+    fov_tolerance_deg: 3.0
+    baseline_m: 0.050           # stereo pair separation; sets MinZ and sigma_z
+    max_resolution: [1280, 720]
+    max_fps: 90
+    # Intel publishes "Min-Z at max resolution ~28 cm". Our own derivation from
+    # f*B/max_disparity gives 268 mm at 1280x720 — the two agree, which is why
+    # min_z is computed per profile rather than listed as one number.
+    min_z_at_max_resolution_m: 0.28
+    ideal_range_m: [0.3, 3.0]
+  color:
+    # 69.4 x 42.5 at 16:9. NOT 62.2 — see the header.
+    fov_deg: [69.4, 42.5]
+    max_resolution: [1920, 1080]
+    max_fps: 30
+  shutter: global               # depth; the RGB module is rolling
+
+# --- the ASIC's behaviour, which the datasheet does not print ---------------
+# MinZ = focal_px * baseline / max_disparity, and the D4xx ASIC searches 126
+# disparities at <=1280 px wide. This is why MinZ scales with resolution and is
+# the whole reason the profile choice below is a geometry decision.
+asic:
+  max_disparity: 126
+  subpixel_accuracy: 0.08       # tuning: Intel's figure for a well-tuned unit.
+                                # Real porcelain is worse, so sigma_z is a FLOOR.
+
+# --- mechanical, from the vendor's own xacro --------------------------------
+# realsense2_description/urdf/_d435.urdf.xacro. These are NOT interchangeable
+# between models and that is the point of this section: on a D455
+# depth_to_color is -0.059 rather than +0.015, so the same mount screw puts the
+# colour optical centre 44 mm away in camera_link Y.
+#
+# The URDF is the authority for where the camera SITS on the robot; these
+# values are here so a model swap is a declared change rather than an invisible
+# one, and `test_camera_config.py` asserts they still match the vendor xacro.
+mechanical:
+  body_size_m: [0.02505, 0.090, 0.025]      # depth(x) x width(y) x height(z)
+  mount_from_center_offset_m: 0.0149
+  depth_optical_offset_m: [0.0149, 0.0175, 0.0125]   # px, py, pz in camera_link
+  depth_to_color_offset_m: 0.015            # +Y from depth to colour
+  depth_to_infra1_offset_m: 0.0
+  depth_to_infra2_offset_m: -0.050          # |this| is the baseline
+  mass_kg: 0.072                            # Intel's published mass.
+                                            # NOTE the URDF deliberately carries
+                                            # NO <inertial> for this link — the
+                                            # vendor tensor implied a 204x778x204 mm
+                                            # box. Recorded here, not injected.
+
+# --- the profiles the camera supports, and the one we run -------------------
+# "Resolution can be adjusted provided it is supported by the camera" — so the
+# supported set is declared and the active choice is one line. A profile not in
+# `supported` is a configuration error, not a silent clamp.
+streams:
+
+  color:
+    frame_id: camera_color_optical_frame
+    # 2026-10-10 (Newton): 1280x720 instead of 1920x1080. On the robot the link reported
+    # "Incomplete video frame" every 2-3 s on both streams, also at rest, and on 10-09 the
+    # colour stream stalled for minutes; a 1080p frame (4.15 MB on the wire) is the most
+    # exposed to a lost packet. The colour FOV does not change with resolution, the models
+    # run on a downscaled frame, and the lift check needs no colour. The link itself
+    # (cable through the arm / connector) is still to be inspected.
+    active_profile: [1280, 720, 30]
+    supported:
+      - [1920, 1080, 30]
+      - [1280, 720, 30]
+      - [960, 540, 30]
+      - [848, 480, 30]
+      - [640, 480, 30]
+      - [640, 360, 30]
+      - [424, 240, 30]
+      - [320, 240, 30]
+    # 1920x1080 matches what alix_real_hardware.launch.py launches today, so sim
+    # and hardware frame the same scene. fx at any width = fx_1920 * w / 1920.
+
+  depth:
+    frame_id: camera_depth_optical_frame
+    # ---------------------------------------------------------------------
+    # THE ONE PARAMETER ON THIS CAMERA THAT IS A GEOMETRY DECISION
+    # ---------------------------------------------------------------------
+    # The wipe tool sits 0.186-0.271 m in front of the lens (measured from the
+    # URDF; camera and tool are both rigid to R_joint7, so it is constant at
+    # every arm pose). MinZ per profile, from f*B/126:
+    #
+    #     1280x720 -> 268 mm    blind across the near HALF of that span
+    #      848x480 -> 177 mm    clears the whole span
+    #      640x480 -> 134 mm    clears it with margin, at lower resolution
+    #
+    # RULED 2026-10-03 (Newton): use the advisable resolution, and change it at
+    # run time as needed. So 848x480 is the active profile everywhere — the real
+    # bringup derives `depth_module.depth_profile` from this line, and Isaac and
+    # Gazebo read the same one.
+    #
+    # Why this one. At 1280x720 MinZ is 268 mm and the tool spans 186-271 mm, so
+    # 82 of those 85 mm are blind — 96 % of the span, and the depth image returns
+    # ZERO there rather than a poor estimate. At 848x480 MinZ is 177 mm and the
+    # whole span is measurable with 9 mm to spare.
+    #
+    # What it costs: sigma_z at 0.9 m goes 1.9 -> 2.9 mm. That is an order of
+    # magnitude below the uncalibrated hand-eye error (1 deg = 15.7 mm at that
+    # range), so it is not the binding term. Colour is untouched at 1920x1080,
+    # so stain-detection resolution is unaffected; only the depth sampling
+    # density changes, and aligned depth is resampled to colour anyway.
+    #
+    # What it does NOT fix: nothing at the inspection pose, where the fixture is
+    # 0.74-1.03 m away and every profile clears MinZ comfortably. This buys
+    # close-range capability — visual servoing, and seeing the surface the pad is
+    # about to touch — which 1280x720 made impossible.
+    active_profile: [848, 480, 30]
+    recommended_profile: [848, 480, 30]
+    recommended_reason: >-
+      MinZ 177 mm clears the 0.186 m tool; 1280x720's 268 mm leaves 96 % of the
+      tool span blind.
+    supported:
+      - [1280, 720, 30]
+      - [1280, 720, 15]
+      - [848, 480, 90]
+      - [848, 480, 30]
+      - [640, 480, 90]
+      - [640, 480, 30]
+      - [640, 360, 90]
+      - [480, 270, 90]
+      - [424, 240, 90]
+
+  # Aligned depth is depth reprojected into the COLOUR frame and intrinsics, so
+  # it inherits colour's resolution and frame_id. The real driver only publishes
+  # it with align_depth.enable:=true; the sim gets it exactly by rendering depth
+  # from the colour camera.
+  aligned_depth:
+    frame_id: camera_color_optical_frame
+    follows: color
+    enabled: true
+
+  infra1:
+    frame_id: camera_infra1_optical_frame
+    follows: depth
+    enabled: false          # the left IR image; not consumed by perception today
+  infra2:
+    frame_id: camera_infra2_optical_frame
+    follows: depth
+    enabled: false
+
+  pointcloud:
+    enabled: false          # alix_moveit_config/sensors_3d.yaml wants one, but
+                            # the real bringup launches with pointcloud.enable
+                            # false; enabling it is a separate decision.
+
+# --- topics: ONE naming scheme, matching the real driver exactly ------------
+# realsense2_camera launched as camera/camera. Every name below is the real
+# driver's; nothing invents a topic. Gazebo currently publishes depth on
+# `/camera/camera/depth`, which is NOT one of these, and no consumer subscribes
+# to it — that is the inconsistency this section exists to end.
+topics:
+  namespace: /camera/camera
+  color:          { image: color/image_raw,                   info: color/camera_info }
+  depth:          { image: depth/image_rect_raw,              info: depth/camera_info }
+  aligned_depth:  { image: aligned_depth_to_color/image_raw,  info: aligned_depth_to_color/camera_info }
+  infra1:         { image: infra1/image_raw,                  info: infra1/camera_info }
+  infra2:         { image: infra2/image_raw,                  info: infra2/camera_info }
+  pointcloud:     { points: depth/color/points }
+
+# --- TF frames, and the convention ------------------------------------------
+# Non-optical frames are ROS convention (X forward, Y left, Z up); optical
+# frames are the camera convention (X right, Y down, Z forward). The two differ
+# by a fixed rotation, and a USD camera differs from a ROS optical frame by a
+# further 180 deg about X — see camera_rig._OPTICAL_TO_USD.
+frames:
+  base: camera_link
+  bottom_screw: camera_bottom_screw_frame
+  color:  { frame: camera_color_frame,  optical: camera_color_optical_frame }
+  depth:  { frame: camera_depth_frame,  optical: camera_depth_optical_frame }
+  infra1: { frame: camera_infra1_frame, optical: camera_infra1_optical_frame }
+  infra2: { frame: camera_infra2_frame, optical: camera_infra2_optical_frame }
+
+# --- per-target extras ------------------------------------------------------
+targets:
+  hardware:
+    # Passed to rs_launch.py verbatim, on top of the profiles derived above.
+    extra_args:
+      # 2026-10-10 (Newton): hardware-reset the camera at bringup so a device left in a bad
+      # state by a previous run (stalled stream, corrupted frames) starts clean.
+      initial_reset: "true"
+      align_depth.enable: "true"
+      enable_sync: "true"
+      enable_rgbd: "true"
+      spatial_filter.enable: "true"
+      temporal_filter.enable: "true"
+      pointcloud.enable: "false"
+      rgb_camera.enable_auto_exposure: "true"
+      depth_module.enable_auto_exposure: "true"
+  isaac:
+    near_clip_m: 0.01   # the tool is 0.19 m away; USD's 1.0 default clips it
+    far_clip_m: 10.0
+    # Isaac's depth is geometrically ideal: no MinZ, no stereo dropout on
+    # textureless porcelain, no specular failure, no IR projector. The config
+    # carries the real MinZ so a consumer can MODEL the blind zone; the
+    # simulator will not produce it on its own.
+    simulates_min_z: false
+  gazebo:
+    near_clip_m: 0.1
+    far_clip_m: 10.0

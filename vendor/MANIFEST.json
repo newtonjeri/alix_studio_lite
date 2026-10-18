@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-10-17T21:39:59+00:00",
+  "generated_utc": "2026-10-18T09:49:48+00:00",
   "alix_root": "/home/newtonjeri/alix_ws/src/alix",
   "alix_git": {
     "commit": "842c0e59797242f548fb1378a3097506c939fce0",
@@ -875,6 +875,237 @@
       "origin": "alix",
       "sha256": "1ebfd4822d82276057205dc28e95b91dac2051ac09201b8e2c5c5495641bb657",
       "bytes": 12383
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/models/commode_status_synthetic_real_v10.pt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/models/commode_status_synthetic_real_v10.pt",
+      "origin": "alix",
+      "sha256": "c9997b9d50fcf9be3b2550588f14445cfd22193fb08cd27fd8e5a68cfb605830",
+      "bytes": 6225194
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/__init__.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/__init__.py",
+      "origin": "alix",
+      "sha256": "4074bc5deb840425eaf3667070c98491e95b806e9e604946bbb093fa4e8d09ec",
+      "bytes": 1908
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/analysis.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/analysis.py",
+      "origin": "alix",
+      "sha256": "adee91d5f43d38fd3f40d20f8574260ae12538d75da83ea84b54a54cf16d57df",
+      "bytes": 30027
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/annotate.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/annotate.py",
+      "origin": "alix",
+      "sha256": "ce3fc266e537df98bff9a9fb9ac8d45dbdf99f4421e582ce0fd4aab86b9f71fa",
+      "bytes": 11049
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/backends/__init__.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/backends/__init__.py",
+      "origin": "alix",
+      "sha256": "96e27e877098ce28a290babecab517afb2211c819d63846c0e6d824b998ce07b",
+      "bytes": 290
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/backends/base.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/backends/base.py",
+      "origin": "alix",
+      "sha256": "c768cf80c8ae2e61dad892198963c7d39a6248c37d0ae24a8e9f0b98f8704a2e",
+      "bytes": 5152
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/backends/cloud.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/backends/cloud.py",
+      "origin": "alix",
+      "sha256": "c4c352241ce17dda748ca48a391d553c3e26a5c4bf56f9b88a91562fb3be5bee",
+      "bytes": 14697
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/backends/local.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/backends/local.py",
+      "origin": "alix",
+      "sha256": "a47a11635b09ef6d0021eeaa88bd962d9a83ce0d4682dba0b7d3a689759d55a9",
+      "bytes": 27072
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/camera.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/camera.py",
+      "origin": "alix",
+      "sha256": "e16edc7ad6dc49e93bb2de9e4dd3199edd918e775ecaad278f07107376275729",
+      "bytes": 11016
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/camera_config.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/camera_config.py",
+      "origin": "alix",
+      "sha256": "fd3cf178136976ba904ecf1f6cdab03629718e198b32024e947e0377559a8575",
+      "bytes": 15091
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/cameras/d435.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/config/cameras/d435.yaml",
+      "origin": "alix",
+      "sha256": "a8d6f6e3ddfe0fb0f83f7a42e9d1f21c0786c6ce730ef44862ba26870347a997",
+      "bytes": 12982
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/cameras/d455.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/config/cameras/d455.yaml",
+      "origin": "alix",
+      "sha256": "86d7d0852a73c29821fbf848079619057f3dc12a1b5219a34eff5f23d5784a69",
+      "bytes": 5150
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml",
+      "origin": "alix",
+      "sha256": "4e92dd72e2a2d38f7891abdc0da79f5598df0ee41cb751274a71ec7e4731862d",
+      "bytes": 873
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/models.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/config/models.yaml",
+      "origin": "alix",
+      "sha256": "814de51e529b84a18be224b8623b30a0b85416d33ac1e55fe972f6fd81f044eb",
+      "bytes": 9855
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/models_synthetic_real_v10.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/config/models_synthetic_real_v10.yaml",
+      "origin": "alix",
+      "sha256": "9efe4d85fc47361c4361b83b740dcf6cb3197879f33d7c33f210775aba3bb4cb",
+      "bytes": 2953
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/region_bands.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/config/region_bands.yaml",
+      "origin": "alix",
+      "sha256": "db7746055bda4fa968d1316386dc0c5720ce9322ce77d08a4a02b02d6a31b09d",
+      "bytes": 4551
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/soil_classes.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/config/soil_classes.yaml",
+      "origin": "alix",
+      "sha256": "e0534e052e893f420d2f4302c53ec37309f7a76202c702b177610387f41dd748",
+      "bytes": 17868
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/waste_classes.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/config/waste_classes.yaml",
+      "origin": "alix",
+      "sha256": "6fc8fcf8c8e60e56eae7a918e5bc72ecf4aef924627cc2a7e4ef083bc45b3270",
+      "bytes": 8462
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/geometry.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/geometry.py",
+      "origin": "alix",
+      "sha256": "f4b8463e531a37a8acc4b4f3371d761c20cccb8037c4ae30d2f1b374ff5a82c5",
+      "bytes": 9296
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/hand_eye.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/hand_eye.py",
+      "origin": "alix",
+      "sha256": "62671193da57c81198944454451053fc71d23a1c0a7d47b403a4ab7513c1df6a",
+      "bytes": 20312
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/named_poses.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/named_poses.py",
+      "origin": "alix",
+      "sha256": "b3355cbabe1067fcf8a6cbca38f1eb8060a12199f659199aa4227c0f73cf3d59",
+      "bytes": 3109
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/paths.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/paths.py",
+      "origin": "alix",
+      "sha256": "b170e07a3f9e855a0bab8d519e12b891626a24165b0195e495f49f7531df64b2",
+      "bytes": 3330
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/prompts.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/prompts.py",
+      "origin": "alix",
+      "sha256": "b3ef4b25dc1aabbbb6489de092c7d9697c3bc3d783c72c28e3f6ef6971dd21dd",
+      "bytes": 9920
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/region3d.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/region3d.py",
+      "origin": "alix",
+      "sha256": "da53d61faeeecb3ac6a5f572b0f2c62d3b4d2fdca5a147c31c09a49b5e8fde14",
+      "bytes": 28202
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/region_map.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/region_map.py",
+      "origin": "alix",
+      "sha256": "c4e15cdaaaf0a14b5e26e3d279dc9cf65b8be6405704fc8d3eff6f565625a799",
+      "bytes": 6489
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/regions.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/regions.py",
+      "origin": "alix",
+      "sha256": "8503415ced96c714d39cbc62112d36e68c5964ad845b9782754ec3f029417558",
+      "bytes": 11129
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/__init__.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/__init__.py",
+      "origin": "alix",
+      "sha256": "f608f5c97cfb4f2b34a91bca050323151792d61871570b787664074ee925ce20",
+      "bytes": 905
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/export.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/export.py",
+      "origin": "alix",
+      "sha256": "da6cff764b0e01eb4e2b09a0414f4e47a7fec25982ede98554f32940a780d8c4",
+      "bytes": 14968
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/manifest.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/manifest.py",
+      "origin": "alix",
+      "sha256": "26075011029938eafa89d4f30cb3edd0e2d44a2342d952aebebf285872200ecc",
+      "bytes": 13270
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/plan.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/plan.py",
+      "origin": "alix",
+      "sha256": "6589f5d3624364897bbbdc371763476f0f6b328f5a24f3308247b58c9e407fb9",
+      "bytes": 13516
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/soil.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/soil.py",
+      "origin": "alix",
+      "sha256": "4a0591138109159100d04c228ed5085aef032d123b8d3b509081d71a174cafc7",
+      "bytes": 45373
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/waste.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/sdg/waste.py",
+      "origin": "alix",
+      "sha256": "dd4bf724c2ef6454a7273903bccdf617edf2c599bed72afc3253e420f6967bcc",
+      "bytes": 21971
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/types.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/types.py",
+      "origin": "alix",
+      "sha256": "ae18a0b44b6dd6bb6fc1b3f080dfe49317569234964c52eaceae34326b218d5a",
+      "bytes": 12804
     },
     {
       "dest": "vendor/alix/core/python/alix_taskgen/src/alix_taskgen/__init__.py",
@@ -3971,6 +4202,41 @@
       "origin": "alix",
       "sha256": "1ea4d589dcfe224690ac0d60442f4a46a78ed5f4d473cd8d3541e9e71313970a",
       "bytes": 2009284
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/CORRECTIONS.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/CORRECTIONS.json",
+      "origin": "alix",
+      "sha256": "619034df986bc5b1e645b357b7afc75843f615fc68457d1ff3c76327adaff5a4",
+      "bytes": 23815
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/body_regions.obj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/body_regions.obj",
+      "origin": "alix",
+      "sha256": "920551217ee35c8d872407c6e74e7c3dcbf5ac1c0c1806bce708cc722c721146",
+      "bytes": 553879
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/lid_regions.obj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/lid_regions.obj",
+      "origin": "alix",
+      "sha256": "28d3eac6c8ebaee18269d5ab2276acb4915e436be0f80c0f0dfffbf1b64cb670",
+      "bytes": 385804
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/regions.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/regions.yaml",
+      "origin": "alix",
+      "sha256": "2c654da3d7b653c373a20df7f6e2f65adf5029c6e9d607f5a864c6a5f361f22c",
+      "bytes": 84845
+    },
+    {
+      "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/seat_regions.obj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/seat_regions.obj",
+      "origin": "alix",
+      "sha256": "c42356037eaff235cd353ea0aad89f7c4b620cc6b2d4c92155ecd34906941fc9",
+      "bytes": 152053
     },
     {
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/lid.stl",

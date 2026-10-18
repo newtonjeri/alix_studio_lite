@@ -1,4 +1,4 @@
-"""The lid and seat checks with the wrist D435, without ROS: ALIX's gap check, ported.
+"""The lid and seat checks with the wrist D435, without ROS: ALIX's perception node, ported.
 
 ALIX's lid and seat plans (vendor/alix/Resource/plans/commode_c/hardware) carry `check_fixture_state`
 actions with `check: fixture_gap`: before a plan moves, and after the left arm's lift, the right wrist's
@@ -19,9 +19,17 @@ same registration (learned from a closed lid, and the seat's own), same refusals
 messages, and the same record of each check (its decision, the depth it used, a picture) in Lite's
 logs, Resources/Logs/<day>/checks/.
 
-Not ported: the cross-check with the colour models (`gap_cross_check`, lines 1162-1190). It needs
-ALIX's models and ultralytics, which Lite does not install; on the robot it never contributed either
-(every check of 10 and 12 Oct records no fused state: the geometry answered alone, as it does here).
+The colour models too (the owner, 18 Oct: "the perception visual models"), as the node uses them: its
+core (`_build_core`, `_load_locator`, lines 516-605: ALIX's alix_perception_core, vendored, with the
+robot bringup's models, models_synthetic_real_v10.yaml, the YOLO status model of the commode's state,
+the fixture's region meshes and calibration), asked
+- by the gap check's CROSS-CHECK (lines 1126-1190): a closed or open class the colour model and the
+  registered depth state confidently contradict is "uncertain", which proves nothing;
+- by the node's status_check mode (lines 775-805): the fixture's state from the colour model, decided by
+  the depth state when its margin is clear (``status``);
+on the colour frame and the depth aligned to it (camera_d435.py), and their registration learned as the
+node learns it (``_learn_registration``). The models need ultralytics (an optional requirement); without it
+they cannot be asked and the gap check answers alone, as the node does then.
 
 The executive's side (what proves an expectation, what a failure asks for) is ALIX's lift_check.py,
 vendored as it is and used by mechanism.py.
@@ -92,7 +100,11 @@ class DepthFrame:
     intrinsics: Intrinsics | None
     cam_to_base: np.ndarray | None             # 4 x 4, base_link <- the depth optical frame
     hands: dict | None = None                  # {hand frame: (x, y, z) in base_link}; a frame absent is "missing"
-    colour: np.ndarray | None = None           # H x W x 3, BGR, the same moment's colour frame (kept in the record)
+    colour: np.ndarray | None = None           # H x W x 3, BGR, the same moment's colour frame (the models' input)
+    aligned: np.ndarray | None = None          # the depth aligned to the colour frame (z16 mm), filtered as the driver does
+    colour_intrinsics: Intrinsics | None = None
+    colour_to_base: np.ndarray | None = None   # 4 x 4, base_link <- the colour optical frame
+    ref_to_base: np.ndarray | None = None      # 4 x 4, base_link <- alix_ref_frame (the node's target frame)
     source: str = "native depth (D435, pyrealsense2)"
     frame: str = DEPTH_FRAME
     stamp_s: float | None = None               # the frame's own time (the camera's clock), when known
@@ -114,20 +126,195 @@ class Answer:
     record_path: str | None = None
 
 
+MANIFEST = (vendor_paths.ALIX / "core" / "python" / "alix_perception_core" / "src" / "alix_perception_core" / "config"
+            / "models_synthetic_real_v10.yaml")     # the robot bringup's models (perception.launch.py: models:=synthetic_real_v10)
+
+
 class GapCheck:
-    """One camera's gap check, with the session's registration (the node's ``_registration``)."""
+    """One camera's checks (the node's gap_check and status_check), with the session's registration (its
+    ``_registration``) and its core (the colour models, the region locator), built as the node builds them."""
 
     #: a closed decision this far from the stored registration means the robot or the fixture MOVED:
     #: the stored value is replaced, not averaged (perception_node.py line 1331)
     REGISTRATION_RESET_M = 0.006
 
+    #: gap classes the fused state can confirm or contradict, and the fused states each agrees with (line 1162)
+    GAP_CLASS_AGREES = {"lid_closed": ("closed",), "lid_open": ("lid_open", "lid_seat_open"),
+                        "seat_closed": ("closed", "lid_open"), "seat_open": ("lid_seat_open",)}
+
     def __init__(self, params: dict | None = None, records: Path | Callable[[], Path] | None = None,
-                 log: Callable[[str], None] | None = None):
+                 log: Callable[[str], None] | None = None, core=None, manifest: Path | None = None):
         self.p = dict(params if params is not None else load_params())
         self._records = records
         self._log = log or (lambda _text: None)
         self._registration: dict = {}          # (named pose, fixture key) -> metres (body +z)
         self._lock = threading.Lock()          # one check at a time: they share the registration
+        self._core, self._core_error, self._fixture_in_world = core, None, None
+        self._manifest = Path(manifest) if manifest else MANIFEST
+
+    # ── the core (perception_node.py `_build_core`, `_load_locator`, lines 516-605), built at the first question
+    def core(self):
+        if self._core is None and self._core_error is None:
+            self._build_core()
+        return self._core
+
+    def _build_core(self) -> None:
+        vendor_paths.activate()
+        try:
+            from alix_perception_core import PerceptionCore, load_vocabulary
+            from alix_perception_core.backends import BackendError, create
+        except Exception as exc:                                          # noqa: BLE001 - said in every answer
+            self._core_error = f"perception core unavailable ({exc})"
+            return
+        try:
+            backend = create(str(self.p.get("inference_backend") or "local"), manifest_path=str(self._manifest))
+        except BackendError as exc:
+            self._core_error = str(exc)
+            self._log(f"inference backend unavailable: {exc}")
+            return
+        vocabulary = load_vocabulary(model=self.p.get("fixture_model", "commode_c"), fixture_type=self.p.get("fixture_type", "commode"))
+        locator, self._fixture_in_world = self._load_locator()
+        self._core = PerceptionCore(
+            backend=backend, vocabulary=vocabulary,
+            state_confidence_threshold=float(self.p["confidence_threshold"]),
+            min_stain_mm=float(self.p.get("min_stain_mm", 15.0)), fallback_depth_m=float(self.p.get("fallback_depth_m", 0.9)),
+            derotate=bool(self.p.get("derotate", True)), canonical_up=tuple(float(v) for v in self.p.get("canonical_up_world", (1, 0, 1))),
+            locator=locator, state_fusion=bool(self.p.get("state_fusion", True)))
+        self._log(f"perception core: {backend.name} backend, {self._manifest.name}, {len(vocabulary)} regions"
+                  + ("" if locator is None else f", fixture at {self._fixture_in_world[:3, 3].round(3).tolist()} in base_link"))
+
+    def _load_locator(self):
+        if not bool(self.p.get("route_by_mesh", True)):
+            return None, None
+        try:
+            from alix_perception_core.region3d import RegionLocator, default_calibration_file, load_fixture_pose
+            scene = str(self.p.get("fixture_scene_yaml") or "")
+            choice = str(self.p.get("fixture_calibration") or "auto").strip()
+            model = str(self.p.get("fixture_model", "commode_c"))
+            calibration = None if choice.lower() == "none" else default_calibration_file(model) if choice.lower() == "auto" else choice
+            if scene:
+                locator = RegionLocator(Path(scene).parent / "models", scene, calibration=calibration)
+            else:
+                locator = RegionLocator.for_fixture(model, self.p.get("fixture_type", "commode"), calibration=calibration)
+            standoff = float(self.p.get("ugv_standoff_m", -1.0))
+            venue = str(self.p.get("fixture_venue_yaml") or "")
+            pose = load_fixture_pose(locator.scene_yaml, None if standoff < 0 else standoff,
+                                     venue_yaml=None if venue.lower() in ("", "none") else venue)
+        except Exception as exc:                                              # noqa: BLE001
+            self._log(f"region meshes unavailable ({exc}); regions come from region_bands.yaml")
+            return None, None
+        return locator, pose
+
+    def _geometry(self, frame: "DepthFrame") -> dict:
+        """The node's `_geometry` (lines 1370-1399): camera -> alix_ref_frame, the colour intrinsics, the colour image,
+        the aligned depth, the fixture's pose in alix_ref_frame."""
+        transform = fixture_pose = None
+        if frame.ref_to_base is not None and frame.colour_to_base is not None:
+            ref_from_base = np.linalg.inv(np.asarray(frame.ref_to_base, dtype=float))
+            transform = ref_from_base @ np.asarray(frame.colour_to_base, dtype=float)
+            if self._fixture_in_world is not None:
+                fixture_pose = ref_from_base @ self._fixture_in_world
+        intrinsics = None
+        if frame.colour_intrinsics is not None:
+            from alix_perception_core import Intrinsics as CoreIntrinsics
+
+            c = frame.colour_intrinsics
+            intrinsics = CoreIntrinsics(fx=c.fx, fy=c.fy, cx=c.cx, cy=c.cy, width=c.width, height=c.height)
+        return {"transform": transform, "intrinsics": intrinsics, "image": frame.colour, "depth": frame.aligned,
+                "fixture_pose": fixture_pose}
+
+    def _learn_registration(self, pose: str, result) -> None:
+        """The node's `_learn_registration` (lines 1347-1368): a confident CLOSED decision from the depth keeps its
+        offset as the registration at `pose`: half-way towards it when one exists, REPLACED when it jumped."""
+        if not bool(self.p.get("depth_registration_learn", True)) or result.fixture_state != "closed" \
+                or result.state_source not in ("depth", "depth+colour"):
+            return
+        offset_mm = result.diagnostics.get("depth_offset_mm")
+        if offset_mm is None:
+            return
+        key = self.registration_key(pose)
+        new = float(offset_mm) / 1000.0
+        old = self._registration.get(key)
+        if old is None:
+            value, why = new, "learned"
+        elif abs(new - old) > self.REGISTRATION_RESET_M:
+            value, why = new, f"RESET (jumped from {old * 1000:+.1f} mm: a new placement)"
+        else:
+            value, why = 0.5 * (old + new), "updated"
+        self._registration[key] = value
+        if old is None or abs(value - old) > 0.002:
+            self._log(f"depth registration at {pose or '(any pose)'}: {value * 1000:+.1f} mm ({why}; closed decision at {offset_mm:+.1f} mm)")
+
+    def _gap_cross_check(self, gap_class: str, frame: "DepthFrame", roll_tf) -> dict:
+        """The node's `_gap_cross_check` (lines 1165-1190): the fused state (colour + registered depth) for this
+        frame, and whether it contradicts `gap_class`; {} when the class is a lifted one (no model knows a part at
+        -30 deg) or nothing could be asked."""
+        agrees = self.GAP_CLASS_AGREES.get(gap_class)
+        if not agrees or frame.aligned is None:
+            return {}
+        try:
+            core = self.core()
+            if core is None:
+                raise RuntimeError(self._core_error or "perception core unavailable")
+            geo = self._geometry(frame)
+            result = core.check_status(geo["image"], camera_to_world=roll_tf, fixture_hint="commode",
+                                       depth_image=geo["depth"], intrinsics=geo["intrinsics"],
+                                       camera_to_target=geo["transform"], fixture_pose=geo["fixture_pose"],
+                                       depth_registration_m=self.registration_for(""))
+            self._learn_registration("", result)
+        except Exception as exc:                                              # noqa: BLE001 - the geometry answers alone
+            self._log(f"gap_check: the models could not be asked ({exc}); the geometry answers alone")
+            return {}
+        fused = result.fixture_state or ""
+        confident = bool(fused) and float(result.state_confidence) >= float(self.p["confidence_threshold"])
+        return {"fused_state": fused, "state_source": result.state_source, "confidence": round(float(result.state_confidence), 3),
+                "fusion": result.diagnostics.get("fusion", ""), "colour_state": result.diagnostics.get("colour_state", ""),
+                "depth_state": result.diagnostics.get("depth_state", ""),
+                "contradiction": bool(confident and fused not in agrees)}
+
+    # ── status_check (perception_node.py lines 775-805): the fixture's state, the colour model's, the depth deciding
+    def status(self, frame: "DepthFrame", expect: str = "") -> "Answer":
+        with self._lock:
+            return self._status(frame, expect)
+
+    def _status(self, frame, expect: str) -> "Answer":
+        response = Answer(fixture_state="", recommendation="")
+        core = self.core()
+        if core is None:
+            response.message = self._core_error or "perception core unavailable"
+            return response
+        if frame is None or frame.colour is None:
+            response.message = "no colour frame from the wrist camera — refusing (a stale frame is not this pose)"
+            return response
+        geo = self._geometry(frame)
+        try:
+            result = core.check_status(geo["image"], camera_to_world=frame.colour_to_base, fixture_hint="commode",
+                                       depth_image=geo["depth"], intrinsics=geo["intrinsics"], camera_to_target=geo["transform"],
+                                       fixture_pose=geo["fixture_pose"], depth_registration_m=self.registration_for(""))
+        except Exception as exc:                                              # noqa: BLE001 - a runtime not installed (OpenCV)
+            response.message = (f"the colour model could not be asked ({exc}): install the optional ultralytics "
+                                "(python3 tools/setup_lite.py)")
+            return response
+        result.diagnostics["depth_state_gate"] = "depth_state_poses empty"
+        self._learn_registration("", result)
+        if bool(self.p.get("save_check_frames", True)) and self._records is not None:
+            root = self._records() if callable(self._records) else self._records
+            written = write_check_record(root, "status_check", expect,
+                                         {"class": getattr(result, "fixture_state", ""), "fixture_type": getattr(result, "fixture_type", ""),
+                                          "confidence": float(getattr(result, "state_confidence", 0.0) or 0.0),
+                                          "backend": getattr(getattr(core, "backend", None), "name", ""),
+                                          "state_source": result.state_source,
+                                          "colour_state": result.diagnostics.get("colour_state", ""),
+                                          "depth_state": result.diagnostics.get("depth_state", ""),
+                                          "fusion": result.diagnostics.get("fusion", "")}, None, frame.colour, None)
+            if written:
+                response.record_path = str(written)
+        response.fixture_type, response.fixture_state = result.fixture_type, result.fixture_state
+        response.state_confidence, response.recommendation = float(result.state_confidence), result.recommendation
+        response.success, response.message = result.success, result.message
+        response.record = dict(state_source=result.state_source, colour_state=result.diagnostics.get("colour_state", ""),
+                               depth_state=result.diagnostics.get("depth_state", ""), fusion=result.diagnostics.get("fusion", ""))
+        return response
 
     # ── the registration (perception_node.py lines 1319-1345)
     def registration_key(self, pose: str) -> tuple:
@@ -169,6 +356,9 @@ class GapCheck:
         mode = "gap_check"
         part = "seat" if "seat" in expect.lower() else "lid"
         response = Answer()
+        if self.core() is None:                         # the node answers nothing without its core (lines 677-680)
+            response.success, response.message = False, self._core_error or "perception core unavailable"
+            return response
         source = frame.source if frame is not None else "native depth (D435)"
         frame_name = frame.frame if frame is not None else DEPTH_FRAME
         roll_tf = None if frame is None else frame.cam_to_base
@@ -178,8 +368,6 @@ class GapCheck:
         part_expect = expect
 
         def keep(decision):                    # the node's `keep` (lines 888-922): the record of this decision
-            if not bool(p.get("save_check_frames", True)) or self._records is None:
-                return
             decision = dict(decision)
             decision.update({
                 "decision_wall_s": round(time.time(), 3),
@@ -194,13 +382,15 @@ class GapCheck:
                              "hands": None if frame is None or frame.hands is None
                              else {k: [round(float(c), 4) for c in v] for k, v in frame.hands.items()},
                              "params": {k: p.get(k) for k in RECORD_PARAMS}})
+            response.record = decision           # in the answer always; written when the records have a place
+            if not bool(p.get("save_check_frames", True)) or self._records is None:
+                return
             root = self._records() if callable(self._records) else self._records
             written = write_check_record(root, mode, part_expect, decision, record_depth["arr"],
                                          None if frame is None else frame.colour, rois_for_record)
             if written:
                 response.record_path = str(written)
                 self._log(f"check record: {written}")
-            response.record = decision
 
         def refuse(text):
             response.success = False
@@ -211,6 +401,9 @@ class GapCheck:
 
         if frame is None or frame.depth is None:
             return refuse(f"no depth frame ({source}; nothing received) -> NOT lifted")
+        colour_note = frame.colour_note or ("" if frame.colour is not None else
+                                            "no colour frame from the wrist camera — the depth decides alone, the models are "
+                                            "not asked, no colour frame is recorded")
         if roll_tf is None:
             return refuse(f"no TF {frame_name} -> {WORLD_FRAME} -> NOT lifted")
         if frame.intrinsics is None:
@@ -369,6 +562,14 @@ class GapCheck:
             detail = (f"; opening visible {hole_frac * 100:.0f} % of the wide ROI, standing-lid pixels "
                       f"{standing_frac * 100:.0f} % of the top rows (hands masked around {len(hand_centres)} frames"
                       + (f", {len(hands_missing)} missing" if hands_missing else "") + ")")
+        # THE MODELS' ANSWER beside the geometry's: a closed/open class the fused state confidently contradicts is
+        # not a proof of anything: "uncertain", which no expectation matches
+        cross = self._gap_cross_check(state, frame, roll_tf) \
+            if (bool(p.get("gap_cross_check", True)) and frame.colour is not None) else {}
+        if cross.get("contradiction"):
+            self._log(f"gap_check: {state} contradicted by the models ({cross['fused_state']} from "
+                      f"{cross['state_source']} at {cross['confidence']:.2f}) -> uncertain")
+            state, conf = "uncertain", 0.0
         expected = expect
         lifted = state == expected or (expected in ("lid_open",) and state == "lid_lifted") \
             or (expected in ("seat_open",) and state == "seat_lifted")
@@ -381,15 +582,18 @@ class GapCheck:
                             + f", rise {rise * 1000:.0f} mm vs {lift * 1000:.0f} mm bar"
                             + ("; ABSENT from its closed place" + (", the rim shows" if part == "seat" else ", the bowl shows") if absent else "") + "); "
                             f"{coverage * 100:.0f} % of the ROI valid, median range {float(np.median(d)):.3f} m; "
-                            f"{source}, {frame_name}{detail}; models: not installed (the geometry answers alone)"
-                            + (f"; colour: {frame.colour_note}" if frame.colour_note else ""))
+                            f"{source}, {frame_name}{detail}"
+                            + (f"; models: {cross.get('fused_state') or 'no state'} from {cross.get('state_source') or '-'} "
+                               f"at {cross.get('confidence', 0.0):.2f}" + (" — CONTRADICTS the geometry: uncertain" if cross.get("contradiction") else "")
+                               if cross else "")
+                            + (f"; colour: {colour_note}" if colour_note else ""))
         self._log(f"gap_check: {response.message} -> {response.fixture_state}")
         keep({"class": state, "success": True, "confidence": conf, "passes_expectation": bool(lifted),
               "part": part, "height_m": height, "closed_top_m": top, "nominal_top_m": nominal_top,
-              "color_used": frame.colour is not None, "color_note": frame.colour_note,
+              "color_used": frame.colour is not None, "color_note": colour_note,
               "registration_m": registration, "registration_source": registration_source, "registration_pose": at_pose,
               "rise_m": rise, "roi_valid": coverage, "median_range_m": float(np.median(d)), "message": response.message,
-              "models": {}})
+              "models": cross})
         return response
 
 

@@ -1,0 +1,841 @@
+{
+ "fixture": "commode_c",
+ "modelsDir": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models",
+ "rules": {
+  "bridgeMm": 12.0,
+  "FAR": {
+   "mm": 40.0,
+   "maxShare": 0.1
+  },
+  "OFF_SHEET": {
+   "mm": 10.0,
+   "deg": 60.0,
+   "maxShare": 0.02
+  },
+  "mainBody": {
+   "minShare": 0.05,
+   "cumulative": 0.8
+  },
+  "DECLARED": {
+   "exclusions": [
+    {
+     "name": "sbha_body_rear_inner_wall",
+     "region": "seat_body_hinge_area",
+     "component": "body",
+     "group": "seat_body_hinge_area",
+     "normal": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "minCos": 0.7,
+     "boxMin": [
+      -0.0084,
+      -0.0812,
+      -0.0948
+     ],
+     "boxMax": [
+      0.0409,
+      0.1809,
+      -0.0238
+     ],
+     "reason": "P17 L0b 2026-09-26, measured (2026-09-26_sbha_offset m4/m6/m7, L0b probe/rear_wall_faces.py): the body's rear/inner wall, 64 faces / 54.2 cm2 (25 % of the body group, 13.5 % of the region), base_link normal x > 0.7 (facing the room wall), x 0.969-1.008 z 0.330-0.391 m; the task's approach ray is blocked by the body at 1.5 mm (lid/seat open and closed) and the archive covers 0.00 of it: unreachable by the task"
+    }
+   ],
+   "from": "DECLARED_EXCLUSIONS"
+  },
+  "BURIED": {
+   "rule": {
+    "name": "buried_inside_own_stl",
+    "mm": 3.0,
+    "rayM": 0.05,
+    "reason": "P17 L0c 2026-09-27, measured (2026-09-26_lsha_drop buried_probe.py; L0c survey): painted faces > 3 mm inside their own component STL and occluded along their normal (internal faces of the lid's hinge knuckle): no pad reaches them"
+   },
+   "from": "BURIED_FACES",
+   "stl": {
+    "body": "body.stl",
+    "lid": "lid.stl",
+    "seat": "seat.stl"
+   },
+   "stlFrom": {
+    "body": {
+     "from": "scene.yaml",
+     "scene": {
+      "mesh": "body.stl",
+      "scale": [
+       1.0,
+       1.0,
+       1.0
+      ]
+     },
+     "why": "the scene's own mesh with its scale (the collision world's skin)"
+    },
+    "lid": {
+     "from": "scene.yaml",
+     "scene": {
+      "mesh": "lid.stl",
+      "scale": [
+       1.0,
+       1.0,
+       1.0
+      ]
+     },
+     "why": "the scene's own mesh with its scale (the collision world's skin)"
+    },
+    "seat": {
+     "from": "scene.yaml",
+     "scene": {
+      "mesh": "seat.stl",
+      "scale": [
+       1.0,
+       1.0,
+       1.0
+      ]
+     },
+     "why": "the scene's own mesh with its scale (the collision world's skin)"
+    }
+   }
+  }
+ },
+ "sources": {
+  "body_regions.obj": "61b1a55a0827c2a510778103a601646f18f5130d0d8522855691c0d85408a69d",
+  "scene.yaml#body": "c5722afe35ce85e8897bc2a9b9b710104747ec1a50eb9c07ee91ba292c4e64bb",
+  "body.stl": "1ea4d589dcfe224690ac0d60442f4a46a78ed5f4d473cd8d3541e9e71313970a",
+  "lid_regions.obj": "6b23cf81757e33a3a84d0758f0a1576db082ba584563d02e3bf121d7da92f988",
+  "scene.yaml#lid": "8aab9acd72be6567a945a357c63381bd2dfed8461f5a6ff1209ead8ab1f9c621",
+  "lid.stl": "d42904a9c949913c6f4b49a90ac6ad74d61693e696b766fe9aa782eb7bbe2566",
+  "seat_regions.obj": "edafc4d939e10ce512def8f52d1c1f2c8c943c8f99968c60dd7033d74e43c236",
+  "scene.yaml#seat": "b1f0a5e2f8987f28d18b8bc2f983a1be166ab9abc64febba7de537ef793a6b20",
+  "seat.stl": "365e5194a47a51e329e34b705499f807930597dbf84eaef1fc015ab6c76fd70e",
+  "regions.yaml": "f38ffb29997240c87df7586b91757bc940989c4f0de03a25b4cc7a42c2efefa8"
+ },
+ "objs": {
+  "body_regions.obj": {
+   "component": "body",
+   "groups": [
+    {
+     "component": "body",
+     "group": "bowl_inside_back",
+     "faces": 179,
+     "areaCm2": 180.27,
+     "components": 7,
+     "clusters": 4,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 179.94,
+     "fragments": 3,
+     "removedFragments": 2,
+     "removedFaces": 3,
+     "removedAreaCm2": 0.11,
+     "removed": [
+      {
+       "rule": "OFF_SHEET",
+       "faces": 2,
+       "areaCm2": 0.074,
+       "distanceMm": 29.1,
+       "normalOffDeg": 69.9,
+       "centroid": [
+        0.1582,
+        -0.0574,
+        -0.0449
+       ]
+      },
+      {
+       "rule": "FAR",
+       "faces": 1,
+       "areaCm2": 0.036,
+       "distanceMm": 89.1,
+       "normalOffDeg": 45.5,
+       "centroid": [
+        0.1065,
+        -0.1085,
+        -0.0012
+       ]
+      }
+     ]
+    },
+    {
+     "component": "body",
+     "group": "bowl_inside_front",
+     "faces": 625,
+     "areaCm2": 772.45,
+     "components": 1,
+     "clusters": 1,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 772.45,
+     "fragments": 0,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "body",
+     "group": "bowl_inside_rim",
+     "faces": 1136,
+     "areaCm2": 505.65,
+     "components": 23,
+     "clusters": 6,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 427.85,
+     "fragments": 5,
+     "removedFragments": 2,
+     "removedFaces": 50,
+     "removedAreaCm2": 73.26,
+     "removed": [
+      {
+       "rule": "FAR",
+       "faces": 28,
+       "areaCm2": 46.231,
+       "distanceMm": 124.1,
+       "normalOffDeg": 31.6,
+       "centroid": [
+        -0.001,
+        -0.116,
+        -0.0917
+       ]
+      },
+      {
+       "rule": "FAR",
+       "faces": 22,
+       "areaCm2": 27.029,
+       "distanceMm": 131.4,
+       "normalOffDeg": 35.9,
+       "centroid": [
+        0.001,
+        0.0881,
+        -0.1094
+       ]
+      }
+     ]
+    },
+    {
+     "component": "body",
+     "group": "bowl_inside_ring",
+     "faces": 543,
+     "areaCm2": 275.85,
+     "components": 14,
+     "clusters": 1,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 275.85,
+     "fragments": 0,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "body",
+     "group": "front",
+     "faces": 874,
+     "areaCm2": 1131.77,
+     "components": 5,
+     "clusters": 2,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 1131.74,
+     "fragments": 1,
+     "removedFragments": 1,
+     "removedFaces": 1,
+     "removedAreaCm2": 0.027,
+     "removed": [
+      {
+       "rule": "OFF_SHEET",
+       "faces": 1,
+       "areaCm2": 0.027,
+       "distanceMm": 23.9,
+       "normalOffDeg": 86.9,
+       "centroid": [
+        0.4577,
+        -0.1075,
+        -0.0346
+       ]
+      }
+     ]
+    },
+    {
+     "component": "body",
+     "group": "hinge_area",
+     "faces": 337,
+     "areaCm2": 331.17,
+     "components": 32,
+     "clusters": 7,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 325.88,
+     "fragments": 6,
+     "removedFragments": 4,
+     "removedFaces": 40,
+     "removedAreaCm2": 5.233,
+     "removed": [
+      {
+       "rule": "FAR",
+       "faces": 35,
+       "areaCm2": 5.197,
+       "distanceMm": 355.3,
+       "normalOffDeg": 12.9,
+       "centroid": [
+        0.0054,
+        0.1427,
+        -0.3725
+       ]
+      },
+      {
+       "rule": "OFF_SHEET",
+       "faces": 3,
+       "areaCm2": 0.018,
+       "distanceMm": 15.9,
+       "normalOffDeg": 83.1,
+       "centroid": [
+        -0.0022,
+        0.0078,
+        -0.0175
+       ]
+      },
+      {
+       "rule": "OFF_SHEET",
+       "faces": 1,
+       "areaCm2": 0.012,
+       "distanceMm": 20.8,
+       "normalOffDeg": 81.9,
+       "centroid": [
+        0.1256,
+        -0.0622,
+        0.0034
+       ]
+      },
+      {
+       "rule": "FAR",
+       "faces": 1,
+       "areaCm2": 0.007,
+       "distanceMm": 395.4,
+       "normalOffDeg": 15.8,
+       "centroid": [
+        0.0293,
+        0.1549,
+        -0.3973
+       ]
+      }
+     ]
+    },
+    {
+     "component": "body",
+     "group": "sides",
+     "faces": 3099,
+     "areaCm2": 3389.36,
+     "components": 55,
+     "clusters": 6,
+     "mainBodyClusters": 2,
+     "mainBodyAreaCm2": 3389.21,
+     "fragments": 4,
+     "removedFragments": 3,
+     "removedFaces": 5,
+     "removedAreaCm2": 0.092,
+     "removed": [
+      {
+       "rule": "FAR",
+       "faces": 2,
+       "areaCm2": 0.04,
+       "distanceMm": 47.7,
+       "normalOffDeg": 77.0,
+       "centroid": [
+        0.4304,
+        -0.1021,
+        -0.0238
+       ]
+      },
+      {
+       "rule": "FAR",
+       "faces": 1,
+       "areaCm2": 0.029,
+       "distanceMm": 50.0,
+       "normalOffDeg": 75.9,
+       "centroid": [
+        0.3925,
+        -0.1199,
+        -0.0244
+       ]
+      },
+      {
+       "rule": "OFF_SHEET",
+       "faces": 2,
+       "areaCm2": 0.023,
+       "distanceMm": 24.6,
+       "normalOffDeg": 76.6,
+       "centroid": [
+        0.3832,
+        0.1494,
+        -0.038
+       ]
+      }
+     ]
+    },
+    {
+     "component": "body",
+     "group": "top",
+     "faces": 408,
+     "areaCm2": 514.03,
+     "components": 17,
+     "clusters": 6,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 513.32,
+     "fragments": 5,
+     "removedFragments": 3,
+     "removedFaces": 17,
+     "removedAreaCm2": 0.536,
+     "removed": [
+      {
+       "rule": "FAR",
+       "faces": 13,
+       "areaCm2": 0.479,
+       "distanceMm": 43.8,
+       "normalOffDeg": 78.1,
+       "centroid": [
+        0.36,
+        -0.1485,
+        -0.0466
+       ]
+      },
+      {
+       "rule": "OFF_SHEET",
+       "faces": 3,
+       "areaCm2": 0.052,
+       "distanceMm": 25.0,
+       "normalOffDeg": 66.9,
+       "centroid": [
+        0.1134,
+        0.105,
+        -0.0007
+       ]
+      },
+      {
+       "rule": "OFF_SHEET",
+       "faces": 1,
+       "areaCm2": 0.004,
+       "distanceMm": 34.0,
+       "normalOffDeg": 76.8,
+       "centroid": [
+        0.4794,
+        0.0839,
+        -0.0334
+       ]
+      }
+     ]
+    },
+    {
+     "component": "body",
+     "group": "seat_body_hinge_area",
+     "faces": 404,
+     "areaCm2": 216.32,
+     "components": 20,
+     "clusters": 3,
+     "mainBodyClusters": 2,
+     "mainBodyAreaCm2": 191.71,
+     "fragments": 1,
+     "removedFragments": 1,
+     "removedFaces": 64,
+     "removedAreaCm2": 54.22,
+     "removed": [
+      {
+       "rule": "DECLARED",
+       "faces": 64,
+       "areaCm2": 54.22,
+       "distanceMm": 0.0,
+       "normalOffDeg": 1.5,
+       "centroid": [
+        -0.0015,
+        0.0731,
+        -0.0632
+       ],
+       "name": "sbha_body_rear_inner_wall",
+       "reason": "P17 L0b 2026-09-26, measured (2026-09-26_sbha_offset m4/m6/m7, L0b probe/rear_wall_faces.py): the body's rear/inner wall, 64 faces / 54.2 cm2 (25 % of the body group, 13.5 % of the region), base_link normal x > 0.7 (facing the room wall), x 0.969-1.008 z 0.330-0.391 m; the task's approach ray is blocked by the body at 1.5 mm (lid/seat open and closed) and the archive covers 0.00 of it: unreachable by the task"
+      }
+     ],
+     "excludedFaces": 64,
+     "excludedAreaCm2": 54.22
+    }
+   ],
+   "removedFaces": 180,
+   "removedAreaCm2": 133.479,
+   "buriedFaces": 0,
+   "buriedAreaCm2": 0.0
+  },
+  "lid_regions.obj": {
+   "component": "lid",
+   "groups": [
+    {
+     "component": "lid",
+     "group": "bottomlid",
+     "faces": 5212,
+     "areaCm2": 1323.3,
+     "components": 33,
+     "clusters": 1,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 1323.3,
+     "fragments": 0,
+     "removedFragments": 1,
+     "removedFaces": 44,
+     "removedAreaCm2": 7.856,
+     "removed": [
+      {
+       "rule": "BURIED",
+       "faces": 44,
+       "areaCm2": 7.856,
+       "distanceMm": 3.3,
+       "normalOffDeg": 0.0,
+       "centroid": [
+        0.0076,
+        0.0467,
+        0.0057
+       ],
+       "name": "buried_inside_own_stl",
+       "reason": "P17 L0c 2026-09-27, measured (2026-09-26_lsha_drop buried_probe.py; L0c survey): painted faces > 3 mm inside their own component STL and occluded along their normal (internal faces of the lid's hinge knuckle): no pad reaches them"
+      }
+     ],
+     "buriedFaces": 44,
+     "buriedAreaCm2": 7.856,
+     "buriedFractionOfGroup": 0.0059
+    },
+    {
+     "component": "lid",
+     "group": "lidsides",
+     "faces": 422,
+     "areaCm2": 38.92,
+     "components": 5,
+     "clusters": 2,
+     "mainBodyClusters": 2,
+     "mainBodyAreaCm2": 38.92,
+     "fragments": 0,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "lid",
+     "group": "lidsides_back",
+     "faces": 314,
+     "areaCm2": 54.79,
+     "components": 41,
+     "clusters": 2,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 47.16,
+     "fragments": 1,
+     "removedFragments": 1,
+     "removedFaces": 236,
+     "removedAreaCm2": 31.45,
+     "removed": [
+      {
+       "rule": "BURIED",
+       "faces": 236,
+       "areaCm2": 31.45,
+       "distanceMm": 3.1,
+       "normalOffDeg": 0.0,
+       "centroid": [
+        0.0065,
+        -0.0162,
+        0.0048
+       ],
+       "name": "buried_inside_own_stl",
+       "reason": "P17 L0c 2026-09-27, measured (2026-09-26_lsha_drop buried_probe.py; L0c survey): painted faces > 3 mm inside their own component STL and occluded along their normal (internal faces of the lid's hinge knuckle): no pad reaches them"
+      }
+     ],
+     "buriedFaces": 236,
+     "buriedAreaCm2": 31.45,
+     "buriedFractionOfGroup": 0.574
+    },
+    {
+     "component": "lid",
+     "group": "lidsides_front",
+     "faces": 279,
+     "areaCm2": 26.18,
+     "components": 8,
+     "clusters": 1,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 26.18,
+     "fragments": 0,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "lid",
+     "group": "toplid",
+     "faces": 3460,
+     "areaCm2": 1337.41,
+     "components": 13,
+     "clusters": 1,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 1337.41,
+     "fragments": 0,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "lid",
+     "group": "lid_seat_hinge_area",
+     "faces": 91,
+     "areaCm2": 40.44,
+     "components": 33,
+     "clusters": 4,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 37.41,
+     "fragments": 3,
+     "removedFragments": 1,
+     "removedFaces": 57,
+     "removedAreaCm2": 4.88,
+     "removed": [
+      {
+       "rule": "BURIED",
+       "faces": 57,
+       "areaCm2": 4.88,
+       "distanceMm": 3.5,
+       "normalOffDeg": 0.0,
+       "centroid": [
+        0.0072,
+        0.0109,
+        0.0046
+       ],
+       "name": "buried_inside_own_stl",
+       "reason": "P17 L0c 2026-09-27, measured (2026-09-26_lsha_drop buried_probe.py; L0c survey): painted faces > 3 mm inside their own component STL and occluded along their normal (internal faces of the lid's hinge knuckle): no pad reaches them"
+      }
+     ],
+     "buriedFaces": 57,
+     "buriedAreaCm2": 4.88,
+     "buriedFractionOfGroup": 0.1207
+    },
+    {
+     "component": "lid",
+     "group": "seat_body_hinge_area",
+     "faces": 112,
+     "areaCm2": 72.59,
+     "components": 27,
+     "clusters": 3,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 69.88,
+     "fragments": 2,
+     "removedFragments": 1,
+     "removedFaces": 2,
+     "removedAreaCm2": 0.987,
+     "removed": [
+      {
+       "rule": "BURIED",
+       "faces": 2,
+       "areaCm2": 0.987,
+       "distanceMm": 3.1,
+       "normalOffDeg": 0.0,
+       "centroid": [
+        0.0095,
+        -0.0527,
+        0.0022
+       ],
+       "name": "buried_inside_own_stl",
+       "reason": "P17 L0c 2026-09-27, measured (2026-09-26_lsha_drop buried_probe.py; L0c survey): painted faces > 3 mm inside their own component STL and occluded along their normal (internal faces of the lid's hinge knuckle): no pad reaches them"
+      }
+     ],
+     "buriedFaces": 2,
+     "buriedAreaCm2": 0.987,
+     "buriedFractionOfGroup": 0.0136
+    }
+   ],
+   "removedFaces": 339,
+   "removedAreaCm2": 45.172,
+   "buriedFaces": 339,
+   "buriedAreaCm2": 45.172
+  },
+  "seat_regions.obj": {
+   "component": "seat",
+   "groups": [
+    {
+     "component": "seat",
+     "group": "seat_ring",
+     "faces": 1169,
+     "areaCm2": 784.49,
+     "components": 18,
+     "clusters": 3,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 784.4,
+     "fragments": 2,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "seat",
+     "group": "seat_ring_bottom",
+     "faces": 1835,
+     "areaCm2": 801.83,
+     "components": 16,
+     "clusters": 1,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 801.83,
+     "fragments": 0,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "seat",
+     "group": "seat_ring_sides",
+     "faces": 207,
+     "areaCm2": 58.82,
+     "components": 3,
+     "clusters": 2,
+     "mainBodyClusters": 2,
+     "mainBodyAreaCm2": 58.82,
+     "fragments": 0,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "seat",
+     "group": "seat_ring_sides_front",
+     "faces": 97,
+     "areaCm2": 28.12,
+     "components": 3,
+     "clusters": 2,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 28.05,
+     "fragments": 1,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "seat",
+     "group": "lid_seat_hinge_area",
+     "faces": 271,
+     "areaCm2": 81.04,
+     "components": 4,
+     "clusters": 2,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 81.01,
+     "fragments": 1,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    },
+    {
+     "component": "seat",
+     "group": "seat_body_hinge_area",
+     "faces": 271,
+     "areaCm2": 112.03,
+     "components": 8,
+     "clusters": 2,
+     "mainBodyClusters": 1,
+     "mainBodyAreaCm2": 111.85,
+     "fragments": 1,
+     "removedFragments": 0,
+     "removedFaces": 0,
+     "removedAreaCm2": 0.0,
+     "removed": []
+    }
+   ],
+   "removedFaces": 0,
+   "removedAreaCm2": 0.0,
+   "buriedFaces": 0,
+   "buriedAreaCm2": 0.0
+  }
+ },
+ "manifest": {
+  "overrides": {
+   "bowl_inside_ring": {
+    "stroke_passes": 2.0,
+    "coverage_target": 0.95,
+    "coverage_pass_pct": 95.0,
+    "coverage_target_citation": "hardware union 0.9681 (2 same-date pairs 0.9667/0.9695; all 28 LxR 0.9663-0.9700): L c1a882046fbd x4, R 02c407b0baab x7; target = the figure rounded down to 0.05 ([N-1])",
+    "clearance_floor_mm": 10.0,
+    "clearance_floor_citation": "Newton 2026-09-29: arm+camera clearance floor = TCP execution-gate budget, 10 mm bowl inside/back"
+   },
+   "bowl_inside_rim": {
+    "ik_frame": "glove_frame_3",
+    "singular_margin_deg": 10.0,
+    "coverage_target": 0.55,
+    "coverage_pass_pct": 55.0,
+    "coverage_target_citation": "hardware union 0.5666 (2 same-date pairs 0.5660/0.5673; all 24 LxR 0.5603-0.5723): L 82cd7ed227c6 x4, R 838c3e2c2380 x6; target = the figure rounded down to 0.05 ([N-1])",
+    "clearance_floor_mm": 10.0,
+    "clearance_floor_citation": "Newton 2026-09-29: arm+camera clearance floor = TCP execution-gate budget, 10 mm bowl inside/back"
+   },
+   "hinge_area": {
+    "ik_frame": "glove_frame_4",
+    "singular_margin_deg": 10.0,
+    "coverage_target": 0.85,
+    "coverage_pass_pct": 85.0,
+    "coverage_target_citation": "hardware union 0.8935 with lidsides_back's 236 buried faces removed (P17 L0c 2026-09-27; 3 same-date pairs 0.8935/0.8935/0.8935; all 40 LxR 0.8935): L d53e7ed89543 x5, R 040c4777df60 x8 (0.8248 with them); target = the figure rounded down to 0.05 ([N-1])"
+   },
+   "bowl_inside_front": {
+    "singular_margin_deg": 10.0,
+    "coverage_target": 0.95,
+    "coverage_pass_pct": 95.0,
+    "coverage_target_citation": "hardware 0.994 (median of 7 runs of 9dd32c5e9335: 0.988-0.998; 2026-09-03..07), single-arm R on the whole region; target = the figure rounded down to 0.05 ([N-1])",
+    "clearance_floor_mm": 10.0,
+    "clearance_floor_citation": "Newton 2026-09-29: arm+camera clearance floor = TCP execution-gate budget, 10 mm bowl inside/back"
+   },
+   "seat_ring": {
+    "singular_margin_deg": 5.0,
+    "coverage_target": 0.95,
+    "coverage_pass_pct": 95.0,
+    "coverage_target_citation": "hardware union 0.9590 (2 same-date pairs 0.9588/0.9592; all 44 LxR 0.9505-0.9607): L 2cd9e46b327a x4, R 4b347b549d7f x11; target = the figure rounded down to 0.05 ([N-1])"
+   },
+   "front": {
+    "singular_margin_deg": 20.0,
+    "seam_intersection_m": 0.03,
+    "coverage_target": 0.9,
+    "coverage_pass_pct": 90.0,
+    "coverage_target_citation": "[N-1] closed 2026-09-23, applied as proposed: plan/P16 section 7 row 'sides / front / toplid / lid_side' (:114), hardware not quoted -> 0.90 (no hardware run)"
+   },
+   "seat_ring_bottom": {
+    "seam_intersection_m": 0.05,
+    "coverage_target": 0.95,
+    "coverage_pass_pct": 95.0,
+    "coverage_target_citation": "hardware union 0.9738 (3 same-date pairs 0.9735-0.9742; all 60 LxR 0.9723-0.9743): L 2b0d035cc44e x6, R 4831d596ca89 x8 + db9667547b34 x2; target = the figure rounded down to 0.05 ([N-1])"
+   },
+   "lid_seat_hinge_area": {
+    "seam_intersection_m": 0.05,
+    "coverage_target": 0.55,
+    "coverage_pass_pct": 55.0,
+    "coverage_target_citation": "hardware union 0.5570 with the lid placed open as declared and its 57 buried faces removed (P17 L0c 2026-09-27; 2 same-date pairs 0.5570/0.5570; all 28 LxR 0.5537-0.5570): L 421ca9c80ad2 x4, R 582f2e59ecf4 x7 (0.5365 with them, P17 L0b; 0.6843 with the lid group placed closed); target = the figure rounded down to 0.05 ([N-1])"
+   },
+   "bottomlid": {
+    "coverage_target": 0.95,
+    "coverage_pass_pct": 95.0,
+    "coverage_target_citation": "hardware union 0.9962 with the 44 buried lid faces removed (P17 L0c 2026-09-27; 2 same-date pairs 0.9963/0.9962; all 44 LxR 0.9962-0.9963): L a99ed95190d6 x4, R f75a86284617 x11, 2026-09-03..07 (0.9948 with them); target = the figure rounded down to 0.05 ([N-1])"
+   },
+   "bowl_inside_back": {
+    "coverage_target": 0.85,
+    "coverage_pass_pct": 85.0,
+    "coverage_target_citation": "hardware 0.8865 (median of 4 runs of 90de7ef0665f: 0.943 0.829 0.853 0.920; 2026-09-05/07), single-arm L on the whole region; target = the figure rounded down to 0.05 ([N-1])",
+    "clearance_floor_mm": 10.0,
+    "clearance_floor_citation": "Newton 2026-09-29: arm+camera clearance floor = TCP execution-gate budget, 10 mm bowl inside/back"
+   },
+   "top": {
+    "coverage_target": 0.95,
+    "coverage_pass_pct": 95.0,
+    "coverage_target_citation": "hardware union 0.9955 (2 same-date pairs 0.9948/0.9962; all 40 LxR 0.9947-0.9963): L c3894aed66d1 x4, R e7a73facef64 x10; target = the figure rounded down to 0.05 ([N-1])"
+   },
+   "side": {
+    "coverage_target": 0.9,
+    "coverage_pass_pct": 90.0,
+    "coverage_target_citation": "[N-1] closed 2026-09-23, applied as proposed: plan/P16 section 7 row 'sides / front / toplid / lid_side' (:114), hardware not quoted -> 0.90 (every side run, L and R, played a C-space plan track: no archive figure)"
+   },
+   "lid_side": {
+    "coverage_target": 0.9,
+    "coverage_pass_pct": 90.0,
+    "coverage_target_citation": "[N-1] closed 2026-09-23, applied as proposed: plan/P16 section 7 row 'sides / front / toplid / lid_side' (:114), hardware not quoted -> 0.90 (no hardware run)"
+   },
+   "toplid": {
+    "coverage_target_citation": "default: no hardware run of an archive L+R pair (left archive 4e2ec9718558 x4 reads 0.992; every right run played a C-space plan track) -- the manifest's coverage_pass_pct 90 stands"
+   },
+   "seat_body_hinge_area": {
+    "coverage_target_citation": "default: the hardware figure is not usable -- hardware union 0.1755 with lid and seat placed open as declared, the rear/inner wall excluded and the 2 buried lid faces removed (P17 L0c 2026-09-27; 2 same-date pairs 0.1767/0.1743; all 24 LxR 0.1743-0.1870; 0.1821 with the buried faces, P17 L0b; 0.1579 on the full marking): L bcee5a194fca x4, R bc3acc1d3556 x6, below the 0.50 target floor (the 09-23 figure 0.0502 had lid and seat placed CLOSED); the manifest's coverage_pass_pct 90 stands"
+   }
+  },
+  "overridesFrom": "MANIFEST_OVERRIDES"
+ }
+}

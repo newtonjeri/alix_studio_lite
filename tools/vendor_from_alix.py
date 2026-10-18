@@ -47,6 +47,9 @@ ALIX_TREES = [
     ("external/butterfli-realman-alix/Python/Robotic_Arm", ["libs/win_*"]),
     ("core/python/alix_taskgen/src/alix_taskgen/web_editor", []),          # reference for the Lite UI
     ("ros/manipulation/alix_moveit_config/config/group_states", []),
+    # the wrist camera's perception, ROS-free (the colour models, the depth state, the fixture's regions): what
+    # perception_node.py builds and asks for the lid and seat checks (the owner, 18 Oct: the visual models too)
+    ("core/python/alix_perception_core/src/alix_perception_core", []),
 ]
 ALIX_FILES = [
     # alix_taskgen: only the light modules Lite uses (no generator, no Studio server)
@@ -135,6 +138,11 @@ ALIX_FILES = [
     *[f"ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/{p}.yaml"
       for p in ("lid_open", "seat_open", "lid_close_right", "seat_close_right")],
     "ros/perception/alix_perception/config/perception.yaml",
+    # the status model the robot's bringup uses (models_synthetic_real_v10.yaml; the stain model is for cleaning
+    # inspections, not the lid and seat), and the fixture's corrected region meshes its locator and depth state read
+    "core/python/alix_perception_core/models/commode_status_synthetic_real_v10.pt",
+    *[f"ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/{f}"
+      for f in ("regions.yaml", "body_regions.obj", "lid_regions.obj", "seat_regions.obj", "CORRECTIONS.json")],
 ]
 URDF_IN_TREE = "core/python/alix_workspace/src/alix_workspace/urdf/alix.urdf"
 EXTRA_PACKAGE_ROOTS = ["../vendor"]          # realsense2_description lives beside the ALIX repo
@@ -224,7 +232,10 @@ class Copier:
             return
         if not self.dry_run:
             dst.parent.mkdir(parents=True, exist_ok=True)
+            kept = dst.stat().st_mode if dst.exists() else None
             shutil.copy2(src, dst)
+            if kept is not None:                   # a file already here keeps its mode (git's), whatever ALIX's is
+                dst.chmod(kept)
         self.entries.append({"dest": str(dst.relative_to(LITE)), "source": str(src), "origin": origin,
                              "sha256": sha256(src), "bytes": src.stat().st_size})
 

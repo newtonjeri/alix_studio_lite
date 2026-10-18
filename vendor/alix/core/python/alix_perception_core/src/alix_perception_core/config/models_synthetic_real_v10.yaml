@@ -1,0 +1,93 @@
+# =============================================================================
+# CANDIDATE MANIFEST — synthetic_real_v10 (trained and packaged 2026-10-08 night)
+# =============================================================================
+# v9's recipe with the two-pose render set (commode_c_soil_v6_inspect: both
+# inspection poses x five pole heights) mapped by the camera-look fit MEASURED
+# on that session's own 297 replay pairs (real_look_2026-10-08.json) instead
+# of the 10-07 fit, which had left those renders at 119 against the real 136.
+# 1080 camera-look renders + 360 real D435 frames x4 rotations (the 2026-03
+# train days, the 10-07 session, the 10-08 train stops). Weights copied from
+# generated/models/synthetic_real_v10/{status,stain}/weights/best.pt.
+#
+# WHY THIS ONE (replaces v9, same day): states as v9 — the 2026-10-08 gate
+# 122/122, corpus 214/247, the 2026-03 hand-held gate 31/47, 0 false positives
+# on every real gate and at every rotation — and the stain model matched to the
+# camera's brightness: on the held-out two-pose renders at that brightness,
+# precision 0.82 against v9's 0.48 at the same mAP50 gain (0.58 vs 0.52).
+# Real soil recall is STILL unmeasured (every real frame is clean; the capture
+# tool's --marks is for the session that changes that). v3 (713a2d08), v8
+# (ef427bad) and v9 (388816a9) are in git history.
+# =============================================================================
+min_stain_mm: 15.0
+models:
+  status:
+    task: status
+    runtime: ultralytics
+    weights: ../../../models/commode_status_synthetic_real_v10.pt
+    confidence: 0.25
+    classes:
+      closed:
+        fixture_type: commode
+        fixture_state: closed
+      lid_open:
+        fixture_type: commode
+        fixture_state: lid_open
+      lid_seat_open:
+        fixture_type: commode
+        fixture_state: lid_seat_open
+  stain:
+    task: stain
+    runtime: ultralytics
+    weights: ../../../models/commode_stain_synthetic_real_v10.pt
+    confidence: 0.35
+    classes:
+      black_dirt:
+        kind: stain
+      blood:
+        kind: stain
+      bottle:
+        kind: waste
+      cigarette_end:
+        kind: waste
+      copper_stain:
+        kind: permanent
+      face_mask:
+        kind: waste
+      faecal:
+        kind: stain
+      fiducial:
+        kind: ignore
+      glove:
+        kind: waste
+      hair:
+        kind: waste
+      limescale:
+        kind: permanent
+      manganese_black:
+        kind: permanent
+      mould:
+        kind: stain
+      paper_towel:
+        kind: waste
+      pink_biofilm:
+        kind: stain
+      rust:
+        kind: permanent
+      sanitary_waste:
+        kind: waste
+      sharps:
+        kind: waste
+      soap_scum:
+        kind: stain
+      tissue:
+        kind: waste
+      urine_fresh:
+        kind: stain
+      urine_scale:
+        kind: permanent
+      vomit:
+        kind: stain
+      water_mark:
+        kind: stain
+      wrapper:
+        kind: waste

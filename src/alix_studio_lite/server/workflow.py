@@ -1693,10 +1693,6 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
     if missing:
         raise UserError("Not on the controllers: " + "; ".join(missing) + ". Nothing moved.",
                         "Upload the programs or save the points, simulate again, then run it.", code="missing")
-    if any(st["kind"] == "mechanism" for st in run["plan"]):
-        from . import mechanism as mech
-
-        mech.camera_ready(robot)                    # the lid and seat checks need the wrist camera: refused before anything moves
     warns = [f["text"] for f in sim["findings"] if f["level"] == "warn"] if simulated else []
     col = sim["collisions"] if simulated else {"ok": True}
     if not col["ok"]:
@@ -1856,10 +1852,9 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                     ex = mech.RealExec(job, robot, {x: reals.get(x) or robot._real(x) for x in ARMS}, kit,
                                        (lambda text: hw.hardware(None, "mechanism", text=text)) if hw is not None else None,
                                        live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}))
-                    try:
+                    mech.camera_warning(robot, ex.say)
+                    with kit.camera.using():
                         out = mech.Runner(ex, ex.say).run(st["task"])
-                    finally:
-                        kit.camera.close()
                     did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
                                     for p in out["plans"])
                     say(f"LID / SEAT // {st['title']} // DONE", **{x: f"{pid} // COMPLETE" for x in ARMS})

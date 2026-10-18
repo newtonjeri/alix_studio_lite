@@ -1,0 +1,434 @@
+# =============================================================================
+# SOIL CLASSES — what a stain IS, how it looks, and how it behaves under a wipe
+# =============================================================================
+# Read by `alix_perception_core.sdg.soil`. Each class is a kind of soil found on
+# a commode, urinal or wash basin, with the parameters that decide what a pad
+# does to it and how the renderer shows it:
+#
+#   lift_dry / lift_wet   fraction of a cell's soil ONE PASS removes, with a
+#                         dry pad / a saturated pad (linear in pad wetness)
+#   dried_resistance      0..1; lift is multiplied by
+#                         1 - dried_resistance * (1 - cell moisture)
+#   spread_dry/spread_wet fraction of what the pad carries that is SMEARED
+#                         back down at its trailing edge per pass
+#   kind                  `stain` (wipeable) or `permanent` (a water-wet pad
+#                         cannot shift it — needs acid or bleach; the robot
+#                         reports it for descaling instead of looping on it)
+#   hazard                true when the deposit is a body-fluid spill with its
+#                         own procedure (NHS NIPCM appendix 9); the robot still
+#                         cleans it, the flag selects the handling
+#   procedure             wipe | absorb_disinfect — the latter is the NHS
+#                         two-step: soak up the bulk, then chlorine, then
+#                         detergent; the single-pass wipe model is the second
+#                         step only
+#   initial_moisture      how wet it is when freshly deposited
+#   size_mm               [min, max] blob diameter for the placer
+#   color                 linear RGB of a THIN deposit; `appearance.color_dark`
+#                         is the colour at full amount
+#   appearance            how a deposit is SHAPED (see sdg/soil.py Appearance)
+#
+# -----------------------------------------------------------------------------
+# PROVENANCE (2026-10-05 research pass, Resource/reports/2026-10-05_washroom_soil_research)
+# -----------------------------------------------------------------------------
+# Every line marked `# src:` carries a verified source. Everything else is still
+# an ASSUMPTION. In particular NO per-pass transfer coefficient for soil MASS on
+# glazed porcelain exists in the literature: every wiping study reports a
+# microbial log reduction. Those are used here only as BOUNDS:
+#   * dry pad on a dry surface removes essentially nothing
+#       src: Moore & Griffith 2006, J Hosp Infect (six microfibre cloths)
+#   * water-damp microfibre removes ~95 % per pass on hard floors (cotton 68 %)
+#       src: Rutala, Gergen & Weber 2007, ICHE 28:1046 (PMID 17980233)
+#   * on CERAMIC: 2.4 log10 removed, 0.3 % of the carried load re-deposited
+#       src: Trajtman et al. 2015 (C. difficile spores, 1.5–1.77 N pad force)
+#   * 1 h of drying costs only ~0.5 log10 for a protein soil under a damp cloth
+#       src: Smith et al. 2011, "Assessing the efficacy of microfibre"
+#   * dried organic soil on Formica: wipe-only 0.74 log10 vs 2.95 with detergent
+#       src: Hardison et al. 2022 (PMC8965596)
+# The experiment that replaces these numbers is unchanged: deposit a known
+# mass, wipe with the real pad at a known wetness, weigh what comes off
+# (EN 16615 four-field wipe test and ASTM D5343 soap-scum tile method are the
+# templates; see the report).
+# =============================================================================
+
+classes:
+
+  urine_fresh:
+    description: >-
+      fresh or same-day urine on the rim, seat underside, lid underside and the
+      floor within ~1 m; translucent pale straw when fresh, darkening toward
+      amber as it concentrates; water-soluble until it mineralises over days
+    # src: dry-on-dry ~no removal (Moore & Griffith 2006); damp microfibre ~95 %
+    #      per pass (Rutala 2007); 1 h dried costs ~0.5 log10 (Smith 2011)
+    lift_dry: 0.10
+    lift_wet: 0.90
+    dried_resistance: 0.25
+    spread_dry: 0.45             # assumption: a dry pad pushes free liquid around
+    spread_wet: 0.05             # bound: re-deposition ~0.3 % of load on ceramic (Trajtman 2015)
+    kind: stain
+    initial_moisture: 0.95       # src: urine is 91–96 % water
+    # src: in-flight droplets 4.4–7.2 mm median (Hurst 2025, PMC11976717);
+    #      seated rebound droplets ~2.8 mm equivalent (Cesario 2022); runs and
+    #      pools unmeasured — the upper bound is an assumption
+    size_mm: [3, 60]
+    # src: CIE L*a*b* of urine, Belasco 2020 (PMC7649145): mean L*95.8 a*-2.2
+    #      b*18.5 -> linear sRGB (0.985, 0.896, 0.625); mean + 2 SD (L*89, b*43)
+    #      -> (0.933, 0.733, 0.266). Thin film on white porcelain is paler than
+    #      the bulk colour; the renderer blends toward porcelain by amount.
+    color: [0.95, 0.90, 0.66]
+    appearance:
+      pattern: drip               # a run from the rim or the seat underside
+      edge_noise: 0.3
+      satellites: [2, 12]         # src: every void throws fine droplets (Cesario 2022; Hurst 2025)
+      drip_mm: [0, 70]            # assumption: run length unmeasured
+      grain: 0.25
+      core_amount: 0.6            # translucent film, rarely opaque
+      color_dark: [0.90, 0.70, 0.26]
+      roughness_wet: 0.06
+      roughness_dry: 0.35
+    # drying: a 4 uL water droplet on glass dries in 26–34 min at 20 C
+    # (NSF 10091482); the field's 10 min e-fold is the same order. Dried urine
+    # stains are "diffuse, pale, spread over large areas" (Harbison & Fleming
+    # 2016) — expect low-contrast marks.
+
+  faecal:
+    description: >-
+      faecal mark on the bowl interior under the rim and sides, the seat and
+      its underside; sticky viscoelastic paste that smears under a dry pad;
+      hospital procedure is absorb the bulk, 1,000 ppm chlorine, then detergent
+    procedure: absorb_disinfect  # src: NHS England NIPCM appendix 9
+    # src: adhesion rises as it dries toward ~60 % water (NSF 10288793);
+    #      dried-vs-fresh gap ~1.5 log10 and chemistry matters more than
+    #      strokes (Hardison 2022; Gold 2016); a passive pad pass is not the
+    #      primitive for adhered residue (SCCRUB 2025, arXiv 2507.06053)
+    lift_dry: 0.10
+    lift_wet: 0.60
+    dried_resistance: 0.70
+    spread_dry: 0.70             # the classic dry-wipe smear (assumption)
+    spread_wet: 0.10             # bound: 0.3–1.6 % per surface for spores (Trajtman 2015); paste unmeasured
+    kind: stain
+    initial_moisture: 0.75       # src: median 74.6 % water, Rose et al. 2015 (PMC4500995)
+    # src: stool diameter 25–34 mm (Penn 2018); MaP simulant 25 mm; mark length unmeasured
+    size_mm: [10, 45]
+    # src: colorimeter on healthy stool, L*32.8 a*7.4 b*17.1 (PMC6403287)
+    #      -> linear (0.119, 0.065, 0.033); thin layer sits in the
+    #      yellowish-brown band (high b*)
+    color: [0.45, 0.23, 0.07]
+    appearance:
+      pattern: splatter
+      edge_noise: 0.45
+      satellites: [1, 6]          # src: 15–47 visible droplets per lidless flush (Best 2012), few visible
+      grain: 0.35
+      core_amount: 1.0
+      color_dark: [0.13, 0.07, 0.035]
+      roughness_wet: 0.25
+      roughness_dry: 0.7
+
+  mould:
+    description: >-
+      dark mildew in the seat hinge, under the rim, on seals and grout; olive
+      Cladosporium (powdery) or black, shiny Aureobasidium on wet seals;
+      scrubbing with detergent removes it (US EPA)
+    # src: moistened wipe picks up ~0.35 of dry spore powder per pass (Brown 2007)
+    lift_dry: 0.10
+    lift_wet: 0.60
+    dried_resistance: 0.30
+    spread_dry: 0.40
+    spread_wet: 0.10
+    kind: stain
+    initial_moisture: 0.5        # src: Cladosporium grows at water activity >= 0.82 (intermittently damp)
+    size_mm: [8, 40]
+    # src: Cladosporium colonies olive-green to olive-brown (INSPQ fact sheet)
+    color: [0.36, 0.40, 0.34]
+    appearance:
+      pattern: speckle            # dots that merge into a dark patch
+      edge_noise: 0.4
+      speckle_density: 0.5
+      grain: 0.3
+      core_amount: 0.9
+      color_dark: [0.10, 0.13, 0.10]
+      roughness_wet: 0.45         # src: Aureobasidium is shiny and mucoid when wet (INSPQ)
+      roughness_dry: 0.8          # powdery / velvety
+
+  soap_scum:
+    description: >-
+      lime soap — calcium and magnesium stearates — on basins and around taps;
+      a white waxy film that is INSOLUBLE in water: a water-wet pad only moves
+      it mechanically, an alkaline detergent with a chelant dissolves it
+    # src: calcium stearate insoluble in water (Wikipedia); solubility rises
+    #      ~2,000x with surfactant + Na2EDTA at high pH (J Surfactants Deterg 2013)
+    lift_dry: 0.10
+    lift_wet: 0.30               # water-wet pad, mechanical only; detergent pad would be higher
+    dried_resistance: 0.30
+    spread_dry: 0.20
+    spread_wet: 0.05
+    kind: stain
+    initial_moisture: 0.3
+    size_mm: [30, 120]
+    # src: white solid (USGS / Wikipedia); on white porcelain it reads as dullness
+    color: [0.84, 0.84, 0.78]
+    appearance:
+      pattern: film
+      edge_noise: 0.35
+      grain: 0.15
+      core_amount: 0.6
+      color_dark: [0.66, 0.66, 0.58]
+      roughness_wet: 0.6
+      roughness_dry: 0.75
+
+  water_mark:
+    description: >-
+      dried droplet rings and runs; the deposit sits at the pinned edge
+      (coffee-ring effect); in hard-water supplies the ring is mineral and
+      needs an acid dwell, in soft water it is faint and comes off wet
+    # src: hard-water spots on fittings need a vinegar/citric dwell, not a
+    #      wipe (Kohler, Hansgrohe care guides); ring = coffee-ring effect
+    lift_dry: 0.05
+    lift_wet: 0.35
+    dried_resistance: 0.30
+    spread_dry: 0.10
+    spread_wet: 0.02
+    kind: stain
+    initial_moisture: 0.1
+    size_mm: [5, 25]
+    color: [0.80, 0.82, 0.80]
+    appearance:
+      pattern: ring
+      edge_noise: 0.15
+      ring_width: 0.25
+      grain: 0.2
+      core_amount: 0.6
+      color_dark: [0.62, 0.64, 0.62]
+      roughness_wet: 0.4
+      roughness_dry: 0.6
+
+  limescale:
+    description: >-
+      calcium carbonate scale where water evaporates — the waterline, drip
+      paths, dried droplets; off-white to grey, reddish-brown where iron is
+      present; NOT water-removable (acid). Frequency scales with water
+      hardness (UK DWI bands: soft <=100 .. very hard >300 mg/l CaCO3)
+    # src: Wikipedia Limescale; DWI hardness bands; scale forms where water
+    #      evaporates (DWI treatment guide)
+    lift_dry: 0.01
+    lift_wet: 0.02
+    dried_resistance: 0.0
+    spread_dry: 0.0
+    spread_wet: 0.0
+    kind: permanent
+    initial_moisture: 0.0
+    size_mm: [30, 120]
+    color: [0.84, 0.83, 0.78]
+    appearance:
+      pattern: ring               # heaviest at the waterline, thinning inward
+      edge_noise: 0.3
+      ring_width: 0.5
+      grain: 0.3
+      core_amount: 0.9
+      color_dark: [0.68, 0.64, 0.55]
+      roughness_wet: 0.75         # chalky whether wet or dry
+      roughness_dry: 0.85
+
+  urine_scale:
+    description: >-
+      "urine stone" — a composite crust of calcium phosphates, struvite,
+      calcium carbonate, uric acid and protein that forms under the rim and at
+      urinal outlets once bacteria hydrolyse urea (pH ~10); white-yellow to
+      brown, near black with dirt; rock hard; acid dissolves it and a protein
+      film resists even that. Days to form, never within one cleaning cycle
+    # src: Ohki et al. 2010, J Surfactants Deterg 13:19 (composition, worst
+    #      under the rim); Udert 2003 (days to hydrolyse); struvite white to
+    #      yellowish/brownish (Wikipedia); Kincho (colour, hardness, HCl)
+    lift_dry: 0.01
+    lift_wet: 0.02
+    dried_resistance: 0.0
+    spread_dry: 0.0
+    spread_wet: 0.0
+    kind: permanent
+    initial_moisture: 0.0
+    size_mm: [20, 120]
+    color: [0.80, 0.70, 0.48]     # struvite white-yellow (L*86 b*18 -> 0.78, 0.67, 0.46)
+    appearance:
+      pattern: ring
+      edge_noise: 0.4
+      ring_width: 0.6
+      grain: 0.35
+      core_amount: 0.95
+      color_dark: [0.50, 0.36, 0.18]
+      roughness_wet: 0.8
+      roughness_dry: 0.85
+
+  pink_biofilm:
+    description: >-
+      Serratia marcescens — the pink-orange slime (prodigiosin) at the toilet
+      waterline, basin overflow and grout, feeding on soap residue and bowl
+      deposits; wipes off but regrows unless disinfected (chlorine 10–20 min)
+    # src: Wikipedia Serratia marcescens; Gwinnett County water (bleach
+    #      10–20 min); MCWD (sits on limescale / soap scum)
+    lift_dry: 0.20
+    lift_wet: 0.75
+    dried_resistance: 0.30
+    spread_dry: 0.30
+    spread_wet: 0.10
+    kind: stain
+    initial_moisture: 0.8        # slimy
+    size_mm: [20, 120]
+    color: [0.80, 0.42, 0.34]
+    appearance:
+      pattern: film               # a band at the waterline
+      edge_noise: 0.35
+      grain: 0.25
+      core_amount: 0.7
+      color_dark: [0.70, 0.20, 0.15]   # prodigiosin red-orange (L*62 a*35 b*25)
+      roughness_wet: 0.10
+      roughness_dry: 0.5
+
+  black_dirt:
+    description: >-
+      the black ring and specks of domestic toilet bowls — melanin from
+      Exophiala and Cladosporium fungi at and below the waterline; biological,
+      so scrubbing removes it (distinct from manganese black, which is mineral)
+    # src: Exophiala/Cladosporium melanin, 10 Japanese homes (PMID 25744213)
+    lift_dry: 0.15
+    lift_wet: 0.55
+    dried_resistance: 0.40
+    spread_dry: 0.30
+    spread_wet: 0.08
+    kind: stain
+    initial_moisture: 0.6
+    size_mm: [10, 80]
+    color: [0.30, 0.30, 0.28]
+    appearance:
+      pattern: speckle
+      edge_noise: 0.4
+      speckle_density: 0.55
+      grain: 0.3
+      core_amount: 0.9
+      color_dark: [0.08, 0.08, 0.08]
+      roughness_wet: 0.5
+      roughness_dry: 0.7
+
+  rust:
+    description: >-
+      iron staining below a dripping fitting; reddish-orange to brown; NOT
+      water-removable (oxalic or reducing cleaners); bleach intensifies it
+    # src: US EPA secondary standards, iron >= 0.3 mg/L -> reddish/orange
+    #      staining; Kohler care guide (oxalic acid, no abrasives on glaze)
+    lift_dry: 0.01
+    lift_wet: 0.02
+    dried_resistance: 0.0
+    spread_dry: 0.0
+    spread_wet: 0.0
+    kind: permanent
+    initial_moisture: 0.0
+    size_mm: [10, 60]
+    color: [0.72, 0.45, 0.22]
+    appearance:
+      pattern: drip               # a streak below the fitting that drips
+      edge_noise: 0.3
+      drip_mm: [20, 120]
+      grain: 0.3
+      core_amount: 0.9
+      color_dark: [0.42, 0.20, 0.07]
+      roughness_wet: 0.6
+      roughness_dry: 0.7
+
+  manganese_black:
+    description: >-
+      black-to-brown mineral staining from manganese in the supply (>= 0.05
+      mg/L); a streak below fittings and in the bowl; acid-removable, not by
+      wiping; bleach darkens it. Distinct from black_dirt (fungal, wipeable)
+    # src: US EPA secondary standards; Connecticut DPH iron/manganese sheet
+    lift_dry: 0.01
+    lift_wet: 0.02
+    dried_resistance: 0.0
+    spread_dry: 0.0
+    spread_wet: 0.0
+    kind: permanent
+    initial_moisture: 0.0
+    size_mm: [10, 60]
+    color: [0.35, 0.30, 0.26]
+    appearance:
+      pattern: drip
+      edge_noise: 0.3
+      drip_mm: [10, 90]
+      grain: 0.3
+      core_amount: 0.9
+      color_dark: [0.10, 0.08, 0.07]
+      roughness_wet: 0.7
+      roughness_dry: 0.8
+
+  copper_stain:
+    description: >-
+      blue-green streak below taps and overflows from copper pipe corrosion
+      (>= 1.0 mg/L); acid-removable, not by wiping
+    # src: US EPA secondary standards (copper -> blue-green staining)
+    lift_dry: 0.01
+    lift_wet: 0.02
+    dried_resistance: 0.0
+    spread_dry: 0.0
+    spread_wet: 0.0
+    kind: permanent
+    initial_moisture: 0.0
+    size_mm: [10, 80]
+    color: [0.40, 0.70, 0.62]
+    appearance:
+      pattern: drip
+      edge_noise: 0.3
+      drip_mm: [10, 100]
+      grain: 0.25
+      core_amount: 0.8
+      color_dark: [0.15, 0.45, 0.40]
+      roughness_wet: 0.6
+      roughness_dry: 0.7
+
+  blood:
+    description: >-
+      blood spill (hospital washrooms): bright red when fresh, dark brown as
+      haemoglobin oxidises (hours); high-risk body fluid — 10,000 ppm chlorine
+      granules for 3 min, then clean; absorb the bulk first. Spot < 20 mm,
+      small < 100 mm, large >= 100 mm have different procedures
+    hazard: true                 # src: NHS GGC needlestick/body-fluid risk classes (blood = high)
+    procedure: absorb_disinfect  # src: NHS England NIPCM appendix 9 (10,000 ppm, 3 min)
+    # src: dried coagulated blood: hypochlorite wipe removes protein best (Gold 2016)
+    lift_dry: 0.05
+    lift_wet: 0.50
+    dried_resistance: 0.80
+    spread_dry: 0.50
+    spread_wet: 0.15
+    kind: stain
+    initial_moisture: 0.9
+    size_mm: [3, 100]            # src: RACGP spill bands spot / <10 cm / >=10 cm
+    color: [0.45, 0.05, 0.04]
+    appearance:
+      pattern: splatter
+      edge_noise: 0.4
+      satellites: [1, 8]
+      grain: 0.3
+      core_amount: 0.9
+      color_dark: [0.10, 0.03, 0.02]   # src: red -> dark brown as HbO2 -> met-Hb -> hemichrome (PLoS ONE 2011)
+      roughness_wet: 0.10
+      roughness_dry: 0.6
+
+  vomit:
+    description: >-
+      vomit (hospital and public washrooms): low-risk body fluid unless
+      blood-stained; absorb the bulk, 1,000 ppm chlorine, then detergent
+    procedure: absorb_disinfect  # src: NHS England NIPCM appendix 9 (1,000 ppm)
+    lift_dry: 0.10
+    lift_wet: 0.60
+    dried_resistance: 0.60
+    spread_dry: 0.60
+    spread_wet: 0.15
+    kind: stain
+    initial_moisture: 0.85
+    size_mm: [30, 200]
+    color: [0.75, 0.68, 0.45]    # assumption: no colour measurement found
+    appearance:
+      pattern: splatter
+      edge_noise: 0.5
+      satellites: [2, 10]
+      grain: 0.35
+      core_amount: 0.9
+      color_dark: [0.55, 0.45, 0.25]
+      roughness_wet: 0.15
+      roughness_dry: 0.6

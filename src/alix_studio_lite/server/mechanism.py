@@ -405,13 +405,17 @@ class Runner:
                     return a
                 answer = self.ex.ask(a, str(a.get("expect") or ""))
                 passed = lc.evaluate_fixture_check(a, answer)
+                models = (getattr(answer, "record", None) or {}).get("models") or {}
                 row = dict(check=label, expect=a.get("expect"), state=answer.fixture_state,
                            confidence=round(float(answer.state_confidence), 2), verdict="PASS" if passed else "NO",
-                           message=answer.message, record=getattr(answer, "record_path", None))
+                           message=answer.message, record=getattr(answer, "record_path", None), models=models)
                 self.checks.append(row)
                 self.say(f"CHECK {label}: expect {a.get('expect')}, the camera says {answer.fixture_state} at "
-                         f"{float(answer.state_confidence):.2f} -> {'PASS' if passed else 'NO'}",
-                         "info" if passed else "warn")
+                         f"{float(answer.state_confidence):.2f}" + (f" (models: {models.get('fused_state') or 'no state'} from "
+                                                                    f"{models.get('state_source') or '-'} at {models.get('confidence', 0):.2f}"
+                                                                    + (", CONTRADICTS: uncertain" if models.get("contradiction") else "") + ")"
+                                                                    if models else "")
+                         + f" -> {'PASS' if passed else 'NO'}", "info" if passed else "warn")
                 if passed and a.get("also_observe"):
                     self._observe_also(a, state)
                 if not passed:
@@ -637,26 +641,51 @@ class RealExec(_Exec):
             readings[side] = dict(q_deg=fb.get("joints_deg"), pole_mm=fb.get("pole_mm"), hand=fb.get("hand"))
         try:
             shot = self.kit.camera.shot(wait_s=float(self.kit.gap.p.get("frame_wait_s", 2.0)))
-        except UserError as exc:
+        except UserError as exc:                     # no frame: the check refuses and reads NOT, as ALIX's sender reads it
             frame = None
             self.say(f"camera: {exc}", "error")
-            if not observe:
-                # ALIX reads an unanswered check as NOT, and a NOT before lid_open is "skip: it is open already". With
-                # no camera at all that is a guess: the task stops and a person looks (the second question keeps
-                # ALIX's rule: its follow-up asks again)
-                raise UserError(f"{action.get('stage')}: the wrist camera did not answer ({exc}), so {expect} could not be "
-                                "checked.", "A person must look at the commode; check the camera's cable, then run it again.",
-                                code="escalate") from None
         else:
-            frame = DepthFrame(depth=shot.depth, intrinsics=shot.intrinsics, cam_to_base=robot_fk.camera_to_base(readings),
+            frames = robot_fk.camera_frames(readings) or {}
+            frame = DepthFrame(depth=shot.depth, intrinsics=shot.intrinsics, cam_to_base=frames.get("depth"),
                                hands=robot_fk.hand_positions(readings, self.kit.gap.p["gap_hand_frames"]),
-                               colour=shot.colour, stamp_s=None if shot.camera_ms is None else shot.camera_ms / 1000.0,
-                               age_s=shot.age_s)
+                               colour=shot.colour, aligned=shot.aligned, colour_intrinsics=shot.colour_intrinsics,
+                               colour_to_base=frames.get("colour"), ref_to_base=frames.get("ref"),
+                               stamp_s=None if shot.camera_ms is None else shot.camera_ms / 1000.0, age_s=shot.age_s)
         answer = self.kit.gap.ask(expect, frame)
         self.job.set(check=dict(stage=action.get("stage"), expect=expect, state=answer.fixture_state,
                                 confidence=round(float(answer.state_confidence), 2), message=answer.message,
                                 record=answer.record_path, observe=observe))
         return answer
+
+
+def camera_check(robot) -> dict:
+    """What the wrist camera sees now, as the perception node's status_check answers it: the colour model's state of
+    the commode, decided by the depth state when its margin is clear (gap_check.GapCheck.status). Nothing moves; a
+    linked right arm gives the camera's pose (else the colour model alone, as the node without TF). With a small
+    picture of the colour frame, for the page."""
+    from . import robot_fk
+    from .gap_check import DepthFrame, png_bytes
+    import base64
+
+    k = kit(robot)
+    readings = {}
+    for side, link in robot.links.items():
+        fb = link.read_fresh()
+        readings[side] = dict(q_deg=fb.get("joints_deg"), pole_mm=fb.get("pole_mm"), hand=fb.get("hand"))
+    with k.camera.using():
+        shot = k.camera.shot(wait_s=float(k.gap.p.get("frame_wait_s", 2.0)))
+    frames = robot_fk.camera_frames(readings) or {}
+    frame = DepthFrame(depth=shot.depth, intrinsics=shot.intrinsics, cam_to_base=frames.get("depth"), colour=shot.colour,
+                       aligned=shot.aligned, colour_intrinsics=shot.colour_intrinsics, colour_to_base=frames.get("colour"),
+                       ref_to_base=frames.get("ref"))
+    a = k.gap.status(frame, "camera_check")
+    picture = None
+    if shot.colour is not None:
+        small = shot.colour[::2, ::2, ::-1]                       # BGR -> RGB, half size
+        picture = "data:image/png;base64," + base64.b64encode(png_bytes(small)).decode("ascii")
+    return dict(ok=bool(a.success), state=a.fixture_state, confidence=round(float(a.state_confidence), 3), message=a.message,
+                source=(a.record or {}).get("state_source"), colour_state=(a.record or {}).get("colour_state"),
+                depth_state=(a.record or {}).get("depth_state"), posed=bool(frames), record=a.record_path, picture=picture)
 
 
 # ── the camera and the check, one of each for the server's session (the registration is the session's)
@@ -707,16 +736,17 @@ def kit(robot) -> Kit:
         return k
 
 
-def camera_ready(robot) -> dict:
-    """The wrist camera, plugged in and readable, before a Real run with a lid or seat task: refused otherwise
-    (its checks would be guesses). The test harness's scripted answers stand in for it (LITE_CHECK_SCRIPT)."""
+def camera_warning(robot, say) -> dict:
+    """The wrist camera before a Real run with a lid or seat task. ALIX's sender starts all the same and reads an
+    unanswered check as NOT (fail-closed), and Lite does as it does (the owner, 18 Oct: "use the approach used in
+    the alix ws code base"); what it means is said at the start. The test harness's scripted answers stand in for
+    it (LITE_CHECK_SCRIPT)."""
     if os.environ.get("LITE_CHECK_SCRIPT"):
         return dict(ok=True, scripted=True)
     have = kit(robot).camera.available()
     if not have["ok"]:
-        raise UserError(f"The lid and seat tasks check with the wrist camera, and it cannot be read: {have['why']}. Nothing moved.",
-                        "Plug the D435 into this computer (USB 3) and install pyrealsense2 (tools/setup_lite.py), then run it.",
-                        code="camera")
+        say(f"The wrist camera cannot be read ({have['why']}): every check will read NOT (fail-closed), as ALIX's sender "
+            "reads an unanswered check, and each plan follows its own policy for a NOT.", "warn")
     return have
 
 
@@ -737,13 +767,11 @@ def run(robot, name: str, mode: str | None = None):
             raise UserError(f"{plan.title} uses both arms: the {' and '.join(gone)} arm is not linked to its controller.",
                             "Connect both arms, then run it again.")
         if mode == "real" and all(linked.values()):
-            camera_ready(robot)
             k = kit(robot)
             ex = RealExec(job, robot, linked, k, say)
-            try:
+            camera_warning(robot, ex.say)
+            with k.camera.using():
                 return _finish(Runner(ex, ex.say).run(name), plan, mode)
-            finally:
-                k.camera.close()
         if mode == "hwsim" and all(linked.values()):
             ex = DryExec(job, robot, say)
         else:

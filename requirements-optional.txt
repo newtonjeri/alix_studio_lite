@@ -16,3 +16,9 @@ rtree==1.4.1
 # PyPI has wheels for Linux x86-64 and Windows. Without it the lid and seat tasks still simulate and run in
 # Hardware sim; Real refuses their checks (fail-closed), so nothing is lifted unseen.
 pyrealsense2==2.57.7.10387
+# The wrist camera's colour models (ALIX's alix_perception_core, vendored: the YOLO status model of the commode's
+# state, models_synthetic_real_v10.yaml), asked by the lid and seat checks as ALIX's perception node asks them:
+# the version ALIX runs. It brings PyTorch (on Linux x86-64 PyPI's build carries CUDA, a large download; on a
+# computer with no NVIDIA GPU, install torch from https://download.pytorch.org/whl/cpu first). Without it the
+# models cannot be asked and the depth answers alone, as ALIX's node does then.
+ultralytics==8.4.55

@@ -1,0 +1,14 @@
+# Fixture calibration: the REAL commode_c against its region meshes, MEASURED from the
+# robot's own depth frames by tools/perception/calibrate_fixture.py (see its docstring).
+# offsets_m: per part and region, along the part's local +z (its top normal), RELATIVE to the
+# rim top (the body's `top` region, offset 0); + = the real surface lies higher above the rim
+# than the modelled one. From the top-down frames only (pose 4): an oblique view adds the
+# bevels, and the absolute gap mixes in the robot's placement, which varies per session.
+# Applied by region3d.RegionLocator to its cells, so the depth state, the label checker and
+# the box projection all see the fixture's parts where they are relative to each other.
+# Sources: Resource/Data/d435_frames_2026-10-08, Resource/Data/d435_frames_2026-10
+offsets_m:
+  seat:
+    seat_ring: 0.0086
+  lid:
+    toplid: 0.0092
