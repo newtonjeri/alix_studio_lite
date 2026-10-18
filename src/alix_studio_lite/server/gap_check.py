@@ -151,6 +151,7 @@ class GapCheck:
         self._lock = threading.Lock()          # one check at a time: they share the registration
         self._core, self._core_error, self._fixture_in_world = core, None, None
         self._manifest = Path(manifest) if manifest else MANIFEST
+        self._named: dict | None = None        # the right arm's named poses (ALIX's MoveIt group states), read once
 
     # ── the core (perception_node.py `_build_core`, `_load_locator`, lines 516-605), built at the first question
     def core(self):
@@ -245,10 +246,10 @@ class GapCheck:
         if old is None or abs(value - old) > 0.002:
             self._log(f"depth registration at {pose or '(any pose)'}: {value * 1000:+.1f} mm ({why}; closed decision at {offset_mm:+.1f} mm)")
 
-    def _gap_cross_check(self, gap_class: str, frame: "DepthFrame", roll_tf) -> dict:
+    def _gap_cross_check(self, gap_class: str, frame: "DepthFrame", roll_tf, at_pose: str = "", depth_ok: bool = True) -> dict:
         """The node's `_gap_cross_check` (lines 1165-1190): the fused state (colour + registered depth) for this
         frame, and whether it contradicts `gap_class`; {} when the class is a lifted one (no model knows a part at
-        -30 deg) or nothing could be asked."""
+        -30 deg) or nothing could be asked. The depth state only where the pose gate allows it, as the node."""
         agrees = self.GAP_CLASS_AGREES.get(gap_class)
         if not agrees or frame.aligned is None:
             return {}
@@ -258,10 +259,10 @@ class GapCheck:
                 raise RuntimeError(self._core_error or "perception core unavailable")
             geo = self._geometry(frame)
             result = core.check_status(geo["image"], camera_to_world=roll_tf, fixture_hint="commode",
-                                       depth_image=geo["depth"], intrinsics=geo["intrinsics"],
+                                       depth_image=geo["depth"] if depth_ok else None, intrinsics=geo["intrinsics"],
                                        camera_to_target=geo["transform"], fixture_pose=geo["fixture_pose"],
-                                       depth_registration_m=self.registration_for(""))
-            self._learn_registration("", result)
+                                       depth_registration_m=self.registration_for(at_pose))
+            self._learn_registration(at_pose, result)
         except Exception as exc:                                              # noqa: BLE001 - the geometry answers alone
             self._log(f"gap_check: the models could not be asked ({exc}); the geometry answers alone")
             return {}
@@ -273,11 +274,12 @@ class GapCheck:
                 "contradiction": bool(confident and fused not in agrees)}
 
     # ── status_check (perception_node.py lines 775-805): the fixture's state, the colour model's, the depth deciding
-    def status(self, frame: "DepthFrame", expect: str = "") -> "Answer":
+    def status(self, frame: "DepthFrame", expect: str = "", q_deg=None) -> "Answer":
+        """``q_deg``: the right arm's joints (degrees) when read: the node's pose gate on the depth state."""
         with self._lock:
-            return self._status(frame, expect)
+            return self._status(frame, expect, q_deg)
 
-    def _status(self, frame, expect: str) -> "Answer":
+    def _status(self, frame, expect: str, q_deg=None) -> "Answer":
         response = Answer(fixture_state="", recommendation="")
         core = self.core()
         if core is None:
@@ -287,16 +289,18 @@ class GapCheck:
             response.message = "no colour frame from the wrist camera — refusing (a stale frame is not this pose)"
             return response
         geo = self._geometry(frame)
+        depth_ok, why, at_pose = self.pose_gate(q_deg)
         try:
             result = core.check_status(geo["image"], camera_to_world=frame.colour_to_base, fixture_hint="commode",
-                                       depth_image=geo["depth"], intrinsics=geo["intrinsics"], camera_to_target=geo["transform"],
-                                       fixture_pose=geo["fixture_pose"], depth_registration_m=self.registration_for(""))
+                                       depth_image=geo["depth"] if depth_ok else None, intrinsics=geo["intrinsics"],
+                                       camera_to_target=geo["transform"], fixture_pose=geo["fixture_pose"],
+                                       depth_registration_m=self.registration_for(at_pose))
         except Exception as exc:                                              # noqa: BLE001 - a runtime not installed (OpenCV)
             response.message = (f"the colour model could not be asked ({exc}): install the optional ultralytics "
                                 "(python3 tools/setup_lite.py)")
             return response
-        result.diagnostics["depth_state_gate"] = "depth_state_poses empty"
-        self._learn_registration("", result)
+        result.diagnostics["depth_state_gate"] = why
+        self._learn_registration(at_pose, result)
         if bool(self.p.get("save_check_frames", True)) and self._records is not None:
             root = self._records() if callable(self._records) else self._records
             written = write_check_record(root, "status_check", expect,
@@ -306,14 +310,16 @@ class GapCheck:
                                           "state_source": result.state_source,
                                           "colour_state": result.diagnostics.get("colour_state", ""),
                                           "depth_state": result.diagnostics.get("depth_state", ""),
-                                          "fusion": result.diagnostics.get("fusion", "")}, None, frame.colour, None)
+                                          "fusion": result.diagnostics.get("fusion", ""),
+                                          "depth_state_gate": why, "pose": at_pose}, None, frame.colour, None)
             if written:
                 response.record_path = str(written)
         response.fixture_type, response.fixture_state = result.fixture_type, result.fixture_state
         response.state_confidence, response.recommendation = float(result.state_confidence), result.recommendation
         response.success, response.message = result.success, result.message
         response.record = dict(state_source=result.state_source, colour_state=result.diagnostics.get("colour_state", ""),
-                               depth_state=result.diagnostics.get("depth_state", ""), fusion=result.diagnostics.get("fusion", ""))
+                               depth_state=result.diagnostics.get("depth_state", ""), fusion=result.diagnostics.get("fusion", ""),
+                               gate=why, pose=at_pose)
         return response
 
     # ── the registration (perception_node.py lines 1319-1345)
@@ -336,6 +342,58 @@ class GapCheck:
         with self._lock:
             self._registration.clear()
 
+    # ── the named poses (perception_node.py `_load_named_poses` and `_depth_state_pose_name`, lines 1271-1317): ALIX's
+    #    MoveIt group states (inspection_pose_1, inspection_pose_4, rest_pose ...), read by alix_perception_core's
+    #    named_poses from the vendored tree, matched to the right arm's joints as the node matches /joint_states
+    def named_poses(self) -> dict:
+        """{pose: {R_jointN: radians}} of the right arm, or {} when the group states cannot be read."""
+        if self._named is None:
+            try:
+                from alix_perception_core import named_poses                     # noqa: PLC0415 - vendored
+
+                path = named_poses.default_group_states_file()
+                self._named = named_poses.load_group_states(path, "rm75_arm_right") if path else {}
+            except Exception as exc:                                              # noqa: BLE001
+                self._log(f"named poses unavailable ({exc})")
+                self._named = {}
+        return self._named
+
+    @staticmethod
+    def _joints(q_deg) -> dict:
+        """The right arm's joints as the node has them from /joint_states (radians by name)."""
+        if q_deg is None or len(q_deg) < 7:
+            return {}
+        return {f"R_joint{i + 1}": float(np.radians(v)) for i, v in enumerate(list(q_deg)[:7])}
+
+    def _match(self, joints: dict, poses: dict) -> str:
+        from alix_perception_core import named_poses                             # noqa: PLC0415 - vendored
+
+        return named_poses.match_named_pose(joints, poses, float(self.p.get("depth_state_pose_tolerance_rad", 0.1)))
+
+    def named_pose(self, q_deg) -> str:
+        """The named pose the right arm is at (every joint within the node's tolerance), or ''."""
+        joints, poses = self._joints(q_deg), self.named_poses()
+        return self._match(joints, poses) if joints and poses else ""
+
+    def pose_gate(self, q_deg) -> tuple[bool, str, str]:
+        """(may the depth decide the state here, why, the named pose or ''): the node's `_depth_state_pose_name`.
+        `depth_state_poses` empty, as the robot's perception.yaml has it, means at any pose, and the pose is '' (the
+        node's own value then); names in it restore the gate at those poses only."""
+        wanted = [str(p) for p in (self.p.get("depth_state_poses") or []) if str(p)]
+        if not wanted:
+            return True, "depth_state_poses empty", ""
+        poses = self.named_poses()
+        if not poses:
+            return False, "named poses unavailable", ""
+        gate = {p: poses[p] for p in wanted if p in poses}
+        if not gate:
+            return False, f"depth_state_poses not in the group states: {[p for p in wanted if p not in poses]}", ""
+        joints = self._joints(q_deg)
+        if not joints:
+            return False, "no joint states (the right arm was not read)", ""
+        at = self._match(joints, gate)
+        return (True, f"at {at}", at) if at else (False, f"not at any of {sorted(gate)}", "")
+
     def _learn_gap_registration(self, pose: str, value: float, height: float, nominal_top: float) -> None:
         if not bool(self.p.get("depth_registration_learn", True)):
             return
@@ -347,11 +405,14 @@ class GapCheck:
                   + "; every later lid/seat top at this placement carries it")
 
     # ── the check (perception_node.py `_gap_check`, lines 851-1159)
-    def ask(self, expect: str, frame: DepthFrame | None, at_pose: str = "") -> Answer:
+    def ask(self, expect: str, frame: DepthFrame | None, q_deg=None) -> Answer:
+        """``q_deg``: the right arm's joints (degrees) when read, the node's /joint_states: the named pose the
+        registration belongs to, and the depth-state gate of the models' cross-check."""
         with self._lock:
-            return self._ask(str(expect or ""), frame, at_pose)
+            depth_ok, _why, at_pose = self.pose_gate(q_deg)
+            return self._ask(str(expect or ""), frame, at_pose, depth_ok)
 
-    def _ask(self, expect: str, frame: DepthFrame | None, at_pose: str) -> Answer:
+    def _ask(self, expect: str, frame: DepthFrame | None, at_pose: str, depth_ok: bool = True) -> Answer:
         p = self.p
         mode = "gap_check"
         part = "seat" if "seat" in expect.lower() else "lid"
@@ -564,7 +625,7 @@ class GapCheck:
                       + (f", {len(hands_missing)} missing" if hands_missing else "") + ")")
         # THE MODELS' ANSWER beside the geometry's: a closed/open class the fused state confidently contradicts is
         # not a proof of anything: "uncertain", which no expectation matches
-        cross = self._gap_cross_check(state, frame, roll_tf) \
+        cross = self._gap_cross_check(state, frame, roll_tf, at_pose, depth_ok) \
             if (bool(p.get("gap_cross_check", True)) and frame.colour is not None) else {}
         if cross.get("contradiction"):
             self._log(f"gap_check: {state} contradicted by the models ({cross['fused_state']} from "

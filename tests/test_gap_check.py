@@ -53,6 +53,31 @@ def test_the_robots_lid_open_run_of_12_october_replays_to_its_own_answers(tmp_pa
     assert abs(gc.registration_view()["seat_mm"] - 3.8) < 1.5
 
 
+#: inspection_pose_4, the depth viewpoint: where lid_open's move_to_inspect leaves the right arm (ALIX's group states)
+POSE4_DEG = [float(np.degrees(v)) for v in [0.5585, -1.6755, 0.1745, 1.9548, -0.4363, 1.0472, -0.2443]]
+
+
+def test_the_named_poses_are_alix_s_and_the_depth_gate_is_the_node_s(tmp_path):
+    gc = GapCheck()
+    assert {"inspection_pose_1", "inspection_pose_4", "rest_pose"} <= set(gc.named_poses())
+    assert gc.named_pose(POSE4_DEG) == "inspection_pose_4"
+    assert gc.named_pose([0.0] * 7) == "zero_pose" and gc.named_pose(None) == "" and gc.named_pose([1.0, 2.0]) == ""
+    # the robot's perception.yaml (depth_state_poses: ['']): the depth decides at any pose, and the pose is '' as the node has it
+    assert gc.pose_gate(POSE4_DEG) == (True, "depth_state_poses empty", "")
+    assert gc.pose_gate(None) == (True, "depth_state_poses empty", "")
+    # the gate restored at pose 4 only: the node's _depth_state_pose_name, word for word
+    gated = GapCheck(params=dict(load_params(), depth_state_poses=["inspection_pose_4"]), records=tmp_path / "checks")
+    assert gated.pose_gate(POSE4_DEG) == (True, "at inspection_pose_4", "inspection_pose_4")
+    assert gated.pose_gate([0.0] * 7) == (False, "not at any of ['inspection_pose_4']", "")
+    assert gated.pose_gate(None) == (False, "no joint states (the right arm was not read)", "")
+    assert gated.pose_gate([0.0] * 7)[0] is False
+    # a check made at pose 4 keeps its registration under that pose, as the node keys it
+    rec, frame = frame_of(RUN_12_OCT[0])
+    same_answer(gated.ask(rec["expect"], frame, q_deg=POSE4_DEG), rec, RUN_12_OCT[0])
+    assert abs(gated.registration_for("inspection_pose_4") * 1000 - rec["registration_m"] * 1000) < 2.0
+    assert gated.registration_for("") == 0.0
+
+
 def test_the_robots_seat_checks_of_10_october_with_the_registration_they_had(tmp_path):
     gc = GapCheck(records=tmp_path / "checks")
     lid = gc.registration_key("")

@@ -160,6 +160,12 @@ def test_the_catalogue_says_what_each_task_does_and_the_rows_it_runs_for():
     assert set(cat) == set(mechanism.TASKS)
     assert cat["lid_open"]["standoff_mm"] == 250 and cat["lid_open"]["seconds"] > 5
     assert set(mechanism.ROWS.values()) == set(mechanism.TASKS)
+    # ALIX's inspection poses of the right arm, from its group states; pose 4 is where lid_open's move_to_inspect ends
+    poses = {p["name"]: p for p in mechanism.poses()}
+    assert list(poses) == ["inspection_pose_1", "inspection_pose_4"] and all(p["arm"] == "right" for p in poses.values())
+    assert np.allclose(poses["inspection_pose_4"]["joints_deg"], np.degrees([0.5585, -1.6755, 0.1745, 1.9548, -0.4363, 1.0472, -0.2443]), atol=0.01)
+    inspect = next(e for e in mechanism.Plan("lid_open").entries if e.stage == "move_to_inspect")
+    assert np.allclose(np.degrees(np.asarray(inspect.last(), dtype=float)), poses["inspection_pose_4"]["joints_deg"], atol=0.01)
 
 
 def test_s2_s_plan_with_lid_and_seat_tasks_is_v53_s_plan_cut_at_them():

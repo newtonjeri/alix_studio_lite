@@ -15,7 +15,7 @@
 // completed in Simulation as it is.
 
 import { call, get, post, put, say } from './api.js';
-import { REAL_CHECKS, confirmDialog, ctx, el, tell } from './ctx.js';
+import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, robotCall, tell, watchJob } from './ctx.js';
 import { borrow, home3d, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { speedPct } from './status.js';
@@ -118,9 +118,13 @@ function armPanel(side) {
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_task`, text: 'Lid or seat task (pre-recorded)' }),
           el('select', { id: `liteS2_${side}_task`, onchange: () => paintTask(side) })),
-        btn('+ ADD TO BOTH ARMS', () => addMechanism(side), 'btn green'),
-        btn('CHECK THE CAMERA', () => cameraCheck(side), 'btn light')),
+        btn('+ ADD TO BOTH ARMS', () => addMechanism(side), 'btn green')),
       el('div', { id: `liteS2TaskNote_${side}`, class: 'mini-note' }),
+      el('div', { class: 'lite-row' },
+        el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_pose`, text: "ALIX's inspection pose (the right arm carries the camera)" }),
+          el('select', { id: `liteS2_${side}_pose` })),
+        btn('MOVE RIGHT ARM', () => movePose(side), 'btn light'),
+        btn('CHECK THE CAMERA', () => cameraCheck(side), 'btn light')),
       el('div', { id: `liteS2Camera_${side}`, class: 'lite-s2-camera' })),
     el('div', { class: 'lite-table-scroll lite-s2-table' }, el('table', { class: 'lite-table' },
       el('thead', {}, el('tr', {}, ['#', 'TYPE', 'TARGET', 'OPTIONS'].map(h => el('th', { text: h })))),
@@ -226,9 +230,15 @@ async function loadMechanisms() {
   try {
     const d = await get('/api/mechanism');
     S.mechanisms = Object.fromEntries(d.tasks.map(t => [t.name, t]));
+    S.poses = d.poses || [];                       // ALIX's inspection poses of the right arm (1 colour, 4 depth)
     for (const side of ARMS) {
       const sel = $(`liteS2_${side}_task`);
       if (sel) sel.replaceChildren(...d.tasks.map(t => el('option', { value: t.name, text: `${t.short} // ${t.title}` })));
+      const ps = $(`liteS2_${side}_pose`);
+      if (ps) {
+        ps.replaceChildren(...S.poses.map(p => el('option', { value: p.name, text: `${p.title} // ${p.short}` })));
+        if (S.poses.some(p => p.name === 'inspection_pose_4')) ps.value = 'inspection_pose_4';
+      }
       paintTask(side);
     }
     paintAll();
@@ -442,9 +452,28 @@ async function cameraCheck(side) {
       ? `The camera sees: ${words(r.state)} (${Math.round(r.confidence * 100)} %, decided by ${r.source || 'nothing'}; `
         + `colour model: ${words(r.colour_state)}, depth state: ${words(r.depth_state)}).`
       : `The camera could not tell: ${r.message}`;
-    box.replaceChildren(el('div', { class: `lite-status ${r.ok ? 'ok' : 'warn'}`,
-      text: said + (r.posed ? '' : ' The right arm is not linked, so the colour model answers alone (no depth state).') }),
+    const where = !r.posed ? ' The right arm is not linked, so the colour model answers alone (no depth state).'
+      : r.pose ? ` The right arm is at ALIX's ${words(r.pose)}.` : ' The right arm is not at one of ALIX\'s named poses.';
+    const gate = r.gate && r.gate !== 'depth_state_poses empty' ? ` Depth state gate: ${r.gate}.` : '';
+    box.replaceChildren(el('div', { class: `lite-status ${r.ok ? 'ok' : 'warn'}`, text: said + where + gate }),
     r.picture ? el('img', { src: r.picture, alt: 'What the wrist camera sees', class: 'lite-s2-camera-img' }) : '');
+  } catch (err) { box.replaceChildren(); tell(err); }
+}
+
+// The right arm to one of ALIX's inspection poses (its MoveIt group states, vendored), as Lite moves to any joint
+// pose: the speed slider's speed, the controller's SIM mode in Hardware sim, the robot's confirmation in Real.
+async function movePose(side) {
+  const name = $(`liteS2_${side}_pose`)?.value, p = (S.poses || []).find(x => x.name === name);
+  if (!p) { window.toast('Choose an inspection pose.'); return; }
+  const box = $(`liteS2Camera_${side}`);
+  box.replaceChildren(el('div', { class: 'mini-note', text: `Moving the RIGHT arm to ${p.title}...` }));
+  try {
+    const job = await robotCall('/api/robots/right/move-joints', { joints_deg: p.joints_deg, name: p.title },
+      { what: `Moving the RIGHT arm to ALIX's ${p.title} (${p.what})` });
+    const j = await watchJob(job, (v) => box.replaceChildren(el('div', { class: 'mini-note', text: jobLine(v) })));
+    box.replaceChildren(el('div', { class: `lite-status ${j.state === 'done' ? 'ok' : 'warn'}`,
+      text: j.state === 'done' ? `RIGHT arm at ${p.title} (${p.what}). CHECK THE CAMERA shows what it sees from here.`
+        : `The move stopped: ${j.error || j.state}` }));
   } catch (err) { box.replaceChildren(); tell(err); }
 }
 

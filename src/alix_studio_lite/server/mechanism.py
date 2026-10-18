@@ -651,7 +651,7 @@ class RealExec(_Exec):
                                colour=shot.colour, aligned=shot.aligned, colour_intrinsics=shot.colour_intrinsics,
                                colour_to_base=frames.get("colour"), ref_to_base=frames.get("ref"),
                                stamp_s=None if shot.camera_ms is None else shot.camera_ms / 1000.0, age_s=shot.age_s)
-        answer = self.kit.gap.ask(expect, frame)
+        answer = self.kit.gap.ask(expect, frame, q_deg=(readings.get("right") or {}).get("q_deg"))
         self.job.set(check=dict(stage=action.get("stage"), expect=expect, state=answer.fixture_state,
                                 confidence=round(float(answer.state_confidence), 2), message=answer.message,
                                 record=answer.record_path, observe=observe))
@@ -678,14 +678,16 @@ def camera_check(robot) -> dict:
     frame = DepthFrame(depth=shot.depth, intrinsics=shot.intrinsics, cam_to_base=frames.get("depth"), colour=shot.colour,
                        aligned=shot.aligned, colour_intrinsics=shot.colour_intrinsics, colour_to_base=frames.get("colour"),
                        ref_to_base=frames.get("ref"))
-    a = k.gap.status(frame, "camera_check")
+    q_right = (readings.get("right") or {}).get("q_deg")
+    a = k.gap.status(frame, "camera_check", q_deg=q_right)
     picture = None
     if shot.colour is not None:
         small = shot.colour[::2, ::2, ::-1]                       # BGR -> RGB, half size
         picture = "data:image/png;base64," + base64.b64encode(png_bytes(small)).decode("ascii")
     return dict(ok=bool(a.success), state=a.fixture_state, confidence=round(float(a.state_confidence), 3), message=a.message,
                 source=(a.record or {}).get("state_source"), colour_state=(a.record or {}).get("colour_state"),
-                depth_state=(a.record or {}).get("depth_state"), posed=bool(frames), record=a.record_path, picture=picture)
+                depth_state=(a.record or {}).get("depth_state"), gate=(a.record or {}).get("gate"), posed=bool(frames),
+                pose=k.gap.named_pose(q_right) if q_right is not None else None, record=a.record_path, picture=picture)
 
 
 # ── the camera and the check, one of each for the server's session (the registration is the session's)
@@ -788,3 +790,29 @@ def _finish(out: dict, plan, mode) -> dict:
 
 def catalogue() -> list:
     return [Plan(n).view() for n in TASKS]
+
+
+#: ALIX's inspection poses of the right arm (its MoveIt group states; the owner, 18 Oct: "the inspection poses 1 and 4").
+#: The perception core's named_poses.py (Newton, 2026-10-08): "Only pose 4 is used for depth based state inspection ...
+#: the other poses are only used for coloured inspection."
+INSPECTION_POSES = {
+    "inspection_pose_1": dict(title="Inspection pose 1", short="colour viewpoint",
+                              what="the colour viewpoint: the camera on its side (rolled -87 degrees), "
+                              "for the colour model's inspection of the commode"),
+    "inspection_pose_4": dict(title="Inspection pose 4", short="depth viewpoint (the lid and seat checks)",
+                              what="the depth viewpoint: the camera looking down at the lid and the "
+                              "seat, where ALIX's plans check them (lid_open's move_to_inspect ends here)"),
+}
+
+
+def poses(gap=None) -> list:
+    """The inspection poses as the page lists them: name, title, what they are for, the joints (degrees)."""
+    from .gap_check import GapCheck
+
+    named = (gap or GapCheck()).named_poses()
+    out = []
+    for name, info in INSPECTION_POSES.items():
+        joints = named.get(name)
+        if joints:
+            out.append(dict(name=name, arm="right", joints_deg=[round(float(np.degrees(joints[f"R_joint{i}"])), 2) for i in range(1, 8)], **info))
+    return out

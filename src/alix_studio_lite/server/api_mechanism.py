@@ -1,8 +1,10 @@
 """The lid and the seat (mechanism.py): ALIX's pre-recorded tasks, listed and run in the mode Lite is in.
 
 - ``GET /api/mechanism``: the four tasks (what each does, its checks, its moves, the 250 mm standoff its plan
-  was made at), the rows of Lite's catalogue each one runs for, the wrist camera (plugged in or not) and the
-  placement the camera has learned this session.
+  was made at), the rows of Lite's catalogue each one runs for, the wrist camera (plugged in or not), the
+  placement the camera has learned this session, and ALIX's inspection poses of the right arm (1, the colour
+  viewpoint; 4, the depth viewpoint) with their joints, which the page moves the arm to through
+  ``POST /api/robots/right/move-joints`` as it moves to any joint pose.
 - ``POST /api/mechanism/<task>/run`` ``{confirmed}``: one task as a job on both arms; Real needs the real
   robot's confirmation, as every motion does.
 - ``POST /api/mechanism/camera/check``: what the wrist camera sees now, as the perception node's status_check
@@ -22,7 +24,7 @@ def get_mechanism(app, q, body, m):
     session(app)
     k = mechanism.kit(app.robot)
     return dict(tasks=mechanism.catalogue(), rows=mechanism.ROWS, standoff_mm=mechanism.STANDOFF_MM,
-                camera=k.camera.available(), registration=k.gap.registration_view())
+                camera=k.camera.available(), registration=k.gap.registration_view(), poses=mechanism.poses(k.gap))
 
 
 @route("POST", r"/api/mechanism/([a-z_]+)/run")

@@ -32,16 +32,31 @@ def pool() -> ProcessPoolExecutor:
 
 
 def shutdown() -> None:
-    """The server is stopping: a tune still running is ended, not waited for."""
+    """The server is stopping: a tune still running is ended (the worker terminated), not waited for; the pool's
+    own manager thread is then waited for (bounded: its worker is gone), and the pool's queue semaphores are
+    released here, because Lite leaves with os._exit, which skips the atexit work that would release them.
+    Without this the resource tracker says "5 leaked semaphore objects" after Lite has stopped (the owner's
+    terminal, 18 Oct) whenever a tune or a collision check ran. The manager thread must be joined first: with
+    shutdown(wait=False) it freed the queues on its own, and an exit between its unlink and its message to the
+    tracker left one "leaked" (1 run in 10). The finalizers are run directly, not through multiprocessing's
+    _exit_function, which marks the whole process as exiting: a pool made later in the same process (the test
+    suite's) would then never be released."""
     global _POOL
     with _POOL_LOCK:
         if _POOL is not None:
-            procs = list((getattr(_POOL, "_processes", None) or {}).values())
-            _POOL.shutdown(wait=False, cancel_futures=True)
-            for p in procs:
+            for p in list((getattr(_POOL, "_processes", None) or {}).values()):
                 if p.is_alive():
                     p.terminate()
+            _POOL.shutdown(wait=True, cancel_futures=True)
             _POOL = None
+            try:
+                import gc                                                   # noqa: PLC0415
+                from multiprocessing import util                             # noqa: PLC0415
+
+                gc.collect()                                                # the queues go, their semaphores with them
+                util._run_finalizers(0)                                     # noqa: SLF001 - any still registered
+            except Exception:                                               # noqa: BLE001 - never keeps Lite from quitting
+                pass
 
 
 def kill_now() -> None:
