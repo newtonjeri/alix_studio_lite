@@ -50,6 +50,74 @@
     "note": "",
     "mode": "real"
    }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "9d3ea89a4446dd0d14bcc00382d0c0d0bbd4192968d731c44167982a972105cf",
+   "ok": true,
+   "at": "2026-10-19 10:18:36",
+   "detail": {
+    "program_id": 50
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "9d3ea89a4446dd0d14bcc00382d0c0d0bbd4192968d731c44167982a972105cf",
+   "ok": true,
+   "at": "2026-10-19 10:19:05",
+   "detail": {
+    "program_id": 50,
+    "dry_run": true,
+    "seconds": 10.78,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "9d3ea89a4446dd0d14bcc00382d0c0d0bbd4192968d731c44167982a972105cf",
+   "ok": true,
+   "at": "2026-10-19 10:19:43",
+   "detail": {
+    "program_id": 50,
+    "dry_run": false,
+    "seconds": 9.95,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 1.5,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "9d3ea89a4446dd0d14bcc00382d0c0d0bbd4192968d731c44167982a972105cf",
+   "ok": true,
+   "at": "2026-10-19 10:20:34",
+   "detail": {
+    "program_id": 50,
+    "dry_run": false,
+    "seconds": 11.85,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 2.2,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "9d3ea89a4446dd0d14bcc00382d0c0d0bbd4192968d731c44167982a972105cf",
+   "ok": true,
+   "at": "2026-10-19 10:20:49",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
   }
  ]
 }

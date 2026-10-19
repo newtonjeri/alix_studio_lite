@@ -2,25 +2,26 @@
  "id": "alix_mvbvk1fk_zti6s",
  "name": "Commode_C_17_10_2026",
  "createdAt": "2026-10-17T04:06:33.536Z",
- "updatedAt": "2026-10-17T14:19:13.747Z",
+ "updatedAt": "2026-10-19T08:12:50.377Z",
  "archived": false,
  "state": {
   "currentView": "teach",
-  "currentTask": 6,
+  "currentTask": 7,
   "selectedArm": "left",
-  "currentStage": "teach",
+  "currentStage": "prepare",
   "armDone": {
    "left": false,
-   "right": false
+   "right": true
   },
-  "armSelectionLocked": true,
+  "armSelectionLocked": false,
   "completed": {
    "0": true,
    "1": true,
    "2": true,
    "3": true,
    "4": true,
-   "5": true
+   "5": true,
+   "6": true
   },
   "taskRecords": {
    "0": {
@@ -43,7 +44,7 @@
     "rightRegion": "R-R01 LID TOP PART 1",
     "selectedArm": "left",
     "workflowStage": "complete",
-    "targetSeconds": 30,
+    "targetSeconds": 16,
     "prepareSetupByArm": {
      "left": {
       "arm": "left",
@@ -64,7 +65,7 @@
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-17T08:26:01.868Z"
+      "savedAt": "2026-10-19T02:20:49.939Z"
      },
      "right": {
       "arm": "right",
@@ -78,14 +79,14 @@
        "Thumb Bend": 0,
        "Thumb Rotate": 1000
       },
-      "startPose": "Default Start Pose",
+      "startPose": "gp:R_HME_POS",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-17T08:14:01.617Z"
+      "savedAt": "2026-10-19T02:09:10.799Z"
      }
     },
     "ugvPositionByArm": {
@@ -113,12 +114,12 @@
     },
     "leftStartPose": "gp:L_HME_POS",
     "rightStartPose": "gp:R_HME_POS",
-    "trajectoryFileName": "L_TASK_1A_trajectory.txt",
-    "programId": 1,
+    "trajectoryFileName": "L_TASK_1A_16s.txt",
+    "programId": 50,
     "leftApproved": true,
     "rightApproved": true,
     "completed": true,
-    "lastUpdated": "2026-10-17T08:26:01.868Z",
+    "lastUpdated": "2026-10-19T02:20:49.939Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -128,14 +129,14 @@
      },
      "scaleRegions": [],
      "trimRegions": [],
-     "activeTrajectoryName": "L_TASK_1A_trajectory.txt",
-     "activeTrajectoryRows": 8102,
+     "activeTrajectoryName": "L_TASK_1A_16s.txt",
+     "activeTrajectoryRows": 3201,
      "tuningApplied": true,
-     "tuningSourceFileName": "L_TASK_1A_trajectory.txt",
-     "tunedOutputFileName": "L_BSL_01.txt"
+     "tuningSourceFileName": "L_TASK_1A_16s.txt",
+     "tunedOutputFileName": "L_TASK_1A_8s_processed.txt"
     },
     "ugvStandoffMm": 250,
-    "rightProgramId": 1,
+    "rightProgramId": 50,
     "approvedSetup": {
      "right": {
       "poleHeightMm": 200,
@@ -154,13 +155,13 @@
        "leftMm": null,
        "rightMm": null
       },
-      "startPose": "Default Start Pose",
-      "programId": 1,
-      "trajectoryFile": "LID_TOP_P1_4.txt",
-      "approvedAt": "2026-10-17T08:14:01.615Z",
+      "startPose": "gp:R_HME_POS",
+      "programId": 50,
+      "trajectoryFile": "R_lid_top_p1_18s.txt",
+      "approvedAt": "2026-10-19T02:09:10.799Z",
       "lite": {
-       "start_pose": "Default Start Pose",
-       "speed_pct": 50,
+       "start_pose": "R_HME_POS",
+       "speed_pct": 15,
        "pole_mm": 200,
        "hand": [
         1000,
@@ -184,7 +185,7 @@
         "left_mm": 220,
         "right_mm": 220,
         "front_mm": 1062,
-        "at": "2026-10-17 15:19:49"
+        "at": "2026-10-19 09:43:42"
        }
       }
      },
@@ -206,12 +207,12 @@
        "rightMm": null
       },
       "startPose": "gp:L_HME_POS",
-      "programId": 1,
-      "trajectoryFile": "L_TASK_1A_trajectory.txt",
-      "approvedAt": "2026-10-17T08:26:01.862Z",
+      "programId": 50,
+      "trajectoryFile": "L_TASK_1A_16s.txt",
+      "approvedAt": "2026-10-19T02:20:49.939Z",
       "lite": {
        "start_pose": "L_HME_POS",
-       "speed_pct": 50,
+       "speed_pct": 15,
        "pole_mm": 50,
        "hand": [
         1000,
@@ -235,12 +236,12 @@
         "left_mm": 220,
         "right_mm": 220,
         "front_mm": 1062,
-        "at": "2026-10-17 15:19:49"
+        "at": "2026-10-19 09:43:42"
        }
       }
      }
     },
-    "leftProgramId": 1
+    "leftProgramId": 50
    },
    "1": {
     "startPoints": {
@@ -262,7 +263,7 @@
     "rightRegion": "R-R01 LID TOP PART 2",
     "selectedArm": "right",
     "workflowStage": "complete",
-    "targetSeconds": 30,
+    "targetSeconds": 16,
     "prepareSetupByArm": {
      "left": {
       "arm": "left",
@@ -276,14 +277,14 @@
        "Thumb Bend": 0,
        "Thumb Rotate": 1000
       },
-      "startPose": "L_BSL_STP",
+      "startPose": "gp:L_R01_STP",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-17T08:42:51.458Z"
+      "savedAt": "2026-10-19T02:35:46.200Z"
      },
      "right": {
       "arm": "right",
@@ -304,226 +305,7 @@
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-17T08:43:17.243Z"
-     }
-    },
-    "ugvPositionByArm": {
-     "left": {
-      "frontMm": null,
-      "rearMm": null,
-      "leftMm": null,
-      "rightMm": null
-     },
-     "right": {
-      "frontMm": null,
-      "rearMm": null,
-      "leftMm": null,
-      "rightMm": null
-     }
-    },
-    "poleHeightMm": 200,
-    "handChannels": {
-     "Little": 1000,
-     "Ring": 1000,
-     "Middle": 1000,
-     "Index": 1000,
-     "Thumb Bend": 0,
-     "Thumb Rotate": 1000
-    },
-    "leftStartPose": "L_BSL_STP",
-    "rightStartPose": "gp:R_HME_POS",
-    "trajectoryFileName": "LD_TP_P2_3.txt",
-    "leftProgramId": 2,
-    "programId": 2,
-    "leftApproved": true,
-    "rightApproved": true,
-    "completed": true,
-    "lastUpdated": "2026-10-17T08:43:17.243Z",
-    "tuning": {
-     "processing": {
-      "trim": true,
-      "smooth": true,
-      "scale": true,
-      "smoothWindow": 9
-     },
-     "scaleRegions": [],
-     "trimRegions": [],
-     "activeTrajectoryName": "LD_TP_P2_3.txt",
-     "activeTrajectoryRows": 6348,
-     "tuningApplied": true,
-     "tuningSourceFileName": "LD_TP_P2_3.txt",
-     "tunedOutputFileName": "LD_TP_P2_4.txt"
-    },
-    "rightProgramId": 2,
-    "ugvStandoffMm": 250,
-    "approvedSetup": {
-     "right": {
-      "poleHeightMm": 200,
-      "handPreset": "Cleaning Pose",
-      "handChannels": {
-       "Little": 1000,
-       "Ring": 1000,
-       "Middle": 1000,
-       "Index": 1000,
-       "Thumb Bend": 0,
-       "Thumb Rotate": 1000
-      },
-      "ugvPositionMm": {
-       "frontMm": null,
-       "rearMm": null,
-       "leftMm": null,
-       "rightMm": null
-      },
-      "startPose": "gp:R_HME_POS",
-      "programId": 2,
-      "trajectoryFile": "LD_TP_P2_3.txt",
-      "approvedAt": "2026-10-17T08:43:17.243Z",
-      "lite": {
-       "start_pose": "R_HME_POS",
-       "speed_pct": 50,
-       "pole_mm": 200,
-       "hand": [
-        1000,
-        1000,
-        1000,
-        1000,
-        0,
-        1000
-       ],
-       "hand_preset": "Cleaning Pose",
-       "placement": {
-        "standoff_mm": 250,
-        "front_mm": null,
-        "rear_mm": null,
-        "left_mm": null,
-        "right_mm": null
-       },
-       "room": {
-        "width_mm": 800,
-        "length_mm": 1600,
-        "left_mm": 220,
-        "right_mm": 220,
-        "front_mm": 1062,
-        "at": "2026-10-17 16:36:38"
-       }
-      }
-     },
-     "left": {
-      "poleHeightMm": 50,
-      "handPreset": "Cleaning Pose",
-      "handChannels": {
-       "Little": 1000,
-       "Ring": 1000,
-       "Middle": 1000,
-       "Index": 1000,
-       "Thumb Bend": 0,
-       "Thumb Rotate": 1000
-      },
-      "ugvPositionMm": {
-       "frontMm": null,
-       "rearMm": null,
-       "leftMm": null,
-       "rightMm": null
-      },
-      "startPose": "L_BSL_STP",
-      "programId": 2,
-      "trajectoryFile": "L_SD_EXT.txt",
-      "approvedAt": "2026-10-17T08:42:51.457Z",
-      "lite": {
-       "start_pose": "L_BSL_STP",
-       "speed_pct": 50,
-       "pole_mm": 50,
-       "hand": [
-        1000,
-        1000,
-        1000,
-        1000,
-        0,
-        1000
-       ],
-       "hand_preset": "Cleaning Pose",
-       "placement": {
-        "standoff_mm": 250,
-        "front_mm": null,
-        "rear_mm": null,
-        "left_mm": null,
-        "right_mm": null
-       },
-       "room": {
-        "width_mm": 800,
-        "length_mm": 1600,
-        "left_mm": 220,
-        "right_mm": 220,
-        "front_mm": 1062,
-        "at": "2026-10-17 16:36:38"
-       }
-      }
-     }
-    }
-   },
-   "2": {
-    "startPoints": {
-     "left": [],
-     "right": []
-    },
-    "selectedStartPoint": {
-     "left": "",
-     "right": ""
-    },
-    "transitionTrajectories": {
-     "left": null,
-     "right": null
-    },
-    "taskLabel": "TASK 1C",
-    "step": 3,
-    "type": "clean",
-    "leftRegion": "L-R03 PEDESTAL UPPER LEFT",
-    "rightRegion": "R-R02 RIGHT HINGE",
-    "selectedArm": "right",
-    "workflowStage": "complete",
-    "targetSeconds": 30,
-    "prepareSetupByArm": {
-     "left": {
-      "arm": "left",
-      "poleHeightMm": 50,
-      "handPreset": "Cleaning Pose",
-      "handChannels": {
-       "Little": 1000,
-       "Ring": 1000,
-       "Middle": 1000,
-       "Index": 1000,
-       "Thumb Bend": 0,
-       "Thumb Rotate": 1000
-      },
-      "startPose": "gp:L_HME_POS",
-      "ugvPositionMm": {
-       "frontMm": null,
-       "rearMm": null,
-       "leftMm": null,
-       "rightMm": null
-      },
-      "savedAt": "2026-10-17T11:00:18.344Z"
-     },
-     "right": {
-      "arm": "right",
-      "poleHeightMm": 200,
-      "handPreset": "Cleaning Pose",
-      "handChannels": {
-       "Little": 1000,
-       "Ring": 1000,
-       "Middle": 1000,
-       "Index": 1000,
-       "Thumb Bend": 0,
-       "Thumb Rotate": 1000
-      },
-      "startPose": "gp:R_HME_POS",
-      "ugvPositionMm": {
-       "frontMm": null,
-       "rearMm": null,
-       "leftMm": null,
-       "rightMm": null
-      },
-      "savedAt": "2026-10-17T11:00:43.963Z"
+      "savedAt": "2026-10-19T03:04:24.440Z"
      }
     },
     "ugvPositionByArm": {
@@ -551,13 +333,13 @@
     },
     "leftStartPose": "gp:L_HME_POS",
     "rightStartPose": "gp:R_HME_POS",
-    "trajectoryFileName": "R_TASK_1C_trajectory.txt",
-    "leftProgramId": 4,
-    "programId": 4,
+    "trajectoryFileName": "R_TASK_2A_16S.txt",
+    "leftProgramId": 51,
+    "programId": 51,
     "leftApproved": true,
     "rightApproved": true,
     "completed": true,
-    "lastUpdated": "2026-10-17T11:00:43.963Z",
+    "lastUpdated": "2026-10-19T03:04:24.440Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -567,65 +349,15 @@
      },
      "scaleRegions": [],
      "trimRegions": [],
-     "activeTrajectoryName": "R_TASK_1C_trajectory.txt",
-     "activeTrajectoryRows": 6871,
+     "activeTrajectoryName": "R_TASK_2A_16S.txt",
+     "activeTrajectoryRows": 3201,
      "tuningApplied": true,
-     "tuningSourceFileName": "R_TASK_1C_trajectory.txt",
-     "tunedOutputFileName": "R_TASK_1C_trajectory_trim_mean_scale_processed.txt"
+     "tuningSourceFileName": "R_TASK_2A_16S.txt",
+     "tunedOutputFileName": "R_TASK_2A_8_4S.txt"
     },
+    "rightProgramId": 51,
     "ugvStandoffMm": 250,
     "approvedSetup": {
-     "left": {
-      "poleHeightMm": 50,
-      "handPreset": "Cleaning Pose",
-      "handChannels": {
-       "Little": 1000,
-       "Ring": 1000,
-       "Middle": 1000,
-       "Index": 1000,
-       "Thumb Bend": 0,
-       "Thumb Rotate": 1000
-      },
-      "ugvPositionMm": {
-       "frontMm": null,
-       "rearMm": null,
-       "leftMm": null,
-       "rightMm": null
-      },
-      "startPose": "gp:L_HME_POS",
-      "programId": 4,
-      "trajectoryFile": "L_TASK_1C_trajectory.txt",
-      "approvedAt": "2026-10-17T11:00:18.343Z",
-      "lite": {
-       "start_pose": "L_HME_POS",
-       "speed_pct": 50,
-       "pole_mm": 50,
-       "hand": [
-        1000,
-        1000,
-        1000,
-        1000,
-        0,
-        1000
-       ],
-       "hand_preset": "Cleaning Pose",
-       "placement": {
-        "standoff_mm": 250,
-        "front_mm": null,
-        "rear_mm": null,
-        "left_mm": null,
-        "right_mm": null
-       },
-       "room": {
-        "width_mm": 800,
-        "length_mm": 1600,
-        "left_mm": 220,
-        "right_mm": 220,
-        "front_mm": 1062,
-        "at": "2026-10-17 18:02:39"
-       }
-      }
-     },
      "right": {
       "poleHeightMm": 200,
       "handPreset": "Cleaning Pose",
@@ -644,12 +376,12 @@
        "rightMm": null
       },
       "startPose": "gp:R_HME_POS",
-      "programId": 4,
-      "trajectoryFile": "R_TASK_1C_trajectory.txt",
-      "approvedAt": "2026-10-17T11:00:43.960Z",
+      "programId": 51,
+      "trajectoryFile": "R_TASK_2A_16S.txt",
+      "approvedAt": "2026-10-19T03:04:24.439Z",
       "lite": {
        "start_pose": "R_HME_POS",
-       "speed_pct": 50,
+       "speed_pct": 15,
        "pole_mm": 200,
        "hand": [
         1000,
@@ -673,14 +405,64 @@
         "left_mm": 220,
         "right_mm": 220,
         "front_mm": 1062,
-        "at": "2026-10-17 18:02:39"
+        "at": "2026-10-19 10:37:39"
+       }
+      }
+     },
+     "left": {
+      "poleHeightMm": 50,
+      "handPreset": "Cleaning Pose",
+      "handChannels": {
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 0,
+       "Thumb Rotate": 1000
+      },
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "startPose": "gp:L_R01_STP",
+      "programId": 51,
+      "trajectoryFile": "L_TASK_2A_16_5.txt",
+      "approvedAt": "2026-10-19T02:35:46.199Z",
+      "lite": {
+       "start_pose": "L_R01_STP",
+       "speed_pct": 15,
+       "pole_mm": 50,
+       "hand": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+       ],
+       "hand_preset": "Cleaning Pose",
+       "placement": {
+        "standoff_mm": 250,
+        "front_mm": null,
+        "rear_mm": null,
+        "left_mm": null,
+        "right_mm": null
+       },
+       "room": {
+        "width_mm": 800,
+        "length_mm": 1600,
+        "left_mm": 220,
+        "right_mm": 220,
+        "front_mm": 1062,
+        "at": "2026-10-19 10:24:02"
        }
       }
      }
-    },
-    "rightProgramId": 4
+    }
    },
-   "3": {
+   "2": {
     "startPoints": {
      "left": [],
      "right": []
@@ -693,14 +475,14 @@
      "left": null,
      "right": null
     },
-    "taskLabel": "TASK 2",
-    "step": 4,
+    "taskLabel": "TASK 1C",
+    "step": 3,
     "type": "clean",
-    "leftRegion": "L-R04 LEFT HINGE",
-    "rightRegion": "R-R03 SIDE EXTERIOR RIGHT",
+    "leftRegion": "L-R03 PEDESTAL UPPER LEFT",
+    "rightRegion": "R-R02 RIGHT HINGE",
     "selectedArm": "right",
     "workflowStage": "complete",
-    "targetSeconds": 30,
+    "targetSeconds": 16,
     "prepareSetupByArm": {
      "left": {
       "arm": "left",
@@ -714,14 +496,14 @@
        "Thumb Bend": 0,
        "Thumb Rotate": 1000
       },
-      "startPose": "L_PUR_STP",
+      "startPose": "L_R02_STP",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-17T11:17:01.867Z"
+      "savedAt": "2026-10-19T03:18:56.650Z"
      },
      "right": {
       "arm": "right",
@@ -735,14 +517,14 @@
        "Thumb Bend": 0,
        "Thumb Rotate": 1000
       },
-      "startPose": "gp:R_HME_POS",
+      "startPose": "gp:R_R01_P2_STP",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-17T11:17:31.372Z"
+      "savedAt": "2026-10-19T03:52:45.200Z"
      }
     },
     "ugvPositionByArm": {
@@ -768,15 +550,15 @@
      "Thumb Bend": 0,
      "Thumb Rotate": 1000
     },
-    "leftStartPose": "L_PUR_STP",
-    "rightStartPose": "gp:R_HME_POS",
-    "trajectoryFileName": "R_TASK_2_trajectory.txt",
-    "leftProgramId": 4,
-    "programId": 4,
+    "leftStartPose": "gp:L_HME_POS",
+    "rightStartPose": "gp:R_R01_P2_STP",
+    "trajectoryFileName": "R_TASK_1C_16s_trimmed.txt",
+    "leftProgramId": 52,
+    "programId": 52,
     "leftApproved": true,
     "rightApproved": true,
     "completed": true,
-    "lastUpdated": "2026-10-17T11:17:31.372Z",
+    "lastUpdated": "2026-10-19T03:52:45.200Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -786,13 +568,12 @@
      },
      "scaleRegions": [],
      "trimRegions": [],
-     "activeTrajectoryName": "R_TASK_2_trajectory.txt",
-     "activeTrajectoryRows": 10775,
+     "activeTrajectoryName": "R_TASK_1C_16s_trimmed.txt",
+     "activeTrajectoryRows": 3201,
      "tuningApplied": true,
-     "tuningSourceFileName": "R_TASK_2_trajectory.txt",
-     "tunedOutputFileName": "R_TASK_2_trajectory_trim_mean_scale_processed_2.txt"
+     "tuningSourceFileName": "R_TASK_1C_16s_trimmed.txt",
+     "tunedOutputFileName": "R_TASK_1C_8s_processed.txt"
     },
-    "rightProgramId": 4,
     "ugvStandoffMm": 250,
     "approvedSetup": {
      "left": {
@@ -812,13 +593,13 @@
        "leftMm": null,
        "rightMm": null
       },
-      "startPose": "L_PUR_STP",
-      "programId": 4,
-      "trajectoryFile": "L_TASK_2_trajectory.txt",
-      "approvedAt": "2026-10-17T11:17:01.865Z",
+      "startPose": "L_R02_STP",
+      "programId": 52,
+      "trajectoryFile": "L_TASK_1C_16S.txt",
+      "approvedAt": "2026-10-19T03:18:56.650Z",
       "lite": {
-       "start_pose": "L_PUR_STP",
-       "speed_pct": 100,
+       "start_pose": "L_R02_STP",
+       "speed_pct": 15,
        "pole_mm": 50,
        "hand": [
         1000,
@@ -842,7 +623,7 @@
         "left_mm": 220,
         "right_mm": 220,
         "front_mm": 1062,
-        "at": "2026-10-17 18:02:39"
+        "at": "2026-10-19 11:09:50"
        }
       }
      },
@@ -863,13 +644,13 @@
        "leftMm": null,
        "rightMm": null
       },
-      "startPose": "gp:R_HME_POS",
-      "programId": 4,
-      "trajectoryFile": "R_TASK_2_trajectory.txt",
-      "approvedAt": "2026-10-17T11:17:31.371Z",
+      "startPose": "gp:R_R01_P2_STP",
+      "programId": 52,
+      "trajectoryFile": "R_TASK_1C_16s_trimmed.txt",
+      "approvedAt": "2026-10-19T03:52:45.200Z",
       "lite": {
-       "start_pose": "R_HME_POS",
-       "speed_pct": 100,
+       "start_pose": "R_R01_P2_STP",
+       "speed_pct": 15,
        "pole_mm": 200,
        "hand": [
         1000,
@@ -893,7 +674,227 @@
         "left_mm": 220,
         "right_mm": 220,
         "front_mm": 1062,
-        "at": "2026-10-17 18:02:39"
+        "at": "2026-10-19 11:31:16"
+       }
+      }
+     }
+    },
+    "rightProgramId": 52
+   },
+   "3": {
+    "startPoints": {
+     "left": [],
+     "right": []
+    },
+    "selectedStartPoint": {
+     "left": "",
+     "right": ""
+    },
+    "transitionTrajectories": {
+     "left": null,
+     "right": null
+    },
+    "taskLabel": "TASK 2",
+    "step": 4,
+    "type": "clean",
+    "leftRegion": "L-R04 LEFT HINGE",
+    "rightRegion": "R-R03 SIDE EXTERIOR RIGHT",
+    "selectedArm": "left",
+    "workflowStage": "complete",
+    "targetSeconds": 16,
+    "prepareSetupByArm": {
+     "left": {
+      "arm": "left",
+      "poleHeightMm": 50,
+      "handPreset": "Cleaning Pose",
+      "handChannels": {
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 0,
+       "Thumb Rotate": 1000
+      },
+      "startPose": "gp:L_R03_STP",
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "savedAt": "2026-10-19T04:44:26.793Z"
+     },
+     "right": {
+      "arm": "right",
+      "poleHeightMm": 200,
+      "handPreset": "Cleaning Pose",
+      "handChannels": {
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 0,
+       "Thumb Rotate": 1000
+      },
+      "startPose": "gp:R_R02_STP",
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "savedAt": "2026-10-19T04:15:08.921Z"
+     }
+    },
+    "ugvPositionByArm": {
+     "left": {
+      "frontMm": null,
+      "rearMm": null,
+      "leftMm": null,
+      "rightMm": null
+     },
+     "right": {
+      "frontMm": null,
+      "rearMm": null,
+      "leftMm": null,
+      "rightMm": null
+     }
+    },
+    "poleHeightMm": 50,
+    "handChannels": {
+     "Little": 1000,
+     "Ring": 1000,
+     "Middle": 1000,
+     "Index": 1000,
+     "Thumb Bend": 0,
+     "Thumb Rotate": 1000
+    },
+    "leftStartPose": "gp:L_R03_STP",
+    "rightStartPose": "gp:R_R02_STP",
+    "trajectoryFileName": "L_TASK_2_trajectory_17s_trimmed.txt",
+    "leftProgramId": 53,
+    "programId": 53,
+    "leftApproved": true,
+    "rightApproved": true,
+    "completed": true,
+    "lastUpdated": "2026-10-19T04:44:26.793Z",
+    "tuning": {
+     "processing": {
+      "trim": true,
+      "smooth": true,
+      "scale": true,
+      "smoothWindow": 9
+     },
+     "scaleRegions": [],
+     "trimRegions": [],
+     "activeTrajectoryName": "L_TASK_2_trajectory_17s_trimmed.txt",
+     "activeTrajectoryRows": 3401,
+     "tuningApplied": true,
+     "tuningSourceFileName": "L_TASK_2_trajectory_17s_trimmed.txt",
+     "tunedOutputFileName": "L_TASK_2_trajectory_6_9S.txt"
+    },
+    "rightProgramId": 53,
+    "ugvStandoffMm": 250,
+    "approvedSetup": {
+     "left": {
+      "poleHeightMm": 50,
+      "handPreset": "Cleaning Pose",
+      "handChannels": {
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 0,
+       "Thumb Rotate": 1000
+      },
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "startPose": "gp:L_R03_STP",
+      "programId": 53,
+      "trajectoryFile": "L_TASK_2_trajectory_17s_trimmed.txt",
+      "approvedAt": "2026-10-19T04:44:26.792Z",
+      "lite": {
+       "start_pose": "L_R03_STP",
+       "speed_pct": 15,
+       "pole_mm": 50,
+       "hand": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+       ],
+       "hand_preset": "Cleaning Pose",
+       "placement": {
+        "standoff_mm": 250,
+        "front_mm": null,
+        "rear_mm": null,
+        "left_mm": null,
+        "right_mm": null
+       },
+       "room": {
+        "width_mm": 800,
+        "length_mm": 1600,
+        "left_mm": 220,
+        "right_mm": 220,
+        "front_mm": 1062,
+        "at": "2026-10-19 12:16:56"
+       }
+      }
+     },
+     "right": {
+      "poleHeightMm": 200,
+      "handPreset": "Cleaning Pose",
+      "handChannels": {
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 0,
+       "Thumb Rotate": 1000
+      },
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "startPose": "gp:R_R02_STP",
+      "programId": 53,
+      "trajectoryFile": "R_TASK_2_19_TRIMMED.txt",
+      "approvedAt": "2026-10-19T04:15:08.921Z",
+      "lite": {
+       "start_pose": "R_R02_STP",
+       "speed_pct": 15,
+       "pole_mm": 200,
+       "hand": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+       ],
+       "hand_preset": "Cleaning Pose",
+       "placement": {
+        "standoff_mm": 250,
+        "front_mm": null,
+        "rear_mm": null,
+        "left_mm": null,
+        "right_mm": null
+       },
+       "room": {
+        "width_mm": 800,
+        "length_mm": 1600,
+        "left_mm": 220,
+        "right_mm": 220,
+        "front_mm": 1062,
+        "at": "2026-10-19 11:53:38"
        }
       }
      }
@@ -917,9 +918,9 @@
     "type": "action",
     "leftRegion": "L-T01 OPEN LID + SEAT (MASTER)",
     "rightRegion": "R-T01 OPEN LID + SEAT (SUPPORT)",
-    "selectedArm": "right",
-    "workflowStage": "complete",
-    "targetSeconds": 30,
+    "selectedArm": "left",
+    "workflowStage": "prepare",
+    "targetSeconds": 16,
     "prepareSetupByArm": {
      "right": {
       "arm": "right",
@@ -954,14 +955,14 @@
        "Thumb Bend": 0,
        "Thumb Rotate": 1000
       },
-      "startPose": "L_HNG_STP",
+      "startPose": "gp:L_R03_STP",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-17T13:03:37.969Z"
+      "savedAt": "2026-10-19T04:49:33.948Z"
      }
     },
     "ugvPositionByArm": {
@@ -978,7 +979,7 @@
       "rightMm": null
      }
     },
-    "poleHeightMm": 200,
+    "poleHeightMm": 50,
     "handChannels": {
      "Little": 1000,
      "Ring": 1000,
@@ -987,15 +988,15 @@
      "Thumb Bend": 0,
      "Thumb Rotate": 1000
     },
-    "leftStartPose": "L_HNG_STP",
-    "rightStartPose": "R_SD_EXT_STP",
-    "trajectoryFileName": "R_TASK_3_trajectory.txt",
+    "leftStartPose": "gp:L_R03_STP",
+    "rightStartPose": "gp:R_R02_STP",
+    "trajectoryFileName": "L_TASK_3_trajectory.txt",
     "rightProgramId": 5,
-    "programId": 5,
-    "leftApproved": true,
-    "rightApproved": true,
+    "programId": 53,
+    "leftApproved": false,
+    "rightApproved": false,
     "completed": true,
-    "lastUpdated": "2026-10-17T13:14:25.229Z",
+    "lastUpdated": "2026-10-19T04:49:33.948Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -1005,13 +1006,13 @@
      },
      "scaleRegions": [],
      "trimRegions": [],
-     "activeTrajectoryName": "R_TASK_3_trajectory.txt",
-     "activeTrajectoryRows": 1118,
-     "tuningApplied": true,
-     "tuningSourceFileName": "R_TASK_3_trajectory.txt",
-     "tunedOutputFileName": "R_TASK_3_trajectory_scale_processed.txt"
+     "activeTrajectoryName": "L_TASK_3_trajectory.txt",
+     "activeTrajectoryRows": 10000,
+     "tuningApplied": false,
+     "tuningSourceFileName": "L_TASK_3_trajectory.txt",
+     "tunedOutputFileName": null
     },
-    "leftProgramId": 5,
+    "leftProgramId": 53,
     "ugvStandoffMm": 250,
     "approvedSetup": {
      "left": {
@@ -1355,13 +1356,13 @@
     "type": "clean",
     "leftRegion": "L-R05 SEAT TOP PART 1",
     "rightRegion": "R-R04 LID UNDERSIDE RIGHT HALF",
-    "selectedArm": "left",
-    "workflowStage": "teach",
-    "targetSeconds": 30,
+    "selectedArm": "right",
+    "workflowStage": "complete",
+    "targetSeconds": 16,
     "prepareSetupByArm": {
      "left": {
       "arm": "left",
-      "poleHeightMm": 50,
+      "poleHeightMm": 200,
       "handPreset": "Cleaning Pose",
       "handChannels": {
        "Little": 1000,
@@ -1371,14 +1372,35 @@
        "Thumb Bend": 0,
        "Thumb Rotate": 1000
       },
-      "startPose": "gp:L_HME_POS",
+      "startPose": "gp:L_R04_STP",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-17T14:19:13.747Z"
+      "savedAt": "2026-10-19T06:58:48.568Z"
+     },
+     "right": {
+      "arm": "right",
+      "poleHeightMm": 200,
+      "handPreset": "Grip / Cleaning",
+      "handChannels": {
+       "Little": 0,
+       "Ring": 0,
+       "Middle": 0,
+       "Index": 0,
+       "Thumb Bend": 150,
+       "Thumb Rotate": 1000
+      },
+      "startPose": "gp:R_R03_STP",
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "savedAt": "2026-10-19T07:56:02.324Z"
      }
     },
     "ugvPositionByArm": {
@@ -1395,24 +1417,24 @@
       "rightMm": null
      }
     },
-    "poleHeightMm": 50,
+    "poleHeightMm": 200,
     "handChannels": {
-     "Little": 1000,
-     "Ring": 1000,
-     "Middle": 1000,
-     "Index": 1000,
-     "Thumb Bend": 0,
+     "Little": 0,
+     "Ring": 0,
+     "Middle": 0,
+     "Index": 0,
+     "Thumb Bend": 150,
      "Thumb Rotate": 1000
     },
     "leftStartPose": "gp:L_HME_POS",
-    "rightStartPose": "gp:R_HME_POS",
-    "trajectoryFileName": "L_TASK_5A_trajectory.txt",
-    "leftProgramId": 6,
-    "programId": 6,
-    "leftApproved": false,
-    "rightApproved": false,
-    "completed": false,
-    "lastUpdated": "2026-10-17T14:19:13.747Z",
+    "rightStartPose": "gp:R_R03_STP",
+    "trajectoryFileName": "R_TASK_5A_18s_txt.txt",
+    "leftProgramId": 54,
+    "programId": 54,
+    "leftApproved": true,
+    "rightApproved": true,
+    "completed": true,
+    "lastUpdated": "2026-10-19T07:56:02.324Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -1422,13 +1444,286 @@
      },
      "scaleRegions": [],
      "trimRegions": [],
-     "activeTrajectoryName": "L_TASK_5A_trajectory.txt",
-     "activeTrajectoryRows": 27580,
+     "activeTrajectoryName": "R_TASK_5A_18s_txt.txt",
+     "activeTrajectoryRows": 3601,
+     "tuningApplied": true,
+     "tuningSourceFileName": "R_TASK_5A_18s_txt.txt",
+     "tunedOutputFileName": "R_TASK_5A_7_3s_processed.txt"
+    },
+    "ugvStandoffMm": 250,
+    "approvedSetup": {
+     "left": {
+      "poleHeightMm": 200,
+      "handPreset": "Cleaning Pose",
+      "handChannels": {
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 0,
+       "Thumb Rotate": 1000
+      },
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "startPose": "gp:L_R04_STP",
+      "programId": 54,
+      "trajectoryFile": "L_TASK_5A_15S_TRIMMED.txt",
+      "approvedAt": "2026-10-19T06:58:48.567Z",
+      "lite": {
+       "start_pose": "L_R04_STP",
+       "speed_pct": 15,
+       "pole_mm": 200,
+       "hand": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+       ],
+       "hand_preset": "Cleaning Pose",
+       "placement": {
+        "standoff_mm": 250,
+        "front_mm": null,
+        "rear_mm": null,
+        "left_mm": null,
+        "right_mm": null
+       },
+       "room": {
+        "width_mm": 800,
+        "length_mm": 1600,
+        "left_mm": 220,
+        "right_mm": 220,
+        "front_mm": 1062,
+        "at": "2026-10-19 12:51:05"
+       }
+      }
+     },
+     "right": {
+      "poleHeightMm": 200,
+      "handPreset": "Grip / Cleaning",
+      "handChannels": {
+       "Little": 0,
+       "Ring": 0,
+       "Middle": 0,
+       "Index": 0,
+       "Thumb Bend": 150,
+       "Thumb Rotate": 1000
+      },
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "startPose": "gp:R_R03_STP",
+      "programId": 54,
+      "trajectoryFile": "R_TASK_5A_18s_txt.txt",
+      "approvedAt": "2026-10-19T07:56:02.323Z",
+      "lite": {
+       "start_pose": "R_R03_STP",
+       "speed_pct": 15,
+       "pole_mm": 200,
+       "hand": [
+        0,
+        0,
+        0,
+        0,
+        150,
+        1000
+       ],
+       "hand_preset": "Grip / Cleaning",
+       "placement": {
+        "standoff_mm": 250,
+        "front_mm": null,
+        "rear_mm": null,
+        "left_mm": null,
+        "right_mm": null
+       },
+       "room": {
+        "width_mm": 800,
+        "length_mm": 1600,
+        "left_mm": 220,
+        "right_mm": 220,
+        "front_mm": 1062,
+        "at": "2026-10-19 15:00:39"
+       }
+      }
+     }
+    },
+    "rightProgramId": 54
+   },
+   "7": {
+    "startPoints": {
+     "left": [],
+     "right": []
+    },
+    "selectedStartPoint": {
+     "left": "",
+     "right": ""
+    },
+    "transitionTrajectories": {
+     "left": null,
+     "right": null
+    },
+    "taskLabel": "TASK 5B",
+    "step": 8,
+    "type": "clean",
+    "leftRegion": "L-R05 SEAT TOP PART 2",
+    "rightRegion": "R-R05 PEDESTAL UPPER RIGHT",
+    "selectedArm": "left",
+    "workflowStage": "prepare",
+    "targetSeconds": 16,
+    "prepareSetupByArm": {
+     "left": {
+      "arm": "left",
+      "poleHeightMm": 200,
+      "handPreset": "Cleaning Pose",
+      "handChannels": {
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 0,
+       "Thumb Rotate": 1000
+      },
+      "startPose": "gp:L_HME_POS",
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "savedAt": "2026-10-19T08:12:50.376Z"
+     },
+     "right": {
+      "arm": "right",
+      "poleHeightMm": 200,
+      "handPreset": "Cleaning Pose",
+      "handChannels": {
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 0,
+       "Thumb Rotate": 1000
+      },
+      "startPose": "gp:R_R04_STP",
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "savedAt": "2026-10-19T08:11:58.820Z"
+     }
+    },
+    "ugvPositionByArm": {
+     "left": {
+      "frontMm": null,
+      "rearMm": null,
+      "leftMm": null,
+      "rightMm": null
+     },
+     "right": {
+      "frontMm": null,
+      "rearMm": null,
+      "leftMm": null,
+      "rightMm": null
+     }
+    },
+    "poleHeightMm": 200,
+    "handChannels": {
+     "Little": 1000,
+     "Ring": 1000,
+     "Middle": 1000,
+     "Index": 1000,
+     "Thumb Bend": 0,
+     "Thumb Rotate": 1000
+    },
+    "leftStartPose": "gp:L_HME_POS",
+    "rightStartPose": "gp:R_R04_STP",
+    "trajectoryFileName": "L_TASK_5B_trajectory.txt",
+    "leftProgramId": 55,
+    "programId": 55,
+    "leftApproved": false,
+    "rightApproved": true,
+    "completed": false,
+    "lastUpdated": "2026-10-19T08:12:50.376Z",
+    "tuning": {
+     "processing": {
+      "trim": true,
+      "smooth": true,
+      "scale": true,
+      "smoothWindow": 9
+     },
+     "scaleRegions": [],
+     "trimRegions": [],
+     "activeTrajectoryName": "L_TASK_5B_trajectory.txt",
+     "activeTrajectoryRows": 10000,
      "tuningApplied": false,
-     "tuningSourceFileName": "L_TASK_5A_trajectory.txt",
+     "tuningSourceFileName": "L_TASK_5B_trajectory.txt",
      "tunedOutputFileName": null
     },
-    "ugvStandoffMm": 250
+    "rightProgramId": 55,
+    "ugvStandoffMm": 250,
+    "approvedSetup": {
+     "right": {
+      "poleHeightMm": 200,
+      "handPreset": "Cleaning Pose",
+      "handChannels": {
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 0,
+       "Thumb Rotate": 1000
+      },
+      "ugvPositionMm": {
+       "frontMm": null,
+       "rearMm": null,
+       "leftMm": null,
+       "rightMm": null
+      },
+      "startPose": "gp:R_R04_STP",
+      "programId": 55,
+      "trajectoryFile": "R_TASK_5B_trajectory_2_trimmed.txt",
+      "approvedAt": "2026-10-19T08:11:58.820Z",
+      "lite": {
+       "start_pose": "R_R04_STP",
+       "speed_pct": 15,
+       "pole_mm": 200,
+       "hand": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+       ],
+       "hand_preset": "Cleaning Pose",
+       "placement": {
+        "standoff_mm": 250,
+        "front_mm": null,
+        "rear_mm": null,
+        "left_mm": null,
+        "right_mm": null
+       },
+       "room": {
+        "width_mm": 800,
+        "length_mm": 1600,
+        "left_mm": 220,
+        "right_mm": 220,
+        "front_mm": 1062,
+        "at": "2026-10-19 15:56:53"
+       }
+      }
+     }
+    }
    }
   },
   "setupChecks": [
@@ -1438,8 +1733,8 @@
    true,
    true
   ],
-  "targetSec": 30,
-  "poleHeight": 50,
+  "targetSec": 16,
+  "poleHeight": 200,
   "handPreset": "Cleaning Pose",
   "handValues": [
    1000,
@@ -1450,15 +1745,15 @@
    1000
   ],
   "leftPose": "gp:L_HME_POS",
-  "rightPose": "gp:R_HME_POS",
-  "programId": "6",
-  "fileName": "L_TASK_5A_trajectory.txt",
+  "rightPose": "gp:R_R04_STP",
+  "programId": "55",
+  "fileName": "L_TASK_5B_trajectory.txt",
   "activeTrajectorySource": "recorded",
-  "activeTrajectoryName": "L_TASK_5A_trajectory.txt",
-  "activeTrajectoryRows": 27580,
+  "activeTrajectoryName": "L_TASK_5B_trajectory.txt",
+  "activeTrajectoryRows": 10000,
   "tuningApplied": false,
   "tunedOutputFileName": "",
-  "tuningSourceFileName": "L_TASK_5A_trajectory.txt",
+  "tuningSourceFileName": "L_TASK_5B_trajectory.txt",
   "manualScaleRegions": [],
   "manualTrimRegions": [],
   "sequenceConfig": [
@@ -1742,7 +2037,7 @@
   "sequenceVisualConfirmed": false,
   "fullSimulationApproved": false,
   "elapsed": 0,
-  "savedAt": "2026-10-17T14:19:13.747Z"
+  "savedAt": "2026-10-19T08:12:50.377Z"
  },
  "lastSaveReason": "Workflow updated",
  "lite": {

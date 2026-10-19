@@ -5,7 +5,7 @@
   "left_mm": 220.0,
   "right_mm": 220.0,
   "front_mm": 1062.0,
-  "at": "2026-10-17 22:06:48"
+  "at": "2026-10-19 15:56:53"
  },
  "tasks": {
   "TASK 1A": {
@@ -14,7 +14,7 @@
    "rear_mm": null,
    "left_mm": null,
    "right_mm": null,
-   "at": "2026-10-17 15:19:52"
+   "at": "2026-10-19 09:43:47"
   },
   "TASK 2A": {
    "standoff_mm": 250.0,
@@ -22,7 +22,7 @@
    "rear_mm": null,
    "left_mm": null,
    "right_mm": null,
-   "at": "2026-10-17 16:36:39"
+   "at": "2026-10-19 10:37:40"
   },
   "TASK 1C": {
    "standoff_mm": 250.0,
@@ -30,7 +30,7 @@
    "rear_mm": null,
    "left_mm": null,
    "right_mm": null,
-   "at": "2026-10-17 17:03:48"
+   "at": "2026-10-19 11:31:17"
   },
   "TASK 2": {
    "standoff_mm": 250.0,
@@ -38,7 +38,7 @@
    "rear_mm": null,
    "left_mm": null,
    "right_mm": null,
-   "at": "2026-10-17 18:02:37"
+   "at": "2026-10-19 12:16:57"
   },
   "TASK 3": {
    "standoff_mm": 250.0,
@@ -62,7 +62,15 @@
    "rear_mm": null,
    "left_mm": null,
    "right_mm": null,
-   "at": "2026-10-17 22:16:01"
+   "at": "2026-10-19 15:00:40"
+  },
+  "TASK 5B": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-19 15:56:59"
   }
  }
 }
