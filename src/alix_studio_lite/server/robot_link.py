@@ -25,6 +25,7 @@ controller emulator, which has no IO, so its E-stop reads as clear.
 from __future__ import annotations
 
 import collections
+import functools
 import threading
 import time
 from contextlib import contextmanager
@@ -47,6 +48,16 @@ LATE_S = 0.8                       # no reading for this long: weak
 SLOW_S = 0.5                       # a reading that took this long, among the last ten: weak
 LOST_S = 3.0                       # no reading answered for this long: none
 HELD_S = 60.0                      # a command that has not ended in this long (unless it says it takes longer): weak
+# A call into the SDK that does not come back (the lab, 19 Oct: three times a call made right after "run mode REAL"
+# never returned; nothing on that controller answered, STOP included, until Lite was killed). The SDK answers a
+# request within its reply timeout (1.5 s, connect.ACK_TIMEOUT_MS), so a call that has not returned in CALL_STUCK_S
+# is stuck inside the library, and Python cannot interrupt it: the connection is given up and made again
+# (robot_standin). The calls that last as long as their work (LONG_CALLS: the arm moving, a file sent, a recording
+# saved) are judged by the command's own expectation (busy(expect_s)), never by CALL_STUCK_S.
+CALL_SLOW_S = 5.0                  # a call not answered in this long: weak, and named
+CALL_STUCK_S = 20.0                # a call not answered in this long: stuck
+LONG_CALLS = frozenset({"rm_movej", "rm_movel", "rm_movec", "rm_movej_p", "rm_moves", "rm_save_trajectory",
+                        "rm_send_project", "rm_set_program_id_run", "rm_run_drag_trajectory"})
 
 
 def estop_state(read, active_level: int = ESTOP_PRESSED_LEVEL) -> tuple[str, dict]:
@@ -103,6 +114,50 @@ def error_codes(err) -> list[int]:
     return out
 
 
+def _noted(fn, name: str, link: "ArmLink"):
+    @functools.wraps(fn)
+    def call(self, *a, **kw):
+        link._enter(name)
+        try:
+            return fn(self, *a, **kw)
+        finally:
+            link._leave()
+    return call
+
+
+def _swap_class(obj, link: "ArmLink") -> bool:
+    cls = type(obj)
+    ns = {}
+    for name in dir(cls):
+        if name.startswith("rm_"):
+            fn = getattr(cls, name, None)
+            if callable(fn):
+                ns[name] = _noted(fn, name, link)
+    if not ns:
+        return False
+    try:
+        sub = type(cls.__name__, (cls,), ns)
+        sub.__module__, sub.__qualname__ = cls.__module__, cls.__qualname__
+        object.__setattr__(obj, "__class__", sub)      # not through a __setattr__ that forwards to a wrapped object
+    except TypeError:
+        return False
+    return True
+
+
+def watch_calls(robot, link: "ArmLink") -> bool:
+    """Every ``rm_*`` method of the SDK object noted on its link as it is called (what, since when), through a
+    subclass of the object's own class put in its place (``__class__``): the SDK is untouched, the object is the
+    same one (its callbacks stay registered), and ALIX's checks of its type and module still hold
+    (``type(robot).__module__`` names the emulator or the SDK). ALIX's emulated handle wraps the emulator and
+    forwards to it (``_emulated_inner``): both are watched. False when nothing could be swapped: then nothing is
+    noted and a stuck call is only ever seen as a command that does not end."""
+    done = _swap_class(robot, link)
+    inner = getattr(robot, "_emulated_inner", None)
+    if inner is not None and inner is not robot:
+        done = _swap_class(inner, link) or done
+    return done
+
+
 class ArmLink:
     """One controller: connected once, read by one thread, which also owns the SDK handle (it
     closes it when it stops, so nothing uses a deleted handle). ``on_read`` is called after every
@@ -133,6 +188,8 @@ class ArmLink:
         self._stop = threading.Event()
         self._lock = threading.Lock()
         self._thread = None
+        self._calls: dict = {}                      # thread id -> (SDK call, since): what is in flight on the handle
+        self.abandoned = False                      # given up: a call on its handle never came back (robot_standin)
 
     def open(self) -> "ArmLink":
         from alix_dispatch import connect
@@ -148,6 +205,7 @@ class ArmLink:
                             "Check that the controller is on, the cable, and the address in Robot & mode.")
         self.handle = h
         self.emulated = connect.sdk_provenance(h.robot) == "emulated"
+        watch_calls(h.robot, self)
         try:
             self.read_once()
         except Exception:
@@ -164,6 +222,47 @@ class ArmLink:
         self._stop.set()
         if self._thread:
             self._thread.join(timeout=2.0)
+
+    # ── the calls into the SDK, as they are made (watch_calls)
+    def _enter(self, name: str) -> None:
+        with self._lock:
+            self._calls[threading.get_ident()] = (name, time.monotonic())
+
+    def _leave(self) -> None:
+        with self._lock:
+            self._calls.pop(threading.get_ident(), None)
+
+    def in_flight(self) -> tuple[str, float] | None:
+        """The SDK call that has waited longest for its answer (name, seconds), or None."""
+        now = time.monotonic()
+        with self._lock:
+            calls = list(self._calls.values())
+        if not calls:
+            return None
+        name, t0 = min(calls, key=lambda c: c[1])
+        return name, now - t0
+
+    def stuck(self) -> tuple[str, float] | None:
+        """A call that has not come back within its bound (name, seconds): CALL_STUCK_S, or for the calls that last
+        as long as their work (LONG_CALLS) the command's own expectation."""
+        now = time.monotonic()
+        with self._lock:
+            calls = list(self._calls.values())
+            expect = self._busy_expect if self._busy else HELD_S
+        worst = None
+        for name, t0 in calls:
+            age = now - t0
+            bound = max(CALL_STUCK_S, expect) if name in LONG_CALLS else CALL_STUCK_S
+            if age > bound and (worst is None or age > worst[1]):
+                worst = (name, age)
+        return worst
+
+    def abandon(self) -> None:
+        """Given up: a call on its handle never came back. The thread stops reading; the handle is never deleted
+        (that call still runs on it: the lab, 17 Oct) and nothing waits for the thread. The arm is connected again
+        on a new link (robot_standin)."""
+        self.abandoned = True
+        self._stop.set()
 
     def _loop(self) -> None:
         from alix_dispatch import connect
@@ -299,6 +398,10 @@ class ArmLink:
         comes during one arm's STOP still stops that arm the E-stop's way at once (one call). ``drag``: the
         arm is in drag teaching, which it leaves first (``rm_stop_drag_teach``, its return code in ``drag``).
         No reading starts meanwhile, and one under way ends first (at most READ_WAIT_S)."""
+        stuck = self.stuck()
+        if stuck:                                   # nothing passes through this handle: STOP goes through a new one (robot_standin)
+            return dict(ok=False, stuck=True, text=f"{self.side.upper()}: its connection is stuck ({stuck[0]} not answered "
+                        f"for {stuck[1]:.0f} s), so STOP cannot pass through it")
         if not self._stop_lock.acquire(blocking=False):
             h = self.handle
             if hard and not self._stop_hard and h is not None:
@@ -439,7 +542,9 @@ class ArmLink:
             fb["estop"] = "UNKNOWN"                                      # no fresh reading: fail closed
         fb["age_s"] = None if age is None else round(age, 2)
         fb.pop("t", None)
-        return dict(ip=self.ip, port=self.port, emulated=self.emulated, feedback=fb, quality=self.quality())
+        call = self.in_flight()
+        fb["call"] = None if call is None or call[1] < CALL_SLOW_S else dict(name=call[0], age_s=round(call[1], 1))
+        return dict(ip=self.ip, port=self.port, emulated=self.emulated, abandoned=self.abandoned, feedback=fb, quality=self.quality())
 
     def quality(self) -> dict:
         """The connection as the arm's indicator shows it (the owner, 17 Oct: "green a good connection,
@@ -451,6 +556,13 @@ class ArmLink:
         with self._lock:
             busy, since, expect = list(self._busy), self._busy_since, self._busy_expect
             recent, t = list(self._recent), self.feedback.get("t")
+        doing = f" ({busy[-1]})" if busy else ""
+        stuck = self.stuck()
+        if stuck:                                   # a call into the SDK that does not come back
+            return dict(level="none", text=f"stuck: {stuck[0]} has not answered for {stuck[1]:.0f} s{doing}")
+        call = self.in_flight()
+        if call is not None and call[1] > CALL_SLOW_S:
+            return dict(level="weak", text=f"{call[0]} has not answered for {call[1]:.0f} s{doing}")
         if busy:                                    # a command holds it: nothing is read meanwhile, by design
             held = now - since
             if held > expect:

@@ -280,17 +280,7 @@ def _close(app, srv) -> None:
 
 
 def _dump_threads(root) -> str | None:
-    """Every thread's stack, to threads-HHMMSS.txt in the day's log folder and to the terminal."""
-    import faulthandler
-    import time
+    """Every thread's stack, to threads-HHMMSS.txt in the day's log folder and to the terminal (logbook.dump_threads)."""
+    from .logbook import dump_threads
 
-    try:
-        d = Path(root) / time.strftime("%Y-%m-%d")
-        d.mkdir(parents=True, exist_ok=True)
-        p = d / f"threads-{time.strftime('%H%M%S')}.txt"
-        with open(p, "w", encoding="utf-8") as f:
-            faulthandler.dump_traceback(file=f, all_threads=True)
-        faulthandler.dump_traceback(file=sys.stderr, all_threads=True)
-        return str(p)
-    except Exception:                                                       # noqa: BLE001
-        return None
+    return dump_threads(root)

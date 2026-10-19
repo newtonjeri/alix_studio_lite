@@ -119,6 +119,7 @@ class StandInArm:
 _REPORTS_RE = re.compile(r"^!! the arm reports (.+) at ([\d.]+) s$")
 STOP_WAIT_S = 5.0                     # how long STOP's answer waits for each controller's confirmation
 CONNECT_WAIT_S = 20.0                 # a controller that has not answered a Connect by then is said not to
+WATCH_PERIOD_S = 1.0                  # how often the links are looked at for a call that never came back
 
 
 def arm_report(line: str) -> dict | None:
@@ -210,6 +211,11 @@ class StandInRobot:
         self.speed_found = {s: None for s in ARMS}      # side -> the global speed found (None: not reported)
         self.sens_found = {s: None for s in ARMS}       # side -> the drag sensitivity found (None: not reported)
         self.sens_now = {s: None for s in ARMS}         # side -> the drag sensitivity Lite set
+        # a link whose call into the SDK never comes back (the lab, 19 Oct): given up and made again (_recover)
+        self._recovering: set = set()                   # sides being connected again
+        self._stop_wanted: set = set()                  # STOP pressed while a side's connection was stuck: sent through the new one
+        if link:
+            threading.Thread(target=self._watch_links, name="lite-link-watch", daemon=True).start()
 
     @property
     def read_only(self) -> bool:
@@ -389,6 +395,8 @@ class StandInRobot:
             if s in self.links:
                 out[s]["link"] = self.links[s].view()
                 out[s]["quality"] = out[s]["link"]["quality"]
+            elif s in self._recovering:                 # given up: a call never came back; connected again within CONNECT_WAIT_S
+                out[s]["quality"] = dict(level="none", text="connecting again: a call to its controller never came back")
             else:                                       # the arm indicator (the owner, 17 Oct): no controller linked
                 out[s]["quality"] = dict(level="none", text="not connected to its controller" if self.link_kind or not a.connected
                                          else "the stand-in robot: no controller")
@@ -700,6 +708,102 @@ class StandInRobot:
             raise box["error"]
         return box["link"]
 
+    # ── a call into the SDK that never comes back (the lab, 19 Oct: three in one day, each cleared only by killing Lite)
+    @staticmethod
+    def _stuck(link) -> tuple | None:
+        """robot_link.ArmLink.stuck of a link (None for a stand-in link in the tests)."""
+        fn = getattr(link, "stuck", None)
+        return fn() if callable(fn) else None
+
+    def _watch_links(self) -> None:
+        """Once a second: a link with an SDK call that has not come back within its bound (robot_link.ArmLink.stuck)
+        is given up and the arm connected again on a new handle. Python cannot interrupt a call inside the SDK's
+        library, so the stuck thread is left behind."""
+        while True:
+            time.sleep(WATCH_PERIOD_S)
+            try:
+                for side, link in list(self.links.items()):
+                    stuck = self._stuck(link)
+                    if stuck and side not in self._recovering:
+                        self._recovering.add(side)
+                        threading.Thread(target=self._recover, args=(side, link, stuck), name=f"lite-recover-{side}",
+                                         daemon=True).start()
+            except Exception:                                                   # noqa: BLE001 - the watch never ends
+                pass
+
+    def _give_up(self, side: str, link, stuck: tuple) -> None:
+        """A controller whose call never came back: said (with every thread's stack written to the day's log
+        folder), the arm's jobs ended as failed, the link abandoned (its handle never deleted under the call) and
+        the arm held until Recover, as after a STOP."""
+        from .logbook import dump_threads
+
+        if link.abandoned:
+            return
+        name, age = stuck
+        S = side.upper()
+        busy = link.view()["feedback"].get("busy") or "a reading"
+        where = dump_threads(self.log.root) if self.log is not None else None
+        self._alert("error", side, f"{S}: its controller has not answered {name} for {age:.0f} s ({busy}). Lite gives that "
+                    "connection up and connects the arm again." + (f" What each thread was doing: {where}." if where else ""),
+                    "Press the red E-stop button if the arm is moving.", "stuck")
+        self.jobs.give_up_arm(side, f"The {S} controller stopped answering ({name}, {age:.0f} s): Lite connects it again.",
+                              "Check the arm, then try again once it is connected.")
+        with self.lock:
+            if self.links.get(side) is link:
+                del self.links[side]
+            a = self.arms[side]
+            a.teaching = False
+            if a.recovery == "drag":
+                a.recovery, a.recovery_note = "held", "the connection was lost in Arm Drag Mode"
+            a.estop_latched = a.stop_latched = True
+            if a.estop == "CLEAR":
+                a.estop = "RECOVERING"
+        link.abandon()
+
+    def _recover(self, side: str, link, stuck: tuple) -> None:
+        try:
+            self._give_up(side, link, stuck)
+            self._reconnect(side)
+        finally:
+            self._recovering.discard(side)
+
+    def _reconnect(self, side: str) -> None:
+        """The arm connected again on a new handle, bounded (CONNECT_WAIT_S); a STOP that waited for it is sent
+        through it. A new connection that does not answer either means the SDK library in this Lite is stuck."""
+        from .robot_link import ArmLink
+
+        S, a = side.upper(), self.arms[side]
+        try:
+            new = self._open_link(ArmLink(side, a.ip, on_read=lambda: self._sync(side)))
+        except Exception as exc:                                                    # noqa: BLE001
+            with self.lock:
+                a.connected, a.estop = False, "NOT_CONNECTED"
+            self._alert("error", side, f"{S}: a new connection did not answer either ({exc}). The robot library in this Lite "
+                        "is stuck: restart Lite (Ctrl+C in its terminal; again if it does not quit).",
+                        "Check the controller on its pendant meanwhile.", "stuck")
+            return
+        with self.lock:
+            self.links[side] = new
+            a.connected = True
+        self._sync(side)
+        for step in (self._read_speed, self._read_sensitivity):
+            try:
+                step(side)
+            except Exception:                                                       # noqa: BLE001 - said by its own log
+                pass
+        if self.mode in ("hwsim", "real"):
+            try:
+                self.set_controller_modes(self.mode, [side])
+            except UserError as exc:
+                self._alert("warn", side, f"{S} connected again, but {exc}", "Check its mode on the pendant.", "runmode")
+        if side in self._stop_wanted:
+            self._stop_wanted.discard(side)
+            r = new.stop(hard=True)
+            self._alert("warn" if r.get("ok") else "error", side, f"{S}: STOP sent through the new connection: {r.get('text')}.",
+                        None if r.get("ok") else "Press the red E-stop button on the robot if it is still moving.", "stop")
+        self._alert("warn", side, f"{S}: connected again. The call that never came back is left behind; press Recover before "
+                    "moving.", None, "stuck")
+
     def connect(self, side: str, ip: str | None = None) -> dict:
         a = self.arm(side)
         target = (ip or a.ip).strip()
@@ -707,25 +811,36 @@ class StandInRobot:
             from .robot_link import ArmLink
 
             if side in self.links:                       # its old link is closed below: not under a running job
-                self._refuse_if_busy(side, "connect again")
-            # the new link first: when it cannot open, the arm keeps its old link (or stays
-            # disconnected), never "connected" without a reading behind its E-stop chip
-            new = self._open_link(ArmLink(side, target, on_read=lambda: self._sync(side)))
-            with self.lock:
-                old = self.links.get(side)
-                self.links[side] = new
-                a.ip, a.connected = target, True
-            if old is not None:
-                old.close()
-            self._sync(side)
-            self._read_speed(side)
-            self._read_sensitivity(side)
-            if self.mode in ("hwsim", "real"):          # connected in Hardware sim or Real: its controller follows
-                try:
-                    self.set_controller_modes(self.mode, [side])
-                except UserError as exc:
-                    self._alert("warn", side, f"{side.upper()} connected, but {exc}", "Check its mode on the pendant.", "runmode")
-            return self.view()[side]
+                stuck = self._stuck(self.links[side])
+                if stuck:                                # its call never came back: given up, never "busy"
+                    if side in self._recovering:
+                        raise UserError(f"The {side.upper()} arm is being connected again by Lite (a call to its controller "
+                                        "never came back).", "Wait a moment, then look at its indicator.", code="busy")
+                    self._recovering.add(side)
+                    self._give_up(side, self.links[side], stuck)
+                else:
+                    self._refuse_if_busy(side, "connect again")
+            try:
+                # the new link first: when it cannot open, the arm keeps its old link (or stays
+                # disconnected), never "connected" without a reading behind its E-stop chip
+                new = self._open_link(ArmLink(side, target, on_read=lambda: self._sync(side)))
+                with self.lock:
+                    old = self.links.get(side)
+                    self.links[side] = new
+                    a.ip, a.connected = target, True
+                if old is not None:
+                    old.close()
+                self._sync(side)
+                self._read_speed(side)
+                self._read_sensitivity(side)
+                if self.mode in ("hwsim", "real"):      # connected in Hardware sim or Real: its controller follows
+                    try:
+                        self.set_controller_modes(self.mode, [side])
+                    except UserError as exc:
+                        self._alert("warn", side, f"{side.upper()} connected, but {exc}", "Check its mode on the pendant.", "runmode")
+                return self.view()[side]
+            finally:
+                self._recovering.discard(side)
         time.sleep(_s(0.4))
         self._read_speed(side)
         with self.lock:
@@ -771,7 +886,10 @@ class StandInRobot:
         then the link closes (a move or run under way would lose its link mid-command, and with it its
         own ``finally`` that puts the speed back)."""
         a = self.arm(side)
-        if side in self.links:
+        stuck = self._stuck(self.links[side]) if side in self.links else None
+        if stuck:                                        # its call never came back: let go without a word to it
+            self._give_up(side, self.links[side], stuck)
+        elif side in self.links:
             self._refuse_if_busy(side, "disconnect")
             self._settle(side)                           # a job STOP ended finishes on the open link
             self._give_back_speed(side)                  # the controller's own speed, as found on connecting
@@ -848,6 +966,15 @@ class StandInRobot:
         t_sent = time.time()
 
         def one(s, link):
+            stuck = self._stuck(link)
+            if stuck:                                   # its handle answers nothing: STOP goes through a new connection
+                self._stop_wanted.add(s)
+                got[s] = dict(ok=False, text=f"{s.upper()}: its connection is stuck ({stuck[0]} not answered for "
+                              f"{stuck[1]:.0f} s): STOP will go through a new connection (up to {CONNECT_WAIT_S:g} s)")
+                if s not in self._recovering:
+                    self._recovering.add(s)
+                    threading.Thread(target=self._recover, args=(s, link, stuck), name=f"lite-recover-{s}", daemon=True).start()
+                return
             r = link.stop(hard=every, drag=s in teaching)  # drag teaching ends first, within the stop
             if s in teaching and self.log is not None and r.get("drag") is not None:
                 self.log.hardware(s, "rm_stop_drag_teach", ret=r["drag"], ok=r["drag"] == 0, text="STOP: drag teaching left first")

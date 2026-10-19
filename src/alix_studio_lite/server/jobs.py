@@ -30,6 +30,7 @@ class Job:
         self.reason: tuple[str, str | None] | None = None   # why it was stopped, when not by STOP (an E-stop)
         self.alone = False                                 # runs on its arm alone: the other arm stays stopped
         self.extra: dict = {}                              # what a job shows besides its stage (S2: live status, a question)
+        self.given_up = False                              # ended as failed while its thread is still inside a call (give_up)
         self._cancel = threading.Event()
         self._lock = threading.Lock()
         self._on_cancel: list = []                         # called once when it is stopped (S2: the runner's own stop)
@@ -52,6 +53,19 @@ class Job:
         with self._lock:
             self.events.append(dict(seq=len(self.events), t=round(time.time() - self.started, 2),
                                     text=text, level=level))
+
+    def give_up(self, reason: str, hint: str | None = None) -> bool:
+        """Ended now, as failed, although its thread has not come back: a call into the controller's SDK that never
+        answered (robot_standin). The thread is left behind; if its call does come back, that is logged on the job
+        and its own ending is not kept. True when the job was running."""
+        with self._lock:
+            if self.state != "running":
+                return False
+            self.state, self.error, self.hint, self.given_up = "failed", reason, hint, True
+            self.finished = time.time()
+        self.log(reason, "error")
+        self._cancel.set()
+        return True
 
     def cancel(self, reason: str | None = None, hint: str | None = None) -> None:
         """Stop the job at its next check. With ``reason`` (an E-stop), it ends as failed with that
@@ -148,32 +162,37 @@ class Jobs:
                     self._jobs.pop(k, None)
 
         def run():
+            state, error, hint, result, note = "done", None, None, None, None
             try:
                 res = fn(job)
-                job.result = res if isinstance(res, dict) else {"value": res}
-                job.state = "done"
+                result = res if isinstance(res, dict) else {"value": res}
             except Cancelled:
                 if job.reason:
-                    job.state, (job.error, job.hint) = "failed", job.reason
-                    job.log(job.error, "error")
+                    state, (error, hint) = "failed", job.reason
                 else:
-                    job.state = "cancelled"
-                    job.log("Stopped.", "warn")
+                    state, note = "cancelled", "Stopped."
             except UserError as exc:
-                job.state, job.error, job.hint = "failed", str(exc), exc.hint
-                job.log(str(exc), "error")
+                state, error, hint = "failed", str(exc), exc.hint
             except BaseException as exc:                            # noqa: BLE001 - even an exit ends the job
-                job.state, job.error = "failed", f"{type(exc).__name__}: {exc}"
-                job.hint = "Details are in the server log."
-                job.log(job.error, "error")
+                state, error, hint = "failed", f"{type(exc).__name__}: {exc}", "Details are in the server log."
                 traceback.print_exc()
-            finally:
-                job.finished = time.time()
-                if self.on_end is not None:
-                    try:
-                        self.on_end(job)
-                    except Exception:                                   # noqa: BLE001 - a log never stops a job
-                        traceback.print_exc()
+            with job._lock:
+                given_up = job.given_up
+            if given_up:                                            # it had ended as failed while its call hung (give_up)
+                job.log(f"Its call came back after {time.time() - job.started:.0f} s; the job had already ended.", "warn")
+                return
+            job.result, job.state = result, state
+            if error:
+                job.error, job.hint = error, hint
+                job.log(error, "error")
+            elif note:
+                job.log(note, "warn")
+            job.finished = time.time()
+            if self.on_end is not None:
+                try:
+                    self.on_end(job)
+                except Exception:                                   # noqa: BLE001 - a log never stops a job
+                    traceback.print_exc()
 
         self._pool.submit(run)
         return job
@@ -194,6 +213,20 @@ class Jobs:
             if (arm in ("all", "both") or j.arm in (arm, "both")) and (kinds is None or j.kind in kinds):
                 j.cancel(reason, hint)
                 n += 1
+        return n
+
+    def give_up_arm(self, arm: str, reason: str, hint: str | None = None) -> int:
+        """End the running jobs of ``arm`` now, as failed (Job.give_up): their threads are inside a controller call
+        that never came back."""
+        n = 0
+        for j in self.running():
+            if (arm in ("all", "both") or j.arm in (arm, "both")) and j.give_up(reason, hint):
+                n += 1
+                if self.on_end is not None:
+                    try:
+                        self.on_end(j)
+                    except Exception:                                   # noqa: BLE001 - a log never stops a job
+                        traceback.print_exc()
         return n
 
 

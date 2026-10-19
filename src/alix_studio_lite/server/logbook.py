@@ -40,6 +40,28 @@ def _clean(v, depth: int = 0):
     return v
 
 
+def dump_threads(root) -> str | None:
+    """Every thread's stack, to threads-HHMMSS.txt in the day's log folder and to the terminal: what Lite was doing
+    when it could not close (server), or when a call into a controller's SDK never came back (robot_standin). The
+    path written, or None."""
+    import faulthandler
+    import sys
+
+    try:
+        d = Path(root) / time.strftime("%Y-%m-%d")
+        d.mkdir(parents=True, exist_ok=True)
+        p = d / f"threads-{time.strftime('%H%M%S')}.txt"
+        with open(p, "w", encoding="utf-8") as f:
+            faulthandler.dump_traceback(file=f, all_threads=True)
+    except Exception:                                                       # noqa: BLE001
+        return None
+    try:
+        faulthandler.dump_traceback(file=sys.stderr, all_threads=True)      # the terminal's copy; a captured stderr has no fd
+    except Exception:                                                       # noqa: BLE001
+        pass
+    return str(p)
+
+
 class Logbook:
     def __init__(self, root: Path):
         self.root = Path(root)
