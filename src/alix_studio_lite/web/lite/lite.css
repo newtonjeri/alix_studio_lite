@@ -860,3 +860,23 @@ html[data-theme="dark"] .queue-status.lite-prerecorded { border-color: var(--lit
 .lite-mech-notice { margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 #view-teach.lite-prerecorded #pipeline, #view-teach.lite-prerecorded .stage { display: none !important; }
 .lite-s2-camera-img { display: block; max-width: 100%; margin-top: 8px; border-radius: 8px; border: 1px solid var(--line); }
+/* The teaching screen's arm cards: the previous and the next task beside the current picture (neighbours.js; the
+   owner, 19 Oct). The current picture stays the page's own element, in the middle and larger; the side panels show
+   that arm's step of the task before and after with its pole height and hand pose. The first task has an empty left,
+   the last an empty right (the space is kept, so the current picture does not move). */
+.lite-trio { display: flex; align-items: flex-start; gap: 12px; margin: 12px 0 0; min-width: 0; }
+.lite-trio .lite-mid { flex: 2 1 0; min-width: 0; }         /* the middle twice a side, at every width */
+#view-teach .lite-trio .choice-region-thumb { margin: 0; }
+#view-teach .task-board:not(.post-record) .choice.lite-has-trio .choice-region-thumb {
+  height: 184px !important; max-height: 184px !important; min-height: 184px !important; }
+.lite-side { flex: 1 1 0; max-width: 230px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.lite-side.lite-empty { visibility: hidden; }
+.lite-side-tag { font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); line-height: 1.3; }
+.lite-side-pic { height: 104px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); overflow: hidden; }
+.lite-side-pic img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.lite-side.lite-no-pic .lite-side-pic img { display: none; }
+.lite-side-name { font-size: 12px; font-weight: 700; line-height: 1.25; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lite-side-meta { font-size: 11px; line-height: 1.35; color: var(--muted); }
+.task-board.post-record .lite-trio, .task-board.post-record .lite-mid { display: block; }   /* the compact cards: as the page has them */
+.task-board.post-record .lite-side { display: none; }

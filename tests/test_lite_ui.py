@@ -42,6 +42,21 @@ def test_replaced_functions_exist_in_the_page():
     assert not missing, f"page functions the bridge replaces are gone: {missing}"
 
 
+def test_the_neighbour_panels_use_the_pages_own_pictures_and_cards():
+    """neighbours.js puts the previous and the next task beside the current picture in each arm card
+    (the owner, 19 Oct), with the page's own crops (resolveRegionPair) in the page's own cards."""
+    page = (WEB / "index.html").read_text(encoding="utf-8")
+    for needle in ("function resolveRegionPair(", "const CUSTOM_REGION_IMAGES", "const SLIDES=", 'id="choiceLeft"', 'id="choiceRight"',
+                   'class="choice-region-thumb left-thumb"', 'class="choice-region-thumb right-thumb"', 'class="choice-zoom-row"'):
+        assert needle in page, needle
+    src = (WEB / "lite/neighbours.js").read_text(encoding="utf-8")
+    for needle in ("resolveRegionPair(", "CUSTOM_REGION_IMAGES[", "SLIDES[", "'.choice-region-thumb'", "lite:step", "pole_mm", "handPresetName("):
+        assert needle in src, needle
+    assert "installNeighbours()" in (WEB / "lite/main.js").read_text(encoding="utf-8")
+    css = (WEB / "lite/lite.css").read_text(encoding="utf-8")
+    assert ".lite-trio" in css and ".task-board.post-record .lite-side { display: none; }" in css
+
+
 def test_no_remote_resources():
     page = (WEB / "index.html").read_text(encoding="utf-8")
     assert not re.search(r"""(src|href)=["']https?://""", page)
