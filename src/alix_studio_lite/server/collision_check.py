@@ -13,8 +13,12 @@ checked, at the pole height and hand pose it was taught with, against:
   front wall that the 3D draws as a line on the floor), or ALIX's venue cubicle when the room has
   not been measured;
 - the commode in the region's lid and seat state, where Lite's 3D puts it (``fixtures.spec``, moved
-  by the task's UGV placement);
-- the other arm, standing.
+  by the task's UGV placement; its lid and seat open only as far as the wall behind lets them);
+- the other arm, standing;
+- the robot's own bin, lowered as it stands for cleaning (the owner, 19 Oct: "include the bin body, the
+  bin handles and the bin covers in the collision checking matrices"): the bin, its rail and carriage,
+  its two handles and its two lid-opening covers (``BIN_LINKS``), as ALIX's own paired sweep checks each
+  arm against the bin (``dual_arm_plan_collision``: "the bin is LOWERED into the workspace").
 
 Cleaning touches the commode, so the hand on the commode is CONTACT, not a collision: it is
 reported only when it goes deeper than ALIX's pad compliance (20 mm, ``body_collision``). Any other
@@ -34,6 +38,10 @@ from pathlib import Path
 import numpy as np
 
 HAND_PREFIX = {"left": "ILH_", "right": "IRH_"}
+#: the bin as the URDF has it: the rail on the UGV, the carriage on the rail, the bin on the carriage, and on the bin
+#: its two handles and its two lid-opening covers (all with collision meshes)
+BIN_LINKS = frozenset({"bin_rail_link", "bin_carriage_link", "bin_link", "bin_handle_left", "bin_handle_right",
+                       "lid_opening_cover1", "lid_opening_cover2"})
 CONTACT_DEPTH_MM = 20.0           # ALIX's pad compliance (alix_taskgen.body_collision.PAD_COMPLIANCE_MM)
 LINK_EVERY = 4                    # the colliding links read again every 4th line (20 ms, the 3D's own step) in one collision
 DEPTH_EVERY_S = 0.1               # while the hand stays on the commode its depth is measured every 0.1 s (FCL gathers
@@ -67,6 +75,15 @@ def _arm(side: str, part: str = "all"):
 
 
 @lru_cache(maxsize=None)
+def _bin():
+    """The bin's collision links (BIN_LINKS), posed where the standing pose puts them (the bin lowered, as
+    ALIX's sweep seeds it from the SRDF): ``pose(tf)`` once per check, then every arm is tested against it."""
+    from alix_workspace.dual_arm_plan_collision import _ArmCollision
+
+    return _ArmCollision(_rcm(), lambda ln: ln in BIN_LINKS)
+
+
+@lru_cache(maxsize=None)
 def _disabled() -> frozenset:
     from alix_workspace.dual_arm_plan_collision import load_disabled_pairs
 
@@ -76,15 +93,16 @@ def _disabled() -> frozenset:
 
 
 @lru_cache(maxsize=None)
-def _commode(fid: str, cubicle_mm: int, phase: str) -> tuple:
+def _commode(fid: str, cubicle_mm: int, phase: str, back_mm: float | None = None) -> tuple:
     """The fixture's meshes in a lid/seat state, posed in the robot base frame at ALIX's calibrated
-    standoff, as Lite's 3D shows them: ((name, mesh, 4x4), ...)."""
+    standoff, as Lite's 3D shows them: ((name, mesh, 4x4), ...). ``back_mm``: the gap to the wall behind,
+    which the lid and the seat open no further than (``fixtures.spec``)."""
     import trimesh
 
     from . import fixtures
 
     out = []
-    for part in fixtures.spec(fid, cubicle_mm)["parts"]:
+    for part in fixtures.spec(fid, cubicle_mm, back_mm)["parts"]:
         url = (part.get("state_meshes") or {}).get(phase) or part.get("mesh")
         path = fixtures.mesh_path(fid, url.rsplit("/", 1)[-1]) if url else None
         if path is None:
@@ -129,7 +147,8 @@ def _objects(scene: dict, fid: str, cubicle_mm: int, phase: str) -> tuple[list, 
         out.append(("wall", "cubicle wall", load_wall_manager(vendor_paths.cubicle_yaml(cubicle_mm))[0]))
     shift = np.eye(4)
     shift[:2, 3] = (scene.get("offset_m") or [0.0, 0.0])[:2]
-    for name, mesh, M in _commode(fid, cubicle_mm, phase):
+    back = scene.get("back_mm")
+    for name, mesh, M in _commode(fid, cubicle_mm, phase, None if back is None else round(float(back), 1)):
         out.append(("commode", name, one(name, mesh, shift @ M)))
     return out, made
 
@@ -198,8 +217,10 @@ def check(md_path: str, side: str, stage: dict, home: dict, scene: dict, fid: st
     values = dict(home)
     values.update(staging.joint_values(side, stage.get("pole_mm"), stage.get("hand")))
     structure, hand, everything = _arm(side, "structure"), _arm(side, "hand"), _arm(side, "all")
-    partner = _arm(other)
-    partner.pose(model.link_world_transforms(dict(home)))
+    partner, bin_ = _arm(other), _bin()
+    standing = model.link_world_transforms(dict(home))
+    partner.pose(standing)
+    bin_.pose(standing)                        # lowered, where it stands for cleaning
     objects, made = _objects(scene, fid, int(cubicle_mm), phase)
     disabled = _disabled()
     joints = [f"{s}_joint{i}" for i in range(1, 8)]
@@ -245,6 +266,12 @@ def check(md_path: str, side: str, stage: dict, home: dict, scene: dict, fid: st
             touching = _names(everything, partner.mgr, disabled)
             if touching:
                 found.add(("other arm", f"the {other.upper()} arm"))
+        if structure.mgr.in_collision_other(bin_.mgr) or hand.mgr.in_collision_other(bin_.mgr):
+            everything.pose(tf)
+            on_bin = _names(everything, bin_.mgr, disabled)
+            if on_bin:
+                found.add(("bin", "the bin"))
+                touching = touching | on_bin
         if found:
             found = frozenset(found)
             if named[0] == found and i - named[1] < LINK_EVERY:
@@ -270,12 +297,12 @@ def check(md_path: str, side: str, stage: dict, home: dict, scene: dict, fid: st
         everything.pose(tf)
         pairs = []
         for what, name in sorted(e.pop("_found")):
-            mgr = partner.mgr if what == "other arm" else by_name[name]
-            for link, obj, depth in _pairs(everything, mgr, disabled if what == "other arm" else frozenset()):
+            mgr = partner.mgr if what == "other arm" else bin_.mgr if what == "bin" else by_name[name]
+            for link, obj, depth in _pairs(everything, mgr, disabled if what in ("other arm", "bin") else frozenset()):
                 if what == "commode" and link.startswith(HAND_PREFIX[side]):
                     continue                     # the hand's touch there is contact, said apart
-                pairs.append(dict(what=what, link=link, object=name if what != "other arm" else f"{other.upper()} arm {obj}",
-                                  depth_mm=round(depth, 1)))
+                pairs.append(dict(what=what, link=link, depth_mm=round(depth, 1),
+                                  object=f"{other.upper()} arm {obj}" if what == "other arm" else obj if what == "bin" else name))
         e["pairs"] = pairs
     for e in events[MAX_EVENTS:]:
         e.pop("_found", None)
@@ -283,6 +310,7 @@ def check(md_path: str, side: str, stage: dict, home: dict, scene: dict, fid: st
                 more=max(0, len(events) - MAX_EVENTS), colliding_lines=len(hits), spans=_spans(lit), phase=phase,
                 contact=dict(contact, deepest_mm=round(contact["deepest_mm"], 1)),
                 checked=dict(walls=made, commode=phase, other_arm=f"the {other.upper()} arm, standing",
+                             bin="the bin, lowered: its body, rail and carriage, handles and covers",
                              links=everything.link_count, contact_depth_mm=CONTACT_DEPTH_MM),
                 seconds=round(time.monotonic() - t0, 2))
 
@@ -312,6 +340,8 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
     joints = {s: [f"{staging.SIDE_PREFIX[s]}_joint{i}" for i in range(1, 8)] for s in ("left", "right")}
     parts = {s: (_arm(s, "structure"), _arm(s, "hand")) for s in sides}
     whole = {s: _arm(s) for s in ("left", "right")}
+    bin_ = _bin()
+    bin_.pose(model.link_world_transforms(dict(home)))     # lowered, where it stands for cleaning
     disabled = _disabled()
     objects_by_phase, made = {}, None
     for ph in sorted(set(phases)):
@@ -369,6 +399,11 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
                         if depth > CONTACT_DEPTH_MM:
                             found.add((s, "hand deep in the commode", name))
                             links |= {a for a, _ in _names(hand, mgr)}
+                if structure.mgr.in_collision_other(bin_.mgr) or hand.mgr.in_collision_other(bin_.mgr):
+                    on_bin = _names(whole[s], bin_.mgr, disabled)
+                    if on_bin:
+                        found.add((s, "bin", "the bin"))
+                        links |= {a for a, _ in on_bin}
             both_known = all(data[s]["known"][i] for s in sides)
             if both_known and whole["left"].mgr.in_collision_other(whole["right"].mgr):
                 touching = _names(whole["left"], whole["right"].mgr, disabled)
@@ -400,6 +435,10 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
                 for link, obj, depth in _pairs(whole["left"], whole["right"].mgr, disabled):
                     pairs.append(dict(side="both", what=what, link=link, object=f"RIGHT arm {obj}", depth_mm=round(depth, 1)))
                 continue
+            if what == "bin":
+                for link, obj, depth in _pairs(whole[s], bin_.mgr, disabled):
+                    pairs.append(dict(side=s, what=what, link=link, object=obj, depth_mm=round(depth, 1)))
+                continue
             for link, obj, depth in _pairs(whole[s], by_name[name]):
                 if what == "commode" and link.startswith(HAND_PREFIX[s]):
                     continue                     # the hand's touch there is contact, said apart
@@ -410,5 +449,6 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
     return dict(ok=not events, samples=n, first=out[0] if out else None, events=out, more=max(0, len(events) - MAX_EVENTS),
                 colliding_samples=len(hits), spans=spans, dt=round(times[1] - times[0], 4) if n > 1 else 0.0,
                 contact={s: dict(c, deepest_mm=round(c["deepest_mm"], 1)) for s, c in contact.items()},
-                checked=dict(walls=made, arms=sides, two_arms=True, contact_depth_mm=CONTACT_DEPTH_MM),
+                checked=dict(walls=made, arms=sides, two_arms=True, contact_depth_mm=CONTACT_DEPTH_MM,
+                             bin="the bin, lowered: its body, rail and carriage, handles and covers"),
                 seconds=round(time.monotonic() - t0, 2))
