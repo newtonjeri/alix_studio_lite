@@ -20,11 +20,20 @@ const ROOM = [
   ['left_mm', 'Left wall → commode', 'To the commode’s left edge'],
   ['right_mm', 'Commode → right wall', 'From the commode’s right edge'],
   ['front_mm', 'Commode front → front wall', 'From the commode’s front tip'],
+  ['back_mm', 'Commode back → wall behind', 'From the commode’s back; 0 when it stands against the wall'],
 ];
 const MOVES = [['ugvFrontMm', 'front_mm', 'Move front (mm, +X)'], ['ugvRearMm', 'rear_mm', 'Move rear (mm, −X)'],
   ['ugvLeftMm', 'left_mm', 'Move left (mm, +Y)'], ['ugvRightMm', 'right_mm', 'Move right (mm, −Y)']];
 
 let view = null;                                   // the server's placement for the task on screen
+
+// How far the lid and the seat open before the wall behind (server/fixtures.wall_clamp): said beside the saved room.
+function lidSentence(ls) {
+  const parts = Object.entries((ls && ls.parts) || {}).filter(([, c]) => c.touches_wall);
+  if (!parts.length) return '';
+  const say = parts.map(([name, c]) => `the ${name} to ${Math.abs(c.used_deg).toFixed(1)}° (ALIX's model: ${Math.abs(c.alix_deg).toFixed(0)}°)`);
+  return ` The wall behind lets ${say.join(' and ')} open: the 3D and the collision check stop there.`;
+}
 const task = () => TASKS[currentTask]?.label || null;
 const num = (v) => (v === '' || v == null ? null : Number(v));
 const changed = () => document.dispatchEvent(new CustomEvent('lite:placement'));
@@ -103,7 +112,8 @@ function fill() {
     const roomNotes = notes.filter(n => !n.startsWith('No UGV standoff'));
     rn.textContent = !view.room ? 'Not measured yet: the 3D view shows ALIX’s standard cubicle.'
       : roomNotes.length ? `Warning: ${roomNotes.join(' ')}` : `Saved · ${view.room.width_mm} × ${view.room.length_mm} mm room; the commode `
-        + `${view.room.left_mm} mm from the left wall, ${view.room.right_mm} mm from the right, ${view.room.front_mm} mm from the front.`;
+        + `${view.room.left_mm} mm from the left wall, ${view.room.right_mm} mm from the right, ${view.room.front_mm} mm from the front, `
+        + `${view.room.back_mm ?? 0} mm from the wall behind.` + lidSentence(view.scene.lid_seat);
     rn.classList.toggle('lite-warn', roomNotes.length > 0);
   }
   paintTotals(view.room ? view.scene.totals || [] : []);

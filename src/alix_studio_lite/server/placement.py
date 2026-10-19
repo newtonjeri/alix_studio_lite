@@ -25,10 +25,14 @@ from pathlib import Path
 
 from .jobs import UserError
 
-ROOM_FIELDS = ("width_mm", "length_mm", "left_mm", "right_mm", "front_mm")
+ROOM_FIELDS = ("width_mm", "length_mm", "left_mm", "right_mm", "front_mm", "back_mm")
 TASK_FIELDS = ("standoff_mm", "front_mm", "rear_mm", "left_mm", "right_mm")
 ROOM_TEXT = {"width_mm": "the room width", "length_mm": "the room length", "left_mm": "the left wall to the commode",
-             "right_mm": "the commode to the right wall", "front_mm": "the commode's front to the front wall"}
+             "right_mm": "the commode to the right wall", "front_mm": "the commode's front to the front wall",
+             "back_mm": "the commode's back to the wall behind"}
+# back_mm (the owner, 19 Oct): the commode is not always against the wall behind it; 0 means it is. The wall behind is
+# placed from the commode's back as the other walls are placed from the commode, and the lid and the seat open no
+# further than that wall lets them (fixtures.wall_clamp). A room measured before it had this field stands at 0.
 WALL_THICK_M, WALL_HEIGHT_M = 0.10, 2.0          # ALIX's cubicle meshes (assets/scene/cubicles)
 TOL_MM = 10.0     # the owner, 16 Oct: "a tolerance of + or -10mm in all measurements on the total": each room
                   # total against its parts, and two placements taken as the same (S1 merges)
@@ -44,7 +48,10 @@ def load(units) -> dict:
         d = json.loads(_file(units).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         d = {}
-    return {"room": d.get("room"), "tasks": d.get("tasks") or {}}
+    room = d.get("room")
+    if room and "back_mm" not in room:                # measured before the gap behind had a field: against the wall
+        room = dict(room, back_mm=0.0)
+    return {"room": room, "tasks": d.get("tasks") or {}}
 
 
 def _save(units, d: dict) -> None:
@@ -76,7 +83,9 @@ def _number(v, what: str, lo: float = 0.0, hi: float = 20000.0, required: bool =
 
 
 def save_room(units, body: dict) -> dict:
-    room = {k: _number(body.get(k), ROOM_TEXT[k], 1.0) for k in ROOM_FIELDS}
+    room = {k: _number(body.get(k), ROOM_TEXT[k], 0.0 if k == "back_mm" else 1.0, required=k != "back_mm") for k in ROOM_FIELDS}
+    if room["back_mm"] is None:                       # left empty: against the wall behind
+        room["back_mm"] = 0.0
     room["at"] = time.strftime("%Y-%m-%d %H:%M:%S")
     with units.lock:
         d = load(units)
@@ -131,16 +140,16 @@ def totals(room: dict, commode_width_mm: float, commode_depth_mm: float) -> list
     +-10mm of the total measurement, also the other measurements, but warn of the exceeding values"):
 
     - width: the left distance + the commode's width (ALIX's model) + the right distance;
-    - length: the commode's front distance + its depth (ALIX's model), the commode standing at the
-      wall behind it.
+    - length: the commode's front distance + its depth (ALIX's model) + the gap behind it to the wall
+      (0 when it stands against the wall; the owner, 19 Oct).
 
     Each says its sum, the room's measure, the difference and, past the tolerance, a warning with the
     values. Nothing is refused: the 3D builds the walls from what was entered."""
-    r = {k: float(room[k]) for k in ROOM_FIELDS}
+    r = {k: float(room.get(k) or 0.0) for k in ROOM_FIELDS}
     rows = [("width", "Room width", "the left distance + the commode's width + the right distance",
              [("left", r["left_mm"]), ("commode", commode_width_mm), ("right", r["right_mm"])], r["width_mm"]),
-            ("length", "Room length", "the front distance + the commode's depth",
-             [("front", r["front_mm"]), ("commode", commode_depth_mm)], r["length_mm"])]
+            ("length", "Room length", "the front distance + the commode's depth + the gap behind",
+             [("front", r["front_mm"]), ("commode", commode_depth_mm), ("back", r["back_mm"])], r["length_mm"])]
     out = []
     for name, title, what, parts, whole in rows:
         total = sum(v for _, v in parts)
@@ -153,9 +162,10 @@ def totals(room: dict, commode_width_mm: float, commode_depth_mm: float) -> list
             warning = (f"{title}: {what} make {sums} = {_mm(total)} mm, but the room {name} is {_mm(whole)} mm: "
                        f"a difference of {_mm1(abs(diff))} mm, {_mm1(over)} mm past the ±{TOL_MM:.0f} mm tolerance.")
             if name == "length" and diff > 0:
-                warning += " The wall behind would stand inside the commode."
+                warning += " The wall behind would stand inside the commode: check the length, the front distance and the gap behind."
             elif name == "length":
-                warning += " Unless the commode stands that far off the wall behind it, check the length and the front distance."
+                warning += (" Unless the commode stands that much further off the wall behind it than entered, check the "
+                            "length, the front distance and the gap behind.")
             else:
                 warning += " Check the three distances and the width."
         out.append(dict(name=name, title=title, parts=[dict(name=n, mm=round(v, 1)) for n, v in parts],
@@ -166,7 +176,8 @@ def totals(room: dict, commode_width_mm: float, commode_depth_mm: float) -> list
 TASK_TEXT = {"standoff_mm": "UGV standoff", "front_mm": "UGV move front", "rear_mm": "UGV move rear",
              "left_mm": "UGV move left", "right_mm": "UGV move right"}
 ROOM_SHORT = {"width_mm": "room width", "length_mm": "room length", "left_mm": "left wall to the commode",
-              "right_mm": "the commode to the right wall", "front_mm": "the commode's front to the front wall"}
+              "right_mm": "the commode to the right wall", "front_mm": "the commode's front to the front wall",
+              "back_mm": "the commode's back to the wall behind"}
 
 
 def differences(a: dict | None, b: dict | None) -> list[str]:
@@ -229,11 +240,13 @@ def scene(fid: str, room: dict | None, task: dict | None) -> dict:
         return out
     out["totals"] = totals(room, out["commode_width_mm"], out["commode_depth_mm"])
     notes.extend(t["warning"] for t in out["totals"] if not t["ok"])
-    m = lambda k: float(room[k]) / 1000.0                             # noqa: E731
+    m = lambda k: float(room.get(k) or 0.0) / 1000.0                  # noqa: E731
+    out["back_mm"] = round(m("back_mm") * 1000.0, 1)
+    out["lid_seat"] = fixtures.wall_clamp(fid, out["back_mm"])   # how far the lid and the seat open before the wall behind
     front_tip = fp["front_x"] + dx
     left_y, right_y = fp["left_y"] + dy + m("left_mm"), fp["right_y"] + dy - m("right_mm")
     front_x = front_tip - m("front_mm")
-    back_x = front_x + m("length_mm")
+    back_x = fp["back_x"] + dx + m("back_mm")         # the wall behind, from the commode's back, as the other walls
     t, h = WALL_THICK_M, WALL_HEIGHT_M
     depth = back_x - front_x
     out["walls"] = [

@@ -53,3 +53,28 @@ def test_catalogues(fid):
     assert all(u["arm"] in ("left", "right") for u in c["units"])
     if fid != "commode_c":
         assert all(u["provisional"] for u in c["units"])
+
+
+def test_the_lid_and_the_seat_open_only_as_far_as_the_wall_behind_lets_them():
+    """The owner, 19 Oct: the lid angle must obey the wall, open only up to where it touches it, at a 0 mm gap and
+    at a larger one. Commode C against the wall: the lid stops at 105.6 degrees (ALIX's model opens it to 110) and
+    the seat, resting on it, the same; 50 mm off the wall both open fully; no room measured, nothing clamped."""
+    fp = F.footprint("commode_c")
+    against = F.wall_clamp("commode_c", 0)
+    lid, seat = against["parts"]["lid"], against["parts"]["seat"]
+    assert lid["touches_wall"] and lid["alix_deg"] == -110 and -106 < lid["used_deg"] < -105
+    assert seat["touches_wall"] and seat["used_deg"] == lid["used_deg"]
+    s = F.spec("commode_c", 1400, 0.0)
+    assert s["lid_seat"] == against and s["back_mm"] == 0.0
+    for name in ("lid", "seat"):
+        part = next(p for p in s["parts"] if p["name"] == name)
+        pts = F._stl_points(F.mesh_path("commode_c", part["mesh"].rsplit("/", 1)[-1])) * np.asarray(part["scale"])
+        for phase in ("lid_open", "seat_open"):
+            M = _m(part, phase)
+            assert (pts @ M[:3, :3].T + M[:3, 3])[:, 0].max() <= fp["back_x"] + 1e-4        # nothing past the wall's face
+    open_m = _m(next(p for p in F.spec("commode_c")["parts"] if p["name"] == "lid"), "lid_open")
+    assert not np.allclose(open_m, _m(next(p for p in s["parts"] if p["name"] == "lid"), "lid_open"))   # a different pose
+    free = F.spec("commode_c", 1400, 50.0)["lid_seat"]["parts"]
+    assert free["lid"]["used_deg"] == -110 and not free["lid"]["touches_wall"] and not free["seat"]["touches_wall"]
+    assert F.spec("commode_c")["lid_seat"] is None and F.wall_clamp("commode_c", None) is None
+    assert F.wall_clamp("commode_a", 0) is None                                            # one mesh per state: no hinge

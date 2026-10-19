@@ -14,6 +14,7 @@ Region catalogues:
 from __future__ import annotations
 
 import json
+import math
 from functools import lru_cache
 from pathlib import Path
 
@@ -68,9 +69,81 @@ def washroom_rotation(cubicle_mm: int):
 
 
 @lru_cache(maxsize=None)
-def spec(fid: str, cubicle_mm: int = 1400) -> dict:
+def wall_clamp(fid: str, back_mm: float | None, cubicle_mm: int = 1400) -> dict | None:
+    """How far the lid and the seat open before touching the wall behind the commode (the owner, 19 Oct: the lid
+    angle must obey the wall, "open only up to the point where it just touches the wall", at a 0 mm gap and at a
+    larger one): ``{back_mm, parts: {lid | seat: {alix_deg, used_deg, touches_wall}}}``, or None without a gap (no
+    room measured) or for a fixture with no hinged parts. The wall's face stands ``back_mm`` behind the commode's
+    back (``footprint``); a part's angle is the largest, from closed toward ALIX's open angle, at which no point of
+    its mesh is past that face, found to 0.01 degrees. The seat rests on the lid, so it never opens past it."""
+    import numpy as np
+    from alix_taskgen.fixture_parts import load_part_registry
+    from alix_taskgen.scene_pose import resolve_component_pose, resolve_mesh_path, resolve_mesh_scale
+
+    if back_mm is None:
+        return None
+    scene = _folder(fid) / "scene.yaml"
+    registry = load_part_registry(scene)
+    if not registry or registry.is_combined:
+        return None
+    rot = washroom_rotation(cubicle_mm)
+    wall_x = footprint(fid)["back_x"] + float(back_mm) / 1000.0
+    parts, lid_used = {}, None
+    for name in ("lid", "seat"):
+        part = registry.part(name)
+        if part is None or part.static or not part.joint:
+            continue
+        nominal = float(part.joint_angle_deg("open"))
+        path = resolve_mesh_path(scene, name, vendor_paths.ALIX)
+        mesh = mesh_path(fid, Path(str(path)).name) if path else None
+        if abs(nominal) < 1e-9 or mesh is None:
+            continue
+        pts = _stl_points(mesh) * np.asarray(resolve_mesh_scale(scene, name), dtype=float)
+
+        def farthest(angle, pts=pts, name=name):
+            """The part's farthest point toward the wall (m, base frame) at this hinge angle."""
+            T = resolve_component_pose(scene, name, joint_angle_deg=angle, washroom_rotation=rot)
+            return float((pts @ T.rotation.as_matrix().T + np.asarray(T.translation, dtype=float))[:, 0].max())
+
+        used = _angle_before(farthest, nominal, wall_x)
+        if abs(used) < abs(nominal) - 1e-9:
+            used = math.copysign(math.floor(abs(used) * 100.0) / 100.0, nominal)     # to 0.01 deg, towards closed
+        if name == "seat" and lid_used is not None and abs(used) > abs(lid_used):
+            used = lid_used
+        if name == "lid":
+            lid_used = used
+        parts[name] = dict(alix_deg=round(nominal, 2), used_deg=used, touches_wall=abs(used) < abs(nominal) - 1e-6)
+    return dict(back_mm=round(float(back_mm), 1), parts=parts) if parts else None
+
+
+def _angle_before(farthest, nominal: float, wall_x: float) -> float:
+    """The largest angle from 0 toward ``nominal`` (its sign) at which ``farthest(angle)`` is not past ``wall_x``:
+    1 degree steps from closed, then bisection to under 0.01 degrees."""
+    tol = 1e-6
+    if farthest(nominal) <= wall_x + tol:
+        return nominal
+    sign, span = (1.0 if nominal > 0 else -1.0), abs(nominal)
+    ok, bad, a = 0.0, span, 1.0
+    while a < span:
+        if farthest(sign * a) > wall_x + tol:
+            bad = a
+            break
+        ok, a = a, a + 1.0
+    for _ in range(12):
+        mid = (ok + bad) / 2.0
+        if farthest(sign * mid) > wall_x + tol:
+            bad = mid
+        else:
+            ok = mid
+    return sign * ok
+
+
+@lru_cache(maxsize=None)
+def spec(fid: str, cubicle_mm: int = 1400, back_mm: float | None = None) -> dict:
     """What the 3D view needs: every part's mesh and its 4x4 pose in the robot base frame for each
-    lid/seat state, computed with ALIX's own ``scene_pose.resolve_component_pose`` (row-major)."""
+    lid/seat state, computed with ALIX's own ``scene_pose.resolve_component_pose`` (row-major). ``back_mm``: the
+    gap from the commode's back to the wall behind (placement); the lid and the seat then open no further than
+    that wall lets them (``wall_clamp``, said in ``lid_seat``)."""
     import numpy as np
     from alix_taskgen.fixture_parts import load_part_registry
     from alix_taskgen.scene_pose import resolve_component_pose, resolve_mesh_path, resolve_mesh_scale
@@ -81,9 +154,13 @@ def spec(fid: str, cubicle_mm: int = 1400) -> dict:
     registry = load_part_registry(scene)
     states = {"closed": {"lid": "closed", "seat": "closed"}, "lid_open": {"lid": "open", "seat": "closed"},
               "lid_seat_open": {"lid": "open", "seat": "open"}}
+    clamp = wall_clamp(fid, back_mm, cubicle_mm) if back_mm is not None else None
+    used = {p: c["used_deg"] for p, c in ((clamp or {}).get("parts") or {}).items() if c["touches_wall"]}
 
     def matrix(part, state):
-        T = resolve_component_pose(scene, part, articulation_state=states[state].get(part), washroom_rotation=rot)
+        st = states[state].get(part)
+        T = resolve_component_pose(scene, part, articulation_state=st, joint_angle_deg=used.get(part) if st == "open" else None,
+                                   washroom_rotation=rot)
         M = np.eye(4)
         M[:3, :3] = T.rotation.as_matrix()
         M[:3, 3] = np.asarray(T.translation, dtype=float)
@@ -112,7 +189,7 @@ def spec(fid: str, cubicle_mm: int = 1400) -> dict:
     return dict(id=fid, name=fx.get("display_name", fid), type=fx.get("type", "fixture"),
                 articulated=bool(fx.get("articulated")), cubicle_mm=cubicle_mm,
                 washroom_rpy_deg=None if rot is None else [round(float(v), 4) for v in rot.as_euler("xyz", degrees=True)],
-                parts=parts)
+                parts=parts, back_mm=back_mm, lid_seat=clamp)
 
 
 def list_fixtures() -> list[dict]:

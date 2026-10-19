@@ -59,7 +59,8 @@ function lines(rec, a) {
     `Start pose: ${poseName(L.start_pose || a.startPose)}${L.speed_pct ? ` at ${L.speed_pct} %` : ''}`,
     p ? `UGV: standoff ${mm(p.standoff_mm)} mm${moves ? `${moves} mm` : ' · no moves'}` : 'UGV: not placed',
     room ? `Room: ${mm(room.width_mm)} × ${mm(room.length_mm)} mm · commode ${mm(room.left_mm)} mm from the left wall, `
-      + `${mm(room.right_mm)} mm from the right, ${mm(room.front_mm)} mm from the front` : 'Room: not measured',
+      + `${mm(room.right_mm)} mm from the right, ${mm(room.front_mm)} mm from the front, ${mm(room.back_mm ?? 0)} mm from the wall behind`
+      : 'Room: not measured',
   ];
 }
 

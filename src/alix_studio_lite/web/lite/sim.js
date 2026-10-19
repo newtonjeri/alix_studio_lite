@@ -56,14 +56,14 @@ export function placementOf(task = null) {
   }
   return places.get(k);
 }
-document.addEventListener('lite:placement', () => { places.clear(); sim.stale = true; });
+document.addEventListener('lite:placement', () => { places.clear(); scenes.clear(); sim.stale = true; });   // the wall behind moves the lid's angle too
 
 // The fixture (the open project's, else commode C) in `phase`, inside the cubicle: the measured room
 // with the commode where the UGV's placement puts it (`place`: a scene from the server; by default
 // the room alone, at ALIX's calibrated standoff).
 export async function scene(phase, fixture = ctx.fixture || 'commode_c', place = undefined) {
   if (!scenes.has(fixture)) {
-    const p = get(`/api/fixtures/${fixture}/scene`);
+    const p = get(`/api/fixtures/${fixture}/scene${ctx.pid ? `?project=${encodeURIComponent(ctx.pid)}` : ''}`);   // its room's wall behind
     p.catch(() => scenes.delete(fixture));
     scenes.set(fixture, p);
   }

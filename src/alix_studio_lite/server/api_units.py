@@ -308,7 +308,8 @@ def get_placement(app, q, body, m):
 
 @route("POST", P + "/placement/room")
 def post_placement_room(app, q, body, m):
-    """The room: ``{width_mm, length_mm, left_mm, right_mm, front_mm}``, all required."""
+    """The room: ``{width_mm, length_mm, left_mm, right_mm, front_mm, back_mm}``, all required (``back_mm``, the
+    commode's back to the wall behind, may be 0: the commode against the wall)."""
     units = units_of(app, m.group(1))
     placement.save_room(units, body)
     return _placement_view(units, body.get("task"))
@@ -1858,4 +1859,8 @@ def get_scene(app, q, body, m):
     cub = int((q.get("cubicle") or [app.ui.get("cubicle_mm", 1400)])[0])
     if cub not in (1400, 800):
         raise UserError("The cubicle is 1400 mm or 800 mm wide.")
-    return {"fixture": fid, "cubicle_mm": cub, "spec": fixtures.spec(fid, cub)}
+    back, pid = None, (q.get("project") or [None])[0]
+    if pid:                                            # the project's room: the lid and the seat open only as far as its wall behind
+        room = placement.load(units_of(app, pid))["room"]
+        back = float(room["back_mm"]) if room else None
+    return {"fixture": fid, "cubicle_mm": cub, "spec": fixtures.spec(fid, cub, back)}

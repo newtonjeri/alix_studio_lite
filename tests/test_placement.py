@@ -38,7 +38,7 @@ def call(ctx, method, path, body=None):
 
 
 P = "/api/projects/alix_pl"
-ROOM = {"width_mm": 1400, "length_mm": 1940, "left_mm": 516, "right_mm": 516, "front_mm": 1400}
+ROOM = {"width_mm": 1400, "length_mm": 1940, "left_mm": 516, "right_mm": 516, "front_mm": 1400, "back_mm": 2}
 
 
 def test_the_footprint_is_alixs():
@@ -58,6 +58,11 @@ def test_the_room_and_a_tasks_placement_are_checked_and_kept(lite):
     assert "250 to 2000" in call(lite, "POST", P + "/placement/task", {"task": "TASK 1A", "standoff_mm": 200})["error"]
     v = call(lite, "POST", P + "/placement/room", ROOM)
     assert v["room"]["width_mm"] == 1400 and v["scene"]["walls"] and not v["scene"]["notes"][1:]
+    lid = v["scene"]["lid_seat"]["parts"]["lid"]                                # 2 mm off the wall: the lid stops at it
+    assert lid["touches_wall"] and lid["alix_deg"] == -110 and -106 < lid["used_deg"] < -105 and v["room"]["back_mm"] == 2
+    v = call(lite, "POST", P + "/placement/room", {**ROOM, "back_mm": ""})       # left empty: against the wall
+    assert v["room"]["back_mm"] == 0 and v["scene"]["back_mm"] == 0
+    v = call(lite, "POST", P + "/placement/room", ROOM)
     v = call(lite, "POST", P + "/placement/task", {"task": "TASK 1A", "standoff_mm": 380, "front_mm": 30, "left_mm": 20})
     assert v["tasks"]["TASK 1A"]["standoff_mm"] == 380 and v["tasks"]["TASK 1A"]["rear_mm"] is None
     s = v["scene"]
@@ -66,7 +71,9 @@ def test_the_room_and_a_tasks_placement_are_checked_and_kept(lite):
     left_face = walls["left"]["center"][1] - 0.05
     assert abs(left_face - (0.1838 - 0.02 + 0.516)) < 0.001                    # the commode's left edge + 516 mm
     assert abs(s["front_x"] - (0.4703 + 0.10 - 1.4)) < 0.001                    # front tip - 1400 mm, with the UGV moved
-    assert abs((walls["back"]["center"][0] - 0.05) - (s["front_x"] + 1.94)) < 0.001
+    from alix_studio_lite.server import fixtures as F
+    back = F.footprint("commode_c")["back_x"] + 0.10 + 0.002                     # the wall behind: the commode's back + the gap
+    assert abs((walls["back"]["center"][0] - 0.05) - back) < 0.001 and s["back_mm"] == 2
     assert walls["left"]["size"][2] == 2.0 and walls["back"]["size"][0] == 0.1  # ALIX's cubicle walls
 
 
@@ -84,7 +91,7 @@ def test_room_totals_within_10_mm_or_warned_with_the_values(lite):
     v = call(lite, "POST", P + "/placement/room", {**ROOM, "width_mm": 1500, "length_mm": 1700})
     notes = " ".join(v["scene"]["notes"])
     assert "516 + 368 + 516 = 1,400 mm, but the room width is 1,500 mm" in notes
-    assert "1,400 + 538 = 1,938 mm, but the room length is 1,700 mm" in notes and "inside the commode" in notes
+    assert "1,400 + 538 + 2 = 1,940 mm, but the room length is 1,700 mm" in notes and "inside the commode" in notes
     v = call(lite, "POST", P + "/placement/room", {**ROOM, "length_mm": 2400, "task": "TASK 1A"})
     assert "off the wall behind it" in " ".join(v["scene"]["notes"])
     call(lite, "POST", P + "/placement/room", ROOM)
