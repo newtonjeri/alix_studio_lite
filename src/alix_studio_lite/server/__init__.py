@@ -254,6 +254,7 @@ def _close(app, srv) -> None:
         if sent.is_set():
             print("\nQuitting now: the controllers' global speed may not be back where Lite found it.", flush=True)
             workers.kill_now()
+            _kill_arm_workers()
             os._exit(130)
 
     def watchdog():
@@ -263,6 +264,7 @@ def _close(app, srv) -> None:
         print(f"\nLite did not close within {EXIT_LIMIT_S:g} s, so it quits now"
               + (f" (what each thread was doing: {where})." if where else "."), flush=True)
         workers.kill_now()
+        _kill_arm_workers()
         os._exit(1)
 
     signal.signal(signal.SIGINT, again)
@@ -284,3 +286,13 @@ def _dump_threads(root) -> str | None:
     from .logbook import dump_threads
 
     return dump_threads(root)
+
+
+def _kill_arm_workers() -> None:
+    """The arms' connection processes (robot_process) ended at once with Lite's hard exit."""
+    try:
+        from .robot_process import kill_all
+
+        kill_all()
+    except Exception:                                                       # noqa: BLE001
+        pass

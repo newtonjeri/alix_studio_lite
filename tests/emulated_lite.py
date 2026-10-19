@@ -97,13 +97,14 @@ def tracks(self, page, size, search):
     return -4, {}                           # RealMan's tracks list: 4th-generation controllers only
 
 
-if __name__ == "__main__":                  # Lite's tuning workers import the main module again
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-    from alix_studio_lite import vendor_paths
-
-    vendor_paths.activate()
+def setup():
+    """The shims on ALIX's emulator: run here before the server starts, and in each arm's worker process before it
+    opens its link (robot_process: LITE_WORKER_SETUP names this file)."""
     from alix_emulator import rm_emulator
 
+    if getattr(rm_emulator, "_lite_shimmed", False):
+        return
+    rm_emulator._lite_shimmed = True
     rm_emulator.RoboticArm.rm_start_drag_teach = start
     rm_emulator.RoboticArm.rm_stop_drag_teach = stop
     rm_emulator.RoboticArm.rm_save_trajectory = save
@@ -123,6 +124,17 @@ if __name__ == "__main__":                  # Lite's tuning workers import the m
         return ri, cw
 
     rm_emulator.install = install
+
+
+if __name__ == "__main__":                  # Lite's tuning workers import the main module again
+    import os
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+    from alix_studio_lite import vendor_paths
+
+    vendor_paths.activate()
+    setup()
+    os.environ["LITE_WORKER_SETUP"] = str(Path(__file__).resolve())      # the arm workers shim their emulator the same way
     from alix_studio_lite.server import main
 
     sys.exit(main(sys.argv[1:]))

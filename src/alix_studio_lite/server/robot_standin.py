@@ -120,6 +120,9 @@ _REPORTS_RE = re.compile(r"^!! the arm reports (.+) at ([\d.]+) s$")
 STOP_WAIT_S = 5.0                     # how long STOP's answer waits for each controller's confirmation
 CONNECT_WAIT_S = 20.0                 # a controller that has not answered a Connect by then is said not to
 WATCH_PERIOD_S = 1.0                  # how often the links are looked at for a call that never came back
+# Each arm's connection in a process of its own (robot_process): a call into the SDK that never comes back dies with
+# that process, and the arm is connected again in a fresh one. LITE_LINK_PROCESS=0 keeps the links in this process.
+LINK_PROCESS = os.environ.get("LITE_LINK_PROCESS", "1") != "0"
 
 
 def arm_report(line: str) -> dict | None:
@@ -240,9 +243,19 @@ class StandInRobot:
         link = self.links.get(side)
         if link is None:
             return None
+        from .robot_process import LinkProcess, RealArmProxy
         from .robot_real import RealArm
 
-        return RealArm(link, self.log)
+        return RealArmProxy(link, self.log) if isinstance(link, LinkProcess) else RealArm(link, self.log)
+
+    def _new_link(self, side: str, ip: str):
+        """A link to an arm's controller: in a process of its own (LINK_PROCESS), else in this one."""
+        from .robot_link import ArmLink
+        from .robot_process import LinkProcess
+
+        if LINK_PROCESS:
+            return LinkProcess(side, ip, kind=self.link_kind or "realman", on_read=lambda: self._sync(side), log=self.log)
+        return ArmLink(side, ip, on_read=lambda: self._sync(side))
 
     def _measured(self, side: str) -> tuple:
         """The pole (mm) and the hand as they are now: read from a linked controller, else the stand-in's."""
@@ -770,11 +783,9 @@ class StandInRobot:
     def _reconnect(self, side: str) -> None:
         """The arm connected again on a new handle, bounded (CONNECT_WAIT_S); a STOP that waited for it is sent
         through it. A new connection that does not answer either means the SDK library in this Lite is stuck."""
-        from .robot_link import ArmLink
-
         S, a = side.upper(), self.arms[side]
         try:
-            new = self._open_link(ArmLink(side, a.ip, on_read=lambda: self._sync(side)))
+            new = self._open_link(self._new_link(side, a.ip))
         except Exception as exc:                                                    # noqa: BLE001
             with self.lock:
                 a.connected, a.estop = False, "NOT_CONNECTED"
@@ -808,8 +819,6 @@ class StandInRobot:
         a = self.arm(side)
         target = (ip or a.ip).strip()
         if self.link_kind:
-            from .robot_link import ArmLink
-
             if side in self.links:                       # its old link is closed below: not under a running job
                 stuck = self._stuck(self.links[side])
                 if stuck:                                # its call never came back: given up, never "busy"
@@ -823,7 +832,7 @@ class StandInRobot:
             try:
                 # the new link first: when it cannot open, the arm keeps its old link (or stays
                 # disconnected), never "connected" without a reading behind its E-stop chip
-                new = self._open_link(ArmLink(side, target, on_read=lambda: self._sync(side)))
+                new = self._open_link(self._new_link(side, target))
                 with self.lock:
                     old = self.links.get(side)
                     self.links[side] = new

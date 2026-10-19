@@ -40,17 +40,17 @@ def _clean(v, depth: int = 0):
     return v
 
 
-def dump_threads(root) -> str | None:
-    """Every thread's stack, to threads-HHMMSS.txt in the day's log folder and to the terminal: what Lite was doing
-    when it could not close (server), or when a call into a controller's SDK never came back (robot_standin). The
-    path written, or None."""
+def dump_threads(root, prefix: str = "threads-") -> str | None:
+    """Every thread's stack, to <prefix>HHMMSS.txt in the day's log folder and to the terminal: what Lite was doing
+    when it could not close (server), or when a call into a controller's SDK never came back (robot_standin; an
+    arm's worker process writes its own, ``threads-<side>-``). The path written, or None."""
     import faulthandler
     import sys
 
     try:
         d = Path(root) / time.strftime("%Y-%m-%d")
         d.mkdir(parents=True, exist_ok=True)
-        p = d / f"threads-{time.strftime('%H%M%S')}.txt"
+        p = d / f"{prefix}{time.strftime('%H%M%S')}.txt"
         with open(p, "w", encoding="utf-8") as f:
             faulthandler.dump_traceback(file=f, all_threads=True)
     except Exception:                                                       # noqa: BLE001

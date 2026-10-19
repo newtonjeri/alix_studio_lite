@@ -63,6 +63,7 @@ def lite(tmp_path, monkeypatch, watch_s):
     monkeypatch.setattr(robot_link, "CALL_SLOW_S", 0.1)
     monkeypatch.setattr(robot_link, "CALL_STUCK_S", 0.4)
     monkeypatch.setattr(robot_standin, "WATCH_PERIOD_S", watch_s)
+    monkeypatch.setattr(robot_standin, "LINK_PROCESS", False)             # the link in this process (robot_process has its own test)
     monkeypatch.setattr(robot_link.ArmLink, "_stop_now",
                         lambda self, hard, drag=False: dict(ok=True, text=f"{self.side.upper()}: stopped on its controller"))
     made = []

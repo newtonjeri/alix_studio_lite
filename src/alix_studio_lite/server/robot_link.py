@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import collections
 import functools
+import os
 import threading
 import time
 from contextlib import contextmanager
@@ -54,8 +55,8 @@ HELD_S = 60.0                      # a command that has not ended in this long (
 # is stuck inside the library, and Python cannot interrupt it: the connection is given up and made again
 # (robot_standin). The calls that last as long as their work (LONG_CALLS: the arm moving, a file sent, a recording
 # saved) are judged by the command's own expectation (busy(expect_s)), never by CALL_STUCK_S.
-CALL_SLOW_S = 5.0                  # a call not answered in this long: weak, and named
-CALL_STUCK_S = 20.0                # a call not answered in this long: stuck
+CALL_SLOW_S = float(os.environ.get("LITE_CALL_SLOW_S", 5.0))      # a call not answered in this long: weak, and named
+CALL_STUCK_S = float(os.environ.get("LITE_CALL_STUCK_S", 20.0))   # ... in this long: stuck (the env: the tests' arm workers)
 LONG_CALLS = frozenset({"rm_movej", "rm_movel", "rm_movec", "rm_movej_p", "rm_moves", "rm_save_trajectory",
                         "rm_send_project", "rm_set_program_id_run", "rm_run_drag_trajectory"})
 
