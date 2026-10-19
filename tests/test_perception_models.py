@@ -65,11 +65,15 @@ def test_without_the_models_runtime_the_depth_answers_alone():
 
 @needs_models
 def test_status_check_answers_as_alix_s_core_on_the_robot_s_frames():
+    """The state and what decided it are ALIX's own on every frame. The confidence is the model's own number: ALIX's
+    answers were recorded on a CPU, and the lab computer runs the model on its GPU, whose arithmetic differs in the
+    third decimal (19 Oct, pose 4 lid and seat open: 0.870 against 0.871), so it is matched within 0.01."""
     expected = json.loads((DATA / "perception/expected_status.json").read_text())["frames"]
     gc = GapCheck()
     for row in expected:
         a = gc.status(DepthFrame(depth=None, intrinsics=None, cam_to_base=None, **recorded(row["file"])))
-        assert (a.fixture_state, round(a.state_confidence, 3), a.record["state_source"]) == (row["state"], row["conf"], row["source"]), row["file"]
+        assert (a.fixture_state, a.record["state_source"]) == (row["state"], row["source"]), row["file"]
+        assert abs(a.state_confidence - row["conf"]) <= 0.01, (row["file"], a.state_confidence, row["conf"])
         assert a.fixture_state == row["declared"]                    # and as the operator declared it
 
 
