@@ -1,0 +1,51 @@
+{
+ "unit": "L-R05_PART1",
+ "arm": "left",
+ "taken": "2026-10-19 14:54",
+ "lines": 3001,
+ "sha256": "a4e1c368d1b4f8152fd6409d50e2cc221abc888e3dbbe5e7eee7127104020906",
+ "note": "trimmed to lines 1\u20133,001 of 4,033 (15.000 s)",
+ "source": "trim",
+ "original": "L_TASK_5A_15S_TRIMMED.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 5A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 12:51:05"
+  }
+ },
+ "name": "L_TASK_5A_15S_TRIMMED.txt"
+}

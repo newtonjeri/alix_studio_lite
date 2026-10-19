@@ -1,0 +1,51 @@
+{
+ "unit": "R-R01_PART2",
+ "arm": "right",
+ "taken": "2026-10-19 10:41",
+ "lines": 8999,
+ "sha256": "993120d98e69b398d64f6e92fb46b45d6f66013ebb18ec52ca2d6d424b90f2ee",
+ "note": "drag-taught on the RIGHT arm: 8999 points in 47 s, at pole 200 mm, hand cleaning pose",
+ "source": "teach",
+ "original": "right_drag_20261019_104056.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 2A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 10:37:39"
+  }
+ },
+ "name": "R_TASK_2A_trajectory.txt"
+}

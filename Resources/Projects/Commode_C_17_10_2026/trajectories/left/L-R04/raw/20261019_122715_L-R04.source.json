@@ -1,0 +1,51 @@
+{
+ "unit": "L-R04",
+ "arm": "left",
+ "taken": "2026-10-19 12:27",
+ "lines": 3401,
+ "sha256": "f0d2c8cc2202d94c8b960bdfbbf5adaeb55a02171ad286b4cf438766034ed22a",
+ "note": "trimmed to lines 1\u20133,401 of 4,195 (17.000 s)",
+ "source": "trim",
+ "original": "L_TASK_2_trajectory_17S.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 2",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 12:16:56"
+  }
+ },
+ "name": "L_TASK_2_trajectory_17S.txt"
+}
