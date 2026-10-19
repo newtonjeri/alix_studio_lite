@@ -1,0 +1,51 @@
+{
+ "unit": "R-R04",
+ "arm": "right",
+ "taken": "2026-10-19 15:36",
+ "lines": 4465,
+ "sha256": "53bfe26cb17de5081fc589babda21f94202856acf3cbac276d0b4272ece0ade1",
+ "note": "drag-taught on the RIGHT arm: 4465 points in 23 s, at pole 200 mm, hand grip",
+ "source": "teach",
+ "original": "right_drag_20261019_153642.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 5A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 15:00:39"
+  }
+ },
+ "name": "R_TASK_5A_trajectory_trimmed_2_trimmed_2.txt"
+}

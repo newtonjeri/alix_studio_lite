@@ -1,0 +1,51 @@
+{
+ "unit": "R-R01_PART1",
+ "arm": "right",
+ "taken": "2026-10-19 09:45",
+ "lines": 8004,
+ "sha256": "494eb3269cd3aace730feb4ed387b82fc504d7871905138ae6e2d50e6d730005",
+ "note": "drag-taught on the RIGHT arm: 8004 points in 41 s, at pole 200 mm, hand cleaning pose",
+ "source": "teach",
+ "original": "right_drag_20261019_094519.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 1A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 09:43:42"
+  }
+ },
+ "name": "R_TASK_1A_trajectory_3.txt"
+}

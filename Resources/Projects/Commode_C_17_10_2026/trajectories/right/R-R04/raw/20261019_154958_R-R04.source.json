@@ -1,0 +1,51 @@
+{
+ "unit": "R-R04",
+ "arm": "right",
+ "taken": "2026-10-19 15:49",
+ "lines": 3601,
+ "sha256": "c571885d3a3ceefa9a7f276bde8c4a04c815ff77ee3ec6343954da9cd82eb4f9",
+ "note": "trimmed to lines 1\u20133,601 of 4,377 (18.000 s)",
+ "source": "trim",
+ "original": "R_TASK_5A_18s_txt.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 5A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 15:00:39"
+  }
+ },
+ "name": "R_TASK_5A_18s_txt.txt"
+}

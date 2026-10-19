@@ -61,6 +61,100 @@
     "note": "",
     "mode": "real"
    }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "2161e8c86efe506217b1d5e0f43a60bba0473b89e0707a91cfb243ad3cdc495c",
+   "ok": true,
+   "at": "2026-10-19 12:10:00",
+   "detail": {
+    "program_id": 53
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "2161e8c86efe506217b1d5e0f43a60bba0473b89e0707a91cfb243ad3cdc495c",
+   "ok": true,
+   "at": "2026-10-19 12:10:34",
+   "detail": {
+    "program_id": 53,
+    "dry_run": true,
+    "seconds": 10.62,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "2161e8c86efe506217b1d5e0f43a60bba0473b89e0707a91cfb243ad3cdc495c",
+   "ok": true,
+   "at": "2026-10-19 12:10:53",
+   "detail": {
+    "program_id": 53,
+    "dry_run": false,
+    "seconds": 11.07,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "2161e8c86efe506217b1d5e0f43a60bba0473b89e0707a91cfb243ad3cdc495c",
+   "ok": true,
+   "at": "2026-10-19 12:11:09",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "833fe8efe4678d8521c0e24895e2177d8a0a46c6fee162002c13bbd129836854",
+   "ok": true,
+   "at": "2026-10-19 12:13:41",
+   "detail": {
+    "program_id": 53
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "833fe8efe4678d8521c0e24895e2177d8a0a46c6fee162002c13bbd129836854",
+   "ok": true,
+   "at": "2026-10-19 12:14:17",
+   "detail": {
+    "program_id": 53,
+    "dry_run": true,
+    "seconds": 23.53,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "833fe8efe4678d8521c0e24895e2177d8a0a46c6fee162002c13bbd129836854",
+   "ok": true,
+   "at": "2026-10-19 12:15:03",
+   "detail": {
+    "program_id": 53,
+    "dry_run": false,
+    "seconds": 22.04,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 15.9,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "833fe8efe4678d8521c0e24895e2177d8a0a46c6fee162002c13bbd129836854",
+   "ok": true,
+   "at": "2026-10-19 12:15:08",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
   }
  ]
 }

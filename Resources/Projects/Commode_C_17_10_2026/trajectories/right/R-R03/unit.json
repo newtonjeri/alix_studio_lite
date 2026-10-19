@@ -17,14 +17,14 @@
   "pole": {
    "pole_mm": 200.0,
    "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
     0,
-    0,
-    0,
-    0,
-    150,
     1000
    ],
-   "at": "2026-10-17 17:43:08"
+   "at": "2026-10-19 11:53:22"
   },
   "hand": {
    "pole_mm": 200.0,
@@ -36,42 +36,27 @@
     0,
     1000
    ],
-   "at": "2026-10-17 17:43:14"
+   "at": "2026-10-19 11:53:24"
   }
  },
- "active": "20261017_174844_R-R03.txt",
+ "active": "20261019_120048_R-R03.txt",
  "settings": {
   "optimiser": "manual",
   "target_s": null,
   "segments": [
    {
     "start": 1,
-    "end": 2155,
-    "pct": 29.0
+    "end": 1430,
+    "pct": 35.0
    },
    {
-    "start": 2156,
-    "end": 4310,
+    "start": 1431,
+    "end": 3781,
     "pct": 40.0
-   },
-   {
-    "start": 4311,
-    "end": 6465,
-    "pct": 40.0
-   },
-   {
-    "start": 6466,
-    "end": 8620,
-    "pct": 31.0
-   },
-   {
-    "start": 8621,
-    "end": 10775,
-    "pct": 45.0
    }
   ],
   "smooth_window": 101,
-  "program_id": 4,
+  "program_id": 53,
   "max_dev_mm": null,
   "trim": true,
   "smooth": true,
@@ -234,8 +219,361 @@
     "idle_min_run": 20
    },
    "at": 1792231036.157339
+  },
+  {
+   "label": "Scale regions cleared: another recording (R_TASK_2_trajectory_2.txt)",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382290.2998104
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1960,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382587.3119442
+  },
+  {
+   "label": "Scaling regions changed",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382613.671904
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382614.8053238
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 60.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382634.4822705
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 60.0
+     },
+     {
+      "start": 1431,
+      "end": 3781,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382653.742891
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 60.0
+     },
+     {
+      "start": 1431,
+      "end": 3781,
+      "pct": 45.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382674.409964
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 60.0
+     },
+     {
+      "start": 1431,
+      "end": 3781,
+      "pct": 40.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382687.4413755
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 55.0
+     },
+     {
+      "start": 1431,
+      "end": 3781,
+      "pct": 40.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382703.1750796
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 50.0
+     },
+     {
+      "start": 1431,
+      "end": 3781,
+      "pct": 40.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 4,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382931.8392043
+  },
+  {
+   "label": "Program ID 53",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 50.0
+     },
+     {
+      "start": 1431,
+      "end": 3781,
+      "pct": 40.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792382997.6342874
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 40.0
+     },
+     {
+      "start": 1431,
+      "end": 3781,
+      "pct": 40.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792383127.6555648
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 35.0
+     },
+     {
+      "start": 1431,
+      "end": 3781,
+      "pct": 40.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792383146.1743658
   }
  ],
- "cursor": 3,
- "version": "v002"
+ "cursor": 16,
+ "version": "v004"
 }

@@ -1,0 +1,192 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "131e6b5dfc5f05b6c42e482f0eb94bbb86a7bb26312c22354674632281d93f20",
+   "ok": true,
+   "at": "2026-10-19 15:15:59",
+   "detail": {
+    "program_id": 54
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "131e6b5dfc5f05b6c42e482f0eb94bbb86a7bb26312c22354674632281d93f20",
+   "ok": true,
+   "at": "2026-10-19 15:18:17",
+   "detail": {
+    "program_id": 54,
+    "dry_run": true,
+    "seconds": 10.69,
+    "reported": []
+   }
+  },
+  {
+   "kind": "run_failed",
+   "sha256": "131e6b5dfc5f05b6c42e482f0eb94bbb86a7bb26312c22354674632281d93f20",
+   "ok": false,
+   "at": "2026-10-19 15:18:39",
+   "detail": {
+    "state": "failed",
+    "error": "INTERRUPTED \u2014 E-STOP: it did not finish."
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "131e6b5dfc5f05b6c42e482f0eb94bbb86a7bb26312c22354674632281d93f20",
+   "ok": false,
+   "at": "2026-10-19 15:19:35",
+   "detail": {
+    "verdict": "again",
+    "note": "",
+    "mode": "real"
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "2afbfdafad97018a0633c58faf8b1c830863cff79b07b0f56f71e8fecef7ff0c",
+   "ok": true,
+   "at": "2026-10-19 15:27:34",
+   "detail": {
+    "program_id": 54
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "2afbfdafad97018a0633c58faf8b1c830863cff79b07b0f56f71e8fecef7ff0c",
+   "ok": true,
+   "at": "2026-10-19 15:34:19",
+   "detail": {
+    "program_id": 54,
+    "unchanged": true
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "2afbfdafad97018a0633c58faf8b1c830863cff79b07b0f56f71e8fecef7ff0c",
+   "ok": true,
+   "at": "2026-10-19 15:34:41",
+   "detail": {
+    "program_id": 54,
+    "dry_run": true,
+    "seconds": 9.7,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "2afbfdafad97018a0633c58faf8b1c830863cff79b07b0f56f71e8fecef7ff0c",
+   "ok": true,
+   "at": "2026-10-19 15:35:00",
+   "detail": {
+    "program_id": 54,
+    "dry_run": false,
+    "seconds": 10.03,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "2afbfdafad97018a0633c58faf8b1c830863cff79b07b0f56f71e8fecef7ff0c",
+   "ok": false,
+   "at": "2026-10-19 15:35:28",
+   "detail": {
+    "verdict": "again",
+    "note": "",
+    "mode": "real"
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "58f423b6c8f425c42590bccf35718912236424821af65d9bd9de25d82308ddef",
+   "ok": true,
+   "at": "2026-10-19 15:40:31",
+   "detail": {
+    "program_id": 54
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "58f423b6c8f425c42590bccf35718912236424821af65d9bd9de25d82308ddef",
+   "ok": true,
+   "at": "2026-10-19 15:40:52",
+   "detail": {
+    "program_id": 54,
+    "dry_run": true,
+    "seconds": 10.07,
+    "reported": []
+   }
+  },
+  {
+   "kind": "run_failed",
+   "sha256": "58f423b6c8f425c42590bccf35718912236424821af65d9bd9de25d82308ddef",
+   "ok": false,
+   "at": "2026-10-19 15:41:09",
+   "detail": {
+    "state": "failed",
+    "error": "INTERRUPTED \u2014 E-STOP: it did not finish."
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "58f423b6c8f425c42590bccf35718912236424821af65d9bd9de25d82308ddef",
+   "ok": false,
+   "at": "2026-10-19 15:41:49",
+   "detail": {
+    "verdict": "again",
+    "note": "",
+    "mode": "real"
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "d3dfc23767769ac146e013dc5b9014fd548ffcacc132c2a5cd6f8b602cd01618",
+   "ok": true,
+   "at": "2026-10-19 15:54:35",
+   "detail": {
+    "program_id": 54
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "d3dfc23767769ac146e013dc5b9014fd548ffcacc132c2a5cd6f8b602cd01618",
+   "ok": true,
+   "at": "2026-10-19 15:55:12",
+   "detail": {
+    "program_id": 54,
+    "dry_run": true,
+    "seconds": 9.85,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "d3dfc23767769ac146e013dc5b9014fd548ffcacc132c2a5cd6f8b602cd01618",
+   "ok": true,
+   "at": "2026-10-19 15:55:32",
+   "detail": {
+    "program_id": 54,
+    "dry_run": false,
+    "seconds": 11.0,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 2.1,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "d3dfc23767769ac146e013dc5b9014fd548ffcacc132c2a5cd6f8b602cd01618",
+   "ok": true,
+   "at": "2026-10-19 15:56:02",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}

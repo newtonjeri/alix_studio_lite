@@ -1,0 +1,51 @@
+{
+ "unit": "L-R01",
+ "arm": "left",
+ "taken": "2026-10-19 10:16",
+ "lines": 3201,
+ "sha256": "3052ddaa83c2bb076f32fc940a054bec14108582d17d67adf757f6513e8337cc",
+ "note": "trimmed to lines 1\u20133,201 of 3,661 (16.000 s)",
+ "source": "trim",
+ "original": "L_TASK_1A_16s.txt",
+ "pole_mm": 50,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 1A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 09:43:42"
+  }
+ },
+ "name": "L_TASK_1A_16s.txt"
+}

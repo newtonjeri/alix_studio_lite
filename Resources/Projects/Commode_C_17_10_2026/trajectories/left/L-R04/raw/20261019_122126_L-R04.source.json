@@ -1,0 +1,51 @@
+{
+ "unit": "L-R04",
+ "arm": "left",
+ "taken": "2026-10-19 12:21",
+ "lines": 6135,
+ "sha256": "37a1a55b7fa636b052546c12912e1a5d5f1003c8b9aee2c50033f22f5f4e9187",
+ "note": "drag-taught on the LEFT arm: 6135 points in 32 s, at pole 50 mm, hand cleaning pose",
+ "source": "teach",
+ "original": "left_drag_20261019_122118.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 2",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 12:16:56"
+  }
+ },
+ "name": "L_TASK_2_trajectory_2_2.txt"
+}

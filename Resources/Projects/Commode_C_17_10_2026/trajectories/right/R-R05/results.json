@@ -1,0 +1,60 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "a14b956a3e57fa5b1bb1e398b58e49ac895731c1348e375e4435ee0ee58e442d",
+   "ok": true,
+   "at": "2026-10-19 16:10:00",
+   "detail": {
+    "program_id": 55
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "a14b956a3e57fa5b1bb1e398b58e49ac895731c1348e375e4435ee0ee58e442d",
+   "ok": true,
+   "at": "2026-10-19 16:10:28",
+   "detail": {
+    "program_id": 55,
+    "dry_run": true,
+    "seconds": 9.65,
+    "reported": []
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "a14b956a3e57fa5b1bb1e398b58e49ac895731c1348e375e4435ee0ee58e442d",
+   "ok": true,
+   "at": "2026-10-19 16:10:59",
+   "detail": {
+    "program_id": 55,
+    "dry_run": true,
+    "seconds": 23.85,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "a14b956a3e57fa5b1bb1e398b58e49ac895731c1348e375e4435ee0ee58e442d",
+   "ok": true,
+   "at": "2026-10-19 16:11:41",
+   "detail": {
+    "program_id": 55,
+    "dry_run": false,
+    "seconds": 9.69,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "a14b956a3e57fa5b1bb1e398b58e49ac895731c1348e375e4435ee0ee58e442d",
+   "ok": true,
+   "at": "2026-10-19 16:11:58",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}
