@@ -131,7 +131,7 @@ async function setSensitivity(pct) {
   sensBusy = true;
   try {
     const out = await post(`/api/robots/${side}/sensitivity`, { pct });
-    window.toast(`${side.toUpperCase()} drag sensitivity ${out.pct} % (read back on its controller).`);
+    window.toast(`${side.toUpperCase()} drag sensitivity ${out.pct} % (read back on its controller).`, 'good');
   } catch (err) { tell(err); } finally { sensBusy = false; }
 }
 
@@ -193,7 +193,7 @@ export function installTeach() {
 
   const pageStart = window.startTeach;
   window.startTeach = async function startTeach() {
-    if (!isSetupReady()) { window.toast('Complete Setup & Safety first.'); return; }
+    if (!isSetupReady()) { window.toast('Complete Setup & Safety first.', 'warn'); return; }
     if (timerInt || counting) return;
     const s = step();
     if (s && ctx.pid && !s.later) {
@@ -239,13 +239,13 @@ export function installTeach() {
     try {
       const r = await post(`/api/projects/${t.pid}/units/${t.key}/teach/stop`, { name: asked, task: t.task });
       if (ctx.pid === t.pid) ctx.units[t.key] = r.unit;
-      if (r.name && asked && r.name !== asked) window.toast(`Saved as ${r.name}: ${asked} is already used in this project.`);
+      if (r.name && asked && r.name !== asked) window.toast(`Saved as ${r.name}: ${asked} is already used in this project.`, 'warn');
       if (here()) {
         if ($('fileName') && r.name) $('fileName').value = r.name;
         syncActive(r.unit);
         $('savedFileMeta').textContent = `Recorded and saved: ${(activeRec(r.unit) || {}).lines?.toLocaleString() || ''} rows · ${r.stage.text}`;
       }
-      if (r.take) window.toast(`Robot stand-in: the take is ${r.take}, a ${t.arm.toUpperCase()}-arm recording (${r.stage.text}).`);
+      if (r.take) window.toast(`Robot stand-in: the take is ${r.take}, a ${t.arm.toUpperCase()}-arm recording (${r.stage.text}).`, 'good');
     } catch (err) {
       $('postDragModal')?.classList.remove('show');
       if ($('timerResult')) $('timerResult').textContent = `Nothing was recorded: ${say(err)}`;
@@ -292,7 +292,7 @@ export function installTeach() {
     try {
       ctx.units[s.key] = await post(unitUrl(s.key, 'name'), { name });     // refused if the project has that name
       tuningApplied = false; tunedOutputFileName = ''; tuningSourceFileName = name;   // V32: a new source to tune
-      window.toast(`Saved in the project as ${name}.`);
+      window.toast(`Saved in the project as ${name}.`, 'good');
     } catch (err) { tell(err); }
     document.dispatchEvent(new CustomEvent('lite:recordings'));
   };
@@ -341,7 +341,7 @@ export function installTeach() {
       const done = await watchJob(job);
       const real = (await liteMode()) === 'real';
       window.toast(done.state === 'done' ? `${s.arm.toUpperCase()} arm at the start${real ? '' : ' (dry run: nothing moved)'}.`
-        : `Stopped: ${done.error || 'the move did not finish.'} ${done.hint || ''}`);
+        : `Stopped: ${done.error || 'the move did not finish.'} ${done.hint || ''}`, done.state === 'done' ? 'good' : 'error');
     } catch (err) { tell(err); }
   };
 

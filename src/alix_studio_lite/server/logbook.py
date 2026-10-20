@@ -117,7 +117,8 @@ class Logbook:
 
     def alert(self, level: str, text: str, *, hint: str | None = None, side: str | None = None,
               source: str | None = None) -> dict:
-        """A hardware error ("error") or failure risk ("warn") the page must show until closed."""
+        """A hardware error ("error"), a failure risk ("warn") or a good status ("good": an arm connected again) the
+        page must show until closed."""
         a = dict(id=next(self._ids), at=time.time(), level=level, side=side, source=source, text=text, hint=hint)
         self.alerts.append(a)
         self.hardware(side, f"ALERT {level.upper()}", text=text + (f" ({hint})" if hint else ""))

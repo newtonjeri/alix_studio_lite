@@ -340,7 +340,7 @@ export function installSim() {
         const why = sim.blocked && s && sim.blocked.key === s.key ? `Nothing plays: ${say(sim.blocked)}`
           : !s ? 'Open a project and choose a region first.' : 'The simulation is still loading: press ▶ Start again in a moment.';
         warn(why);
-        window.toast(why);
+        window.toast(why, 'warn');
         return;
       }
       if (sim.abort) return;                              // already staging

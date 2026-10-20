@@ -812,7 +812,7 @@ class StandInRobot:
             r = new.stop(hard=True)
             self._alert("warn" if r.get("ok") else "error", side, f"{S}: STOP sent through the new connection: {r.get('text')}.",
                         None if r.get("ok") else "Press the red E-stop button on the robot if it is still moving.", "stop")
-        self._alert("warn", side, f"{S}: connected again. The call that never came back is left behind; press Recover before "
+        self._alert("good", side, f"{S}: connected again. The call that never came back is left behind; press Recover before "
                     "moving.", None, "stuck")
 
     def connect(self, side: str, ip: str | None = None) -> dict:

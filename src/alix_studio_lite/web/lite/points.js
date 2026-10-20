@@ -48,7 +48,7 @@ export async function loadPoints(side, force = false) {
 export function dropGone(sel, was, side) {
   if (!sel || !String(was).startsWith('gp:') || [...sel.options].some(o => o.value === was)) return false;
   sel.dispatchEvent(new Event('change', { bubbles: true }));
-  window.toast(`“${String(was).slice(3)}” is no longer on the ${side.toUpperCase()} controller: its choice was cleared.`);
+  window.toast(`“${String(was).slice(3)}” is no longer on the ${side.toUpperCase()} controller: its choice was cleared.`, 'warn');
   return true;
 }
 

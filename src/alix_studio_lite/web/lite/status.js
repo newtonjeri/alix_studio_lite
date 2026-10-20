@@ -73,9 +73,9 @@ function speedSlider() {
     try {
       const out = await post('/api/robots/speed', { pct: Number(input.value) });
       if (last) last.speed = out;
-      window.toast(`Speed ${out.pct} %: every MoveJ / MoveL of both arms goes at it.`);
+      window.toast(`Speed ${out.pct} %: every MoveJ / MoveL of both arms goes at it.`, 'good');
       document.dispatchEvent(new CustomEvent('lite:speed', { detail: out }));   // the 3D's moves to a start follow it
-    } catch (err) { window.toast(err.message || String(err)); } finally { speedBusy = false; poll(); }
+    } catch (err) { window.toast(err.message || String(err), 'error'); } finally { speedBusy = false; poll(); }
   });
   pill.before(box);
   return box;

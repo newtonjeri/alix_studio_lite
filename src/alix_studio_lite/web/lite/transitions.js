@@ -38,7 +38,7 @@ const deg = (j) => (Array.isArray(j) ? j.map(v => Number(v).toFixed(1)).join(', 
 
 function noUnit(side) {
   const t = TASKS[currentTask];
-  window.toast(`${t ? t.label : 'This task'} has no ${ARM(side)}-arm step, so it has no ${ARM(side)} transition or start point.`);
+  window.toast(`${t ? t.label : 'This task'} has no ${ARM(side)}-arm step, so it has no ${ARM(side)} transition or start point.`, 'warn');
 }
 
 // The card's lines: the file kept in the project, and what the chosen start point holds.
@@ -82,7 +82,7 @@ let box = null;
 async function simulate(side) {
   const u = unitOf(side);
   const tv = await transitionOf(side, true);
-  if (!tv) { window.toast(`Choose a ${ARM(side)} transition trajectory .txt file first.`); return; }
+  if (!tv) { window.toast(`Choose a ${ARM(side)} transition trajectory .txt file first.`, 'warn'); return; }
   box?.remove();
   const host = el('div', { class: 'lite-transition-3d', 'aria-label': '3D simulation of the transition' });
   const line = el('div', { class: 'mini-note', text: 'Loading the 3D view…' });
@@ -170,10 +170,10 @@ function programInput(side) {
 async function runReal(side) {
   const u = unitOf(side);
   const tv = await transitionOf(side, true);
-  if (!tv) { window.toast(`Choose a ${ARM(side)} transition trajectory .txt file first.`); return; }
+  if (!tv) { window.toast(`Choose a ${ARM(side)} transition trajectory .txt file first.`, 'warn'); return; }
   const inp = programInput(side);
   const pid = Number(inp.value);
-  if (!(pid >= 1 && pid <= 100)) { inp.focus(); window.toast('Enter the Program ID the transition is sent to (1 to 100).'); return; }
+  if (!(pid >= 1 && pid <= 100)) { inp.focus(); window.toast('Enter the Program ID the transition is sent to (1 to 100).', 'warn'); return; }
   const S = side === 'left' ? 'Left' : 'Right';
   const fs = document.getElementById(`transitionFile${S}Status`);
   const show = (j) => { if (fs) fs.textContent = `${ARM(side)} transition: ${jobLine(j)}`; };
@@ -186,7 +186,7 @@ async function runReal(side) {
     const job = await robotCall(unitUrl(u.key, 'transition/run'), { program_id: pid },
       { what: `The ${ARM(side)} transition (${tv.name}), with the ${side === 'left' ? 'RIGHT' : 'LEFT'} arm stopped,` });
     const j = await watchJob(job, show);
-    window.toast(j.state === 'done' ? `${ARM(side)} transition finished: the arm is at its end.` : `${ARM(side)} transition stopped: ${j.error || j.state}`);
+    window.toast(j.state === 'done' ? `${ARM(side)} transition finished: the arm is at its end.` : `${ARM(side)} transition stopped: ${j.error || j.state}`, j.state === 'done' ? 'good' : 'error');
   } catch (err) { tell(err); }
   paint();
 }
@@ -200,14 +200,14 @@ export function installTransitions() {
     if (!u) { noUnit(side); return; }
     const named = armFromName(file.name);
     if (named && named !== side) {
-      window.toast(`${file.name}'s name says the ${ARM(named)} arm: a ${ARM(side)} transition must be a ${ARM(side)}-arm file.`);
+      window.toast(`${file.name}'s name says the ${ARM(named)} arm: a ${ARM(side)} transition must be a ${ARM(side)}-arm file.`, 'warn');
       return;
     }
     const said = await stageDialog({ title: `${ARM(side)} transition: ${file.name}`, arm: named,
       body: `The pole height and hand pose ${file.name} was taught with: every run stages them first.` + (named ? '' : ' Its name does not say the arm.'),
       setup: u.setup, askArm: !named });
     if (!said) return;
-    if (said.arm !== side) { window.toast(`A ${ARM(said.arm)}-arm file cannot be the ${ARM(side)} transition.`); return; }
+    if (said.arm !== side) { window.toast(`A ${ARM(said.arm)}-arm file cannot be the ${ARM(side)} transition.`, 'warn'); return; }
     try {
       const out = await post(unitUrl(u.key, 'transition'), { name: file.name, content: await file.text(), arm: said.arm,
         pole_mm: said.pole_mm, hand: said.hand });
@@ -218,7 +218,7 @@ export function installTransitions() {
         project_path: out.transition.project_path };
       window.safeSaveTaskRecords();
       window.renderTaskStartPointTools();
-      window.toast(`${out.transition.name} kept in the project as the ${ARM(side)} transition.`);
+      window.toast(`${out.transition.name} kept in the project as the ${ARM(side)} transition.`, 'good');
     } catch (err) { tell(err); }
   };
 
@@ -235,39 +235,39 @@ export function installTransitions() {
       const n = (window.taskRecordForStartTools().startPoints[side]?.length || 0) + 1;
       const point = window.addTaskStartPointRecord(side, pointName(side, null, `${ARM(side)} Start ${n}`), 'captured-current-pose',
         { joints: c.joints_deg, pose: c.pose, pole_mm: c.pole_mm, hand: c.hand, capturedAt: c.at, controller: c.controller });
-      window.toast(`${point.name}: the ${ARM(side)} arm's pose read from its controller.`);
+      window.toast(`${point.name}: the ${ARM(side)} arm's pose read from its controller.`, 'good');
     } catch (err) { tell(err); }
   };
 
   window.addPreviousTaskEndStartPoint = async function addPreviousTaskEndStartPoint(side) {
-    if (currentTask <= 0) { window.toast('Task 1 has no previous task end position. Use Capture Current Pose or a transition trajectory.'); return; }
+    if (currentTask <= 0) { window.toast('Task 1 has no previous task end position. Use Capture Current Pose or a transition trajectory.', 'warn'); return; }
     const prev = TASKS[currentTask - 1], pu = unitOf(side, currentTask - 1);
     if (!unitOf(side)) { noUnit(side); return; }
-    if (!pu) { window.toast(`${prev.label} has no ${ARM(side)}-arm step, so it has no ${ARM(side)} end.`); return; }
+    if (!pu) { window.toast(`${prev.label} has no ${ARM(side)}-arm step, so it has no ${ARM(side)} end.`, 'warn'); return; }
     try {
       const e = await get(`/api/projects/${ctx.pid}/units/${pu.key}/end`);
       const point = window.addTaskStartPointRecord(side, pointName(side, `${ARM(side)} · ${prev.label} End`), 'previous-task-end',
         { joints: e.joints_deg, referenceTaskIndex: currentTask - 1, referenceTaskLabel: prev.label, trajectoryFile: e.name,
           trajectorySha256: e.sha256, from: e.which, pole_mm: e.stage.pole_mm, hand: e.stage.hand });
-      window.toast(`${point.name}: the last line of ${e.name} (${e.which === 'version' ? 'its kept version' : 'the recording as taught'}).`);
+      window.toast(`${point.name}: the last line of ${e.name} (${e.which === 'version' ? 'its kept version' : 'the recording as taught'}).`, 'good');
     } catch (err) { tell(err); }
   };
 
   window.saveTrajectoryEndAsStartPoint = async function saveTrajectoryEndAsStartPoint(side) {
     if (!unitOf(side)) { noUnit(side); return; }
     const tv = await transitionOf(side, true);
-    if (!tv) { window.toast(`Choose a ${ARM(side)} transition trajectory first.`); return; }
+    if (!tv) { window.toast(`Choose a ${ARM(side)} transition trajectory first.`, 'warn'); return; }
     const point = window.addTaskStartPointRecord(side, pointName(side, `${ARM(side)} · ${tv.name.replace(/\.txt$/i, '')} End`), 'trajectory-end',
       { joints: tv.end_joints_deg, trajectoryFile: tv.name, trajectorySha256: tv.sha256, pole_mm: tv.stage.pole_mm, hand: tv.stage.hand });
-    window.toast(`${point.name}: the transition's last line.`);
+    window.toast(`${point.name}: the transition's last line.`, 'good');
   };
 
   window.moveToTaskStartPoint = async function moveToTaskStartPoint(side) {
     const rec = window.taskRecordForStartTools(), id = rec.selectedStartPoint?.[side];
     const point = (rec.startPoints[side] || []).find(p => p.id === id);
-    if (!point) { window.toast(`Select a ${ARM(side)} start point first.`); return; }
+    if (!point) { window.toast(`Select a ${ARM(side)} start point first.`, 'warn'); return; }
     if (!Array.isArray(point.joints)) {
-      window.toast(`${point.name} has no joint values (it was saved before Lite read them): capture it again.`);
+      window.toast(`${point.name} has no joint values (it was saved before Lite read them): capture it again.`, 'warn');
       return;
     }
     const S = side === 'left' ? 'Left' : 'Right';
@@ -276,7 +276,7 @@ export function installTransitions() {
       const job = await robotCall(`/api/robots/${side}/move-joints`, { joints_deg: point.joints, name: point.name },
         { what: `Moving the ${ARM(side)} arm to “${point.name}”` });
       const j = await watchJob(job, (v) => { if (st) st.textContent = jobLine(v); });
-      window.toast(j.state === 'done' ? `${ARM(side)} arm at “${point.name}”.` : `${ARM(side)} move stopped: ${j.error || j.state}`);
+      window.toast(j.state === 'done' ? `${ARM(side)} arm at “${point.name}”.` : `${ARM(side)} move stopped: ${j.error || j.state}`, j.state === 'done' ? 'good' : 'error');
     } catch (err) { tell(err); }
     paint();
   };

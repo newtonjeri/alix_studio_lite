@@ -16,7 +16,7 @@ export function installAuth() {
     if (!operatorLoggedIn) return;
     session.set(null);
     window.showOperatorLogin();
-    window.toast('Please log in again: the Lite session has ended.');
+    window.toast('Please log in again: the Lite session has ended.', 'warn');
   });
 
   window.submitOperatorLogin = async function submitOperatorLogin() {
@@ -53,7 +53,7 @@ export function installAuth() {
       window.showProjectManager();
       window.toast(r.default_pin
         ? 'Logged in. The operator PIN is still the template PIN: ask an engineer to change it.'
-        : 'Operator login successful · choose a project to continue.');
+        : 'Operator login successful · choose a project to continue.', r.default_pin ? 'warn' : 'good');
     }, 180);
   };
 

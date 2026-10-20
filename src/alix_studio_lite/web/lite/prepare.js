@@ -92,7 +92,7 @@ async function setPhase(v) {
     ctx.units[s.key] = u;
     Object.assign(s, { phase: u.phase, phase_attached: u.phase_attached });   // the task list's copy, which the views read
     showPhase(u);
-    window.toast(`${u.display}: the commode is ${PHASE_WORDS[u.phase]} for this region.`);
+    window.toast(`${u.display}: the commode is ${PHASE_WORDS[u.phase]} for this region.`, 'good');
   } catch (err) { tell(err); refresh(); }
 }
 
@@ -136,7 +136,7 @@ async function afterTeaching(s, u, set, part) {
   if (!rec || !rec.stage || !armSelectionLocked) return;
   if (Math.abs(Number(rec.stage.pole_mm) - set.pole_mm) > 5) {
     window.toast(`${rec.name} was taught at pole ${rec.stage.pole_mm} mm. The arm moves with the pole, so it runs only at that `
-      + `height: ${set.pole_mm} mm is for the next recording (Record Again).`);
+      + `height: ${set.pole_mm} mm is for the next recording (Record Again).`, 'warn');
     return;
   }
   if (part === 'pole') return;                         // the pole's Apply applied no hand: nothing to ask
@@ -145,10 +145,10 @@ async function afterTeaching(s, u, set, part) {
   const yes = await confirmDialog({ title: `Use this hand for ${rec.name}?`, danger: false, ok: 'Use it for this recording',
     body: `${rec.name} was taught with the hand ${rec.stage.hand_text}. From now on every run of it stages the hand set here. `
       + 'Tune it again and keep it: Real Test runs the kept version.' });
-  if (!yes) { window.toast(`The hand set here is for the next recording; ${rec.name} keeps its own.`); return; }
+  if (!yes) { window.toast(`The hand set here is for the next recording; ${rec.name} keeps its own.`, 'warn'); return; }
   try {
     ctx.units[s.key] = await post(`${unitUrl(s.key, 'recordings')}/${rec.file}/hand`, { hand: set.hand, confirmed: true });
-    window.toast(`${rec.name} now runs with this hand. Tune it again, then keep it.`);
+    window.toast(`${rec.name} now runs with this hand. Tune it again, then keep it.`, 'good');
   } catch (err) { tell(err); }
 }
 
@@ -165,7 +165,7 @@ async function applySetup(kind) {
     showSetup(out.unit.setup);
     if (!out.job) {
       paintApplied(out.unit.applied);
-      window.toast(`Setup kept for ${s.display}: ${out.unit.setup.text}. In Visual sim nothing moves.`);
+      window.toast(`Setup kept for ${s.display}: ${out.unit.setup.text}. In Visual sim nothing moves.`, 'good');
       await afterTeaching(s, out.unit, body, part);
       return;
     }
@@ -176,12 +176,12 @@ async function applySetup(kind) {
       const said = `Not staged: ${done.error || 'staging stopped.'} ${done.hint || ''}`;
       $('liteSetupNote').textContent = said;
       $('liteSetupNote').classList.add('lite-bad');
-      window.toast(said);
+      window.toast(said, 'error');
       return;
     }
     $('liteSetupNote').classList.remove('lite-bad');
     window.toast(`${s.arm.toUpperCase()} ${part === 'pole' ? `pole at ${out.unit.setup.pole_mm} mm` : part === 'hand' ? 'hand set' : 'staged'}: `
-      + `${out.unit.setup.text} ` + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).'));
+      + `${out.unit.setup.text} ` + (mode === 'real' ? '(read back).' : '(emulated: in Hardware sim nothing moves).'), 'good');
     window.rcSyncGuidedValues();                       // the Advanced panel shows the same values (nothing is sent)
     await afterTeaching(s, out.unit, body, part);
   } catch (err) { paintApplied(); tell(err); }
@@ -257,7 +257,7 @@ async function regionPoints() {
 
 async function moveRegion() {
   const sel = $('regionPose'), status = $('liteRegionStatus');
-  if (!String(sel.value).startsWith('gp:')) { window.toast('Choose one of the controller’s global points first.'); return; }
+  if (!String(sel.value).startsWith('gp:')) { window.toast('Choose one of the controller’s global points first.', 'warn'); return; }
   const side = selectedArm, name = sel.value.slice(3), motion = $('lite_regionMotion')?.value || 'movej';
   try {
     const done = await movePoint(side, name, motion, 0, {}, (j) => { status.textContent = jobLine(j); });
@@ -271,13 +271,13 @@ async function moveRegion() {
 // Setup & Safety (feedback v2, slide 13): one button reads both arms' global points again.
 async function refreshAllPoints() {
   const sides = ['left', 'right'].filter(hasController);
-  if (!sides.length) { window.toast('Connect the arms with the live link (--robot realman) to read their global points.'); return; }
+  if (!sides.length) { window.toast('Connect the arms with the live link (--robot realman) to read their global points.', 'warn'); return; }
   const counts = await Promise.all(sides.map(async (side) => {
     try { const d = await loadPoints(side, true); return `${side.toUpperCase()} ${d.points.length}`; }
     catch (err) { return `${side.toUpperCase()}: ${say(err)}`; }
   }));
   for (const side of sides) document.dispatchEvent(new CustomEvent('lite:points', { detail: side }));
-  window.toast(`Global points read again from the controllers: ${counts.join(' · ')}.`);
+  window.toast(`Global points read again from the controllers: ${counts.join(' · ')}.`, 'good');
 }
 
 function refreshButton() {
@@ -326,7 +326,7 @@ async function savePoint() {
     document.dispatchEvent(new CustomEvent('lite:points', { detail: poseSide }));
     st.textContent = `Saved on the ${poseSide.toUpperCase()} controller as “${out.name}”${out.replaced ? ' (replaced)' : ''}: `
       + `the arm's joints and its pose in the ${out.work_frame || 'current'} work frame and ${out.tool_frame || 'current'} tool frame, read back.`;
-    window.toast(`Global point “${out.name}” saved on the ${poseSide.toUpperCase()} controller.`);
+    window.toast(`Global point “${out.name}” saved on the ${poseSide.toUpperCase()} controller.`, 'good');
   } catch (err) { st.textContent = say(err); tell(err); }
 }
 
@@ -343,7 +343,7 @@ export function installPrepare() {
     if (stage === 'teach' && currentStage === 'prepare' && ctx.pid) {
       const missing = await missingForTeaching();
       if (missing.length) {
-        window.toast(`Before teaching ${step()?.display || 'this region'}: ${missing.join('; ')}.`);
+        window.toast(`Before teaching ${step()?.display || 'this region'}: ${missing.join('; ')}.`, 'warn');
         return undefined;
       }
     }
@@ -351,7 +351,7 @@ export function installPrepare() {
   };
 
   window.demoApply = function demoApply(kind) {
-    if (!ctx.pid) { window.toast('Open a project first: Apply keeps the setup of its region.'); return; }
+    if (!ctx.pid) { window.toast('Open a project first: Apply keeps the setup of its region.', 'warn'); return; }
     applySetup(kind);
   };
 
@@ -382,14 +382,14 @@ export function installPrepare() {
   // Move to the selected start pose. BOTH asks one confirmation in Real, then sends both arms, and
   // says what each arm did: one arm refused or stopped never hides that the other one moved.
   window.demoMove = async function demoMove(which) {
-    if (!isSetupReady()) { window.toast('Complete all physical preparation checks first.'); return false; }
+    if (!isSetupReady()) { window.toast('Complete all physical preparation checks first.', 'warn'); return false; }
     const arms = which === 'BOTH' ? ['left', 'right'] : [String(which).toLowerCase()];
     const mode = await liteMode();
     let extra = {};
     if (arms.length > 1 && mode === 'real') {
       const yes = await confirmDialog({ title: 'Real robot: both arms will move', ok: 'Yes, move both arms', list: REAL_CHECKS,
         body: 'The LEFT and the RIGHT arm move to their selected start poses on the real robot.' });
-      if (!yes) { window.toast('Cancelled: nothing was sent to the robot.'); return false; }
+      if (!yes) { window.toast('Cancelled: nothing was sent to the robot.', 'warn'); return false; }
       extra = { confirmed: true };
     }
     lastMoveError = null;
@@ -421,7 +421,7 @@ export function installPrepare() {
     });
     if (lastMoveError) {
       const moved = arms.filter((a, i) => results[i].status === 'fulfilled');
-      if (moved.length) window.toast(`${say(lastMoveError)} The ${moved.map(a => a.toUpperCase()).join(' and ')} arm did reach its start pose.`);
+      if (moved.length) window.toast(`${say(lastMoveError)} The ${moved.map(a => a.toUpperCase()).join(' and ')} arm did reach its start pose.`, 'error');
       else tell(lastMoveError);
       return false;
     }

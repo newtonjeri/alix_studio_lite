@@ -38,7 +38,7 @@ async function switchMode(mode) {
     if (err.code !== 'confirm') { tell(err); return false; }
     const yes = await confirmDialog({ title: 'Switch to the real robot?', ok: 'Yes, use the real robot', list: REAL_CHECKS,
       body: 'Step 4 runs the trajectory on the physical arm: Lite switches to Real robot, and the controller to its REAL mode.' });
-    if (!yes) { window.toast('Not switched: nothing was run.'); return false; }
+    if (!yes) { window.toast('Not switched: nothing was run.', 'warn'); return false; }
     try { await post('/api/robots/mode', { mode, confirmed: true }); } catch (e2) { tell(e2); return false; }
   }
   document.dispatchEvent(new CustomEvent('lite:mode'));
@@ -78,7 +78,7 @@ async function runStep(kind) {
   if (!s || !ctx.pid) return;
   const hw = kind === 'hwsim';
   const status = hw ? $('realRunStatus') : $('liteRealRunStatus');
-  if (!hw && $('liteRealRunBtn')?.disabled) { window.toast('Step 4 opens once step 3 has run this version to its end in Hardware sim.'); return; }
+  if (!hw && $('liteRealRunBtn')?.disabled) { window.toast('Step 4 opens once step 3 has run this version to its end in Hardware sim.', 'warn'); return; }
   if (!(await switchMode(hw ? 'hwsim' : 'real'))) { status.textContent = 'Not run: the mode was not switched.'; return; }
   try {
     const u = await loadUnit(s.key);
@@ -328,7 +328,7 @@ async function teachAnother() {
     await refreshTasks().catch(() => {});            // the cards and the queue say where each file is now
     if (currentStage !== 'prepare') await window.setStage('prepare');
     document.getElementById('taskBoard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    window.toast(`${s.display} stays on the controller. Next: ${TASKS[next.i].label}, ${next.arm.toUpperCase()} arm: prepare it.`);
+    window.toast(`${s.display} stays on the controller. Next: ${TASKS[next.i].label}, ${next.arm.toUpperCase()} arm: prepare it.`, 'good');
     return;
   }
   window.resetWorkingTrajectoryState?.();
@@ -337,7 +337,7 @@ async function teachAnother() {
   window.setJourneyVisible?.(true, false);
   document.getElementById('taskBoard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   window.toast(`${s.display} stays on the controller. ${TASKS[currentTask]?.label || 'This'} is the last task in the queue: `
-    + 'choose a task in the Operator Journey, or the other arm, then prepare it.');
+    + 'choose a task in the Operator Journey, or the other arm, then prepare it.', 'good');
 }
 
 // The upload as a horizontal bar with its percentage (the owner, 14 Oct), under the page's status
@@ -366,7 +366,7 @@ function uploadBar(status) {
 
 export function installRealTest() {
   window.simulateUpload = async function simulateUpload() {
-    if (!window.validateProgramId()) { window.toast('Enter a valid Program ID from 1 to 100 before Upload.'); $('programId')?.focus(); return; }
+    if (!window.validateProgramId()) { window.toast('Enter a valid Program ID from 1 to 100 before Upload.', 'warn'); $('programId')?.focus(); return; }
     const s = step();
     if (!s || !ctx.pid) return;
     const pid = Number($('programId').value);
@@ -408,7 +408,7 @@ export function installRealTest() {
         ? `${side.toUpperCase()} at “${name}” (${motion === 'movel' ? 'MoveL' : 'MoveJ'})${real ? ', read back' : ': the controller’s SIM mode, nothing moved'}.`
         : `Stopped: ${done.error || 'the move did not finish.'} ${done.hint || ''}`;
       if (status) status.textContent = said;
-      window.toast(said);
+      window.toast(said, done.state === 'done' ? 'good' : 'error');
     } catch (err) { if (status) status.textContent = say(err); tell(err); }
     return undefined;
   };

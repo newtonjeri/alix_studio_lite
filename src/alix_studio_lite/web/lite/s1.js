@@ -170,13 +170,13 @@ const MAX_PARTS = 50;                                      // a merge's files at
 async function loadFiles(side, input) {
   const files = [...(input.files || [])].filter(f => /\.txt$/i.test(f.name));
   input.value = '';
-  if (!files.length) { window.toast('Choose .txt trajectory files.'); return; }
+  if (!files.length) { window.toast('Choose .txt trajectory files.', 'warn'); return; }
   const where = (f) => f.webkitRelativePath || f.name;
   files.sort((a, b) => where(a).localeCompare(where(b), undefined, { numeric: true, sensitivity: 'base' }));
   const other = files.filter(f => { const a = armFromName(where(f)); return a && a !== side; });
   const mine = files.filter(f => !other.includes(f));
   const otherArm = ARM(side === 'left' ? 'right' : 'left');
-  if (!mine.length) { window.toast(`${other.length === 1 ? `${other[0].name} is` : 'These files are'} named for the ${otherArm} arm: never merged on the ${ARM(side)} arm.`); return; }
+  if (!mine.length) { window.toast(`${other.length === 1 ? `${other[0].name} is` : 'These files are'} named for the ${otherArm} arm: never merged on the ${ARM(side)} arm.`, 'warn'); return; }
   const said = await stageDialog({ title: `Load ${mine.length === 1 ? mine[0].name : `${mine.length} files`} into the ${ARM(side)} merges`,
     body: LOAD_WARNING, arm: side });
   if (!said) { status(side, 'Nothing loaded: without their pole and hand, files cannot be checked against the others.', 'warn'); return; }
@@ -322,9 +322,9 @@ function move(side, i, d) {
 async function merge(side) {
   const s = st[side];
   if (s.busy) return;                                      // one merge at a time (a double click makes one)
-  if (!s.picked.length) { window.toast(`Add the ${ARM(side)} files to merge first.`); return; }
+  if (!s.picked.length) { window.toast(`Add the ${ARM(side)} files to merge first.`, 'warn'); return; }
   const off = s.picked.slice(1).map(r => s.items.find(it => it.ref === r)).filter(it => it && it.differs && it.differs.length);
-  if (off.length) { window.toast(`${off[0].name} cannot join this merge: ${off[0].differs.join('; ')}.`); return; }
+  if (off.length) { window.toast(`${off[0].name} cannot join this merge: ${off[0].differs.join('; ')}.`, 'warn'); return; }
   const name = ($(`liteS1Name_${side}`)?.value || '').trim();
   s.busy = true;
   status(side, 'Merging…');
@@ -366,16 +366,16 @@ async function download(side) {
   try {
     const blob = await call('GET', murl(side, m.file, 'download'), undefined, { raw: true });
     const saved = await saveBlobAs(blob, m.name, [{ description: 'Trajectory', accept: { 'text/plain': ['.txt'] } }]);
-    if (saved) window.toast(`Saved ${saved}.`);
+    if (saved) window.toast(`Saved ${saved}.`, 'good');
   } catch (err) { tell(err); }
 }
 
 async function upload(side) {
   const m = selected(side);
   if (!m) return;
-  if (st[side].sending) { window.toast(`${ARM(side)}: a file is being sent. Send the next one once it is on the controller.`); return; }
+  if (st[side].sending) { window.toast(`${ARM(side)}: a file is being sent. Send the next one once it is on the controller.`, 'warn'); return; }
   const inp = $(`liteS1Pid_${side}`), pid = Number(inp.value);
-  if (!(Number.isInteger(pid) && pid >= 1 && pid <= 100)) { inp.focus(); window.toast(`Enter the ${ARM(side)} Program ID (1 to 100).`); return; }
+  if (!(Number.isInteger(pid) && pid >= 1 && pid <= 100)) { inp.focus(); window.toast(`Enter the ${ARM(side)} Program ID (1 to 100).`, 'warn'); return; }
   st[side].sending = true;                                   // one send at a time (a double click sends once; the server holds it too)
   const btn = [...($(`liteS1Tools_${side}`)?.querySelectorAll('button') || [])].find(b => b.textContent === 'Upload to controller');
   if (btn) btn.disabled = true;
@@ -409,7 +409,7 @@ async function readSlots(side, refresh = false) {
   slotLine(side);
   if (refresh) {
     window.toast(`${ARM(side)} controller: ${slots[side].programs.length} programs${slots[side].read ? `, read ${slots[side].read}` : ''}.`
-      + (slots[side].note ? ` ${slots[side].note}` : ''));
+      + (slots[side].note ? ` ${slots[side].note}` : ''), 'good');
     document.dispatchEvent(new CustomEvent('lite:controller', { detail: { side, from: 's1' } }));
   }
 }
@@ -465,7 +465,7 @@ async function toTune(side) {
       ctx.tuneMerge = null;
       return;
     }
-    window.toast(`${m.name} is open in Tune + Simulation. What you keep there comes back to S1 as a new merge.`);
+    window.toast(`${m.name} is open in Tune + Simulation. What you keep there comes back to S1 as a new merge.`, 'good');
   } catch (err) { ctx.tuneKey = null; ctx.tuneMerge = null; tell(err); }
 }
 
@@ -497,7 +497,7 @@ async function show3d(side, again = false) {
     player.load(tl.total_s);
     if (again) player.seek(Math.min(at, tl.total_s)); else player.play();
   } catch (err) {
-    if (my === review.token) { window.toast(`Nothing plays: ${say(err)}`); frame(host).title(m.name, `Nothing plays: ${say(err)}`); }
+    if (my === review.token) { window.toast(`Nothing plays: ${say(err)}`, 'error'); frame(host).title(m.name, `Nothing plays: ${say(err)}`); }
   }
 }
 

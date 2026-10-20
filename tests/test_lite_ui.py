@@ -57,6 +57,67 @@ def test_the_neighbour_panels_use_the_pages_own_pictures_and_cards():
     assert ".lite-trio" in css and ".task-board.post-record .lite-side { display: none; }" in css
 
 
+def _calls(src, head):
+    """Each call ``head(...)`` in JavaScript source: (line, the text of its arguments), strings and templates skipped."""
+    def string_end(j):
+        q, k = src[j], j + 1
+        while k < len(src) and src[k] != q:
+            k += 2 if src[k] == "\\" else 1
+        return k + 1
+
+    def template_end(j):
+        while j < len(src):
+            if src[j] == "\\":
+                j += 2
+            elif src[j] == "`":
+                return j + 1
+            elif src[j] == "$" and src[j + 1] == "{":
+                j = nest_end(j + 2, "{", "}")
+            else:
+                j += 1
+        raise ValueError("template not closed")
+
+    def nest_end(j, opener, closer):
+        depth = 1
+        while j < len(src):
+            c = src[j]
+            if c in "'\"":
+                j = string_end(j)
+            elif c == "`":
+                j = template_end(j + 1)
+            else:
+                if c == opener:
+                    depth += 1
+                elif c == closer:
+                    depth -= 1
+                    if depth == 0:
+                        return j + 1
+                j += 1
+        raise ValueError("not closed")
+
+    out, i = [], src.find(head + "(")
+    while i >= 0:
+        end = nest_end(i + len(head) + 1, "(", ")")
+        out.append((src.count("\n", 0, i) + 1, src[i + len(head) + 1:end - 1]))
+        i = src.find(head + "(", end)
+    return out
+
+
+def test_every_notification_lite_raises_says_its_level():
+    """notify.js colours each notification by its level (the owner, 20 Oct: green good, orange warning, red error):
+    Lite's own modules say it with the message, as the last argument, so none falls back to reading the words."""
+    level = re.compile(r"(?:^'(?:good|warn|error)'$)|(?:\?\s*'(?:good|warn|error)'\s*:\s*'(?:good|warn|error)'$)")
+    bad = []
+    for f in bridge_files():
+        if f.name in ("notify.js", "fullseq.js"):            # the definition, and a wrapper that passes the level on
+            continue
+        for line, args in _calls(f.read_text(encoding="utf-8"), "window.toast"):
+            last = args.rsplit(",", 1)[-1].strip()
+            if not level.search(last):
+                bad.append(f"{f.name}:{line}: {args.strip()[:80]}")
+    assert not bad, "notifications without a level:\n" + "\n".join(bad)
+
+
 def test_no_remote_resources():
     page = (WEB / "index.html").read_text(encoding="utf-8")
     assert not re.search(r"""(src|href)=["']https?://""", page)

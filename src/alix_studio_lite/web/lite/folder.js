@@ -45,7 +45,7 @@ export function installFolder() {
     try {
       const root = await parent.getDirectoryHandle(safe, { create: true });
       const { files } = await get(`/api/projects/${id}/folder`);
-      window.toast(`Copying ${files.length} project files from Lite…`);
+      window.toast(`Copying ${files.length} project files from Lite…`, 'good');
       let bytes = 0;
       for (const f of files) {
         const parts = f.path.split('/');
@@ -78,7 +78,7 @@ export function installFolder() {
       await window.fsWriteJson(root, 'project_manifest.json', manifest);
       const readme = await (await (await root.getFileHandle('README.txt')).getFile()).text();
       await writeFile(root, 'README.txt', readme.split('IMPORTANT:')[0] + README_NOTE);
-      window.toast(`Project folder saved: ${project.name} · ${files.length} files from Lite (${(bytes / 1e6).toFixed(1)} MB) and ${rows.length} log events.`);
+      window.toast(`Project folder saved: ${project.name} · ${files.length} files from Lite (${(bytes / 1e6).toFixed(1)} MB) and ${rows.length} log events.`, 'good');
     } catch (err) {
       tell(Object.assign(err, { message: `The project folder has the page's manifests, but Lite's files were not all copied: ${err.message}` }));
     }

@@ -24,7 +24,7 @@ export function installPerf() {
     if (software && !told) {
       told = true;
       window.toast('The 3D is drawn in software (no graphics card in use), so simulations will lag. Close this Chrome '
-        + 'window and open Lite again (its terminal: run_lite); if it stays, restart the computer.');
+        + 'window and open Lite again (its terminal: run_lite); if it stays, restart the computer.', 'warn');
     }
   });
   try {

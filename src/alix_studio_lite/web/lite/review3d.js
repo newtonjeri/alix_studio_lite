@@ -206,7 +206,7 @@ async function saveTrim(asNew) {
   if (!unit || !rec) return;
   const first = Math.round(trim.a / CYCLE_S) + 1, last = Math.round(trim.b / CYCLE_S) + 1;
   const name = ($('liteTrimName')?.value || '').trim();
-  if (asNew && !name) { window.toast('Enter the name of the new recording.'); $('liteTrimName')?.focus(); return; }
+  if (asNew && !name) { window.toast('Enter the name of the new recording.', 'warn'); $('liteTrimName')?.focus(); return; }
   if (!asNew) {
     const yes = await confirmDialog({ title: `Overwrite ${rec.name}?`, ok: 'Overwrite it',
       body: `${rec.name} keeps lines ${first.toLocaleString()}–${last.toLocaleString()} of ${Number(rec.lines).toLocaleString()}; the rest is `
@@ -220,7 +220,7 @@ async function saveTrim(asNew) {
     const now = out.unit.recordings.find(x => x.file === out.unit.active);
     invalidate();                                       // the 3D reads the file again (Save keeps its name)
     window.toast(asNew ? `Saved as ${now ? now.name : name}: ${(last - first + 1).toLocaleString()} lines. It is the selected recording.`
-      : `${rec.name} is trimmed: ${(last - first + 1).toLocaleString()} lines kept.`);
+      : `${rec.name} is trimmed: ${(last - first + 1).toLocaleString()} lines kept.`, 'good');
     document.dispatchEvent(new CustomEvent('lite:recordings'));
   } catch (err) { tell(err); }
 }

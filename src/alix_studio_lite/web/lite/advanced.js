@@ -95,17 +95,17 @@ async function runSlot(side, program) {
   const done = await watchJob(j, (v) => window.rcSetStatus(side, jobLine(v), true));
   window.rcSetStatus(side, done.state === 'done' ? `${what}: done ✓` : (done.error || `${what} stopped`), false);
   window.rcAppend(side, `${what} // ${done.state.toUpperCase()}${done.error ? ' // ' + done.error : ''}`);
-  if (done.state !== 'done') window.toast(`${done.error || 'The program stopped.'} ${done.hint || ''}`);
+  if (done.state !== 'done') window.toast(`${done.error || 'The program stopped.'} ${done.hint || ''}`, 'error');
   return done;
 }
 
 const fileOf = (side) => document.getElementById(`rc${S(side)}Track`)?.files?.[0] || null;
 const slotOf = (side) => {
   const f = document.getElementById(`rc${S(side)}Slot`), id = Number(f?.value);
-  if (!Number.isInteger(id) || id < 1 || id > 100) { window.toast(`${S(side)} Program ID must be 1 to 100.`); f?.focus(); return null; }
+  if (!Number.isInteger(id) || id < 1 || id > 100) { window.toast(`${S(side)} Program ID must be 1 to 100.`, 'warn'); f?.focus(); return null; }
   return id;
 };
-const notConnected = (what) => window.toast(`${what} is not connected yet: nothing was sent. Run each program with Run Stored.`);
+const notConnected = (what) => window.toast(`${what} is not connected yet: nothing was sent. Run each program with Run Stored.`, 'warn');
 
 export function installAdvanced() {
   window.rcSetMode = async function rcSetMode(side, mode) {
@@ -125,13 +125,13 @@ export function installAdvanced() {
       if (link) {                                     // the live controller, as read (Lite only reads it)
         const mode = (link.feedback && link.feedback.run_mode) || 'not read';
         window.rcAppend(side, `MODE CHECK // live controller: ${mode} (read only) // E-stop ${st.arms[side].estop}`);
-        window.toast(`${S(side)} controller: run mode ${mode}, E-stop ${st.arms[side].estop}. Lite only reads it.`);
+        window.toast(`${S(side)} controller: run mode ${mode}, E-stop ${st.arms[side].estop}. Lite only reads it.`, 'good');
         return;
       }
       const a = await robotCall(`/api/robots/${side}/controller-mode`, { mode: 'CHECK' });
       robotControlState[side].mode = a.controller_mode;
       window.rcAppend(side, `MODE CHECK // ${a.connected ? a.controller_mode : 'not connected'} // E-stop ${a.estop}`);
-      window.toast(`${S(side)}: ${a.connected ? a.controller_mode : 'not connected'}, E-stop ${a.estop_text}.`);
+      window.toast(`${S(side)}: ${a.connected ? a.controller_mode : 'not connected'}, E-stop ${a.estop_text}.`, 'good');
     } catch (err) { tell(err); }
   };
 
@@ -219,14 +219,14 @@ export function installAdvanced() {
 
   window.rcPointMove = async function rcPointMove(side, motion) {
     const name = (document.getElementById(`rc${S(side)}PointSearch`)?.value || '').trim();
-    if (!name) { window.toast('Enter or choose a Global Point name first.'); return; }
+    if (!name) { window.toast('Enter or choose a Global Point name first.', 'warn'); return; }
     const move = String(motion).toLowerCase() === 'movel' ? 'movel' : 'movej';
     try {
       const done = await movePoint(side, name, move, waitOf(side), {}, (v) => window.rcSetStatus(side, jobLine(v), true));
       const what = `GLOBAL POINT // ${motion} // ${name} // ${speedOf()} %`;
       window.rcSetStatus(side, done.state === 'done' ? `${what}: done ✓` : (done.error || `${what} stopped`), false);
       window.rcAppend(side, `${what} // ${done.state.toUpperCase()}${done.error ? ' // ' + done.error : ''}`);
-      if (done.state !== 'done') window.toast(`${done.error || 'The move stopped.'} ${done.hint || ''}`);
+      if (done.state !== 'done') window.toast(`${done.error || 'The move stopped.'} ${done.hint || ''}`, 'error');
     } catch (err) { tell(err); }
   };
 
@@ -234,7 +234,7 @@ export function installAdvanced() {
   // first step that does not finish.
   window.rcRunPointSequence = async function rcRunPointSequence(side) {
     const steps = robotControlState[side].pointSequence;
-    if (!steps.length) { window.toast('Add one or more Global Points first.'); return; }
+    if (!steps.length) { window.toast('Add one or more Global Points first.', 'warn'); return; }
     let extra = {};
     for (const [i, st] of steps.entries()) {
       const move = String(st.motion).toLowerCase() === 'movel' ? 'movel' : 'movej';
@@ -245,7 +245,7 @@ export function installAdvanced() {
         window.rcAppend(side, `SEQUENCE ${i + 1}/${steps.length} // ${st.motion} // ${st.name} // ${done.state.toUpperCase()}`);
         if (done.state !== 'done') {
           window.rcSetStatus(side, `Sequence stopped at step ${i + 1}: ${done.error || 'the move did not finish'}`, false);
-          window.toast(`Sequence stopped at step ${i + 1}: ${done.error || 'the move did not finish.'}`);
+          window.toast(`Sequence stopped at step ${i + 1}: ${done.error || 'the move did not finish.'}`, 'error');
           return;
         }
       } catch (err) { tell(err); return; }
@@ -273,7 +273,7 @@ export function installAdvancedRuns() {
   window.rcProgramAction = async function rcProgramAction(side, action) {
     if (action !== 'RUN STORED') { notConnected(action === 'MULTI RUN' ? 'Multi Run' : 'Load Sequence'); return; }
     const program = (document.getElementById(`rc${S(side)}StoredProgram`)?.value || '').trim();
-    if (!program) { window.toast('Enter a Program ID or a program name first.'); return; }
+    if (!program) { window.toast('Enter a Program ID or a program name first.', 'warn'); return; }
     try {
       if (await visualSim()) await showMove(side, { program }, `program ${program}`);
       else await runSlot(side, program);
@@ -284,10 +284,10 @@ export function installAdvancedRuns() {
     const id = slotOf(side);
     if (!id) return;
     const file = fileOf(side);
-    if (action !== 'RUN ONLY' && !file) { window.toast(`Choose a ${S(side)} trajectory .txt file first.`); return; }
+    if (action !== 'RUN ONLY' && !file) { window.toast(`Choose a ${S(side)} trajectory .txt file first.`, 'warn'); return; }
     try {
       if (await visualSim()) {                  // nothing is sent: the file, or the slot's program, shown in 3D
-        if (action === 'UPLOAD ONLY') { window.toast('Visual sim sends nothing: choose Hardware sim or Real robot to upload.'); return; }
+        if (action === 'UPLOAD ONLY') { window.toast('Visual sim sends nothing: choose Hardware sim or Real robot to upload.', 'warn'); return; }
         await (action === 'RUN ONLY' ? showMove(side, { program: String(id) }, `program ${id}`)
           : showMove(side, { name: file.name, content: await file.text() }, file.name));
         return;
@@ -315,7 +315,7 @@ export function installAdvancedRuns() {
   window.rcRunDualStored = async function rcRunDualStored() {
     const l = (document.getElementById('rcDualLeftProgram')?.value || '').trim();
     const r = (document.getElementById('rcDualRightProgram')?.value || '').trim();
-    if (!l || !r) { window.toast('Enter both LEFT and RIGHT stored programs.'); return; }
+    if (!l || !r) { window.toast('Enter both LEFT and RIGHT stored programs.', 'warn'); return; }
     try {
       if (await visualSim()) {
         const [tl, tr] = await Promise.all([shape('left', { program: l }), shape('right', { program: r })]);
@@ -336,14 +336,14 @@ export function installAdvancedRuns() {
   window.rcPointMove = async function rcPointMove(side, motion) {
     if (!(await visualSim())) { await pointMove(side, motion); return; }
     const name = (document.getElementById(`rc${S(side)}PointSearch`)?.value || '').trim();
-    if (!name) { window.toast('Enter or choose a Global Point name first.'); return; }
+    if (!name) { window.toast('Enter or choose a Global Point name first.', 'warn'); return; }
     try { await showMove(side, { point: name, move: String(motion).toLowerCase() }, `${motion} to ${name}`); } catch (err) { tell(err); }
   };
   const pointSequence = window.rcRunPointSequence;
   window.rcRunPointSequence = async function rcRunPointSequence(side) {
     if (!(await visualSim())) { await pointSequence(side); return; }
     const steps = robotControlState[side].pointSequence;
-    if (!steps.length) { window.toast('Add one or more Global Points first.'); return; }
+    if (!steps.length) { window.toast('Add one or more Global Points first.', 'warn'); return; }
     let start = null;
     try {
       for (const [i, st] of steps.entries()) {          // each step from where the one before left the arm

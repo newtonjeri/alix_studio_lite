@@ -122,8 +122,8 @@ export async function robotCall(url, body = {}, { what = 'This move', replacing 
 }
 
 export function tell(err) {
-  if (err && err.code === 'cancelled') { window.toast(err.message); return; }
-  window.toast(say(err));
+  if (err && err.code === 'cancelled') { window.toast(err.message, 'warn'); return; }
+  window.toast(say(err), 'error');
   if (err && (err.code === 'mode' || err.code === 'connect')) document.dispatchEvent(new CustomEvent('lite:open-robot-panel'));
 }
 

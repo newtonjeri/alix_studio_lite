@@ -18,8 +18,8 @@ export const stopArm = (side) => send(`/api/robots/${side === 'right' ? 'right' 
 
 function report(promise, done) {
   promise.then((d) => {
-    if (d && d.error) window.toast(`${d.error} Press the red E-stop button on the robot if it is still moving.`);
-    else window.toast((d && d.message) || done);
+    if (d && d.error) window.toast(`${d.error} Press the red E-stop button on the robot if it is still moving.`, 'error');
+    else window.toast((d && d.message) || done, 'warn');
   });
 }
 

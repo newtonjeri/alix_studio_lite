@@ -362,7 +362,7 @@ async function goStep(n, scroll = true) {
   if (!unlocked(n)) {
     window.toast(n === 6 ? 'Generate first: Compare opens once the processed file is made from these settings.'
       : manualOnly(n) && unit && unit.active ? 'Time-optimal (TOPP-RA) takes none of the manual steps: choose Manual tuning in Setup.'
-        : 'This region has no recording yet: record it, or load a file in Save & Review.');
+        : 'This region has no recording yet: record it, or load a file in Save & Review.', 'warn');
     return;
   }
   const was = pipeStep;
@@ -558,7 +558,7 @@ async function loadAnalysis(again, withTarget = false) {
   const status = $('liteAnalysisStatus');
   if (!unit || !unit.active) { setStatus(status, 'Load a file to run automatic analysis.'); return; }
   const target = withTarget ? Number($('liteAnalysisTarget')?.value) : null;
-  if (withTarget && !(target > 0)) { window.toast('Type the optimised time in seconds first, e.g. 20.'); $('liteAnalysisTarget')?.focus(); return; }
+  if (withTarget && !(target > 0)) { window.toast('Type the optimised time in seconds first, e.g. 20.', 'warn'); $('liteAnalysisTarget')?.focus(); return; }
   if (again || !analysisNow()) {
     setStatus(status, 'Analysing…');
     if ($('liteApplySuggest')) $('liteApplySuggest').disabled = true;
@@ -1456,7 +1456,7 @@ export function installTune() {
       if (!ok) return;
       let back = null;
       try { back = (await post(unitUrl(ctx.tuneKey, 'keep'), {})).merge; } catch (err) { tell(err); return; }
-      window.toast(`${back.name} is saved in S1 as a new ${back.side.toUpperCase()} merge.`);
+      window.toast(`${back.name} is saved in S1 as a new ${back.side.toUpperCase()} merge.`, 'good');
       backToS1(back);
       return;
     }
@@ -1490,14 +1490,14 @@ export function installTune() {
   window.saveTunedTrajectoryAs = async function saveTunedTrajectoryAs() {
     if (!unit) return;
     await flushPush();
-    if (!fresh()) { window.toast('Generate first: Confirm & Generate makes the processed file.'); return; }
+    if (!fresh()) { window.toast('Generate first: Confirm & Generate makes the processed file.', 'warn'); return; }
     let name = ($('liteKeepName')?.value || '').trim() || outputName();
     if (!/\.txt$/i.test(name)) name += '.txt';
     const typed = !!$('liteKeepName')?.dataset.typed;
     try { await keepAs(name, !typed); } catch (err) { tell(err); return; }
     const ver = keptVersion();
-    if (ctx.tuneKey && unit.merge) { window.toast(`${unit.merge.name} is saved in S1 as a new ${unit.merge.side.toUpperCase()} merge.`); return; }
-    window.toast(`${(ver && ver.name) || name} is kept in the project: Real Test uploads it.`);
+    if (ctx.tuneKey && unit.merge) { window.toast(`${unit.merge.name} is saved in S1 as a new ${unit.merge.side.toUpperCase()} merge.`, 'good'); return; }
+    window.toast(`${(ver && ver.name) || name} is kept in the project: Real Test uploads it.`, 'good');
   };
 
   document.addEventListener('change', (e) => {

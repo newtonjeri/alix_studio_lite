@@ -266,8 +266,14 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-sim-scrub { width: min(240px, 30vw); accent-color: var(--blue); }
 .lite-sim-scrub:disabled { opacity: 0.4; }
 
-/* notifications stay 15 s (notify.js); a click closes one */
+/* notifications stay 15 s (notify.js); a click closes one. Each is coloured by what it says (the owner, 20 Oct):
+   green a success or a good status, orange a warning, red an error; the alerts the same */
 #toast { cursor: pointer; }
+#toast.lite-good { background: var(--green); color: white; }
+#toast.lite-warn { background: var(--orange); color: white; }
+#toast.lite-error { background: var(--red); color: white; }
+.lite-alert.good { border-left-color: var(--green); }
+.lite-alert.good .lite-alert-head b { color: var(--green); }
 .lite-arms-all { justify-content: flex-end; margin: 10px 0 0; }
 
 /* Tune + Simulation as the Trajectory V2 processor (tune.js): its six-step pipeline on V32's Tune

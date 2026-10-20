@@ -21,7 +21,7 @@ function queue(work) {
   chain = chain.then(work).catch((err) => {
     failed = true;
     window.setProjectSaveIndicator('unsaved', 'Save failed');
-    window.toast(`Could not save the project: ${say(err)}`);
+    window.toast(`Could not save the project: ${say(err)}`, 'error');
   });
   return chain;
 }
@@ -91,8 +91,8 @@ export function installProjects() {
     const name = clean(document.getElementById('newProjectName')?.value) || window.defaultNewProjectName();
     try {
       const out = await post('/api/projects/name-check', { name });
-      if (!out.ok) { nameRefused(out.problem); window.toast(out.problem); return; }
-    } catch (err) { window.toast(`Could not check the project name: ${say(err)}`); return; }
+      if (!out.ok) { nameRefused(out.problem); window.toast(out.problem, 'warn'); return; }
+    } catch (err) { window.toast(`Could not check the project name: ${say(err)}`, 'error'); return; }
     pageCreateFromPanel();
   };
 
@@ -120,8 +120,8 @@ export function installProjects() {
       await flush();
       remember(await post(`/api/projects/${id}/duplicate`));
       window.renderProjectManager();
-      window.toast('Project duplicated, with its files.');
-    } catch (err) { window.toast(`Could not duplicate the project: ${say(err)}`); }
+      window.toast('Project duplicated, with its files.', 'good');
+    } catch (err) { window.toast(`Could not duplicate the project: ${say(err)}`, 'error'); }
   };
 
   window.deleteProject = async (id) => {
@@ -135,22 +135,22 @@ export function installProjects() {
       delete cache[id];
       if (id === currentProjectId) { currentProjectId = null; window.updateCurrentProjectHeader(); }
       window.renderProjectManager();
-      window.toast('Project deleted.');
-    } catch (err) { window.toast(`Could not delete the project: ${say(err)}`); }
+      window.toast('Project deleted.', 'good');
+    } catch (err) { window.toast(`Could not delete the project: ${say(err)}`, 'error'); }
   };
 
   window.exportProjectFile = async (id = currentProjectId) => {
     if (id === currentProjectId) window.saveCurrentProjectNow('Project file export');
     const p = cache[id];
-    if (!p) { window.toast('No project selected.'); return; }
+    if (!p) { window.toast('No project selected.', 'warn'); return; }
     try {
       await flush();
       const blob = await get(`/api/projects/${id}/export`, { raw: true });
       const name = `${(p.name || 'ALIX_Project').replace(/[^A-Za-z0-9_-]+/g, '_')}.alixproj`;
       await saveFile(blob, name, 'ASL Project', { 'application/zip': ['.alixproj'] });
-      window.toast(`Project file saved: ${p.name}`);
+      window.toast(`Project file saved: ${p.name}`, 'good');
     } catch (err) {
-      if (err?.name !== 'AbortError') window.toast(`Could not save the project file: ${say(err)}`);
+      if (err?.name !== 'AbortError') window.toast(`Could not save the project file: ${say(err)}`, 'error');
     }
   };
 
@@ -161,9 +161,9 @@ export function installProjects() {
       const data = await file.arrayBuffer();
       remember(await post(`/api/projects/import?name=${encodeURIComponent(file.name)}`, data));
       window.renderProjectManager();
-      window.toast('Project imported. Open it from the Project Library.');
+      window.toast('Project imported. Open it from the Project Library.', 'good');
     } catch (err) {
-      window.toast(`Invalid ALIX project file: ${say(err)}`);
+      window.toast(`Invalid ALIX project file: ${say(err)}`, 'error');
     } finally {
       event.target.value = '';
     }

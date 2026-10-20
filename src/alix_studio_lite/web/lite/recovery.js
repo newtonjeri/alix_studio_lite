@@ -52,7 +52,7 @@ async function dragMode(side) {
     await robotCall(`/api/robots/${side}/drag-mode`, { on: true }, {
       what: `Arm Drag Mode on the ${side.toUpperCase()} arm: it becomes free to be moved by hand, for recovery only (nothing is `
         + 'recorded). Support the arm: it can sag if its load is not set right. Everything else is locked until Normal Mode' });
-    window.toast(`${side.toUpperCase()} arm in Arm Drag Mode: move it by hand, then press Normal Mode.`);
+    window.toast(`${side.toUpperCase()} arm in Arm Drag Mode: move it by hand, then press Normal Mode.`, 'good');
   } catch (err) { tell(err); }
   refresh();
 }
@@ -69,7 +69,7 @@ async function normalMode() {
     }
     const held = out.filter(a => a.recovery);
     window.toast(held.length ? `Still held: ${held.map(a => `${a.side.toUpperCase()}: ${a.recovery_note}`).join('; ')}.`
-      : 'Normal Mode: the arm is at rest with no error. The page is unlocked.');
+      : 'Normal Mode: the arm is at rest with no error. The page is unlocked.', held.length ? 'warn' : 'good');
   } catch (err) { tell(err); }
   busy = false;
   refresh();
@@ -78,7 +78,7 @@ async function normalMode() {
 async function clearErrors(side) {
   try {
     const out = await post(`/api/robots/${side}/clear-errors`, {});
-    window.toast(out.clean ? `${side.toUpperCase()} controller: errors cleared.` : `${side.toUpperCase()} controller: still ${out.text}.`);
+    window.toast(out.clean ? `${side.toUpperCase()} controller: errors cleared.` : `${side.toUpperCase()} controller: still ${out.text}.`, out.clean ? 'good' : 'warn');
   } catch (err) { tell(err); }
   refresh();
 }

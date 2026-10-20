@@ -154,19 +154,19 @@ export async function refreshPlacement() {
 }
 
 async function saveRoom() {
-  if (!ctx.pid) { window.toast('Open a project first.'); return; }
+  if (!ctx.pid) { window.toast('Open a project first.', 'warn'); return; }
   const body = Object.fromEntries(ROOM.map(([k]) => [k, num($(`liteRoom_${k}`)?.value)]));
   try {
     view = await post(`/api/projects/${ctx.pid}/placement/room`, { ...body, task: task() });
     fill();
     changed();
     const notes = (view.scene.notes || []).filter(n => !n.startsWith('No UGV standoff'));
-    window.toast(notes.length ? `Room saved, with a warning: ${notes.join(' ')}` : 'Room saved: the 3D view uses these walls.');
+    window.toast(notes.length ? `Room saved, with a warning: ${notes.join(' ')}` : 'Room saved: the 3D view uses these walls.', notes.length ? 'warn' : 'good');
   } catch (err) { tell(err); }
 }
 
 async function saveTask() {
-  if (!ctx.pid) { window.toast('Open a project first.'); return false; }
+  if (!ctx.pid) { window.toast('Open a project first.', 'warn'); return false; }
   const body = { task: task(), standoff_mm: num($('liteStandoffMm')?.value) };
   for (const [id, k] of MOVES) body[k] = num($(id)?.value);
   try {
@@ -179,7 +179,7 @@ async function saveTask() {
     rec.ugvPositionByArm = { left: ugv, right: ugv };
     rec.ugvStandoffMm = body.standoff_mm;
     window.safeSaveTaskRecords();
-    window.toast(`UGV placement saved for ${task()}: standoff ${body.standoff_mm} mm (both arms).`);
+    window.toast(`UGV placement saved for ${task()}: standoff ${body.standoff_mm} mm (both arms).`, 'good');
     return true;
   } catch (err) { tell(err); return false; }
 }

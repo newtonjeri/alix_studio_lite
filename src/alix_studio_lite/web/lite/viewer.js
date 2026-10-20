@@ -322,7 +322,7 @@ async function useFor(side, target) {
     armSelectionLocked = true;
     window.updateArmLockUI();
     window.setStage('review');
-    window.toast(`${f.name} is now the active recording of ${target.display}.`);
+    window.toast(`${f.name} is now the active recording of ${target.display}.`, 'good');
   } catch (err) { tell(err); }
 }
 

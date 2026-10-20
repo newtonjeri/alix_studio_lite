@@ -2,7 +2,8 @@
 // request, 14 October): a controller's error codes, a robot command refused or failed with its
 // return code, STOP not confirmed, an E-stop press, a link that stopped reading. They come with
 // the robot status (status.js polls it; server/logbook.py keeps them), newest last, and every one
-// is also in the hardware log. Closed ones stay closed in this browser tab.
+// is also in the hardware log. Closed ones stay closed in this browser tab. Each is coloured by its
+// level (the owner, 20 Oct): red an error, orange a warning, green a good status (an arm connected again).
 
 import { el } from './ctx.js';
 
@@ -33,9 +34,10 @@ function tidy() {
 
 function card(a) {
   const when = new Date(a.at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const head = { error: 'Hardware error', warn: 'Hardware warning', good: 'Hardware status' }[a.level] || 'Hardware status';
   return el('div', { class: `lite-alert ${a.level}`, role: a.level === 'error' ? 'alert' : 'status' },
     el('div', { class: 'lite-alert-head' },
-      el('b', { text: `${a.side ? a.side.toUpperCase() + ' · ' : ''}${a.level === 'error' ? 'Hardware error' : 'Hardware warning'}` }),
+      el('b', { text: `${a.side ? a.side.toUpperCase() + ' · ' : ''}${head}` }),
       el('small', { text: when }),
       el('button', { class: 'lite-alert-x', type: 'button', 'aria-label': 'Close this message', text: '✕', onclick: () => close(a.key) })),
     el('div', { text: a.text }),

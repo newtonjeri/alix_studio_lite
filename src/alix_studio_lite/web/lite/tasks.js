@@ -160,7 +160,7 @@ export function installTasks() {
   window.selectArm = function selectArm(a) {
     const t = TASKS[currentTask];
     if (t && t.lite && later(t, a) && !bothLater(t)) {
-      if (!quiet) window.toast(t.lite[a] ? `${t.lite[a].display} is not in Release 1: it will be added later.` : `This task does not use the ${a.toUpperCase()} arm.`);
+      if (!quiet) window.toast(t.lite[a] ? `${t.lite[a].display} is not in Release 1: it will be added later.` : `This task does not use the ${a.toUpperCase()} arm.`, 'warn');
       return;
     }
     pageSelectArm(a);
@@ -208,7 +208,7 @@ export function installTasks() {
     const id = pageCreate(name);
     ctx.pid = id;
     await flush();                                        // the project now exists on the server
-    try { await refreshTasks(); } catch (err) { window.toast(say(err)); }
+    try { await refreshTasks(); } catch (err) { window.toast(say(err), 'error'); }
     document.dispatchEvent(new CustomEvent('lite:step'));
     return id;
   };
