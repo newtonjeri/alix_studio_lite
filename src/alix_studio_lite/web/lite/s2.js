@@ -308,7 +308,7 @@ async function refreshSources(said = false) {
     window.toast(`Read from the controllers: programs LEFT ${S.sources.left.programs.length}, RIGHT ${S.sources.right.programs.length}; global points `
       + ARMS.map(s => (S.sources[s].points_read ? `${ARM(s)} ${S.sources[s].points.length}` : `${ARM(s)} not read (connect the arm)`)).join(', ') + '.'
       + (cleared.length ? ` Cleared (no longer on the controller): ${cleared.join(', ')}.` : '')
-      + (gone.length ? ` Not on the controller: ${gone.join(', ')}.` : ''));
+      + (gone.length ? ` Not on the controller: ${gone.join(', ')}.` : ''), cleared.length || gone.length ? 'warn' : 'good');
   }
 }
 
@@ -344,7 +344,7 @@ function recheckPick() {
   if (still) return;
   S.pick = null;
   window.toast(S.scope === 'task' ? 'The steps changed: choose the task again (its row no longer holds that Program).'
-    : 'The steps changed: choose the dual-arm task again.');
+    : 'The steps changed: choose the dual-arm task again.', 'warn');
 }
 
 function saveSteps(side) {
@@ -399,12 +399,12 @@ function append(side, step) {
 
 function addProgram(side) {
   const m = /^\s*(\d+)/.exec(val(side, 'prog'));
-  if (!m) { window.toast(`${ARM(side)}: choose or enter a Program ID.`); return; }
+  if (!m) { window.toast(`${ARM(side)}: choose or enter a Program ID.`, 'warn'); return; }
   const id = Number(m[1]);
-  if (!(id >= 1 && id <= 100)) { window.toast('Program ID must be 1-100.'); return; }
+  if (!(id >= 1 && id <= 100)) { window.toast('Program ID must be 1-100.', 'warn'); return; }
   let start = Math.trunc(Number(val(side, 'start')));
   if (!Number.isFinite(start)) start = 30;
-  if (!(start >= 1 && start <= 100)) { window.toast('Start / Transit speed must be 1-100%.'); return; }
+  if (!(start >= 1 && start <= 100)) { window.toast('Start / Transit speed must be 1-100%.', 'warn'); return; }
   const known = S.sources[side].programs.find(p => p.id === id);
   const rule = RULES.includes(val(side, 'rule')) ? val(side, 'rule') : 'TOGETHER';
   append(side, { type: 'program', id, name: (known && known.name) || '', speed: 100, transit_speed: start, dual_rule: rule });
@@ -412,23 +412,23 @@ function addProgram(side) {
 
 function addGlobal(side) {
   const name = val(side, 'point');
-  if (!name) { window.toast(`${ARM(side)}: choose or enter a global point name.`); return; }
+  if (!name) { window.toast(`${ARM(side)}: choose or enter a global point name.`, 'warn'); return; }
   const speed = Math.trunc(Number(val(side, 'gspeed'))), wait = Number(val(side, 'gwait') || 0);
-  if (!Number.isFinite(speed) || !Number.isFinite(wait)) { window.toast('Speed and Wait must be numeric.'); return; }
-  if (!(speed >= 1 && speed <= 100)) { window.toast('Speed must be 1-100%.'); return; }
-  if (!(wait >= 0 && wait <= 3600)) { window.toast('Wait must be 0-3600 seconds.'); return; }
+  if (!Number.isFinite(speed) || !Number.isFinite(wait)) { window.toast('Speed and Wait must be numeric.', 'warn'); return; }
+  if (!(speed >= 1 && speed <= 100)) { window.toast('Speed must be 1-100%.', 'warn'); return; }
+  if (!(wait >= 0 && wait <= 3600)) { window.toast('Wait must be 0-3600 seconds.', 'warn'); return; }
   append(side, { type: 'global', name, move: val(side, 'move') === 'movel' ? 'movel' : 'movej', speed, wait_s: wait });
 }
 
 function addPole(side) {
   const mm = Number(val(side, 'pole'));
-  if (!(mm >= 0 && mm <= 315) || val(side, 'pole') === '') { window.toast('Pole height must be 0-315 mm.'); return; }
+  if (!(mm >= 0 && mm <= 315) || val(side, 'pole') === '') { window.toast('Pole height must be 0-315 mm.', 'warn'); return; }
   append(side, { type: 'pole', mm });
 }
 
 function addWait(side) {
   const s = Number(val(side, 'wait'));
-  if (!(s >= 0 && s <= 3600) || val(side, 'wait') === '') { window.toast('Wait must be 0-3600 seconds.'); return; }
+  if (!(s >= 0 && s <= 3600) || val(side, 'wait') === '') { window.toast('Wait must be 0-3600 seconds.', 'warn'); return; }
   append(side, { type: 'wait', seconds: s });
 }
 
@@ -436,7 +436,7 @@ function setHand(side, values) { values.forEach((v, i) => { $(`liteS2_${side}_h$
 
 function addHand(side) {
   const values = [0, 1, 2, 3, 4, 5].map(i => Math.trunc(Number(val(side, `h${i}`))));
-  if (values.some(v => !Number.isFinite(v) || v < 0 || v > 1000)) { window.toast('All six Hand values must be 0-1000.'); return; }
+  if (values.some(v => !Number.isFinite(v) || v < 0 || v > 1000)) { window.toast('All six Hand values must be 0-1000.', 'warn'); return; }
   append(side, { type: 'hand', values });
 }
 
@@ -464,7 +464,7 @@ async function cameraCheck(side) {
 // pose: the speed slider's speed, the controller's SIM mode in Hardware sim, the robot's confirmation in Real.
 async function movePose(side) {
   const name = $(`liteS2_${side}_pose`)?.value, p = (S.poses || []).find(x => x.name === name);
-  if (!p) { window.toast('Choose an inspection pose.'); return; }
+  if (!p) { window.toast('Choose an inspection pose.', 'warn'); return; }
   const box = $(`liteS2Camera_${side}`);
   box.replaceChildren(el('div', { class: 'mini-note', text: `Moving the RIGHT arm to ${p.title}...` }));
   try {
@@ -479,14 +479,14 @@ async function movePose(side) {
 
 function addMechanism(side) {
   const task = $(`liteS2_${side}_task`)?.value, t = S.mechanisms[task];
-  if (!t) { window.toast('Choose a lid or seat task.'); return; }
+  if (!t) { window.toast('Choose a lid or seat task.', 'warn'); return; }
   for (const s of ARMS) {
     S.steps[s].push({ type: 'mechanism', task });
     S.sel[s] = S.steps[s].length - 1;
     paintArm(s);
     saveSteps(s);
   }
-  window.toast(`${t.title}: added at the end of both arms' lists (UP / DOWN place it in each).`);
+  window.toast(`${t.title}: added at the end of both arms' lists (UP / DOWN place it in each).`, 'good');
 }
 
 // A lid or seat task is on both arms: the k-th of one arm's is the k-th of the other's.
@@ -505,7 +505,7 @@ function moveSel(side, d) {
 function duplicate(side) {
   const i = S.sel[side];
   if (i == null) return;
-  if (S.steps[side][i].type === 'mechanism') { window.toast('A lid or seat task is added to both arms from the LID / SEAT tab.'); return; }
+  if (S.steps[side][i].type === 'mechanism') { window.toast('A lid or seat task is added to both arms from the LID / SEAT tab.', 'warn'); return; }
   S.steps[side].splice(i + 1, 0, JSON.parse(JSON.stringify(S.steps[side][i])));
   S.sel[side] = i + 1;
   paintArm(side);
@@ -522,7 +522,7 @@ function remove(side) {
       S.sel[other] = S.steps[other].length ? Math.min(j, S.steps[other].length - 1) : null;
       paintArm(other);
       saveSteps(other);
-      window.toast(`${(S.mechanisms[S.steps[side][i].task] || {}).title || 'The task'}: removed from both arms.`);
+      window.toast(`${(S.mechanisms[S.steps[side][i].task] || {}).title || 'The task'}: removed from both arms.`, 'good');
     }
   }
   S.steps[side].splice(i, 1);
@@ -542,11 +542,11 @@ async function clear(side) {
 }
 
 async function saveFile(side) {
-  if (!S.steps[side].length) { window.toast(`${ARM(side)} sequence is empty.`); return; }
+  if (!S.steps[side].length) { window.toast(`${ARM(side)} sequence is empty.`, 'warn'); return; }
   try {
     const blob = await call('GET', `${base()}/${side}/download`, undefined, { raw: true });
     const saved = await saveBlobAs(blob, `${side}_workflow_sequence.json`, [{ description: 'JSON sequence', accept: { 'application/json': ['.json'] } }]);
-    if (saved) window.toast(`Saved ${saved}.`);
+    if (saved) window.toast(`Saved ${saved}.`, 'good');
   } catch (err) { tell(err); }
 }
 
@@ -560,8 +560,8 @@ async function loadFile(side, e) {
     S.sel[side] = S.steps[side].length ? 0 : null;
     S.edited = true;                                         // not as simulated any more
     recheckPick();
-    window.toast(`${ARM(side)}: ${S.steps[side].length} step(s) loaded from ${f.name}.`);
-  } catch (err) { window.toast(`Could not load sequence: ${say(err)}`); }
+    window.toast(`${ARM(side)}: ${S.steps[side].length} step(s) loaded from ${f.name}.`, 'good');
+  } catch (err) { window.toast(`Could not load sequence: ${say(err)}`, 'error'); }
   paintAll();
 }
 
@@ -628,7 +628,7 @@ function paintAll() {
 }
 
 function setMode(m) {
-  if (S.job) { window.toast('The mode stays as it is while a sequence or a simulation runs.'); return; }
+  if (S.job) { window.toast('The mode stays as it is while a sequence or a simulation runs.', 'warn'); return; }
   S.mode = m;
   paintAll();
 }
@@ -723,13 +723,13 @@ function gate() {
 // ── running: Simulation Mode or Real Machine Mode
 
 async function run(mode) {
-  if (!ctx.pid) { window.toast('Open a project first.'); return; }
-  if (S.job) { window.toast('A sequence is already running.'); return; }
+  if (!ctx.pid) { window.toast('Open a project first.', 'warn'); return; }
+  if (S.job) { window.toast('A sequence is already running.', 'warn'); return; }
   try { await saved(); } catch (err) { tell(err); return; }
   const w = what(mode);
-  if (!w) { window.toast(S.scope === 'task' ? 'Choose the task first: a Program row.' : 'Choose the dual-arm task first: a stage of the plan.'); return; }
-  if (w.mode === 'both' && (!S.steps.left.length || !S.steps.right.length)) { window.toast('Build or load BOTH LEFT and RIGHT sequences first.'); return; }
-  if (w.mode !== 'both' && !S.steps[w.mode].length) { window.toast(`${ARM(w.mode)} sequence is empty.`); return; }
+  if (!w) { window.toast(S.scope === 'task' ? 'Choose the task first: a Program row.' : 'Choose the dual-arm task first: a stage of the plan.', 'warn'); return; }
+  if (w.mode === 'both' && (!S.steps.left.length || !S.steps.right.length)) { window.toast('Build or load BOTH LEFT and RIGHT sequences first.', 'warn'); return; }
+  if (w.mode !== 'both' && !S.steps[w.mode].length) { window.toast(`${ARM(w.mode)} sequence is empty.`, 'warn'); return; }
   if (S.mode === 'sim') simulate(w);
   else runReal(w);
 }
@@ -764,7 +764,7 @@ async function runReal(w) {
       const go = await confirmDialog({ title: 'Run it without simulating it first?', ok: 'Yes, run it on the real robot',
         body: `${err.message} It has not been played in Simulation Mode, so its collision check has not been made. `
           + 'Do you want to run it on the real hardware without simulating it first?' });
-      if (!go) { window.toast('Not run: nothing was sent to the robot. Simulation Mode plays it in 3D first.'); return; }
+      if (!go) { window.toast('Not run: nothing was sent to the robot. Simulation Mode plays it in 3D first.', 'warn'); return; }
       body.unsimulated_ok = true;
       job = await post(`${base()}/run`, body);
     }
@@ -784,7 +784,7 @@ async function runReal(w) {
         + `Overall controller speed: ${speedPct()}%. ${warns.length ? `The simulation found: ${warns.join(' ')} ` : ''}`
         + 'Confirm both work areas are clear and both hardware E-stops are accessible.',
       list: REAL_CHECKS });
-    if (!yes) { window.toast('Cancelled: nothing was sent to the robot.'); return; }
+    if (!yes) { window.toast('Cancelled: nothing was sent to the robot.', 'warn'); return; }
     try { job = await post(`${base()}/run`, { ...body, confirmed: true, warnings_seen: S.sim && S.sim.hash }); } catch (e2) { tell(e2); return; }
   }
   follow(job);
@@ -801,8 +801,8 @@ async function follow(job) {
       if (done.state === 'done') { const sim = (await get(base())).sim; S.job = null; setSim(sim, true); }
       return;
     }
-    if (done.state === 'done') window.toast(`Sequence complete (${fmt(done.elapsed_s)}).`);
-    else if (done.state === 'cancelled') window.toast('The sequence was stopped.');
+    if (done.state === 'done') window.toast(`Sequence complete (${fmt(done.elapsed_s)}).`, 'good');
+    else if (done.state === 'cancelled') window.toast('The sequence was stopped.', 'warn');
     else tell(Object.assign(new Error(done.error || 'The sequence did not finish.'), { hint: done.hint }));
     if (done.state !== 'done' && done.error) S.status = `PROGRAM RULES STOPPED // ${done.error}`;
   } catch (err) { tell(err); } finally {
@@ -920,7 +920,10 @@ async function frames(side, stage) {
   const k = `${side}:${stage}`;
   if (!view.frames.has(k)) {
     const p = post(`${base()}/frames`, { side, stage, hash: S.sim && S.sim.hash });   // this simulation's, no other's
-    p.catch(() => setTimeout(() => { if (view.frames.get(k) === p) view.frames.delete(k); }, 2000));   // asked again later
+    p.catch((err) => {                                     // asked again later, unless its files are not on this computer
+      if (err && err.code === 'files') return;               // (a simulation made elsewhere): a new simulation is needed
+      setTimeout(() => { if (view.frames.get(k) === p) view.frames.delete(k); }, 2000);
+    });
     view.frames.set(k, p);
   }
   return view.frames.get(k);
@@ -945,7 +948,7 @@ async function prefetch() {
 }
 
 function playSim(fromStart = false) {
-  if (!S.sim) { window.toast('Run the sequence in Simulation Mode first.'); return; }
+  if (!S.sim) { window.toast('Run the sequence in Simulation Mode first.', 'warn'); return; }
   if (!(S.sim.total_s > 0)) { view.clean = true; simEnded(); return; }   // nothing that takes time: it is at its end
   if (!view.three || view.three.viewer.host !== $('liteS2Host')) {     // the 3D first: a run with nothing shown is not played
     prefetch().then((ok) => { if (ok) playSim(fromStart); });
@@ -1057,11 +1060,11 @@ async function simEnded() {
         + `${missing.length === 1 ? 'it' : 'them'} on the controllers, and asks, before it runs.`;
       $('liteS2SimState').className = 'lite-status warn';
       $('liteS2SimState').textContent = text;
-      window.toast(text);
+      window.toast(text, 'warn');
     } else {
       $('liteS2SimState').className = 'lite-status ok';
       $('liteS2SimState').textContent = 'Played to its end with every step drawn: Real Machine Mode can run it as it is.';
-      window.toast('Simulation complete, every step drawn: Real Machine Mode can run it as it is.');
+      window.toast('Simulation complete, every step drawn: Real Machine Mode can run it as it is.', 'good');
     }
   } catch (err) { tell(err); }
   paintAll();

@@ -1281,10 +1281,14 @@ def _inside(a: dict, t: float, md_of):
         return p0, h0, q0 + float(_ease(g)) * (q1 - q0)
     if a["kind"] == "stream":                    # a lid or seat plan's arm move: its own 5 ms lines
         md = md_of(a["file"])
+        if md is None:
+            raise MissingFile(a)
         i = int(round((t - a["t0"]) / CYCLE_S))
         return p0, h0, md[max(0, min(md.shape[0] - 1, i))] / 1000.0
     if a["kind"] == "program" and a.get("drawn"):
         md = md_of(a["file"])
+        if md is None:
+            raise MissingFile(a)
         if t < a["traj_t0"]:
             g = (t - a["t0"]) / max(1e-9, a["traj_t0"] - a["t0"])
             return p0, h0, q0 + float(_ease(g)) * (md[0] / 1000.0 - q0)
@@ -1309,7 +1313,50 @@ def load_sim(units) -> dict | None:
         return None
 
 
-def _md_reader():
+PROJECT_DIRS = ("trajectories", "merged", "sequence", "setup", "simulation", "controller_exports")
+
+
+def portable(path, root) -> str:
+    """A file's path as the simulation keeps it: relative to the project's folder when the file is in it (the
+    simulation then plays on any computer the project is copied to), else as it is (a library file)."""
+    try:
+        return str(Path(str(path)).relative_to(Path(root)))
+    except ValueError:
+        return str(path)
+
+
+def resolve_file(path, root) -> Path:
+    """A simulation's file on this computer: a relative path is under the project's folder; an absolute one is
+    taken as it is, or, when it is another computer's copy of this project (a simulation made in the lab and
+    pulled with the project), the same file under the project's folder here."""
+    p = Path(str(path))
+    if not p.is_absolute():
+        return Path(root) / p if root else p
+    if p.exists() or not root:
+        return p
+    root = Path(root)
+    parts = list(p.parts)
+    if root.name in parts:                                   # .../Projects/<this project>/trajectories/...: after its name
+        tail = parts[len(parts) - parts[::-1].index(root.name):]
+        if tail and (root / Path(*tail)).exists():
+            return root / Path(*tail)
+    for i, part in enumerate(parts):                         # a project folder renamed: by the folder the file is in
+        if part in PROJECT_DIRS and (root / Path(*parts[i:])).exists():
+            return root / Path(*parts[i:])
+    return p
+
+
+class MissingFile(Exception):
+    """A drawn Program's file is not on this computer (the simulation came from another)."""
+
+    def __init__(self, act: dict):
+        super().__init__(act.get("file"))
+        self.act = act
+
+
+def _md_reader(root=None):
+    """A reader of the files a simulation draws, cached; ``root``: the project's folder, which a relative path
+    (portable) is under, and under which another computer's absolute path is looked for (resolve_file)."""
     import numpy as np
 
     from ..motion import track
@@ -1326,7 +1373,7 @@ def _md_reader():
             cache[path] = np.asarray(mechanism.cached(task).entries[int(i)].rows, dtype=float)
         if path not in cache:
             try:
-                cache[path] = np.asarray(track.read_md(Path(path)), dtype=float)
+                cache[path] = np.asarray(track.read_md(resolve_file(path, root)), dtype=float)
             except (OSError, ValueError):
                 cache[path] = None
         return cache[path]
@@ -1373,7 +1420,7 @@ def simulate(app, units, mode: str, pick: dict | None):
         programs = {s: programs_known(app, units, s) for s in ARMS}
         points = {s: points_known(app, s) for s in ARMS}
         ident = identity_of(run, programs, points, overall)
-        findings, md_of = [], _md_reader()
+        findings, md_of = [], _md_reader(units.root)
         starts, start_how, sims = {}, {}, {}
         for s in ARMS:
             starts[s], start_how[s] = _start_state(app, s, home)
@@ -1425,6 +1472,10 @@ def simulate(app, units, mode: str, pick: dict | None):
         job.check()
         for e in check["events"]:                         # where in the sequence: each arm's row and line then
             e["at"] = [_where(acts[s], e["first_t"]) for s in (ARMS if "both" in e["sides"] else e["sides"]) if s in acts]
+        for s in acts:                                    # the files as the project holds them: the record plays elsewhere too
+            for a in acts[s]:
+                if a.get("file") and not str(a["file"]).startswith("mechanism:"):
+                    a["file"] = portable(a["file"], units.root)
         out = dict(made=time.strftime("%Y-%m-%d %H:%M:%S"), hash=digest(ident), identity=ident, completed=False,
                    mode=run["mode"], pick=run["pick"], overall=overall, counts=run["counts"], stages=stages,
                    total_s=round(total, 3), acts=acts, start=starts, start_from=start_how,
@@ -1456,6 +1507,15 @@ def _where(acts: list[dict], t: float) -> dict | None:
     return out
 
 
+def _not_here(a: dict) -> UserError:
+    """The refusal for a simulation whose drawn file is not on this computer (made elsewhere, pulled with the project)."""
+    what = f"Program {a['program']}" if a.get("program") is not None else a.get("text") or "a step"
+    name = a.get("file_name") or a.get("file")
+    return UserError(f"The simulation's file for {a['side'].upper()} row {a.get('row')}, {what}" + (f" ({name})" if name else "")
+                     + " is not on this computer.",
+                     "Run the sequence again in Simulation Mode: it draws the project's files as they are here.", code="files")
+
+
 def frames(app, units, side: str, stage: int, want_hash: str | None = None) -> dict:
     """One arm's part of a simulated stage as 3D frames (the shape of staging.execution_timeline):
     every link the pole moves, at times on the run's clock. ``stage`` -1: where the arm starts."""
@@ -1481,7 +1541,10 @@ def frames(app, units, side: str, stage: int, want_hash: str | None = None) -> d
         t0, t1 = mine[0]["t0"], mine[-1]["t1"]
         dt = max(FRAME_S, (t1 - t0) / MAX_FRAMES)
         times = np.arange(t0, t1, dt).tolist() + [t1]
-    pole, hand, q = sample(acts, times, sim["start"][side], _md_reader())
+    try:
+        pole, hand, q = sample(acts, times, sim["start"][side], _md_reader(units.root))
+    except MissingFile as exc:
+        raise _not_here(exc.act) from None
     p = _payload(app)
     links = staging.staged_links(side, _mesh_links(p))
     model = robot_model.fk_model()
@@ -1536,10 +1599,13 @@ def check_in(app, units, want_hash: str, phase: str):
             total = float(sim.get("total_s") or 0.0)
             dt = max(SAMPLE_S, total / MAX_SAMPLES)
             times = np.arange(0.0, total + 1e-9, dt).tolist() if total > 0 else [0.0]
-            md_of = _md_reader()
+            md_of = _md_reader(units.root)
             arms = {}
             for s in (ARMS if sim["mode"] == "both" else [sim["mode"]]):
-                pole, hand, q, known = sample(sim["acts"][s], times, sim["start"][s], md_of, with_known=True)
+                try:
+                    pole, hand, q, known = sample(sim["acts"][s], times, sim["start"][s], md_of, with_known=True)
+                except MissingFile as exc:
+                    raise _not_here(exc.act) from None
                 arms[s] = dict(pole=pole.tolist(), hand=hand.tolist(), q=q.tolist(), known=known.tolist())
             base = dict(home)
             for s in ARMS:

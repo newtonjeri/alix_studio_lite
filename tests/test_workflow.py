@@ -301,6 +301,39 @@ def test_a_simulation_is_checked_again_in_one_commode_state(lite):
     assert call(lite, "GET", f"{P}/workflow")["sim"]["hash"] == sim["hash"]
 
 
+def test_a_pulled_simulation_plays_from_the_projects_own_folder(lite):
+    """A simulation keeps its program files relative to the project's folder, so one made on another computer (the lab's,
+    pulled with the project) plays here; an older one with that computer's absolute paths is read under the project's
+    folder here; a file that is nowhere refuses with the program named, instead of failing on the server."""
+    from alix_studio_lite.server import workflow
+    from alix_studio_lite.server.lite_units import LiteUnits
+
+    units = LiteUnits(lite["app"].store.folder(PID), "commode_c")
+    f = workflow._sim_file(units)
+    kept = f.read_text(encoding="utf-8")
+    sim = json.loads(kept)
+    drawn = [a for a in sim["acts"]["left"] if a["kind"] == "program" and a.get("drawn")]
+    assert drawn and all(not Path(a["file"]).is_absolute() for a in drawn)                 # relative to the project's folder
+    assert all((Path(units.root) / a["file"]).is_file() for a in drawn)
+    assert workflow.resolve_file(drawn[0]["file"], units.root) == Path(units.root) / drawn[0]["file"]
+    try:
+        for a in drawn:                                                                    # the lab's copy of this project
+            a["file"] = f"/home/alai-labs/alix_studio_lite/Resources/Projects/{Path(units.root).name}/{a['file']}"
+        f.write_text(json.dumps(sim), encoding="utf-8")
+        fr = call(lite, "POST", f"{P}/workflow/frames", {"side": "left", "stage": 0})
+        assert len(fr["times"]) > 10 and len(fr["links"]) > 20
+        for a in drawn:                                                                    # a file that is nowhere
+            a["file"] = f"/nowhere/{Path(a['file']).name}"
+        f.write_text(json.dumps(sim), encoding="utf-8")
+        r = call(lite, "POST", f"{P}/workflow/frames", {"side": "left", "stage": 0})
+        assert r["code"] == "files" and "LEFT row 4, Program 71 (L_s2_a.txt) is not on this computer" in r["error"]
+        assert "Simulation Mode" in r["hint"]
+        j = wait(lite, call(lite, "POST", f"{P}/workflow/collisions", {"hash": sim["hash"], "phase": "lid_open"}))   # not cached yet
+        assert j["state"] == "failed" and "is not on this computer" in j["error"], j
+    finally:
+        f.write_text(kept, encoding="utf-8")
+
+
 def test_a_program_lite_did_not_send_is_drawn_from_its_file_found_by_name(lite):
     """The owner (16 Oct): the sequence must play in the simulation. A Program the control program sent (not
     Lite) is drawn from the file of the name the sequence gives it (V53's JSON), here the Trajectory Viewer's
