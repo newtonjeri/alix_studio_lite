@@ -14,7 +14,7 @@
 //    keeps comes back here as a new merge.
 
 import { call, get, post, say } from './api.js';
-import { armFromName, confirmDialog, ctx, el, jobLine, robotCall, stageDialog, tell, watchJob } from './ctx.js';
+import { armFromName, confirmDialog, ctx, el, fmtT, jobLine, robotCall, stageDialog, tell, watchJob } from './ctx.js';
 import { borrow, home3d, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { saveBlobAs } from './tune.js';
@@ -237,7 +237,7 @@ function chooseFile(side, anchor) {
     if (!groups.has(label)) groups.set(label, []);
     const differs = it.differs && it.differs.length ? `Cannot join this merge: ${it.differs.join('; ')}` : '';
     groups.get(label).push({ value: it.ref, text: it.name, search: `${KIND[it.kind]} ${it.grade} ${it.grade_text || ''} ${it.region} ${it.project || ''}`,
-      detail: `${KIND[it.kind]} · ${it.grade_text || it.grade} · ${fmt(it.seconds)} · ${it.stage_text} · ${it.placement_text}`,
+      detail: `${KIND[it.kind]} · ${it.grade_text || it.grade} · ${fmtT(it.seconds)} · ${it.stage_text} · ${it.placement_text}`,
       disabled: !!(it.why || differs), note: it.why ? `Cannot be merged: ${it.why}` : differs });
   }
   choose(anchor, [...groups].map(([label, rows]) => ({ label, rows })), null, (ref) => pick(side, ref),
@@ -264,7 +264,7 @@ function paint(side) {
   order.replaceChildren(...(s.picked.length ? s.picked.map((ref, i) => {
     const it = byRef.get(ref) || { name: ref, seconds: 0 };
     const clash = i > 0 && it.differs && it.differs.length ? `Cannot join this merge: ${it.differs.join('; ')}` : '';   // the order changed
-    return el('li', {}, el('span', {}, el('b', { text: it.name }), ` · ${fmt(it.seconds)}`,
+    return el('li', {}, el('span', {}, el('b', { text: it.name }), ` · ${fmtT(it.seconds)}`,
       el('small', { class: 'mini-note', text: ` ${KIND[it.kind] || ''}${it.grade_text ? ` · ${it.grade_text}` : ''} · ${it.project ? `${it.project} · ` : ''}${it.region || ''}` }),
       clash ? el('div', { class: 'lite-warn lite-s1-why', text: clash }) : null),
       el('span', { class: 'lite-s1-order-tools' },
@@ -272,6 +272,11 @@ function paint(side) {
         el('button', { class: 'btn light', type: 'button', text: 'Down', disabled: i === s.picked.length - 1, onclick: () => move(side, i, 1) }),
         el('button', { class: 'btn outline', type: 'button', text: 'Remove', onclick: () => unpick(side, ref) })));
   }) : [el('li', { class: 'mini-note lite-s1-empty', text: 'Add files above (Choose a file to add, or load them from this computer), in the order they run.' })]));
+  if (s.picked.length) {                 // after the last row: the files' own times added (the owner, 20 Oct), no transitions between them
+    const total = s.picked.reduce((a, ref) => a + Number((byRef.get(ref) || {}).seconds || 0), 0);
+    order.append(el('li', { class: 'lite-s1-total' }, el('span', {}, el('b', { text: `Total ${fmtT(total)}` }),
+      el('small', { class: 'mini-note', text: ` · ${s.picked.length} file${s.picked.length === 1 ? '' : 's'}, their own times added, no transition time between them` }))));
+  }
   const name = $(`liteS1Name_${side}`);
   if (name && !name.value) name.value = `${ARM(side)[0]}_merge_${s.merges.length + 1}.txt`;
 
@@ -282,7 +287,7 @@ function paint(side) {
     el('td', {}, el('b', { text: m.name }), el('div', { class: 'mini-note', text: (m.made_from ? `Tuned from ${m.made_from.merge} · ` : '')
       + `${m.parts.length} file${m.parts.length === 1 ? '' : 's'}: ${m.parts.map(p => p.name).join(' → ')}`
       + (m.joins.length ? ` · ${m.joins.length} join${m.joins.length === 1 ? '' : 's'}` : '') })),
-    el('td', { text: `${fmt(m.seconds)} · ${Number(m.lines).toLocaleString()} lines` }),
+    el('td', { text: `${fmtT(m.seconds)} · ${Number(m.lines).toLocaleString()} lines` }),
     el('td', { text: m.stage ? m.stage.text || stageText(m.stage) : '—' }),
     el('td', { text: m.placement ? placeText(m.placement) : 'not recorded' }),
     el('td', {}, el('span', { class: m.limits_ok ? 'lite-ok' : 'lite-warn', text: m.limits_ok ? 'L1–L4 pass' : `${m.limits_text} (shown, not enforced)` }))))
@@ -334,7 +339,7 @@ async function merge(side) {
     s.sel = m.file;
     $(`liteS1Name_${side}`).value = '';
     status(side, `${m.name}: ${m.parts.length} file${m.parts.length === 1 ? '' : 's'}, ${m.joins.length} join${m.joins.length === 1 ? '' : 's'}, `
-      + `${fmt(m.seconds)}${m.limits_ok ? ', within L1–L4.' : `; it breaks ${m.limits_text}: shown, not enforced (sending it asks once).`}`,
+      + `${fmtT(m.seconds)}${m.limits_ok ? ', within L1–L4.' : `; it breaks ${m.limits_text}: shown, not enforced (sending it asks once).`}`,
     m.limits_ok ? 'ok' : 'warn');
   } catch (err) { status(side, say(err), 'warn'); tell(err); }
   s.busy = false;

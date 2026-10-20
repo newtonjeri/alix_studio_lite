@@ -1758,7 +1758,8 @@ def get_robot_data(app, q, body, m):
 
         mine = app.robot.arm(side).programs
         content.store(side, programs=[dict(id=int(p["num"]), name=p.get("name"), bytes=p.get("bytes"), sent=bool(p.get("lite")),
-                                           sha256=(mine.get(int(p["num"])) or {}).get("sha256") if p.get("lite") else None)
+                                           sha256=(mine.get(int(p["num"])) or {}).get("sha256") if p.get("lite") else None,
+                                           lines=(p.get("lite") or {}).get("lines"))
                                       for p in out.get("programs") or [] if p.get("name")],
                       points=out.get("points") or [])
     out["not_in_api"] = {

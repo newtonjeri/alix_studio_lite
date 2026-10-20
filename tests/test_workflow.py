@@ -76,6 +76,13 @@ def generated(rng: random.Random) -> list:
     return steps
 
 
+def test_a_tracks_execution_time_is_its_lines_less_one_on_the_5_ms_clock():
+    from alix_studio_lite.motion import track
+
+    assert track.duration_s(300) == 1.495 and track.duration_s(1) == 0.0 and track.duration_s(0) is None
+    assert track.duration_s(None) is None and track.duration_s("600") == 2.995
+
+
 def test_the_planner_is_v53s_own():
     from alix_studio_lite.server import workflow
 
@@ -249,6 +256,9 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     la, ra = sim["acts"]["left"], sim["acts"]["right"]
     assert [a["kind"] for a in la] == ["pole", "hand", "pole", "program", "program"] and [a["row"] for a in la] == [1, 2, 3, 4, 5]
     assert la[3]["drawn"] and la[3]["lines"] == 300 and la[3]["t1"] - la[3]["traj_t0"] == pytest.approx(299 * 0.005, abs=1e-3)
+    assert sim["programs"]["left"]["71"]["seconds"] == pytest.approx(1.495)                  # its execution time travels with it
+    src = call(lite, "GET", f"{P}/workflow/left/sources")
+    assert next(p for p in src["programs"] if p["id"] == 71)["seconds"] == pytest.approx(1.495)
     assert not la[4]["drawn"]                                    # program 72: Lite never sent it
     assert ra[1]["t0"] == ra[0]["t1"] and ra[2]["kind"] == "wait" and ra[2]["stage"] == 1   # the tail, after TIMELINE-1
     texts = " | ".join(f["text"] for f in sim["findings"])

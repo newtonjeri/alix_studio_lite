@@ -35,6 +35,10 @@ export const el = (tag, attrs = {}, ...kids) => {
 
 // Seconds to the hundredth, rounded half up (48.175 s is 48.18 s; toFixed alone gives 48.17).
 export const fmtS = (s) => (s == null ? '—' : `${(Math.round(Number(s) * 100 + 1e-6) / 100).toFixed(2)} s`);
+// A trajectory's execution time, to the millisecond (its lines are 5 ms apart, so the totals add up on screen).
+export const fmtT = (s) => (s == null ? '—' : `${(Math.round(Number(s) * 1000 + 1e-6) / 1000).toFixed(3)} s`);
+// A trajectory's name with its execution time after it (the owner, 20 Oct: the time travels with the trajectory).
+export const timed = (name, s) => (s == null ? String(name ?? '') : `${name} (${fmtT(s)})`);
 
 // Polls a job until it ends; onProgress(view) on every poll. Resolves to the final view.
 export async function watchJob(job, onProgress = null) {

@@ -66,6 +66,7 @@ def test_a_kept_version_is_chosen_and_sent(lite):
         unit(lite, key, "keep", {})
     u = unit(lite, key)
     assert [v["version"] for v in u["versions"]] == ["v001", "v002"] and u["version"] == "v002"   # a newly kept one runs
+    assert all(v["seconds"] == v["achieved_s"] == round(0.005 * (v["lines"] - 1), 3) for v in u["versions"])   # the time travels with it
     u = unit(lite, key, "version", {"version": "v001"})
     assert u["version"] == "v001" and "v001" in next(g for g in u["gates"] if g["id"] == "limits")["text"]
     assert "no version v009" in unit(lite, key, "version", {"version": "v009"})["error"]

@@ -63,13 +63,17 @@ def _named(programs: list, files: dict | None, mine: dict | None = None) -> list
         r = (mine or {}).get(p.get("id")) or {}
         return r.get("name") if p.get("sha256") and r.get("sha256") == p.get("sha256") else None
 
-    return [dict(p, file_name=file_for(files, p.get("sha256"), sent_as(p)).get("name")) for p in programs]
+    from ..motion import track
+
+    return [dict(p, file_name=file_for(files, p.get("sha256"), sent_as(p)).get("name"), seconds=track.duration_s(p.get("lines")))
+            for p in programs]
 
 
 def read_now(app, side: str) -> None:
     """The controller's programs and global points, read now (the arm linked and idle)."""
     robot = app.robot
-    programs = [dict(id=int(x["id"]), name=x["name"], bytes=x.get("bytes"), sent=bool(x.get("sha256")), sha256=x.get("sha256"))
+    programs = [dict(id=int(x["id"]), name=x["name"], bytes=x.get("bytes"), sent=bool(x.get("sha256")), sha256=x.get("sha256"),
+                     lines=x.get("lines"))
                 for x in robot.programs(side) if x.get("name")]
     store(side, programs, robot.global_points(side) or [])
 
@@ -81,7 +85,8 @@ def content(app, side: str, refresh: bool = False, files: dict | None = None) ->
     robot = app.robot
     a = robot.arm(side)
     if robot._real(side) is None:                   # the stand-in: what Lite sent to it
-        programs = [dict(id=int(i), name=r.get("stored_name") or r.get("name"), bytes=r.get("bytes"), sent=True, sha256=r.get("sha256"))
+        programs = [dict(id=int(i), name=r.get("stored_name") or r.get("name"), bytes=r.get("bytes"), sent=True, sha256=r.get("sha256"),
+                         lines=r.get("lines"))
                     for i, r in sorted(a.programs.items())]
         return dict(side=side, live=False, standin=True, read=None, programs=_named(programs, files, a.programs), points=[],
                     note="The stand-in robot has no controller: the programs Lite sent to it are listed.")

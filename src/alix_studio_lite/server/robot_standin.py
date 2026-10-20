@@ -40,6 +40,7 @@ import threading
 import time
 from pathlib import Path
 
+from ..motion import track
 from . import staging
 from .jobs import Jobs, UserError
 
@@ -1558,14 +1559,16 @@ class StandInRobot:
         a = self.arm(side)
         real = self._real(side)
         if real is None:
-            return [dict(id=i, **a.programs[i]) if i in a.programs else dict(id=i, name=None) for i in range(1, 101)]
+            return [dict(id=i, **a.programs[i], seconds=track.duration_s(a.programs[i].get("lines"))) if i in a.programs
+                    else dict(id=i, name=None) for i in range(1, 101)]
         held = {int(x["id"]): x for x in real.programs()}
         out = []
         for i in range(1, 101):
             x, mine = held.get(i), a.programs.get(i)
             ours = bool(x and mine and self._same_program(mine, x))
             out.append(dict(id=i, name=(x or {}).get("name"), bytes=(x or {}).get("size"),
-                            **({k: mine[k] for k in ("sha256", "stage", "lines", "uploaded")} if ours else {})))
+                            **({k: mine[k] for k in ("sha256", "stage", "lines", "uploaded")} if ours else {}),
+                            seconds=track.duration_s(mine.get("lines")) if ours else None))      # its execution time
         return out
 
     def controller_data(self, side: str, files: dict | None = None) -> dict:
@@ -1583,6 +1586,7 @@ class StandInRobot:
         def lite(mine):
             f = file_for(files, mine.get("sha256"), mine.get("name"))
             return dict(sent=mine.get("uploaded"), file=mine.get("name"), lines=mine.get("lines"),
+                        seconds=track.duration_s(mine.get("lines")),        # its execution time (the owner, 20 Oct)
                         project_file=f.get("name"), region=f.get("region"))
 
         if real is None:

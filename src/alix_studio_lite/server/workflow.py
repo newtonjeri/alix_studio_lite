@@ -780,13 +780,15 @@ def programs_known(app, units, side: str) -> dict:
     lines, sha256, stage) with the project's file of those bytes, when it is still there. On a linked
     controller, the slots it holds now too: a program Lite did not send, or one that replaced Lite's,
     is known by its name only (``sent`` False)."""
+    from ..motion import track
     from .content import file_for
 
     files = _project_files(units, side, every=True)
     out = {}
     for pid, r in app.robot.arm(side).programs.items():
         f = file_for(files, r.get("sha256"), r.get("name"))
-        out[int(pid)] = dict(id=int(pid), name=r.get("name"), lines=r.get("lines"), sha256=r.get("sha256"), stage=r.get("stage"),
+        out[int(pid)] = dict(id=int(pid), name=r.get("name"), lines=r.get("lines"), seconds=track.duration_s(r.get("lines")),
+                             sha256=r.get("sha256"), stage=r.get("stage"),
                              sent=True, file=f.get("path"), file_name=f.get("name"), phase=f.get("phase"),
                              placement=f.get("placement"), region=f.get("region"))
     held = None
@@ -799,11 +801,11 @@ def programs_known(app, units, side: str) -> dict:
             from . import content
 
             content.store(side, programs=[dict(id=pid, name=x["name"], bytes=x.get("bytes"), sent=bool(x.get("sha256")),
-                                               sha256=x.get("sha256")) for pid, x in sorted(held.items())])
+                                               sha256=x.get("sha256"), lines=x.get("lines")) for pid, x in sorted(held.items())])
     if held is not None:
         for pid, x in held.items():
             if not x.get("sha256"):                       # the controller's own, not what Lite sent
-                out[pid] = dict(id=pid, name=x.get("name"), size=x.get("bytes"), lines=None, sha256=None, stage=None,
+                out[pid] = dict(id=pid, name=x.get("name"), size=x.get("bytes"), lines=None, seconds=None, sha256=None, stage=None,
                                 sent=False, file=None)
         for pid in [p for p in out if p not in held]:
             out[pid] = dict(out[pid], gone=True)          # Lite sent it, the controller no longer holds it
@@ -1480,7 +1482,7 @@ def simulate(app, units, mode: str, pick: dict | None):
                    mode=run["mode"], pick=run["pick"], overall=overall, counts=run["counts"], stages=stages,
                    total_s=round(total, 3), acts=acts, start=starts, start_from=start_how,
                    findings=findings, collisions=check, scene=scene, phases=changes,
-                   programs={s: {str(k): {kk: v.get(kk) for kk in ("name", "sent", "file_name", "region", "gone", "lines")}
+                   programs={s: {str(k): {kk: v.get(kk) for kk in ("name", "sent", "file_name", "region", "gone", "lines", "seconds")}
                                  for k, v in programs[s].items()} for s in ARMS},
                    points={s: (points[s] or {}).get("read") for s in ARMS})
         from .project import _atomic_write

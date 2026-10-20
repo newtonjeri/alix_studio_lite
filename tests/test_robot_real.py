@@ -417,6 +417,7 @@ def test_data_management_lists_what_each_controller_stores(server):
     progs = {p["num"]: p for p in d["programs"]}
     assert progs[9]["name"] == "9_L-T01_v001.txt" and progs[9]["bytes"] > 0 and "speed" in progs[9]
     assert progs[9]["lite"]["sent"] and progs[9]["lite"]["project_file"] and progs[9]["lite"]["lines"] > 0
+    assert progs[9]["lite"]["seconds"] == round(0.005 * (progs[9]["lite"]["lines"] - 1), 3)            # its execution time
     assert d["default_program"] == 0
     assert [p["name"] for p in d["points"]][:3] == ["STP_HOME", "STP_LID_OPEN", "CLEAN_A"] and len(d["points"][0]["joints"]) == 7
     assert not d["tracks"]["available"] and "4th-generation" in d["tracks"]["why"]

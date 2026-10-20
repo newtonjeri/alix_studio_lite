@@ -15,7 +15,7 @@
 // completed in Simulation as it is.
 
 import { call, get, post, put, say } from './api.js';
-import { REAL_CHECKS, confirmDialog, ctx, el, jobLine, robotCall, tell, watchJob } from './ctx.js';
+import { REAL_CHECKS, confirmDialog, ctx, el, fmtT, jobLine, robotCall, tell, watchJob } from './ctx.js';
 import { borrow, home3d, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { speedPct } from './status.js';
@@ -50,7 +50,8 @@ function row(step) {
   if (k === 'program') {
     const known = (S.sources[step._side]?.programs || []).find(p => p.id === step.id);
     const name = step.name || (known && known.name) || '';
-    return [k.toUpperCase(), `Program ${step.id}${name ? ` // ${name}` : ''}`,
+    const t = known && known.seconds != null ? ` (${fmtT(known.seconds)})` : '';     // its execution time, after its name
+    return [k.toUpperCase(), `Program ${step.id}${name ? ` // ${name}` : ''}${t}`,
       `Start ${step.transit_speed ?? step.start_speed ?? 30}% // Stored timing // ${String(step.dual_rule || 'TOGETHER').toUpperCase()}`];
   }
   if (k === 'pole') return ['POLE', `${Number(step.mm)} mm`, ''];
@@ -58,7 +59,8 @@ function row(step) {
   if (k === 'wait') return ['WAIT', `${Number(step.seconds)} s`, step.note || ''];
   if (k === 'mechanism') {                                   // a lid or seat task of ALIX's (mechanism.py), on both arms
     const t = S.mechanisms[step.task] || {};
-    return ['LID / SEAT', `${t.short || step.task} // ${t.title || ''}`, 'Pre-recorded (ALIX) // both arms // camera checks'];
+    return ['LID / SEAT', `${t.short || step.task} // ${t.title || ''}${t.seconds != null ? ` (${fmtT(t.seconds)})` : ''}`,
+      'Pre-recorded (ALIX) // both arms // camera checks'];
   }
   return ['GLOBAL', step.name, `${String(step.move).toUpperCase()} // Speed ${step.speed}% // Wait ${Number(step.wait_s)}s`];
 }
@@ -276,7 +278,8 @@ function pickInto(side, what, anchor) {
     ? [{ label: src.points_read ? `${ARM(side)} controller · ${src.points.length} global points (read ${src.points_read})`
       : `${ARM(side)}: global points not read (connect the arm, then refresh)`, rows: src.points.map(n => ({ value: n, text: n })) }]
     : [{ label: `${ARM(side)} · ${src.programs.length} stored programs`, rows: src.programs.map(p => ({ value: label(p), text: label(p),
-      detail: p.sent ? `sent by Lite${p.file_name ? `: ${p.file_name}` : ''}` : p.gone ? 'no longer on the controller' : 'on the controller' })) }];
+      detail: (p.sent ? `sent by Lite${p.file_name ? `: ${p.file_name}` : ''}` : p.gone ? 'no longer on the controller' : 'on the controller')
+        + (p.seconds != null ? ` · ${fmtT(p.seconds)}` : '') })) }];
   choose(anchor, groups, input.value, (v) => { input.value = v; input.focus(); },
     { placeholder: what === 'point' ? 'Search the global points' : 'Search the programs: ID or name' });
 }
@@ -292,7 +295,7 @@ async function refreshSources(said = false) {
     const src = S.sources[side];
     const pl = $(`liteS2Progs_${side}`);
     if (pl) pl.replaceChildren(...src.programs.map(p => el('option', { value: `${p.id}${p.name ? ` // ${p.name}` : ''}`,
-      text: p.sent ? `sent by Lite${p.file_name ? `: ${p.file_name}` : ''}` : 'on the controller' })));
+      text: (p.sent ? `sent by Lite${p.file_name ? `: ${p.file_name}` : ''}` : 'on the controller') + (p.seconds != null ? ` · ${fmtT(p.seconds)}` : '') })));
     const pp = $(`liteS2Points_${side}`);
     if (pp) pp.replaceChildren(...src.points.map(n => el('option', { value: n })));
     if (!known(side)) return;                                  // nothing read yet: nothing is judged
@@ -594,6 +597,15 @@ function paintArm(side) {
     el('td', { text: off ? `${options}${options ? ' · ' : ''}not on the controller` : options }));
     return tr;
   }));
+  if (list.length) {                     // after the last row: the trajectories' own times added (the owner, 20 Oct), no transitions
+    const secsOf = (st) => st.type === 'program' ? (S.sources[side]?.programs || []).find(p => p.id === st.id)?.seconds
+      : st.type === 'mechanism' ? (S.mechanisms[st.task] || {}).seconds : null;
+    const withTime = list.filter(st => secsOf(st) != null);
+    const unknown = list.filter(st => (st.type === 'program' || st.type === 'mechanism') && secsOf(st) == null).length;
+    body.append(el('tr', { class: 'lite-s2-total' }, el('td', { colspan: '4',
+      text: `Total ${fmtT(withTime.reduce((a, st) => a + Number(secsOf(st)), 0))} · ${withTime.length} trajector${withTime.length === 1 ? 'y' : 'ies'}, `
+        + `their own times added, no transition time between them${unknown ? ` · ${unknown} with no known time` : ''}` })));
+  }
   const cur = now ? body.querySelector('.lite-s2-now') : null;          // the row in view inside its table, the page left where it is
   const box = body.closest('.lite-s2-table');
   if (cur && box) {
@@ -656,7 +668,8 @@ const LID = ' · after the lid checkpoint: it asks first';
 // plan with both arms' Programs (Dual-arm task).
 async function chooseTask(anchor) {
   try { await saved(); } catch (err) { tell(err); return; }
-  const label = (st) => `Program ${st.id}${st.name ? ` // ${st.name}` : ''}`;
+  const secs = (side, id) => (S.sources[side]?.programs || []).find(p => p.id === id)?.seconds;      // its execution time
+  const label = (st, side) => `Program ${st.id}${st.name ? ` // ${st.name}` : ''}${secs(side, st.id) != null ? ` (${fmtT(secs(side, st.id))})` : ''}`;
   let full = null;                                           // V53's plan of both arms (none with one arm's steps)
   if (S.steps.left.length && S.steps.right.length) {
     try { full = await post(`${base()}/plan`, { mode: 'both' }); } catch (_) { /* no checkpoint to say */ }
@@ -665,12 +678,12 @@ async function chooseTask(anchor) {
   if (S.scope === 'task') {
     const stageOf = (side, row) => full && full.stages.find(x => ((x.programs || {})[side] || []).some(p => p.row === row));
     const groups = ARMS.map(side => ({ label: `${ARM(side)} arm`, rows: S.steps[side].map((st, i) => (st.type !== 'program' ? null
-      : { value: `${side}:${i + 1}`, text: `Row ${i + 1} · ${label(st)}`, search: ARM(side),
+      : { value: `${side}:${i + 1}`, text: `Row ${i + 1} · ${label(st, side)}`, search: ARM(side),
         detail: `${st.dual_rule || 'TOGETHER'} · Start ${st.transit_speed || 30} %${afterCheck(stageOf(side, i + 1)) ? LID : ''}` })).filter(Boolean) }));
     choose(anchor, groups, S.pick ? `${S.pick.side}:${S.pick.row}` : null, (v) => {
       const [side, row] = v.split(':');
       const st = S.steps[side][Number(row) - 1];
-      S.pick = { side, row: Number(row), id: st.id, text: label(st) };
+      S.pick = { side, row: Number(row), id: st.id, text: label(st, side) };
       paintAll();
     }, { placeholder: 'Search the Programs: row, ID or name' });
     return;
@@ -679,7 +692,8 @@ async function chooseTask(anchor) {
     try { full = await post(`${base()}/plan`, { mode: 'both' }); } catch (err) { tell(err); return; }
   }
   const plan = full;
-  const names = (side, s) => (s.programs[side] || []).map(x => `${x.id}${x.name ? ` ${x.name}` : ''}`).join(', ');
+  const names = (side, s) => (s.programs[side] || []).map(x => `${x.id}${x.name ? ` ${x.name}` : ''}`
+    + (secs(side, x.id) != null ? ` (${fmtT(secs(side, x.id))})` : '')).join(', ');
   const tasks = plan.stages.filter(s => s.kind === 'mechanism').map(s => ({ value: String(s.index),
     text: `Stage ${s.index + 1} · ${s.label} · ${s.title} (both arms, pre-recorded)`,
     detail: `ALIX's plan · LEFT row ${(s.rows || {}).left} · RIGHT row ${(s.rows || {}).right}${afterCheck(s) ? LID : ''}` }));

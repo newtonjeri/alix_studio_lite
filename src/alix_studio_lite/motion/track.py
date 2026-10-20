@@ -25,6 +25,17 @@ def read_md(path) -> np.ndarray:
     return np.asarray(tr.parse_track(Path(path)), dtype=np.int64)
 
 
+def duration_s(lines) -> float | None:
+    """A track's execution time as Lite states it everywhere (the owner, 20 Oct: the time travels with the
+    trajectory): (lines - 1) x 5 ms, from its first sample to its last on the 5 ms clock, the same count as the
+    optimiser's achieved time; None without a line count."""
+    try:
+        n = int(lines)
+    except (TypeError, ValueError):
+        return None
+    return round(0.005 * (n - 1), 3) if n > 0 else None
+
+
 def to_deg(md) -> np.ndarray:
     return np.asarray(md, dtype=float) / 1000.0
 

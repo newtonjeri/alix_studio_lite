@@ -22,6 +22,7 @@ import time
 from pathlib import Path
 
 from .. import vendor_paths
+from ..motion import track
 
 LIBRARIES = vendor_paths.ASSETS / "recordings"         # <fixture>.yaml: existing taught recordings
 HISTORY_MAX = 20                      # at least 5 undo steps (R2); kept short and labelled
@@ -178,6 +179,8 @@ class Project:
             out.append(dict(version=p.stem, file=p.name, path=str(p), sha256=rec.get("track_sha256"),
                             optimiser=res.get("optimiser"), lines=res.get("lines"),
                             achieved_s=res.get("achieved_s"), uploadable=res.get("uploadable"),
+                            # its execution time: the optimisation's result, (lines - 1) x 5 ms (the owner, 20 Oct)
+                            seconds=res.get("achieved_s") if res.get("achieved_s") is not None else track.duration_s(res.get("lines")),
                             # whether every hard limit passes; only a time-optimal file is held to it
                             limits_ok=res.get("limits_ok", res.get("uploadable")),
                             limits_text=res.get("limits_text") or "", enforced=res.get("optimiser") == "toppra",

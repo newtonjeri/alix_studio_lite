@@ -15,7 +15,7 @@
 //   6 Compare   original vs optimized on one synchronized time cursor (or an external file), the tuned file in 3D
 
 import { get, post, say } from './api.js';
-import { confirmDialog, ctx, el, fitPlot, loadUnit, step, tell, unitUrl, watchJob } from './ctx.js';
+import { confirmDialog, ctx, el, fitPlot, loadUnit, step, tell, timed, unitUrl, watchJob } from './ctx.js';
 import { elsewhere, fileKey, invalidate, onMoment, onPlayhead, release, say3d, scene, seekTo, showFile, showStanding, sim, unload } from './sim.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
 import { frame } from './vp.js';
@@ -394,7 +394,7 @@ function place3d(hostId) {
 function renderSource() {
   const box = $('liteSourceMetrics'), r = rec();
   if (!box) return;
-  $('liteSourceName').textContent = r ? r.name : '-';
+  $('liteSourceName').textContent = r ? timed(r.name, r.seconds) : '-';
   if (!r) {
     setStatus($('liteLoadStatus'), 'No file loaded. Record the region, or load a file in Save & Review.');
     box.replaceChildren();
@@ -1102,7 +1102,7 @@ function syncKeep() {
   if (btn) btn.disabled = !fresh();
   if (note) {
     note.textContent = !fresh() ? 'Generate first: the processed file is kept once it is made.'
-      : ver ? `Kept as ${ver.version}: ${ver.name || ''}. ${ctx.tuneKey ? 'It is a merge in S1 now: S1 sends it.' : 'Real Test sends this file.'}`
+      : ver ? `Kept as ${ver.version}: ${timed(ver.name || ver.file || '', ver.seconds)}. ${ctx.tuneKey ? 'It is a merge in S1 now: S1 sends it.' : 'Real Test sends this file.'}`
         : 'Not kept yet. “Simulation Looks Good” in Compare keeps it too.';
   }
   tuningSourceFileName = (rec() && rec().name) || tuningSourceFileName;

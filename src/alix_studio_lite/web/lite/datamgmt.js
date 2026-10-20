@@ -11,7 +11,7 @@
 // programs and the model warehouse, and the tracks list on these 3rd-generation controllers.
 
 import { get, say } from './api.js';
-import { ctx, el } from './ctx.js';
+import { ctx, el, fmtT } from './ctx.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
@@ -36,6 +36,7 @@ const COLUMNS = {
     ['created', 'Create Time', (r) => (r.lite && r.lite.sent) || '', true],
     ['edited', 'Edit Time', (r) => (r.lite && r.lite.sent) || '', true],
     ['size', 'File Size', (r) => r.bytes, false],
+    ['time', 'Execution Time', (r) => (r.lite && r.lite.seconds != null ? r.lite.seconds : ''), true],   // Lite's record (the owner, 20 Oct)
     ['speed', 'Default Speed', (r) => r.speed, false]],
   points: [
     ['name', 'Name', (r) => r.name, true],
@@ -62,6 +63,11 @@ function cell(t, r, key) {
     if (key === 'num') return el('td', { text: String(r.num) });
     if (key === 'created' || key === 'edited') return el('td', { text: (r.lite && r.lite.sent) || dash, title: r.lite ? 'When Lite sent it (Lite’s record)' : '' });
     if (key === 'size') return el('td', { text: kb(r.bytes) });
+    if (key === 'time') {
+      const s = r.lite ? r.lite.seconds : null;
+      return el('td', { class: 'lite-dm-num', text: s != null ? fmtT(s) : dash,
+        title: s != null ? 'Its execution time, (lines - 1) x 5 ms; a tuned file\'s is its optimisation\'s result (Lite\'s record)' : '' });
+    }
     if (key === 'speed') return el('td', { text: r.speed == null ? dash : String(r.speed) });
   }
   if (t === 'points') {

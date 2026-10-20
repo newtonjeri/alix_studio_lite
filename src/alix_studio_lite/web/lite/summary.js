@@ -7,7 +7,7 @@
 // placement and room the project has now.
 
 import { get } from './api.js';
-import { ctx, loadUnit, step } from './ctx.js';
+import { ctx, fmtT, loadUnit, step } from './ctx.js';
 import { handPresetName } from './prepare.js';
 import { speedPct } from './status.js';
 
@@ -33,6 +33,7 @@ async function facts(side) {
     const u = ctx.units[s.key] || await loadUnit(s.key);
     const v = (u.versions || []).find(x => x.version === u.version) || (u.versions || [])[(u.versions || []).length - 1];
     const st = (v && v.stage) || u.setup;
+    if (v) Object.assign(out, { file: v.name || v.file, seconds: v.seconds != null ? v.seconds : v.achieved_s });   // the trajectory and its time
     const preset = st && handPresetName(st.hand);                // else the stage's own words: "fingers 50 % open, thumb held"
     if (st) Object.assign(out, { pole_mm: st.pole_mm, hand: st.hand,
       hand_preset: preset !== 'Custom' ? preset : String(st.text || '').split(', ').slice(1).join(', ') || 'Custom' });
@@ -57,6 +58,7 @@ function lines(rec, a) {
     `Pole: ${mm(L.pole_mm ?? a.poleHeightMm)} mm`,
     `Hand: ${preset} (${hand.map(v => (v == null ? 'held' : v)).join(', ')})`,
     `Start pose: ${poseName(L.start_pose || a.startPose)}${L.speed_pct ? ` at ${L.speed_pct} %` : ''}`,
+    L.file ? `Trajectory: ${L.file}${L.seconds != null ? ` (${fmtT(L.seconds)})` : ''}` : null,
     p ? `UGV: standoff ${mm(p.standoff_mm)} mm${moves ? `${moves} mm` : ' · no moves'}` : 'UGV: not placed',
     room ? `Room: ${mm(room.width_mm)} × ${mm(room.length_mm)} mm · commode ${mm(room.left_mm)} mm from the left wall, `
       + `${mm(room.right_mm)} mm from the right, ${mm(room.front_mm)} mm from the front, ${mm(room.back_mm ?? 0)} mm from the wall behind`
@@ -68,7 +70,7 @@ export function installSummary() {
   window.setupSummaryHtml = function setupSummaryHtml(rec, side) {
     const a = rec && rec.approvedSetup && rec.approvedSetup[side];
     if (!a) return '<span class="mini-note">—</span>';
-    const [first, ...rest] = lines(rec, a);
+    const [first, ...rest] = lines(rec, a).filter(Boolean);
     return `<div class="approved-setup lite-approved-setup"><div>${esc(first)}</div>${rest.map(t => `<div>${esc(t)}</div>`).join('')}`
       + `<div class="mini-note">Program: ${esc(a.programId || '—')}</div></div>`;
   };

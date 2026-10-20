@@ -9,7 +9,7 @@
 // drag teach are not connected: they say so (they used to report COMPLETE with nothing sent).
 
 import { get, post, say } from './api.js';
-import { ctx, el, jobLine, robotCall, tell, watchJob } from './ctx.js';
+import { ctx, el, fmtT, jobLine, robotCall, tell, watchJob } from './ctx.js';
 import { loadPoints, matches, movePoint } from './points.js';
 import { borrow, Player } from './seq3d.js';
 import { liteMode, speedPct, standIn } from './status.js';
@@ -168,8 +168,8 @@ export function installAdvanced() {
       const d = await get(`/api/robots/${side}/programs`);
       const where = standIn() ? ' on the stand-in robot' : '';
       if (count) count.textContent = d.programs.length ? `${d.programs.length} programs${where}. Choose one to fill Program ID.` : `No programs stored yet${where}.`;
-      listBox(count, `rc${S(side)}ProgramList`).replaceChildren(table(['ID', 'Name', 'Size'], d.programs.map(p => ({
-        cells: [String(p.id), p.name || '', p.bytes || p.size ? `${Math.round((p.bytes || p.size) / 1000)} kB` : ''],
+      listBox(count, `rc${S(side)}ProgramList`).replaceChildren(table(['ID', 'Name', 'Time', 'Size'], d.programs.map(p => ({
+        cells: [String(p.id), p.name || '', p.seconds != null ? fmtT(p.seconds) : '', p.bytes || p.size ? `${Math.round((p.bytes || p.size) / 1000)} kB` : ''],
         pick: () => { const f = document.getElementById(`rc${S(side)}StoredProgram`); if (f) f.value = String(p.id); },
       }))));
       window.rcAppend(side, `PROGRAM LIST // ${d.programs.length} stored`);

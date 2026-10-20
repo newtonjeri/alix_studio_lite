@@ -886,3 +886,6 @@ html[data-theme="dark"] .queue-status.lite-prerecorded { border-color: var(--lit
 .lite-side-meta { font-size: 11px; line-height: 1.35; color: var(--muted); }
 .task-board.post-record .lite-trio, .task-board.post-record .lite-mid { display: block; }   /* the compact cards: as the page has them */
 .task-board.post-record .lite-side { display: none; }
+/* the trajectories' own times added, after the last row of the sequence and of the merge (the owner, 20 Oct) */
+.lite-s2-total td { font-weight: 700; border-top: 2px solid var(--line); }
+.lite-s1-order .lite-s1-total { list-style: none; margin-left: -22px; border-top: 1px solid var(--line); padding-top: 6px; }

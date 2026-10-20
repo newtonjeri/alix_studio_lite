@@ -86,7 +86,8 @@ def get_workflow_sources(app, q, body, m):
     c = content.content(app, side, refresh=str((q.get("refresh") or [""])[0]) in ("1", "true"),
                         files=workflow._project_files(units, side, every=True))
     return {"side": side, "read": c["read"], "live": c["live"], "standin": c["standin"], "note": c["note"],
-            "programs": [dict(id=p["id"], name=p.get("name"), sent=p.get("sent"), file_name=p.get("file_name")) for p in c["programs"]],
+            "programs": [dict(id=p["id"], name=p.get("name"), sent=p.get("sent"), file_name=p.get("file_name"), lines=p.get("lines"),
+                              seconds=p.get("seconds")) for p in c["programs"]],
             "points": sorted(p["name"] for p in c["points"]), "points_read": c["read"] if c["points"] or c["live"] else None}
 
 
