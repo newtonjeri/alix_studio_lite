@@ -21,6 +21,7 @@ import sys
 import threading
 import time
 import traceback
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
@@ -65,6 +66,7 @@ class LiteApp:
                  projects_dir: Path | None = None):
         self.project = project
         self.data_dir = Path(data_dir)
+        self.boot = uuid.uuid4().hex[:12]                     # this start of Lite: a page of an earlier one closes itself
         self.log = Logbook(Path(log_dir) if log_dir else self.data_dir / "logs")   # every activity, and the hardware's
         self.jobs = Jobs(on_end=self._job_ended)
         self.robot = StandInRobot(self.data_dir, self.jobs, link=robot_link, log=self.log)
@@ -223,10 +225,10 @@ def _unit(app: LiteApp, key: str) -> dict:
 
 @route("GET", "/api/lite/hello")
 def get_hello(app, q, body, m):
-    """Who serves this port, with no log-in: how a second start finds the Lite already running, and
-    whether it runs the same code."""
+    """Who serves this port, with no log-in: how a second start finds the Lite already running (to stop it), and
+    ``boot``, this start, how a page of an earlier one knows it belongs to the Lite before (web/lite/status.js)."""
     return {"app": "ALIX Studio Lite", "version": __version__, "code": CODE_ID, "pid": os.getpid(),
-            "data_dir": str(app.data_dir)}
+            "data_dir": str(app.data_dir), "boot": app.boot}
 
 
 @route("GET", "/api/lite/state")

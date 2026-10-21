@@ -140,6 +140,12 @@
 .lite-dot.on { background: var(--green); }
 /* STOP BOTH on top of everything while an overlay covers the top bar's (safety.js) */
 .lite-stop-fixed { display: none; position: fixed; left: 16px; bottom: 16px; z-index: 2147483000; }
+/* a view of an earlier start of Lite (status.js): over everything but STOP BOTH */
+.lite-stale { position: fixed; inset: 0; z-index: 2147482500; display: grid; place-items: center; padding: 24px; background: var(--lite-scrim); }
+.lite-stale-card { max-width: 560px; padding: 24px; border-radius: 18px; background: var(--card); color: var(--ink); box-shadow: 0 24px 60px var(--lite-scrim); }
+.lite-stale-card h2 { margin: 0 0 8px; font-size: 22px; }
+.lite-stale-card p { margin: 0 0 16px; font-size: 16px; line-height: 1.5; }
+body:has(.lite-stale) .lite-stop-fixed { display: block; }
 body:has(.modal.show, .project-manager-screen.show) .lite-stop-fixed,
 body.simulation-expanded .lite-stop-fixed, body:has(.lite-vp-max) .lite-stop-fixed { display: block; }   /* a maximized 3D view covers the bar */
 body:has(.operator-login-screen:not(.hidden)) .lite-stop-fixed { display: none; }   /* never on the log-in screen (owner, 14 Oct) */

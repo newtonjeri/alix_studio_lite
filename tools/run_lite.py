@@ -19,6 +19,8 @@ folder: the last project and the projects' trash in ``projects/``, Legacy Lite's
 ``legacy/projects/``, the Viewer's files, the PINs and the settings. Without ``--robot`` the robot is a
 stand-in: every robot screen works and nothing moves. The page opens in a Chrome window of Lite's
 own (``--no-browser`` to open it yourself), which shows the 3D even where the graphics run in software.
+A start replaces the Lite already running on its port: that one is stopped first, as Ctrl+C stops it
+(STOP to the arms, then each controller's speed back), and its windows close.
 """
 from __future__ import annotations
 

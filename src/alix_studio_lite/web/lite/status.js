@@ -151,10 +151,49 @@ async function poll() {
   }
 }
 
+// A view of an earlier start (the owner, 21 Oct: "Starting the app should automatically close any existing front end
+// views"): this start of the server (`boot`, from /api/lite/hello, which needs no log-in) is read every few seconds;
+// once another start answers, this view belongs to the Lite before. It says so over the page and closes itself where
+// the browser lets a page close (a new start closes Lite's own Chrome windows itself: server/__init__.py). STOP BOTH
+// stays above it wherever it shows (never on the log-in screen, where such a page usually is by then).
+let boot = null, bootTimer = null;
+async function watchBoot() {
+  let d;
+  try {
+    const r = await fetch('/api/lite/hello', { cache: 'no-store' });
+    d = await r.json();
+  } catch (_) { return; }                             // restarting, or gone: nothing to compare yet
+  if (!d || !d.boot) return;
+  if (boot == null) { boot = d.boot; return; }
+  if (d.boot !== boot) staleView();
+}
+
+function staleView() {
+  clearInterval(bootTimer); clearInterval(timer);
+  if (document.getElementById('liteStale')) return;
+  const reload = Object.assign(document.createElement('button'), { className: 'btn', type: 'button', textContent: 'Reload this window' });
+  reload.addEventListener('click', () => window.location.reload());
+  const card = el('div', 'lite-stale-card', '');
+  card.append(el('h2', '', 'ALIX Studio Lite was started again'),
+    el('p', '', 'This window belongs to the run before it, so it is closed. Use the window the new start opened, '
+      + 'or reload this one to use the new start here.'), reload);
+  const box = el('div', 'lite-stale', '');
+  box.id = 'liteStale';
+  box.setAttribute('role', 'alertdialog');
+  box.setAttribute('aria-modal', 'true');
+  box.append(card);
+  document.body.append(box);
+  reload.focus();
+  window.close();                                     // where the browser lets a page close itself
+}
+
 export function installStatus() {
   show('offline', 'CONNECTING', 'to the Lite server');
   if (timer) clearInterval(timer);
   timer = setInterval(poll, 1500);
   poll();
   document.addEventListener('lite:mode', poll);
+  clearInterval(bootTimer);
+  bootTimer = setInterval(watchBoot, 3000);
+  watchBoot();
 }

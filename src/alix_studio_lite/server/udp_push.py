@@ -44,11 +44,12 @@ def lite_pids() -> set[int]:
     return out
 
 
-def port_holders(port: int, mine=()) -> list[dict]:
-    """The UDP sockets bound to ``port`` on this computer, outside processes ``mine``: [{pid, command}]. A socket of a
-    process this user cannot look into has pid None. Empty without /proc (not Linux)."""
+def port_holders(port: int, mine=(), kind: str = "udp") -> list[dict]:
+    """The UDP sockets bound to ``port`` on this computer (``kind`` "tcp": the TCP sockets listening on it, a server's),
+    outside processes ``mine``: [{pid, command}]. A socket of a process this user cannot look into has pid None. Empty
+    without /proc (not Linux)."""
     inodes = set()
-    for f in ("/proc/net/udp", "/proc/net/udp6"):
+    for f in (f"/proc/net/{kind}", f"/proc/net/{kind}6"):
         try:
             rows = Path(f).read_text().splitlines()[1:]
         except OSError:
@@ -56,7 +57,7 @@ def port_holders(port: int, mine=()) -> list[dict]:
         for row in rows:
             parts = row.split()
             try:
-                if int(parts[1].rsplit(":", 1)[1], 16) == int(port):
+                if int(parts[1].rsplit(":", 1)[1], 16) == int(port) and (kind != "tcp" or parts[3] == "0A"):   # 0A: LISTEN
                     inodes.add(parts[9])
             except (IndexError, ValueError):
                 continue

@@ -179,8 +179,9 @@ def test_a_stop_with_a_reason_ends_the_job_as_failed():
 
 
 def test_a_second_start_tells_this_lite_an_older_one_and_another_program(lite, tmp_path, capsys):
-    """Starting Lite on a port in use opens it when it is this same Lite; an older Lite (whose server
-    still runs its old code) must be stopped first; anything else is another program."""
+    """Starting Lite on a port in use replaces the Lite there (test_restart.py); one it cannot stop (here this very
+    process) is opened when it is this same Lite, and an older one (whose server still runs its old code) must be
+    stopped first; anything else is another program, never stopped."""
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
     from alix_studio_lite import code_id

@@ -69,6 +69,7 @@ alix_studio_lite/tools/run_lite.sh                # Windows: py alix_studio_lite
 Lite opens at **http://127.0.0.1:8766/** in a Chrome window of its own (its own profile, with Chrome's GPU blocklist ignored), so the 3D shows even on a computer whose graphics run in software. Without Chrome, the default browser opens a tab.
 - Log in with the operator PIN. Advanced Robot Controls ask for the engineer PIN.
 - Both PINs are **`1234`** until changed: `tools/run_lite.sh --set-pin operator`, or `--set-pin engineer`.
+- Starting Lite again (`tools/run_lite.sh` or `tools/run_lite.py`) replaces the Lite already running on its port: that one is stopped first, as Ctrl+C stops it, and its window closes.
 - STOP BOTH always works, with or without a log-in, and acts like the E-stop: afterwards nothing moves until **Recover** (Robot & mode). When a window covers the top bar (the log-in screen, the Project Manager, a dialog), a second STOP BOTH stays at the bottom left.
 - Projects live in `Resources/Projects/`, one folder each, named as the project was named when it was created. They are not committed: keep a project file of any project you need. Settings, PINs and the projects' trash live in `~/ALIX-Lite/`.
 - A project file (`.alixproj`) from another computer brings its recordings and settings, but not its kept versions or test results: tune and keep again here before running on this robot.
@@ -165,8 +166,9 @@ Every activity is logged, one folder per day in **`Resources/Logs/<date>/`** in 
 | `this Python has no venv module` | Ubuntu or Debian: `sudo apt install python3.12-venv` (use your Python version). Then run the installer again. |
 | `NOT updated: could not reach GitHub (sign-in or network)` | Lite is installed as it was. Check the internet connection and the GitHub sign-in, then run the installer again. |
 | `the repository could not be cloned` | Sign in first (see above), then run the installer again. |
-| `Cannot use port 8766: another program …` | Something other than Lite holds the port. On Linux, `ss -ltnp 'sport = :8766'` shows which program; close it, or start Lite with `--port 8800`. (If this Lite is already running there, starting it again just opens it.) |
-| `An older ALIX Studio Lite is still running` | The Lite started before an update still runs the old code. Press Ctrl+C in its terminal, or run the `kill` command it shows, then start Lite again. |
+| `Cannot use port 8766: another program …` | Something other than Lite holds the port. On Linux, `ss -ltnp 'sport = :8766'` shows which program; close it, or start Lite with `--port 8800`. (A Lite already running there is stopped by the new start: see below.) |
+| `ALIX Studio Lite is already running on port 8766 … stopping it first` | Starting Lite again replaces the Lite already running on its port: it is stopped as Ctrl+C stops it (STOP to the arms, then each controller's speed back; ended at once if it is still there after 40 s, or does not answer), and Lite's own window for that port closes; a window of it left in another browser says it was closed. Then the new start opens its own window. |
+| `An older ALIX Studio Lite is still running` | A Lite the new start could not stop (another user's): press Ctrl+C in its terminal, or run the `kill` command it shows, then start Lite again. |
 | `Lite cannot reach the LEFT arm's controller` | Check the power, the cable, the address in Robot & mode, and that the computer is on 192.168.1.x. |
 | `The RealMan SDK does not load on this computer` | The robot link needs Linux. Run Lite on the Linux computer that runs the control program. |
 | E-stop chip reads *not configured* | IO3 is not in the controller's E-stop mode. An engineer sets it at the pendant; Lite never writes IO modes. |

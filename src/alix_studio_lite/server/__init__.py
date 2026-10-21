@@ -13,6 +13,13 @@ DEFAULT_DATA = Path(os.environ.get("ALIX_LITE_DATA", Path.home() / "ALIX-Lite"))
 # Lite's own Chrome profile (_open_browser): a separate Chrome, so its switches apply even while another is open
 CHROME_PROFILE = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "alix-studio-lite" / "chrome"
 EXIT_LIMIT_S = 30.0                     # Lite's exit (STOP, then each controller's speed back) ends by then, else it quits
+STOP_WAIT_S = EXIT_LIMIT_S + 10.0       # a Lite a new start stops (_replace_running) has ended by then, else it is killed
+
+
+def chrome_profile(port: int) -> Path:
+    """Lite's Chrome profile for the page on ``port``: one per port, so that a new start closes that port's windows
+    only (_close_windows); the default port's is the one Lite always had."""
+    return CHROME_PROFILE if int(port) == DEFAULT_PORT else CHROME_PROFILE.with_name(f"{CHROME_PROFILE.name}-{int(port)}")
 
 
 def _chrome() -> str | None:
@@ -38,11 +45,13 @@ def _open_browser(url: str) -> None:
         webbrowser.open(url)
         return
     import subprocess
+    from urllib.parse import urlsplit
 
+    profile = chrome_profile(urlsplit(url).port or DEFAULT_PORT)
     try:
-        CHROME_PROFILE.mkdir(parents=True, exist_ok=True)
-        _fresh_caches(CHROME_PROFILE)
-        subprocess.Popen([chrome, f"--user-data-dir={CHROME_PROFILE}", "--ignore-gpu-blocklist", "--no-first-run",
+        profile.mkdir(parents=True, exist_ok=True)
+        _fresh_caches(profile)
+        subprocess.Popen([chrome, f"--user-data-dir={profile}", "--ignore-gpu-blocklist", "--no-first-run",
                           "--no-default-browser-check", "--new-window", url],
                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                          start_new_session=True)        # as webbrowser does: Ctrl+C here leaves the window open
@@ -84,6 +93,160 @@ def _running_lite(port: int) -> dict | None:
         return {} if (exc.headers.get("Server") or "").startswith("ALIXStudioLite/") else None
     except Exception:                                                      # noqa: BLE001
         return None
+
+
+def _replace_running(port: int) -> None:
+    """A new start replaces the Lite already on its port, and closes the windows showing it (the owner, 21 Oct: "Any
+    existing instance on that port should be killed when a new server-side start ... begins"; "Starting the app should
+    automatically close any existing front end views"). That Lite is stopped as Ctrl+C stops it (SIGTERM: STOP to the
+    arms, then each controller's speed back, its arms' processes with it; it quits by EXIT_LIMIT_S), and ended at once
+    if it is still there after STOP_WAIT_S. Then Lite's own Chrome windows for this port close (_close_windows); a page
+    left open in another browser closes itself once it sees the new start (web/lite/status.js). Never this process, and
+    never a program that is not Lite: one that holds the port is said by _port_taken, as before."""
+    pid = _lite_pid(port)
+    if pid and pid not in (os.getpid(), os.getppid()):
+        print(f"ALIX Studio Lite is already running on port {port} (process {pid}): stopping it first, as Ctrl+C does "
+              f"(STOP to the arms, then each controller's speed back; at most {STOP_WAIT_S:g} s)...", flush=True)
+        print(f"   {_stop_process(pid)}", flush=True)
+    if _close_windows(port):
+        print(f"Closed Lite's window for port {port}: the new start opens its own.", flush=True)
+
+
+def _lite_pid(port: int) -> int | None:
+    """The process of the ALIX Studio Lite serving ``port`` on this computer: by its own answer (/api/lite/hello), else
+    (a Lite from before that route, or one that no longer answers) the process listening on the port, when its command
+    is Lite's (Linux: /proc). None when there is none, or it cannot be told."""
+    running = _running_lite(port)
+    if running and running.get("pid"):
+        return int(running["pid"])
+    from .udp_push import port_holders
+
+    for h in port_holders(port, kind="tcp"):
+        if h.get("pid") and _is_lite_command(_command_of(h["pid"])):
+            return int(h["pid"])
+    return None
+
+
+def _is_lite_command(command: str) -> bool:
+    """Whether a command line (its arguments NUL-separated, as /proc gives them) starts Lite's server: run_lite.py (what
+    run_lite.sh and run_lite.bat run), ``-m alix_studio_lite.server``, or the tests' emulated_lite.py. Its interpreter is
+    not looked at: any program run with Lite's own Python names the repository there."""
+    args = command.split("\0") if "\0" in command else command.split()
+    rest = args[1:]
+    return (any(Path(x).name in ("run_lite.py", "emulated_lite.py") for x in rest)
+            or any(x == "-m" and y.startswith("alix_studio_lite.server") for x, y in zip(rest, rest[1:])))
+
+
+def _command_of(pid: int) -> str:
+    """A process's command line: /proc on Linux, else ps (macOS). "" when it cannot be read."""
+    try:
+        raw = Path(f"/proc/{int(pid)}/cmdline").read_bytes()
+        return "\0".join(p.decode(errors="replace") for p in raw.split(b"\0") if p)
+    except OSError:
+        pass
+    import subprocess
+
+    try:
+        return subprocess.run(["ps", "-p", str(int(pid)), "-o", "command="], capture_output=True, text=True, timeout=5).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def _alive(pid: int) -> bool:
+    """Whether process ``pid`` still runs (a zombie has ended). Windows: asked without touching it (there os.kill with
+    signal 0 would end it)."""
+    if os.name == "nt":
+        import ctypes
+
+        k = ctypes.windll.kernel32
+        h = k.OpenProcess(0x00100000, False, int(pid))                    # SYNCHRONIZE
+        if not h:
+            return False
+        try:
+            return k.WaitForSingleObject(h, 0) == 0x102                   # WAIT_TIMEOUT: still running
+        finally:
+            k.CloseHandle(h)
+    try:
+        os.kill(int(pid), 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    try:
+        return Path(f"/proc/{int(pid)}/stat").read_text().rsplit(")", 1)[1].split()[0] != "Z"
+    except (OSError, IndexError):
+        return True
+
+
+def _stop_process(pid: int) -> str:
+    """A Lite stopped as Ctrl+C stops it (SIGTERM), waited for up to STOP_WAIT_S, else ended at once. What happened."""
+    import signal
+    import time
+
+    try:
+        os.kill(int(pid), signal.SIGTERM)
+    except ProcessLookupError:
+        return "It had stopped already."
+    except PermissionError:
+        return "It runs as another user, so this start cannot stop it: stop it there (Ctrl+C in its terminal)."
+    t0 = time.monotonic()
+    while time.monotonic() - t0 < STOP_WAIT_S:
+        if not _alive(pid):
+            return f"It has stopped ({time.monotonic() - t0:.1f} s)."
+        time.sleep(0.2)
+    try:
+        os.kill(int(pid), getattr(signal, "SIGKILL", signal.SIGTERM))
+    except OSError:
+        pass
+    for _ in range(50):
+        if not _alive(pid):
+            break
+        time.sleep(0.1)
+    return f"It had not stopped after {STOP_WAIT_S:g} s, so it was ended at once."
+
+
+def _close_windows(port: int) -> bool:
+    """Lite's own Chrome windows for ``port`` closed: the browser of its profile (chrome_profile), found by the profile's
+    SingletonLock ("<host>-<pid>") and its own command line (that profile, so never another browser's windows), asked to
+    close as Chrome closes on SIGTERM (ended at once after 5 s). Whether one was open. Not on Windows (its lock names no
+    process)."""
+    import signal
+    import socket
+    import time
+
+    if os.name == "nt":
+        return False
+    profile = chrome_profile(port)
+    lock = profile / "SingletonLock"
+    try:
+        target = os.readlink(lock)
+        host, _, pid = target.rpartition("-")
+        pid = int(pid)
+    except (OSError, ValueError):
+        return False
+    args = _command_of(pid).replace("\0", " ").split(" ")
+    if host != socket.gethostname() or not _alive(pid) or f"--user-data-dir={profile}" not in args:
+        return False
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError:
+        return False
+    for _ in range(50):
+        if not _alive(pid):
+            break
+        time.sleep(0.1)
+    else:
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except OSError:
+            pass
+        time.sleep(0.2)
+    try:                                         # a lock left by the browser ended: the new window's caches are cleared
+        if not _alive(pid) and os.readlink(lock) == target:
+            lock.unlink()
+    except OSError:
+        pass
+    return True
 
 
 def _port_taken(port: int, root: str, url: str, no_browser: bool) -> int:
@@ -156,6 +319,7 @@ def main(argv=None) -> int:
 
     if a.set_pin:
         return _set_pin(a.data, a.set_pin)
+    _replace_running(a.port)                        # a new start: the Lite on this port stopped, its windows closed
 
     from .. import vendor_paths
 
