@@ -12286,3 +12286,12 @@ A positive WAIT exists before the next serial section on only one arm. Add the m
 23:43:50.555 [activity] operator:37ebef PUT /api/projects/alix_mvbvk1fk_zti6s
 23:43:50.686 [activity] operator:37ebef page: SYSTEM · Browser closing
 23:43:50.687 [activity] operator:37ebef page: SYSTEM · Application hidden
+23:46:30.896 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+23:46:31.098 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+23:46:59.640 [LEFT] ALERT ERROR · LEFT: STOP sent, not confirmed by its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)
+23:46:59.640 [RIGHT] ALERT ERROR · RIGHT: STOP sent, not confirmed by its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)
+23:47:07.838 [LEFT] stop confirmed late (18.199 s) · LEFT: STOP not confirmed: the arm's stop returned None; the pole: -2; the arm is not proven still (the program is still running after rm_set_arm_stop — no software stop has been shown to work on this controller; use the pendant / e-stop)
+23:47:07.838 [LEFT] ALERT ERROR · LEFT: STOP not confirmed: the arm's stop returned None; the pole: -2; the arm is not proven still (the program is still running after rm_set_arm_stop — no software stop has been shown to work on this controller; use the pendant / e-stop) (confirmed after 18.2 s). (Press the red E-stop button on the robot if it is still moving.)
+23:47:07.839 [RIGHT] stop confirmed late (18.200 s) · RIGHT: STOP not confirmed: the arm's stop returned None; the pole: -2; the arm is not proven still (the program is still running after rm_set_arm_stop — no software stop has been shown to work on this controller; use the pendant / e-stop)
+23:47:07.839 [RIGHT] ALERT ERROR · RIGHT: STOP not confirmed: the arm's stop returned None; the pole: -2; the arm is not proven still (the program is still running after rm_set_arm_stop — no software stop has been shown to work on this controller; use the pendant / e-stop) (confirmed after 18.2 s). (Press the red E-stop button on the robot if it is still moving.)
+23:47:17.936 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
