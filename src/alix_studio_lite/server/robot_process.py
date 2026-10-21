@@ -26,11 +26,18 @@ teaching, the STOP hook, close: a thread of the worker's own, never behind a com
 heartbeats). ``LITE_LINK_PROCESS=0`` keeps the links in this process (robot_standin.LINK_PROCESS: the tests of the
 in-process path, or a diagnosis). ``LITE_WORKER_SETUP=<file.py>`` names a module whose ``setup()`` the worker runs
 before it opens the link (the emulated Lite's shims, tests/emulated_lite.py; a fake controller in the tests).
+
+Ctrl+C in Lite's terminal reaches every process started from it, the workers too, and it is the server's alone: its
+shutdown sends STOP through each worker, gives each controller its speed back, then closes the workers. A worker
+ignores SIGINT, from its very start: the server starts it with SIGINT held (``open``) and the worker sets it aside
+before letting it through (the lab, 21 Oct: both workers died of the Ctrl+C with a traceback each, and the
+shutdown's STOP found no process to pass through, "STOP not confirmed" on both arms).
 """
 from __future__ import annotations
 
 import multiprocessing as mp
 import os
+import signal
 import threading
 import time
 from contextlib import contextmanager
@@ -102,6 +109,12 @@ class _LogForwarder:
 def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log_root: str | None, cmd, ctl, feed) -> None:
     """The arm worker: the link opened, then commands one after the other (``cmd``), STOP and the like on their
     own thread (``ctl``), the link's view pushed on ``feed``."""
+    # Ctrl+C is the server's (the module's docstring): ignored here first, then let through, so one that came while
+    # this process was starting (held since open) is dropped, never raised. A STOP mid-stream is an exception raised
+    # in the streaming thread (robot_real._interrupt), not a signal; the tuning pool's worker does the same (workers.py).
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    if hasattr(signal, "pthread_sigmask"):
+        signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGINT})
     from .. import vendor_paths
 
     vendor_paths.activate()
@@ -251,7 +264,19 @@ class LinkProcess:
         root = str(self.log.root) if self.log is not None else None
         self._proc = ctx.Process(target=worker_main, name=f"lite-arm-{self.side}",
                                  args=(self.side, self.ip, self.port, self.kind, setup, root, cmd_b, ctl_b, feed_b), daemon=True)
-        self._proc.start()
+        # The worker starts with Ctrl+C held (it inherits this thread's signal mask) until worker_main ignores it; this
+        # thread's mask is put back at once. multiprocessing's resource tracker, which the first spawn starts, ends its
+        # own start by letting SIGINT through in the calling thread (its guard for the same race, bpo-33613): it is
+        # started first, outside the hold, or the worker would start with Ctrl+C let through.
+        from multiprocessing import resource_tracker
+
+        resource_tracker.ensure_running()
+        held = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGINT}) if hasattr(signal, "pthread_sigmask") else None
+        try:
+            self._proc.start()
+        finally:
+            if held is not None:
+                signal.pthread_sigmask(signal.SIG_SETMASK, held)
         with _PROCS_LOCK:
             _PROCS[:] = [p for p in _PROCS if p.is_alive()] + [self._proc]
         cmd_b.close(), ctl_b.close(), feed_b.close()

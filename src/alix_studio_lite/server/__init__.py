@@ -271,7 +271,7 @@ def _close(app, srv) -> None:
     signal.signal(signal.SIGTERM, again)
     threading.Thread(target=watchdog, name="lite-exit", daemon=True).start()
     try:                                            # each step is tried; none keeps Lite from quitting
-        for step in (lambda: app.robot.stop("all"), sent.set, app.robot.close, srv.server_close, workers.shutdown):
+        for step in (lambda: _stop_arms(app), sent.set, app.robot.close, srv.server_close, workers.shutdown):
             try:
                 step()
             except Exception as exc:                                        # noqa: BLE001
@@ -279,6 +279,16 @@ def _close(app, srv) -> None:
     finally:
         sent.set()
         ended.set()
+
+
+def _stop_arms(app) -> None:
+    """Lite's exit, first: STOP to every arm, through its connection's process (robot_process: the workers leave
+    Ctrl+C to the server). An arm whose controller did not confirm it is said in the terminal too: the page that
+    shows that alert is closing."""
+    out = app.robot.stop("all")
+    for r in (out.get("controllers") or {}).values():
+        if not r.get("ok"):
+            print(f"  {r.get('text')}. Press the red E-stop button on the robot if it is still moving.", flush=True)
 
 
 def _dump_threads(root) -> str | None:
