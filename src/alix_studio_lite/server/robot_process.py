@@ -149,7 +149,22 @@ def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log
     except BaseException as exc:                                            # noqa: BLE001
         push(cmd, ("open_error", _err(exc)))
         return
-    push(cmd, ("opened", dict(emulated=link.emulated, view=link.view())))
+    left = None
+    if not link.emulated:                        # the controller's realtime push left on toward this computer (udp_push)
+        from .udp_push import left_on
+
+        try:
+            with link.busy("reading the realtime push"):
+                left = left_on(link.handle)
+        except Exception as exc:                                            # noqa: BLE001 - never keeps the arm from connecting
+            left = dict(error=f"{type(exc).__name__}: {exc}")
+    if left and left.get("cleared"):             # turned off, but this process's SDK has bound its port: a fresh process
+        push(cmd, ("reopen", left))
+        try:
+            link.close()
+        finally:
+            os._exit(0)
+    push(cmd, ("opened", dict(emulated=link.emulated, view=link.view(), push=left)))
     log = _LogForwarder(lambda msg: push(cmd, msg))
     arm = RealArm(link, log)
     state = dict(hook=None, dumped=False)
@@ -255,7 +270,7 @@ class LinkProcess:
         self._hooks: list = []
 
     # -- life
-    def open(self) -> "LinkProcess":
+    def open(self, _again: bool = False) -> "LinkProcess":
         ctx = mp.get_context("spawn")
         cmd_a, cmd_b = ctx.Pipe()
         ctl_a, ctl_b = ctx.Pipe()
@@ -291,13 +306,49 @@ class LinkProcess:
             self.abandon()
             raise UserError(f"The {self.side.upper()} arm's connection process ended before it connected.",
                             "Its traceback is in Lite's terminal; start Lite from a terminal to read it.") from None
+        if msg[0] == "reopen" and not _again:   # the push was left on toward this computer (udp_push): turned off, and
+            self._proc.join(CLOSE_JOIN_S)       # that process's SDK holds its port; a fresh one binds nothing
+            if self._proc.is_alive():
+                self._proc.kill()
+                self._proc.join(1.0)
+            for c in (cmd_a, ctl_a, feed_a):
+                c.close()
+            self._say_push(msg[1], reopened=True)
+            return self.open(_again=True)
         if msg[0] != "opened":
             self.abandon()
-            _raise(msg[1])
+            _raise(msg[1] if msg[0] != "reopen" else dict(
+                type="UserError", text=f"The {self.side.upper()} controller's 5 ms feed was on toward this computer again after Lite "
+                "turned it off, so the arm is not connected.", hint="Turn it off on the pendant (realtime push), then connect the arm again."))
         self.emulated = bool(msg[1]["emulated"])
         self._take_view(msg[1]["view"], None, None)
         threading.Thread(target=self._feed_loop, name=f"lite-feed-{self.side}", daemon=True).start()
+        if msg[1].get("push"):
+            self._say_push(msg[1]["push"], reopened=False)
         return self
+
+    def _say_push(self, info: dict, reopened: bool) -> None:
+        """What the push check found as the arm connected (udp_push.left_on): in the hardware log; an alert when the
+        lid and seat tasks cannot stream on this arm."""
+        from .udp_push import held_text
+
+        if self.log is None:
+            return
+        S, port = self.side.upper(), info.get("port")
+        if info.get("error"):
+            self.log.hardware(self.side, "realtime push", ok=False, text=f"not checked: {info['error']}")
+        elif reopened:
+            self.log.hardware(self.side, "realtime push", ok=True,
+                              text=f"left on toward this computer (port {port}), so this arm's connection had bound the port its "
+                                   "CanFD capture needs: turned off, and the arm connected again in a fresh process")
+        elif info.get("holders"):
+            self.log.alert("warn", f"{S}: the controller's 5 ms feed goes to this computer's port {port}, which another program "
+                           f"holds ({held_text(info['holders'])}), so the lid and seat tasks cannot stream on this arm while it runs.",
+                           hint="Stop it (ALIX's driver or one of its tools), then connect the arm again.", side=self.side, source="push")
+        else:
+            self.log.alert("warn", f"{S}: the controller's 5 ms feed was left on toward this computer (port {port}) and could not be "
+                           "turned off, so the lid and seat tasks cannot stream on this arm. " + " ".join(info.get("said") or []),
+                           hint="Turn it off on the pendant (realtime push), then connect the arm again.", side=self.side, source="push")
 
     def close(self) -> None:
         """The worker closes its link (never under a call: robot_link) and ends; a worker that does not end is killed."""

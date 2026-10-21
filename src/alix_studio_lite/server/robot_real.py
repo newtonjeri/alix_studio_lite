@@ -933,8 +933,11 @@ class RealArm:
                 rec.start(self.robot)
             except Exception as exc:                                                # noqa: BLE001
                 self._hw("canfd capture", ok=False, text=f"refused: {exc}")
+                from .udp_push import capture_refused_hint       # who holds the port: this connection, or another program
+
+                hint = capture_refused_hint(UDP_PORT[self.side]) if "already bound" in str(exc) else None
                 raise UserError(f"The {self.SIDE} controller's 5 ms feed to this computer could not be set up ({exc}), so "
-                                "nothing was streamed.", "Check that nothing else (ALIX's driver) takes the controller's push.") from None
+                                "nothing was streamed.", hint or "Check that nothing else (ALIX's driver) takes the controller's push.") from None
             try:
                 t_end = time.monotonic() + 1.0
                 while watch.n_frames == 0 and time.monotonic() < t_end:

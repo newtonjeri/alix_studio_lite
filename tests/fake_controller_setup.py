@@ -1,10 +1,33 @@
 """A fake controller for an arm's worker process (robot_process: LITE_WORKER_SETUP names this file), for
 tests/test_link_process.py: enough of the SDK for a reading, and one call that never answers on the connection
 made while the marker file LITE_FAKE_STUCK_MARKER exists (the first; it is removed as that connection opens, so the
-next one answers). Anything else answers -1."""
+next one answers). Anything else answers -1.
+
+With LITE_FAKE_PUSH_FILE, the controller's realtime push setting (a JSON file, so that it is the same controller
+for every process that connects to it) and the RealMan SDK's own listener as measured with its library (triple-thread
+mode, tests/test_sdk_push_port.py): connecting, or reading the setting, while the push is enabled binds its port on
+this computer (every address, SO_REUSEADDR), kept for as long as the process lives."""
+import json
 import os
+import socket
 import threading
 from pathlib import Path
+
+_HELD: dict = {}                                            # port -> the SDK listener's socket, for this process's life
+
+
+def _push() -> dict | None:
+    f = os.environ.get("LITE_FAKE_PUSH_FILE")
+    return json.loads(Path(f).read_text()) if f else None
+
+
+def _sdk_listens(cfg: dict) -> None:
+    port = int(cfg.get("port") or 0)
+    if cfg.get("enable") and port and port not in _HELD:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind(("", port))
+        _HELD[port] = s
 
 
 class Controller:
@@ -44,6 +67,23 @@ class Controller:
     def rm_delete_robot_arm(self):
         return 0
 
+    def rm_get_realtime_push(self):
+        cfg = _push()
+        if cfg is None:
+            return -1, None
+        _sdk_listens(cfg)
+        return 0, dict(cfg)
+
+    def rm_set_realtime_push(self, cfg):
+        now = _push()
+        if now is None:
+            return -1
+        ip = cfg.ip.decode() if isinstance(cfg.ip, bytes) else str(cfg.ip)
+        now.update(enable=bool(cfg.enable), port=int(cfg.port), ip=ip, cycle=int(cfg.cycle))
+        Path(os.environ["LITE_FAKE_PUSH_FILE"]).write_text(json.dumps(now))
+        _sdk_listens(now)
+        return 0
+
     def __getattr__(self, name):
         if name.startswith("rm_"):
             return lambda *a, **kw: (-1, None)
@@ -59,6 +99,9 @@ def setup():
         stuck = bool(marker) and Path(marker).exists()
         if stuck:
             Path(marker).unlink()
+        cfg = _push()
+        if cfg is not None:                                 # connecting reads the push setting, as the SDK does
+            _sdk_listens(cfg)
         return connect.ArmHandle(side, ip or "192.168.1.103", port or 8080, Controller(stuck=stuck), 1, "127.0.0.1")
 
     connect.open_arm = open_arm

@@ -128,3 +128,118 @@ def test_a_ctrl_c_while_an_arm_worker_starts_is_dropped(monkeypatch, capfd):
     assert link._proc.exitcode == 0
     err = capfd.readouterr().err
     assert "KeyboardInterrupt" not in err and "Traceback" not in err, err
+
+
+# ── the controller's realtime push left on toward this computer (server/udp_push.py; the lab, 21 Oct 15:24) ──────────
+
+def _udp_port() -> int:
+    import socket
+
+    while True:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.bind(("", 0))
+            p = s.getsockname()[1]
+        if p not in (8089, 8090):
+            return p
+
+
+def _outside_holder(port: int) -> int:
+    """A program outside Lite (not a child of this test) holding ``port`` as the SDK and ALIX's driver do (SO_REUSEADDR):
+    a double fork, so that it is nobody's child here. Its pid."""
+    import subprocess
+    import sys
+
+    code = f"""
+import os, socket, time
+r, w = os.pipe()
+if os.fork():
+    os.close(w); print(os.read(r, 32).decode(), flush=True); os._exit(0)
+os.setsid()
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(("", {port}))
+n = os.open(os.devnull, os.O_RDWR)
+for fd in (0, 1, 2):
+    os.dup2(n, fd)
+os.write(w, str(os.getpid()).encode()); os.close(w)
+time.sleep(120)
+"""
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=30)
+    return int(out.stdout.strip())
+
+
+def test_a_push_left_on_toward_this_computer_is_turned_off_and_the_arm_connected_again(tmp_path, monkeypatch):
+    """The RIGHT controller pushed to this computer's port as ALIX's driver leaves it: connecting bound that port for the
+    SDK's own listener, and the S2 run's capture was refused ("UDP port 8090 is already bound ON THIS HOST"). Now the
+    push is turned off as the arm connects and the arm is connected again in a fresh process, which binds nothing: the
+    capture's own bind (ALIX's UdpRecorder: no SO_REUSEADDR) takes the port."""
+    import json
+    import socket
+
+    from alix_studio_lite.server.udp_push import port_holders
+
+    port = _udp_port()
+    push = tmp_path / "push.json"
+    push.write_text(json.dumps(dict(enable=True, ip="127.0.0.1", port=port, cycle=1)))
+    monkeypatch.setenv("LITE_WORKER_SETUP", str(Path(__file__).with_name("fake_controller_setup.py")))
+    monkeypatch.setenv("LITE_FAKE_PUSH_FILE", str(push))
+    log = Logbook(tmp_path / "logs")
+    t0 = time.time()
+    link = LinkProcess("right", "192.168.1.19", kind="realman", log=log).open()
+    try:
+        assert json.loads(push.read_text())["enable"] is False                      # turned off on the controller
+        said = [r for r in log.records("hardware", t0 - 1, time.time() + 1) if r["verb"] == "realtime push"]
+        assert said and said[-1]["ok"] and "connected again in a fresh process" in said[-1]["text"], said
+        assert port_holders(port) == []                   # the first process, whose SDK had bound it, is gone
+        cap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        cap.bind(("", port))                              # the capture's bind
+        cap.close()
+        assert link.read_fresh()["estop"] == "CLEAR" and not log.alerts_view()
+    finally:
+        link.close()
+
+
+def test_a_push_another_program_here_takes_is_left_alone_and_said(tmp_path, monkeypatch):
+    """A push toward this computer whose port another program holds (ALIX's driver running) is a live consumer: never
+    turned off; the arm connects, and an alert names the program."""
+    import json
+    import signal as sig
+
+    port = _udp_port()
+    holder = _outside_holder(port)
+    try:
+        push = tmp_path / "push.json"
+        push.write_text(json.dumps(dict(enable=True, ip="127.0.0.1", port=port, cycle=1)))
+        monkeypatch.setenv("LITE_WORKER_SETUP", str(Path(__file__).with_name("fake_controller_setup.py")))
+        monkeypatch.setenv("LITE_FAKE_PUSH_FILE", str(push))
+        log = Logbook(tmp_path / "logs")
+        link = LinkProcess("left", "192.168.1.18", kind="realman", log=log).open()
+        try:
+            assert json.loads(push.read_text())["enable"] is True                   # left on: it is someone's feed
+            a = [x for x in log.alerts_view() if x.get("source") == "push"]
+            assert a and a[-1]["level"] == "warn" and f"pid {holder}" in a[-1]["text"] and str(port) in a[-1]["text"], a
+            assert link.read_fresh()["estop"] == "CLEAR"
+        finally:
+            link.close()
+    finally:
+        os.kill(holder, sig.SIGKILL)
+
+
+def test_a_refused_capture_says_who_holds_the_port():
+    import socket
+
+    from alix_studio_lite.server.udp_push import capture_refused_hint
+
+    port = _udp_port()
+    assert capture_refused_hint(port) is None                                          # nobody: ALIX's own hint stands
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind(("", port))
+    try:
+        assert "This arm's own connection holds the port" in capture_refused_hint(port)   # this very process
+    finally:
+        s.close()
+    holder = _outside_holder(port)
+    try:
+        hint = capture_refused_hint(port)
+        assert f"Another program on this computer holds it: pid {holder} (" in hint, hint
+    finally:
+        os.kill(holder, signal.SIGKILL)
