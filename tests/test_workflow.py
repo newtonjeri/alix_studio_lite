@@ -265,6 +265,8 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     assert "LEFT row 5: program 72 is not drawn (Lite has not sent this program; no file of its name in the project" in texts
     assert "From here the arm's pose is not known" in texts             # the check leaves that arm out after it
     assert "RIGHT row 2, program 71: taught at pole 50 mm, hand grip, but the pole is at 200 mm here" in texts
+    stop = next(f for f in sim["findings"] if "RIGHT row 2, program 71: taught at" in f["text"])
+    assert stop["level"] == "stop" and "It runs only with its own" in stop["text"]     # Real Machine Mode does not run it
     assert "hand" in texts and "no Hand step before it" in texts   # the right arm's hand was never set in this run
     col = sim["collisions"]
     assert col["samples"] > 100 and col["checked"]["two_arms"] and set(col["checked"]["arms"]) == {"left", "right"}

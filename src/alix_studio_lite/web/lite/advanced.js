@@ -9,7 +9,7 @@
 // drag teach are not connected: they say so (they used to report COMPLETE with nothing sent).
 
 import { get, post, say } from './api.js';
-import { ctx, el, fmtT, jobLine, robotCall, tell, watchJob } from './ctx.js';
+import { ctx, el, fmtT, jobLine, robotCall, stageDialog, tell, watchJob } from './ctx.js';
 import { loadPoints, matches, movePoint } from './points.js';
 import { borrow, Player } from './seq3d.js';
 import { liteMode, speedPct, standIn } from './status.js';
@@ -86,15 +86,27 @@ async function showMove(side, body, says) {
   return r;
 }
 
-// A slot run as the control program runs it (Hardware sim: the controller's SIM mode; Real: the arm).
-async function runSlot(side, program) {
+// A program run from its slot (Hardware sim: the controller's SIM mode; Real: the arm), with its own pole and hand staged
+// first (the owner, 21 Oct): Lite's record of the program it sent; for one it did not send, the operator states them.
+// ``status(text, busy)``: where its progress is said (the Trajectory Viewer's own line), else the arm's Advanced status.
+export async function runSlot(side, program, stated = null, status = null) {
   const what = `RUN // program ${program}`;
-  const j = await robotCall(`/api/robots/${side}/programs/run`, { program },
-    { what: `Program ${program} runs as it is stored: the controller first moves the arm to its first point, then plays it; `
-      + 'the pole and the hand stay as they are (set them in HAND / POLE first)' });
-  const done = await watchJob(j, (v) => window.rcSetStatus(side, jobLine(v), true));
-  window.rcSetStatus(side, done.state === 'done' ? `${what}: done ✓` : (done.error || `${what} stopped`), false);
-  window.rcAppend(side, `${what} // ${done.state.toUpperCase()}${done.error ? ' // ' + done.error : ''}`);
+  const set = status || ((text, busy) => window.rcSetStatus(side, text, busy));
+  let j;
+  try {
+    j = await robotCall(`/api/robots/${side}/programs/run`, { program, ...(stated || {}) },
+      { what: `Program ${program} runs from its slot with its own pole and hand, staged first; the controller then moves `
+        + 'the arm to its first point and plays it' });
+  } catch (err) {
+    if (err.code !== 'stage' || stated) throw err;
+    const st = await stageDialog({ title: `Program ${program}: the pole and hand it runs with`, arm: side,
+      body: `${say(err)} Lite stages them before the program runs.` });
+    if (!st) { window.toast('Not run: nothing was sent to the robot.', 'warn'); return null; }
+    return runSlot(side, program, { pole_mm: st.pole_mm, hand: st.hand }, status);
+  }
+  const done = await watchJob(j, (v) => set(jobLine(v), true));
+  set(done.state === 'done' ? `${what}: done ✓` : (done.error || `${what} stopped`), false);
+  if (!status) window.rcAppend(side, `${what} // ${done.state.toUpperCase()}${done.error ? ' // ' + done.error : ''}`);
   if (done.state !== 'done') window.toast(`${done.error || 'The program stopped.'} ${done.hint || ''}`, 'error');
   return done;
 }
@@ -293,8 +305,12 @@ export function installAdvancedRuns() {
         return;
       }
       if (action !== 'RUN ONLY') {
-        const j = await robotCall(`/api/robots/${side}/programs/upload`, { program_id: id, name: file.name, content: await file.text() },
-          { what: `Upload of ${file.name}`, replacing: `program ${id}` });
+        // its pole and hand, recorded with it: every run from its slot stages them first (the owner, 21 Oct)
+        const st = await stageDialog({ title: `${file.name}: the pole and hand it was taught with`, arm: side,
+          body: `Program ${id} will run from its slot with these: Lite stages them before every run of it.` });
+        if (!st) { window.toast('Not uploaded: nothing was sent to the robot.', 'warn'); return; }
+        const j = await robotCall(`/api/robots/${side}/programs/upload`, { program_id: id, name: file.name, content: await file.text(),
+          pole_mm: st.pole_mm, hand: st.hand }, { what: `Upload of ${file.name}`, replacing: `program ${id}` });
         const note = document.getElementById(`rc${S(side)}UploadNote`);
         if (j.unchanged) {
           if (note) note.textContent = `Program ${id} already holds ${file.name} ✓`;

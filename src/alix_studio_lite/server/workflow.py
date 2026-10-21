@@ -1069,15 +1069,10 @@ class _ArmSim:
                 self._say(level, step, f"{S} row {step.get('_row')}, program {pid}: drawn from {found['name']} ({found['source']}), "
                           f"found by its name; {found['how']}.")
         st = staging.stage_from(info.get("stage"))
-        if st is not None:                           # V53 stages nothing itself: its own Pole and Hand steps must match
-            off = []
-            if abs(self.pole - st.pole_mm) > staging.POLE_TOL_MM:
-                off.append(f"the pole is at {self.pole:g} mm here" + ("" if self.set_pole else " (as the arm stands: no Pole step before it in this run)"))
-            if not staging.same_hand(self.hand, st.hand):
-                off.append(f"the hand is {staging.hand_words(self.hand)} here" + ("" if self.set_hand else " (as the arm stands: no Hand step before it)"))
-            if off:
-                self._say("warn", step, f"{S} row {step.get('_row')}, program {pid}: taught at {staging.describe(st)}, but "
-                          + " and ".join(off) + ".")
+        if st is not None:                           # V53 stages nothing itself: its own Pole and Hand steps must set it
+            said = stage_off(S, step.get("_row"), pid, st, self.pole, self.hand, self.set_pole, self.set_hand)
+            if said:                                 # a stop: Real Machine Mode does not run it (the owner, 21 Oct)
+                self._say("stop", step, said)
         md = self.md_of(info.get("file")) if info.get("file") and not info.get("gone") else None
         if md is None:
             named = step.get("name") or info.get("name")
@@ -1100,6 +1095,52 @@ class _ArmSim:
         self.q = (md[-1] / 1000.0).tolist()
         self.known = True                            # on the program's own lines: known again (its move to them is not)
         return a
+
+
+def stage_off(S: str, row, pid: int, st, pole, hand, set_pole: bool, set_hand: bool) -> str | None:
+    """A Program's own pole and hand (what Lite recorded when it sent it: the ones it was taught with) against the ones in
+    effect before it; what is off, or None. The owner, 21 Oct: a program runs with its own pole and hand, wherever it
+    runs, never with others; in S2 the sequence's own Pole and Hand steps set them, as V53 runs it."""
+    from . import staging
+
+    off = []
+    if pole is None or abs(float(pole) - st.pole_mm) > staging.POLE_TOL_MM:
+        off.append((f"the pole is at {float(pole):g} mm here" if pole is not None else "the pole height here is not known")
+                   + ("" if set_pole else " (as the arm stands: no Pole step before it in this run)"))
+    if hand is None or not staging.same_hand(list(hand), st.hand):
+        off.append((f"the hand is {staging.hand_words(list(hand))} here" if hand is not None else "the hand here is not known")
+                   + ("" if set_hand else " (as the arm stands: no Hand step before it)"))
+    if not off:
+        return None
+    return (f"{S} row {row}, program {pid}: taught at {staging.describe(st)}, but " + " and ".join(off)
+            + ". It runs only with its own: set them before it (a Pole step and a Hand step).")
+
+
+def _stage_stops(run: dict, programs: dict, robot, sides) -> list[str]:
+    """For a run not simulated, what the simulation would stop on: each Program whose own pole and hand are not the ones in
+    effect before it, from each arm as it stands, through its Pole, Hand and lid or seat steps."""
+    from . import mechanism, staging
+
+    out = []
+    for s in sides:
+        pole, hand = robot._measured(s)
+        set_pole = set_hand = False
+        for st in run["steps"][s]:
+            k = st["type"]
+            if k == "pole":
+                pole, set_pole = float(st["mm"]), True
+            elif k == "hand":
+                hand, set_hand = [int(v) for v in st["values"]], True
+            elif k == "mechanism":                   # the arm leaves a lid or seat task at the plan's end
+                tg = mechanism.cached(st["task"]).targets("end").get(s) or {}
+                pole = tg.get("pole_mm", pole)
+                hand = [h if h is not None else (hand[i] if hand else None) for i, h in enumerate(tg["hand"])] if tg.get("hand") else hand
+            elif k == "program":
+                stg = staging.stage_from((programs[s].get(int(st["id"])) or {}).get("stage"))
+                said = stage_off(s.upper(), st.get("_row"), int(st["id"]), stg, pole, hand, set_pole, set_hand) if stg else None
+                if said:
+                    out.append(said)
+    return out
 
 
 def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> float:
@@ -1773,6 +1814,11 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
     if missing:
         raise UserError("Not on the controllers: " + "; ".join(missing) + ". Nothing moved.",
                         "Upload the programs or save the points, simulate again, then run it.", code="missing")
+    # a Program at another pole or hand than its own is never run (the owner, 21 Oct): not a question, a stop
+    stops = [f["text"] for f in sim["findings"] if f["level"] == "stop"] if simulated else _stage_stops(run, programs, robot, sides)
+    if stops:
+        raise UserError("Not run: " + " ".join(stops), "Each Program runs with the pole and hand it was taught with: set them "
+                        "before it with a Pole step and a Hand step, simulate again, then run it.", code="stage")
     warns = [f["text"] for f in sim["findings"] if f["level"] == "warn"] if simulated else []
     col = sim["collisions"] if simulated else {"ok": True}
     if not col["ok"]:

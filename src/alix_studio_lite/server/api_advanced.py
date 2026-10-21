@@ -49,16 +49,30 @@ def _program_of(app, side: str, given) -> int:
                     "Refresh the list, then choose one, or enter its Program ID.")
 
 
+def _stated_stage(body):
+    """The pole and hand the operator states for a program Lite did not send (``pole_mm``, ``hand``), or None."""
+    from . import staging
+
+    if body.get("pole_mm") in (None, "") or not body.get("hand"):
+        return None
+    return staging.make_stage(body.get("pole_mm"), body.get("hand"), "as the operator stated it")
+
+
 @route("POST", R + r"/programs/run")
 def post_run_stored(app, q, body, m):
-    """Run Stored / Run Only: ``{program}`` (a number or a name)."""
+    """Run Stored / Run Only (and the Trajectory Viewer's Run on the robot): ``{program}`` (a number or a name), staged
+    with the program's own pole and hand (robot_standin.run_stored); ``pole_mm``, ``hand``: the ones the operator
+    states for a program Lite did not send (refused with code "stage" without them)."""
     session(app)
     side = m.group(1)
     mode = require_robot_mode(app)
     pid = _program_of(app, side, body.get("program"))
+    stated = _stated_stage(body)
+    if app.robot.stored_stage(side, pid) is None and stated is None:     # asked first, before any confirmation
+        return app.robot.run_stored(side, pid, "", mode=mode)             # raises: "State the pole and hand ..."
     require_confirmed(app, body, f"Running program {pid}")
     title = f"{side.upper()} program {pid}" + (" in Hardware sim" if mode == "hwsim" else " on the real arm")
-    return app.robot.run_stored(side, pid, title, mode=mode).view()
+    return app.robot.run_stored(side, pid, title, mode=mode, stage=stated).view()
 
 
 def _track_of(name: str, content) -> tuple[str, "object"]:
@@ -86,8 +100,9 @@ def _track_of(name: str, content) -> tuple[str, "object"]:
 
 @route("POST", R + r"/programs/upload")
 def post_upload_file(app, q, body, m):
-    """Upload Only / Upload + Run: ``{program_id, name, content, replace}``; kept in Lite's data folder
-    (``advanced/<arm>/``) as Lite writes tracks, then sent as program ``program_id``."""
+    """Upload Only / Upload + Run: ``{program_id, name, content, replace, pole_mm, hand}``; kept in Lite's data folder
+    (``advanced/<arm>/``) as Lite writes tracks, then sent as program ``program_id``, with the pole and hand the operator
+    states for it recorded as its own (a run from its slot stages them: run_stored)."""
     from ..motion import track
 
     session(app)
@@ -102,8 +117,9 @@ def post_upload_file(app, q, body, m):
     name, md = _track_of(body.get("name"), body.get("content"))
     path = Path(app.data_dir) / "advanced" / side / f"{time.strftime('%Y%m%d_%H%M%S')}_{name}"
     track.write_md(path, md)
+    stated = _stated_stage(body)
     job = app.robot.upload(side, pid, path, Path(name).stem[:28], track.sha256_file(path), bool(body.get("replace")),
-                           f"Upload {name} to {side.upper()} program {pid}")
+                           f"Upload {name} to {side.upper()} program {pid}", stage=stated.as_dict() if stated else None)
     if job is None:
         return {"unchanged": True, "program_id": pid}
     return job.view()

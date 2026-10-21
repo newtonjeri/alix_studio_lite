@@ -1416,20 +1416,37 @@ class StandInRobot:
 
         return self._start("move", title, work, side, mode)
 
-    def run_stored(self, side: str, program_id: int, title: str, mode: str | None = None):
-        """A program the arm's controller holds, run as the control program's RUN runs a slot (Advanced
-        Robot Controls; the owner, 17 Oct: "running a saved program ... a project in a certain slot"): the
-        controller moves the arm to the program's first point, then plays it; the pole and the hand stay as
-        they are (nothing is staged). Any program in the slot, sent by Lite or not; in Hardware sim the
-        controller runs it in its SIM mode (the arm stays still), in Real on the arm."""
+    def stored_stage(self, side: str, program_id: int):
+        """The pole and hand a stored program runs with: Lite's record of the program it sent (the stage of the very file
+        sent, the one it was taught with), while the slot still holds that program (its size read back); else None."""
+        rec = next((p for p in self.programs(side) if int(p["id"]) == int(program_id)), None)
+        return staging.stage_from((rec or {}).get("stage"))
+
+    def run_stored(self, side: str, program_id: int, title: str, mode: str | None = None, stage=None):
+        """A program the arm's controller holds, run from its slot (Advanced Robot Controls, the Trajectory Viewer; the
+        owner, 17 Oct: "running a saved program ... a project in a certain slot"): its own pole and hand staged first
+        (the owner, 21 Oct: "the project's own pole and hand values must be applied ... not replaced by the default"):
+        Lite's record of the program it sent, else the ones the operator states (``stage``), never others; without
+        either it does not run. Then the controller moves the arm to the program's first point and plays it. In
+        Hardware sim the controller runs it in its SIM mode (the arm stays still), in Real on the arm."""
         mode = mode or self.mode
         pid, a, S = int(program_id), self.arm(side), side.upper()
         if not 1 <= pid <= 100:
             raise UserError("Program numbers are 1 to 100.")
         dry = mode != "real"
+        own = self.stored_stage(side, pid)
+        if own is None and stage is None:
+            raise UserError(f"Lite does not know the pole height and hand pose program {pid} runs with: Lite did not send "
+                            "it, or the slot holds another program since.",
+                            "State the pole and hand it was taught with, or send it again from its region.", code="stage")
+        st = own or stage
+        how = "its own, as Lite sent it" if own is not None else "as stated"
 
         def work(job):
             self._same_mode(mode, "the program did not start")
+            job.log(f"Program {pid}: pole and hand {staging.describe(st)} ({how}) first.")
+            self._stage(job, side, st, mode)
+            self._same_mode(mode, "the pole and the hand were staged, but the program did not start")
             real = self._real(side)
             if real is None:                            # the stand-in: what Lite sent to it
                 prog = a.programs.get(pid)

@@ -1109,11 +1109,11 @@ function paintFindings() {
       el('span', { text: `${fmt(e.first_t)}–${fmt(e.last_t)}: ${e.pairs.map(pair).join('; ') || e.what.join(', ')} · ${where(e)}` }),
       el('button', { class: 'btn light', type: 'button', text: 'Show', onclick: () => { player.pause(); seekSim(e.first_t); } }))),
     el('h4', { text: 'Before it runs on the robot' }),
-    sim.findings.length ? el('ul', { class: 'lite-s2-findlist' }, sim.findings.map(f => el('li', { class: f.level === 'warn' ? 'lite-warn' : 'mini-note', text: f.text })))
+    sim.findings.length ? el('ul', { class: 'lite-s2-findlist' }, sim.findings.map(f => el('li', { class: f.level === 'stop' ? 'lite-bad' : f.level === 'warn' ? 'lite-warn' : 'mini-note', text: f.text })))
       : el('div', { class: 'lite-status ok', text: 'Every Program is drawn, and its pole and hand are the ones it was taught with.' }),
     el('div', { class: 'mini-note', text: `Times are estimated: the moves at their speed % of each joint's rating, the programs on their stored 5 ms timing. `
-      + `The arms start ${Object.values(sim.start_from || {}).includes('now') ? 'where they stand now' : 'from the standing pose'}. Nothing is blocked by this check: `
-      + 'Real Machine Mode asks about what it found, once.' })].filter(Boolean));
+      + `The arms start ${Object.values(sim.start_from || {}).includes('now') ? 'where they stand now' : 'from the standing pose'}. A Program set at another `
+      + 'pole or hand than its own stops Real Machine Mode (red); the rest it asks about, once.' })].filter(Boolean));
   const marks = $('liteS2Marks'), T = Math.max(1e-6, sim.total_s);          // the checkpoints (the collisions: the view's tools)
   marks.replaceChildren(...sim.stages.filter(s => s.kind === 'checkpoint').map(s => el('span', { class: 'lite-s2-checkmark', title: s.label, style: `left:${(100 * s.t0) / T}%` })));
 }
