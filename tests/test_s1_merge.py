@@ -414,3 +414,30 @@ def test_toppra_files_read_as_auto_optimized(lite):
     assert "error" not in kept, kept
     ver = next(it for it in sources(lite, "left").values() if it["kind"] == "ver" and it["tasks"] == ["L-R11_PART1"])
     assert ver["grade"] == "processed" and ver["grade_text"] == "Auto optimized (TOPP-RA)"
+
+
+def test_the_list_shows_what_the_controller_holds(lite):
+    """The owner, 21 Oct: S1's list shows, by default, "only the uploaded tasks ... the ones that already exist in the
+    controller" (s1.js: Show: On the controller). Each file the arm's controller holds now says which program it is: by
+    its bytes for one Lite sent, by its name for one another program sent (RealMan keeps no checksum: its "<slot>_"
+    taken off, as S2 finds such a program's file)."""
+    sent = upload(lite, "L-R07_PART1", "L_s1_on_ctl.txt", "TASK 1A")
+    other = upload(lite, "L-R07_PART2", "L_s1_by_name.txt", "TASK 1A", start=1.0)
+    upload(lite, "L-R08", "L_s1_not_on_ctl.txt", "TASK 1A", start=2.0)
+    arm = lite["app"].robot.arm("left")                                  # the stand-in holds what Lite sent it
+    before = dict(arm.programs)
+    try:
+        arm.programs[61] = dict(name="L_s1_on_ctl", lines=400, bytes=1, sha256=sent["sha256"], stage=sent["stage"], uploaded="2026-10-21 16:00")
+        arm.programs[62] = dict(name="62_L_s1_by_name", lines=400, bytes=1, sha256=None, stage=None, uploaded="2026-10-21 16:01")
+        arm.save()
+        out = call(lite, "POST", f"{P}/merge-sources/left", {"picked": []})
+        items = {it["name"]: it for it in out["items"]}
+        assert items["L_s1_on_ctl.txt"]["on_controller"] == {"id": 61, "name": "L_s1_on_ctl", "by": "bytes"}
+        assert items["L_s1_by_name.txt"]["on_controller"] == {"id": 62, "name": "62_L_s1_by_name", "by": "name"}
+        assert items["L_s1_not_on_ctl.txt"]["on_controller"] is None
+        assert out["controller"]["standin"] and out["controller"]["programs"] >= 2
+        assert other["sha256"] != sent["sha256"]
+    finally:
+        arm.programs.clear()
+        arm.programs.update(before)
+        arm.save()

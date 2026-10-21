@@ -32,7 +32,7 @@ const LOAD_WARNING = 'Lite does not know the pole height and hand pose these fil
   + 'Say them as the robot had them when they were taught. A merge stages them before it runs, so a wrong value runs it at the wrong '
   + 'height or with the wrong hand. Lite has no UGV placement or room for them either: they merge only with files that have none.';
 const PHASE_WORDS = { lid_closed: 'lid closed', lid_open: 'lid open', seat_open: 'seat open' };
-const fresh = () => ({ items: [], picked: [], merges: [], sel: null, busy: false, scope: 'project' });
+const fresh = () => ({ items: [], picked: [], merges: [], sel: null, busy: false, scope: 'project', show: 'controller', controller: null });
 const st = { left: fresh(), right: fresh() };
 const review = { side: null, file: null, phase: null, scene: null, t0: 0, total: 0, token: 0 };
 let panel = null, player = null, built = false, tools = null;
@@ -65,6 +65,11 @@ function build() {
         el('div', { class: 'field' }, el('label', { for: `liteS1Scope_${side}`, text: 'Files from' }),
           el('select', { id: `liteS1Scope_${side}`, onchange: (e) => { st[side].scope = e.target.value; load(side); } },
             el('option', { value: 'project', text: 'This project' }), el('option', { value: 'all', text: 'All projects' }))),
+        // the list shows, by default, the files already on the arm's controller (the owner, 21 Oct: "only the uploaded
+        // tasks ... the ones that already exist in the controller"); All files shows every one
+        el('div', { class: 'field' }, el('label', { for: `liteS1Show_${side}`, text: 'Show' }),
+          el('select', { id: `liteS1Show_${side}`, onchange: (e) => { st[side].show = e.target.value; paint(side); } },
+            el('option', { value: 'controller', text: 'On the controller' }), el('option', { value: 'all', text: 'All files' }))),
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS1Add_${side}`, text: 'Add a file' }),
           el('button', { id: `liteS1Add_${side}`, class: 'lite-picker-btn', type: 'button', 'aria-haspopup': 'listbox', 'aria-expanded': 'false',
             onclick: (e) => chooseFile(side, e.currentTarget) }, el('span', { class: 'lite-picker-value', text: 'Choose a file to add…' })))),
@@ -140,6 +145,7 @@ async function load(side) {
       get(`${base()}/merges`)]);
     const was = new Map(st[side].items.map(it => [it.ref, it]));
     st[side].items = src.items;
+    st[side].controller = src.controller || null;
     const gone = st[side].picked.filter(r => !src.items.some(it => it.ref === r));
     st[side].picked = st[side].picked.filter(r => src.items.some(it => it.ref === r));
     if (gone.length) {                                       // e.g. another project's files, with Files from: This project
@@ -156,6 +162,7 @@ async function repick(side) {
   try {
     const src = await post(`${base()}/merge-sources/${side}`, { picked: st[side].picked, scope: st[side].scope });
     st[side].items = src.items;
+    st[side].controller = src.controller || null;
   } catch (err) { tell(err); }
   paint(side);
 }
@@ -228,20 +235,38 @@ async function intoOrder(side, refs) {
 
 // The files to add as a searchable list (picker.js): by project and region; a file that cannot join is
 // greyed, with why (another pole, hand, placement or room than the first file; its arm or stage unknown).
+// Where a file is on its arm's controller, in the list's words.
+const onCtl = (it) => (it.on_controller ? `on the controller as program ${it.on_controller.id}${it.on_controller.by === 'name' ? ', found by its name' : ''}` : '');
+
 function chooseFile(side, anchor) {
   const s = st[side];
   const groups = new Map();
   for (const it of s.items) {
     if (s.picked.includes(it.ref)) continue;                 // in the order already
+    if (s.show === 'controller' && !it.on_controller) continue;     // by default, the files on the controller only
     const label = `${it.project ? `${it.project} · ` : s.scope === 'all' ? 'This project · ' : ''}${it.region}`;
     if (!groups.has(label)) groups.set(label, []);
     const differs = it.differs && it.differs.length ? `Cannot join this merge: ${it.differs.join('; ')}` : '';
     groups.get(label).push({ value: it.ref, text: it.name, search: `${KIND[it.kind]} ${it.grade} ${it.grade_text || ''} ${it.region} ${it.project || ''}`,
-      detail: `${KIND[it.kind]} · ${it.grade_text || it.grade} · ${fmtT(it.seconds)} · ${it.stage_text} · ${it.placement_text}`,
+      detail: `${KIND[it.kind]} · ${it.grade_text || it.grade} · ${fmtT(it.seconds)} · ${it.stage_text} · ${it.placement_text}`
+        + (it.on_controller ? ` · ${onCtl(it)}` : ''),
       disabled: !!(it.why || differs), note: it.why ? `Cannot be merged: ${it.why}` : differs });
   }
-  choose(anchor, [...groups].map(([label, rows]) => ({ label, rows })), null, (ref) => pick(side, ref),
-    { placeholder: 'Search the files: name, region or project' });
+  const lists = [...groups].map(([label, rows]) => ({ label, rows }));
+  if (!lists.length && s.show === 'controller') {
+    lists.push({ label: `${ARM(side)} controller`, rows: [{ value: '', text: 'No file here is on the controller', disabled: true,
+      note: `${ctlWords(side)} Choose Show: All files to see every file.` }] });
+  }
+  choose(anchor, lists, null, (ref) => pick(side, ref), { placeholder: 'Search the files: name, region or project' });
+}
+
+// What Lite knows of the arm's controller, for the list's count and its empty list.
+function ctlWords(side) {
+  const c = st[side].controller;
+  if (!c) return `The ${ARM(side)} controller's programs are not known.`;
+  if (c.standin) return `The stand-in robot holds the programs Lite sent it (${c.programs}).`;
+  if (!c.read) return `The ${ARM(side)} controller has not been read: connect the arm.`;
+  return `The ${ARM(side)} controller holds ${c.programs} program${c.programs === 1 ? '' : 's'} (read ${c.read}${c.live ? '' : ', not connected now'}).`;
 }
 
 // ── painting
@@ -251,13 +276,18 @@ function paint(side) {
   const count = $(`liteS1Count_${side}`);
   if (!count) return;
   $(`liteS1Scope_${side}`).value = s.scope;
-  const free = s.items.filter(it => !s.picked.includes(it.ref));
+  $(`liteS1Show_${side}`).value = s.show;
+  const listed = s.show === 'controller' ? s.items.filter(it => it.on_controller) : s.items;
+  const free = listed.filter(it => !s.picked.includes(it.ref));
   const can = free.filter(it => !it.why && !(it.differs && it.differs.length)).length;
-  count.textContent = s.items.length
-    ? `${s.items.length} ${ARM(side)} file${s.items.length === 1 ? '' : 's'} ${s.scope === 'all' ? 'in all projects' : 'in this project'}: `
-      + `${can} can be added now${free.length > can ? `, ${free.length - can} greyed in the list with why` : ''}.`
-    : `${s.scope === 'all' ? 'No project has' : 'The project has no'} ${ARM(side)} files yet: teach or load them in the region loop`
-      + `${s.scope === 'all' ? '.' : ', or choose All projects.'}`;
+  const where = s.scope === 'all' ? 'in all projects' : 'in this project';
+  count.textContent = !s.items.length
+    ? `${s.scope === 'all' ? 'No project has' : 'The project has no'} ${ARM(side)} files yet: teach or load them in the region loop`
+      + `${s.scope === 'all' ? '.' : ', or choose All projects.'}`
+    : s.show === 'controller' && !listed.length
+      ? `None of the ${s.items.length} ${ARM(side)} files ${where} is on the controller. ${ctlWords(side)} Choose Show: All files to see every file.`
+      : `${s.show === 'controller' ? `${listed.length} of the ${s.items.length} ${ARM(side)} files ${where} ${listed.length === 1 ? 'is' : 'are'} on the controller` : `${s.items.length} ${ARM(side)} file${s.items.length === 1 ? '' : 's'} ${where}`}: `
+        + `${can} can be added now${free.length > can ? `, ${free.length - can} greyed in the list with why` : ''}.`;
 
   const order = $(`liteS1Order_${side}`);
   const byRef = new Map(s.items.map(it => [it.ref, it]));

@@ -1352,11 +1352,20 @@ def post_merge_sources(app, q, body, m):
     and the arm's merges, each with its pole and hand and its UGV placement and room; with ``scope: all``,
     every other project's too; against the first file picked (``picked``: refs in order), whether each can
     join the merge and why not."""
+    from . import content
+
     units, side = units_of(app, m.group(1)), m.group(2)
     picked = [str(x) for x in (body.get("picked") or []) if isinstance(x, str)][:50]
-    items = merges.sources_all(units, side, _other_projects(app, m.group(1), body))
+    items = merges.with_compatibility(merges.sources_all(units, side, _other_projects(app, m.group(1), body)), picked)
+    try:                                         # which of them the arm's controller holds (S1's list, by default: those)
+        c = content.content(app, side)
+        held = dict(read=c["read"], live=c["live"], standin=c["standin"], note=c["note"], programs=len(c["programs"]))
+    except Exception as exc:                                                        # noqa: BLE001 - the list still comes
+        c, held = dict(programs=[]), dict(read=None, live=False, standin=False, note=f"The controller's programs could not be read ({exc}).",
+                                          programs=0)
+    merges.mark_on_controller(items, c["programs"])
     return {"side": side, "picked": picked, "tol_mm": placement.TOL_MM, "scope": "all" if body.get("scope") == "all" else "project",
-            "items": merges.with_compatibility(items, picked)}
+            "items": items, "controller": held}
 
 
 @route("POST", P + r"/merge-files/(left|right)")

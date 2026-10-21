@@ -426,6 +426,30 @@ def differences(a: dict, b: dict) -> list[str]:
     return out + pl.differences(a.get("placement"), b.get("placement"))
 
 
+def mark_on_controller(items: list[dict], programs: list[dict]) -> None:
+    """Each file its arm's controller holds now as a program (the owner, 21 Oct: S1's list shows, by default, "only the
+    uploaded tasks ... the ones that already exist in the controller"): ``on_controller`` {id, name, by}, by "bytes"
+    for a program Lite sent (the file of those very bytes: content.py's record, kept only while the controller holds
+    that program), by "name" for one another program sent (the controller keeps no checksum: found by its name as S2
+    finds such a program's file, workflow._found: "<slot>_" taken off, RealMan's API cuts names to 31 characters, Lite's
+    uploads to 28); None when it holds none of it. ``programs``: content.content's, as last read."""
+    by_sha, named = {}, []
+    for p in programs or []:
+        if p.get("sha256"):
+            by_sha.setdefault(p["sha256"], p)
+        elif p.get("name"):
+            held = re.sub(rf"^{int(p['id'])}_", "", str(p["name"])).lower()
+            named.append((held[:-4] if held.endswith(".txt") else held, p))
+    for it in items:
+        p, how = by_sha.get(it.get("sha256")), "bytes"
+        if p is None:
+            stem = str(it.get("name") or "").lower()
+            stem = stem[:-4] if stem.endswith(".txt") else stem
+            p = next((q for held, q in named if held and (held == stem or (len(held) >= 28 and stem.startswith(held)))), None)
+            how = "name"
+        it["on_controller"] = dict(id=int(p["id"]), name=p.get("name"), by=how) if p else None
+
+
 def sources_all(units, side: str, others: list | None = None) -> list[dict]:
     """The files S1 can merge: this project's (``sources``), then, for "All projects" (the owner, 16 Oct:
     "all projects taught files, so that user has access to all projects"), every other project's
