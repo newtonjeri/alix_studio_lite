@@ -1,15 +1,317 @@
 {
  "left": [
   {
-   "type": "mechanism",
-   "task": "seat_open"
+   "type": "global",
+   "name": "L_HME_POS",
+   "move": "movej",
+   "speed": 20,
+   "wait_s": 0.0
+  },
+  {
+   "type": "pole",
+   "mm": 50.0
+  },
+  {
+   "type": "hand",
+   "values": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 80,
+   "name": "80_L_merge_1.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "wait",
+   "seconds": 3.0
+  },
+  {
+   "type": "pole",
+   "mm": 200.0
+  },
+  {
+   "type": "program",
+   "id": 81,
+   "name": "81_L_merge_2_1.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "hand",
+   "values": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 56,
+   "name": "56_L-R06_v001.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "wait",
+   "seconds": 3.0
+  },
+  {
+   "type": "hand",
+   "values": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 83,
+   "name": "83_L_merge_4.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "hand",
+   "values": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 84,
+   "name": "84_L_merge_5.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "pole",
+   "mm": 20.0
+  },
+  {
+   "type": "program",
+   "id": 85,
+   "name": "85_L_merge_6.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "pole",
+   "mm": 200.0
+  },
+  {
+   "type": "hand",
+   "values": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 86,
+   "name": "86_L_merge_7_1_trim_mean_scale_p",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "global",
+   "name": "L_HME_POS",
+   "move": "movej",
+   "speed": 20,
+   "wait_s": 0.0
   }
  ],
  "right": [
   {
-   "type": "mechanism",
-   "task": "seat_open"
+   "type": "global",
+   "name": "R_HME_POS",
+   "move": "movej",
+   "speed": 20,
+   "wait_s": 0.0
+  },
+  {
+   "type": "pole",
+   "mm": 200.0
+  },
+  {
+   "type": "hand",
+   "values": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 80,
+   "name": "80_R_merge_1.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "wait",
+   "seconds": 3.0
+  },
+  {
+   "type": "hand",
+   "values": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 54,
+   "name": "54_R-R04_v005.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "hand",
+   "values": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 55,
+   "name": "55_R-R05_v001.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "pole",
+   "mm": 50.0
+  },
+  {
+   "type": "program",
+   "id": 56,
+   "name": "56_R-R06_v001.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "wait",
+   "seconds": 3.0
+  },
+  {
+   "type": "hand",
+   "values": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 81,
+   "name": "81_R_merge_5.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "pole",
+   "mm": 200.0
+  },
+  {
+   "type": "program",
+   "id": 20,
+   "name": "20_R_T04_GC_BP.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "program",
+   "id": 100,
+   "name": "100_delay_12s.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "program",
+   "id": 99,
+   "name": "99_delay_7s.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "hand",
+   "values": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+   ]
+  },
+  {
+   "type": "program",
+   "id": 82,
+   "name": "82_R_merge_7.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "global",
+   "name": "R_HME_POS",
+   "move": "movej",
+   "speed": 20,
+   "wait_s": 0.0
   }
  ],
- "updated": "2026-10-21 21:51:31"
+ "updated": "2026-10-21 23:12:49"
 }
