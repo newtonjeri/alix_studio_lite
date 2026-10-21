@@ -907,7 +907,8 @@ def identity_of(run: dict, programs: dict, points: dict, overall: int) -> dict:
     if tasks:                                       # ALIX's plan files as they are: another plan is another run
         from . import mechanism
 
-        used["mechanisms"] = {t: mechanism.digest(t) for t in tasks}
+        looks = {mechanism.FINAL_CHECKS[t][1] for t in tasks if t in mechanism.FINAL_CHECKS}   # whose way in each final check takes
+        used["mechanisms"] = {t: mechanism.digest(t) for t in sorted(set(tasks) | looks)}
     return dict(mode=run["mode"], pick=run["pick"], steps={s: [{k: v for k, v in st.items() if k != "_row"} for st in steps]
                                                                for s, steps in run["steps"].items()},
                 used=used, overall=int(overall))
@@ -1106,60 +1107,54 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
     camera here): each arm to the plan's start (its pole and hand, then the MoveJ at the speed slider's speed), then the
     plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
     hand as Lite moves them, a hold where the plan holds, a moment where the camera is asked. The commode is in the
-    task's end state from its end."""
+    task's end state from its end; then its final check (mechanism.FINAL_CHECKS): the right arm to its inspection pose by
+    the way in ALIX planned in that state, the camera, and the right arm back to where the plan ended."""
     from . import mechanism, staging
 
     plan = mechanism.cached(st["task"])
     title, rows = plan.title, st.get("rows") or {}
     mark = {s: {"_row": rows.get(s)} for s in ARMS}
+    camera = "right"                                 # the D435 rides the right wrist
+    clock = [T]
 
     def act(side, kind, dur, text, **more):
         sim = sims[side]
-        a = sim._act(stage, mark[side], kind, T, dur, text, mechanism=plan.name, **more)
+        a = sim._act(stage, mark[side], kind, clock[0], dur, text, mechanism=plan.name, **more)
         return sim, a
 
-    def done(sim, a):
+    def done(sim, a, dur):
         a.update(pole1=sim.pole, hand1=list(sim.hand), q1=list(sim.q))
+        clock[0] += dur
 
-    targets = plan.targets("start")
-    for side in plan.sides():
-        tg, sim = targets[side], sims[side]
-        if "pole_mm" in tg:
-            dur = staging.pole_travel_s(sim.pole, tg["pole_mm"])
-            sim, a = act(side, "pole", dur, f"{title}: pole {tg['pole_mm']:g} mm (its start)")
-            sim.pole = float(tg["pole_mm"])
-            done(sim, a)
-            T += dur
-        if "hand" in tg:
-            vals = [int(c) if c is not None else int(h) for c, h in zip(tg["hand"], sim.hand)]
-            dur = staging.hand_move_s(sim.hand, vals)
-            sim, a = act(side, "hand", dur, f"{title}: hand " + ",".join(str(v) for v in vals) + " (its start)")
-            sim.hand = vals
-            done(sim, a)
-            T += dur
-        if "arm_deg" in tg:
-            mv = _move_s(sim.q, tg["arm_deg"], float(overall), sim.rating)
-            sim, a = act(side, "global", mv, f"{title}: MoveJ to its start ({overall} %)", move_s=round(mv, 4), drawn=True)
-            sim.q, sim.known = [float(v) for v in tg["arm_deg"]], True
-            done(sim, a)
-            T += mv
-    camera = "right"                                 # the D435 rides the right wrist
-    for e in plan.entries:
-        for pa in e.pre_actions:
-            if pa.get("type") == "hold_pose" and float(pa.get("seconds") or 0) > 0:
-                dur = float(pa["seconds"])
-                sim, a = act(e.side, "wait", dur, f"{title}: {pa.get('stage') or 'hold'} {dur:g} s")
-                done(sim, a)
-                T += dur
-            elif pa.get("type") == "check_fixture_state":
-                sim, a = act(camera, "check", CHECK_S, f"{title}: the camera checks {pa.get('expect')} (assumed here)",
-                             expect=pa.get("expect"))
-                done(sim, a)
-                T += CHECK_S
+    def approach(targets, where):
+        for side, tg in targets.items():
+            sim = sims[side]
+            if "pole_mm" in tg:
+                dur = staging.pole_travel_s(sim.pole, tg["pole_mm"])
+                sim, a = act(side, "pole", dur, f"{title}: pole {tg['pole_mm']:g} mm ({where})")
+                sim.pole = float(tg["pole_mm"])
+                done(sim, a, dur)
+            if "hand" in tg:
+                vals = [int(c) if c is not None else int(h) for c, h in zip(tg["hand"], sim.hand)]
+                dur = staging.hand_move_s(sim.hand, vals)
+                sim, a = act(side, "hand", dur, f"{title}: hand " + ",".join(str(v) for v in vals) + f" ({where})")
+                sim.hand = vals
+                done(sim, a, dur)
+            if "arm_deg" in tg:
+                mv = _move_s(sim.q, tg["arm_deg"], float(overall), sim.rating)
+                sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({overall} %)", move_s=round(mv, 4), drawn=True)
+                sim.q, sim.known = [float(v) for v in tg["arm_deg"]], True
+                done(sim, a, mv)
+
+    def check(expect, words):
+        sim, a = act(camera, "check", CHECK_S, f"{title}: the camera checks {expect}{words} (assumed here)", expect=expect)
+        done(sim, a, CHECK_S)
+
+    def entry(owner, e):
         sim = sims[e.side]
         if e.kind == "arm":
-            sim, a = act(e.side, "stream", e.seconds, f"{title}: {e.stage}", file=f"mechanism:{plan.name}:{e.i}", drawn=True,
-                         lines=len(e.rows), traj_t0=round(T, 4))
+            sim, a = act(e.side, "stream", e.seconds, f"{title}: {e.stage}" + (f" ({owner.title}'s)" if owner is not plan else ""),
+                         file=f"mechanism:{owner.name}:{e.i}", drawn=True, lines=len(e.rows), traj_t0=round(clock[0], 4))
             sim.q, sim.known = [v / 1000.0 for v in e.rows[-1]], True
             dur = e.seconds
         elif e.kind == "pole":
@@ -1172,12 +1167,29 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
             dur = staging.hand_move_s(sim.hand, vals)
             sim, a = act(e.side, "hand", dur, f"{title}: {e.stage} (hand " + ",".join(str(v) for v in vals) + ")")
             sim.hand = vals
-        done(sim, a)
-        T += dur
+        done(sim, a, dur)
+
+    approach(plan.targets("start"), "its start")
+    for e in plan.entries:
+        for pa in e.pre_actions:
+            if pa.get("type") == "hold_pose" and float(pa.get("seconds") or 0) > 0:
+                dur = float(pa["seconds"])
+                sim, a = act(e.side, "wait", dur, f"{title}: {pa.get('stage') or 'hold'} {dur:g} s")
+                done(sim, a, dur)
+            elif pa.get("type") == "check_fixture_state":
+                check(pa.get("expect"), "")
+        entry(plan, e)
     sim, a = act(plan.sides()[0], "wait", 0.0, f"{title}: done, {mechanism.TASKS[plan.name]['end']}",
                  phase=mechanism.PHASE_AFTER[plan.name])
-    done(sim, a)
-    return T
+    done(sim, a, 0.0)
+    if plan.name in mechanism.FINAL_CHECKS:          # the commode in its end state from here: the final check sees it
+        fc = mechanism.final_check(plan.name)
+        approach({"right": fc["by"].targets("start")["right"]}, f"the final check's way in, {fc['by'].title}'s start")
+        for e in fc["look"]:
+            entry(fc["by"], e)
+        check(fc["expect"], ", the final check")
+        approach({"right": plan.targets("end")["right"]}, "where it ended")
+    return clock[0]
 
 
 CHECK_S = 0.5                    # a camera question, in the simulation (a frame, the check)

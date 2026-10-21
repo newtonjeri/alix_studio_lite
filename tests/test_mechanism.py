@@ -76,7 +76,7 @@ class FakeExec:
     def __init__(self, answers):
         self.answers, self.calls = list(answers), []
 
-    def approach(self, plan, targets, at):
+    def approach(self, plan, targets, at, words=None):
         self.calls.append(("approach", plan.name, at, tuple(targets)))
 
     def move(self, e, bridge=False):
@@ -102,7 +102,7 @@ def test_lid_open_as_on_the_robot_on_12_october():
     """Closed; three misses (the lift and re-lifts 1 and 2), re-lift 3 lifts it; the seat came up with it, so the
     seat is closed after; seat_close_right's own questions."""
     ex = FakeExec(["lid_closed", "lid_closed", "lid_closed", "lid_closed", "lid_lifted", "seat_lifted",
-                   "lid_open", "seat_lifted"])
+                   "lid_open", "seat_lifted", "seat_closed"])                 # the last: seat_close_right's final check
     out = mechanism.Runner(ex).run("lid_open")
     assert [(p["plan"], p["outcome"], p["relifts"]) for p in out["plans"]] == [("lid_open", "done", 3), ("seat_close_right", "done", 0)]
     notes = [m[5] for m in moves(ex) if m[5]]
@@ -111,7 +111,12 @@ def test_lid_open_as_on_the_robot_on_12_october():
     assert retract == [("move", "move_to_retract", "left", "arm", True, "")]     # 24 degrees from rung 3's end: bridged
     first = {m[2]: m for m in moves(ex) if m[3] == "arm"}
     assert [m for m in moves(ex) if m[3] == "arm" and m[4]][0][1] == "move_to_inspect"   # the first move after the approach
-    assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("lid_open", "start"), ("seat_close_right", "start")]
+    # lid_open's own final check is seat_close_right's first look (a follow-up looks first); seat_close_right's end is
+    # checked by the camera from Open the seat's way in, then the right arm goes back to where it ended
+    assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("lid_open", "start"), ("seat_close_right", "start"),
+                                                                ("seat_open", "start"), ("seat_close_right", "end")]
+    assert [c[1:] for c in ex.calls if c[0] == "ask"][-1] == ("verify_seat_closed_after", "seat_closed", "seat_closed")
+    assert [p["check"] for p in out["checks"] if p.get("final")] == ["verify_seat_closed_after"]
     assert first
 
 
@@ -126,14 +131,20 @@ def test_a_lid_already_open_skips_lid_open_and_parks_where_it_would_end():
 def test_seat_open_with_the_lid_closed_runs_lid_open_first_then_itself_again():
     ex = FakeExec(["lid_closed",                         # seat_open: verify_lid_open -> NO: its prerequisite
                    "lid_closed", "lid_lifted", "seat_closed",     # lid_open: closed, lifted, the seat stayed down
-                   "lid_open", "seat_closed", "seat_lifted"])     # seat_open again: lid open, seat down, seat lifted
+                   "lid_open",                                    # lid_open's final check: the lid open
+                   "lid_open", "seat_closed", "seat_lifted",      # seat_open again: lid open, seat down, seat lifted
+                   "seat_open"])                                  # seat_open's final check: the seat open
     out = mechanism.Runner(ex).run("seat_open")
     assert [p["plan"] for p in out["plans"]] == ["lid_open", "seat_open"]
-    assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("seat_open", "start"), ("lid_open", "start"), ("seat_open", "start")]
+    assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [
+        ("seat_open", "start"), ("lid_open", "start"),
+        ("seat_open", "start"), ("lid_open", "end"),             # lid_open's final check: Open the seat's way in, back
+        ("seat_open", "start"),
+        ("seat_close_right", "start"), ("seat_open", "end")]     # seat_open's: Close the seat's way in, back
 
 
 def test_seat_open_re_lifts_back_along_its_lift_without_a_rung():
-    ex = FakeExec(["lid_open", "seat_closed", "seat_closed", "seat_lifted"])
+    ex = FakeExec(["lid_open", "seat_closed", "seat_closed", "seat_lifted", "seat_open"])
     out = mechanism.Runner(ex).run("seat_open")
     assert out["plans"][0]["relifts"] == 1
     back = [m for m in moves(ex) if m[5] == "re-lift restore, reversed"]
@@ -153,6 +164,34 @@ def test_an_unanswered_question_is_not_lifted():
     ex = FakeExec(["lid_closed", None, None, None, None])
     with pytest.raises(UserError, match="escalate|re-lift"):
         mechanism.Runner(ex).run("lid_open")
+
+
+def test_a_plan_whose_end_state_the_camera_does_not_see_stops_the_run():
+    """The lab, 21 Oct: the left arm lifted the lid, the right one did not take it, and the plan ran to its end all the
+    same. Now the right arm goes back to its inspection pose after the plan and the camera checks the end state: a NOT
+    stops the run there, for a person to look, with nothing moved after the look."""
+    ex = FakeExec(["lid_closed", "lid_lifted", "seat_closed",        # closed, lifted, the seat stayed down
+                   "lid_closed"])                                    # the final check: the lid fell back
+    with pytest.raises(UserError, match="Open the lid ran to its end, but the camera does not see lid open") as err:
+        mechanism.Runner(ex).run("lid_open")
+    assert err.value.code == "escalate" and "A person must look" in err.value.hint
+    assert [m[1:3] for m in moves(ex)][-3:] == [("move_to_inspect_pole_length", "right"), ("hand_grasp", "right"),
+                                                ("move_to_inspect", "right")]       # Open the seat's way in, then nothing
+    assert ex.calls[-1] == ("ask", "verify_lid_open_after", "lid_open", "lid_closed")
+
+
+def test_each_final_check_looks_the_way_alix_planned_it_in_the_state_the_plan_leaves():
+    """The right arm's way in of the plan that starts where this one ends: its pole, its hand and its move_to_inspect,
+    which ends at inspection pose 4, where the camera's depth checks are made."""
+    pose4 = next(p for p in mechanism.poses() if p["name"] == "inspection_pose_4")["joints_deg"]
+    for name, (expect, by) in mechanism.FINAL_CHECKS.items():
+        fc = mechanism.final_check(name)
+        assert fc["expect"] == expect and fc["by"].name == by and fc["action"]["on_fail"] == "abort"
+        assert [(e.kind, e.side) for e in fc["look"]] == [("pole", "right"), ("hand", "right"), ("arm", "right")]
+        assert np.allclose(np.degrees(np.asarray(fc["look"][-1].last(), dtype=float)), pose4, atol=0.5), name
+        # the way in is planned for the state this plan leaves (the lid closed covers the seat: "lid closed")
+        assert mechanism.TASKS[by]["start"] == {"lid and seat closed": "lid closed"}.get(mechanism.TASKS[name]["end"],
+                                                                                         mechanism.TASKS[name]["end"]), name
 
 
 def test_the_catalogue_says_what_each_task_does_and_the_rows_it_runs_for():

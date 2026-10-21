@@ -31,6 +31,10 @@ the check's own policy: skip (the plan's outcome already holds), run_prerequisit
 state runs first, then this one again from its start), retry_lift (the lifting arm's block again, from the
 next pre-planned rung), abort (a person must look). A PASS with also_observe asks the second question:
 seat_close_right follows when the seat came up with the lid.
+
+After a plan has run, its end state is checked (FINAL_CHECKS; the owner, 21 Oct: a lid opening whose right side
+did not open the lid ran to its end all the same): the right arm goes to its inspection pose the way ALIX planned it
+in that state, the camera is asked, and a NOT stops the run. ALIX's plans check only on the way in.
 """
 from __future__ import annotations
 
@@ -77,6 +81,19 @@ TASKS = {
         does="The camera checks the lid is open (else there is nothing to do) and the seat is down (else Close the "
              "seat runs first); the right arm closes the lid."),
 }
+#: After each plan its end state, checked by the wrist camera (the owner, 21 Oct, after a lid opening whose right side did
+#: not open the lid and ran to its end all the same: "add a status check after completion to confirm the final state was
+#: reached"). The camera sees the lid and the seat from the right arm's inspection pose alone, so the right arm goes there
+#: as ALIX planned it in the state the plan leaves: the way in of the plan that starts in that state (its pole, its hand,
+#: its move_to_inspect); the camera is asked, judged as the plans' own checks are (lift_check); the right arm goes back to
+#: where the plan ended. A NOT stops the run: a person must look. {plan: (what the camera must see, whose way in looks)}
+FINAL_CHECKS = {
+    "lid_open": ("lid_open", "seat_open"),                    # lid open, seat down: Open the seat starts there
+    "seat_open": ("seat_open", "seat_close_right"),           # lid and seat open: Close the seat starts there
+    "seat_close_right": ("seat_closed", "seat_open"),         # lid open, seat down
+    "lid_close_right": ("lid_closed", "lid_open"),            # lid and seat closed: Open the lid starts there
+}
+
 #: Lite's catalogue rows (docs/region_catalogue_commode_c.csv) and the plan each one runs
 ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T02": "seat_close_right", "R-T02": "seat_close_right",
         "L-T03": "seat_open", "R-T03": "seat_open", "L-T05": "lid_close_right", "R-T09": "lid_close_right"}
@@ -285,6 +302,21 @@ def cached(name: str) -> "Plan":
     return Plan(name)
 
 
+def final_check(name: str) -> dict:
+    """Plan ``name``'s end-state check (FINAL_CHECKS): {expect, action (written as the plans write a check), by (the plan
+    whose way in looks), look (its entries up to its move_to_inspect: the right arm's pole, hand and move)}."""
+    expect, by_name = FINAL_CHECKS[name]
+    by = cached(by_name)
+    k = next(i for i, e in enumerate(by.entries) if e.kind == "arm")
+    look = by.entries[: k + 1]
+    if look[-1].stage != "move_to_inspect" or any(e.side != "right" for e in look):
+        raise UserError(f"{by.title}'s way in is not the right arm's move to its inspection pose, so {TASKS[name]['title']}'s "
+                        "end state cannot be checked: nothing was moved.")
+    action = dict(type="check_fixture_state", stage=f"verify_{expect}_after", check="fixture_gap", expect=expect, arm="right",
+                  on_fail="abort", max_retries=0, also_observe="", if_observed="", prerequisite="")
+    return dict(expect=expect, action=action, by=by, look=look)
+
+
 def digest(name: str) -> str:
     """The plan file's sha256: what the simulation's identity holds, so another plan is another run."""
     return _sha256(cached(name).path)
@@ -368,6 +400,12 @@ class Runner:
             i += 1
         for a in self.final_actions(plan):
             self.ex.hold(float(a.get("seconds") or 0.0), a.get("stage") or "hold_pose")
+        if not state["skipped"]:
+            if state["follow_up"]:                   # it looks first thing, with its own checks (a NOT there stops it)
+                self.say(f"FINAL CHECK {plan.title}: {TASKS[state['follow_up']]['title']} runs next and looks first, with its "
+                         "own checks")
+            else:
+                self._final_check(plan)
         if state["follow_up"]:
             nxt = state["follow_up"]
             if nxt not in TASKS:
@@ -380,6 +418,30 @@ class Runner:
         self.done.append(dict(plan=name, title=plan.title, outcome="skipped" if state["skipped"] else "done",
                               relifts=state["relifts"]))
         return "done"
+
+    def _final_check(self, plan) -> None:
+        """The plan's end state, seen by the camera (FINAL_CHECKS): the right arm to its inspection pose the way ALIX
+        planned it in that state, the camera asked, the right arm back to where the plan ended. A NOT stops the run there."""
+        fc = final_check(plan.name)
+        a, expect, by = fc["action"], fc["expect"], fc["by"]
+        self.say(f"FINAL CHECK {plan.title}: the right arm to its inspection pose ({by.title}'s way in), the camera checks "
+                 f"{expect}")
+        self.ex.approach(by, {"right": by.targets("start")["right"]}, "start", words=f"the final check of {plan.title}")
+        for e in fc["look"]:
+            self.ex.check_stop()
+            self.ex.move(e)
+        answer = self.ex.ask(a, expect)
+        passed = lift_check().evaluate_fixture_check(a, answer)
+        self.checks.append(dict(check=a["stage"], expect=expect, state=answer.fixture_state,
+                                confidence=round(float(answer.state_confidence), 2), verdict="PASS" if passed else "NO",
+                                message=answer.message, record=getattr(answer, "record_path", None), final=True))
+        self.say(f"FINAL CHECK {a['stage']}: expect {expect}, the camera says {answer.fixture_state} at "
+                 f"{float(answer.state_confidence):.2f} -> {'PASS' if passed else 'NO'}", "info" if passed else "error")
+        if not passed:
+            raise UserError(f"{plan.title} ran to its end, but the camera does not see {expect.replace('_', ' ')} after it "
+                            f"(it reads {answer.fixture_state} at {float(answer.state_confidence):.2f}).",
+                            "A person must look at the commode: nothing else was moved after this.", code="escalate")
+        self.ex.approach(plan, {"right": plan.targets("end")["right"]}, "end", words=f"where {plan.title} ended")
 
     @staticmethod
     def final_actions(plan) -> list:
@@ -523,8 +585,8 @@ class StandInExec(_Exec):
         super().__init__(job, log)
         self.scale, self.words = scale, words
 
-    def approach(self, plan, targets, at):
-        self.say(f"{plan.title}: to its {at} ({', '.join(f'{s.upper()} arm' for s in targets)}), on {self.words}")
+    def approach(self, plan, targets, at, words=None):
+        self.say(f"{words or f'{plan.title}: to its {at}'} ({', '.join(f'{s.upper()} arm' for s in targets)}), on {self.words}")
 
     def move(self, e, bridge=False):
         self.job.progress(f"{e.label()}: {e.seconds:.2f} s")
@@ -544,19 +606,20 @@ class DryExec(_Exec):
         super().__init__(job, log)
         self.robot = robot
 
-    def approach(self, plan, targets, at):
+    def approach(self, plan, targets, at, words=None):
         from alix_dispatch import track
 
+        where = words or f"{plan.title}'s {at}"
         for side, tg in targets.items():
             link = self.robot.links.get(side)
             fb = link.read_fresh() if link is not None else {}
             q = fb.get("joints_deg")
             if "arm_deg" in tg and q:
                 gap = max(abs(a - b) for a, b in zip(q, tg["arm_deg"]))
-                self.say(f"{side.upper()}: Real would MoveJ {gap:.1f} degrees to {plan.title}'s {at}"
+                self.say(f"{side.upper()}: Real would MoveJ {gap:.1f} degrees to {where}"
                          + (f", pole {tg['pole_mm']:.0f} mm" if "pole_mm" in tg else "") + (f", hand {tg['hand']}" if "hand" in tg else ""))
             elif "arm_deg" in tg:
-                self.say(f"{side.upper()}: not read, so the move to {plan.title}'s {at} is not measured", "warn")
+                self.say(f"{side.upper()}: not read, so the move to {where} is not measured", "warn")
         _ = track
 
     def move(self, e, bridge=False):
@@ -592,23 +655,24 @@ class RealExec(_Exec):
             raise UserError(f"The {side.upper()} arm is not connected.", "Connect it, then run the task again.")
         return a
 
-    def approach(self, plan, targets, at):
+    def approach(self, plan, targets, at, words=None):
         from . import staging
 
         pct = int(self.robot.speed_pct)
+        where = words or f"{plan.title}'s {at}"
         for side, tg in targets.items():
             self.check_stop()
             arm = self._arm(side)
             pole, hand = self.robot._measured(side)
             stage = staging.make_stage(tg.get("pole_mm", pole if pole is not None else 0.0),
-                                       tg.get("hand") or [None] * 6, f"{plan.title}'s {at}")
-            self.job.progress(f"{side.upper()}: pole and hand to {plan.title}'s {at}")
+                                       tg.get("hand") or [None] * 6, where)
+            self.job.progress(f"{side.upper()}: pole and hand to {where}")
             arm.stage(stage)
             if "arm_deg" in tg:
                 self.check_stop()
-                self.job.progress(f"{side.upper()}: MoveJ to {plan.title}'s {at} at {pct} %")
+                self.job.progress(f"{side.upper()}: MoveJ to {where} at {pct} %")
                 arm.move_to([round(v * 1000) for v in tg["arm_deg"]], speed=pct, restore_pct=self.robot.found_speed(side))
-            self.say(f"{side.upper()}: at {plan.title}'s {at}")
+            self.say(f"{side.upper()}: at {where}")
 
     def move(self, e, bridge=False):
         arm = self._arm(e.side)
