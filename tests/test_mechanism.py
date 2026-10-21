@@ -252,3 +252,23 @@ def test_s2_s_plan_with_lid_and_seat_tasks_is_v53_s_plan_cut_at_them():
     assert checked[0] == {"type": "mechanism", "task": "lid_open"} and checked[1]["note"]
     with pytest.raises(UserError, match="is not a lid or seat task"):
         workflow.check_steps([{"type": "mechanism", "task": "flush"}], "left")
+
+
+def test_a_simulation_made_with_a_plan_revised_since_is_never_played_and_says_so():
+    """21 Oct: ALIX's Open the lid was revised and vendored again; the lab project's last simulation names that plan's
+    moves by their place (mechanism:lid_open:13 was the right arm's move to its start, now a hand step), and its 3D
+    failed on the server ("Something went wrong"). Such a simulation is refused by name, and Real's gate says what
+    changed instead of failing."""
+    from alix_studio_lite.server import workflow
+
+    now = mechanism.digest("seat_open")
+    sim = {"identity": {"used": {"mechanisms": {"lid_open": "0" * 64, "seat_open": now}}}}
+    assert workflow.plans_changed(sim) == ["Open the lid"]
+    with pytest.raises(UserError) as err:
+        workflow._require_plans(sim)
+    assert err.value.code == "plans" and "Open the lid is not the one this simulation was made with" in str(err.value)
+    assert workflow.plans_changed({"identity": {"used": {"mechanisms": {"seat_open": now}}}}) == []
+    sides = {"left": {"programs": {}, "points": {}}, "right": {"programs": {}, "points": {}}}
+    ident = dict(mode="both", pick=None, steps={"left": [], "right": []}, overall=100, used=dict(sides, mechanisms={"lid_open": "new"}))
+    old = {"identity": dict(ident, used=dict(sides, mechanisms={"lid_open": "old"}))}
+    assert workflow._changed(old, ident) == "changed since it was simulated: ALIX's plan of Open the lid (revised since)"

@@ -935,7 +935,8 @@ async function frames(side, stage) {
   if (!view.frames.has(k)) {
     const p = post(`${base()}/frames`, { side, stage, hash: S.sim && S.sim.hash });   // this simulation's, no other's
     p.catch((err) => {                                     // asked again later, unless its files are not on this computer
-      if (err && err.code === 'files') return;               // (a simulation made elsewhere): a new simulation is needed
+      if (err && (err.code === 'files' || err.code === 'plans')) return;    // (made elsewhere, or with other lid and seat plans):
+                                                             // a new simulation is needed
       setTimeout(() => { if (view.frames.get(k) === p) view.frames.delete(k); }, 2000);
     });
     view.frames.set(k, p);
@@ -1098,7 +1099,10 @@ function paintFindings() {
   const pair = (p) => `${p.link} – ${p.object}${p.depth_mm ? ` (${p.depth_mm} mm)` : ''}`;
   const where = (e) => (e.at || []).filter(Boolean).map(w => `${ARM(w.side)} row ${w.row} (${w.text}${w.line ? `, line ${w.line.toLocaleString()}` : ''})`).join('; ');
   const c = Object.entries(col.contact || {}).filter(([, v]) => v.samples).map(([s, v]) => `${ARM(s)} hand on the commode from ${fmt(v.first_t)} (deepest ${v.deepest_mm} mm)`);
+  const revised = sim.plans_changed || [];                  // made with ALIX's plans of before (server: workflow.plans_changed)
   box.replaceChildren(...[
+    revised.length ? el('div', { class: 'lite-status err', text: `This simulation was made with the plan of ${revised.join(' and ')} as it `
+      + 'was before ALIX revised it: it no longer plays. Run the sequence again in Simulation Mode.' }) : null,
     el('h4', { text: 'Collision check' }),
     el('div', { class: `lite-status ${col.ok ? 'ok' : 'err'}`, text: col.ok
       ? `No collision: ${col.samples.toLocaleString()} moments checked, both arms against ${col.checked.walls}, the commode and each other.`

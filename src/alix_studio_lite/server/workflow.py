@@ -1368,6 +1368,30 @@ def load_sim(units) -> dict | None:
         return None
 
 
+def plans_changed(sim: dict | None) -> list[str]:
+    """The lid and seat tasks whose ALIX plan is not the one ``sim`` was made with (revised and vendored since, as on
+    21 Oct): a simulation keeps their moves by their place in the plan, so it no longer plays. Their titles."""
+    from . import mechanism
+
+    made = (((sim or {}).get("identity") or {}).get("used") or {}).get("mechanisms") or {}
+    out = []
+    for task, sha in sorted(made.items()):
+        try:
+            same = mechanism.digest(task) == sha
+        except UserError:
+            same = False
+        if not same:
+            out.append(mechanism.TASKS.get(task, {}).get("title", task))
+    return out
+
+
+def _require_plans(sim: dict) -> None:
+    changed = plans_changed(sim)
+    if changed:
+        raise UserError(f"ALIX's plan of {' and '.join(changed)} is not the one this simulation was made with (it was revised "
+                        "since), so the simulation no longer plays.", "Run the sequence again in Simulation Mode.", code="plans")
+
+
 PROJECT_DIRS = ("trajectories", "merged", "sequence", "setup", "simulation", "controller_exports")
 
 
@@ -1586,6 +1610,7 @@ def frames(app, units, side: str, stage: int, want_hash: str | None = None) -> d
         raise UserError("There is no simulation yet.", "Run the sequence in Simulation Mode.")
     if want_hash and sim.get("hash") != want_hash:          # another simulation was made since (another page)
         raise UserError("That simulation is no longer the last one.", "Run it again in Simulation Mode.", code="stale")
+    _require_plans(sim)
     acts = sim["acts"][side]
     mine = [a for a in acts if a["stage"] == int(stage)]
     if int(stage) == -1:
@@ -1641,6 +1666,7 @@ def check_in(app, units, want_hash: str, phase: str):
         raise UserError("There is no simulation yet.", "Run the sequence in Simulation Mode.")
     if want_hash and sim.get("hash") != want_hash:
         raise UserError("That simulation is no longer the last one.", "Run it again in Simulation Mode.", code="stale")
+    _require_plans(sim)
     cub = int(app.ui.get("cubicle_mm", 1400))
     home = dict(_payload(app)["home"])
     made_of = json.dumps([sim["hash"], sim.get("made"), phase, cub, sim.get("scene"), units.fixture], sort_keys=True)
@@ -1687,6 +1713,7 @@ def played(units, h: str) -> dict:
         sim = load_sim(units)
         if not sim or sim.get("hash") != h:
             raise UserError("That simulation is no longer the last one.", "Run it again in Simulation Mode.")
+        _require_plans(sim)
         if not (sim.get("total_s") or 0) > 0 or not any(a.get("drawn") is not False and a["t1"] > a["t0"] and a.get("kind") != "wait"
                                                         for side in sim["acts"].values() for a in side):     # a Wait moves nothing
             raise UserError("Nothing in this run can be shown in 3D, so it cannot be checked in Simulation Mode.",
@@ -1703,7 +1730,7 @@ def summary(units) -> dict:
         sim = {k: v for k, v in sim.items() if k not in ("acts", "identity", "start")} | {
             "acts": {s: [{k: a.get(k) for k in ("row", "kind", "t0", "t1", "text", "stage", "drawn", "program", "traj_t0", "lines")}
                          for a in sim["acts"][s]] for s in ARMS},
-            "steps": sim["identity"]["steps"]}
+            "steps": sim["identity"]["steps"], "plans_changed": plans_changed(sim)}
     return dict(load(units), sim=sim)
 
 
@@ -1721,11 +1748,19 @@ def _changed(sim: dict | None, ident: dict) -> str:
     if old.get("steps") != ident["steps"]:
         what.append("its steps")
     for side, u in ident["used"].items() if not other_run else ():   # another run uses other programs and points
+        if side not in ARMS:                        # "mechanisms": the lid and seat plans, below
+            continue
         o = (old.get("used") or {}).get(side) or {}
         if o.get("programs") != u["programs"]:
             what.append(f"the {side.upper()} programs Lite sent")
         if o.get("points") != u["points"]:
             what.append(f"the {side.upper()} global points (as read from the controller)")
+    om, nm = (old.get("used") or {}).get("mechanisms") or {}, ident["used"].get("mechanisms") or {}
+    if not other_run and om != nm:
+        from . import mechanism
+
+        names = [mechanism.TASKS.get(t, {}).get("title", t) for t in sorted(set(om) | set(nm)) if om.get(t) != nm.get(t)]
+        what.append(f"ALIX's plan of {' and '.join(names)} (revised since)")
     if old.get("overall") != ident["overall"]:
         what.append(f"the speed (simulated at {old.get('overall')} %, now {ident['overall']} %)")
     return "changed since it was simulated: " + ", ".join(what) if what else "changed since it was simulated"
