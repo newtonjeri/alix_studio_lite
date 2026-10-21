@@ -57,6 +57,23 @@ def test_the_neighbour_panels_use_the_pages_own_pictures_and_cards():
     assert ".lite-trio" in css and ".task-board.post-record .lite-side { display: none; }" in css
 
 
+def test_drag_and_teach_uploads_an_existing_project_beside_its_countdown_and_shows_it_in_the_standard_view():
+    """The owner, 21 Oct: an "upload existing project" button in Drag and Teach, next to the countdown's Start and Stop,
+    and a viewport for an uploaded file "like the other trajectory-visualizing viewports" (vp.js, view3d.js)."""
+    page = (WEB / "index.html").read_text(encoding="utf-8")
+    for needle in ('class="timer-actions timer-actions-near-clock"', 'id="startTeachBtn"', 'id="stopTeachBtn"', 'id="timerResult"'):
+        assert needle in page, needle
+    teach = (WEB / "lite/teach.js").read_text(encoding="utf-8")
+    for needle in ("'Upload existing project'", "($('stopTeachBtn') || startBtn).after(up, input)", "up.disabled = startBtn.disabled",
+                   "source: 'upload'", "stageDialog("):
+        assert needle in teach, needle
+    view = (WEB / "lite/teachview.js").read_text(encoding="utf-8")
+    for needle in ("frame($('liteTeach3dHost'))", "new Tools(", "showFile(host, u, 'raw'", "unitUrl(unit.key, 'collisions')",
+                   "r.source !== 'upload'"):
+        assert needle in view, needle
+    assert "installTeachView()" in (WEB / "lite/main.js").read_text(encoding="utf-8")
+
+
 def _calls(src, head):
     """Each call ``head(...)`` in JavaScript source: (line, the text of its arguments), strings and templates skipped."""
     def string_end(j):

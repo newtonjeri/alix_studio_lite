@@ -31,6 +31,7 @@ import { installStatus } from './status.js';
 import { installSummary } from './summary.js';
 import { installTasks } from './tasks.js';
 import { installTeach } from './teach.js';
+import { installTeachView } from './teachview.js';
 import { installVoice } from './voice.js';
 import { installTransitions } from './transitions.js';
 import { installTune } from './tune.js';
@@ -58,6 +59,7 @@ installPlacement();       // the room, the commode in it and each task's UGV pla
 installTransitions();     // Prepare's transition trajectories and task start points (V32)
 installVoice();           // the spoken timer: each second on its second, in a natural voice (the owner, 16 Oct)
 installTeach();           // existing recordings first (D31), drag teach, Save & Review
+installTeachView();       // Drag & Teach: an uploaded file in 3D, to check it is the right one (the owner, 21 Oct)
 installSim();             // the 3D robot in the simulation pane, on the 5 ms clock
 installTune();            // tuning with the optimiser, limits, target time (D24, D36)
 installRealTest();

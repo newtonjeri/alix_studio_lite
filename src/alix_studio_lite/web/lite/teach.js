@@ -8,7 +8,11 @@
 // one is active; a file loaded from this computer is added and never replaces the new recording.
 // Every file name in a project is used once (the owner, 14 Oct): Save TXT refuses one already used,
 // and a take or a loaded file gets a numbered name. The recording selected plays in Save & Review's
-// own 3D, with its collision check and Trim (review3d.js).
+// own 3D, with its collision check and Trim (review3d.js). Drag & Teach's Upload existing project, beside
+// START and STOP (the owner, 21 Oct: "Sometimes a task already has a project that wasn't taught in ALIX
+// Studio Lite ... It lets the user upload the existing project instead of teaching the task again"), loads a
+// .txt as Save & Review's Browse does (loadFile): the region's recording in use, with the pole and hand it
+// was taught with; Drag & Teach then shows it in 3D (teachview.js).
 
 import { post, say } from './api.js';
 import { armFromName, ctx, el, fmtS, loadUnit, robotCall, stageDialog, step, tell, unitUrl, watchJob } from './ctx.js';
@@ -84,15 +88,35 @@ async function refreshTeach() {
       el('b', { text: r.source === 'library' ? ' This region already has a taught recording.' : ' This region already has a recording.' }),
       el('span', { text: ` ${r.name} · ${fmtS(r.seconds)} · ${SOURCE[r.source] || r.source}` })),
     el('div', { class: 'cta-row' },
-      el('button', { class: 'btn green big', text: 'Use this recording → Save & Review', onclick: useExisting }),
+      el('button', { class: 'btn green big', text: 'Use this recording → Save & Review', onclick: useRecording }),
       el('span', { class: 'mini-note', text: 'or record a new one with START below.' })));
 }
 
-function useExisting() {
+export function useRecording() {
   armSelectionLocked = true;                     // the arm stays locked through Real Test, as after a recording
   window.updateArmLockUI();
   window.setStage('review');
   window.setJourneyVisible(false, false);
+}
+
+// A .txt from this computer made the recording in use of the arm step on screen (`s`), as taught elsewhere: never
+// one named for the other arm; its pole and hand asked for (Prepare's setup offered), staged before every run of
+// it. The unit after it, or null when the operator cancelled. Save & Review's Browse and Drag & Teach's Upload
+// existing project.
+async function loadFile(file, s, intro) {
+  const named = armFromName(file.name);
+  if (named && named !== s.arm) {
+    throw new Error(`${file.name} is named for the ${named.toUpperCase()} arm: it can never be used on this ${s.arm.toUpperCase()}-arm region.`);
+  }
+  const v = await stageDialog({ title: `How was ${file.name} taught?`, setup: (ctx.units[s.key] || s).setup,
+    arm: named || null, askArm: !named,
+    body: `${intro} Say the arm and the pole and hand it was taught with: they are staged before every run.` });
+  if (!v) return null;
+  const r = await post(unitUrl(s.key, 'recordings'), { source: 'upload', name: file.name, content: await file.text(), ...v,
+    task: TASKS[currentTask]?.label });
+  ctx.units[s.key] = r.unit;
+  tuningApplied = false; tunedOutputFileName = ''; tuningSourceFileName = file.name;   // V32: a new source to tune
+  return r.unit;
 }
 
 // The arm's drag sensitivity (feedback v5, slide 2; the controller's Drag Settings): 0-100 %, higher is
@@ -244,6 +268,7 @@ export function installTeach() {
         if ($('fileName') && r.name) $('fileName').value = r.name;
         syncActive(r.unit);
         $('savedFileMeta').textContent = `Recorded and saved: ${(activeRec(r.unit) || {}).lines?.toLocaleString() || ''} rows · ${r.stage.text}`;
+        document.dispatchEvent(new CustomEvent('lite:recordings'));     // the take is the one in use: an uploaded file's 3D goes
       }
       if (r.take) window.toast(`Robot stand-in: the take is ${r.take}, a ${t.arm.toUpperCase()}-arm recording (${r.stage.text}).`, 'good');
     } catch (err) {
@@ -302,24 +327,10 @@ export function installTeach() {
     const s = step();
     const st = $('previousTrajectoryStatus');
     if (!file || !s || !ctx.pid) return;
-    const named = armFromName(file.name);
-    if (named && named !== s.arm) {
-      st.textContent = `${file.name} is named for the ${named.toUpperCase()} arm: it can never be used on this ${s.arm.toUpperCase()}-arm region.`;
-      st.className = 'statusbar warn';
-      event.target.value = '';
-      return;
-    }
-    const v = await stageDialog({ title: `How was ${file.name} taught?`, setup: (ctx.units[s.key] || s).setup,
-      arm: named || null, askArm: !named,
-      body: `It becomes the active recording of ${s.display} (${s.arm.toUpperCase()} arm). Say the arm and the pole and hand it was taught with: they are staged before every run.` });
-    if (!v) { event.target.value = ''; return; }
-    st.textContent = `Checking ${file.name}…`;
     try {
-      const r = await post(unitUrl(s.key, 'recordings'), { source: 'upload', name: file.name, content: await file.text(), ...v,
-        task: TASKS[currentTask]?.label });
-      ctx.units[s.key] = r.unit;
-      tuningApplied = false; tunedOutputFileName = ''; tuningSourceFileName = file.name;   // V32: a new source to tune
-      const rec = activeRec(r.unit);
+      const u = await loadFile(file, s, `It becomes the active recording of ${s.display} (${s.arm.toUpperCase()} arm).`);
+      if (!u) return;
+      const rec = activeRec(u);
       st.textContent = `Loaded ${rec.name} · ${rec.lines.toLocaleString()} rows · ${fmtS(rec.seconds)}. The new recording is kept too.`
         + (rec.name !== file.name ? ` (${file.name} is already used in this project, so this one is ${rec.name}.)` : '');
       st.className = 'statusbar ok';
@@ -330,6 +341,44 @@ export function installTeach() {
       st.className = 'statusbar warn';
     } finally { event.target.value = ''; }
   };
+
+  // Upload existing project, beside START, STOP and Reset: a file taught elsewhere in place of teaching the region.
+  // Open exactly when START is (not during the countdown or a take).
+  const startBtn = $('startTeachBtn');
+  if (startBtn) {
+    const input = el('input', { id: 'liteUploadProjectInput', type: 'file', accept: '.txt,text/plain', hidden: true,
+      onchange: (e) => uploadProject(e) });
+    const up = el('button', { id: 'liteUploadProjectBtn', class: 'btn outline big', type: 'button', text: 'Upload existing project',
+      title: 'A trajectory .txt taught elsewhere, used for this region in place of teaching it again', onclick: () => input.click() });
+    ($('stopTeachBtn') || startBtn).after(up, input);
+    const sync = () => { up.disabled = startBtn.disabled; };
+    new MutationObserver(sync).observe(startBtn, { attributes: true, attributeFilter: ['disabled'] });
+    sync();
+  }
+  async function uploadProject(event) {
+    const file = event.target.files?.[0];
+    const s = step();
+    event.target.value = '';
+    if (!file) return;
+    if (!s || !ctx.pid || s.later) { window.toast('Open a project and choose the arm step to use it for first.', 'warn'); return; }
+    if (timerInt || counting || teaching) { window.toast('Drag teaching is running: stop it first.', 'warn'); return; }
+    try {
+      const u = await loadFile(file, s, `It becomes the recording of ${s.display} (${s.arm.toUpperCase()} arm) in place of teaching it; `
+        + 'a recording taught before is kept.');
+      if (!u) { $('timerResult').textContent = `${file.name} was not loaded.`; return; }
+      const rec = activeRec(u);
+      $('timerResult').textContent = `Loaded ${rec.name} · ${rec.lines.toLocaleString()} rows · ${fmtS(rec.seconds)} · staged first: `
+        + `${rec.stage ? rec.stage.text : 'pole and hand not known'}. Check it in 3D below, then use it (Save & Review).`
+        + (rec.name !== file.name ? ` (${file.name} is already used in this project, so this one is ${rec.name}.)` : '');
+      window.toast(`${rec.name} is the recording of ${s.display} now: check it in 3D below.`, 'good');
+      window.resetPlotSelection();
+      document.dispatchEvent(new CustomEvent('lite:recordings'));
+      $('liteTeach3d')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    } catch (err) {
+      $('timerResult').textContent = `${file.name} was not loaded: ${say(err)}`;
+      window.toast(`${file.name} was not loaded: ${say(err)}`, 'error');
+    }
+  }
 
   const pageAction = window.demoAction;
   window.demoAction = async function demoAction(x) {
@@ -353,6 +402,9 @@ export function installTeach() {
     if (currentStage === 'teach') refreshTeach();
     if (currentStage === 'review') refreshReview();
   });
-  document.addEventListener('lite:recordings', () => { if (currentStage === 'review') refreshReview(); });
+  document.addEventListener('lite:recordings', () => {
+    if (currentStage === 'review') refreshReview();
+    if (currentStage === 'teach') refreshTeach();
+  });
   document.addEventListener('lite:status', (e) => { lastStatus = e.detail; if (currentStage === 'teach') sensitivity(e.detail); });
 }
