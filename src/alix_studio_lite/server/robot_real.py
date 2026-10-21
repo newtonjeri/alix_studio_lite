@@ -883,6 +883,79 @@ class RealArm:
     def _runner_line(self, line: str) -> None:
         self._hw("runner v14", text=line)
 
+    # ── deleting what the controller stores (the owner, 21 Oct: "Add a delete feature for anything stored on the
+    #    controller: uploaded projects, global points, any other stored content"). Neither the control program nor
+    #    ALIX deletes, so these are RealMan's own delete calls, each read back; the page asks first, every time.
+    def delete_program(self, program_id: int) -> dict:
+        """Program ``program_id`` deleted (``rm_delete_program_trajectory``), then the program list read again: gone."""
+        pid = int(program_id)
+        t0, after = time.monotonic(), None
+        with self.link.busy(f"deleting program {pid}"), _printed_to(self._printed):
+            held = self._slots()
+            if pid not in held:
+                raise UserError(f"The {self.SIDE} controller holds no program {pid}.", "Read the controller again.")
+            name = held[pid][0]
+            rc = self._sdk("rm_delete_program_trajectory")(pid)
+            if rc == 0:
+                try:
+                    after = self._slots()
+                except UserError:
+                    after = None
+        ok = rc == 0 and after is not None and pid not in after
+        self._hw("delete program", args=dict(program_id=pid, name=name), ret=rc, ok=ok, elapsed_s=time.monotonic() - t0,
+                 text=None if ok else return_text(rc, "delete program") if rc != 0 else
+                 "the list could not be read back" if after is None else "still listed")
+        if rc != 0:
+            raise UserError(f"Program {pid} ({name}) was not deleted from the {self.SIDE} controller ({return_text(rc, 'delete program')}).",
+                            "Check the controller, then try again.")
+        if after is not None and pid in after:
+            raise UserError(f"The {self.SIDE} controller still lists program {pid} ({name}) after deleting it.", "Read the controller again.")
+        return dict(program_id=pid, name=name, read_back=after is not None)
+
+    def delete_global_point(self, name: str) -> dict:
+        """Global point ``name`` deleted (``rm_delete_global_waypoint``), then asked for again: gone."""
+        rt = _runner()
+        t0, gone = time.monotonic(), False
+        with self.link.busy(f"deleting global point {name}"), _printed_to(self._runner_line):
+            try:
+                rt.get_global_waypoint(self.robot, name)
+            except Exception:                                                   # noqa: BLE001 - not on this controller
+                raise UserError(f"“{name}” is not a global point on the {self.SIDE} controller.", "Read the controller again.") from None
+            rc = self._sdk("rm_delete_global_waypoint")(name)
+            if rc == 0:
+                try:
+                    rt.get_global_waypoint(self.robot, name)
+                except Exception:                                               # noqa: BLE001 - gone, as asked
+                    gone = True
+        ok = rc == 0 and gone
+        self._hw("delete global point", args=dict(name=name), ret=rc, ok=ok, elapsed_s=time.monotonic() - t0,
+                 text=None if ok else return_text(rc, "delete global point") if rc != 0 else "still read back")
+        if not ok:
+            raise UserError(f"Global point “{name}” was not deleted from the {self.SIDE} controller"
+                            + (f" ({return_text(rc, 'delete global point')})." if rc != 0 else ": it still reads back."),
+                            "Check the controller, then try again.")
+        return dict(name=name)
+
+    def delete_track(self, name: str) -> dict:
+        """A drag-teaching track deleted (``rm_delete_trajectory_file``: 4th-generation controllers only), then the
+        tracks list read again: gone."""
+        t0, listed = time.monotonic(), None
+        with self.link.busy(f"deleting track {name}"):
+            rc = self._sdk("rm_delete_trajectory_file")(name)
+            if rc == 0:
+                listed = self._tracks()
+        gone = rc == 0 and listed is not None and listed.get("available") and not any(t.get("name") == name for t in listed["list"])
+        self._hw("delete track", args=dict(name=name), ret=rc, ok=bool(gone), elapsed_s=time.monotonic() - t0,
+                 text=None if gone else return_text(rc, "delete track") if rc != 0 else "still listed")
+        if rc == -4:
+            raise UserError("RealMan's API deletes tracks on 4th-generation controllers only; this one is 3rd generation.",
+                            "Delete it on the arm's own web page.")
+        if not gone:
+            raise UserError(f"Track “{name}” was not deleted from the {self.SIDE} controller"
+                            + (f" ({return_text(rc, 'delete track')})." if rc != 0 else ": it is still listed."),
+                            "Check the controller, then try again.")
+        return dict(name=name)
+
     # ── ALIX's CanFD lane: a lid or seat plan's arm move, streamed from this computer, one line every 5 ms
     def stream(self, rows_millideg: list, label: str, *, speed: int = 50, restore_pct: int = RESTORE_PCT,
                bridge_speed: int | None = None, stop_hook=None, records: Path | None = None) -> dict:

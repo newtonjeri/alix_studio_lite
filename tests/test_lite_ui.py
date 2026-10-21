@@ -89,6 +89,22 @@ def test_any_task_opens_at_any_time_and_the_task_left_resumes_where_it_was():
     assert "leaveTask();" in (WEB / "lite/realtest.js").read_text(encoding="utf-8")       # Teach another task keeps it too
 
 
+def test_a_delete_column_with_no_name_whose_bin_shows_on_the_hovered_row():
+    """The owner, 21 Oct: delete anything stored on the controller from Data Management and from S1's merged files: one
+    more column after the last, with no name; the icon shows on the row hovered, only there; always asked first."""
+    dm = (WEB / "lite/datamgmt.js").read_text(encoding="utf-8")
+    assert dm.count("['del', '', null, false]") == 3                     # programs, global points, tracks: the last column
+    for needle in ("deleteStored(side, 'program'", "deleteStored(side, 'point'", "deleteStored(side, 'track'", "class: 'lite-del-row'"):
+        assert needle in dm, needle
+    s1 = (WEB / "lite/s1.js").read_text(encoding="utf-8")
+    assert "binCell(side, m)" in s1 and "deleteStored(side, 'program', c.id" in s1 and "lite-del-row" in s1
+    ctx = (WEB / "lite/ctx.js").read_text(encoding="utf-8")
+    assert "const yes = await confirmDialog({ title: `Delete ${what} from the ${S} controller?`" in ctx      # asked, every time
+    assert "createElementNS(NS, 'svg')" in ctx                           # a drawn bin, not an emoji
+    css = (WEB / "lite/lite.css").read_text(encoding="utf-8")
+    assert ".lite-del-row:hover .lite-del, .lite-del-row:focus-within .lite-del" in css and "opacity: 0;" in css
+
+
 def _calls(src, head):
     """Each call ``head(...)`` in JavaScript source: (line, the text of its arguments), strings and templates skipped."""
     def string_end(j):

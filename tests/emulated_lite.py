@@ -5,9 +5,10 @@ recording is written by "the SDK" itself, as on the robot (one {"point":[...]} l
 millidegrees per 5 ms sample, CRLF), starting from where the arm stands. Nor has it global points:
 three are stored here, made from where the arm stands at the first list (reachable by MoveJ and
 MoveL), answered as the SDK answers (a page of the list, or one point by name), and saved as the SDK
-saves them (rm_add_global_waypoint, rm_update_global_waypoint with its rm_waypoint_t). Data Management's
-two other reads answer as the lab's 3rd-generation controllers do: no IO default program, and -4 for the
-tracks list (a 4th-generation call)."""
+saves them (rm_add_global_waypoint, rm_update_global_waypoint with its rm_waypoint_t), and deleted
+(rm_delete_global_waypoint). Data Management's two other reads answer as the lab's 3rd-generation controllers do:
+no IO default program, and -4 for the tracks list (a 4th-generation call), and for deleting a track. A program is
+deleted from ALIX's emulated program store (rm_delete_program_trajectory: 1 for a slot that holds none)."""
 import json
 import sys
 import time
@@ -89,6 +90,28 @@ def update_point(self, wp):
     return 0
 
 
+def delete_point(self, name):
+    pts = _points(self)
+    i = next((i for i, p in enumerate(pts) if p["point_name"] == name), None)
+    if i is None:
+        return 1                                # the controller refuses a name it does not have
+    del pts[i]
+    return 0
+
+
+def delete_program(self, tra_id):
+    store = self._store                         # ALIX's emulated program store (alix_dispatch.emulated_program)
+    with store.lock:
+        if int(tra_id) not in store.slots:
+            return 1
+        del store.slots[int(tra_id)]
+    return 0
+
+
+def delete_track(self, name):
+    return -4                                   # RealMan's track calls: 4th-generation controllers only
+
+
 def default_program(self):
     return 0, 0                             # the program the controller's IO starts: none
 
@@ -116,6 +139,11 @@ def setup():
     rm_emulator.RoboticArm.rm_update_global_waypoint = update_point
     rm_emulator.RoboticArm.rm_get_default_run_program = default_program
     rm_emulator.RoboticArm.rm_get_trajectory_file_list = tracks
+    rm_emulator.RoboticArm.rm_delete_global_waypoint = delete_point
+    rm_emulator.RoboticArm.rm_delete_trajectory_file = delete_track
+    from alix_dispatch import emulated_program
+
+    emulated_program.ProgramSurface.rm_delete_program_trajectory = delete_program
     emulator_install = rm_emulator.install
 
     def install():                          # the SDK's waypoint structure beside the emulated arm

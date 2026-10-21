@@ -78,6 +78,45 @@ export function confirmDialog({ title, body, ok = 'Continue', danger = true, lis
 
 export const REAL_CHECKS = ['The work area around the arm is clear of people.', 'The red E-stop buttons are within reach.'];
 
+// A bin, drawn (an icon, never an emoji: the owner's rule), for a delete button's face.
+export function binIcon() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  for (const [k, v] of [['viewBox', '0 0 24 24'], ['width', '18'], ['height', '18'], ['aria-hidden', 'true'], ['focusable', 'false']]) svg.setAttribute(k, v);
+  for (const d of ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 13h10l1-13', 'M10 11v6', 'M14 11v6']) {
+    const path = document.createElementNS(NS, 'path');
+    for (const [k, v] of [['d', d], ['fill', 'none'], ['stroke', 'currentColor'], ['stroke-width', '2'], ['stroke-linecap', 'round'], ['stroke-linejoin', 'round']]) {
+      path.setAttribute(k, v);
+    }
+    svg.append(path);
+  }
+  return svg;
+}
+
+// The delete button of a row, shown when the row is hovered (or focused): `label` says what it deletes.
+export const deleteButton = (label, onclick) => el('button', { type: 'button', class: 'lite-del', title: label, 'aria-label': label, onclick },
+  binIcon());
+
+// Something a controller stores, deleted (the owner, 21 Oct: Data Management and S1's merged files; "Deleting always asks
+// for confirmation first"): `kind` program (`which`: its slot), point or track (`which`: its name); `what` names it in the
+// question, `more` says what else to know. True once deleted; every list Lite offers reads the controller again.
+export async function deleteStored(side, kind, which, { what, more = '' } = {}) {
+  const S = side.toUpperCase();
+  const yes = await confirmDialog({ title: `Delete ${what} from the ${S} controller?`, ok: 'Delete it', danger: true,
+    body: `It is deleted from the ${S} arm's controller, and cannot be brought back from there.${more ? ` ${more}` : ''}` });
+  if (!yes) return false;
+  try {
+    const out = await post(`/api/robots/${side}/stored/delete`,
+      { kind, ...(kind === 'program' ? { program_id: which } : { name: which }), confirmed: true });
+    window.toast(out.said, 'good');
+    document.dispatchEvent(new CustomEvent('lite:controller', { detail: { side } }));
+    return true;
+  } catch (err) {
+    tell(err);
+    return false;
+  }
+}
+
 // A Plotly chart kept to its box (the owner, 17 Oct: no horizontal scrollbar at any width). Plotly's own
 // responsive mode follows only the window's resize, and a chart resized while its page is hidden keeps the size
 // it had (its box measures nothing then): Tune's Compare stayed 906 px wide in a 510 px box at 1280 px. The box

@@ -431,3 +431,43 @@ def test_data_management_lists_what_each_controller_stores(server):
     wait(server, job, 300)
     hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
     assert "controller data" in {r["verb"] for r in hw}
+
+
+def test_what_a_controller_stores_is_deleted_only_when_asked_and_read_back(server):
+    """The owner, 21 Oct: delete anything stored on the controller (Data Management, S1's merged files), always asked
+    first. RealMan's own delete calls, each read back; Lite's record of a program it sent goes with it; never while
+    the arm runs something; a track only on a 4th-generation controller."""
+    call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
+    D = "/api/robots/left/stored/delete"
+    progs = lambda: {p["num"]: p for p in call(server, "GET", "/api/robots/left/data")["programs"]}       # noqa: E731
+    if 9 not in progs():                                   # as test_data_management_lists_what_each_controller_stores leaves it
+        assert wait(server, call(server, "POST", f"{U}/L-T01/upload", {"program_id": 9, "confirmed": True,
+                                                                       "limits_seen": True}))["state"] == "done"
+    asked = call(server, "POST", D, {"kind": "program", "program_id": 9})
+    assert asked["code"] == "confirm_delete" and 9 in progs()                    # nothing deleted without the answer
+    job = call(server, "POST", f"{U}/L-T01/run", {"confirmed": True})
+    time.sleep(0.3)
+    busy = call(server, "POST", D, {"kind": "program", "program_id": 9, "confirmed": True})
+    assert busy.get("code") == "busy", busy
+    wait(server, job, 300)
+    assert 9 in progs()                                                          # still there: refused while it ran
+    out = call(server, "POST", D, {"kind": "program", "program_id": 9, "confirmed": True})
+    assert out["kind"] == "program" and out["which"] == 9 and out["said"].startswith("Program 9 (9_L-T01_v001.txt) is deleted"), out
+    assert 9 not in progs()
+    assert not call(server, "GET", "/api/robots/left/programs")["programs"] or 9 not in {
+        p["id"] for p in call(server, "GET", "/api/robots/left/programs")["programs"]}
+    assert "holds no program 9" in call(server, "POST", D, {"kind": "program", "program_id": 9, "confirmed": True})["error"]
+
+    names = lambda: [p["name"] for p in call(server, "GET", "/api/robots/left/data")["points"]]           # noqa: E731
+    assert "CLEAN_A" in names()
+    out = call(server, "POST", D, {"kind": "point", "name": "CLEAN_A", "confirmed": True})
+    assert out["said"] == "Global point “CLEAN_A” is deleted from the LEFT controller." and "CLEAN_A" not in names()
+    assert "not a global point" in call(server, "POST", D, {"kind": "point", "name": "CLEAN_A", "confirmed": True})["error"]
+    assert "4th-generation" in call(server, "POST", D, {"kind": "track", "name": "T1", "confirmed": True})["error"]
+
+    call(server, "POST", "/api/robots/mode", {"mode": "visual"})                   # as an upload: never in Visual sim
+    assert call(server, "POST", D, {"kind": "point", "name": "STP_HOME", "confirmed": True})["code"] == "mode"
+    call(server, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    done = {r["verb"]: r for r in hw if r["verb"].startswith("delete")}
+    assert done["delete program"]["ret"] == 0 and done["delete global point"]["ret"] == 0 and done["delete track"]["ret"] == -4

@@ -1777,6 +1777,28 @@ def get_robot_data(app, q, body, m):
     return out
 
 
+@route("POST", r"/api/robots/(left|right)/stored/delete")
+def post_delete_stored(app, q, body, m):
+    """Something the arm's controller stores, deleted (the owner, 21 Oct: Data Management, and S1's merged files on the
+    controller; "Deleting always asks for confirmation first"): ``{kind: program | point | track, program_id | name,
+    confirmed}`` (robot_standin.delete_stored). As an upload, it writes to the controller: Hardware sim or Real."""
+    session(app)
+    side = _arm(m)
+    require_robot_mode(app)
+    kind = str(body.get("kind") or "")
+    which = body.get("program_id") if kind == "program" else body.get("name")
+    if kind == "program":
+        try:
+            which = int(which)
+        except (TypeError, ValueError):
+            raise UserError("Say the program's number (1 to 100).") from None
+    elif not str(which or "").strip():
+        raise UserError("Say the name of what to delete.")
+    if body.get("confirmed") is not True:
+        raise UserError("Deleting from a controller needs your confirmation.", code="confirm_delete")
+    return app.robot.delete_stored(side, kind, which)
+
+
 @route("POST", r"/api/robots/(left|right)/points/save")
 def post_point_save(app, q, body, m):
     """The arm's pose now, saved on its controller as a global point (feedback v2, slide 14):

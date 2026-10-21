@@ -4,14 +4,17 @@
 // same columns sorting features"): what each arm's controller stores, laid out as RealMan's own web page
 // lays it out (its Data Management: Tracks List, Graphical Program, Script Program, Model Warehouse,
 // Global Points; the Graphical Program's columns Name, Num, Create Time, Edit Time, File Size, Default
-// Speed, sorted by Num, Create Time or Edit Time; a search and pages). Display only: nothing here changes
-// a controller. Read from the arm's controller when the window opens, when the other arm is chosen and on
-// Refresh (GET /api/robots/<arm>/data), never while the arm moves. What RealMan's API cannot give is said:
-// the programs' own create and edit times (Lite's record of when it sent a program stands in), the script
-// programs and the model warehouse, and the tracks list on these 3rd-generation controllers.
+// Speed, sorted by Num, Create Time or Edit Time; a search and pages). Read from the arm's controller when the
+// window opens, when the other arm is chosen and on Refresh (GET /api/robots/<arm>/data), never while the arm moves.
+// What RealMan's API cannot give is said: the programs' own create and edit times (Lite's record of when it sent a
+// program stands in), the script programs and the model warehouse, and the tracks list on these 3rd-generation
+// controllers. The one change made here is a delete (the owner, 21 Oct: "Add a delete feature for anything stored on
+// the controller"): a column after the last, with no name, whose bin shows on the row the pointer is on; a program,
+// a global point or a track is deleted from the controller after the question every delete asks
+// (POST /api/robots/<arm>/stored/delete), and the list read again.
 
 import { get, say } from './api.js';
-import { ctx, el, fmtT } from './ctx.js';
+import { ctx, deleteButton, deleteStored, el, fmtT } from './ctx.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
@@ -37,21 +40,47 @@ const COLUMNS = {
     ['edited', 'Edit Time', (r) => (r.lite && r.lite.sent) || '', true],
     ['size', 'File Size', (r) => r.bytes, false],
     ['time', 'Execution Time', (r) => (r.lite && r.lite.seconds != null ? r.lite.seconds : ''), true],   // Lite's record (the owner, 20 Oct)
-    ['speed', 'Default Speed', (r) => r.speed, false]],
+    ['speed', 'Default Speed', (r) => r.speed, false],
+    ['del', '', null, false]],
   points: [
     ['name', 'Name', (r) => r.name, true],
     ['joints', 'Joints J1–J7 (deg)', (r) => (r.joints || []).join(','), false],
     ['pose', 'Pose X Y Z (mm) · RX RY RZ (deg)', (r) => (r.pose || []).join(','), false],
     ['work', 'Work Frame', (r) => r.work_frame, false],
     ['tool', 'Tool Frame', (r) => r.tool_frame, false],
-    ['time', 'Time', (r) => r.time || '', true]],
+    ['time', 'Time', (r) => r.time || '', true],
+    ['del', '', null, false]],
   tracks: [
     ['name', 'Name', (r) => r.name, true],
     ['points', 'Points', (r) => r.points, false],
-    ['created', 'Create Time', (r) => r.created || '', true]],
+    ['created', 'Create Time', (r) => r.created || '', true],
+    ['del', '', null, false]],
 };
 
+// The bin of a row: what it deletes, said in the question (a program: what Lite knows of it; the IO's own).
+function binCell(t, r) {
+  const ARM = side.toUpperCase(), d = data[side] || {};
+  let label, go;
+  if (t === 'programs') {
+    const what = `program ${r.num}${r.name ? ` (${r.name})` : ''}`;
+    label = `Delete ${what} from the ${ARM} controller`;
+    go = () => deleteStored(side, 'program', r.num, { what,
+      more: (r.lite ? `Lite sent it${r.lite.project_file || r.lite.file ? `: ${r.lite.project_file || r.lite.file}` : ''}; the file stays in Lite. ` : '')
+        + (d.default_program === r.num ? 'Its IO starts this program: the IO will have none to start. ' : '')
+        + 'A sequence (S2) that runs it will not find it.' });
+  } else if (t === 'points') {
+    label = `Delete global point ${r.name} from the ${ARM} controller`;
+    go = () => deleteStored(side, 'point', r.name, { what: `global point “${r.name}”`,
+      more: 'A start pose or a sequence step (S2) that uses it will not find it.' });
+  } else {
+    label = `Delete track ${r.name} from the ${ARM} controller`;
+    go = () => deleteStored(side, 'track', r.name, { what: `track “${r.name}”` });
+  }
+  return el('td', { class: 'lite-del-cell' }, deleteButton(label, async () => { if (await go()) read(side); }));
+}
+
 function cell(t, r, key) {
+  if (key === 'del') return binCell(t, r);
   if (t === 'programs') {
     if (key === 'name') {
       const d = data[side];
@@ -169,6 +198,7 @@ function paintTable() {
   const part = shown.slice((page - 1) * size, page * size);
   const cols = COLUMNS[tab];
   const head = el('tr', {}, cols.map(([key, title, , sortable]) => {
+    if (key === 'del') return el('th', { scope: 'col', class: 'lite-del-cell', 'aria-label': 'Delete' });   // a column with no name
     if (!sortable) return el('th', { scope: 'col', text: title });
     const s = sorts[tab];
     const dir = s.key === key ? (s.dir > 0 ? 'ascending' : 'descending') : 'none';
@@ -177,7 +207,7 @@ function paintTable() {
         title: `Sort by ${title}`, onclick: () => { sorts[tab] = { key, dir: s.key === key ? -s.dir : 1 }; page = 1; paintTable(); } }));
   }));
   area.replaceChildren(el('table', { class: 'lite-table lite-dm-table' }, el('thead', {}, head),
-    el('tbody', {}, part.length ? part.map(r => el('tr', {}, cols.map(([key]) => cell(tab, r, key))))
+    el('tbody', {}, part.length ? part.map(r => el('tr', { class: 'lite-del-row' }, cols.map(([key]) => cell(tab, r, key))))
       : el('tr', {}, el('td', { colspan: String(cols.length), class: 'lite-dm-none', text: rows.length ? 'Nothing matches the search.' : 'None stored.' })))));
   if (tab === 'programs') {
     note.textContent = 'Create Time and Edit Time: when Lite sent the program (Lite’s record); RealMan’s API does not give the '
@@ -228,10 +258,11 @@ function build() {
   box = el('div', { class: 'modal lite-viewer lite-dm', id: 'liteDataMgmt' },
     el('div', { class: 'modal-card lite-viewer-card lite-dm-card', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Data Management' },
       el('div', { class: 'section-head' },
-        el('div', {}, el('div', { class: 'eyebrow', text: 'Each arm’s controller · display only' }),
+        el('div', {}, el('div', { class: 'eyebrow', text: 'Each arm’s controller' }),
           el('h3', { text: 'Data Management' }),
           el('p', { class: 'mini-note', text: 'What each arm’s controller stores, as RealMan’s own web page lists it. Read when this '
-            + 'window opens, when the other arm is chosen and on Refresh, never while the arm moves. Nothing here changes a controller.' })),
+            + 'window opens, when the other arm is chosen and on Refresh, never while the arm moves. The bin at the end of a row (it shows '
+            + 'on the row the pointer is on) deletes it from the controller, after a question.' })),
         el('div', { class: 'cta-row' }, el('button', { class: 'btn light', type: 'button', text: 'Close', onclick: close }))),
       el('div', { class: 'lite-dm-bar' },
         el('div', { class: 'lite-dm-arms', role: 'group', 'aria-label': 'Arm' },

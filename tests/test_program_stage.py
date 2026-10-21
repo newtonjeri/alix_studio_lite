@@ -177,3 +177,19 @@ def test_visual_sim_shows_a_program_lite_sent_with_its_own_pole_and_hand(lite):
     shown = call(lite, "POST", "/api/robots/left/simulate-move", {"program": 46, "pid": pid})
     assert "its own pole and hand first: pole 70 mm, hand grip" in shown["what"], shown.get("what") or shown
     assert shown["stage"]["pole_mm"] == 70
+
+
+def test_a_program_the_stand_in_holds_is_deleted_only_when_asked(lite):
+    """Delete from a controller (the owner, 21 Oct): the stand-in's programs are the ones Lite sent it; the question is
+    asked first, every time; it has no global points or tracks to delete."""
+    up = call(lite, "POST", "/api/robots/left/programs/upload", {"program_id": 47, "name": "L_del.txt", "content": content(6.0),
+                                                                "pole_mm": 40, "hand": "GRIP", "confirmed": True})
+    assert wait(lite, up)["state"] == "done"
+    D = "/api/robots/left/stored/delete"
+    assert call(lite, "POST", D, {"kind": "program", "program_id": 47})["code"] == "confirm_delete"
+    assert 47 in lite["app"].robot.arm("left").programs
+    out = call(lite, "POST", D, {"kind": "program", "program_id": 47, "confirmed": True})
+    assert out["said"] == "Program 47 (L_del) is deleted from the LEFT stand-in robot."
+    assert 47 not in lite["app"].robot.arm("left").programs
+    assert 47 not in {p["id"] for p in call(lite, "GET", "/api/robots/left/programs")["programs"]}
+    assert call(lite, "POST", D, {"kind": "point", "name": "STP_HOME", "confirmed": True})["code"] == "connect"

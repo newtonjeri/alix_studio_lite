@@ -646,6 +646,15 @@ body:has(.lite-vp-max) #toast { z-index: 19600; }                       /* what 
 .lite-dm-tablebox { flex: 1; min-height: 160px; overflow: auto; margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; }
 .lite-dm-table { margin: 0; }
 .lite-dm-table thead th { position: sticky; top: 0; z-index: 1; background: var(--card); white-space: nowrap; }
+/* the delete column (Data Management, S1's merged files): the bin shows on the row the pointer is on, or that has the focus */
+.lite-del-cell { width: 44px; padding-left: 4px !important; padding-right: 4px !important; text-align: center; }
+.lite-del { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1px solid transparent;
+  border-radius: 8px; background: transparent; color: var(--red); cursor: pointer; opacity: 0; transition: opacity .12s; }
+.lite-del-row:hover .lite-del, .lite-del-row:focus-within .lite-del, .lite-del:focus-visible { opacity: 1; }
+.lite-del:hover, .lite-del:focus-visible { background: var(--red2); border-color: var(--red); }
+@media (hover: none) { .lite-del { opacity: .7; } }                /* a touch screen has no hover: the bin stays in sight */
+html[data-theme="dark"] .lite-del { color: var(--lite-d-red); }
+html[data-theme="dark"] .lite-del:hover, html[data-theme="dark"] .lite-del:focus-visible { background: var(--card); border-color: var(--lite-d-red); }
 .lite-dm-sort { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
 .lite-dm-sort::after { content: ''; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 5px solid var(--muted); opacity: .45; }
 .lite-dm-sort.asc::after { border-bottom-color: var(--blue); opacity: 1; }

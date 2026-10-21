@@ -1392,6 +1392,49 @@ class StandInRobot:
         finally:
             content.forget(side)                        # the controller's lists are read again at their next use
 
+    def delete_stored(self, side: str, kind: str, which) -> dict:
+        """Something the arm's controller stores, deleted (the owner, 21 Oct: Data Management and S1's merged files):
+        ``kind`` "program" (``which``: its slot), "point" or "track" (``which``: its name). A linked arm's controller,
+        read back; the stand-in's programs are the ones Lite sent it. Never while the arm moves, teaches or takes an
+        upload; Lite's record of a program it sent there goes with it. {kind, which, name, said}."""
+        from . import content
+
+        a, S = self.arm(side), side.upper()
+        if kind not in ("program", "point", "track"):
+            raise UserError("Say what to delete: a program, a global point or a track.")
+        real = self._real(side)
+        if real is None:
+            if kind != "program":
+                raise UserError(f"The stand-in robot has no {'global points' if kind == 'point' else 'tracks'}.",
+                                "Start Lite with --robot realman and connect the arm.", code="connect")
+        elif not a.connected:
+            raise UserError(f"The {S} arm is not connected.", "Connect it from the bar at the top.", code="connect")
+        moving = [j for j in self.jobs.running(arm=side) if j.kind in CONTROLLER_KINDS]
+        if moving or a.teaching:
+            raise UserError(f"The {S} arm is busy ({moving[0].title if moving else 'drag teaching'}).",
+                            "Delete it once the arm has stopped.", code="busy")
+        with self._send_lock:                           # never beside an upload to the same controller
+            try:
+                if kind == "program":
+                    pid = int(which)
+                    if real is None:
+                        rec = a.programs.get(pid)
+                        if rec is None:
+                            raise UserError(f"The stand-in robot holds no program {pid}.")
+                        out = dict(program_id=pid, name=rec.get("stored_name") or rec.get("name"))
+                    else:
+                        out = real.delete_program(pid)
+                    if a.programs.pop(pid, None) is not None:
+                        a.save()
+                    return dict(kind=kind, which=pid, name=out["name"],
+                                said=f"Program {pid} ({out['name']}) is deleted from the {S} {'stand-in robot' if real is None else 'controller'}"
+                                + ("" if out.get("read_back", True) else " (its list could not be read back to confirm)") + ".")
+                out = real.delete_global_point(str(which)) if kind == "point" else real.delete_track(str(which))
+                return dict(kind=kind, which=str(which), name=out["name"],
+                            said=f"{'Global point' if kind == 'point' else 'Track'} “{out['name']}” is deleted from the {S} controller.")
+            finally:
+                content.forget(side)                    # every list Lite offers reads the controller again
+
     def move_point(self, side: str, name: str, move: str, speed: int, wait_s: float, title: str, mode: str | None = None):
         """MoveJ or MoveL to a global point of a linked arm: in Real the arm moves, in Hardware sim
         the controller's SIM mode simulates it (read back either way)."""

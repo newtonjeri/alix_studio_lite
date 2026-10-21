@@ -18,7 +18,7 @@
 // card of its own with its heading and what it does; a click on the bar goes to that step.
 
 import { call, get, post, say } from './api.js';
-import { armFromName, confirmDialog, ctx, el, fmtT, jobLine, robotCall, stageDialog, tell, watchJob } from './ctx.js';
+import { armFromName, confirmDialog, ctx, deleteButton, deleteStored, el, fmtT, jobLine, robotCall, stageDialog, tell, watchJob } from './ctx.js';
 import { borrow, home3d, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { saveBlobAs } from './tune.js';
@@ -110,7 +110,8 @@ function build() {
       stepCard(side, 3, 'Choose a merged file: rename or download it, upload it to a Program ID on the controller, review it in 3D, '
         + 'or send it to Tune + Simulation.',
       el('div', { class: 'lite-table-scroll lite-s1-merges' }, el('table', { class: 'lite-table' },
-        el('thead', {}, el('tr', {}, ['', 'Merge', 'Time', 'Pole and hand', 'UGV placement', 'Limits'].map(h => el('th', { text: h })))),
+        el('thead', {}, el('tr', {}, ['', 'Merge', 'Time', 'Pole and hand', 'UGV placement', 'Limits'].map(h => el('th', { text: h })),
+          el('th', { class: 'lite-del-cell', 'aria-label': 'Delete from the controller' }))),
         el('tbody', { id: `liteS1Merges_${side}` }))),
       el('div', { id: `liteS1Tools_${side}`, class: 'lite-s1-tools', hidden: true },
         el('div', { class: 'lite-row' },
@@ -332,7 +333,7 @@ function paint(side) {
   if (name && !name.value) name.value = `${ARM(side)[0]}_merge_${s.merges.length + 1}.txt`;
 
   const mb = $(`liteS1Merges_${side}`);
-  mb.replaceChildren(...(s.merges.length ? s.merges.slice().reverse().map((m) => el('tr', { class: m.file === s.sel ? 'lite-picked' : '' },
+  mb.replaceChildren(...(s.merges.length ? s.merges.slice().reverse().map((m) => el('tr', { class: `lite-del-row${m.file === s.sel ? ' lite-picked' : ''}` },
     el('td', {}, el('input', { type: 'radio', name: `liteS1Sel_${side}`, checked: m.file === s.sel, 'aria-label': `Select ${m.name}`,
       onchange: () => select(side, m.file) })),
     el('td', {}, el('b', { text: m.name }), el('div', { class: 'mini-note', text: (m.made_from ? `Tuned from ${m.made_from.merge} · ` : '')
@@ -341,8 +342,9 @@ function paint(side) {
     el('td', { text: `${fmtT(m.seconds)} · ${Number(m.lines).toLocaleString()} lines` }),
     el('td', { text: m.stage ? m.stage.text || stageText(m.stage) : '—' }),
     el('td', { text: m.placement ? placeText(m.placement) : 'not recorded' }),
-    el('td', {}, el('span', { class: m.limits_ok ? 'lite-ok' : 'lite-warn', text: m.limits_ok ? 'L1–L4 pass' : `${m.limits_text} (shown, not enforced)` }))))
-    : [el('tr', {}, el('td', { colspan: '6', class: 'mini-note', text: `No ${ARM(side)} merge yet.` }))]));
+    el('td', {}, el('span', { class: m.limits_ok ? 'lite-ok' : 'lite-warn', text: m.limits_ok ? 'L1–L4 pass' : `${m.limits_text} (shown, not enforced)` })),
+    binCell(side, m)))
+    : [el('tr', {}, el('td', { colspan: '7', class: 'mini-note', text: `No ${ARM(side)} merge yet.` }))]));
   steps(side);
   const sel = s.merges.find(m => m.file === s.sel);
   $(`liteS1Tools_${side}`).hidden = !sel;
@@ -350,6 +352,26 @@ function paint(side) {
     $(`liteS1Rename_${side}`).value = sel.name;
     $(`liteS1Rename_${side}`).dataset.for = sel.file;
   }
+}
+
+// A merged file on the arm's controller (S1's list knows where: merges.mark_on_controller): its bin, which deletes that
+// program from the controller (the owner, 21 Oct: "It lets the user delete any of those uploaded files from the
+// controller"), after the question; the merge stays in the project. None for a merge the controller does not hold.
+const onControllerOf = (side, m) => (st[side].items.find(it => it.ref === `merge:${m.file}`) || {}).on_controller || null;
+
+function binCell(side, m) {
+  const c = onControllerOf(side, m);
+  if (!c) return el('td', { class: 'lite-del-cell' });
+  const what = `program ${c.id}${c.name ? ` (${c.name})` : ''}`;
+  return el('td', { class: 'lite-del-cell' }, deleteButton(`Delete ${what}, ${m.name}, from the ${ARM(side)} controller`, async () => {
+    const done = await deleteStored(side, 'program', c.id, { what,
+      more: `It is ${m.name}${c.by === 'name' ? ' (found on the controller by its name)' : ''}; the merge stays in this project, to upload again. `
+        + 'A sequence (S2) that runs it will not find it.' });
+    if (!done) return;
+    status(side, `${m.name}: program ${c.id} is deleted from the ${ARM(side)} controller; the merge stays here.`, 'ok');
+    readSlots(side, true);
+    await load(side);
+  }));
 }
 
 // The step bar as the teaching flow's: the step to do now (blue), the steps done (green); each card's badge says how far.
