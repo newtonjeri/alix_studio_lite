@@ -1,15 +1,14 @@
 {
  "left": [
   {
-   "type": "mechanism",
-   "task": "lid_open"
+   "type": "program",
+   "id": 50,
+   "name": "50_L-R01_v002.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
   }
  ],
- "right": [
-  {
-   "type": "mechanism",
-   "task": "lid_open"
-  }
- ],
- "updated": "2026-10-21 15:18:09"
+ "right": [],
+ "updated": "2026-10-21 17:45:39"
 }

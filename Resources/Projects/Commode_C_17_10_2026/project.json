@@ -2,13 +2,13 @@
  "id": "alix_mvbvk1fk_zti6s",
  "name": "Commode_C_17_10_2026",
  "createdAt": "2026-10-17T04:06:33.536Z",
- "updatedAt": "2026-10-21T07:25:43.808Z",
+ "updatedAt": "2026-10-21T10:09:30.951Z",
  "archived": false,
  "state": {
   "currentView": "sequence",
   "currentTask": 19,
   "selectedArm": "left",
-  "currentStage": "prepare",
+  "currentStage": "teach",
   "armDone": {
    "left": false,
    "right": false
@@ -3694,11 +3694,11 @@
     },
     "taskLabel": "TASK 13",
     "step": 20,
-    "type": "procedure",
+    "type": "mixed",
     "leftRegion": "L-T06 DROP GLOVE",
     "rightRegion": "R-T06 RETURN DRAIN BRUSH AND DROP GLOVE",
     "selectedArm": "left",
-    "workflowStage": "prepare",
+    "workflowStage": "teach",
     "targetSeconds": 10,
     "prepareSetupByArm": {
      "left": {
@@ -3713,14 +3713,14 @@
        "Thumb Bend": 1000,
        "Thumb Rotate": 1000
       },
-      "startPose": "gp:L_HME_POS",
+      "startPose": "",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-21T07:25:43.803Z"
+      "savedAt": "2026-10-21T10:09:30.949Z"
      },
      "right": {
       "arm": "right",
@@ -3767,15 +3767,15 @@
      "Thumb Bend": 1000,
      "Thumb Rotate": 1000
     },
-    "leftStartPose": "gp:L_HME_POS",
-    "rightStartPose": "gp:R_GLR_BPCK_STP",
+    "leftStartPose": "",
+    "rightStartPose": "",
     "trajectoryFileName": "L_TASK_13_trajectory.txt",
     "leftProgramId": 65,
     "programId": 65,
     "leftApproved": false,
     "rightApproved": false,
     "completed": false,
-    "lastUpdated": "2026-10-21T07:25:43.803Z",
+    "lastUpdated": "2026-10-21T10:09:30.949Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -3785,10 +3785,10 @@
      },
      "scaleRegions": [],
      "trimRegions": [],
-     "activeTrajectoryName": "L_TASK_13_trajectory.txt",
-     "activeTrajectoryRows": 1143,
+     "activeTrajectoryName": "L_merge_1.txt",
+     "activeTrajectoryRows": 6294,
      "tuningApplied": false,
-     "tuningSourceFileName": "L_TASK_13_trajectory.txt",
+     "tuningSourceFileName": "L_merge_1.txt",
      "tunedOutputFileName": null
     },
     "rightProgramId": 59,
@@ -3813,16 +3813,16 @@
    1000,
    1000
   ],
-  "leftPose": "gp:L_HME_POS",
-  "rightPose": "gp:R_GLR_BPCK_STP",
+  "leftPose": "",
+  "rightPose": "",
   "programId": "65",
   "fileName": "L_TASK_13_trajectory.txt",
   "activeTrajectorySource": "recorded",
-  "activeTrajectoryName": "L_TASK_13_trajectory.txt",
-  "activeTrajectoryRows": 1143,
+  "activeTrajectoryName": "L_merge_1.txt",
+  "activeTrajectoryRows": 6294,
   "tuningApplied": false,
   "tunedOutputFileName": "",
-  "tuningSourceFileName": "L_TASK_13_trajectory.txt",
+  "tuningSourceFileName": "L_merge_1.txt",
   "manualScaleRegions": [],
   "manualTrimRegions": [],
   "sequenceConfig": [
@@ -4106,7 +4106,7 @@
   "sequenceVisualConfirmed": false,
   "fullSimulationApproved": false,
   "elapsed": 0,
-  "savedAt": "2026-10-21T07:25:43.808Z"
+  "savedAt": "2026-10-21T10:09:30.951Z"
  },
  "lastSaveReason": "Workflow updated",
  "lite": {

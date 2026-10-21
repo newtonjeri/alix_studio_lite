@@ -1,0 +1,120 @@
+{
+ "name": "L_merge_1.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "lines": 6294,
+ "seconds": 31.465,
+ "sha256": "2540b7d3f37e45f414776e9d11190097095503411186c98de7e2524fbf932074",
+ "parts": [
+  {
+   "name": "L_TASK_1A_8s_processed.txt",
+   "lines": 1583
+  },
+  {
+   "name": "L_TASK_2A_8S.txt",
+   "lines": 1628
+  },
+  {
+   "name": "L_TASK_1C_8S.txt",
+   "lines": 1608
+  },
+  {
+   "name": "L_TASK_2_trajectory_6_9S.txt",
+   "lines": 1397
+  }
+ ],
+ "joins": [
+  {
+   "after": 2,
+   "lines": 39,
+   "seconds": 0.2,
+   "gap_deg": 0.09
+  },
+  {
+   "after": 3,
+   "lines": 39,
+   "seconds": 0.2,
+   "gap_deg": 0.09
+  }
+ ],
+ "limits_ok": false,
+ "limits_text": "L1 Joint limits -9.38 deg (limit 0.5 deg); L2 Joint speed 1.57 x limit (limit 1 x limit); L3 Joint acceleration 6451 deg/s^2 (limit 612 deg/s^2)",
+ "placement": {
+  "task": "TASK 1A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 09:43:42"
+  }
+ },
+ "phase": "lid_closed",
+ "sources": [
+  {
+   "ref": "ver:L-R01/v002",
+   "name": "L_TASK_1A_8s_processed.txt",
+   "sha256": "9d3ea89a4446dd0d14bcc00382d0c0d0bbd4192968d731c44167982a972105cf",
+   "tasks": [
+    "L-R01"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:L-R02/v002",
+   "name": "L_TASK_2A_8S.txt",
+   "sha256": "07ab0e8ba4cb4db53ea46f0db274ff35f886b194694b62226905b1628ba0d818",
+   "tasks": [
+    "L-R02"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:L-R03/v002",
+   "name": "L_TASK_1C_8S.txt",
+   "sha256": "78629b1da65b3ef1ac7a7219ceccf1285fc634efb93dbf73f2150805dfd8549e",
+   "tasks": [
+    "L-R03"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:L-R04/v004",
+   "name": "L_TASK_2_trajectory_6_9S.txt",
+   "sha256": "f59ff71761c6188f7e376a3e9d72bb90a7beebae0e82a173d64ecd1d7caeb2f9",
+   "tasks": [
+    "L-R04"
+   ],
+   "grade": "processed"
+  }
+ ],
+ "made_from": null,
+ "made": "2026-10-21 16:46:35",
+ "tasks": [
+  "L-R01",
+  "L-R02",
+  "L-R03",
+  "L-R04"
+ ],
+ "grade": "processed"
+}

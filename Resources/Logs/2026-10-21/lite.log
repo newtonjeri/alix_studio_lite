@@ -3763,3 +3763,1927 @@
 15:29:11.644 [activity] operator:0c3a66 page: SYSTEM · Session active
 15:29:37.419 [RIGHT] ALERT ERROR · RIGHT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)
 15:29:37.419 [LEFT] ALERT ERROR · LEFT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)
+15:34:52.741 [activity] - page: NAVIGATION · Open screen
+15:34:52.742 [activity] - page: SYSTEM · ASL frontend initialized
+15:34:54.102 [activity] - POST /api/auth/login
+15:34:55.055 [activity] operator:589f7e page: AUTH · Operator login
+15:34:55.056 [activity] operator:589f7e page: NAVIGATION · Open screen
+15:34:55.057 [activity] operator:589f7e page: AUTH · Setting changed
+15:34:57.203 [activity] operator:589f7e page: UI · Button action
+15:34:59.053 [activity] operator:589f7e page: NAVIGATION · Task loaded
+15:34:59.054 [activity] operator:589f7e page: SETUP · Arm selected
+15:34:59.054 [activity] operator:589f7e page: NAVIGATION · Teaching stage changed
+15:34:59.054 [activity] operator:589f7e page: SETUP · Arm selected
+15:34:59.068 [activity] operator:589f7e page: NAVIGATION · Open screen
+15:35:04.572 [activity] operator:589f7e page: NAVIGATION · Scrolled view
+15:35:08.190 [activity] operator:589f7e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+15:35:08.191 [activity] operator:589f7e page: SYSTEM · 3D device
+15:35:09.549 [activity] operator:589f7e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+15:35:09.645 [activity] operator:589f7e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+15:35:11.050 [activity] operator:589f7e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+15:35:23.378 [activity] operator:589f7e page: SYSTEM · Application hidden
+15:35:24.180 [activity] operator:589f7e page: SYSTEM · Browser closing
+15:35:24.188 [activity] operator:589f7e PUT /api/projects/alix_mvbvk1fk_zti6s
+15:35:29.095 [activity] - POST /api/auth/login
+15:35:29.119 [activity] operator:10482b page: NAVIGATION · Open screen
+15:35:29.128 [activity] operator:10482b page: SYSTEM · ASL frontend initialized
+15:35:30.161 [activity] operator:10482b page: AUTH · Operator login
+15:35:30.163 [activity] operator:10482b page: NAVIGATION · Open screen
+15:35:30.165 [activity] operator:10482b page: AUTH · Setting changed
+15:35:31.679 [activity] operator:10482b page: UI · Button action
+15:35:33.520 [activity] operator:10482b page: NAVIGATION · Task loaded
+15:35:33.521 [activity] operator:10482b page: SETUP · Arm selected
+15:35:33.522 [activity] operator:10482b page: NAVIGATION · Teaching stage changed
+15:35:33.525 [activity] operator:10482b page: SETUP · Arm selected
+15:35:33.537 [activity] operator:10482b page: NAVIGATION · Open screen
+15:35:36.761 [activity] operator:10482b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+15:35:36.786 [activity] operator:10482b page: SYSTEM · 3D device
+15:35:37.783 [activity] operator:10482b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+15:35:37.850 [activity] operator:10482b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+15:35:39.181 [activity] operator:10482b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+15:35:39.618 [activity] operator:10482b PUT /api/projects/alix_mvbvk1fk_zti6s
+15:35:40.445 [activity] operator:10482b page: UI · Button action
+15:35:40.669 [activity] operator:10482b PUT /api/projects/alix_mvbvk1fk_zti6s
+15:35:43.857 [activity] operator:10482b page: UI · Button action
+15:35:44.071 [activity] operator:10482b PUT /api/projects/alix_mvbvk1fk_zti6s
+15:35:58.999 [activity] operator:10482b page: UI · Button action
+15:35:59.220 [activity] operator:10482b PUT /api/projects/alix_mvbvk1fk_zti6s
+15:35:59.923 [activity] operator:10482b page: SYSTEM · Session active
+15:36:03.218 [activity] operator:10482b page: NAVIGATION · Scrolled view
+15:36:29.165 [activity] operator:10482b page: SYSTEM · Page slow
+15:36:29.167 [activity] operator:10482b page: SYSTEM · Session active
+15:36:57.007 [activity] operator:10482b page: NAVIGATION · Scrolled view
+15:36:59.920 [activity] operator:10482b page: SYSTEM · Session active
+15:37:29.926 [activity] operator:10482b page: SYSTEM · Session active
+15:37:42.196 [activity] operator:10482b page: NAVIGATION · Scrolled view
+15:37:59.923 [activity] operator:10482b page: SYSTEM · Session active
+15:38:29.924 [activity] operator:10482b page: SYSTEM · Session active
+15:38:59.924 [activity] operator:10482b page: SYSTEM · Session active
+15:39:29.925 [activity] operator:10482b page: SYSTEM · Session active
+15:39:59.924 [activity] operator:10482b page: SYSTEM · Session active
+15:40:29.924 [activity] operator:10482b page: SYSTEM · Session active
+15:40:59.922 [activity] operator:10482b page: SYSTEM · Session active
+15:41:29.920 [activity] operator:10482b page: SYSTEM · Session active
+15:41:59.920 [activity] operator:10482b page: SYSTEM · Session active
+15:42:29.920 [activity] operator:10482b page: SYSTEM · Session active
+15:42:59.970 [activity] operator:10482b page: SYSTEM · Session active
+15:43:29.922 [activity] operator:10482b page: SYSTEM · Session active
+15:43:59.922 [activity] operator:10482b page: SYSTEM · Session active
+15:44:29.921 [activity] operator:10482b page: SYSTEM · Session active
+15:44:59.921 [activity] operator:10482b page: SYSTEM · Session active
+15:45:29.922 [activity] operator:10482b page: SYSTEM · Session active
+15:45:59.947 [activity] operator:10482b page: SYSTEM · Session active
+15:46:29.923 [activity] operator:10482b page: SYSTEM · Session active
+15:46:59.926 [activity] operator:10482b page: SYSTEM · Session active
+15:47:29.921 [activity] operator:10482b page: SYSTEM · Session active
+15:47:59.926 [activity] operator:10482b page: SYSTEM · Session active
+15:48:29.924 [activity] operator:10482b page: SYSTEM · Session active
+15:48:59.924 [activity] operator:10482b page: SYSTEM · Session active
+15:49:29.923 [activity] operator:10482b page: SYSTEM · Session active
+15:49:59.920 [activity] operator:10482b page: SYSTEM · Session active
+15:50:29.924 [activity] operator:10482b page: SYSTEM · Session active
+15:50:59.923 [activity] operator:10482b page: SYSTEM · Session active
+15:51:29.920 [activity] operator:10482b page: SYSTEM · Session active
+15:51:59.921 [activity] operator:10482b page: SYSTEM · Session active
+15:52:29.929 [activity] operator:10482b page: SYSTEM · Session active
+15:52:59.921 [activity] operator:10482b page: SYSTEM · Session active
+15:53:13.340 [activity] operator:10482b page: UI · Button action
+15:53:13.565 [activity] operator:10482b PUT /api/projects/alix_mvbvk1fk_zti6s
+15:53:14.709 [activity] operator:10482b page: SYSTEM · Application hidden
+15:53:16.734 [activity] operator:10482b page: SYSTEM · Application visible
+15:53:19.599 [activity] operator:10482b page: UI · Button action
+15:53:19.815 [activity] operator:10482b PUT /api/projects/alix_mvbvk1fk_zti6s
+15:53:22.094 [activity] operator:10482b page: UI · Button action
+15:53:22.313 [activity] operator:10482b PUT /api/projects/alix_mvbvk1fk_zti6s
+15:53:29.918 [activity] operator:10482b page: SYSTEM · Session active
+15:53:59.921 [activity] operator:10482b page: SYSTEM · Session active
+15:54:29.926 [activity] operator:10482b page: SYSTEM · Session active
+15:54:30.202 [activity] operator:10482b page: SYSTEM · Application hidden
+15:54:49.142 [activity] operator:10482b page: SYSTEM · Application visible
+15:54:50.018 [activity] operator:10482b POST /api/auth/engineer/lock
+15:54:50.819 [activity] operator:10482b page: UI · Button action
+15:54:51.051 [activity] operator:10482b PUT /api/projects/alix_mvbvk1fk_zti6s
+15:54:55.869 [activity] operator:10482b page: SYSTEM · Browser closing
+15:54:55.878 [activity] operator:10482b PUT /api/projects/alix_mvbvk1fk_zti6s
+15:54:55.892 [activity] operator:10482b page: SYSTEM · Application hidden
+15:55:07.633 [activity] - page: NAVIGATION · Open screen
+15:55:07.635 [activity] - page: SYSTEM · ASL frontend initialized
+15:55:09.157 [activity] - POST /api/auth/login
+15:55:10.196 [activity] operator:dc15ab page: AUTH · Operator login
+15:55:10.197 [activity] operator:dc15ab page: NAVIGATION · Open screen
+15:55:10.198 [activity] operator:dc15ab page: AUTH · Setting changed
+15:55:11.935 [activity] operator:dc15ab page: UI · Button action
+15:55:13.550 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/right
+15:55:13.577 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+15:55:15.152 [activity] operator:dc15ab page: NAVIGATION · Task loaded
+15:55:15.153 [activity] operator:dc15ab page: SETUP · Arm selected
+15:55:15.154 [activity] operator:dc15ab page: NAVIGATION · Teaching stage changed
+15:55:15.154 [activity] operator:dc15ab page: SETUP · Arm selected
+15:55:15.155 [activity] operator:dc15ab page: NAVIGATION · Open screen
+15:55:15.155 [activity] operator:dc15ab page: NAVIGATION · Open screen
+15:55:15.156 [activity] operator:dc15ab page: SYSTEM · 3D device
+15:55:16.186 [activity] operator:dc15ab page: UI · Button action
+15:55:16.186 [activity] operator:dc15ab page: NAVIGATION · Open screen
+15:55:16.778 [activity] operator:dc15ab POST /api/auth/engineer/lock
+15:55:16.867 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:17.578 [activity] operator:dc15ab page: UI · Button action
+15:55:17.804 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:19.554 [activity] engineer:dc15ab POST /api/auth/engineer
+15:55:19.872 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:27.750 [activity] engineer:dc15ab page: UI · Button action
+15:55:27.968 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:30.866 [activity] engineer:dc15ab page: UI · Button action
+15:55:31.083 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:34.119 [activity] operator:dc15ab POST /api/auth/engineer/lock
+15:55:34.914 [activity] operator:dc15ab page: UI · Button action
+15:55:34.914 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+15:55:35.141 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:35.913 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:36.879 [LEFT] read global speed ret=0 · not reported
+15:55:36.881 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+15:55:37.067 [activity] operator:dc15ab page: UI · Button action
+15:55:37.073 [LEFT] program list · 24 programs
+15:55:37.213 [LEFT] global points · 17 point(s)
+15:55:37.324 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:37.466 [LEFT] read drag sensitivity ret=0 · 100 %
+15:55:37.466 [activity] operator:dc15ab POST /api/robots/left/connect
+15:55:37.988 [RIGHT] read global speed ret=0 · not reported
+15:55:37.989 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+15:55:38.080 [RIGHT] read drag sensitivity ret=0 · 100 %
+15:55:38.081 [activity] operator:dc15ab POST /api/robots/right/connect
+15:55:38.308 [RIGHT] program list · 17 programs
+15:55:38.420 [RIGHT] global points · 12 point(s)
+15:55:39.120 [activity] operator:dc15ab POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+15:55:39.923 [activity] operator:dc15ab page: ROBOT · Button action
+15:55:39.924 [activity] operator:dc15ab page: SYSTEM · Session active
+15:55:40.151 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:40.399 [LEFT] run mode REAL
+15:55:40.498 [RIGHT] run mode REAL
+15:55:40.500 [activity] operator:dc15ab POST /api/robots/mode
+15:55:40.968 [activity] operator:dc15ab page: ROBOT · Button action
+15:55:41.222 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:42.954 [activity] operator:dc15ab page: UI · Button action
+15:55:43.173 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:47.310 [activity] operator:dc15ab POST /api/auth/engineer/lock
+15:55:48.106 [activity] operator:dc15ab page: UI · Button action
+15:55:48.327 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:49.697 [activity] engineer:dc15ab POST /api/auth/engineer
+15:55:50.028 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:52.884 [activity] engineer:dc15ab page: UI · Button action
+15:55:53.107 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:54.129 [RIGHT] program list · 17 programs
+15:55:54.344 [RIGHT] global points · 12 point(s)
+15:55:54.794 [activity] engineer:dc15ab page: UI · Button action
+15:55:55.005 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:55:59.241 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+15:56:07.634 [activity] engineer:dc15ab page: SYSTEM · Page slow
+15:56:09.984 [activity] engineer:dc15ab page: SYSTEM · Session active
+15:56:17.877 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:56:18.755 [activity] engineer:dc15ab POST /api/robots/right/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+15:56:19.553 [activity] engineer:dc15ab page: ROBOT · Button action
+15:56:19.792 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:56:20.548 [activity] engineer:dc15ab POST /api/robots/right/points/move
+15:56:20.658 [RIGHT] run mode REAL
+15:56:20.701 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+15:56:20.702 [activity] engineer:dc15ab page: ROBOT · Button action
+15:56:20.708 [RIGHT] runner v14 · GLOBAL MOVE START: R_R08_P2_STP // MOVEJ // speed 15%
+15:56:21.600 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:56:23.043 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_R08_P2_STP // MOVEJ
+15:56:23.066 [RIGHT] alix · global speed restored to 50 (ret=0)
+15:56:23.164 [RIGHT] movej global point {"name": "R_R08_P2_STP", "speed": 15, "wait_s": 0.0} ret=0 (2.498 s) · gap 0.04 deg
+15:56:23.355 [activity] - job move done: RIGHT MoveJ to R_R08_P2_STP
+15:56:35.086 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:56:35.913 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+15:56:37.034 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:56:37.800 [activity] engineer:dc15ab page: UI · Input updated
+15:56:39.984 [activity] engineer:dc15ab page: SYSTEM · Session active
+15:56:41.325 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+15:56:42.323 [activity] engineer:dc15ab page: UI · Setting changed
+15:56:42.674 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:56:43.085 [activity] engineer:dc15ab POST /api/robots/right/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+15:56:43.887 [activity] engineer:dc15ab page: ROBOT · Button action
+15:56:44.106 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:56:44.281 [activity] engineer:dc15ab POST /api/robots/right/points/move
+15:56:44.395 [RIGHT] run mode REAL
+15:56:44.438 [RIGHT] runner v14 · GLOBAL MOVE START: R_GLR_BPCK_STP // MOVEJ // speed 15%
+15:56:45.062 [activity] engineer:dc15ab page: ROBOT · Button action
+15:56:45.280 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:56:49.170 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_GLR_BPCK_STP // MOVEJ
+15:56:49.191 [RIGHT] alix · global speed restored to 50 (ret=0)
+15:56:49.290 [RIGHT] movej global point {"name": "R_GLR_BPCK_STP", "speed": 15, "wait_s": 0.0} ret=0 (4.893 s) · gap 0.04 deg
+15:56:49.393 [activity] - job move done: RIGHT MoveJ to R_GLR_BPCK_STP
+15:56:52.373 [activity] operator:dc15ab POST /api/auth/engineer/lock
+15:56:53.177 [activity] operator:dc15ab page: UI · Button action
+15:56:53.464 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:56:54.942 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+15:57:09.983 [activity] operator:dc15ab page: SYSTEM · Session active
+15:57:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+15:58:07.643 [activity] operator:dc15ab page: SYSTEM · Page slow
+15:58:09.983 [activity] operator:dc15ab page: SYSTEM · Session active
+15:58:39.981 [activity] operator:dc15ab page: SYSTEM · Session active
+15:58:57.999 [activity] - page: SYSTEM · Session active
+15:58:57.999 [activity] - page: SYSTEM · Session active
+15:58:58.000 [activity] - page: SYSTEM · Session active
+15:58:58.000 [activity] - page: SYSTEM · Session active
+15:58:58.000 [activity] - page: SYSTEM · Session active
+15:58:58.000 [activity] - page: SYSTEM · Session active
+15:58:58.000 [activity] - page: SYSTEM · Session active
+15:58:58.000 [activity] - page: SYSTEM · Session active
+15:58:58.001 [activity] - page: SYSTEM · Session active
+15:58:58.001 [activity] - page: SYSTEM · Session active
+15:58:58.001 [activity] - page: SYSTEM · Session active
+15:58:58.001 [activity] - page: SYSTEM · Browser closing
+15:59:03.667 [activity] operator:dc15ab POST /api/auth/engineer/lock
+15:59:04.467 [activity] operator:dc15ab page: UI · Button action
+15:59:04.681 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:59:06.670 [activity] engineer:dc15ab POST /api/auth/engineer
+15:59:06.999 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:59:07.639 [activity] engineer:dc15ab page: SYSTEM · Page slow
+15:59:09.979 [activity] engineer:dc15ab page: SYSTEM · Session active
+15:59:09.979 [activity] engineer:dc15ab page: UI · Button action
+15:59:10.746 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:59:12.102 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:59:12.368 [activity] engineer:dc15ab POST /api/robots/right/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+15:59:13.159 [activity] engineer:dc15ab page: ROBOT · Button action
+15:59:13.371 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:59:13.411 [activity] engineer:dc15ab POST /api/robots/right/points/move
+15:59:13.521 [RIGHT] run mode REAL
+15:59:13.666 [RIGHT] runner v14 · GLOBAL MOVE START: R_GLR_BPCK_STP // MOVEJ // speed 15%
+15:59:14.203 [activity] engineer:dc15ab page: ROBOT · Button action
+15:59:14.422 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:59:15.210 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_GLR_BPCK_STP // MOVEJ
+15:59:15.231 [RIGHT] alix · global speed restored to 50 (ret=0)
+15:59:15.328 [RIGHT] movej global point {"name": "R_GLR_BPCK_STP", "speed": 15, "wait_s": 0.0} ret=0 (1.806 s) · gap 0.09 deg
+15:59:15.424 [activity] - job move done: RIGHT MoveJ to R_GLR_BPCK_STP
+15:59:21.774 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+15:59:39.990 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:00:09.980 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:00:39.979 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:00:54.164 [activity] engineer:dc15ab POST /api/robots/right/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+16:00:54.969 [activity] engineer:dc15ab page: ROBOT · Button action
+16:00:55.185 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:00:55.269 [activity] engineer:dc15ab POST /api/robots/right/points/move
+16:00:55.378 [RIGHT] run mode REAL
+16:00:55.441 [RIGHT] runner v14 · GLOBAL MOVE START: R_GLR_BPCK_STP // MOVEJ // speed 15%
+16:00:56.059 [activity] engineer:dc15ab page: ROBOT · Button action
+16:00:56.126 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_GLR_BPCK_STP // MOVEJ
+16:00:56.143 [RIGHT] alix · global speed restored to 50 (ret=0)
+16:00:56.243 [RIGHT] movej global point {"name": "R_GLR_BPCK_STP", "speed": 15, "wait_s": 0.0} ret=0 (0.865 s) · gap 0.09 deg
+16:00:56.307 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:00:56.428 [activity] - job move done: RIGHT MoveJ to R_GLR_BPCK_STP
+16:01:09.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:01:39.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:02:09.985 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:02:39.988 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:03:09.195 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:03:09.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:03:39.980 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:04:09.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:04:39.979 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:05:09.979 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:05:39.984 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:06:09.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:06:39.980 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:07:09.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:07:17.789 [activity] engineer:dc15ab page: UI · Button action
+16:07:18.066 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:07:20.869 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:07:21.661 [activity] engineer:dc15ab page: UI · Input updated
+16:07:22.573 [RIGHT] program list · 17 programs
+16:07:22.679 [RIGHT] global points · 13 point(s)
+16:07:23.140 [activity] engineer:dc15ab page: UI · Setting changed
+16:07:23.141 [activity] engineer:dc15ab page: UI · Button action
+16:07:23.420 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:07:26.788 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+16:07:28.357 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:07:31.163 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+16:07:32.898 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:07:33.811 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:07:34.590 [activity] engineer:dc15ab page: UI · Input updated
+16:07:37.571 [activity] engineer:dc15ab page: UI · Setting changed
+16:07:37.936 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:07:38.835 [activity] engineer:dc15ab POST /api/robots/right/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+16:07:38.866 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+16:07:38.866 [activity] engineer:dc15ab page: ROBOT · Button action
+16:07:39.858 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:07:39.979 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:07:40.414 [activity] engineer:dc15ab POST /api/robots/right/points/move
+16:07:40.518 [RIGHT] run mode REAL
+16:07:40.673 [RIGHT] runner v14 · GLOBAL MOVE START: R_T05_STP // MOVEJ // speed 15%
+16:07:41.184 [activity] engineer:dc15ab page: ROBOT · Button action
+16:07:41.420 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:07:44.064 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_T05_STP // MOVEJ
+16:07:44.083 [RIGHT] alix · global speed restored to 50 (ret=0)
+16:07:44.197 [RIGHT] movej global point {"name": "R_T05_STP", "speed": 15, "wait_s": 0.0} ret=0 (3.677 s) · gap 0.06 deg
+16:07:44.293 [activity] - job move done: RIGHT MoveJ to R_T05_STP
+16:08:09.980 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:08:39.988 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:09:09.980 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:09:39.988 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:10:09.979 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:10:39.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:11:09.979 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:11:39.984 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:12:09.985 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:12:39.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:13:09.986 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:13:39.993 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:13:46.349 [RIGHT] ALERT ERROR · The controller reports 4105 (0x1009 Speed out of limit). (Check the arm and its pendant; clear the error there before running.)
+16:14:09.987 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:14:39.983 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:15:09.985 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:15:39.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:16:02.649 [RIGHT] ALERT ERROR · The controller reports 4105 (0x1009 Speed out of limit). (Check the arm and its pendant; clear the error there before running.)
+16:16:09.980 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:16:39.990 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:17:09.987 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:17:39.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:18:09.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:18:39.986 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:19:09.979 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:19:39.979 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:20:09.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:20:39.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:20:55.009 [activity] engineer:dc15ab page: UI · Button action
+16:20:55.225 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:20:57.482 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:20:58.220 [activity] engineer:dc15ab page: UI · Input updated
+16:20:58.220 [activity] engineer:dc15ab page: UI · Setting changed
+16:20:58.220 [activity] engineer:dc15ab page: UI · Button action
+16:20:58.747 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:21:09.980 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:21:16.133 [RIGHT] program list · 17 programs
+16:21:16.778 [activity] engineer:dc15ab page: UI · Button action
+16:21:17.009 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:21:18.558 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+16:21:21.974 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+16:21:25.007 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+16:21:39.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:22:09.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:22:10.703 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:20.963 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:21.078 [activity] engineer:dc15ab page: TRAJECTORY · Setting changed
+16:22:21.078 [activity] engineer:dc15ab page: TRAJECTORY · Input updated
+16:22:23.765 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:24.536 [activity] engineer:dc15ab page: TRAJECTORY · Input updated
+16:22:24.536 [activity] engineer:dc15ab page: TRAJECTORY · Setting changed
+16:22:24.788 [RIGHT] program list · 17 programs
+16:22:24.789 [activity] engineer:dc15ab POST /api/robots/right/programs/upload
+16:22:24.931 [RIGHT] rm_upload · upload R_T05_CDH.txt: 2716 points, 152.4 KB -> slot 21 on 192.168.1.103
+16:22:24.932 [RIGHT] rm_upload ·   slot 21 now: empty
+16:22:25.433 [activity] engineer:dc15ab page: TRAJECTORY · Button action
+16:22:25.666 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:28.774 [RIGHT] rm_upload ·   sent: ret=0 err_line=-1
+16:22:28.853 [RIGHT] rm_upload ·   VERIFIED: slot 21 holds '21_R_T05_CDH.txt', 156041 bytes (sent 156041)
+16:22:28.939 [RIGHT] upload {"program_id": 21, "file": "20261021_162224_R_T05_CDH.txt", "bytes": 156041} ret=0 (4.149 s)
+16:22:28.993 [activity] - job upload done: Upload R_T05_CDH.txt to RIGHT program 21
+16:22:34.816 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:38.427 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:38.547 [activity] engineer:dc15ab page: TRAJECTORY · Setting changed
+16:22:38.548 [activity] engineer:dc15ab page: TRAJECTORY · Input updated
+16:22:39.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:22:40.516 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:41.289 [activity] engineer:dc15ab page: TRAJECTORY · Input updated
+16:22:41.290 [activity] engineer:dc15ab page: TRAJECTORY · Setting changed
+16:22:41.290 [activity] engineer:dc15ab page: TRAJECTORY · Button action
+16:22:41.422 [RIGHT] program list · 18 programs
+16:22:41.423 [activity] engineer:dc15ab POST /api/robots/right/programs/upload
+16:22:41.641 [RIGHT] rm_upload · upload R_T06_RBGR.txt: 2546 points, 145.1 KB -> slot 22 on 192.168.1.103
+16:22:41.641 [RIGHT] rm_upload ·   slot 22 now: empty
+16:22:42.142 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:45.388 [RIGHT] rm_upload ·   sent: ret=0 err_line=-1
+16:22:45.461 [RIGHT] rm_upload ·   VERIFIED: slot 22 holds '22_R_T06_RBGR.txt', 148612 bytes (sent 148612)
+16:22:45.575 [RIGHT] upload {"program_id": 22, "file": "20261021_162241_R_T06_RBGR.txt", "bytes": 148612} ret=0 (4.151 s)
+16:22:45.765 [activity] - job upload done: Upload R_T06_RBGR.txt to RIGHT program 22
+16:22:48.747 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:52.019 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:52.152 [activity] engineer:dc15ab page: TRAJECTORY · Setting changed
+16:22:52.152 [activity] engineer:dc15ab page: TRAJECTORY · Input updated
+16:22:53.522 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:54.424 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:55.118 [RIGHT] program list · 19 programs
+16:22:55.120 [activity] engineer:dc15ab POST /api/robots/right/programs/upload
+16:22:55.176 [RIGHT] rm_upload · upload R_T07_GC.txt: 2596 points, 142.5 KB -> slot 23 on 192.168.1.103
+16:22:55.178 [RIGHT] rm_upload ·   slot 23 now: empty
+16:22:55.205 [activity] engineer:dc15ab page: TRAJECTORY · Input updated
+16:22:55.205 [activity] engineer:dc15ab page: TRAJECTORY · Setting changed
+16:22:55.206 [activity] engineer:dc15ab page: TRAJECTORY · Button action
+16:22:55.926 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:22:58.798 [RIGHT] rm_upload ·   sent: ret=0 err_line=-1
+16:22:58.866 [RIGHT] rm_upload ·   VERIFIED: slot 23 holds '23_R_T07_GC.txt', 145946 bytes (sent 145946)
+16:22:58.950 [RIGHT] upload {"program_id": 23, "file": "20261021_162254_R_T07_GC.txt", "bytes": 145946} ret=0 (3.827 s)
+16:22:59.059 [activity] - job upload done: Upload R_T07_GC.txt to RIGHT program 23
+16:23:02.381 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:23:06.455 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:23:06.592 [activity] engineer:dc15ab page: TRAJECTORY · Setting changed
+16:23:06.593 [activity] engineer:dc15ab page: TRAJECTORY · Input updated
+16:23:08.038 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:23:09.980 [activity] engineer:dc15ab page: SYSTEM · Session active
+16:23:10.479 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:23:11.270 [activity] engineer:dc15ab page: TRAJECTORY · Input updated
+16:23:21.830 [RIGHT] program list · 20 programs
+16:23:21.831 [activity] engineer:dc15ab POST /api/robots/right/programs/upload
+16:23:22.042 [RIGHT] rm_upload · upload R_T08_PRFL.txt: 1559 points, 83.5 KB -> slot 24 on 192.168.1.103
+16:23:22.043 [RIGHT] rm_upload ·   slot 24 now: empty
+16:23:22.309 [activity] engineer:dc15ab page: TRAJECTORY · Setting changed
+16:23:22.309 [activity] engineer:dc15ab page: TRAJECTORY · Button action
+16:23:22.685 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:23:24.224 [RIGHT] rm_upload ·   sent: ret=0 err_line=-1
+16:23:24.325 [RIGHT] rm_upload ·   VERIFIED: slot 24 holds '24_R_T08_PRFL.txt', 85526 bytes (sent 85526)
+16:23:24.418 [RIGHT] upload {"program_id": 24, "file": "20261021_162321_R_T08_PRFL.txt", "bytes": 85526} ret=0 (2.586 s)
+16:23:24.566 [activity] - job upload done: Upload R_T08_PRFL.txt to RIGHT program 24
+16:23:32.628 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+16:23:34.939 [activity] operator:dc15ab POST /api/auth/engineer/lock
+16:23:35.739 [activity] operator:dc15ab page: UI · Button action
+16:23:35.949 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:23:37.006 [LEFT] controller data · 24 programs; IO default 0; tracks not available
+16:23:37.148 [LEFT] global points · 17 point(s)
+16:23:37.346 [activity] operator:dc15ab page: UI · Button action
+16:23:37.346 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:23:37.562 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:23:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:23:43.606 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:23:43.680 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:23:47.437 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:23:47.439 [activity] operator:dc15ab page: UI · Button action
+16:23:47.807 [RIGHT] controller data · 21 programs; IO default 0; tracks not available
+16:23:47.993 [RIGHT] global points · 14 point(s)
+16:23:48.225 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:23:51.043 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:23:56.302 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:24:09.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:24:39.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:25:09.982 [activity] operator:dc15ab page: SYSTEM · Session active
+16:25:39.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:26:09.992 [activity] operator:dc15ab page: SYSTEM · Session active
+16:26:39.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:27:09.982 [activity] operator:dc15ab page: SYSTEM · Session active
+16:27:39.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:28:09.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:28:39.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:28:55.773 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:28:59.428 [activity] operator:dc15ab page: UI · Button action
+16:28:59.429 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:28:59.584 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:29:09.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:29:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:30:09.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:30:39.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:31:09.982 [activity] operator:dc15ab page: SYSTEM · Session active
+16:31:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:32:09.982 [activity] operator:dc15ab page: SYSTEM · Session active
+16:32:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:33:09.982 [activity] operator:dc15ab page: SYSTEM · Session active
+16:33:39.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:34:09.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:34:39.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:35:09.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:35:39.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:36:09.984 [activity] operator:dc15ab page: SYSTEM · Session active
+16:36:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:37:09.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:37:39.984 [activity] operator:dc15ab page: SYSTEM · Session active
+16:38:09.988 [activity] operator:dc15ab page: SYSTEM · Session active
+16:38:27.300 [LEFT] program list · 24 programs
+16:38:27.380 [RIGHT] program list · 21 programs
+16:38:27.517 [LEFT] global points · 17 point(s)
+16:38:27.572 [RIGHT] global points · 14 point(s)
+16:38:27.898 [activity] operator:dc15ab page: SETUP · Button action
+16:38:27.898 [activity] operator:dc15ab page: NAVIGATION · Open screen
+16:38:28.142 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:28.855 [activity] operator:dc15ab page: UI · Button action
+16:38:29.075 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:29.752 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+16:38:29.761 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/right
+16:38:30.544 [activity] operator:dc15ab page: SEQUENCE · Button action
+16:38:30.544 [activity] operator:dc15ab page: NAVIGATION · Open screen
+16:38:31.206 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:35.060 [activity] operator:dc15ab page: UI · Button action
+16:38:35.279 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:36.299 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:38:38.556 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:39.328 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:38:39.329 [activity] operator:dc15ab page: SYSTEM · Session active
+16:38:40.926 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:44.920 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:38:47.462 [activity] operator:dc15ab page: UI · Button action
+16:38:47.697 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:38:52.485 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:38:55.516 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:38:58.592 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:39:01.754 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:39:03.567 [activity] operator:dc15ab page: UI · Button action
+16:39:03.799 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:04.846 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:39:05.129 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:07.631 [activity] operator:dc15ab page: SYSTEM · Page slow
+16:39:09.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:39:12.728 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:13.144 [RIGHT] controller data · 21 programs; IO default 0; tracks not available
+16:39:13.226 [RIGHT] global points · 14 point(s)
+16:39:13.593 [activity] operator:dc15ab page: UI · Button action
+16:39:13.807 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:15.284 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:15.838 [activity] operator:dc15ab page: UI · Button action
+16:39:16.067 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:20.747 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:39:24.352 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:39:34.658 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:39:38.053 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:39.015 [activity] operator:dc15ab page: UI · Button action
+16:39:39.233 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:39.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:39:41.106 [activity] operator:dc15ab page: UI · Button action
+16:39:41.323 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:39:45.389 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:39:52.483 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:39:56.380 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:39:59.736 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:40:03.171 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:40:06.847 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:40:09.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:40:39.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:40:58.688 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:41:04.270 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:41:07.343 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:41:09.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:41:17.749 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:41:21.332 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:41:24.430 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:41:27.542 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:41:35.877 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:41:39.297 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:41:39.298 [activity] operator:dc15ab page: SYSTEM · Session active
+16:42:09.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:42:39.987 [activity] operator:dc15ab page: SYSTEM · Session active
+16:43:09.985 [activity] operator:dc15ab page: SYSTEM · Session active
+16:43:39.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:43:46.178 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:43:50.370 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:43:53.957 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:44:04.501 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+16:44:05.343 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:44:09.771 [activity] operator:dc15ab page: UI · Button action
+16:44:09.772 [activity] operator:dc15ab page: SYSTEM · Session active
+16:44:09.982 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:44:12.811 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:44:22.219 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:44:23.658 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+16:44:24.505 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:44:29.589 [activity] operator:dc15ab page: UI · Button action
+16:44:29.828 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:44:32.627 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:44:39.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:44:41.417 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:44:47.399 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+16:44:48.293 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:45:09.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:45:39.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:46:07.117 [activity] operator:dc15ab page: UI · Button action
+16:46:07.327 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:46:09.985 [activity] operator:dc15ab page: SYSTEM · Session active
+16:46:09.994 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:46:18.322 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:46:27.471 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+16:46:28.334 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:46:32.714 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:46:35.656 [activity] operator:dc15ab page: UI · Button action
+16:46:35.706 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/from-project
+16:46:35.870 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:46:35.884 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+16:46:39.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:46:43.067 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:47:09.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:47:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:47:43.398 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:48:09.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:48:39.982 [activity] operator:dc15ab page: SYSTEM · Session active
+16:49:09.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:49:17.774 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:49:34.254 [activity] operator:dc15ab page: UI · Button action
+16:49:34.481 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:49:39.985 [activity] operator:dc15ab page: SYSTEM · Session active
+16:49:49.520 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:49:52.538 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:50:09.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:50:21.401 [LEFT] controller data · 24 programs; IO default 0; tracks not available
+16:50:21.463 [activity] operator:dc15ab page: UI · Button action
+16:50:21.699 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:21.788 [LEFT] global points · 17 point(s)
+16:50:27.487 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:50:30.425 [activity] operator:dc15ab page: UI · Button action
+16:50:30.638 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:31.515 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:50:31.517 [activity] operator:dc15ab page: UI · Button action
+16:50:31.926 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:35.639 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:50:42.313 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+16:50:42.955 [activity] operator:dc15ab page: UI · Setting changed
+16:50:42.956 [activity] operator:dc15ab page: UI · Input updated
+16:50:43.183 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:43.782 [activity] operator:dc15ab page: UI · Button action
+16:50:43.994 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:45.275 [activity] operator:dc15ab page: UI · Button action
+16:50:45.486 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:47.436 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:50:50.921 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:50:53.861 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:54.315 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:50:54.315 [activity] operator:dc15ab page: PROJECT · Setting changed
+16:50:54.316 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+16:50:55.213 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:50:55.595 [activity] operator:dc15ab page: PROJECT · Input updated
+16:50:55.595 [activity] operator:dc15ab page: UI · Button action
+16:50:56.209 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:51:01.753 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:51:05.053 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:51:07.630 [activity] operator:dc15ab page: SYSTEM · Page slow
+16:51:07.630 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:51:08.020 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:51:09.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:51:12.058 [activity] operator:dc15ab page: UI · Button action
+16:51:12.301 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:51:16.452 [activity] operator:dc15ab page: UI · Button action
+16:51:16.685 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:51:39.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:52:09.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:52:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:53:09.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:53:39.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:54:09.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:54:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+16:55:09.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:55:11.709 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:55:11.710 [activity] operator:dc15ab page: UI · Button action
+16:55:12.262 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:55:37.977 [activity] operator:dc15ab page: SIMULATION · Button action
+16:55:37.977 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:55:38.210 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:55:39.983 [activity] operator:dc15ab page: SYSTEM · Session active
+16:55:53.685 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_164635_L_merge_1.txt/tune
+16:55:54.402 [activity] operator:dc15ab page: UI · Button action
+16:55:54.402 [activity] operator:dc15ab page: NAVIGATION · Open screen
+16:55:54.402 [activity] operator:dc15ab page: NAVIGATION · Teaching stage changed
+16:55:54.729 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:55:57.802 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:56:00.489 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:09.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:56:12.664 [activity] operator:dc15ab page: SETUP · Button action
+16:56:12.899 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:15.292 [activity] operator:dc15ab page: TRAJECTORY · Button action
+16:56:15.378 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:56:16.515 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:17.614 [activity] operator:dc15ab page: UI · Button action
+16:56:17.913 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:18.927 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:56:22.159 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:56:31.988 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:56:39.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:56:55.958 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:56:56.584 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/units/MERGE-L-001/settings
+16:56:57.068 [activity] operator:dc15ab page: UI · Button action
+16:56:57.309 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:00.230 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:00.612 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:57:04.342 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:04.996 [activity] operator:dc15ab page: TUNING · Input updated
+16:57:04.996 [activity] operator:dc15ab page: TUNING · Input updated
+16:57:05.482 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/units/MERGE-L-001/settings
+16:57:06.071 [activity] operator:dc15ab page: TUNING · Setting changed
+16:57:06.072 [activity] operator:dc15ab page: UI · Button action
+16:57:06.452 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:07.630 [activity] operator:dc15ab page: SYSTEM · Page slow
+16:57:08.966 [activity] operator:dc15ab page: UI · Button action
+16:57:08.967 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:57:09.176 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:09.985 [activity] operator:dc15ab page: SYSTEM · Session active
+16:57:10.202 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/units/MERGE-L-001/optimise
+16:57:10.964 [activity] operator:dc15ab page: UI · Button action
+16:57:11.174 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:11.915 [activity] - job optimise done: Tune MERGE-L-001 (breaks L2 Joint speed 1.96 x limit (limit 1 x limit); L3 Joint acceleration 20594 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 68.02 mm (limit 10 mm), shown, not enforced)
+16:57:14.035 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:57:20.125 [activity] operator:dc15ab page: UI · Button action
+16:57:20.496 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:23.322 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:57:24.968 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:27.819 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:28.339 [activity] operator:dc15ab page: TUNING · Input updated
+16:57:28.339 [activity] operator:dc15ab page: TUNING · Input updated
+16:57:35.168 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/units/MERGE-L-001/settings
+16:57:35.804 [activity] operator:dc15ab page: TUNING · Setting changed
+16:57:35.804 [activity] operator:dc15ab page: UI · Button action
+16:57:36.159 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:37.329 [activity] operator:dc15ab page: UI · Button action
+16:57:37.542 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:37.994 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/units/MERGE-L-001/optimise
+16:57:38.700 [activity] - job optimise done: Tune MERGE-L-001 (breaks L2 Joint speed 1.96 x limit (limit 1 x limit); L3 Joint acceleration 20590 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 68.03 mm (limit 10 mm), shown, not enforced)
+16:57:38.777 [activity] operator:dc15ab page: UI · Button action
+16:57:38.779 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:57:39.038 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:39.979 [activity] operator:dc15ab page: SYSTEM · Session active
+16:57:42.742 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:57:49.089 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:57:50.714 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/units/MERGE-L-001/keep
+16:57:50.975 [activity] operator:dc15ab page: UI · Button action
+16:57:51.194 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:54.901 [activity] operator:dc15ab page: UI · Button action
+16:57:55.328 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:55.919 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:57:59.838 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:09.548 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:09.548 [activity] operator:dc15ab page: SYSTEM · Session active
+16:58:09.974 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/units/MERGE-L-001/keep
+16:58:10.378 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+16:58:10.388 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/right
+16:58:10.941 [activity] operator:dc15ab page: SIMULATION · Button action
+16:58:10.941 [activity] operator:dc15ab page: NAVIGATION · Open screen
+16:58:10.973 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:13.854 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:17.911 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:21.653 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:25.536 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:30.396 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:32.845 [activity] operator:dc15ab page: UI · Button action
+16:58:32.867 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:33.208 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:33.324 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_165750_L_merge_1_trim_mean_scale_processed.txt/timeline
+16:58:38.053 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:39.981 [activity] operator:dc15ab page: SYSTEM · Session active
+16:58:41.134 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:58:57.395 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:59:07.640 [activity] operator:dc15ab page: SYSTEM · Page slow
+16:59:10.086 [activity] operator:dc15ab page: SYSTEM · Session active
+16:59:12.135 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:59:15.498 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+16:59:33.404 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:59:36.455 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+16:59:39.983 [activity] operator:dc15ab page: SYSTEM · Session active
+17:00:09.983 [activity] operator:dc15ab page: SYSTEM · Session active
+17:00:39.981 [activity] operator:dc15ab page: SYSTEM · Session active
+17:01:09.982 [activity] operator:dc15ab page: SYSTEM · Session active
+17:01:24.214 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:01:39.984 [activity] operator:dc15ab page: SYSTEM · Session active
+17:01:51.601 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:01:52.383 [activity] operator:dc15ab page: ROBOT · Input updated
+17:01:52.708 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:01:53.497 [activity] operator:dc15ab page: ROBOT · Input updated
+17:01:55.430 [activity] operator:dc15ab page: ROBOT · Setting changed
+17:01:55.862 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:02.564 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:03.345 [activity] operator:dc15ab page: TRAJECTORY · Input updated
+17:02:06.119 [LEFT] program list · 24 programs
+17:02:06.250 [LEFT] global points · 17 point(s)
+17:02:06.410 [activity] operator:dc15ab page: TRAJECTORY · Setting changed
+17:02:06.410 [activity] operator:dc15ab page: UI · Button action
+17:02:06.829 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:09.981 [activity] operator:dc15ab page: SYSTEM · Session active
+17:02:10.545 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_165750_L_merge_1_trim_mean_scale_processed.txt/upload -> REFUSED: L_merge_1_trim_mean_scale_processed.txt breaks L2 Joint speed 1.96 x limit (limit 1 x limit); L3 Joint acceleration 20590 deg/s^2 (limit 612 deg/s^2). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+17:02:11.304 [activity] operator:dc15ab page: TRAJECTORY · Button action
+17:02:11.516 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:13.468 [LEFT] program list · 24 programs
+17:02:13.469 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_165750_L_merge_1_trim_mean_scale_processed.txt/upload
+17:02:13.720 [LEFT] rm_upload · upload L_merge_1_trim_mean_scale_proces.txt: 6111 points, 344.8 KB -> slot 80 on 192.168.1.10
+17:02:13.720 [LEFT] rm_upload ·   slot 80 now: empty
+17:02:13.916 [activity] operator:dc15ab page: UI · Button action
+17:02:14.143 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:22.184 [LEFT] rm_upload ·   sent: ret=0 err_line=-1
+17:02:22.722 [LEFT] rm_upload ·   VERIFIED: slot 80 holds '80_L_merge_1_trim_mean_scale_pro', 353035 bytes (sent 353035)
+17:02:22.853 [LEFT] upload {"program_id": 80, "file": "20261021_165750_L_merge_1_trim_mean_scale_processed.txt", "bytes": 353035} ret=0 (9.383 s)
+17:02:23.306 [activity] - job upload done: Upload L_merge_1_trim_mean_scale_processed.txt to program 80
+17:02:23.930 [LEFT] program list · 25 programs
+17:02:24.134 [LEFT] global points · 17 point(s)
+17:02:32.977 [LEFT] program list · 25 programs
+17:02:33.255 [LEFT] global points · 17 point(s)
+17:02:33.417 [activity] operator:dc15ab page: UI · Button action
+17:02:33.629 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+17:02:40.807 [LEFT] controller data · 25 programs; IO default 0; tracks not available
+17:02:41.097 [LEFT] global points · 17 point(s)
+17:02:41.147 [activity] operator:dc15ab page: UI · Button action
+17:02:41.424 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:42.440 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:02:45.464 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:02:46.856 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:46.985 [activity] operator:dc15ab page: UI · Setting changed
+17:02:46.986 [activity] operator:dc15ab page: UI · Input updated
+17:02:50.841 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:02:53.164 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:57.693 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:58.682 [activity] operator:dc15ab page: UI · Button action
+17:02:58.918 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:00.725 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_165750_L_merge_1_trim_mean_scale_processed.txt/name -> REFUSED: L_merge_1.txt is already the name of a LEFT merge in this project.
+17:03:01.003 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:03:01.424 [activity] operator:dc15ab page: UI · Button action
+17:03:01.662 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:05.276 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:07.333 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:08.120 [activity] operator:dc15ab page: TRAJECTORY · Input updated
+17:03:08.684 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:09.473 [activity] operator:dc15ab page: TRAJECTORY · Input updated
+17:03:09.474 [activity] operator:dc15ab page: SYSTEM · Session active
+17:03:10.070 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:10.857 [activity] operator:dc15ab page: TRAJECTORY · Input updated
+17:03:14.821 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_165750_L_merge_1_trim_mean_scale_processed.txt/name
+17:03:15.044 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:03:15.309 [activity] operator:dc15ab page: TRAJECTORY · Setting changed
+17:03:15.309 [activity] operator:dc15ab page: UI · Button action
+17:03:15.685 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:18.098 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_165750_L_merge_1_trim_mean_scale_processed.txt/upload -> REFUSED: L_merge_1_P.txt breaks L2 Joint speed 1.96 x limit (limit 1 x limit); L3 Joint acceleration 20590 deg/s^2 (limit 612 deg/s^2). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+17:03:18.804 [activity] operator:dc15ab page: TRAJECTORY · Button action
+17:03:19.023 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:20.006 [LEFT] program list · 25 programs
+17:03:20.007 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_165750_L_merge_1_trim_mean_scale_processed.txt/upload
+17:03:20.206 [activity] operator:dc15ab page: UI · Button action
+17:03:20.439 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:20.559 [LEFT] program list · 25 programs
+17:03:20.885 [LEFT] global points · 17 point(s)
+17:03:27.867 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_165750_L_merge_1_trim_mean_scale_processed.txt/upload -> REFUSED: L_merge_1_P.txt breaks L2 Joint speed 1.96 x limit (limit 1 x limit); L3 Joint acceleration 20590 deg/s^2 (limit 612 deg/s^2). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+17:03:28.628 [activity] operator:dc15ab page: TRAJECTORY · Button action
+17:03:28.861 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:29.279 [LEFT] program list · 25 programs
+17:03:29.279 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_165750_L_merge_1_trim_mean_scale_processed.txt/upload
+17:03:29.795 [activity] operator:dc15ab page: UI · Button action
+17:03:30.015 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:32.553 [LEFT] controller data · 25 programs; IO default 0; tracks not available
+17:03:32.674 [LEFT] global points · 17 point(s)
+17:03:33.044 [activity] operator:dc15ab page: UI · Button action
+17:03:33.263 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:36.949 [LEFT] controller data · 25 programs; IO default 0; tracks not available
+17:03:37.101 [LEFT] global points · 17 point(s)
+17:03:37.387 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:39.389 [activity] operator:dc15ab page: UI · Button action
+17:03:39.389 [activity] operator:dc15ab page: SYSTEM · Session active
+17:03:39.613 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:43.809 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:03:47.087 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:04:09.981 [activity] operator:dc15ab page: SYSTEM · Session active
+17:04:11.853 [activity] operator:dc15ab POST /api/auth/engineer/lock
+17:04:12.652 [activity] operator:dc15ab page: UI · Button action
+17:04:12.866 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:14.775 [activity] engineer:dc15ab POST /api/auth/engineer
+17:04:15.137 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:20.525 [LEFT] program list · 25 programs
+17:04:20.780 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:04:20.781 [activity] engineer:dc15ab page: UI · Button action
+17:04:21.244 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:22.485 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:23.704 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:24.478 [activity] engineer:dc15ab page: ROBOT · Input updated
+17:04:27.555 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:04:28.922 [activity] engineer:dc15ab page: ROBOT · Setting changed
+17:04:29.294 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:30.652 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:04:31.461 [activity] engineer:dc15ab POST /api/robots/left/programs/run -> REFUSED: Running program 80 on the real robot needs your confirmation.
+17:04:32.261 [activity] engineer:dc15ab page: UI · Button action
+17:04:32.475 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:34.957 [activity] engineer:dc15ab page: UI · Button action
+17:04:35.181 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:39.445 [activity] engineer:dc15ab page: ROBOT · Button action
+17:04:39.446 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:04:39.447 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:04:39.659 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:51.887 [activity] engineer:dc15ab page: UI · Button action
+17:04:52.122 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:52.463 [activity] engineer:dc15ab POST /api/robots/left/hand -> REFUSED: Moving the hand on the real robot needs your confirmation.
+17:04:53.263 [activity] engineer:dc15ab page: ROBOT · Button action
+17:04:53.486 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:54.531 [activity] engineer:dc15ab POST /api/robots/left/hand
+17:04:54.980 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:04:55.066 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+17:04:55.130 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 1000, 1000, 1000, 997, 981]; law 0.86 s)
+17:04:55.288 [activity] engineer:dc15ab page: ROBOT · Button action
+17:04:55.553 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:04:56.084 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 592, 981] after 0.88 s (per-channel travel [0, 0, 0, 0, 410, 0])
+17:04:56.085 [LEFT] alix · ** hand: settled without arriving — worst channel 5 is 592 counts short (target 0, readback 592)
+17:04:56.185 [LEFT] hand move {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": 500} ret=0 (0.879 s) · read back [1000, 1000, 1000, 1000, 592, 981] (settled short of the target: stopped on force)
+17:04:56.186 [activity] - job hand done: Hand LEFT
+17:05:09.991 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:05:09.991 [activity] engineer:dc15ab page: ROBOT · Input updated
+17:05:09.997 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:05:10.639 [activity] engineer:dc15ab POST /api/robots/left/pole -> REFUSED: Moving the pole on the real robot needs your confirmation.
+17:05:11.313 [activity] engineer:dc15ab page: ROBOT · Setting changed
+17:05:11.313 [activity] engineer:dc15ab page: ROBOT · Button action
+17:05:11.664 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:05:11.952 [activity] engineer:dc15ab POST /api/robots/left/pole
+17:05:11.966 [LEFT] alix · pole: 150 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 3.56 s, timeout 10.7 s)
+17:05:12.728 [activity] engineer:dc15ab page: ROBOT · Button action
+17:05:12.939 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:05:14.660 [LEFT] alix · pole: at 51 mm after 2.69 s (verified_by=getter, moved 99 mm through 43 distinct readings)
+17:05:14.766 [LEFT] pole move {"mm": 50.0, "speed_pct": 50} ret=0 (2.687 s) · final 0.051 m, verified by getter
+17:05:14.768 [activity] - job pole done: Pole LEFT to 50 mm
+17:05:19.814 [activity] engineer:dc15ab page: UI · Button action
+17:05:20.055 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:05:23.219 [activity] engineer:dc15ab POST /api/robots/left/programs/run -> REFUSED: Running program 80 on the real robot needs your confirmation.
+17:05:24.018 [activity] engineer:dc15ab page: UI · Button action
+17:05:24.238 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:05:24.441 [activity] engineer:dc15ab POST /api/robots/left/programs/run
+17:05:24.778 [LEFT] program list · 25 programs
+17:05:25.175 [LEFT] program list · 25 programs
+17:05:25.214 [activity] engineer:dc15ab page: ROBOT · Button action
+17:05:25.218 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:05:25.286 [LEFT] run mode REAL
+17:05:25.471 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:05:25.486 [LEFT] rm_upload · run slot 80 (80_L_merge_1_trim_mean_scale_pro) on 192.168.1.10; transit speed 15 %
+17:05:25.487 [LEFT] rm_upload ·   the controller first moves the arm to the program's first point: up to 56.0 deg on J7 — keep that path clear
+17:05:39.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:06:09.998 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:06:20.767 [activity] operator:dc15ab POST /api/auth/engineer/lock
+17:06:21.568 [activity] operator:dc15ab page: UI · Button action
+17:06:21.807 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:23.234 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:06:26.582 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:06:27.763 [activity] operator:dc15ab page: TRAJECTORY · Setting changed
+17:06:27.764 [activity] operator:dc15ab page: TRAJECTORY · Input updated
+17:06:28.001 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:31.753 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:06:34.233 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_164635_L_merge_1.txt/upload -> REFUSED: L_merge_1.txt breaks L1 Joint limits -9.38 deg (limit 0.5 deg); L2 Joint speed 1.57 x limit (limit 1 x limit); L3 Joint acceleration 6451 deg/s^2 (limit 612 deg/s^2). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+17:06:34.935 [activity] operator:dc15ab page: TRAJECTORY · Button action
+17:06:35.172 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:35.767 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_164635_L_merge_1.txt/upload -> REFUSED: The LEFT arm is busy: LEFT program 80 on the real arm.
+17:06:36.481 [activity] operator:dc15ab page: UI · Button action
+17:06:36.704 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:39.984 [activity] operator:dc15ab page: SYSTEM · Session active
+17:06:45.403 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:48.573 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:07:07.631 [activity] operator:dc15ab page: SYSTEM · Page slow
+17:07:09.992 [activity] operator:dc15ab page: SYSTEM · Session active
+17:07:12.637 [LEFT] ALERT ERROR · LEFT: its controller has not answered rm_set_program_id_run for 107 s (running program 80). Lite gives that connection up and connects the arm again. What each thread was doing: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/threads-170712.txt. (Press the red E-stop button if the arm is moving.)
+17:07:12.640 [activity] - job run failed: LEFT program 80 on the real arm -> REFUSED: The LEFT controller stopped answering (rm_set_program_id_run, 107 s): Lite connects it again.
+17:07:12.641 [LEFT] ALERT ERROR · LEFT program 80 on the real arm: The LEFT controller stopped answering (rm_set_program_id_run, 107 s): Lite connects it again. (Check the arm, then try again once it is connected.)
+17:07:12.653 [LEFT] restore run mode · not restored (The LEFT controller's connection was given up (abandoned): the arm must be connected again.)
+17:07:13.070 [LEFT] ALERT ERROR · The controller reports 4105 (0x1009 Speed out of limit). (Check the arm and its pendant; clear the error there before running.)
+17:07:13.171 [LEFT] read global speed ret=0 · not reported
+17:07:13.172 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+17:07:13.273 [LEFT] read drag sensitivity ret=0 · 100 %
+17:07:13.483 [LEFT] run mode REAL
+17:07:13.484 [LEFT] ALERT GOOD · LEFT: connected again. The call that never came back is left behind; press Recover before moving.
+17:07:14.628 [LEFT] program list · 25 programs
+17:07:14.814 [LEFT] global points · 17 point(s)
+17:07:39.984 [activity] operator:dc15ab page: SYSTEM · Session active
+17:07:51.491 [activity] operator:dc15ab POST /api/robots/left/recover
+17:07:52.286 [activity] operator:dc15ab page: UI · Button action
+17:07:52.516 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:00.410 [activity] operator:dc15ab page: UI · Button action
+17:08:00.646 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:02.048 [activity] operator:dc15ab page: UI · Button action
+17:08:02.282 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:02.923 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_164635_L_merge_1.txt/upload -> REFUSED: L_merge_1.txt breaks L1 Joint limits -9.38 deg (limit 0.5 deg); L2 Joint speed 1.57 x limit (limit 1 x limit); L3 Joint acceleration 6451 deg/s^2 (limit 612 deg/s^2). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+17:08:03.636 [activity] operator:dc15ab page: TRAJECTORY · Button action
+17:08:03.896 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:06.962 [LEFT] program list · 25 programs
+17:08:06.963 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_164635_L_merge_1.txt/upload -> REFUSED: Program 80 on the LEFT controller already holds “80_L_merge_1_trim_mean_scale_pro”.
+17:08:07.277 [activity] operator:dc15ab page: UI · Button action
+17:08:07.498 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:08.644 [LEFT] program list · 25 programs
+17:08:08.649 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_164635_L_merge_1.txt/upload
+17:08:08.975 [LEFT] rm_upload · upload L_merge_1.txt: 6294 points, 355.2 KB -> slot 80 on 192.168.1.10
+17:08:08.976 [LEFT] rm_upload ·   slot 80 now: 80_L_merge_1_trim_mean_scale_pro (344.8 KB) — it will be REPLACED
+17:08:09.062 [activity] operator:dc15ab page: UI · Button action
+17:08:09.290 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:09.982 [activity] operator:dc15ab page: SYSTEM · Session active
+17:08:17.976 [LEFT] rm_upload ·   sent: ret=0 err_line=-1
+17:08:18.397 [LEFT] rm_upload ·   VERIFIED: slot 80 holds '80_L_merge_1.txt', 363678 bytes (sent 363678)
+17:08:18.497 [LEFT] upload {"program_id": 80, "file": "20261021_164635_L_merge_1.txt", "bytes": 363678} ret=0 (9.847 s)
+17:08:18.823 [activity] - job upload done: Upload L_merge_1.txt to program 80
+17:08:19.553 [LEFT] program list · 25 programs
+17:08:19.700 [LEFT] global points · 17 point(s)
+17:08:23.335 [activity] operator:dc15ab POST /api/auth/engineer/lock
+17:08:24.136 [activity] operator:dc15ab page: UI · Button action
+17:08:24.373 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:26.946 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:28.760 [activity] engineer:dc15ab POST /api/auth/engineer
+17:08:28.972 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:33.693 [LEFT] program list · 25 programs
+17:08:34.201 [activity] engineer:dc15ab page: UI · Button action
+17:08:34.202 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:08:34.431 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:36.671 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:37.178 [activity] engineer:dc15ab POST /api/robots/left/programs/run -> REFUSED: Running program 80 on the real robot needs your confirmation.
+17:08:37.742 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:08:37.743 [activity] engineer:dc15ab page: UI · Button action
+17:08:38.208 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:38.459 [activity] engineer:dc15ab POST /api/robots/left/programs/run
+17:08:38.868 [LEFT] program list · 25 programs
+17:08:39.227 [activity] engineer:dc15ab page: ROBOT · Button action
+17:08:39.228 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:08:39.372 [LEFT] program list · 25 programs
+17:08:39.464 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:08:39.636 [LEFT] run mode REAL
+17:08:40.173 [LEFT] rm_upload · run slot 80 (80_L_merge_1.txt) on 192.168.1.10; transit speed 15 %
+17:08:40.174 [LEFT] rm_upload ·   the controller first moves the arm to the program's first point: up to 68.7 deg on J7 — keep that path clear
+17:08:43.566 [LEFT] rm_upload ·   running (3.3 s)
+17:08:55.660 [LEFT] rm_upload ·   !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 15.5 s
+17:08:55.661 [LEFT] ALERT WARN · LEFT Real run of program 80: the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 15.5 s. (Check the arm; a code that stops the program ends the run.)
+17:09:09.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:09:30.454 [LEFT] rm_upload ·   global speed restored to 50 % (ret=0)
+17:09:30.479 [LEFT] rm_upload ·   RUN COMPLETE: 50.3 s, no error
+17:09:30.563 [LEFT] run {"program_id": 80, "points": 6294, "transit_speed": 15, "restore_speed": 50} ret=0 (50.927 s)
+17:09:30.673 [activity] - job run done: LEFT program 80 on the real arm
+17:09:39.980 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:09:45.548 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:10:09.981 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:10:10.887 [activity] operator:dc15ab POST /api/auth/engineer/lock
+17:10:11.689 [activity] operator:dc15ab page: UI · Button action
+17:10:11.914 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:10:13.392 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:17.436 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:21.275 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:21.275 [activity] operator:dc15ab page: UI · Button action
+17:10:21.662 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:10:30.678 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:33.749 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:37.477 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:39.984 [activity] operator:dc15ab page: SYSTEM · Session active
+17:10:39.984 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:44.256 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:47.507 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:50.557 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:53.673 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:10:57.291 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:11:01.727 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:11:04.921 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:11:05.734 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:11:07.038 [activity] operator:dc15ab page: UI · Button action
+17:11:07.270 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:11:09.983 [activity] operator:dc15ab page: SYSTEM · Session active
+17:11:09.983 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:11:13.155 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:11:18.619 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:11:19.307 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:11:27.983 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/from-project
+17:11:28.279 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:11:28.296 [activity] operator:dc15ab page: UI · Button action
+17:11:28.547 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:11:39.980 [activity] operator:dc15ab page: SYSTEM · Session active
+17:12:09.983 [activity] operator:dc15ab page: SYSTEM · Session active
+17:12:15.407 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:12:18.300 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:12:18.636 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:12:18.636 [activity] operator:dc15ab page: ROBOT · Input updated
+17:12:19.292 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_171127_L_merge_2.txt/upload -> REFUSED: L_merge_2.txt breaks L2 Joint speed 1.83 x limit (limit 1 x limit); L3 Joint acceleration 6550 deg/s^2 (limit 612 deg/s^2). Lite does not hold manual tuning to the limits: the robot's own protections decide.
+17:12:19.929 [activity] operator:dc15ab page: ROBOT · Setting changed
+17:12:19.930 [activity] operator:dc15ab page: TRAJECTORY · Button action
+17:12:20.260 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:12:21.201 [LEFT] program list · 25 programs
+17:12:21.202 [activity] operator:dc15ab POST /api/projects/alix_mvbvk1fk_zti6s/merges/left/20261021_171127_L_merge_2.txt/upload
+17:12:21.515 [activity] operator:dc15ab page: UI · Button action
+17:12:21.594 [LEFT] rm_upload · upload L_merge_2.txt: 2996 points, 168.9 KB -> slot 81 on 192.168.1.10
+17:12:21.595 [LEFT] rm_upload ·   slot 81 now: empty
+17:12:21.734 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:12:23.897 [activity] operator:dc15ab page: NAVIGATION · Scrolled view
+17:12:26.109 [LEFT] rm_upload ·   sent: ret=0 err_line=-1
+17:12:26.466 [LEFT] rm_upload ·   VERIFIED: slot 81 holds '81_L_merge_2.txt', 172963 bytes (sent 172963)
+17:12:26.591 [LEFT] upload {"program_id": 81, "file": "20261021_171127_L_merge_2.txt", "bytes": 172963} ret=0 (5.388 s)
+17:12:26.849 [activity] - job upload done: Upload L_merge_2.txt to program 81
+17:12:27.487 [LEFT] program list · 26 programs
+17:12:27.640 [LEFT] global points · 17 point(s)
+17:12:28.936 [activity] operator:dc15ab POST /api/auth/engineer/lock
+17:12:29.737 [activity] operator:dc15ab page: UI · Button action
+17:12:29.957 [activity] operator:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:12:31.994 [activity] engineer:dc15ab POST /api/auth/engineer
+17:12:32.304 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:12:39.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:13:09.985 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:13:39.983 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:14:09.986 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:14:39.988 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:14:48.537 [LEFT] program list · 26 programs
+17:14:49.021 [activity] engineer:dc15ab page: UI · Button action
+17:14:49.022 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:14:49.244 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:53.270 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:14:54.773 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:14:56.299 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:15:01.544 [activity] engineer:dc15ab page: ROBOT · Button action
+17:15:01.545 [activity] engineer:dc15ab page: NAVIGATION · Scrolled view
+17:15:01.782 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:15:09.985 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:15:12.306 [activity] engineer:dc15ab POST /api/robots/left/pole -> REFUSED: Moving the pole on the real robot needs your confirmation.
+17:15:13.108 [activity] engineer:dc15ab page: ROBOT · Button action
+17:15:13.343 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:15:14.027 [activity] engineer:dc15ab POST /api/robots/left/pole
+17:15:14.088 [LEFT] alix · pole: 50 mm -> 200 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 6.58 s, timeout 19.8 s)
+17:15:14.809 [activity] engineer:dc15ab page: ROBOT · Button action
+17:15:15.069 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:15:17.756 [LEFT] alix · pole: at 198 mm after 3.66 s (verified_by=getter, moved 148 mm through 58 distinct readings)
+17:15:17.879 [LEFT] pole move {"mm": 200.0, "speed_pct": 50} ret=0 (3.661 s) · final 0.198 m, verified by getter
+17:15:17.881 [activity] - job pole done: Pole LEFT to 200 mm
+17:15:20.575 [activity] engineer:dc15ab page: UI · Button action
+17:15:20.810 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:15:22.141 [activity] engineer:dc15ab POST /api/robots/left/programs/run -> REFUSED: Running program 81 on the real robot needs your confirmation.
+17:15:22.937 [activity] engineer:dc15ab page: UI · Button action
+17:15:23.165 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:15:23.508 [activity] engineer:dc15ab POST /api/robots/left/programs/run
+17:15:23.757 [LEFT] program list · 26 programs
+17:15:24.066 [LEFT] program list · 26 programs
+17:15:24.258 [LEFT] run mode REAL
+17:15:24.283 [activity] engineer:dc15ab page: ROBOT · Button action
+17:15:24.497 [activity] engineer:dc15ab PUT /api/projects/alix_mvbvk1fk_zti6s
+17:15:24.957 [LEFT] rm_upload · run slot 81 (81_L_merge_2.txt) on 192.168.1.10; transit speed 15 %
+17:15:24.960 [LEFT] rm_upload ·   the controller first moves the arm to the program's first point: up to 0.0 deg on J3
+17:15:26.960 [LEFT] rm_upload ·   running (2.0 s)
+17:15:27.522 [LEFT] rm_upload ·   !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 2.5 s
+17:15:27.523 [LEFT] ALERT WARN · LEFT Real run of program 81: the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 2.5 s. (Check the arm; a code that stops the program ends the run.)
+17:15:39.982 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:15:45.209 [LEFT] rm_upload ·   global speed restored to 50 % (ret=0)
+17:15:45.213 [LEFT] rm_upload ·   RUN COMPLETE: 20.3 s, no error
+17:15:45.300 [LEFT] run {"program_id": 81, "points": 2996, "transit_speed": 15, "restore_speed": 50} ret=0 (21.041 s)
+17:15:45.408 [activity] - job run done: LEFT program 81 on the real arm
+17:16:09.983 [activity] engineer:dc15ab page: SYSTEM · Session active
+17:16:13.208 [LEFT] ALERT ERROR · LEFT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)
+17:16:13.209 [RIGHT] ALERT ERROR · RIGHT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)
+17:16:52.953 [activity] - page: NAVIGATION · Open screen
+17:16:52.954 [activity] - page: SYSTEM · ASL frontend initialized
+17:17:08.458 [activity] - POST /api/auth/login
+17:17:08.484 [activity] operator:e43b3e page: UI · Button action
+17:17:09.549 [activity] operator:e43b3e page: AUTH · Operator login
+17:17:09.550 [activity] operator:e43b3e page: NAVIGATION · Open screen
+17:17:15.118 [activity] operator:e43b3e page: PROJECT · Button action
+17:17:17.174 [activity] operator:e43b3e page: NAVIGATION · Task loaded
+17:17:17.184 [activity] operator:e43b3e page: SETUP · Arm selected
+17:17:17.200 [activity] operator:e43b3e page: NAVIGATION · Teaching stage changed
+17:17:17.200 [activity] operator:e43b3e page: SETUP · Arm selected
+17:17:17.209 [activity] operator:e43b3e page: NAVIGATION · Open screen
+17:17:26.157 [activity] operator:e43b3e page: UI · Button action
+17:17:26.160 [activity] operator:e43b3e page: SYSTEM · 3D device
+17:17:26.219 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:17:28.579 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:17:29.847 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:17:29.931 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:17:31.646 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+17:17:39.292 [activity] operator:e43b3e page: SYSTEM · Session active
+17:17:52.951 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:17:57.126 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:01.044 [activity] operator:e43b3e POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+17:18:01.846 [activity] operator:e43b3e page: ROBOT · Button action
+17:18:01.848 [activity] operator:e43b3e page: ROBOT · Robot & mode opened
+17:18:02.159 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:03.346 [activity] operator:e43b3e page: UI · Button action
+17:18:03.572 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:03.840 [LEFT] realtime push · left on toward this computer (port 8089), so this arm's connection had bound the port its CanFD capture needs: turned off, and the arm connected again in a fresh process
+17:18:04.491 [LEFT] read global speed ret=0 · not reported
+17:18:04.492 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+17:18:04.594 [LEFT] read drag sensitivity ret=0 · 100 %
+17:18:04.596 [activity] operator:e43b3e POST /api/robots/left/connect
+17:18:05.268 [RIGHT] read global speed ret=0 · not reported
+17:18:05.269 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+17:18:05.426 [RIGHT] read drag sensitivity ret=0 · 100 %
+17:18:05.427 [activity] operator:e43b3e POST /api/robots/right/connect
+17:18:05.639 [RIGHT] program list · 21 programs
+17:18:05.646 [LEFT] program list · 26 programs
+17:18:05.753 [LEFT] global points · 17 point(s)
+17:18:05.770 [RIGHT] global points · 14 point(s)
+17:18:07.917 [activity] operator:e43b3e POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+17:18:08.718 [activity] operator:e43b3e page: ROBOT · Button action
+17:18:08.719 [activity] operator:e43b3e page: SYSTEM · Session active
+17:18:08.945 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:12.823 [LEFT] run mode REAL
+17:18:12.926 [RIGHT] run mode REAL
+17:18:12.927 [activity] operator:e43b3e POST /api/robots/mode
+17:18:13.486 [activity] operator:e43b3e page: ROBOT · Button action
+17:18:13.715 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:20.798 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:18:39.297 [activity] operator:e43b3e page: SYSTEM · Session active
+17:19:06.776 [LEFT] ALERT ERROR · The controller reports 4105 (0x1009 Speed out of limit). (Check the arm and its pendant; clear the error there before running.)
+17:19:06.777 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:19:07.778 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:19:09.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:19:39.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:19:52.954 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:20:09.296 [activity] operator:e43b3e page: SYSTEM · Session active
+17:20:39.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:20:52.954 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:21:09.295 [activity] operator:e43b3e page: SYSTEM · Session active
+17:21:39.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:21:52.960 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:22:09.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:22:31.187 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:22:39.297 [activity] operator:e43b3e page: SYSTEM · Session active
+17:22:52.955 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:23:09.297 [activity] operator:e43b3e page: SYSTEM · Session active
+17:23:39.332 [activity] operator:e43b3e page: SYSTEM · Session active
+17:23:52.118 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:02.622 [RIGHT] clear errors · [INFO] right: clear_errors -> unreadable
+17:24:02.623 [RIGHT] clear errors · unreadable
+17:24:02.623 [activity] - RIGHT controller: errors cleared, still unreadable
+17:24:02.624 [activity] operator:e43b3e POST /api/robots/right/clear-errors
+17:24:03.185 [activity] operator:e43b3e page: UI · Button action
+17:24:03.425 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:06.610 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:06.806 [activity] operator:e43b3e POST /api/robots/left/recover
+17:24:07.601 [activity] operator:e43b3e page: UI · Button action
+17:24:07.834 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:09.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:24:11.898 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:15.628 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:15.934 [RIGHT] restore global speed {"pct": 50} ret=-1
+17:24:15.942 [activity] operator:e43b3e POST /api/robots/right/disconnect
+17:24:16.536 [activity] operator:e43b3e page: UI · Button action
+17:24:16.765 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:20.262 [activity] operator:e43b3e page: UI · Button action
+17:24:20.496 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:20.917 [RIGHT] read global speed ret=0 · not reported
+17:24:20.918 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+17:24:21.008 [RIGHT] read drag sensitivity ret=0 · 100 %
+17:24:21.219 [RIGHT] run mode REAL
+17:24:21.220 [activity] operator:e43b3e POST /api/robots/right/connect
+17:24:21.538 [RIGHT] program list · 21 programs
+17:24:21.798 [RIGHT] global points · 14 point(s)
+17:24:27.586 [activity] operator:e43b3e page: UI · Button action
+17:24:27.821 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:30.440 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:31.314 [activity] operator:e43b3e page: UI · Button action
+17:24:31.544 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:35.899 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:24:38.530 [activity] operator:e43b3e page: UI · Button action
+17:24:38.531 [activity] operator:e43b3e page: SYSTEM · Session active
+17:24:38.754 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:39.692 [LEFT] program list · 26 programs
+17:24:40.080 [activity] operator:e43b3e page: UI · Button action
+17:24:40.315 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:40.368 [RIGHT] program list · 21 programs
+17:24:40.478 [LEFT] global points · 17 point(s)
+17:24:40.656 [RIGHT] global points · 14 point(s)
+17:24:40.804 [LEFT] program list · 26 programs
+17:24:41.176 [RIGHT] program list · 21 programs
+17:24:41.178 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+17:24:41.189 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/plan
+17:24:45.251 [LEFT] program list · 26 programs
+17:24:45.860 [RIGHT] program list · 21 programs
+17:24:45.861 [activity] operator:e43b3e page: ROBOT · Button action
+17:24:45.879 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:24:45.983 [LEFT] global points · 17 point(s)
+17:24:46.257 [RIGHT] global points · 14 point(s)
+17:24:46.419 [LEFT] program list · 26 programs
+17:24:46.916 [RIGHT] program list · 21 programs
+17:24:46.918 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+17:24:47.019 [LEFT] run mode REAL
+17:24:47.273 [RIGHT] run mode REAL
+17:24:47.444 [-] mechanism · PLAN 1/1: Open the lid (lid_open_toppra.json, 20 entries, 16.3 s of motion)
+17:24:47.809 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:24:47.899 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:24:47.909 [RIGHT] alix · hand: OPEN before the pole moves — from peripherals.HAND_OPEN — this plan authors no release stage and the caller named none
+17:24:47.958 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [997, 1000, 1000, 1000, 123, 920]; law 0.77 s)
+17:24:48.781 [RIGHT] alix · hand: arrived at [997, 1000, 1000, 1000, 1000, 990] after 0.76 s (per-channel travel [0, 0, 0, 0, 877, 70])
+17:24:48.992 [RIGHT] alix · pole: 200 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.53 s, timeout 7.6 s)
+17:24:50.709 [RIGHT] alix · pole: at 151 mm after 1.70 s (verified_by=getter, moved 49 mm through 25 distinct readings)
+17:24:50.710 [RIGHT] alix · hand: None (the state the stroke was planned with)
+17:24:50.767 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [997, 1000, 1000, 1000, 1000, 990]; law 0.12 s)
+17:24:50.939 [RIGHT] alix · hand: arrived at [997, 1000, 1000, 1000, 1000, 990] after 0.11 s (per-channel travel [0, 0, 0, 0, 0, 0])
+17:24:51.036 [RIGHT] stage {"pole_mm": 150.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 151 mm, hand [997, 1000, 1000, 1000, 1000, 990]
+17:24:51.041 [RIGHT] alix · rest: movej to the plan's caller at speed 15 of a 100 % global ratio
+17:24:52.952 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:24:52.956 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:24:53.032 [RIGHT] move to pose {"deg": [0.0, -81.99, -26.0, 97.99, 6.0, 62.0, 69.0], "speed": 15, "restore_speed": 50} · gap 0.051996459960932384 deg
+17:24:53.033 [-] mechanism · RIGHT: at Open the lid's start
+17:24:53.232 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:24:53.303 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+17:24:53.309 [LEFT] alix · hand: OPEN before the pole moves — from peripherals.HAND_OPEN — this plan authors no release stage and the caller named none
+17:24:53.358 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 1000, 1000, 1000, 592, 980]; law 0.42 s)
+17:24:54.063 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 998, 980] after 0.64 s (per-channel travel [0, 0, 0, 0, 406, 0])
+17:24:54.063 [LEFT] alix · ** hand: settled without arriving — worst channel 6 is 20 counts short (target 1000, readback 980)
+17:24:54.274 [LEFT] alix · pole: 200 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.53 s, timeout 7.6 s)
+17:24:55.967 [LEFT] alix · pole: at 151 mm after 1.69 s (verified_by=getter, moved 49 mm through 26 distinct readings)
+17:24:55.968 [LEFT] alix · hand: None (the state the stroke was planned with)
+17:24:56.017 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 1000, 1000, 1000, 997, 979]; law 0.13 s)
+17:24:56.304 [LEFT] alix · hand: settled at [1000, 1000, 1000, 1000, 998, 980] after 0.22 s (per-channel travel [0, 0, 0, 0, 1, 1])
+17:24:56.304 [LEFT] alix · ** hand: settled without arriving — worst channel 6 is 20 counts short (target 1000, readback 980)
+17:24:56.384 [LEFT] stage {"pole_mm": 150.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 151 mm, hand [1000, 1000, 1000, 1000, 998, 980]
+17:24:56.385 [LEFT] alix · rest: movej to the plan's caller at speed 15 of a 100 % global ratio
+17:25:02.259 [LEFT] alix · global speed restored to 50 (ret=0)
+17:25:02.260 [LEFT] move to pose {"deg": [0.0, -81.99, 26.0, 97.99, -6.0, 62.0, 111.0], "speed": 15, "restore_speed": 50} · gap 0.05300140380859375 deg
+17:25:02.260 [-] mechanism · LEFT: at Open the lid's start
+17:25:02.297 [RIGHT] alix · pole: 150 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)
+17:25:02.378 [RIGHT] alix · pole: at 150 mm after 0.07 s (verified_by=no_op, moved 0 mm through 1 distinct readings)
+17:25:02.465 [RIGHT] pole move {"mm": 150.0, "speed_pct": 50} ret=0 (0.072 s) · final 0.15 m, verified by no_op
+17:25:02.714 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:25:02.799 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:25:02.859 [RIGHT] alix · hand: ANGLE_SET [33, 33, 33, 33, 133, 944] (from [997, 1000, 1000, 1000, 1000, 990]; law 0.84 s)
+17:25:03.868 [RIGHT] alix · hand: settled at [997, 1000, 1000, 1000, 119, 933] after 0.95 s (per-channel travel [0, 0, 0, 0, 881, 58])
+17:25:03.869 [RIGHT] alix · ** hand: channel(s) [1, 2, 3, 4] were commanded to move and did NOT — target [33, 33, 33, 33, 133, 944], readback [997, 1000, 1000, 1000, 119, 933]. Either that channel is dead or the readback is not the device.
+17:25:03.936 [RIGHT] hand move {"counts": [33, 33, 33, 33, 133, 944], "speed_set": 500} ret=0 (0.949 s) · read back [997, 1000, 1000, 1000, 119, 933] (settled short of the target: stopped on force)
+17:25:04.502 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172503_RIGHT_arm_move_to_inspect.frames.jsonl (target 192.168.1.239:8090, cycle 5 ms, all sections on)
+17:25:04.523 [RIGHT] alix · CANFD: 169 lines at 5.0000 ms/line, per_joint rate gate, peak 180.0 deg/s on J7 = 0.800 of its 225; start gap must be <= 0.720 deg
+17:25:04.524 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:25:05.631 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:25:05.805 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 0.84 s
+17:25:05.806 [RIGHT] alix · stream 0.84 s at the host's 5.000 ms period — the player's advisory band [0.9239999999999999, 0.9408] s does not apply to a host-timed stream; worst send lateness 5.32 ms
+17:25:06.625 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+17:25:06.626 [RIGHT] alix · recorded 300 frames
+17:25:06.700 [RIGHT] canfd stream {"label": "RIGHT arm move_to_inspect", "lines": 169, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": 15, "capture": "20261021_172503_RIGHT_arm_move_to_inspect.frames.jsonl"} ret=host_timed (2.762 s) · 169/169 lines
+17:25:06.703 [-] mechanism · RIGHT arm move_to_inspect: 169/169 lines in 0.84 s
+17:25:09.254 [RIGHT] camera · camera open: Intel RealSense D435 425122070189, depth 848x480 (fx 432.7, scale 1 mm), colour 1280x720 (fx 904.5); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+17:25:09.295 [activity] operator:e43b3e page: SYSTEM · Session active
+17:25:15.025 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+17:25:15.189 [RIGHT] camera · gap registration at (any pose): +10.8 mm (the closed lid read 0.461 m, nominal 0.450); every later lid/seat top at this placement carries it
+17:25:27.626 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:25:32.637 [RIGHT] camera · gap_check: lid surface median z 0.461 m in base_link (closed top 0.461 = nominal 0.450 registered +11 mm by the none, rise 0 mm vs 50 mm bar); 100 % of the ROI valid, median range 0.458 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); models: closed from colour at 0.83 -> lid_closed
+17:25:32.890 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/checks/20261021_172532_639_gap_check_lid_closed_lid_closed.json
+17:25:32.891 [-] mechanism · CHECK verify_lid_closed: expect lid_closed, the camera says lid_closed at 1.00 (models: closed from colour at 0.83) -> PASS
+17:25:33.049 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:25:33.112 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+17:25:33.162 [LEFT] alix · hand: ANGLE_SET [993, 993, 993, 993, 981, 992] (from [1000, 1000, 1000, 1000, 998, 980]; law 0.13 s)
+17:25:33.349 [LEFT] alix · hand: arrived at [1000, 1000, 995, 995, 977, 980] after 0.12 s (per-channel travel [0, 0, 5, 5, 21, 0])
+17:25:33.447 [LEFT] hand move {"counts": [993, 993, 993, 993, 981, 992], "speed_set": 500} ret=0 (0.117 s) · read back [1000, 1000, 995, 995, 977, 980]
+17:25:33.463 [LEFT] alix · pole: 150 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)
+17:25:33.543 [LEFT] alix · pole: at 150 mm after 0.06 s (verified_by=no_op, moved 0 mm through 1 distinct readings)
+17:25:33.615 [LEFT] pole move {"mm": 150.0, "speed_pct": 50} ret=0 (0.063 s) · final 0.15 m, verified by no_op
+17:25:33.778 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:25:33.857 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+17:25:33.910 [LEFT] alix · hand: ANGLE_SET [516, 516, 516, 516, 133, 944] (from [996, 996, 995, 994, 978, 980]; law 0.75 s)
+17:25:34.828 [LEFT] alix · hand: settled at [726, 691, 648, 636, 546, 922] after 0.86 s (per-channel travel [313, 331, 347, 364, 432, 58])
+17:25:34.829 [LEFT] alix · ** hand: settled without arriving — worst channel 5 is 413 counts short (target 133, readback 546)
+17:25:34.916 [LEFT] hand move {"counts": [516, 516, 516, 516, 133, 944], "speed_set": 500} ret=0 (0.856 s) · read back [726, 691, 648, 636, 546, 922] (settled short of the target: stopped on force)
+17:25:35.415 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172534_LEFT_arm_move_to_pre_start.frames.jsonl (target 192.168.1.239:8089, cycle 5 ms, all sections on)
+17:25:35.416 [LEFT] alix · CANFD: 307 lines at 5.0000 ms/line, per_joint rate gate, peak 36.0 deg/s on J2 = 0.200 of its 180; start gap must be <= 0.720 deg
+17:25:35.436 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:25:37.110 [LEFT] alix · global speed restored to 50 (ret=0)
+17:25:37.311 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 1.53 s
+17:25:37.312 [LEFT] alix · stream 1.53 s at the host's 5.000 ms period — the player's advisory band [1.6829999999999998, 1.7136] s does not apply to a host-timed stream; worst send lateness 6.86 ms
+17:25:37.817 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+17:25:37.844 [LEFT] alix · recorded 408 frames
+17:25:37.939 [LEFT] canfd stream {"label": "LEFT arm move_to_pre_start", "lines": 307, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": 15, "capture": "20261021_172534_LEFT_arm_move_to_pre_start.frames.jsonl"} ret=host_timed (3.017 s) · 307/307 lines
+17:25:37.940 [-] mechanism · LEFT arm move_to_pre_start: 307/307 lines in 1.53 s
+17:25:38.392 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172537_LEFT_arm_move_to_start.frames.jsonl (target 192.168.1.239:8089, cycle 5 ms, all sections on)
+17:25:38.415 [LEFT] alix · CANFD: 182 lines at 5.0000 ms/line, per_joint rate gate, peak 45.0 deg/s on J4 = 0.200 of its 225; start gap must be <= 0.720 deg
+17:25:38.416 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:25:39.290 [activity] operator:e43b3e page: SYSTEM · Session active
+17:25:39.517 [LEFT] alix · global speed restored to 50 (ret=0)
+17:25:39.708 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 0.91 s
+17:25:39.711 [LEFT] alix · stream 0.91 s at the host's 5.000 ms period — the player's advisory band [0.9954999999999999, 1.0136] s does not apply to a host-timed stream; worst send lateness 5.15 ms
+17:25:40.175 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+17:25:40.177 [LEFT] alix · recorded 309 frames
+17:25:40.254 [LEFT] canfd stream {"label": "LEFT arm move_to_start", "lines": 182, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261021_172537_LEFT_arm_move_to_start.frames.jsonl"} ret=host_timed (2.297 s) · 182/182 lines
+17:25:40.259 [-] mechanism · LEFT arm move_to_start: 182/182 lines in 0.91 s
+17:25:40.696 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172540_LEFT_arm_execute_path.frames.jsonl (target 192.168.1.239:8089, cycle 5 ms, all sections on)
+17:25:40.698 [LEFT] alix · CANFD: 296 lines at 5.0000 ms/line, per_joint rate gate, peak 101.8 deg/s on J4 = 0.452 of its 225; start gap must be <= 0.720 deg
+17:25:40.699 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:25:42.346 [LEFT] alix · global speed restored to 50 (ret=0)
+17:25:42.555 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 1.48 s
+17:25:42.555 [LEFT] alix · stream 1.48 s at the host's 5.000 ms period — the player's advisory band [1.6224999999999998, 1.652] s does not apply to a host-timed stream; worst send lateness 4.05 ms
+17:25:43.521 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+17:25:43.522 [LEFT] alix · recorded 407 frames
+17:25:43.602 [LEFT] canfd stream {"label": "LEFT arm execute_path", "lines": 296, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261021_172540_LEFT_arm_execute_path.frames.jsonl"} ret=host_timed (3.341 s) · 296/296 lines
+17:25:43.603 [-] mechanism · LEFT arm execute_path: 296/296 lines in 1.48 s
+17:25:44.977 [RIGHT] camera · gap_check: lid surface median z 0.627 m in base_link (closed top 0.461 = nominal 0.450 registered +11 mm by the lid, rise 166 mm vs 50 mm bar); 99 % of the ROI valid, median range 0.279 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 0 % of the wide ROI, standing-lid pixels 2 % of the top rows (hands masked around 17 frames) -> lid_lifted
+17:25:45.259 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/checks/20261021_172544_979_gap_check_lid_lifted_lid_lifted.json
+17:25:45.259 [-] mechanism · CHECK verify_lid_lifted: expect lid_lifted, the camera says lid_lifted at 1.00 -> PASS
+17:25:45.975 [RIGHT] camera · gap_check: seat surface median z 0.443 m in base_link (closed top 0.451 = nominal 0.440 registered +11 mm by the lid, rise -8 mm vs 50 mm bar); 52 % of the ROI valid, median range 0.233 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 3 % of the ROI, 10/90 % heights 0.440/0.444, 88 % masked around 17 hand frames; models: closed from colour at 0.90 -> seat_closed
+17:25:46.187 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/checks/20261021_172545_975_gap_check_seat_lifted_seat_closed.json
+17:25:46.198 [-] mechanism · OBSERVED verify_lid_lifted: seat_lifted = no
+17:25:46.366 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:25:46.431 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:25:46.485 [RIGHT] alix · hand: ANGLE_SET [993, 993, 993, 993, 981, 992] (from [997, 1000, 1000, 1000, 119, 933]; law 0.76 s)
+17:25:47.308 [RIGHT] alix · hand: arrived at [997, 1000, 1000, 1000, 987, 982] after 0.75 s (per-channel travel [0, 0, 0, 0, 868, 49])
+17:25:47.413 [RIGHT] hand move {"counts": [993, 993, 993, 993, 981, 992], "speed_set": 500} ret=0 (0.752 s) · read back [997, 1000, 1000, 1000, 987, 982]
+17:25:47.444 [RIGHT] alix · pole: 150 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)
+17:25:47.521 [RIGHT] alix · pole: at 150 mm after 0.07 s (verified_by=no_op, moved 0 mm through 1 distinct readings)
+17:25:47.598 [RIGHT] pole move {"mm": 150.0, "speed_pct": 50} ret=0 (0.067 s) · final 0.15 m, verified by no_op
+17:25:47.753 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:25:47.821 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+17:25:47.891 [RIGHT] alix · hand: ANGLE_SET [516, 516, 516, 516, 133, 944] (from [997, 1000, 1000, 1000, 979, 982]; law 0.75 s)
+17:25:48.818 [RIGHT] alix · hand: settled at [997, 1000, 1000, 1000, 118, 933] after 0.87 s (per-channel travel [0, 0, 0, 0, 861, 64])
+17:25:48.821 [RIGHT] alix · ** hand: channel(s) [1, 2, 3, 4] were commanded to move and did NOT — target [516, 516, 516, 516, 133, 944], readback [997, 1000, 1000, 1000, 118, 933]. Either that channel is dead or the readback is not the device.
+17:25:48.894 [RIGHT] hand move {"counts": [516, 516, 516, 516, 133, 944], "speed_set": 500} ret=0 (0.874 s) · read back [997, 1000, 1000, 1000, 118, 933] (settled short of the target: stopped on force)
+17:25:49.592 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172548_RIGHT_arm_move_to_pre_start.frames.jsonl (target 192.168.1.239:8090, cycle 5 ms, all sections on)
+17:25:49.593 [RIGHT] alix · CANFD: 423 lines at 5.0000 ms/line, per_joint rate gate, peak 45.0 deg/s on J7 = 0.200 of its 225; start gap must be <= 0.720 deg
+17:25:49.594 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:25:51.895 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:25:52.149 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 2.11 s
+17:25:52.149 [RIGHT] alix · stream 2.11 s at the host's 5.000 ms period — the player's advisory band [2.3209999999999997, 2.3632] s does not apply to a host-timed stream; worst send lateness 6.12 ms
+17:25:52.780 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+17:25:52.785 [RIGHT] alix · recorded 584 frames
+17:25:52.861 [RIGHT] canfd stream {"label": "RIGHT arm move_to_pre_start", "lines": 423, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261021_172548_RIGHT_arm_move_to_pre_start.frames.jsonl"} ret=host_timed (3.947 s) · 423/423 lines
+17:25:52.861 [-] mechanism · RIGHT arm move_to_pre_start: 423/423 lines in 2.11 s
+17:25:52.965 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:25:53.295 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172552_RIGHT_arm_move_to_start.frames.jsonl (target 192.168.1.239:8090, cycle 5 ms, all sections on)
+17:25:53.296 [RIGHT] alix · CANFD: 129 lines at 5.0000 ms/line, per_joint rate gate, peak 33.2 deg/s on J1 = 0.184 of its 180; start gap must be <= 0.720 deg
+17:25:53.296 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:25:54.089 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:25:54.326 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 0.64 s
+17:25:54.328 [RIGHT] alix · stream 0.64 s at the host's 5.000 ms period — the player's advisory band [0.704, 0.7168] s does not apply to a host-timed stream; worst send lateness 4.83 ms
+17:25:54.921 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+17:25:54.922 [RIGHT] alix · recorded 237 frames
+17:25:55.023 [RIGHT] canfd stream {"label": "RIGHT arm move_to_start", "lines": 129, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261021_172552_RIGHT_arm_move_to_start.frames.jsonl"} ret=host_timed (2.145 s) · 129/129 lines
+17:25:55.024 [-] mechanism · RIGHT arm move_to_start: 129/129 lines in 0.64 s
+17:25:55.248 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:25:55.323 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+17:25:55.397 [LEFT] alix · hand: ANGLE_SET [993, 993, 993, 993, 981, 992] (from [750, 716, 655, 640, 546, 922]; law 0.44 s)
+17:25:56.098 [LEFT] alix · hand: settled at [1000, 1000, 997, 1000, 978, 975] after 0.64 s (per-channel travel [250, 284, 342, 360, 432, 64])
+17:25:56.099 [LEFT] alix · ** hand: settled without arriving — worst channel 6 is 17 counts short (target 992, readback 975)
+17:25:56.170 [LEFT] hand move {"counts": [993, 993, 993, 993, 981, 992], "speed_set": 500} ret=0 (0.639 s) · read back [1000, 1000, 997, 1000, 978, 975] (settled short of the target: stopped on force)
+17:25:56.598 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172556_LEFT_arm_move_to_retract.frames.jsonl (target 192.168.1.239:8089, cycle 5 ms, all sections on)
+17:25:56.599 [LEFT] alix · CANFD: 165 lines at 5.0000 ms/line, per_joint rate gate, peak 36.0 deg/s on J1 = 0.200 of its 180; start gap must be <= 0.720 deg
+17:25:56.600 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:25:57.573 [LEFT] alix · global speed restored to 50 (ret=0)
+17:25:57.781 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 0.82 s
+17:25:57.785 [LEFT] alix · stream 0.82 s at the host's 5.000 ms period — the player's advisory band [0.9019999999999999, 0.9184] s does not apply to a host-timed stream; worst send lateness 6.61 ms
+17:25:58.223 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+17:25:58.223 [LEFT] alix · recorded 272 frames
+17:25:58.305 [LEFT] canfd stream {"label": "LEFT arm move_to_retract", "lines": 165, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261021_172556_LEFT_arm_move_to_retract.frames.jsonl"} ret=host_timed (2.130 s) · 165/165 lines
+17:25:58.332 [-] mechanism · LEFT arm move_to_retract: 165/165 lines in 0.82 s
+17:25:58.562 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+17:25:58.606 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+17:25:58.668 [LEFT] alix · hand: ANGLE_SET [33, 33, 33, 33, 133, 944] (from [1000, 992, 997, 1000, 979, 975]; law 0.84 s)
+17:25:59.605 [LEFT] alix · hand: settled at [653, 635, 596, 573, 546, 923] after 0.87 s (per-channel travel [393, 401, 428, 427, 433, 52])
+17:25:59.610 [LEFT] alix · ** hand: settled without arriving — worst channel 1 is 620 counts short (target 33, readback 653)
+17:25:59.694 [LEFT] hand move {"counts": [33, 33, 33, 33, 133, 944], "speed_set": 500} ret=0 (0.868 s) · read back [653, 635, 596, 573, 546, 923] (settled short of the target: stopped on force)
+17:26:00.139 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172559_LEFT_arm_move_to_rest.frames.jsonl (target 192.168.1.239:8089, cycle 5 ms, all sections on)
+17:26:00.140 [LEFT] alix · CANFD: 125 lines at 5.0000 ms/line, per_joint rate gate, peak 119.4 deg/s on J2 = 0.663 of its 180; start gap must be <= 0.720 deg
+17:26:00.141 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:26:00.928 [LEFT] alix · global speed restored to 50 (ret=0)
+17:26:01.124 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 0.62 s
+17:26:01.139 [LEFT] alix · stream 0.62 s at the host's 5.000 ms period — the player's advisory band [0.6819999999999999, 0.6944] s does not apply to a host-timed stream; worst send lateness 6.61 ms
+17:26:01.733 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+17:26:01.735 [LEFT] alix · recorded 228 frames
+17:26:01.835 [LEFT] canfd stream {"label": "LEFT arm move_to_rest", "lines": 125, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261021_172559_LEFT_arm_move_to_rest.frames.jsonl"} ret=host_timed (2.121 s) · 125/125 lines
+17:26:01.838 [-] mechanism · LEFT arm move_to_rest: 125/125 lines in 0.62 s
+17:26:02.177 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172601_RIGHT_arm_execute_path.frames.jsonl (target 192.168.1.239:8090, cycle 5 ms, all sections on)
+17:26:02.178 [RIGHT] alix · CANFD: 497 lines at 5.0000 ms/line, per_joint rate gate, peak 124.4 deg/s on J4 = 0.553 of its 225; start gap must be <= 0.720 deg
+17:26:02.179 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:26:04.874 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:26:05.155 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 2.48 s
+17:26:05.156 [RIGHT] alix · stream 2.48 s at the host's 5.000 ms period — the player's advisory band [2.7279999999999998, 2.7776] s does not apply to a host-timed stream; worst send lateness 7.75 ms
+17:26:05.838 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+17:26:05.839 [RIGHT] alix · recorded 620 frames
+17:26:05.898 [RIGHT] canfd stream {"label": "RIGHT arm execute_path", "lines": 497, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261021_172601_RIGHT_arm_execute_path.frames.jsonl"} ret=host_timed (4.054 s) · 497/497 lines
+17:26:05.901 [-] mechanism · RIGHT arm execute_path: 497/497 lines in 2.48 s
+17:26:06.436 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/canfd/20261021_172605_RIGHT_arm_move_to_rest.frames.jsonl (target 192.168.1.239:8090, cycle 5 ms, all sections on)
+17:26:06.437 [RIGHT] alix · CANFD: 115 lines at 5.0000 ms/line, per_joint rate gate, peak 135.2 deg/s on J6 = 0.601 of its 225; start gap must be <= 0.720 deg
+17:26:06.438 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+17:26:07.207 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:26:07.508 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 0.57 s
+17:26:07.510 [RIGHT] alix · stream 0.57 s at the host's 5.000 ms period — the player's advisory band [0.627, 0.6384] s does not apply to a host-timed stream; worst send lateness 5.62 ms
+17:26:08.103 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+17:26:08.105 [RIGHT] alix · recorded 260 frames
+17:26:08.164 [RIGHT] canfd stream {"label": "RIGHT arm move_to_rest", "lines": 115, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261021_172605_RIGHT_arm_move_to_rest.frames.jsonl"} ret=host_timed (2.261 s) · 115/115 lines
+17:26:08.165 [-] mechanism · RIGHT arm move_to_rest: 115/115 lines in 0.57 s
+17:26:08.704 [RIGHT] camera · camera closed
+17:26:09.086 [LEFT] restore global speed {"pct": 50} ret=0
+17:26:09.246 [RIGHT] restore global speed {"pct": 50} ret=0
+17:26:09.247 [activity] - job run done: S2 Real Machine: both arms, SAFE TIMELINE
+17:26:09.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:26:39.344 [activity] operator:e43b3e page: SYSTEM · Session active
+17:26:52.956 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:27:09.289 [activity] operator:e43b3e page: SYSTEM · Session active
+17:27:39.289 [activity] operator:e43b3e page: SYSTEM · Session active
+17:27:52.952 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:28:09.292 [activity] operator:e43b3e page: SYSTEM · Session active
+17:28:36.630 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:28:39.287 [activity] operator:e43b3e page: SYSTEM · Session active
+17:28:40.704 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:28:43.335 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:28:49.042 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:28:52.955 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:29:09.292 [activity] operator:e43b3e page: SYSTEM · Session active
+17:29:39.293 [activity] operator:e43b3e page: SYSTEM · Session active
+17:29:52.956 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:30:09.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:30:39.298 [activity] operator:e43b3e page: SYSTEM · Session active
+17:30:52.956 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:31:09.293 [activity] operator:e43b3e page: SYSTEM · Session active
+17:31:30.598 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:31:39.290 [activity] operator:e43b3e page: SYSTEM · Session active
+17:31:40.540 [LEFT] controller data · 26 programs; IO default 0; tracks not available
+17:31:40.590 [activity] operator:e43b3e page: NAVIGATION · Button action
+17:31:40.651 [LEFT] global points · 17 point(s)
+17:31:40.854 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:31:41.306 [RIGHT] program list · 21 programs
+17:31:41.513 [RIGHT] global points · 14 point(s)
+17:31:47.150 [activity] operator:e43b3e page: UI · Button action
+17:31:47.385 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:31:49.260 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:31:52.951 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:32:09.290 [activity] operator:e43b3e page: SYSTEM · Session active
+17:32:19.621 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:32:21.432 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:23.542 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:26.344 [activity] operator:e43b3e page: TEACH · Button action
+17:32:26.346 [activity] operator:e43b3e page: NAVIGATION · Open screen
+17:32:26.580 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:27.532 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:32:28.912 [LEFT] program list · 26 programs
+17:32:29.030 [LEFT] global points · 17 point(s)
+17:32:29.804 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:31.016 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:31.939 [activity] operator:e43b3e page: SETUP · Arm selected
+17:32:32.175 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:33.675 [activity] operator:e43b3e page: UI · Button action
+17:32:33.897 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:38.054 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:38.115 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:32:39.298 [activity] operator:e43b3e page: SYSTEM · Session active
+17:32:39.405 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:43.170 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:32:53.730 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:32:56.093 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:33:01.771 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:33:09.297 [activity] operator:e43b3e page: SYSTEM · Session active
+17:33:10.645 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:33:15.504 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:33:39.292 [activity] operator:e43b3e page: SYSTEM · Session active
+17:34:09.296 [activity] operator:e43b3e page: SYSTEM · Session active
+17:34:25.861 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:34:28.406 [activity] operator:e43b3e page: SEQUENCE · Button action
+17:34:28.407 [activity] operator:e43b3e page: NAVIGATION · Open screen
+17:34:28.569 [RIGHT] program list · 21 programs
+17:34:28.589 [LEFT] program list · 26 programs
+17:34:28.631 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:34:28.683 [RIGHT] global points · 14 point(s)
+17:34:28.695 [LEFT] global points · 17 point(s)
+17:34:32.443 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:34:32.950 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/right
+17:34:32.986 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:34:33.312 [activity] operator:e43b3e page: TRAJECTORY · Button action
+17:34:33.538 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:34:37.075 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:34:39.289 [activity] operator:e43b3e page: SYSTEM · Session active
+17:34:40.405 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:34:44.842 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:34:49.791 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:34:55.471 [activity] operator:e43b3e page: UI · Setting changed
+17:34:55.473 [activity] operator:e43b3e page: UI · Input updated
+17:34:55.734 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:34:58.921 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:35:03.371 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:35:07.301 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:35:09.208 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:35:09.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:35:10.272 [activity] operator:e43b3e page: TRAJECTORY · Setting changed
+17:35:10.273 [activity] operator:e43b3e page: TRAJECTORY · Input updated
+17:35:10.314 [LEFT] program list · 26 programs
+17:35:10.427 [LEFT] global points · 17 point(s)
+17:35:10.516 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:35:14.282 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:35:39.292 [activity] operator:e43b3e page: SYSTEM · Session active
+17:35:39.293 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:36:09.288 [activity] operator:e43b3e page: SYSTEM · Session active
+17:36:14.241 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:36:15.699 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:36:17.983 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:36:39.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:37:09.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:37:25.653 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:37:27.417 [activity] operator:e43b3e page: UI · Button action
+17:37:27.834 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:37:30.662 [LEFT] program list · 26 programs
+17:37:30.695 [RIGHT] program list · 21 programs
+17:37:30.764 [activity] operator:e43b3e page: SEQUENCE · Button action
+17:37:30.835 [RIGHT] global points · 14 point(s)
+17:37:31.135 [LEFT] global points · 17 point(s)
+17:37:31.156 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:37:32.429 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:37:35.491 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:37:36.531 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:37:37.301 [activity] operator:e43b3e page: ROBOT · Input updated
+17:37:38.342 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:37:38.465 [activity] operator:e43b3e page: TRAJECTORY · Setting changed
+17:37:38.466 [activity] operator:e43b3e page: TRAJECTORY · Input updated
+17:37:39.045 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+17:37:39.288 [activity] operator:e43b3e page: SYSTEM · Session active
+17:37:39.290 [activity] operator:e43b3e page: ROBOT · Button action
+17:37:39.841 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:37:43.198 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:37:51.105 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:37:56.819 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:38:09.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:38:19.018 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:38:32.945 [RIGHT] program list · 21 programs
+17:38:33.024 [LEFT] program list · 26 programs
+17:38:33.122 [LEFT] global points · 17 point(s)
+17:38:33.124 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:38:33.150 [RIGHT] global points · 14 point(s)
+17:38:33.151 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/right
+17:38:33.174 [activity] operator:e43b3e page: TRAJECTORY · Button action
+17:38:33.413 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:38:34.665 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:38:37.835 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:38:39.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:38:42.238 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:38:43.257 [activity] operator:e43b3e page: UI · Setting changed
+17:38:43.257 [activity] operator:e43b3e page: UI · Input updated
+17:38:43.483 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:38:44.353 [activity] operator:e43b3e page: UI · Button action
+17:38:44.586 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:38:48.315 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:38:53.045 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:38:56.841 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:38:59.968 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:39:09.302 [activity] operator:e43b3e page: SYSTEM · Session active
+17:39:18.348 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:39:21.738 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:39:26.405 [LEFT] program list · 26 programs
+17:39:26.529 [LEFT] global points · 17 point(s)
+17:39:26.530 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:39:27.013 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:39:34.743 [activity] operator:e43b3e page: UI · Button action
+17:39:34.989 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:39:37.810 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:39:39.301 [activity] operator:e43b3e page: SYSTEM · Session active
+17:39:41.750 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:39:44.773 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:39:47.799 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:39:50.926 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:39:59.739 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:40:02.821 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:40:05.871 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:40:09.038 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:40:09.039 [activity] operator:e43b3e page: SYSTEM · Session active
+17:40:13.826 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:40:35.245 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:40:37.483 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:40:39.298 [activity] operator:e43b3e page: SYSTEM · Session active
+17:40:40.752 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:40:41.246 [activity] operator:e43b3e page: UI · Button action
+17:40:41.472 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:40:57.949 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:40:58.082 [activity] operator:e43b3e page: TRAJECTORY · Setting changed
+17:40:58.083 [activity] operator:e43b3e page: UI · Input updated
+17:41:02.071 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:41:02.271 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:41:02.903 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:41:09.289 [activity] operator:e43b3e page: SYSTEM · Session active
+17:41:22.010 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:41:32.817 [LEFT] program list · 26 programs
+17:41:33.096 [LEFT] global points · 17 point(s)
+17:41:33.097 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:41:33.158 [activity] operator:e43b3e page: UI · Button action
+17:41:33.402 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:41:39.298 [activity] operator:e43b3e page: SYSTEM · Session active
+17:41:40.861 [activity] operator:e43b3e page: UI · Button action
+17:41:41.093 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:41:49.567 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:41:49.672 [activity] operator:e43b3e page: TRAJECTORY · Setting changed
+17:41:49.673 [activity] operator:e43b3e page: UI · Input updated
+17:41:54.259 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:41:59.472 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:42:09.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:42:09.295 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:42:22.111 [LEFT] program list · 26 programs
+17:42:22.224 [LEFT] global points · 17 point(s)
+17:42:22.226 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:42:22.449 [activity] operator:e43b3e page: UI · Setting changed
+17:42:22.449 [activity] operator:e43b3e page: UI · Input updated
+17:42:22.707 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:42:26.547 [activity] operator:e43b3e page: UI · Button action
+17:42:26.776 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:42:35.432 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:42:35.551 [activity] operator:e43b3e page: TRAJECTORY · Setting changed
+17:42:35.552 [activity] operator:e43b3e page: UI · Input updated
+17:42:39.293 [activity] operator:e43b3e page: SYSTEM · Session active
+17:42:45.880 [activity] operator:e43b3e page: UI · Button action
+17:42:46.110 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:00.474 [activity] operator:e43b3e page: TRAJECTORY · Setting changed
+17:43:00.484 [activity] operator:e43b3e page: UI · Input updated
+17:43:00.488 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:04.619 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:04.898 [activity] operator:e43b3e page: ROBOT · Input updated
+17:43:04.898 [activity] operator:e43b3e page: ROBOT · Input updated
+17:43:04.899 [activity] operator:e43b3e page: ROBOT · Input updated
+17:43:06.283 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:06.415 [activity] operator:e43b3e page: ROBOT · Setting changed
+17:43:09.290 [activity] operator:e43b3e page: SYSTEM · Session active
+17:43:14.551 [activity] operator:e43b3e page: ROBOT · Setting changed
+17:43:14.553 [activity] operator:e43b3e page: ROBOT · Input updated
+17:43:14.794 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:15.775 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-files/left
+17:43:15.852 [activity] operator:e43b3e page: UI · Button action
+17:43:16.089 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:43:16.161 [LEFT] program list · 26 programs
+17:43:16.352 [LEFT] global points · 17 point(s)
+17:43:16.354 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:43:16.606 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+17:43:23.893 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:43:27.066 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:43:34.657 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:43:39.292 [activity] operator:e43b3e page: SYSTEM · Session active
+17:43:42.021 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:43:52.955 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:44:09.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:44:32.551 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:44:35.676 [RIGHT] program list · 21 programs
+17:44:35.713 [LEFT] program list · 26 programs
+17:44:35.835 [RIGHT] global points · 14 point(s)
+17:44:35.837 [activity] operator:e43b3e page: SEQUENCE · Button action
+17:44:35.841 [LEFT] global points · 17 point(s)
+17:44:36.075 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:39.289 [activity] operator:e43b3e page: SYSTEM · Session active
+17:44:40.258 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:44:41.528 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:48.581 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:44:50.721 [activity] operator:e43b3e page: ROBOT · Button action
+17:44:50.909 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:52.954 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:44:55.552 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:44:58.291 [activity] operator:e43b3e page: ROBOT · Button action
+17:44:58.510 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:45:09.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:45:38.623 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:45:38.623 [activity] operator:e43b3e page: SYSTEM · Session active
+17:45:39.115 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:45:39.382 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+17:45:39.385 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:45:40.081 [activity] operator:e43b3e page: UI · Button action
+17:45:40.148 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:46:03.754 [LEFT] program list · 26 programs
+17:46:04.184 [RIGHT] program list · 21 programs
+17:46:04.199 [activity] operator:e43b3e page: SEQUENCE · Button action
+17:46:04.292 [LEFT] global points · 17 point(s)
+17:46:04.399 [RIGHT] global points · 14 point(s)
+17:46:04.402 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: what is run (the sequence, the task or the arms), its steps.
+17:46:04.426 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:46:07.140 [LEFT] program list · 26 programs
+17:46:07.401 [activity] operator:e43b3e page: ROBOT · Button action
+17:46:07.538 [RIGHT] program list · 21 programs
+17:46:07.626 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:46:07.665 [LEFT] global points · 17 point(s)
+17:46:07.778 [RIGHT] global points · 14 point(s)
+17:46:08.006 [LEFT] program list · 26 programs
+17:46:08.008 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+17:46:08.020 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/plan
+17:46:09.292 [activity] operator:e43b3e page: SYSTEM · Session active
+17:46:17.004 [activity] operator:e43b3e page: ROBOT · Button action
+17:46:17.243 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:46:17.427 [LEFT] program list · 26 programs
+17:46:17.852 [RIGHT] program list · 21 programs
+17:46:17.978 [LEFT] global points · 17 point(s)
+17:46:18.084 [RIGHT] global points · 14 point(s)
+17:46:18.258 [LEFT] program list · 26 programs
+17:46:18.262 [activity] operator:e43b3e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+17:46:18.382 [LEFT] run mode REAL
+17:46:18.459 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 15%
+17:46:18.463 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+17:46:18.639 [LEFT] runner v14 ·   01. PROGRAM: Program 50 50_L-R01_v002.txt // start/transit 30% // stored trajectory timing
+17:46:18.660 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 15% // ret=0
+17:46:18.660 [LEFT] runner v14 · WORKFLOW STEP START 1/1: PROGRAM
+17:46:18.693 [LEFT] runner v14 · WORKFLOW PROGRAM 1/1: slot 50 (50_L-R01_v002.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+17:46:26.276 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:46:39.289 [activity] operator:e43b3e page: SYSTEM · Session active
+17:46:47.130 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:46:52.913 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:47:09.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:47:39.289 [activity] operator:e43b3e page: SYSTEM · Session active
+17:48:09.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:48:39.289 [activity] operator:e43b3e page: SYSTEM · Session active
+17:49:09.292 [activity] operator:e43b3e page: SYSTEM · Session active
+17:49:22.349 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:49:39.294 [activity] operator:e43b3e page: SYSTEM · Session active
+17:49:53.213 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:50:00.131 [activity] operator:e43b3e page: NAVIGATION · Scrolled view
+17:50:03.075 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:05.926 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:09.291 [activity] operator:e43b3e page: SYSTEM · Session active
+17:50:13.434 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:14.829 [activity] operator:e43b3e PUT /api/projects/alix_mvbvk1fk_zti6s
+17:50:39.287 [activity] operator:e43b3e page: SYSTEM · Session active
+17:50:52.965 [activity] operator:e43b3e page: SYSTEM · Page slow
+17:51:06.400 [LEFT] ALERT ERROR · LEFT: STOP sent, not confirmed by its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)
+17:51:16.783 [activity] - page: NAVIGATION · Open screen
+17:51:16.784 [activity] - page: SYSTEM · ASL frontend initialized
+17:51:26.223 [activity] - page: SYSTEM · Browser closing
+17:51:26.240 [activity] - page: SYSTEM · Session active
+17:51:26.240 [activity] - page: SYSTEM · Browser closing
+17:51:42.127 [activity] - page: NAVIGATION · Open screen
+17:51:42.127 [activity] - page: SYSTEM · ASL frontend initialized
+17:51:45.017 [activity] - POST /api/auth/login
+17:51:45.832 [activity] operator:212777 page: AUTH · Operator login
+17:51:45.836 [activity] operator:212777 page: NAVIGATION · Open screen
+17:51:46.168 [activity] operator:212777 page: AUTH · Setting changed
+17:51:48.261 [activity] operator:212777 page: UI · Button action
+17:51:49.177 [activity] operator:212777 page: NAVIGATION · Task loaded
+17:51:49.292 [activity] operator:212777 page: SETUP · Arm selected
+17:51:49.302 [activity] operator:212777 page: NAVIGATION · Teaching stage changed
+17:51:49.305 [activity] operator:212777 page: SETUP · Arm selected
+17:51:49.314 [activity] operator:212777 page: NAVIGATION · Open screen
+17:51:50.797 [activity] operator:212777 page: UI · Button action
+17:51:51.052 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:52.711 [activity] operator:212777 page: TEACH · Button action
+17:51:52.712 [activity] operator:212777 page: NAVIGATION · Open screen
+17:51:52.901 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:53.592 [activity] operator:212777 page: SYSTEM · 3D device
+17:51:57.339 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:51:57.339 [activity] operator:212777 page: UI · Button action
+17:51:58.039 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:02.138 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:52:02.167 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:05.166 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:05.993 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:15.832 [activity] operator:212777 page: SYSTEM · Session active
+17:52:25.071 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:52:30.054 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:52:30.054 [activity] operator:212777 page: TEACH · Button action
+17:52:30.054 [activity] operator:212777 page: NAVIGATION · Teaching stage changed
+17:52:30.331 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:33.177 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:52:45.832 [activity] operator:212777 page: SYSTEM · Session active
+17:52:45.832 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:52:49.225 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:52:50.745 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:52.216 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:52.711 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:56.383 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:53:15.832 [activity] operator:212777 page: SYSTEM · Session active
+17:53:45.831 [activity] operator:212777 page: SYSTEM · Session active
+17:54:15.865 [activity] operator:212777 page: SYSTEM · Session active
+17:54:45.865 [activity] operator:212777 page: SYSTEM · Session active
+17:54:58.985 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:55:15.865 [activity] operator:212777 page: SYSTEM · Session active
+17:55:45.866 [activity] operator:212777 page: SYSTEM · Session active
+17:55:56.923 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:56:05.205 [activity] operator:212777 page: TRAJECTORY · Button action
+17:56:05.427 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:15.865 [activity] operator:212777 page: SYSTEM · Session active
+17:56:22.047 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:28.903 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:36.727 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:41.902 [activity] operator:212777 page: UI · Button action
+17:56:42.114 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:45.833 [activity] operator:212777 page: SYSTEM · Session active
+17:57:15.833 [activity] operator:212777 page: SYSTEM · Session active
+17:57:45.833 [activity] operator:212777 page: SYSTEM · Session active
+17:58:15.833 [activity] operator:212777 page: SYSTEM · Session active
+17:58:45.833 [activity] operator:212777 page: SYSTEM · Session active
+17:59:15.834 [activity] operator:212777 page: SYSTEM · Session active
+17:59:31.997 [activity] operator:212777 page: UI · Button action
+17:59:32.210 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:59:43.193 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:59:46.101 [activity] operator:212777 page: SYSTEM · Session active
+17:59:48.586 [activity] operator:212777 page: NAVIGATION · Scrolled view
+17:59:56.454 [activity] operator:212777 page: UI · Button action
+17:59:56.665 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:00:02.288 [activity] operator:212777 page: TRAJECTORY · Button action
+18:00:02.668 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:00:14.787 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:00:15.910 [activity] operator:212777 page: SYSTEM · Session active
+18:00:19.625 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:00:44.600 [activity] operator:212777 page: NAVIGATION · Scrolled view
+18:00:45.842 [activity] operator:212777 page: SYSTEM · Session active
+18:00:51.339 [activity] operator:212777 page: UI · Button action
+18:00:51.551 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:00:58.953 [activity] operator:212777 page: TRAJECTORY · Button action
+18:00:59.040 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:01.905 [activity] operator:212777 page: NAVIGATION · Scrolled view
+18:01:15.835 [activity] operator:212777 page: SYSTEM · Session active
+18:01:24.942 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:45.843 [activity] operator:212777 page: SYSTEM · Session active
+18:02:15.842 [activity] operator:212777 page: SYSTEM · Session active
+18:02:45.843 [activity] operator:212777 page: SYSTEM · Session active
+18:03:15.842 [activity] operator:212777 page: SYSTEM · Session active
+18:03:45.833 [activity] operator:212777 page: SYSTEM · Session active
+18:04:15.833 [activity] operator:212777 page: SYSTEM · Session active
+18:04:45.833 [activity] operator:212777 page: SYSTEM · Session active
+18:05:15.832 [activity] operator:212777 page: SYSTEM · Session active
+18:05:45.833 [activity] operator:212777 page: SYSTEM · Session active
+18:06:15.833 [activity] operator:212777 page: SYSTEM · Session active
+18:06:45.833 [activity] operator:212777 page: SYSTEM · Session active
+18:07:15.831 [activity] operator:212777 page: SYSTEM · Session active
+18:07:45.842 [activity] operator:212777 page: SYSTEM · Session active
+18:08:10.085 [activity] operator:212777 page: UI · Button action
+18:08:10.275 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:12.732 [activity] operator:212777 page: NAVIGATION · Button action
+18:08:12.943 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:14.254 [activity] operator:212777 page: NAVIGATION · Scrolled view
+18:08:16.002 [activity] operator:212777 page: SYSTEM · Session active
+18:08:16.002 [activity] operator:212777 page: ROBOT · Button action
+18:08:16.725 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:17.788 [activity] operator:212777 page: UI · Button action
+18:08:18.001 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:18.852 [activity] operator:212777 page: UI · Button action
+18:08:18.853 [activity] operator:212777 page: NAVIGATION · Scrolled view
+18:08:19.317 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:19.699 [activity] operator:212777 page: UI · Button action
+18:08:19.700 [activity] operator:212777 page: UI · Button action
+18:08:20.468 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:22.230 [activity] operator:212777 page: UI · Button action
+18:08:22.627 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:23.606 [activity] operator:212777 page: UI · Button action
+18:08:23.851 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:25.581 [activity] operator:212777 page: TRAJECTORY · Button action
+18:08:25.940 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:27.597 [activity] operator:212777 page: UI · Button action
+18:08:27.598 [activity] operator:212777 page: NAVIGATION · Scrolled view
+18:08:27.789 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:30.454 [activity] operator:212777 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:08:30.869 [activity] operator:212777 page: SEQUENCE · Button action
+18:08:30.888 [activity] operator:212777 page: NAVIGATION · Open screen
+18:08:30.887 [activity] operator:212777 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:08:30.933 [activity] operator:212777 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:08:31.287 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:08:31.382 [activity] operator:212777 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:08:33.968 [activity] operator:212777 page: NAVIGATION · Scrolled view
+18:08:45.859 [activity] operator:212777 page: SYSTEM · Session active
+18:09:15.861 [activity] operator:212777 page: SYSTEM · Session active
+18:09:30.131 [activity] operator:212777 POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/right
+18:09:30.140 [activity] operator:212777 POST /api/projects/alix_mvbvk1fk_zti6s/merge-sources/left
+18:09:30.748 [activity] operator:212777 page: TRAJECTORY · Button action
+18:09:30.965 [activity] operator:212777 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:09:34.374 [activity] operator:212777 page: NAVIGATION · Scrolled view
+18:09:45.860 [activity] operator:212777 page: SYSTEM · Session active
+18:10:15.861 [activity] operator:212777 page: SYSTEM · Session active
+18:10:45.862 [activity] operator:212777 page: SYSTEM · Session active
+18:11:15.833 [activity] operator:212777 page: SYSTEM · Session active
+18:11:45.832 [activity] operator:212777 page: SYSTEM · Session active
+18:12:15.832 [activity] operator:212777 page: SYSTEM · Session active
+18:12:45.833 [activity] operator:212777 page: SYSTEM · Session active
+18:13:15.833 [activity] operator:212777 page: SYSTEM · Session active

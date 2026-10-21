@@ -1,0 +1,75 @@
+{
+ "name": "L_merge_1_P.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "lines": 6111,
+ "seconds": 30.55,
+ "sha256": "aeaa194a68eef7d987af3a796ae099eb60386c1afe69a2f3fff46e38bf130964",
+ "parts": [
+  {
+   "name": "L_merge_1_trim_mean_scale_processed.txt",
+   "lines": 6111
+  }
+ ],
+ "joins": [],
+ "limits_ok": false,
+ "limits_text": "L2 Joint speed 1.96 x limit (limit 1 x limit); L3 Joint acceleration 20590 deg/s^2 (limit 612 deg/s^2)",
+ "placement": {
+  "task": "TASK 1A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 09:43:42"
+  }
+ },
+ "phase": "lid_closed",
+ "sources": [
+  {
+   "ref": "tune:MERGE-L-001/v001",
+   "name": "L_merge_1_trim_mean_scale_processed.txt",
+   "sha256": "aeaa194a68eef7d987af3a796ae099eb60386c1afe69a2f3fff46e38bf130964",
+   "tasks": [
+    "L-R01",
+    "L-R02",
+    "L-R03",
+    "L-R04"
+   ],
+   "grade": "processed"
+  }
+ ],
+ "made_from": {
+  "merge": "L_merge_1.txt",
+  "file": "20261021_164635_L_merge_1.txt",
+  "version": "v001"
+ },
+ "made": "2026-10-21 16:57:50",
+ "tasks": [
+  "L-R01",
+  "L-R02",
+  "L-R03",
+  "L-R04"
+ ],
+ "grade": "processed"
+}

@@ -1,0 +1,39 @@
+{
+ "key": "MERGE-L-001",
+ "side": "left",
+ "file": "20261021_164635_L_merge_1.txt",
+ "name": "L_merge_1.txt",
+ "sha256": "2540b7d3f37e45f414776e9d11190097095503411186c98de7e2524fbf932074",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 1A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 09:43:42"
+  }
+ },
+ "phase": "lid_closed",
+ "made": "2026-10-21 16:55:53"
+}
