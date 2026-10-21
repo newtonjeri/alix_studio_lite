@@ -189,3 +189,26 @@ def test_a_task_after_waits_on_both_arms_runs_with_no_question(server):
     j = wait(server, job)
     assert j["state"] == "done" and not j["extra"].get("question"), j
     assert "WORKFLOW STEP START" in events(j)
+
+
+def test_a_global_point_after_a_program_waits_for_the_programs_end(server):
+    """The lab, 21 Oct 22:29 and 22:41: a Home MoveJ straight after the last Program returned 1 and the sequence failed
+    at its last row, though the arm went Home (the controller's end-of-program message, late, taken by the SDK for the
+    move's own). That move waits 2 s for the Program's end first, in Simulation and on the robot (runner v14's own
+    Wait), and the sequence runs to its end."""
+    home = {"type": "global", "name": "STP_HOME", "move": "movej", "speed": 30, "wait_s": 0}
+    call(server, "PUT", f"{P}/workflow/left", {"steps": steps(tail=[home])})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": steps()})
+    assert [s["kind"] for s in call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})["stages"]] == ["parallel", "tail"]
+    sim = simulated(server)
+    tail = [a for a in sim["acts"]["left"] if a["stage"] == 1]
+    assert [a["kind"] for a in tail] == ["wait", "global"] and tail[0]["row"] == tail[1]["row"] == 4
+    assert round(tail[0]["t1"] - tail[0]["t0"], 3) == 2.0 and "end of the Program" in tail[0]["text"]
+    t0 = time.time()
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
+    assert j["state"] == "done", j
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    said = [r["text"] for r in hw if r["verb"] == "runner v14" and r["side"] == "left" and r["t"] >= t0]
+    w = next(i for i, s in enumerate(said) if s.startswith("WORKFLOW WAIT: 2 s"))
+    g = next(i for i, s in enumerate(said) if s.startswith("GLOBAL MOVE START: STP_HOME"))
+    assert w < g and any(s.startswith("GLOBAL MOVE COMPLETE: STP_HOME") for s in said[g:])

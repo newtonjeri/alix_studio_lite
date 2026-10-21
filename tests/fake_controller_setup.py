@@ -1,7 +1,7 @@
 """A fake controller for an arm's worker process (robot_process: LITE_WORKER_SETUP names this file), for
 tests/test_link_process.py: enough of the SDK for a reading, and one call that never answers on the connection
 made while the marker file LITE_FAKE_STUCK_MARKER exists (the first; it is removed as that connection opens, so the
-next one answers). Anything else answers -1.
+next one answers). Anything else answers -1. With LITE_FAKE_RUNNER, runner v14 is ``FakeRunner``.
 
 With LITE_FAKE_PUSH_FILE, the controller's realtime push setting (a JSON file, so that it is the same controller
 for every process that connects to it) and the RealMan SDK's own listener as measured with its library (triple-thread
@@ -90,9 +90,42 @@ class Controller:
         raise AttributeError(name)
 
 
+class FakeRunner:
+    """Runner v14's sequence as far as its lines and its Ctrl+C go (LITE_FAKE_RUNNER): a Program's lines, then a Wait in
+    50 ms slices; a KeyboardInterrupt is its STOP, handled and said as the runner does (its slow stop, the speed back)."""
+
+    @staticmethod
+    def normalize_workflow_step(st):
+        return dict(st)
+
+    @staticmethod
+    def run_workflow_sequence(arm, a, ip, steps):
+        import time
+
+        try:
+            print("WORKFLOW STEP START 1/2: PROGRAM")
+            print("WORKFLOW PROGRAM 1/2: slot 71 (71_x.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%")
+            print("WORKFLOW PROGRAM COMPLETE 1/2: 0.500 s")
+            print("WORKFLOW STEP START 2/2: WAIT")
+            t_end = time.monotonic() + 20
+            while time.monotonic() < t_end:
+                time.sleep(0.05)
+            print("WORKFLOW COMPLETE: 2/2 step(s), 20.5 s")
+            return 0
+        except KeyboardInterrupt:
+            print("** WORKFLOW STOP REQUESTED")
+            print("  arm slow-stop ret=0")
+            print("WORKFLOW SPEED RESTORE: 50% // ret=0")
+            return 1
+
+
 def setup():
     from alix_dispatch import connect
 
+    if os.environ.get("LITE_FAKE_RUNNER"):
+        from alix_studio_lite.server import robot_real
+
+        robot_real._RUNNER = FakeRunner
     marker = os.environ.get("LITE_FAKE_STUCK_MARKER")
 
     def open_arm(side, ip=None, port=None, **kw):

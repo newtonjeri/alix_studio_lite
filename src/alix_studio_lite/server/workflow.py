@@ -10,7 +10,8 @@ arm" is on; the steps after the last Program at the end. A Wait is a task of its
 its seconds, on one arm or both, anywhere (the owner, 21 Oct; V53 made a positive WAIT before a
 TOGETHER Program on both arms its manual lid checkpoint and refused one on one arm: WAIT_CHECKPOINTS). Each arm's part of a stage runs through runner v14's own
 ``run_workflow_sequence`` on that arm's controller, one call per arm per stage, as V53 runs it. Saved
-and loaded as V53's JSON (``realman_workflow_sequence_v1``).
+and loaded as V53's JSON (``realman_workflow_sequence_v1``). A move that waits for its arrival right after a Program
+waits PROGRAM_END_S first, in Simulation and on the robot (``settle_moves``: the lab, 21 Oct).
 
 What Lite adds, none of it motion (the owner's decisions of 16 Oct):
 - Simulation Mode: both arms in 3D through the same plan, with the collision check (walls, commode,
@@ -42,6 +43,13 @@ RULES = ("TOGETHER", "RUN FIRST", "WAIT OTHER")
 #: 5 sec ... a user defined stage in the sequence": it holds its own arm for its seconds, on one arm or both, anywhere,
 #: and never makes a checkpoint. V53's rule is kept, off (tests/test_workflow.py turns it on to check it against V53).
 WAIT_CHECKPOINTS = False
+#: A move that waits for its arrival (a Global Point's MoveJ / MoveL, a lid or seat task's first move) right after a
+#: Program: runner v14 sends it about 0.1 s after the controller's run state says the Program has ended, but the
+#: controller's own end-of-program message comes later (ALIX's 155 program runs with the blocking probe, 2026-09: a
+#: median 0.46 s after the run state, at most 1.6 s); the SDK's blocking move takes that message for its own arrival and
+#: returns 1 while the arm goes on to the point (the lab, 21 Oct 22:29 and 22:41: both arms' Home after their last
+#: Program "failed", ret=1, and both went Home). Such a move waits this long after the Program first (``settle_moves``).
+PROGRAM_END_S = 2.0
 ARMS = ("left", "right")
 MAX_STEPS = 500
 
@@ -491,6 +499,60 @@ def build_full(left_steps: list, right_steps: list) -> list[dict]:
     return plan
 
 
+def settle_moves(plan: list[dict]) -> list[dict]:
+    """``plan`` with PROGRAM_END_S between a Program and a move that waits for its arrival after it, on each arm in
+    the plan's order across its stages: a Wait before such a Global Point (``settle``: its seconds, the point's row),
+    or ``settle_s`` on a lid or seat task (the longest any arm needs, waited before it starts). The Waits between
+    them count towards it; Pole and Hand steps do not (one at its height already takes no time)."""
+    since = {s: None for s in ARMS}                # each arm: the seconds waited since its last Program, None: none
+    out = []
+    for st in plan:
+        if st["kind"] == "mechanism":
+            need = max([PROGRAM_END_S - since[s] for s in ARMS if since[s] is not None] or [0.0])
+            out.append(dict(st, settle_s=round(need, 3)) if need > 0 else st)
+            since = {s: None for s in ARMS}
+            continue
+        if st["kind"] == "checkpoint":
+            out.append(st)
+            continue
+        st = copy.deepcopy(st)
+        for side, steps in _items(st):
+            mine = []
+            for x in steps:
+                if x["type"] == "global" and since[side] is not None:
+                    if since[side] < PROGRAM_END_S:
+                        mine.append({"type": "wait", "seconds": round(PROGRAM_END_S - since[side], 3), "_row": x.get("_row"),
+                                     "settle": True})
+                    since[side] = None
+                elif x["type"] == "program":
+                    since[side] = 0.0
+                elif x["type"] == "wait" and since[side] is not None:
+                    since[side] += float(x.get("seconds") or 0)
+                mine.append(x)
+            steps[:] = mine
+        out.append(st)
+    return out
+
+
+def plan_shape(plan: list[dict]) -> list[dict]:
+    """The plan as a simulation's identity keeps it: each stage's kind and each arm's steps in it by row (a settle by its
+    seconds). The same steps planned otherwise (Lite's planner rules changed, as on 21 Oct) are not the run simulated."""
+    out = []
+    for st in plan:
+        row = {"kind": st["kind"]}
+        if st["kind"] == "mechanism":
+            row.update(task=st["task"], settle_s=st.get("settle_s") or 0)
+        elif st["kind"] == "checkpoint":
+            row["label"] = st.get("program_id")
+        else:
+            for side, steps in _items(st):
+                row[side] = [["settle", x["seconds"]] if x.get("settle") else x.get("_row") for x in steps]
+            if st["kind"] == "serial":
+                row["first"] = st["first"]["side"]
+        out.append(row)
+    return out
+
+
 # ── the steps: checked as runner v14 checks them, kept in the project, saved and loaded as V53's JSON
 
 def _runner():
@@ -614,7 +676,7 @@ def _with_stage(steps: list, part: list) -> list:
 
 
 def _items(st: dict) -> list:
-    """(side, steps) of each arm's part of a stage of V53's plan."""
+    """(side, steps) of each arm's part of a stage of V53's plan, in the order they run."""
     if st["kind"] == "serial":
         return [(x["side"], x["steps"]) for x in (st["first"], st["second"])]
     return [(side, st[side]["steps"]) for side in ARMS if isinstance(st.get(side), dict)]
@@ -669,6 +731,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
         check = _lid_check_before(full, k) if k is not None else None
         if check:
             plan = [check] + plan
+        plan = settle_moves(plan)
         return dict(mode=side, pick=dict(scope="task", side=side, row=row), first_row={side: row}, steps=picked, plan=plan,
                     counts=counts(plan))
     if scope == "dual":
@@ -707,6 +770,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
         check = _lid_check_before(full, k)
         if check:
             plan = [check] + plan
+        plan = settle_moves(plan)
         first = {side: min(x.get("_row") or 1 for x in parts[side]) for side in ARMS}
         return dict(mode="both", pick=dict(scope="dual", stage=k, label=st.get("program_id") or st.get("title")), first_row=first,
                     steps=picked, plan=plan, counts=counts(plan))
@@ -727,6 +791,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
         if not picked[mode]:
             raise UserError(f"{mode.upper()} sequence is empty.")
         plan = [{"kind": "single", "program_id": None, mode: {"side": mode, "steps": picked[mode]}}]
+    plan = settle_moves(plan)
     return dict(mode=mode, pick=dict(scope="sequence"), first_row={side: 1 for side in picked}, steps=picked, plan=plan,
                 counts=counts(plan))
 
@@ -902,8 +967,8 @@ def _fingerprint(info: dict | None) -> str | None:
 
 def identity_of(run: dict, programs: dict, points: dict, overall: int) -> dict:
     """What makes a run the same run (Real only after the same one completed in Simulation): its
-    steps, mode and rows, the programs it uses as Lite knows them, the global points it moves to as
-    read, and the overall speed."""
+    steps, mode and rows, how they are planned into stages (``plan_shape``), the programs it uses as Lite
+    knows them, the global points it moves to as read, and the overall speed."""
     used = {}
     for side, steps in run["steps"].items():
         pids = sorted({int(s["id"]) for s in steps if s["type"] == "program"})
@@ -919,7 +984,7 @@ def identity_of(run: dict, programs: dict, points: dict, overall: int) -> dict:
         used["mechanisms"] = {t: mechanism.digest(t) for t in sorted(set(tasks) | looks)}
     return dict(mode=run["mode"], pick=run["pick"], steps={s: [{k: v for k, v in st.items() if k != "_row"} for st in steps]
                                                                for s, steps in run["steps"].items()},
-                used=used, overall=int(overall))
+                plan=plan_shape(run["plan"]), used=used, overall=int(overall))
 
 
 # ── Simulation Mode: each arm's actions on one clock, through V53's plan
@@ -995,7 +1060,7 @@ class _ArmSim:
                 self.set_hand = True
             elif kind == "wait":
                 dur = float(step["seconds"])
-                a = self._act(stage, step, "wait", t, dur, f"Wait {dur:g} s")
+                a = self._act(stage, step, "wait", t, dur, _step_words(step))
             elif kind == "global":
                 pts = (self.points or {}).get("points") or {}
                 name, pct = step["name"], float(step["speed"]) * self.overall / 100.0
@@ -1272,8 +1337,8 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
         row = dict(index=i, kind=kind, label=str(st.get("program_id") or ("FINAL AUX STEPS" if kind == "tail" else "")), t0=round(T, 4))
         if kind == "checkpoint":
             row.update(t1=round(T, 4), title=st["title"], message=st["message"])
-        elif kind == "mechanism":
-            T = _sim_mechanism(st, sims, T, i, overall)
+        elif kind == "mechanism":                   # after the Programs' end (settle_moves), its own moves
+            T = _sim_mechanism(st, sims, T + float(st.get("settle_s") or 0), i, overall)
             row.update(t1=round(T, 4), title=st["title"], task=st["task"])
         elif kind == "serial":
             first, second = st["first"], st["second"]
@@ -1758,6 +1823,8 @@ def _changed(sim: dict | None, ident: dict) -> str:
         what.append("what is run (the sequence, the task or the arms)")
     if old.get("steps") != ident["steps"]:
         what.append("its steps")
+    elif not other_run and old.get("plan") != ident.get("plan"):  # the same steps, planned otherwise: Lite was updated
+        what.append("how its steps are planned into stages (Lite plans them otherwise since)")
     for side, u in ident["used"].items() if not other_run else ():   # another run uses other programs and points
         if side not in ARMS:                        # "mechanisms": the lid and seat plans, below
             continue
@@ -1804,6 +1871,8 @@ def _step_words(step: dict) -> str:
     if k == "hand":
         return "Hand " + ",".join(str(v) for v in step["values"])
     if k == "wait":
+        if step.get("settle"):
+            return f"Wait {float(step['seconds']):g} s for the controller's end of the Program, before the move"
         return f"Wait {float(step['seconds']):g} s"
     return f"{step['move'].upper()} {step['name']}"
 
@@ -2017,6 +2086,10 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                 elif kind == "mechanism":                   # a lid or seat task: ALIX's plan on both arms, the camera's checks
                     from . import mechanism as mech
 
+                    if st.get("settle_s"):                  # its first move waits for the Programs' end (settle_moves)
+                        say(f"LID / SEAT // {st['title']} // the controllers end the Programs before it",
+                            **{x: f"{pid} // WAITING {st['settle_s']:g} s" for x in ARMS})
+                        job.sleep(float(st["settle_s"]))
                     say(f"LID / SEAT // {st['title']} // ALIX's plan, the wrist camera's checks",
                         **{x: f"{pid} // RUNNING" for x in ARMS})
                     kit = mech.kit(robot)

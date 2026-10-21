@@ -150,6 +150,60 @@ def test_a_wait_is_its_arms_own_idle_and_never_a_checkpoint():
     assert refused < 3000
 
 
+def test_a_move_after_a_program_waits_for_the_programs_end():
+    """The lab, 21 Oct 22:29 and 22:41: each arm's Home MoveJ straight after its last Program returned 1, and the arm went
+    Home anyway (ALIX's 155 program runs: the controller's end-of-program message comes up to 1.6 s after its run state
+    says ended, and the SDK's blocking move takes it for its own). Such a move waits PROGRAM_END_S after the Program:
+    Waits between them count towards it, a Hand does not; across stages; and before a lid or seat task."""
+    from alix_studio_lite.server import workflow
+
+    assert workflow.PROGRAM_END_S == 2.0
+    prog = lambda i: {"type": "program", "id": i, "name": "", "speed": 100, "transit_speed": 30, "dual_rule": "TOGETHER"}  # noqa: E731
+    home = {"type": "global", "name": "HOME", "move": "movej", "speed": 20, "wait_s": 0.0}
+    left = [home, prog(80), {"type": "wait", "seconds": 0.5}, home, prog(81), {"type": "hand", "values": [1000] * 6}, home,
+            prog(82), {"type": "wait", "seconds": 3.0}, home, prog(83)]
+    right = [home, prog(80), prog(54), home]
+    steps = workflow._numbered({"left": left, "right": right})
+    run = workflow.plan_for(steps, "both")
+    assert [st["kind"] for st in run["plan"]] == ["parallel", "tail"] and run["plan"][1]["left"] is None
+    lp = run["plan"][0]["left"]["steps"]
+    # row 1: no Program before it; row 4: 0.5 s waited, 1.5 s more; row 7: a Hand between counts for nothing; row 10: 3 s
+    assert [(x["_row"], x["seconds"]) for x in lp if x.get("settle")] == [(4, 1.5), (7, 2.0)]
+    assert [x.get("_row") for x in lp] == [1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 11]
+    assert run["plan"][1]["right"]["steps"] == [{"type": "wait", "seconds": 2.0, "_row": 4, "settle": True}, dict(home, _row=4)]
+    assert run["steps"] == steps                                           # the arms' own steps: as they are
+    alone = workflow.plan_for(steps, "right")["plan"][0]["right"]["steps"]
+    assert [(x["type"], x.get("settle")) for x in alone] == [("global", None), ("program", None), ("program", None), ("wait", True),
+                                                             ("global", None)]
+    assert "for the controller's end of the Program" in workflow._step_words(alone[3])
+    task = {"type": "mechanism", "task": "lid_open"}
+    after = workflow.plan_for(workflow._numbered({"left": [prog(80), task], "right": [prog(80), dict(home), task]}), "both")
+    assert [(st["kind"], st.get("settle_s")) for st in after["plan"]] == [("parallel", None), ("tail", None), ("mechanism", 2.0)]
+    assert [x.get("settle") for x in after["plan"][1]["right"]["steps"]] == [True, None]   # the right arm's Home waited already
+    first = workflow.plan_for(workflow._numbered({"left": [task, prog(80)], "right": [task, prog(81)]}), "both")
+    assert [(st["kind"], st.get("settle_s")) for st in first["plan"]] == [("mechanism", None), ("parallel", None)]
+
+
+def test_the_same_steps_planned_otherwise_are_simulated_again(monkeypatch):
+    """A simulation is of a plan, not only of steps: after Lite plans the same steps otherwise (V53's Wait checkpoints
+    off since 21 Oct; the settle before a move), the one made before it no longer lets Real Machine Mode run them."""
+    from alix_studio_lite.server import workflow
+
+    prog = lambda i: {"type": "program", "id": i, "name": "", "speed": 100, "transit_speed": 30, "dual_rule": "TOGETHER"}  # noqa: E731
+    pause = {"type": "wait", "seconds": 2.0}
+    steps = workflow._numbered({"left": [prog(71), pause, prog(72)], "right": [prog(81), pause, prog(82)]})
+    none = {"left": {}, "right": {}}, {"left": None, "right": None}
+    now = workflow.identity_of(workflow.plan_for(steps, "both"), *none, 15)
+    monkeypatch.setattr(workflow, "WAIT_CHECKPOINTS", True)
+    before = workflow.plan_for(steps, "both")
+    assert [st["kind"] for st in before["plan"]] == ["parallel", "parallel", "checkpoint", "parallel"]
+    old = workflow.identity_of(before, *none, 15)
+    assert old["steps"] == now["steps"] and workflow.digest(old) != workflow.digest(now)
+    said = workflow._changed({"identity": old}, now)
+    assert said == "changed since it was simulated: how its steps are planned into stages (Lite plans them otherwise since)"
+    assert "planned into stages" in workflow._changed({"identity": {k: v for k, v in now.items() if k != "plan"}}, now)
+
+
 def test_steps_are_checked_and_v53s_json_loads_per_arm():
     from alix_studio_lite.server import workflow
     from alix_studio_lite.server.jobs import UserError
