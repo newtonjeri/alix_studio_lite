@@ -151,7 +151,8 @@ function build() {
       el('div', {},
         el('div', { class: 'eyebrow', text: 'PAGE 02 // DUAL ARM SEQUENCE BUILDER // SAFE START + LIVE STATUS' }),
         el('h3', { text: 'Build independent LEFT and RIGHT cleaning workflows' }),
-        el('p', { class: 'mini-note', text: 'Mix stored Programs, Pole, 6-channel Hand, Wait, and Global Points (MoveJ / MoveL + speed) in any order.' })),
+        el('p', { class: 'mini-note', text: 'Mix stored Programs, Pole, 6-channel Hand, Wait, and Global Points (MoveJ / MoveL + speed) in any order. '
+          + 'A Wait is a task of its own: its arm idles for its seconds, on one arm or both.' })),
       el('div', { class: 'lite-row' }, btn('Refresh Programs', () => refreshSources(true)), btn('Refresh Global Points', () => refreshSources(true)))),
     el('div', { class: 'card lite-s2-exec' },
       el('div', { class: 'lite-s2-modes', role: 'radiogroup', 'aria-label': 'Execution mode' },

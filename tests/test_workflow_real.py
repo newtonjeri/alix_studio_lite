@@ -1,6 +1,6 @@
 """S2's Real Machine Mode (feedback v5, slide 9) on ALIX's emulated arms: only after the same run
 completed in Simulation; each arm's part of each stage through runner v14's own
-run_workflow_sequence on its controller, as V53 runs it; the lid checkpoint asks the operator; STOP
+run_workflow_sequence on its controller, as V53 runs it; a Wait idles its own arm (no checkpoint since 21 Oct); STOP
 interrupts the runner the way V53's STOP does (its own Ctrl+C path) and latches the arms."""
 import json
 import socket
@@ -139,22 +139,22 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     assert "without a simulation of it, as confirmed" in events(j)
 
 
-def test_the_lid_checkpoint_asks_and_stop_interrupts_the_runner(server):
-    lid = {"type": "wait", "seconds": 0.5}
+def test_a_wait_idles_its_own_arm_and_stop_interrupts_the_runner(server):
+    """A Wait is a task of its own (the owner, 21 Oct): on one arm only, before a TOGETHER Program (the lab's pop-up:
+    V53 refused it, "SAFE TIMELINE checkpoint mismatch"), it idles that arm there, and nothing stops for the operator.
+    STOP cuts a long Wait short and latches the arms."""
+    hold = {"type": "wait", "seconds": 0.5}
     long_wait = {"type": "wait", "seconds": 60}
-    call(server, "PUT", f"{P}/workflow/left", {"steps": steps(lid, tail=[long_wait])})
-    call(server, "PUT", f"{P}/workflow/right", {"steps": steps(lid, tail=[long_wait])})
+    call(server, "PUT", f"{P}/workflow/left", {"steps": steps(hold, tail=[long_wait])})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": steps(tail=[long_wait])})
     plan = call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})
-    assert [s["label"] for s in plan["stages"]] == ["LID-PREP-1", "LID-CHECK-1", "TIMELINE-1", ""]
+    assert [s["label"] for s in plan["stages"]] == ["TIMELINE-1", ""] and plan["counts"]["checkpoints"] == 0
     sim = simulated(server)
+    held = [a for a in sim["acts"]["left"] if a["kind"] == "wait" and a["stage"] == 0]
+    assert held and round(held[0]["t1"] - held[0]["t0"], 3) == 0.5                      # the left arm idles 0.5 s there
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
-    j = wait(server, job, until=lambda j: j["extra"].get("question"))
-    q = j["extra"]["question"]
-    assert q["title"] == "MANUAL LID COVER CHECKPOINT" and "Open the toilet lid cover manually" in q["text"]
-    assert j["extra"]["live"]["left"] == "PAUSED // MANUAL LID CHECK"
-    call(server, "POST", f"/api/jobs/{job['id']}/answer", {"question": q["id"], "yes": True})
     j = wait(server, job, until=lambda j: "FINAL AUX" in j["extra"]["live"]["left"] and "Wait 60 s" in j["extra"]["live"]["left"])
-    assert j["state"] == "running", j
+    assert j["state"] == "running" and not j["extra"].get("question"), j                # no operator question
     m = next(x for x in call(server, "GET", f"{P}/merges")["left"])                 # nothing is sent to an arm that runs
     busy = call(server, "POST", f"{P}/merges/left/{m['file']}/upload", {"program_id": 72, "confirmed": True, "limits_seen": True})
     assert busy["code"] == "busy" and "S2 Real Machine" in busy["error"]
@@ -169,27 +169,23 @@ def test_the_lid_checkpoint_asks_and_stop_interrupts_the_runner(server):
         assert call(server, "POST", f"/api/robots/{side}/recover", {})["estop"] == "CLEAR"
 
 
-def test_a_task_after_the_lid_checkpoint_asks_it_before_anything_moves(server):
-    """A Single task picked after V53's manual lid cover checkpoint runs without the sequence's sections before
-    it, so it asks the checkpoint first (the owner, 16 Oct): Cancel ends it with nothing run on the arm."""
-    lid = {"type": "wait", "seconds": 0.5}
-    call(server, "PUT", f"{P}/workflow/left", {"steps": steps(lid)})
-    call(server, "PUT", f"{P}/workflow/right", {"steps": steps(lid)})
+def test_a_task_after_waits_on_both_arms_runs_with_no_question(server):
+    """Waits on both arms before the Program (V53's manual lid cover checkpoint until 21 Oct) are each arm's own idle:
+    a Single task picked after them runs as it is, with nothing asked first."""
+    hold = {"type": "wait", "seconds": 0.5}
+    call(server, "PUT", f"{P}/workflow/left", {"steps": steps(hold)})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": steps(hold)})
     left = call(server, "GET", f"{P}/workflow")["left"]
     row = next(i + 1 for i, st in enumerate(left) if st["type"] == "program")
     pick = {"scope": "task", "side": "left", "row": row, "id": 71}
     plan = call(server, "POST", f"{P}/workflow/plan", {"mode": "left", "pick": pick})
-    assert [s["kind"] for s in plan["stages"]] == ["checkpoint", "single"]
+    assert [s["kind"] for s in plan["stages"]] == ["single"]
+    full = call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})
+    assert [s["kind"] for s in full["stages"]] == ["parallel"] and full["counts"]["checkpoints"] == 0
     j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "left", "pick": pick}))
     assert j["state"] == "done", j
     call(server, "POST", f"{P}/workflow/played", {"hash": j["result"]["hash"]})
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "left", "pick": pick, "confirmed": True, "warnings_seen": j["result"]["hash"]})
-    j = wait(server, job, until=lambda j: j["extra"].get("question"))
-    q = j["extra"]["question"]
-    assert q["title"] == "MANUAL LID COVER CHECKPOINT" and q["text"].startswith("This task comes after the manual lid")
-    live = j["extra"]["live"]
-    assert live["left"] == "PAUSED // MANUAL LID CHECK" and live.get("right") != "PAUSED // MANUAL LID CHECK"   # the task's arm only
-    call(server, "POST", f"/api/jobs/{job['id']}/answer", {"question": q["id"], "yes": False})
     j = wait(server, job)
-    assert j["state"] == "failed" and "checkpoint was not confirmed" in j["error"]
-    assert "WORKFLOW STEP START" not in events(j)                                       # nothing ran on the arm
+    assert j["state"] == "done" and not j["extra"].get("question"), j
+    assert "WORKFLOW STEP START" in events(j)

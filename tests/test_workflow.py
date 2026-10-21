@@ -83,9 +83,11 @@ def test_a_tracks_execution_time_is_its_lines_less_one_on_the_5_ms_clock():
     assert track.duration_s(None) is None and track.duration_s("600") == 2.995
 
 
-def test_the_planner_is_v53s_own():
+def test_the_planner_is_v53s_own(monkeypatch):
+    """With V53's own Wait checkpoint rule (off in Lite since 21 Oct: WAIT_CHECKPOINTS), the plan is V53's own."""
     from alix_studio_lite.server import workflow
 
+    monkeypatch.setattr(workflow, "WAIT_CHECKPOINTS", True)
     theirs = v53_planner()
     left, right = v6()
     mine = workflow.build_plan(left, right)
@@ -100,6 +102,52 @@ def test_the_planner_is_v53s_own():
         assert ours == v53, (a, b)
         refused += ours[0] == "refused"
     assert 300 < refused < 2900                                  # both ways well exercised
+
+
+def zero_waits(steps: list) -> list:
+    return [dict(st, seconds=0.0) if st.get("type") == "wait" else st for st in steps]
+
+
+def plan_without_seconds(plan):
+    """The plan with every Wait at 0 s, wherever its steps are (a stage's arms, a serial stage's first and second)."""
+    if isinstance(plan, list):
+        return [plan_without_seconds(x) for x in plan]
+    if isinstance(plan, dict):
+        out = {k: plan_without_seconds(v) for k, v in plan.items()}
+        if out.get("type") == "wait":
+            out["seconds"] = 0.0
+        return out
+    return plan
+
+
+def test_a_wait_is_its_arms_own_idle_and_never_a_checkpoint():
+    """The owner, 21 Oct (the lab's pop-up: "SAFE TIMELINE checkpoint mismatch ... A positive WAIT exists ... on only one
+    arm"): a Wait is "an independent task, idle task, wait for 5 sec ... a user defined stage in the sequence". On one arm
+    or both, anywhere, it stays among its arm's steps (its arm idles for its seconds there) and never stops the other arm
+    or asks the operator: V53's plan as V53 makes it with the Waits at 0 s, each Wait keeping its own seconds."""
+    from alix_studio_lite.server import workflow
+
+    assert workflow.WAIT_CHECKPOINTS is False
+    theirs = v53_planner()
+    prog = lambda i, rule="TOGETHER": {"type": "program", "id": i, "name": "", "speed": 100, "transit_speed": 30,   # noqa: E731
+                                       "dual_rule": rule}
+    plan = workflow.build_plan([prog(71), {"type": "wait", "seconds": 5.0}, prog(72)], [prog(81), prog(82)])
+    assert [(st["kind"], st["program_id"]) for st in plan] == [("parallel", "TIMELINE-1")]
+    assert [(x["type"], x.get("id", x.get("seconds"))) for x in plan[0]["left"]["steps"]] == [("program", 71), ("wait", 5.0),
+                                                                                              ("program", 72)]
+    left, right = v6()                                  # V6's 2 s "MANUAL LID COVER OPEN" Waits on both arms: idles now
+    mine = workflow.build_plan(left, right)
+    assert "checkpoint" not in [st["kind"] for st in mine] and workflow.counts(mine)["checkpoints"] == 0
+    rng, refused = random.Random(21), 0
+    for _ in range(3000):
+        a, b = generated(rng), generated(rng)
+        ours = outcome(workflow.build_plan, a, b)
+        v53 = outcome(theirs, zero_waits(a), zero_waits(b))
+        assert (ours[0], plan_without_seconds(ours[1]) if ours[0] == "plan" else ours[1]) == v53, (a, b)
+        assert ours[0] == "refused" or not any(st["kind"] == "checkpoint" for st in ours[1])
+        assert ours[0] == "plan" or "checkpoint" not in ours[1]                       # never refused for a Wait
+        refused += ours[0] == "refused"
+    assert refused < 3000
 
 
 def test_steps_are_checked_and_v53s_json_loads_per_arm():
@@ -125,12 +173,15 @@ def test_steps_are_checked_and_v53s_json_loads_per_arm():
             workflow.check_steps([bad], "left")
 
 
-def test_a_single_task_a_dual_arm_task_or_the_sequences():
+def test_a_single_task_a_dual_arm_task_or_the_sequences(monkeypatch):
     """What is run (the owner, 16 Oct: "options to play a single task arm, dual arm task and sequences in both
     simulation and real"): a Program row alone on its arm with the Pole and Hand in force before it; one
-    coordinated stage of V53's plan with both arms' Programs, each arm staged the same way; or the sequences."""
+    coordinated stage of V53's plan with both arms' Programs, each arm staged the same way; or the sequences. With
+    V53's Wait checkpoint rule on (off since 21 Oct), a task after the checkpoint asks it first."""
     from alix_studio_lite.server import workflow
     from alix_studio_lite.server.jobs import UserError
+
+    monkeypatch.setattr(workflow, "WAIT_CHECKPOINTS", True)
 
     left, right = (workflow.check_steps(s, side) for s, side in zip(v6(), ("left", "right")))
     steps = workflow._numbered({"left": left, "right": right})

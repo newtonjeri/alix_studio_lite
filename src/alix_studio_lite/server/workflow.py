@@ -4,11 +4,11 @@ The control program's Page 02 (``rm_trajectory_ui_v53_safe_lid_checkpoint.py``, 
 ported as it is: each arm's ordered steps (Program, Global Point, Pole, Hand, Wait), each Program with
 its Start % (the controller's move to its first point; the stored timing is kept) and its Dual Rule
 (TOGETHER, RUN FIRST, WAIT OTHER). RUN BOTH follows V53's SAFE TIMELINE plan (``build_plan``, V53's
-own code): consecutive TOGETHER Programs as LEFT / RIGHT timeline blocks started together; a positive
-WAIT before a TOGETHER Program on both arms as the manual lid checkpoint (both arms finish, run the
-checkpoint's setup, then wait for the operator); RUN FIRST + WAIT OTHER as a one-arm-at-a-time
-handoff, asking before the waiting arm when "Confirm before waiting arm" is on; the steps after the
-last Program at the end. Each arm's part of a stage runs through runner v14's own
+own code): consecutive TOGETHER Programs as LEFT / RIGHT timeline blocks started together; RUN FIRST +
+WAIT OTHER as a one-arm-at-a-time handoff, asking before the waiting arm when "Confirm before waiting
+arm" is on; the steps after the last Program at the end. A Wait is a task of its own: its arm idles for
+its seconds, on one arm or both, anywhere (the owner, 21 Oct; V53 made a positive WAIT before a
+TOGETHER Program on both arms its manual lid checkpoint and refused one on one arm: WAIT_CHECKPOINTS). Each arm's part of a stage runs through runner v14's own
 ``run_workflow_sequence`` on that arm's controller, one call per arm per stage, as V53 runs it. Saved
 and loaded as V53's JSON (``realman_workflow_sequence_v1``).
 
@@ -36,6 +36,12 @@ from .jobs import UserError
 
 FORMAT = "realman_workflow_sequence_v1"
 RULES = ("TOGETHER", "RUN FIRST", "WAIT OTHER")
+#: V53's SAFE TIMELINE makes a positive WAIT before a TOGETHER Program a hard cross-arm checkpoint (both arms finish,
+#: then stop for the operator's OK: its manual lid cover checkpoint) and refuses one on one arm only ("SAFE TIMELINE
+#: checkpoint mismatch", the lab, 21 Oct 23:08). The owner, 21 Oct: a Wait is "an independent task, idle task, wait for
+#: 5 sec ... a user defined stage in the sequence": it holds its own arm for its seconds, on one arm or both, anywhere,
+#: and never makes a checkpoint. V53's rule is kept, off (tests/test_workflow.py turns it on to check it against V53).
+WAIT_CHECKPOINTS = False
 ARMS = ("left", "right")
 MAX_STEPS = 500
 
@@ -144,6 +150,8 @@ def build_plan(left_steps: list, right_steps: list) -> list[dict]:
         return str(item.get("dual_rule") or "TOGETHER").upper()
 
     def positive_wait_index(item):
+        if not WAIT_CHECKPOINTS:                    # a Wait is its arm's own idle: never a checkpoint (the owner, 21 Oct)
+            return None
         found = None
         for idx, step in enumerate(item.get("steps") or []):
             if str(step.get("type") or "").lower() != "wait":
