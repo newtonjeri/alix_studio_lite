@@ -115,11 +115,41 @@ class FakeExec:
         pass
 
 
+def _plans_with_rung1_at(tmp_path, monkeypatch, off_deg: float) -> float:
+    """ALIX's plans copied, lid_open's first re-lift made to start ``off_deg`` from where its lift ends (the rungs chain
+    from there), and Lite reading them: the ladder's runs whatever re-lifts are vendored (21 Oct: the revised Open the lid
+    ends its lift 3.2 degrees from where its re-lifts of 10 Oct begin). The lift's end, joint 1 (rad)."""
+    import shutil
+
+    dst = tmp_path / "hardware"
+    shutil.copytree(mechanism.PLANS, dst)
+    plan = json.loads((dst / "lid_open_toppra.json").read_text())
+    lift = next(st for st in plan["sub_trajectories"] if st["stage_name"] == "execute_path" and st["joint_names"][0].startswith("L_"))
+    end = list(lift["waypoints"][-1]["positions"])
+    rung = dst / "rungs" / "lid_open_toppra.rung1.json"
+    r = json.loads(rung.read_text())
+    arm = next(st for st in r["sub_trajectories"] if st.get("waypoints") and st["joint_names"][0].startswith("L_")
+               and "sliding_plate" not in st["joint_names"][0])
+    arm["waypoints"][0]["positions"] = [end[0] + np.radians(off_deg)] + end[1:]
+    rung.write_text(json.dumps(r))
+    monkeypatch.setattr(mechanism, "PLANS", dst)
+    mechanism.cached.cache_clear()
+    return end[0]
+
+
+@pytest.fixture
+def fitted(tmp_path, monkeypatch):
+    """lid_open's re-lifts starting where its lift ends: the ladder's policies, played through."""
+    _plans_with_rung1_at(tmp_path, monkeypatch, 0.0)
+    yield
+    mechanism.cached.cache_clear()
+
+
 def moves(ex):
     return [c for c in ex.calls if c[0] == "move"]
 
 
-def test_lid_open_as_on_the_robot_on_12_october():
+def test_lid_open_as_on_the_robot_on_12_october(fitted):
     """Closed; three misses (the lift and re-lifts 1 and 2), re-lift 3 lifts it; the seat came up with it, so the
     seat is closed after; seat_close_right's own questions."""
     ex = FakeExec(["lid_closed", "lid_closed", "lid_closed", "lid_closed", "lid_lifted", "seat_lifted",
@@ -173,7 +203,7 @@ def test_seat_open_re_lifts_back_along_its_lift_without_a_rung():
     assert all(m[2] == "left" for m in back)
 
 
-def test_a_lift_never_proven_escalates_to_a_person_with_nothing_moved_after():
+def test_a_lift_never_proven_escalates_to_a_person_with_nothing_moved_after(fitted):
     ex = FakeExec(["lid_closed"] + ["lid_closed"] * 4)
     with pytest.raises(UserError, match="still NOT lid_lifted after 3 re-lift") as err:
         mechanism.Runner(ex).run("lid_open")
@@ -272,3 +302,23 @@ def test_a_simulation_made_with_a_plan_revised_since_is_never_played_and_says_so
     ident = dict(mode="both", pick=None, steps={"left": [], "right": []}, overall=100, used=dict(sides, mechanisms={"lid_open": "new"}))
     old = {"identity": dict(ident, used=dict(sides, mechanisms={"lid_open": "old"}))}
     assert workflow._changed(old, ident) == "changed since it was simulated: ALIX's plan of Open the lid (revised since)"
+
+
+def test_re_lifts_planned_for_another_version_of_the_plan_stop_the_run_before_anything_moves(tmp_path, monkeypatch):
+    """21 Oct: Open the lid revised (its lift ends elsewhere), its pre-planned re-lifts of 10 Oct not: they chain from where
+    the lift ends, so the first one's stream would be refused at its first line ("the arm is not at the track's first
+    point"). Lite says it at the plan (the LID / SEAT tab's plan, S2's simulation) and, at a missed lift, stops before
+    the re-lift moves anything: a person must look."""
+    _plans_with_rung1_at(tmp_path, monkeypatch, 3.0)
+    try:
+        note = mechanism.Plan("lid_open").rungs_note()
+        assert note and "start 3.0 degrees from where its lift ends" in note and "Plan the re-lifts again in ALIX" in note
+        assert mechanism.Plan("lid_open").view()["rungs_note"] == note
+        ex = FakeExec(["lid_closed", "lid_closed"])                    # closed: the lift runs; NO: the lift missed
+        with pytest.raises(UserError) as err:
+            mechanism.Runner(ex).run("lid_open")
+        assert err.value.code == "escalate" and "re-lift 1's pre-planned rung starts 3.0 degrees" in str(err.value)
+        assert moves(ex)[-1][1] == "execute_path" and not any(m[5] for m in moves(ex))      # nothing of the re-lift moved
+        assert mechanism.Plan("seat_open").rungs_note() is None                          # no rungs: back along its lift
+    finally:
+        mechanism.cached.cache_clear()

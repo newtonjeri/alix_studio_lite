@@ -93,6 +93,14 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     assert said.get("code") == "confirm"                         # Real asks first, as every motion does
     job = call(server, "POST", "/api/mechanism/lid_open/run", {"confirmed": True})
     done = wait(server, job)
+    from alix_studio_lite.server import mechanism
+
+    if mechanism.Plan("lid_open").rungs_note():          # the vendored re-lifts planned for another version of the plan
+        assert done["state"] == "failed" and "planned for another version of Open the lid" in done["error"], done.get("error")
+        labels = [r["args"]["label"] for r in hardware(server) if r.get("verb") == "canfd stream"]
+        assert labels and not any("re-lift" in x for x in labels)              # stopped before any of it moved
+        server["script"].write_text(json.dumps(["lid_closed"]))                # the STOP test's answer, from the first
+        return
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-8:])
     res = done["result"]
     assert [(p["plan"], p["outcome"], p["relifts"]) for p in res["plans"]] == [("lid_open", "done", 1)]

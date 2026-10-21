@@ -211,16 +211,16 @@ left:
       translation: [-0.05, -0.025, 0.0]
       rotation: [0.0, 0.0, 0.0]
     point4:   # DRAFT: mirrored from right.point4 (UNCALIBRATED - teach + certify before use)
-      translation: [-0.07, -0.03, 0.00]
+      translation: [-0.07, -0.04, 0.00]
       rotation: [0.0, 0.0, 0.0]
     point5:   # DRAFT: mirrored from right.point5 (UNCALIBRATED - teach + certify before use)
-      translation: [-0.1, -0.04, 0.02]
+      translation: [-0.1, -0.045, 0.02]
       rotation: [0.0, 0.0, 5.0]
     point6:   # DRAFT: mirrored from right.point6 (UNCALIBRATED - teach + certify before use)
       translation: [-0.08, -0.05, 0.10]
       rotation: [0.0, 0.0, 10.0]
     point7:   # DRAFT: mirrored from right.point7 (UNCALIBRATED - teach + certify before use)
-      translation: [-0.03, -0.04, 0.12]
+      translation: [-0.03, -0.055, 0.12]
       rotation: [0.0, 0.0, 15.0]
 
   # CLEANING SEQUENCE

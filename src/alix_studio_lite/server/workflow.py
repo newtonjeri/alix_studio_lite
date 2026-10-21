@@ -1155,6 +1155,9 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
     plan = mechanism.cached(st["task"])
     title, rows = plan.title, st.get("rows") or {}
     mark = {s: {"_row": rows.get(s)} for s in ARMS}
+    stale = plan.rungs_note()
+    if stale:                                        # a missed lift would stop the run at its first re-lift
+        sims["left"]._say("warn", mark["left"], stale)
     camera = "right"                                 # the D435 rides the right wrist
     clock = [T]
 

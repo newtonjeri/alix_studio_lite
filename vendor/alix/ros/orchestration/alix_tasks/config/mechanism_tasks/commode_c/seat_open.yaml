@@ -187,7 +187,7 @@ left:
 
     # 0.52879; 0.14178; -0.11611, 0.04812; 0.99669; 0.0032849; 0.065393   (RIGHT taught raw, source of the mirror)
     # start_pose: [0.53, 0.118, -0.11, 0.99669, 0.04812, 0.065393, 0.0032849]   
-    start_pose: [0.52, 0.118, -0.11, 0.99669, 0.04812, 0.065393, 0.0032849]
+    start_pose: [0.53, 0.118, -0.11, 0.99669, 0.04812, 0.065393, 0.0032849]
     
     # 0.58456; 0.13676; -0.14306, 0.048186; 0.99669; 0.003265; 0.065462   (RIGHT taught raw, source of the mirror)
     pre_start_pose: [0.58456, 0.11124, -0.14306, 0.99669, 0.048186, 0.065462, 0.003265]   # DRAFT: mirrored from right.pre_start_pose (UNCALIBRATED - teach + certify before use)

@@ -181,6 +181,18 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def start_tol_deg() -> float:
+    """How far from a stream's first line the arm may be: what one 5 ms line may close (ALIX's run_verified: 80 % of
+    the first frame's limit at the per-joint gate, 0.72 degrees)."""
+    from alix_dispatch import track
+
+    return 0.8 * track.canfd_frame0_limit_deg(CLOCK_S, RATE_GATE)
+
+
+def _gap_deg(a, b) -> float:
+    return float(np.degrees(np.max(np.abs(np.asarray(a, dtype=float) - np.asarray(b, dtype=float)))))
+
+
 def _entries(data: dict, folder: Path, what: str) -> list:
     """A plan's runnable entries, its strokes' 5 ms tracks checked against their sha256 and their own moves."""
     from alix_dispatch import track
@@ -297,13 +309,45 @@ class Plan:
             e.note = f"re-lift {k}, pre-planned"
         return block
 
+    def rung_made(self, k: int) -> str | None:
+        """When re-lift ``k``'s rung was planned (its file's timestamp), or None."""
+        try:
+            return json.loads((self.path.parent / "rungs" / f"{self.path.stem}.rung{k}.json").read_text(encoding="utf-8")).get("timestamp_human")
+        except (OSError, ValueError):
+            return None
+
+    def rungs_note(self) -> str | None:
+        """Why this plan's pre-planned re-lifts do not fit it, or None. They chain from where its lift ends (the first
+        starts there, each next where the one before ended); re-lifts planned for another version of the plan start
+        elsewhere, and a missed lift then stops the run at the first one (21 Oct: Open the lid revised at 17:42, its
+        re-lifts of 10 Oct start 3.2 degrees from where its lift ends)."""
+        for idx, e in enumerate(self.entries):
+            for a in e.pre_actions:
+                if a.get("type") != "check_fixture_state" or a.get("on_fail") != "retry_lift":
+                    continue
+                lifter = "left" if a.get("arm", "right") == "right" else "right"
+                ended = next((x for x in reversed(self.entries[:idx]) if x.kind == "arm" and x.side == lifter), None)
+                try:
+                    first = next((x for x in self.rung_block(1, lifter) or [] if x.kind == "arm"), None)
+                except UserError as exc:
+                    return str(exc)
+                if ended is None or first is None:
+                    continue
+                gap = _gap_deg(first.first(), ended.last())
+                if gap > start_tol_deg():
+                    return (f"{self.title}'s pre-planned re-lifts (planned {self.rung_made(1) or 'when, not known'}) start {gap:.1f} "
+                            f"degrees from where its lift ends (the plan of {self.made}): they were planned for another version of it, "
+                            "so a missed lift stops the run at the first re-lift. Plan the re-lifts again in ALIX with this plan (its "
+                            "retry ladder), then vendor them into Lite.")
+        return None
+
     def view(self) -> dict:
         t = TASKS.get(self.name, {})
         return dict(name=self.name, title=self.title, short=t.get("short"), does=t.get("does"), start=t.get("start"),
                     end=t.get("end"), file=self.path.name, made=self.made, seconds=self.seconds(), sides=self.sides(),
                     entries=[dict(stage=e.stage, kind=e.kind, side=e.side, seconds=round(e.seconds, 2),
                                   lines=len(e.rows) if e.rows else None, track=e.group is not None) for e in self.entries],
-                    checks=self.checks(), standoff_mm=STANDOFF_MM,
+                    checks=self.checks(), standoff_mm=STANDOFF_MM, rungs_note=self.rungs_note(),
                     rungs=sorted(int(m.group(1)) for p in (self.path.parent / "rungs").glob(f"{self.path.stem}.rung*.json")
                                  if (m := re.fullmatch(re.escape(self.path.stem) + r"\.rung(\d+)\.json", p.name))))
 
@@ -556,6 +600,16 @@ class Runner:
                 if block is None:
                     return ("abort", f"{label}: re-lift {n} ({lc.describe_offset(offset)}) has no pre-planned rung in Lite, "
                                      "and Lite cannot re-plan it live (ALIX does that with ROS).")
+                # it starts where the lift before it ended (the rungs chain): one planned for another version of the plan
+                # starts elsewhere, and its stream would be refused at its first line; said here, before anything moves
+                ended = next((x for x in reversed(entries[i:k]) if x.kind == "arm" and x.side == lifter), None)
+                first = next((x for x in block if x.kind == "arm"), None)
+                gap = _gap_deg(first.first(), ended.last()) if ended is not None and first is not None else 0.0
+                if gap > start_tol_deg():
+                    return ("abort", f"{label}: NOT {expect}, and re-lift {n}'s pre-planned rung starts {gap:.1f} degrees from where "
+                                     f"the lift before it ended: it was planned for another version of {plan.title} (the re-lifts "
+                                     f"{plan.rung_made(n) or 'of another date'}, the plan {plan.made}). Plan the re-lifts again in "
+                                     "ALIX with this plan, then vendor them into Lite.")
                 self.say(f"{label}: NO — re-lift {n}/{budget}: {lc.describe_offset(offset)} on the {lifter} start pose, "
                          f"the pre-planned rung ({len(block)} entries) replaces the lift; the check runs again", "warn")
             else:
