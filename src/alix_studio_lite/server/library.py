@@ -308,11 +308,15 @@ class TaughtLibrary:
     def checks(self, fid: str) -> dict:
         """Every limit on the file as taught, on its own arm (L5 and L6 compare a tuned file with
         its recording, so they do not apply). Cached per file."""
+        return self.checks_of(self.get(fid))
+
+    def checks_of(self, meta: dict) -> dict:
+        """``checks`` of a file by its record ({name, arm, path}): a library file's, or the file of a
+        program on a controller (the Viewer's programs, api_library)."""
         from ..motion import track
         from ..motion.checks import check_bytes
         from ..motion.limits import load_limits
 
-        meta = self.get(fid)
         side = meta.get("arm")
         if side not in ("left", "right"):
             raise UserError(f"Say which arm {meta['name']} was taught on first.", code="arm")

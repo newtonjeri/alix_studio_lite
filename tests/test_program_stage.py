@@ -8,6 +8,7 @@ import json
 import threading
 import time
 import urllib.request
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -109,3 +110,70 @@ def test_s2_stops_a_program_whose_own_pole_and_hand_are_not_set_before_it():
     assert workflow._stage_stops(run(ok), programs, robot, ["left"]) == []
     unknown = {"left": {71: {"stage": None}}, "right": {}}                   # Lite did not send it: nothing to hold it to
     assert workflow._stage_stops(run([{"type": "program", "id": 71}]), unknown, robot, ["left"]) == []
+
+
+def test_the_viewer_finds_the_programs_on_the_controllers_and_replays_one_with_its_own_pole_and_hand(lite):
+    """The Trajectory Viewer (the owner, 21 Oct: "The tab can search the uploaded tasks"): the programs on both arms'
+    controllers, each with Lite's record of what it sent there; one sent with its pole and hand replays like a file,
+    staged with its own, from the very file sent (its path is kept with the record)."""
+    up = call(lite, "POST", "/api/robots/left/programs/upload", {"program_id": 43, "name": "L_viewer.txt", "content": content(2.0),
+                                                                "pole_mm": 60, "hand": "CLEANING", "confirmed": True})
+    assert wait(lite, up)["state"] == "done"
+    rec = lite["app"].robot.arm("left").programs[43]
+    assert Path(rec["path"]).is_file() and rec["path"].endswith("_L_viewer.txt")
+    listed = call(lite, "GET", "/api/library/programs")
+    assert set(listed["arms"]) == {"left", "right"} and listed["backend"] == "stand-in"
+    row = next(p for p in listed["arms"]["left"]["programs"] if p["id"] == 43)
+    assert row["viewable"] and row["why"] is None and row["sent"]
+    assert row["stage"]["text"] == "pole 60 mm, hand cleaning pose" and row["lines"] == 120
+    tl = call(lite, "GET", "/api/library/programs/left/43/timeline")
+    assert tl["program"] == 43 and tl["lines"] == 120 and tl["stage"]["pole_mm"] == 60 and tl["traj_t0"] > 0     # staged first
+    assert call(lite, "GET", "/api/library/programs/left/43/track")["lines"] == 120
+    assert {"L1", "L2", "L3", "L4"} <= {c["id"] for c in call(lite, "GET", "/api/library/programs/left/43/checks")["checks"]}
+    # the collision check takes it as a slot's file, on its own arm only
+    j = call(lite, "POST", "/api/library/collisions", {"left": "p_left_43", "phase": "lid_closed"})
+    assert wait(lite, j)["state"] == "done"
+    other = call(lite, "POST", "/api/library/collisions", {"right": "p_left_43"})
+    assert other["code"] == "arm" and "never shown on the RIGHT arm" in other["error"]
+
+
+def test_the_viewer_shows_only_what_lite_knows_of_a_program(lite):
+    """Sent without its pole and hand: listed and run (asked for them then), never shown. Its file gone: run, not shown,
+    until a file of the same bytes is on this computer again. A slot that holds nothing: refused."""
+    up = call(lite, "POST", "/api/robots/left/programs/upload", {"program_id": 44, "name": "L_bare.txt", "content": content(3.0),
+                                                                "confirmed": True})
+    assert wait(lite, up)["state"] == "done"
+    row = lambda n: next(p for p in call(lite, "GET", "/api/library/programs")["arms"]["left"]["programs"] if p["id"] == n)  # noqa: E731
+    assert not row(44)["viewable"] and "without its pole and hand" in row(44)["why"]
+    refused = call(lite, "GET", "/api/library/programs/left/44/timeline")
+    assert refused["code"] == "stage" and "cannot be shown" in refused["error"]
+
+    up = call(lite, "POST", "/api/robots/left/programs/upload", {"program_id": 45, "name": "L_moved.txt", "content": content(4.0),
+                                                                "pole_mm": 90, "hand": "GRIP", "confirmed": True})
+    assert wait(lite, up)["state"] == "done"
+    sent = Path(lite["app"].robot.arm("left").programs[45]["path"])
+    sent.rename(sent.with_suffix(".gone"))
+    assert not row(45)["viewable"] and "no longer on this computer" in row(45)["why"] and row(45)["stage"]["pole_mm"] == 90
+    assert "cannot be shown" in call(lite, "GET", "/api/library/programs/left/45/timeline")["error"]
+    call(lite, "POST", "/api/library", {"name": "L_again.txt", "content": content(4.0), "arm": "left", "pole_mm": 10, "hand": "OPEN"})
+    assert row(45)["viewable"]                     # the same bytes again: shown, still with its own pole and hand
+    assert call(lite, "GET", "/api/library/programs/left/45/timeline")["stage"]["pole_mm"] == 90
+
+    assert "holds no program 99" in call(lite, "GET", "/api/library/programs/left/99/timeline")["error"]
+
+
+def test_visual_sim_shows_a_program_lite_sent_with_its_own_pole_and_hand(lite):
+    """Nothing is sent in Visual sim, but a program is shown as its run from the slot runs: its own pole and hand first."""
+    pid = "stage_vis"
+    call(lite, "PUT", f"/api/projects/{pid}", {"id": pid, "name": "Stage visual", "createdAt": "2026-10-21T10:00:00.000Z",
+                                               "updatedAt": "2026-10-21T10:00:00.000Z", "archived": False, "state": {"currentTask": 0}})
+    txt = content(5.0)
+    r = call(lite, "POST", f"/api/projects/{pid}/units/L-R01/recordings", {"source": "upload", "name": "L_vis.txt", "content": txt,
+                                                                          "pole_mm": 70, "hand": "GRIP"})
+    assert "error" not in r, r
+    up = call(lite, "POST", "/api/robots/left/programs/upload", {"program_id": 46, "name": "L_vis.txt", "content": txt,
+                                                                "pole_mm": 70, "hand": "GRIP", "confirmed": True})
+    assert wait(lite, up)["state"] == "done"
+    shown = call(lite, "POST", "/api/robots/left/simulate-move", {"program": 46, "pid": pid})
+    assert "its own pole and hand first: pole 70 mm, hand grip" in shown["what"], shown.get("what") or shown
+    assert shown["stage"]["pole_mm"] == 70

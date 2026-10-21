@@ -1700,7 +1700,7 @@ class StandInRobot:
                 job.progress("Stored: the name and the size read back", 100, 100)
                 a.programs[pid] = dict(name=name, lines=lines, bytes=size, sha256=sha256, stage=stage, first_row=first,
                                        controller_bytes=out["bytes"], stored_name=out["stored_name"],
-                                       uploaded=time.strftime("%Y-%m-%d %H:%M"))
+                                       uploaded=time.strftime("%Y-%m-%d %H:%M"), path=str(path))
                 a.save()
                 from . import content
 
@@ -1718,7 +1718,7 @@ class StandInRobot:
                 job.progress(f"Sending {size / 1e3:.0f} kB to program {pid}", int(100 * el / wall), 100)
                 job.sleep(min(0.2, wall))
             a.programs[pid] = dict(name=name, lines=lines, bytes=size, sha256=sha256, stage=stage, first_row=first,
-                                   uploaded=time.strftime("%Y-%m-%d %H:%M"))
+                                   uploaded=time.strftime("%Y-%m-%d %H:%M"), path=str(path))
             a.save()
             job.log(f"Stored as program {pid}; name and size read back.")
             return dict(program_id=pid, lines=lines, bytes=size, seconds=round(dur, 1))

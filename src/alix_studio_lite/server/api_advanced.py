@@ -4,11 +4,14 @@ project in a certain slot) ... in all three run modes"). The page's RUN tab was 
 said COMPLETE after a timer and sent nothing); here:
 
 - a program stored on a controller, run by its number or its name, as the control program's RUN runs a slot
-  (``robot.run_stored``: the controller's move to its first point, then the program; the pole and the hand
-  as they are). Hardware sim: the controller's SIM mode; Real: the arm, confirmed;
-- a .txt from this computer sent to a slot (and run), read through ALIX's strict parser first;
+  (``robot.run_stored``: the program's own pole and hand first (the owner, 21 Oct), then the controller's move
+  to its first point, then the program). Hardware sim: the controller's SIM mode; Real: the arm, confirmed.
+  The Trajectory Viewer runs a program from its slot through this route too;
+- a .txt from this computer sent to a slot (and run), read through ALIX's strict parser first, with the pole
+  and hand the operator states for it recorded as its own;
 - in Visual sim nothing is sent: the move to a global point, a stored program and a chosen file are shown
-  in 3D (``simulate-move``), from where the arm stands (a linked arm) or its standing pose.
+  in 3D (``simulate-move``), from where the arm stands (a linked arm) or its standing pose; a stored program
+  Lite sent with its pole and hand stages them first, as its run does.
 """
 from __future__ import annotations
 
@@ -131,7 +134,8 @@ def post_simulate_move(app, q, body, m):
     controller (MoveJ; a MoveL is shown as the same joint move), ``{program, pid}`` a stored program's file
     (found in project ``pid`` by its bytes when Lite sent it, else by its name), ``{name, content}`` a .txt
     from this computer. From where the arm stands (a linked arm) or its standing pose; the pole and the
-    hand stay as they are."""
+    hand stay as they are, but for a program Lite sent with its own pole and hand: those are staged first,
+    as its run from the slot does (robot_standin.run_stored)."""
     import numpy as np
 
     from . import content, staging, workflow
@@ -146,7 +150,7 @@ def post_simulate_move(app, q, body, m):
     start, how = workflow._start_state(app, side, home)
     if body.get("start") is not None:                # a sequence's next point: where the previous one left the arm
         start, how = staging.check_start(body["start"]), "after the previous step"
-    what = ""
+    what, own = "", None
     if body.get("point"):
         name = str(body["point"]).strip()
         pts = content.content(app, side)["points"]
@@ -175,12 +179,16 @@ def post_simulate_move(app, q, body, m):
                             "Load the file in this project (S1's Load from this computer), or run it in Hardware sim.")
         md = track.read_md(path)
         what = f"program {pid} ({info.get('name') or Path(path).name})"
+        if info.get("sent") and not info.get("gone"):
+            own = staging.stage_from(info.get("stage"))
+        what += (f", its own pole and hand first: {staging.describe(own)}" if own is not None
+                 else ", with the pole and hand as they are (Lite does not know its own)")
     elif body.get("content") is not None:
         name, md = _track_of(body.get("name"), body.get("content"))
         what = name
     else:
         raise UserError("Say what to show: a global point, a program or a file.")
-    stage = staging.make_stage(start["pole_mm"], start["hand"], "where the arm stands")
+    stage = own or staging.make_stage(start["pole_mm"], start["hand"], "where the arm stands")
     out = staging.execution_timeline(side, md, stage, home=staging.start_values(side, home, start),
                                      links=staging.staged_links(side, _mesh_links(p)),
                                      rating_deg_s=load_limits(side).rating_deg_s, max_frames=5000)
