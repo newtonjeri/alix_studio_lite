@@ -281,7 +281,7 @@ function pickInto(side, what, anchor) {
       detail: (p.sent ? `sent by Lite${p.file_name ? `: ${p.file_name}` : ''}` : p.gone ? 'no longer on the controller' : 'on the controller')
         + (p.seconds != null ? ` · ${fmtT(p.seconds)}` : '') })) }];
   choose(anchor, groups, input.value, (v) => { input.value = v; input.focus(); },
-    { placeholder: what === 'point' ? 'Search the global points' : 'Search the programs: ID or name' });
+    { placeholder: what === 'point' ? 'Search the global points' : 'Search the programs: ID or name', files: what !== 'point' });
 }
 
 // The programs and the global points to choose from are the controller's, as Data Management lists them (the

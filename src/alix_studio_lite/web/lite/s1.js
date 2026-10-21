@@ -12,6 +12,10 @@
 //    (below: staged first, then the file on the 5 ms clock, in the room and at the UGV placement its
 //    files were taught at), or sent to Tune + Simulation: Tune opens it as its source, and what Tune
 //    keeps comes back here as a new merge.
+// The three steps are set apart as the teaching flow sets its own apart (the owner, 21 Oct: "Use the same
+// step-separation format that the app already uses for steps in other sub-tasks (such as Prepare, Drag and Teach, and
+// Save and Review)"): the numbered step bar (the page's pipeline: the step to do now, the steps done) and each step a
+// card of its own with its heading and what it does; a click on the bar goes to that step.
 
 import { call, get, post, say } from './api.js';
 import { armFromName, confirmDialog, ctx, el, fmtT, jobLine, robotCall, stageDialog, tell, watchJob } from './ctx.js';
@@ -33,6 +37,8 @@ const LOAD_WARNING = 'Lite does not know the pole height and hand pose these fil
   + 'height or with the wrong hand. Lite has no UGV placement or room for them either: they merge only with files that have none.';
 const PHASE_WORDS = { lid_closed: 'lid closed', lid_open: 'lid open', seat_open: 'seat open' };
 const fresh = () => ({ items: [], picked: [], merges: [], sel: null, busy: false, scope: 'project', show: 'controller', controller: null });
+// the steps, as the teaching flow's step bar names its own: [title, what it holds]
+const STEPS = [['Files', 'Pick them in order'], ['Merge order', 'Order · name · merge'], ['Merged files', 'Upload · review · tune']];
 const st = { left: fresh(), right: fresh() };
 const review = { side: null, file: null, phase: null, scene: null, t0: 0, total: 0, token: 0 };
 let panel = null, player = null, built = false, tools = null;
@@ -48,6 +54,15 @@ function status(side, text, cls = '') {
 
 // ── the panel
 
+// One step's card: its heading and what it does, as the teaching flow's stage cards have them, then its content.
+function stepCard(side, n, does, ...kids) {
+  return el('section', { id: `liteS1Step${n}_${side}`, class: 'card lite-s1-step', 'aria-labelledby': `liteS1StepTitle${n}_${side}` },
+    el('div', { class: 'section-head' },
+      el('div', {}, el('h2', { id: `liteS1StepTitle${n}_${side}`, text: `${n}. ${STEPS[n - 1][0]}` }), el('p', { text: does })),
+      el('span', { id: `liteS1StepBadge${n}_${side}`, class: 'badge' })),
+    ...kids);
+}
+
 function build() {
   if (built) return;
   built = true;
@@ -60,7 +75,12 @@ function build() {
     el('div', { class: 'lite-s1-arms' }, ARMS.map((side) => el('div', { class: `card lite-s1-arm ${side}` },
       el('div', { class: 'lite-s1-head' }, el('span', { class: `badge ${side === 'left' ? 'blue' : 'orange'}`, text: `${ARM(side)} ARM` }),
         el('b', { text: `Merge the ${ARM(side)} arm's files` })),
-      el('h4', { text: '1 · Files, picked in order' }),
+      el('div', { class: 'pipeline lite-s1-pipeline', role: 'list', 'aria-label': `${ARM(side)} arm: the merge's steps` },
+        STEPS.map(([title, sub], i) => el('button', { id: `liteS1Pipe${i + 1}_${side}`, class: 'pipe', type: 'button', role: 'listitem',
+          onclick: () => $(`liteS1Step${i + 1}_${side}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) },
+        `${i + 1}. ${title}`, el('span', { text: sub })))),
+      stepCard(side, 1, 'Pick the files to merge, in the order they run: from the list (by default the files already on the controller), '
+        + 'or loaded from this computer.',
       el('div', { class: 'lite-row lite-s1-pickrow' },
         el('div', { class: 'field' }, el('label', { for: `liteS1Scope_${side}`, text: 'Files from' }),
           el('select', { id: `liteS1Scope_${side}`, onchange: (e) => { st[side].scope = e.target.value; load(side); } },
@@ -80,14 +100,15 @@ function build() {
         el('input', { id: `liteS1Load_${side}`, type: 'file', accept: '.txt,text/plain', multiple: true, hidden: true,
           onchange: (e) => loadFiles(side, e.target) }),
         el('input', { id: `liteS1LoadDir_${side}`, type: 'file', multiple: true, hidden: true, webkitdirectory: '',
-          onchange: (e) => loadFiles(side, e.target) })),
-      el('h4', { text: '2 · Merge order' }),
-      el('ol', { id: `liteS1Order_${side}`, class: 'lite-s1-order' }),
-      el('div', { class: 'lite-row' },
-        el('div', { class: 'field lite-grow' }, el('label', { for: `liteS1Name_${side}`, text: 'Merged file name' }),
-          el('input', { id: `liteS1Name_${side}`, type: 'text', autocomplete: 'off', maxlength: '120' })),
-        btn('Merge and save', () => merge(side), 'btn')),
-      el('h4', { text: '3 · Merged files' }),
+          onchange: (e) => loadFiles(side, e.target) }))),
+      stepCard(side, 2, 'Put the files in the order they run, name the merged file, then merge and save it.',
+        el('ol', { id: `liteS1Order_${side}`, class: 'lite-s1-order' }),
+        el('div', { class: 'lite-row' },
+          el('div', { class: 'field lite-grow' }, el('label', { for: `liteS1Name_${side}`, text: 'Merged file name' }),
+            el('input', { id: `liteS1Name_${side}`, type: 'text', autocomplete: 'off', maxlength: '120' })),
+          btn('Merge and save', () => merge(side), 'btn'))),
+      stepCard(side, 3, 'Choose a merged file: rename or download it, upload it to a Program ID on the controller, review it in 3D, '
+        + 'or send it to Tune + Simulation.',
       el('div', { class: 'lite-table-scroll lite-s1-merges' }, el('table', { class: 'lite-table' },
         el('thead', {}, el('tr', {}, ['', 'Merge', 'Time', 'Pole and hand', 'UGV placement', 'Limits'].map(h => el('th', { text: h })))),
         el('tbody', { id: `liteS1Merges_${side}` }))),
@@ -105,7 +126,7 @@ function build() {
           btn('Upload to controller', () => upload(side), 'btn'),
           btn('Review in 3D', () => show3d(side), 'btn green'),
           btn('Send to Tune + Simulation', () => toTune(side), 'btn outline')),
-        el('div', { id: `liteS1Slot_${side}`, class: 'mini-note' })),
+        el('div', { id: `liteS1Slot_${side}`, class: 'mini-note' }))),
       el('div', { id: `liteS1Status_${side}`, class: 'lite-status' })))),
     el('div', { class: 'card lite-s1-sim' },
       el('div', { class: 'lite-section-title' },
@@ -200,8 +221,8 @@ async function loadFiles(side, input) {
   const otherWords = other.length ? ` ${other.length} named for the ${otherArm} arm left out.` : '';
   const refusedWords = refused.length ? ` Refused: ${refused.join('; ')}` : '';
   const restatedWords = restated.length ? ` Pole and hand changed: ${restated.join('; ')} (a merge made from it before keeps its own).` : '';
-  const addedWords = !ok ? '' : added === ok ? ` ${ok === 1 ? 'It is' : 'They are'} in the merge order (2 · Merge order).`
-    : `${added ? ` ${added} added to the merge order (2 · Merge order).` : ''} Not added to the merge order (in the list under Loaded from this computer, `
+  const addedWords = !ok ? '' : added === ok ? ` ${ok === 1 ? 'It is' : 'They are'} in the merge order (2. Merge order).`
+    : `${added ? ` ${added} added to the merge order (2. Merge order).` : ''} Not added to the merge order (in the list under Loaded from this computer, `
       + `greyed with why): ${left.join('; ')}.`;
   status(side, `${ok} file${ok === 1 ? '' : 's'} loaded.${restatedWords}${addedWords}${otherWords}${refusedWords}`,
     refused.length || other.length || added < ok ? 'warn' : 'ok');
@@ -257,7 +278,7 @@ function chooseFile(side, anchor) {
     lists.push({ label: `${ARM(side)} controller`, rows: [{ value: '', text: 'No file here is on the controller', disabled: true,
       note: `${ctlWords(side)} Choose Show: All files to see every file.` }] });
   }
-  choose(anchor, lists, null, (ref) => pick(side, ref), { placeholder: 'Search the files: name, region or project' });
+  choose(anchor, lists, null, (ref) => pick(side, ref), { placeholder: 'Search the files: name, region or project', files: true });
 }
 
 // What Lite knows of the arm's controller, for the list's count and its empty list.
@@ -322,12 +343,30 @@ function paint(side) {
     el('td', { text: m.placement ? placeText(m.placement) : 'not recorded' }),
     el('td', {}, el('span', { class: m.limits_ok ? 'lite-ok' : 'lite-warn', text: m.limits_ok ? 'L1–L4 pass' : `${m.limits_text} (shown, not enforced)` }))))
     : [el('tr', {}, el('td', { colspan: '6', class: 'mini-note', text: `No ${ARM(side)} merge yet.` }))]));
+  steps(side);
   const sel = s.merges.find(m => m.file === s.sel);
   $(`liteS1Tools_${side}`).hidden = !sel;
   if (sel && $(`liteS1Rename_${side}`).dataset.for !== sel.file) {
     $(`liteS1Rename_${side}`).value = sel.name;
     $(`liteS1Rename_${side}`).dataset.for = sel.file;
   }
+}
+
+// The step bar as the teaching flow's: the step to do now (blue), the steps done (green); each card's badge says how far.
+function steps(side) {
+  const s = st[side];
+  const now = s.picked.length ? 2 : s.merges.length ? 3 : 1;
+  for (let n = 1; n <= 3; n += 1) {
+    const pipe = $(`liteS1Pipe${n}_${side}`);
+    if (!pipe) continue;
+    pipe.classList.toggle('active', n === now);
+    pipe.classList.toggle('done', n < now);
+    pipe.setAttribute('aria-current', n === now ? 'step' : 'false');
+  }
+  const badge = (n, text, cls) => { const b = $(`liteS1StepBadge${n}_${side}`); if (b) { b.textContent = text; b.className = `badge ${cls}`.trim(); } };
+  badge(1, s.picked.length ? `${s.picked.length} PICKED` : 'NO FILE PICKED', s.picked.length ? 'green' : now === 1 ? 'blue' : '');
+  badge(2, s.picked.length ? 'READY TO MERGE' : 'NOTHING TO MERGE', s.picked.length ? 'blue' : '');
+  badge(3, s.merges.length ? `${s.merges.length} MERGED` : 'NONE YET', s.merges.length ? (now === 3 ? 'blue' : 'green') : '');
 }
 
 const stageText = (s) => `pole ${s.pole_mm} mm, hand ${(s.hand || []).join(', ')}`;

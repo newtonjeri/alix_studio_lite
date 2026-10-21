@@ -18,15 +18,17 @@ const fits = (text, ws) => { const t = String(text).toLowerCase(); return ws.eve
 // Opens the list under `anchor`: `groups` [{label, rows: [{value, text, detail, search, disabled, note}]}]
 // (the search looks in a row's text, its `search` words and its group's label), `current`
 // the value chosen now; `pick(value)` when one is chosen. A disabled row is shown greyed with its note (why
-// it cannot be chosen) and is never chosen.
-export function choose(anchor, groups, current, pick, { placeholder = 'Search the global points' } = {}) {
+// it cannot be chosen) and is never chosen. `files`: a list of files, each shown as an entry of its own (the owner,
+// 21 Oct: "show the files as clearly separated entries"; S1's files, S2's programs).
+export function choose(anchor, groups, current, pick, { placeholder = 'Search the global points', files = false } = {}) {
   if (open) open.close();
   const all = groups.flatMap(g => g.rows);
   const search = el('input', { type: 'search', class: 'lite-picker-search', placeholder, 'aria-label': placeholder,
     autocomplete: 'off', role: 'combobox', 'aria-expanded': 'true', 'aria-autocomplete': 'list' });
   const list = el('div', { class: 'lite-picker-list', role: 'listbox', id: `litePickerList${Date.now()}` });
   const count = el('div', { class: 'lite-picker-count' });
-  const panel = el('div', { class: 'lite-picker-panel', role: 'dialog', 'aria-label': 'Choose a point' }, search, count, list);
+  const panel = el('div', { class: `lite-picker-panel${files ? ' lite-picker-files' : ''}`, role: 'dialog',
+    'aria-label': files ? 'Choose a file' : 'Choose a point' }, search, count, list);
   search.setAttribute('aria-controls', list.id);
   document.body.append(panel);
   let shown = [], active = -1;

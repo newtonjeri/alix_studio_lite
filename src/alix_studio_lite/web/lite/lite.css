@@ -436,6 +436,19 @@ html[data-theme="dark"] .lite-status.err { color: var(--lite-d-red); }
 .lite-picker-none { padding: 10px; color: var(--muted); font-size: 13px; }
 .lite-picker-row.disabled { cursor: not-allowed; opacity: .6; }
 .lite-picker-row .lite-picker-note { color: var(--orange); }
+/* a list of files (S1's, S2's programs): each file an entry of its own, set apart (the owner, 21 Oct) */
+.lite-picker-files .lite-picker-list { gap: 6px; }
+.lite-picker-files .lite-picker-row { border: 1px solid var(--line); border-left: 4px solid var(--blue); background: var(--bg); padding: 10px 12px; }
+.lite-picker-files .lite-picker-row b { font-size: 14px; }
+.lite-picker-files .lite-picker-row.disabled { border-left-color: var(--line); }
+.lite-picker-files .lite-picker-row.active { background: var(--blue2); border-color: var(--blue); }
+.lite-picker-files .lite-picker-group { margin-top: 6px; }
+/* S1's steps, set apart as the teaching flow's (s1.js): the step bar, then a card per step */
+.lite-s1-pipeline { margin: 12px 0 4px; }
+.lite-s1-step { margin-top: 12px; padding: 14px 16px; }
+.lite-s1-step > .section-head { margin-bottom: 10px; }
+.lite-s1-step > .section-head h2 { font-size: 18px; }
+.lite-s1-step > .section-head .badge { flex: none; }
 
 /* Prepare's transition trajectories (V32): the Program ID beside the run buttons, the 3D window */
 .transition-run-actions .lite-transition-program { width: 130px; min-height: 44px; }
