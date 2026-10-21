@@ -606,6 +606,7 @@ class LiteUnits(Project):
                     hand_counts=setup and setup["hand"], setup=setup, target_s=u.get("target_s"),
                     picture=u.get("picture"), status=st["status"], status_label=st["label"],
                     recordings=st["recordings"], version=st["version"], library=self.library_file(key) is not None,
+                    own=sum(1 for r in self.recordings(key) if r.get("source") != "library"),   # not the fixture's taught set
                     mechanism=_mechanism_of(u))
 
 

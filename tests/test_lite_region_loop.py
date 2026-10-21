@@ -89,6 +89,7 @@ def test_task_queue_follows_the_deck(lite):
     # existing recordings are in place from the start (D31)
     t3 = tasks[labels.index("TASK 3")]
     assert t3["left"]["key"] == "L-T01" and t3["left"]["library"] and t3["left"]["status"] == "taught"
+    assert t3["left"]["own"] == 0                           # the fixture's taught set: not the operator's work (IN PROGRESS)
 
 
 def test_one_arm_step_through_the_loop(lite):
@@ -248,6 +249,8 @@ def test_loaded_file_never_replaces_the_recording(lite):
     assert len(u["recordings"]) == 2 and u["active"] != first
     assert [r["stage"]["text"] for r in u["recordings"]] == ["pole 140 mm, fingers 100 % open, thumb held",
                                                              "pole 50 mm, hand grip"]
+    tasks = call(lite, "GET", "/api/projects/alix_loop/tasks")["tasks"]
+    assert next(t["left"] for t in tasks if t["left"] and t["left"]["key"] == key)["own"] == 2     # the operator's own files
     assert unit(lite, key, "active", {"file": first})["active"] == first
     u = unit(lite, key, "name", {"name": "L_TASK_1A_trajectory.txt"})
     assert [r["name"] for r in u["recordings"] if r["file"] == first] == ["L_TASK_1A_trajectory.txt"]

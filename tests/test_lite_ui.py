@@ -74,6 +74,21 @@ def test_drag_and_teach_uploads_an_existing_project_beside_its_countdown_and_sho
     assert "installTeachView()" in (WEB / "lite/main.js").read_text(encoding="utf-8")
 
 
+def test_any_task_opens_at_any_time_and_the_task_left_resumes_where_it_was():
+    """The owner, 21 Oct: no need to finish the current task first (the page's jumpTask refused while the arm was locked
+    until Real Test); the task left is kept and resumes; a task left partway says IN PROGRESS."""
+    page = (WEB / "index.html").read_text(encoding="utf-8")
+    assert "Finish Real Test for the current '+selectedArm.toUpperCase()+' arm before opening another task." in page   # the page's own
+    for needle in ("function captureCurrentTaskRecord(", "function taskQueueStatus(", "function armTaskStatusInfo(", "onclick=\"jumpTask(${i})\""):
+        assert needle in page, needle
+    src = (WEB / "lite/progress.js").read_text(encoding="utf-8")
+    for needle in ("window.jumpTask = async function jumpTask(", "armSelectionLocked = false;", "rec.liteResume = {", "await resumeTask(i)",
+                   "teachingNow()", "'IN PROGRESS'", "window.openApprovedTask = function"):
+        assert needle in src, needle
+    assert "installProgress()" in (WEB / "lite/main.js").read_text(encoding="utf-8")
+    assert "leaveTask();" in (WEB / "lite/realtest.js").read_text(encoding="utf-8")       # Teach another task keeps it too
+
+
 def _calls(src, head):
     """Each call ``head(...)`` in JavaScript source: (line, the text of its arguments), strings and templates skipped."""
     def string_end(j):

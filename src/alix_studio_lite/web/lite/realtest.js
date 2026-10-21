@@ -12,6 +12,7 @@ import { fillPointGroup, filterOptions, hasController, movePoint, pointControls 
 import { borrow, Player } from './seq3d.js';
 import { scene } from './sim.js';
 import { liteMode, standIn } from './status.js';
+import { leaveTask } from './progress.js';
 import { refreshTasks } from './tasks.js';
 import { gateChips } from './tune.js';
 import { frame } from './vp.js';
@@ -311,11 +312,7 @@ function teachAnotherButton() {
 async function teachAnother() {
   const s = step();
   if (!s || !ctx.pid || $('liteTeachAnother')?.disabled) return;
-  try {                                               // the page's own record of this task, as it stands
-    const rec = window.captureCurrentTaskRecord();
-    taskRecords[currentTask] = rec;
-    window.safeSaveTaskRecords();
-  } catch (_) { /* the page still works */ }
+  leaveTask();                                        // its record as it stands: opened again, it resumes in Real Test
   const next = nextTask(currentTask, selectedArm);
   window.auditLog?.('TEACH', 'Teach another task', `${TASKS[currentTask]?.label || ''} · ${selectedArm.toUpperCase()} ARM · `
     + `left Real Test with its file on the controller${next ? ` · next: ${TASKS[next.i].label} · ${next.arm.toUpperCase()} ARM` : ''}`,

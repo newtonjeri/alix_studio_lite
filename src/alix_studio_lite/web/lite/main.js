@@ -20,6 +20,7 @@ import { installNeighbours } from './neighbours.js';
 import { installNotify } from './notify.js';
 import { installPlacement } from './placement.js';
 import { installPrepare } from './prepare.js';
+import { installProgress } from './progress.js';
 import { installProjects } from './projects.js';
 import { installRealTest } from './realtest.js';
 import { installRecovery } from './recovery.js';
@@ -60,6 +61,7 @@ installTransitions();     // Prepare's transition trajectories and task start po
 installVoice();           // the spoken timer: each second on its second, in a natural voice (the owner, 16 Oct)
 installTeach();           // existing recordings first (D31), drag teach, Save & Review
 installTeachView();       // Drag & Teach: an uploaded file in 3D, to check it is the right one (the owner, 21 Oct)
+installProgress();        // any task opened at any time, the task left kept and resumed (the owner, 21 Oct)
 installSim();             // the 3D robot in the simulation pane, on the 5 ms clock
 installTune();            // tuning with the optimiser, limits, target time (D24, D36)
 installRealTest();

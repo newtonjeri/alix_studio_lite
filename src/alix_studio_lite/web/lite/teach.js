@@ -29,6 +29,8 @@ const ZERO = secs(0);
 let takeOf = null;                 // {pid, key}: the region of the last take the timer shows
 let teaching = null;           // the drag teaching running: {pid, key, arm}, where its take is saved
 let counting = null;           // the countdown's job while it runs
+// whether a drag-teaching take, or its countdown, runs now (progress.js: another task waits for its STOP DRAG)
+export const teachingNow = () => !!(timerInt || counting || teaching);
 
 async function current() {
   const s = step();

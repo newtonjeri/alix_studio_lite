@@ -876,6 +876,8 @@ html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); c
 @media (max-width: 640px) { .summary-table th, .audit-table th, .lite-table th { overflow-wrap: anywhere; } }
 /* A lid or seat task: ALIX's plan, pre-recorded, never taught (tasks.js; the owner, 18 Oct) */
 .queue-status.lite-prerecorded { background: var(--card); border-color: var(--violet); color: var(--violet); }
+.queue-status.lite-inprogress { background: var(--orange2); border-color: var(--orange); color: var(--orange); }   /* left partway (progress.js) */
+html[data-theme="dark"] .queue-status.lite-inprogress { background: var(--card); border-color: var(--lite-d-orange); color: var(--lite-d-orange); }
 html[data-theme="dark"] .queue-status.lite-prerecorded { border-color: var(--lite-d-violet-edge); color: var(--lite-d-violet); }
 .lite-mech-notice { margin-top: 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 #view-teach.lite-prerecorded #pipeline, #view-teach.lite-prerecorded .stage { display: none !important; }
