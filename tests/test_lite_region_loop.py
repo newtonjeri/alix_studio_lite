@@ -80,10 +80,12 @@ def test_task_queue_follows_the_deck(lite):
     assert t9["right"]["display"] == "R-R08 FLOOR SPILLAGE RIGHT PART 2"
     for lab in ("TASK 10A", "TASK 10B"):                    # one action spanning two tasks
         t = tasks[labels.index(lab)]
-        assert t["right"]["key"] == "R-T04" and t["right"]["later"] and not t["left"]["later"]
-    assert tasks[labels.index("TASK 13")]["kind"] == "procedure"
-    later = {s["key"] for t in tasks for s in (t["left"], t["right"]) if s and s["later"]}
-    assert later == {"L-T06", "L-T04", "R-T04", "R-T10", "R-T05_PART1", "R-T05_PART2", "R-T06", "R-T07"}
+        assert t["right"]["key"] == "R-T04" and not t["right"]["later"] and not t["left"]["later"]
+    # every step released (the owner, 21 Oct: the drain brush and glove steps were held): the deck's procedure
+    # tasks are taught as the others, with no note saying "later"
+    for lab in ("TASK 13", "TASK 14"):
+        assert tasks[labels.index(lab)]["kind"] == "mixed" and not tasks[labels.index(lab)]["note"]
+    assert not [s["key"] for t in tasks for s in (t["left"], t["right"]) if s and s["later"]]
     # existing recordings are in place from the start (D31)
     t3 = tasks[labels.index("TASK 3")]
     assert t3["left"]["key"] == "L-T01" and t3["left"]["library"] and t3["left"]["status"] == "taught"
@@ -317,8 +319,10 @@ def test_teaching_needs_real_the_setup_and_keeps_the_arm(lite):
     call(lite, "POST", "/api/robots/mode", {"mode": "hwsim"})
 
 
-def test_later_steps_cannot_be_taught(lite):
-    assert "not in Release 1" in unit(lite, "R-T04", "teach/start", {})["error"]
+def test_every_step_can_be_taught(lite):
+    """The owner, 21 Oct: "release all the tasks" (the drain brush and glove steps were held, "not in Release 1")."""
+    for key in ("R-T04", "R-T05_PART1", "L-T04", "R-T07"):
+        assert "Release 1" not in str(unit(lite, key, "teach/start", {}).get("error"))
 
 
 def test_time_optimal_keeps_its_limits():

@@ -27,6 +27,10 @@ export function applyTasks(d) {
       if (!s) continue;
       t.left = s.left ? s.left.display : '—';
       t.right = s.right ? s.right.display : '—';
+      // the deck's procedure tasks (TASK 13, 14: the gloves, the drain brush returned) are taught once their steps are
+      // released (the owner, 21 Oct: "release all the tasks"): the kind the server gives them, without the deck's
+      // "Procedure to be added later"
+      if (t.kind === 'procedure' && s.kind !== 'procedure') { t.kind = s.kind; delete t.note; }
       if (s.note && t.kind !== 'procedure') t.note = s.note;
     }
   } else {

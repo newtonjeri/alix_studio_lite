@@ -637,12 +637,15 @@ def _expand(deck_task: str | None) -> list[str]:
 
 
 def _kind(left: dict | None, right: dict | None) -> str:
+    """The task's kind, as the page shows it: a procedure while none of its steps is released, an action for the lid
+    and seat, mixed when a step is not released, is alone, or is not a cleaning one (a glove change, the drain brush
+    picked or returned), else clean."""
     steps = [s for s in (left, right) if s]
     if all(s["later"] for s in steps):
         return "procedure"
     if any("Lid/seat" in (s.get("type") or "") for s in steps):
         return "action"
-    if any(s["later"] for s in steps) or len(steps) == 1:
+    if any(s["later"] for s in steps) or len(steps) == 1 or not all(str(s.get("type") or "").startswith("Cleaning") for s in steps):
         return "mixed"
     return "clean"
 

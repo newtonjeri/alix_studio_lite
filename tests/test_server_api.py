@@ -60,7 +60,7 @@ def test_starts_safe(server):
     assert s["mode"] == "visual" and s["role"] == "operator"            # NFR-UX (f): starts without hardware
     assert not any(a["connected"] for a in s["arms"].values())
     cat = call(server, "catalogue")
-    assert cat["first_release"] == 34 and len(cat["units"]) == 42
+    assert cat["first_release"] == 42 and len(cat["units"]) == 42          # every step released (the owner, 21 Oct)
     assert cat["counts"]["taught"] == 8                                 # the library's existing recordings (D31)
 
 
