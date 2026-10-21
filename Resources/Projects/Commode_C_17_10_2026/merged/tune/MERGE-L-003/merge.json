@@ -1,0 +1,24 @@
+{
+ "key": "MERGE-L-003",
+ "side": "left",
+ "file": "20261021_201310_L_merge_7_1.txt",
+ "name": "L_merge_7_1.txt",
+ "sha256": "0f6d6e8d90f77122dcaaf1bb7e5a5d6195b51c312ede3e630d2cd9ebb7f90bef",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "placement": null,
+ "phase": null,
+ "made": "2026-10-21 20:13:17"
+}

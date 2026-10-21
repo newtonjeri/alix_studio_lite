@@ -1,0 +1,25 @@
+{
+ "name": "L_T04_GC.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "lines": 2364,
+ "seconds": 11.815,
+ "sha256": "74e8bddbc174a1adff1118a96cedea08112fa0d0bd7a01607f19d5000892d7f4",
+ "loaded": "2026-10-21 19:49:20",
+ "folder": "",
+ "restated": "2026-10-21 20:12:55"
+}

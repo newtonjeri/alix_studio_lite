@@ -1,0 +1,36 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "80f9070b577bc802ecc3ea57787f7b739f29e99ed6a831a88e1339b65fa7d010",
+   "ok": true,
+   "at": "2026-10-21 18:51:10",
+   "detail": {
+    "program_id": 100
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "80f9070b577bc802ecc3ea57787f7b739f29e99ed6a831a88e1339b65fa7d010",
+   "ok": true,
+   "at": "2026-10-21 18:51:16",
+   "detail": {
+    "program_id": 100,
+    "dry_run": true,
+    "seconds": 0.84,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "80f9070b577bc802ecc3ea57787f7b739f29e99ed6a831a88e1339b65fa7d010",
+   "ok": true,
+   "at": "2026-10-21 18:51:21",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "hwsim"
+   }
+  }
+ ]
+}

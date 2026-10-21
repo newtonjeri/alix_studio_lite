@@ -1,0 +1,129 @@
+{
+ "name": "L_merge_5.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "lines": 11256,
+ "seconds": 56.275,
+ "sha256": "b2aae3e54e21893c696aba67aa3d2888f2042d37a017f5e068aecbd73491e1ce",
+ "parts": [
+  {
+   "name": "L_TASK_9_trajectory_trimmed_trim_mean_scale_processed.txt",
+   "lines": 1258
+  },
+  {
+   "name": "L_TASK_10A_trajectory_2_trimmed_trim_mean_scale_processed.txt",
+   "lines": 964
+  },
+  {
+   "name": "L_TASK_10B_trajectory_trimmed_trim_mean_scale_processed.txt",
+   "lines": 993
+  },
+  {
+   "name": "L_TASK_11A_trajectory_trimmed_trim_processed.txt",
+   "lines": 4201
+  },
+  {
+   "name": "L_TASK_11B_trajectory_2_2_2_trimmed_trim_processed.txt",
+   "lines": 3801
+  }
+ ],
+ "joins": [
+  {
+   "after": 3,
+   "lines": 39,
+   "seconds": 0.2,
+   "gap_deg": 0.07
+  }
+ ],
+ "limits_ok": false,
+ "limits_text": "L1 Joint limits -7.31 deg (limit 0.5 deg); L2 Joint speed 1.57 x limit (limit 1 x limit); L3 Joint acceleration 4065 deg/s^2 (limit 612 deg/s^2)",
+ "placement": {
+  "task": "TASK 9",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 16:00:06"
+  }
+ },
+ "phase": "seat_open",
+ "sources": [
+  {
+   "ref": "ver:L-R08/v001",
+   "name": "L_TASK_9_trajectory_trimmed_trim_mean_scale_processed.txt",
+   "sha256": "7b74d061cc9903b88b07b7e75407f70d9d5708bd501e5340eb07dacc420127e1",
+   "tasks": [
+    "L-R08"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:L-R09_PART1/v001",
+   "name": "L_TASK_10A_trajectory_2_trimmed_trim_mean_scale_processed.txt",
+   "sha256": "b381d0d8ff4334b32c2f35865d5ac120b3e15ef898b4a0c24800976653023d6a",
+   "tasks": [
+    "L-R09_PART1"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:L-R09_PART2/v001",
+   "name": "L_TASK_10B_trajectory_trimmed_trim_mean_scale_processed.txt",
+   "sha256": "65f245c16920cffc92c694708b30fe1e684205bb1fd28e91cb6614537e4e4fcc",
+   "tasks": [
+    "L-R09_PART2"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:L-R10_PART1/v001",
+   "name": "L_TASK_11A_trajectory_trimmed_trim_processed.txt",
+   "sha256": "f36da482e0d9511e740547d4bf8f2cae751ebf100b0f3cf4409e0cf17fef137f",
+   "tasks": [
+    "L-R10_PART1"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:L-R10_PART2/v001",
+   "name": "L_TASK_11B_trajectory_2_2_2_trimmed_trim_processed.txt",
+   "sha256": "f50cc2ee4a2058b09ff7cfd680974034d99022fcfbe8836076dc587a381ff04b",
+   "tasks": [
+    "L-R10_PART2"
+   ],
+   "grade": "processed"
+  }
+ ],
+ "made_from": null,
+ "made": "2026-10-21 19:26:43",
+ "tasks": [
+  "L-R08",
+  "L-R09_PART1",
+  "L-R09_PART2",
+  "L-R10_PART1",
+  "L-R10_PART2"
+ ],
+ "grade": "processed"
+}

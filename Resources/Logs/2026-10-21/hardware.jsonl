@@ -2517,3 +2517,5 @@
 {"t": 1792591048.2757747, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1792591048.357462, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1792591048.3597538, "side": "both", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "S2 Real Machine: both arms, SAFE TIMELINE: LEFT arm execute_path: the stream did not complete (the arm is not at the track's first point; 0 of 387 lines sent). (The arm holds where it stopped: check it, then press STOP or run the task again.)"}
+{"t": 1792591235.4822881, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792591235.5871572, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}

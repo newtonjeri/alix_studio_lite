@@ -1,0 +1,24 @@
+{
+ "name": "R_T05_CDH.txt",
+ "side": "right",
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "lines": 2716,
+ "seconds": 13.575,
+ "sha256": "6249cd8b49a72357baca2e64bac0afd2364d7db18629b30c09a58ed03c755c12",
+ "loaded": "2026-10-21 21:06:26",
+ "folder": ""
+}

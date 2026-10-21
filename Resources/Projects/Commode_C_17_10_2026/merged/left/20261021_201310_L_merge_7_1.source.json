@@ -1,0 +1,57 @@
+{
+ "name": "L_merge_7_1.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "lines": 3847,
+ "seconds": 19.23,
+ "sha256": "0f6d6e8d90f77122dcaaf1bb7e5a5d6195b51c312ede3e630d2cd9ebb7f90bef",
+ "parts": [
+  {
+   "name": "L_T06_DG.txt",
+   "lines": 1483
+  },
+  {
+   "name": "L_T04_GC.txt",
+   "lines": 2364
+  }
+ ],
+ "joins": [],
+ "limits_ok": false,
+ "limits_text": "L2 Joint speed 1.04 x limit (limit 1 x limit); L3 Joint acceleration 1828 deg/s^2 (limit 612 deg/s^2)",
+ "placement": null,
+ "phase": null,
+ "sources": [
+  {
+   "ref": "file:20261021_174315_L_T06_DG.txt",
+   "name": "L_T06_DG.txt",
+   "sha256": "ccbd3f610a3b855c33da0d3620f63e649faced28bdecd8d746afb4a74b5eab2f",
+   "tasks": [],
+   "grade": "raw"
+  },
+  {
+   "ref": "file:20261021_194920_L_T04_GC.txt",
+   "name": "L_T04_GC.txt",
+   "sha256": "74e8bddbc174a1adff1118a96cedea08112fa0d0bd7a01607f19d5000892d7f4",
+   "tasks": [],
+   "grade": "raw"
+  }
+ ],
+ "made_from": null,
+ "made": "2026-10-21 20:13:10",
+ "tasks": [],
+ "grade": "raw"
+}

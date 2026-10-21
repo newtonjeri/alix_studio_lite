@@ -6,25 +6,25 @@
    1000,
    1000,
    1000,
-   1000,
+   0,
    1000
   ],
   "source": "set in Prepare",
-  "text": "pole 200 mm, hand open",
-  "hand_text": "open"
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
  },
  "applied": {
   "pole": {
    "pole_mm": 200.0,
    "hand": [
-    0,
-    0,
-    0,
-    0,
-    150,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
     1000
    ],
-   "at": "2026-10-21 12:43:17"
+   "at": "2026-10-21 18:49:02"
   },
   "hand": {
    "pole_mm": 200.0,
@@ -33,10 +33,67 @@
     1000,
     1000,
     1000,
-    1000,
+    0,
     1000
    ],
-   "at": "2026-10-21 12:43:38"
+   "at": "2026-10-21 18:49:07"
   }
- }
+ },
+ "active": "20261021_184955_L-T06.txt",
+ "version": "v001",
+ "settings": {
+  "optimiser": "manual",
+  "target_s": null,
+  "segments": [],
+  "smooth_window": 101,
+  "program_id": 100,
+  "max_dev_mm": null,
+  "trim": true,
+  "smooth": true,
+  "scale": true,
+  "time_mode": "fastest",
+  "idle_window": 11,
+  "idle_threshold_md": 8.0,
+  "idle_min_run": 20
+ },
+ "history": [
+  {
+   "label": "Start",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   }
+  },
+  {
+   "label": "Program ID 100",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 100,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792579868.0592625
+  }
+ ],
+ "cursor": 1
 }

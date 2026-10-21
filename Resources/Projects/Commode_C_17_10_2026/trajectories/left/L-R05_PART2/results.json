@@ -127,6 +127,76 @@
     "note": "",
     "mode": "real"
    }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "0bba88a2d5d3bf25d351ddecc417fa15a8398e52503a120b2bee2f1cedb88921",
+   "ok": true,
+   "at": "2026-10-21 18:54:51",
+   "detail": {
+    "program_id": 55
+   }
+  },
+  {
+   "kind": "run_failed",
+   "sha256": "0bba88a2d5d3bf25d351ddecc417fa15a8398e52503a120b2bee2f1cedb88921",
+   "ok": false,
+   "at": "2026-10-21 18:56:28",
+   "detail": {
+    "state": "failed",
+    "error": "The LEFT controller stopped answering (rm_set_program_id_run, 72 s): Lite connects it again."
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "0bba88a2d5d3bf25d351ddecc417fa15a8398e52503a120b2bee2f1cedb88921",
+   "ok": true,
+   "at": "2026-10-21 18:58:03",
+   "detail": {
+    "program_id": 55,
+    "dry_run": true,
+    "seconds": 40.2,
+    "reported": []
+   }
+  },
+  {
+   "kind": "run_failed",
+   "sha256": "0bba88a2d5d3bf25d351ddecc417fa15a8398e52503a120b2bee2f1cedb88921",
+   "ok": false,
+   "at": "2026-10-21 18:58:22",
+   "detail": {
+    "state": "failed",
+    "error": "INTERRUPTED \u2014 E-STOP: it did not finish."
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "0bba88a2d5d3bf25d351ddecc417fa15a8398e52503a120b2bee2f1cedb88921",
+   "ok": true,
+   "at": "2026-10-21 18:59:29",
+   "detail": {
+    "program_id": 55,
+    "dry_run": false,
+    "seconds": 16.3,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 9.1,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "0bba88a2d5d3bf25d351ddecc417fa15a8398e52503a120b2bee2f1cedb88921",
+   "ok": true,
+   "at": "2026-10-21 18:59:38",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
   }
  ]
 }

@@ -1,0 +1,79 @@
+{
+ "name": "R_merge_7.txt",
+ "side": "right",
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "lines": 9417,
+ "seconds": 47.08,
+ "sha256": "0fee2282383d853eb89485a380ff0966af60d32ebefdbe540836ae812428e0d3",
+ "parts": [
+  {
+   "name": "R_T05_CDH.txt",
+   "lines": 2716
+  },
+  {
+   "name": "R_T06_RBGR.txt",
+   "lines": 2546
+  },
+  {
+   "name": "R_T07_GC.txt",
+   "lines": 2596
+  },
+  {
+   "name": "R_T08_PRFL.txt",
+   "lines": 1559
+  }
+ ],
+ "joins": [],
+ "limits_ok": false,
+ "limits_text": "L1 Joint limits -0.42 deg (limit 0.5 deg); L2 Joint speed 1.22 x limit (limit 1 x limit); L3 Joint acceleration 1729 deg/s^2 (limit 612 deg/s^2)",
+ "placement": null,
+ "phase": null,
+ "sources": [
+  {
+   "ref": "file:20261021_210626_R_T05_CDH.txt",
+   "name": "R_T05_CDH.txt",
+   "sha256": "6249cd8b49a72357baca2e64bac0afd2364d7db18629b30c09a58ed03c755c12",
+   "tasks": [],
+   "grade": "raw"
+  },
+  {
+   "ref": "file:20261021_210627_R_T06_RBGR.txt",
+   "name": "R_T06_RBGR.txt",
+   "sha256": "8efeaae1cbb34ba32c8e6876e404523d76ccebc249893fd2e1de1e9f4afe7841",
+   "tasks": [],
+   "grade": "raw"
+  },
+  {
+   "ref": "file:20261021_210627_R_T07_GC.txt",
+   "name": "R_T07_GC.txt",
+   "sha256": "f3b918a6ba5023c042d67cd9e7f5e1fed05a72a1627865d24a8a5200fefdc839",
+   "tasks": [],
+   "grade": "raw"
+  },
+  {
+   "ref": "file:20261021_210627_R_T08_PRFL.txt",
+   "name": "R_T08_PRFL.txt",
+   "sha256": "80b170d590c9981b823e9780c9ac127e20e9158835de4bc7a37c397dc0f90d49",
+   "tasks": [],
+   "grade": "raw"
+  }
+ ],
+ "made_from": null,
+ "made": "2026-10-21 21:06:41",
+ "tasks": [],
+ "grade": "raw"
+}

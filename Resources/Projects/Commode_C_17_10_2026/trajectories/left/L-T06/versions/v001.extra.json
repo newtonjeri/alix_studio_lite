@@ -1,0 +1,56 @@
+{
+ "util": {
+  "speed": [
+   0.0,
+   0.0202
+  ],
+  "acceleration": [
+   0.0,
+   0.0
+  ],
+  "lines": 2
+ },
+ "progress": [
+  [
+   1,
+   1
+  ],
+  [
+   2,
+   256
+  ]
+ ],
+ "settings": {
+  "optimiser": "manual",
+  "target_s": null,
+  "segments": [],
+  "smooth_window": 101,
+  "max_dev_mm": null,
+  "trim": true,
+  "smooth": true,
+  "scale": true,
+  "time_mode": "fastest",
+  "idle_window": 11,
+  "idle_threshold_md": 8.0,
+  "idle_min_run": 20
+ },
+ "raw_file": "20261021_184955_L-T06.txt",
+ "raw_sha256": "d3136099c1f0474e060bc95734e234bc4976fa0bfbf277fbea4bfc0ae9269b19",
+ "made": "2026-10-21 18:50:20",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "name": "L_TASK_13_trajectory_trim_mean_scale_processed.txt"
+}

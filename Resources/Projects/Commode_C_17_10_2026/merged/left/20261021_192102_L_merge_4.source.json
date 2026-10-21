@@ -1,0 +1,80 @@
+{
+ "name": "L_merge_4.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "lines": 2908,
+ "seconds": 14.535,
+ "sha256": "2c680fc22af4f5c69bb6365bffebd992ade40d64888243ba2295fb58e5d50003",
+ "parts": [
+  {
+   "name": "L_TASK_8A_trajectory_2_trimmed_trim_mean_scale_processed.txt",
+   "lines": 1458
+  },
+  {
+   "name": "L_TASK_8B_trajectory_2_2_trimmed_trim_mean_scale_processed_2.txt",
+   "lines": 1450
+  }
+ ],
+ "joins": [],
+ "limits_ok": false,
+ "limits_text": "L1 Joint limits -31.04 deg (limit 0.5 deg); L2 Joint speed 1.31 x limit (limit 1 x limit); L3 Joint acceleration 3941 deg/s^2 (limit 612 deg/s^2)",
+ "placement": {
+  "task": "TASK 8A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 12:36:16"
+  }
+ },
+ "phase": "seat_open",
+ "sources": [
+  {
+   "ref": "ver:L-R07_PART1/v001",
+   "name": "L_TASK_8A_trajectory_2_trimmed_trim_mean_scale_processed.txt",
+   "sha256": "27b5a6736e3a81119f1aebb9a168debc8dcd82c7630ef49c6ef787e8b305026c",
+   "tasks": [
+    "L-R07_PART1"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:L-R07_PART2/v002",
+   "name": "L_TASK_8B_trajectory_2_2_trimmed_trim_mean_scale_processed_2.txt",
+   "sha256": "c054118eac896c443be5bd49d94290b3e49951f69435c67d3860b888ac7d0a1c",
+   "tasks": [
+    "L-R07_PART2"
+   ],
+   "grade": "processed"
+  }
+ ],
+ "made_from": null,
+ "made": "2026-10-21 19:21:02",
+ "tasks": [
+  "L-R07_PART1",
+  "L-R07_PART2"
+ ],
+ "grade": "processed"
+}

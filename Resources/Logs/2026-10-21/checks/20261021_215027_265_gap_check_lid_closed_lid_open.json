@@ -1,0 +1,202 @@
+{
+  "class": "lid_open",
+  "success": true,
+  "confidence": 1.0,
+  "passes_expectation": false,
+  "part": "lid",
+  "height_m": 0.2628364040641742,
+  "closed_top_m": 0.45706727517279666,
+  "nominal_top_m": 0.45,
+  "color_used": true,
+  "color_note": "",
+  "registration_m": 0.00706727517279665,
+  "registration_source": "lid",
+  "registration_pose": "",
+  "rise_m": -0.19423087110862247,
+  "roi_valid": 0.884060650887574,
+  "median_range_m": 0.683,
+  "message": "lid surface median z 0.263 m in base_link (closed top 0.457 = nominal 0.450 registered +7 mm by the lid, rise -194 mm vs 50 mm bar; ABSENT from its closed place, the bowl shows); 88 % of the ROI valid, median range 0.683 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 45 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); models: lid_open from colour at 0.85",
+  "models": {
+    "fused_state": "lid_open",
+    "state_source": "colour",
+    "confidence": 0.853,
+    "fusion": "colour",
+    "colour_state": "lid_open",
+    "depth_state": "",
+    "contradiction": false
+  },
+  "decision_wall_s": 1792590627.266,
+  "depth_header_stamp_s": 1792590627.001954,
+  "depth_age_s": 0.016,
+  "color_age_s": null,
+  "depth_frame_id": "camera_depth_optical_frame",
+  "source": "native depth (D435, pyrealsense2)",
+  "frame": "camera_depth_optical_frame",
+  "world_frame": "base_link",
+  "camera_to_world": [
+    [
+      0.481747,
+      -0.813898,
+      0.324792,
+      0.554321
+    ],
+    [
+      -0.876256,
+      -0.443267,
+      0.18892,
+      -0.125225
+    ],
+    [
+      -0.009792,
+      -0.375613,
+      -0.926725,
+      0.885637
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "intrinsics": {
+    "fx": 432.6650695800781,
+    "fy": 432.6650695800781,
+    "cx": 420.2126159667969,
+    "cy": 237.48733520507812,
+    "width": 848,
+    "height": 480
+  },
+  "hands": {
+    "ILH_plam": [
+      0.5451,
+      0.2287,
+      0.8026
+    ],
+    "ILH_left_index_1": [
+      0.602,
+      0.2409,
+      0.6841
+    ],
+    "ILH_left_index_tip": [
+      0.6189,
+      0.2292,
+      0.6095
+    ],
+    "ILH_left_middle_1": [
+      0.5834,
+      0.2388,
+      0.6793
+    ],
+    "ILH_left_middle_tip": [
+      0.5986,
+      0.2255,
+      0.6011
+    ],
+    "ILH_left_ring_1": [
+      0.5647,
+      0.2367,
+      0.6753
+    ],
+    "ILH_left_ring_tip": [
+      0.5751,
+      0.2243,
+      0.5997
+    ],
+    "ILH_left_little_1": [
+      0.5458,
+      0.2346,
+      0.6724
+    ],
+    "ILH_left_little_tip": [
+      0.5512,
+      0.2238,
+      0.6037
+    ],
+    "ILH_left_thumb_1": [
+      0.5795,
+      0.218,
+      0.7496
+    ],
+    "ILH_left_thumb_tip": [
+      0.6744,
+      0.2067,
+      0.7025
+    ],
+    "IRH_plam": [
+      0.5225,
+      -0.1617,
+      0.798
+    ],
+    "IRH_right_index_tip": [
+      0.5625,
+      -0.1046,
+      0.6032
+    ],
+    "IRH_right_middle_tip": [
+      0.5733,
+      -0.1236,
+      0.5989
+    ],
+    "IRH_right_ring_tip": [
+      0.5842,
+      -0.1442,
+      0.603
+    ],
+    "IRH_right_little_tip": [
+      0.5935,
+      -0.1646,
+      0.6121
+    ],
+    "IRH_right_thumb_tip": [
+      0.5352,
+      -0.1145,
+      0.6565
+    ]
+  },
+  "params": {
+    "gap_lid_top_z": 0.45,
+    "gap_seat_top_z": 0.44,
+    "gap_lift_m": 0.05,
+    "gap_roi": [
+      0.4,
+      0.6,
+      0.4,
+      0.6
+    ],
+    "gap_seat_roi": [
+      0.58,
+      0.78,
+      0.3,
+      0.7
+    ],
+    "gap_seat_band_z": [
+      0.38,
+      0.47
+    ],
+    "gap_seat_min_band": 0.03,
+    "gap_seat_absent_m": 0.012,
+    "gap_hand_mask_m": 0.14,
+    "gap_lid_closed_tol_m": 0.02,
+    "gap_lid_open_m": 0.05,
+    "gap_lid_wide_roi": [
+      0.3,
+      0.75,
+      0.3,
+      0.7
+    ],
+    "gap_lid_deep_m": 0.1,
+    "gap_lid_hole_min": 0.08,
+    "gap_lid_top_rows": 0.35,
+    "gap_lid_standing_range_m": 0.35,
+    "gap_lid_standing_min": 0.1
+  },
+  "stamp": "20261021_215027_265",
+  "mode": "gap_check",
+  "expect": "lid_closed",
+  "files": {
+    "depth_npy": "20261021_215027_265_gap_check_lid_closed_lid_open_depth.npy",
+    "depth_png": "20261021_215027_265_gap_check_lid_closed_lid_open_depth.png",
+    "color_png": "20261021_215027_265_gap_check_lid_closed_lid_open_color.png"
+  }
+}

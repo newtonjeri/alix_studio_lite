@@ -1,14 +1,15 @@
 {
  "left": [
   {
-   "type": "program",
-   "id": 50,
-   "name": "50_L-R01_v002.txt",
-   "speed": 100,
-   "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "type": "mechanism",
+   "task": "seat_open"
   }
  ],
- "right": [],
- "updated": "2026-10-21 17:45:39"
+ "right": [
+  {
+   "type": "mechanism",
+   "task": "seat_open"
+  }
+ ],
+ "updated": "2026-10-21 21:51:31"
 }

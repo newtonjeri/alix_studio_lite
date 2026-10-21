@@ -1,0 +1,45 @@
+{
+ "unit": "L-T06",
+ "arm": "left",
+ "taken": "2026-10-21 18:49",
+ "lines": 256,
+ "sha256": "d3136099c1f0474e060bc95734e234bc4976fa0bfbf277fbea4bfc0ae9269b19",
+ "note": "drag-taught on the LEFT arm: 256 points in 1 s, at pole 200 mm, hand cleaning pose",
+ "source": "teach",
+ "original": "left_drag_20261021_184954.txt",
+ "pole_mm": null,
+ "hand_counts": null,
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 13",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-21 18:49:37"
+  }
+ },
+ "name": "L_TASK_13_trajectory.txt"
+}

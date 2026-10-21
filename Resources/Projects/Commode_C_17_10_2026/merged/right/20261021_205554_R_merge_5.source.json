@@ -1,0 +1,107 @@
+{
+ "name": "R_merge_5.txt",
+ "side": "right",
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "lines": 6493,
+ "seconds": 32.46,
+ "sha256": "b60950cc0d0e3c53eec975822e58852f732fc6885ab2184530a691149b50e21d",
+ "parts": [
+  {
+   "name": "R_TASK_8A_trajectory_2_2_2_2_2_2_trimmed_trim_mean_scale_processed.txt",
+   "lines": 1460
+  },
+  {
+   "name": "R_TASK_8B_trajectory_trimmed_trim_processed.txt",
+   "lines": 2554
+  },
+  {
+   "name": "R_TASK_9_trajectory_2_2_2_2_trimmed_trim_mean_scale_processed.txt",
+   "lines": 2401
+  }
+ ],
+ "joins": [
+  {
+   "after": 1,
+   "lines": 39,
+   "seconds": 0.2,
+   "gap_deg": 0.12
+  },
+  {
+   "after": 2,
+   "lines": 39,
+   "seconds": 0.2,
+   "gap_deg": 0.08
+  }
+ ],
+ "limits_ok": false,
+ "limits_text": "L2 Joint speed 1.34 x limit (limit 1 x limit); L3 Joint acceleration 4251 deg/s^2 (limit 612 deg/s^2)",
+ "placement": {
+  "task": "TASK 8A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 12:36:16"
+  }
+ },
+ "phase": "seat_open",
+ "sources": [
+  {
+   "ref": "ver:R-R07/v001",
+   "name": "R_TASK_8A_trajectory_2_2_2_2_2_2_trimmed_trim_mean_scale_processed.txt",
+   "sha256": "cfee300aa70ba93910f8a58ec774dbbdc3073fed4a5e898ba8b4235cf20f40b1",
+   "tasks": [
+    "R-R07"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:R-R08_PART1/v001",
+   "name": "R_TASK_8B_trajectory_trimmed_trim_processed.txt",
+   "sha256": "727b76327fe71d7366bb0722193465c5dda16e67eb131ccb92c61d193ae51757",
+   "tasks": [
+    "R-R08_PART1"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:R-R08_PART2/v001",
+   "name": "R_TASK_9_trajectory_2_2_2_2_trimmed_trim_mean_scale_processed.txt",
+   "sha256": "614fd82d133d6c5a4f1d6ecd25dade3d3ee56fafe825679c706665158fb77638",
+   "tasks": [
+    "R-R08_PART2"
+   ],
+   "grade": "processed"
+  }
+ ],
+ "made_from": null,
+ "made": "2026-10-21 20:55:54",
+ "tasks": [
+  "R-R07",
+  "R-R08_PART1",
+  "R-R08_PART2"
+ ],
+ "grade": "processed"
+}

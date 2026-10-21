@@ -9455,3 +9455,7 @@
 21:58:30.274 [activity] operator:a63b54 page: SYSTEM · Session active
 21:59:00.062 [activity] operator:a63b54 page: SYSTEM · Session active
 21:59:30.001 [activity] operator:a63b54 page: SYSTEM · Session active
+22:00:00.000 [activity] operator:a63b54 page: SYSTEM · Session active
+22:00:30.001 [activity] operator:a63b54 page: SYSTEM · Session active
+22:00:35.482 [LEFT] restore global speed {"pct": 50} ret=0
+22:00:35.587 [RIGHT] restore global speed {"pct": 50} ret=0

@@ -1,0 +1,80 @@
+{
+ "name": "L_merge_6.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 20.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 20 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "lines": 4324,
+ "seconds": 21.615,
+ "sha256": "5f930e53326816ed7da028b1d876c51a687d6b7b7fd4fbf4fe355fbac6af35ab",
+ "parts": [
+  {
+   "name": "L_TASK_12A_trajectory_2_2_2_2_2_2_2_2_2_trimmed_trim_mean_scale_processed.txt",
+   "lines": 2305
+  },
+  {
+   "name": "L_TASK_12B_trajectory_trimmed_2_trimmed_trim_mean_scale_processed.txt",
+   "lines": 2019
+  }
+ ],
+ "joins": [],
+ "limits_ok": false,
+ "limits_text": "L3 Joint acceleration 2204 deg/s^2 (limit 612 deg/s^2)",
+ "placement": {
+  "task": "TASK 12A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-21 11:34:48"
+  }
+ },
+ "phase": "seat_open",
+ "sources": [
+  {
+   "ref": "ver:L-R11_PART1/v001",
+   "name": "L_TASK_12A_trajectory_2_2_2_2_2_2_2_2_2_trimmed_trim_mean_scale_processed.txt",
+   "sha256": "764588deaa99cffa6ba87f70f93dd175c9915eb327b2a8f72463ffdcbe777b96",
+   "tasks": [
+    "L-R11_PART1"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:L-R11_PART2/v002",
+   "name": "L_TASK_12B_trajectory_trimmed_2_trimmed_trim_mean_scale_processed.txt",
+   "sha256": "70438b92c19e6f25f4c2ff657bb13b86d492ee9d4edc82062a77e59a6ff3d260",
+   "tasks": [
+    "L-R11_PART2"
+   ],
+   "grade": "processed"
+  }
+ ],
+ "made_from": null,
+ "made": "2026-10-21 19:39:50",
+ "tasks": [
+  "L-R11_PART1",
+  "L-R11_PART2"
+ ],
+ "grade": "processed"
+}

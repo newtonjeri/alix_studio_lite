@@ -1,0 +1,35 @@
+{
+ "unit": "MERGE-L-002",
+ "arm": "left",
+ "taken": "2026-10-21 19:50",
+ "lines": 3961,
+ "sha256": "28079a4a8d44d3177c958596a40ea7019baa59b6ba5ff3f1e51f1cee03517ec1",
+ "note": "the LEFT merge L_merge_7.txt",
+ "source": "merge",
+ "original": "20261021_194930_L_merge_7.txt",
+ "pole_mm": 200.0,
+ "hand_counts": [
+  1000,
+  1000,
+  1000,
+  1000,
+  0,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "name": "L_merge_7.txt"
+}

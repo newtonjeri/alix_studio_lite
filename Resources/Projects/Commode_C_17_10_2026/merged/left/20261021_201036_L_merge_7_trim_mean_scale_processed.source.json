@@ -1,0 +1,50 @@
+{
+ "name": "L_merge_7_trim_mean_scale_processed.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "lines": 2582,
+ "seconds": 12.905,
+ "sha256": "0984d30b2fc56e1d5041e2949d90cc301b9c0ad13fdce95f5d47ac6e9c9fbf94",
+ "parts": [
+  {
+   "name": "L_merge_7_trim_mean_scale_processed.txt",
+   "lines": 2582
+  }
+ ],
+ "joins": [],
+ "limits_ok": false,
+ "limits_text": "L2 Joint speed 1.12 x limit (limit 1 x limit); L3 Joint acceleration 6087 deg/s^2 (limit 612 deg/s^2)",
+ "placement": null,
+ "phase": "lid_closed",
+ "sources": [
+  {
+   "ref": "tune:MERGE-L-002/v001",
+   "name": "L_merge_7_trim_mean_scale_processed.txt",
+   "sha256": "0984d30b2fc56e1d5041e2949d90cc301b9c0ad13fdce95f5d47ac6e9c9fbf94",
+   "tasks": [],
+   "grade": "processed"
+  }
+ ],
+ "made_from": {
+  "merge": "L_merge_7.txt",
+  "file": "20261021_194930_L_merge_7.txt",
+  "version": "v001"
+ },
+ "made": "2026-10-21 20:10:36",
+ "tasks": [],
+ "grade": "processed"
+}

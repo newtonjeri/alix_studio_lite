@@ -1,0 +1,35 @@
+{
+ "unit": "MERGE-L-003",
+ "arm": "left",
+ "taken": "2026-10-21 20:13",
+ "lines": 3847,
+ "sha256": "0f6d6e8d90f77122dcaaf1bb7e5a5d6195b51c312ede3e630d2cd9ebb7f90bef",
+ "note": "the LEFT merge L_merge_7_1.txt",
+ "source": "merge",
+ "original": "20261021_201310_L_merge_7_1.txt",
+ "pole_mm": 200.0,
+ "hand_counts": [
+  1000,
+  1000,
+  1000,
+  1000,
+  1000,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "name": "L_merge_7_1.txt"
+}
