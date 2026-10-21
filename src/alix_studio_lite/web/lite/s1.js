@@ -338,7 +338,9 @@ function paint(side) {
       onchange: () => select(side, m.file) })),
     el('td', {}, el('b', { text: m.name }), el('div', { class: 'mini-note', text: (m.made_from ? `Tuned from ${m.made_from.merge} · ` : '')
       + `${m.parts.length} file${m.parts.length === 1 ? '' : 's'}: ${m.parts.map(p => p.name).join(' → ')}`
-      + (m.joins.length ? ` · ${m.joins.length} join${m.joins.length === 1 ? '' : 's'}` : '') })),
+      + (m.joins.length ? ` · ${m.joins.length} join${m.joins.length === 1 ? '' : 's'}` : '') }),
+      onControllerOf(side, m) ? el('div', { class: 'lite-ok lite-s1-onctl', text: `On the ${ARM(side)} controller as program ${onControllerOf(side, m).id}`
+        + (onControllerOf(side, m).by === 'name' ? ' (found by its name)' : '') }) : null),
     el('td', { text: `${fmtT(m.seconds)} · ${Number(m.lines).toLocaleString()} lines` }),
     el('td', { text: m.stage ? m.stage.text || stageText(m.stage) : '—' }),
     el('td', { text: m.placement ? placeText(m.placement) : 'not recorded' }),
@@ -354,14 +356,28 @@ function paint(side) {
   }
 }
 
-// A merged file on the arm's controller (S1's list knows where: merges.mark_on_controller): its bin, which deletes that
-// program from the controller (the owner, 21 Oct: "It lets the user delete any of those uploaded files from the
-// controller"), after the question; the merge stays in the project. None for a merge the controller does not hold.
+// Each merged file's bin (the owner, 21 Oct: "It lets the user delete any of those uploaded files from the controller";
+// every row has it, as in Data Management): a merge on the arm's controller (S1's list knows which program holds it:
+// merges.mark_on_controller) is deleted from there after the question, and the merge stays in the project; for one the
+// controller does not hold as Lite reads it, the bin says why there is nothing to delete there.
 const onControllerOf = (side, m) => (st[side].items.find(it => it.ref === `merge:${m.file}`) || {}).on_controller || null;
+
+function notOnController(side, m) {
+  const c = st[side].controller, A = ARM(side);
+  const why = !c ? `the ${A} controller's programs are not known yet`
+    : c.standin ? `Lite runs the stand-in robot here (no hardware): it holds only the programs Lite sent to it (${c.programs}), `
+      + 'and this file is not one of them. A file sent to the robot is deleted with Lite started for the robot (--robot realman) '
+      + 'and the arm connected'
+      : !c.live ? `the ${A} arm is not connected (its programs as last read${c.read ? `, ${c.read}` : ''}): connect it, then read the controller`
+        : `the ${A} controller (read ${c.read}) holds no program of its bytes or its name`;
+  const text = `${m.name} is not on the ${A} controller, so there is nothing to delete there: ${why}.`;
+  status(side, text, 'warn');
+  window.toast(text, 'warn');
+}
 
 function binCell(side, m) {
   const c = onControllerOf(side, m);
-  if (!c) return el('td', { class: 'lite-del-cell' });
+  if (!c) return el('td', { class: 'lite-del-cell' }, deleteButton(`Delete ${m.name} from the ${ARM(side)} controller`, () => notOnController(side, m)));
   const what = `program ${c.id}${c.name ? ` (${c.name})` : ''}`;
   return el('td', { class: 'lite-del-cell' }, deleteButton(`Delete ${what}, ${m.name}, from the ${ARM(side)} controller`, async () => {
     const done = await deleteStored(side, 'program', c.id, { what,

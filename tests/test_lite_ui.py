@@ -98,6 +98,7 @@ def test_a_delete_column_with_no_name_whose_bin_shows_on_the_hovered_row():
         assert needle in dm, needle
     s1 = (WEB / "lite/s1.js").read_text(encoding="utf-8")
     assert "binCell(side, m)" in s1 and "deleteStored(side, 'program', c.id" in s1 and "lite-del-row" in s1
+    assert "() => notOnController(side, m)" in s1                        # every merged file has its bin (the owner, 21 Oct)
     ctx = (WEB / "lite/ctx.js").read_text(encoding="utf-8")
     assert "const yes = await confirmDialog({ title: `Delete ${what} from the ${S} controller?`" in ctx      # asked, every time
     assert "createElementNS(NS, 'svg')" in ctx                           # a drawn bin, not an emoji

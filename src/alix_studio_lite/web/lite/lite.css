@@ -722,6 +722,7 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-s1-loadrow .btn { padding: 6px 10px; min-height: 34px; }
 .lite-s1-merges { max-height: 260px; overflow: auto; }
 .lite-s1-why { font-size: 12px; margin-top: 2px; }
+.lite-s1-onctl { font-size: 12px; font-weight: 700; margin-top: 2px; }
 .lite-s1-merges td:nth-child(3) { white-space: nowrap; }
 #liteS2Speedup { min-height: 40px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); }
 .lite-s1-order { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
