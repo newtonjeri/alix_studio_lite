@@ -37,6 +37,27 @@ def test_the_four_plans_load_their_tracks_check_and_every_move_streams_at_5_ms()
     assert lid.view()["rungs"] == [1, 2, 3]
 
 
+def test_a_one_point_move_gets_alix_s_half_second_from_where_its_arm_was():
+    """ALIX's sender gives a one-point move at t = 0 half a second to get there (arm_trajectory_sender's
+    SINGLE_POINT_MIN_S): the revised lid and seat open (21 Oct) have the right arm's start at its pre-start, one point.
+    A 5 ms stream needs two lines, so it runs from where that arm's previous move ended, within every gate."""
+    from pathlib import Path
+
+    from alix_dispatch import track
+
+    joints = [f"R_joint{k}" for k in range(1, 8)]
+    a, b = [0.1] * 7, [0.12] * 7
+    data = {"sub_trajectories": [
+        {"stage_name": "move_to_pre_start", "joint_names": joints,
+         "waypoints": [{"time_from_start": 0.0, "positions": [0.0] * 7}, {"time_from_start": 1.0, "positions": a}]},
+        {"stage_name": "move_to_start", "joint_names": joints, "waypoints": [{"time_from_start": 0.0, "positions": b}]}]}
+    pre, one = mechanism._entries(data, Path("."), "a test plan")
+    assert one.note == "one point: 0.5 s to it" and one.seconds == 0.5 and len(one.rows) == 101
+    assert np.allclose(one.first(), pre.last()) and np.allclose(one.last(), b)
+    assert track.canfd_preflight(one.rows, mechanism.CLOCK_S, mechanism.RATE_GATE)["ok"]
+    assert not track.canfd_preflight(one.rows[:1], mechanism.CLOCK_S, mechanism.RATE_GATE)["ok"]     # what one line gets
+
+
 def test_alix_s_5_ms_law_rebuilds_each_stroke_s_track():
     for name in mechanism.TASKS:
         plan = mechanism.Plan(name)

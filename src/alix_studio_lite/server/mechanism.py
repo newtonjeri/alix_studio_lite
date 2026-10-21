@@ -14,7 +14,9 @@ checks, re-lifts and prerequisites. What runs them is ALIX's arm_trajectory_send
   ROS-free lane (alix_dispatch ``track.run_verified(channel="canfd")``, as cleaning_tracks.py runs a track:
   the 5 ms capture and its watch, the per-joint rate gate). The lifts and pushes come from the plans' own
   5 ms tracks (.g0/.g1, sha256 checked), the other moves are resampled by the same law
-  (cleaning_tracks.emit_fastpath). On the robot ROS's controllers streamed the same moves every 10 ms;
+  (cleaning_tracks.emit_fastpath). On the robot ROS's controllers streamed the same moves every 10 ms. A move
+  of one point (the revised lid and seat open of 21 Oct: the right arm's start is its pre-start) is given
+  SINGLE_POINT_S to get there, from where that arm's previous move ended, as the sender gives it;
 - the pole and the hand as Lite moves them everywhere (ALIX's peripherals, read back);
 - each check asks the wrist camera through gap_check.py (ALIX's gap check, ported) and is judged by
   ALIX's lift_check.py, vendored as it is;
@@ -57,6 +59,7 @@ from .jobs import Cancelled, UserError
 PLANS = vendor_paths.ALIX / "Resource" / "plans" / "commode_c" / "hardware"
 LIFT_CHECK = vendor_paths.ALIX / "ros" / "orchestration" / "alix_tasks" / "scripts" / "lift_check.py"
 CLOCK_S = 0.005                      # Lite's clock (D26) = the plans' track clock = the CanFD period
+SINGLE_POINT_S = 0.5                 # a one-point move at t = 0 gets this long (arm_trajectory_sender.SINGLE_POINT_MIN_S)
 MODE = "toppra"
 STANDOFF_MM = 250                    # the UGV placement the plans were made at, with no offset
 RATE_GATE = "per_joint"              # ALIX's lane since 2026-09-21 (cleaning_tracks, run_verified's default)
@@ -205,8 +208,17 @@ def _entries(data: dict, folder: Path, what: str) -> list:
             raise UserError(f"{what}: entry {st.get('stage_name')} moves joints Lite cannot route ({joints[:2]}).")
         t = np.array([float(w["time_from_start"]) for w in wps])
         q = np.array([w["positions"] for w in wps], dtype=float)
+        note = ""
+        if kind[0] == "arm" and len(wps) == 1:
+            # ALIX's sender (arm_trajectory_sender, SINGLE_POINT_MIN_S): "A single point at t = 0 asks the controller to
+            # BE there now ... give the controller a short interval to close it rather than a step." A stream needs two
+            # lines (track.canfd_preflight): the move goes there from where the same arm's previous move ended.
+            before = next((x for x in reversed(out) if x.kind == "arm" and x.side == kind[1]), None)
+            t = np.array([0.0, float(t[0]) if t[0] > 0 else SINGLE_POINT_S])
+            q = np.vstack([before.q[-1] if before is not None else q[0], q[0]])
+            note = f"one point: {t[1]:g} s to it"
         e = Entry(len(out), int(st.get("index", pos)), str(st.get("stage_name") or f"entry {pos}"), kind[0], kind[1],
-                  list(joints), t, q, list(st.get("pre_actions") or []))
+                  list(joints), t, q, list(st.get("pre_actions") or []), note=note)
         if e.kind == "arm":
             if pos in groups:
                 e.group, e.rows = groups[pos][0], groups[pos][1]

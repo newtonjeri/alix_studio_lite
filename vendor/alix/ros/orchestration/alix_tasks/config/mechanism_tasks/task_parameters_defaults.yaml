@@ -51,7 +51,7 @@ task_parameters:
   # velocity/acceleration scalings, adjustable HERE (config, not code).
   # Stages opt in via `speed_class:` in stage_sequence.
   speed_classes:
-    freespace: 0.8   # free-space moves
+    freespace: 0.6   # free-space moves
     approach: 0.2    # approach to grasp/contact, retract to release
     carry: 0.5       # carrying the seat / lid / bin
   max_acceleration_scaling: 0.7              # Acceleration scaling for arm movements
