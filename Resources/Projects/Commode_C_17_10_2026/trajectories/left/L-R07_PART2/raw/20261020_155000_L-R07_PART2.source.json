@@ -1,0 +1,52 @@
+{
+ "unit": "L-R07_PART2",
+ "arm": "left",
+ "taken": "2026-10-20 15:50",
+ "lines": 4319,
+ "sha256": "1f000b6a6e1d06d69eb70456da492fed45f7cd2d74214d1196c44ad10a87fb54",
+ "note": "drag-taught on the LEFT arm: 4319 points in 22 s, at pole 200 mm, hand cleaning pose",
+ "source": "teach",
+ "original": "left_drag_20261020_154955.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 8B",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 15:41:07"
+  }
+ },
+ "name": "L_TASK_8B_trajectory_2_2.txt"
+}

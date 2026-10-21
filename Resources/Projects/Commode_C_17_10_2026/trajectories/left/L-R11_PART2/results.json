@@ -1,0 +1,98 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "dc894f540b4e46ce69304dbc866d1a6101fcf27f744bb8b51be5017cda98d85e",
+   "ok": true,
+   "at": "2026-10-21 12:34:29",
+   "detail": {
+    "program_id": 65
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "dc894f540b4e46ce69304dbc866d1a6101fcf27f744bb8b51be5017cda98d85e",
+   "ok": true,
+   "at": "2026-10-21 12:35:51",
+   "detail": {
+    "program_id": 65,
+    "dry_run": true,
+    "seconds": 15.72,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "dc894f540b4e46ce69304dbc866d1a6101fcf27f744bb8b51be5017cda98d85e",
+   "ok": true,
+   "at": "2026-10-21 12:36:15",
+   "detail": {
+    "program_id": 65,
+    "dry_run": false,
+    "seconds": 16.27,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 7.6,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "dc894f540b4e46ce69304dbc866d1a6101fcf27f744bb8b51be5017cda98d85e",
+   "ok": false,
+   "at": "2026-10-21 12:37:08",
+   "detail": {
+    "verdict": "again",
+    "note": "",
+    "mode": "real"
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "70438b92c19e6f25f4c2ff657bb13b86d492ee9d4edc82062a77e59a6ff3d260",
+   "ok": true,
+   "at": "2026-10-21 12:41:25",
+   "detail": {
+    "program_id": 65
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "70438b92c19e6f25f4c2ff657bb13b86d492ee9d4edc82062a77e59a6ff3d260",
+   "ok": true,
+   "at": "2026-10-21 12:41:48",
+   "detail": {
+    "program_id": 65,
+    "dry_run": true,
+    "seconds": 12.95,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "70438b92c19e6f25f4c2ff657bb13b86d492ee9d4edc82062a77e59a6ff3d260",
+   "ok": true,
+   "at": "2026-10-21 12:42:16",
+   "detail": {
+    "program_id": 65,
+    "dry_run": false,
+    "seconds": 12.97,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "70438b92c19e6f25f4c2ff657bb13b86d492ee9d4edc82062a77e59a6ff3d260",
+   "ok": true,
+   "at": "2026-10-21 12:42:31",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}

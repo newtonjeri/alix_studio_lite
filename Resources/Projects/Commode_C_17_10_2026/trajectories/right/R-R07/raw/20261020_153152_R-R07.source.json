@@ -1,0 +1,52 @@
+{
+ "unit": "R-R07",
+ "arm": "right",
+ "taken": "2026-10-20 15:31",
+ "lines": 3201,
+ "sha256": "5e408fade7b864b893e0bce25717409a5fdffa57c1cf2d96af19bb18341d7d1d",
+ "note": "trimmed to lines 1\u20133,201 of 5,851 (16.000 s)",
+ "source": "trim",
+ "original": "R_TASK_8A_trajectory_2_2_2_2_2_2_trimmed.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 8A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 12:36:16"
+  }
+ },
+ "name": "R_TASK_8A_trajectory_2_2_2_2_2_2_trimmed.txt"
+}

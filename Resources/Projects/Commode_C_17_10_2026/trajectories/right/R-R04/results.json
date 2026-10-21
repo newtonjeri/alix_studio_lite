@@ -187,6 +187,29 @@
     "note": "",
     "mode": "real"
    }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "d3dfc23767769ac146e013dc5b9014fd548ffcacc132c2a5cd6f8b602cd01618",
+   "ok": true,
+   "at": "2026-10-20 10:53:19",
+   "detail": {
+    "program_id": 54,
+    "dry_run": true,
+    "seconds": 22.16,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "d3dfc23767769ac146e013dc5b9014fd548ffcacc132c2a5cd6f8b602cd01618",
+   "ok": true,
+   "at": "2026-10-20 10:53:30",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "hwsim"
+   }
   }
  ]
 }

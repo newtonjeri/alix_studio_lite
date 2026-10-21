@@ -5,7 +5,8 @@
   "left_mm": 220.0,
   "right_mm": 220.0,
   "front_mm": 1062.0,
-  "at": "2026-10-19 15:56:53"
+  "back_mm": 0.0,
+  "at": "2026-10-21 12:43:44"
  },
  "tasks": {
   "TASK 1A": {
@@ -70,7 +71,95 @@
    "rear_mm": null,
    "left_mm": null,
    "right_mm": null,
-   "at": "2026-10-19 15:56:59"
+   "at": "2026-10-20 10:56:29"
+  },
+  "TASK 6": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-20 12:02:01"
+  },
+  "TASK 8A": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-20 12:36:17"
+  },
+  "TASK 8B": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-20 17:50:23"
+  },
+  "TASK 9": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-21 10:21:38"
+  },
+  "TASK 10A": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-20 16:15:42"
+  },
+  "TASK 10B": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-20 16:30:23"
+  },
+  "TASK 11A": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-20 16:38:00"
+  },
+  "TASK 11B": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-20 16:44:39"
+  },
+  "TASK 12A": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-21 11:34:52"
+  },
+  "TASK 12B": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-21 12:21:09"
+  },
+  "TASK 13": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-21 12:47:01"
   }
  }
 }

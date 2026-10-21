@@ -1,0 +1,90 @@
+{
+ "unit": "R-R07",
+ "arm": "right",
+ "taken": "2026-10-20 13:15",
+ "lines": 35,
+ "sha256": "69dcb3d21a8ee7eb786962a6b073e826615b67fcb1504500a34f495996592493",
+ "note": "drag-taught on the RIGHT arm: 35 points in 216 s, at pole 50 mm, hand grip",
+ "source": "teach",
+ "original": "right_drag_20261020_131521.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "the hand set in Prepare after teaching",
+  "text": "pole 50 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 8A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 12:36:16"
+  }
+ },
+ "name": "R_TASK_8A_trajectory_2.txt",
+ "stage_history": [
+  {
+   "at": "2026-10-20 15:16:57",
+   "was": {
+    "pole_mm": 50.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 50 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "why": "the hand set in Prepare after teaching"
+  },
+  {
+   "at": "2026-10-20 15:17:19",
+   "was": {
+    "pole_mm": 50.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     1000,
+     1000
+    ],
+    "source": "the hand set in Prepare after teaching",
+    "text": "pole 50 mm, hand 0, 0, 0, 0, 1000, 1000",
+    "hand_text": "0, 0, 0, 0, 1000, 1000"
+   },
+   "why": "the hand set in Prepare after teaching"
+  }
+ ]
+}

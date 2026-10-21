@@ -1,0 +1,52 @@
+{
+ "unit": "R-R07",
+ "arm": "right",
+ "taken": "2026-10-20 13:10",
+ "lines": 2224,
+ "sha256": "7e158a5d5b6753f63e1f4f2a2b1663cdb9d30440633e28cee9f7d7c38030f578",
+ "note": "drag-taught on the RIGHT arm: 2224 points in 122 s, at pole 50 mm, hand grip",
+ "source": "teach",
+ "original": "right_drag_20261020_131029.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 8A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 12:36:16"
+  }
+ },
+ "name": "R_TASK_8A_trajectory.txt"
+}

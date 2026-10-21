@@ -123,6 +123,47 @@
     "note": "",
     "mode": "real"
    }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "18f4689da842b417b24567d1b5f893ca3bdcbb9f5da937794c28051089bda4ba",
+   "ok": true,
+   "at": "2026-10-20 10:50:29",
+   "detail": {
+    "program_id": 54,
+    "dry_run": true,
+    "seconds": 9.49,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "18f4689da842b417b24567d1b5f893ca3bdcbb9f5da937794c28051089bda4ba",
+   "ok": true,
+   "at": "2026-10-20 10:50:50",
+   "detail": {
+    "program_id": 54,
+    "dry_run": false,
+    "seconds": 10.64,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 1.6,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "18f4689da842b417b24567d1b5f893ca3bdcbb9f5da937794c28051089bda4ba",
+   "ok": true,
+   "at": "2026-10-20 10:51:12",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
   }
  ]
 }

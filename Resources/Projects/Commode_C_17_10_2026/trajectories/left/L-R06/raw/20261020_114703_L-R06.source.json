@@ -1,0 +1,52 @@
+{
+ "unit": "L-R06",
+ "arm": "left",
+ "taken": "2026-10-20 11:47",
+ "lines": 14784,
+ "sha256": "2a0a4b1ee3f978b62a81ee0834d89f58eb01bcaad9f84cc3fa2530101f1772aa",
+ "note": "drag-taught on the LEFT arm: 14784 points in 77 s, at pole 200 mm, hand grip",
+ "source": "teach",
+ "original": "left_drag_20261020_114648.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 6",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 11:41:49"
+  }
+ },
+ "name": "L_TASK_6_trajectory.txt"
+}

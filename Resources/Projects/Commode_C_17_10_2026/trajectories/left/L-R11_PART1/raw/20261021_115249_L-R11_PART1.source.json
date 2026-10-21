@@ -1,0 +1,52 @@
+{
+ "unit": "L-R11_PART1",
+ "arm": "left",
+ "taken": "2026-10-21 11:52",
+ "lines": 2601,
+ "sha256": "e94d3bcfa1048e81b846c7f46e0a174be2ad967381f950ba21e4f192a0975eab",
+ "note": "trimmed to lines 1\u20132,601 of 3,355 (13.000 s)",
+ "source": "trim",
+ "original": "L_TASK_12A_trajectory_2_2_2_2_2_2_2_2_2_trimmed.txt",
+ "pole_mm": 50,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 20.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 20 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 12A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-21 11:34:48"
+  }
+ },
+ "name": "L_TASK_12A_trajectory_2_2_2_2_2_2_2_2_2_trimmed.txt"
+}

@@ -1,0 +1,52 @@
+{
+ "unit": "L-R11_PART1",
+ "arm": "left",
+ "taken": "2026-10-21 11:36",
+ "lines": 5614,
+ "sha256": "acac1e95ab7eb897df3fa5c37f66abcb14f29be4ced5791a82fffbcf97f1a869",
+ "note": "drag-taught on the LEFT arm: 5614 points in 29 s, at pole 50 mm, hand grip",
+ "source": "teach",
+ "original": "left_drag_20261021_113616.txt",
+ "pole_mm": 50,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 12A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-21 11:34:48"
+  }
+ },
+ "name": "L_TASK_12A_trajectory.txt"
+}

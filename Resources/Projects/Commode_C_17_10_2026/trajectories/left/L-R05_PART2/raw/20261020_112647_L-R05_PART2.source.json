@@ -1,0 +1,52 @@
+{
+ "unit": "L-R05_PART2",
+ "arm": "left",
+ "taken": "2026-10-20 11:26",
+ "lines": 4270,
+ "sha256": "e45b34746d590f051edcb72462859d08b689cd8e4fe6770b2a10ba7ecb835734",
+ "note": "drag-taught on the LEFT arm: 4270 points in 22 s, at pole 200 mm, hand cleaning pose",
+ "source": "teach",
+ "original": "left_drag_20261020_112640.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 5B",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 10:56:28"
+  }
+ },
+ "name": "L_TASK_5B_trajectory.txt"
+}

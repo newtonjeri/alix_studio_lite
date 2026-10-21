@@ -1,0 +1,132 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "38b054007ef4656152d8e24aca52bea846fdc73f26213831773dace3237c4ea1",
+   "ok": true,
+   "at": "2026-10-20 11:35:18",
+   "detail": {
+    "program_id": 55
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "38b054007ef4656152d8e24aca52bea846fdc73f26213831773dace3237c4ea1",
+   "ok": true,
+   "at": "2026-10-20 11:36:03",
+   "detail": {
+    "program_id": 55,
+    "dry_run": true,
+    "seconds": 10.99,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "38b054007ef4656152d8e24aca52bea846fdc73f26213831773dace3237c4ea1",
+   "ok": true,
+   "at": "2026-10-20 11:36:21",
+   "detail": {
+    "program_id": 55,
+    "dry_run": false,
+    "seconds": 10.89,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 8.9,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "b0b7d5ec6b10911a394274febb358fff1ca047461f55807897b4f331491a2219",
+   "ok": true,
+   "at": "2026-10-20 11:37:24",
+   "detail": {
+    "program_id": 55
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "b0b7d5ec6b10911a394274febb358fff1ca047461f55807897b4f331491a2219",
+   "ok": true,
+   "at": "2026-10-20 11:37:55",
+   "detail": {
+    "program_id": 55,
+    "dry_run": true,
+    "seconds": 9.67,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "b0b7d5ec6b10911a394274febb358fff1ca047461f55807897b4f331491a2219",
+   "ok": true,
+   "at": "2026-10-20 11:38:19",
+   "detail": {
+    "program_id": 55,
+    "dry_run": false,
+    "seconds": 11.29,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 8.4,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "6bc69c374f68cc35c552d0fe3d6dccd792902cd1c5ff4dcb694d23c38dbbf070",
+   "ok": true,
+   "at": "2026-10-20 11:38:56",
+   "detail": {
+    "program_id": 55
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "6bc69c374f68cc35c552d0fe3d6dccd792902cd1c5ff4dcb694d23c38dbbf070",
+   "ok": true,
+   "at": "2026-10-20 11:39:52",
+   "detail": {
+    "program_id": 55,
+    "dry_run": true,
+    "seconds": 9.6,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "6bc69c374f68cc35c552d0fe3d6dccd792902cd1c5ff4dcb694d23c38dbbf070",
+   "ok": true,
+   "at": "2026-10-20 11:40:16",
+   "detail": {
+    "program_id": 55,
+    "dry_run": false,
+    "seconds": 10.73,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 2.9,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "6bc69c374f68cc35c552d0fe3d6dccd792902cd1c5ff4dcb694d23c38dbbf070",
+   "ok": true,
+   "at": "2026-10-20 11:40:28",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}

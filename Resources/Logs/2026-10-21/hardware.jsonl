@@ -1,0 +1,821 @@
+{"t": 1792549263.89067, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792549264.0562189, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792549264.658353, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792549264.7656357, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792549265.090725, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792549266.280205, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792549266.4054217, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792549266.5514264, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792549267.0188348, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792549267.1819277, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792549272.5833774, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549272.7292473, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549282.852122, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 50 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)"}
+{"t": 1792549282.9210923, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 50 mm after 0.07 s (verified_by=no_op, moved 0 mm through 1 distinct readings)"}
+{"t": 1792549283.0084605, "side": "right", "verb": "pole move", "args": {"mm": 50.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 0.066, "text": "final 0.05 m, verified by no_op"}
+{"t": 1792549288.683582, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792549288.7681873, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792549288.8322654, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [995, 1000, 396, 993, 156, 987]; law 0.86 s)"}
+{"t": 1792549289.7788854, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [996, 1000, 396, 994, 156, 987] after 0.88 s (per-channel travel [1, 0, 0, 1, 0, 0])"}
+{"t": 1792549289.7791548, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 3, 4] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [996, 1000, 396, 994, 156, 987]. Either that channel is dead or the readback is not the device."}
+{"t": 1792549289.8549263, "side": "right", "verb": "hand move", "args": {"counts": [0, 0, 0, 0, 150, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.876, "text": "read back [996, 1000, 396, 994, 156, 987] (settled short of the target: stopped on force)"}
+{"t": 1792549319.048249, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549319.1154678, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792549324.050483, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792549324.155824, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 1, "ok": false, "elapsed_s": 5.103, "text": "MOVEJ to 'R_R08_P1_STP' failed, ret=1"}
+{"t": 1792549324.2682896, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT MoveJ to R_R08_P1_STP: The RIGHT arm did not reach global point 'R_R08_P1_STP' (MOVEJ to 'R_R08_P1_STP' failed, ret=1). (Check the arm and the point on the pendant, then try again.)"}
+{"t": 1792549334.5237746, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549334.5826406, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792549337.607009, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P1_STP // MOVEJ"}
+{"t": 1792549337.6418152, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792549337.8033004, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 3.279, "text": "gap 0.08 deg"}
+{"t": 1792549344.597347, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs; IO default 0; tracks not available"}
+{"t": 1792549344.713712, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792549346.7682757, "side": "right", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs; IO default 0; tracks not available"}
+{"t": 1792549346.8950894, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792549458.9246635, "side": "right", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.012, "text": null}
+{"t": 1792549480.472668, "side": "right", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.008, "text": null}
+{"t": 1792549486.8841522, "side": "right", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-6l7s1q5n/right_drag_20261021_102440.txt"], "ret": 0, "ok": true, "elapsed_s": 6.411, "text": null}
+{"t": 1792549492.2571778, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549513.4171476, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: its controller has not answered rm_get_current_work_frame for 21 s (MoveJ to R_R08_P1_STP). Lite gives that connection up and connects the arm again. What each thread was doing: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/threads-102513.txt. (Press the red E-stop button if the arm is moving.)"}
+{"t": 1792549513.4174926, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT MoveJ to R_R08_P1_STP: The RIGHT controller stopped answering (rm_get_current_work_frame, 21 s): Lite connects it again. (Check the arm, then try again once it is connected.)"}
+{"t": 1792549513.4203386, "side": "right", "verb": "restore run mode", "args": null, "ret": null, "ok": false, "elapsed_s": null, "text": "not restored (The RIGHT controller's connection was given up (abandoned): the arm must be connected again.)"}
+{"t": 1792549513.8457322, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792549513.9584167, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792549514.1853113, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549514.185583, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: connected again. The call that never came back is left behind; press Recover before moving."}
+{"t": 1792549519.3644254, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792549519.4818764, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792549522.5541148, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549522.6032202, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792549523.333156, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P1_STP // MOVEJ"}
+{"t": 1792549523.3561568, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792549523.479502, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 0.923, "text": "gap 0.12 deg"}
+{"t": 1792549538.2413127, "side": "right", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.008, "text": null}
+{"t": 1792549606.3178465, "side": "right", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.019, "text": null}
+{"t": 1792549607.7284675, "side": "right", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-drc4kms5/right_drag_20261021_102646.txt"], "ret": 0, "ok": true, "elapsed_s": 1.411, "text": null}
+{"t": 1792549608.1359963, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792549608.2459304, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792549614.0170164, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549614.0861545, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792549615.3267267, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P1_STP // MOVEJ"}
+{"t": 1792549615.3533273, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792549615.4707882, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.453, "text": "gap 0.09 deg"}
+{"t": 1792549637.6440854, "side": "right", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.015, "text": null}
+{"t": 1792549695.761184, "side": "right", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.008, "text": null}
+{"t": 1792549709.579615, "side": "right", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-atxkd1tl/right_drag_20261021_102815.txt"], "ret": 0, "ok": true, "elapsed_s": 13.818, "text": null}
+{"t": 1792549709.7897255, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549709.9399312, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792549711.3644357, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P1_STP // MOVEJ"}
+{"t": 1792549711.4102645, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792549711.5506084, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.76, "text": "gap 0.03 deg"}
+{"t": 1792549720.9055562, "side": "right", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.031, "text": null}
+{"t": 1792549772.835392, "side": "right", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.006, "text": null}
+{"t": 1792549776.3444457, "side": "right", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-glqmw76j/right_drag_20261021_102932.txt"], "ret": 0, "ok": true, "elapsed_s": 3.509, "text": null}
+{"t": 1792549776.5742502, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792549776.7596378, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792549790.7946064, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549790.881606, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792549794.036948, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P1_STP // MOVEJ"}
+{"t": 1792549794.0640118, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792549794.1821458, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 1, "ok": false, "elapsed_s": 3.387, "text": "the arm is 52.3 degrees from it"}
+{"t": 1792549794.303652, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT MoveJ to R_R08_P1_STP: The RIGHT arm did not reach global point 'R_R08_P1_STP' (the arm is 52.3 degrees from it). (Check the arm and the point on the pendant, then try again.)"}
+{"t": 1792549804.4058053, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549804.5131276, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792549806.6784952, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P1_STP // MOVEJ"}
+{"t": 1792549806.7059267, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792549806.8212109, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 1, "ok": false, "elapsed_s": 2.415, "text": "the arm is 52.3 degrees from it"}
+{"t": 1792549807.0211785, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT MoveJ to R_R08_P1_STP: The RIGHT arm did not reach global point 'R_R08_P1_STP' (the arm is 52.3 degrees from it). (Check the arm and the point on the pendant, then try again.)"}
+{"t": 1792549826.4002016, "side": "right", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs; IO default 0; tracks not available"}
+{"t": 1792549826.7039423, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792549917.921129, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792549923.4782586, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792549923.8450658, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792549924.0351923, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549924.1078477, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 58 (58_R-R08_PART1_v001.txt) on 192.168.1.103; transit speed 15 %"}
+{"t": 1792549924.1083317, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 117.3 deg on J4 — keep that path clear"}
+{"t": 1792549969.517728, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792549984.37964, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792549993.3606143, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT: STOP sent, not confirmed by its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792549993.3609276, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: STOP sent, not confirmed by its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792550003.5075614, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT: its controller has not answered rm_set_arm_stop for 20 s (a reading). Lite gives that connection up and connects the arm again. What each thread was doing: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/threads-103323.txt. (Press the red E-stop button if the arm is moving.)"}
+{"t": 1792550003.9430978, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792550004.0395203, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792550004.1736257, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792550004.1739132, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT: connected again. The call that never came back is left behind; press Recover before moving."}
+{"t": 1792550004.5078714, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: its controller has not answered rm_set_program_id_run for 80 s (running program 58). Lite gives that connection up and connects the arm again. What each thread was doing: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-21/threads-103324.txt. (Press the red E-stop button if the arm is moving.)"}
+{"t": 1792550004.508127, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT program 58 on the real arm: The RIGHT controller stopped answering (rm_set_program_id_run, 80 s): Lite connects it again. (Check the arm, then try again once it is connected.)"}
+{"t": 1792550004.5111654, "side": "left", "verb": "stop confirmed late", "args": null, "ret": null, "ok": false, "elapsed_s": 21.151, "text": "LEFT: STOP not confirmed (no answer from its connection's process)"}
+{"t": 1792550004.5116377, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT: STOP not confirmed (no answer from its connection's process) (confirmed after 21.2 s). (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792550004.5113487, "side": "right", "verb": "restore run mode", "args": null, "ret": null, "ok": false, "elapsed_s": null, "text": "not restored (The RIGHT controller's connection was given up (abandoned): the arm must be connected again.)"}
+{"t": 1792550004.5120122, "side": "right", "verb": "stop confirmed late", "args": null, "ret": null, "ok": false, "elapsed_s": 21.152, "text": "RIGHT: STOP not confirmed (no answer from its connection's process)"}
+{"t": 1792550004.5123827, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: STOP not confirmed (no answer from its connection's process) (confirmed after 21.2 s). (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792550004.962273, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792550005.0431702, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792550005.1590917, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792550005.1593578, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: connected again. The call that never came back is left behind; press Recover before moving."}
+{"t": 1792550024.943233, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550025.2815492, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550025.4831884, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792550025.7930696, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 58 (58_R-R08_PART1_v001.txt) on 192.168.1.103; transit speed 15 %"}
+{"t": 1792550025.7935135, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 110.9 deg on J4 — keep that path clear"}
+{"t": 1792550026.9428232, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.1 s)"}
+{"t": 1792550036.0656788, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792550036.0727801, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 10.3 s, no error"}
+{"t": 1792550036.1590889, "side": "right", "verb": "run", "args": {"program_id": 58, "points": 2554, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 10.675, "text": null}
+{"t": 1792550036.2611766, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT program 58 on the real arm: Program 58 ended after 10.7 s of the 12.8 s its points take: it was stopped on the controller (an E-stop, or its pendant), not completed. (Check the arm and its E-stop, then run it again.)"}
+{"t": 1792550086.3806505, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)"}
+{"t": 1792550087.4204812, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792550197.2615025, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": -1, "ok": false, "elapsed_s": null, "text": null}
+{"t": 1792550200.098285, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792550200.364095, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792550200.6877248, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792550200.9250746, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792550201.5328834, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550201.9289293, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792550213.2350771, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550213.8445654, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550214.1191778, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792550214.4476628, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 58 (58_R-R08_PART1_v001.txt) on 192.168.1.103; transit speed 15 %"}
+{"t": 1792550214.449397, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 69.6 deg on J5 — keep that path clear"}
+{"t": 1792550216.3577762, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.9 s)"}
+{"t": 1792550234.0434122, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792550234.0781093, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 19.6 s, no error"}
+{"t": 1792550234.3074007, "side": "right", "verb": "run", "args": {"program_id": 58, "points": 2554, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 20.188, "text": null}
+{"t": 1792550265.0078244, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550265.7235775, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550266.0245998, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792550266.3301573, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 58 (58_R-R08_PART1_v001.txt) on 192.168.1.103; transit speed 15 %"}
+{"t": 1792550266.3306394, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 71.2 deg on J5 — keep that path clear"}
+{"t": 1792550268.8500862, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (2.4 s)"}
+{"t": 1792550296.7388813, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792550296.745808, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 30.4 s, no error"}
+{"t": 1792550296.8560746, "side": "right", "verb": "run", "args": {"program_id": 58, "points": 2554, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 30.831, "text": null}
+{"t": 1792550314.2172573, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550314.4943979, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792550391.4897113, "side": "right", "verb": "capture pose", "args": {"joints_deg": [-23.079, 91.161, -36.758, -10.117, -16.925, -72.923, 32.141], "pose": [0.356309, -0.052621, -0.505738, 2.656, 1.05, -2.838], "pole_mm": 50.0, "hand": [995, 1000, 397, 993, 157, 987]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792550423.5740707, "side": "right", "verb": "add global point", "args": {"name": "R_R08_P1_STP", "joints_deg": [-23.078, 91.164, -36.758, -10.118, -16.924, -72.925, 32.139], "pose": [0.35629, -0.0526, -0.50573, 2.656, 1.05, -2.838], "work_frame": "World", "tool_frame": "Arm_Tip"}, "ret": 0, "ok": true, "elapsed_s": 0.4, "text": "read back: 0.001 deg"}
+{"t": 1792550424.0304894, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550424.250581, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792550436.8133924, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792550436.9744062, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792550437.5499115, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P1_STP // MOVEJ"}
+{"t": 1792550437.571015, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792550437.6773014, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 0.861, "text": "gap 0.09 deg"}
+{"t": 1792550441.262816, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 50 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)"}
+{"t": 1792550441.3332844, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 50 mm after 0.06 s (verified_by=no_op, moved 0 mm through 1 distinct readings)"}
+{"t": 1792550441.4127665, "side": "right", "verb": "pole move", "args": {"mm": 50.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 0.065, "text": "final 0.05 m, verified by no_op"}
+{"t": 1792550443.2224972, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792550443.304046, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792550443.3663483, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [995, 1000, 397, 994, 156, 986]; law 0.86 s)"}
+{"t": 1792550444.3100748, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [995, 1000, 397, 993, 156, 987] after 0.87 s (per-channel travel [0, 0, 0, 1, 1, 1])"}
+{"t": 1792550444.3103633, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 3, 4] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [995, 1000, 397, 993, 156, 987]. Either that channel is dead or the readback is not the device."}
+{"t": 1792550444.39118, "side": "right", "verb": "hand move", "args": {"counts": [0, 0, 0, 0, 150, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.874, "text": "read back [995, 1000, 397, 993, 156, 987] (settled short of the target: stopped on force)"}
+{"t": 1792550564.967818, "side": "right", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.017, "text": null}
+{"t": 1792550584.5479972, "side": "right", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.006, "text": null}
+{"t": 1792550590.4741938, "side": "right", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-s29go0cg/right_drag_20261021_104304.txt"], "ret": 0, "ok": true, "elapsed_s": 5.926, "text": null}
+{"t": 1792550966.9493124, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550967.1297812, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792550982.004833, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 programs"}
+{"t": 1792550982.280803, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload R-R08_PART2_v001.txt: 2401 points, 135.8 KB -> slot 59 on 192.168.1.103"}
+{"t": 1792550982.2810707, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 59 now: empty"}
+{"t": 1792550985.5539618, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792550985.6873896, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 59 holds '59_R-R08_PART2_v001.txt', 139099 bytes (sent 139099)"}
+{"t": 1792550985.776181, "side": "right", "verb": "upload", "args": {"program_id": 59, "file": "v001.txt", "bytes": 139099}, "ret": 0, "ok": true, "elapsed_s": 3.769, "text": null}
+{"t": 1792551010.4366946, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551010.5417485, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792551012.3262908, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P1_STP // MOVEJ"}
+{"t": 1792551012.352067, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792551012.454959, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 2.018, "text": "gap 0.08 deg"}
+{"t": 1792551013.870157, "side": "left", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551014.0529535, "side": "right", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551014.64707, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792551014.8710923, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792551017.958876, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792551018.183276, "side": "right", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551018.2765388, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 59 (59_R-R08_PART2_v001.txt) on 192.168.1.103; transit speed 15 %"}
+{"t": 1792551018.2770147, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.1 deg on J5"}
+{"t": 1792551019.0004654, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (0.7 s)"}
+{"t": 1792551032.8443983, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792551032.8512833, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 14.6 s, no error"}
+{"t": 1792551032.9634209, "side": "right", "verb": "run", "args": {"program_id": 59, "points": 2401, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 14.78, "text": null}
+{"t": 1792551038.1487815, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551038.2543535, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551040.457078, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792551040.5394402, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792551040.5458467, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 50 mm, the plan's 50 mm (within 5 mm, read from the getter)"}
+{"t": 1792551040.5460994, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792551040.603858, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [995, 1000, 397, 994, 156, 987]; law 0.86 s)"}
+{"t": 1792551041.5559416, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [995, 1000, 397, 993, 156, 987] after 0.88 s (per-channel travel [0, 0, 0, 1, 0, 0])"}
+{"t": 1792551041.5563195, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 3, 4] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [995, 1000, 397, 993, 156, 987]. Either that channel is dead or the readback is not the device."}
+{"t": 1792551041.5564895, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** right: the hand read back [995, 1000, 397, 993, 156, 987] against a commanded [0, 0, 0, 0, 150, 1000] — channel 2 is 1000 counts out, past its 25-count staging band"}
+{"t": 1792551041.6583226, "side": "right", "verb": "hand settled", "args": {"target": [0, 0, 0, 0, 150, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [995, 1000, 397, 993, 156, 987] (on the tool): done, as the control program takes it"}
+{"t": 1792551041.6586046, "side": "right", "verb": "stage", "args": {"pole_mm": 50.0, "hand": [0, 0, 0, 0, 150, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 50 mm, hand [995, 1000, 397, 993, 156, 987]"}
+{"t": 1792551041.9017878, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792551042.0092201, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551042.1816509, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 59 (59_R-R08_PART2_v001.txt) on 192.168.1.103; transit speed 15 %"}
+{"t": 1792551042.1824417, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.1 deg on J5"}
+{"t": 1792551043.3398142, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.1 s)"}
+{"t": 1792551053.8467698, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 11.6 s"}
+{"t": 1792551053.847347, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT Real run of program 59: the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 11.6 s. (Check the arm; a code that stops the program ends the run.)"}
+{"t": 1792551057.315345, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792551057.3343441, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 15.2 s, no error"}
+{"t": 1792551057.4275968, "side": "right", "verb": "run", "args": {"program_id": 59, "points": 2401, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 15.418, "text": null}
+{"t": 1792551057.9033217, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792551058.101384, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792551074.2152014, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792551074.3764408, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792551166.2529063, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792551166.5340755, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792551197.061214, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792551197.3206227, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792551248.9250743, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792551249.1281314, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792551412.927673, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792551413.0518177, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792551415.4028604, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792551415.6741343, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792551521.1250758, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792551521.345405, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792551521.4511678, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792551521.808259, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792551658.7206476, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792551658.9141138, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792551721.4426382, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792551721.7343068, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "10 point(s)"}
+{"t": 1792551727.1196966, "side": "right", "verb": "capture pose", "args": {"joints_deg": [3.349, -106.371, -1.853, 94.982, -1.594, 86.669, 10.292], "pose": [0.414913, -0.018737, 0.130296, 3.054, 0.242, 2.909], "pole_mm": 50.0, "hand": [995, 1000, 397, 994, 156, 988]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551728.0982947, "side": "right", "verb": "capture pose", "args": {"joints_deg": [3.349, -106.371, -1.852, 94.982, -1.594, 86.669, 10.292], "pose": [0.414913, -0.018732, 0.130296, 3.054, 0.242, 2.909], "pole_mm": 50.0, "hand": [995, 1000, 397, 993, 156, 988]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551738.5351944, "side": "right", "verb": "capture pose", "args": {"joints_deg": [3.35, -106.372, -1.852, 94.982, -1.594, 86.671, 10.291], "pose": [0.414907, -0.018735, 0.130299, 3.054, 0.242, 2.909], "pole_mm": 50.0, "hand": [995, 1000, 397, 994, 156, 988]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551740.7771113, "side": "right", "verb": "add global point", "args": {"name": "R_R08_P2_STP", "joints_deg": [3.35, -106.369, -1.855, 94.981, -1.594, 86.669, 10.292], "pose": [0.41492, -0.01875, 0.1303, 3.054, 0.242, 2.909], "work_frame": "World", "tool_frame": "Arm_Tip"}, "ret": 0, "ok": true, "elapsed_s": 0.273, "text": "read back: 0.001 deg"}
+{"t": 1792551740.9404235, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792551741.2557504, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "11 point(s)"}
+{"t": 1792551770.1723857, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792551770.2306848, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792551770.974091, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P2_STP // MOVEJ"}
+{"t": 1792551771.005239, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792551771.1728394, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.0, "text": "gap 0.12 deg"}
+{"t": 1792551846.7271743, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 50 mm -> 200 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 6.58 s, timeout 19.8 s)"}
+{"t": 1792551850.3607104, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 198 mm after 3.63 s (verified_by=getter, moved 148 mm through 55 distinct readings)"}
+{"t": 1792551850.4604266, "side": "right", "verb": "pole move", "args": {"mm": 200.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 3.629, "text": "final 0.198 m, verified by getter"}
+{"t": 1792552001.9388373, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792552002.068764, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792552003.481097, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P2_STP // MOVEJ"}
+{"t": 1792552003.5040755, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792552003.6281798, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.689, "text": "gap 0.08 deg"}
+{"t": 1792552065.239133, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792552065.432998, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792552065.495965, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P2_STP // MOVEJ"}
+{"t": 1792552065.515125, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792552065.6732097, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 0.433, "text": "gap 0.00 deg"}
+{"t": 1792552070.9956968, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792552071.0728915, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792552071.8748248, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P2_STP // MOVEJ"}
+{"t": 1792552071.8972394, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792552072.0187604, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.023, "text": "gap 0.10 deg"}
+{"t": 1792552258.4187527, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792552258.480829, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792552260.070813, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P2_STP // MOVEJ"}
+{"t": 1792552260.0933611, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792552260.221917, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.802, "text": "gap 0.06 deg"}
+{"t": 1792552413.2193847, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792552413.2780914, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_R08_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792552414.459144, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_R08_P2_STP // MOVEJ"}
+{"t": 1792552414.5165613, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792552414.6753929, "side": "right", "verb": "movej global point", "args": {"name": "R_R08_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.455, "text": "gap 0.05 deg"}
+{"t": 1792552530.2007327, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792552559.2671068, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792552564.7734344, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792553466.5420156, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792553540.1491964, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792553540.2296455, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792553540.2844498, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [1000, 1000, 1000, 1000, 510, 996]; law 0.86 s)"}
+{"t": 1792553541.2304914, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [393, 393, 450, 515, 511, 988] after 0.88 s (per-channel travel [611, 607, 550, 513, 1, 8])"}
+{"t": 1792553541.2307737, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [393, 393, 450, 515, 511, 988]. Either that channel is dead or the readback is not the device."}
+{"t": 1792553541.323725, "side": "left", "verb": "hand move", "args": {"counts": [0, 0, 0, 0, 150, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.875, "text": "read back [393, 393, 450, 515, 511, 988] (settled short of the target: stopped on force)"}
+{"t": 1792553550.433155, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792553550.734142, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792553550.9041955, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553551.1751585, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 63 (63_L-R10_PART2_v001.txt) on 192.168.1.10; transit speed 15 %"}
+{"t": 1792553551.1756122, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 174.2 deg on J6 — keep that path clear"}
+{"t": 1792553552.3580308, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.2 s)"}
+{"t": 1792553600.4444222, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792553600.4506438, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 49.3 s, no error"}
+{"t": 1792553600.5389938, "side": "left", "verb": "run", "args": {"program_id": 63, "points": 3801, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 49.634, "text": null}
+{"t": 1792553622.1330743, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792553622.408456, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792553630.3173134, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-27.008, -25.892, -11.309, 36.499, -119.24, -94.504, 258.406], "pose": [0.660798, 0.080402, -0.06711, -3.042, -0.436, 1.561], "pole_mm": 200.0, "hand": [392, 392, 448, 537, 510, 980]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553630.5601506, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-27.008, -25.892, -11.31, 36.5, -119.238, -94.504, 258.407], "pose": [0.660797, 0.080398, -0.067112, -3.042, -0.436, 1.561], "pole_mm": 200.0, "hand": [392, 392, 447, 537, 510, 980]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553630.7936592, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-27.009, -25.892, -11.309, 36.5, -119.24, -94.504, 258.405], "pose": [0.660795, 0.080398, -0.067116, -3.042, -0.436, 1.561], "pole_mm": 200.0, "hand": [392, 392, 447, 538, 510, 980]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553630.9538667, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-27.009, -25.89, -11.307, 36.499, -119.238, -94.505, 258.405], "pose": [0.660794, 0.080405, -0.067119, -3.042, -0.436, 1.561], "pole_mm": 200.0, "hand": [392, 393, 448, 537, 511, 980]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553638.4515376, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-27.008, -25.89, -11.309, 36.499, -119.24, -94.505, 258.405], "pose": [0.660794, 0.080398, -0.067118, -3.042, -0.436, 1.561], "pole_mm": 200.0, "hand": [392, 393, 448, 537, 511, 980]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553639.1975067, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-27.008, -25.89, -11.307, 36.499, -119.24, -94.505, 258.405], "pose": [0.660793, 0.080403, -0.067118, -3.042, -0.436, 1.561], "pole_mm": 200.0, "hand": [392, 392, 447, 537, 510, 980]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553654.030368, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792553654.442912, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792553672.669112, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 200 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 4.59 s, timeout 13.8 s)"}
+{"t": 1792553676.3011699, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 51 mm after 3.63 s (verified_by=getter, moved 149 mm through 61 distinct readings)"}
+{"t": 1792553676.392609, "side": "left", "verb": "pole move", "args": {"mm": 50.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 3.626, "text": "final 0.051 m, verified by getter"}
+{"t": 1792553681.7361329, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792553681.8382757, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792553681.9070394, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [392, 392, 448, 537, 511, 980]; law 0.52 s)"}
+{"t": 1792553682.534193, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [392, 392, 443, 472, 511, 980] after 0.56 s (per-channel travel [1, 1, 7, 68, 1, 0])"}
+{"t": 1792553682.5344756, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 5] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [392, 392, 443, 472, 511, 980]. Either that channel is dead or the readback is not the device."}
+{"t": 1792553682.6453722, "side": "left", "verb": "hand move", "args": {"counts": [0, 0, 0, 0, 150, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.562, "text": "read back [392, 392, 443, 472, 511, 980] (settled short of the target: stopped on force)"}
+{"t": 1792553715.0179925, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553715.223553, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792553715.8694935, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792553715.8926136, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792553716.011151, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 0.991, "text": "gap 0.08 deg"}
+{"t": 1792553747.0972688, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.009, "text": null}
+{"t": 1792553776.154034, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.013, "text": null}
+{"t": 1792553781.9702427, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-f4a070di/left_drag_20261021_113616.txt"], "ret": 0, "ok": true, "elapsed_s": 5.816, "text": null}
+{"t": 1792553782.31403, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792553782.6108754, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792553786.8206313, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553786.8697398, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792553792.6566002, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792553792.6775613, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792553792.777194, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 5.956, "text": "gap 0.09 deg"}
+{"t": 1792553830.2429767, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.017, "text": null}
+{"t": 1792553916.8982928, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.021, "text": null}
+{"t": 1792553931.5142038, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT MoveJ to L_R10_P2_STP: The LEFT controller is busy: saving the recording. (Try again once it has finished.)"}
+{"t": 1792553937.5310466, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT MoveJ to L_R10_P2_STP: The LEFT controller is busy: saving the recording. (Try again once it has finished.)"}
+{"t": 1792553938.9340518, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-9qpwqrnv/left_drag_20261021_113836.txt"], "ret": 0, "ok": true, "elapsed_s": 22.036, "text": null}
+{"t": 1792553946.6076825, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553946.755724, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792553951.065961, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792553951.181155, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 1, "ok": false, "elapsed_s": 4.572, "text": "MOVEJ to 'L_R10_P2_STP' failed, ret=1"}
+{"t": 1792553951.3772945, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT MoveJ to L_R10_P2_STP: The LEFT arm did not reach global point 'L_R10_P2_STP' (MOVEJ to 'L_R10_P2_STP' failed, ret=1). (Check the arm and the point on the pendant, then try again.)"}
+{"t": 1792553955.6714933, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792553955.730157, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792553957.3049834, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792553957.325744, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792553957.4249406, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.753, "text": "gap 0.09 deg"}
+{"t": 1792553962.2806926, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792553962.5160635, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792553967.4708147, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 50 mm -> 20 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.12 s, timeout 6.4 s)"}
+{"t": 1792553968.7787178, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 21 mm after 1.30 s (verified_by=getter, moved 29 mm through 19 distinct readings)"}
+{"t": 1792553968.902537, "side": "left", "verb": "pole move", "args": {"mm": 20.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 1.3, "text": "final 0.021 m, verified by getter"}
+{"t": 1792554014.138426, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.017, "text": null}
+{"t": 1792554054.0731869, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.006, "text": null}
+{"t": 1792554064.6894813, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-77o2co83/left_drag_20261021_114054.txt"], "ret": 0, "ok": true, "elapsed_s": 10.616, "text": null}
+{"t": 1792554064.8864079, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792554065.0891693, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792554066.600106, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792554066.6335523, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792554066.7565172, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.869, "text": "gap 0.09 deg"}
+{"t": 1792554079.3793433, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.021, "text": null}
+{"t": 1792554143.51106, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.006, "text": null}
+{"t": 1792554156.671685, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT MoveJ to L_R10_P2_STP: The LEFT controller is busy: saving the recording. (Try again once it has finished.)"}
+{"t": 1792554159.842429, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-5d2e3psf/left_drag_20261021_114223.txt"], "ret": 0, "ok": true, "elapsed_s": 16.331, "text": null}
+{"t": 1792554177.42619, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792554177.585162, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792554179.8531017, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792554179.902106, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792554180.084806, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 2.658, "text": "gap 0.07 deg"}
+{"t": 1792554210.7132757, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.011, "text": null}
+{"t": 1792554266.4917774, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.019, "text": null}
+{"t": 1792554279.3323743, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-hsrt7qjv/left_drag_20261021_114426.txt"], "ret": 0, "ok": true, "elapsed_s": 12.84, "text": null}
+{"t": 1792554279.6056573, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792554279.823047, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792554288.920681, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792554288.9516313, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792554289.17756, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 9.562, "text": "gap 0.37 deg"}
+{"t": 1792554304.1850734, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.01, "text": null}
+{"t": 1792554379.2644188, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.006, "text": null}
+{"t": 1792554395.364141, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT MoveJ to L_R10_P2_STP: The LEFT controller is busy: saving the recording. (Try again once it has finished.)"}
+{"t": 1792554398.4917648, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-v9hauyh6/left_drag_20261021_114619.txt"], "ret": 0, "ok": true, "elapsed_s": 19.227, "text": null}
+{"t": 1792554402.1062222, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792554402.1669347, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792554408.8499136, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792554408.906751, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792554409.095228, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 6.988, "text": "gap 0.09 deg"}
+{"t": 1792554435.4510202, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.013, "text": null}
+{"t": 1792554476.768197, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.006, "text": null}
+{"t": 1792554487.5804248, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-0t0sia9y/left_drag_20261021_114756.txt"], "ret": 0, "ok": true, "elapsed_s": 10.812, "text": null}
+{"t": 1792554490.122663, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792554490.2580485, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792554495.1737113, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792554495.3108401, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 1, "ok": false, "elapsed_s": 5.188, "text": "MOVEJ to 'L_R10_P2_STP' failed, ret=1"}
+{"t": 1792554495.599686, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT MoveJ to L_R10_P2_STP: The LEFT arm did not reach global point 'L_R10_P2_STP' (MOVEJ to 'L_R10_P2_STP' failed, ret=1). (Check the arm and the point on the pendant, then try again.)"}
+{"t": 1792554501.3334568, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792554501.5056248, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792554503.104941, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792554503.129811, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792554503.2481682, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.914, "text": "gap 0.08 deg"}
+{"t": 1792554511.6369548, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.01, "text": null}
+{"t": 1792554527.1538649, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.011, "text": null}
+{"t": 1792554531.762327, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-fodyom9g/left_drag_20261021_114847.txt"], "ret": 0, "ok": true, "elapsed_s": 4.608, "text": null}
+{"t": 1792554532.161228, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792554532.387867, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792554537.9703648, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792554538.1189895, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792554540.6654994, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792554540.6882508, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792554540.7993703, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 2.828, "text": "gap 0.05 deg"}
+{"t": 1792554620.1285315, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792554620.20134, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792554629.277699, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792554629.3286505, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792554629.4342387, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 9.305, "text": "gap 0.06 deg"}
+{"t": 1792554638.7629597, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.008, "text": null}
+{"t": 1792554684.9505506, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.013, "text": null}
+{"t": 1792554696.3791628, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-tw9ggw8g/left_drag_20261021_115124.txt"], "ret": 0, "ok": true, "elapsed_s": 11.428, "text": null}
+{"t": 1792554696.854251, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792554697.099052, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792554700.2324917, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792554700.2550275, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792554700.3950737, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 3.54, "text": "gap 0.04 deg"}
+{"t": 1792554708.7096725, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.011, "text": null}
+{"t": 1792554726.0838706, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.004, "text": null}
+{"t": 1792554731.418094, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-izrrmldv/left_drag_20261021_115206.txt"], "ret": 0, "ok": true, "elapsed_s": 5.334, "text": null}
+{"t": 1792554831.9651442, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792554832.0810153, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792554872.8081958, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792554872.9405696, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792555019.233684, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "20 programs"}
+{"t": 1792555019.4517126, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload L-R11_PART1_v001.txt: 2305 points, 128.4 KB -> slot 64 on 192.168.1.10"}
+{"t": 1792555019.4520843, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 64 now: empty"}
+{"t": 1792555022.5302231, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792555022.8888948, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 64 holds '64_L-R11_PART1_v001.txt', 131501 bytes (sent 131501)"}
+{"t": 1792555022.9931056, "side": "left", "verb": "upload", "args": {"program_id": 64, "file": "v001.txt", "bytes": 131501}, "ret": 0, "ok": true, "elapsed_s": 3.758, "text": null}
+{"t": 1792555023.9325104, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792555024.3330975, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792555064.3981242, "side": "left", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792555064.523009, "side": "right", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792555064.9265728, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792555065.1467266, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792555067.0567782, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792555067.2548351, "side": "left", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792555067.497535, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 64 (64_L-R11_PART1_v001.txt) on 192.168.1.10; transit speed 15 %"}
+{"t": 1792555067.4980721, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 180.9 deg on J5 — keep that path clear"}
+{"t": 1792555068.2301493, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (0.7 s)"}
+{"t": 1792555109.1429234, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792555109.1496332, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 41.7 s, no error"}
+{"t": 1792555109.2331195, "side": "left", "verb": "run", "args": {"program_id": 64, "points": 2305, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 41.978, "text": null}
+{"t": 1792555109.8280818, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792555110.0966952, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792555111.4161084, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792555111.5416524, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556358.2100692, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556358.398162, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792556361.1408772, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R10_P2_STP // MOVEJ"}
+{"t": 1792556361.1745532, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792556361.280015, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 3.069, "text": "gap 0.03 deg"}
+{"t": 1792556366.639405, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792556366.7147539, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792556366.7211719, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 20 mm, the plan's 20 mm (within 5 mm, read from the getter)"}
+{"t": 1792556366.721409, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792556366.78981, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [392, 391, 443, 471, 510, 987]; law 0.47 s)"}
+{"t": 1792556367.4183016, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [393, 391, 428, 451, 511, 987] after 0.56 s (per-channel travel [1, 1, 20, 20, 2, 0])"}
+{"t": 1792556367.4186113, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 5] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [393, 391, 428, 451, 511, 987]. Either that channel is dead or the readback is not the device."}
+{"t": 1792556367.4187694, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** left: the hand read back [393, 391, 428, 451, 511, 987] against a commanded [0, 0, 0, 0, 150, 1000] — channel 4 is 451 counts out, past its 25-count staging band"}
+{"t": 1792556367.5065758, "side": "left", "verb": "hand settled", "args": {"target": [0, 0, 0, 0, 150, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [393, 391, 428, 451, 511, 987] (on the tool): done, as the control program takes it"}
+{"t": 1792556367.5069008, "side": "left", "verb": "stage", "args": {"pole_mm": 20.0, "hand": [0, 0, 0, 0, 150, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 20 mm, hand [393, 391, 428, 451, 511, 987]"}
+{"t": 1792556367.8468976, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792556368.0591407, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556368.1841028, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 64 (64_L-R11_PART1_v001.txt) on 192.168.1.10; transit speed 15 %"}
+{"t": 1792556368.1846385, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.0 deg on J7"}
+{"t": 1792556368.8410146, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (0.6 s)"}
+{"t": 1792556382.2157466, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792556382.2254958, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 14.0 s, no error"}
+{"t": 1792556382.30593, "side": "left", "verb": "run", "args": {"program_id": 64, "points": 2305, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 14.246, "text": null}
+{"t": 1792556382.8670518, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792556383.1521146, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "15 point(s)"}
+{"t": 1792556439.157235, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 20 mm -> 50 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.52 s, timeout 7.6 s)"}
+{"t": 1792556440.4928615, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 48 mm after 1.31 s (verified_by=getter, moved 28 mm through 18 distinct readings)"}
+{"t": 1792556440.5908089, "side": "left", "verb": "pole move", "args": {"mm": 50.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 1.313, "text": "final 0.048 m, verified by getter"}
+{"t": 1792556444.8963263, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 50 mm -> 20 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.12 s, timeout 6.4 s)"}
+{"t": 1792556446.1946237, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 21 mm after 1.29 s (verified_by=getter, moved 29 mm through 18 distinct readings)"}
+{"t": 1792556446.3014321, "side": "left", "verb": "pole move", "args": {"mm": 20.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 1.288, "text": "final 0.021 m, verified by getter"}
+{"t": 1792556450.1177363, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792556450.2097, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792556450.2660048, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [393, 392, 429, 451, 510, 987]; law 0.45 s)"}
+{"t": 1792556450.7917535, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [393, 392, 422, 451, 510, 987] after 0.46 s (per-channel travel [0, 1, 7, 0, 1, 1])"}
+{"t": 1792556450.7920449, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 4, 5] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [393, 392, 422, 451, 510, 987]. Either that channel is dead or the readback is not the device."}
+{"t": 1792556450.8750813, "side": "left", "verb": "hand move", "args": {"counts": [0, 0, 0, 0, 150, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.457, "text": "read back [393, 392, 422, 451, 510, 987] (settled short of the target: stopped on force)"}
+{"t": 1792556473.7416108, "side": "left", "verb": "capture pose", "args": {"joints_deg": [22.483, 83.735, 4.13, 3.609, 61.978, -88.117, 160.725], "pose": [0.34368, 0.043452, -0.48761, 2.836, -1.176, -0.79], "pole_mm": 20.0, "hand": [393, 392, 422, 451, 510, 986]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556474.578597, "side": "left", "verb": "capture pose", "args": {"joints_deg": [22.486, 83.735, 4.13, 3.61, 61.979, -88.115, 160.724], "pose": [0.343672, 0.043476, -0.487614, 2.836, -1.176, -0.79], "pole_mm": 20.0, "hand": [393, 391, 423, 451, 510, 987]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556570.9585643, "side": "left", "verb": "capture pose", "args": {"joints_deg": [22.487, 83.735, 4.133, 3.609, 61.98, -88.114, 160.724], "pose": [0.343666, 0.043485, -0.487618, 2.836, -1.176, -0.79], "pole_mm": 20.0, "hand": [393, 392, 423, 451, 510, 986]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556572.5735347, "side": "left", "verb": "add global point", "args": {"name": "L_R11_P1_STP", "joints_deg": [22.484, 83.733, 4.132, 3.609, 61.979, -88.114, 160.725], "pose": [0.34368, 0.04346, -0.48762, 2.836, -1.176, -0.79], "work_frame": "World", "tool_frame": "Arm_Tip"}, "ret": 0, "ok": true, "elapsed_s": 0.324, "text": "read back: 0.001 deg"}
+{"t": 1792556572.9524941, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792556573.172433, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792556700.9485853, "side": "left", "verb": "capture pose", "args": {"joints_deg": [22.486, 83.735, 4.13, 3.609, 61.978, -88.114, 160.727], "pose": [0.34368, 0.043478, -0.487616, 2.836, -1.176, -0.79], "pole_mm": 20.0, "hand": [393, 391, 423, 451, 510, 986]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556701.501738, "side": "left", "verb": "capture pose", "args": {"joints_deg": [22.486, 83.735, 4.132, 3.609, 61.976, -88.114, 160.723], "pose": [0.34368, 0.043479, -0.487616, 2.836, -1.176, -0.79], "pole_mm": 20.0, "hand": [393, 392, 422, 451, 510, 986]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556750.9833648, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556751.0630703, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R10_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792556754.209843, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792556754.224204, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)"}
+{"t": 1792556754.3206775, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)"}
+{"t": 1792556754.3208456, "side": "left", "verb": "movej global point", "args": {"name": "L_R10_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 1, "ok": false, "elapsed_s": 3.337, "text": "MOVEJ to 'L_R10_P2_STP' failed, ret=1"}
+{"t": 1792556754.546228, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT MoveJ to L_R10_P2_STP: The LEFT arm did not reach global point 'L_R10_P2_STP' (MOVEJ to 'L_R10_P2_STP' failed, ret=1). (Check the arm and the point on the pendant, then try again.)"}
+{"t": 1792556767.92996, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792556768.1678135, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792556771.087406, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792556857.6049407, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": -1, "ok": false, "elapsed_s": null, "text": null}
+{"t": 1792556861.0395026, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792556861.173966, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792556861.3377101, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792556861.6270301, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556862.1965072, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792556862.800274, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792556873.2409854, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792556873.3596299, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R11_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792556875.4619648, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R11_P1_STP // MOVEJ"}
+{"t": 1792556875.5072994, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792556875.69035, "side": "left", "verb": "movej global point", "args": {"name": "L_R11_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 2.447, "text": "gap 0.10 deg"}
+{"t": 1792556940.9338567, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.056, "text": null}
+{"t": 1792556988.4993298, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.008, "text": null}
+{"t": 1792557003.6357057, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-r66bd7sk/left_drag_20261021_122948.txt"], "ret": 0, "ok": true, "elapsed_s": 15.136, "text": null}
+{"t": 1792557222.7948484, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792557223.0598042, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792557265.4008625, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "21 programs"}
+{"t": 1792557265.6058588, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload L-R11_PART2_v001.txt: 2443 points, 134.3 KB -> slot 65 on 192.168.1.10"}
+{"t": 1792557265.6061227, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 65 now: empty"}
+{"t": 1792557268.8661733, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792557269.3318286, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 65 holds '65_L-R11_PART2_v001.txt', 137508 bytes (sent 137508)"}
+{"t": 1792557269.455828, "side": "left", "verb": "upload", "args": {"program_id": 65, "file": "v001.txt", "bytes": 137508}, "ret": 0, "ok": true, "elapsed_s": 4.054, "text": null}
+{"t": 1792557270.2597666, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557270.5107305, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792557326.9282653, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557327.050251, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R11_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792557330.1107216, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R11_P1_STP // MOVEJ"}
+{"t": 1792557330.134475, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792557330.246394, "side": "left", "verb": "movej global point", "args": {"name": "L_R11_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 3.318, "text": "gap 0.07 deg"}
+{"t": 1792557332.6967192, "side": "left", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557332.8128614, "side": "right", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557333.0166774, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557333.2497764, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792557335.3233974, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557335.5622163, "side": "left", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557336.0099492, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 65 (65_L-R11_PART2_v001.txt) on 192.168.1.10; transit speed 15 %"}
+{"t": 1792557336.0104864, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.0 deg on J2"}
+{"t": 1792557337.2140281, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.2 s)"}
+{"t": 1792557351.0341287, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792557351.1157043, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 15.1 s, no error"}
+{"t": 1792557351.2855058, "side": "left", "verb": "run", "args": {"program_id": 65, "points": 2443, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 15.723, "text": null}
+{"t": 1792557355.7362285, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557355.9430943, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557357.7117734, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792557357.7936947, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792557357.8000445, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 20 mm, the plan's 20 mm (within 5 mm, read from the getter)"}
+{"t": 1792557357.8003397, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792557357.8491733, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [392, 388, 421, 447, 510, 986]; law 0.45 s)"}
+{"t": 1792557358.4596832, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [378, 374, 403, 421, 511, 986] after 0.55 s (per-channel travel [14, 14, 18, 26, 1, 0])"}
+{"t": 1792557358.4600432, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [5] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [378, 374, 403, 421, 511, 986]. Either that channel is dead or the readback is not the device."}
+{"t": 1792557358.4602156, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** left: the hand read back [378, 374, 403, 421, 511, 986] against a commanded [0, 0, 0, 0, 150, 1000] — channel 4 is 421 counts out, past its 25-count staging band"}
+{"t": 1792557358.5782764, "side": "left", "verb": "hand settled", "args": {"target": [0, 0, 0, 0, 150, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [378, 374, 403, 421, 511, 986] (on the tool): done, as the control program takes it"}
+{"t": 1792557358.5786033, "side": "left", "verb": "stage", "args": {"pole_mm": 20.0, "hand": [0, 0, 0, 0, 150, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 20 mm, hand [378, 374, 403, 421, 511, 986]"}
+{"t": 1792557359.3358035, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557359.5584266, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557359.9898393, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 65 (65_L-R11_PART2_v001.txt) on 192.168.1.10; transit speed 15 %"}
+{"t": 1792557359.990385, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.0 deg on J2"}
+{"t": 1792557361.4216034, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.4 s)"}
+{"t": 1792557367.604523, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  !! the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 7.6 s"}
+{"t": 1792557367.605017, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT Real run of program 65: the arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 7.6 s. (Check the arm; a code that stops the program ends the run.)"}
+{"t": 1792557375.738014, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792557375.7428498, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 15.8 s, no error"}
+{"t": 1792557375.8300729, "side": "left", "verb": "run", "args": {"program_id": 65, "points": 2443, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 16.271, "text": null}
+{"t": 1792557376.6344378, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557376.9300718, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792557419.5133855, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557419.6653106, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R11_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792557423.2231967, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R11_P1_STP // MOVEJ"}
+{"t": 1792557423.246771, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792557423.3808134, "side": "left", "verb": "movej global point", "args": {"name": "L_R11_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 3.863, "text": "gap 0.11 deg"}
+{"t": 1792557429.4473948, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557429.6585302, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792557434.026933, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 20 mm -> 20 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)"}
+{"t": 1792557434.7564206, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 20 mm after 0.72 s (verified_by=no_op, moved 0 mm through 1 distinct readings)"}
+{"t": 1792557434.8546855, "side": "left", "verb": "pole move", "args": {"mm": 20.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 0.721, "text": "final 0.02 m, verified by no_op"}
+{"t": 1792557434.8579526, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "The controller reports 4117 (unknown system code). (Check the arm and its pendant; clear the error there before running.)"}
+{"t": 1792557435.6911771, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792557435.780406, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792557435.8309464, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [379, 374, 403, 422, 511, 986]; law 0.43 s)"}
+{"t": 1792557436.3363998, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [380, 374, 398, 422, 511, 986] after 0.44 s (per-channel travel [1, 0, 5, 0, 1, 0])"}
+{"t": 1792557436.336684, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 4, 5] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [380, 374, 398, 422, 511, 986]. Either that channel is dead or the readback is not the device."}
+{"t": 1792557436.4493508, "side": "left", "verb": "hand move", "args": {"counts": [0, 0, 0, 0, 150, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.445, "text": "read back [380, 374, 398, 422, 511, 986] (settled short of the target: stopped on force)"}
+{"t": 1792557527.2542114, "side": "left", "verb": "rm_start_drag_teach", "args": [1], "ret": 0, "ok": true, "elapsed_s": 0.009, "text": null}
+{"t": 1792557547.0026221, "side": "left", "verb": "rm_stop_drag_teach", "args": [], "ret": 0, "ok": true, "elapsed_s": 0.006, "text": null}
+{"t": 1792557553.319351, "side": "left", "verb": "rm_save_trajectory", "args": ["/tmp/lite-teach-dhxzld74/left_drag_20261021_123906.txt"], "ret": 0, "ok": true, "elapsed_s": 6.317, "text": null}
+{"t": 1792557673.9956434, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557674.3875415, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792557681.9414577, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557682.2028906, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload L-R11_PART2_v002.txt: 2019 points, 110.0 KB -> slot 65 on 192.168.1.10"}
+{"t": 1792557682.2031496, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 65 now: 65_L-R11_PART2_v001.txt (134.3 KB) — it will be REPLACED"}
+{"t": 1792557684.9106755, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792557685.2273161, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 65 holds '65_L-R11_PART2_v002.txt', 112635 bytes (sent 112635)"}
+{"t": 1792557685.3210573, "side": "left", "verb": "upload", "args": {"program_id": 65, "file": "v002.txt", "bytes": 112635}, "ret": 0, "ok": true, "elapsed_s": 3.378, "text": null}
+{"t": 1792557688.056247, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557688.135398, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R11_P1_STP // MOVEJ // speed 15%"}
+{"t": 1792557690.5364816, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R11_P1_STP // MOVEJ"}
+{"t": 1792557690.5711398, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792557690.7023044, "side": "left", "verb": "movej global point", "args": {"name": "L_R11_P1_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 2.645, "text": "gap 0.08 deg"}
+{"t": 1792557692.4882934, "side": "left", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557692.5864542, "side": "right", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557694.8727758, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557695.0963545, "side": "left", "verb": "run mode SIM", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557695.438352, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 65 (65_L-R11_PART2_v002.txt) on 192.168.1.10; transit speed 15 %"}
+{"t": 1792557695.4387789, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.0 deg on J5"}
+{"t": 1792557696.622136, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (1.2 s)"}
+{"t": 1792557707.9478192, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792557707.9613383, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 12.5 s, no error"}
+{"t": 1792557708.0459058, "side": "left", "verb": "run", "args": {"program_id": 65, "points": 2019, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 12.949, "text": null}
+{"t": 1792557708.5851507, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557708.7052004, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792557720.6989868, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557720.8113294, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557722.3551126, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792557722.4281414, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792557722.4408226, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: already at 20 mm, the plan's 20 mm (within 5 mm, read from the getter)"}
+{"t": 1792557722.441202, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792557722.4985085, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [382, 374, 399, 421, 511, 987]; law 0.43 s)"}
+{"t": 1792557722.9941807, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [381, 374, 399, 410, 511, 986] after 0.43 s (per-channel travel [1, 0, 0, 11, 1, 1])"}
+{"t": 1792557722.994491, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 3, 5] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [381, 374, 399, 410, 511, 986]. Either that channel is dead or the readback is not the device."}
+{"t": 1792557722.994669, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** left: the hand read back [381, 374, 399, 410, 511, 986] against a commanded [0, 0, 0, 0, 150, 1000] — channel 4 is 410 counts out, past its 25-count staging band"}
+{"t": 1792557723.0791783, "side": "left", "verb": "hand settled", "args": {"target": [0, 0, 0, 0, 150, 1000]}, "ret": null, "ok": true, "elapsed_s": null, "text": "stopped at [381, 374, 399, 410, 511, 986] (on the tool): done, as the control program takes it"}
+{"t": 1792557723.0794952, "side": "left", "verb": "stage", "args": {"pole_mm": 20.0, "hand": [0, 0, 0, 0, 150, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 20 mm, hand [381, 374, 399, 410, 511, 986]"}
+{"t": 1792557723.26788, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557723.3825026, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557723.7433002, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "run slot 65 (65_L-R11_PART2_v002.txt) on 192.168.1.10; transit speed 15 %"}
+{"t": 1792557723.7437367, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  the controller first moves the arm to the program's first point: up to 0.0 deg on J5"}
+{"t": 1792557724.5871167, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  running (0.8 s)"}
+{"t": 1792557736.254027, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  global speed restored to 50 % (ret=0)"}
+{"t": 1792557736.258711, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  RUN COMPLETE: 12.5 s, no error"}
+{"t": 1792557736.3537245, "side": "left", "verb": "run", "args": {"program_id": 65, "points": 2019, "transit_speed": 15, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 12.97, "text": null}
+{"t": 1792557753.0086448, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557753.2198958, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 point(s)"}
+{"t": 1792557793.2800174, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 20 mm -> 200 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 7.60 s, timeout 22.8 s)"}
+{"t": 1792557797.5092335, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 198 mm after 4.22 s (verified_by=getter, moved 178 mm through 68 distinct readings)"}
+{"t": 1792557797.5928812, "side": "left", "verb": "pole move", "args": {"mm": 200.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 4.223, "text": "final 0.198 m, verified by getter"}
+{"t": 1792557801.7900846, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792557801.8863504, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792557801.9409785, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [381, 374, 399, 411, 510, 986]; law 0.42 s)"}
+{"t": 1792557802.4773448, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [381, 374, 392, 411, 510, 986] after 0.46 s (per-channel travel [0, 0, 7, 0, 1, 0])"}
+{"t": 1792557802.477629, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 4, 5] were commanded to move and did NOT — target [0, 0, 0, 0, 150, 1000], readback [381, 374, 392, 411, 510, 986]. Either that channel is dead or the readback is not the device."}
+{"t": 1792557802.58038, "side": "left", "verb": "hand move", "args": {"counts": [0, 0, 0, 0, 150, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.46, "text": "read back [381, 374, 392, 411, 510, 986] (settled short of the target: stopped on force)"}
+{"t": 1792557817.1990392, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792557817.2840195, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792557817.3435545, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [381, 374, 393, 411, 511, 986]; law 0.58 s)"}
+{"t": 1792557817.9714642, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: arrived at [1000, 1000, 1000, 1000, 1000, 987] after 0.55 s (per-channel travel [619, 626, 607, 589, 489, 1])"}
+{"t": 1792557818.0714343, "side": "left", "verb": "hand move", "args": {"counts": [1000, 1000, 1000, 1000, 1000, 1000], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.554, "text": "read back [1000, 1000, 1000, 1000, 1000, 987]"}
+{"t": 1792557847.9465942, "side": "left", "verb": "capture pose", "args": {"joints_deg": [-4.759, -91.639, 2.016, 74.943, 10.46, 97.398, 166.976], "pose": [0.458445, 0.049991, 0.156048, -3.087, -0.175, 0.302], "pole_mm": 200.0, "hand": [1000, 1000, 1000, 1000, 998, 987]}, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557855.2668855, "side": "left", "verb": "add global point", "args": {"name": "L_R11_P2_STP", "joints_deg": [-4.758, -91.638, 2.016, 74.943, 10.461, 97.398, 166.978], "pose": [0.45845, 0.04999, 0.15604, -3.087, -0.175, 0.302], "work_frame": "World", "tool_frame": "Arm_Tip"}, "ret": 0, "ok": true, "elapsed_s": 0.459, "text": "read back: 0.001 deg"}
+{"t": 1792557855.7591052, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792557856.0772076, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792557865.8440647, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792557865.897609, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R11_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792557867.652785, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R11_P2_STP // MOVEJ"}
+{"t": 1792557867.6704044, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792557867.7866166, "side": "left", "verb": "movej global point", "args": {"name": "L_R11_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.942, "text": "gap 0.05 deg"}
+{"t": 1792557991.6555939, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792557991.656054, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792558027.5010147, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792558027.6018941, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792558028.2293916, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792558028.3721735, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792558028.8956633, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792558028.9390988, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792558029.0479343, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "12 point(s)"}
+{"t": 1792558029.1903589, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792558037.6384246, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792558037.774619, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792558060.3661659, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792558060.57895, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792558094.766975, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792558095.0878127, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792558255.3599315, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792558255.4967237, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792558261.1389441, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792558261.2222986, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_R11_P2_STP // MOVEJ // speed 15%"}
+{"t": 1792558262.0807445, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_R11_P2_STP // MOVEJ"}
+{"t": 1792558262.1014638, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792558262.204567, "side": "left", "verb": "movej global point", "args": {"name": "L_R11_P2_STP", "speed": 15, "wait_s": 0.0}, "ret": 0, "ok": true, "elapsed_s": 1.06, "text": "gap 0.10 deg"}
+{"t": 1792558484.6794367, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792558575.3363633, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792558709.5962179, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792558764.7070932, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792559017.379358, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792559033.9119854, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792559047.431751, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792559048.935457, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792559050.9384582, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792560187.9139187, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792560188.189443, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792560189.7419713, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs; IO default 0; tracks not available"}
+{"t": 1792560189.8867583, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792560407.090585, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs; IO default 0; tracks not available"}
+{"t": 1792560407.2494922, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792560626.4235628, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "22 programs"}
+{"t": 1792560626.9392295, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload L_T06_DG.txt: 1483 points, 84.7 KB -> slot 20 on 192.168.1.10"}
+{"t": 1792560626.9397578, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 20 now: empty"}
+{"t": 1792560629.4404535, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792560629.539569, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 20 holds '20_L_T06_DG.txt', 86764 bytes (sent 86764)"}
+{"t": 1792560629.6259692, "side": "left", "verb": "upload", "args": {"program_id": 20, "file": "20261021_133025_L_T06_DG.txt", "bytes": 86764}, "ret": 0, "ok": true, "elapsed_s": 3.197, "text": null}
+{"t": 1792560756.1992095, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "23 programs"}
+{"t": 1792560756.416902, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload L_T04_GC.txt: 2364 points, 132.8 KB -> slot 21 on 192.168.1.10"}
+{"t": 1792560756.417607, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 21 now: empty"}
+{"t": 1792560760.1439877, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792560760.551662, "side": "left", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 21 holds '21_L_T04_GC.txt', 135943 bytes (sent 135943)"}
+{"t": 1792560760.6732907, "side": "left", "verb": "upload", "args": {"program_id": 21, "file": "20261021_133235_L_T04_GC.txt", "bytes": 135943}, "ret": 0, "ok": true, "elapsed_s": 4.469, "text": null}
+{"t": 1792560766.9795322, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs; IO default 0; tracks not available"}
+{"t": 1792560767.3225255, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792560768.9058814, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs; IO default 0; tracks not available"}
+{"t": 1792560769.224158, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792561025.79335, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "16 programs"}
+{"t": 1792561026.0296717, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "upload R_T04_GC_BP.txt: 5012 points, 286.5 KB -> slot 20 on 192.168.1.103"}
+{"t": 1792561026.0303411, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  slot 20 now: empty"}
+{"t": 1792561033.572929, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  sent: ret=0 err_line=-1"}
+{"t": 1792561033.7562945, "side": "right", "verb": "rm_upload", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  VERIFIED: slot 20 holds '20_R_T04_GC_BP.txt', 293376 bytes (sent 293376)"}
+{"t": 1792561033.861362, "side": "right", "verb": "upload", "args": {"program_id": 20, "file": "20261021_133705_R_T04_GC_BP.txt", "bytes": 293376}, "ret": 0, "ok": true, "elapsed_s": 8.066, "text": null}
+{"t": 1792561122.335335, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs; IO default 0; tracks not available"}
+{"t": 1792561122.48609, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792561123.438196, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs; IO default 0; tracks not available"}
+{"t": 1792561123.6694164, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792561124.2780368, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs; IO default 0; tracks not available"}
+{"t": 1792561124.4454293, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792561730.4537678, "side": "right", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 programs; IO default 0; tracks not available"}
+{"t": 1792561730.6888983, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "12 point(s)"}
+{"t": 1792561906.131191, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792561906.3279953, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792566853.3843238, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792566853.3849287, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792566995.7853136, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792566995.9056814, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792566996.2175982, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs"}
+{"t": 1792566996.444898, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792566997.287911, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)"}
+{"t": 1792566997.4059958, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1792566997.5039194, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1792566998.0878923, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 programs"}
+{"t": 1792566998.3833413, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "12 point(s)"}
+{"t": 1792567004.7231598, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792567004.9628184, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792567351.1849356, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs"}
+{"t": 1792567351.5136676, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 programs"}
+{"t": 1792567351.7435606, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792567351.9043214, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "12 point(s)"}
+{"t": 1792567437.0969706, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs"}
+{"t": 1792567437.7247796, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 programs"}
+{"t": 1792567437.942121, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792567438.1596541, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "12 point(s)"}
+{"t": 1792567438.4533665, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs"}
+{"t": 1792567438.7118886, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 programs"}
+{"t": 1792567440.866938, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs"}
+{"t": 1792567441.3589668, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 programs"}
+{"t": 1792567441.5507746, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 point(s)"}
+{"t": 1792567441.681758, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "12 point(s)"}
+{"t": 1792567441.9391897, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 programs"}
+{"t": 1792567442.1177077, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "17 programs"}
+{"t": 1792567442.251891, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792567442.3570693, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792567442.4715219, "side": null, "verb": "mechanism", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "The wrist camera cannot be read (no D435 is plugged into this computer): every check will read NOT (fail-closed), as ALIX's sender reads an unanswered check, and each plan follows its own policy for a NOT."}
+{"t": 1792567442.5110698, "side": null, "verb": "mechanism", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "PLAN 1/1: Open the lid (lid_open_toppra.json, 20 entries, 16.3 s of motion)"}
+{"t": 1792567442.839213, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792567442.9323974, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792567442.9453793, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: OPEN before the pole moves — from peripherals.HAND_OPEN — this plan authors no release stage and the caller named none"}
+{"t": 1792567443.0176013, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [995, 1000, 398, 994, 156, 987]; law 0.74 s)"}
+{"t": 1792567443.8495486, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: arrived at [995, 1000, 1000, 993, 1000, 989] after 0.77 s (per-channel travel [0, 0, 602, 1, 844, 3])"}
+{"t": 1792567444.095363, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 200 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.53 s, timeout 7.6 s)"}
+{"t": 1792567445.860854, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 151 mm after 1.74 s (verified_by=getter, moved 49 mm through 25 distinct readings)"}
+{"t": 1792567445.8613622, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792567445.9239445, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [996, 1000, 1000, 994, 1000, 990]; law 0.12 s)"}
+{"t": 1792567446.1163664, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: arrived at [995, 1000, 1000, 994, 1000, 991] after 0.12 s (per-channel travel [1, 0, 0, 0, 0, 1])"}
+{"t": 1792567446.2079222, "side": "right", "verb": "stage", "args": {"pole_mm": 150.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 151 mm, hand [995, 1000, 1000, 994, 1000, 991]"}
+{"t": 1792567446.3018453, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 15 of a 100 % global ratio"}
+{"t": 1792567448.2390726, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792567448.337404, "side": "right", "verb": "move to pose", "args": {"deg": [0.0, -81.99, -26.0, 97.99, 6.0, 62.0, 69.0], "speed": 15, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.042999267578125 deg"}
+{"t": 1792567448.33852, "side": null, "verb": "mechanism", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: at Open the lid's start"}
+{"t": 1792567448.6345851, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792567448.7105155, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792567448.7238734, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: OPEN before the pole moves — from peripherals.HAND_OPEN — this plan authors no release stage and the caller named none"}
+{"t": 1792567448.7937884, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 1000, 1000, 1000, 997, 981]; law 0.13 s)"}
+{"t": 1792567449.0908825, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 997, 980] after 0.22 s (per-channel travel [0, 0, 0, 0, 0, 1])"}
+{"t": 1792567449.0911229, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: settled without arriving — worst channel 6 is 20 counts short (target 1000, readback 980)"}
+{"t": 1792567449.29296, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 200 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 2.53 s, timeout 7.6 s)"}
+{"t": 1792567451.0309227, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 151 mm after 1.73 s (verified_by=getter, moved 49 mm through 25 distinct readings)"}
+{"t": 1792567451.0315058, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: None (the state the stroke was planned with)"}
+{"t": 1792567451.0863788, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 1000, 1000, 1000, 997, 981]; law 0.13 s)"}
+{"t": 1792567451.3599894, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [1000, 1000, 1000, 1000, 997, 981] after 0.21 s (per-channel travel [0, 0, 0, 0, 0, 0])"}
+{"t": 1792567451.3605464, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: settled without arriving — worst channel 6 is 19 counts short (target 1000, readback 981)"}
+{"t": 1792567451.4443457, "side": "left", "verb": "stage", "args": {"pole_mm": 150.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 151 mm, hand [1000, 1000, 1000, 1000, 997, 981]"}
+{"t": 1792567451.5413036, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 15 of a 100 % global ratio"}
+{"t": 1792567453.8109741, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1792567453.9113257, "side": "left", "verb": "move to pose", "args": {"deg": [0.0, -81.99, 26.0, 97.99, -6.0, 62.0, 111.0], "speed": 15, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.052002502441411025 deg"}
+{"t": 1792567453.9125342, "side": null, "verb": "mechanism", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT: at Open the lid's start"}
+{"t": 1792567453.9228666, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 150 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 1.50 s, timeout 4.5 s)"}
+{"t": 1792567453.9978645, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 150 mm after 0.07 s (verified_by=no_op, moved 0 mm through 1 distinct readings)"}
+{"t": 1792567454.0914664, "side": "right", "verb": "pole move", "args": {"mm": 150.0, "speed_pct": 50}, "ret": 0, "ok": true, "elapsed_s": 0.066, "text": "final 0.15 m, verified by no_op"}
+{"t": 1792567454.094377, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "The controller reports 4117 (unknown system code). (Check the arm and its pendant; clear the error there before running.)"}
+{"t": 1792567454.3500862, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1792567454.4243383, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 500 on all six channels"}
+{"t": 1792567454.489028, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [33, 33, 33, 33, 133, 944] (from [995, 1000, 1000, 994, 1000, 990]; law 0.84 s)"}
+{"t": 1792567455.43013, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [995, 1000, 1000, 994, 129, 931] after 0.87 s (per-channel travel [0, 0, 0, 1, 871, 70])"}
+{"t": 1792567455.4305708, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: channel(s) [1, 2, 3, 4] were commanded to move and did NOT — target [33, 33, 33, 33, 133, 944], readback [995, 1000, 1000, 994, 129, 931]. Either that channel is dead or the readback is not the device."}
+{"t": 1792567455.5530674, "side": "right", "verb": "hand move", "args": {"counts": [33, 33, 33, 33, 133, 944], "speed_set": 500}, "ret": 0, "ok": true, "elapsed_s": 0.871, "text": "read back [995, 1000, 1000, 994, 129, 931] (settled short of the target: stopped on force)"}
+{"t": 1792567456.0169237, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** the realtime push was ENABLED toward 192.168.1.239:8090 — that is THIS host and THIS port, so it is a stale enable from a capture that never restored, not a live consumer. Clearing it (ok). No --steal-push is needed for a self-enable."}
+{"t": 1792567456.017512, "side": "right", "verb": "canfd capture", "args": null, "ret": null, "ok": false, "elapsed_s": null, "text": "refused: UDP port 8090 is already bound ON THIS HOST ([Errno 98] Address already in use). A stale self-enable was cleared on the way in; nothing else on the controller was changed. The stale self-enable was cleared, so the controller is no longer pushing here — something else on this host holds the port. Find it — `ss -lunp | grep 8090` or `sudo lsof -nP -iUDP:8090`. Or record on another port with RM_UDP_PORT / --udp-port."}
+{"t": 1792567456.523365, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792567456.653196, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792567456.6597104, "side": "both", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "S2 Real Machine: both arms, SAFE TIMELINE: The RIGHT controller's 5 ms feed to this computer could not be set up (UDP port 8090 is already bound ON THIS HOST ([Errno 98] Address already in use). A stale self-enable was cleared on the way in; nothing else on the controller was changed. The stale self-enable was cleared, so the controller is no longer pushing here — something else on this host holds the port. Find it — `ss -lunp | grep 8090` or `sudo lsof -nP -iUDP:8090`. Or record on another port with RM_UDP_PORT / --udp-port.), so nothing was streamed. (Check that nothing else (ALIX's driver) takes the controller's push.)"}
+{"t": 1792567777.419275, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)"}
+{"t": 1792567777.4198554, "side": "left", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "LEFT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)"}

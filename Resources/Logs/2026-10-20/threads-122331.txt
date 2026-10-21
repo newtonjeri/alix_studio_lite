@@ -1,0 +1,76 @@
+Current thread 0x0000761a44ff56c0 (most recent call first):
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/logbook.py", line 55 in dump_threads
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_standin.py", line 758 in _give_up
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_standin.py", line 778 in _recover
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x0000761a967fc6c0 (most recent call first):
+  File "/usr/lib/python3.12/threading.py", line 355 in wait
+  File "/usr/lib/python3.12/multiprocessing/queues.py", line 251 in _feed
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x0000761a3d9fe6c0 (most recent call first):
+  File "/usr/lib/python3.12/selectors.py", line 415 in select
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 1136 in wait
+  File "/usr/lib/python3.12/concurrent/futures/process.py", line 426 in wait_result_broken_or_wakeup
+  File "/usr/lib/python3.12/concurrent/futures/process.py", line 353 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x0000761a957fa6c0 (most recent call first):
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 395 in _recv
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 430 in _recv_bytes
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 250 in recv
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 309 in _feed_loop
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x0000761a96ffd6c0 (most recent call first):
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 395 in _recv
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 430 in _recv_bytes
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 250 in recv
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 309 in _feed_loop
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x0000761a3e1ff6c0 (most recent call first):
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 395 in _recv
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 430 in _recv_bytes
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 250 in recv
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 392 in call
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 512 in method
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_standin.py", line 1409 in work
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/jobs.py", line 167 in run
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58 in run
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 92 in _worker
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x0000761a977fe6c0 (most recent call first):
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/app.py", line 97 in _status_loop
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x0000761a97fff6c0 (most recent call first):
+  File "/usr/lib/python3.12/threading.py", line 355 in wait
+  File "/usr/lib/python3.12/threading.py", line 655 in wait
+  File "/usr/lib/python3.12/threading.py", line 997 in start
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_standin.py", line 743 in _watch_links
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x0000761ac4217740 (most recent call first):
+  File "/usr/lib/python3.12/selectors.py", line 415 in select
+  File "/usr/lib/python3.12/socketserver.py", line 235 in serve_forever
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/__init__.py", line 231 in main
+  File "/home/alai-labs/alix_studio_lite/tools/run_lite.py", line 88 in main
+  File "/home/alai-labs/alix_studio_lite/tools/run_lite.py", line 92 in <module>

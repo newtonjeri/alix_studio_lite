@@ -17,14 +17,14 @@
   "pole": {
    "pole_mm": 200.0,
    "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
     0,
-    0,
-    0,
-    0,
-    150,
     1000
    ],
-   "at": "2026-10-19 16:12:28"
+   "at": "2026-10-20 10:55:52"
   },
   "hand": {
    "pole_mm": 200.0,
@@ -36,7 +36,415 @@
     0,
     1000
    ],
-   "at": "2026-10-19 16:12:50"
+   "at": "2026-10-20 10:56:24"
   }
- }
+ },
+ "active": "20261020_112925_L-R05_PART2.txt",
+ "settings": {
+  "optimiser": "manual",
+  "target_s": null,
+  "segments": [
+   {
+    "start": 1,
+    "end": 2690,
+    "pct": 45.0
+   },
+   {
+    "start": 2691,
+    "end": 3601,
+    "pct": 48.0
+   }
+  ],
+  "smooth_window": 101,
+  "program_id": 55,
+  "max_dev_mm": null,
+  "trim": true,
+  "smooth": true,
+  "scale": true,
+  "time_mode": "fastest",
+  "idle_window": 11,
+  "idle_threshold_md": 8.0,
+  "idle_min_run": 20
+ },
+ "history": [
+  {
+   "label": "Start",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   }
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2656,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792466905.8906927
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2656,
+      "pct": 50.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792466911.0880873
+  },
+  {
+   "label": "Scale regions cleared: another recording (L_TASK_5B_trajectory_18s_trimmed.txt)",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792466965.446257
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467035.421717
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 50.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467038.898681
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 50.0
+     },
+     {
+      "start": 2691,
+      "end": 3601,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467068.5525293
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 50.0
+     },
+     {
+      "start": 2691,
+      "end": 3601,
+      "pct": 60.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467263.9194257
+  },
+  {
+   "label": "Program ID 55",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 50.0
+     },
+     {
+      "start": 2691,
+      "end": 3601,
+      "pct": 60.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 55,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467314.590188
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 50.0
+     },
+     {
+      "start": 2691,
+      "end": 3601,
+      "pct": 50.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 55,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467406.5904696
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 50.0
+     },
+     {
+      "start": 2691,
+      "end": 3601,
+      "pct": 45.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 55,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467418.7565098
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 48.0
+     },
+     {
+      "start": 2691,
+      "end": 3601,
+      "pct": 45.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 55,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467422.0207002
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 48.0
+     },
+     {
+      "start": 2691,
+      "end": 3601,
+      "pct": 48.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 55,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467514.9105375
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2690,
+      "pct": 45.0
+     },
+     {
+      "start": 2691,
+      "end": 3601,
+      "pct": 48.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 55,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792467517.0653107
+  }
+ ],
+ "cursor": 13,
+ "version": "v003"
 }

@@ -1,0 +1,52 @@
+{
+ "unit": "L-R07_PART1",
+ "arm": "left",
+ "taken": "2026-10-20 12:54",
+ "lines": 3201,
+ "sha256": "301562a7a956761b575a3634ebcfed85c2ee84390afa8e122c8c9121f0cb30a5",
+ "note": "trimmed to lines 1\u20133,201 of 3,524 (16.000 s)",
+ "source": "trim",
+ "original": "L_TASK_8A_trajectory_2_trimmed.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 8A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 12:36:16"
+  }
+ },
+ "name": "L_TASK_8A_trajectory_2_trimmed.txt"
+}

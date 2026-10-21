@@ -1,0 +1,104 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "7423280e6fbbaff1cbc7311146ae06ef76b21106c314521d4e0ed57d45f48724",
+   "ok": true,
+   "at": "2026-10-20 15:53:30",
+   "detail": {
+    "program_id": 58
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "7423280e6fbbaff1cbc7311146ae06ef76b21106c314521d4e0ed57d45f48724",
+   "ok": true,
+   "at": "2026-10-20 15:55:52",
+   "detail": {
+    "program_id": 58,
+    "dry_run": true,
+    "seconds": 9.91,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "7423280e6fbbaff1cbc7311146ae06ef76b21106c314521d4e0ed57d45f48724",
+   "ok": true,
+   "at": "2026-10-20 15:56:18",
+   "detail": {
+    "program_id": 58,
+    "dry_run": false,
+    "seconds": 10.61,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 7.8,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "7423280e6fbbaff1cbc7311146ae06ef76b21106c314521d4e0ed57d45f48724",
+   "ok": false,
+   "at": "2026-10-20 15:57:04",
+   "detail": {
+    "verdict": "tune",
+    "note": "",
+    "mode": "real"
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "c054118eac896c443be5bd49d94290b3e49951f69435c67d3860b888ac7d0a1c",
+   "ok": true,
+   "at": "2026-10-20 15:58:34",
+   "detail": {
+    "program_id": 58
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "c054118eac896c443be5bd49d94290b3e49951f69435c67d3860b888ac7d0a1c",
+   "ok": true,
+   "at": "2026-10-20 15:58:52",
+   "detail": {
+    "program_id": 58,
+    "dry_run": true,
+    "seconds": 9.5,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "c054118eac896c443be5bd49d94290b3e49951f69435c67d3860b888ac7d0a1c",
+   "ok": true,
+   "at": "2026-10-20 15:59:12",
+   "detail": {
+    "program_id": 58,
+    "dry_run": false,
+    "seconds": 9.84,
+    "reported": [
+     {
+      "codes": "4105 (0x1009: joint speed over its limit (a warning; the run goes on))",
+      "at_s": 3.6,
+      "warn": true
+     }
+    ]
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "c054118eac896c443be5bd49d94290b3e49951f69435c67d3860b888ac7d0a1c",
+   "ok": true,
+   "at": "2026-10-20 15:59:26",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}

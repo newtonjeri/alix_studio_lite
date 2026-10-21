@@ -1,0 +1,36 @@
+Thread 0x00007723dffff6c0 (most recent call first):
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 395 in _recv
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 430 in _recv_bytes
+  File "/usr/lib/python3.12/multiprocessing/connection.py", line 250 in recv
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 156 in control
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Current thread 0x00007723ecbfc6c0 (most recent call first):
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/logbook.py", line 55 in dump_threads
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 151 in heartbeat
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x00007723ed3fd6c0 (most recent call first):
+  File "/usr/lib/python3.12/threading.py", line 359 in wait
+  File "/usr/lib/python3.12/threading.py", line 655 in wait
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_link.py", line 272 in _loop
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x000077241a90a740 (most recent call first):
+  File "/home/alai-labs/alix_studio_lite/vendor/alix/external/butterfli-realman-alix/Python/Robotic_Arm/rm_robot_interface.py", line 1140 in rm_get_current_work_frame
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_link.py", line 123 in call
+  File "/home/alai-labs/alix_studio_lite/vendor/control_app/rm_upload_fast_v14_safe_transit.py", line 1435 in _capture_current_frames
+  File "/home/alai-labs/alix_studio_lite/vendor/control_app/rm_upload_fast_v14_safe_transit.py", line 1487 in move_global_waypoint
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_real.py", line 818 in move_point
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 213 in worker_main
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 108 in run
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 314 in _bootstrap
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 135 in _main
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122 in spawn_main
+  File "<string>", line 1 in <module>

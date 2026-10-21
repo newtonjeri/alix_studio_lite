@@ -10651,3 +10651,162 @@
 16:21:45.562 [RIGHT] ALERT ERROR · RIGHT: STOP not confirmed: the arm is not proven still (the program ended but the arm is still moving at 5.80 deg/s after rm_set_arm_stop — no software stop has been shown to work on this controller; use the pendant / e-stop). (Press the red E-stop button on the robot if it is still moving.)
 16:21:45.724 [LEFT] restore global speed {"pct": 50} ret=0
 16:21:45.884 [RIGHT] restore global speed {"pct": 50} ret=0
+18:00:14.565 [activity] - page: NAVIGATION · Open screen
+18:00:14.566 [activity] - page: SYSTEM · ASL frontend initialized
+18:00:19.206 [activity] - POST /api/auth/login
+18:00:20.436 [activity] operator:337cb6 page: AUTH · Operator login
+18:00:20.438 [activity] operator:337cb6 page: NAVIGATION · Open screen
+18:00:20.438 [activity] operator:337cb6 page: AUTH · Setting changed
+18:00:24.226 [activity] operator:337cb6 page: UI · Button action
+18:00:26.467 [activity] operator:337cb6 page: NAVIGATION · Task loaded
+18:00:26.495 [activity] operator:337cb6 page: SETUP · Arm selected
+18:00:26.500 [activity] operator:337cb6 page: NAVIGATION · Teaching stage changed
+18:00:26.501 [activity] operator:337cb6 page: SETUP · Arm selected
+18:00:26.502 [activity] operator:337cb6 page: NAVIGATION · Open screen
+18:00:26.503 [activity] operator:337cb6 page: NAVIGATION · Teaching stage changed
+18:00:31.340 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:00:36.529 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:00:42.398 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:00:42.399 [activity] operator:337cb6 page: UI · Button action
+18:00:43.256 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:00:45.102 [activity] operator:337cb6 page: SEQUENCE · Button action
+18:00:45.103 [activity] operator:337cb6 page: NAVIGATION · Open screen
+18:00:46.770 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:00:48.715 [activity] operator:337cb6 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:00:48.720 [activity] operator:337cb6 page: SYSTEM · 3D device
+18:00:50.043 [activity] operator:337cb6 page: SYSTEM · Session active
+18:00:50.075 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:00:51.655 [activity] operator:337cb6 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:00:52.000 [activity] operator:337cb6 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:00:54.584 [activity] operator:337cb6 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+18:00:57.703 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:01:04.006 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:01:04.339 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:05.312 [activity] operator:337cb6 page: UI · Button action
+18:01:05.546 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:06.605 [activity] operator:337cb6 page: PROJECT · Button action
+18:01:06.608 [activity] operator:337cb6 page: NAVIGATION · Open screen
+18:01:06.821 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:11.763 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:01:14.585 [activity] operator:337cb6 page: SYSTEM · Page slow
+18:01:14.586 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:01:19.295 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:01:19.296 [activity] operator:337cb6 page: UI · Button action
+18:01:19.296 [activity] operator:337cb6 page: SYSTEM · Session active
+18:01:19.869 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:25.234 [activity] operator:337cb6 page: NAVIGATION · Button action
+18:01:25.459 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:29.810 [activity] operator:337cb6 page: NAVIGATION · Scrolled view
+18:01:29.861 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:34.577 [activity] operator:337cb6 page: UI · Button action
+18:01:34.919 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:54.681 [activity] operator:337cb6 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:01:54.686 [activity] operator:337cb6 page: NAVIGATION · Button action
+18:01:54.687 [activity] operator:337cb6 page: NAVIGATION · Open screen
+18:01:54.687 [activity] operator:337cb6 page: SYSTEM · Browser closing
+18:01:55.775 [activity] operator:337cb6 page: SYSTEM · Application hidden
+18:01:59.055 [activity] - page: NAVIGATION · Open screen
+18:01:59.055 [activity] - page: SYSTEM · ASL frontend initialized
+18:02:01.364 [activity] - POST /api/auth/login
+18:02:02.523 [activity] operator:dcc685 page: AUTH · Operator login
+18:02:02.523 [activity] operator:dcc685 page: NAVIGATION · Open screen
+18:02:02.524 [activity] operator:dcc685 page: AUTH · Setting changed
+18:02:05.346 [activity] operator:dcc685 page: UI · Button action
+18:02:23.447 [activity] operator:dcc685 page: NAVIGATION · Task loaded
+18:02:23.453 [activity] operator:dcc685 page: SETUP · Arm selected
+18:02:23.454 [activity] operator:dcc685 page: NAVIGATION · Teaching stage changed
+18:02:23.454 [activity] operator:dcc685 page: SETUP · Arm selected
+18:02:23.455 [activity] operator:dcc685 page: NAVIGATION · Open screen
+18:02:31.154 [activity] operator:dcc685 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:09.385 [activity] operator:dcc685 page: UI · Button action
+18:03:09.386 [activity] operator:dcc685 page: UI · Button action
+18:03:09.387 [activity] operator:dcc685 page: SYSTEM · Session active
+18:03:09.388 [activity] operator:dcc685 page: UI · Button action
+18:03:09.389 [activity] operator:dcc685 page: TEACH · Button action
+18:03:09.391 [activity] operator:dcc685 page: NAVIGATION · Open screen
+18:03:13.343 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:03:13.346 [activity] operator:dcc685 page: SYSTEM · Session active
+18:03:13.357 [activity] operator:dcc685 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:03:14.185 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:03:20.713 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:03:26.076 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:03:32.301 [activity] operator:dcc685 page: SYSTEM · Session active
+18:03:36.049 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:03:39.439 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:03:42.874 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:03:47.723 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:03:51.069 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:03:54.189 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:03:59.051 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:04:00.311 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:04:02.281 [activity] operator:dcc685 page: SYSTEM · Session active
+18:04:03.548 [activity] operator:dcc685 page: TEACH · Button action
+18:04:03.548 [activity] operator:dcc685 page: NAVIGATION · Teaching stage changed
+18:04:03.789 [activity] operator:dcc685 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:04:08.036 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:04:12.072 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:04:15.052 [activity] operator:dcc685 page: TEACH · Button action
+18:04:15.053 [activity] operator:dcc685 page: NAVIGATION · Teaching stage changed
+18:04:15.053 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:04:15.237 [activity] operator:dcc685 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:04:18.540 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:04:21.776 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:04:32.293 [activity] operator:dcc685 page: SYSTEM · Session active
+18:04:59.055 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:05:02.276 [activity] operator:dcc685 page: SYSTEM · Session active
+18:05:23.554 [activity] operator:dcc685 page: SIMULATION · Button action
+18:05:23.555 [activity] operator:dcc685 page: NAVIGATION · Teaching stage changed
+18:05:24.006 [activity] operator:dcc685 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:05:26.980 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:05:27.641 [activity] operator:dcc685 POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R05_PART2/optimise -> REFUSED: This region has no recording yet.
+18:05:28.608 [activity] operator:dcc685 page: TRAJECTORY · Button action
+18:05:28.655 [activity] operator:dcc685 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:05:28.978 [activity] operator:dcc685 POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R05_PART2/optimise -> REFUSED: This region has no recording yet.
+18:05:29.727 [activity] operator:dcc685 POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R05_PART2/optimise -> REFUSED: This region has no recording yet.
+18:05:29.903 [activity] operator:dcc685 page: TRAJECTORY · Button action
+18:05:29.904 [activity] operator:dcc685 page: TRAJECTORY · Button action
+18:05:30.063 [activity] operator:dcc685 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:05:30.452 [activity] operator:dcc685 POST /api/projects/alix_mvbvk1fk_zti6s/units/L-R05_PART2/optimise -> REFUSED: This region has no recording yet.
+18:05:31.314 [activity] operator:dcc685 page: TRAJECTORY · Button action
+18:05:31.315 [activity] operator:dcc685 page: TRAJECTORY · Button action
+18:05:31.873 [activity] operator:dcc685 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:05:32.372 [activity] operator:dcc685 page: SYSTEM · Session active
+18:05:35.656 [activity] operator:dcc685 page: NAVIGATION · Scrolled view
+18:05:59.057 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:06:02.284 [activity] operator:dcc685 page: SYSTEM · Session active
+18:06:32.270 [activity] operator:dcc685 page: SYSTEM · Session active
+18:06:59.050 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:07:02.283 [activity] operator:dcc685 page: SYSTEM · Session active
+18:07:32.274 [activity] operator:dcc685 page: SYSTEM · Session active
+18:07:59.050 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:08:02.282 [activity] operator:dcc685 page: SYSTEM · Session active
+18:08:32.276 [activity] operator:dcc685 page: SYSTEM · Session active
+18:08:59.058 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:09:02.277 [activity] operator:dcc685 page: SYSTEM · Session active
+18:09:32.276 [activity] operator:dcc685 page: SYSTEM · Session active
+18:09:59.051 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:10:02.275 [activity] operator:dcc685 page: SYSTEM · Session active
+18:10:32.272 [activity] operator:dcc685 page: SYSTEM · Session active
+18:10:59.055 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:11:02.274 [activity] operator:dcc685 page: SYSTEM · Session active
+18:11:32.274 [activity] operator:dcc685 page: SYSTEM · Session active
+18:11:59.054 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:12:02.276 [activity] operator:dcc685 page: SYSTEM · Session active
+18:12:32.385 [activity] operator:dcc685 page: SYSTEM · Session active
+18:12:59.056 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:13:02.348 [activity] operator:dcc685 page: SYSTEM · Session active
+18:13:32.359 [activity] operator:dcc685 page: SYSTEM · Session active
+18:13:59.056 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:14:02.371 [activity] operator:dcc685 page: SYSTEM · Session active
+18:14:32.361 [activity] operator:dcc685 page: SYSTEM · Session active
+18:14:59.054 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:15:02.362 [activity] operator:dcc685 page: SYSTEM · Session active
+18:15:32.341 [activity] operator:dcc685 page: SYSTEM · Session active
+18:15:59.053 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:16:02.360 [activity] operator:dcc685 page: SYSTEM · Session active
+18:16:32.359 [activity] operator:dcc685 page: SYSTEM · Session active
+18:16:59.054 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:17:02.357 [activity] operator:dcc685 page: SYSTEM · Session active
+18:17:32.361 [activity] operator:dcc685 page: SYSTEM · Session active
+18:17:59.055 [activity] operator:dcc685 page: SYSTEM · Page slow
+18:18:02.356 [activity] operator:dcc685 page: SYSTEM · Session active

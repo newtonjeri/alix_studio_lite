@@ -1,5 +1,15 @@
 {
- "left": [],
- "right": [],
- "updated": "2026-10-19 12:49:25"
+ "left": [
+  {
+   "type": "mechanism",
+   "task": "lid_open"
+  }
+ ],
+ "right": [
+  {
+   "type": "mechanism",
+   "task": "lid_open"
+  }
+ ],
+ "updated": "2026-10-21 15:18:09"
 }

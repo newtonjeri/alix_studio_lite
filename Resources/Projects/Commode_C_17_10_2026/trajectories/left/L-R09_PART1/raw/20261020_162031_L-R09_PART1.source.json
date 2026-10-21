@@ -1,0 +1,52 @@
+{
+ "unit": "L-R09_PART1",
+ "arm": "left",
+ "taken": "2026-10-20 16:20",
+ "lines": 18174,
+ "sha256": "8da643e6cdc586e64826332c7ffd4c9dc23271a57531496c6230c595be14959d",
+ "note": "drag-taught on the LEFT arm: 18174 points in 140 s, at pole 200 mm, hand grip",
+ "source": "teach",
+ "original": "left_drag_20261020_162008.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 10A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-20 16:15:38"
+  }
+ },
+ "name": "L_TASK_10A_trajectory.txt"
+}
