@@ -95,9 +95,11 @@ function showSpeed(sp) {
 
 // The arm indicators, top right (the owner, 17 Oct): one circle per arm, green a good connection, yellow a
 // weak one, red none (a cable out, the controller off or not answering); the server grades each link
-// (robot_link.ArmLink.quality) and says why in the circle's title.
+// (robot_link.ArmLink.quality) and says why in the circle's title. After them the wrist camera's (the owner,
+// 21 Oct): green connected (a D435 plugged in, or open and its frames coming), red not (camera_d435.status).
 const LEVEL = { good: 'Good connection', weak: 'Weak connection', none: 'No connection' };
-function armDots(arms, offline) {
+const CAMERA = { good: 'Connected', none: 'Not connected' };
+function armDots(arms, offline, camera) {
   let box = document.getElementById('liteArmDots');
   if (!box) {
     const stop = document.querySelector('.topbar .emstop');
@@ -111,9 +113,20 @@ function armDots(arms, offline) {
       dot.append(el('i', 'lite-arm-dot-led', ''), el('b', '', side === 'left' ? 'L' : 'R'));
       box.append(dot);
     }
+    const cam = el('span', 'lite-arm-dot lite-cam-dot', '');
+    cam.id = 'liteCamDot';
+    cam.append(el('i', 'lite-arm-dot-led', ''), el('b', '', 'CAM'));
+    box.append(cam);
     stop.before(box);
   }
-  for (const dot of box.querySelectorAll('.lite-arm-dot')) {
+  const cam = document.getElementById('liteCamDot');
+  if (cam) {
+    const c = offline ? { level: 'none', text: 'the Lite server is not answering' } : camera || { level: 'none', text: 'not looked at yet' };
+    cam.dataset.level = c.level;
+    cam.title = `Wrist camera: ${CAMERA[c.level] || c.level} (${c.text})`;
+    cam.setAttribute('aria-label', cam.title);
+  }
+  for (const dot of box.querySelectorAll('.lite-arm-dot[data-side]')) {
     const side = dot.dataset.side, q = offline ? { level: 'none', text: 'the Lite server is not answering' }
       : ((arms || {})[side] || {}).quality || { level: 'none', text: 'not connected' };
     dot.dataset.level = q.level;
@@ -131,7 +144,7 @@ async function poll() {
     document.dispatchEvent(new CustomEvent('lite:status', { detail: st }));      // alerts.js, and anyone else
     const p = pillText(st);
     show(p.state, p.head, p.text, st.mode_text);
-    armDots(st.arms, false);
+    armDots(st.arms, false, st.camera);
   } catch (err) {
     last = null;
     if (err.code === 'offline') { show('offline', 'NO SERVER', 'restart ALIX Studio Lite'); armDots(null, true); }

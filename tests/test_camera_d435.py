@@ -187,3 +187,38 @@ def test_no_frame_in_time_is_said(monkeypatch):
             raise AssertionError("a frame was invented")
         except Exception as exc:                                # noqa: BLE001
             assert "sent no frame within 0.3 s" in str(exc)
+
+
+def test_the_top_bars_camera_circle(monkeypatch):
+    """The owner, 21 Oct: the camera's circle beside the arms' (status, for status.js): green with a D435 plugged in, or
+    open with its frames coming; red without one, or with pyrealsense2 missing, the reason said."""
+    from alix_studio_lite.server.jobs import UserError
+
+    monkeypatch.setattr("alix_studio_lite.server.camera_d435.WARM_UP_S", 0.0)
+    monkeypatch.setattr("alix_studio_lite.server.camera_d435.STATUS_EVERY_S", 0.05)
+    rs = FakeRS()
+    cam = D435(rs=rs)
+    try:
+        st = cam.status()
+        assert st == {"level": "good", "text": "Intel RealSense D435 (serial 123) plugged in"}
+        with cam.using():
+            cam.shot()
+            time.sleep(0.2)
+            assert cam.status() == {"level": "good", "text": "Intel RealSense D435 (serial 123), streaming"}
+        rs.context = lambda: SimpleNamespace(query_devices=lambda: [])               # unplugged
+        time.sleep(0.2)
+        assert cam.status() == {"level": "none", "text": "no D435 is plugged into this computer"}
+    finally:
+        cam.stop_status()
+    bare = D435()
+
+    def missing():
+        raise UserError("The wrist camera cannot be read: pyrealsense2 is not installed on this computer.")
+
+    monkeypatch.setattr(bare, "_module", missing)
+    try:
+        st = bare.status()
+        assert st["level"] == "none" and "pyrealsense2 is not installed" in st["text"]
+    finally:
+        bare.stop_status()
+

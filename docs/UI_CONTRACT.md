@@ -159,6 +159,7 @@ The Lite UI is the designer's **ASL FINAL Template V32** (product name ASL): one
   - Real Test is unchanged: its step 4 (Run on real) still waits for step 3 (Hardware sim).
 - **The speed starts at 15 %** (the owner). Connecting an arm no longer moves the slider to the controller's own speed.
 - **One indicator per arm**, L and R beside STOP BOTH (the owner: green a good connection, yellow a weak one, red none; they must react when a cable is pulled).
+- **The wrist camera's indicator**, CAM after them (the owner, 21 Oct): green connected, red not, the reason in its tooltip (`camera_d435.D435.status`, in the robot status every poll). Closed, the camera is connected while a D435 is plugged in and listed by pyrealsense2, looked at every 3 s on a thread of its own without opening it; open (a lid or seat task, a camera check), while its frames keep coming (none for 2 s: red). On a computer without pyrealsense2 it is red, saying so.
   - Green: readings every 0.2 s, answered in time.
   - Yellow: a reading unanswered among the last ten, one that took over 0.5 s, or none for 0.8 s. Also a command holding the controller longer than it should: 60 s, or what the command says it may take (a MoveJ 2 min, sending a program 5 min, a program its own length).
   - Red: no answered reading for 3 s (a cable pulled, the controller off), not connected, or the Lite server not answering.

@@ -77,6 +77,7 @@ def test_hardware_failures_and_estops_are_alerts(lite):
     job = wait(lite, call(lite, "POST", "/api/lite/unit/L-T01/prepare", {}))
     assert job["state"] == "failed"
     st = call(lite, "GET", "/api/robots/status")
+    assert st["camera"]["level"] in ("good", "none") and st["camera"]["text"]      # the wrist camera's circle (21 Oct)
     failed = [a for a in st["alerts"] if a["level"] == "error" and a["side"] == "left"]
     assert failed and "pole did not reach" in failed[-1]["text"] and st["instance"]
     call(lite, "POST", "/api/robots/left/fault", {"pole": False})

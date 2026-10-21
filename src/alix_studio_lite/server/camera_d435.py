@@ -33,6 +33,9 @@ from .jobs import UserError
 
 MODEL = "d435"                         # the camera on the right wrist (ALIX's camera_config.DEFAULT_MODEL)
 WARM_UP_S = 1.0                        # auto exposure settles before the first check is answered
+STATUS_EVERY_S = 3.0                   # the top bar's camera circle (status): looked at again this often, in the background
+STATUS_FIRST_S = 2.0                   # the first status call waits this long at most for the first look
+FRAMES_STALE_S = 2.0                   # an open camera with no frame for this long is not delivering
 
 
 def spec(model: str = MODEL) -> dict:
@@ -96,6 +99,11 @@ class D435:
         self._error: str | None = None
         self._users = 0                                  # a task, a camera check: open while any of them uses it
         self.device = None                              # name and serial, for the page and the logs
+        self._status = dict(level="none", text="not looked at yet")
+        self._status_ready = threading.Event()
+        self._status_thread = None
+        self._status_lock = threading.Lock()
+        self._status_stop = threading.Event()             # stop_status(): the tests' cameras
 
     def _module(self):
         if self._rs is None:
@@ -119,6 +127,49 @@ class D435:
             return dict(ok=False, devices=[], why=f"the camera library could not list devices ({exc})")
         d435 = [d for d in devs if "D435" in d["name"] and (self.serial is None or d["serial"] == self.serial)]
         return dict(ok=bool(d435), devices=devs, why=None if d435 else "no D435 is plugged into this computer")
+
+    # ── the top bar's camera circle (the owner, 21 Oct: "a camera status check, similar to the arm connection
+    # indicators ... red: not connected, green: connected")
+    def status(self) -> dict:
+        """{level: "good" | "none", text}: an open camera is good while its frames come; a closed one, while a D435 is
+        plugged in (``available``, which never opens it). Brought up to date every STATUS_EVERY_S on a thread of its own,
+        so the status poll never waits on the camera library; the first call waits for the first look."""
+        with self._status_lock:
+            if self._status_thread is None:
+                self._status_thread = threading.Thread(target=self._watch_status, name="lite-camera-status", daemon=True)
+                self._status_thread.start()
+        self._status_ready.wait(STATUS_FIRST_S)
+        return dict(self._status)
+
+    def stop_status(self) -> None:
+        self._status_stop.set()
+
+    def _watch_status(self) -> None:
+        while True:
+            try:
+                self._status = self._look()
+            except Exception as exc:                                                # noqa: BLE001 - said in the circle
+                self._status = dict(level="none", text=f"the camera could not be checked ({exc})")
+            self._status_ready.set()
+            if self._status_stop.wait(STATUS_EVERY_S):
+                return
+
+    def _look(self) -> dict:
+        if self._pipe is not None:                       # open: its frames say it, no second look at the device
+            name = f"{self.device['name']} (serial {self.device['serial']})" if self.device else "the camera"
+            last = self._latest
+            age = last.age_s if last is not None else time.monotonic() - self._opened_at
+            if age > FRAMES_STALE_S:
+                why = f"; {self._error}" if self._error else ""
+                return dict(level="none", text=f"{name} is open, but no frame has come for {age:.0f} s{why}")
+            return dict(level="good", text=f"{name}, streaming")
+        if self._lock.locked():                          # being opened or closed: as last seen
+            return self._status
+        have = self.available()
+        if have["ok"]:
+            d = next(x for x in have["devices"] if "D435" in x["name"])
+            return dict(level="good", text=f"{d['name']} (serial {d['serial']}) plugged in")
+        return dict(level="none", text=have["why"] or "no D435 is plugged into this computer")
 
     def open(self) -> None:
         with self._lock:

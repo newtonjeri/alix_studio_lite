@@ -54,7 +54,7 @@ What is connected, screen by screen, is in [`UI_CONTRACT.md`](UI_CONTRACT.md).
   - Projects are folders, with duplicate, trash, and `.alixproj` export and import, and auto save to the server. A project has a fixture (D29).
   - STOP BOTH and SLOW STOP need no log-in.
   - The status pill opens Robot & mode (D30). It covers Visual sim, Hardware sim and Real, connecting each arm, and each arm's E-stop with Recover.
-- **Task queue (D35).** V19's 22 tasks are tied to the region catalogue: codes, TASK 9 as the deck has it, each step's status. Every step is released (21 October: the 8 drain-brush, drain-hole and glove steps were held as LATER until then); TASK 13 and 14 are taught as mixed tasks.
+- **Task queue (D35).** V19's 22 tasks are tied to the region catalogue: codes, TASK 9 as the deck has it, each step's status. Every step is released (21 October: the 8 drain-brush, drain-hole and glove steps were held as LATER until then); TASK 13 and 14 are taught as mixed tasks. The top bar has the wrist camera's indicator after the arms' (CAM: green connected, red not; 21 October).
 - **Region loop**, against the robot stand-in:
   - Prepare: each region's setup (pole height and hand pose); Apply stages the hand shown (the preset, or the six channels with Custom), the pole and then the hand: read back in Real, emulated in Hardware sim. Move BOTH asks one confirmation in Real and reports each arm.
   - Drag & Teach: the existing recording is offered first (D31); drag teaching needs Real, starts only with the arm in the region's setup, and saves the take in the region it started in.

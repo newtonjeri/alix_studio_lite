@@ -184,8 +184,11 @@ def import_project(app, q, body, m):
 
 @route("GET", "/api/robots/status")
 def robots_status(app, q, body, m):
+    from . import mechanism
+
     session(app)
     return {"mode": app.ui["mode"], "mode_text": MODE_TEXT[app.ui["mode"]], "arms": app.robot.view(),
+            "camera": mechanism.kit(app.robot).camera.status(),          # the wrist camera's circle in the top bar
             "backend": app.robot.backend, "label": app.robot.label, "motion_block": app.robot.motion_block(),
             "jobs": [j.view() for j in app.jobs.running()], "speed": app.robot.speed_view(),
             "sensitivity": app.robot.sensitivity_view(),
