@@ -2,11 +2,7 @@
  "id": "alix_mvbvk1fk_zti6s",
  "name": "Commode_C_17_10_2026",
  "createdAt": "2026-10-17T04:06:33.536Z",
-<<<<<<< HEAD
  "updatedAt": "2026-10-22T10:56:27.599Z",
-=======
- "updatedAt": "2026-10-22T02:18:22.023Z",
->>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
  "archived": false,
  "state": {
   "currentView": "sequence",
@@ -1641,11 +1637,7 @@
        "leftMm": null,
        "rightMm": null
       },
-<<<<<<< HEAD
       "savedAt": "2026-10-22T03:05:39.830Z"
-=======
-      "savedAt": "2026-10-22T02:18:22.021Z"
->>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
      }
     },
     "ugvPositionByArm": {
@@ -1679,11 +1671,7 @@
     "leftApproved": true,
     "rightApproved": false,
     "completed": false,
-<<<<<<< HEAD
     "lastUpdated": "2026-10-22T03:05:39.830Z",
-=======
-    "lastUpdated": "2026-10-22T02:18:22.021Z",
->>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
     "tuning": {
      "processing": {
       "trim": true,
@@ -4439,11 +4427,7 @@
   "sequenceVisualConfirmed": false,
   "fullSimulationApproved": false,
   "elapsed": 0,
-<<<<<<< HEAD
   "savedAt": "2026-10-22T10:56:27.599Z"
-=======
-  "savedAt": "2026-10-22T02:18:22.023Z"
->>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
  },
  "lastSaveReason": "Workflow updated",
  "lite": {
