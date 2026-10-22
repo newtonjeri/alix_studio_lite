@@ -12365,3 +12365,6 @@
 22:30:46.213 [activity] operator:eb79b1 page: SYSTEM · Session active
 22:31:16.213 [activity] operator:eb79b1 page: SYSTEM · Session active
 22:31:46.213 [activity] operator:eb79b1 page: SYSTEM · Session active
+22:32:16.213 [activity] operator:eb79b1 page: SYSTEM · Session active
+22:32:32.021 [LEFT] restore global speed {"pct": 50} ret=0
+22:32:32.075 [RIGHT] restore global speed {"pct": 50} ret=0
