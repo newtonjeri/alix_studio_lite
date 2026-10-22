@@ -593,3 +593,28 @@ def test_a_file_found_by_name_is_compared_with_the_controllers_program():
     held = "81_L_P01P02_with_a_very_long_name_for_it.txt"[:31]               # RealMan's API: 31 characters at most
     long = sim._found(81, {"id": 81}, {"name": held, "size": None})
     assert long is not None and long["differs"] is None
+
+
+def test_a_program_sent_from_advanced_is_drawn_from_the_file_lite_kept(lite):
+    """The lab, 21 Oct: Programs 20, 99 and 100 were sent from Advanced, whose files Lite keeps in its data folder, not in
+    the project, so the simulation could not draw them and left the right arm out of the check for 48 s. The very file
+    Lite sent is drawn while it holds the same bytes."""
+    from alix_studio_lite.motion import track
+    from alix_studio_lite.server import workflow
+    from alix_studio_lite.server.lite_units import LiteUnits
+
+    md = np.round(np.tile(np.array([[36.8, -60.6, -37.0, 116.0, -32.9, -52.7, 90.3]]), (120, 1)) * 1000).astype(np.int64)  # a hold
+    path = lite["data"] / "advanced" / "right" / "20261021_225804_delay_12s.txt"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    track.write_md(path, md)
+    arm = lite["app"].robot.arm("right")
+    arm.programs[100] = dict(name="delay_12s", lines=120, bytes=path.stat().st_size, sha256=track.sha256_file(path), stage=None,
+                             first_row=md[0].tolist(), uploaded="2026-10-21 22:58", path=str(path))
+    units = LiteUnits(lite["app"].store.folder(PID), "commode_c")
+    try:
+        known = workflow.programs_known(lite["app"], units, "right")[100]
+        assert known["file"] == str(path) and known["lines"] == 120 and known["sent"]
+        path.write_bytes(path.read_bytes() + b"{}\n")                       # other bytes since: not the program it sent
+        assert workflow.programs_known(lite["app"], units, "right")[100]["file"] is None
+    finally:
+        arm.programs.pop(100, None)

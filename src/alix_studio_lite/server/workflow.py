@@ -448,9 +448,10 @@ def _project_files(units, side: str, every: bool = False) -> dict:
 
 def programs_known(app, units, side: str) -> dict:
     """{program id: what Lite knows}: the programs it sent to this arm's controller (its record: name,
-    lines, sha256, stage) with the project's file of those bytes, when it is still there. On a linked
-    controller, the slots it holds now too: a program Lite did not send, or one that replaced Lite's,
-    is known by its name only (``sent`` False)."""
+    lines, sha256, stage) with the project's file of those bytes, when it is still there, else the very file
+    Lite sent (a file sent from Advanced is kept in Lite's data folder, not in the project), when it still holds
+    those bytes. On a linked controller, the slots it holds now too: a program Lite did not send, or one that
+    replaced Lite's, is known by its name only (``sent`` False)."""
     from ..motion import track
     from .content import file_for
 
@@ -458,6 +459,12 @@ def programs_known(app, units, side: str) -> dict:
     out = {}
     for pid, r in app.robot.arm(side).programs.items():
         f = file_for(files, r.get("sha256"), r.get("name"))
+        if not f.get("path") and r.get("path") and r.get("sha256"):      # the file it sent, where Lite kept it
+            try:
+                if Path(r["path"]).is_file() and track.sha256_file(r["path"]) == r["sha256"]:
+                    f = dict(path=str(r["path"]), name=Path(r["path"]).name)
+            except OSError:
+                pass
         out[int(pid)] = dict(id=int(pid), name=r.get("name"), lines=r.get("lines"), seconds=track.duration_s(r.get("lines")),
                              sha256=r.get("sha256"), stage=r.get("stage"),
                              sent=True, file=f.get("path"), file_name=f.get("name"), phase=f.get("phase"),
