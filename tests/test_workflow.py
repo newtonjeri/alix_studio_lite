@@ -216,6 +216,35 @@ def test_a_move_after_a_program_clears_the_arms_4105_first():
     assert ready["plan"][-1]["kind"] == "mechanism" and "clear" not in ready["plan"][-1]
 
 
+def test_after_the_lid_and_seat_tasks_each_arm_gets_its_pole_and_hand_back():
+    """The owner, 22 Oct: "after the lid and seat opening tasks, each arm moves back to the pole and hand state it had
+    before those tasks started; then the dual-arm tasks that follow are triggered on both arms at the same time". On the
+    last task of each run of them (the stages keep their numbers): each arm's last Pole and Hand rows before the run's
+    first task, None where no row set them (then as the arm stood). A single task picked alone puts nothing back."""
+    from alix_studio_lite.server import workflow
+
+    lid, seat = {"type": "mechanism", "task": "lid_open"}, {"type": "mechanism", "task": "seat_open"}
+    grip, opened = [0, 0, 0, 0, 150, 1000], [1000] * 6
+    left = [{"type": "pole", "mm": 50}, {"type": "hand", "values": grip}, {"type": "meet"}, prog(80), {"type": "pole", "mm": 120},
+            lid, seat, prog(81), seat]
+    right = [{"type": "pole", "mm": 200}, {"type": "meet"}, prog(80), lid, seat, {"type": "hand", "values": opened}, prog(82), seat]
+    run = workflow.plan_for(numbered(left, right), "both")
+    kinds = [(st["kind"], st.get("task"), bool(st.get("restore"))) for st in run["plan"]]
+    assert kinds == [("parallel", None, False), ("parallel", None, False), ("mechanism", "lid_open", False),
+                     ("mechanism", "seat_open", True), ("parallel", None, False), ("mechanism", "seat_open", True)]
+    back = run["plan"][3]["restore"]
+    assert back["since"] == "Open the lid"
+    assert back["left"] == {"pole_mm": 120.0, "hand": grip} and back["right"] == {"pole_mm": 200.0, "hand": None}
+    again = run["plan"][5]["restore"]                           # the second run: the rows since the first one count
+    assert again["left"] == {"pole_mm": 120.0, "hand": grip} and again["right"] == {"pole_mm": 200.0, "hand": opened}
+    st = run["plan"][3]
+    assert workflow.restore_steps(st, "right", 75.0, [500] * 6) == [
+        {"type": "pole", "mm": 200.0, "_row": 5, "restore": True}, {"type": "hand", "values": [500] * 6, "_row": 5, "restore": True}]
+    assert "pole and hand back to before Open the lid" in workflow.restore_title(st)
+    alone = workflow.plan_for(numbered(left, right), "both", {"scope": "dual", "stage": 3})
+    assert alone["plan"][0]["kind"] == "mechanism" and "restore" not in alone["plan"][0]
+
+
 def test_the_same_steps_planned_otherwise_are_simulated_again():
     """A simulation is of a plan, not only of steps: one made before Lite planned the same steps otherwise (V53's planner
     gone on 22 Oct) no longer lets Real Machine Mode run them, and the refusal says so."""

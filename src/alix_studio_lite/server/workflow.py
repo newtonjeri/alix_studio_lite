@@ -117,6 +117,35 @@ def clear_before_moves(plan: list[dict]) -> list[dict]:
     return out
 
 
+def restore_after_tasks(plan: list[dict]) -> list[dict]:
+    """``plan`` (a whole sequence of both arms) with ``restore`` on the last lid or seat task of each run of them (the
+    owner, 22 Oct: "after the lid and seat opening tasks, each arm moves back to the pole and hand state it had before
+    those tasks started; then the dual-arm tasks that follow are triggered on both arms at the same time"): each arm's
+    pole and hand as its rows last set them before the run's first task (None: no row set it; then as the arm stood
+    there). The next stage then starts both arms together, as after every meeting point. On the task's stage, not a
+    stage of its own: the stages keep the numbers the Dual-arm task picks them by (``flow.build``)."""
+    out, last = [], {s: {"pole_mm": None, "hand": None} for s in ARMS}
+    before = None
+    for i, st in enumerate(plan):
+        if st["kind"] != "mechanism":
+            for side, steps in _items(st):
+                for x in steps:
+                    if x["type"] == "pole":
+                        last[side]["pole_mm"] = float(x["mm"])
+                    elif x["type"] == "hand":
+                        last[side]["hand"] = [int(v) for v in x["values"]]
+            out.append(st)
+            continue
+        if before is None:                             # the first task of a run: the arms' state before it
+            before = {"since": st.get("title"), **copy.deepcopy(last)}
+        if i + 1 < len(plan) and plan[i + 1]["kind"] == "mechanism":
+            out.append(st)
+            continue
+        out.append(dict(st, restore=before))
+        before = None
+    return out
+
+
 def plan_shape(plan: list[dict]) -> list[dict]:
     """The plan as a simulation's identity keeps it: each stage's kind and each arm's steps in it by row (a clear with its
     row, a Wait-for with the row it waits for). The same steps planned otherwise (Lite's planner changed, as on 21 and 22
@@ -125,7 +154,7 @@ def plan_shape(plan: list[dict]) -> list[dict]:
     for st in plan:
         row = {"kind": st["kind"]}
         if st["kind"] == "mechanism":
-            row.update(task=st["task"], clear=st.get("clear") or [])
+            row.update(task=st["task"], clear=st.get("clear") or [], restore=st.get("restore"))
         else:
             for side, steps in _items(st):
                 row[side] = [["clear", x.get("_row")] if x["type"] == "clear"
@@ -392,6 +421,8 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
         if not mine:
             raise UserError(f"The {mode.upper()} sequence has only Meet and Wait-for rows: nothing to run on its own.")
         plan = [{"kind": "single", "program_id": None, mode: {"side": mode, "steps": mine}}]
+    if mode == "both":
+        plan = restore_after_tasks(plan)
     plan = clear_before_moves(plan)
     return dict(mode=mode, pick=dict(scope="sequence"), first_row={side: 1 for side in picked}, steps=picked, plan=plan,
                 counts=flow.counts(plan), said=said)
@@ -878,9 +909,11 @@ def _stage_stops(run: dict, programs: dict, robot, sides) -> list[str]:
     from . import mechanism, staging
 
     out = []
+    restores = {(x, (st.get("rows") or {}).get(x)): st for st in run["plan"] if st.get("restore") for x in ARMS}
     for s in sides:
         pole, hand = robot._measured(s)
         set_pole = set_hand = False
+        before = None                                # the arm before a run of lid and seat tasks
         for st in run["steps"][s]:
             k = st["type"]
             if k == "pole":
@@ -888,9 +921,19 @@ def _stage_stops(run: dict, programs: dict, robot, sides) -> list[str]:
             elif k == "hand":
                 hand, set_hand = [int(v) for v in st["values"]], True
             elif k == "mechanism":                   # the arm leaves a lid or seat task at the plan's end
+                if before is None:
+                    before = (pole, hand)
                 tg = mechanism.cached(st["task"]).targets("end").get(s) or {}
                 pole = tg.get("pole_mm", pole)
                 hand = [h if h is not None else (hand[i] if hand else None) for i, h in enumerate(tg["hand"])] if tg.get("hand") else hand
+                last = restores.get((s, st.get("_row")))
+                if last is not None:                 # ...then back to before the run (restore_after_tasks)
+                    for y in restore_steps(last, s, *before):
+                        if y["type"] == "pole":
+                            pole = y["mm"]
+                        else:
+                            hand = y["values"]
+                    before = None
             elif k == "program":
                 stg = staging.stage_from((programs[s].get(int(st["id"])) or {}).get("stage"))
                 said = stage_off(s.upper(), st.get("_row"), int(st["id"]), stg, pole, hand, set_pole, set_hand) if stg else None
@@ -995,6 +1038,27 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
 CHECK_S = 0.5                    # a camera question, in the simulation (a frame, the check)
 
 
+def restore_steps(st: dict, side: str, pole_mm, hand) -> list[dict]:
+    """The Pole and Hand steps that put an arm back after a run of lid and seat tasks (``restore`` on its last task):
+    its rows' last values before the run, else as it stood then (``pole_mm``, ``hand``)."""
+    r = (st.get("restore") or {}).get(side) or {}
+    pole = r.get("pole_mm") if r.get("pole_mm") is not None else pole_mm
+    vals = r.get("hand") if r.get("hand") is not None else hand
+    row = (st.get("rows") or {}).get(side)
+    out = []
+    if pole is not None:
+        out.append({"type": "pole", "mm": float(pole), "_row": row, "restore": True})
+    if vals is not None and len(vals) == 6 and all(v is not None for v in vals):
+        out.append({"type": "hand", "values": [int(v) for v in vals], "_row": row, "restore": True})
+    return out
+
+
+def restore_title(st: dict) -> str:
+    if not st.get("restore"):
+        return st["title"]
+    return f"{st['title']}, then each arm's pole and hand back to before {st['restore'].get('since') or 'the tasks'}"
+
+
 def _start_state(app, side: str, home: dict) -> tuple[dict, str]:
     """Where an arm starts: as it stands now (a linked arm's live reading), else the standing pose."""
     from . import staging
@@ -1087,11 +1151,16 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
         kind = st["kind"]
         row = dict(index=i, kind=kind, label=str(st.get("program_id") or ""), t0=round(T, 4))
         if kind == "mechanism":                     # the arms' errors read first (clear_before_moves), then its own moves
+            if i == 0 or plan[i - 1]["kind"] != "mechanism":      # the arms as they stand before a run of tasks
+                stood = {s: (sims[s].pole, list(sims[s].hand)) for s in ARMS}
             ready = T
             for s in st.get("clear") or []:
                 ready = max(ready, sims[s].run([{"type": "clear", "_row": (st.get("rows") or {}).get(s), "_alone": True}], T, i))
             T = _sim_mechanism(st, sims, ready, i, overall)
-            row.update(t1=round(T, 4), title=st["title"], task=st["task"])
+            if st.get("restore"):                      # each arm's pole and hand back to before the run (restore_after_tasks)
+                ends = [sims[s].run(restore_steps(st, s, *stood[s]), T, i) for s in ARMS]
+                T = max(ends + [T])
+            row.update(t1=round(T, 4), title=restore_title(st), task=st["task"])
         else:
             ends = _sim_part(st, sims, T, i, words) if any(st.get(s) for s in ARMS) else {}
             T = max(ends.values() or [T])
@@ -2188,6 +2257,45 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                                 + ": " + "; ".join(f"{s.upper()}: {results.get(s, {}).get('why') or 'see the hardware log'}" for s in bad),
                                 "Check the arms and their controllers' errors before anything else runs.")
 
+        stood = {}
+
+        def put_back(st, pid):
+            """After a run of lid and seat tasks: each arm's pole and hand back to before it (restore_after_tasks), both
+            arms at once; the next stage then starts both together."""
+            from . import staging
+
+            say(f"LID / SEAT // {restore_title(st)}", **{x: f"{pid} // POLE AND HAND BACK" for x in ARMS})
+            done, threads = {}, []
+
+            def one(x):
+                steps = restore_steps(st, x, *stood.get(x, (None, None)))
+                pole = next((y["mm"] for y in steps if y["type"] == "pole"), None)
+                hand = next((y["values"] for y in steps if y["type"] == "hand"), None)
+                if pole is None or hand is None:
+                    done[x] = f"{x.upper()}: its pole and hand before the tasks are not known, left as they are"
+                    return
+                try:
+                    reals[x].stage(staging.make_stage(pole, hand, f"before {(st.get('restore') or {}).get('since') or 'the tasks'}"))
+                    done[x] = None
+                    job.log(f"{x.upper()}: pole {pole:g} mm and hand {','.join(str(v) for v in hand)} back, as before the tasks.")
+                except Exception as exc:                                   # noqa: BLE001 - said below
+                    done[x] = f"{x.upper()}: {exc}"
+
+            for x in ARMS:
+                threads.append(threading.Thread(target=one, args=(x,), name=f"lite-s2-back-{x}", daemon=True))
+                threads[-1].start()
+            for t in threads:
+                while t.is_alive():
+                    t.join(0.1)
+            job.check()
+            bad = [w for w in done.values() if w and "not known" not in w]
+            for w in done.values():
+                if w and "not known" in w:
+                    job.log(w, "warn")
+            if bad:
+                raise UserError(f"{st['title']}: the pole and hand were not put back: " + "; ".join(bad),
+                                "Check the poles and the hands, then run the sequence again.")
+
         t0 = time.monotonic()
         try:
             for s in sides:
@@ -2197,6 +2305,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 job.set(stage=i)
                 job.progress(f"Stage {i + 1} of {len(run['plan'])}", i, len(run["plan"]))
                 kind, pid = st["kind"], st.get("program_id")
+                if kind == "mechanism" and (i == 0 or run["plan"][i - 1]["kind"] != "mechanism"):
+                    stood = {x: robot._measured(x) for x in ARMS}       # the arms before a run of lid and seat tasks
                 if kind == "mechanism":                     # a lid or seat task: ALIX's plan on both arms, the camera's checks
                     from . import mechanism as mech
 
@@ -2217,8 +2327,10 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                         out = mech.Runner(ex, ex.say).run(st["task"])
                     did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
                                     for p in out["plans"])
-                    say(f"LID / SEAT // {st['title']} // DONE", **{x: f"{pid} // COMPLETE" for x in ARMS})
                     job.log(f"{st['title']}: {did}.")
+                    if st.get("restore"):                   # each arm's pole and hand back to before the run of tasks
+                        put_back(st, pid)
+                    say(f"LID / SEAT // {st['title']} // DONE", **{x: f"{pid} // COMPLETE" for x in ARMS})
                 elif kind == "parallel":
                     arms_here = [s for s in ARMS if st.get(s)]
                     together(st, str(pid or "PART"), f"PAGE 02 // {pid} // " + (" + ".join(s.upper() for s in arms_here)))

@@ -161,3 +161,37 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])
     said = " | ".join(e["text"] for e in done["events"])
     assert "Open the lid: Open the lid done." in said and "CHECK verify_lid_lifted" in said
+
+
+def test_s2_puts_each_arms_pole_and_hand_back_after_its_lid_and_seat_tasks(server):
+    """The owner, 22 Oct: after the lid and seat opening tasks each arm's pole and hand go back to where they were
+    before them, and the dual-arm tasks after start on both arms together: in Simulation (the stage ends with each
+    arm's Pole and Hand back, the next stage starting both at once) and on the robot."""
+    lid = {"type": "mechanism", "task": "lid_open"}
+    left = [{"type": "pole", "mm": 120}, {"type": "hand", "values": [1000, 1000, 1000, 1000, 0, 1000]}, lid, {"type": "wait", "seconds": 0.5}]
+    right = [{"type": "pole", "mm": 150}, {"type": "hand", "values": [0, 0, 0, 0, 150, 1000]}, lid, {"type": "wait", "seconds": 0.5}]
+    call(server, "PUT", f"{P}/workflow/left", {"steps": left})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": right})
+    plan = call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})
+    assert [s["kind"] for s in plan["stages"]] == ["parallel", "mechanism", "parallel"]
+    j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "both"}))
+    assert j["state"] == "done", j
+    sim = j["result"]
+    assert "pole and hand back to before Open the lid" in sim["stages"][1]["title"]
+    for side, pole, hand in (("left", 120.0, left[1]["values"]), ("right", 150.0, right[1]["values"])):
+        mine = [a for a in sim["acts"][side] if a["stage"] == 1]
+        assert [a["kind"] for a in mine[-2:]] == ["pole", "hand"], [a["kind"] for a in mine[-4:]]
+        assert mine[-2]["pole1"] == pole and mine[-1]["hand1"] == hand
+    nxt = {side: min(a["t0"] for a in sim["acts"][side] if a["stage"] == 2) for side in ("left", "right")}
+    assert nxt["left"] == pytest.approx(nxt["right"], abs=1e-6)          # both arms start the next stage together
+    assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
+    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "seat_closed", "lid_open"]))
+    job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
+    done = wait(server, job)
+    assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])
+    said = " | ".join(e["text"] for e in done["events"])
+    assert "LEFT: pole 120 mm and hand 1000,1000,1000,1000,0,1000 back, as before the tasks." in said
+    assert "RIGHT: pole 150 mm and hand 0,0,0,0,150,1000 back, as before the tasks." in said
+    arms = call(server, "GET", "/api/robots/status")["arms"]
+    assert abs(arms["left"]["link"]["feedback"]["pole_mm"] - 120) < 3 and abs(arms["right"]["link"]["feedback"]["pole_mm"] - 150) < 3
+

@@ -218,7 +218,8 @@ function build() {
         el('h3', { text: 'Build independent LEFT and RIGHT cleaning workflows' }),
         el('p', { class: 'mini-note', text: 'Mix stored Programs, Pole, 6-channel Hand, Wait, and Global Points (MoveJ / MoveL + speed) in any order. '
           + 'Both arms start together and each goes through its own rows; an arm waits for the other only at a Meet, a Wait-for or a lid '
-          + 'or seat task. A Wait is a task of its own: its arm idles for its seconds, on one arm or both. '
+          + 'or seat task. After a lid or seat task (or several in a row) each arm\'s pole and hand go back to what they were before '
+          + 'it, and the rows after start on both arms together. A Wait is a task of its own: its arm idles for its seconds, on one arm or both. '
           + 'Before a Global Point or a lid or seat task that follows a Program, Lite clears the 4105 warning (a joint over its speed '
           + 'limit) when the arm holds one: the controller refuses that move\'s arrival while it is latched.' })),
       el('div', { class: 'lite-row' }, btn('Refresh Programs', () => refreshSources(true)), btn('Refresh Global Points', () => refreshSources(true)))),
