@@ -258,28 +258,27 @@ def test_the_catalogue_says_what_each_task_does_and_the_rows_it_runs_for():
     assert np.allclose(np.degrees(np.asarray(inspect.last(), dtype=float)), poses["inspection_pose_4"]["joints_deg"], atol=0.01)
 
 
-def test_s2_s_plan_with_lid_and_seat_tasks_is_v53_s_plan_cut_at_them():
-    """The owner, 18 Oct: pre-recorded tasks injected at a point in the sequence. Without one, the plan is V53's as it
-    is; with them (on both arms, the same order), V53 plans each part and each task is a stage between them."""
-    from alix_studio_lite.server import workflow
+def test_s2_s_plan_has_each_lid_and_seat_task_as_a_point_both_arms_meet():
+    """The owner, 18 Oct: pre-recorded tasks injected at a point in the sequence. A task uses both arms: it is on both
+    arms' lists, the same tasks in the same order (with the Meets: at each, both arms meet), and it is a stage of its
+    own between the arms' parts; each arm's rows after its last Program are its own (22 Oct: no tail waiting)."""
+    from alix_studio_lite.server import flow, workflow
 
-    def prog(pid, rule="TOGETHER"):
-        return {"type": "program", "id": pid, "name": "", "speed": 100, "transit_speed": 30, "dual_rule": rule}
+    def prog(pid):
+        return {"type": "program", "id": pid, "name": "", "speed": 100, "transit_speed": 30}
 
     lid = {"type": "mechanism", "task": "lid_open"}
     seat = {"type": "mechanism", "task": "seat_open"}
-    left, right = [prog(71), prog(72)], [prog(71), prog(72)]
-    assert workflow.build_full(left, right) == workflow.build_plan(left, right)
-    plan = workflow.build_full([prog(71), lid, prog(72), seat], [prog(71), lid, prog(72), seat, {"type": "wait", "seconds": 1.0}])
-    assert [s["kind"] for s in plan] == ["parallel", "mechanism", "parallel", "mechanism", "tail"]
+    plan = flow.build([prog(71), lid, prog(72), seat], [prog(71), lid, prog(72), seat, {"type": "wait", "seconds": 1.0}])
+    assert [s["kind"] for s in plan] == ["parallel", "mechanism", "parallel", "mechanism", "parallel"]
+    assert plan[-1]["left"] is None and plan[-1]["right"]["steps"] == [{"type": "wait", "seconds": 1.0}]
     assert [s.get("task") for s in plan if s["kind"] == "mechanism"] == ["lid_open", "seat_open"]
-    assert workflow.counts(plan)["mechanisms"] == 2
-    with pytest.raises(ValueError, match="on both arms' lists, the same tasks in the same order"):
-        workflow.build_full([prog(71), lid], [prog(71)])
-    with pytest.raises(ValueError, match="unmatched Program section"):         # V53's own rule, in each part
-        workflow.build_full([prog(71), lid, prog(72)], [prog(71), lid])
+    assert flow.counts(plan)["mechanisms"] == 2
+    with pytest.raises(ValueError, match="must come in the same order on both arms"):
+        flow.build([prog(71), lid], [prog(71)])
+    assert [s["kind"] for s in flow.build([prog(71), lid, prog(72)], [prog(71), lid])] == ["parallel", "mechanism", "parallel"]
     checked = workflow.check_steps([lid, {"type": "mechanism", "task": "lid_open", "note": "after the pre-lid part"}], "left")
-    assert checked[0] == {"type": "mechanism", "task": "lid_open"} and checked[1]["note"]
+    assert {k: v for k, v in checked[0].items() if k != "uid"} == {"type": "mechanism", "task": "lid_open"} and checked[1]["note"]
     with pytest.raises(UserError, match="is not a lid or seat task"):
         workflow.check_steps([{"type": "mechanism", "task": "flush"}], "left")
 

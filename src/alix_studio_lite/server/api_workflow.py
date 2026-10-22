@@ -23,9 +23,8 @@ def _run_args(body: dict) -> tuple[str, dict | None]:
 
 
 def _stage_programs(s: dict) -> dict:
-    parts = [s["first"], s["second"]] if s["kind"] == "serial" else [s.get(x) for x in workflow.ARMS if s.get(x)]
     return {x["side"]: [dict(id=int(st["id"]), row=st.get("_row"), name=st.get("name")) for st in x["steps"] if st["type"] == "program"]
-            for x in parts}
+            for x in (s.get(side) for side in workflow.ARMS) if x}
 
 
 @route("GET", W)
@@ -41,7 +40,7 @@ def get_workflow(app, q, body, m):
 
 @route("PUT", W + r"/(left|right)")
 def put_workflow_side(app, q, body, m):
-    """An arm's steps as edited (each checked as runner v14 checks it, V53's Dual Rule kept)."""
+    """An arm's steps as edited (each checked as runner v14 checks it, with its uid)."""
     units = units_of(app, m.group(1))
     workflow.save_side(units, m.group(2), body.get("steps"))
     return workflow.summary(units)
@@ -93,16 +92,17 @@ def get_workflow_sources(app, q, body, m):
 
 @route("POST", W + "/plan")
 def post_workflow_plan(app, q, body, m):
-    """V53's validation before anything moves: the plan's stages and counts, or why it cannot run."""
+    """The check before anything moves: the plan's stages (each part with the rows its arms meet at after it, each lid
+    or seat task with its rows) and counts, and what the plan says (rows passed over); or why it cannot run."""
     units = units_of(app, m.group(1))
     mode, pick = _run_args(body)
     run = workflow.plan_for(workflow._numbered(workflow.load(units)), mode, pick)
     stages = [dict(index=i, kind=s["kind"], label=str(s.get("program_id") or ""), title=s.get("title"),
-                   programs=_stage_programs(s) if s["kind"] in ("parallel", "serial", "single") else {}, **(
-        {"first": s["first"]["side"], "second": s["second"]["side"]} if s["kind"] == "serial" else {}),
+                   programs=_stage_programs(s) if s["kind"] in ("parallel", "single") else {},
+                   **({"meet_rows": s["meet_rows"]} if s.get("meet_rows") else {}),
                    **({"task": s["task"], "rows": s.get("rows")} if s["kind"] == "mechanism" else {}))
-        for i, s in enumerate(run["plan"])]
-    return dict(mode=run["mode"], pick=run["pick"], counts=run["counts"], stages=stages)
+              for i, s in enumerate(run["plan"])]
+    return dict(mode=run["mode"], pick=run["pick"], counts=run["counts"], stages=stages, said=run.get("said") or [])
 
 
 @route("POST", W + "/simulate")
@@ -146,4 +146,4 @@ def post_workflow_run(app, q, body, m):
     session(app)
     units = units_of(app, m.group(1))
     mode, pick = _run_args(body)
-    return workflow.run_real(app, units, mode, pick, bool(body.get("confirm_each", True)), body).view()
+    return workflow.run_real(app, units, mode, pick, body).view()

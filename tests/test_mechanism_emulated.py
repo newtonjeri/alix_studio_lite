@@ -144,7 +144,7 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "both"}))
     assert j["state"] == "done", j
     sim = j["result"]
-    assert [s["kind"] for s in sim["stages"]] == ["mechanism", "tail"] and sim["counts"]["mechanisms"] == 1
+    assert [s["kind"] for s in sim["stages"]] == ["mechanism", "parallel"] and sim["counts"]["mechanisms"] == 1   # then the left's Wait
     kinds = {a["kind"] for side in ("left", "right") for a in sim["acts"][side]}
     assert {"stream", "pole", "hand", "global", "check"} <= kinds
     assert sim["phases"][-1][1] == "lid_open"

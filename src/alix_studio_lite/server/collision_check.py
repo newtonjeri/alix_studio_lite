@@ -48,6 +48,7 @@ DEPTH_EVERY_S = 0.1               # while the hand stays on the commode its dept
                                   # thousands of contact points for it), at once when a contact starts
 WALL_T_M, WALL_H_M = 0.10, 2.0    # the front wall as a box like the others (placement.WALL_*)
 MAX_EVENTS = 50
+EXACT_MOMENTS = 12                # a clearance stretch's moments measured on the real meshes (clearance_states)
 
 
 @lru_cache(maxsize=None)
@@ -452,3 +453,168 @@ def check_states(times, arms: dict, home: dict, scene: dict, fid: str, phases, c
                 checked=dict(walls=made, arms=sides, two_arms=True, contact_depth_mm=CONTACT_DEPTH_MM,
                              bin="the bin, lowered: its body, rail and carriage, handles and covers"),
                 seconds=round(time.monotonic() - t0, 2))
+
+
+# ── the two arms apart at every timing (S2: the owner, 22 Oct)
+
+@lru_cache(maxsize=None)
+def _hulls(side: str):
+    """One arm's collision links (the set ``_arm`` checks) as convex hulls, with each hull's reach from its link's
+    origin. A hull holds its mesh, so the gap between two hulls is never more than the real one; FCL measures it
+    some 15 times faster (1 ms a moment against 18), which lets S2 check the arms at many timings."""
+    import trimesh
+    from alix_workspace.dual_arm_plan_collision import _full_arm_filter
+
+    from .. import vendor_paths
+
+    rcm, keep = _rcm(), _full_arm_filter(side, str(vendor_paths.URDF))
+    mgr, entries, reach = trimesh.collision.CollisionManager(), [], {}
+    for link, geoms in rcm.links.items():
+        if not keep(link):
+            continue
+        for gi, geom in enumerate(geoms):
+            mesh = rcm._load_mesh(geom)
+            if mesh is None:
+                continue
+            hull, origin = mesh.convex_hull, np.asarray(geom.origin, dtype=float)
+            name = f"{link}#{gi}"
+            mgr.add_object(name, hull)
+            entries.append((name, link, origin))
+            pts = np.asarray(hull.vertices, dtype=float) @ origin[:3, :3].T + origin[:3, 3]
+            reach[link] = max(reach.get(link, 0.0), float(np.max(np.linalg.norm(pts, axis=1))) if len(pts) else 0.0)
+    links = sorted(reach)
+    return mgr, entries, links, np.asarray([reach[ln] for ln in links])
+
+
+def clearance_states(scenarios: list[dict], home: dict, clearance_mm: float, progress=None) -> list[dict]:
+    """The two arms against each other with ``clearance_mm`` between them, in each of ``scenarios`` (each ``times``
+    and ``arms``: both arms' pole mm, hand counts, joints deg and ``known`` at those times, as check_states takes
+    them). A moment is skipped when no link of one arm can come that close to the other (their origins' distance less
+    their hulls' reach); otherwise the hulls' least gap is measured. Each scenario's stretches closer than the
+    clearance: their first and last time, the hulls' least gap (mm; below 0 when they overlap) and the least gap between
+    the arms' real meshes over the stretch (``exact_mm``, at up to EXACT_MOMENTS of its moments, the hulls' closest
+    among them), with the two links then. A stretch only the hulls make that close (the meshes never are) is left out."""
+    from alix_studio_lite import vendor_paths
+
+    vendor_paths.activate()
+    from . import robot_model, staging
+
+    model = robot_model.fk_model()
+    joints = {s: [f"{staging.SIDE_PREFIX[s]}_joint{i}" for i in range(1, 8)] for s in ("left", "right")}
+    hulls = {s: _hulls(s) for s in ("left", "right")}
+    exact = {s: _arm(s) for s in ("left", "right")}
+    limit = float(clearance_mm) / 1000.0
+    tf_of: dict = {}                       # (side, pose) -> that arm's link transforms (each arm's own; the poses repeat)
+    gap_of: dict = {}                      # (left pose, right pose) -> (gap m, names)
+    exact_of: dict = {}                    # (left pose, right pose) -> (the meshes' gap mm, names)
+
+    def pose_key(arm, i):
+        return (round(float(arm["pole"][i]), 1), tuple(int(round(float(c))) for c in arm["hand"][i]),
+                tuple(round(float(v), 3) for v in arm["q"][i]))
+
+    def transforms(side, key):
+        tf = tf_of.get((side, key))
+        if tf is None:
+            pole, hand, q = key
+            v = dict(home)
+            v.update(staging.joint_values(side, pole, list(hand)))
+            v.update(zip(joints[side], np.radians(np.asarray(q, dtype=float)).tolist()))
+            full = model.link_world_transforms(v)
+            names = hulls[side][2]
+            tf = ({ln: full[ln] for _, ln, _ in hulls[side][1] if ln in full},
+                  np.asarray([full[ln][:3, 3] for ln in names]))
+            if len(tf_of) > 400000:
+                tf_of.clear()
+            tf_of[(side, key)] = tf
+        return tf
+
+    def gap(kl, kr):
+        got = gap_of.get((kl, kr))
+        if got is None:
+            (tl, ol), (tr, orr) = transforms("left", kl), transforms("right", kr)
+            ra, rb = hulls["left"][3], hulls["right"][3]
+            d = np.linalg.norm(ol[:, None, :] - orr[None, :, :], axis=2) - ra[:, None] - rb[None, :]
+            if float(d.min()) > limit:                                 # nothing of one arm can be that close to the other
+                got = (float(d.min()), None)
+            else:
+                for s, tf in (("left", tl), ("right", tr)):
+                    mgr, entries = hulls[s][0], hulls[s][1]
+                    for name, link, origin in entries:
+                        T = tf.get(link)
+                        if T is not None:
+                            mgr.set_transform(name, T @ origin)
+                if hulls["left"][0].in_collision_other(hulls["right"][0]):
+                    dist, names = 0.0, None
+                    _, data = hulls["left"][0].in_collision_other(hulls["right"][0], return_data=True)
+                    if data:
+                        deepest = max(data, key=lambda c: (float(getattr(c, "depth", 0.0) or 0.0), tuple(sorted(c.names))))
+                        dist, names = -float(getattr(deepest, "depth", 0.0) or 0.0), tuple(deepest.names)
+                    got = (dist, names)
+                else:
+                    dist, names = hulls["left"][0].min_distance_other(hulls["right"][0], return_names=True)
+                    got = (float(dist), tuple(names))
+            if len(gap_of) > 400000:
+                gap_of.clear()
+            gap_of[(kl, kr)] = got
+        return got
+
+    out, total, done = [], sum(len(sc["times"]) for sc in scenarios), 0
+    for sc in scenarios:
+        times, arms = [float(t) for t in sc["times"]], sc["arms"]
+        L, R = arms["left"], arms["right"]
+        events, cur = [], None
+        for i, t in enumerate(times):
+            done += 1
+            if progress is not None and done % 2000 == 0:
+                progress(done, total)
+            if not (bool(L["known"][i]) and bool(R["known"][i])):
+                cur = None
+                continue
+            kl, kr = pose_key(L, i), pose_key(R, i)
+            d, names = gap(kl, kr)
+            if d < limit:
+                if cur is None:
+                    cur = dict(first_t=t, last_t=t, min_mm=d * 1000.0, names=names, at=i, keys=(kl, kr), moments=[])
+                    events.append(cur)
+                else:
+                    cur["last_t"] = t
+                    if d * 1000.0 < cur["min_mm"]:
+                        cur.update(min_mm=d * 1000.0, names=names, at=i, keys=(kl, kr))
+                cur["moments"].append((t, kl, kr))
+            else:
+                cur = None
+        kept = []
+        for e in events:                                    # the real meshes' gap over the stretch, said exactly
+            moments = e.pop("moments")
+            pick = moments if len(moments) <= EXACT_MOMENTS else \
+                [moments[int(k)] for k in np.linspace(0, len(moments) - 1, EXACT_MOMENTS - 1)]
+            best = None
+            for t, kl, kr in [(None, *e.pop("keys"))] + pick:  # the hulls' closest moment first
+                got = exact_of.get((kl, kr))
+                if got is None:
+                    exact["left"].pose(transforms("left", kl)[0])
+                    exact["right"].pose(transforms("right", kr)[0])
+                    if exact["left"].mgr.in_collision_other(exact["right"].mgr):
+                        _, data = exact["left"].mgr.in_collision_other(exact["right"].mgr, return_data=True)
+                        deepest = max(data, key=lambda c: (float(getattr(c, "depth", 0.0) or 0.0), tuple(sorted(c.names))),
+                                      default=None)                # the deepest contact (a set's first is any one)
+                        got = (0.0, tuple(deepest.names) if deepest is not None else ())
+                    else:
+                        dist, names = exact["left"].mgr.min_distance_other(exact["right"].mgr, return_names=True)
+                        got = (round(1000.0 * float(dist), 1), tuple(names))
+                    exact_of[(kl, kr)] = got
+                if best is None or got[0] < best[0]:
+                    best = got
+                if best[0] <= 0.0:
+                    break
+            if best[0] >= float(clearance_mm):              # only the hulls come that close
+                continue
+            e["exact_mm"] = best[0]
+            names = best[1] or e["names"] or ()
+            e.pop("names", None)
+            e["links"] = sorted({n.split("#", 1)[0] for n in names})
+            e["min_mm"] = round(e["min_mm"], 1)
+            e["first_t"], e["last_t"] = round(e["first_t"], 3), round(e["last_t"], 3)
+            kept.append(e)
+        out.append(dict(events=kept[:MAX_EVENTS], more=max(0, len(kept) - MAX_EVENTS), samples=len(times)))
+    return out

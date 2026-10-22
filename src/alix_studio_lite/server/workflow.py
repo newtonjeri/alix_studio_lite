@@ -1,29 +1,29 @@
-"""Merge + Sequence, S2: Sequence (feedback v5, slide 9; the owner, 16 Oct).
+"""Merge + Sequence, S2: Sequence (feedback v5, slide 9; the owner, 16 Oct; its plan, 22 Oct).
 
-The control program's Page 02 (``rm_trajectory_ui_v53_safe_lid_checkpoint.py``, run by runner v14),
-ported as it is: each arm's ordered steps (Program, Global Point, Pole, Hand, Wait), each Program with
-its Start % (the controller's move to its first point; the stored timing is kept) and its Dual Rule
-(TOGETHER, RUN FIRST, WAIT OTHER). RUN BOTH follows V53's SAFE TIMELINE plan (``build_plan``, V53's
-own code): consecutive TOGETHER Programs as LEFT / RIGHT timeline blocks started together; RUN FIRST +
-WAIT OTHER as a one-arm-at-a-time handoff, asking before the waiting arm when "Confirm before waiting
-arm" is on; the steps after the last Program at the end. A Wait is a task of its own: its arm idles for
-its seconds, on one arm or both, anywhere (the owner, 21 Oct; V53 made a positive WAIT before a
-TOGETHER Program on both arms its manual lid checkpoint and refused one on one arm: WAIT_CHECKPOINTS). Each arm's part of a stage runs through runner v14's own
-``run_workflow_sequence`` on that arm's controller, one call per arm per stage, as V53 runs it. Saved
-and loaded as V53's JSON (``realman_workflow_sequence_v1``). A move that waits for its arrival right after a Program
-waits PROGRAM_END_S first, in Simulation and on the robot (``settle_moves``: the lab, 21 Oct).
+The control program's Page 02 (``rm_trajectory_ui_v53_safe_lid_checkpoint.py``, run by runner v14) in Lite: each arm's
+ordered rows (Program with its Start %: the controller's move to its first point, the stored timing kept; Global
+Point; Pole; Hand; Wait), and Lite's own: Meet, Wait-for and the lid and seat tasks. Each arm's rows run top to bottom,
+both arms starting together; an arm waits only at a Meet (both arms meet there), at a Wait-for (until the other arm has
+finished the row it names) and at a lid or seat task (it uses both arms): ``flow.py`` (the owner, 22 Oct: V53's Dual
+Rule and its SAFE TIMELINE planner are gone; a V53 file's RUN FIRST / WAIT OTHER pairs load as Meets and a Wait-for). A
+Wait is a task of its own: its arm idles for its seconds. Each arm's part of a stage runs through runner v14's own
+``run_workflow_sequence`` on that arm's controller, a call per stretch between its Wait-for rows. A move that waits for
+its arrival right after a Program waits PROGRAM_END_S first, in Simulation and on the robot (``settle_moves``: the lab,
+21 Oct). Saved and loaded as Lite's JSON (``LITE_FORMAT``); V53's own (``FORMAT``) loads too.
 
-What Lite adds, none of it motion (the owner's decisions of 16 Oct):
-- Simulation Mode: both arms in 3D through the same plan, with the collision check (walls, commode,
-  the two arms against each other), and what would not be right on the robot: a Program whose pole
-  or hand is not the one it was taught with, a Program Lite did not send (not drawn), a global point
-  that could not be read;
-- Real Machine Mode only after the same sequence (steps, range, programs, points, speed) completed in
-  Simulation; Partial = a row range per arm;
-- before the first move, every Program slot and global point checked on its controller (V53 finds a
-  missing one mid-run); a loaded file of the other arm refused; the overall speed is the top bar's
-  slider, and each controller's own speed, found when it was connected, is put back after (not
-  V53's fixed 50 %); STOP latches, as everywhere in Lite.
+What Lite adds, none of it motion:
+- Simulation Mode: both arms in 3D through the same plan, with the collision check (walls, commode, the two arms
+  against each other), and what would not be right on the robot: a Program whose pole or hand is not the one it was
+  taught with, a Program Lite did not send (not drawn), a global point that could not be read;
+- timing as the robot keeps it (the owner, 22 Oct): every step with the time it takes at least and at most (measured
+  in the lab's logs: ``ROBOT_TIMES``), and the two arms checked against each other at every timing those ranges allow
+  between their meeting points, with CLEARANCE_MM between them;
+- Real Machine Mode only after the same run (its steps, its plan, programs, points, speed) completed in Simulation, or
+  with the operator's word that it runs without; a step that runs outside its range is said, and stops both arms when
+  far outside it (STOP_PROGRAM_OVER / STOP_PROGRAM_UNDER, STOP_STEP_MARGIN);
+- before the first move, every Program slot and global point checked on its controller; a loaded file of the other arm
+  refused; the overall speed is the top bar's slider, and each controller's own speed, found when it was connected, is
+  put back after; STOP latches, as everywhere in Lite.
 """
 from __future__ import annotations
 
@@ -33,16 +33,11 @@ import json
 import time
 from pathlib import Path
 
+from . import flow
 from .jobs import UserError
 
-FORMAT = "realman_workflow_sequence_v1"
-RULES = ("TOGETHER", "RUN FIRST", "WAIT OTHER")
-#: V53's SAFE TIMELINE makes a positive WAIT before a TOGETHER Program a hard cross-arm checkpoint (both arms finish,
-#: then stop for the operator's OK: its manual lid cover checkpoint) and refuses one on one arm only ("SAFE TIMELINE
-#: checkpoint mismatch", the lab, 21 Oct 23:08). The owner, 21 Oct: a Wait is "an independent task, idle task, wait for
-#: 5 sec ... a user defined stage in the sequence": it holds its own arm for its seconds, on one arm or both, anywhere,
-#: and never makes a checkpoint. V53's rule is kept, off (tests/test_workflow.py turns it on to check it against V53).
-WAIT_CHECKPOINTS = False
+FORMAT = "realman_workflow_sequence_v1"           # V53's JSON: loaded (its Dual Rule as Meets and a Wait-for)
+LITE_FORMAT = "alix_studio_lite_sequence_v1"       # Lite's: V53's rows, Lite's Meet and Wait-for, each row's uid
 #: A move that waits for its arrival (a Global Point's MoveJ / MoveL, a lid or seat task's first move) right after a
 #: Program: runner v14 sends it about 0.1 s after the controller's run state says the Program has ended, but the
 #: controller's own end-of-program message comes later (ALIX's 155 program runs with the blocking probe, 2026-09: a
@@ -53,450 +48,38 @@ PROGRAM_END_S = 2.0
 ARMS = ("left", "right")
 MAX_STEPS = 500
 
-
-# ── V53's planner, as it is (DualArmTrajectoryUI._page2_program_chunks and
-#    _page2_build_program_rule_plan; tests/test_workflow.py runs V53's own methods against these)
-
-def program_chunks(steps: list, side: str) -> list[dict]:
-    """
-    Split one arm's workflow into chunks that END at a Program step.
-
-    This preserves setup steps that belong before that trajectory:
-      Pole / Hand / Wait / Global / Program
-
-    Example:
-      Pole, Hand, Global, Program10, Program11, Pole, Program12
-
-    becomes:
-      chunk 1 = Pole + Hand + Global + Program10
-      chunk 2 = Program11
-      chunk 3 = Pole + Program12
-    """
-    chunks = []
-    pending = []
-
-    for step in steps:
-        pending.append(json.loads(json.dumps(step)))
-
-        if step.get("type") == "program":
-            program = step
-            chunks.append({
-                "side": side,
-                "steps": pending,
-                "program_id": int(program.get("id")),
-                "program_name": str(program.get("name") or ""),
-                "dual_rule": str(
-                    program.get("dual_rule") or "TOGETHER"
-                ).upper(),
-            })
-            pending = []
-
-    # Preserve any trailing non-program actions after the final Program.
-    if pending:
-        chunks.append({
-            "side": side,
-            "steps": pending,
-            "program_id": None,
-            "program_name": "FINAL AUX STEPS",
-            "dual_rule": "TOGETHER",
-        })
-
-    return chunks
-
-
-def build_plan(left_steps: list, right_steps: list) -> list[dict]:
-    """
-    Build the Page-02 dual-arm plan.
-
-    v53 SAFE TIMELINE RULES
-
-    TOGETHER sections may contain different Program IDs and different
-    numbers of Program rows on LEFT and RIGHT.
-
-    A positive WAIT located before a TOGETHER Program on BOTH arms is
-    treated as a HARD CROSS-ARM CHECKPOINT:
-
-      1. finish every preceding timeline Program on BOTH arms,
-      2. run the checkpoint setup steps (for example Pole 150 + Wait 2 s)
-         on BOTH arms,
-      3. stop and require operator confirmation,
-      4. only then start the Program after the WAIT on BOTH arms.
-
-    This prevents one arm from entering the post-lid-cleaning Program
-    while the other arm is still finishing the pre-lid section.
-
-    RUN FIRST + WAIT OTHER remains an explicit serial handoff and still
-    requires the same Program ID on both arms.
-
-    (V53's errors are ValueError, raised before anything runs; Lite says them as they are.)
-    """
-    left_chunks = program_chunks(left_steps, "left")
-    right_chunks = program_chunks(right_steps, "right")
-
-    left_programs = [
-        x for x in left_chunks if x["program_id"] is not None
-    ]
-    right_programs = [
-        x for x in right_chunks if x["program_id"] is not None
-    ]
-
-    def validate_unique(items, side):
-        seen = set()
-        for item in items:
-            pid = item["program_id"]
-            if pid in seen:
-                raise ValueError(
-                    f"{side.upper()} Program {pid} appears more than once. "
-                    "SAFE TIMELINE requires unique Program IDs per arm."
-                )
-            seen.add(pid)
-
-    validate_unique(left_programs, "left")
-    validate_unique(right_programs, "right")
-
-    def rule(item):
-        return str(item.get("dual_rule") or "TOGETHER").upper()
-
-    def positive_wait_index(item):
-        if not WAIT_CHECKPOINTS:                    # a Wait is its arm's own idle: never a checkpoint (the owner, 21 Oct)
-            return None
-        found = None
-        for idx, step in enumerate(item.get("steps") or []):
-            if str(step.get("type") or "").lower() != "wait":
-                continue
-            try:
-                seconds = float(step.get("seconds", step.get("wait_s", 0)) or 0)
-            except Exception:
-                seconds = 0.0
-            if seconds > 0:
-                found = idx
-        return found
-
-    def combine(side, chunks, label="TOGETHER"):
-        steps = []
-        ids = []
-        names = []
-
-        for chunk in chunks:
-            steps.extend(json.loads(json.dumps(chunk["steps"])))
-            if chunk.get("program_id") is not None:
-                ids.append(int(chunk["program_id"]))
-            if chunk.get("program_name"):
-                names.append(str(chunk["program_name"]))
-
-        return {
-            "side": side,
-            "steps": steps,
-            "program_id": ids[-1] if ids else None,
-            "program_ids": ids,
-            "program_name": " + ".join(names) or label,
-            "dual_rule": "TOGETHER",
-        }
-
-    def split_wait_chunk(item):
-        wi = positive_wait_index(item)
-        if wi is None:
-            raise ValueError("internal SAFE TIMELINE error: checkpoint WAIT not found")
-
-        before = {
-            "side": item["side"],
-            "steps": json.loads(json.dumps(item["steps"][: wi + 1])),
-            "program_id": None,
-            "program_ids": [],
-            "program_name": "MANUAL LID PREP",
-            "dual_rule": "TOGETHER",
-        }
-
-        after_steps = json.loads(json.dumps(item["steps"][wi + 1:]))
-        if not after_steps:
-            raise ValueError(
-                f"{item['side'].upper()} checkpoint WAIT has no Program after it."
-            )
-
-        programs_after = [
-            s for s in after_steps if str(s.get("type") or "").lower() == "program"
-        ]
-        if len(programs_after) != 1:
-            raise ValueError(
-                f"{item['side'].upper()} checkpoint must lead to exactly one "
-                "Program in that chunk."
-            )
-
-        program = programs_after[0]
-        after = {
-            "side": item["side"],
-            "steps": after_steps,
-            "program_id": int(program["id"]),
-            "program_ids": [int(program["id"])],
-            "program_name": str(program.get("name") or ""),
-            "dual_rule": str(program.get("dual_rule") or "TOGETHER").upper(),
-        }
-        return before, after
-
-    plan = []
-    li = 0
-    ri = 0
-    timeline_number = 0
-    checkpoint_number = 0
-
-    while li < len(left_programs) or ri < len(right_programs):
-        lcur = left_programs[li] if li < len(left_programs) else None
-        rcur = right_programs[ri] if ri < len(right_programs) else None
-
-        # ----------------------------------------------------------
-        # TOGETHER region
-        # ----------------------------------------------------------
-        if (
-            lcur is not None
-            and rcur is not None
-            and rule(lcur) == "TOGETHER"
-            and rule(rcur) == "TOGETHER"
-        ):
-            # Locate the next WAIT checkpoint before the next serial rule.
-            lbar = None
-            j = li
-            while j < len(left_programs) and rule(left_programs[j]) == "TOGETHER":
-                if positive_wait_index(left_programs[j]) is not None:
-                    lbar = j
-                    break
-                j += 1
-
-            rbar = None
-            j = ri
-            while j < len(right_programs) and rule(right_programs[j]) == "TOGETHER":
-                if positive_wait_index(right_programs[j]) is not None:
-                    rbar = j
-                    break
-                j += 1
-
-            if (lbar is None) != (rbar is None):
-                raise ValueError(
-                    "SAFE TIMELINE checkpoint mismatch.\n\n"
-                    "A positive WAIT exists before the next serial section "
-                    "on only one arm. Add the manual checkpoint WAIT to BOTH "
-                    "arms at the same process boundary."
-                )
-
-            if lbar is not None and rbar is not None:
-                # Everything BEFORE the checkpoint must complete on BOTH arms.
-                left_pre = left_programs[li:lbar]
-                right_pre = right_programs[ri:rbar]
-
-                if bool(left_pre) != bool(right_pre):
-                    raise ValueError(
-                        "SAFE TIMELINE checkpoint alignment is ambiguous.\n\n"
-                        f"LEFT Programs before checkpoint: "
-                        f"{[x['program_id'] for x in left_pre] or 'none'}\n"
-                        f"RIGHT Programs before checkpoint: "
-                        f"{[x['program_id'] for x in right_pre] or 'none'}"
-                    )
-
-                if left_pre and right_pre:
-                    timeline_number += 1
-                    left_item = combine("left", left_pre)
-                    right_item = combine("right", right_pre)
-                    plan.append({
-                        "kind": "parallel",
-                        "program_id": f"TIMELINE-{timeline_number}",
-                        "timeline_number": timeline_number,
-                        "left_program_ids": left_item["program_ids"],
-                        "right_program_ids": right_item["program_ids"],
-                        "left": left_item,
-                        "right": right_item,
-                    })
-
-                # Split the checkpoint chunk:
-                # setup/pole/wait -> MANUAL CONFIRM -> Program.
-                left_prep, left_after = split_wait_chunk(left_programs[lbar])
-                right_prep, right_after = split_wait_chunk(right_programs[rbar])
-
-                if rule(left_after) != "TOGETHER" or rule(right_after) != "TOGETHER":
-                    raise ValueError(
-                        "Program after the manual checkpoint must be TOGETHER "
-                        "on both arms."
-                    )
-
-                checkpoint_number += 1
-
-                plan.append({
-                    "kind": "parallel",
-                    "program_id": f"LID-PREP-{checkpoint_number}",
-                    "timeline_number": None,
-                    "left_program_ids": [],
-                    "right_program_ids": [],
-                    "left": left_prep,
-                    "right": right_prep,
-                })
-
-                plan.append({
-                    "kind": "checkpoint",
-                    "program_id": f"LID-CHECK-{checkpoint_number}",
-                    "checkpoint_number": checkpoint_number,
-                    "title": "MANUAL LID COVER CHECKPOINT",
-                    "message": (
-                        "Both pre-lid cleaning sections are complete and both "
-                        "checkpoint setup sequences have finished.\n\n"
-                        "Open the toilet lid cover manually.\n\n"
-                        "Before continuing, confirm:\n"
-                        "• Lid cover is fully open\n"
-                        "• Both hands are completely outside the robot workspace\n"
-                        "• Both robot paths are clear\n\n"
-                        "Press OK only when it is safe to start the next robot Programs."
-                    ),
-                })
-
-                timeline_number += 1
-                plan.append({
-                    "kind": "parallel",
-                    "program_id": f"TIMELINE-{timeline_number}",
-                    "timeline_number": timeline_number,
-                    "left_program_ids": left_after["program_ids"],
-                    "right_program_ids": right_after["program_ids"],
-                    "left": left_after,
-                    "right": right_after,
-                })
-
-                li = lbar + 1
-                ri = rbar + 1
-                continue
-
-            # No checkpoint before the next serial section:
-            # take all consecutive TOGETHER chunks on each arm.
-            left_block = []
-            while li < len(left_programs) and rule(left_programs[li]) == "TOGETHER":
-                left_block.append(left_programs[li])
-                li += 1
-
-            right_block = []
-            while ri < len(right_programs) and rule(right_programs[ri]) == "TOGETHER":
-                right_block.append(right_programs[ri])
-                ri += 1
-
-            if not left_block or not right_block:
-                raise ValueError(
-                    "SAFE TIMELINE found a TOGETHER section on only one arm."
-                )
-
-            timeline_number += 1
-            left_item = combine("left", left_block)
-            right_item = combine("right", right_block)
-            plan.append({
-                "kind": "parallel",
-                "program_id": f"TIMELINE-{timeline_number}",
-                "timeline_number": timeline_number,
-                "left_program_ids": left_item["program_ids"],
-                "right_program_ids": right_item["program_ids"],
-                "left": left_item,
-                "right": right_item,
-            })
-            continue
-
-        # ----------------------------------------------------------
-        # Serial RUN FIRST / WAIT OTHER
-        # ----------------------------------------------------------
-        if lcur is None or rcur is None:
-            raise ValueError(
-                "SAFE TIMELINE reached an unmatched Program section.\n\n"
-                f"Next LEFT Program: "
-                f"{None if lcur is None else lcur['program_id']}\n"
-                f"Next RIGHT Program: "
-                f"{None if rcur is None else rcur['program_id']}"
-            )
-
-        lpid = int(lcur["program_id"])
-        rpid = int(rcur["program_id"])
-        lr = rule(lcur)
-        rr = rule(rcur)
-
-        if lpid != rpid:
-            raise ValueError(
-                "RUN FIRST / WAIT OTHER serial handoffs must use the same "
-                "Program ID on both arms.\n\n"
-                f"LEFT  = Program {lpid} ({lr})\n"
-                f"RIGHT = Program {rpid} ({rr})"
-            )
-
-        if lr == "RUN FIRST" and rr == "WAIT OTHER":
-            plan.append({
-                "kind": "serial",
-                "program_id": lpid,
-                "first": lcur,
-                "second": rcur,
-            })
-        elif lr == "WAIT OTHER" and rr == "RUN FIRST":
-            plan.append({
-                "kind": "serial",
-                "program_id": lpid,
-                "first": rcur,
-                "second": lcur,
-            })
-        else:
-            raise ValueError(
-                f"Program {lpid} has an invalid Dual Rule pair:\n\n"
-                f"LEFT  = {lr}\n"
-                f"RIGHT = {rr}\n\n"
-                "Use TOGETHER on both arms, or RUN FIRST + WAIT OTHER."
-            )
-
-        li += 1
-        ri += 1
-
-    # Preserve trailing non-program steps after the final Program.
-    left_tail = next(
-        (x for x in left_chunks if x["program_id"] is None),
-        None,
-    )
-    right_tail = next(
-        (x for x in right_chunks if x["program_id"] is None),
-        None,
-    )
-
-    if left_tail or right_tail:
-        plan.append({
-            "kind": "tail",
-            "program_id": None,
-            "left": left_tail,
-            "right": right_tail,
-        })
-
-    return plan
-
-
-def counts(plan: list[dict]) -> dict:
-    """What V53's RUN BOTH dialog says before it starts (and Lite's lid and seat tasks)."""
-    n = {k: sum(1 for s in plan if s.get("kind") == k) for k in ("parallel", "serial", "checkpoint", "tail", "mechanism")}
-    return dict(coordinated=n["parallel"] + n["serial"], together=n["parallel"], one_arm=n["serial"],
-                checkpoints=n["checkpoint"], tail=n["tail"], mechanisms=n["mechanism"], stages=len(plan))
-
-
-def build_full(left_steps: list, right_steps: list) -> list[dict]:
-    """V53's plan with Lite's lid and seat tasks in it (the owner, 18 Oct: pre-recorded "tasks that are available
-    to be injected at a point in the sequence"). A task uses both arms, so it is on both arms' lists, the same tasks
-    in the same order; each list is cut at them, each part between them is planned by V53 as it is (``build_plan``,
-    its rules and its checkpoints), and each task is a stage of its own between the parts (``kind`` mechanism): both
-    arms finish what comes before it, it runs (mechanism.py), then both go on."""
-    from . import mechanism
-
-    lists = {"left": left_steps, "right": right_steps}
-    cuts = {s: [i for i, st in enumerate(lists[s]) if st["type"] == "mechanism"] for s in ARMS}
-    tasks = {s: [lists[s][i]["task"] for i in cuts[s]] for s in ARMS}
-    if tasks["left"] != tasks["right"]:
-        words = {s: ", ".join(mechanism.TASKS[t]["title"] for t in tasks[s]) or "none" for s in ARMS}
-        raise ValueError("A lid or seat task uses both arms: it must be on both arms' lists, the same tasks in the same "
-                         f"order. LEFT has {words['left']}; RIGHT has {words['right']}.")
-    plan, lp, rp = [], 0, 0
-    bounds = list(zip(cuts["left"], cuts["right"]))
-    for k, (li, ri) in enumerate(bounds + [(len(left_steps), len(right_steps))]):
-        part_l, part_r = left_steps[lp:li], right_steps[rp:ri]
-        if part_l or part_r:
-            plan += build_plan(part_l, part_r)
-        if k < len(bounds):
-            task = left_steps[li]["task"]
-            plan.append({"kind": "mechanism", "task": task, "program_id": mechanism.TASKS[task]["short"],
-                         "title": mechanism.TASKS[task]["title"],
-                         "rows": {"left": left_steps[li].get("_row"), "right": right_steps[ri].get("_row")}})
-            lp, rp = li + 1, ri + 1
-    return plan
+#: What each step takes on the robot: (least, as a rule, most), from runner v14's own lines in the lab's logs of 21 Oct
+#: 2026 with the controllers' realtime push off (Lite turns it off as it connects: with it on, programs ran some 13 %
+#: slower). A Program's lines against (lines - 1) x 5 ms: the owner's 96-102 % (22 Oct). Before the arm moves, the
+#: controller reads the file (the "start ack": 0.17-0.37 ms a line, 36 runs); its checks, the end's report and the
+#: runner's settle after it add 0.1-0.6 s. Runner v14's Hand (its raw hand at SPEED_SET 1000, opened and closed for the
+#: step): 0.82-1.22 s over 32 steps, longer with the stroke. A Pole: ALIX's law plus 0.02-0.10 s (21 steps). A Global
+#: Point's MoveJ: the move at its speed x the overall speed of each joint's rating (staging's law), measured 3 % longer
+#: (2 moves); 0.08 s when the arm is already there (6 moves). A Wait: its seconds. Each runner call (a stage's part, or
+#: its stretch to a Wait-for) starts in 0.10-0.30 s.
+ROBOT_TIMES = dict(
+    play=(0.96, 1.00, 1.02),
+    load_s_per_line=(0.17e-3, 0.23e-3, 0.37e-3),
+    program_extra_s=(0.10, 0.20, 0.60),
+    hand_s=(0.75, 0.82, 1.05), hand_s_per_1000=0.25,
+    pole_extra_s=(0.0, 0.06, 0.15),
+    global_factor=(0.95, 1.03, 1.15), global_there_s=(0.05, 0.08, 0.15),
+    wait_extra_s=(0.0, 0.005, 0.02),
+    call_start_s=(0.10, 0.17, 0.30),
+)
+#: A Program's move to its first point when the arm is not there (the controller's own MoveJ at the Program's Start %)
+#: is known only roughly: in the logs it took between the Start % of each joint's rating (the least) and that times the
+#: overall speed (the most): 139 deg on J6 at 30 % took 10.6 s, where those give 2.1 and 13.8 s.
+TRANSIT_MIN_DEG = 0.5
+#: The owner, 22 Oct: on the robot, a step outside its range is said; a Program whose lines run past 105 % of their
+#: time, or that ends before 90 % of it (stopped on the controller: an E-stop gives no code), stops both arms; any other
+#: step more than 10 % outside its range stops both arms.
+STOP_PROGRAM_OVER = 1.05
+STOP_PROGRAM_UNDER = 0.90
+STOP_STEP_MARGIN = 0.10
+#: The two arms are kept this far apart at every timing their ranges allow (the owner, 22 Oct: 50 mm; the gloves, the
+#: pad, the brush and a held tool are not in the model).
+CLEARANCE_MM = 50.0
 
 
 def settle_moves(plan: list[dict]) -> list[dict]:
@@ -511,9 +94,6 @@ def settle_moves(plan: list[dict]) -> list[dict]:
             need = max([PROGRAM_END_S - since[s] for s in ARMS if since[s] is not None] or [0.0])
             out.append(dict(st, settle_s=round(need, 3)) if need > 0 else st)
             since = {s: None for s in ARMS}
-            continue
-        if st["kind"] == "checkpoint":
-            out.append(st)
             continue
         st = copy.deepcopy(st)
         for side, steps in _items(st):
@@ -536,24 +116,23 @@ def settle_moves(plan: list[dict]) -> list[dict]:
 
 def plan_shape(plan: list[dict]) -> list[dict]:
     """The plan as a simulation's identity keeps it: each stage's kind and each arm's steps in it by row (a settle by its
-    seconds). The same steps planned otherwise (Lite's planner rules changed, as on 21 Oct) are not the run simulated."""
+    seconds, a Wait-for with the row it waits for). The same steps planned otherwise (Lite's planner changed, as on 21
+    and 22 Oct) are not the run simulated."""
     out = []
     for st in plan:
         row = {"kind": st["kind"]}
         if st["kind"] == "mechanism":
             row.update(task=st["task"], settle_s=st.get("settle_s") or 0)
-        elif st["kind"] == "checkpoint":
-            row["label"] = st.get("program_id")
         else:
             for side, steps in _items(st):
-                row[side] = [["settle", x["seconds"]] if x.get("settle") else x.get("_row") for x in steps]
-            if st["kind"] == "serial":
-                row["first"] = st["first"]["side"]
+                row[side] = [["settle", x["seconds"]] if x.get("settle")
+                             else ["wait_for", x.get("_row"), (x.get("_target") or {}).get("row")] if x["type"] == "wait_for"
+                             else x.get("_row") for x in steps]
         out.append(row)
     return out
 
 
-# ── the steps: checked as runner v14 checks them, kept in the project, saved and loaded as V53's JSON
+# ── the steps: checked as runner v14 checks them, kept in the project, saved and loaded as JSON
 
 def _runner():
     from .robot_real import _runner as runner
@@ -561,17 +140,26 @@ def _runner():
     return runner()
 
 
+def _v53_rules(steps) -> bool:
+    """Whether a list still carries V53's Dual Rule other than TOGETHER (a V53 file, a sequence kept before 22 Oct)."""
+    return any(isinstance(x, dict) and str(x.get("dual_rule") or "TOGETHER").strip().upper() != "TOGETHER" for x in steps)
+
+
 def check_steps(steps, side: str) -> list[dict]:
-    """An arm's steps, each as the runner will take it (its ``normalize_workflow_step``) and with V53's
-    own fields (a Program's Dual Rule, a Wait's note) kept: refused with the row that is wrong."""
+    """An arm's rows, each as the runner will take it (its ``normalize_workflow_step``), with Lite's own rows (Meet,
+    Wait-for, a lid or seat task), each row's ``uid`` and a Wait's note kept: refused with the row that is wrong. A Dual
+    Rule of V53's (a file, or a page of before 22 Oct) becomes Meets and a Wait-for (flow.from_v53); TOGETHER is dropped."""
     if not isinstance(steps, list):
         raise UserError(f"The {side.upper()} sequence must be a list of steps.")
+    if _v53_rules(steps):
+        steps, _ = flow.from_v53(steps)
     if len(steps) > MAX_STEPS:
         raise UserError(f"The {side.upper()} sequence has {len(steps)} steps: at most {MAX_STEPS}.")
     rt = _runner()
     out = []
     for i, raw in enumerate(steps, 1):
-        if isinstance(raw, dict) and raw.get("type") == "mechanism":   # a lid or seat task of ALIX's (mechanism.py)
+        kind = raw.get("type") if isinstance(raw, dict) else None
+        if kind == "mechanism":                     # a lid or seat task of ALIX's (mechanism.py)
             from . import mechanism
 
             task = str(raw.get("task") or "")
@@ -579,25 +167,34 @@ def check_steps(steps, side: str) -> list[dict]:
                 raise UserError(f"{side.upper()} row {i}: {task or 'no task'} is not a lid or seat task.",
                                 f"One of: {', '.join(t['title'] for t in mechanism.TASKS.values())}.", code="step")
             step = {"type": "mechanism", "task": task}
-            if raw.get("note"):
-                step["note"] = str(raw["note"])[:200]
-            out.append(step)
-            continue
-        try:
-            norm = rt.normalize_workflow_step(raw)
-        except (TypeError, ValueError, KeyError) as exc:
-            raise UserError(f"{side.upper()} row {i}: {exc}.", "Correct or remove that row.", code="step") from None
-        step = dict(norm)
-        if norm["type"] == "program":
-            rule = str(raw.get("dual_rule") or "TOGETHER").strip().upper()
-            if rule not in RULES:
-                raise UserError(f"{side.upper()} row {i}: the Dual Rule {rule!r} is not TOGETHER, RUN FIRST or WAIT OTHER.",
-                                code="step")
-            step["dual_rule"] = rule
+        elif kind == "meet":                        # both arms meet here (flow.py)
+            step = {"type": "meet"}
+        elif kind == "wait_for":                    # this arm waits for a row of the other's (flow.py)
+            tg = raw.get("target") if isinstance(raw.get("target"), dict) else {}
+            if tg.get("uid"):
+                step = {"type": "wait_for", "target": {"uid": str(tg["uid"])[:32]}}
+            elif tg.get("program") is not None:
+                try:
+                    pid = int(tg["program"])
+                except (TypeError, ValueError):
+                    pid = 0
+                if not 1 <= pid <= 100:
+                    raise UserError(f"{side.upper()} row {i}: a Wait-for names a Program 1-100.", code="step")
+                step = {"type": "wait_for", "target": {"program": pid}}
+            else:
+                raise UserError(f"{side.upper()} row {i}: a Wait-for names the other arm's row it waits for.",
+                                "Choose that row, or remove the Wait-for.", code="step")
+        else:
+            try:
+                step = dict(rt.normalize_workflow_step(raw))
+            except (TypeError, ValueError, KeyError) as exc:
+                raise UserError(f"{side.upper()} row {i}: {exc}.", "Correct or remove that row.", code="step") from None
         if raw.get("note"):
             step["note"] = str(raw["note"])[:200]
+        if raw.get("uid"):
+            step["uid"] = str(raw["uid"])[:32]
         out.append(step)
-    return out
+    return flow.with_uids(out)
 
 
 def _file(units) -> Path:
@@ -605,11 +202,26 @@ def _file(units) -> Path:
 
 
 def load(units) -> dict:
-    try:
-        d = json.loads(_file(units).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        d = {}
-    return {side: list(d.get(side) or []) for side in ARMS} | {"updated": d.get("updated")}
+    """Both arms' rows as kept. Rows kept before 22 Oct (no uid; V53's Dual Rule) are brought to today's form once and
+    kept so: a Wait-for names a row by its uid, which must not change between two reads."""
+    from .project import _atomic_write
+
+    with units.lock:
+        try:
+            d = json.loads(_file(units).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            d = {}
+        out = {side: list(d.get(side) or []) for side in ARMS} | {"updated": d.get("updated")}
+        stale = [s for s in ARMS if out[s] and (any("uid" not in x or "dual_rule" in x for x in out[s] if isinstance(x, dict)))]
+        if stale:
+            for s in stale:
+                try:
+                    out[s] = check_steps(out[s], s)
+                except UserError:
+                    continue                         # kept as it is; the page says what is wrong when it is saved
+            _file(units).parent.mkdir(parents=True, exist_ok=True)
+            _atomic_write(_file(units), json.dumps({**d, **{s: out[s] for s in ARMS}}, indent=1))
+    return out
 
 
 def save_side(units, side: str, steps) -> dict:
@@ -626,16 +238,17 @@ def save_side(units, side: str, steps) -> dict:
 
 
 def document(side: str, steps: list) -> dict:
-    """V53's SAVE (WorkflowSequencePanel.sequence_document)."""
-    return {"format": FORMAT, "side": side, "steps": steps}
+    """SAVE: an arm's rows as Lite keeps them (V53's rows, Lite's Meet and Wait-for, each row's uid)."""
+    return {"format": LITE_FORMAT, "side": side, "steps": steps}
 
 
 def from_document(side: str, data) -> list[dict]:
-    """V53's LOAD: its format and a list of steps, and its v51 compatibility (a Program row without a
-    Start % gets 30 %). Lite refuses a file saved for the other arm: Program 71 is another trajectory
-    on each controller."""
-    if not isinstance(data, dict) or data.get("format") != FORMAT:
-        raise UserError("Could not load the sequence: wrong sequence format.", f"A V53 sequence JSON has \"format\": \"{FORMAT}\".")
+    """LOAD: Lite's JSON, or V53's (its v51 compatibility too: a Program row without a Start % gets 30 %; its Dual Rule
+    as Meets and a Wait-for). A file saved for the other arm is refused: Program 71 is another trajectory on each
+    controller."""
+    if not isinstance(data, dict) or data.get("format") not in (FORMAT, LITE_FORMAT):
+        raise UserError("Could not load the sequence: wrong sequence format.",
+                        f"A sequence JSON has \"format\": \"{LITE_FORMAT}\" (Lite's) or \"{FORMAT}\" (V53's).")
     steps = data.get("steps")
     if not isinstance(steps, list):
         raise UserError("Could not load the sequence: steps must be a list.")
@@ -676,35 +289,24 @@ def _with_stage(steps: list, part: list) -> list:
 
 
 def _items(st: dict) -> list:
-    """(side, steps) of each arm's part of a stage of V53's plan, in the order they run."""
-    if st["kind"] == "serial":
-        return [(x["side"], x["steps"]) for x in (st["first"], st["second"])]
+    """(side, steps) of each arm's part of a stage, for the arms that have one."""
     return [(side, st[side]["steps"]) for side in ARMS if isinstance(st.get(side), dict)]
 
 
-def _lid_check_before(full: list, k: int) -> dict | None:
-    """The manual lid cover checkpoint a task picked from stage ``k`` of V53's plan comes after (the last one
-    before it), as the first stage of the task's own run (the owner, 16 Oct: a task after the checkpoint asks,
-    as the sequence does): its pre-lid sections are not part of that run, so the operator says the lid is open
-    and the paths are clear before it starts. In Simulation it is the pause the sequence has there."""
-    check = next((st for st in reversed(full[:k]) if st["kind"] == "checkpoint"), None)
-    if check is None:
-        return None
-    asks = str(check.get("message") or "").split("\n\n", 1)[-1]
-    return dict(check, message="This task comes after the manual lid cover checkpoint of the sequence, and the "
-                               "sections before the checkpoint are not part of this run.\n\n" + asks)
+def _plan_error(exc) -> UserError:
+    return UserError(f"Cannot run the sequence: {exc}", "Correct the Meet or Wait-for rows it names.", code="plan")
 
 
 def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
-    """What a run does (the owner, 16 Oct: "options to play a single task arm, dual arm task and sequences in
-    both simulation and real"):
-    - a sequence: ``mode`` both (V53's RUN BOTH, its plan) or left / right (V53's RUN LEFT / RIGHT SEQUENCE:
-      that arm's steps in one runner call), every row;
-    - a single task: ``pick`` {scope: task, side, row}, that Program row alone on its arm, with the Pole and
-      Hand in force before it;
-    - a dual-arm task: ``pick`` {scope: dual, stage}, one coordinated stage of V53's plan of both arms (its
-      TOGETHER Programs, or its RUN FIRST / WAIT OTHER pair), each arm with the Pole and Hand in force
-      before its part.
+    """What a run does (the owner, 16 Oct: "options to play a single task arm, dual arm task and sequences in both
+    simulation and real"):
+    - a sequence: ``mode`` both (RUN BOTH: both arms' rows, ``flow.build``) or left / right (RUN LEFT / RIGHT: that
+      arm's rows in one runner call; its Meet and Wait-for rows passed over, the other arm not running);
+    - a single task: ``pick`` {scope: task, side, row}, that Program row alone on its arm, with the Pole and Hand in
+      force before it;
+    - a dual-arm task: ``pick`` {scope: dual, stage}, one stage of both arms' plan (their rows between two meeting
+      points, each arm with the Pole and Hand in force before its part; a Wait-for whose row came earlier is already
+      done), or one lid or seat task.
     Steps are numbered (``_row``)."""
     scope = str((pick or {}).get("scope") or "sequence")
     if scope == "task":
@@ -722,61 +324,54 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
             raise UserError(f"{side.upper()} row {row} holds Program {mine[row - 1]['id']} now, not Program {pick.get('id')}: "
                             "the steps changed since the task was chosen.", "Choose the task again.", code="pick")
         picked = {side: _staged(mine, row) + [mine[row - 1]]}
-        plan = [{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}]
-        try:                                                 # where the row is in V53's plan of both arms
-            full = build_full(steps["left"], steps["right"]) if steps["left"] and steps["right"] else []
-        except ValueError:
-            full = []
-        k = next((i for i, st in enumerate(full) for s, part in _items(st) if s == side and any(x.get("_row") == row for x in part)), None)
-        check = _lid_check_before(full, k) if k is not None else None
-        if check:
-            plan = [check] + plan
-        plan = settle_moves(plan)
+        plan = settle_moves([{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}])
         return dict(mode=side, pick=dict(scope="task", side=side, row=row), first_row={side: row}, steps=picked, plan=plan,
-                    counts=counts(plan))
+                    counts=flow.counts(plan), said=[])
     if scope == "dual":
         if not steps["left"] or not steps["right"]:
             raise UserError("Build or load BOTH LEFT and RIGHT sequences first.")
         try:
-            full = build_full(steps["left"], steps["right"])
+            full = flow.build(steps["left"], steps["right"])
             k = int(pick.get("stage"))
-        except ValueError as exc:
-            raise UserError(f"Cannot start dual sequence: {exc}", code="plan") from None
-        except TypeError:
+        except flow.PlanError as exc:
+            raise _plan_error(exc) from None
+        except (TypeError, ValueError):
             raise UserError("Choose the dual-arm task: a stage of the plan.") from None
-        if not 0 <= k < len(full) or full[k]["kind"] not in ("parallel", "serial", "mechanism"):
-            raise UserError("That stage is not a dual-arm task.", "Choose a TOGETHER or RUN FIRST / WAIT OTHER stage, or a lid or seat task.")
+        if not 0 <= k < len(full) or full[k]["kind"] not in ("parallel", "mechanism"):
+            raise UserError("That stage is not a dual-arm task.", "Choose a part with both arms' Programs, or a lid or seat task.")
         st = full[k]
         if st["kind"] == "mechanism":                       # one lid or seat task on its own: both arms, its own plan
             if pick.get("task") and pick.get("task") != st["task"]:
                 raise UserError(f"Stage {k + 1} is {st['title']} now: the steps changed since it was chosen.", "Choose it again.",
                                 code="pick")
             return dict(mode="both", pick=dict(scope="dual", stage=k, label=st["program_id"]), first_row=dict(st["rows"]),
-                        steps={"left": [], "right": []}, plan=[st], counts=counts([st]))
-        parts = {x["side"]: x["steps"] for x in (st["first"], st["second"])} if st["kind"] == "serial" \
-            else {side: st[side]["steps"] for side in ARMS if st.get(side)}
+                        steps={"left": [], "right": []}, plan=[st], counts=flow.counts([st]), said=[])
+        parts = {side: st[side]["steps"] for side in ARMS if st.get(side)}
         if set(parts) != set(ARMS) or not all(any(x["type"] == "program" for x in parts[side]) for side in ARMS):
-            raise UserError("That stage is not a dual-arm task: it has no Program on both arms.", "Choose a stage with both arms' Programs.")
+            raise UserError("That stage is not a dual-arm task: it has no Program on both arms.", "Choose a part with both arms' Programs.")
         want = pick.get("ids")                              # the page's word: the Programs it showed for the stage
         have = {side: [str(x["id"]) for x in parts[side] if x["type"] == "program"] for side in ARMS}
         if isinstance(want, dict) and any([str(i) for i in (want.get(side) or [])] != have[side] for side in ARMS):
             raise UserError(f"Stage {k + 1} holds LEFT Program {', '.join(have['left'])} and RIGHT Program {', '.join(have['right'])} now: "
                             "the steps changed since the dual-arm task was chosen.", "Choose the dual-arm task again.", code="pick")
         picked = {side: _with_stage(steps[side], parts[side]) for side in ARMS}
-        try:
-            plan = build_plan(picked["left"], picked["right"])
-        except ValueError as exc:
-            raise UserError(f"Cannot start the dual-arm task: {exc}", code="plan") from None
-        check = _lid_check_before(full, k)
-        if check:
-            plan = [check] + plan
-        plan = settle_moves(plan)
+        stage = {"kind": "parallel", "program_id": st["program_id"],
+                 **{side: {"side": side, "steps": [dict(x) for x in picked[side]]} for side in ARMS}}
+        for side in ARMS:                                   # the rows of this part are run; a Wait-for's earlier row is done
+            for x in stage[side]["steps"]:
+                if x["type"] == "wait_for" and not (x.get("_target") or {}).get("done"):
+                    rows = {y.get("_row") for y in picked[flow.OTHER[side]]}
+                    if (x.get("_target") or {}).get("row") not in rows:
+                        x["_target"] = dict(x.get("_target") or {}, done=True)
+            stage[f"{side}_program_ids"] = [int(x["id"]) for x in picked[side] if x["type"] == "program"]
+        plan = settle_moves([stage])
         first = {side: min(x.get("_row") or 1 for x in parts[side]) for side in ARMS}
         return dict(mode="both", pick=dict(scope="dual", stage=k, label=st.get("program_id") or st.get("title")), first_row=first,
-                    steps=picked, plan=plan, counts=counts(plan))
+                    steps=picked, plan=plan, counts=flow.counts(plan), said=[])
     if mode not in ("both", *ARMS):
         raise UserError("Run both arms, or the left or the right arm.")
     picked = {side: list(steps[side]) for side in ARMS if mode in ("both", side)}
+    said = []
     if mode != "both" and any(st["type"] == "mechanism" for st in picked[mode]):
         raise UserError(f"The {mode.upper()} sequence has a lid or seat task, which uses both arms.",
                         "Run both arms (RUN BOTH), or remove the task from the list.", code="plan")
@@ -784,16 +379,19 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
         if not picked["left"] or not picked["right"]:
             raise UserError("Build or load BOTH LEFT and RIGHT sequences first.")
         try:
-            plan = build_full(picked["left"], picked["right"])
-        except ValueError as exc:
-            raise UserError(f"Cannot start dual sequence: {exc}", code="plan") from None
+            plan = flow.build(picked["left"], picked["right"])
+        except flow.PlanError as exc:
+            raise _plan_error(exc) from None
     else:
         if not picked[mode]:
             raise UserError(f"{mode.upper()} sequence is empty.")
-        plan = [{"kind": "single", "program_id": None, mode: {"side": mode, "steps": picked[mode]}}]
+        mine, said = flow.single(mode, picked[mode])
+        if not mine:
+            raise UserError(f"The {mode.upper()} sequence has only Meet and Wait-for rows: nothing to run on its own.")
+        plan = [{"kind": "single", "program_id": None, mode: {"side": mode, "steps": mine}}]
     plan = settle_moves(plan)
     return dict(mode=mode, pick=dict(scope="sequence"), first_row={side: 1 for side in picked}, steps=picked, plan=plan,
-                counts=counts(plan))
+                counts=flow.counts(plan), said=said)
 
 
 def digest(obj) -> str:
@@ -987,7 +585,7 @@ def identity_of(run: dict, programs: dict, points: dict, overall: int) -> dict:
                 plan=plan_shape(run["plan"]), used=used, overall=int(overall))
 
 
-# ── Simulation Mode: each arm's actions on one clock, through V53's plan
+# ── Simulation Mode: each arm's actions on one clock, through the plan
 
 CYCLE_S = 0.005
 SAMPLE_S = 0.02                  # the collision check's clock: every 4th 5 ms line
@@ -1012,11 +610,23 @@ def _move_s(q0, q1, pct: float, rating) -> float:
     return max(1.0, float(np.max(d / (frac * np.asarray(rating, dtype=float))))) + 0.5
 
 
-class _ArmSim:
-    """One arm through its steps: what each step does and when (its actions), from a start state."""
+def _at(r, lam) -> float:
+    """A step's time from its range ``r`` (least, as a rule, most): as a rule (``lam`` None), or ``lam`` of the way from
+    its least (0) to its most (1)."""
+    return float(r[1]) if lam is None else float(r[0]) + float(lam) * (float(r[2]) - float(r[0]))
 
-    def __init__(self, side, start, rating, overall, programs, points, md_of, findings, named=None):
-        self.side, self.rating, self.overall = side, rating, overall
+
+def _plus(*rs):
+    return tuple(sum(float(r[i]) for r in rs) for i in range(3))
+
+
+class _ArmSim:
+    """One arm through its steps: what each step does and when (its actions), from a start state, each step with its
+    range of times on the robot (ROBOT_TIMES); ``lam`` None times the run as a rule, 0 to 1 at that point of every
+    step's range (0: as fast as the robot runs it, 1: as slow)."""
+
+    def __init__(self, side, start, rating, overall, programs, points, md_of, findings, named=None, lam=None):
+        self.side, self.rating, self.overall, self.lam = side, rating, overall, lam
         self.pole, self.hand, self.q = float(start["pole_mm"]), [int(c) for c in start["hand"]], [float(v) for v in start["q_deg"]]
         self.programs, self.points, self.md_of, self.findings = programs, points, md_of, findings
         self.named = named or {}                     # the arm's files by name (files_by_name)
@@ -1035,56 +645,81 @@ class _ArmSim:
 
     def _unknown(self, step, why):
         """After a step the simulation cannot draw, where the arm is is not known: it is shown where it
-        was, and the collision check leaves it out until a drawn Program puts it on a known line again."""
+        was, and the collision check leaves it out until a drawn Program puts it on a known line again, or a
+        Global Point it knows on a known point."""
         self._say("warn", step, f"{self.side.upper()} row {step.get('_row')}: {why}. From here the arm's pose is not known: "
-                  "it is shown where it was, and the collision check leaves this arm out until a drawn Program.")
+                  "it is shown where it was, and the collision check leaves this arm out until a drawn Program or a Global Point "
+                  "it knows.")
         self.known = False
 
-    def run(self, steps, t, stage) -> float:
+    def hold(self, stage, step, t0, t1, text, **more) -> dict:
+        """The arm still where it is from ``t0`` to ``t1`` (a Meet, a Wait-for): an action, even of no time, so that every
+        timing of the run has the same actions in the same order."""
+        a = self._act(stage, step, "wait", t0, max(0.0, t1 - t0), text, gate=True, times=(0.0, 0.0, 0.0), **more)
+        a.update(pole1=self.pole, hand1=list(self.hand), q1=list(self.q))
+        return a
+
+    def run(self, steps, t, stage, done=None) -> float:
+        """The steps one after the other from ``t``: their actions; ``done(step, t1)`` as each ends. The end's time."""
         from . import staging
 
-        S = self.side.upper()
+        S, T, lam = self.side.upper(), ROBOT_TIMES, self.lam
         for step in steps:
             kind = step["type"]
             if kind == "pole":
                 mm = float(step["mm"])
-                dur = staging.pole_travel_s(self.pole, mm)
-                a = self._act(stage, step, "pole", t, dur, f"Pole {mm:g} mm")
+                law = staging.pole_travel_s(self.pole, mm)
+                r = tuple(law + x for x in T["pole_extra_s"])
+                a = self._act(stage, step, "pole", t, _at(r, lam), f"Pole {mm:g} mm", times=r)
                 self.pole = mm
                 self.set_pole = True
             elif kind == "hand":
                 vals = [int(v) for v in step["values"]]
-                dur = staging.hand_move_s(self.hand, vals)
-                a = self._act(stage, step, "hand", t, dur, "Hand " + ",".join(str(v) for v in vals))
+                k = T["hand_s_per_1000"] * max(abs(int(a_) - int(b_)) for a_, b_ in zip(self.hand, vals)) / 1000.0
+                r = (T["hand_s"][0], T["hand_s"][1] + k, T["hand_s"][2] + k)
+                a = self._act(stage, step, "hand", t, _at(r, lam), "Hand " + ",".join(str(v) for v in vals), times=r)
                 self.hand = vals
                 self.set_hand = True
             elif kind == "wait":
-                dur = float(step["seconds"])
-                a = self._act(stage, step, "wait", t, dur, _step_words(step))
+                r = tuple(float(step["seconds"]) + x for x in T["wait_extra_s"])
+                a = self._act(stage, step, "wait", t, _at(r, lam), _step_words(step), times=r)
             elif kind == "global":
                 pts = (self.points or {}).get("points") or {}
-                name, pct = step["name"], float(step["speed"]) * self.overall / 100.0
+                name, pct, hold = step["name"], float(step["speed"]) * self.overall / 100.0, float(step["wait_s"])
                 if name in pts:
+                    import numpy as np
+
                     q1 = [float(v) for v in pts[name]]
-                    mv = _move_s(self.q, q1, pct, self.rating)
-                    dur = mv + float(step["wait_s"])
-                    a = self._act(stage, step, "global", t, dur, f"{step['move'].upper()} {name} ({step['speed']} %)", move_s=round(mv, 4),
-                                  drawn=True)
+                    if float(np.max(np.abs(np.asarray(q1) - np.asarray(self.q)))) < 0.2:
+                        r = T["global_there_s"]                   # already there: the controller answers at once
+                    else:
+                        mv = _move_s(self.q, q1, pct, self.rating)
+                        r = tuple(mv * f for f in T["global_factor"])
+                        if not self.known:                         # from a pose not known: from no move to the move from
+                            r = (T["global_there_s"][0], r[1], r[2])   # where the arm was last known
+                    mv = _at(r, lam)
+                    a = self._act(stage, step, "global", t, mv + hold, f"{step['move'].upper()} {name} ({step['speed']} %)",
+                                  move_s=round(mv, 4), drawn=True, times=_plus(r, (hold, hold, hold)), move_times=r)
                     if step["move"] == "movel":
                         self._say("note", step, f"{S} row {step.get('_row')}: MoveL to {name} is drawn as a joint move "
                                   "(the controller moves the tool in a straight line).")
                     self.q = q1
+                    self.known = True                        # at the point: known again (its move to it is not)
                 else:
-                    dur = float(step["wait_s"])
-                    a = self._act(stage, step, "global", t, dur, f"{step['move'].upper()} {name}: not drawn", drawn=False)
+                    r = (0.05 + hold, 1.5 + hold, 10.0 + hold)
+                    a = self._act(stage, step, "global", t, _at(r, lam), f"{step['move'].upper()} {name}: not drawn", drawn=False,
+                                  times=r, move_times=(0.05, 1.5, 10.0))
                     self._unknown(step, f"global point {name} is not drawn: "
                                   + ("the controller's global points were not read (connect the arm)" if not self.points
                                      else "the controller has no point of that name"))
             else:
                 a = self._program(step, t, stage)
-                dur = a["t1"] - a["t0"]
             a.update(pole1=self.pole, hand1=list(self.hand), q1=list(self.q))
-            t += dur
+            if self.lam is None:                     # as a rule: the step keeps its range (Real Machine Mode times it)
+                step["_t"] = {k: a.get(k) for k in ("kind", "times", "move_times", "play_s", "transit", "lines", "drawn")}
+            t = a["t1"]
+            if done is not None:
+                done(step, t)
         return t
 
     def _found(self, pid: int, step: dict, info: dict) -> dict | None:
@@ -1126,10 +761,24 @@ class _ArmSim:
                         differs=True)
         return dict(cands[0], how="not compared with the controller's program (connect the arm to compare)", differs=None)
 
+    def _transit(self, q_first, transit_pct: float):
+        """The controller's own move to a Program's first point: (least, as a rule, most) and the joint gap, or no
+        move when the arm is within TRANSIT_MIN_DEG of it."""
+        import numpy as np
+
+        d = np.abs(np.asarray(q_first, dtype=float) - np.asarray(self.q, dtype=float))
+        gap = float(np.max(d))
+        if gap < TRANSIT_MIN_DEG:
+            return (0.0, 0.0, 0.0), gap
+        rating = np.asarray(self.rating, dtype=float)
+        fast = float(np.max(d / (max(1.0, float(transit_pct)) / 100.0 * rating))) + 0.5
+        slow = float(np.max(d / (max(1.0, float(transit_pct)) / 100.0 * max(1.0, float(self.overall)) / 100.0 * rating))) + 0.5
+        return (fast, 0.5 * (fast + slow), max(fast, slow)), gap
+
     def _program(self, step, t, stage) -> dict:
         from . import staging
 
-        S, pid = self.side.upper(), int(step["id"])
+        S, pid, lam, T = self.side.upper(), int(step["id"]), self.lam, ROBOT_TIMES
         info = self.programs.get(pid) or {}
         label = f"Program {pid}" + (f" // {info.get('name') or step.get('name')}" if (info.get("name") or step.get("name")) else "")
         found = None
@@ -1147,6 +796,8 @@ class _ArmSim:
             if said:                                 # a stop: Real Machine Mode does not run it (the owner, 21 Oct)
                 self._say("stop", step, said)
         md = self.md_of(info.get("file")) if info.get("file") and not info.get("gone") else None
+        lead = lambda n: tuple(0.05 + n * x for x in T["load_s_per_line"])                      # noqa: E731
+        tail = tuple(max(0.0, x - 0.05) for x in T["program_extra_s"])
         if md is None:
             named = step.get("name") or info.get("name")
             nowhere = f"; no file of its name{f' ({named})' if named else ''} in the project or the Trajectory Viewer's library"
@@ -1155,16 +806,35 @@ class _ArmSim:
                    else "Lite has not sent this program" + nowhere if not info
                    else "its file is no longer in the project")
             lines = int(info.get("lines") or 0)
-            dur = max(lines - 1, 0) * CYCLE_S
-            a = self._act(stage, step, "program", t, dur, label + ": not drawn", program=pid, drawn=False, why=why, phase=None)
-            self._unknown(step, f"program {pid} is not drawn ({why}" + (f"; {dur:.1f} s allowed for it)" if dur else ")"))
+            r = _plus(lead(lines), tuple((max(lines, 1) - 1) * CYCLE_S * x for x in T["play"]), tail) if lines else (0.0, 0.0, 0.0)
+            a = self._act(stage, step, "program", t, _at(r, lam), label + ": not drawn", program=pid, drawn=False, why=why, phase=None,
+                          times=r, lines=lines or None, play_s=round((max(lines, 1) - 1) * CYCLE_S, 4) if lines else None)
+            self._unknown(step, f"program {pid} is not drawn ({why}" + (f"; {_at(r, None):.1f} s allowed for it)" if lines else ")"))
             return a
+        n = int(md.shape[0])
         q_first = (md[0] / 1000.0).tolist()
-        transit = _move_s(self.q, q_first, float(step["transit_speed"]), self.rating)
-        traj = (md.shape[0] - 1) * CYCLE_S
-        a = self._act(stage, step, "program", t, transit + traj, label, program=pid, drawn=True, file=info["file"],
-                      file_name=info.get("file_name"), lines=int(md.shape[0]), traj_t0=round(t + transit, 4), phase=info.get("phase"),
-                      placement=info.get("placement"), by_name=bool(found))
+        transit, gap = self._transit(q_first, float(step["transit_speed"]))
+        play = tuple((n - 1) * CYCLE_S * x for x in T["play"])
+        r_lead = lead(n)
+        if transit[2] > 0 and not self.known:      # from a pose not known (a step not drawn): as a rule none, as a sequence
+            transit = (0.0, 0.0, transit[2])         # is made (the lab's delays held Program 82's first point, 21 Oct), up to
+            if self.lam is None:                     # the move from where the arm was last known
+                self._say("note", step, f"{S} row {step.get('_row')}, program {pid}: where the arm is before it is not known (a "
+                          "step before it is not drawn), so the controller's move to the program's first point is not known either: "
+                          f"none as a rule, up to {transit[2]:.1f} s (from where the arm was last known, {gap:.0f} deg away).")
+        elif transit[2] > 0 and self.lam is None:
+            self._say("note", step, f"{S} row {step.get('_row')}, program {pid}: the controller first moves the arm {gap:.0f} deg to "
+                      f"the program's first point, at its Start % ({step['transit_speed']} %): that move takes "
+                      f"{transit[0]:.1f}-{transit[2]:.1f} s on the robot, which widens this arm's timing from here.")
+        move_t0 = t + _at(r_lead, lam)
+        traj_t0 = move_t0 + _at(transit, lam)
+        play_s = _at(play, lam)
+        t1 = traj_t0 + play_s + _at(tail, lam)
+        a = self._act(stage, step, "program", t, t1 - t, label, program=pid, drawn=True, file=info["file"],
+                      file_name=info.get("file_name"), lines=n, move_t0=round(move_t0, 4), traj_t0=round(traj_t0, 4),
+                      line_s=round(play_s / max(1, n - 1), 7), play_s=round((n - 1) * CYCLE_S, 4), transit=[round(x, 3) for x in transit],
+                      gap_deg=round(gap, 2), phase=info.get("phase"), placement=info.get("placement"), by_name=bool(found),
+                      times=_plus(r_lead, transit, play, tail))
         self.q = (md[-1] / 1000.0).tolist()
         self.known = True                            # on the program's own lines: known again (its move to them is not)
         return a
@@ -1326,35 +996,99 @@ def _start_state(app, side: str, home: dict) -> tuple[dict, str]:
     return dict(pole_mm=float(pole0), hand=[int(c) for c in hand0], q_deg=q_home), "standing"
 
 
+def _segments(steps: list) -> list[tuple[str, object]]:
+    """An arm's part of a stage as its runner calls run it: the stretches of rows between its Wait-for rows
+    (("steps", [...])), and each Wait-for (("wait", the row))."""
+    out, cur = [], []
+    for x in steps:
+        if x["type"] == "wait_for":
+            if cur:
+                out.append(("steps", cur))
+                cur = []
+            out.append(("wait", x))
+        else:
+            cur.append(x)
+    if cur:
+        out.append(("steps", cur))
+    return out
+
+
+def _row_words(steps: list, row) -> str:
+    st = next((x for x in steps if x.get("_row") == row and not x.get("settle")), None)
+    return f"row {row}" + (f" ({_step_words(st)})" if st else "")
+
+
+def _sim_part(st: dict, sims: dict, T: float, stage: int, words) -> dict:
+    """A stage's parts on one clock from ``T``: each arm through its rows in its runner calls (each starting in
+    ROBOT_TIMES call_start_s); at a Wait-for the arm holds until the other arm has finished the row it names (``words``
+    says that row). Each arm's end time."""
+    parts = {s: st[s]["steps"] for s in ARMS if st.get(s)}
+    segs = {s: _segments(parts[s]) for s in parts}
+    pos = {s: 0 for s in parts}
+    clock = {s: T + _at(ROBOT_TIMES["call_start_s"], sims[s].lam) for s in parts}
+    done: dict = {s: {} for s in parts}                 # each arm's rows finished in this stage: row -> when
+
+    def mark(s):
+        return lambda step, t1: done[s].__setitem__(step.get("_row"), t1)
+
+    while any(pos[s] < len(segs[s]) for s in parts):
+        moved = False
+        for s in parts:
+            while pos[s] < len(segs[s]):
+                what, x = segs[s][pos[s]]
+                if what == "wait":
+                    tg = x.get("_target") or {}
+                    other = tg.get("side")
+                    if tg.get("done") or other not in parts:
+                        release = clock[s]                      # its row was finished before this stage
+                    elif tg.get("row") in done[other]:
+                        release = max(clock[s], done[other][tg["row"]])
+                    else:
+                        break                                   # the other arm has not finished that row yet
+                    sims[s].hold(stage, x, clock[s], release, f"Wait for {str(other or '').upper()} {words(other, tg.get('row'))}",
+                                 waits_for=dict(side=other, row=tg.get("row")))
+                    done[s][x.get("_row")] = release
+                    clock[s] = release + _at(ROBOT_TIMES["call_start_s"], sims[s].lam)   # the next runner call
+                else:
+                    clock[s] = sims[s].run(x, clock[s], stage, done=mark(s))
+                pos[s] += 1
+                moved = True
+        if not moved:                                   # flow.build walked this already: never here
+            raise UserError("The simulation found the arms waiting for each other for ever.", code="plan")
+    return clock
+
+
 def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], float]:
-    """V53's plan on one clock: a TOGETHER (parallel) stage starts both arms' parts at once and ends
-    when both have; a serial stage runs the waiting arm when the first has finished; a checkpoint is a
-    moment (in Real the robots stop there for the operator); a single arm's run is one part; a lid or seat
-    task (Lite's) takes both arms, after both have finished what came before it."""
+    """The plan on one clock: a stage between two meeting points starts both arms' parts at once (each through its
+    own rows, holding at its Wait-for rows) and ends when both have, the first one holding at its Meet (an action, so
+    every timing has the same actions); a single arm's run is one part; a lid or seat task takes both arms after both
+    have finished what came before it."""
     T, out = 0.0, []
-    for i, st in enumerate(run["plan"]):
+    every = {s: [x for st in run["plan"] for side, part in _items(st) if side == s for x in part] + list((run.get("steps") or {}).get(s) or [])
+             for s in ARMS}
+    words = lambda side, row: _row_words(every.get(side) or [], row)                  # noqa: E731
+    plan = run["plan"]
+    for i, st in enumerate(plan):
         kind = st["kind"]
-        row = dict(index=i, kind=kind, label=str(st.get("program_id") or ("FINAL AUX STEPS" if kind == "tail" else "")), t0=round(T, 4))
-        if kind == "checkpoint":
-            row.update(t1=round(T, 4), title=st["title"], message=st["message"])
-        elif kind == "mechanism":                   # after the Programs' end (settle_moves), its own moves
+        row = dict(index=i, kind=kind, label=str(st.get("program_id") or ""), t0=round(T, 4))
+        if kind == "mechanism":                     # after the Programs' end (settle_moves), its own moves
             T = _sim_mechanism(st, sims, T + float(st.get("settle_s") or 0), i, overall)
             row.update(t1=round(T, 4), title=st["title"], task=st["task"])
-        elif kind == "serial":
-            first, second = st["first"], st["second"]
-            mid = sims[first["side"]].run(first["steps"], T, i)
-            T = sims[second["side"]].run(second["steps"], mid, i)
-            row.update(t1=round(T, 4), first=first["side"], second=second["side"], handoff_t=round(mid, 4))
         else:
-            ends = [sims[s].run(st[s]["steps"], T, i) for s in ARMS if st.get(s)]
-            T = max(ends or [T])
+            ends = _sim_part(st, sims, T, i, words) if any(st.get(s) for s in ARMS) else {}
+            T = max(ends.values() or [T])
+            if kind == "parallel" and i + 1 < len(plan):          # the one that ended first holds for the other at the Meet
+                nxt = plan[i + 1]
+                for s, e in ends.items():
+                    meet = (st.get("meet_rows") or {}).get(s)
+                    sims[s].hold(i, {"_row": meet}, e, T, f"Meet the {flow.OTHER[s].upper()} arm" if nxt["kind"] == "parallel"
+                                 else f"Wait for the {flow.OTHER[s].upper()} arm before {nxt.get('title') or 'the task'}")
             row.update(t1=round(T, 4))
             if kind == "single":
                 row["label"] = f"{[s for s in ARMS if st.get(s)][0].upper()} SEQUENCE"
         for s in ARMS:
-            item = st.get(s) if kind != "serial" else (st["first"] if st["first"]["side"] == s else st["second"])
-            if item:
-                row[f"{s}_programs"] = [int(x["id"]) for x in item["steps"] if x["type"] == "program"]
+            if st.get(s):
+                row[f"{s}_programs"] = [int(x["id"]) for x in st[s]["steps"] if x["type"] == "program"]
         out.append(row)
     return out, T
 
@@ -1391,7 +1125,7 @@ def sample(acts: list[dict], times, start: dict, md_of, with_known: bool = False
 def _known_after(a: dict) -> bool:
     if a.get("drawn") is False:
         return False
-    if a["kind"] in ("program", "stream"):
+    if a["kind"] in ("program", "stream", "global"):     # on its own lines, or at its point
         return True
     return bool(a.get("known", True))
 
@@ -1420,10 +1154,11 @@ def _inside(a: dict, t: float, md_of):
         md = md_of(a["file"])
         if md is None:
             raise MissingFile(a)
-        if t < a["traj_t0"]:
-            g = (t - a["t0"]) / max(1e-9, a["traj_t0"] - a["t0"])
+        if t < a["traj_t0"]:                     # still where it was while the controller reads the file, then its move
+            m0 = a.get("move_t0", a["t0"])      # to the first point (a simulation made before 22 Oct: from the start)
+            g = (t - m0) / max(1e-9, a["traj_t0"] - m0)
             return p0, h0, q0 + float(_ease(g)) * (md[0] / 1000.0 - q0)
-        i = int(round((t - a["traj_t0"]) / CYCLE_S))
+        i = int(round((t - a["traj_t0"]) / float(a.get("line_s") or CYCLE_S)))
         return p0, h0, md[max(0, min(md.shape[0] - 1, i))] / 1000.0
     return p0, h0, q0
 
@@ -1553,11 +1288,133 @@ def _phase_at(changes, t: float) -> str:
     return ph
 
 
+DRIFT_SAMPLE_S = 0.04          # the arms checked against each other at every timing: every 8th 5 ms line
+DRIFT_STEP_S = 0.5             # timings at most this far apart, from one end of the two arms' ranges to the other,
+DRIFT_MAX_TIMINGS = 21         # but no more of them than this (each is the whole run checked again): a coarser check is said
+
+
+def _band(acts: dict, stage: int) -> float:
+    """How far apart the two arms' timings can drift in a stage: each arm's steps' ranges added up, both arms."""
+    return sum(float((a.get("times") or (0, 0, 0))[2]) - float((a.get("times") or (0, 0, 0))[0])
+               for s in ARMS for a in acts.get(s) or [] if a["stage"] == stage)
+
+
+def _drift(run, make_sims, overall, acts_nominal, base, job) -> dict:
+    """The two arms against each other at every timing their ranges allow (the owner, 22 Oct): the run scheduled again
+    with one arm at a point of its range and the other at the opposite point (from the left as fast as it runs and the
+    right as slow, to the reverse), each stage's both-arm parts sampled every DRIFT_SAMPLE_S, and every moment checked
+    for CLEARANCE_MM between the arms (collision_check.clearance_states). Each pair of rows that comes closer: the
+    least gap, the links, when, and how far one arm was ahead of the other then."""
+    import numpy as np
+
+    from . import collision_check, workers
+
+    both = [i for i, st in enumerate(run["plan"]) if st["kind"] == "parallel" and st.get("left") and st.get("right")]
+    if not both:
+        return dict(timings=0, band_s=0.0, events=[], findings=[])
+    t_start = time.monotonic()
+    bands = {i: _band(acts_nominal, i) for i in both}
+    widest = max(bands, key=bands.get)
+    band = bands[widest]
+    n = 1 if band < 0.05 else int(min(DRIFT_MAX_TIMINGS, max(3, np.ceil(band / DRIFT_STEP_S) + 1)))
+    lams = [None] + ([] if n == 1 else [float(u) for u in np.linspace(0.0, 1.0, n)])
+    step_s = band / (n - 1) if n > 1 else 0.0
+    cases, scenarios = [], []
+    for lam in lams:
+        sims = make_sims({"left": lam, "right": None if lam is None else 1.0 - lam})
+        stages, total = schedule(run, sims, overall)
+        acts = {s: sims[s].acts for s in ARMS}
+        spans = [(r["t0"], r["t1"]) for r in stages if r["index"] in both]
+        times = np.concatenate([np.arange(t0, t1, DRIFT_SAMPLE_S) for t0, t1 in spans] or [np.zeros(0)])
+        arms = {}
+        for s in ARMS:
+            pole, hand, q, known = sample(acts[s], times.tolist(), run["start"][s], run["md_of"], with_known=True)
+            arms[s] = dict(pole=pole.astype(np.float32), hand=hand.astype(np.float32), q=q.astype(np.float32), known=known)
+        cases.append(dict(lam=lam, acts=acts, stages=stages))
+        scenarios.append(dict(times=times.tolist(), arms=arms))
+    job.progress(f"Checking the two arms {CLEARANCE_MM:g} mm apart at {len(lams)} timings: "
+                 f"{sum(len(x['times']) for x in scenarios):,} moments", 3, 4)
+    fut = workers.pool().submit(collision_check.clearance_states, scenarios, base, CLEARANCE_MM)
+    while not fut.done():
+        job.sleep(0.2)
+    found = fut.result()
+    job.check()
+
+    def ahead(case, t):
+        """How far ahead of its time as a rule each arm is at ``t`` in this timing (by its action then)."""
+        out = {}
+        for s in ARMS:
+            i = next((k for k, a in enumerate(case["acts"][s]) if a["t0"] <= t < a["t1"]), None)
+            if i is None or i >= len(acts_nominal[s]):
+                out[s] = 0.0
+                continue
+            a, b = case["acts"][s][i], acts_nominal[s][i]
+            f = (t - a["t0"]) / max(1e-9, a["t1"] - a["t0"])
+            out[s] = (b["t0"] + f * (b["t1"] - b["t0"])) - t       # positive: where the arm as a rule is later
+        return out
+
+    pairs: dict = {}
+    for case, res in zip(cases, found):
+        for e in res["events"]:
+            t = e["first_t"] + 0.5 * (e["last_t"] - e["first_t"])
+            at = {s: _where(case["acts"][s], t) for s in ARMS}
+            key = tuple((at[s] or {}).get("row") for s in ARMS)
+            lead = ahead(case, t)
+            rel = lead["right"] - lead["left"]                    # positive: the right arm ahead of the left
+            ev = dict(e, at=[at[s] for s in ARMS if at[s]], lam=case["lam"], right_ahead_s=round(rel, 2), t=round(t, 2))
+            prev = pairs.get(key)
+            if prev is None or e["min_mm"] < prev["min_mm"]:              # the closest kept, every timing counted once
+                pairs[key] = dict(ev, lams=(prev or {}).get("lams", set()), ahead=(prev or {}).get("ahead", []),
+                                  rule_mm=(prev or {}).get("rule_mm"))
+            pairs[key]["lams"].add(case["lam"])
+            pairs[key]["ahead"].append(rel)
+            if case["lam"] is None:                                       # as timed as a rule: its own least gap
+                had = pairs[key]["rule_mm"]
+                pairs[key]["rule_mm"] = e["exact_mm"] if had is None else min(had, e["exact_mm"])
+    events, findings = sorted(pairs.values(), key=lambda e: e["min_mm"]), []
+    gap = lambda mm: f"{mm:.0f} mm apart" if mm > 0 else "touching"           # noqa: E731
+    for e in events:
+        rows = " and ".join(f"{w['side'].upper()} row {w['row']} ({w['text']}"
+                            + (f", line {w['line']:,}" if w.get("line") else "") + ")" for w in e["at"])
+        span, lams_hit = sorted(e.pop("ahead")), e.pop("lams")
+        e["timings"], e["as_rule"] = len(lams_hit), None in lams_hit
+        lead = (f"when the RIGHT arm runs {e['right_ahead_s']:.1f} s ahead of the LEFT" if e["right_ahead_s"] > 0.05 else
+                f"when the LEFT arm runs {-e['right_ahead_s']:.1f} s ahead of the RIGHT" if e["right_ahead_s"] < -0.05 else
+                "with the arms on time")
+        counted = f"in {e['timings']} of the {len(lams)} timings checked, from {min(span):+.1f} to {max(span):+.1f} s"
+        if e["timings"] == len(lams):                     # whatever their timing: the rows themselves put them there
+            text = (f"{gap(e['exact_mm'])} ({', '.join(e['links']) or 'their links'}) at every timing checked: those rows put the arms "
+                    "that close whatever their timing. Change those steps (the arms' poses or hands there).")
+        elif e["as_rule"]:
+            text = (f"{gap(e['rule_mm'])} as timed as a rule, {gap(e['exact_mm'])} ({', '.join(e['links']) or 'their links'}) {lead} "
+                    f"({counted}). Keep the arms apart with a Meet or a Wait-for between those rows.")
+        else:
+            text = (f"{gap(e['exact_mm'])} ({', '.join(e['links']) or 'their links'}) {lead} ({counted}). Those timings are within the "
+                    "robot's ranges: keep the arms apart with a Meet or a Wait-for between those rows.")
+        findings.append(dict(level="warn", side=None, row=None, text=(
+            f"The two arms come closer than {CLEARANCE_MM:g} mm: {rows}, about {e['t']:.0f} s in: {text}")))
+    if step_s > DRIFT_STEP_S + 1e-6:                               # said, never a silent cap: what the check can miss
+        st = run["plan"][widest]
+        findings.append(dict(level="note", side=None, row=None, text=(
+            f"{st.get('program_id') or 'A part'} has its two arms going on their own for long (no Meet in it): their timings can drift "
+            f"up to {band:.1f} s apart (each arm's steps' ranges added up), so the {n} timings checked are up to {step_s:.1f} s apart "
+            "and a closer approach between two of them can be missed. A Meet or a Wait-for in it makes the check finer.")))
+    ranges = {}
+    for lam in ((0.0, 0.0), (1.0, 1.0)):                           # each stage as fast and as slow as both arms run
+        sims = make_sims({"left": lam[0], "right": lam[1]})
+        for r in schedule(run, sims, overall)[0]:
+            ranges.setdefault(r["index"], []).append(r["t1"])
+    return dict(timings=len(lams), band_s=round(band, 2), step_s=round(step_s, 2), clearance_mm=CLEARANCE_MM, events=events, findings=findings,
+                stage_t1={str(k): [round(min(v), 2), round(max(v), 2)] for k, v in ranges.items()},
+                samples=sum(r["samples"] for r in found), seconds=round(time.monotonic() - t_start, 1))
+
+
 def simulate(app, units, mode: str, pick: dict | None):
-    """Simulation Mode: the run (``plan_for``) through V53's plan on one clock, both arms, in the
-    room and at the UGV placement its Programs were taught at; the collision check over all of it; and
-    what would not be right on the robot (``findings``). Kept as the project's last simulation, with
-    what makes it the same run (``identity_of``)."""
+    """Simulation Mode: the run (``plan_for``) through its plan on one clock, both arms, in the room and at the UGV
+    placement its Programs were taught at, each step as long as it takes on the robot as a rule; the collision check
+    over all of it; the two arms against each other at every timing their ranges allow (``_drift``); and what would not
+    be right on the robot (``findings``). Kept as the project's last simulation, with what makes it the same run
+    (``identity_of``)."""
     from . import collision_check, placement, staging, workers
     from ..motion.limits import load_limits
     from .routes_robot import _payload
@@ -1576,12 +1433,19 @@ def simulate(app, units, mode: str, pick: dict | None):
         points = {s: points_known(app, s) for s in ARMS}
         ident = identity_of(run, programs, points, overall)
         findings, md_of = [], _md_reader(units.root)
-        starts, start_how, sims = {}, {}, {}
+        starts, start_how = {}, {}
+        named = {s: files_by_name(app, units, s) for s in ARMS}
         for s in ARMS:
             starts[s], start_how[s] = _start_state(app, s, home)
-            sims[s] = _ArmSim(s, starts[s], load_limits(s).rating_deg_s, overall, programs[s], points[s], md_of, findings,
-                              files_by_name(app, units, s))
-        job.progress("Timing the stages", 1, 3)
+
+        def make_sims(lam, said=None):
+            said = findings if said is None else said
+            return {s: _ArmSim(s, starts[s], load_limits(s).rating_deg_s, overall, programs[s], points[s], md_of, said, named[s],
+                               lam=lam.get(s)) for s in ARMS}
+
+        sims = make_sims({"left": None, "right": None})
+        findings.extend(dict(level="note", side=None, row=None, text=t) for t in run.get("said") or [])
+        job.progress("Timing the stages", 1, 4)
         stages, total = schedule(run, sims, overall)
         acts = {s: sims[s].acts for s in ARMS}
         places = [a.get("placement") for s in sides for a in acts[s] if a["kind"] == "program" and a.get("drawn")]
@@ -1618,7 +1482,7 @@ def simulate(app, units, mode: str, pick: dict | None):
                                  "hands hold the lid and the seat by design, so it is left out of this collision check (ALIX's "
                                  "planner checked it with the commode's contact allowances); its camera checks are assumed "
                                  "here, and asked of the camera in Real."))
-        job.progress(f"Checking collisions: {len(times):,} moments, both arms", 2, 3)
+        job.progress(f"Checking collisions: {len(times):,} moments, both arms", 2, 4)
         phases = [_phase_at(changes, t) for t in times]
         fut = workers.pool().submit(collision_check.check_states, times, arms, base, scene, units.fixture, phases, cub)
         while not fut.done():                         # STOP is heard while it checks
@@ -1627,6 +1491,11 @@ def simulate(app, units, mode: str, pick: dict | None):
         job.check()
         for e in check["events"]:                         # where in the sequence: each arm's row and line then
             e["at"] = [_where(acts[s], e["first_t"]) for s in (ARMS if "both" in e["sides"] else e["sides"]) if s in acts]
+        drift = _drift(dict(run, start=starts, md_of=md_of), lambda lam: make_sims(lam, []), overall, acts, base, job) \
+            if run["mode"] == "both" else dict(timings=0, band_s=0.0, events=[], findings=[])
+        findings.extend(drift.pop("findings"))
+        for row in stages:                                # each stage's end as fast and as slow as both arms run it
+            row["t1_range"] = drift.get("stage_t1", {}).get(str(row["index"]))
         for s in acts:                                    # the files as the project holds them: the record plays elsewhere too
             for a in acts[s]:
                 if a.get("file") and not str(a["file"]).startswith("mechanism:"):
@@ -1634,7 +1503,7 @@ def simulate(app, units, mode: str, pick: dict | None):
         out = dict(made=time.strftime("%Y-%m-%d %H:%M:%S"), hash=digest(ident), identity=ident, completed=False,
                    mode=run["mode"], pick=run["pick"], overall=overall, counts=run["counts"], stages=stages,
                    total_s=round(total, 3), acts=acts, start=starts, start_from=start_how,
-                   findings=findings, collisions=check, scene=scene, phases=changes,
+                   findings=findings, collisions=check, drift=drift, scene=scene, phases=changes,
                    programs={s: {str(k): {kk: v.get(kk) for kk in ("name", "sent", "file_name", "region", "gone", "lines", "seconds")}
                                  for k, v in programs[s].items()} for s in ARMS},
                    points={s: (points[s] or {}).get("read") for s in ARMS})
@@ -1644,6 +1513,8 @@ def simulate(app, units, mode: str, pick: dict | None):
         _atomic_write(_sim_file(units), json.dumps(out))
         job.log(f"Simulated: {len(stages)} stage(s), {total:.1f} s; " + ("no collision" if check["ok"] else
                 f"{len(check['events']) + check['more']} collision event(s), the first at {check['first']['first_t']:.2f} s")
+                + (f"; the two arms checked {CLEARANCE_MM:g} mm apart at {drift['timings']} timing(s): "
+                   + (f"{len(drift['events'])} place(s) closer" if drift["events"] else "never closer") if drift.get("timings") else "")
                 + f"; {sum(1 for f in findings if f['level'] == 'warn')} warning(s).")
         return out
 
@@ -1656,7 +1527,7 @@ def _where(acts: list[dict], t: float) -> dict | None:
         return None
     out = dict(side=a["side"], row=a["row"], kind=a["kind"], text=a["text"], stage=a["stage"])
     if a["kind"] in ("program", "stream") and a.get("drawn") and t >= a["traj_t0"]:
-        out["line"] = 1 + int(round((t - a["traj_t0"]) / CYCLE_S))
+        out["line"] = 1 + int(round((t - a["traj_t0"]) / float(a.get("line_s") or CYCLE_S)))
     if a.get("mechanism"):
         out["mechanism"] = a["mechanism"]
     return out
@@ -1693,8 +1564,9 @@ def frames(app, units, side: str, stage: int, want_hash: str | None = None) -> d
         times = [0.0]
     elif not mine:
         raise UserError(f"The {side.upper()} arm has nothing in that stage.")
-    else:
-        t0, t1 = mine[0]["t0"], mine[-1]["t1"]
+    else:                                   # from the stage's start: its runner call starts before its first step
+        t0 = next((r["t0"] for r in sim.get("stages") or [] if r.get("index") == int(stage)), mine[0]["t0"])
+        t1 = mine[-1]["t1"]
         dt = max(FRAME_S, (t1 - t0) / MAX_FRAMES)
         times = np.arange(t0, t1, dt).tolist() + [t1]
     try:
@@ -1804,7 +1676,7 @@ def summary(units) -> dict:
     sim = load_sim(units)
     if sim:
         sim = {k: v for k, v in sim.items() if k not in ("acts", "identity", "start")} | {
-            "acts": {s: [{k: a.get(k) for k in ("row", "kind", "t0", "t1", "text", "stage", "drawn", "program", "traj_t0", "lines")}
+            "acts": {s: [{k: a.get(k) for k in ("row", "kind", "t0", "t1", "text", "stage", "drawn", "program", "traj_t0", "lines", "gate")}
                          for a in sim["acts"][s]] for s in ARMS},
             "steps": sim["identity"]["steps"], "plans_changed": plans_changed(sim)}
     return dict(load(units), sim=sim)
@@ -1874,20 +1746,130 @@ def _step_words(step: dict) -> str:
         if step.get("settle"):
             return f"Wait {float(step['seconds']):g} s for the controller's end of the Program, before the move"
         return f"Wait {float(step['seconds']):g} s"
+    if k == "meet":
+        return "Meet the other arm"
+    if k == "wait_for":
+        tg = step.get("_target") or {}
+        return f"Wait for the {str(tg.get('side') or 'other').upper()} arm's row {tg.get('row', '?')}"
+    if k == "mechanism":
+        from . import mechanism
+
+        return mechanism.TASKS.get(step.get("task"), {}).get("title", "Lid or seat task")
     return f"{step['move'].upper()} {step['name']}"
 
 
-def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body: dict):
-    """Real Machine Mode (V53's RUN BOTH / RUN LEFT / RUN RIGHT): only in Real robot mode, on linked
-    controllers; a run not completed in Simulation as it is now asks first (``unsimulated_ok``; the owner,
-    17 Oct: "a user can run on the hardware without having run in simulation first", with a confirmation
-    that says so, before the real-robot one); every Program slot and global point it
-    uses checked on its controller before anything moves; what the simulation found asked about once,
-    with the real-robot confirmation. Then V53's stages: a TOGETHER stage starts both arms' parts at
-    once and waits for both; a serial stage runs the first arm, asks before the waiting arm when
-    ``confirm_each`` (V53's CONFIRM BEFORE WAITING ARM), then runs it; a checkpoint waits for the
-    operator's OK; a failed part ends the run there. STOP (any) interrupts the runner as V53's STOP does
-    and latches the arms as Lite's STOP always does."""
+def _times_now(app, units, run: dict, programs: dict, points: dict, overall: int) -> None:
+    """Each step of the run's plan with its range of times on the robot (``_t``), from the arms as they stand now: the
+    simulation's own timing as a rule (_ArmSim, schedule), with no 3D and no collision check (Real Machine Mode's
+    watchdog reads them)."""
+    from ..motion.limits import load_limits
+    from .routes_robot import _payload
+
+    home = dict(_payload(app)["home"])
+    md_of = _md_reader(units.root)
+    sims = {}
+    for s in ARMS:
+        start, _ = _start_state(app, s, home)
+        sims[s] = _ArmSim(s, start, load_limits(s).rating_deg_s, overall, programs[s], points[s], md_of, [],
+                          files_by_name(app, units, s))
+    schedule(run, sims, overall)
+
+
+def _watch(job, side: str, steps: list, say_stop, warn) -> tuple:
+    """Each step of a runner call timed against its range (``_t``, the owner, 22 Oct): ``on_line`` sees the runner's
+    lines; a step outside its range is said (``warn``); a Program whose lines run past STOP_PROGRAM_OVER of their time,
+    or any other step more than STOP_STEP_MARGIN past the most it takes, is stopped at that moment (``say_stop`` with
+    why: it stops both arms); a step other than a Program that ends more than STOP_STEP_MARGIN sooner than the least it
+    takes is stopped as it ends. (A Program ending before STOP_PROGRAM_UNDER of its lines' time is the early-end check.)
+    Returns (on_line, close)."""
+    import threading
+
+    cur, lock, dead = {}, threading.Lock(), threading.Event()
+
+    def limit(st) -> float | None:
+        t = st.get("_t") or {}
+        r = t.get("move_times") if st["type"] == "global" and not st.get("settle") else t.get("times")
+        if st["type"] == "wait" and (st.get("settle") or not t):    # a split wait or a settle: its own seconds
+            sec = float(st.get("seconds") or 0)
+            r = tuple(sec + x for x in ROBOT_TIMES["wait_extra_s"])
+        if not r:
+            return None
+        if st["type"] == "program":
+            if not t.get("drawn") or not t.get("play_s"):
+                return None
+            tr = t.get("transit") or (0, 0, 0)
+            lines = int(t.get("lines") or 0)
+            lead = 0.05 + lines * ROBOT_TIMES["load_s_per_line"][2]
+            tail = ROBOT_TIMES["program_extra_s"][2]
+            return lead + float(tr[2]) + STOP_PROGRAM_OVER * float(t["play_s"]) + tail + 0.3
+        return float(r[2]) * (1.0 + STOP_STEP_MARGIN) + 0.15
+
+    def tick():
+        while not dead.wait(0.1):
+            with lock:
+                c = dict(cur)
+            if c and c.get("deadline") and time.monotonic() > c["deadline"]:
+                st = c["step"]
+                with lock:
+                    cur.clear()
+                say_stop(f"{side.upper()} row {st.get('_row')} ({_step_words(st)}) ran past "
+                         + (f"{STOP_PROGRAM_OVER:.0%} of its lines' time (a controller's realtime push left on slows its programs "
+                            "to some 113 %)" if st["type"] == "program"
+                            else f"the most it takes ({float(((st.get('_t') or {}).get('move_times') if st['type'] == 'global' else (st.get('_t') or {}).get('times') or (0, 0, 0))[2]):.1f} s) by {STOP_STEP_MARGIN:.0%}")
+                         + ": stopped, as the two arms' timings are no longer the ones checked")
+
+    threading.Thread(target=tick, name=f"lite-s2-watch-{side}", daemon=True).start()
+
+    def on_line(text: str) -> None:
+        if text.startswith("WORKFLOW STEP START"):
+            try:
+                k = int(text.split()[3].split("/")[0])
+                st = steps[k - 1]
+            except (IndexError, ValueError):
+                return
+            lim = limit(st)
+            with lock:
+                cur.clear()
+                cur.update(step=st, t0=time.monotonic(), deadline=(time.monotonic() + lim) if lim else None)
+        elif text.startswith("WORKFLOW STEP COMPLETE"):
+            with lock:
+                c = dict(cur)
+                cur.clear()
+            if not c:
+                return
+            st, dur = c["step"], time.monotonic() - c["t0"]
+            t = st.get("_t") or {}
+            r = t.get("move_times") if st["type"] == "global" else t.get("times")
+            if st["type"] == "wait" and (st.get("settle") or not t):
+                sec = float(st.get("seconds") or 0)
+                r = tuple(sec + x for x in ROBOT_TIMES["wait_extra_s"])
+            if not r:
+                return
+            lo, hi = float(r[0]), float(r[2])
+            words = f"{side.upper()} row {st.get('_row')} ({_step_words(st)}) took {dur:.2f} s"
+            if st["type"] != "program" and dur < lo * (1.0 - STOP_STEP_MARGIN) - 0.15:
+                say_stop(f"{words}, less than the least it takes ({lo:.2f} s) by more than {STOP_STEP_MARGIN:.0%}: stopped, as the "
+                         "two arms' timings are no longer the ones checked")
+            elif not lo - 0.05 <= dur <= hi + 0.05:
+                warn(f"{words}, outside its range on the robot ({lo:.2f}-{hi:.2f} s).")
+
+    def close():
+        dead.set()
+
+    return on_line, close
+
+
+def run_real(app, units, mode: str, pick: dict | None, body: dict):
+    """Real Machine Mode (RUN BOTH / RUN LEFT / RUN RIGHT, a single task, a dual-arm task): only in Real robot mode, on
+    linked controllers; a run not completed in Simulation as it is now asks first (``unsimulated_ok``; the owner, 17 Oct:
+    "a user can run on the hardware without having run in simulation first", with a confirmation that says so, before
+    the real-robot one); every Program slot and global point it uses checked on its controller before anything moves;
+    what the simulation found asked about once, with the real-robot confirmation. Then the plan's stages: a stage
+    between meeting points starts both arms' parts at once (each arm's part through runner v14, a call per stretch
+    between its Wait-for rows; at a Wait-for the arm holds until the other arm's runner has reported the row it names
+    complete) and ends when both have (the Meet); a lid or seat task runs on both arms; every step is timed against its
+    range (``_watch``); a failed part ends the run there and stops the other arm. STOP (any) interrupts the runner as
+    V53's STOP does and latches the arms as Lite's STOP always does."""
     import contextlib
     import threading
 
@@ -1905,6 +1887,16 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                             "control program's runner on the controllers.", "Connect the arm (Lite started with --robot realman).",
                             code="connect")
     robot.require_motion("both" if mode == "both" else mode)
+    for s in sides:                     # the times checked are the robot's with its realtime push off (ROBOT_TIMES)
+        on = getattr(robot.links.get(s), "push_on", None)
+        if on:
+            from .udp_push import held_text
+
+            raise UserError(f"The {s.upper()} controller's realtime push is on (toward this computer's port {on.get('port')}"
+                            + (f", which {held_text(on['holders'])} holds" if on.get("holders") else "") + "): with it on, its "
+                            f"programs run some 13 % slower than their lines, past the {STOP_PROGRAM_OVER:.0%} at which an S2 run "
+                            "stops. Nothing moved.", "Turn it off (stop the program that holds the port, or on the pendant: realtime "
+                            "push), then connect the arm again.", code="push")
     overall = int(robot.speed_pct)
     programs = {s: programs_known(app, units, s) for s in ARMS}
     points = {s: points_known(app, s) for s in ARMS}
@@ -1950,15 +1942,26 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
     lines_of = {s: {pid: int(programs[s][pid]["lines"]) for pid in used[s]
                     if (programs[s].get(pid) or {}).get("sent") and (programs[s][pid].get("lines") or 0) > 1} for s in sides}
     longest = max([n for s in sides for n in lines_of[s].values()] or [0])
-    timeout = max(300.0, (longest - 1) * CYCLE_S * 1.5 + 60.0)        # the runner's 300 s, longer for this run's longer programs
+    unknown = any(pid not in lines_of[s] for s in sides for pid in used[s])
+    # the runner's own limit on a Program (it slow-stops one still running then): this run's longest, half as long again;
+    # an hour when a Program's length is not known (one Lite did not send): Lite's own watchdog times the known ones
+    timeout = max(300.0, (longest - 1) * CYCLE_S * 1.5 + 60.0, 3600.0 if unknown else 0.0)
+    try:
+        _times_now(app, units, run, programs, points, overall)
+    except Exception as exc:                                        # noqa: BLE001 - untimed steps are said, not run blind
+        robot_log = getattr(robot, "log", None)
+        if robot_log is not None:
+            robot_log.activity(f"S2: the steps' ranges could not be worked out ({exc}); each step runs untimed")
 
     def work(job):
         live = {s: "READY" for s in ARMS}
         rows = {s: None for s in ARMS}
-        job.set(live=dict(live), status=f"PAGE 02 PROGRAM RULES // {len(run['plan'])} coordinated stage(s)", stage=None,
-                question=None, counts=run["counts"], rows=dict(rows), mode=run["mode"])
+        job.set(live=dict(live), status=f"PAGE 02 // {len(run['plan'])} stage(s)", stage=None, question=None,
+                counts=run["counts"], rows=dict(rows), mode=run["mode"])
         if not simulated:
             job.log("Run on the robot without a simulation of it, as confirmed.", "warn")
+        for t in run.get("said") or []:
+            job.log(t)
         reals = {s: robot._real(s) for s in sides}
         originals = {}
 
@@ -1968,28 +1971,57 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
 
         stops = {}                                  # each running part's own stop (its runner, V53's way)
         stopped_why = {}                            # why Lite stopped a part, said with the failure
+        cond = threading.Condition()
+        progress = {s: set() for s in ARMS}         # the rows each arm has finished in the stage running
+        ended = {s: False for s in ARMS}            # each arm's part of the stage running is over (done or not)
 
-        def part(side, item, label):
-            steps = split_waits(item["steps"])
+        def finished(side, row) -> None:
+            with cond:
+                progress[side].add(row)
+                cond.notify_all()
+
+        def stop_part(side, why) -> None:
+            stopped_why.setdefault(side, why)
+            fn = stops.get(side)
+            if fn is not None:
+                fn()
+
+        def call(side, steps, label) -> dict:
+            """One runner call: a stretch of an arm's rows (no Wait-for among them)."""
             current = {"slot": None}
+            last_of_row = {k: (k + 1 >= len(steps) or steps[k + 1].get("_row") != st.get("_row")) for k, st in enumerate(steps)}
 
             def stop_hook(fn):
                 stops[side] = fn
                 job.on_cancel(fn)
 
+            emulated = bool(getattr(robot.links.get(side), "emulated", False))      # ALIX's emulator keeps its own pace
+            watch_line, watch_close = _watch(job, side, steps,
+                                             (lambda why: job.log(f"{why} (an emulated arm: said, not stopped)", "warn")) if emulated
+                                             else (lambda why: stop_part(side, why)),
+                                             lambda text: job.log(text, "warn"))
+
             def on_line(line):                      # in the runner's own thread, as it prints
                 text = line.strip()
+                watch_line(text)
                 if text.startswith("WORKFLOW STEP START"):
                     try:
                         k = int(text.split()[3].split("/")[0])
                         rows[side] = steps[k - 1].get("_row")
                         job.set(rows=dict(rows))
-                        say(**{side: f"{label} // {k}/{len(steps)} {_step_words(steps[k - 1])} // RUNNING"})
+                        say(**{side: f"{label} // {_step_words(steps[k - 1])} // RUNNING"})
                     except (IndexError, ValueError):
                         pass
                     # The E-stop between two steps (the link reads nothing while the runner holds the arm): a
                     # press latches and stops both arms (their stop hooks); the runner stops at once.
                     robot.estop_check(side, on_press=lambda: stopped_why.__setitem__(side, f"the {side.upper()} E-stop was pressed"))
+                elif text.startswith("WORKFLOW STEP COMPLETE"):
+                    try:
+                        k = int(text.split()[3].split("/")[0])
+                        if last_of_row.get(k - 1):  # its row is finished (a row's Wait split from it, a settle before it)
+                            finished(side, steps[k - 1].get("_row"))
+                    except (IndexError, ValueError):
+                        pass
                 m = _PROGRAM_RE.match(text)
                 if m:
                     current["slot"] = int(m.group(1))
@@ -1997,10 +2029,10 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                 if m and current["slot"] in lines_of[side]:
                     from .robot_standin import ended_early
 
-                    short = ended_early(float(m.group(1)), lines_of[side][current["slot"]], robot.emulator_scale(side))
+                    short = ended_early(float(m.group(1)), lines_of[side][current["slot"]], robot.emulator_scale(side),
+                                        share=STOP_PROGRAM_UNDER)
                     if short:                       # stopped on the controller (an E-stop gives no error code)
-                        stopped_why[side] = f"program {current['slot']} ended {short}: it was stopped on the controller"
-                        stops[side]()
+                        stop_part(side, f"program {current['slot']} ended {short}: it was stopped on the controller")
                 if text.startswith(("WORKFLOW STEP START", "WORKFLOW COMPLETE", "**", "!!")):
                     job.log(f"{side.upper()}: {text}", "error" if text.startswith("**") else "info")
 
@@ -2008,14 +2040,61 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                 out = reals[side].run_workflow(steps, overall, restore[side], timeout, on_line, stop_hook)
             finally:
                 stops.pop(side, None)
+                watch_close()
             if stopped_why.get(side):
                 out = dict(out, ok=False, why=stopped_why[side])
+            if out["ok"]:
+                for st in steps:
+                    finished(side, st.get("_row"))
+            return out
+
+        def part(side, item, label):
+            """An arm's part of a stage: its runner calls, and between them its Wait-for rows."""
+            out = dict(ok=True, rc=0, why=None)
+            try:
+                for what, x in _segments(split_waits(item["steps"])):
+                    if what == "steps":
+                        out = call(side, x, label)
+                        if not out["ok"]:
+                            break
+                        continue
+                    tg = x.get("_target") or {}
+                    other = tg.get("side")
+                    if not tg.get("done") and other in item.get("_with", ()):
+                        say(**{side: f"{label} // WAITING FOR {str(other).upper()} ROW {tg.get('row')}"})
+                        rows[side] = x.get("_row")
+                        job.set(rows=dict(rows))
+                        job.log(f"{side.upper()} row {x.get('_row')}: waits for {str(other).upper()} row {tg.get('row')}.")
+                        with cond:
+                            while tg.get("row") not in progress[other]:
+                                if ended[other]:
+                                    out = dict(ok=False, rc=1, why=f"the {str(other).upper()} arm's part ended before its row "
+                                               f"{tg.get('row')}, which row {x.get('_row')} waits for")
+                                    break
+                                if job.cancelled or stopped_why.get(side):
+                                    out = dict(ok=False, rc=1, why=stopped_why.get(side) or "stopped")
+                                    break
+                                cond.wait(0.2)
+                        if not out["ok"]:
+                            break
+                    finished(side, x.get("_row"))
+            finally:
+                with cond:
+                    ended[side] = True
+                    cond.notify_all()
             say(**{side: f"{label} // COMPLETE" if out["ok"] else f"{label} // FAILED rc={out['rc']}"})
             return out
 
         def together(stage, label, status):
-            say(status, **{s: f"{label} // RUNNING" for s in ARMS})
-            barrier, results = threading.Barrier(2), {}
+            mine = [s for s in ARMS if stage.get(s)]
+            say(status, **{s: f"{label} // RUNNING" for s in mine})
+            barrier, results = threading.Barrier(len(mine)), {}
+            with cond:
+                for s in ARMS:
+                    progress[s].clear()
+                    ended[s] = s not in mine
+            for s in mine:
+                stage[s]["_with"] = tuple(mine)
 
             def go(side):
                 # each arm's controller taken before the two meet, so neither waits for its own after the
@@ -2037,35 +2116,22 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                     results[side] = dict(ok=False, rc=1, why=str(exc))
                     return
                 if not results[side].get("ok"):     # the owner (16 Oct): one arm failing stops the other as well
-                    other = "right" if side == "left" else "left"
-                    fn = stops.get(other)
-                    if fn is not None:
-                        stopped_why.setdefault(other, f"stopped because the {side.upper()} arm's part failed")
-                        fn()
+                    other = flow.OTHER[side]
+                    if other in mine:
+                        stop_part(other, f"stopped because the {side.upper()} arm's part failed")
 
-            threads = [threading.Thread(target=go, args=(s,), name=f"lite-s2-{s}", daemon=True) for s in ARMS]
+            threads = [threading.Thread(target=go, args=(s,), name=f"lite-s2-{s}", daemon=True) for s in mine]
             for t in threads:
                 t.start()
             for t in threads:                       # both parts end before anything else: STOP interrupts both
                 while t.is_alive():
                     t.join(0.1)
             job.check()
-            bad = [s for s in ARMS if not results.get(s, {}).get("ok")]
+            bad = [s for s in mine if not results.get(s, {}).get("ok")]
             if bad:
-                raise UserError("PROGRAM RULES STOPPED // parallel Program stage failed // "
-                                + " // ".join(f"{s.upper()} rc={results.get(s, {}).get('rc')}" for s in ARMS)
+                raise UserError(f"{label} STOPPED // " + " // ".join(f"{s.upper()} rc={results.get(s, {}).get('rc')}" for s in mine)
                                 + ": " + "; ".join(f"{s.upper()}: {results.get(s, {}).get('why') or 'see the hardware log'}" for s in bad),
                                 "Check the arms and their controllers' errors before anything else runs.")
-
-        def alone(item, label, status):
-            side = item["side"]
-            say(status, **{side: f"{label} // RUNNING"})
-            out = part(side, item, label)
-            job.check()
-            if not out["ok"]:
-                raise UserError(f"{side.upper()} {label} failed (rc={out['rc']}): {out['why'] or 'see the hardware log'}.",
-                                "Check the arm and its controller's errors before anything else runs.")
-            return out
 
         t0 = time.monotonic()
         try:
@@ -2076,14 +2142,7 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                 job.set(stage=i)
                 job.progress(f"Stage {i + 1} of {len(run['plan'])}", i, len(run["plan"]))
                 kind, pid = st["kind"], st.get("program_id")
-                if kind == "checkpoint":                    # the arms of this run pause (a task's: its own arm or both)
-                    say("SAFE TIMELINE // MANUAL LID COVER CHECKPOINT // ROBOTS PAUSED", **{x: "PAUSED // MANUAL LID CHECK" for x in sides})
-                    if not job.ask(st["title"], st["message"], ok="OK", cancel="Cancel"):
-                        say("SAFE TIMELINE CANCELLED // MANUAL CHECKPOINT NOT CONFIRMED", **{x: "IDLE // CHECKPOINT CANCELLED" for x in sides})
-                        raise UserError("The manual checkpoint was not confirmed: the sequence ended there.",
-                                        "Nothing ran after it.")
-                    say("SAFE TIMELINE // MANUAL LID CONFIRMED // RESUMING", **{x: "READY // LID CONFIRMED" for x in sides})
-                elif kind == "mechanism":                   # a lid or seat task: ALIX's plan on both arms, the camera's checks
+                if kind == "mechanism":                     # a lid or seat task: ALIX's plan on both arms, the camera's checks
                     from . import mechanism as mech
 
                     if st.get("settle_s"):                  # its first move waits for the Programs' end (settle_moves)
@@ -2105,34 +2164,14 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
                     say(f"LID / SEAT // {st['title']} // DONE", **{x: f"{pid} // COMPLETE" for x in ARMS})
                     job.log(f"{st['title']}: {did}.")
                 elif kind == "parallel":
-                    together(st, f"Program {pid}", f"PROGRAM RULES // Program {pid} // LEFT + RIGHT TOGETHER")
-                elif kind == "tail" and st.get("left") and st.get("right"):
-                    together(st, "FINAL AUX", "PROGRAM RULES // FINAL AUX STEPS // LEFT + RIGHT")
-                elif kind == "tail":
-                    item = st.get("left") or st.get("right")
-                    alone(item, "FINAL AUX", f"PROGRAM RULES // {item['side'].upper()} FINAL AUX STEPS")
-                elif kind == "serial":
-                    first, second = st["first"], st["second"]
-                    F, S = first["side"].upper(), second["side"].upper()
-                    say(None, **{second["side"]: f"Program {pid} // WAITING FOR {F}"})
-                    alone(first, f"Program {pid}", f"PROGRAM RULES // Program {pid} // {F} RUN FIRST // {S} WAITING")
-                    if confirm_each:
-                        say(f"PROGRAM RULES // {F} Program {pid} COMPLETE // {S} Program {pid} WAITING",
-                            **{second["side"]: f"Program {pid} // WAITING // CONFIRMATION REQUIRED"})
-                        if not job.ask("Program Handoff", f"{F} Program {pid} completed.\n\n{S} Program {pid} is waiting.\n\n"
-                                       f"Start {S} Program {pid} now?", ok="Yes", cancel="No"):
-                            say(f"PROGRAM RULES PAUSED // Program {pid} handoff cancelled",
-                                **{second["side"]: f"Program {pid} // HANDOFF CANCELLED"})
-                            raise UserError(f"The {S} arm's Program {pid} was not started: the sequence ended there.",
-                                            "Nothing ran after it.")
-                    else:
-                        say(None, **{second["side"]: f"Program {pid} // WAITING // AUTO HANDOFF"})
-                    alone(second, f"Program {pid}", f"PROGRAM RULES // Program {pid} // {S} STARTING AFTER OTHER ARM")
-                else:                                                     # one arm's whole sequence (V53's RUN LEFT / RIGHT)
+                    arms_here = [s for s in ARMS if st.get(s)]
+                    together(st, str(pid or "PART"), f"PAGE 02 // {pid} // " + (" + ".join(s.upper() for s in arms_here)))
+                else:                                                     # one arm's whole sequence, or a single task
                     item = st[sides[0]]
-                    alone(item, "SEQUENCE", f"PAGE 02 // {sides[0].upper()} sequence")
+                    label = "SEQUENCE" if kind == "single" and pid is None else f"Program {pid}"
+                    together({sides[0]: item}, label, f"PAGE 02 // {sides[0].upper()} {label.lower()}")
             elapsed = time.monotonic() - t0
-            say(f"PAGE 02 PROGRAM RULES COMPLETE // {elapsed:.1f} s", **{s: "SEQUENCE COMPLETE" for s in sides})
+            say(f"PAGE 02 SEQUENCE COMPLETE // {elapsed:.1f} s", **{s: "SEQUENCE COMPLETE" for s in sides})
             job.log(f"Sequence complete: {len(run['plan'])} stage(s) in {elapsed:.1f} s.")
             return dict(mode=run["mode"], stages=len(run["plan"]), seconds=round(elapsed, 1))
         finally:
@@ -2141,5 +2180,5 @@ def run_real(app, units, mode: str, pick: dict | None, confirm_each: bool, body:
             for s in sides:                         # the runner gives the speed back in its finally; again here,
                 reals[s].restore_speed(restore[s])  # in case a stop landed before its try (never raises)
 
-    title = "S2 Real Machine: " + ("both arms, SAFE TIMELINE" if mode == "both" else f"{mode.upper()} sequence")
+    title = "S2 Real Machine: " + ("both arms" if mode == "both" else f"{mode.upper()} sequence")
     return robot._start("run", title, work, "both" if mode == "both" else mode, "real")

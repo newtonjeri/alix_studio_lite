@@ -258,6 +258,7 @@ class LinkProcess:
         self.on_read, self.log = on_read, log
         self.emulated = False
         self.abandoned = False
+        self.push_on: dict | None = None                 # the controller's realtime push found left on as it connected
         self._proc = None
         self._cmd = self._ctl = self._feed = None
         self._lock = threading.RLock()                   # one command at a time (busy); reentrant for reserved()
@@ -273,6 +274,7 @@ class LinkProcess:
 
     # -- life
     def open(self, _again: bool = False) -> "LinkProcess":
+        self.push_on = None
         ctx = mp.get_context("spawn")
         cmd_a, cmd_b = ctx.Pipe()
         ctl_a, ctl_b = ctx.Pipe()
@@ -334,6 +336,8 @@ class LinkProcess:
         lid and seat tasks cannot stream on this arm."""
         from .udp_push import held_text
 
+        if not info.get("error") and not reopened:     # left on (another program holds its port, or it would not turn off):
+            self.push_on = dict(info)                    # the controller's programs run some 13 % slower (S2 Real refuses it)
         if self.log is None:
             return
         S, port = self.side.upper(), info.get("port")

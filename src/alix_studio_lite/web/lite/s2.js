@@ -1,18 +1,22 @@
 // Merge + Sequence, S2: Sequence (feedback v5, slide 9; the owner, 16 Oct; was Full & Partial Sequence): the
-// control program's Page 02 (V53 with runner v14) in Lite's style, its layout and its working as
-// they are (server/workflow.py):
+// control program's Page 02 (V53 with runner v14) in Lite's style, its layout as it is (server/workflow.py):
 // - each arm's steps: PROGRAM (a stored program, its Start %: the controller's move to its first
-//   point, its Dual Rule), GLOBAL POINT (MoveJ / MoveL, speed, wait), HAND / POLE / WAIT; the table
-//   with Up, Down, Duplicate, Remove, Clear, Save and Load (V53's JSON; another arm's file is
-//   refused); RUN and STOP per arm;
-// - RUN BOTH // SAFE TIMELINE (V53's plan), STOP BOTH, Confirm before waiting arm, the overall
-//   speed (the speed slider at the top), the status and the live status of each arm.
+//   point), GLOBAL POINT (MoveJ / MoveL, speed, wait), HAND / POLE / WAIT; the table with Up, Down,
+//   Duplicate, Remove, Clear, Save and Load (another arm's file is refused); RUN and STOP per arm;
+// - RUN BOTH, STOP BOTH, the overall speed (the speed slider at the top), the status and the live
+//   status of each arm.
+// How the arms go together (the owner, 22 Oct; server/flow.py): each arm's rows run top to bottom, both arms
+// starting together, and an arm waits only where its list says: at a MEET (both arms meet there, the first to
+// arrive waits; the Meets pair up in order), at a WAIT FOR (until the other arm has finished the row it names)
+// and at a lid or seat task. V53's Dual Rule and its SAFE TIMELINE are gone; a V53 file loads with its handoffs as
+// Meets and a Wait-for.
 // What Lite adds: Simulation Mode or Real Machine Mode; what to run (the owner, 16 Oct: "options to play
 // a single task arm, dual arm task and sequences in both simulation and real"; Full and Partial are gone):
 // the sequences, a single task (a Program row on its arm, with the Pole and Hand in force before it) or a
-// dual-arm task (one stage of V53's plan with both arms' Programs); Simulation Mode plays the run in 3D with
-// the collision check and says what would not be right on the robot; Real Machine Mode runs only what
-// completed in Simulation as it is.
+// dual-arm task (one part between two Meets with both arms' Programs, or a lid or seat task); Simulation Mode
+// plays the run in 3D with the collision check, checks the two arms 50 mm apart at every timing the robot's
+// ranges allow and says what would not be right on the robot; Real Machine Mode runs only what completed in
+// Simulation as it is.
 
 import { call, get, post, put, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, fmtT, jobLine, robotCall, tell, watchJob } from './ctx.js';
@@ -27,13 +31,13 @@ import { frame } from './vp.js';
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
 const ARM = (s) => s.toUpperCase();
-const RULES = ['TOGETHER', 'RUN FIRST', 'WAIT OTHER'];
+const OTHER = { left: 'right', right: 'left' };
 const SCOPES = [['sequence', 'Sequences'], ['task', 'Single task'], ['dual', 'Dual-arm task']];
 const GRIP = [0, 0, 0, 0, 150, 1000], OPEN = [1000, 1000, 1000, 1000, 1000, 1000];
 const CLEANING = [1000, 1000, 1000, 1000, 0, 1000];          // the Cleaning Pose (the owner, 15 Oct; Prepare's preset)
 const S = {
   steps: { left: [], right: [] }, sources: { left: { programs: [], points: [] }, right: { programs: [], points: [] } },
-  sel: { left: null, right: null }, mode: 'sim', scope: 'sequence', pick: null, edited: false, confirmEach: true,
+  sel: { left: null, right: null }, mode: 'sim', scope: 'sequence', pick: null, edited: false,
   sim: null, job: null, live: { left: 'IDLE', right: 'IDLE' }, status: 'PAGE 02 READY // Build LEFT and RIGHT sequences', runtime: 0,
   rows: { left: null, right: null }, mechanisms: {},
 };
@@ -43,7 +47,49 @@ let panel = null, built = false, player = null, saving = { left: null, right: nu
 const base = () => `/api/projects/${ctx.pid}/workflow`;
 const fmt = (s) => `${Number(s || 0).toFixed(1)} s`;
 
-// ── the steps as V53 shows them (WorkflowSequencePanel._row)
+// ── the steps as V53 shows them (WorkflowSequencePanel._row), with Lite's Meet and Wait-for rows
+
+// A row's own id (flow.with_uids): a Wait-for names the row it waits for by it, so that it follows the row when rows move.
+function newUid() {
+  return Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// A row in a few words (a Wait-for's target, its picker).
+function brief(st) {
+  const k = st.type;
+  if (k === 'program') return `Program ${st.id}${st.name ? ` // ${st.name}` : ''}`;
+  if (k === 'pole') return `Pole ${Number(st.mm)} mm`;
+  if (k === 'hand') return `Hand ${st.values.join(',')}`;
+  if (k === 'wait') return `Wait ${Number(st.seconds)} s`;
+  if (k === 'mechanism') return (S.mechanisms[st.task] || {}).title || st.task;
+  if (k === 'meet') return 'Meet';
+  if (k === 'wait_for') return 'Wait for';
+  return `${String(st.move).toUpperCase()} ${st.name}`;
+}
+
+// The row of the other arm a Wait-for waits for (its uid; a V53 file's: the other arm's first row of that Program); -1:
+// not there (removed).
+function targetOf(side, st) {
+  const list = S.steps[OTHER[side]], tg = st.target || {};
+  if (tg.uid) return list.findIndex(x => x.uid === tg.uid);
+  if (tg.program != null) return list.findIndex(x => x.type === 'program' && Number(x.id) === Number(tg.program));
+  return -1;
+}
+
+// A Meet's partner: the other arm's Meet of the same number (the Meets pair up in order); -1: none.
+function partnerOf(side, i) {
+  const n = S.steps[side].slice(0, i + 1).filter(x => x.type === 'meet').length;
+  let seen = 0;
+  return S.steps[OTHER[side]].findIndex(x => x.type === 'meet' && ++seen === n);
+}
+
+// Why a Meet or Wait-for row cannot run as it is (marked in its table), or ''.
+function gateProblem(side, i) {
+  const st = S.steps[side][i], other = ARM(OTHER[side]);
+  if (st.type === 'wait_for' && targetOf(side, st) < 0) return `The ${other} row it waited for is no longer there: choose the row again (remove this one, add WAIT FOR).`;
+  if (st.type === 'meet' && partnerOf(side, i) < 0) return `No Meet of the same number on the ${other} arm: add one there, or remove this one.`;
+  return '';
+}
 
 function row(step) {
   const k = step.type;
@@ -52,7 +98,17 @@ function row(step) {
     const name = step.name || (known && known.name) || '';
     const t = known && known.seconds != null ? ` (${fmtT(known.seconds)})` : '';     // its execution time, after its name
     return [k.toUpperCase(), `Program ${step.id}${name ? ` // ${name}` : ''}${t}`,
-      `Start ${step.transit_speed ?? step.start_speed ?? 30}% // Stored timing // ${String(step.dual_rule || 'TOGETHER').toUpperCase()}`];
+      `Start ${step.transit_speed ?? step.start_speed ?? 30}% // Stored timing`];
+  }
+  if (k === 'meet') {
+    const side = step._side, n = S.steps[side].slice(0, step._i + 1).filter(x => x.type === 'meet').length, j = partnerOf(side, step._i);
+    return ['MEET', `Meet ${n}${j >= 0 ? ` // with ${ARM(OTHER[side])} row ${j + 1}` : ` // no Meet ${n} on the ${ARM(OTHER[side])} arm`}`,
+      'Both arms meet here: the first to arrive waits'];
+  }
+  if (k === 'wait_for') {
+    const side = step._side, j = targetOf(side, step), other = OTHER[side];
+    return ['WAIT FOR', j >= 0 ? `${ARM(other)} row ${j + 1} // ${brief(S.steps[other][j])}` : `${ARM(other)} row no longer there`,
+      `Until the ${ARM(other)} arm has finished it${step.note ? ` // ${step.note}` : ''}`];
   }
   if (k === 'pole') return ['POLE', `${Number(step.mm)} mm`, ''];
   if (k === 'hand') return ['HAND', step.values.join(','), 'L,R,M,I,TB,TR'];
@@ -78,7 +134,7 @@ function armPanel(side) {
   return el('div', { class: `card lite-s2-arm ${side}` },
     el('div', { class: 'lite-s2-armhead' }, el('b', { text: `${ARM(side)} ARM // SEQUENCE` })),
     el('div', { class: 'lite-s2-subtabs', role: 'tablist' }, tab('program', 'PROGRAM'), tab('global', 'GLOBAL POINT'), tab('aux', 'HAND / POLE / WAIT'),
-      tab('lid', 'LID / SEAT')),
+      tab('gate', 'MEET / WAIT FOR'), tab('lid', 'LID / SEAT')),
     el('div', { id: `liteS2Add_${side}_program`, class: 'lite-s2-add' },
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_prog`, text: 'Stored Program' }),
@@ -87,11 +143,9 @@ function armPanel(side) {
             btn('Choose', (e) => pickInto(side, 'prog', e.currentTarget), 'btn light')),
           el('datalist', { id: `liteS2Progs_${side}` })),
         el('div', { class: 'field' }, el('label', { for: `liteS2_${side}_start`, text: 'Start %' }), num('start', 30, { min: '1', max: '100', step: '1' })),
-        el('div', { class: 'field' }, el('label', { for: `liteS2_${side}_rule`, text: 'Dual Rule' }),
-          el('select', { id: `liteS2_${side}_rule` }, RULES.map(r => el('option', { value: r, text: r })))),
         btn('+ ADD PROGRAM', () => addProgram(side), 'btn green')),
       el('div', { class: 'mini-note', text: 'Start % = speed used only to reach this Program\'s first pose (default 30%). Stored trajectory timing is '
-        + 'unchanged. Dual Rule controls TOGETHER / RUN FIRST / WAIT OTHER.' })),
+        + 'unchanged. Where this arm waits for the other: the MEET / WAIT FOR tab.' })),
     el('div', { id: `liteS2Add_${side}_global`, class: 'lite-s2-add', hidden: true },
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_point`, text: 'Global Point' }),
@@ -116,6 +170,17 @@ function armPanel(side) {
         btn('GRIP', () => setHand(side, GRIP), 'btn orange'), btn('OPEN', () => setHand(side, OPEN), 'btn green'),
         btn('CLEANING POSE', () => setHand(side, CLEANING), 'btn violet'),
         btn('+ ADD HAND', () => addHand(side), 'btn green'))),
+    el('div', { id: `liteS2Add_${side}_gate`, class: 'lite-s2-add', hidden: true },
+      el('div', { class: 'lite-row' },
+        btn('+ MEET (BOTH ARMS)', () => addMeet(), 'btn green'),
+        el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_target`, text: `Wait for the ${ARM(OTHER[side])} arm's row` }),
+          el('select', { id: `liteS2_${side}_target` })),
+        btn('+ WAIT FOR', () => addWaitFor(side), 'btn')),
+      el('div', { class: 'mini-note', text: 'MEET: both arms meet there; the first to arrive waits for the other, then both go on. It goes on both '
+        + 'arms, after the row chosen in each table (at the end of a table with none chosen); the Meets pair up in order, each arm\'s first '
+        + `with the other's first. WAIT FOR: this arm waits there until the ${ARM(OTHER[side])} arm has finished the row chosen above, `
+        + `while the ${ARM(OTHER[side])} arm goes on; it goes after the row chosen in this table. Anywhere else each arm goes on with its `
+        + 'own rows.' })),
     el('div', { id: `liteS2Add_${side}_lid`, class: 'lite-s2-add', hidden: true },
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_task`, text: 'Lid or seat task (pre-recorded)' }),
@@ -152,7 +217,8 @@ function build() {
         el('div', { class: 'eyebrow', text: 'PAGE 02 // DUAL ARM SEQUENCE BUILDER // SAFE START + LIVE STATUS' }),
         el('h3', { text: 'Build independent LEFT and RIGHT cleaning workflows' }),
         el('p', { class: 'mini-note', text: 'Mix stored Programs, Pole, 6-channel Hand, Wait, and Global Points (MoveJ / MoveL + speed) in any order. '
-          + 'A Wait is a task of its own: its arm idles for its seconds, on one arm or both. '
+          + 'Both arms start together and each goes through its own rows; an arm waits for the other only at a Meet, a Wait-for or a lid '
+          + 'or seat task. A Wait is a task of its own: its arm idles for its seconds, on one arm or both. '
           + 'A Global Point straight after a Program waits 2 s first, for the controller to end the Program.' })),
       el('div', { class: 'lite-row' }, btn('Refresh Programs', () => refreshSources(true)), btn('Refresh Global Points', () => refreshSources(true)))),
     el('div', { class: 'card lite-s2-exec' },
@@ -169,10 +235,8 @@ function build() {
     el('div', { class: 'card lite-s2-control' },
       el('div', { class: 'lite-s2-kicker', text: 'DUAL SEQUENCE CONTROL' }),
       el('div', { class: 'lite-row' },
-        btn('RUN BOTH // SAFE TIMELINE', () => run('both'), 'btn green', { id: 'liteS2RunBoth' }),
+        btn('RUN BOTH', () => run('both'), 'btn green', { id: 'liteS2RunBoth' }),
         btn('STOP BOTH SEQUENCES', () => stop('both'), 'btn red', { id: 'liteS2StopBoth' }),
-        el('label', { class: 'lite-s2-check' }, el('input', { id: 'liteS2Confirm', type: 'checkbox', checked: true,
-          onchange: (e) => { S.confirmEach = e.target.checked; } }), ' CONFIRM BEFORE WAITING ARM'),
         el('span', { class: 'lite-s2-speed' }, 'OVERALL SPEED % ', el('b', { id: 'liteS2Speed', text: '50' }),
           el('small', { class: 'mini-note', text: ' (the speed slider at the top)' })),
         el('span', { id: 'liteS2StatusText', class: 'lite-s2-statustext lite-grow' }),
@@ -218,7 +282,7 @@ function build() {
 }
 
 function subtab(side, id) {
-  for (const t of ['program', 'global', 'aux', 'lid']) {
+  for (const t of ['program', 'global', 'aux', 'gate', 'lid']) {
     $(`liteS2Add_${side}_${t}`).hidden = t !== id;
     $(`liteS2Tab_${side}_${t}`).classList.toggle('active', t === id);
     $(`liteS2Tab_${side}_${t}`).setAttribute('aria-selected', String(t === id));
@@ -396,10 +460,46 @@ async function saved() {
 const val = (side, id) => $(`liteS2_${side}_${id}`)?.value?.trim() ?? '';
 
 function append(side, step) {
-  S.steps[side].push(step);
+  S.steps[side].push({ ...step, uid: newUid() });
   S.sel[side] = S.steps[side].length - 1;
-  paintArm(side);
+  paintAll();
   saveSteps(side);
+}
+
+// A Meet or a Wait-for row after the arm's chosen row (at its end when none is chosen): where it is placed matters
+// against the other arm's rows. Its row number, from 1.
+function insertGate(side, step) {
+  const i = S.sel[side] == null ? S.steps[side].length : S.sel[side] + 1;
+  S.steps[side].splice(i, 0, { ...step, uid: newUid() });
+  S.sel[side] = i;
+  paintAll();
+  saveSteps(side);
+  return i + 1;
+}
+
+function addMeet() {
+  const rows = ARMS.map(side => insertGate(side, { type: 'meet' }));
+  window.toast(`Meet added: LEFT row ${rows[0]}, RIGHT row ${rows[1]}. Both arms meet there (UP / DOWN move it in each list).`, 'good');
+}
+
+function addWaitFor(side) {
+  const other = OTHER[side], uid = val(side, 'target'), j = S.steps[other].findIndex(x => x.uid === uid);
+  if (!uid || j < 0) { window.toast(`${ARM(side)}: choose the ${ARM(other)} row to wait for.`, 'warn'); return; }
+  const row = insertGate(side, { type: 'wait_for', target: { uid } });
+  window.toast(`${ARM(side)} row ${row}: waits until the ${ARM(other)} arm has finished its row ${j + 1} (${brief(S.steps[other][j])}).`, 'good');
+}
+
+// Each arm's WAIT FOR picker: the other arm's rows (not its Meet and Wait-for rows), the choice kept while its row is.
+function paintTargets() {
+  for (const side of ARMS) {
+    const sel = $(`liteS2_${side}_target`);
+    if (!sel) continue;
+    const was = sel.value, other = OTHER[side];
+    const opts = S.steps[other].map((st, i) => (st.uid && st.type !== 'meet' && st.type !== 'wait_for'
+      ? el('option', { value: st.uid, text: `Row ${i + 1} // ${brief(st)}` }) : null)).filter(Boolean);
+    sel.replaceChildren(...(opts.length ? opts : [el('option', { value: '', text: `The ${ARM(other)} list has no rows yet` })]));
+    if (opts.some(o => o.value === was)) sel.value = was;
+  }
 }
 
 function addProgram(side) {
@@ -411,8 +511,7 @@ function addProgram(side) {
   if (!Number.isFinite(start)) start = 30;
   if (!(start >= 1 && start <= 100)) { window.toast('Start / Transit speed must be 1-100%.', 'warn'); return; }
   const known = S.sources[side].programs.find(p => p.id === id);
-  const rule = RULES.includes(val(side, 'rule')) ? val(side, 'rule') : 'TOGETHER';
-  append(side, { type: 'program', id, name: (known && known.name) || '', speed: 100, transit_speed: start, dual_rule: rule });
+  append(side, { type: 'program', id, name: (known && known.name) || '', speed: 100, transit_speed: start });
 }
 
 function addGlobal(side) {
@@ -486,7 +585,7 @@ function addMechanism(side) {
   const task = $(`liteS2_${side}_task`)?.value, t = S.mechanisms[task];
   if (!t) { window.toast('Choose a lid or seat task.', 'warn'); return; }
   for (const s of ARMS) {
-    S.steps[s].push({ type: 'mechanism', task });
+    S.steps[s].push({ type: 'mechanism', task, uid: newUid() });
     S.sel[s] = S.steps[s].length - 1;
     paintArm(s);
     saveSteps(s);
@@ -503,7 +602,7 @@ function moveSel(side, d) {
   if (i == null || i + d < 0 || i + d >= list.length) return;
   [list[i], list[i + d]] = [list[i + d], list[i]];
   S.sel[side] = i + d;
-  paintArm(side);
+  paintAll();
   saveSteps(side);
 }
 
@@ -511,9 +610,10 @@ function duplicate(side) {
   const i = S.sel[side];
   if (i == null) return;
   if (S.steps[side][i].type === 'mechanism') { window.toast('A lid or seat task is added to both arms from the LID / SEAT tab.', 'warn'); return; }
-  S.steps[side].splice(i + 1, 0, JSON.parse(JSON.stringify(S.steps[side][i])));
+  if (S.steps[side][i].type === 'meet') { window.toast('A Meet is added to both arms from the MEET / WAIT FOR tab.', 'warn'); return; }
+  S.steps[side].splice(i + 1, 0, { ...JSON.parse(JSON.stringify(S.steps[side][i])), uid: newUid() });    // a copy: a row of its own
   S.sel[side] = i + 1;
-  paintArm(side);
+  paintAll();
   saveSteps(side);
 }
 
@@ -530,9 +630,24 @@ function remove(side) {
       window.toast(`${(S.mechanisms[S.steps[side][i].task] || {}).title || 'The task'}: removed from both arms.`, 'good');
     }
   }
+  if (S.steps[side][i].type === 'meet') {                     // and its partner: the Meets pair up in order
+    const other = OTHER[side], j = partnerOf(side, i);
+    if (j >= 0) {
+      S.steps[other].splice(j, 1);
+      S.sel[other] = S.steps[other].length ? Math.min(j, S.steps[other].length - 1) : null;
+      paintArm(other);
+      saveSteps(other);
+      window.toast(`Meet removed from both arms (${ARM(side)} row ${i + 1}, ${ARM(other)} row ${j + 1}).`, 'good');
+    }
+  }
+  const waiting = S.steps[OTHER[side]].map((x, j) => (x.type === 'wait_for' && targetOf(OTHER[side], x) === i ? j + 1 : null)).filter(Boolean);
+  if (waiting.length) {
+    window.toast(`${ARM(side)} row ${i + 1} was the row ${ARM(OTHER[side])} row ${waiting.join(', ')} waited for: choose the row to wait for again `
+      + '(marked in red).', 'warn');
+  }
   S.steps[side].splice(i, 1);
   S.sel[side] = S.steps[side].length ? Math.min(i, S.steps[side].length - 1) : null;
-  paintArm(side);
+  paintAll();
   saveSteps(side);
 }
 
@@ -542,7 +657,7 @@ async function clear(side) {
   if (!yes) return;
   S.steps[side] = [];
   S.sel[side] = null;
-  paintArm(side);
+  paintAll();
   saveSteps(side);
 }
 
@@ -584,10 +699,11 @@ function paintArm(side) {
   };
   const gone = new Set(missing(side).map(m => m.row));
   body.replaceChildren(...list.map((step, i) => {
-    const [type, target, options] = row({ ...step, _side: side });
-    const off = gone.has(i + 1);
+    const [type, target, options] = row({ ...step, _side: side, _i: i });
+    const problem = gateProblem(side, i);
+    const off = gone.has(i + 1) || !!problem;
     const tr = el('tr', { class: `${S.sel[side] === i ? 'lite-picked' : ''}${now === i + 1 ? ' lite-s2-now' : ''}${off ? ' lite-s2-gone' : ''}`, tabindex: '0',
-      title: off ? `Not on the ${ARM(side)} controller (as read ${S.sources[side].read || ''}): replace or remove this step.` : '',
+      title: problem || (off ? `Not on the ${ARM(side)} controller (as read ${S.sources[side].read || ''}): replace or remove this step.` : ''),
       'data-i': String(i), 'aria-selected': String(S.sel[side] === i),
       onclick: () => pick(i, false),
       onkeydown: (e) => {
@@ -596,7 +712,7 @@ function paintArm(side) {
         if (e.key === 'ArrowUp' && i > 0) { e.preventDefault(); pick(i - 1, true); }
       } },
     el('td', { text: String(i + 1) }), el('td', { text: type }), el('td', { text: target }),
-    el('td', { text: off ? `${options}${options ? ' · ' : ''}not on the controller` : options }));
+    el('td', { text: problem ? `${options} · cannot run as it is` : off ? `${options}${options ? ' · ' : ''}not on the controller` : options }));
     return tr;
   }));
   if (list.length) {                     // after the last row: the trajectories' own times added (the owner, 20 Oct), no transitions
@@ -622,13 +738,14 @@ function paintArm(side) {
 function paintAll() {
   if (!built) return;
   for (const side of ARMS) paintArm(side);
+  paintTargets();
   for (const m of ['sim', 'real']) $(`liteS2Mode_${m}`).classList.toggle('active', S.mode === m);
   for (const [m] of SCOPES) $(`liteS2Scope_${m}`).classList.toggle('active', S.scope === m);
   for (const m of ['sim', 'real']) $(`liteS2Mode_${m}`).setAttribute('aria-checked', String(S.mode === m));
   for (const [m] of SCOPES) $(`liteS2Scope_${m}`).setAttribute('aria-checked', String(S.scope === m));
   $('liteS2Pick').hidden = S.scope === 'sequence';
-  $('liteS2PickText').textContent = pickText() || (S.scope === 'task' ? 'Choose the task: a Program row…' : 'Choose the dual-arm task: a stage…');
-  $('liteS2RunBoth').textContent = S.scope === 'task' ? 'RUN TASK' : S.scope === 'dual' ? 'RUN DUAL-ARM TASK' : 'RUN BOTH // SAFE TIMELINE';
+  $('liteS2PickText').textContent = pickText() || (S.scope === 'task' ? 'Choose the task: a Program row…' : 'Choose the dual-arm task: a part…');
+  $('liteS2RunBoth').textContent = S.scope === 'task' ? 'RUN TASK' : S.scope === 'dual' ? 'RUN DUAL-ARM TASK' : 'RUN BOTH';
   for (const side of ARMS) $(`liteS2Run_${side}`).hidden = S.scope !== 'sequence';     // an arm's own sequence: Sequences only
   $('liteS2Speed').textContent = String(speedPct());
   $('liteS2StatusText').textContent = S.status;
@@ -663,25 +780,16 @@ function pickText() {
   return `Stage ${k.stage + 1} · ${k.text}`;
 }
 
-// A task after V53's manual lid cover checkpoint asks it first, in Real (its pause in Simulation): said in the list.
-const LID = ' · after the lid checkpoint: it asks first';
-
-// The task as a searchable list (picker.js): each arm's Program rows (Single task), or the stages of V53's
-// plan with both arms' Programs (Dual-arm task).
+// The task as a searchable list (picker.js): each arm's Program rows (Single task), or the parts of both arms'
+// plan (their rows between two Meets) with both arms' Programs and the lid and seat tasks (Dual-arm task).
 async function chooseTask(anchor) {
   try { await saved(); } catch (err) { tell(err); return; }
   const secs = (side, id) => (S.sources[side]?.programs || []).find(p => p.id === id)?.seconds;      // its execution time
   const label = (st, side) => `Program ${st.id}${st.name ? ` // ${st.name}` : ''}${secs(side, st.id) != null ? ` (${fmtT(secs(side, st.id))})` : ''}`;
-  let full = null;                                           // V53's plan of both arms (none with one arm's steps)
-  if (S.steps.left.length && S.steps.right.length) {
-    try { full = await post(`${base()}/plan`, { mode: 'both' }); } catch (_) { /* no checkpoint to say */ }
-  }
-  const afterCheck = (s) => !!s && !!full && full.stages.some(x => x.kind === 'checkpoint' && x.index < s.index);
   if (S.scope === 'task') {
-    const stageOf = (side, row) => full && full.stages.find(x => ((x.programs || {})[side] || []).some(p => p.row === row));
     const groups = ARMS.map(side => ({ label: `${ARM(side)} arm`, rows: S.steps[side].map((st, i) => (st.type !== 'program' ? null
       : { value: `${side}:${i + 1}`, text: `Row ${i + 1} · ${label(st, side)}`, search: ARM(side),
-        detail: `${st.dual_rule || 'TOGETHER'} · Start ${st.transit_speed || 30} %${afterCheck(stageOf(side, i + 1)) ? LID : ''}` })).filter(Boolean) }));
+        detail: `Start ${st.transit_speed || 30} % · with the Pole and Hand in force before it` })).filter(Boolean) }));
     choose(anchor, groups, S.pick ? `${S.pick.side}:${S.pick.row}` : null, (v) => {
       const [side, row] = v.split(':');
       const st = S.steps[side][Number(row) - 1];
@@ -690,28 +798,26 @@ async function chooseTask(anchor) {
     }, { placeholder: 'Search the Programs: row, ID or name' });
     return;
   }
-  if (!full) {
-    try { full = await post(`${base()}/plan`, { mode: 'both' }); } catch (err) { tell(err); return; }
-  }
-  const plan = full;
+  let plan;
+  try { plan = await post(`${base()}/plan`, { mode: 'both' }); } catch (err) { tell(err); return; }
   const names = (side, s) => (s.programs[side] || []).map(x => `${x.id}${x.name ? ` ${x.name}` : ''}`
     + (secs(side, x.id) != null ? ` (${fmtT(secs(side, x.id))})` : '')).join(', ');
   const tasks = plan.stages.filter(s => s.kind === 'mechanism').map(s => ({ value: String(s.index),
     text: `Stage ${s.index + 1} · ${s.label} · ${s.title} (both arms, pre-recorded)`,
-    detail: `ALIX's plan · LEFT row ${(s.rows || {}).left} · RIGHT row ${(s.rows || {}).right}${afterCheck(s) ? LID : ''}` }));
-  const rows = plan.stages.filter(s => (s.kind === 'parallel' || s.kind === 'serial') && (s.programs.left || []).length && (s.programs.right || []).length)
+    detail: `ALIX's plan · LEFT row ${(s.rows || {}).left} · RIGHT row ${(s.rows || {}).right}` }));
+  const rows = plan.stages.filter(s => s.kind === 'parallel' && (s.programs.left || []).length && (s.programs.right || []).length)
     .map(s => ({ value: String(s.index),
-      text: s.kind === 'serial' ? `Stage ${s.index + 1} · Program ${s.label} · one arm at a time (${ARM(s.first)} first)`
-        : `Stage ${s.index + 1} · ${s.title || (/^\d+$/.test(s.label) ? `Program ${s.label}` : s.label || 'TIMELINE')} · LEFT + RIGHT together`,
-      detail: `LEFT ${names('left', s)} · RIGHT ${names('right', s)}${afterCheck(s) ? LID : ''}` }));
-  const groups = [{ label: `V53's plan · ${rows.length} dual-arm task${rows.length === 1 ? '' : 's'}`, rows }];
+      text: `Stage ${s.index + 1} · ${s.label} · each arm through its own rows`
+        + (s.meet_rows ? ` · up to LEFT row ${s.meet_rows.left} and RIGHT row ${s.meet_rows.right}` : ''),
+      detail: `LEFT ${names('left', s)} · RIGHT ${names('right', s)}` }));
+  const groups = [{ label: `Both arms' parts (between the Meets) · ${rows.length} dual-arm task${rows.length === 1 ? '' : 's'}`, rows }];
   if (tasks.length) groups.push({ label: `Lid and seat · ${tasks.length} task${tasks.length === 1 ? '' : 's'}`, rows: tasks });
   choose(anchor, groups, S.pick ? String(S.pick.stage) : null, (v) => {
     const r = [...rows, ...tasks].find(x => x.value === v), s = plan.stages.find(x => String(x.index) === v);
     S.pick = { stage: Number(v), ids: { left: (s.programs.left || []).map(x => x.id), right: (s.programs.right || []).map(x => x.id) },
       text: r.text.replace(/^Stage \d+ · /, ''), ...(s.kind === 'mechanism' ? { task: s.task } : {}) };
     paintAll();
-  }, { placeholder: 'Search the stages: Program ID or name' });
+  }, { placeholder: 'Search the parts: Program ID or name' });
 }
 
 // Whether Real Machine Mode can run what is chosen: the last simulation is this run, played to its end, and
@@ -768,7 +874,7 @@ async function simulate(w) {
 
 async function runReal(w) {
   const mode = w.mode;
-  const body = { mode, pick: w.pick, confirm_each: S.confirmEach };
+  const body = { mode, pick: w.pick };
   let job;
   try {
     try {
@@ -791,13 +897,17 @@ async function runReal(w) {
     let plan = null;
     try { plan = await post(`${base()}/plan`, { mode, pick: w.pick }); } catch (_) { /* the server says it again */ }
     const c = plan && plan.counts;
-    const moves = mode === 'both' ? 'DUAL SAFE-TIMELINE EXECUTION' : `${ARM(mode)} ROBOT ARM WILL MOVE`;
+    const moves = mode === 'both' ? 'BOTH ROBOT ARMS WILL MOVE' : `${ARM(mode)} ROBOT ARM WILL MOVE`;
     const title = S.scope === 'task' ? `Run the task: ${pickText()}` : S.scope === 'dual' ? `Run the dual-arm task: ${pickText()}`
       : mode === 'both' ? 'Run Dual Sequences' : `Run ${ARM(mode)} Sequence`;
+    const n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
     const yes = await confirmDialog({ title, ok: 'Start on the robot',
-      body: `${moves}. ${c ? (mode === 'both' ? `Coordinated timeline/serial stages: ${c.coordinated}; TOGETHER timeline blocks: ${c.together}; `
-        + `one-arm-at-a-time stages: ${c.one_arm}; manual safety checkpoints: ${c.checkpoints}. ` : '') : ''}`
+      body: `${moves}. ${c && mode === 'both' ? `Each arm goes through its own rows: ${n(c.parts, 'part', 'parts')}, `
+        + `${n(c.meets, 'Meet', 'Meets')} where both arms meet, ${n(c.waits_for, 'Wait-for row', 'Wait-for rows')}, `
+        + `${n(c.mechanisms, 'lid or seat task', 'lid and seat tasks')}. ` : ''}`
+        + `${(plan && plan.said || []).join(' ')}${plan && (plan.said || []).length ? ' ' : ''}`
         + `Overall controller speed: ${speedPct()}%. ${warns.length ? `The simulation found: ${warns.join(' ')} ` : ''}`
+        + 'Each step is timed on the robot: one far outside its range stops both arms. '
         + 'Confirm both work areas are clear and both hardware E-stops are accessible.',
       list: REAL_CHECKS });
     if (!yes) { window.toast('Cancelled: nothing was sent to the robot.', 'warn'); return; }
@@ -820,7 +930,7 @@ async function follow(job) {
     if (done.state === 'done') window.toast(`Sequence complete (${fmt(done.elapsed_s)}).`, 'good');
     else if (done.state === 'cancelled') window.toast('The sequence was stopped.', 'warn');
     else tell(Object.assign(new Error(done.error || 'The sequence did not finish.'), { hint: done.hint }));
-    if (done.state !== 'done' && done.error) S.status = `PROGRAM RULES STOPPED // ${done.error}`;
+    if (done.state !== 'done' && done.error) S.status = `PAGE 02 SEQUENCE STOPPED // ${done.error}`;
   } catch (err) { tell(err); } finally {
     S.job = null;
     S.rows = { left: null, right: null };
@@ -828,7 +938,7 @@ async function follow(job) {
   }
 }
 
-// Polls a job, painting its live status and asking its questions (the lid checkpoint, the waiting arm).
+// Polls a job, painting its live status and asking its questions, if it has any (jobs.py: ask).
 async function watch(job) {
   let j = job, misses = 0, asked = 0;                       // a job's questions are numbered from 1: per job
   for (;;) {
@@ -1041,15 +1151,13 @@ function paintMoment(g) {
     const acts = sim.acts[side] || [];
     const a = acts.find(x => x.t0 <= g && g < x.t1);
     let text = 'IDLE';
-    if (a) text = `${a.text} // ${a.drawn === false ? 'NOT DRAWN' : 'RUNNING'} (row ${a.row})`;
-    else if (stage && stage.kind === 'serial' && stage.second === side && g < stage.handoff_t) text = `Program ${stage.label} // WAITING FOR ${ARM(stage.first)}`;
-    else if (stage && stage.kind === 'checkpoint') text = 'PAUSED // MANUAL LID CHECK';
+    if (a) text = `${a.text} // ${a.gate ? 'WAITING' : a.drawn === false ? 'NOT DRAWN' : 'RUNNING'} (row ${a.row})`;
     else if (acts.length && g >= acts[acts.length - 1].t1) text = 'SEQUENCE COMPLETE';
     S.live[side] = text;
     if ((a ? a.row : null) !== S.rows[side]) { S.rows[side] = a ? a.row : null; paintArm(side); }
   }
-  S.status = stage ? `SIMULATION // ${stage.kind === 'serial' ? `Program ${stage.label} // ${ARM(stage.first)} RUN FIRST` : stage.label || stage.kind.toUpperCase()}`
-    + `${stage.kind === 'parallel' ? ' // LEFT + RIGHT TOGETHER' : ''}` : S.status;
+  S.status = stage ? `SIMULATION // ${stage.label || stage.kind.toUpperCase()}${stage.kind === 'parallel' ? ' // EACH ARM THROUGH ITS OWN ROWS' : ''}`
+    : S.status;
   document.querySelectorAll('.lite-s2-stage').forEach((n) => n.classList.toggle('active', stage && Number(n.dataset.i) === stage.index));
   for (const side of ARMS) $(`liteS2Live_${side}`).textContent = `${ARM(side)} // ${S.live[side]}`;
   $('liteS2StatusText').textContent = S.status;
@@ -1089,15 +1197,15 @@ async function simEnded() {
 
 function paintStages() {
   const sim = S.sim, box = $('liteS2Stages');
-  const words = { parallel: 'LEFT + RIGHT together', serial: 'one arm at a time', checkpoint: 'manual checkpoint', tail: 'final steps', single: 'one arm',
-    mechanism: 'lid / seat, both arms (ALIX\'s plan)' };
-  box.replaceChildren(el('h4', { text: 'Stages (V53\'s SAFE TIMELINE plan)' }), ...sim.stages.map(s => el('button', {
+  const words = { parallel: 'each arm through its own rows', single: 'one arm', mechanism: 'lid / seat, both arms (ALIX\'s plan)' };
+  const ends = (s) => (s.t1_range && s.t1_range[1] - s.t1_range[0] >= 0.05 ? ` (ends ${fmt(s.t1_range[0])}–${fmt(s.t1_range[1])} on the robot)` : '');
+  box.replaceChildren(el('h4', { text: 'Stages (each ends where both arms meet)' }), ...sim.stages.map(s => el('button', {
     class: 'lite-s2-stage', type: 'button', 'data-i': String(s.index), onclick: () => { player.pause(); seekSim(s.t0); },
-    text: `${s.index + 1}. ${s.kind === 'serial' ? `Program ${s.label}` : s.label || s.kind.toUpperCase()} · ${words[s.kind] || s.kind}${s.kind === 'serial' ? ` (${ARM(s.first)} first)` : ''} · ${fmt(s.t0)}–${fmt(s.t1)}` })));
+    text: `${s.index + 1}. ${s.title || s.label || s.kind.toUpperCase()} · ${words[s.kind] || s.kind} · ${fmt(s.t0)}–${fmt(s.t1)}${ends(s)}` })));
 }
 
 function paintFindings() {
-  const sim = S.sim, box = $('liteS2Findings'), col = sim.collisions;
+  const sim = S.sim, box = $('liteS2Findings'), col = sim.collisions, drift = sim.drift;
   const pair = (p) => `${p.link} – ${p.object}${p.depth_mm ? ` (${p.depth_mm} mm)` : ''}`;
   const where = (e) => (e.at || []).filter(Boolean).map(w => `${ARM(w.side)} row ${w.row} (${w.text}${w.line ? `, line ${w.line.toLocaleString()}` : ''})`).join('; ');
   const c = Object.entries(col.contact || {}).filter(([, v]) => v.samples).map(([s, v]) => `${ARM(s)} hand on the commode from ${fmt(v.first_t)} (deepest ${v.deepest_mm} mm)`);
@@ -1114,14 +1222,24 @@ function paintFindings() {
     ...col.events.slice(0, 6).map(e => el('div', { class: 'lite-rev3d-event' },
       el('span', { text: `${fmt(e.first_t)}–${fmt(e.last_t)}: ${e.pairs.map(pair).join('; ') || e.what.join(', ')} · ${where(e)}` }),
       el('button', { class: 'btn light', type: 'button', text: 'Show', onclick: () => { player.pause(); seekSim(e.first_t); } }))),
+    drift && drift.timings ? el('h4', { text: `The two arms ${drift.clearance_mm} mm apart, at every timing` }) : null,
+    drift && drift.timings ? el('div', { class: `lite-status ${drift.events.length ? 'warn' : 'ok'}`, text: (drift.events.length
+      ? `Closer than ${drift.clearance_mm} mm in ${drift.events.length} place${drift.events.length === 1 ? '' : 's'} (said below)`
+      : `Never closer than ${drift.clearance_mm} mm`) + `: ${drift.timings} timing${drift.timings === 1 ? '' : 's'} checked, each arm's steps from as fast `
+      + `as the robot runs them to as slow, against the other's (up to ${fmt(drift.band_s)} apart).` }) : null,
+    // (no Show: the 3D plays the usual timing, and these are other timings)
+    ...(drift && drift.events || []).slice(0, 6).map(e => el('div', { class: 'lite-rev3d-event' },
+      el('span', { text: `${fmt(e.first_t)}–${fmt(e.last_t)} in its timing: ${e.exact_mm > 0 ? `${e.exact_mm} mm` : 'touching'} · ${(e.links || []).join(', ')} · ${where(e)}` }))),
     el('h4', { text: 'Before it runs on the robot' }),
     sim.findings.length ? el('ul', { class: 'lite-s2-findlist' }, sim.findings.map(f => el('li', { class: f.level === 'stop' ? 'lite-bad' : f.level === 'warn' ? 'lite-warn' : 'mini-note', text: f.text })))
       : el('div', { class: 'lite-status ok', text: 'Every Program is drawn, and its pole and hand are the ones it was taught with.' }),
-    el('div', { class: 'mini-note', text: `Times are estimated: the moves at their speed % of each joint's rating, the programs on their stored 5 ms timing. `
+    el('div', { class: 'mini-note', text: 'Times are as the robot runs each step as a rule (measured in the lab): the programs on their stored 5 ms '
+      + 'timing, the moves at their speed % of each joint\'s rating; each step also has its range, which the timing check above goes through. '
       + `The arms start ${Object.values(sim.start_from || {}).includes('now') ? 'where they stand now' : 'from the standing pose'}. A Program set at another `
-      + 'pole or hand than its own stops Real Machine Mode (red); the rest it asks about, once.' })].filter(Boolean));
-  const marks = $('liteS2Marks'), T = Math.max(1e-6, sim.total_s);          // the checkpoints (the collisions: the view's tools)
-  marks.replaceChildren(...sim.stages.filter(s => s.kind === 'checkpoint').map(s => el('span', { class: 'lite-s2-checkmark', title: s.label, style: `left:${(100 * s.t0) / T}%` })));
+      + 'pole or hand than its own stops Real Machine Mode (red); the rest it asks about, once. On the robot each step is timed: a '
+      + 'Program whose lines run past 105 % of their time (or end before 90 %), or another step more than 10 % outside its range, '
+      + 'stops both arms.' })].filter(Boolean));
+  $('liteS2Marks').replaceChildren();                       // (the collisions are marked by the view's tools)
 }
 
 // Data Management read a controller again (or S1, or a start-pose list): the lists here follow it.
