@@ -1618,7 +1618,7 @@
        "Thumb Bend": 0,
        "Thumb Rotate": 1000
       },
-      "startPose": "",
+      "startPose": "gp:R_T06_STP",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
@@ -1651,8 +1651,8 @@
      "Thumb Bend": 0,
      "Thumb Rotate": 1000
     },
-    "leftStartPose": "",
-    "rightStartPose": "",
+    "leftStartPose": "gp:L_HME_POS",
+    "rightStartPose": "gp:R_T06_STP",
     "trajectoryFileName": "R_TASK_5B_trajectory.txt",
     "leftProgramId": 55,
     "programId": 55,
@@ -3898,8 +3898,8 @@
    0,
    1000
   ],
-  "leftPose": "",
-  "rightPose": "",
+  "leftPose": "gp:L_HME_POS",
+  "rightPose": "gp:R_T06_STP",
   "programId": "55",
   "fileName": "R_TASK_5B_trajectory.txt",
   "activeTrajectorySource": "recorded",
