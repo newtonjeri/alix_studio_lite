@@ -96,30 +96,49 @@ LIFT_TOL_M = 0.005              # the pole controller's goal tolerance (5 mm)
 
 # --- L49: the TWO-PHASE travel model, fitted to the run ledger ---------------
 # The single-slope model (LIFT_START_LATENCY_S + d / LIFT_CRUISE_MPS, x3) put a
-# full 0.315 m stroke at 8.25 s against a true ~7 s: a 1.15x margin on a branch
-# that has never been reached, because the wait exits on the 0.68 s fallback
-# instead (B6). Measured here from every `_frames.ndjson` in
-# Resource/runs/tracks/2026-09-0*/ that carries a `pre_run.pole` with a target,
-# taking first-change to last-change of the 5 ms `lift_state.height` channel
-# (73 files, 67 real moves, 6 zero-distance commands):
+# full 0.315 m stroke at 8.25 s against the ~7 s of the earlier whole-mm up fit
+# (below): a 1.15x margin on a branch that has never been reached, because the
+# wait exits on the 0.68 s fallback instead (B6). On the fine channel the model
+# now gives the stroke 4.75 s, and its timeout 14.2 s.
+# Measured here (2026-10-22) on the pole's FINE channel, the 5 ms
+# push's `lift_state.pos` (counts; mm per count from the move's whole-mm height
+# change), from the first move over 0.2 mm to STAYING within 0.5 mm of where the
+# pole settles (the median of the capture's last second), over every
+# `_frames.ndjson` in Resource/runs/tracks/2026-09-*/ that carries a
+# `pre_run.pole` with a target (113 files, 101 real moves, 12 zero-distance):
 #
-#     UP    0.075 m  n=33   2.555 / 2.629 / 2.662 s  (min/median/max)
-#     DOWN  0.075 m  n=33   1.713 / 1.720 / 1.730 s
-#     DOWN  0.165 m  n=1                     2.678 s
+#     UP    0.075 m  n=43   1.917 / 1.954 / 1.968 s  (min/median/max)
+#     DOWN  0.075 m  n=45   1.928 / 1.948 / 1.999 s
+#     UP    0.044 / 0.060 / 0.076 m  1.586 / 1.776 / 1.969 s  (max)
+#     DOWN  0.036 / 0.060 m          1.427 / 1.835 s
+#     DOWN  0.132 / 0.149 / 0.165 / 0.234 m   2.545 / 2.687 / 2.818 / 3.491 s
 #
-# and the shape of a single series (2026-09-03/run_slot70_212854) shows why one
-# slope cannot fit it: 75 -> 149 mm takes 1.576 s, and the LAST millimetre takes
-# 1.067 s. So the model is a direction-dependent slew plus a fixed creep:
+# The same time up and down. A 75 mm move is within 5 mm of its end at 1.23 s,
+# 2 mm at 1.48 s, 1 mm at 1.67 s, 0.5 mm at 1.95 s and 0.2 mm at 2.29 s (medians,
+# both directions alike): a cruise of ~0.10 m/s, then a settle of ~1 s that one
+# slope cannot fit. So the model is a slew plus a fixed creep:
 #
-#     t(d) = LIFT_CREEP_S + d / slew(direction)
+#     t(d) = LIFT_CREEP_S + d / slew
 #
-# The constants below are chosen so the prediction covers the measured MAXIMUM
-# in every observed (direction, distance) cell — 2.771 >= 2.662 up, 2.273 >=
-# 1.730 and 3.201 >= 2.678 down — and `test_staging.py` asserts exactly that
-# against the ledger. Only 100 % speed has ever been commanded, so the
+# The earlier fit (UP 0.059, DOWN 0.097 m/s) timed first-change to last-change
+# of the WHOLE-MM `lift_state.height` channel — UP 0.075 m 2.555-2.662 s, DOWN
+# 1.713-1.730 s — and the asymmetry was that channel's rounding, not the pole:
+# going up, the height reaches its final integer only at the very end of the
+# settle (2026-09-03/run_slot70_212854: the pole 0.1 mm from settled), going
+# down at the first crossing (run_slot71_212922: still 0.9 mm above).
+#
+# With 0.097 m/s both ways the prediction covers the slowest within-0.5 mm time
+# in every observed cell with at least 0.27 s to spare — 2.273 >= 1.999 at
+# 0.075 m, 3.201 >= 2.818 at 0.165 m, 3.912 >= 3.491 at 0.234 m — and
+# `test_staging.py` asserts that against the 2026-09-0* run_slot cells. The
+# spare stands for command-to-first-motion, which the frames do not timestamp;
+# the 2026-07-15 bench put it at 194-266 ms down and 305-378 ms up
+# (conversions.hpp kLiftStartLatencyS), so the slowest 0.075 m UP move can reach
+# 0.5 mm up to ~0.07 s after the prediction — still inside 1 mm, against a 5 mm
+# goal tolerance (LIFT_TOL_M). Only 100 % speed has ever been commanded, so the
 # speed_pct scaling below is an assumption applied to the slew alone.
-LIFT_SLEW_UP_MPS = 0.059        # measured, endpoint-fitted at 100 %
-LIFT_SLEW_DOWN_MPS = 0.097      # measured, two-distance fit at 100 %
+LIFT_SLEW_UP_MPS = 0.097        # measured on lift_state.pos at 100 %, = DOWN
+LIFT_SLEW_DOWN_MPS = 0.097      # measured on lift_state.pos at 100 %
 LIFT_CREEP_S = 1.5              # the final-approach phase, direction-independent
 LIFT_TIMEOUT_MARGIN = 3.0       # kept from the old model: 3x on the sum
 #: A pushed height must hold inside the tolerance for this long, moving no more
@@ -132,8 +151,10 @@ def lift_travel_s(dist_m: float, *, up: Optional[bool] = None,
                   speed_pct: int = 100) -> float:
     """Expected pole travel time for *dist_m* metres (L49, two-phase).
 
-    *up* None means the direction is unknown (the height getter was
-    unreadable): the slower of the two slews is used, never the faster.
+    The pole travels the same up and down (L49, the fine channel), so the two
+    slews are equal and *up* no longer changes the result. It is kept for
+    the callers that pass it; None (the height getter was unreadable) takes
+    the up slew, as it always has.
     """
     frac = max(1, min(100, int(speed_pct))) / 100.0
     slew = (LIFT_SLEW_DOWN_MPS if up is False else LIFT_SLEW_UP_MPS) * frac

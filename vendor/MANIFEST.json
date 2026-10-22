@@ -817,8 +817,8 @@
       "dest": "vendor/alix/core/python/alix_dispatch/src/alix_dispatch/peripherals.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_dispatch/src/alix_dispatch/peripherals.py",
       "origin": "alix",
-      "sha256": "8aaafa19c8a89bd214aacc0a66569519ccd0879dc7ca3e4edf700464b859095a",
-      "bytes": 46995
+      "sha256": "f6131b3f455385467ec2e23581c9fce1c24aaec09e1e85b6522fe216aa179d56",
+      "bytes": 48491
     },
     {
       "dest": "vendor/alix/core/python/alix_dispatch/src/alix_dispatch/program.py",
@@ -4487,8 +4487,8 @@
       "dest": "vendor/control_app/pole.py",
       "source": "/home/newtonjeri/alix_studio_lite_ws/upload_channel/pole.py",
       "origin": "workspace",
-      "sha256": "291353a9a1dd53633e4baabc322c72dbc8de7c3f2c442b5664bec5b37eecfea9",
-      "bytes": 2595
+      "sha256": "c59b55d6805b768492df16aa86bc79a1e50f8111af1a2a78e8e540a5452aca81",
+      "bytes": 2823
     },
     {
       "dest": "vendor/control_app/reference/rm_trajectory_ui_v53_safe_lid_checkpoint.py",

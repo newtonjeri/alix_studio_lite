@@ -44,7 +44,9 @@ def test_times_follow_alix_models():
     assert staging.pole_travel_s(300, 300) == 0.0 and staging.pole_travel_s(140, 144) == 0.0   # within 5 mm
     assert staging.pole_travel_s(300, 140) == pytest.approx(peripherals.lift_travel_s(0.160, up=False))
     assert staging.pole_travel_s(140, 300) == pytest.approx(peripherals.lift_travel_s(0.160, up=True))
-    assert staging.pole_travel_s(140, 300) > staging.pole_travel_s(300, 140)            # the pole rises slower
+    # the same up and down (ALIX's ledger on the pole's fine position, 22 Oct: the slower rise was the whole-mm reading)
+    assert staging.pole_travel_s(140, 300) == pytest.approx(staging.pole_travel_s(300, 140))
+    assert staging.pole_travel_s(140, 300) == pytest.approx(1.5 + 0.160 / 0.097)
     b = backends.SdkBackend
     assert staging.hand_move_s([1000] * 6, [0, 0, 0, 0, 150, 1000]) == pytest.approx(1000 / b.HAND_COUNTS_PER_S + b.HAND_LATENCY_S)
     assert staging.hand_move_s([1000] * 6, [1000, 1000, 1000, 1000, None, None]) == 0.0

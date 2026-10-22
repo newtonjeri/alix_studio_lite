@@ -2,8 +2,9 @@ import time
 
 LIFT_TOL_M = 0.005          # pole controller's goal tolerance (5 mm)
 LIFT_STROKE_M = 0.315       # full stroke
-LIFT_SLEW_UP_MPS = 0.059    # measured on this robot at 100 % (vendor's 0.185 is never reached)
-LIFT_SLEW_DOWN_MPS = 0.097
+LIFT_SLEW_UP_MPS = 0.097    # measured on this robot at 100 % (vendor's 0.185 is never reached): the same both ways
+LIFT_SLEW_DOWN_MPS = 0.097  # on the pole's fine position (ALIX's ledger, lift_state.pos): up was 0.059 when fitted to
+                            # the whole-mm height, which reaches its last mm only at the end of the settle going up
 LIFT_CREEP_S = 1.5          # slow final approach: the last mm can take ~1 s
 LIFT_TIMEOUT_MARGIN = 3.0
 

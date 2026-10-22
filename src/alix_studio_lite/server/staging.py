@@ -15,7 +15,7 @@ Units and laws are ALIX's own, imported, not copied:
 
 - pole: the controller's millimetres are the sliding plate's travel
   (``{L,R}_sliding_plate_joint``, metres), 0-315 mm, arrival within 5 mm, travel time
-  ``alix_dispatch.peripherals.lift_travel_s`` (1.5 s creep + distance / 0.059 m/s up, 0.097 down);
+  ``alix_dispatch.peripherals.lift_travel_s`` (1.5 s creep + distance / 0.097 m/s, up and down alike);
 - hand: six counts in SDK order (little, ring, middle, index, thumb bend, thumb rotate),
   1000 = open, 0 = closed, ``None`` = hold; radians by ALIX's ``hand_units.hw_to_rad``; the time
   a move takes is span / 373 counts/s + 0.115 s (``alix_dispatch.backends.SdkBackend``);
