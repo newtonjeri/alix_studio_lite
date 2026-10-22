@@ -1,0 +1,50 @@
+{
+ "name": "L_merge_7_2.txt",
+ "side": "left",
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded into S1 (not taught in Lite)",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "lines": 2339,
+ "seconds": 11.69,
+ "sha256": "b01db8140ccdf8a859fdfdc8bdebeb0359edc631ee15973319ae66d55633f8e5",
+ "parts": [
+  {
+   "name": "L_merge_7_1_trim_mean_scale_processed_2.txt",
+   "lines": 2339
+  }
+ ],
+ "joins": [],
+ "limits_ok": false,
+ "limits_text": "L2 Joint speed 1.19 x limit (limit 1 x limit); L3 Joint acceleration 1809 deg/s^2 (limit 612 deg/s^2)",
+ "placement": null,
+ "phase": "lid_closed",
+ "sources": [
+  {
+   "ref": "tune:MERGE-L-003/v002",
+   "name": "L_merge_7_1_trim_mean_scale_processed_2.txt",
+   "sha256": "b01db8140ccdf8a859fdfdc8bdebeb0359edc631ee15973319ae66d55633f8e5",
+   "tasks": [],
+   "grade": "processed"
+  }
+ ],
+ "made_from": {
+  "merge": "L_merge_7_1.txt",
+  "file": "20261021_201310_L_merge_7_1.txt",
+  "version": "v002"
+ },
+ "made": "2026-10-22 15:33:55",
+ "tasks": [],
+ "grade": "processed"
+}

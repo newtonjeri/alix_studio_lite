@@ -46,13 +46,13 @@
   "segments": [
    {
     "start": 1,
-    "end": 1430,
+    "end": 2779,
     "pct": 35.0
    },
    {
-    "start": 1431,
+    "start": 2780,
     "end": 3781,
-    "pct": 40.0
+    "pct": 65.0
    }
   ],
   "smooth_window": 101,
@@ -67,178 +67,6 @@
   "idle_min_run": 20
  },
  "history": [
-  {
-   "label": "Start",
-   "settings": {
-    "optimiser": "manual",
-    "target_s": null,
-    "segments": [],
-    "smooth_window": 101,
-    "program_id": null,
-    "max_dev_mm": null,
-    "trim": true,
-    "smooth": true,
-    "scale": true,
-    "time_mode": "fastest",
-    "idle_window": 11,
-    "idle_threshold_md": 8.0,
-    "idle_min_run": 20
-   }
-  },
-  {
-   "label": "Automatic suggestions",
-   "settings": {
-    "optimiser": "manual",
-    "target_s": null,
-    "segments": [
-     {
-      "start": 1,
-      "end": 2155,
-      "pct": 29.0
-     },
-     {
-      "start": 2156,
-      "end": 4310,
-      "pct": 45.0
-     },
-     {
-      "start": 4311,
-      "end": 6465,
-      "pct": 45.0
-     },
-     {
-      "start": 6466,
-      "end": 8620,
-      "pct": 31.0
-     },
-     {
-      "start": 8621,
-      "end": 10775,
-      "pct": 29.0
-     }
-    ],
-    "smooth_window": 101,
-    "program_id": null,
-    "max_dev_mm": null,
-    "trim": true,
-    "smooth": true,
-    "scale": true,
-    "time_mode": "fastest",
-    "idle_window": 11,
-    "idle_threshold_md": 8.0,
-    "idle_min_run": 20
-   },
-   "at": 1792230701.4454165
-  },
-  {
-   "label": "Program ID 4",
-   "settings": {
-    "optimiser": "manual",
-    "target_s": null,
-    "segments": [
-     {
-      "start": 1,
-      "end": 2155,
-      "pct": 29.0
-     },
-     {
-      "start": 2156,
-      "end": 4310,
-      "pct": 45.0
-     },
-     {
-      "start": 4311,
-      "end": 6465,
-      "pct": 45.0
-     },
-     {
-      "start": 6466,
-      "end": 8620,
-      "pct": 31.0
-     },
-     {
-      "start": 8621,
-      "end": 10775,
-      "pct": 29.0
-     }
-    ],
-    "smooth_window": 101,
-    "program_id": 4,
-    "max_dev_mm": null,
-    "trim": true,
-    "smooth": true,
-    "scale": true,
-    "time_mode": "fastest",
-    "idle_window": 11,
-    "idle_threshold_md": 8.0,
-    "idle_min_run": 20
-   },
-   "at": 1792230748.1109223
-  },
-  {
-   "label": "Automatic suggestions",
-   "settings": {
-    "optimiser": "manual",
-    "target_s": null,
-    "segments": [
-     {
-      "start": 1,
-      "end": 2155,
-      "pct": 29.0
-     },
-     {
-      "start": 2156,
-      "end": 4310,
-      "pct": 40.0
-     },
-     {
-      "start": 4311,
-      "end": 6465,
-      "pct": 40.0
-     },
-     {
-      "start": 6466,
-      "end": 8620,
-      "pct": 31.0
-     },
-     {
-      "start": 8621,
-      "end": 10775,
-      "pct": 45.0
-     }
-    ],
-    "smooth_window": 101,
-    "program_id": 4,
-    "max_dev_mm": null,
-    "trim": true,
-    "smooth": true,
-    "scale": true,
-    "time_mode": "fastest",
-    "idle_window": 11,
-    "idle_threshold_md": 8.0,
-    "idle_min_run": 20
-   },
-   "at": 1792231036.157339
-  },
-  {
-   "label": "Scale regions cleared: another recording (R_TASK_2_trajectory_2.txt)",
-   "settings": {
-    "optimiser": "manual",
-    "target_s": null,
-    "segments": [],
-    "smooth_window": 101,
-    "program_id": 4,
-    "max_dev_mm": null,
-    "trim": true,
-    "smooth": true,
-    "scale": true,
-    "time_mode": "fastest",
-    "idle_window": 11,
-    "idle_threshold_md": 8.0,
-    "idle_min_run": 20
-   },
-   "at": 1792382290.2998104
-  },
   {
    "label": "Scaling regions",
    "settings": {
@@ -572,8 +400,238 @@
     "idle_min_run": 20
    },
    "at": 1792383146.1743658
+  },
+  {
+   "label": "Scaling regions changed",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 35.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792652473.8491027
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1430,
+      "pct": 35.0
+     },
+     {
+      "start": 2780,
+      "end": 3781,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792652475.5744581
+  },
+  {
+   "label": "Scaling regions changed",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 2780,
+      "end": 3781,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792652495.748308
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2779,
+      "pct": 100.0
+     },
+     {
+      "start": 2780,
+      "end": 3781,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792652502.05866
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2779,
+      "pct": 35.0
+     },
+     {
+      "start": 2780,
+      "end": 3781,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792652508.6795206
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2779,
+      "pct": 35.0
+     },
+     {
+      "start": 2780,
+      "end": 3781,
+      "pct": 55.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792652511.8682082
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2779,
+      "pct": 35.0
+     },
+     {
+      "start": 2780,
+      "end": 3781,
+      "pct": 60.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792652531.2994106
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2779,
+      "pct": 35.0
+     },
+     {
+      "start": 2780,
+      "end": 3781,
+      "pct": 65.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 53,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792652565.2605104
   }
  ],
- "cursor": 16,
- "version": "v004"
+ "cursor": 19,
+ "version": "v005"
 }

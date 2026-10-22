@@ -4,12 +4,19 @@
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
-   "speed": 20,
+<<<<<<< HEAD
+   "speed": 100,
    "wait_s": 0.0
+=======
+   "speed": 20,
+   "wait_s": 0.0,
+   "uid": "86c2c716"
+>>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
   },
   {
    "type": "pole",
-   "mm": 50.0
+   "mm": 50.0,
+   "uid": "f8d209bb"
   },
   {
    "type": "hand",
@@ -20,7 +27,8 @@
     1000,
     0,
     1000
-   ]
+   ],
+   "uid": "8eb235e5"
   },
   {
    "type": "program",
@@ -28,15 +36,24 @@
    "name": "80_L_merge_1.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "6df10c15"
   },
   {
    "type": "wait",
-   "seconds": 3.0
+   "seconds": 3.0,
+   "uid": "f054efaa"
   },
   {
    "type": "pole",
-   "mm": 200.0
+   "mm": 200.0,
+   "uid": "de385a06"
+  },
+  {
+   "type": "wait_for",
+   "target": {
+    "uid": "ed8d04c3"
+   },
+   "uid": "2b7a1446"
   },
   {
    "type": "program",
@@ -44,7 +61,7 @@
    "name": "81_L_merge_2_1.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "7f8c5400"
   },
   {
    "type": "hand",
@@ -55,7 +72,8 @@
     0,
     150,
     1000
-   ]
+   ],
+   "uid": "d2cd0b47"
   },
   {
    "type": "program",
@@ -63,11 +81,12 @@
    "name": "56_L-R06_v001.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "99f06aff"
   },
   {
    "type": "wait",
-   "seconds": 3.0
+   "seconds": 3.0,
+   "uid": "2536b659"
   },
   {
    "type": "hand",
@@ -78,7 +97,8 @@
     1000,
     0,
     1000
-   ]
+   ],
+   "uid": "3befbef3"
   },
   {
    "type": "program",
@@ -86,7 +106,7 @@
    "name": "83_L_merge_4.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "0880f322"
   },
   {
    "type": "hand",
@@ -97,7 +117,15 @@
     0,
     150,
     1000
-   ]
+   ],
+   "uid": "3fc66d26"
+  },
+  {
+   "type": "wait_for",
+   "target": {
+    "uid": "a9e5f6c2"
+   },
+   "uid": "e4038e8a"
   },
   {
    "type": "program",
@@ -105,23 +133,25 @@
    "name": "84_L_merge_5.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "1d3b1868"
   },
   {
    "type": "pole",
-   "mm": 20.0
+   "mm": 20.0,
+   "uid": "76084987"
   },
   {
    "type": "program",
    "id": 85,
-   "name": "85_L_merge_6.txt",
+   "name": "85_L_merge_6_2.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "78e03ff5"
   },
   {
    "type": "pole",
-   "mm": 200.0
+   "mm": 200.0,
+   "uid": "e6589ff9"
   },
   {
    "type": "hand",
@@ -132,22 +162,29 @@
     1000,
     1000,
     1000
-   ]
+   ],
+   "uid": "2792cef2"
   },
   {
    "type": "program",
    "id": 86,
-   "name": "86_L_merge_7_1_trim_mean_scale_p",
+   "name": "86_L_merge_7_2.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "5412dfc5"
   },
   {
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
-   "speed": 20,
+<<<<<<< HEAD
+   "speed": 100,
    "wait_s": 0.0
+=======
+   "speed": 20,
+   "wait_s": 0.0,
+   "uid": "ea5d2d81"
+>>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
   }
  ],
  "right": [
@@ -156,11 +193,13 @@
    "name": "R_HME_POS",
    "move": "movej",
    "speed": 20,
-   "wait_s": 0.0
+   "wait_s": 0.0,
+   "uid": "0c9fc143"
   },
   {
    "type": "pole",
-   "mm": 200.0
+   "mm": 200.0,
+   "uid": "6df2493c"
   },
   {
    "type": "hand",
@@ -171,19 +210,28 @@
     1000,
     0,
     1000
-   ]
+   ],
+   "uid": "6bd637cc"
+  },
+  {
+   "type": "wait_for",
+   "target": {
+    "uid": "6df10c15"
+   },
+   "uid": "1a771b9d"
   },
   {
    "type": "program",
    "id": 80,
-   "name": "80_R_merge_1.txt",
+   "name": "80_R_merge_1_2.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "9b278b14"
   },
   {
    "type": "wait",
-   "seconds": 3.0
+   "seconds": 3.0,
+   "uid": "691761fe"
   },
   {
    "type": "hand",
@@ -194,7 +242,8 @@
     0,
     150,
     1000
-   ]
+   ],
+   "uid": "ff30fba7"
   },
   {
    "type": "program",
@@ -202,7 +251,7 @@
    "name": "54_R-R04_v005.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "ed8d04c3"
   },
   {
    "type": "hand",
@@ -213,7 +262,8 @@
     1000,
     0,
     1000
-   ]
+   ],
+   "uid": "97e002cb"
   },
   {
    "type": "program",
@@ -221,11 +271,12 @@
    "name": "55_R-R05_v001.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "bb64e4c3"
   },
   {
    "type": "pole",
-   "mm": 50.0
+   "mm": 50.0,
+   "uid": "ef410dac"
   },
   {
    "type": "program",
@@ -233,11 +284,16 @@
    "name": "56_R-R06_v001.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "828472bd"
   },
   {
    "type": "wait",
-   "seconds": 3.0
+<<<<<<< HEAD
+   "seconds": 5.0
+=======
+   "seconds": 3.0,
+   "uid": "4bee997a"
+>>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
   },
   {
    "type": "hand",
@@ -248,7 +304,15 @@
     0,
     150,
     1000
-   ]
+   ],
+   "uid": "294dacd8"
+  },
+  {
+   "type": "wait_for",
+   "target": {
+    "uid": "0880f322"
+   },
+   "uid": "6bf66757"
   },
   {
    "type": "program",
@@ -256,37 +320,37 @@
    "name": "81_R_merge_5.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "a9e5f6c2"
   },
   {
    "type": "pole",
-   "mm": 200.0
+   "mm": 200.0,
+   "uid": "8849a767"
   },
   {
+<<<<<<< HEAD
+=======
    "type": "program",
    "id": 20,
    "name": "20_R_T04_GC_BP.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "871d007f"
   },
   {
-   "type": "program",
-   "id": 100,
-   "name": "100_delay_12s.txt",
-   "speed": 100,
-   "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "type": "wait",
+   "seconds": 12.0,
+   "note": "was Program 100 (100_delay_12s.txt): a delay",
+   "uid": "d35be378"
   },
   {
-   "type": "program",
-   "id": 99,
-   "name": "99_delay_7s.txt",
-   "speed": 100,
-   "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "type": "wait",
+   "seconds": 7.0,
+   "note": "was Program 99 (99_delay_7s.txt): a delay",
+   "uid": "3e6d2461"
   },
   {
+>>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
    "type": "hand",
    "values": [
     1000,
@@ -295,7 +359,27 @@
     1000,
     1000,
     1000
-   ]
+   ],
+   "uid": "76899099"
+  },
+  {
+   "type": "wait_for",
+   "target": {
+    "uid": "1d3b1868"
+   },
+   "uid": "e7690c2b"
+  },
+  {
+   "type": "program",
+   "id": 20,
+   "name": "20_R-T04_v001.txt",
+   "speed": 100,
+   "transit_speed": 30,
+   "dual_rule": "TOGETHER"
+  },
+  {
+   "type": "wait",
+   "seconds": 6.0
   },
   {
    "type": "program",
@@ -303,15 +387,20 @@
    "name": "82_R_merge_7.txt",
    "speed": 100,
    "transit_speed": 30,
-   "dual_rule": "TOGETHER"
+   "uid": "9c50a7e2"
   },
   {
    "type": "global",
    "name": "R_HME_POS",
    "move": "movej",
    "speed": 20,
-   "wait_s": 0.0
+   "wait_s": 0.0,
+   "uid": "1b7c6171"
   }
  ],
- "updated": "2026-10-21 23:12:49"
+<<<<<<< HEAD
+ "updated": "2026-10-22 16:31:46"
+=======
+ "updated": "2026-10-22 05:22:34"
+>>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
 }

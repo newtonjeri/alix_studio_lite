@@ -46,12 +46,17 @@
   "segments": [
    {
     "start": 1,
+    "end": 1701,
+    "pct": 60.0
+   },
+   {
+    "start": 1702,
     "end": 3001,
-    "pct": 70.0
+    "pct": 90.0
    }
   ],
   "smooth_window": 101,
-  "program_id": 65,
+  "program_id": 63,
   "max_dev_mm": null,
   "trim": true,
   "smooth": true,
@@ -62,24 +67,6 @@
   "idle_min_run": 20
  },
  "history": [
-  {
-   "label": "Start",
-   "settings": {
-    "optimiser": "manual",
-    "target_s": null,
-    "segments": [],
-    "smooth_window": 101,
-    "program_id": null,
-    "max_dev_mm": null,
-    "trim": true,
-    "smooth": true,
-    "scale": true,
-    "time_mode": "fastest",
-    "idle_window": 11,
-    "idle_threshold_md": 8.0,
-    "idle_min_run": 20
-   }
-  },
   {
    "label": "Scaling regions",
    "settings": {
@@ -413,8 +400,232 @@
     "idle_min_run": 20
    },
    "at": 1792557618.9834344
+  },
+  {
+   "label": "Scaling regions changed",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 65,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792657044.091997
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1701,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 65,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792657044.9017544
+  },
+  {
+   "label": "Scaling regions",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1701,
+      "pct": 100.0
+     },
+     {
+      "start": 1702,
+      "end": 3001,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 65,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792657065.7311718
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1701,
+      "pct": 50.0
+     },
+     {
+      "start": 1702,
+      "end": 3001,
+      "pct": 100.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 65,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792657071.7592118
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1701,
+      "pct": 50.0
+     },
+     {
+      "start": 1702,
+      "end": 3001,
+      "pct": 90.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 65,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792657074.0990226
+  },
+  {
+   "label": "Region scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1701,
+      "pct": 60.0
+     },
+     {
+      "start": 1702,
+      "end": 3001,
+      "pct": 90.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 65,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792657077.6215966
+  },
+  {
+   "label": "Program ID 21",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1701,
+      "pct": 60.0
+     },
+     {
+      "start": 1702,
+      "end": 3001,
+      "pct": 90.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 21,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792657151.9989226
+  },
+  {
+   "label": "Program ID 63",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [
+     {
+      "start": 1,
+      "end": 1701,
+      "pct": 60.0
+     },
+     {
+      "start": 1702,
+      "end": 3001,
+      "pct": 90.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 63,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1792657240.2426968
   }
  ],
- "cursor": 12,
- "version": "v002"
+ "cursor": 19,
+ "version": "v003"
 }

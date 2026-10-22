@@ -1,0 +1,65 @@
+{
+ "unit": "R-T04",
+ "arm": "right",
+ "taken": "2026-10-22 11:06",
+ "lines": 5012,
+ "sha256": "95f2b234e0feee9021e0d6db80dad613e7c574cc59b69cd6ddc45774281f8c05",
+ "note": "loaded file R_T04_GC_BP.txt",
+ "source": "upload",
+ "original": "R_T04_GC_BP.txt",
+ "pole_mm": null,
+ "hand_counts": null,
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "the hand set in Prepare after teaching",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "placement": {
+  "task": "TASK 10A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-22 11:06:13"
+  }
+ },
+ "name": "R_TASK_10A_trajectory.txt",
+ "stage_history": [
+  {
+   "at": "2026-10-22 11:07:25",
+   "was": {
+    "pole_mm": 200.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "stated when it was loaded",
+    "text": "pole 200 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "why": "the hand set in Prepare after teaching"
+  }
+ ]
+}

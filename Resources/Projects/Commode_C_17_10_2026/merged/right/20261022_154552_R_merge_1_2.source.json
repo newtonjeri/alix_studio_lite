@@ -1,0 +1,107 @@
+{
+ "name": "R_merge_1_2.txt",
+ "side": "right",
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "lines": 6582,
+ "seconds": 32.905,
+ "sha256": "85f380cb6cbea2b78a9977a69fadbe64ff3cc155b1383cb7e8542886adedb5dc",
+ "parts": [
+  {
+   "name": "R_lid_top_p1_8_3s.txt",
+   "lines": 1672
+  },
+  {
+   "name": "R_TASK_2A_8_4S.txt",
+   "lines": 1697
+  },
+  {
+   "name": "R_TASK_1C_8s_processed.txt",
+   "lines": 1601
+  },
+  {
+   "name": "R_TASK_2_19_TRIMMED_trim_mean_scale_processed.txt",
+   "lines": 1612
+  }
+ ],
+ "joins": [],
+ "limits_ok": false,
+ "limits_text": "L1 Joint limits -5.22 deg (limit 0.5 deg); L2 Joint speed 1.38 x limit (limit 1 x limit); L3 Joint acceleration 7418 deg/s^2 (limit 612 deg/s^2)",
+ "placement": {
+  "task": "TASK 1A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "at": "2026-10-19 09:43:42"
+  }
+ },
+ "phase": "lid_closed",
+ "sources": [
+  {
+   "ref": "ver:R-R01_PART1/v004",
+   "name": "R_lid_top_p1_8_3s.txt",
+   "sha256": "d79344ad2092c98df667143ae58a3c68ddba2f1d88c9461c9b24e8f91035e0b1",
+   "tasks": [
+    "R-R01_PART1"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:R-R01_PART2/v002",
+   "name": "R_TASK_2A_8_4S.txt",
+   "sha256": "71ed00e4d449f43fc43dfd0399b9abf25628c7dad36a18bec76b780613665261",
+   "tasks": [
+    "R-R01_PART2"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:R-R02/v004",
+   "name": "R_TASK_1C_8s_processed.txt",
+   "sha256": "ad2a038fe66f8b178eb93e05696520d934710e03c912324ba920bf4d73d0e196",
+   "tasks": [
+    "R-R02"
+   ],
+   "grade": "processed"
+  },
+  {
+   "ref": "ver:R-R03/v005",
+   "name": "R_TASK_2_19_TRIMMED_trim_mean_scale_processed.txt",
+   "sha256": "a60fa7fdc4e696088634e68cb86d9a4972b7b0393870a58e5d6a467558b4684f",
+   "tasks": [
+    "R-R03"
+   ],
+   "grade": "processed"
+  }
+ ],
+ "made_from": null,
+ "made": "2026-10-22 15:45:52",
+ "tasks": [
+  "R-R01_PART1",
+  "R-R01_PART2",
+  "R-R02",
+  "R-R03"
+ ],
+ "grade": "processed"
+}

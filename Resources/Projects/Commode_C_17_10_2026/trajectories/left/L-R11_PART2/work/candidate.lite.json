@@ -1,13 +1,13 @@
 {
   "lite_sidecar": 1,
-  "written_utc": "2026-10-21T04:40:21+00:00",
-  "track_sha256": "70438b92c19e6f25f4c2ff657bb13b86d492ee9d4edc82062a77e59a6ff3d260",
+  "written_utc": "2026-10-22T08:18:01+00:00",
+  "track_sha256": "0f57ba71deb2ac5d003448c94fa20798e045a34d1a5047006a6db6bf207b0f12",
   "result": {
     "optimiser": "manual",
     "side": "left",
     "target_s": null,
-    "achieved_s": 10.09,
-    "lines": 2019,
+    "achieved_s": 10.425,
+    "lines": 2086,
     "t_min_s": null,
     "lines_min": null,
     "recorded_s": 15.0,
@@ -15,8 +15,8 @@
     "uploadable": true,
     "limits_ok": false,
     "enforced": false,
-    "limits_text": "L3 Joint acceleration 2204 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 46.89 mm (limit 10 mm)",
-    "message": "Generated successfully.\nStages applied: Trim + Mean Smooth + Scale\nTrim: ON \u2014 1 idle region(s), 117 point(s) removed\nMean Smooth: ON \u2014 101-point centered moving mean\nScale: ON \u2014 1 region(s) applied\nFinal rows: 2019\nFinal time @ 5 ms/row: 10.090 s\nLimits (shown, not enforced: the hardware decides): L3 Joint acceleration 2204 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 46.89 mm (limit 10 mm).",
+    "limits_text": "L3 Joint acceleration 2229 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 46.89 mm (limit 10 mm)",
+    "message": "Generated successfully.\nStages applied: Trim + Mean Smooth + Scale\nTrim: ON \u2014 1 idle region(s), 117 point(s) removed\nMean Smooth: ON \u2014 101-point centered moving mean\nScale: ON \u2014 2 region(s) applied\nFinal rows: 2086\nFinal time @ 5 ms/row: 10.425 s\nLimits (shown, not enforced: the hardware decides): L3 Joint acceleration 2229 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 46.89 mm (limit 10 mm).",
     "hints": [],
     "binding": []
   },
@@ -28,12 +28,12 @@
         "name": "Joint limits",
         "hard": true,
         "passed": true,
-        "value": 4.6,
+        "value": 7.87,
         "limit": 0.5,
         "unit": "deg",
-        "detail": "closest approach 15.0 deg (joint 6); after the predicted overshoot at turns, 4.6 deg",
+        "detail": "closest approach 15.0 deg (joint 6); after the predicted overshoot at turns, 7.9 deg",
         "joint": 6,
-        "line": 1685,
+        "line": 1657,
         "speed_fixes": null
       },
       {
@@ -41,12 +41,12 @@
         "name": "Joint speed",
         "hard": true,
         "passed": true,
-        "value": 0.786,
+        "value": 0.611,
         "limit": 1.0,
         "unit": "x limit",
-        "detail": "fastest: joint 4 at 172 deg/s (limit 218) at line 1746",
+        "detail": "fastest: joint 4 at 133 deg/s (limit 218) at line 1735",
         "joint": 4,
-        "line": 1746,
+        "line": 1735,
         "speed_fixes": null
       },
       {
@@ -54,12 +54,12 @@
         "name": "Joint acceleration",
         "hard": true,
         "passed": false,
-        "value": 2203.6,
+        "value": 2229.2,
         "limit": 612.0,
         "unit": "deg/s^2",
-        "detail": "highest: joint 2 at 2204 deg/s^2 (20 Hz band-limited) around line 2016 (hardware limit 600 deg/s^2)",
+        "detail": "highest: joint 2 at 2229 deg/s^2 (20 Hz band-limited) around line 2083 (hardware limit 600 deg/s^2)",
         "joint": 2,
-        "line": 2016,
+        "line": 2083,
         "speed_fixes": true
       },
       {
@@ -67,12 +67,12 @@
         "name": "Step size",
         "hard": true,
         "passed": true,
-        "value": 0.859,
+        "value": 0.668,
         "limit": 10.0,
         "unit": "deg",
-        "detail": "largest: joint 4, 0.859 deg between lines 1746 and 1747",
+        "detail": "largest: joint 4, 0.668 deg between lines 1732 and 1733",
         "joint": 4,
-        "line": 1747,
+        "line": 1733,
         "speed_fixes": null
       },
       {
@@ -106,10 +106,10 @@
         "name": "Predicted path departure (estimate)",
         "hard": false,
         "passed": false,
-        "value": 37.38,
+        "value": 32.15,
         "limit": 10.0,
         "unit": "mm",
-        "detail": "ALIX's upload model predicts up to 37 mm (p95 26 mm). It over-reads on taught paths, so it is shown, not enforced.",
+        "detail": "ALIX's upload model predicts up to 32 mm (p95 26 mm). It over-reads on taught paths, so it is shown, not enforced.",
         "joint": null,
         "line": null,
         "speed_fixes": null
@@ -119,10 +119,10 @@
         "name": "Jerk",
         "hard": false,
         "passed": false,
-        "value": 1.89,
+        "value": 1.91,
         "limit": 1.0,
         "unit": "x reference",
-        "detail": "peak 162613 deg/s^3 against the 1500 rad/s^3 reference (reported only)",
+        "detail": "peak 163868 deg/s^3 against the 1500 rad/s^3 reference (reported only)",
         "joint": null,
         "line": null,
         "speed_fixes": null
@@ -132,10 +132,10 @@
         "name": "Hand speed",
         "hard": false,
         "passed": true,
-        "value": 0.78,
+        "value": 0.884,
         "limit": null,
         "unit": "m/s",
-        "detail": "top speed 0.78 m/s, typical 0.35 m/s",
+        "detail": "top speed 0.88 m/s, typical 0.30 m/s",
         "joint": null,
         "line": null,
         "speed_fixes": null
@@ -162,7 +162,7 @@
     "cycle_s": 0.005,
     "report": {
       "sourceFile": "L_TASK_12B_trajectory_trimmed_2_trimmed.txt",
-      "generatedAt": "2026-10-21T04:40:21.067Z",
+      "generatedAt": "2026-10-22T08:18:01.454Z",
       "selectedStages": {
         "trim": true,
         "meanSmooth": true,
@@ -192,17 +192,26 @@
       "scalingRegions": [
         {
           "originalStartRow": 1,
-          "originalEndRow": 3001,
+          "originalEndRow": 1701,
           "trimmedStartRow": 1,
+          "trimmedEndRow": 1701,
+          "scalePct": 60,
+          "inputRows": 1701,
+          "outputRows": 1021
+        },
+        {
+          "originalStartRow": 1702,
+          "originalEndRow": 3001,
+          "trimmedStartRow": 1702,
           "trimmedEndRow": 2884,
-          "scalePct": 70,
-          "inputRows": 2884,
-          "outputRows": 2019
+          "scalePct": 90,
+          "inputRows": 1183,
+          "outputRows": 1065
         }
       ],
       "skippedRegions": [],
       "automaticOptimizationAnalysis": {
-        "generatedAt": "2026-10-21T04:40:21.067Z",
+        "generatedAt": "2026-10-22T08:18:01.454Z",
         "method": "Motion-only heuristic using joint step magnitude and acceleration/change activity",
         "contactDataAvailable": false,
         "suggestions": [
@@ -283,11 +292,11 @@
           }
         ]
       },
-      "finalRows": 2019,
+      "finalRows": 2086,
       "originalTimeSeconds": 15.0,
       "afterTrimTimeSeconds": 14.415000000000001,
       "afterMeanSmoothTimeSeconds": 14.415000000000001,
-      "finalTimeSeconds": 10.09,
+      "finalTimeSeconds": 10.425,
       "endpointPreserved": {
         "first": true,
         "last": true
@@ -302,12 +311,21 @@
       "segments": [
         {
           "originalStartRow": 1,
-          "originalEndRow": 3001,
+          "originalEndRow": 1701,
           "trimmedStartRow": 1,
+          "trimmedEndRow": 1701,
+          "scalePct": 60,
+          "inputRows": 1701,
+          "outputRows": 1021
+        },
+        {
+          "originalStartRow": 1702,
+          "originalEndRow": 3001,
+          "trimmedStartRow": 1702,
           "trimmedEndRow": 2884,
-          "scalePct": 70,
-          "inputRows": 2884,
-          "outputRows": 2019
+          "scalePct": 90,
+          "inputRows": 1183,
+          "outputRows": 1065
         }
       ]
     }

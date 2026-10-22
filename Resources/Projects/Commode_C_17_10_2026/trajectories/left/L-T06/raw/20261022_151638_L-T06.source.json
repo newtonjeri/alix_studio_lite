@@ -1,0 +1,45 @@
+{
+ "unit": "L-T06",
+ "arm": "left",
+ "taken": "2026-10-22 15:16",
+ "lines": 1483,
+ "sha256": "ccbd3f610a3b855c33da0d3620f63e649faced28bdecd8d746afb4a74b5eab2f",
+ "note": "loaded file L_T06_DG.txt",
+ "source": "upload",
+ "original": "L_T06_DG.txt",
+ "pole_mm": null,
+ "hand_counts": null,
+ "taught_arm": "left",
+ "stage": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "stated when it was loaded",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "placement": {
+  "task": "TASK 13",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-10-22 15:09:32"
+  }
+ },
+ "name": "L_T06_DG_2.txt"
+}

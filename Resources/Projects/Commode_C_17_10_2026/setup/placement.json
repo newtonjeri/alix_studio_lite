@@ -6,7 +6,7 @@
   "right_mm": 220.0,
   "front_mm": 1062.0,
   "back_mm": 0.0,
-  "at": "2026-10-21 18:49:37"
+  "at": "2026-10-22 15:09:32"
  },
  "tasks": {
   "TASK 1A": {
@@ -111,7 +111,7 @@
    "rear_mm": null,
    "left_mm": null,
    "right_mm": null,
-   "at": "2026-10-20 16:15:42"
+   "at": "2026-10-22 11:06:10"
   },
   "TASK 10B": {
    "standoff_mm": 250.0,
@@ -160,6 +160,14 @@
    "left_mm": null,
    "right_mm": null,
    "at": "2026-10-21 18:49:38"
+  },
+  "TASK 14": {
+   "standoff_mm": 250.0,
+   "front_mm": null,
+   "rear_mm": null,
+   "left_mm": null,
+   "right_mm": null,
+   "at": "2026-10-22 15:09:50"
   }
  }
 }

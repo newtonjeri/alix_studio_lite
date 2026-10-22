@@ -1,0 +1,58 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "95f2b234e0feee9021e0d6db80dad613e7c574cc59b69cd6ddc45774281f8c05",
+   "ok": true,
+   "at": "2026-10-22 11:09:21",
+   "detail": {
+    "program_id": 20
+   }
+  },
+  {
+   "kind": "run_failed",
+   "sha256": "95f2b234e0feee9021e0d6db80dad613e7c574cc59b69cd6ddc45774281f8c05",
+   "ok": false,
+   "at": "2026-10-22 11:11:05",
+   "detail": {
+    "state": "failed",
+    "error": "The RIGHT controller stopped answering (rm_set_program_id_run, 98 s): Lite connects it again."
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "95f2b234e0feee9021e0d6db80dad613e7c574cc59b69cd6ddc45774281f8c05",
+   "ok": true,
+   "at": "2026-10-22 11:12:07",
+   "detail": {
+    "program_id": 20,
+    "dry_run": true,
+    "seconds": 27.55,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "95f2b234e0feee9021e0d6db80dad613e7c574cc59b69cd6ddc45774281f8c05",
+   "ok": true,
+   "at": "2026-10-22 11:12:42",
+   "detail": {
+    "program_id": 20,
+    "dry_run": false,
+    "seconds": 27.5,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "95f2b234e0feee9021e0d6db80dad613e7c574cc59b69cd6ddc45774281f8c05",
+   "ok": true,
+   "at": "2026-10-22 11:12:51",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}
