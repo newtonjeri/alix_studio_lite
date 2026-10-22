@@ -957,7 +957,7 @@ def _stage_stops(run: dict, programs: dict, robot, sides) -> list[str]:
     from . import mechanism, staging
 
     out = []
-    restores = {(x, (st.get("rows") or {}).get(x)): st for st in run["plan"] if st.get("restore") for x in ARMS}
+    restores = {(x, (st.get("rows") or {}).get(x)): st for st in run.get("plan") or [] if st.get("restore") for x in ARMS}
     for s in sides:
         pole, hand = robot._measured(s)
         set_pole = set_hand = False
