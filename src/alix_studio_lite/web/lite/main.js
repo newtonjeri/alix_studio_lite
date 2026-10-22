@@ -16,6 +16,7 @@ import { installFixes } from './fixes.js';
 import { installFolder } from './folder.js';
 import { installFullSeq } from './fullseq.js';
 import { installLayout } from './layout.js';
+import { installManage } from './manage.js';
 import { installNeighbours } from './neighbours.js';
 import { installNotify } from './notify.js';
 import { installPlacement } from './placement.js';
@@ -52,6 +53,7 @@ installStatus();
 installAlerts();          // hardware errors and failures, bottom right, until closed
 installRobotPanel();      // Visual sim / Hardware sim / Real, connections, E-stop (D30, R4)
 installTasks();           // the 22 tasks tied to the region catalogue (D35), fixtures (D29)
+installManage();          // Open / Manage Projects: every project, what it holds, every action on it (the owner, 22 Oct)
 installNeighbours();      // the previous and the next task beside the current picture (the owner, 19 Oct)
 installPrepare();
 installSummary();         // the project summary's Approved Setup: pole, hand, start pose, UGV, room (the owner, 16 Oct)

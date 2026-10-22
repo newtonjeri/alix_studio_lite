@@ -928,3 +928,41 @@ html[data-theme="dark"] .queue-status.lite-prerecorded { border-color: var(--lit
 /* the trajectories' own times added, after the last row of the sequence and of the merge (the owner, 20 Oct) */
 .lite-s2-total td { font-weight: 700; border-top: 2px solid var(--line); }
 .lite-s1-order .lite-s1-total { list-style: none; margin-left: -22px; border-top: 1px solid var(--line); padding-top: 6px; }
+
+/* Open / Manage Projects (manage.js): the Project Manager's view of every project, in place of its cards and library */
+.project-manager-shell.lite-pm-on > :not(.project-manager-head):not(#liteManage) { display: none !important; }
+#liteManage[hidden] { display: none; }
+.lite-pm { margin-top: 14px; border: 1px solid var(--line); border-radius: 16px; padding: 15px; background: var(--card); color: var(--ink); }
+.lite-pm-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.lite-pm-title { display: flex; align-items: center; gap: 12px; }
+.lite-pm-title h3 { margin: 0; }
+.lite-pm-title .mini-note { margin: 2px 0 0; overflow-wrap: anywhere; }
+.lite-pm-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lite-pm-tools input[type="search"] { min-width: 240px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card); color: var(--ink); font: inherit; }
+.lite-pm-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.lite-pm-seg button { border: 0; border-right: 1px solid var(--line); background: transparent; color: var(--muted); padding: 8px 12px; font-weight: 700; cursor: pointer; }
+.lite-pm-seg button:last-child { border-right: 0; }
+.lite-pm-seg button.active { background: var(--blue2); color: var(--blue); }
+.lite-pm-body { display: grid; grid-template-columns: minmax(260px, 380px) minmax(0, 1fr); gap: 14px; align-items: start; }
+@media (max-width: 900px) { .lite-pm-body { grid-template-columns: minmax(0, 1fr); } }
+.lite-pm-list { display: flex; flex-direction: column; gap: 6px; max-height: 66vh; overflow: auto; padding-right: 2px; }
+.lite-pm-row { display: flex; flex-direction: column; gap: 3px; text-align: left; border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 12px; background: var(--card); color: var(--ink); cursor: pointer; font: inherit; }
+.lite-pm-row:hover { border-color: var(--blue); }
+.lite-pm-row.sel { border-color: var(--blue); background: var(--blue2); }
+.lite-pm-row.archived { opacity: .75; }
+.lite-pm-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.lite-pm-meta { color: var(--muted); font-size: 12.5px; }
+.lite-pm-detail { border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-height: 220px; max-height: 66vh; overflow: auto; }
+.lite-pm-dhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lite-pm-dhead h3 { margin: 0; overflow-wrap: anywhere; }
+.lite-pm-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.lite-pm-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px 14px; margin: 0 0 12px; }
+.lite-pm-facts dt { color: var(--muted); font-weight: 700; }
+.lite-pm-facts dd { margin: 0; overflow-wrap: anywhere; }
+.lite-pm-tasks { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lite-pm-tasks th, .lite-pm-tasks td { border-top: 1px solid var(--line); padding: 6px; text-align: left; vertical-align: top; }
+.lite-pm-tasks th { color: var(--muted); font-size: 12px; }
+.lite-pm-tasks .sub { color: var(--muted); font-size: 12px; }
+

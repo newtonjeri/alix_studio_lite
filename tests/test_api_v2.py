@@ -146,6 +146,30 @@ def test_projects_are_folders_the_server_owns(lite):
     assert dup["id"] not in [p["id"] for p in req(lite, "GET", "/api/projects", token=tok)["projects"]]
 
 
+def test_a_project_is_seen_without_opening_it(lite):
+    """Open / Manage Projects (the owner, 22 Oct: "open and view existing projects"): what a project holds, read from
+    its folder (GET /api/projects/<id>/overview); and a project folder put in the projects folder by hand, or by git,
+    while Lite runs is listed by the next read."""
+    tok = login(lite)["token"]
+    rec = req(lite, "PUT", "/api/projects/alix_view1", page_record("alix_view1", "Viewed 01", completed={"0": True, "2": True}), tok)
+    folder = lite["data"] / "projects" / rec["lite"]["folder"]
+    (folder / "sequence").mkdir(exist_ok=True)
+    (folder / "sequence" / "s2.json").write_text(json.dumps({"left": [{"type": "wait", "seconds": 1}] * 3, "right": [],
+                                                               "updated": "2026-10-22 21:08:15"}))
+    v = req(lite, "GET", "/api/projects/alix_view1/overview", token=tok)
+    assert v["name"] == "Viewed 01" and v["folder"] == str(folder) and v["fixture"] == "commode_c" and v["fixture_name"]
+    assert v["done"] == [0, 2] and len(v["tasks"]) >= 20 and v["tasks"][0]["left"]["code"].startswith("L-")
+    assert v["sequence"] == {"left": 3, "right": 0, "updated": "2026-10-22 21:08:15"} and v["simulation"] is None
+    assert v["merges"] == {"left": 0, "right": 0} and v["files"]["count"] >= 2 and v["files"]["bytes"] > 0
+    assert req(lite, "GET", "/api/projects/alix_nothere/overview", token=tok)["error"] == "Project not found."
+    assert req(lite, "GET", "/api/projects/alix_view1/overview")["code"] == "login"
+    pulled = lite["data"] / "projects" / "Pulled 01"                 # as git pull or a copy would bring it
+    pulled.mkdir()
+    (pulled / "project.json").write_text(json.dumps(dict(page_record("alix_pulled1", "Pulled 01"), lite={"folder": "Pulled 01"})))
+    assert "alix_pulled1" in [p["id"] for p in req(lite, "GET", "/api/projects", token=tok)["projects"]]
+    assert req(lite, "GET", "/api/projects/alix_pulled1/overview", token=tok)["name"] == "Pulled 01"
+
+
 def test_project_file_round_trip(lite):
     tok = login(lite)["token"]
     req(lite, "PUT", "/api/projects/alix_trip", page_record("alix_trip", "Round trip", currentTask=3), tok)

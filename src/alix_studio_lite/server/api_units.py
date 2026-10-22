@@ -1,6 +1,7 @@
 """The Lite UI's region loop: ``/api/projects/<id>/…`` for one project's tasks and arm steps.
 
     GET  tasks                                the task queue (decision D35)
+    GET  overview                             what the project holds, for Open / Manage Projects (nothing opened)
     GET  units/<KEY>                          one arm step: setup, recordings, tuning, versions, gates
     POST units/<KEY>/setup                    the region's pole and hand (Prepare), staged on the robot
     GET  placement | POST placement/room|task the room, the commode in it and each task's UGV placement
@@ -331,6 +332,48 @@ def get_tasks(app, q, body, m):
     fx = next((f for f in fixtures.list_fixtures() if f["id"] == units.fixture), {})
     return {"fixture": units.fixture, "fixture_name": fx.get("name"), "has_deck": fx.get("has_deck", False),
             "hand_presets": units.catalogue.get("hand_presets"), "tasks": task_list(units)}
+
+
+@route("GET", P + "/overview")
+def get_overview(app, q, body, m):
+    """What a project holds, read from its folder without opening it (Open / Manage Projects, the owner, 22 Oct: "open
+    and view existing projects, and manage them"): its record (name, fixture, folder, times, archived, progress), each
+    task's step on each arm (its status, recordings, kept version), each arm's merges, the S2 sequence (rows per arm,
+    when it was last changed), its last simulation, and the folder's files."""
+    pid = m.group(1)
+    units = units_of(app, pid)
+    rec = app.store.get(pid)
+    folder = app.store.folder(pid)
+    fx = next((f for f in fixtures.list_fixtures() if f["id"] == units.fixture), {})
+    tasks = []
+    for t in task_list(units):
+        row = {"label": t.get("label"), "kind": t.get("kind")}
+        for side in ARMS:
+            u = t.get(side) or {}
+            if u:
+                row[side] = {k: u.get(k) for k in ("code", "part", "name", "status", "status_label", "recordings", "version", "kind")}
+        tasks.append(row)
+    done = {k for k, v in ((rec.get("state") or {}).get("completed") or {}).items() if v}
+    from . import workflow
+
+    seq = workflow.load(units)
+    sim = workflow.load_sim(units) or {}
+    count = size = 0
+    for f in folder.rglob("*"):
+        if f.is_file():
+            count += 1
+            try:
+                size += f.stat().st_size
+            except OSError:
+                pass
+    return {"id": pid, "name": rec.get("name"), "folder": str(folder), "fixture": units.fixture, "fixture_name": fx.get("name"),
+            "createdAt": rec.get("createdAt"), "updatedAt": rec.get("updatedAt"), "archived": bool(rec.get("archived")),
+            "lastSaveReason": rec.get("lastSaveReason"), "done": sorted(int(k) for k in done if str(k).isdigit()),
+            "tasks": tasks, "merges": {side: len(merges.listing(units, side)) for side in ARMS},
+            "sequence": {"left": len(seq.get("left") or []), "right": len(seq.get("right") or []), "updated": seq.get("updated")},
+            "simulation": ({"made": sim.get("made"), "completed": sim.get("completed"), "total_s": sim.get("total_s"),
+                            "mode": sim.get("mode")} if sim else None),
+            "files": {"count": count, "bytes": size}}
 
 
 @route("GET", r"/api/fixtures/([a-z0-9_]+)/tasks")
