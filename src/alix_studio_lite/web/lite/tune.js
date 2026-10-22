@@ -1038,15 +1038,29 @@ function outputName() {
 const outputBase = () => outputName().replace(/_processed\.txt$/i, '');
 
 export async function saveBlobAs(blob, name, types) {
+  if (!(blob instanceof Blob)) {                       // what is written is always bytes: text as it is, else JSON
+    blob = new Blob([typeof blob === 'string' ? blob : JSON.stringify(blob, null, 2)], { type: 'application/octet-stream' });
+  }
   if (typeof window.showSaveFilePicker === 'function') {
+    let h = null;
     try {
-      const h = await window.showSaveFilePicker({ suggestedName: name, types });
-      const w = await h.createWritable();
-      await w.write(blob);
-      await w.close();
-      return { name: h.name || name, picker: true };
+      h = await window.showSaveFilePicker({ suggestedName: name, types });
     } catch (err) {
       if (err && err.name === 'AbortError') return null;
+      h = null;                                        // no picker (no click to answer it): the browser's download below
+    }
+    if (h) {                                           // the picker has made the file: it is written, or the failure said
+      let w = null;
+      try {
+        w = await h.createWritable();
+        await w.write(blob);
+        await w.close();
+        return { name: h.name || name, picker: true };
+      } catch (err) {
+        try { if (w) await w.abort(); } catch (_) { /* nothing more to undo */ }
+        throw Object.assign(new Error(`${h.name || name} could not be written (${err && err.message ? err.message : err}).`),
+          { hint: 'Save it again; if it fails again, save it to another folder.' });
+      }
     }
   }
   const url = URL.createObjectURL(blob);

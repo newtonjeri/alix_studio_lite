@@ -219,7 +219,8 @@ function build() {
         el('p', { class: 'mini-note', text: 'Mix stored Programs, Pole, 6-channel Hand, Wait, and Global Points (MoveJ / MoveL + speed) in any order. '
           + 'Both arms start together and each goes through its own rows; an arm waits for the other only at a Meet, a Wait-for or a lid '
           + 'or seat task. A Wait is a task of its own: its arm idles for its seconds, on one arm or both. '
-          + 'A Global Point straight after a Program waits 2 s first, for the controller to end the Program.' })),
+          + 'Before a Global Point or a lid or seat task that follows a Program, Lite clears the 4105 warning (a joint over its speed '
+          + 'limit) when the arm holds one: the controller refuses that move\'s arrival while it is latched.' })),
       el('div', { class: 'lite-row' }, btn('Refresh Programs', () => refreshSources(true)), btn('Refresh Global Points', () => refreshSources(true)))),
     el('div', { class: 'card lite-s2-exec' },
       el('div', { class: 'lite-s2-modes', role: 'radiogroup', 'aria-label': 'Execution mode' },
@@ -666,7 +667,7 @@ async function saveFile(side) {
   try {
     const blob = await call('GET', `${base()}/${side}/download`, undefined, { raw: true });
     const saved = await saveBlobAs(blob, `${side}_workflow_sequence.json`, [{ description: 'JSON sequence', accept: { 'application/json': ['.json'] } }]);
-    if (saved) window.toast(`Saved ${saved}.`, 'good');
+    if (saved) window.toast(`${ARM(side)} sequence saved: ${saved.name}.`, 'good');
   } catch (err) { tell(err); }
 }
 

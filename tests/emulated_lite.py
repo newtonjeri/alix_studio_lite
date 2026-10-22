@@ -8,8 +8,15 @@ MoveL), answered as the SDK answers (a page of the list, or one point by name), 
 saves them (rm_add_global_waypoint, rm_update_global_waypoint with its rm_waypoint_t), and deleted
 (rm_delete_global_waypoint). Data Management's two other reads answer as the lab's 3rd-generation controllers do:
 no IO default program, and -4 for the tracks list (a 4th-generation call), and for deleting a track. A program is
-deleted from ALIX's emulated program store (rm_delete_program_trajectory: 1 for a slot that holds none)."""
+deleted from ALIX's emulated program store (rm_delete_program_trajectory: 1 for a slot that holds none).
+
+The lab's 4105 (22 Oct), when the file LITE_EMU_4105 names holds an arm's side ("left", "right" or "both"), and a code
+after it ("left 4107": the left's brake release failing as its Program 86 started, the lab, 22 Oct): that arm's
+Programs latch 4105 (a joint over its speed limit; or that code) as they start, as the lab's controllers did, and its
+blocking MoveJ does what RealMan's SDK does while any code is latched (libapi_c's rm_movej_block reads the arm's state
+once the controller has taken the move and returns 1 on any code): the arm goes to the point and the call returns 1."""
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -120,6 +127,42 @@ def tracks(self, page, size, search):
     return -4, {}                           # RealMan's tracks list: 4th-generation controllers only
 
 
+def _code_on(ctrl) -> int | None:
+    """The code this arm's Programs latch (LITE_EMU_4105's file: a side, then a code, 4105 if none), or None."""
+    flag = os.environ.get("LITE_EMU_4105")
+    try:
+        want = (Path(flag).read_text().split() if flag else []) + ["4105"]
+    except OSError:
+        return None
+    from alix_emulator import rm_emulator
+
+    side = "left" if getattr(ctrl, "ip", None) == rm_emulator.EMU_LEFT_IP else "right"
+    return int(want[1]) if want[0] in (side, "both") else None
+
+
+def _program_run(run):
+    def rm_set_program_id_run(self, tra_id, speed, timeout):
+        ret = run(self, tra_id, speed, timeout)
+        ctrl = self._ctrl()
+        code = _code_on(ctrl) if ret == 0 and ctrl is not None else None
+        if code:
+            with ctrl._lock:
+                ctrl.sys_err_code = code
+        return ret
+
+    return rm_set_program_id_run
+
+
+def _movej(movej):
+    def rm_movej(self, joint, v, r, connect, block):
+        if block and self._ctrl.sys_err_code not in (0, None):
+            ret = movej(self, joint, v, r, connect, 0)
+            return 1 if ret == 0 else ret
+        return movej(self, joint, v, r, connect, block)
+
+    return rm_movej
+
+
 def setup():
     """The shims on ALIX's emulator: run here before the server starts, and in each arm's worker process before it
     opens its link (robot_process: LITE_WORKER_SETUP names this file)."""
@@ -144,6 +187,8 @@ def setup():
     from alix_dispatch import emulated_program
 
     emulated_program.ProgramSurface.rm_delete_program_trajectory = delete_program
+    emulated_program.ProgramSurface.rm_set_program_id_run = _program_run(emulated_program.ProgramSurface.rm_set_program_id_run)
+    rm_emulator.RoboticArm.rm_movej = _movej(rm_emulator.RoboticArm.rm_movej)
     emulator_install = rm_emulator.install
 
     def install():                          # the SDK's waypoint structure beside the emulated arm

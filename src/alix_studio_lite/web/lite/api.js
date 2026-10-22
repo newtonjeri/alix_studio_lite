@@ -30,7 +30,9 @@ export async function call(method, path, body, { raw = false, keepalive = false,
     throw Object.assign(new Error('Lite cannot reach its server.'), { hint: 'Is ALIX Studio Lite still running?', code: 'offline' });
   }
   const type = r.headers.get('Content-Type') || '';
-  if (raw && !type.startsWith('application/json')) return r.blob();
+  // a file's bytes (the server marks every file it sends: an S2 sequence is a JSON file, which was parsed here and
+  // saved as an empty file, the lab 22 Oct); a refusal is JSON without the mark
+  if (raw && (r.headers.get('X-Lite-Raw') || !type.startsWith('application/json'))) return r.blob();
   const d = await r.json().catch(() => ({ error: 'The server sent an answer Lite cannot read.' }));
   if (d && d.error && !(d.id && d.state)) {
     if (d.code === 'login' && onLoginLost) onLoginLost();

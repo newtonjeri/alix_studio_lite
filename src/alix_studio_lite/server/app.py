@@ -852,7 +852,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def _send_raw(self, out: RawResponse):
         headers = [("Content-Type", out.ctype), ("Content-Length", str(len(out.data))),
-                   ("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff")]
+                   ("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff"),
+                   ("X-Lite-Raw", "1")]          # a file, whatever its type (S2's sequence is JSON): api.js keeps its bytes
         if out.filename:                       # an ASCII name, plus the exact one (RFC 6266 / 5987)
             ascii_name = re.sub(r"[^A-Za-z0-9._ -]", "_", out.filename).strip() or "download"
             headers.append(("Content-Disposition",

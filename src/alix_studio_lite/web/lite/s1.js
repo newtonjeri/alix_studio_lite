@@ -478,7 +478,7 @@ async function download(side) {
   try {
     const blob = await call('GET', murl(side, m.file, 'download'), undefined, { raw: true });
     const saved = await saveBlobAs(blob, m.name, [{ description: 'Trajectory', accept: { 'text/plain': ['.txt'] } }]);
-    if (saved) window.toast(`Saved ${saved}.`, 'good');
+    if (saved) window.toast(`Saved ${saved.name}.`, 'good');
   } catch (err) { tell(err); }
 }
 

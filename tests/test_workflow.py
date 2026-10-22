@@ -181,36 +181,39 @@ def test_a_single_task_or_a_dual_arm_task():
         workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 6, "id": 72})
 
 
-def test_a_move_after_a_program_waits_for_the_programs_end():
-    """The lab, 21 Oct 22:29 and 22:41: each arm's Home MoveJ straight after its last Program returned 1, and the arm went
-    Home anyway (ALIX's 155 program runs: the controller's end-of-program message comes up to 1.6 s after its run state
-    says ended, and the SDK's blocking move takes it for its own). Such a move waits PROGRAM_END_S after the Program:
-    Waits between them count towards it, a Hand does not; across stages; and before a lid or seat task."""
+def test_a_move_after_a_program_clears_the_arms_4105_first():
+    """The lab, 21 Oct 22:29 and 22:41, 22 Oct 21:12: the Home MoveJ after an arm's last Program returned 1 at once and the
+    arm went Home anyway; each Program had raised 4105 (a joint over its speed limit), which runner v14 lets stand, and the
+    SDK's blocking move returns 1 while any code is latched (a 2 s wait after the Program changed nothing). Before such a
+    move, after a Program or a lid or seat task on that arm, and at the run's start, Lite reads the arm's errors and clears
+    a 4105 alone: a clear step of its own, between two runner calls; across stages; and before a lid or seat task."""
     from alix_studio_lite.server import workflow
 
-    assert workflow.PROGRAM_END_S == 2.0
+    assert workflow.WARN_ONLY == {"4105"}
     home = {"type": "global", "name": "HOME", "move": "movej", "speed": 20, "wait_s": 0.0}
-    left = [home, prog(80), {"type": "wait", "seconds": 0.5}, home, prog(81), {"type": "hand", "values": [1000] * 6}, home,
-            prog(82), {"type": "wait", "seconds": 3.0}, home, prog(83)]
+    left = [home, prog(80), {"type": "wait", "seconds": 0.5}, home, home, prog(81), {"type": "hand", "values": [1000] * 6}, home,
+            {"type": "meet"}, prog(83)]
     right = [home, prog(80), prog(54), {"type": "meet"}, home]
-    left = left[:-1] + [{"type": "meet"}, prog(83)]
     run = workflow.plan_for(numbered(left, right), "both")
     assert [st["kind"] for st in run["plan"]] == ["parallel", "parallel"]
     lp = run["plan"][0]["left"]["steps"]
-    # row 1: no Program before it; row 4: 0.5 s waited, 1.5 s more; row 7: a Hand between counts for nothing; row 10: 3 s
-    assert [(x["_row"], x["seconds"]) for x in lp if x.get("settle")] == [(4, 1.5), (7, 2.0)]
-    rp = run["plan"][1]["right"]["steps"]                          # after a Meet, straight from the Program before it
-    assert rp[0]["settle"] and rp[0]["seconds"] == 2.0 and rp[1]["type"] == "global"
+    # row 1: the run's start; row 4: after Program 80 (a Wait between changes nothing); row 5: no Program since row 4's
+    # clear; row 8: after Program 81 (a Hand between changes nothing)
+    assert [x["_row"] for x in lp if x["type"] == "clear"] == [1, 4, 8]
+    assert [x["type"] for x in lp[:3]] == ["clear", "global", "program"]
+    rp = run["plan"][1]["right"]["steps"]                          # after a Meet, from the Program before it
+    assert [x["type"] for x in rp] == ["clear", "global"] and rp[0]["_row"] == 5
+    assert [w for w, _ in workflow._segments(lp)] == ["clear", "steps", "clear", "steps", "clear", "steps"]   # a runner call each
+    assert "4105" in workflow._step_words(rp[0])
     alone = workflow.plan_for(numbered(left, [home, prog(80), prog(54), home]), "right")["plan"][0]["right"]["steps"]
-    assert [(x["type"], x.get("settle")) for x in alone] == [("global", None), ("program", None), ("program", None), ("wait", True),
-                                                             ("global", None)]
-    assert "for the controller's end of the Program" in workflow._step_words(alone[3])
+    assert [x["type"] for x in alone] == ["clear", "global", "program", "program", "clear", "global"]
     task = {"type": "mechanism", "task": "lid_open"}
     after = workflow.plan_for(numbered([prog(80), task], [prog(80), dict(home), task]), "both")
-    assert [(st["kind"], st.get("settle_s")) for st in after["plan"]] == [("parallel", None), ("mechanism", 2.0)]
-    assert [x.get("settle") for x in after["plan"][0]["right"]["steps"]] == [None, True, None]   # the right's Home waited already
+    assert [(st["kind"], st.get("clear")) for st in after["plan"]] == [("parallel", None), ("mechanism", ["left"])]   # the right's Home's
     first = workflow.plan_for(numbered([task, prog(80)], [task, prog(81)]), "both")
-    assert [(st["kind"], st.get("settle_s")) for st in first["plan"]] == [("mechanism", None), ("parallel", None)]
+    assert [(st["kind"], st.get("clear")) for st in first["plan"]] == [("mechanism", ["left", "right"]), ("parallel", None)]
+    ready = workflow.plan_for(numbered([home, task], [home, task]), "both")      # the Homes' clears were the last motion
+    assert ready["plan"][-1]["kind"] == "mechanism" and "clear" not in ready["plan"][-1]
 
 
 def test_the_same_steps_planned_otherwise_are_simulated_again():
@@ -618,3 +621,30 @@ def test_a_program_sent_from_advanced_is_drawn_from_the_file_lite_kept(lite):
         assert workflow.programs_known(lite["app"], units, "right")[100]["file"] is None
     finally:
         arm.programs.pop(100, None)
+
+
+def test_a_saved_sequence_is_the_file_and_loads_back(lite):
+    """The lab, 22 Oct: S2's Save wrote an empty JSON file and Load said it could not be read. The sequence is a JSON
+    file, and the page took it for an answer to read (its own refusals are JSON too) instead of the file's bytes: the
+    server marks every file it sends (X-Lite-Raw), which the page keeps as bytes. A file saved empty before that is
+    said to be empty."""
+    steps = [{"type": "wait", "seconds": 1.5}, {"type": "pole", "mm": 120}]
+    call(lite, "PUT", f"{P}/workflow/left", {"steps": steps})
+    r = urllib.request.Request(lite["base"] + f"{P}/workflow/left/download", headers={"X-Lite-Token": lite["tok"]})
+    with urllib.request.urlopen(r, timeout=60) as resp:
+        assert resp.headers.get("X-Lite-Raw") == "1" and resp.headers.get("Content-Type") == "application/json"
+        assert "left_workflow_sequence.json" in resp.headers.get("Content-Disposition", "")
+        text = resp.read().decode()
+    doc = json.loads(text)
+    assert doc["side"] == "left" and len(doc["steps"]) == 2
+    call(lite, "PUT", f"{P}/workflow/left", {"steps": []})
+    out = call(lite, "POST", f"{P}/workflow/left/load", {"document": text})
+    assert [(s["type"], s.get("seconds"), s.get("mm")) for s in out["left"]] == [("wait", 1.5, None), ("pole", None, 120.0)]
+    empty = call(lite, "POST", f"{P}/workflow/left/load", {"document": "  "})
+    assert "the file is empty" in empty["error"] and "save the sequence again" in empty["hint"]
+    refused = call(lite, "POST", f"{P}/workflow/right/load", {"document": text})
+    assert "error" in refused                                          # another arm's file
+    call(lite, "PUT", f"{P}/workflow/right", {"steps": []})
+    r = urllib.request.Request(lite["base"] + f"{P}/workflow/right/download", headers={"X-Lite-Token": lite["tok"]})
+    with urllib.request.urlopen(r, timeout=60) as resp:                 # a refusal is not marked as a file
+        assert resp.headers.get("X-Lite-Raw") is None and "empty" in json.loads(resp.read())["error"]

@@ -460,6 +460,26 @@ class RealArm:
         self._hw("clear errors", ok=bool(ok), text=out["text"])
         return dict(out, ok=bool(ok))
 
+    def clear_warning(self, warn_only=frozenset({"4105"})) -> dict:
+        """Before a move that waits for its arrival (S2: a Global Point, a lid or seat task): the arm's errors read
+        (``dual_arm_common.error_state``) and a warning alone (``warn_only``: 4105, a joint over its speed limit, which a
+        Program raises now and then and runner v14 lets stand) cleared as the controller web GUI's Clear Error does, then
+        read back; the SDK's blocking move returns 1 at once while any code is latched (workflow.WARN_ONLY). Anything
+        else latched is not cleared. Nothing moves. Returns {readable, cleared: [codes], other: what is latched that is
+        not a warning, or None}."""
+        dac = _dac()
+        with self.link.busy("checking the errors before the move"), _printed_to(lambda line: self._hw("clear warning", text=line.strip())):
+            st = dac.error_state(self)
+            if not st["readable"] or dac.error_state_clean(st):
+                return dict(readable=bool(st["readable"]), cleared=[], other=None)
+            if set(st["sys"]) - set(warn_only) or st["joints"] or st.get("lift_err") or st.get("disabled"):
+                return dict(readable=True, cleared=[], other=dac.describe_error_state(st))
+            ok = dac.clear_errors(self)
+            back = dac.error_state(self)
+        clean = bool(ok) and dac.error_state_clean(back)
+        self._hw("clear warning", args=dict(codes=st["sys"]), ok=clean, text="cleared" if clean else dac.describe_error_state(back))
+        return dict(readable=True, cleared=list(st["sys"]) if clean else [], other=None if clean else dac.describe_error_state(back))
+
     def read_sensitivity(self) -> int | None:
         """The drag sensitivity, 0-100 % (higher: the arm moves more easily by hand; the controller's own
         default is 100), or None when the controller does not answer it."""

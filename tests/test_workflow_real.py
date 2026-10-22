@@ -5,6 +5,7 @@ Wait-for holds its arm until the other arm's runner has finished the row it name
 for the other (the owner, 22 Oct); STOP interrupts the runner the way V53's STOP does (its own Ctrl+C path) and latches
 the arms."""
 import json
+import os
 import socket
 import subprocess
 import sys
@@ -30,7 +31,8 @@ def server(tmp_path_factory):
     data = tmp_path_factory.mktemp("lite-wf")
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
                              "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"), "--projects", str(data / "projects")],
-                            cwd=str(vendor_paths.LITE_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                            cwd=str(vendor_paths.LITE_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                            env=dict(os.environ, LITE_EMU_4105=str(data / "emu_4105")))     # the lab's 4105 (emulated_lite)
     ctx = {"base": f"http://127.0.0.1:{port}", "data": data}
     for _ in range(150):
         try:
@@ -112,7 +114,8 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     sim = j["result"]
     assert sim["start_from"] == {"left": "now", "right": "now"} and sim["points"]["left"]          # read from the controllers
     la = sim["acts"]["left"]
-    assert [a["kind"] for a in la] == ["pole", "hand", "global", "program"] and la[2]["drawn"] and la[3]["drawn"]
+    assert [a["kind"] for a in la] == ["pole", "hand", "wait", "global", "program"] and la[3]["drawn"] and la[4]["drawn"]
+    assert "4105" in la[2]["text"]                               # the run's start: its errors read before the move
     assert not [f for f in sim["findings"] if "program 71" in f["text"]]                         # its stage is the steps'
     refused = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True})
     assert refused["code"] == "unsimulated" and "not played to its end" in refused["error"]
@@ -125,10 +128,10 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     assert j["extra"]["live"] == {"left": "SEQUENCE COMPLETE", "right": "SEQUENCE COMPLETE"}
     assert j["extra"]["status"].startswith("PAGE 02 SEQUENCE COMPLETE")
     said = events(j)
-    assert "LEFT: WORKFLOW COMPLETE: 4/4 step(s)" in said and "RIGHT: WORKFLOW COMPLETE: 3/3 step(s)" in said
+    assert "LEFT: WORKFLOW COMPLETE: 2/2 step(s)" in said and "RIGHT: WORKFLOW COMPLETE: 3/3 step(s)" in said
     hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
     runs = [r for r in hw if r["verb"] == "workflow"]
-    assert len(runs) == 2 and all(r["ok"] for r in runs)
+    assert len(runs) == 3 and all(r["ok"] for r in runs)       # the left's pole and hand, then its clear, then the rest
     assert any("WORKFLOW SPEED RESTORE" in (r["text"] or "") for r in hw if r["verb"] == "runner v14")
 
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps(tail=[{"type": "wait", "seconds": 1}])})     # changed after
@@ -193,27 +196,82 @@ def test_a_task_after_waits_on_both_arms_runs_with_no_question(server):
     assert "WORKFLOW STEP START" in events(j)
 
 
-def test_a_global_point_after_a_program_waits_for_the_programs_end(server):
-    """The lab, 21 Oct 22:29 and 22:41: a Home MoveJ straight after the last Program returned 1 and the sequence failed
-    at its last row, though the arm went Home (the controller's end-of-program message, late, taken by the SDK for the
-    move's own). That move waits 2 s for the Program's end first, in Simulation and on the robot (runner v14's own
-    Wait), and the sequence runs to its end."""
+def test_a_global_point_after_a_program_clears_the_4105_it_left(server):
+    """The lab, 21 Oct 22:29 and 22:41, 22 Oct 21:12: the Home MoveJ after the last Program returned 1 at once and the
+    sequence failed at its last row, though the arm went Home; each Program had raised 4105, which runner v14 lets stand,
+    and the SDK's blocking move returns 1 while any code is latched (emulated here as on the robot: emulated_lite). Lite
+    reads the arm's errors before that move and clears a 4105 alone (a clear step between two runner calls, in Simulation
+    and on the robot), and the sequence runs to its end."""
+    flag = server["data"] / "emu_4105"
     home = {"type": "global", "name": "STP_HOME", "move": "movej", "speed": 30, "wait_s": 0}
-    call(server, "PUT", f"{P}/workflow/left", {"steps": steps(tail=[home])})
-    call(server, "PUT", f"{P}/workflow/right", {"steps": steps()})
-    assert [s["kind"] for s in call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})["stages"]] == ["parallel"]
-    sim = simulated(server)
-    tail = [a for a in sim["acts"]["left"] if a["row"] == 4]
-    assert [a["kind"] for a in tail] == ["wait", "global"]
-    assert tail[0]["t1"] - tail[0]["t0"] == pytest.approx(2.0, abs=0.01) and "end of the Program" in tail[0]["text"]
-    t0 = time.time()
-    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
-    assert j["state"] == "done", j
-    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
-    said = [r["text"] for r in hw if r["verb"] == "runner v14" and r["side"] == "left" and r["t"] >= t0]
-    w = next(i for i, s in enumerate(said) if s.startswith("WORKFLOW WAIT: 2 s"))
-    g = next(i for i, s in enumerate(said) if s.startswith("GLOBAL MOVE START: STP_HOME"))
-    assert w < g and any(s.startswith("GLOBAL MOVE COMPLETE: STP_HOME") for s in said[g:])
+    try:
+        flag.write_text("left")
+        left = call(server, "GET", f"{P}/workflow")["left"]
+        call(server, "PUT", f"{P}/workflow/left", {"steps": steps()})       # the lab's failure, first: a Program alone...
+        row = next(i + 1 for i, st in enumerate(steps()) if st["type"] == "program")
+        pick = {"scope": "task", "side": "left", "row": row, "id": 71}
+        j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "left", "pick": pick}))
+        call(server, "POST", f"{P}/workflow/played", {"hash": j["result"]["hash"]})
+        j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "left", "pick": pick, "confirmed": True,
+                                                                   "warnings_seen": j["result"]["hash"]}))
+        assert j["state"] == "done", j
+        assert call(server, "GET", "/api/robots/status")["arms"]["left"]["link"]["feedback"]["errors"] == [4105]
+        moved = wait(server, call(server, "POST", "/api/robots/left/points/move", {"name": "STP_HOME", "move": "movej",
+                                                                                  "confirmed": True}))
+        assert moved["state"] == "failed" and "ret=1" in moved["error"], moved      # ...then a MoveJ: 1, as in the lab
+        call(server, "PUT", f"{P}/workflow/left", {"steps": steps(tail=[home])})
+        call(server, "PUT", f"{P}/workflow/right", {"steps": steps()})
+        assert [s["kind"] for s in call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})["stages"]] == ["parallel"]
+        sim = simulated(server)
+        tail = [a for a in sim["acts"]["left"] if a["row"] == 4]
+        assert [a["kind"] for a in tail] == ["wait", "global"] and "4105" in tail[0]["text"]
+        assert tail[0]["t1"] - tail[0]["t0"] < 1.0                                  # no 2 s wait for the Program's end
+        t0 = time.time()
+        j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
+        assert j["state"] == "done", j
+        assert "LEFT row 4: cleared 4105" in events(j)
+        hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+        said = [r["text"] for r in hw if r["verb"] == "runner v14" and r["side"] == "left" and r["t"] >= t0]
+        g = next(i for i, s in enumerate(said) if s.startswith("GLOBAL MOVE START: STP_HOME"))
+        assert said[g - 1].startswith("WORKFLOW STEP START 1/1: GLOBAL")             # a runner call of its own, after the clear
+        assert any(s.startswith("GLOBAL MOVE COMPLETE: STP_HOME") for s in said[g:])
+        cleared = [r for r in hw if r["verb"] == "clear warning" and r["side"] == "left" and r["t"] >= t0 and r.get("args")]
+        assert [r["args"]["codes"] for r in cleared] == [["4105"]] and cleared[0]["ok"]
+    finally:
+        flag.unlink(missing_ok=True)
+        call(server, "PUT", f"{P}/workflow/left", {"steps": left})
+        for side in ("left", "right"):
+            call(server, "POST", f"/api/robots/{side}/clear-errors", {})
+
+
+def test_a_stage_that_fails_says_each_arms_errors_after_the_stop(server):
+    """The lab, 22 Oct (12:55, 16:14): the LEFT arm's Program 86 ended with 4107 (a joint's brake release failed) as it
+    started, and the run stopped; four times that day the RIGHT arm's Program 82 ended on its controller at that moment
+    with no code the runner reads. When a stage fails, each arm's errors as its controller holds them then (its joints'
+    own flags too) are said and kept in the hardware log; a code that is not a warning is not cleared."""
+    flag = server["data"] / "emu_4105"
+    left = call(server, "GET", f"{P}/workflow")["left"]
+    try:
+        flag.write_text("left 4107")
+        call(server, "PUT", f"{P}/workflow/left", {"steps": steps()})
+        call(server, "PUT", f"{P}/workflow/right", {"steps": steps()})
+        sim = simulated(server)
+        t0 = time.time()
+        j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
+        assert j["state"] == "failed" and "LEFT rc=1" in j["error"], j
+        said = events(j)
+        assert "LEFT: ** WORKFLOW PROGRAM NOT COMPLETE 3/3: 4107" in said
+        assert "LEFT controller's errors after the stop: system 4107" in said and "RIGHT controller's errors after the stop: clean" in said
+        hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+        after = {r["side"]: r["text"] for r in hw if r["verb"] == "errors after the stop" and r["t"] >= t0}
+        assert after["left"].startswith("system 4107") and after["right"] == "clean"
+        st = call(server, "GET", "/api/robots/status")["arms"]["left"]["link"]["feedback"]["errors"]
+        assert st == [4107]                                                     # not a warning: left for a person
+    finally:
+        flag.unlink(missing_ok=True)
+        call(server, "PUT", f"{P}/workflow/left", {"steps": left})
+        for side in ("left", "right"):
+            call(server, "POST", f"/api/robots/{side}/clear-errors", {})
 
 
 def test_a_wait_for_and_a_meet_order_the_two_arms_on_the_robot(server):

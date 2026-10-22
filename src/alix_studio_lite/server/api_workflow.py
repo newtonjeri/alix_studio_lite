@@ -52,6 +52,9 @@ def post_workflow_load(app, q, body, m):
     file is refused."""
     units, side = units_of(app, m.group(1)), m.group(2)
     doc = body.get("document")
+    if isinstance(doc, str) and not doc.strip():
+        raise UserError("Could not load the sequence: the file is empty.",
+                        "A sequence saved before 22 Oct could be saved empty: save the sequence again, then load that file.")
     if isinstance(doc, str):
         try:
             doc = json.loads(doc)
