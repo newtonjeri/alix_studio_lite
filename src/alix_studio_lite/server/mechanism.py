@@ -391,6 +391,32 @@ def reverse_block(block: list) -> list:
     return out
 
 
+#: A joint this close to the reversed lift's first line (millidegrees) is where the lift ended.
+AT_END_MDEG = 50
+
+
+def hold_short(rows: list, now_deg) -> tuple[list, list]:
+    """A re-lift restore's lines (``reverse_block``: the way back along a lift that did not take) from where the arm
+    stands, on the robot: a joint the contact stopped short of the lift's end (the restore's first line) is held where
+    it stands until the way back comes past it, then follows it; the other joints go back as planned. The first line
+    is then where the arm is, and no line takes a joint further than it got. The lab, 22 Oct 11:58, 11:59 and 12:00:
+    the left hand pressed on the seat and J6 ended 2.4 to 4.8 degrees short of the lift's end, the other joints at it,
+    so the restore's first line was that far from the arm and the stream refused it (one 5 ms line may close 0.72
+    degrees: ``start_tol_deg``; no line of the lift was within it either). Returns (the lines, the joints held:
+    [(joint, degrees short)])."""
+    now = [round(float(v) * 1000.0) for v in list(now_deg)[:7]]
+    out = [list(r) for r in rows]
+    held = []
+    for j in range(7):
+        d = out[0][j] - now[j]
+        if abs(d) <= AT_END_MDEG:
+            continue
+        held.append((j + 1, round(abs(d) / 1000.0, 2)))
+        for r in out:
+            r[j] = min(r[j], now[j]) if d > 0 else max(r[j], now[j])
+    return out, held
+
+
 def assumed(expect: str):
     """The answer a check gets when no camera is asked (Simulation, Hardware sim, the stand-in): as expected."""
     from .gap_check import Answer
@@ -749,7 +775,17 @@ class RealExec(_Exec):
         elif e.kind == "hand":
             arm.hand_to(e.hand_counts())
         else:
-            out = arm.stream(e.rows, e.label(), speed=50, restore_pct=self.robot.found_speed(e.side),
+            rows = e.rows
+            if e.note == "re-lift restore, reversed":      # from where the arm stands (hold_short)
+                link = self.robot.links.get(e.side)
+                q = (link.read_fresh() if link is not None else {}).get("joints_deg")
+                if q:
+                    rows, held = hold_short(e.rows, q)
+                    if held:
+                        self.say(f"{e.label()}: from where the arm stands: " + ", ".join(
+                            f"J{j} held where it stopped, {d:.1f} degrees short of the lift's end" for j, d in held)
+                            + ", until the way back comes past it")
+            out = arm.stream(rows, e.label(), speed=50, restore_pct=self.robot.found_speed(e.side),
                              bridge_speed=int(self.robot.speed_pct) if bridge else None,
                              stop_hook=self.job.on_cancel, records=self.kit.records_dir("canfd"))
             self.say(f"{e.label()}: {out['lines_sent']}/{out['lines']} lines in {out['seconds']:.2f} s"

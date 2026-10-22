@@ -321,3 +321,28 @@ def test_re_lifts_planned_for_another_version_of_the_plan_stop_the_run_before_an
         assert mechanism.Plan("seat_open").rungs_note() is None                          # no rungs: back along its lift
     finally:
         mechanism.cached.cache_clear()
+
+
+def test_a_re_lift_restore_goes_back_from_where_the_arm_stands():
+    """The lab, 22 Oct 11:58, 11:59 and 12:00: the seat lift ended with the left hand on the seat, J6 2.4 to 4.8 degrees
+    short of the lift's end and the other joints at it; the restore (back along the lift) began at the lift's end, so its
+    stream refused to start (one 5 ms line closes at most 0.72 degrees) and the task failed there. The restore now begins
+    where the arm stands: J6 held until the way back comes past it, never further than it got, and the restore still
+    ends at the lift's start, every line inside the stream's limits."""
+    from alix_dispatch import track
+
+    plan = mechanism.cached("seat_open")
+    lift = [e for e in plan.entries if e.side == "left" and e.kind == "arm" and e.stage == "execute_path"]
+    back = mechanism.reverse_block(lift)[0]
+    end = np.array(lift[0].rows[-1]) / 1000.0
+    stands = end.copy()
+    stands[5] -= 4.80                                   # the lab's arm at 11:58:05 (its capture): J6 short, the rest at the end
+    rows, held = mechanism.hold_short(back.rows, stands)
+    assert held == [(6, 4.8)]
+    first = np.array(rows[0]) / 1000.0
+    assert np.abs(first - stands).max() <= 0.06 < mechanism.start_tol_deg()          # the stream starts where the arm is
+    assert max(r[5] for r in rows) <= round(stands[5] * 1000)                       # J6 never further into the seat
+    assert rows[-1] == back.rows[-1] == lift[0].rows[0]                              # back at the lift's start
+    assert track.canfd_preflight(rows, mechanism.CLOCK_S, mechanism.RATE_GATE)["ok"]
+    same, none = mechanism.hold_short(back.rows, end)   # an arm at the lift's end: the restore as planned
+    assert same == back.rows and none == []
