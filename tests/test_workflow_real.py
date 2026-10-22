@@ -114,8 +114,9 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     sim = j["result"]
     assert sim["start_from"] == {"left": "now", "right": "now"} and sim["points"]["left"]          # read from the controllers
     la = sim["acts"]["left"]
-    assert [a["kind"] for a in la] == ["pole", "hand", "wait", "global", "program"] and la[3]["drawn"] and la[4]["drawn"]
-    assert "4105" in la[2]["text"]                               # the run's start: its errors read before the move
+    assert [a["kind"] for a in la] == ["pole_hand", "wait", "global", "program"] and la[2]["drawn"] and la[3]["drawn"]
+    assert "4105" in la[1]["text"]                               # the run's start: its errors read before the move
+    assert "moving meanwhile" in la[0]["text"]                   # the hand while the pole travels (the owner, 22 Oct)
     assert not [f for f in sim["findings"] if "program 71" in f["text"]]                         # its stage is the steps'
     refused = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True})
     assert refused["code"] == "unsimulated" and "not played to its end" in refused["error"]
@@ -128,10 +129,12 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     assert j["extra"]["live"] == {"left": "SEQUENCE COMPLETE", "right": "SEQUENCE COMPLETE"}
     assert j["extra"]["status"].startswith("PAGE 02 SEQUENCE COMPLETE")
     said = events(j)
-    assert "LEFT: WORKFLOW COMPLETE: 2/2 step(s)" in said and "RIGHT: WORKFLOW COMPLETE: 3/3 step(s)" in said
+    assert "LEFT: WORKFLOW COMPLETE: 2/2 step(s)" in said and "RIGHT: WORKFLOW COMPLETE: 1/1 step(s)" in said
     hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
     runs = [r for r in hw if r["verb"] == "workflow"]
-    assert len(runs) == 3 and all(r["ok"] for r in runs)       # the left's pole and hand, then its clear, then the rest
+    assert len(runs) == 2 and all(r["ok"] for r in runs)       # each arm's Pole and Hand Lite's, then its clear, then the rest
+    both = [r for r in hw if r["verb"] == "pole and hand"]
+    assert {r["side"] for r in both} == {"left", "right"} and all(r["ok"] for r in both)
     assert any("WORKFLOW SPEED RESTORE" in (r["text"] or "") for r in hw if r["verb"] == "runner v14")
 
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps(tail=[{"type": "wait", "seconds": 1}])})     # changed after
@@ -260,7 +263,7 @@ def test_a_stage_that_fails_says_each_arms_errors_after_the_stop(server):
         j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
         assert j["state"] == "failed" and "LEFT rc=1" in j["error"], j
         said = events(j)
-        assert "LEFT: ** WORKFLOW PROGRAM NOT COMPLETE 3/3: 4107" in said
+        assert "LEFT: ** WORKFLOW PROGRAM NOT COMPLETE 1/1: 4107" in said
         assert "LEFT controller's errors after the stop: system 4107" in said and "RIGHT controller's errors after the stop: clean" in said
         hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
         after = {r["side"]: r["text"] for r in hw if r["verb"] == "errors after the stop" and r["t"] >= t0}

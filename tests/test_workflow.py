@@ -245,6 +245,30 @@ def test_after_the_lid_and_seat_tasks_each_arm_gets_its_pole_and_hand_back():
     assert alone["plan"][0]["kind"] == "mechanism" and "restore" not in alone["plan"][0]
 
 
+def test_a_pole_with_the_hand_after_it_is_one_step():
+    """The owner, 22 Oct: "there is a delay when the sequence moves from the pole movement to the hand movement" (the
+    lab: 3.1 to 4.6 s from the pole's start to the hand's, runner v14 ending its Pole step only when the pole's travel
+    model had run out). A Pole row with a Hand row straight after it, on one arm, is one step: the hand moves while the
+    pole travels; both rows keep their numbers and are finished by it. A Hand before a Pole, or a Pole on its own,
+    stays as it is."""
+    from alix_studio_lite.server import workflow
+
+    grip, opened = [0, 0, 0, 0, 150, 1000], [1000] * 6
+    left = [{"type": "pole", "mm": 50}, {"type": "hand", "values": grip}, prog(80), {"type": "hand", "values": opened},
+            {"type": "pole", "mm": 200}, prog(81), {"type": "pole", "mm": 20}, {"type": "wait", "seconds": 1}, {"type": "hand", "values": grip}]
+    right = [{"type": "pole", "mm": 200}, {"type": "hand", "values": opened}, prog(80)]
+    run = workflow.plan_for(numbered(left, right), "both")
+    lp = run["plan"][0]["left"]["steps"]
+    assert [x["type"] for x in lp] == ["pole_hand", "program", "hand", "pole", "program", "pole", "wait", "hand"]
+    assert lp[0]["_rows"] == [1, 2] and lp[0]["_row"] == 2 and lp[0]["mm"] == 50.0 and lp[0]["values"] == grip
+    assert [w for w, _ in workflow._segments(lp)][:2] == ["pair", "steps"]
+    assert "moving meanwhile" in workflow._step_words(lp[0])
+    shape = workflow.plan_shape(run["plan"])[0]["left"]
+    assert shape[0] == ["pole_hand", 1, 2]
+    alone = workflow.plan_for(numbered(left, right), "both", {"scope": "task", "side": "left", "row": 3, "id": 80})
+    assert [x["type"] for x in alone["plan"][0]["left"]["steps"]] == ["pole_hand", "program"]   # a task's staging too
+
+
 def test_the_same_steps_planned_otherwise_are_simulated_again():
     """A simulation is of a plan, not only of steps: one made before Lite planned the same steps otherwise (V53's planner
     gone on 22 Oct) no longer lets Real Machine Mode run them, and the refusal says so."""
@@ -487,13 +511,15 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     assert st[0]["t1_range"][0] <= st[0]["t1"] <= st[0]["t1_range"][1]                  # as fast and as slow as they run
     assert sim["drift"]["clearance_mm"] == 50 and sim["drift"]["timings"] >= 1          # both arms, at every timing
     la, ra = sim["acts"]["left"], sim["acts"]["right"]
-    assert [a["kind"] for a in la] == ["pole", "hand", "pole", "program", "program"] and [a["row"] for a in la] == [1, 2, 3, 4, 5]
-    assert la[3]["drawn"] and la[3]["lines"] == 300 and 299 * la[3]["line_s"] == pytest.approx(299 * 0.005, abs=1e-3)
-    assert la[3]["t1"] > la[3]["traj_t0"] + 1.495 and la[3]["traj_t0"] > la[3]["t0"]      # the file read first, the end after
+    # rows 1-2, a Pole with the Hand after it: one step, the hand moving while the pole travels (the owner, 22 Oct)
+    assert [a["kind"] for a in la] == ["pole_hand", "pole", "program", "program"] and [a["row"] for a in la] == [2, 3, 4, 5]
+    assert la[0]["pole_s"] > 0 and la[0]["hand_s"] > 0 and la[0]["t1"] - la[0]["t0"] >= max(la[0]["pole_s"], la[0]["hand_s"])
+    assert la[2]["drawn"] and la[2]["lines"] == 300 and 299 * la[2]["line_s"] == pytest.approx(299 * 0.005, abs=1e-3)
+    assert la[2]["t1"] > la[2]["traj_t0"] + 1.495 and la[2]["traj_t0"] > la[2]["t0"]      # the file read first, the end after
     assert sim["programs"]["left"]["71"]["seconds"] == pytest.approx(1.495)                  # its execution time travels with it
     src = call(lite, "GET", f"{P}/workflow/left/sources")
     assert next(p for p in src["programs"] if p["id"] == 71)["seconds"] == pytest.approx(1.495)
-    assert not la[4]["drawn"]                                    # program 72: Lite never sent it
+    assert not la[3]["drawn"]                                    # program 72: Lite never sent it
     assert ra[1]["t0"] == ra[0]["t1"] and ra[2]["kind"] == "wait" and ra[2]["stage"] == 0   # its own, straight after its 71
     texts = " | ".join(f["text"] for f in sim["findings"])
     assert "LEFT row 5: program 72 is not drawn (Lite has not sent this program; no file of its name in the project" in texts
@@ -505,7 +531,7 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     col = sim["collisions"]
     assert col["samples"] > 100 and col["checked"]["two_arms"] and set(col["checked"]["arms"]) == {"left", "right"}
     fr = call(lite, "POST", f"{P}/workflow/frames", {"side": "left", "stage": 0})
-    assert fr["times"][0] == 0 and fr["times"][-1] == pytest.approx(la[4]["t1"], abs=1e-3) and len(fr["links"]) > 20
+    assert fr["times"][0] == 0 and fr["times"][-1] == pytest.approx(la[3]["t1"], abs=1e-3) and len(fr["links"]) > 20
     assert call(lite, "POST", f"{P}/workflow/frames", {"side": "right", "stage": -1})["times"] == [0.0]
 
     view = call(lite, "GET", f"{P}/workflow")["sim"]

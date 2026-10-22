@@ -62,7 +62,11 @@ MAX_STEPS = 500
 #: Point's MoveJ: the move at its speed x the overall speed of each joint's rating (staging's law), measured 3 % longer
 #: (2 moves); 0.08 s when the arm is already there (6 moves). A Wait: its seconds. Each runner call (a stage's part, or
 #: its stretch to a Wait-for) starts in 0.10-0.30 s. Lite's read of an arm's errors before a move, with a clear of a
-#: 4105 (``clear``): four reads, then a clear and four reads again (not yet timed in the lab).
+#: 4105 (``clear``): four reads, then a clear and four reads again (not yet timed in the lab). A Pole with the Hand after
+#: it (``pole_hand``): the longer of the two, the hand by the control program's stroke law (hand.py: 0.115 s + 0.373 s
+#: per 1000 counts at SPEED_SET 1000, at most its own Hand step), plus its port opened with its speed, its target read
+#: and written, its arrival read and the port closed around the pole (``pair_extra_s``: some six calls of 40-60 ms; not
+#: yet timed in the lab).
 ROBOT_TIMES = dict(
     play=(0.96, 1.00, 1.02),
     load_s_per_line=(0.17e-3, 0.23e-3, 0.37e-3),
@@ -73,6 +77,7 @@ ROBOT_TIMES = dict(
     wait_extra_s=(0.0, 0.005, 0.02),
     call_start_s=(0.10, 0.17, 0.30),
     clear_s=(0.03, 0.10, 0.60),
+    pair_extra_s=(0.25, 0.45, 0.80), hand_stroke_s=(0.115, 0.373),
 )
 #: A Program's move to its first point when the arm is not there (the controller's own MoveJ at the Program's Start %)
 #: is known only roughly: in the logs it took between the Start % of each joint's rating (the least) and that times the
@@ -146,6 +151,36 @@ def restore_after_tasks(plan: list[dict]) -> list[dict]:
     return out
 
 
+def pole_with_hand(plan: list[dict]) -> list[dict]:
+    """``plan`` with each Pole row followed straight by a Hand row on the same arm as one step (``pole_hand``; the
+    owner, 22 Oct: "there is a delay when the sequence moves from the pole movement to the hand movement"): the hand
+    moves while the pole travels (``RealArm.pole_and_hand``), and what comes after waits for both; the arm does not
+    move during it. Runner v14 ended its Pole step only when the pole's travel model had run out (1.5 s of creep plus
+    the distance at the pole's measured speed), then began the Hand: 3.1 to 4.6 s from the pole's start to the hand's in
+    the lab's logs. The two rows keep their numbers (``_rows``)."""
+    out = []
+    for st in plan:
+        if st["kind"] == "mechanism":
+            out.append(st)
+            continue
+        st = copy.deepcopy(st)
+        for side, steps in _items(st):
+            mine, i = [], 0
+            while i < len(steps):
+                x = steps[i]
+                if x["type"] == "pole" and i + 1 < len(steps) and steps[i + 1]["type"] == "hand":
+                    h = steps[i + 1]
+                    mine.append({"type": "pole_hand", "mm": float(x["mm"]), "values": [int(v) for v in h["values"]],
+                                 "_row": h.get("_row"), "_rows": [x.get("_row"), h.get("_row")]})
+                    i += 2
+                    continue
+                mine.append(x)
+                i += 1
+            steps[:] = mine
+        out.append(st)
+    return out
+
+
 def plan_shape(plan: list[dict]) -> list[dict]:
     """The plan as a simulation's identity keeps it: each stage's kind and each arm's steps in it by row (a clear with its
     row, a Wait-for with the row it waits for). The same steps planned otherwise (Lite's planner changed, as on 21 and 22
@@ -158,6 +193,7 @@ def plan_shape(plan: list[dict]) -> list[dict]:
         else:
             for side, steps in _items(st):
                 row[side] = [["clear", x.get("_row")] if x["type"] == "clear"
+                             else ["pole_hand", *x["_rows"]] if x["type"] == "pole_hand"
                              else ["wait_for", x.get("_row"), (x.get("_target") or {}).get("row")] if x["type"] == "wait_for"
                              else x.get("_row") for x in steps]
         out.append(row)
@@ -356,7 +392,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
             raise UserError(f"{side.upper()} row {row} holds Program {mine[row - 1]['id']} now, not Program {pick.get('id')}: "
                             "the steps changed since the task was chosen.", "Choose the task again.", code="pick")
         picked = {side: _staged(mine, row) + [mine[row - 1]]}
-        plan = clear_before_moves([{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}])
+        plan = pole_with_hand(clear_before_moves([{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}]))
         return dict(mode=side, pick=dict(scope="task", side=side, row=row), first_row={side: row}, steps=picked, plan=plan,
                     counts=flow.counts(plan), said=[])
     if scope == "dual":
@@ -396,7 +432,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
                     if (x.get("_target") or {}).get("row") not in rows:
                         x["_target"] = dict(x.get("_target") or {}, done=True)
             stage[f"{side}_program_ids"] = [int(x["id"]) for x in picked[side] if x["type"] == "program"]
-        plan = clear_before_moves([stage])
+        plan = pole_with_hand(clear_before_moves([stage]))
         first = {side: min(x.get("_row") or 1 for x in parts[side]) for side in ARMS}
         return dict(mode="both", pick=dict(scope="dual", stage=k, label=st.get("program_id") or st.get("title")), first_row=first,
                     steps=picked, plan=plan, counts=flow.counts(plan), said=[])
@@ -423,7 +459,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
         plan = [{"kind": "single", "program_id": None, mode: {"side": mode, "steps": mine}}]
     if mode == "both":
         plan = restore_after_tasks(plan)
-    plan = clear_before_moves(plan)
+    plan = pole_with_hand(clear_before_moves(plan))
     return dict(mode=mode, pick=dict(scope="sequence"), first_row={side: 1 for side in picked}, steps=picked, plan=plan,
                 counts=flow.counts(plan), said=said)
 
@@ -724,6 +760,18 @@ class _ArmSim:
             elif kind == "wait":
                 r = tuple(float(step["seconds"]) + x for x in T["wait_extra_s"])
                 a = self._act(stage, step, "wait", t, _at(r, lam), _step_words(step), times=r)
+            elif kind == "pole_hand":                # the hand while the pole travels (pole_with_hand), then the next call
+                mm, vals = float(step["mm"]), [int(v) for v in step["values"]]
+                rp = tuple(staging.pole_travel_s(self.pole, mm) + x for x in T["pole_extra_s"])
+                span = max(abs(int(a_) - int(b_)) for a_, b_ in zip(self.hand, vals))
+                law = T["hand_stroke_s"][0] + T["hand_stroke_s"][1] * span / 1000.0         # the control program's stroke law
+                rh = (law, law + 0.05, T["hand_s"][2] + T["hand_s_per_1000"] * span / 1000.0)
+                own = _plus(tuple(max(x, y) for x, y in zip(rp, rh)), T["pair_extra_s"])      # Lite times this part itself
+                r = _plus(own, T["call_start_s"])
+                a = self._act(stage, step, "pole_hand", t, _at(r, lam), _step_words(step), times=r, own_times=own,
+                              pole_s=round(_at(rp, lam), 4), hand_s=round(_at(rh, lam), 4))
+                self.pole, self.hand = mm, vals
+                self.set_pole = self.set_hand = True
             elif kind == "clear":                    # Lite's read (and clear) between runner calls, then the next call
                 r = T["clear_s"] if step.get("_alone") else _plus(T["clear_s"], T["call_start_s"])
                 a = self._act(stage, step, "wait", t, _at(r, lam), _step_words(step), times=r)
@@ -760,7 +808,7 @@ class _ArmSim:
                 a = self._program(step, t, stage)
             a.update(pole1=self.pole, hand1=list(self.hand), q1=list(self.q))
             if self.lam is None:                     # as a rule: the step keeps its range (Real Machine Mode times it)
-                step["_t"] = {k: a.get(k) for k in ("kind", "times", "move_times", "play_s", "transit", "lines", "drawn")}
+                step["_t"] = {k: a.get(k) for k in ("kind", "times", "own_times", "move_times", "play_s", "transit", "lines", "drawn")}
             t = a["t1"]
             if done is not None:
                 done(step, t)
@@ -1075,14 +1123,15 @@ def _start_state(app, side: str, home: dict) -> tuple[dict, str]:
 
 def _segments(steps: list) -> list[tuple[str, object]]:
     """An arm's part of a stage as its runner calls run it: the stretches of rows between its Wait-for rows and
-    Lite's clear steps (("steps", [...])), each Wait-for (("wait", the row)) and each clear (("clear", the step))."""
+    Lite's own steps (("steps", [...])), each Wait-for (("wait", the row)), each clear (("clear", the step)) and each
+    Pole with the Hand after it (("pair", the step))."""
     out, cur = [], []
     for x in steps:
-        if x["type"] in ("wait_for", "clear"):
+        if x["type"] in ("wait_for", "clear", "pole_hand"):
             if cur:
                 out.append(("steps", cur))
                 cur = []
-            out.append(("wait" if x["type"] == "wait_for" else "clear", x))
+            out.append(({"wait_for": "wait", "clear": "clear", "pole_hand": "pair"}[x["type"]], x))
         else:
             cur.append(x)
     if cur:
@@ -1106,7 +1155,10 @@ def _sim_part(st: dict, sims: dict, T: float, stage: int, words) -> dict:
     done: dict = {s: {} for s in parts}                 # each arm's rows finished in this stage: row -> when
 
     def mark(s):
-        return lambda step, t1: done[s].__setitem__(step.get("_row"), t1)
+        def one(step, t1):
+            for r in step.get("_rows") or [step.get("_row")]:
+                done[s][r] = t1
+        return one
 
     while any(pos[s] < len(segs[s]) for s in parts):
         moved = False
@@ -1115,6 +1167,8 @@ def _sim_part(st: dict, sims: dict, T: float, stage: int, words) -> dict:
                 what, x = segs[s][pos[s]]
                 if what == "clear":                     # Lite's, between two runner calls
                     clock[s] = sims[s].run([x], clock[s], stage)
+                elif what == "pair":                    # Lite's Pole with the Hand, between two runner calls
+                    clock[s] = sims[s].run([x], clock[s], stage, done=mark(s))
                 elif what == "wait":
                     tg = x.get("_target") or {}
                     other = tg.get("side")
@@ -1228,6 +1282,11 @@ def _inside(a: dict, t: float, md_of):
         return p0 + float(_ease(f)) * (p1 - p0), h0, q0
     if a["kind"] == "hand":
         return p0, h0 + min(1.0, max(0.0, f)) * (h1 - h0), q0
+    if a["kind"] == "pole_hand":                 # both from its start: the pole over its travel, the hand over its stroke
+        dt = t - a["t0"]
+        fp = min(1.0, max(0.0, dt / max(1e-9, float(a.get("pole_s") or span))))
+        fh = min(1.0, max(0.0, dt / max(1e-9, float(a.get("hand_s") or span))))
+        return p0 + float(_ease(fp)) * (p1 - p0), h0 + fh * (h1 - h0), q0
     if a["kind"] == "global" and a.get("drawn"):
         g = (t - a["t0"]) / max(1e-9, a["move_s"])
         return p0, h0, q0 + float(_ease(g)) * (q1 - q0)
@@ -1833,6 +1892,8 @@ def _step_words(step: dict) -> str:
         return f"Wait {float(step['seconds']):g} s"
     if k == "clear":
         return "Clear the arm's 4105 warning, if it holds one, before the move"
+    if k == "pole_hand":
+        return f"Pole {float(step['mm']):g} mm with the Hand " + ",".join(str(v) for v in step["values"]) + " moving meanwhile"
     if k == "meet":
         return "Meet the other arm"
     if k == "wait_for":
@@ -2154,8 +2215,53 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 job.log(f"{side.upper()} row {row}: the arm's errors could not be read before the move.", "warn")
             return dict(ok=True, rc=0, why=None)
 
+        def pair(side, x, label) -> dict:
+            """Lite's Pole with the Hand after it (pole_with_hand): the hand moving while the pole travels, timed against
+            its range as runner v14's steps are (_watch); both its rows finished after it."""
+            from .jobs import Cancelled
+
+            if stopped_why.get(side) or job.cancelled:
+                return dict(ok=False, rc=1, why=stopped_why.get(side) or "stopped")
+            rows[side] = x.get("_row")
+            job.set(rows=dict(rows))
+            say(**{side: f"{label} // {_step_words(x)} // RUNNING"})
+            job.log(f"{side.upper()}: rows {x['_rows'][0]} and {x['_rows'][1]}: {_step_words(x)}.")
+            robot.estop_check(side, on_press=lambda: stopped_why.__setitem__(side, f"the {side.upper()} E-stop was pressed"))
+            if stopped_why.get(side):
+                return dict(ok=False, rc=1, why=stopped_why[side])
+
+            def stop_hook(fn):
+                stops[side] = fn
+                job.on_cancel(fn)
+
+            t0 = time.monotonic()
+            try:
+                reals[side].pole_and_hand(float(x["mm"]), list(x["values"]), stop_hook=stop_hook)
+            except Cancelled:
+                return dict(ok=False, rc=1, why=stopped_why.get(side) or "stopped")
+            except UserError as exc:
+                return dict(ok=False, rc=1, why=str(exc))
+            finally:
+                stops.pop(side, None)
+            dur = time.monotonic() - t0
+            r = (x.get("_t") or {}).get("own_times")
+            emulated = bool(getattr(robot.links.get(side), "emulated", False))      # ALIX's emulator keeps its own pace
+            if r:
+                lo, hi = float(r[0]), float(r[2])
+                words = f"{side.upper()} rows {x['_rows'][0]}-{x['_rows'][1]} ({_step_words(x)}) took {dur:.2f} s"
+                if (dur > hi * (1.0 + STOP_STEP_MARGIN) + 0.15 or dur < lo * (1.0 - STOP_STEP_MARGIN) - 0.15) and emulated:
+                    job.log(f"{words}, outside its range on the robot ({lo:.2f}-{hi:.2f} s) (an emulated arm: said, not stopped)", "warn")
+                elif dur > hi * (1.0 + STOP_STEP_MARGIN) + 0.15 or dur < lo * (1.0 - STOP_STEP_MARGIN) - 0.15:
+                    return dict(ok=False, rc=1, why=f"{words}, outside its range on the robot ({lo:.2f}-{hi:.2f} s) by more than "
+                                f"{STOP_STEP_MARGIN:.0%}: stopped, as the two arms' timings are no longer the ones checked")
+                if not lo - 0.05 <= dur <= hi + 0.05:
+                    job.log(f"{words}, outside its range on the robot ({lo:.2f}-{hi:.2f} s).", "warn")
+            for n in x.get("_rows") or [x.get("_row")]:
+                finished(side, n)
+            return dict(ok=True, rc=0, why=None)
+
         def part(side, item, label):
-            """An arm's part of a stage: its runner calls, and between them its Wait-for rows and Lite's clear steps."""
+            """An arm's part of a stage: its runner calls, and between them its Wait-for rows and Lite's own steps."""
             out = dict(ok=True, rc=0, why=None)
             try:
                 for what, x in _segments(split_waits(item["steps"])):
@@ -2166,6 +2272,11 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                         continue
                     if what == "clear":
                         out = clear(side, x.get("_row"))
+                        if not out["ok"]:
+                            break
+                        continue
+                    if what == "pair":
+                        out = pair(side, x, label)
                         if not out["ok"]:
                             break
                         continue

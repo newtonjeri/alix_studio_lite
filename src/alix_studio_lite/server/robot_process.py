@@ -614,6 +614,7 @@ def _by_name(method: str, args: tuple, kwargs: dict) -> dict:
 
 
 _LABELS = {"stage": "staging the pole and the hand", "pole_to": "moving the pole", "hand_to": "moving the hand",
+           "pole_and_hand": "moving the pole and the hand",
            "set_run_mode": "switching the run mode", "restore_run_mode": "restoring the run mode", "teach_start": "drag teaching",
            "teach_stop": "saving the recording", "upload": "uploading a program", "run": "running a program",
            "run_workflow": "running a sequence", "move_point": "MoveJ / MoveL to a global point", "move_to": "moving to a pose",

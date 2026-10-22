@@ -309,6 +309,81 @@ class RealArm:
                             "Check the pole, then try again.")
         return out
 
+    def pole_and_hand(self, mm: float, values: list, stop_hook=None) -> dict:
+        """S2's Pole row with the Hand row straight after it, as one step (the owner, 22 Oct: "there is a delay when the
+        sequence moves from the pole movement to the hand movement"): the hand is sent first and moves while the pole
+        travels; the pole as runner v14 moves it (the control program's Pole.move at 100 %: done when idle at its height
+        and its travel model has run out, as the position it reads leads the pole by up to 73 mm); then the hand
+        confirmed as runner v14 confirms it (Hand.command: arrived, or settled on force). The arm does not move. STOP
+        (``stop_hook``) stops the pole and holds the hand where it is."""
+        Hand, _counts, Pole = _runner().load_aux_classes()
+        target = [int(v) for v in values]
+        tid, guard, state = threading.get_ident(), threading.Lock(), {"inside": False, "stopped": False}
+
+        def on_stop():
+            with guard:
+                state["stopped"] = True
+                if state["inside"]:
+                    _interrupt(tid)
+
+        if stop_hook is not None:
+            stop_hook(on_stop)
+        t0 = time.monotonic()
+        hand = pole = None
+        out = dict(pole_ok=False, hand_ok=False)
+        why = None
+        with self.link.busy("moving the pole and the hand", expect_s=60):
+            try:
+                try:
+                    with guard:
+                        if state["stopped"]:
+                            raise KeyboardInterrupt
+                        state["inside"] = True
+                    hand, pole = Hand(self.robot), Pole(self.robot)
+                    start = pole.height_m()
+                    hand.open()
+                    hand.command(target, wait=False)                 # the hand moves while the pole travels
+                    ok_p, final_m = pole.move(float(mm) / 1000.0, speed_pct=100, block=False)
+                    out.update(pole_ok=bool(ok_p), pole_s=round(time.monotonic() - t0, 3), start_mm=None if start is None else round(start * 1000.0, 1),
+                               pole_mm=None if final_m is None else round(final_m * 1000.0, 1))
+                    if ok_p:
+                        ok_h, final_h = hand.command(target, wait=True)
+                        out.update(hand_ok=bool(ok_h), hand=final_h)
+                finally:
+                    with guard:
+                        state["inside"] = False
+                        stopped = state["stopped"]
+                    if stopped:                       # a stop that came as it ended is not raised later
+                        _interrupt(tid, None)
+            except KeyboardInterrupt:
+                for what, fn in (("pole stop", lambda: pole.stop() if pole is not None else None),
+                                 ("hand freeze", lambda: hand.freeze() if hand is not None else None)):
+                    try:
+                        self._hw(what, ret=fn())
+                    except Exception as exc:                                    # noqa: BLE001
+                        self._hw(what, ok=False, text=str(exc))
+                why = "stop"
+            except Exception as exc:                                            # noqa: BLE001 - the pole or the hand refused
+                why = str(exc)
+            finally:
+                try:
+                    if hand is not None:
+                        hand.close()
+                except Exception:                                               # noqa: BLE001
+                    pass
+        out["t_s"] = round(time.monotonic() - t0, 3)
+        ok = why is None and out["pole_ok"] and out["hand_ok"]
+        self._hw("pole and hand", args=dict(mm=float(mm), hand=target), ok=ok, elapsed_s=out["t_s"],
+                 text=(f"pole {out.get('start_mm')} -> {out.get('pole_mm')} mm in {out.get('pole_s')} s, the hand moving meanwhile; "
+                       f"hand {out.get('hand')}") if why is None else f"stopped: {why}")
+        if why == "stop":
+            raise Cancelled()
+        if not ok:
+            raise UserError(f"The {self.SIDE} pole and hand did not reach {float(mm):g} mm and {','.join(map(str, target))} "
+                            f"({why or ('the pole did not arrive' if not out['pole_ok'] else 'the hand did not arrive')}).",
+                            "Check the pole and the hand, then run it again.")
+        return out
+
     def hand_to(self, counts: list) -> dict:
         """The hand alone to six counts (Advanced), at 50 %, read back. Done as staging takes it
         (_settled: the control program's Hand.command): ARRIVED, or SETTLED short of the target,
