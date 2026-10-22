@@ -817,8 +817,8 @@
       "dest": "vendor/alix/core/python/alix_dispatch/src/alix_dispatch/peripherals.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_dispatch/src/alix_dispatch/peripherals.py",
       "origin": "alix",
-      "sha256": "f6131b3f455385467ec2e23581c9fce1c24aaec09e1e85b6522fe216aa179d56",
-      "bytes": 48491
+      "sha256": "c2aa8e6d268d343ccd04a8ede7dc9bcffec321d009b9fa755164b7b4773d9d2f",
+      "bytes": 48544
     },
     {
       "dest": "vendor/alix/core/python/alix_dispatch/src/alix_dispatch/program.py",

@@ -259,8 +259,8 @@ class Pole:
         Across the whole ledger 70 of 70 pole moves with a series exited this
         wait on the ``elapsed > LIFT_START_LATENCY_S + 0.3`` clause — a 0.68 s
         TIMER, not a settle (six zero-distance "moves" took the same 0.69-0.75 s,
-        which is the proof) — while true travel is 2.555-2.662 s up and
-        1.713-2.678 s down. So:
+        which is the proof) — while true travel is 1.92-2.82 s, the same up
+        and down (first motion to within 0.5 mm on ``lift_state.pos``, L49). So:
 
         * with *frame_source* — a callable returning the latest pushed pole
           height in METRES, or None — arrival is judged on that channel:
@@ -410,7 +410,7 @@ class Pole:
                 # When the caller PROMISED push frames and none have landed,
                 # the 0.68 s timer must not sign a real move off on the getter
                 # alone: that timer IS the B6 defect (70 of 70 hardware moves
-                # exited on it, while true travel is 1.7-2.7 s). Hold the getter
+                # exited on it, while true travel is 1.9-2.8 s). Hold the getter
                 # to the modelled travel instead (L49) — unless the pole is
                 # genuinely moving, which the mode word answers directly. A
                 # no-op needs no such wait, and a caller that never asked for
