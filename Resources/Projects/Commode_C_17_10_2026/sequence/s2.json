@@ -6,12 +6,12 @@
    "move": "movej",
    "speed": 20,
    "wait_s": 0.0,
-   "uid": "86c2c716"
+   "uid": "75ad2c3e"
   },
   {
    "type": "pole",
    "mm": 50.0,
-   "uid": "f8d209bb"
+   "uid": "d231eb7f"
   },
   {
    "type": "hand",
@@ -23,7 +23,14 @@
     0,
     1000
    ],
-   "uid": "8eb235e5"
+   "uid": "f5f0f64b"
+  },
+  {
+   "type": "wait_for",
+   "target": {
+    "uid": "82b9d8d5"
+   },
+   "uid": "e117a5e0"
   },
   {
    "type": "program",
@@ -31,24 +38,17 @@
    "name": "80_L_merge_1.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "6df10c15"
+   "uid": "be6583bb"
   },
   {
    "type": "wait",
    "seconds": 3.0,
-   "uid": "f054efaa"
+   "uid": "4597dd9a"
   },
   {
    "type": "pole",
    "mm": 200.0,
-   "uid": "de385a06"
-  },
-  {
-   "type": "wait_for",
-   "target": {
-    "uid": "ed8d04c3"
-   },
-   "uid": "2b7a1446"
+   "uid": "fd9f40f2"
   },
   {
    "type": "program",
@@ -56,7 +56,7 @@
    "name": "81_L_merge_2_1.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "7f8c5400"
+   "uid": "203235b8"
   },
   {
    "type": "hand",
@@ -68,7 +68,7 @@
     150,
     1000
    ],
-   "uid": "d2cd0b47"
+   "uid": "30a2d6d1"
   },
   {
    "type": "program",
@@ -76,12 +76,12 @@
    "name": "56_L-R06_v001.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "99f06aff"
+   "uid": "21b068c4"
   },
   {
    "type": "wait",
    "seconds": 3.0,
-   "uid": "2536b659"
+   "uid": "1c66bc17"
   },
   {
    "type": "hand",
@@ -93,7 +93,7 @@
     0,
     1000
    ],
-   "uid": "3befbef3"
+   "uid": "d8bf2658"
   },
   {
    "type": "program",
@@ -101,7 +101,7 @@
    "name": "83_L_merge_4.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "0880f322"
+   "uid": "7cc15820"
   },
   {
    "type": "hand",
@@ -113,14 +113,7 @@
     150,
     1000
    ],
-   "uid": "3fc66d26"
-  },
-  {
-   "type": "wait_for",
-   "target": {
-    "uid": "a9e5f6c2"
-   },
-   "uid": "e4038e8a"
+   "uid": "1c08461b"
   },
   {
    "type": "program",
@@ -128,25 +121,25 @@
    "name": "84_L_merge_5.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "1d3b1868"
+   "uid": "c12db191"
   },
   {
    "type": "pole",
    "mm": 20.0,
-   "uid": "76084987"
+   "uid": "754b943e"
   },
   {
    "type": "program",
    "id": 85,
-   "name": "85_L_merge_6.txt",
+   "name": "85_L_merge_6_2.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "78e03ff5"
+   "uid": "c7bc10ca"
   },
   {
    "type": "pole",
    "mm": 200.0,
-   "uid": "e6589ff9"
+   "uid": "7e0cf21d"
   },
   {
    "type": "hand",
@@ -158,15 +151,15 @@
     1000,
     1000
    ],
-   "uid": "2792cef2"
+   "uid": "4aa7119f"
   },
   {
    "type": "program",
    "id": 86,
-   "name": "86_L_merge_7_1_trim_mean_scale_p",
+   "name": "86_L_merge_7_2.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "5412dfc5"
+   "uid": "4ce61ba0"
   },
   {
    "type": "global",
@@ -174,7 +167,7 @@
    "move": "movej",
    "speed": 20,
    "wait_s": 0.0,
-   "uid": "ea5d2d81"
+   "uid": "2c2d273c"
   }
  ],
  "right": [
@@ -184,12 +177,12 @@
    "move": "movej",
    "speed": 20,
    "wait_s": 0.0,
-   "uid": "0c9fc143"
+   "uid": "75a28073"
   },
   {
    "type": "pole",
    "mm": 200.0,
-   "uid": "6df2493c"
+   "uid": "d11c8b8e"
   },
   {
    "type": "hand",
@@ -201,27 +194,27 @@
     0,
     1000
    ],
-   "uid": "6bd637cc"
+   "uid": "82b9d8d5"
   },
   {
    "type": "wait_for",
    "target": {
-    "uid": "6df10c15"
+    "uid": "f5f0f64b"
    },
-   "uid": "1a771b9d"
+   "uid": "8c1d9de2"
   },
   {
    "type": "program",
    "id": 80,
-   "name": "80_R_merge_1.txt",
+   "name": "80_R_merge_1_2.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "9b278b14"
+   "uid": "acb73e73"
   },
   {
    "type": "wait",
    "seconds": 3.0,
-   "uid": "691761fe"
+   "uid": "51f96a77"
   },
   {
    "type": "hand",
@@ -233,7 +226,7 @@
     150,
     1000
    ],
-   "uid": "ff30fba7"
+   "uid": "b6050c4a"
   },
   {
    "type": "program",
@@ -241,7 +234,7 @@
    "name": "54_R-R04_v005.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "ed8d04c3"
+   "uid": "d734b12a"
   },
   {
    "type": "hand",
@@ -253,7 +246,7 @@
     0,
     1000
    ],
-   "uid": "97e002cb"
+   "uid": "98f89daf"
   },
   {
    "type": "program",
@@ -261,12 +254,12 @@
    "name": "55_R-R05_v001.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "bb64e4c3"
+   "uid": "51d6def8"
   },
   {
    "type": "pole",
    "mm": 50.0,
-   "uid": "ef410dac"
+   "uid": "971e7a0c"
   },
   {
    "type": "program",
@@ -274,12 +267,12 @@
    "name": "56_R-R06_v001.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "828472bd"
+   "uid": "292b9305"
   },
   {
    "type": "wait",
    "seconds": 3.0,
-   "uid": "4bee997a"
+   "uid": "367b0394"
   },
   {
    "type": "hand",
@@ -291,14 +284,7 @@
     150,
     1000
    ],
-   "uid": "294dacd8"
-  },
-  {
-   "type": "wait_for",
-   "target": {
-    "uid": "0880f322"
-   },
-   "uid": "6bf66757"
+   "uid": "a05e1b76"
   },
   {
    "type": "program",
@@ -306,12 +292,12 @@
    "name": "81_R_merge_5.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "a9e5f6c2"
+   "uid": "d71c74ce"
   },
   {
    "type": "pole",
    "mm": 200.0,
-   "uid": "8849a767"
+   "uid": "64dd6a54"
   },
   {
    "type": "hand",
@@ -323,34 +309,20 @@
     1000,
     1000
    ],
-   "uid": "76899099"
+   "uid": "d17b5213"
   },
   {
    "type": "program",
    "id": 20,
-   "name": "20_R_T04_GC_BP.txt",
+   "name": "20_R-T04_v001.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "871d007f"
+   "uid": "67098a96"
   },
   {
    "type": "wait",
-   "seconds": 12.0,
-   "note": "was Program 100 (100_delay_12s.txt): a delay",
-   "uid": "d35be378"
-  },
-  {
-   "type": "wait",
-   "seconds": 7.0,
-   "note": "was Program 99 (99_delay_7s.txt): a delay",
-   "uid": "3e6d2461"
-  },
-  {
-   "type": "wait_for",
-   "target": {
-    "uid": "1d3b1868"
-   },
-   "uid": "e7690c2b"
+   "seconds": 6.0,
+   "uid": "207b9793"
   },
   {
    "type": "program",
@@ -358,7 +330,7 @@
    "name": "82_R_merge_7.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "9c50a7e2"
+   "uid": "d63963ce"
   },
   {
    "type": "global",
@@ -366,8 +338,8 @@
    "move": "movej",
    "speed": 20,
    "wait_s": 0.0,
-   "uid": "1b7c6171"
+   "uid": "df7d87d4"
   }
  ],
- "updated": "2026-10-22 15:13:59"
+ "updated": "2026-10-22 21:08:15"
 }
