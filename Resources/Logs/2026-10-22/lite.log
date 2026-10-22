@@ -11403,3 +11403,343 @@
 21:13:50.841 [activity] operator:75e5d0 page: SYSTEM · Session active
 21:14:20.841 [activity] operator:75e5d0 page: SYSTEM · Session active
 21:14:50.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:15:20.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:15:50.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:16:20.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:16:31.680 [activity] operator:75e5d0 page: UI · Button action
+21:16:31.895 [activity] operator:75e5d0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:16:35.079 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:16:40.988 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:16:44.012 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:16:50.840 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:17:02.688 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:17:02.688 [activity] operator:75e5d0 page: UI · Button action
+21:17:02.709 [LEFT] program list · 31 programs
+21:17:02.926 [RIGHT] program list · 26 programs
+21:17:02.976 [LEFT] global points · 17 point(s)
+21:17:03.029 [RIGHT] global points · 14 point(s)
+21:17:03.034 [activity] operator:75e5d0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps.
+21:17:03.518 [activity] operator:75e5d0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:17:04.393 [LEFT] program list · 31 programs
+21:17:04.605 [RIGHT] program list · 26 programs
+21:17:04.686 [LEFT] global points · 17 point(s)
+21:17:04.783 [RIGHT] global points · 14 point(s)
+21:17:04.839 [activity] operator:75e5d0 page: ROBOT · Button action
+21:17:04.933 [LEFT] program list · 31 programs
+21:17:04.985 [LEFT] global points · 17 point(s)
+21:17:05.054 [activity] operator:75e5d0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:17:05.182 [RIGHT] program list · 26 programs
+21:17:05.254 [RIGHT] global points · 14 point(s)
+21:17:05.256 [activity] operator:75e5d0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+21:17:05.258 [activity] operator:75e5d0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/plan
+21:17:07.053 [LEFT] program list · 31 programs
+21:17:07.331 [RIGHT] program list · 26 programs
+21:17:07.412 [LEFT] global points · 17 point(s)
+21:17:07.503 [activity] operator:75e5d0 page: ROBOT · Button action
+21:17:07.548 [RIGHT] global points · 14 point(s)
+21:17:07.719 [activity] operator:75e5d0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:17:07.859 [LEFT] program list · 31 programs
+21:17:07.931 [LEFT] global points · 17 point(s)
+21:17:08.176 [RIGHT] program list · 26 programs
+21:17:08.260 [RIGHT] global points · 14 point(s)
+21:17:08.698 [activity] operator:75e5d0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+21:17:08.745 [LEFT] run mode REAL
+21:17:08.795 [RIGHT] run mode REAL
+21:17:08.796 [RIGHT] runner v14 · WORKFLOW START: 3 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 15%
+21:17:08.796 [LEFT] runner v14 · WORKFLOW START: 3 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 15%
+21:17:08.796 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+21:17:08.797 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+21:17:08.808 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 20% // wait 0s
+21:17:08.808 [LEFT] runner v14 ·   02. POLE: 50 mm
+21:17:08.808 [LEFT] runner v14 ·   03. HAND: 1000,1000,1000,1000,0,1000
+21:17:08.810 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 20% // wait 0s
+21:17:08.810 [RIGHT] runner v14 ·   02. POLE: 200 mm
+21:17:08.810 [RIGHT] runner v14 ·   03. HAND: 1000,1000,1000,1000,0,1000
+21:17:08.825 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 15% // ret=0
+21:17:08.826 [LEFT] runner v14 · WORKFLOW STEP START 1/3: GLOBAL
+21:17:08.827 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 15% // ret=0
+21:17:08.828 [RIGHT] runner v14 · WORKFLOW STEP START 1/3: GLOBAL
+21:17:08.853 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 20%
+21:17:08.856 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 20%
+21:17:08.912 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+21:17:08.913 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/3: GLOBAL
+21:17:08.913 [LEFT] runner v14 · WORKFLOW STEP START 2/3: POLE
+21:17:08.927 [LEFT] runner v14 · MANUAL POLE START: current 200.0 mm -> target 50 mm
+21:17:12.003 [LEFT] runner v14 · MANUAL POLE COMPLETE: target 50 mm, final=50.0 mm
+21:17:12.004 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 2/3: POLE
+21:17:12.004 [LEFT] runner v14 · WORKFLOW STEP START 3/3: HAND
+21:17:12.009 [LEFT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+21:17:12.863 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:17:13.091 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[1000, 1000, 1000, 997, 500, 988]
+21:17:13.269 [LEFT] runner v14 · AUX HAND CLOSED
+21:17:13.270 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 3/3: HAND
+21:17:13.270 [LEFT] runner v14 · WORKFLOW COMPLETE: 3/3 step(s), 4.4 s
+21:17:13.283 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+21:17:13.317 [LEFT] workflow {"steps": 3, "overall_speed": 15, "restore_speed": 50} ret=0 (4.521 s)
+21:17:13.351 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+21:17:13.352 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/3: GLOBAL
+21:17:13.352 [RIGHT] runner v14 · WORKFLOW STEP START 2/3: POLE
+21:17:13.368 [RIGHT] runner v14 · MANUAL POLE START: current 200.0 mm -> target 200 mm
+21:17:13.373 [RIGHT] runner v14 · MANUAL POLE COMPLETE: target 200 mm, final=200.0 mm
+21:17:13.373 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 2/3: POLE
+21:17:13.373 [RIGHT] runner v14 · WORKFLOW STEP START 3/3: HAND
+21:17:13.378 [RIGHT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+21:17:14.442 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[998, 997, 1000, 1000, 232, 990]
+21:17:14.585 [RIGHT] runner v14 · AUX HAND CLOSED
+21:17:14.586 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 3/3: HAND
+21:17:14.586 [RIGHT] runner v14 · WORKFLOW COMPLETE: 3/3 step(s), 5.8 s
+21:17:14.587 [LEFT] runner v14 · WORKFLOW START: 18 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 15%
+21:17:14.587 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+21:17:14.603 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+21:17:14.632 [RIGHT] workflow {"steps": 3, "overall_speed": 15, "restore_speed": 50} ret=0 (5.836 s)
+21:17:14.633 [RIGHT] runner v14 · WORKFLOW START: 18 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 15%
+21:17:14.633 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+21:17:14.701 [LEFT] runner v14 ·   01. PROGRAM: Program 80 80_L_merge_1.txt // start/transit 30% // stored trajectory timing
+21:17:14.701 [LEFT] runner v14 ·   02. WAIT: 3 s
+21:17:14.702 [LEFT] runner v14 ·   03. POLE: 200 mm
+21:17:14.702 [LEFT] runner v14 ·   04. PROGRAM: Program 81 81_L_merge_2_1.txt // start/transit 30% // stored trajectory timing
+21:17:14.702 [LEFT] runner v14 ·   05. HAND: 0,0,0,0,150,1000
+21:17:14.703 [LEFT] runner v14 ·   06. PROGRAM: Program 56 56_L-R06_v001.txt // start/transit 30% // stored trajectory timing
+21:17:14.703 [LEFT] runner v14 ·   07. WAIT: 3 s
+21:17:14.703 [LEFT] runner v14 ·   08. HAND: 1000,1000,1000,1000,0,1000
+21:17:14.703 [LEFT] runner v14 ·   09. PROGRAM: Program 83 83_L_merge_4.txt // start/transit 30% // stored trajectory timing
+21:17:14.704 [LEFT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+21:17:14.704 [LEFT] runner v14 ·   11. PROGRAM: Program 84 84_L_merge_5.txt // start/transit 30% // stored trajectory timing
+21:17:14.704 [LEFT] runner v14 ·   12. POLE: 20 mm
+21:17:14.704 [LEFT] runner v14 ·   13. PROGRAM: Program 85 85_L_merge_6_2.txt // start/transit 30% // stored trajectory timing
+21:17:14.704 [LEFT] runner v14 ·   14. POLE: 200 mm
+21:17:14.704 [LEFT] runner v14 ·   15. HAND: 1000,1000,1000,1000,1000,1000
+21:17:14.705 [LEFT] runner v14 ·   16. PROGRAM: Program 86 86_L_merge_7_2.txt // start/transit 30% // stored trajectory timing
+21:17:14.705 [LEFT] runner v14 ·   17. WAIT: 2 s
+21:17:14.705 [LEFT] runner v14 ·   18. GLOBAL: L_HME_POS // MOVEJ // speed 20% // wait 0s
+21:17:14.713 [RIGHT] runner v14 ·   01. PROGRAM: Program 80 80_R_merge_1_2.txt // start/transit 30% // stored trajectory timing
+21:17:14.713 [RIGHT] runner v14 ·   02. WAIT: 3 s
+21:17:14.714 [RIGHT] runner v14 ·   03. HAND: 0,0,0,0,150,1000
+21:17:14.714 [RIGHT] runner v14 ·   04. PROGRAM: Program 54 54_R-R04_v005.txt // start/transit 30% // stored trajectory timing
+21:17:14.715 [RIGHT] runner v14 ·   05. HAND: 1000,1000,1000,1000,0,1000
+21:17:14.715 [RIGHT] runner v14 ·   06. PROGRAM: Program 55 55_R-R05_v001.txt // start/transit 30% // stored trajectory timing
+21:17:14.715 [RIGHT] runner v14 ·   07. POLE: 50 mm
+21:17:14.715 [RIGHT] runner v14 ·   08. PROGRAM: Program 56 56_R-R06_v001.txt // start/transit 30% // stored trajectory timing
+21:17:14.715 [RIGHT] runner v14 ·   09. WAIT: 3 s
+21:17:14.716 [RIGHT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+21:17:14.716 [RIGHT] runner v14 ·   11. PROGRAM: Program 81 81_R_merge_5.txt // start/transit 30% // stored trajectory timing
+21:17:14.716 [RIGHT] runner v14 ·   12. POLE: 200 mm
+21:17:14.716 [RIGHT] runner v14 ·   13. HAND: 1000,1000,1000,1000,1000,1000
+21:17:14.716 [RIGHT] runner v14 ·   14. PROGRAM: Program 20 20_R-T04_v001.txt // start/transit 30% // stored trajectory timing
+21:17:14.716 [RIGHT] runner v14 ·   15. WAIT: 6 s
+21:17:14.717 [RIGHT] runner v14 ·   16. PROGRAM: Program 82 82_R_merge_7.txt // start/transit 30% // stored trajectory timing
+21:17:14.717 [RIGHT] runner v14 ·   17. WAIT: 2 s
+21:17:14.717 [RIGHT] runner v14 ·   18. GLOBAL: R_HME_POS // MOVEJ // speed 20% // wait 0s
+21:17:14.718 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 15% // ret=0
+21:17:14.718 [LEFT] runner v14 · WORKFLOW STEP START 1/18: PROGRAM
+21:17:14.734 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 15% // ret=0
+21:17:14.734 [RIGHT] runner v14 · WORKFLOW STEP START 1/18: PROGRAM
+21:17:14.752 [LEFT] runner v14 · WORKFLOW PROGRAM 1/18: slot 80 (80_L_merge_1.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:17:14.770 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/18: slot 80 (80_R_merge_1_2.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:17:16.377 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 1/18: slot 80 // start ack 1.531 s
+21:17:16.377 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 1/18: slot 80 // start ack 1.551 s
+21:17:17.364 [LEFT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 1.1 s
+21:17:20.840 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:17:38.291 [RIGHT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 22.0 s
+21:17:47.258 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/18: 30.955 s
+21:17:47.259 [LEFT] runner v14 · WORKFLOW FAST SWITCH 1/18: 0.124 s
+21:17:47.260 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/18: PROGRAM
+21:17:47.260 [LEFT] runner v14 · WORKFLOW STEP START 2/18: WAIT
+21:17:47.264 [LEFT] runner v14 · WORKFLOW WAIT: 3 s
+21:17:48.083 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/18: 31.781 s
+21:17:48.083 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 1/18: 0.174 s
+21:17:48.084 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/18: PROGRAM
+21:17:48.084 [RIGHT] runner v14 · WORKFLOW STEP START 2/18: WAIT
+21:17:48.093 [RIGHT] runner v14 · WORKFLOW WAIT: 3 s
+21:17:50.265 [LEFT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+21:17:50.266 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 2/18: WAIT
+21:17:50.266 [LEFT] runner v14 · WORKFLOW STEP START 3/18: POLE
+21:17:50.278 [LEFT] runner v14 · MANUAL POLE START: current 50.0 mm -> target 200 mm
+21:17:50.840 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:17:51.094 [RIGHT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+21:17:51.095 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 2/18: WAIT
+21:17:51.095 [RIGHT] runner v14 · WORKFLOW STEP START 3/18: HAND
+21:17:51.104 [RIGHT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+21:17:51.992 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[612, 519, 528, 595, 232, 992]
+21:17:52.155 [RIGHT] runner v14 · AUX HAND CLOSED
+21:17:52.155 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 3/18: HAND
+21:17:52.156 [RIGHT] runner v14 · WORKFLOW STEP START 4/18: PROGRAM
+21:17:52.169 [RIGHT] runner v14 ·   !! workflow warning-only code before 4/18: 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) — continuing
+21:17:52.192 [RIGHT] runner v14 · WORKFLOW PROGRAM 4/18: slot 54 (54_R-R04_v005.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:17:52.800 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 4/18: slot 54 // start ack 0.586 s
+21:17:53.317 [RIGHT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 0.5 s
+21:17:54.359 [LEFT] runner v14 · MANUAL POLE COMPLETE: target 200 mm, final=200.0 mm
+21:17:54.360 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 3/18: POLE
+21:17:54.360 [LEFT] runner v14 · WORKFLOW STEP START 4/18: PROGRAM
+21:17:54.393 [LEFT] runner v14 · WORKFLOW PROGRAM 4/18: slot 81 (81_L_merge_2_1.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:17:54.882 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 4/18: slot 81 // start ack 0.477 s
+21:17:55.403 [LEFT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 0.5 s
+21:17:56.056 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:18:00.947 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 4/18: 8.169 s
+21:18:00.948 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 4/18: 0.232 s
+21:18:00.948 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 4/18: PROGRAM
+21:18:00.948 [RIGHT] runner v14 · WORKFLOW STEP START 5/18: HAND
+21:18:00.957 [RIGHT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+21:18:01.777 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[999, 996, 998, 997, 231, 984]
+21:18:01.927 [RIGHT] runner v14 · AUX HAND CLOSED
+21:18:01.927 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 5/18: HAND
+21:18:01.928 [RIGHT] runner v14 · WORKFLOW STEP START 6/18: PROGRAM
+21:18:01.943 [RIGHT] runner v14 ·   !! workflow warning-only code before 6/18: 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) — continuing
+21:18:01.964 [RIGHT] runner v14 · WORKFLOW PROGRAM 6/18: slot 55 (55_R-R05_v001.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:18:02.346 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 6/18: slot 55 // start ack 0.366 s
+21:18:04.962 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:18:09.974 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 6/18: 7.642 s
+21:18:09.974 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 6/18: 0.117 s
+21:18:09.974 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 6/18: PROGRAM
+21:18:09.975 [RIGHT] runner v14 · WORKFLOW STEP START 7/18: POLE
+21:18:09.986 [RIGHT] runner v14 · MANUAL POLE START: current 200.0 mm -> target 50 mm
+21:18:10.223 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 4/18: 15.353 s
+21:18:10.224 [LEFT] runner v14 · WORKFLOW FAST SWITCH 4/18: 0.117 s
+21:18:10.224 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 4/18: PROGRAM
+21:18:10.224 [LEFT] runner v14 · WORKFLOW STEP START 5/18: HAND
+21:18:10.231 [LEFT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+21:18:11.121 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[527, 522, 514, 560, 500, 988]
+21:18:11.280 [LEFT] runner v14 · AUX HAND CLOSED
+21:18:11.281 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 5/18: HAND
+21:18:11.281 [LEFT] runner v14 · WORKFLOW STEP START 6/18: PROGRAM
+21:18:11.304 [LEFT] runner v14 ·   !! workflow warning-only code before 6/18: 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) — continuing
+21:18:11.323 [LEFT] runner v14 · WORKFLOW PROGRAM 6/18: slot 56 (56_L-R06_v001.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:18:11.757 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 6/18: slot 56 // start ack 0.420 s
+21:18:13.083 [RIGHT] runner v14 · MANUAL POLE COMPLETE: target 50 mm, final=50.0 mm
+21:18:13.083 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 7/18: POLE
+21:18:13.084 [RIGHT] runner v14 · WORKFLOW STEP START 8/18: PROGRAM
+21:18:13.115 [RIGHT] runner v14 · WORKFLOW PROGRAM 8/18: slot 56 (56_R-R06_v001.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:18:13.331 [LEFT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 1.6 s
+21:18:13.477 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 8/18: slot 56 // start ack 0.351 s
+21:18:13.982 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:18:17.104 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:18:19.308 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 6/18: 7.564 s
+21:18:19.309 [LEFT] runner v14 · WORKFLOW FAST SWITCH 6/18: 0.121 s
+21:18:19.310 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 6/18: PROGRAM
+21:18:19.310 [LEFT] runner v14 · WORKFLOW STEP START 7/18: WAIT
+21:18:19.317 [LEFT] runner v14 · WORKFLOW WAIT: 3 s
+21:18:20.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:18:20.858 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 8/18: 7.392 s
+21:18:20.859 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 8/18: 0.119 s
+21:18:20.859 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 8/18: PROGRAM
+21:18:20.859 [RIGHT] runner v14 · WORKFLOW STEP START 9/18: WAIT
+21:18:20.864 [RIGHT] runner v14 · WORKFLOW WAIT: 3 s
+21:18:22.318 [LEFT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+21:18:22.318 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 7/18: WAIT
+21:18:22.318 [LEFT] runner v14 · WORKFLOW STEP START 8/18: HAND
+21:18:22.325 [LEFT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+21:18:23.171 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[1000, 1000, 1000, 997, 498, 988]
+21:18:23.304 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:18:23.322 [LEFT] runner v14 · AUX HAND CLOSED
+21:18:23.322 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 8/18: HAND
+21:18:23.322 [LEFT] runner v14 · WORKFLOW STEP START 9/18: PROGRAM
+21:18:23.338 [LEFT] runner v14 ·   !! workflow warning-only code before 9/18: 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) — continuing
+21:18:23.359 [LEFT] runner v14 · WORKFLOW PROGRAM 9/18: slot 83 (83_L_merge_4.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:18:23.857 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 9/18: slot 83 // start ack 0.482 s
+21:18:23.865 [RIGHT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+21:18:23.865 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 9/18: WAIT
+21:18:23.865 [RIGHT] runner v14 · WORKFLOW STEP START 10/18: HAND
+21:18:23.872 [RIGHT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+21:18:24.762 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[546, 490, 502, 589, 231, 991]
+21:18:24.899 [RIGHT] runner v14 · AUX HAND CLOSED
+21:18:24.899 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 10/18: HAND
+21:18:24.900 [RIGHT] runner v14 · WORKFLOW STEP START 11/18: PROGRAM
+21:18:24.940 [RIGHT] runner v14 · WORKFLOW PROGRAM 11/18: slot 81 (81_R_merge_5.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:18:26.412 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:18:26.601 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 11/18: slot 81 // start ack 1.648 s
+21:18:27.123 [RIGHT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 0.5 s
+21:18:33.302 [LEFT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 9.4 s
+21:18:38.199 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 9/18: 14.357 s
+21:18:38.199 [LEFT] runner v14 · WORKFLOW FAST SWITCH 9/18: 0.121 s
+21:18:38.199 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 9/18: PROGRAM
+21:18:38.200 [LEFT] runner v14 · WORKFLOW STEP START 10/18: HAND
+21:18:38.204 [LEFT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+21:18:39.092 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[518, 507, 505, 549, 500, 983]
+21:18:39.286 [LEFT] runner v14 · AUX HAND CLOSED
+21:18:39.286 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 10/18: HAND
+21:18:39.286 [LEFT] runner v14 · WORKFLOW STEP START 11/18: PROGRAM
+21:18:39.302 [LEFT] runner v14 ·   !! workflow warning-only code before 11/18: 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) — continuing
+21:18:39.323 [LEFT] runner v14 · WORKFLOW PROGRAM 11/18: slot 84 (84_L_merge_5.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:18:42.253 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:18:42.484 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 11/18: slot 84 // start ack 3.137 s
+21:18:49.768 [LEFT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 7.3 s
+21:18:50.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:18:57.828 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 11/18: 31.240 s
+21:18:57.828 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 11/18: 0.121 s
+21:18:57.829 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 11/18: PROGRAM
+21:18:57.829 [RIGHT] runner v14 · WORKFLOW STEP START 12/18: POLE
+21:18:57.840 [RIGHT] runner v14 · MANUAL POLE START: current 50.0 mm -> target 200 mm
+21:19:01.815 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:19:01.915 [RIGHT] runner v14 · MANUAL POLE COMPLETE: target 200 mm, final=200.0 mm
+21:19:01.915 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 12/18: POLE
+21:19:01.916 [RIGHT] runner v14 · WORKFLOW STEP START 13/18: HAND
+21:19:01.921 [RIGHT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=1000 thumb_rotate=1000
+21:19:02.929 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 1000, 1000], final=[999, 996, 997, 997, 992, 984]
+21:19:03.071 [RIGHT] runner v14 · AUX HAND CLOSED
+21:19:03.072 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 13/18: HAND
+21:19:03.072 [RIGHT] runner v14 · WORKFLOW STEP START 14/18: PROGRAM
+21:19:03.108 [RIGHT] runner v14 · WORKFLOW PROGRAM 14/18: slot 20 (20_R-T04_v001.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:19:03.937 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 14/18: slot 20 // start ack 0.814 s
+21:19:05.915 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:19:20.840 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:19:28.123 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 14/18: 24.200 s
+21:19:28.123 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 14/18: 0.119 s
+21:19:28.124 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 14/18: PROGRAM
+21:19:28.124 [RIGHT] runner v14 · WORKFLOW STEP START 15/18: WAIT
+21:19:28.129 [RIGHT] runner v14 · WORKFLOW WAIT: 6 s
+21:19:31.988 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:19:34.129 [RIGHT] runner v14 · WORKFLOW WAIT COMPLETE: 6 s
+21:19:34.130 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 15/18: WAIT
+21:19:34.130 [RIGHT] runner v14 · WORKFLOW STEP START 16/18: PROGRAM
+21:19:34.164 [RIGHT] runner v14 · WORKFLOW PROGRAM 16/18: slot 82 (82_R_merge_7.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:19:36.450 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 16/18: slot 82 // start ack 2.264 s
+21:19:36.584 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 11/18: 54.123 s
+21:19:36.585 [LEFT] runner v14 · WORKFLOW FAST SWITCH 11/18: 0.117 s
+21:19:36.585 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 11/18: PROGRAM
+21:19:36.585 [LEFT] runner v14 · WORKFLOW STEP START 12/18: POLE
+21:19:36.594 [LEFT] runner v14 · MANUAL POLE START: current 200.0 mm -> target 20 mm
+21:19:38.222 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:19:40.017 [LEFT] runner v14 · MANUAL POLE COMPLETE: target 20 mm, final=20.0 mm
+21:19:40.018 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 12/18: POLE
+21:19:40.018 [LEFT] runner v14 · WORKFLOW STEP START 13/18: PROGRAM
+21:19:40.057 [LEFT] runner v14 · WORKFLOW PROGRAM 13/18: slot 85 (85_L_merge_6_2.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:19:41.573 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 13/18: slot 85 // start ack 1.499 s
+21:19:44.120 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:19:50.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:20:02.841 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 13/18: 21.285 s
+21:20:02.841 [LEFT] runner v14 · WORKFLOW FAST SWITCH 13/18: 0.175 s
+21:20:02.842 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 13/18: PROGRAM
+21:20:02.842 [LEFT] runner v14 · WORKFLOW STEP START 14/18: POLE
+21:20:02.853 [LEFT] runner v14 · MANUAL POLE START: current 20.0 mm -> target 200 mm
+21:20:06.788 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:20:07.473 [LEFT] runner v14 · MANUAL POLE COMPLETE: target 200 mm, final=200.0 mm
+21:20:07.473 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 14/18: POLE
+21:20:07.473 [LEFT] runner v14 · WORKFLOW STEP START 15/18: HAND
+21:20:07.478 [LEFT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=1000 thumb_rotate=1000
+21:20:08.407 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 1000, 1000], final=[1000, 1000, 1000, 997, 992, 982]
+21:20:08.589 [LEFT] runner v14 · AUX HAND CLOSED
+21:20:08.589 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 15/18: HAND
+21:20:08.590 [LEFT] runner v14 · WORKFLOW STEP START 16/18: PROGRAM
+21:20:08.634 [LEFT] runner v14 · WORKFLOW PROGRAM 16/18: slot 86 (86_L_merge_7_2.txt) // START/TRANSIT 30% // stored trajectory timing // overall 15%
+21:20:09.242 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 16/18: slot 86 // start ack 0.597 s
+21:20:09.515 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 16/18: 33.086 s
+21:20:09.515 [RIGHT] runner v14 · ** WORKFLOW STOP REQUESTED
+21:20:09.524 [RIGHT] runner v14 ·   arm slow-stop ret=0
+21:20:09.554 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+21:20:09.605 [RIGHT] workflow {"steps": 18, "overall_speed": 15, "restore_speed": 50} ret=1 (174.972 s) · WORKFLOW STOP REQUESTED
+21:20:09.647 [LEFT] runner v14 · ** WORKFLOW STOP REQUESTED
+21:20:09.651 [LEFT] runner v14 ·   arm slow-stop ret=0
+21:20:09.673 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+21:20:09.709 [LEFT] workflow {"steps": 18, "overall_speed": 15, "restore_speed": 50} ret=1 (175.122 s) · WORKFLOW STOP REQUESTED
+21:20:09.841 [LEFT] restore global speed {"pct": 50} ret=0
+21:20:09.890 [RIGHT] restore global speed {"pct": 50} ret=0
+21:20:09.891 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: PART 1 STOPPED // LEFT rc=1 // RIGHT rc=1: LEFT: stopped because the RIGHT arm's part failed; RIGHT: program 82 ended after 33.1 s of the 47.1 s its points take: it was stopped on the controller
+21:20:09.891 [BOTH] ALERT ERROR · S2 Real Machine: both arms: PART 1 STOPPED // LEFT rc=1 // RIGHT rc=1: LEFT: stopped because the RIGHT arm's part failed; RIGHT: program 82 ended after 33.1 s of the 47.1 s its points take: it was stopped on the controller (Check the arms and their controllers' errors before anything else runs.)
+21:20:11.518 [activity] operator:75e5d0 page: NAVIGATION · Scrolled view
+21:20:20.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:20:50.855 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:21:20.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:21:50.840 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:22:20.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:22:50.841 [activity] operator:75e5d0 page: SYSTEM · Session active
+21:23:20.841 [activity] operator:75e5d0 page: SYSTEM · Session active
