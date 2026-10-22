@@ -135,6 +135,7 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     assert len(runs) == 2 and all(r["ok"] for r in runs)       # each arm's Pole and Hand Lite's, then its clear, then the rest
     both = [r for r in hw if r["verb"] == "pole and hand"]
     assert {r["side"] for r in both} == {"left", "right"} and all(r["ok"] for r in both)
+    assert [r["text"] for r in hw if r["verb"] == "clear warning" and r["side"] == "left"] == ["clean"]   # every check said
     assert any("WORKFLOW SPEED RESTORE" in (r["text"] or "") for r in hw if r["verb"] == "runner v14")
 
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps(tail=[{"type": "wait", "seconds": 1}])})     # changed after

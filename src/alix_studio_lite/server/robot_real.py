@@ -545,9 +545,11 @@ class RealArm:
         dac = _dac()
         with self.link.busy("checking the errors before the move"), _printed_to(lambda line: self._hw("clear warning", text=line.strip())):
             st = dac.error_state(self)
-            if not st["readable"] or dac.error_state_clean(st):
+            if not st["readable"] or dac.error_state_clean(st):      # said every time: the logs show the check ran
+                self._hw("clear warning", ok=bool(st["readable"]), text="clean" if st["readable"] else "the errors could not be read")
                 return dict(readable=bool(st["readable"]), cleared=[], other=None)
             if set(st["sys"]) - set(warn_only) or st["joints"] or st.get("lift_err") or st.get("disabled"):
+                self._hw("clear warning", ok=False, text=f"not cleared, not a warning: {dac.describe_error_state(st)}")
                 return dict(readable=True, cleared=[], other=dac.describe_error_state(st))
             ok = dac.clear_errors(self)
             back = dac.error_state(self)
