@@ -64,6 +64,44 @@ def test_a_stuck_call_dies_with_its_process_and_the_arm_is_connected_again(tmp_p
     assert not new._proc.is_alive()
 
 
+def test_a_stop_from_a_runners_own_line_leaves_its_worker_answering(tmp_path, monkeypatch):
+    """Lite's early-end check stops an arm from inside the line its runner printed (the lab, 21 Oct 23:04, 23:14 and
+    23:18: the RIGHT arm, three times). The STOP waits for that line's handshake with the server to end, the runner then
+    stops as V53's does (its slow stop, the speed back), and the arm's worker answers the next command: it used to take
+    the line's ack, left unread, for a command and end, so the arm was given up and connected again, and the run said
+    "connection given up" instead of why it stopped."""
+    monkeypatch.setenv("LITE_WORKER_SETUP", str(Path(__file__).with_name("fake_controller_setup.py")))
+    monkeypatch.setenv("LITE_FAKE_RUNNER", "1")
+    monkeypatch.setattr(robot_standin, "LINK_PROCESS", True)
+    log, jobs = Logbook(tmp_path / "logs"), Jobs()
+    r = robot_standin.StandInRobot(tmp_path, jobs, link="realman", log=log)
+    try:
+        r.connect("right")
+        link, real = r.links["right"], r._real("right")
+        hooks, lines = [], []
+
+        def on_line(line):                                   # as workflow.run_real's part(): its early-end check's stop
+            lines.append(line)
+            if line.startswith("WORKFLOW PROGRAM COMPLETE"):
+                hooks[0]()
+
+        t0 = time.monotonic()
+        out = real.run_workflow([{"type": "program", "id": 71}, {"type": "wait", "seconds": 20}], 15, 50, 60.0,
+                                on_line=on_line, stop_hook=hooks.append)
+        assert time.monotonic() - t0 < 10 and not out["ok"] and out["stopped"], out
+        assert lines[-3:] == ["** WORKFLOW STOP REQUESTED", "  arm slow-stop ret=0", "WORKFLOW SPEED RESTORE: 50% // ret=0"]
+        assert lines.count("** WORKFLOW STOP REQUESTED") == 1                    # one stop, its handling whole
+        assert link.read_fresh()["estop"] == "CLEAR"                             # the next command answers, same worker
+        assert link._proc.is_alive() and not link._dead and r.links["right"] is link
+        assert real.restore_speed(50) is True
+        link.abandon()                                                            # gone: a job's finally never raises
+        assert real.restore_speed(50) is False
+        assert any(x["verb"] == "restore global speed" and x["ok"] is False and "not restored" in (x["text"] or "")
+                   for x in log.records("hardware", time.time() - 60, time.time() + 1))
+    finally:
+        r.close()
+
+
 def test_ctrl_c_is_the_servers_and_stop_still_passes_through_the_workers(tmp_path, monkeypatch, capfd):
     """Ctrl+C in Lite's terminal reaches every process started from it. The arm workers leave it to the server, whose
     shutdown sends STOP through them, then closes them (the lab, 21 Oct: both died of it, a traceback each, and the

@@ -148,3 +148,60 @@ def test_a_simulation_with_nothing_to_watch_is_never_played(tmp_path):
                                                                "right": []})))
     with pytest.raises(UserError, match="Nothing in this run can be shown"):
         workflow.played(units, "h3")
+
+
+def test_each_step_on_the_robot_is_timed_against_its_range(monkeypatch):
+    """The owner, 22 Oct: a step outside its range is said; one far outside it (any step but a Program more than 10 %
+    past the most it takes, or that much sooner than the least; a Program whose lines run past 105 % of their time)
+    stops both arms, as the timings the simulation checked no longer hold."""
+    from alix_studio_lite.server import workflow
+
+    stopped, said = [], []
+    steps = [{"type": "hand", "values": [0] * 6, "_row": 3, "_t": {"times": (0.05, 0.08, 0.1)}},
+             {"type": "pole", "mm": 50.0, "_row": 4, "_t": {"times": (1.0, 1.1, 1.2)}},
+             {"type": "wait", "seconds": 0.2, "_row": 5, "_t": {"times": (0.2, 0.205, 0.22)}},
+             {"type": "program", "id": 7, "_row": 6, "_t": {"times": (1, 1, 1), "drawn": True, "play_s": 0.2, "lines": 41,
+                                                           "transit": (0, 0, 0)}}]
+    monkeypatch.setitem(workflow.ROBOT_TIMES, "load_s_per_line", (0.0, 0.0, 0.0))
+    monkeypatch.setitem(workflow.ROBOT_TIMES, "program_extra_s", (0.0, 0.0, 0.05))
+    on_line, close = workflow._watch(None, "left", steps, stopped.append, said.append)
+    try:
+        on_line("WORKFLOW STEP START 1/4: HAND")
+        time.sleep(0.6)                                              # past 0.1 s x 1.1 (+ the lines' latency)
+        assert stopped and "LEFT row 3 (Hand 0,0,0,0,0,0) ran past the most it takes (0.1 s) by 10%" in stopped[0]
+        on_line("WORKFLOW STEP START 2/4: POLE")
+        on_line("WORKFLOW STEP COMPLETE 2/4: POLE")                   # at once: much sooner than its least
+        assert len(stopped) == 2 and "less than the least it takes (1.00 s)" in stopped[1]
+        on_line("WORKFLOW STEP START 3/4: WAIT")
+        time.sleep(0.3)
+        on_line("WORKFLOW STEP COMPLETE 3/4: WAIT")                   # a little long: said, not stopped
+        assert len(stopped) == 2 and said and "outside its range on the robot (0.20-0.22 s)" in said[0]
+        on_line("WORKFLOW STEP START 4/4: PROGRAM")
+        time.sleep(0.9)                                              # 0.2 s of lines x 1.05 + its allowances
+        assert len(stopped) == 3 and "ran past 105% of its lines' time" in stopped[2]
+    finally:
+        close()
+
+
+def test_a_real_run_is_refused_while_a_controllers_realtime_push_is_on(monkeypatch):
+    """The programs' times on the robot were measured with the controllers' realtime push off (Lite turns it off as an
+    arm connects): with it left on (another program holds its port, or it would not turn off) they run some 13 % slower,
+    past the 105 % at which an S2 run stops. Such a run is refused before anything moves, saying why."""
+    from alix_studio_lite.server import workflow
+    from alix_studio_lite.server.robot_process import LinkProcess
+
+    link = LinkProcess("right", "192.168.1.103")
+    link._say_push({"port": 8090, "ip": "192.168.1.5", "holders": [{"pid": 4242, "command": "ros2 run alix_hw driver"}]}, reopened=False)
+    assert link.push_on["port"] == 8090                       # left on: kept (no log needed)
+    turned_off = LinkProcess("left", "192.168.1.10")
+    turned_off._say_push({"port": 8089, "ip": "192.168.1.5", "cleared": True}, reopened=True)
+    assert turned_off.push_on is None                          # turned off as it connected: nothing to refuse
+    prog = lambda i: {"type": "program", "id": i, "name": "", "speed": 100, "transit_speed": 30}     # noqa: E731
+    steps = {"left": workflow.check_steps([prog(1)], "left"), "right": workflow.check_steps([prog(2)], "right")}
+    monkeypatch.setattr(workflow, "load", lambda units: steps)
+    robot = SimpleNamespace(_real=lambda s: object(), arm=lambda s: SimpleNamespace(connected=True), require_motion=lambda m: None,
+                            links={"left": turned_off, "right": link})
+    with pytest.raises(workflow.UserError) as got:
+        workflow.run_real(SimpleNamespace(robot=robot, ui={"mode": "real"}), None, "both", None, {})
+    assert got.value.code == "push" and "The RIGHT controller's realtime push is on" in str(got.value)
+    assert "pid 4242 (ros2 run alix_hw driver) holds" in str(got.value) and "Nothing moved" in str(got.value)

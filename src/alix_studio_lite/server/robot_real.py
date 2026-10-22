@@ -735,18 +735,39 @@ class RealArm:
         log = io.StringIO()
         t0 = time.monotonic()
 
+        tid, guard = threading.get_ident(), threading.Lock()
+        state = {"inside": False, "stopped": False, "talking": False, "held": False, "raised": False}
+
         def line_out(line):
             log.write(line + "\n")
             self._runner_line(line)
-            if on_line is not None:
+            if on_line is None:
+                return
+            with guard:
+                state["talking"] = True
+            try:
                 on_line(line)
-
-        tid, guard, state = threading.get_ident(), threading.Lock(), {"inside": False, "stopped": False}
+            finally:
+                with guard:
+                    state["talking"] = False
+                    held, state["held"] = state["held"], False
+            if held:                                  # the STOP that came while the server acted on this line
+                raise KeyboardInterrupt
 
         def stop():
+            # Raised once: a second one would cut the runner's own handling of the first (its slow stop). Never in the
+            # middle of a line's handshake with the server (robot_process: the line sent, its ack read back): one raised
+            # there left the ack unread, the arm's worker read it as its next command and ended (the lab, 21 Oct 23:04,
+            # 23:14 and 23:18: Lite's early-end check stopped the RIGHT arm from its own line, three times); it is held
+            # and raised when the line is done.
             with guard:
                 state["stopped"] = True
-                if state["inside"]:
+                if not state["inside"] or state["raised"]:
+                    return
+                state["raised"] = True
+                if state["talking"]:
+                    state["held"] = True
+                else:
                     _interrupt(tid)
 
         if stop_hook is not None:

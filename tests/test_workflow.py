@@ -1,79 +1,43 @@
-"""Merge + Sequence S2 (feedback v5, slide 9): V53's Page 02 ported as it is. Its planner is
-V53's own code: run here against V53's methods (read from the reference file, not imported: it is a
-Tk program) on the owner's V6 files and on many generated sequences; the steps are checked as runner
-v14 checks them; V53's JSON loads per arm and never into the other arm; a run is a single task, a
-dual-arm task or the sequences (Full and Partial are gone: the owner, 16 Oct); Simulation Mode times both
-arms through the plan, says what would not be right on the robot and checks collisions; Real Machine Mode
-only after the same run completed in Simulation."""
-import ast
+"""Merge + Sequence S2 (feedback v5, slide 9; its plan: the owner, 22 Oct): each arm's rows run top to bottom, both
+arms starting together, and an arm waits only at a Meet (both arms meet), at a Wait-for (until the other arm has
+finished the row it names) and at a lid or seat task (flow.py). V53's Dual Rule and its SAFE TIMELINE planner are gone;
+a V53 file loads with its RUN FIRST / WAIT OTHER pairs as Meets and a Wait-for, which run them as V53 did (the owner's
+V6 files here). The steps are checked as runner v14 checks them, each row with its uid; a run is a single task, a
+dual-arm task or the sequences; Simulation Mode times both arms through the plan as the robot runs (each step's range,
+measured), says what would not be right on the robot and checks collisions, the two arms against each other at every
+timing their ranges allow; Real Machine Mode only after the same run completed in Simulation."""
 import json
-import random
 import threading
 import time
 import urllib.request
 from pathlib import Path
-from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
 from alix_studio_lite import vendor_paths
 
-V53 = vendor_paths.LITE_ROOT / "vendor/control_app/reference/rm_trajectory_ui_v53_safe_lid_checkpoint.py"
 V6 = vendor_paths.LITE_ROOT / "tests/data/legacy_v6"
-
-
-def v53_planner():
-    """V53's _page2_program_chunks and _page2_build_program_rule_plan, compiled from its source, on a
-    stand-in for its window that holds the two arms' steps as its builders do."""
-    tree = ast.parse(V53.read_text(encoding="utf-8"))
-    cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "DualArmTrajectoryUI")
-    fns = [f for f in cls.body if isinstance(f, ast.FunctionDef)
-           and f.name in ("_page2_program_chunks", "_page2_build_program_rule_plan")]
-    assert len(fns) == 2
-    ns = {"json": json}
-    exec(compile(ast.Module(body=fns, type_ignores=[]), str(V53), "exec"), ns)
-
-    class Page2:
-        _page2_program_chunks = ns["_page2_program_chunks"]
-        _page2_build_program_rule_plan = ns["_page2_build_program_rule_plan"]
-
-        def __init__(self, left, right):
-            self.b = {"left": SimpleNamespace(steps=left), "right": SimpleNamespace(steps=right)}
-
-        def _page2_builder(self, side):
-            return self.b[side]
-
-    return lambda left, right: Page2(left, right)._page2_build_program_rule_plan()
-
-
-def outcome(fn, left, right):
-    try:
-        return ("plan", fn(left, right))
-    except ValueError as exc:
-        return ("refused", str(exc))
 
 
 def v6():
     return [json.loads((V6 / f"{s}_V6_70SERIES_FINAL.json").read_text())["steps"] for s in ("LEFT", "RIGHT")]
 
 
-def generated(rng: random.Random) -> list:
-    steps = []
-    for _ in range(rng.randint(0, 9)):
-        k = rng.choice(["program", "program", "program", "pole", "hand", "wait", "global"])
-        if k == "program":
-            steps.append({"type": "program", "id": rng.choice([71, 72, 73, 74, 78, 79]), "name": "", "speed": 100,
-                          "transit_speed": 30, "dual_rule": rng.choice(["TOGETHER", "TOGETHER", "RUN FIRST", "WAIT OTHER"])})
-        elif k == "pole":
-            steps.append({"type": "pole", "mm": rng.choice([50.0, 150.0, 200.0])})
-        elif k == "hand":
-            steps.append({"type": "hand", "values": [0, 0, 0, 0, 150, 1000]})
-        elif k == "wait":
-            steps.append({"type": "wait", "seconds": rng.choice([0.0, 2.0])})
-        else:
-            steps.append({"type": "global", "name": "HOME", "move": "movej", "speed": 20, "wait_s": 0.0})
-    return steps
+def prog(i):
+    return {"type": "program", "id": i, "name": "", "speed": 100, "transit_speed": 30}
+
+
+def numbered(left, right):
+    from alix_studio_lite.server import workflow
+
+    return workflow._numbered({"left": workflow.check_steps(left, "left"), "right": workflow.check_steps(right, "right")})
+
+
+def kinds(plan, side):
+    from alix_studio_lite.server import workflow
+
+    return [[(x["type"], x.get("id")) for x in part] for st in plan for s, part in workflow._items(st) if s == side]
 
 
 def test_a_tracks_execution_time_is_its_lines_less_one_on_the_5_ms_clock():
@@ -83,149 +47,331 @@ def test_a_tracks_execution_time_is_its_lines_less_one_on_the_5_ms_clock():
     assert track.duration_s(None) is None and track.duration_s("600") == 2.995
 
 
-def test_the_planner_is_v53s_own(monkeypatch):
-    """With V53's own Wait checkpoint rule (off in Lite since 21 Oct: WAIT_CHECKPOINTS), the plan is V53's own."""
+def test_each_arm_runs_its_rows_and_waits_only_where_the_sequence_says():
+    """Both arms start together and go through their own rows; a Meet is a point both arms reach before either goes
+    on (the plan's stages end there); a Wait-for holds its arm until the other arm has finished the row it names (its
+    uid, kept as rows move); nothing else waits: no tail, no refusal for a Program on one arm only or used twice."""
+    from alix_studio_lite.server import flow, workflow
+
+    wait5 = {"type": "wait", "seconds": 5.0}
+    steps = numbered([prog(80), wait5, prog(80), {"type": "meet"}, prog(84)], [prog(80), {"type": "meet"}, prog(82)])
+    run = workflow.plan_for(steps, "both")
+    assert [(st["kind"], st["program_id"]) for st in run["plan"]] == [("parallel", "PART 1"), ("parallel", "PART 2")]
+    assert kinds(run["plan"], "left") == [[("program", 80), ("wait", None), ("program", 80)], [("program", 84)]]
+    assert run["plan"][0]["meet_rows"] == {"left": 4, "right": 2} and run["counts"]["parts"] == 2
+    left, right = workflow.check_steps([prog(84), prog(85)], "left"), workflow.check_steps([prog(81), prog(82)], "right")
+    right.insert(1, {"type": "wait_for", "target": {"uid": left[0]["uid"]}})          # the right's 82 after the left's 84
+    steps = workflow._numbered({"left": workflow.check_steps(left, "left"), "right": workflow.check_steps(right, "right")})
+    plan = workflow.plan_for(steps, "both")["plan"]
+    wait = plan[0]["right"]["steps"][1]
+    assert wait["type"] == "wait_for" and wait["_target"] == {"side": "left", "row": 1, "index": 0, "done": False}
+    moved = [left[1], left[0]]                                                           # the target moves: the wait follows it
+    plan = workflow.plan_for(workflow._numbered({"left": moved, "right": workflow.check_steps(right, "right")}), "both")["plan"]
+    assert plan[0]["right"]["steps"][1]["_target"]["row"] == 2
+    alone = workflow.plan_for(steps, "right")                                          # RUN RIGHT: nothing to wait for
+    assert [x["type"] for x in alone["plan"][0]["right"]["steps"]] == ["program", "program"] and "passed over" in alone["said"][0]
+    for left, right, said in (
+            ([prog(1), {"type": "meet"}], [prog(2)], "Each Meet needs its partner on the other arm: the LEFT list has 1"),
+            ([{"type": "wait_for", "target": {"uid": "gone"}}, prog(1)], [prog(2)], "no longer there"),
+            ([{"type": "wait_for", "target": {"program": 9}}, prog(1)], [prog(2)], "Program 9, which is not in the RIGHT list"),
+            ([{"type": "meet"}, {"type": "mechanism", "task": "lid_open"}], [{"type": "mechanism", "task": "lid_open"}, {"type": "meet"}],
+             "must come in the same order on both arms")):
+        with pytest.raises(workflow.UserError, match=said):
+            workflow.plan_for(numbered(left, right), "both")
+    # each arm waiting for the other: refused, saying where each waits
+    left = workflow.check_steps([prog(1), prog(2)], "left")
+    right = workflow.check_steps([prog(3), prog(4)], "right")
+    left.insert(0, {"type": "wait_for", "target": {"uid": right[1]["uid"]}})
+    right.insert(0, {"type": "wait_for", "target": {"uid": left[2]["uid"]}})
+    with pytest.raises(workflow.UserError, match="The arms would wait for each other for ever: LEFT row 1 waits for RIGHT row 3; "
+                                                 "RIGHT row 1 waits for LEFT row 3"):
+        workflow.plan_for(workflow._numbered({"left": workflow.check_steps(left, "left"),
+                                              "right": workflow.check_steps(right, "right")}), "both")
+    left = workflow.check_steps([prog(1), {"type": "meet"}, prog(2)], "left")              # waiting past a Meet: never ends
+    right = workflow.check_steps([prog(3), {"type": "meet"}], "right")
+    right.insert(0, {"type": "wait_for", "target": {"uid": left[2]["uid"]}})
+    with pytest.raises(workflow.UserError, match="wait for each other for ever"):
+        workflow.plan_for(workflow._numbered({"left": left, "right": workflow.check_steps(right, "right")}), "both")
+    assert flow.counts(run["plan"])["waits_for"] == 0
+
+
+def test_a_v53_file_loads_with_its_handoffs_as_meets_and_a_wait_for():
+    """The owner's V6 files (V53's): TOGETHER needs nothing; Programs 78 and 79 (RUN FIRST on the left, WAIT OTHER on
+    the right) run one arm at a time as V53 ran them: both arms meet before and after each, and the right waits for the
+    left's. Lite's own files keep the rows and uids; a file of the other arm is refused."""
     from alix_studio_lite.server import workflow
 
-    monkeypatch.setattr(workflow, "WAIT_CHECKPOINTS", True)
-    theirs = v53_planner()
-    left, right = v6()
-    mine = workflow.build_plan(left, right)
-    assert mine == theirs(left, right)
-    assert [s["kind"] for s in mine] == ["parallel", "parallel", "checkpoint", "parallel", "serial", "serial", "parallel"]
-    assert [s["program_id"] for s in mine] == ["TIMELINE-1", "LID-PREP-1", "LID-CHECK-1", "TIMELINE-2", 78, 79, "TIMELINE-3"]
-    assert workflow.counts(mine) == dict(coordinated=6, together=4, one_arm=2, checkpoints=1, tail=0, mechanisms=0, stages=7)
-    rng, refused = random.Random(53), 0
-    for _ in range(3000):
-        a, b = generated(rng), generated(rng)
-        ours, v53 = outcome(workflow.build_plan, a, b), outcome(theirs, a, b)
-        assert ours == v53, (a, b)
-        refused += ours[0] == "refused"
-    assert 300 < refused < 2900                                  # both ways well exercised
+    left_doc, right_doc = (json.loads((V6 / f"{s}_V6_70SERIES_FINAL.json").read_text()) for s in ("LEFT", "RIGHT"))
+    left, right = workflow.from_document("left", left_doc), workflow.from_document("right", right_doc)
+    assert all("dual_rule" not in x and x["uid"] for x in left + right)
+    assert [x["type"] for x in left].count("meet") == 4 == [x["type"] for x in right].count("meet")
+    run = workflow.plan_for(workflow._numbered({"left": left, "right": right}), "both")
+    assert [st["program_id"] for st in run["plan"]] == ["PART 1", "PART 2", "PART 3", "PART 4"]
+    assert kinds(run["plan"], "left")[1:3] == [[("program", 78)], [("program", 79)]]
+    assert kinds(run["plan"], "right")[1:3] == [[("wait_for", None), ("program", 78)], [("wait_for", None), ("program", 79)]]
+    waits = [st["right"]["steps"][0]["_target"] for st in run["plan"][1:3]]
+    assert [(w["side"], left[w["index"]]["id"]) for w in waits] == [("left", 78), ("left", 79)]
+    saved = workflow.document("left", left)
+    assert saved["format"] == workflow.LITE_FORMAT and workflow.from_document("left", saved) == left
+    with pytest.raises(workflow.UserError, match="LEFT sequence: it never loads into the RIGHT arm"):
+        workflow.from_document("right", saved)
 
 
-def zero_waits(steps: list) -> list:
-    return [dict(st, seconds=0.0) if st.get("type") == "wait" else st for st in steps]
-
-
-def plan_without_seconds(plan):
-    """The plan with every Wait at 0 s, wherever its steps are (a stage's arms, a serial stage's first and second)."""
-    if isinstance(plan, list):
-        return [plan_without_seconds(x) for x in plan]
-    if isinstance(plan, dict):
-        out = {k: plan_without_seconds(v) for k, v in plan.items()}
-        if out.get("type") == "wait":
-            out["seconds"] = 0.0
-        return out
-    return plan
-
-
-def test_a_wait_is_its_arms_own_idle_and_never_a_checkpoint():
-    """The owner, 21 Oct (the lab's pop-up: "SAFE TIMELINE checkpoint mismatch ... A positive WAIT exists ... on only one
-    arm"): a Wait is "an independent task, idle task, wait for 5 sec ... a user defined stage in the sequence". On one arm
-    or both, anywhere, it stays among its arm's steps (its arm idles for its seconds there) and never stops the other arm
-    or asks the operator: V53's plan as V53 makes it with the Waits at 0 s, each Wait keeping its own seconds."""
-    from alix_studio_lite.server import workflow
-
-    assert workflow.WAIT_CHECKPOINTS is False
-    theirs = v53_planner()
-    prog = lambda i, rule="TOGETHER": {"type": "program", "id": i, "name": "", "speed": 100, "transit_speed": 30,   # noqa: E731
-                                       "dual_rule": rule}
-    plan = workflow.build_plan([prog(71), {"type": "wait", "seconds": 5.0}, prog(72)], [prog(81), prog(82)])
-    assert [(st["kind"], st["program_id"]) for st in plan] == [("parallel", "TIMELINE-1")]
-    assert [(x["type"], x.get("id", x.get("seconds"))) for x in plan[0]["left"]["steps"]] == [("program", 71), ("wait", 5.0),
-                                                                                              ("program", 72)]
-    left, right = v6()                                  # V6's 2 s "MANUAL LID COVER OPEN" Waits on both arms: idles now
-    mine = workflow.build_plan(left, right)
-    assert "checkpoint" not in [st["kind"] for st in mine] and workflow.counts(mine)["checkpoints"] == 0
-    rng, refused = random.Random(21), 0
-    for _ in range(3000):
-        a, b = generated(rng), generated(rng)
-        ours = outcome(workflow.build_plan, a, b)
-        v53 = outcome(theirs, zero_waits(a), zero_waits(b))
-        assert (ours[0], plan_without_seconds(ours[1]) if ours[0] == "plan" else ours[1]) == v53, (a, b)
-        assert ours[0] == "refused" or not any(st["kind"] == "checkpoint" for st in ours[1])
-        assert ours[0] == "plan" or "checkpoint" not in ours[1]                       # never refused for a Wait
-        refused += ours[0] == "refused"
-    assert refused < 3000
-
-
-def test_steps_are_checked_and_v53s_json_loads_per_arm():
+def test_rows_are_checked_with_their_uids_and_a_kept_sequence_is_brought_up_to_date(tmp_path):
     from alix_studio_lite.server import workflow
     from alix_studio_lite.server.jobs import UserError
 
     left_doc = json.loads((V6 / "LEFT_V6_70SERIES_FINAL.json").read_text())
     steps = workflow.from_document("left", left_doc)
-    assert len(steps) == 14 and steps[3] == {"type": "program", "id": 71, "name": "L_P01P02.txt", "speed": 100, "transit_speed": 30,
-                                             "dual_rule": "TOGETHER"}
-    assert steps[7] == {"type": "wait", "seconds": 2.0, "note": "MANUAL LID COVER OPEN"}
-    with pytest.raises(UserError, match="LEFT sequence: it never loads into the RIGHT arm"):
-        workflow.from_document("right", left_doc)
+    assert steps[3] == {"type": "program", "id": 71, "name": "L_P01P02.txt", "speed": 100, "transit_speed": 30, "uid": steps[3]["uid"]}
+    assert [x for x in steps if x["type"] == "wait"][0] == {"type": "wait", "seconds": 2.0, "note": "MANUAL LID COVER OPEN",
+                                                            "uid": [x for x in steps if x["type"] == "wait"][0]["uid"]}
     with pytest.raises(UserError, match="wrong sequence format"):
         workflow.from_document("left", {"steps": []})
     old = {"format": workflow.FORMAT, "side": "left", "steps": [{"type": "program", "id": 5, "speed": 40}]}
     assert workflow.from_document("left", old)[0]["transit_speed"] == 30                 # V53's v51 compatibility
+    same = workflow.check_steps([dict(prog(1), uid="abc"), dict(prog(2), uid="abc"), prog(3)], "left")
+    assert same[0]["uid"] == "abc" and len({x["uid"] for x in same}) == 3                 # a copy gets its own
     for bad, said in (({"type": "pole", "mm": 400}, "row 1: pole target must be 0-315 mm"),
                       ({"type": "hand", "values": [1, 2, 3]}, "row 1: hand step requires exactly 6 values"),
-                      ({"type": "program", "id": 7, "dual_rule": "FIRST"}, "row 1: the Dual Rule 'FIRST'"),
+                      ({"type": "wait_for"}, "row 1: a Wait-for names the other arm's row it waits for"),
+                      ({"type": "wait_for", "target": {"program": 300}}, "row 1: a Wait-for names a Program 1-100"),
                       ({"type": "jump"}, "row 1: workflow step type must be")):
         with pytest.raises(UserError, match=said.replace("(", r"\(")):
             workflow.check_steps([bad], "left")
+    assert workflow.check_steps([dict(prog(1), dual_rule="TOGETHER")], "left")[0].get("dual_rule") is None
+    # a sequence kept before 22 Oct (V53's Dual Rule, no uids) is brought to today's form once, and kept so
+    units = type("U", (), {"root": str(tmp_path), "lock": threading.RLock()})()
+    (tmp_path / "sequence").mkdir()
+    l6, r6 = v6()
+    (tmp_path / "sequence" / "s2.json").write_text(json.dumps({"left": l6, "right": r6, "updated": "then"}))
+    first = workflow.load(units)
+    assert all("dual_rule" not in x and x.get("uid") for s in ("left", "right") for x in first[s])
+    assert workflow.load(units) == first                                               # the same uids every time
+    assert [x["type"] for x in first["right"]].count("wait_for") == 2
 
 
-def test_a_single_task_a_dual_arm_task_or_the_sequences(monkeypatch):
-    """What is run (the owner, 16 Oct: "options to play a single task arm, dual arm task and sequences in both
-    simulation and real"): a Program row alone on its arm with the Pole and Hand in force before it; one
-    coordinated stage of V53's plan with both arms' Programs, each arm staged the same way; or the sequences. With
-    V53's Wait checkpoint rule on (off since 21 Oct), a task after the checkpoint asks it first."""
+def test_a_single_task_or_a_dual_arm_task():
+    """What is run (the owner, 16 Oct): a Program row alone on its arm with the Pole and Hand in force before it; one
+    part of the plan between two meeting points, each arm staged the same way, a Wait-for whose row is outside it done."""
     from alix_studio_lite.server import workflow
     from alix_studio_lite.server.jobs import UserError
 
-    monkeypatch.setattr(workflow, "WAIT_CHECKPOINTS", True)
-
     left, right = (workflow.check_steps(s, side) for s, side in zip(v6(), ("left", "right")))
     steps = workflow._numbered({"left": left, "right": right})
-    task = workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 6})     # Program 73: hand (row 2), pole 50 (row 5)
+    task = workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 6})     # Program 73: hand (row 2), pole 5
     assert task["mode"] == "left" and task["pick"] == {"scope": "task", "side": "left", "row": 6} and "right" not in task["steps"]
     assert [(st["type"], st["_row"]) for st in task["steps"]["left"]] == [("hand", 2), ("pole", 5), ("program", 6)]
-    assert task["plan"][0]["kind"] == "single" and task["plan"][0]["program_id"] == 73
+    assert [st["kind"] for st in task["plan"]] == ["single"] and task["plan"][0]["program_id"] == 73
     with pytest.raises(UserError, match="LEFT row 1 is not a Program row"):
         workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 1})
-
-    full = workflow.build_plan(steps["left"], steps["right"])
-    assert [st["kind"] for st in workflow.plan_for(steps, "both")["plan"]] == [st["kind"] for st in full]   # the sequences, every row
-    later = next(i for i, st in enumerate(full) if st["kind"] == "parallel" and i > 2)                     # after the lid checkpoint
-    dual = workflow.plan_for(steps, "both", {"scope": "dual", "stage": later})
-    # after the manual lid cover checkpoint: the task's run asks it first (the owner, 16 Oct), as the sequence does
-    assert dual["mode"] == "both" and [st["kind"] for st in dual["plan"]] == ["checkpoint", "parallel"]
-    check = dual["plan"][0]
-    assert check["title"] == "MANUAL LID COVER CHECKPOINT" and check["message"].startswith("This task comes after the manual lid")
-    assert "Lid cover is fully open" in check["message"] and dual["counts"]["checkpoints"] == 1
-    row = next(x["_row"] for x in full[later]["left"]["steps"] if x["type"] == "program")
-    alone = workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": row})
-    assert [st["kind"] for st in alone["plan"]] == ["checkpoint", "single"] and alone["mode"] == "left"
-    assert [st["kind"] for st in task["plan"]] == ["single"]                                          # before it: no question
-    for side in ("left", "right"):                                     # the pole and hand in force, then the stage's own rows
-        kinds = [st["type"] for st in dual["steps"][side]]
-        assert "program" in kinds and kinds.index("program") > 0 and {"pole", "hand"} <= set(kinds[:kinds.index("program")])
-    serial = next(i for i, st in enumerate(full) if st["kind"] == "serial")
-    asks = [["checkpoint"]] if any(st["kind"] == "checkpoint" for st in full[:serial]) else [[]]
-    assert [st["kind"] for st in workflow.plan_for(steps, "both", {"scope": "dual", "stage": serial})["plan"]] == asks[0] + ["serial"]
-    check = next(i for i, st in enumerate(full) if st["kind"] == "checkpoint")
-    with pytest.raises(UserError, match="not a dual-arm task"):
-        workflow.plan_for(steps, "both", {"scope": "dual", "stage": check})
-
-    # the page says what it chose (the Program, the stage's Programs): a row or a stage that holds others since is
-    # refused, so the one confirmation never names another Program than the one that runs
-    assert workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 6, "id": 73})["pick"]["row"] == 6
+    full = workflow.plan_for(steps, "both")["plan"]
+    dual = workflow.plan_for(steps, "both", {"scope": "dual", "stage": 1})                  # PART 2: left 78, right waits, 78
+    assert [st["kind"] for st in dual["plan"]] == ["parallel"] and dual["mode"] == "both"
+    for side in ("left", "right"):                                   # the pole and hand in force, then the stage's own rows
+        kinds_ = [st["type"] for st in dual["steps"][side]]
+        assert "program" in kinds_ and {"pole", "hand"} <= set(kinds_[:kinds_.index("program")])
+    assert dual["plan"][0]["right"]["steps"][-2]["_target"]["done"] is False                # the left's 78 is in it: waited for
+    ids = {side: [x["id"] for x in full[1][side]["steps"] if x["type"] == "program"] for side in ("left", "right")}
+    assert workflow.plan_for(steps, "both", {"scope": "dual", "stage": 1, "ids": ids})["mode"] == "both"
+    with pytest.raises(UserError, match="Stage 2 holds LEFT Program") as e:
+        workflow.plan_for(steps, "both", {"scope": "dual", "stage": 1, "ids": dict(ids, left=[99])})
+    assert e.value.code == "pick"
     with pytest.raises(UserError, match="LEFT row 6 holds Program 73 now, not Program 72") as e:
         workflow.plan_for(steps, "both", {"scope": "task", "side": "left", "row": 6, "id": 72})
-    assert e.value.code == "pick"
-    ids = {side: [x["id"] for x in (full[later][side]["steps"]) if x["type"] == "program"] for side in ("left", "right")}
-    assert workflow.plan_for(steps, "both", {"scope": "dual", "stage": later, "ids": ids})["mode"] == "both"
-    with pytest.raises(UserError, match=f"Stage {later + 1} holds LEFT Program") as e:
-        workflow.plan_for(steps, "both", {"scope": "dual", "stage": later, "ids": dict(ids, left=[99])})
-    assert e.value.code == "pick"
+
+
+def test_a_move_after_a_program_waits_for_the_programs_end():
+    """The lab, 21 Oct 22:29 and 22:41: each arm's Home MoveJ straight after its last Program returned 1, and the arm went
+    Home anyway (ALIX's 155 program runs: the controller's end-of-program message comes up to 1.6 s after its run state
+    says ended, and the SDK's blocking move takes it for its own). Such a move waits PROGRAM_END_S after the Program:
+    Waits between them count towards it, a Hand does not; across stages; and before a lid or seat task."""
+    from alix_studio_lite.server import workflow
+
+    assert workflow.PROGRAM_END_S == 2.0
+    home = {"type": "global", "name": "HOME", "move": "movej", "speed": 20, "wait_s": 0.0}
+    left = [home, prog(80), {"type": "wait", "seconds": 0.5}, home, prog(81), {"type": "hand", "values": [1000] * 6}, home,
+            prog(82), {"type": "wait", "seconds": 3.0}, home, prog(83)]
+    right = [home, prog(80), prog(54), {"type": "meet"}, home]
+    left = left[:-1] + [{"type": "meet"}, prog(83)]
+    run = workflow.plan_for(numbered(left, right), "both")
+    assert [st["kind"] for st in run["plan"]] == ["parallel", "parallel"]
+    lp = run["plan"][0]["left"]["steps"]
+    # row 1: no Program before it; row 4: 0.5 s waited, 1.5 s more; row 7: a Hand between counts for nothing; row 10: 3 s
+    assert [(x["_row"], x["seconds"]) for x in lp if x.get("settle")] == [(4, 1.5), (7, 2.0)]
+    rp = run["plan"][1]["right"]["steps"]                          # after a Meet, straight from the Program before it
+    assert rp[0]["settle"] and rp[0]["seconds"] == 2.0 and rp[1]["type"] == "global"
+    alone = workflow.plan_for(numbered(left, [home, prog(80), prog(54), home]), "right")["plan"][0]["right"]["steps"]
+    assert [(x["type"], x.get("settle")) for x in alone] == [("global", None), ("program", None), ("program", None), ("wait", True),
+                                                             ("global", None)]
+    assert "for the controller's end of the Program" in workflow._step_words(alone[3])
+    task = {"type": "mechanism", "task": "lid_open"}
+    after = workflow.plan_for(numbered([prog(80), task], [prog(80), dict(home), task]), "both")
+    assert [(st["kind"], st.get("settle_s")) for st in after["plan"]] == [("parallel", None), ("mechanism", 2.0)]
+    assert [x.get("settle") for x in after["plan"][0]["right"]["steps"]] == [None, True, None]   # the right's Home waited already
+    first = workflow.plan_for(numbered([task, prog(80)], [task, prog(81)]), "both")
+    assert [(st["kind"], st.get("settle_s")) for st in first["plan"]] == [("mechanism", None), ("parallel", None)]
+
+
+def test_the_same_steps_planned_otherwise_are_simulated_again():
+    """A simulation is of a plan, not only of steps: one made before Lite planned the same steps otherwise (V53's planner
+    gone on 22 Oct) no longer lets Real Machine Mode run them, and the refusal says so."""
+    from alix_studio_lite.server import workflow
+
+    run = workflow.plan_for(numbered([prog(71), {"type": "wait", "seconds": 2.0}, prog(72)], [prog(81), prog(82)]), "both")
+    none = {"left": {}, "right": {}}, {"left": None, "right": None}
+    now = workflow.identity_of(run, *none, 15)
+    old = dict(now, plan=[{"kind": "parallel", "left": [1, 2], "right": [1]}, {"kind": "tail", "left": [3], "right": [2]}])
+    assert old["steps"] == now["steps"] and workflow.digest(old) != workflow.digest(now)
+    said = workflow._changed({"identity": old}, now)
+    assert said == "changed since it was simulated: how its steps are planned into stages (Lite plans them otherwise since)"
+    assert "planned into stages" in workflow._changed({"identity": {k: v for k, v in now.items() if k != "plan"}}, now)
+
+
+def test_each_step_is_timed_as_the_robot_runs_it():
+    """The lab's logs of 21 Oct (ROBOT_TIMES): a Program takes the controller's read of its file, its lines at 96-102 % of
+    5 ms each, then its end; a move to its first point only when the arm is not there; a Hand runner v14's 0.75-1.3 s; a
+    Pole ALIX's law and a little; a Global Point where the arm already is next to nothing. Each step keeps its range,
+    and a timing ``lam`` puts every step at that point of it."""
+    from alix_studio_lite.server import workflow
+
+    md = np.zeros((2001, 7))
+    md[:, 0] = np.linspace(0, 20000, 2001)                           # 0 to 20 deg on J1 over 10 s
+    files = {"/f.txt": md}
+    progs = {80: dict(file="/f.txt", sent=True, lines=2001)}
+    pts = {"points": {"HOME": [0.0] * 7}}
+    start = dict(pole_mm=200.0, hand=[1000] * 6, q_deg=[0.0] * 7)
+
+    def sim(lam=None):
+        return workflow._ArmSim("left", start, [180, 180, 225, 225, 225, 225, 225], 15, progs, pts, files.get, [], lam=lam)
+
+    steps = [dict(prog(80), _row=1), {"type": "hand", "values": [0, 0, 0, 0, 150, 1000], "_row": 2},
+             {"type": "pole", "mm": 50.0, "_row": 3}, {"type": "global", "name": "HOME", "move": "movej", "speed": 20, "wait_s": 0.0,
+                                                       "_row": 4},
+             {"type": "global", "name": "HOME", "move": "movej", "speed": 20, "wait_s": 0.0, "_row": 5}]
+    a = sim()
+    a.run(steps, 0.0, 0)
+    p, h, pl, g, there = a.acts
+    assert p["traj_t0"] == p["move_t0"] == pytest.approx(0.05 + 2001 * 0.23e-3, abs=1e-3)    # no move to its first point
+    assert p["times"][0] == pytest.approx(0.05 + 2001 * 0.17e-3 + 0.96 * 10 + 0.05)
+    assert p["times"][2] == pytest.approx(0.05 + 2001 * 0.37e-3 + 1.02 * 10 + 0.55)
+    assert p["line_s"] == pytest.approx(0.005, abs=1e-6) and steps[0]["_t"]["play_s"] == 10.0
+    assert h["times"] == pytest.approx((0.75, 0.82 + 0.25, 1.05 + 0.25))
+    assert pl["times"][0] > 3.0 and pl["times"][2] - pl["times"][0] == pytest.approx(0.15)
+    assert g["times"][1] > 2.0 and there["times"] == pytest.approx((0.05, 0.08, 0.15))
+    fast, slow = sim(0.0), sim(1.0)
+    for x in (fast, slow):
+        x.run(steps, 0.0, 0)
+    assert fast.acts[-1]["t1"] < a.acts[-1]["t1"] < slow.acts[-1]["t1"]
+    assert fast.acts[0]["line_s"] == pytest.approx(0.0048, abs=1e-6) and slow.acts[0]["line_s"] == pytest.approx(0.0051, abs=1e-6)
+    away = workflow._ArmSim("left", dict(start, q_deg=[-30.0, 0, 0, 0, 0, 0, 0]), [180, 180, 225, 225, 225, 225, 225], 15, progs,
+                            pts, files.get, said := [])
+    away.run([dict(prog(80), _row=1)], 0.0, 0)
+    tr = away.acts[0]["transit"]
+    assert tr[0] == pytest.approx(30 / (0.3 * 180) + 0.5, abs=1e-3) and tr[2] == pytest.approx(30 / (0.3 * 0.15 * 180) + 0.5, abs=1e-3)
+    assert away.acts[0]["traj_t0"] > away.acts[0]["move_t0"] and "first moves the arm 30 deg" in said[0]["text"]
+
+
+def test_a_wait_for_holds_its_arm_until_the_other_has_finished_its_row():
+    """In the simulation a Wait-for is a hold until the other arm's row ends (an action, so that every timing of the run
+    has the same actions); the arm that ends a stage first holds for the other at the Meet."""
+    from alix_studio_lite.server import workflow
+
+    md = np.zeros((1001, 7))
+    progs = {80: dict(file="/f.txt", sent=True, lines=1001), 81: dict(file="/f.txt", sent=True, lines=1001)}
+    left = workflow.check_steps([prog(80), {"type": "meet"}, prog(81)], "left")
+    right = workflow.check_steps([{"type": "wait", "seconds": 1.0}, prog(81), {"type": "meet"}], "right")
+    right.insert(1, {"type": "wait_for", "target": {"uid": left[0]["uid"]}})
+    run = workflow.plan_for(workflow._numbered({"left": left, "right": workflow.check_steps(right, "right")}), "both")
+    start = dict(pole_mm=200.0, hand=[1000] * 6, q_deg=[0.0] * 7)
+    sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, {"/f.txt": md}.get, []) for s in ("left", "right")}
+    stages, total = workflow.schedule(run, sims, 15)
+    L, R = sims["left"].acts, sims["right"].acts
+    hold = next(a for a in R if a.get("waits_for"))
+    assert hold["t0"] == pytest.approx(R[0]["t1"], abs=1e-3) and hold["t1"] == pytest.approx(L[0]["t1"], abs=1e-3)   # until 80 ends
+    assert R[2]["t0"] > L[0]["t1"]                                                                     # its 81 after that
+    meet = [a for a in L if a.get("gate") and a["stage"] == 0][0]
+    assert meet["text"] == "Meet the RIGHT arm" and meet["t1"] == pytest.approx(stages[0]["t1"], abs=1e-3)
+    assert stages[1]["t0"] == stages[0]["t1"] and total == pytest.approx(max(L[-1]["t1"], R[-1]["t1"]), abs=1e-3)
+
+
+def _drift_case(wait_for: bool):
+    """The lab's near-collision of 21 Oct 23:18 in small (the E-stop pressed just before the arms touched): the left arm
+    late in its program 84, the right arm's program 82 after six Hand steps and a short Wait (tests/data/s2_drift)."""
+    from alix_workspace.collision import RobotCollisionModel
+
+    from alix_studio_lite.motion import track
+    from alix_studio_lite.server import robot_model, staging, workflow
+
+    vendor_paths.activate()
+    data = vendor_paths.LITE_ROOT / "tests/data/s2_drift"
+    L, R = (np.asarray(track.read_md(data / f), float) for f in ("L84_tail.txt", "R82_head.txt"))
+    md, grip, open_ = {"/L.txt": L, "/R.txt": R}, [0, 0, 0, 0, 150, 1000], [1000] * 6
+    left = workflow.check_steps([prog(1)], "left")
+    right = [{"type": "hand", "values": v} for v in (open_, grip) * 3] + [{"type": "wait", "seconds": 0.774}, prog(2)]
+    if wait_for:
+        right.insert(len(right) - 1, {"type": "wait_for", "target": {"uid": left[0]["uid"]}})
+    run = workflow.plan_for(workflow._numbered({"left": left, "right": workflow.check_steps(right, "right")}), "both")
+    progs = {"left": {1: dict(file="/L.txt", sent=True, lines=len(L))}, "right": {2: dict(file="/R.txt", sent=True, lines=len(R))}}
+    starts = {"left": dict(pole_mm=200.0, hand=grip, q_deg=(L[0] / 1000).tolist()),
+              "right": dict(pole_mm=200.0, hand=grip, q_deg=(R[0] / 1000).tolist())}
+
+    def make_sims(lam):
+        return {s: workflow._ArmSim(s, starts[s], [180, 180, 225, 225, 225, 225, 225], 15, progs[s], None, md.get, [], lam=lam.get(s))
+                for s in ("left", "right")}
+
+    sims = make_sims({"left": None, "right": None})
+    workflow.schedule(run, sims, 15)
+    model = robot_model.fk_model()
+    base = robot_model._home(model, RobotCollisionModel.from_file(str(vendor_paths.URDF), tag="visual").index)
+    for s in ("left", "right"):
+        base = staging.start_values(s, base, starts[s])
+    job = type("Job", (), {"progress": lambda self, *a: None, "sleep": lambda self, x: time.sleep(x), "check": lambda self: None})()
+    return workflow._drift(dict(run, start=starts, md_of=md.get), make_sims, 15, {s: sims[s].acts for s in sims}, base, job)
+
+
+def test_the_two_arms_are_checked_at_every_timing_their_ranges_allow():
+    """The owner, 22 Oct: with each step's range known, the arms are checked against each other at every timing those
+    ranges allow, CLEARANCE_MM apart. The lab's programs 84 and 82: as timed as a rule the right arm's opening swing
+    passes the left hand clear, but with the right arm's Hand steps at their quickest and the left's program at its
+    slowest it reaches the left hand: said, with how far ahead the right arm was then. A Wait-for the left's 84 before
+    the right's 82 keeps them apart at every timing."""
+    out = _drift_case(wait_for=False)
+    assert out["timings"] >= 10 and out["clearance_mm"] == 50 and out["band_s"] > 5
+    assert out["events"] and not any(e["lam"] is None for e in out["events"])           # as a rule: clear
+    e = out["events"][0]
+    assert e["right_ahead_s"] > 1.0 and e["min_mm"] < 50 and "IRH_right_thumb_2" in e["links"]
+    said = out["findings"][0]["text"]
+    assert "The two arms come closer than 50 mm: LEFT row 1 (Program 1" in said and "when the RIGHT arm runs" in said
+    assert "keep the arms apart with a Meet or a Wait-for" in said and out["findings"][0]["level"] == "warn"
+    kept = _drift_case(wait_for=True)
+    assert kept["events"] == [] and kept["findings"] == [] and kept["timings"] >= 10
+
+
+def test_the_clearance_check_measures_the_gap_between_the_arms():
+    """At the lab's stop of 21 Oct 23:18:53 the two arms stood 12 mm apart (the left wrist's camera holder, the right
+    thumb): closer than 50 mm, said with the exact gap; at the model's standing pose they are far apart."""
+    from alix_workspace.collision import RobotCollisionModel
+
+    from alix_studio_lite.server import collision_check, robot_model, staging
+
+    vendor_paths.activate()
+    model = robot_model.fk_model()
+    home = robot_model._home(model, RobotCollisionModel.from_file(str(vendor_paths.URDF), tag="visual").index)
+    stop = {"left": [-25.458, -1.705, -15.515, 35.885, -129.774, -64.576, 157.298],
+            "right": [36.811, -11.173, -28.265, 112.847, -19.411, -75.141, 75.4]}
+    hands = {"left": [555, 524, 512, 543, 525, 986], "right": [998, 1000, 1000, 1000, 995, 987]}
+    standing = {s: [float(np.degrees(home[f"{staging.SIDE_PREFIX[s]}_joint{i}"])) for i in range(1, 8)] for s in ("left", "right")}
+
+    def case(q):
+        return dict(times=[0.0, 0.04], arms={s: dict(pole=np.array([200.0, 200.0]), hand=np.array([hands[s]] * 2, float),
+                                                      q=np.array([q[s]] * 2, float), known=[True, True]) for s in ("left", "right")})
+
+    near, far = collision_check.clearance_states([case(stop), case(standing)], home, 50.0)
+    assert len(near["events"]) == 1 and far["events"] == []
+    e = near["events"][0]
+    assert e["exact_mm"] == pytest.approx(12.2, abs=1.0) and e["min_mm"] <= e["exact_mm"] + 0.1        # a hull is never farther
+    assert e["first_t"] == 0.0 and e["last_t"] == 0.04
 
 
 # ── Simulation Mode and the gate to Real Machine Mode, on the stand-in (no controller)
@@ -295,23 +441,28 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     right = [{"type": "pole", "mm": 200}, {"type": "program", "id": 71, "transit_speed": 30, "dual_rule": "TOGETHER"},
              {"type": "wait", "seconds": 1.5}]
     call(lite, "PUT", f"{P}/workflow/left", {"steps": left})
-    assert call(lite, "PUT", f"{P}/workflow/right", {"steps": right})["right"][2] == {"type": "wait", "seconds": 1.5}
+    kept = call(lite, "PUT", f"{P}/workflow/right", {"steps": right})["right"]
+    assert {k: v for k, v in kept[2].items() if k != "uid"} == {"type": "wait", "seconds": 1.5} and kept[2]["uid"]
+    assert all("dual_rule" not in x for x in kept)                   # V53's Dual Rule: gone (22 Oct)
     plan = call(lite, "POST", f"{P}/workflow/plan", {"mode": "both"})
-    assert [s["kind"] for s in plan["stages"]] == ["parallel", "tail"] and plan["counts"]["together"] == 1
+    assert [s["kind"] for s in plan["stages"]] == ["parallel"] and plan["counts"]["parts"] == 1      # no tail of V53's
 
     j = wait(lite, call(lite, "POST", f"{P}/workflow/simulate", {"mode": "both"}))
     assert j["state"] == "done", j
     sim = j["result"]
     st = sim["stages"]
-    assert st[0]["t0"] == 0 and st[0]["t1"] == st[1]["t0"] and st[1]["t1"] == sim["total_s"]
+    assert st[0]["t0"] == 0 and st[0]["t1"] == pytest.approx(sim["total_s"], abs=1e-3)
+    assert st[0]["t1_range"][0] <= st[0]["t1"] <= st[0]["t1_range"][1]                  # as fast and as slow as they run
+    assert sim["drift"]["clearance_mm"] == 50 and sim["drift"]["timings"] >= 1          # both arms, at every timing
     la, ra = sim["acts"]["left"], sim["acts"]["right"]
     assert [a["kind"] for a in la] == ["pole", "hand", "pole", "program", "program"] and [a["row"] for a in la] == [1, 2, 3, 4, 5]
-    assert la[3]["drawn"] and la[3]["lines"] == 300 and la[3]["t1"] - la[3]["traj_t0"] == pytest.approx(299 * 0.005, abs=1e-3)
+    assert la[3]["drawn"] and la[3]["lines"] == 300 and 299 * la[3]["line_s"] == pytest.approx(299 * 0.005, abs=1e-3)
+    assert la[3]["t1"] > la[3]["traj_t0"] + 1.495 and la[3]["traj_t0"] > la[3]["t0"]      # the file read first, the end after
     assert sim["programs"]["left"]["71"]["seconds"] == pytest.approx(1.495)                  # its execution time travels with it
     src = call(lite, "GET", f"{P}/workflow/left/sources")
     assert next(p for p in src["programs"] if p["id"] == 71)["seconds"] == pytest.approx(1.495)
     assert not la[4]["drawn"]                                    # program 72: Lite never sent it
-    assert ra[1]["t0"] == ra[0]["t1"] and ra[2]["kind"] == "wait" and ra[2]["stage"] == 1   # the tail, after TIMELINE-1
+    assert ra[1]["t0"] == ra[0]["t1"] and ra[2]["kind"] == "wait" and ra[2]["stage"] == 0   # its own, straight after its 71
     texts = " | ".join(f["text"] for f in sim["findings"])
     assert "LEFT row 5: program 72 is not drawn (Lite has not sent this program; no file of its name in the project" in texts
     assert "From here the arm's pose is not known" in texts             # the check leaves that arm out after it
@@ -442,3 +593,28 @@ def test_a_file_found_by_name_is_compared_with_the_controllers_program():
     held = "81_L_P01P02_with_a_very_long_name_for_it.txt"[:31]               # RealMan's API: 31 characters at most
     long = sim._found(81, {"id": 81}, {"name": held, "size": None})
     assert long is not None and long["differs"] is None
+
+
+def test_a_program_sent_from_advanced_is_drawn_from_the_file_lite_kept(lite):
+    """The lab, 21 Oct: Programs 20, 99 and 100 were sent from Advanced, whose files Lite keeps in its data folder, not in
+    the project, so the simulation could not draw them and left the right arm out of the check for 48 s. The very file
+    Lite sent is drawn while it holds the same bytes."""
+    from alix_studio_lite.motion import track
+    from alix_studio_lite.server import workflow
+    from alix_studio_lite.server.lite_units import LiteUnits
+
+    md = np.round(np.tile(np.array([[36.8, -60.6, -37.0, 116.0, -32.9, -52.7, 90.3]]), (120, 1)) * 1000).astype(np.int64)  # a hold
+    path = lite["data"] / "advanced" / "right" / "20261021_225804_delay_12s.txt"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    track.write_md(path, md)
+    arm = lite["app"].robot.arm("right")
+    arm.programs[100] = dict(name="delay_12s", lines=120, bytes=path.stat().st_size, sha256=track.sha256_file(path), stage=None,
+                             first_row=md[0].tolist(), uploaded="2026-10-21 22:58", path=str(path))
+    units = LiteUnits(lite["app"].store.folder(PID), "commode_c")
+    try:
+        known = workflow.programs_known(lite["app"], units, "right")[100]
+        assert known["file"] == str(path) and known["lines"] == 120 and known["sent"]
+        path.write_bytes(path.read_bytes() + b"{}\n")                       # other bytes since: not the program it sent
+        assert workflow.programs_known(lite["app"], units, "right")[100]["file"] is None
+    finally:
+        arm.programs.pop(100, None)

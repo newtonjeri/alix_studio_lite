@@ -1,7 +1,9 @@
 """S2's Real Machine Mode (feedback v5, slide 9) on ALIX's emulated arms: only after the same run
 completed in Simulation; each arm's part of each stage through runner v14's own
-run_workflow_sequence on its controller, as V53 runs it; a Wait idles its own arm (no checkpoint since 21 Oct); STOP
-interrupts the runner the way V53's STOP does (its own Ctrl+C path) and latches the arms."""
+run_workflow_sequence on its controller, a call per stretch between its Wait-for rows; a Wait idles its own arm; a
+Wait-for holds its arm until the other arm's runner has finished the row it names, and a Meet holds the first arm there
+for the other (the owner, 22 Oct); STOP interrupts the runner the way V53's STOP does (its own Ctrl+C path) and latches
+the arms."""
 import json
 import socket
 import subprocess
@@ -121,7 +123,7 @@ def test_real_runs_the_simulated_sequence_through_runner_v14(server):
     j = wait(server, job)
     assert j["state"] == "done", j
     assert j["extra"]["live"] == {"left": "SEQUENCE COMPLETE", "right": "SEQUENCE COMPLETE"}
-    assert j["extra"]["status"].startswith("PAGE 02 PROGRAM RULES COMPLETE")
+    assert j["extra"]["status"].startswith("PAGE 02 SEQUENCE COMPLETE")
     said = events(j)
     assert "LEFT: WORKFLOW COMPLETE: 4/4 step(s)" in said and "RIGHT: WORKFLOW COMPLETE: 3/3 step(s)" in said
     hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
@@ -148,12 +150,12 @@ def test_a_wait_idles_its_own_arm_and_stop_interrupts_the_runner(server):
     call(server, "PUT", f"{P}/workflow/left", {"steps": steps(hold, tail=[long_wait])})
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps(tail=[long_wait])})
     plan = call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})
-    assert [s["label"] for s in plan["stages"]] == ["TIMELINE-1", ""] and plan["counts"]["checkpoints"] == 0
+    assert [s["label"] for s in plan["stages"]] == ["PART 1"] and plan["counts"]["parts"] == 1
     sim = simulated(server)
     held = [a for a in sim["acts"]["left"] if a["kind"] == "wait" and a["stage"] == 0]
-    assert held and round(held[0]["t1"] - held[0]["t0"], 3) == 0.5                      # the left arm idles 0.5 s there
+    assert held and held[0]["t1"] - held[0]["t0"] == pytest.approx(0.5, abs=0.01)       # the left arm idles 0.5 s there
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
-    j = wait(server, job, until=lambda j: "FINAL AUX" in j["extra"]["live"]["left"] and "Wait 60 s" in j["extra"]["live"]["left"])
+    j = wait(server, job, until=lambda j: "Wait 60 s" in j["extra"]["live"]["left"])
     assert j["state"] == "running" and not j["extra"].get("question"), j                # no operator question
     m = next(x for x in call(server, "GET", f"{P}/merges")["left"])                 # nothing is sent to an arm that runs
     busy = call(server, "POST", f"{P}/merges/left/{m['file']}/upload", {"program_id": 72, "confirmed": True, "limits_seen": True})
@@ -181,7 +183,7 @@ def test_a_task_after_waits_on_both_arms_runs_with_no_question(server):
     plan = call(server, "POST", f"{P}/workflow/plan", {"mode": "left", "pick": pick})
     assert [s["kind"] for s in plan["stages"]] == ["single"]
     full = call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})
-    assert [s["kind"] for s in full["stages"]] == ["parallel"] and full["counts"]["checkpoints"] == 0
+    assert [s["kind"] for s in full["stages"]] == ["parallel"] and full["counts"]["meets"] == 0
     j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "left", "pick": pick}))
     assert j["state"] == "done", j
     call(server, "POST", f"{P}/workflow/played", {"hash": j["result"]["hash"]})
@@ -189,3 +191,57 @@ def test_a_task_after_waits_on_both_arms_runs_with_no_question(server):
     j = wait(server, job)
     assert j["state"] == "done" and not j["extra"].get("question"), j
     assert "WORKFLOW STEP START" in events(j)
+
+
+def test_a_global_point_after_a_program_waits_for_the_programs_end(server):
+    """The lab, 21 Oct 22:29 and 22:41: a Home MoveJ straight after the last Program returned 1 and the sequence failed
+    at its last row, though the arm went Home (the controller's end-of-program message, late, taken by the SDK for the
+    move's own). That move waits 2 s for the Program's end first, in Simulation and on the robot (runner v14's own
+    Wait), and the sequence runs to its end."""
+    home = {"type": "global", "name": "STP_HOME", "move": "movej", "speed": 30, "wait_s": 0}
+    call(server, "PUT", f"{P}/workflow/left", {"steps": steps(tail=[home])})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": steps()})
+    assert [s["kind"] for s in call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})["stages"]] == ["parallel"]
+    sim = simulated(server)
+    tail = [a for a in sim["acts"]["left"] if a["row"] == 4]
+    assert [a["kind"] for a in tail] == ["wait", "global"]
+    assert tail[0]["t1"] - tail[0]["t0"] == pytest.approx(2.0, abs=0.01) and "end of the Program" in tail[0]["text"]
+    t0 = time.time()
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
+    assert j["state"] == "done", j
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    said = [r["text"] for r in hw if r["verb"] == "runner v14" and r["side"] == "left" and r["t"] >= t0]
+    w = next(i for i, s in enumerate(said) if s.startswith("WORKFLOW WAIT: 2 s"))
+    g = next(i for i, s in enumerate(said) if s.startswith("GLOBAL MOVE START: STP_HOME"))
+    assert w < g and any(s.startswith("GLOBAL MOVE COMPLETE: STP_HOME") for s in said[g:])
+
+
+def test_a_wait_for_and_a_meet_order_the_two_arms_on_the_robot(server):
+    """The owner, 22 Oct: the right arm's Program waits for the left's (a Wait-for naming it) and both meet after
+    them. On the robot the right's Program starts only once the left's runner has said its own complete, and neither
+    arm goes on from the Meet before both are there."""
+    left = steps(tail=[{"type": "meet"}, {"type": "wait", "seconds": 0.3}])
+    call(server, "PUT", f"{P}/workflow/left", {"steps": left})
+    left = call(server, "GET", f"{P}/workflow")["left"]
+    target = next(x for x in left if x["type"] == "program")
+    right = steps(tail=[{"type": "meet"}, {"type": "wait", "seconds": 0.3}])
+    right.insert(2, {"type": "wait_for", "target": {"uid": target["uid"]}})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": right})
+    plan = call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})
+    assert [s["label"] for s in plan["stages"]] == ["PART 1", "PART 2"] and plan["counts"]["waits_for"] == 1
+    sim = simulated(server)
+    held = next(a for a in sim["acts"]["right"] if a.get("waits_for"))
+    left_prog = next(a for a in sim["acts"]["left"] if a["kind"] == "program")
+    assert held["t1"] == pytest.approx(left_prog["t1"], abs=1e-3) and "Wait for LEFT row 3" in held["text"]
+    t0 = time.time()
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
+    assert j["state"] == "done", j
+    assert "RIGHT row 3: waits for LEFT row 3." in events(j)
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    lines = [(r["t"], r["side"], r["text"]) for r in hw if r["verb"] == "runner v14" and r["t"] >= t0]
+    left_done = next(t for t, side, text in lines if side == "left" and text.startswith("WORKFLOW PROGRAM COMPLETE"))
+    right_start = next(t for t, side, text in lines if side == "right" and text.startswith("WORKFLOW PROGRAM "))
+    assert right_start > left_done                                     # the right's Program after the left's
+    ends = {side: max(t for t, s_, text in lines if s_ == side and text.startswith("WORKFLOW PROGRAM COMPLETE")) for side in ("left", "right")}
+    waits = {side: min(t for t, s_, text in lines if s_ == side and text.startswith("WORKFLOW WAIT: 0.3 s")) for side in ("left", "right")}
+    assert min(waits.values()) > max(ends.values())                    # the Meet: neither goes on before both are there

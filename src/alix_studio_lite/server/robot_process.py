@@ -219,6 +219,8 @@ def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log
                 link.close()
             finally:
                 os._exit(0)
+        if msg[0] != "call":                         # a line's ack left unread (a STOP in its handshake): not a command
+            continue
         _, method, args, kwargs, want_lines, want_hook = msg
         kwargs = dict(kwargs)
 
@@ -256,6 +258,7 @@ class LinkProcess:
         self.on_read, self.log = on_read, log
         self.emulated = False
         self.abandoned = False
+        self.push_on: dict | None = None                 # the controller's realtime push found left on as it connected
         self._proc = None
         self._cmd = self._ctl = self._feed = None
         self._lock = threading.RLock()                   # one command at a time (busy); reentrant for reserved()
@@ -271,6 +274,7 @@ class LinkProcess:
 
     # -- life
     def open(self, _again: bool = False) -> "LinkProcess":
+        self.push_on = None
         ctx = mp.get_context("spawn")
         cmd_a, cmd_b = ctx.Pipe()
         ctl_a, ctl_b = ctx.Pipe()
@@ -332,6 +336,8 @@ class LinkProcess:
         lid and seat tasks cannot stream on this arm."""
         from .udp_push import held_text
 
+        if not info.get("error") and not reopened:     # left on (another program holds its port, or it would not turn off):
+            self.push_on = dict(info)                    # the controller's programs run some 13 % slower (S2 Real refuses it)
         if self.log is None:
             return
         S, port = self.side.upper(), info.get("port")
@@ -578,13 +584,14 @@ class RealArmProxy:
             on_line = kwargs.pop("on_line", None)
             stop_hook = kwargs.pop("stop_hook", None)
             wait_s = kwargs.pop("_wait_s", None)
-            if name == "restore_run_mode":           # a job's finally: waits for a command still holding the controller, never raises
-                try:
+            if name in _NEVER_RAISES:                # a job's finally: waits for a command still holding the controller, never
+                try:                                 # raises (a lost connection would say itself instead of why the job ended)
                     return self.link.call(name, (), kwargs, label=_LABELS[name], wait_s=CLOSE_WAIT_S)
                 except Exception as exc:                                     # noqa: BLE001
+                    verb, failed = _NEVER_RAISES[name]
                     if self.log is not None:
-                        self.log.hardware(self.side, "restore run mode", ok=False, text=f"not restored ({exc})")
-                    return None
+                        self.log.hardware(self.side, verb, ok=False, text=f"not restored ({exc})")
+                    return failed
             return self.link.call(name, (), kwargs, label=_LABELS.get(name, name.replace("_", " ")),
                                   on_line=on_line, stop_hook=stop_hook, wait_s=wait_s)
         return method
@@ -611,3 +618,6 @@ _LABELS = {"stage": "staging the pole and the hand", "pole_to": "moving the pole
            "teach_stop": "saving the recording", "upload": "uploading a program", "run": "running a program",
            "run_workflow": "running a sequence", "move_point": "MoveJ / MoveL to a global point", "move_to": "moving to a pose",
            "stream": "streaming a move", "read_speed": "reading the global speed", "restore_speed": "restoring the global speed"}
+#: The commands a job's ``finally`` makes, which never raise (RealArm's own never do): their hardware log verb, and what
+#: they return when the worker cannot be reached.
+_NEVER_RAISES = {"restore_run_mode": ("restore run mode", None), "restore_speed": ("restore global speed", False)}

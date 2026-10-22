@@ -4,14 +4,9 @@
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
-<<<<<<< HEAD
-   "speed": 100,
-   "wait_s": 0.0
-=======
    "speed": 20,
    "wait_s": 0.0,
    "uid": "86c2c716"
->>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
   },
   {
    "type": "pole",
@@ -143,7 +138,7 @@
   {
    "type": "program",
    "id": 85,
-   "name": "85_L_merge_6_2.txt",
+   "name": "85_L_merge_6.txt",
    "speed": 100,
    "transit_speed": 30,
    "uid": "78e03ff5"
@@ -168,7 +163,7 @@
   {
    "type": "program",
    "id": 86,
-   "name": "86_L_merge_7_2.txt",
+   "name": "86_L_merge_7_1_trim_mean_scale_p",
    "speed": 100,
    "transit_speed": 30,
    "uid": "5412dfc5"
@@ -177,14 +172,9 @@
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
-<<<<<<< HEAD
-   "speed": 100,
-   "wait_s": 0.0
-=======
    "speed": 20,
    "wait_s": 0.0,
    "uid": "ea5d2d81"
->>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
   }
  ],
  "right": [
@@ -223,7 +213,7 @@
   {
    "type": "program",
    "id": 80,
-   "name": "80_R_merge_1_2.txt",
+   "name": "80_R_merge_1.txt",
    "speed": 100,
    "transit_speed": 30,
    "uid": "9b278b14"
@@ -288,12 +278,8 @@
   },
   {
    "type": "wait",
-<<<<<<< HEAD
-   "seconds": 5.0
-=======
    "seconds": 3.0,
    "uid": "4bee997a"
->>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
   },
   {
    "type": "hand",
@@ -328,8 +314,6 @@
    "uid": "8849a767"
   },
   {
-<<<<<<< HEAD
-=======
    "type": "program",
    "id": 20,
    "name": "20_R_T04_GC_BP.txt",
@@ -350,7 +334,6 @@
    "uid": "3e6d2461"
   },
   {
->>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
    "type": "hand",
    "values": [
     1000,
@@ -371,18 +354,6 @@
   },
   {
    "type": "program",
-   "id": 20,
-   "name": "20_R-T04_v001.txt",
-   "speed": 100,
-   "transit_speed": 30,
-   "dual_rule": "TOGETHER"
-  },
-  {
-   "type": "wait",
-   "seconds": 6.0
-  },
-  {
-   "type": "program",
    "id": 82,
    "name": "82_R_merge_7.txt",
    "speed": 100,
@@ -398,9 +369,5 @@
    "uid": "1b7c6171"
   }
  ],
-<<<<<<< HEAD
- "updated": "2026-10-22 16:31:46"
-=======
  "updated": "2026-10-22 05:22:34"
->>>>>>> 6c72e914e9f4a9a1c09cb2f0b3d980b4f70b57ca
 }
