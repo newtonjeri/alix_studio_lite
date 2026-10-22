@@ -2,7 +2,7 @@
  "id": "alix_mvbvk1fk_zti6s",
  "name": "Commode_C_17_10_2026",
  "createdAt": "2026-10-17T04:06:33.536Z",
- "updatedAt": "2026-10-21T15:43:50.537Z",
+ "updatedAt": "2026-10-22T02:18:22.023Z",
  "archived": false,
  "state": {
   "currentView": "sequence",
@@ -1618,14 +1618,14 @@
        "Thumb Bend": 0,
        "Thumb Rotate": 1000
       },
-      "startPose": "gp:R_T06_STP",
+      "startPose": "",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-21T15:43:50.535Z"
+      "savedAt": "2026-10-22T02:18:22.021Z"
      }
     },
     "ugvPositionByArm": {
@@ -1651,15 +1651,15 @@
      "Thumb Bend": 0,
      "Thumb Rotate": 1000
     },
-    "leftStartPose": "gp:L_HME_POS",
-    "rightStartPose": "gp:R_T06_STP",
+    "leftStartPose": "",
+    "rightStartPose": "",
     "trajectoryFileName": "R_TASK_5B_trajectory.txt",
     "leftProgramId": 55,
     "programId": 55,
     "leftApproved": true,
     "rightApproved": false,
     "completed": false,
-    "lastUpdated": "2026-10-21T15:43:50.535Z",
+    "lastUpdated": "2026-10-22T02:18:22.021Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -3898,8 +3898,8 @@
    0,
    1000
   ],
-  "leftPose": "gp:L_HME_POS",
-  "rightPose": "gp:R_T06_STP",
+  "leftPose": "",
+  "rightPose": "",
   "programId": "55",
   "fileName": "R_TASK_5B_trajectory.txt",
   "activeTrajectorySource": "recorded",
@@ -4191,7 +4191,7 @@
   "sequenceVisualConfirmed": false,
   "fullSimulationApproved": false,
   "elapsed": 0,
-  "savedAt": "2026-10-21T15:43:50.537Z"
+  "savedAt": "2026-10-22T02:18:22.023Z"
  },
  "lastSaveReason": "Browser closing",
  "lite": {
