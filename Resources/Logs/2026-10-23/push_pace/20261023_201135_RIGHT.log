@@ -1,0 +1,15 @@
+20:11:35.553 current c api version:  1.1.6
+20:11:35.636 RIGHT 192.168.1.103: program 55, 1498 lines; push cycles [0, 2, 4] x 5 ms (0 = off); overall 15 %; pole to 200 mm; hand to [1000, 1000, 1000, 1000, 0, 1000]
+20:11:35.636   the arm first moves 69.6 deg (J2) to the program's first point at 15 %, then plays the program 6 times, moving back to the first point after each run: keep the cell clear
+20:11:44.321   type 'right' to start:   answer: right
+20:11:44.330 MANUAL POLE START: current 200.0 mm -> target 200 mm
+20:11:44.337 MANUAL POLE COMPLETE: target 200 mm, final=200.0 mm
+20:11:44.337 MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+20:11:44.891 MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[999, 996, 997, 998, 180, 983]
+20:11:45.112 AUX HAND CLOSED
+20:11:45.155   to the first point: 69.6 deg (J2) at 15 %
+20:11:48.868   ** the arm did not reach the program's first point: the arm stopped 60.8 deg (J2) short of it after 3.6 s; it holds system 4109 (0x100D Robotic arm collision). Stopping
+20:11:48.883   overall speed back to 50 % (ret=0)
+20:11:48.883 
+20:11:48.883 no run with the push off: nothing to compare with
+20:11:48.883 record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-23/push_pace/20261023_201135_RIGHT.log, .events.jsonl, .summary.json and the captures beside them

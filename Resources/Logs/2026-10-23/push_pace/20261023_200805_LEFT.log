@@ -1,0 +1,6 @@
+20:08:05.372 current c api version:  1.1.6
+20:08:05.446 LEFT 192.168.1.10: program 50, 1583 lines; push cycles [0, 2, 4] x 5 ms (0 = off); overall 15 %; pole to 50 mm; hand to [1000, 1000, 1000, 1000, 0, 1000]
+20:08:05.447   the arm first moves 36.9 deg (J4) to the program's first point at 15 %, then plays the program 6 times, moving back to the first point after each run: keep the cell clear
+20:08:08.752   type 'left' to start:   answer: 
+20:08:08.752   not started
+20:08:08.752 record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-23/push_pace/20261023_200805_LEFT.log, .events.jsonl, .summary.json and the captures beside them

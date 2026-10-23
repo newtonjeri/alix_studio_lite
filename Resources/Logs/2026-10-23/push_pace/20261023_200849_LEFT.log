@@ -1,0 +1,59 @@
+20:08:49.279 current c api version:  1.1.6
+20:08:49.372 LEFT 192.168.1.10: program 50, 1583 lines; push cycles [0, 2, 4] x 5 ms (0 = off); overall 15 %; pole to 50 mm; hand to [1000, 1000, 1000, 1000, 0, 1000]
+20:08:49.373   the arm first moves 36.9 deg (J4) to the program's first point at 15 %, then plays the program 6 times, moving back to the first point after each run: keep the cell clear
+20:08:53.818   type 'left' to start:   answer: left
+20:08:53.823 MANUAL POLE START: current 50.0 mm -> target 50 mm
+20:08:53.830 MANUAL POLE COMPLETE: target 50 mm, final=50.0 mm
+20:08:53.830 MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+20:08:54.594 MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[997, 1000, 992, 1000, 528, 981]
+20:08:54.852 AUX HAND CLOSED
+20:08:54.883   to the first point: 36.9 deg (J4) at 15 %
+20:08:57.138   at the first point (2.2 s)
+20:09:08.917   push off run 1: ended, 7.70 s = 4.865 ms a line
+20:09:09.002   [INFO] left: clear_errors -> clean
+20:09:09.029   to the first point: 98.8 deg (J3) at 15 %
+20:09:13.957   at the first point (4.9 s)
+20:09:25.869   push off run 2: ended, 7.79 s = 4.925 ms a line
+20:09:25.919   [INFO] left: clear_errors -> system 4105 (0x1009 Speed out of limit)
+20:09:25.948   to the first point: 98.8 deg (J3) at 15 %
+20:09:30.469   at the first point (4.5 s)
+20:09:30.762 bind failed: Address already in use
+20:09:30.764 recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-23/push_pace/20261023_200849_LEFT_cycle2_run1.frames.jsonl (target 192.168.1.239:8089, cycle 10 ms, all sections on)
+20:09:30.771 bind failed: Address already in use
+20:09:39.888 push config restored to 192.168.1.239:8089 enable=False (ret=0)
+20:09:39.888 recorded 895 frames
+20:09:43.354   push 10 ms run 1: ended, 8.11 s = 5.127 ms a line; feed frames every 9.8 ms
+20:09:43.409   [INFO] left: clear_errors -> system 4105 (0x1009 Speed out of limit)
+20:09:43.434   to the first point: 98.8 deg (J3) at 15 %
+20:09:48.361   at the first point (4.9 s)
+20:09:48.721 bind failed: Address already in use
+20:09:48.722 recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-23/push_pace/20261023_200849_LEFT_cycle2_run2.frames.jsonl (target 192.168.1.239:8089, cycle 10 ms, all sections on)
+20:09:48.730 bind failed: Address already in use
+20:09:57.833 push config restored to 192.168.1.239:8089 enable=False (ret=0)
+20:09:57.833 recorded 901 frames
+20:10:01.305   push 10 ms run 2: ended, 8.06 s = 5.097 ms a line; feed frames every 9.7 ms
+20:10:01.357   [INFO] left: clear_errors -> system 4105 (0x1009 Speed out of limit)
+20:10:01.385   to the first point: 98.8 deg (J3) at 15 %
+20:10:06.130   at the first point (4.7 s)
+20:10:06.557 bind failed: Address already in use
+20:10:06.557 recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-23/push_pace/20261023_200849_LEFT_cycle4_run1.frames.jsonl (target 192.168.1.239:8089, cycle 20 ms, all sections on)
+20:10:06.568 bind failed: Address already in use
+20:10:15.594 push config restored to 192.168.1.239:8089 enable=False (ret=0)
+20:10:15.594 recorded 456 frames
+20:10:19.052   push 20 ms run 1: ended, 8.00 s = 5.055 ms a line; feed frames every 18.9 ms
+20:10:19.104   [INFO] left: clear_errors -> system 4105 (0x1009 Speed out of limit)
+20:10:19.132   to the first point: 98.8 deg (J3) at 15 %
+20:10:23.973   at the first point (4.8 s)
+20:10:24.337 bind failed: Address already in use
+20:10:24.338 recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-23/push_pace/20261023_200849_LEFT_cycle4_run2.frames.jsonl (target 192.168.1.239:8089, cycle 20 ms, all sections on)
+20:10:24.346 bind failed: Address already in use
+20:10:33.410 push config restored to 192.168.1.239:8089 enable=False (ret=0)
+20:10:33.410 recorded 458 frames
+20:10:36.871   push 20 ms run 2: ended, 8.03 s = 5.073 ms a line; feed frames every 19.0 ms
+20:10:36.883   overall speed back to 50 % (ret=0)
+20:10:36.884 
+20:10:36.884 push off: 4.895 ms a line (the controller's start and end included)
+20:10:36.884 push 10 ms: 5.112 ms a line, +4.4 % against push off -> usable, little margin
+20:10:36.884 push 20 ms: 5.064 ms a line, +3.4 % against push off -> usable, little margin
+20:10:36.884 no cycle tried keeps S2's margin: S2 should not record its feed
+20:10:36.884 record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-23/push_pace/20261023_200849_LEFT.log, .events.jsonl, .summary.json and the captures beside them

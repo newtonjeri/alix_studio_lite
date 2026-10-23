@@ -1,0 +1,79 @@
+{
+ "side": "left",
+ "slot": 50,
+ "track": "Resources/Projects/Commode_C_17_10_2026/trajectories/left/L-R01/versions/v002.txt",
+ "lines": 1583,
+ "overall": 15,
+ "transit": 15,
+ "runs": [
+  {
+   "cycle": 0,
+   "run": 1,
+   "said": "ended",
+   "seconds": 7.697211851998873,
+   "ms_a_line": 4.8654942174455575,
+   "feed_period_ms": null,
+   "capture": null
+  },
+  {
+   "cycle": 0,
+   "run": 2,
+   "said": "ended",
+   "seconds": 7.7917564759991365,
+   "ms_a_line": 4.925256938052551,
+   "feed_period_ms": null,
+   "capture": null
+  },
+  {
+   "cycle": 2,
+   "run": 1,
+   "said": "ended",
+   "seconds": 8.111587808998593,
+   "ms_a_line": 5.127425922249427,
+   "feed_period_ms": 9.798412421696819,
+   "capture": "20261023_200849_LEFT_cycle2_run1.frames.jsonl"
+  },
+  {
+   "cycle": 2,
+   "run": 2,
+   "said": "ended",
+   "seconds": 8.064153364997765,
+   "ms_a_line": 5.0974420764840485,
+   "feed_period_ms": 9.748791482221957,
+   "capture": "20261023_200849_LEFT_cycle2_run2.frames.jsonl"
+  },
+  {
+   "cycle": 4,
+   "run": 1,
+   "said": "ended",
+   "seconds": 7.996688721999817,
+   "ms_a_line": 5.054796916561199,
+   "feed_period_ms": 18.8810266483515,
+   "capture": "20261023_200849_LEFT_cycle4_run1.frames.jsonl"
+  },
+  {
+   "cycle": 4,
+   "run": 2,
+   "said": "ended",
+   "seconds": 8.025778213996091,
+   "ms_a_line": 5.073184711754798,
+   "feed_period_ms": 19.017361527353657,
+   "capture": "20261023_200849_LEFT_cycle4_run2.frames.jsonl"
+  }
+ ],
+ "verdicts": [
+  {
+   "cycle": 2,
+   "ms_a_line": 5.112433999366738,
+   "slowdown": 0.04433948287936862,
+   "verdict": "usable, little margin"
+  },
+  {
+   "cycle": 4,
+   "ms_a_line": 5.063990814157998,
+   "slowdown": 0.034443779385457285,
+   "verdict": "usable, little margin"
+  }
+ ],
+ "off_ms_a_line": 4.895375577749054
+}
