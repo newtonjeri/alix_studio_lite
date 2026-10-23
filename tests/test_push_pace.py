@@ -35,6 +35,17 @@ def test_the_recorder_writes_the_push_at_its_cycle_and_restores_as_alix_does(mon
     assert rec.cycle == 4 and isinstance(rec, track.UdpRecorder)
 
 
+def test_the_verdict_is_the_slowdown_against_the_push_off():
+    """S2 stops a Program past 105 % of 5 ms a line; with the push off the lab's play 4.5-4.9 ms, so a cycle may slow
+    them 3 % with a margin, 7 % at most; the shortest cycle within the margin is the one S2 records at."""
+    tool = _tool()
+    rows = tool.summary([(0, 5.00), (0, 5.02), (2, 5.20), (4, 5.06)])          # off 5.01; 10 ms +3.8 %; 20 ms +1.0 %
+    assert [(c, v) for c, _, _, v in rows] == [(2, "usable, little margin"), (4, "OK for S2")]
+    rows = tool.summary([(0, 5.0), (2, 5.6), (4, 5.4)])                          # +12 %, +8 %
+    assert [v for *_, v in rows] == ["too slow for S2", "too slow for S2"]
+    assert tool.summary([(2, 5.0)]) == []                                        # nothing to compare with
+
+
 def test_a_program_is_timed_from_running_to_its_end(tmp_path):
     tool = _tool()
 

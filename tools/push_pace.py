@@ -11,8 +11,8 @@ Close Lite first: this connects to the arm itself. Each run, as S2 runs a Progra
 - the push set: cycle 0 = off; else on toward this computer every cycle x 5 ms, recorded to a file;
 - the program started (non-blocking, as Lite starts it) and timed from the controller's "running" to its end:
   ms per line = that time / (lines - 1).
-The push goes back to what it was, whatever happens (ALIX's UdpRecorder). The summary compares each cycle's pace with
-the push off: S2 stops a Program that runs past 105 % of its time.
+The push goes back to what it was, whatever happens (ALIX's UdpRecorder). The summary gives each cycle's slowdown
+against the push off and the verdict (``summary``): S2 stops a Program whose lines take more than 105 % of 5 ms each.
 """
 from __future__ import annotations
 
@@ -192,20 +192,41 @@ def main(argv=None) -> int:
             robot.rm_delete_robot_arm()
         except Exception:                                                       # noqa: BLE001
             pass
+    summary(out)
+    print(f"captures: {folder}")
+    return 0
+
+
+#: The judgement (workflow.STOP_PROGRAM_OVER): S2 stops a Program whose lines take more than 105 % of 5 ms each. With the
+#: push off the lab's programs play 4.5-4.9 ms a line (22 Oct), so the push may add at most about 7 % before a 4.9 ms
+#: program crosses 5.25 ms; 3 % or less keeps a margin for the usual run-to-run spread. The times measured here include
+#: the controller's start and end (a few tenths of a second, the same with the push on or off), so the slowdown is
+#: what counts: each cycle's ms a line against the push off's.
+OK_SLOWDOWN, MAX_SLOWDOWN = 0.03, 0.07
+
+
+def summary(out: list) -> list[tuple]:
+    """Each cycle's pace against the push off's and the verdict: [(cycle, ms a line, slowdown, verdict)]."""
     base = [m for c, m in out if c == 0 and m]
     if not base:
         print("\nno run with the push off: nothing to compare with")
-        return 0
+        return []
     off = sum(base) / len(base)
-    print(f"\npush off: {off:.3f} ms a line")
+    print(f"\npush off: {off:.3f} ms a line (the controller's start and end included)")
+    rows = []
     for c in sorted({c for c, _ in out if c}):
         ms = [m for cc, m in out if cc == c and m]
-        if ms:
-            pace = sum(ms) / len(ms)
-            print(f"push {c * 5} ms: {pace:.3f} ms a line = {pace / off * 100:.1f} % of push off"
-                  + ("  (within S2's 105 %)" if pace / off <= 1.05 else "  ** past S2's 105 %"))
-    print(f"captures: {folder}")
-    return 0
+        if not ms:
+            continue
+        pace = sum(ms) / len(ms)
+        slow = pace / off - 1.0
+        verdict = ("OK for S2" if slow <= OK_SLOWDOWN else "usable, little margin" if slow <= MAX_SLOWDOWN
+                   else "too slow for S2")
+        rows.append((c, pace, slow, verdict))
+        print(f"push {c * 5} ms: {pace:.3f} ms a line, {slow * 100:+.1f} % against push off -> {verdict}")
+    best = next((c for c, _, s, _ in rows if s <= OK_SLOWDOWN), None)
+    print(f"S2 can record at {best * 5} ms" if best else "no cycle tried keeps S2's margin: S2 should not record its feed")
+    return rows
 
 
 if __name__ == "__main__":
