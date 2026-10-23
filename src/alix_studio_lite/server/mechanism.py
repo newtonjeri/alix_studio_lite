@@ -425,6 +425,35 @@ def assumed(expect: str):
                   message=f"{expect}: assumed, no camera asked")
 
 
+#: Every camera check on 3 frames, 2 more when they do not decide (the owner, 23 Oct: "for every check we should be
+#: using 3 frames ... for a failed classification in 3, we add 2 more frames, a total of 5"). A frame that cannot judge
+#: (refused: its window covered, no depth) does not vote; a check left undecided stops the run for a person and never
+#: re-lifts (the seat checks of 22-23 Oct read a lifted seat as NOT through a glove and re-lifted).
+FRAMES = (3, 2)                      # the first frames, then more when they do not decide
+FRAME_GAP_S = 0.3                    # between frames: 33 ms apart they are the same picture
+CANNOT_JUDGE = "cannot_judge"
+
+
+def vote(answers: list, need: int):
+    """The frames' decision, or None: the state at least ``need`` of the frames that could judge agree on, as the first
+    of them answered it, with their mean confidence."""
+    from collections import Counter
+    from dataclasses import replace
+
+    judged = [a for a in answers if a.success]
+    if not judged:
+        return None
+    state, n = Counter(a.fixture_state for a in judged).most_common(1)[0]
+    if n < need:
+        return None
+    agree = [a for a in judged if a.fixture_state == state]
+    return replace(agree[0], state_confidence=sum(float(a.state_confidence) for a in agree) / len(agree))
+
+
+def frames_said(answers: list) -> str:
+    return ", ".join(a.fixture_state if a.success else "refused" for a in answers)
+
+
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _observe_also, _after_check_failure, _try_relift, _run_prerequisite, _queue_follow_up)
 class Runner:
@@ -513,6 +542,8 @@ class Runner:
             self.ex.check_stop()
             self.ex.move(e)
         answer = self.ex.ask(a, expect)
+        if not answer.success:
+            self._cannot_judge(a["stage"], expect, answer, f"{plan.title} ran to its end, but ", final=True)
         passed = lift_check().evaluate_fixture_check(a, answer)
         self.checks.append(dict(check=a["stage"], expect=expect, state=answer.fixture_state,
                                 confidence=round(float(answer.state_confidence), 2), verdict="PASS" if passed else "NO",
@@ -524,6 +555,17 @@ class Runner:
                             f"(it reads {answer.fixture_state} at {float(answer.state_confidence):.2f}).",
                             "A person must look at the commode: nothing else was moved after this.", code="escalate")
         self.ex.approach(plan, {"right": plan.targets("end")["right"]}, "end", words=f"where {plan.title} ended")
+
+    def _cannot_judge(self, label, expect, answer, lead="", final=False):
+        """A check its frames left undecided (FRAMES): a person must look; no plan policy runs, no re-lift (the owner,
+        23 Oct: the seat checks read a lifted seat as NOT through the glove, and the re-lift dragged the hand back)."""
+        self.checks.append(dict(check=label, expect=expect, state=answer.fixture_state, confidence=0.0, verdict="cannot judge",
+                                message=answer.message, record=getattr(answer, "record_path", None), final=final))
+        self.say(f"{'FINAL CHECK' if final else 'CHECK'} {label}: expect {expect}, the camera cannot judge it "
+                 f"({answer.message}) -> STOP", "error")
+        raise UserError(f"{lead}{label}: the camera cannot judge whether it is {str(expect).replace('_', ' ')} "
+                        f"({answer.message}).", "A person must look at the commode: nothing else was moved after this.",
+                        code="escalate")
 
     @staticmethod
     def final_actions(plan) -> list:
@@ -548,6 +590,8 @@ class Runner:
                     self.say(f"{label}: {why} — NOT {a.get('expect')} (fail-closed)", "error")
                     return a
                 answer = self.ex.ask(a, str(a.get("expect") or ""))
+                if not answer.success:
+                    self._cannot_judge(label, a.get("expect"), answer)
                 passed = lc.evaluate_fixture_check(a, answer)
                 models = (getattr(answer, "record", None) or {}).get("models") or {}
                 row = dict(check=label, expect=a.get("expect"), state=answer.fixture_state,
@@ -792,8 +836,11 @@ class RealExec(_Exec):
                      + (f", bridged {out['bridged_deg']:.1f} degrees first" if out.get("bridged_deg") else ""))
 
     def ask(self, action, expect, observe=False):
-        from . import robot_fk
-        from .gap_check import DepthFrame
+        """The camera's answer on its frames (FRAMES): decided by 2 of the first 3, or by 3 of 5; else CANNOT_JUDGE
+        (success False), which stops the run for a person. Each frame keeps its own check record."""
+        from dataclasses import replace
+
+        from .gap_check import Answer
 
         self.check_stop()
         self.job.progress(f"{action.get('stage')}: asking the camera ({expect})")
@@ -801,13 +848,40 @@ class RealExec(_Exec):
         scripted = self.kit.scripted(expect)
         if scripted is not None:                    # a test harness only (LITE_CHECK_SCRIPT): never on the robot
             return scripted
+        answers, decided, first = [], None, FRAMES[0]
+        for k in range(sum(FRAMES)):
+            if k:
+                self.check_stop()
+                self.job.sleep(FRAME_GAP_S)
+            answers.append(self._frame(expect))
+            if k + 1 == first and (decided := vote(answers, 2)) is not None:
+                break
+            if k + 1 == sum(FRAMES):
+                decided = vote(answers, 3)
+        seen = frames_said(answers)
+        if decided is not None:
+            answer = replace(decided, message=f"{len(answers)} frames ({seen}): {decided.message}")
+        else:
+            last = answers[-1]
+            answer = Answer(success=False, fixture_state=CANNOT_JUDGE, record=last.record, record_path=last.record_path,
+                            message=f"no decision in {len(answers)} frames ({seen}); the last: {last.message}")
+        self.job.set(check=dict(stage=action.get("stage"), expect=expect, state=answer.fixture_state,
+                                confidence=round(float(answer.state_confidence), 2), message=answer.message,
+                                record=answer.record_path, observe=observe))
+        return answer
+
+    def _frame(self, expect):
+        """One frame: both arms read, the camera's shot, the gap check's answer (its record written)."""
+        from . import robot_fk
+        from .gap_check import DepthFrame
+
         readings = {}
         for side, link in self.robot.links.items():
             fb = link.read_fresh()
             readings[side] = dict(q_deg=fb.get("joints_deg"), pole_mm=fb.get("pole_mm"), hand=fb.get("hand"))
         try:
             shot = self.kit.camera.shot(wait_s=float(self.kit.gap.p.get("frame_wait_s", 2.0)))
-        except UserError as exc:                     # no frame: the check refuses and reads NOT, as ALIX's sender reads it
+        except UserError as exc:                     # no frame: this one cannot judge, and does not vote
             frame = None
             self.say(f"camera: {exc}", "error")
         else:
@@ -817,11 +891,7 @@ class RealExec(_Exec):
                                colour=shot.colour, aligned=shot.aligned, colour_intrinsics=shot.colour_intrinsics,
                                colour_to_base=frames.get("colour"), ref_to_base=frames.get("ref"),
                                stamp_s=None if shot.camera_ms is None else shot.camera_ms / 1000.0, age_s=shot.age_s)
-        answer = self.kit.gap.ask(expect, frame, q_deg=(readings.get("right") or {}).get("q_deg"))
-        self.job.set(check=dict(stage=action.get("stage"), expect=expect, state=answer.fixture_state,
-                                confidence=round(float(answer.state_confidence), 2), message=answer.message,
-                                record=answer.record_path, observe=observe))
-        return answer
+        return self.kit.gap.ask(expect, frame, q_deg=(readings.get("right") or {}).get("q_deg"))
 
 
 def camera_check(robot) -> dict:

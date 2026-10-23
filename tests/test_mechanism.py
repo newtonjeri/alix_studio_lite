@@ -211,10 +211,61 @@ def test_a_lift_never_proven_escalates_to_a_person_with_nothing_moved_after(fitt
     assert moves(ex)[-1][1] == "execute_path" and moves(ex)[-1][5] == "re-lift 3, pre-planned"
 
 
-def test_an_unanswered_question_is_not_lifted():
-    ex = FakeExec(["lid_closed", None, None, None, None])
-    with pytest.raises(UserError, match="escalate|re-lift"):
+def test_a_question_the_camera_cannot_judge_stops_for_a_person_and_never_re_lifts():
+    """The owner, 23 Oct: a check the camera cannot judge (its frames undecided) is a person's to look at, not a NOT:
+    the seat checks of 22-23 Oct read a lifted seat as NOT through the glove, and the re-lift dragged the hand back."""
+    ex = FakeExec(["lid_closed", None])
+    with pytest.raises(UserError, match="verify_lid_lifted: the camera cannot judge whether it is lid lifted") as err:
         mechanism.Runner(ex).run("lid_open")
+    assert err.value.code == "escalate" and "A person must look" in err.value.hint
+    assert not [m for m in moves(ex) if m[5]]                    # no re-lift: the lift and nothing after it
+    ex = FakeExec(["lid_open", "seat_closed", None])             # the lab's seat_open, 23 Oct 15:08
+    with pytest.raises(UserError, match="verify_seat_lifted: the camera cannot judge") as err:
+        mechanism.Runner(ex).run("seat_open")
+    assert not [m for m in moves(ex) if m[5] == "re-lift restore, reversed"]
+    ex = FakeExec(["lid_closed", "lid_lifted", "seat_closed", None])       # the final check undecided
+    with pytest.raises(UserError, match="^Open the lid ran to its end, but verify_lid_open_after: the camera cannot judge"):
+        mechanism.Runner(ex).run("lid_open")
+
+
+def _frames_exec(frames):
+    """A RealExec whose camera answers ``frames`` one per frame; the pauses between them kept."""
+    from types import SimpleNamespace
+
+    slept = []
+    job = SimpleNamespace(progress=lambda *a, **k: None, set=lambda **k: None, sleep=slept.append, check=lambda: None)
+    ex = mechanism.RealExec(job, SimpleNamespace(), {}, SimpleNamespace(scripted=lambda expect: None))
+    answers = iter(frames)
+    ex._frame = lambda expect: next(answers)
+    return ex, slept
+
+
+def _seen(state, conf=0.9):
+    return Answer(success=True, fixture_state=state, state_confidence=conf, message=f"{state} seen")
+
+
+REFUSED = Answer(success=False, message="only 0 % of the seat ROI lies in the seat band after masking the hands")
+
+
+def test_each_check_is_decided_on_three_frames_or_five():
+    """The owner, 23 Oct: "for every check we should be using 3 frames ... for a failed classification in 3, we add 2
+    more frames, a total of 5". Frames that cannot judge do not vote; 0.3 s between frames."""
+    ex, slept = _frames_exec([_seen("seat_lifted", 0.8), _seen("seat_lifted", 1.0), REFUSED, _seen("seat_closed")])
+    a = ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
+    assert a.success and a.fixture_state == "seat_lifted" and a.state_confidence == pytest.approx(0.9)
+    assert a.message.startswith("3 frames (seat_lifted, seat_lifted, refused)") and slept == [0.3, 0.3]
+    ex, slept = _frames_exec([_seen("seat_lifted"), _seen("seat_closed"), REFUSED, _seen("seat_lifted"), _seen("seat_lifted")])
+    a = ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
+    assert a.success and a.fixture_state == "seat_lifted" and a.message.startswith("5 frames") and len(slept) == 4
+    ex, _ = _frames_exec([_seen("seat_closed")] * 3)               # a clear NOT: the plan's own policy follows
+    a = ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
+    assert a.success and a.fixture_state == "seat_closed"
+    ex, _ = _frames_exec([REFUSED] * 5)                            # the lab's glove over the window, five times
+    a = ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
+    assert not a.success and a.fixture_state == mechanism.CANNOT_JUDGE
+    assert a.message.startswith("no decision in 5 frames (refused, refused, refused, refused, refused)")
+    ex, _ = _frames_exec([_seen("seat_lifted"), _seen("seat_closed"), REFUSED, _seen("seat_closed"), REFUSED])
+    assert not ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted").success     # 1 against 2 of 5: no decision
 
 
 def test_no_camera_refuses_a_lid_or_seat_task(monkeypatch):
