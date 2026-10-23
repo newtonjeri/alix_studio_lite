@@ -43,6 +43,36 @@
     "note": "",
     "mode": "real"
    }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "f50cc2ee4a2058b09ff7cfd680974034d99022fcfbe8836076dc587a381ff04b",
+   "ok": true,
+   "at": "2026-10-23 12:19:45",
+   "detail": {
+    "program_id": 63
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "f50cc2ee4a2058b09ff7cfd680974034d99022fcfbe8836076dc587a381ff04b",
+   "ok": true,
+   "at": "2026-10-23 12:20:35",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "hwsim"
+   }
+  },
+  {
+   "kind": "run_failed",
+   "sha256": "f50cc2ee4a2058b09ff7cfd680974034d99022fcfbe8836076dc587a381ff04b",
+   "ok": false,
+   "at": "2026-10-23 12:21:27",
+   "detail": {
+    "state": "failed",
+    "error": "The LEFT controller stopped answering (rm_set_program_id_run, 89 s): Lite connects it again."
+   }
   }
  ]
 }

@@ -1,13 +1,13 @@
 {
   "lite_sidecar": 1,
-  "written_utc": "2026-10-20T08:09:41+00:00",
-  "track_sha256": "7b74d061cc9903b88b07b7e75407f70d9d5708bd501e5340eb07dacc420127e1",
+  "written_utc": "2026-10-23T03:57:33+00:00",
+  "track_sha256": "aca7ff530dfdfe5d5e041be86c208e8b84969c053991e6cf22ae210de75e1a92",
   "result": {
     "optimiser": "manual",
     "side": "left",
     "target_s": null,
-    "achieved_s": 6.285,
-    "lines": 1258,
+    "achieved_s": 7.315,
+    "lines": 1464,
     "t_min_s": null,
     "lines_min": null,
     "recorded_s": 16.0,
@@ -15,8 +15,8 @@
     "uploadable": true,
     "limits_ok": false,
     "enforced": false,
-    "limits_text": "L2 Joint speed 1.04 x limit (limit 1 x limit); L3 Joint acceleration 3034 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 29.29 mm (limit 10 mm)",
-    "message": "Generated successfully.\nStages applied: Trim + Mean Smooth + Scale\nTrim: ON \u2014 1 idle region(s), 57 point(s) removed\nMean Smooth: ON \u2014 101-point centered moving mean\nScale: ON \u2014 1 region(s) applied\nFinal rows: 1258\nFinal time @ 5 ms/row: 6.285 s\nLimits (shown, not enforced: the hardware decides): L2 Joint speed 1.04 x limit (limit 1 x limit); L3 Joint acceleration 3034 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 29.29 mm (limit 10 mm).",
+    "limits_text": "L2 Joint speed 1.04 x limit (limit 1 x limit); L3 Joint acceleration 3031 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 29.29 mm (limit 10 mm)",
+    "message": "Generated successfully.\nStages applied: Trim + Mean Smooth + Scale\nTrim: ON \u2014 1 idle region(s), 57 point(s) removed\nMean Smooth: ON \u2014 101-point centered moving mean\nScale: ON \u2014 2 region(s) applied\nFinal rows: 1464\nFinal time @ 5 ms/row: 7.315 s\nLimits (shown, not enforced: the hardware decides): L2 Joint speed 1.04 x limit (limit 1 x limit); L3 Joint acceleration 3031 deg/s^2 (limit 612 deg/s^2); L5 Path accuracy 29.29 mm (limit 10 mm).",
     "hints": [],
     "binding": []
   },
@@ -41,12 +41,12 @@
         "name": "Joint speed",
         "hard": true,
         "passed": false,
-        "value": 1.042,
+        "value": 1.041,
         "limit": 1.0,
         "unit": "x limit",
-        "detail": "fastest: joint 6 at 227 deg/s (limit 218) at line 1179",
+        "detail": "fastest: joint 6 at 227 deg/s (limit 218) at line 1385",
         "joint": 6,
-        "line": 1179,
+        "line": 1385,
         "speed_fixes": true
       },
       {
@@ -54,12 +54,12 @@
         "name": "Joint acceleration",
         "hard": true,
         "passed": false,
-        "value": 3033.6,
+        "value": 3030.6,
         "limit": 612.0,
         "unit": "deg/s^2",
-        "detail": "highest: joint 7 at 3034 deg/s^2 (20 Hz band-limited) around line 1255 (hardware limit 600 deg/s^2)",
+        "detail": "highest: joint 7 at 3031 deg/s^2 (20 Hz band-limited) around line 1461 (hardware limit 600 deg/s^2)",
         "joint": 7,
-        "line": 1255,
+        "line": 1461,
         "speed_fixes": true
       },
       {
@@ -67,12 +67,12 @@
         "name": "Step size",
         "hard": true,
         "passed": true,
-        "value": 1.137,
+        "value": 1.136,
         "limit": 10.0,
         "unit": "deg",
-        "detail": "largest: joint 6, 1.137 deg between lines 1177 and 1178",
+        "detail": "largest: joint 6, 1.136 deg between lines 1383 and 1384",
         "joint": 6,
-        "line": 1178,
+        "line": 1384,
         "speed_fixes": null
       },
       {
@@ -106,10 +106,10 @@
         "name": "Predicted path departure (estimate)",
         "hard": false,
         "passed": false,
-        "value": 48.69,
+        "value": 48.6,
         "limit": 10.0,
         "unit": "mm",
-        "detail": "ALIX's upload model predicts up to 49 mm (p95 35 mm). It over-reads on taught paths, so it is shown, not enforced.",
+        "detail": "ALIX's upload model predicts up to 49 mm (p95 30 mm). It over-reads on taught paths, so it is shown, not enforced.",
         "joint": null,
         "line": null,
         "speed_fixes": null
@@ -122,7 +122,7 @@
         "value": 2.59,
         "limit": 1.0,
         "unit": "x reference",
-        "detail": "peak 222575 deg/s^3 against the 1500 rad/s^3 reference (reported only)",
+        "detail": "peak 222351 deg/s^3 against the 1500 rad/s^3 reference (reported only)",
         "joint": null,
         "line": null,
         "speed_fixes": null
@@ -135,7 +135,7 @@
         "value": 1.377,
         "limit": null,
         "unit": "m/s",
-        "detail": "top speed 1.38 m/s, typical 0.39 m/s",
+        "detail": "top speed 1.38 m/s, typical 0.30 m/s",
         "joint": null,
         "line": null,
         "speed_fixes": null
@@ -162,7 +162,7 @@
     "cycle_s": 0.005,
     "report": {
       "sourceFile": "L_TASK_9_trajectory_trimmed.txt",
-      "generatedAt": "2026-10-20T08:09:41.428Z",
+      "generatedAt": "2026-10-23T03:57:33.060Z",
       "selectedStages": {
         "trim": true,
         "meanSmooth": true,
@@ -192,17 +192,26 @@
       "scalingRegions": [
         {
           "originalStartRow": 1,
-          "originalEndRow": 3201,
+          "originalEndRow": 400,
           "trimmedStartRow": 1,
+          "trimmedEndRow": 343,
+          "scalePct": 100,
+          "inputRows": 343,
+          "outputRows": 343
+        },
+        {
+          "originalStartRow": 401,
+          "originalEndRow": 3201,
+          "trimmedStartRow": 344,
           "trimmedEndRow": 3144,
           "scalePct": 40,
-          "inputRows": 3144,
-          "outputRows": 1258
+          "inputRows": 2801,
+          "outputRows": 1121
         }
       ],
       "skippedRegions": [],
       "automaticOptimizationAnalysis": {
-        "generatedAt": "2026-10-20T08:09:41.428Z",
+        "generatedAt": "2026-10-23T03:57:33.060Z",
         "method": "Motion-only heuristic using joint step magnitude and acceleration/change activity",
         "contactDataAvailable": false,
         "suggestions": [
@@ -283,11 +292,11 @@
           }
         ]
       },
-      "finalRows": 1258,
+      "finalRows": 1464,
       "originalTimeSeconds": 16.0,
       "afterTrimTimeSeconds": 15.715,
       "afterMeanSmoothTimeSeconds": 15.715,
-      "finalTimeSeconds": 6.285,
+      "finalTimeSeconds": 7.315,
       "endpointPreserved": {
         "first": true,
         "last": true
@@ -302,12 +311,21 @@
       "segments": [
         {
           "originalStartRow": 1,
-          "originalEndRow": 3201,
+          "originalEndRow": 400,
           "trimmedStartRow": 1,
+          "trimmedEndRow": 343,
+          "scalePct": 100,
+          "inputRows": 343,
+          "outputRows": 343
+        },
+        {
+          "originalStartRow": 401,
+          "originalEndRow": 3201,
+          "trimmedStartRow": 344,
           "trimmedEndRow": 3144,
           "scalePct": 40,
-          "inputRows": 3144,
-          "outputRows": 1258
+          "inputRows": 2801,
+          "outputRows": 1121
         }
       ]
     }
