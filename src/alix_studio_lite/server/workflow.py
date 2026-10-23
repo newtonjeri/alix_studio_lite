@@ -2012,7 +2012,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     linked controllers; a run not completed in Simulation as it is now asks first (``unsimulated_ok``; the owner, 17 Oct:
     "a user can run on the hardware without having run in simulation first", with a confirmation that says so, before
     the real-robot one); every Program slot and global point it uses checked on its controller before anything moves;
-    what the simulation found asked about once, with the real-robot confirmation. Then the plan's stages: a stage
+    what the simulation found confirmed once (``warnings_seen``) with the real-robot confirmation, whose card asks only
+    the two safety checks (the owner, 23 Oct; the findings are in the page's Simulation card). Then the plan's stages: a stage
     between meeting points starts both arms' parts at once (each arm's part through runner v14, a call per stretch
     between its Wait-for rows; at a Wait-for the arm holds until the other arm's runner has reported the row it names
     complete) and ends when both have (the Meet); a lid or seat task runs on both arms; every step is timed against its

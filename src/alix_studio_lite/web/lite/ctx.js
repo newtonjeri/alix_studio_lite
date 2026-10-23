@@ -56,13 +56,13 @@ export const jobLine = (j) => (j.n ? `${j.stage} (${Math.round(100 * j.i / Math.
 
 // A confirmation in the page's modal style. Cancel has the focus, so Enter never moves a robot.
 // `escape`: what Escape answers (false: as Cancel; null: neither, e.g. stay where you are); `focus`: the
-// button focused first ('cancel' or 'ok').
+// button focused first ('cancel' or 'ok'). No `body`: the title and the list alone (S2's run card).
 export function confirmDialog({ title, body, ok = 'Continue', danger = true, list = [], cancelText = 'Cancel', escape = false, focus = 'cancel' }) {
   return new Promise((resolve) => {
     const cancel = el('button', { class: 'btn outline', text: cancelText });
     const yes = el('button', { class: danger ? 'btn red' : 'btn green', text: ok });
     const card = el('div', { class: 'modal-card accessible-modal', role: 'alertdialog', 'aria-modal': 'true' },
-      el('h3', { text: title }), el('p', { text: body }),
+      el('h3', { text: title }), body ? el('p', { text: body }) : null,
       list.length ? el('ul', { class: 'lite-confirm-list' }, list.map(x => el('li', { text: x }))) : null,
       el('div', { class: 'modal-actions' }, cancel, yes));
     const box = el('div', { class: 'modal show lite-confirm' }, card);

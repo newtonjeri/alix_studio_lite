@@ -22,7 +22,6 @@ import { call, get, post, put, say } from './api.js';
 import { REAL_CHECKS, confirmDialog, ctx, el, fmtT, jobLine, robotCall, tell, watchJob } from './ctx.js';
 import { borrow, home3d, Player } from './seq3d.js';
 import { scene } from './sim.js';
-import { speedPct } from './status.js';
 import { saveBlobAs } from './tune.js';
 import { checkJob, spansOf, Tools } from './view3d.js';
 import { choose } from './picker.js';
@@ -895,24 +894,10 @@ async function runReal(w) {
     }
   } catch (err) {
     if (err.code !== 'warnings' && err.code !== 'confirm') { tell(err); return; }
-    let warns = [];
-    if (err.code === 'warnings') warns = [err.message.replace(/^Before it runs on the robot: /, '')];
-    let plan = null;
-    try { plan = await post(`${base()}/plan`, { mode, pick: w.pick }); } catch (_) { /* the server says it again */ }
-    const c = plan && plan.counts;
-    const moves = mode === 'both' ? 'BOTH ROBOT ARMS WILL MOVE' : `${ARM(mode)} ROBOT ARM WILL MOVE`;
+    // the card asks only the two safety checks (the owner, 23 Oct); what the simulation found is listed in its card
     const title = S.scope === 'task' ? `Run the task: ${pickText()}` : S.scope === 'dual' ? `Run the dual-arm task: ${pickText()}`
       : mode === 'both' ? 'Run Dual Sequences' : `Run ${ARM(mode)} Sequence`;
-    const n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
-    const yes = await confirmDialog({ title, ok: 'Start on the robot',
-      body: `${moves}. ${c && mode === 'both' ? `Each arm goes through its own rows: ${n(c.parts, 'part', 'parts')}, `
-        + `${n(c.meets, 'Meet', 'Meets')} where both arms meet, ${n(c.waits_for, 'Wait-for row', 'Wait-for rows')}, `
-        + `${n(c.mechanisms, 'lid or seat task', 'lid and seat tasks')}. ` : ''}`
-        + `${(plan && plan.said || []).join(' ')}${plan && (plan.said || []).length ? ' ' : ''}`
-        + `Overall controller speed: ${speedPct()}%. ${warns.length ? `The simulation found: ${warns.join(' ')} ` : ''}`
-        + 'Each step is timed on the robot: one far outside its range stops both arms. '
-        + 'Confirm both work areas are clear and both hardware E-stops are accessible.',
-      list: REAL_CHECKS });
+    const yes = await confirmDialog({ title, ok: 'Start on the robot', list: REAL_CHECKS });
     if (!yes) { window.toast('Cancelled: nothing was sent to the robot.', 'warn'); return; }
     try { job = await post(`${base()}/run`, { ...body, confirmed: true, warnings_seen: S.sim && S.sim.hash }); } catch (e2) { tell(e2); return; }
   }
@@ -1239,7 +1224,8 @@ function paintFindings() {
     el('div', { class: 'mini-note', text: 'Times are as the robot runs each step as a rule (measured in the lab): the programs on their stored 5 ms '
       + 'timing, the moves at their speed % of each joint\'s rating; each step also has its range, which the timing check above goes through. '
       + `The arms start ${Object.values(sim.start_from || {}).includes('now') ? 'where they stand now' : 'from the standing pose'}. A Program set at another `
-      + 'pole or hand than its own stops Real Machine Mode (red); the rest it asks about, once. On the robot each step is timed: a '
+      + 'pole or hand than its own stops Real Machine Mode (red); the rest is listed here only: starting on the robot asks just '
+      + 'for the two safety checks. On the robot each step is timed: a '
       + 'Program whose lines run past 105 % of their time (or end before 90 %), or another step more than 10 % outside its range, '
       + 'stops both arms.' })].filter(Boolean));
   $('liteS2Marks').replaceChildren();                       // (the collisions are marked by the view's tools)

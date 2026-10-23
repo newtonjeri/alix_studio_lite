@@ -167,6 +167,18 @@ def test_every_notification_lite_raises_says_its_level():
     assert not bad, "notifications without a level:\n" + "\n".join(bad)
 
 
+def test_s2_s_run_card_asks_only_the_two_safety_checks():
+    """The owner, 23 Oct: the card shown when RUN starts on the robot listed the whole simulation, "that is not user
+    friendly": it shows only the two bullets (REAL_CHECKS); the findings stay in the Simulation card."""
+    s2 = (WEB / "lite/s2.js").read_text(encoding="utf-8")
+    card = [args for _, args in _calls(s2, "confirmDialog") if "'Start on the robot'" in args]
+    assert len(card) == 1, card
+    assert "list: REAL_CHECKS" in card[0] and "body" not in card[0], card[0]
+    assert "The simulation found:" not in s2 and "Each step is timed on the robot: one far outside" not in s2
+    ctx = (WEB / "lite/ctx.js").read_text(encoding="utf-8")
+    assert "body ? el('p', { text: body }) : null" in ctx                # no empty paragraph above the bullets
+
+
 def test_no_remote_resources():
     page = (WEB / "index.html").read_text(encoding="utf-8")
     assert not re.search(r"""(src|href)=["']https?://""", page)
