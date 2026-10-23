@@ -46,6 +46,66 @@ def test_the_verdict_is_the_slowdown_against_the_push_off():
     assert tool.summary([(2, 5.0)]) == []                                        # nothing to compare with
 
 
+class _Arm:
+    """An arm whose blocking MoveJ ends at once on a stale arrival, as both arms' did at the lab on 23 Oct ("Move
+    command result is: false", ret 1), while a non-blocking one is taken and the joints get there 10 degrees a read."""
+
+    def __init__(self, at):
+        self.q, self.target, self.calls = list(at), None, []
+
+    def rm_set_plan_speed(self, pct):
+        self.calls.append(("ratio", pct))
+        return 0
+
+    def rm_movej(self, joint, v, r, connect, block):
+        self.calls.append(("movej", block))
+        if block:
+            return 1
+        self.target = list(joint)
+        return 0
+
+    def rm_get_current_arm_state(self):
+        if self.target is not None:
+            self.q = [q + max(-10.0, min(10.0, t - q)) for q, t in zip(self.q, self.target)]
+        return 0, {"joint": list(self.q), "err": {"err": ["0"]}}
+
+
+def test_the_move_to_the_first_point_is_alix_bridge_non_blocking_and_read_from_the_joints(tmp_path):
+    tool = _tool()
+    arm = _Arm([0.0] * 7)
+    first = [35.0, -20.0, 0.0, 10.0, 0.0, 5.0, 0.0]
+    rec = tool.Record(tmp_path / "x_LEFT", "left")
+    ok, said = tool.move_to(arm, first, 15, rec, timeout_s=10.0)
+    rec.close()
+    assert ok, said
+    assert arm.calls == [("ratio", 100), ("movej", 0)]               # the ratio at 100 %, then MoveJ non-blocking
+    assert max(abs(a - b) for a, b in zip(arm.q, first)) <= tool.AT_START_DEG
+    events = [json.loads(line) for line in (tmp_path / "x_LEFT.events.jsonl").read_text().splitlines()]
+    assert [e["what"] for e in events][:2] == ["rm_set_plan_speed", "rm_movej (non-blocking)"]
+    assert events[-1]["what"] == "at the first point"
+
+
+def test_the_record_keeps_what_the_terminal_shows_the_sdks_own_lines_included(tmp_path):
+    import ctypes
+    import os
+
+    tool = _tool()
+    path = tmp_path / "x.log"
+    restore = tool.tee_terminal(path)
+    try:
+        print("a line from Python")
+        os.write(1, b"a line written to fd 1\n")
+        libc = ctypes.CDLL(None)
+        libc.printf(b"Move command result is: false, current Device: %d\n", 0)       # the SDK's C printf
+        libc.fflush(None)
+    finally:
+        restore()
+    text = path.read_text()
+    for want in ("a line from Python", "a line written to fd 1", "Move command result is: false, current Device: 0"):
+        assert want in text
+    assert all(line[2] == ":" and line[12] == " " for line in text.splitlines())   # each line with the lab's clock
+
+
 def test_a_program_is_timed_from_running_to_its_end(tmp_path):
     tool = _tool()
 
