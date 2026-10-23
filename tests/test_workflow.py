@@ -703,3 +703,22 @@ def test_a_saved_sequence_is_the_file_and_loads_back(lite):
     r = urllib.request.Request(lite["base"] + f"{P}/workflow/right/download", headers={"X-Lite-Token": lite["tok"]})
     with urllib.request.urlopen(r, timeout=60) as resp:                 # a refusal is not marked as a file
         assert resp.headers.get("X-Lite-Raw") is None and "empty" in json.loads(resp.read())["error"]
+
+
+def test_the_feed_is_recorded_by_default_and_run_lite_feed_off_turns_it_off():
+    """The owner, 23 Oct: "for now we can put it on by default at 20ms, but we should have a way to disable it, either a
+    flag similar to the --robot flag": run_lite --feed 20 (the default) | off; a run the page sends with its checkbox
+    unticked (record_feed false) goes without it too."""
+    import os
+    import subprocess
+    import sys
+    from types import SimpleNamespace
+
+    from alix_studio_lite.server.workflow import feed_wanted
+
+    on, off = SimpleNamespace(feed_ms=20), SimpleNamespace(feed_ms=None)
+    assert feed_wanted(on, {}) and feed_wanted(on, {"record_feed": True}) and not feed_wanted(on, {"record_feed": False})
+    assert not feed_wanted(off, {}) and not feed_wanted(off, {"record_feed": True})
+    out = subprocess.run([sys.executable, "-m", "alix_studio_lite.server", "--help"], capture_output=True, text=True,
+                         env=dict(os.environ, PYTHONPATH=str(vendor_paths.LITE_ROOT / "src")), timeout=120)
+    assert out.returncode == 0 and "--feed {20,off}" in out.stdout, out.stdout + out.stderr

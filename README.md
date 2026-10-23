@@ -84,6 +84,7 @@ Other options:
 | `--projects DIR` | Keeps the projects somewhere other than `Resources/Projects/`. |
 | `--ui legacy` | Opens Legacy Lite instead. |
 | `--robot realman` | Connects to the real arms: see below. |
+| `--feed off` | S2 records no controller feed during Real Machine runs. By default it records every 20 ms (`Resources/Logs/<day>/canfd/`), and the programs play some 3 % slower meanwhile. |
 
 ---
 

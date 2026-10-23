@@ -309,14 +309,15 @@ def test_a_wait_for_and_a_meet_order_the_two_arms_on_the_robot(server):
     assert min(waits.values()) > max(ends.values())                    # the Meet: neither goes on before both are there
 
 
-def test_a_run_records_the_controllers_feed_when_asked(server):
-    """The owner, 23 Oct: S2 can record the controllers' feed every 20 ms, a diagnostic asked per run: each runner call
-    its own file in the day's canfd folder, named in the job's log (on an emulated arm, its joints read in its place)."""
+def test_a_run_records_the_controllers_feed_by_default(server):
+    """The owner, 23 Oct: S2 records the controllers' feed every 20 ms, on by default ("for now we can put it on by default
+    at 20ms"): each runner call its own file in the day's canfd folder, named in the job's log (on an emulated arm, its
+    joints read in its place); a run sent with record_feed false (the page's box unticked) goes without it."""
+    assert call(server, "GET", "/api/robots/status")["feed_ms"] == 20
     call(server, "PUT", f"{P}/workflow/left", {"steps": steps()})
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps()})
     sim = simulated(server)
-    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"],
-                                                                "record_feed": True}))
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
     assert j["state"] == "done", j
     said = events(j)
     assert "Recording the controllers' feed every 20 ms (a diagnostic)" in said and "same 105 % stop" in said
@@ -332,6 +333,7 @@ def test_a_run_records_the_controllers_feed_when_asked(server):
     hw = [json.loads(x) for x in (day / "hardware.jsonl").read_text().splitlines()]
     assert any(r["verb"] == "s2 feed" and r["ok"] and r["text"].endswith(" frames") for r in hw)
     before = set((day / "canfd").glob("*_s2_*"))
-    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"],
+                                                                "record_feed": False}))
     assert j["state"] == "done", j
-    assert set((day / "canfd").glob("*_s2_*")) == before and "Recording the controllers' feed" not in events(j)   # not asked
+    assert set((day / "canfd").glob("*_s2_*")) == before and "Recording the controllers' feed" not in events(j)   # unticked

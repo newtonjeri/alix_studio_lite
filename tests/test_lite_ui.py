@@ -180,17 +180,96 @@ def test_s2_s_run_card_asks_only_the_two_safety_checks():
 
 
 def test_s2_can_record_the_controllers_feed_in_real_machine_mode():
-    """The owner, 23 Oct: S2 records the controllers' feed every 20 ms when asked ("let us use 20ms ... that is 50Hz"): a
-    checkbox in the Execution mode card, shown in Real Machine Mode only, off when the page loads, sent with the run
-    (``record_feed``); the run card stays the two safety bullets."""
+    """The owner, 23 Oct: S2 records the controllers' feed every 20 ms ("let us use 20ms ... that is 50Hz"), on by default
+    with a way to turn it off: a ticked checkbox in the Execution mode card, shown in Real Machine Mode unless Lite was
+    started with --feed off (status ``feed_ms``), sent with the run (``record_feed``); the run card stays the two bullets."""
     s2 = (WEB / "lite/s2.js").read_text(encoding="utf-8")
-    assert "recordFeed: false," in s2
+    assert "recordFeed: true," in s2 and "import { feedMs, speedPct } from './status.js';" in s2
     assert "el('label', { id: 'liteS2RecordWrap', class: 'lite-stage-option lite-s2-record', hidden: true }" in s2
-    assert "$('liteS2RecordWrap').hidden = S.mode !== 'real';" in s2
+    assert "el('input', { id: 'liteS2Record', type: 'checkbox', checked: true," in s2
+    assert "$('liteS2RecordWrap').hidden = S.mode !== 'real' || !feedMs();" in s2
+    assert "export const feedMs = () => (last && last.feed_ms ? last.feed_ms : null);" in (WEB / "lite/status.js").read_text(encoding="utf-8")
     assert "const body = { mode, pick: w.pick, record_feed: S.recordFeed };" in s2
     card = [args for _, args in _calls(s2, "confirmDialog") if "'Start on the robot'" in args]
     assert len(card) == 1 and "record" not in card[0].lower(), card
     assert ".lite-s2-record[hidden] { display: none; }" in (WEB / "lite/lite.css").read_text(encoding="utf-8")
+
+
+def _code_only(src: str) -> str:
+    """A module's source with its comments and string texts blanked: a template literal keeps its ${...} code."""
+    out, i, n = [], 0, len(src)
+    while i < n:
+        c = src[i]
+        if src.startswith("//", i):
+            j = src.find("\n", i)
+            i = n if j < 0 else j
+        elif src.startswith("/*", i):
+            j = src.find("*/", i + 2)
+            i = n if j < 0 else j + 2
+        elif c in "'\"":
+            j = i + 1
+            while j < n and src[j] != c:
+                j += 2 if src[j] == "\\" else 1
+            out.append("''")
+            i = j + 1
+        elif c == "`":
+            j = i + 1
+            while j < n and src[j] != "`":
+                if src[j] == "\\":
+                    j += 2
+                elif src.startswith("${", j):
+                    depth, k = 1, j + 2
+                    while k < n and depth:
+                        depth += {"{": 1, "}": -1}.get(src[k], 0)
+                        k += 1
+                    out.append(" " + _code_only(src[j + 2:k - 1]) + " ")
+                    j = k
+                else:
+                    j += 1
+            out.append("''")
+            i = j + 1
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def _unimported_calls(mods: dict) -> list:
+    """Calls of a name another page module exports, in a module that neither imports nor defines it."""
+    exported = {}
+    for name, src in mods.items():
+        for m in re.finditer(r"^export\s+(?:async\s+)?(?:const|let|function\*?|class)\s+([A-Za-z_$][\w$]*)", src, re.M):
+            exported.setdefault(m.group(1), set()).add(name)
+    bad = []
+    for name, src in mods.items():
+        code = _code_only(src)
+        imported = set()
+        for m in re.finditer(r"import\s*\{([^}]*)\}\s*from", code):
+            imported |= {x.split(" as ")[-1].strip() for x in m.group(1).split(",") if x.strip()}
+        local = set(re.findall(r"(?:const|let|var|function\*?|class)\s+([A-Za-z_$][\w$]*)", code))
+        local |= set(re.findall(r"[({,]\s*([A-Za-z_$][\w$]*)\s*(?:=[^,)]*)?\s*(?=[,)])", code))     # parameters, roughly
+        for m in re.finditer(r"(?<![\w$.])([A-Za-z_$][\w$]*)\s*\(", code):
+            ident = m.group(1)
+            if ident not in exported or name in exported[ident] or ident in imported or ident in local:
+                continue
+            depth, k = 1, m.end()
+            while k < len(code) and depth:
+                depth += {"(": 1, ")": -1}.get(code[k], 0)
+                k += 1
+            if code[k:].lstrip().startswith("{"):                        # a method's definition, not a call
+                continue
+            bad.append(f"{name}:{code.count(chr(10), 0, m.start()) + 1}: {ident}() (exported by {sorted(exported[ident])})")
+    return bad
+
+
+def test_every_name_a_page_module_calls_from_another_is_imported():
+    """57c2e39 dropped s2.js's import of speedPct while two calls stayed: S2's repaint threw a ReferenceError (its speed and
+    the Real Machine gate) and no string test saw it. A name another lite module exports, called in a module, must be
+    imported or defined there."""
+    mods = {p.name: p.read_text(encoding="utf-8") for p in sorted((WEB / "lite").glob("*.js"))}
+    assert not _unimported_calls(mods)
+    s2 = mods["s2.js"].replace("import { feedMs, speedPct } from './status.js';\n", "")      # as 57c2e39 left it
+    assert any(b.startswith("s2.js:") and "speedPct()" in b for b in _unimported_calls(dict(mods, **{"s2.js": s2})))
 
 
 def test_no_remote_resources():

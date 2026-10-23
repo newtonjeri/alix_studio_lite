@@ -63,9 +63,12 @@ MODE_TEXT = {"visual": "Visual sim: the 3D robot moves, no hardware",
 
 class LiteApp:
     def __init__(self, project: Project, data_dir: Path, robot_link: str | None = None, log_dir: Path | None = None,
-                 projects_dir: Path | None = None):
+                 projects_dir: Path | None = None, feed_ms: int | None = 20):
         self.project = project
         self.data_dir = Path(data_dir)
+        # S2's record of the controllers' feed during Real Machine runs (run_lite --feed 20 | off; the owner, 23 Oct: on by
+        # default at 20 ms, with a way to turn it off): its period in ms, None when off
+        self.feed_ms = feed_ms
         self.boot = uuid.uuid4().hex[:12]                     # this start of Lite: a page of an earlier one closes itself
         self.log = Logbook(Path(log_dir) if log_dir else self.data_dir / "logs")   # every activity, and the hardware's
         self.jobs = Jobs(on_end=self._job_ended)

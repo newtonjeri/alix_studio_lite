@@ -2007,6 +2007,13 @@ def _watch(job, side: str, steps: list, say_stop, warn) -> tuple:
     return on_line, close
 
 
+def feed_wanted(app, body: dict) -> bool:
+    """Whether a Real Machine run records the controllers' feed: on by default (the owner, 23 Oct: "for now we can put it
+    on by default at 20ms, but we should have a way to disable it"), off when Lite was started with ``--feed off``
+    (``app.feed_ms`` None) or when the page sends ``record_feed`` false (its checkbox unticked)."""
+    return bool(body.get("record_feed", True)) and bool(getattr(app, "feed_ms", None))
+
+
 def run_real(app, units, mode: str, pick: dict | None, body: dict):
     """Real Machine Mode (RUN BOTH / RUN LEFT / RUN RIGHT, a single task, a dual-arm task): only in Real robot mode, on
     linked controllers; a run not completed in Simulation as it is now asks first (``unsimulated_ok``; the owner, 17 Oct:
@@ -2091,9 +2098,10 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     if not body.get("confirmed"):
         raise UserError("Real Machine Mode on the real robot needs your confirmation.", code="confirm")
     restore = {s: robot.found_speed(s) for s in sides}
-    # the controllers' feed recorded (a diagnostic asked per run): each runner call's own file, the day's canfd folder
+    # the controllers' feed recorded (feed_wanted): each runner call's own file, the day's canfd folder
+    want_feed = feed_wanted(app, body)
     feeds = None
-    if body.get("record_feed"):
+    if want_feed:
         root = getattr(getattr(robot, "log", None), "root", None)
         feeds = Path(root) / time.strftime("%Y-%m-%d") / "canfd" if root else None
     used = {s: {int(st["id"]) for st in run["steps"][s] if st["type"] == "program"} for s in sides}
@@ -2120,7 +2128,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             job.log("Run on the robot without a simulation of it, as confirmed.", "warn")
         for t in run.get("said") or []:
             job.log(t)
-        if body.get("record_feed"):
+        if want_feed:
             from .robot_real import S2_FEED_CYCLE
 
             job.log(f"Recording the controllers' feed every {S2_FEED_CYCLE * 5} ms (a diagnostic) to {feeds}: the Programs play "

@@ -315,6 +315,9 @@ def main(argv=None) -> int:
                     help="standin (default): no hardware. realman: the real arms through ALIX's dispatch "
                          "(feedback of arm, pole and hand; staging, drag teaching, upload, Real and Hardware sim "
                          "runs, STOP). emulated: the same link to ALIX's emulated arms")
+    ap.add_argument("--feed", choices=("20", "off"), default="20",
+                    help="S2's record of the controllers' feed during Real Machine runs: 20 (default: every 20 ms, the "
+                         "programs play some 3 %% slower meanwhile) or off (never recorded)")
     a = ap.parse_args(argv)
 
     if a.set_pin:
@@ -354,7 +357,7 @@ def main(argv=None) -> int:
         logs = a.logs or (_vp.LITE_ROOT / "Resources" / "Logs")
         projects = a.projects or (_vp.LITE_ROOT / "Resources" / "Projects")
         app = LiteApp(project, a.data, robot_link=None if a.robot == "standin" else a.robot, log_dir=logs,
-                      projects_dir=projects)
+                      projects_dir=projects, feed_ms=None if a.feed == "off" else int(a.feed))
     except RuntimeError as exc:                     # e.g. a damaged auth.json: never guess the PINs
         print(f"Lite cannot start: {exc}", file=sys.stderr, flush=True)
         return 2

@@ -22,6 +22,8 @@ export const standIn = () => !last || last.backend === 'stand-in';
 export const linked = () => !!last && Object.values(last.arms || {}).some((a) => a.link);
 // The speed slider's %: MoveJ / MoveL, both arms.
 export const speedPct = () => (last && last.speed ? last.speed.pct : 15);
+// S2's record of the controllers' feed (run_lite --feed 20 | off): its period in ms, null when off or not read yet.
+export const feedMs = () => (last && last.feed_ms ? last.feed_ms : null);
 
 // Each linked controller's own run mode as it reads (the owner, 17 Oct: Hardware sim puts the controllers in their
 // SIM mode, Real in their REAL mode); one that differs from the mode chosen (changed on its pendant) is named.
