@@ -234,9 +234,9 @@ def _frames_exec(frames):
 
     slept = []
     job = SimpleNamespace(progress=lambda *a, **k: None, set=lambda **k: None, sleep=slept.append, check=lambda: None)
-    ex = mechanism.RealExec(job, SimpleNamespace(), {}, SimpleNamespace(scripted=lambda expect: None))
+    ex = mechanism.RealExec(job, SimpleNamespace(), {}, SimpleNamespace(scripted=lambda expect: None, records_dir=lambda what: None))
     answers = iter(frames)
-    ex._frame = lambda expect: next(answers)
+    ex._frame = lambda expect, check=None: next(answers)
     return ex, slept
 
 
@@ -245,6 +245,19 @@ def _seen(state, conf=0.9):
 
 
 REFUSED = Answer(success=False, message="only 0 % of the seat ROI lies in the seat band after masking the hands")
+
+
+def test_each_check_writes_its_frames_and_what_they_decided(tmp_path):
+    """Beside the frames' records, one file per check: each frame's record and answer, and the decision (a dataset
+    tells a check's frames from its decision; the owner, 23 Oct: every frame's record kept)."""
+    ex, _ = _frames_exec([_seen("seat_lifted"), _seen("seat_lifted"), REFUSED])
+    ex.kit.records_dir = lambda what: tmp_path / what
+    ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
+    rows = list((tmp_path / "checks").glob("*_verify_seat_lifted_frames.json"))
+    assert len(rows) == 1, rows
+    s = json.loads(rows[0].read_text())
+    assert s["decided"] and s["state"] == "seat_lifted" and s["expect"] == "seat_lifted"
+    assert [(f["success"], f["state"]) for f in s["frames"]] == [(True, "seat_lifted"), (True, "seat_lifted"), (False, "not_lifted")]
 
 
 def test_each_check_is_decided_on_three_frames_or_five():

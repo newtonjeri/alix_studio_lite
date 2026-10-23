@@ -849,11 +849,13 @@ class RealExec(_Exec):
         if scripted is not None:                    # a test harness only (LITE_CHECK_SCRIPT): never on the robot
             return scripted
         answers, decided, first = [], None, FRAMES[0]
+        check_id = f"{time.strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000) % 1000:03d}_{action.get('stage') or 'check'}"
         for k in range(sum(FRAMES)):
             if k:
                 self.check_stop()
                 self.job.sleep(FRAME_GAP_S)
-            answers.append(self._frame(expect))
+            answers.append(self._frame(expect, dict(check_id=check_id, stage=action.get("stage"), expect=expect,
+                                                    observe=observe, frame=k + 1)))
             if k + 1 == first and (decided := vote(answers, 2)) is not None:
                 break
             if k + 1 == sum(FRAMES):
@@ -868,10 +870,29 @@ class RealExec(_Exec):
         self.job.set(check=dict(stage=action.get("stage"), expect=expect, state=answer.fixture_state,
                                 confidence=round(float(answer.state_confidence), 2), message=answer.message,
                                 record=answer.record_path, observe=observe))
+        self._summary(check_id, action, expect, answers, answer)
         return answer
 
-    def _frame(self, expect):
-        """One frame: both arms read, the camera's shot, the gap check's answer (its record written)."""
+    def _summary(self, check_id, action, expect, answers, answer) -> None:
+        """``<check_id>_frames.json`` beside the frames' records: each frame's record and answer, and what they decided
+        (a dataset tells a check's frames apart from its decision). Never fails a check."""
+        root = self.kit.records_dir("checks")
+        if root is None:
+            return
+        try:
+            root.mkdir(parents=True, exist_ok=True)
+            frames = [dict(record=a.record_path, success=bool(a.success), state=a.fixture_state,
+                           confidence=round(float(a.state_confidence), 3)) for a in answers]
+            (root / f"{check_id}_frames.json").write_text(json.dumps(dict(
+                check_id=check_id, stage=action.get("stage"), expect=expect, decided=bool(answer.success),
+                state=answer.fixture_state, confidence=round(float(answer.state_confidence), 3), message=answer.message,
+                frames=frames), indent=2), encoding="utf-8")
+        except OSError:
+            pass
+
+    def _frame(self, expect, check=None):
+        """One frame: both arms read, the camera's shot, the gap check's answer (its record written, a training row:
+        both arms' readings, ``check`` (which check, which frame) and the camera in its context)."""
         from . import robot_fk
         from .gap_check import DepthFrame
 
@@ -879,6 +900,7 @@ class RealExec(_Exec):
         for side, link in self.robot.links.items():
             fb = link.read_fresh()
             readings[side] = dict(q_deg=fb.get("joints_deg"), pole_mm=fb.get("pole_mm"), hand=fb.get("hand"))
+        context = dict(arms=readings, check=check, camera=getattr(self.kit.camera, "device", None))
         try:
             shot = self.kit.camera.shot(wait_s=float(self.kit.gap.p.get("frame_wait_s", 2.0)))
         except UserError as exc:                     # no frame: this one cannot judge, and does not vote
@@ -890,7 +912,8 @@ class RealExec(_Exec):
                                hands=robot_fk.hand_positions(readings, self.kit.gap.p["gap_hand_frames"]),
                                colour=shot.colour, aligned=shot.aligned, colour_intrinsics=shot.colour_intrinsics,
                                colour_to_base=frames.get("colour"), ref_to_base=frames.get("ref"),
-                               stamp_s=None if shot.camera_ms is None else shot.camera_ms / 1000.0, age_s=shot.age_s)
+                               stamp_s=None if shot.camera_ms is None else shot.camera_ms / 1000.0, age_s=shot.age_s,
+                               context=context)
         return self.kit.gap.ask(expect, frame, q_deg=(readings.get("right") or {}).get("q_deg"))
 
 
@@ -913,7 +936,8 @@ def camera_check(robot) -> dict:
     frames = robot_fk.camera_frames(readings) or {}
     frame = DepthFrame(depth=shot.depth, intrinsics=shot.intrinsics, cam_to_base=frames.get("depth"), colour=shot.colour,
                        aligned=shot.aligned, colour_intrinsics=shot.colour_intrinsics, colour_to_base=frames.get("colour"),
-                       ref_to_base=frames.get("ref"))
+                       ref_to_base=frames.get("ref"),
+                       context=dict(arms=readings, check=dict(stage="camera_check"), camera=getattr(k.camera, "device", None)))
     q_right = (readings.get("right") or {}).get("q_deg")
     a = k.gap.status(frame, "camera_check", q_deg=q_right)
     picture = None

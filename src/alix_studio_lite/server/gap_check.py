@@ -111,6 +111,41 @@ class DepthFrame:
     age_s: float | None = None                 # how old the frame was when the check used it
     colour_age_s: float | None = None
     colour_note: str = ""
+    context: dict | None = None                # the run's side of the frame (both arms' readings, which check and which
+    #                                            frame, the camera): written into the record as it is (a training row)
+
+
+def _sha256(path) -> str | None:
+    import hashlib
+
+    try:
+        return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+_PROVENANCE: dict = {}
+
+
+def provenance() -> dict:
+    """What made a record, so it can serve as a training row (the owner, 23 Oct: every check feeds the models): Lite's
+    commit, the ALIX commit Lite vendored (vendor/MANIFEST.json), the models' sha256. Worked out once."""
+    if not _PROVENANCE:
+        import subprocess
+
+        try:
+            head = subprocess.run(["git", "-C", str(vendor_paths.LITE_ROOT), "rev-parse", "HEAD"], capture_output=True,
+                                  text=True, timeout=5).stdout.strip()
+        except Exception:                                                   # noqa: BLE001 - not a checkout
+            head = ""
+        try:
+            alix = json.loads((vendor_paths.LITE_ROOT / "vendor" / "MANIFEST.json").read_text(encoding="utf-8")).get("alix_git")
+        except Exception:                                                   # noqa: BLE001
+            alix = None
+        models = MANIFEST.parents[3] / "models"
+        _PROVENANCE.update(lite_commit=head or None, alix_vendored=alix,
+                           models={p.name: _sha256(p) for p in sorted(models.glob("*.pt"))})
+    return dict(_PROVENANCE)
 
 
 @dataclass
@@ -175,6 +210,7 @@ class GapCheck:
             return
         vocabulary = load_vocabulary(model=self.p.get("fixture_model", "commode_c"), fixture_type=self.p.get("fixture_type", "commode"))
         locator, self._fixture_in_world = self._load_locator()
+        self._locator = locator
         self._core = PerceptionCore(
             backend=backend, vocabulary=vocabulary,
             state_confidence_threshold=float(self.p["confidence_threshold"]),
@@ -183,6 +219,36 @@ class GapCheck:
             locator=locator, state_fusion=bool(self.p.get("state_fusion", True)))
         self._log(f"perception core: {backend.name} backend, {self._manifest.name}, {len(vocabulary)} regions"
                   + ("" if locator is None else f", fixture at {self._fixture_in_world[:3, 3].round(3).tolist()} in base_link"))
+
+    def fixture_record(self) -> dict:
+        """The fixture as this check placed it (a training row's projection needs it): the model, the scene file and
+        its sha256, the region meshes' folder, the measured calibration, the pose in base_link, the standoff."""
+        loc = getattr(self, "_locator", None)
+        pose = getattr(self, "_fixture_in_world", None)
+        return dict(model=self.p.get("fixture_model", "commode_c"), fixture_type=self.p.get("fixture_type", "commode"),
+                    scene_yaml=None if loc is None else str(loc.scene_yaml),
+                    scene_sha256=None if loc is None else _sha256(loc.scene_yaml),
+                    regions_dir=None if loc is None else str(loc.models_dir),
+                    calibration=None if loc is None else getattr(loc, "calibration", None),
+                    pose_in_world=None if pose is None else np.asarray(pose, dtype=float).round(6).tolist(),
+                    ugv_standoff_m=self.p.get("ugv_standoff_m"))
+
+    def _training_row(self, frame, at_pose: str) -> dict:
+        """What a record needs beyond the node's to be a training row (the owner, 23 Oct: every check feeds the models):
+        the colour camera (its intrinsics and pose), the target frame, the named pose and its registration, the fixture
+        as placed, the run's context (both arms, which check and frame, the camera), what made it. ``split`` is the
+        dataset's to set."""
+        def tf(m):
+            return None if m is None else np.asarray(m, dtype=float).round(6).tolist()
+
+        key = self.registration_key(at_pose)
+        return {"colour_intrinsics": None if frame is None or frame.colour_intrinsics is None else frame.colour_intrinsics.__dict__,
+                "colour_to_world": None if frame is None else tf(frame.colour_to_base),
+                "ref_to_world": None if frame is None else tf(frame.ref_to_base),
+                "named_pose": at_pose or None,
+                "registration": {"lid_m": self.registration_for(at_pose), "seat_m": self._registration.get(key + ("seat",))},
+                "fixture": self.fixture_record(), "context": None if frame is None else frame.context,
+                "provenance": provenance(), "split": ""}
 
     def _load_locator(self):
         if not bool(self.p.get("route_by_mesh", True)):
@@ -311,7 +377,8 @@ class GapCheck:
                                           "colour_state": result.diagnostics.get("colour_state", ""),
                                           "depth_state": result.diagnostics.get("depth_state", ""),
                                           "fusion": result.diagnostics.get("fusion", ""),
-                                          "depth_state_gate": why, "pose": at_pose}, None, frame.colour, None)
+                                          "depth_state_gate": why, "pose": at_pose, **self._training_row(frame, at_pose)},
+                                         None, frame.colour, None, aligned=frame.aligned)
             if written:
                 response.record_path = str(written)
         response.fixture_type, response.fixture_state = result.fixture_type, result.fixture_state
@@ -443,12 +510,14 @@ class GapCheck:
                              "hands": None if frame is None or frame.hands is None
                              else {k: [round(float(c), 4) for c in v] for k, v in frame.hands.items()},
                              "params": {k: p.get(k) for k in RECORD_PARAMS}})
+            decision.update(self._training_row(frame, at_pose))
             response.record = decision           # in the answer always; written when the records have a place
             if not bool(p.get("save_check_frames", True)) or self._records is None:
                 return
             root = self._records() if callable(self._records) else self._records
             written = write_check_record(root, mode, part_expect, decision, record_depth["arr"],
-                                         None if frame is None else frame.colour, rois_for_record)
+                                         None if frame is None else frame.colour, rois_for_record,
+                                         aligned=None if frame is None else frame.aligned)
             if written:
                 response.record_path = str(written)
                 self._log(f"check record: {written}")
@@ -660,10 +729,12 @@ class GapCheck:
 
 # ── the record of a check (perception_node.py `write_check_record`, lines 71-129)
 def write_check_record(root, mode: str, expect: str, decision: dict, depth=None, image=None,
-                       rois: dict | None = None, stamp: str | None = None) -> Path | None:
+                       rois: dict | None = None, stamp: str | None = None, aligned=None) -> Path | None:
     """``<root>/<stamp>_<mode>_<expect>_<class>.json`` (the decision), ``..._depth.npy`` (float32 metres, the array
     the check used), ``..._depth.png`` (0.25-0.75 m colour-mapped, the regions drawn) and ``..._color.png``. ALIX's
-    names and contents; the pictures are drawn with numpy here (no OpenCV in Lite). Never fails a check."""
+    names and contents; the pictures are drawn with numpy here (no OpenCV in Lite). ``aligned``: the depth aligned to
+    the colour frame, kept as ``..._aligned_depth.npz`` (uint16 millimetres, compressed) for training rows (the owner,
+    23 Oct). Never fails a check."""
     try:
         out = Path(root)
         out.mkdir(parents=True, exist_ok=True)
@@ -686,6 +757,14 @@ def write_check_record(root, mode: str, expect: str, decision: dict, depth=None,
                 im = np.asarray(image)
                 (out / f"{stem}_color.png").write_bytes(png_bytes(im[:, :, ::-1] if im.ndim == 3 else im))   # BGR -> RGB
                 files["color_png"] = f"{stem}_color.png"
+            except Exception:                                   # noqa: BLE001
+                pass
+        if aligned is not None:
+            try:
+                a = np.asarray(aligned)
+                mm = a if a.dtype == np.uint16 else np.clip(np.nan_to_num(a.astype(np.float64)) * 1000.0, 0, 65535).astype(np.uint16)
+                np.savez_compressed(out / f"{stem}_aligned_depth.npz", depth_mm=mm)
+                files["aligned_depth_npz"] = f"{stem}_aligned_depth.npz"
             except Exception:                                   # noqa: BLE001
                 pass
         record = dict(decision)
