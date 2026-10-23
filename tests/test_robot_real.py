@@ -209,6 +209,53 @@ def test_a_hand_settled_short_on_force_is_in_pose(monkeypatch):
         arm.hand_to(pose)
 
 
+def test_a_pole_already_where_it_is_asked_is_not_commanded(monkeypatch):
+    """The owner, 23 Oct: every controller code 4117 (undocumented) came within a second of a pole command, three of
+    them a command to where the pole already stood (lid open's 150 -> 150 mm). A pole idle within its 5 mm goal
+    tolerance is not commanded, as ALIX's stage_arm does; a real move still goes to ALIX's Pole.move, and a pole
+    still moving is commanded even inside the band (its reading leads it, ALIX B6)."""
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    vendor_paths.activate()
+    from alix_dispatch import peripherals
+
+    from alix_studio_lite.server.robot_real import RealArm
+
+    sent, moved = [], []
+
+    class Robot:
+        mm, mode = 150.0, 0
+
+        def rm_get_lift_state(self):
+            return 0, {"pos": self.mm, "mode": self.mode, "err_flag": 0}
+
+        def rm_set_lift_height(self, speed, mm, block):
+            sent.append(mm)
+            return 0
+
+    robot = Robot()
+
+    class Link:
+        side, handle = "left", SimpleNamespace(robot=robot)
+
+        @contextmanager
+        def busy(self, what):
+            yield
+
+    def move(self, height_m, speed_pct=100, **kw):
+        moved.append(round(height_m * 1000))
+        return dict(ok=True, ret=0, final_m=height_m, t_s=1.6, verified_by="getter")
+
+    monkeypatch.setattr(peripherals.Pole, "move", move)
+    arm = RealArm(Link())
+    out = arm.pole_to(149.6)                                  # the plans' 150 mm, standing at 150
+    assert out["ok"] and out["verified_by"] == "no_op" and out["sent"] is False and not moved and not sent
+    assert arm.pole_to(156.0)["verified_by"] == "getter" and moved == [156]      # 6 mm away: a real move
+    robot.mode = 1                                            # moving, its reading inside the band: commanded
+    assert arm.pole_to(150.0)["verified_by"] == "getter" and moved == [156, 150]
+
+
 def test_global_points_are_the_controllers_and_moved_to_as_the_control_program_does(server):
     """The owner (14 Oct): the start-pose lists and Advanced show the controller's global points,
     found by name, and MoveJ / MoveL go to one (the control program's runner v14 functions)."""

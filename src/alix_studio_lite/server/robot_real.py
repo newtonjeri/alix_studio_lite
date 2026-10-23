@@ -301,14 +301,27 @@ class RealArm:
         return out
 
     def pole_to(self, mm: float) -> dict:
-        """The pole alone to ``mm`` (Prepare's Apply beside the pole, Advanced), at 50 %, arrival verified;
-        nothing else moves."""
+        """The pole alone to ``mm`` (Prepare's Apply beside the pole, Advanced, a lid or seat plan's pole entry), at 50 %,
+        arrival verified; nothing else moves. A pole standing idle within its 5 mm goal tolerance of ``mm`` is not
+        commanded, as ALIX's stage_arm does: every controller code 4117 (undocumented) came within a second of a pole
+        command, three of them a command to where the pole stood (lid open's 150 -> 150 mm; the owner, 23 Oct: test it)."""
         from alix_dispatch import peripherals
 
         with self.link.busy("moving the pole"):
-            out = peripherals.Pole(self.robot, log=self._alix_log()).move(float(mm) / 1000.0, speed_pct=POLE_SPEED_PCT)
+            pole = peripherals.Pole(self.robot, log=self._alix_log())
+            st = pole.state()
+            here = None if st is None else float(st["pos"]) / peripherals.LIFT_UNITS_PER_METRE
+            idle = st is not None and not int(st.get("mode", 0) or 0) and not int(st.get("err_flag", 0) or 0)
+            if idle and abs(here - float(mm) / 1000.0) <= peripherals.LIFT_TOL_M:
+                pole.log(f"   pole: already at {here * 1000:.0f} mm, the {float(mm):.0f} mm asked (within "
+                         f"{peripherals.LIFT_TOL_M * 1000:.0f} mm, idle): nothing sent")
+                out = dict(ok=True, ret=None, target_m=float(mm) / 1000.0, start_m=here, final_m=here, t_s=0.0,
+                           verified_by="no_op", no_op=True, no_op_source="getter", sent=False)
+            else:
+                out = pole.move(float(mm) / 1000.0, speed_pct=POLE_SPEED_PCT)
         self._hw("pole move", args=dict(mm=mm, speed_pct=POLE_SPEED_PCT), ret=out.get("ret"), ok=bool(out.get("ok")),
-                 elapsed_s=out.get("t_s"), text=f"final {out.get('final_m')} m, verified by {out.get('verified_by')}")
+                 elapsed_s=out.get("t_s"), text=f"final {out.get('final_m')} m, verified by {out.get('verified_by')}"
+                 + ("; nothing sent: already there" if out.get("sent") is False else ""))
         if not out.get("ok"):
             raise UserError(f"The {self.SIDE} pole did not reach {mm:.0f} mm ({out.get('error') or return_text(out.get('ret'))}).",
                             "Check the pole, then try again.")
