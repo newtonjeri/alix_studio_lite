@@ -2070,6 +2070,10 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     if missing:
         raise UserError("Not on the controllers: " + "; ".join(missing) + ". Nothing moved.",
                         "Upload the programs or save the points, simulate again, then run it.", code="missing")
+    if any(st["kind"] == "mechanism" for st in run["plan"]):     # its checks need the wrist camera (the owner, 23 Oct)
+        from . import mechanism
+
+        mechanism.camera_required(robot)
     # a Program at another pole or hand than its own is never run (the owner, 21 Oct): not a question, a stop
     stops = [f["text"] for f in sim["findings"] if f["level"] == "stop"] if simulated else _stage_stops(run, programs, robot, sides)
     if stops:
@@ -2434,7 +2438,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                     ex = mech.RealExec(job, robot, {x: reals.get(x) or robot._real(x) for x in ARMS}, kit,
                                        (lambda text: hw.hardware(None, "mechanism", text=text)) if hw is not None else None,
                                        live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}))
-                    mech.camera_warning(robot, ex.say)
+                    mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
                     with kit.camera.using():
                         out = mech.Runner(ex, ex.say).run(st["task"])
                     did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")

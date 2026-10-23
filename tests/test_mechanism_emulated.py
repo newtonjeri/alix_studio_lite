@@ -169,6 +169,30 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     assert "Open the lid: Open the lid done." in said and "CHECK verify_lid_lifted" in said
 
 
+def test_s2_refuses_a_lid_or_seat_task_with_no_camera_before_anything_moves(server):
+    """The owner, 23 Oct: with no camera every check read NOT, and Open the lid's "is it closed?" NOT ended it as done,
+    the lid closed (the lab, 14:38). A run with a lid or seat task now needs the wrist camera before anything moves.
+    Here the harness's answers are taken away and this computer has no D435."""
+    lid = {"type": "mechanism", "task": "lid_open"}
+    call(server, "PUT", f"{P}/workflow/left", {"steps": [lid]})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": [lid]})
+    j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "both"}))
+    assert j["state"] == "done", j
+    sim = j["result"]
+    assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
+    before = len(hardware(server))
+    away = server["script"].with_suffix(".away")
+    server["script"].rename(away)
+    try:
+        out = refused(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
+    finally:
+        away.rename(server["script"])
+    assert out["code"] == "camera" and "wrist camera cannot be read" in out["error"] and "Nothing moved" in out["error"], out
+    moved = [r for r in hardware(server)[before:] if r.get("verb") in ("canfd stream", "stage", "move to pose", "pole move",
+                                                                      "hand move", "workflow")]
+    assert not moved, moved
+
+
 def test_s2_puts_each_arms_pole_and_hand_back_after_its_lid_and_seat_tasks(server):
     """The owner, 22 Oct: after the lid and seat opening tasks each arm's pole and hand go back to where they were
     before them, and the dual-arm tasks after start on both arms together: in Simulation (the stage ends with each

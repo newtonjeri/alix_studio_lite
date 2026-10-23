@@ -217,6 +217,25 @@ def test_an_unanswered_question_is_not_lifted():
         mechanism.Runner(ex).run("lid_open")
 
 
+def test_no_camera_refuses_a_lid_or_seat_task(monkeypatch):
+    """The owner, 23 Oct: with no camera every check read NOT, and Open the lid's "is it closed?" NOT ended it as done
+    with the lid closed (the lab, 14:38). Without the wrist camera a lid or seat task does not run; one already under
+    way stops at the stage that needs it."""
+    from types import SimpleNamespace
+
+    monkeypatch.delenv("LITE_CHECK_SCRIPT", raising=False)
+    plugged = {"ok": False, "devices": [], "why": "no D435 is plugged into this computer"}
+    monkeypatch.setattr(mechanism, "kit", lambda robot: SimpleNamespace(camera=SimpleNamespace(available=lambda: plugged)))
+    with pytest.raises(UserError, match=r"^Not run: the wrist camera cannot be read \(no D435 .* Nothing moved\.$") as err:
+        mechanism.camera_required(object())
+    assert err.value.code == "camera"
+    with pytest.raises(UserError, match=r"^Open the lid STOPPED: the wrist camera cannot be read") as err:
+        mechanism.camera_required(object(), "Open the lid")
+    assert err.value.code == "camera"
+    plugged.update(ok=True, devices=[{"name": "Intel RealSense D435"}], why=None)
+    assert mechanism.camera_required(object())["ok"]
+
+
 def test_a_plan_whose_end_state_the_camera_does_not_see_stops_the_run():
     """The lab, 21 Oct: the left arm lifted the lid, the right one did not take it, and the plan ran to its end all the
     same. Now the right arm goes back to its inspection pose after the plan and the camera checks the end state: a NOT

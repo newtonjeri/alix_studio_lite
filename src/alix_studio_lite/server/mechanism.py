@@ -904,17 +904,20 @@ def kit(robot) -> Kit:
         return k
 
 
-def camera_warning(robot, say) -> dict:
-    """The wrist camera before a Real run with a lid or seat task. ALIX's sender starts all the same and reads an
-    unanswered check as NOT (fail-closed), and Lite does as it does (the owner, 18 Oct: "use the approach used in
-    the alix ws code base"); what it means is said at the start. The test harness's scripted answers stand in for
-    it (LITE_CHECK_SCRIPT)."""
-    if os.environ.get("LITE_CHECK_SCRIPT"):
+def camera_required(robot, stage: str | None = None) -> dict:
+    """The wrist camera before a Real run with a lid or seat task: without it nothing runs (the owner, 23 Oct). Until
+    then Lite did as ALIX's sender does (the owner, 18 Oct): it started all the same and read every check as NOT, so a
+    lid's "is it closed?" read NOT and Open the lid ended as done, the lid closed (the lab, 23 Oct 14:38). ``stage``:
+    the S2 stage about to start (a run already under way stops there). The test harness's scripted answers stand in
+    for it (LITE_CHECK_SCRIPT, while its file is there)."""
+    script = os.environ.get("LITE_CHECK_SCRIPT")
+    if script and Path(script).is_file():
         return dict(ok=True, scripted=True)
     have = kit(robot).camera.available()
     if not have["ok"]:
-        say(f"The wrist camera cannot be read ({have['why']}): every check will read NOT (fail-closed), as ALIX's sender "
-            "reads an unanswered check, and each plan follows its own policy for a NOT.", "warn")
+        why = f"the wrist camera cannot be read ({have['why']}), and the lid and seat tasks need it to check each state"
+        raise UserError(f"{stage} STOPPED: {why}." if stage else f"Not run: {why}. Nothing moved.",
+                        "Plug the D435 into this computer, then run it again.", code="camera")
     return have
 
 
@@ -924,6 +927,8 @@ def run(robot, name: str, mode: str | None = None):
     plan = Plan(name)                            # read and checked before anything starts
     mode = mode or robot.mode
     title = f"{plan.title} (ALIX's {plan.path.name})"
+    if mode == "real" and all(robot._real(s) for s in ("left", "right")):
+        camera_required(robot)                   # refused at once, before the job starts
 
     def work(job):
         robot._same_mode(mode, "nothing was moved")
@@ -936,8 +941,8 @@ def run(robot, name: str, mode: str | None = None):
                             "Connect both arms, then run it again.")
         if mode == "real" and all(linked.values()):
             k = kit(robot)
+            camera_required(robot)                   # again: it may have been unplugged since
             ex = RealExec(job, robot, linked, k, say)
-            camera_warning(robot, ex.say)
             with k.camera.using():
                 return _finish(Runner(ex, ex.say).run(name), plan, mode)
         if mode == "hwsim" and all(linked.values()):
