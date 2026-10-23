@@ -161,13 +161,18 @@ def _printed_to(sink):
 
 
 class _StopWatch:
-    """ALIX's CanfdWatch with Lite's STOP: the stream's stop check also trips when STOP was pressed."""
+    """ALIX's CanfdWatch with Lite's STOP: the stream's stop check also trips when STOP was pressed. It keeps the last
+    line a check saw sent: a STOP raised inside run_verified leaves no result, and the lab read "0/397 lines" for a way
+    back that had moved (23 Oct 15:08:34)."""
 
     def __new__(cls, rows, period_s, stop):
         from alix_dispatch import track
 
         class Watch(track.CanfdWatch):
+            last_line = -1                    # checked every CANFD_CHECK_EVERY_S (10 lines): a count at most 9 short
+
             def check(self, now, i_sent):
+                self.last_line = max(self.last_line, int(i_sent))
                 if stop.is_set() and self.tripped is None:
                     self.tripped = {"why": "stop", "t_mono": now, "line": i_sent, "detail": "STOP was pressed"}
                 return self.tripped if self.tripped is not None else super().check(now, i_sent)
@@ -1164,6 +1169,8 @@ class RealArm:
                 rec.stop(self.robot)
         cs = out.get("canfd") or {}
         sent, ok = int(cs.get("lines_sent") or 0), bool(out.get("ok")) and not out.get("restore_failed")
+        if not cs and out.get("interrupted"):         # STOP inside run_verified: no result, the stop checks saw the lines
+            sent = watch.last_line + 1
         bridged = out.get("gap_deg") if out.get("movej_ret") == 0 else None
         why = out.get("cut_reason") or cs.get("aborted") or ("STOP" if stop.is_set() else None)
         self._hw("canfd stream", args=dict(label=label, lines=n, period_ms=CANFD_PERIOD_S * 1000, rate_gate="per_joint",

@@ -120,15 +120,21 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
 
 
 def test_stop_in_the_middle_of_a_stream_stops_sending(server):
+    before = len(hardware(server))
     job = call(server, "POST", "/api/mechanism/lid_open/run", {"confirmed": True})
     running = wait(server, job, until=lambda j: "move_to_inspect" in (j.get("stage") or "") and "move_to_inspect_pole" not in (j.get("stage") or ""))
     assert running["state"] == "running", running
-    time.sleep(0.15)
+    deadline = time.monotonic() + 30                             # ALIX's "CANFD: N lines ..." comes as the sending starts
+    while not any(str(r.get("text") or "").startswith("CANFD:") for r in hardware(server)[before:]):
+        assert time.monotonic() < deadline, "the stream never started"
+        time.sleep(0.02)
+    time.sleep(0.3)                                              # some of its 200 lines (1 s) sent
     call(server, "POST", "/api/robots/stop-both", {})
     done = wait(server, job, limit=60)
     assert done["state"] in ("cancelled", "failed"), done
     last = [r for r in hardware(server) if r.get("verb") == "canfd stream"][-1]
-    assert not last["ok"] and int(last["text"].split("/")[0]) < last["args"]["lines"]
+    sent = int(last["text"].split("/")[0])
+    assert not last["ok"] and 0 < sent < last["args"]["lines"], last  # the lines it sent, not "0/200" (23 Oct, the lab)
     for side in ("left", "right"):                               # STOP holds the arms until Recover, as everywhere
         call(server, "POST", f"/api/robots/{side}/recover", {})
 
