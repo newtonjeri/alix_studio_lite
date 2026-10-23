@@ -179,6 +179,20 @@ def test_s2_s_run_card_asks_only_the_two_safety_checks():
     assert "body ? el('p', { text: body }) : null" in ctx                # no empty paragraph above the bullets
 
 
+def test_s2_can_record_the_controllers_feed_in_real_machine_mode():
+    """The owner, 23 Oct: S2 records the controllers' feed every 20 ms when asked ("let us use 20ms ... that is 50Hz"): a
+    checkbox in the Execution mode card, shown in Real Machine Mode only, off when the page loads, sent with the run
+    (``record_feed``); the run card stays the two safety bullets."""
+    s2 = (WEB / "lite/s2.js").read_text(encoding="utf-8")
+    assert "recordFeed: false," in s2
+    assert "el('label', { id: 'liteS2RecordWrap', class: 'lite-stage-option lite-s2-record', hidden: true }" in s2
+    assert "$('liteS2RecordWrap').hidden = S.mode !== 'real';" in s2
+    assert "const body = { mode, pick: w.pick, record_feed: S.recordFeed };" in s2
+    card = [args for _, args in _calls(s2, "confirmDialog") if "'Start on the robot'" in args]
+    assert len(card) == 1 and "record" not in card[0].lower(), card
+    assert ".lite-s2-record[hidden] { display: none; }" in (WEB / "lite/lite.css").read_text(encoding="utf-8")
+
+
 def test_no_remote_resources():
     page = (WEB / "index.html").read_text(encoding="utf-8")
     assert not re.search(r"""(src|href)=["']https?://""", page)

@@ -2091,6 +2091,11 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     if not body.get("confirmed"):
         raise UserError("Real Machine Mode on the real robot needs your confirmation.", code="confirm")
     restore = {s: robot.found_speed(s) for s in sides}
+    # the controllers' feed recorded (a diagnostic asked per run): each runner call's own file, the day's canfd folder
+    feeds = None
+    if body.get("record_feed"):
+        root = getattr(getattr(robot, "log", None), "root", None)
+        feeds = Path(root) / time.strftime("%Y-%m-%d") / "canfd" if root else None
     used = {s: {int(st["id"]) for st in run["steps"][s] if st["type"] == "program"} for s in sides}
     lines_of = {s: {pid: int(programs[s][pid]["lines"]) for pid in used[s]
                     if (programs[s].get(pid) or {}).get("sent") and (programs[s][pid].get("lines") or 0) > 1} for s in sides}
@@ -2115,8 +2120,15 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             job.log("Run on the robot without a simulation of it, as confirmed.", "warn")
         for t in run.get("said") or []:
             job.log(t)
+        if body.get("record_feed"):
+            from .robot_real import S2_FEED_CYCLE
+
+            job.log(f"Recording the controllers' feed every {S2_FEED_CYCLE * 5} ms (a diagnostic) to {feeds}: the Programs play "
+                    "some 3 % slower meanwhile (the 23 Oct pace test: 3.4 %), still held to the same 105 % stop."
+                    if feeds else "The controllers' feed is not recorded: Lite has no log folder.", "info" if feeds else "warn")
         reals = {s: robot._real(s) for s in sides}
         originals = {}
+        feed_n = {s: 0 for s in ARMS}
 
         def say(status=None, **arms):
             live.update({k: v for k, v in arms.items()})
@@ -2149,6 +2161,11 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 job.on_cancel(fn)
 
             emulated = bool(getattr(robot.links.get(side), "emulated", False))      # ALIX's emulator keeps its own pace
+            cap = None
+            if feeds is not None:
+                feed_n[side] += 1
+                slug = "".join(ch if ch.isalnum() else "_" for ch in str(label))[:40]
+                cap = feeds / f"{time.strftime('%Y%m%d_%H%M%S')}_{side.upper()}_s2_{feed_n[side]:02d}_{slug}.frames.jsonl"
             watch_line, watch_close = _watch(job, side, steps,
                                              (lambda why: job.log(f"{why} (an emulated arm: said, not stopped)", "warn")) if emulated
                                              else (lambda why: stop_part(side, why)),
@@ -2190,10 +2207,14 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                     job.log(f"{side.upper()}: {text}", "error" if text.startswith("**") else "info")
 
             try:
-                out = reals[side].run_workflow(steps, overall, restore[side], timeout, on_line, stop_hook)
+                out = reals[side].run_workflow(steps, overall, restore[side], timeout, on_line, stop_hook, record=cap)
             finally:
                 stops.pop(side, None)
                 watch_close()
+            fed = out.get("feed")
+            if fed:
+                job.log(f"{side.upper()}: its feed, {fed['frames']} frame(s) every {fed['cycle_ms']} ms: {Path(fed['file']).name}",
+                        "info" if fed["frames"] else "warn")
             if stopped_why.get(side):
                 out = dict(out, ok=False, why=stopped_why[side])
             if out["ok"]:

@@ -256,6 +256,85 @@ def test_a_pole_already_where_it_is_asked_is_not_commanded(monkeypatch):
     assert arm.pole_to(150.0)["verified_by"] == "getter" and moved == [156, 150]
 
 
+def _workflow_arm(monkeypatch, recorder):
+    """A RealArm on a real (not emulated) link whose runner v14 and ALIX recorder are fakes: what S2's recording does
+    around a runner call, in order."""
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    vendor_paths.activate()
+    from alix_studio_lite.server import robot_real
+
+    order = []
+
+    class Runner:
+        @staticmethod
+        def normalize_workflow_step(st):
+            return st
+
+        @staticmethod
+        def run_workflow_sequence(robot, a, ip, norm):
+            order.append("runner")
+            print("WORKFLOW STEP START 1/1: PROGRAM")
+            print("WORKFLOW STEP COMPLETE 1/1: PROGRAM")
+            return 0
+
+    class Link:
+        side, ip, emulated = "left", "192.168.1.10", False
+        handle = SimpleNamespace(robot=object(), host_ip="192.168.1.239")
+
+        @contextmanager
+        def busy(self, what, **kw):
+            yield
+
+    monkeypatch.setattr(robot_real, "_runner", lambda: Runner)
+    monkeypatch.setattr(robot_real, "CycleRecorder", lambda *a, **kw: recorder(order, *a, **kw))
+    return robot_real.RealArm(Link()), order
+
+
+def test_s2_records_a_real_controllers_feed_every_20_ms_around_each_runner_call(monkeypatch, tmp_path):
+    """The owner, 23 Oct: S2 records the controllers' feed at 20 ms ("which is more than enough, that is 50Hz"): ALIX's
+    recorder at cycle 4 on the arm's own port, started before the runner's call and stopped (the push put back) after."""
+    from alix_studio_lite.server.robot_real import S2_FEED_CYCLE, UDP_PORT
+
+    made = {}
+
+    class Recorder:
+        def __init__(self, order, out_path, host_ip, port=None, log=print, cycle=1):
+            self.order, self.out_path, self.frames = order, out_path, 0
+            made.update(host_ip=host_ip, port=port, cycle=cycle)
+
+        def start(self, robot):
+            self.order.append("start")
+
+        def stop(self, robot):
+            self.order.append("stop")
+            self.frames = 412
+
+    arm, order = _workflow_arm(monkeypatch, Recorder)
+    cap = tmp_path / "canfd" / "x_LEFT_s2_01_SEQUENCE.frames.jsonl"
+    out = arm.run_workflow([{"type": "program", "id": 71}], 15, 50, record=cap)
+    assert out["ok"] and order == ["start", "runner", "stop"]
+    assert S2_FEED_CYCLE == 4 and made == dict(host_ip="192.168.1.239", port=UDP_PORT["left"], cycle=4)
+    assert out["feed"] == dict(file=str(cap), frames=412, cycle_ms=20) and cap.parent.is_dir()
+    assert arm.run_workflow([{"type": "program", "id": 71}], 15, 50)["feed"] is None and order[-1] == "runner"   # not asked
+
+
+def test_a_feed_that_cannot_be_recorded_is_said_and_the_run_goes_on(monkeypatch, tmp_path):
+    class Recorder:
+        def __init__(self, order, *a, **kw):
+            pass
+
+        def start(self, robot):
+            raise RuntimeError("UDP port 8089 is already bound ON THIS HOST")
+
+    arm, order = _workflow_arm(monkeypatch, Recorder)
+    lines = []
+    out = arm.run_workflow([{"type": "program", "id": 71}], 15, 50, on_line=lines.append, record=tmp_path / "x.frames.jsonl")
+    assert out["ok"] and order == ["runner"] and out["feed"] is None
+    assert any(ln.startswith("!! LEFT: its feed is not recorded for this part (UDP port 8089 is already bound") for ln in lines)
+
+
 def test_global_points_are_the_controllers_and_moved_to_as_the_control_program_does(server):
     """The owner (14 Oct): the start-pose lists and Advanced show the controller's global points,
     found by name, and MoveJ / MoveL go to one (the control program's runner v14 functions)."""

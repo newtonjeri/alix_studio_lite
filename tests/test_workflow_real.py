@@ -307,3 +307,31 @@ def test_a_wait_for_and_a_meet_order_the_two_arms_on_the_robot(server):
     ends = {side: max(t for t, s_, text in lines if s_ == side and text.startswith("WORKFLOW PROGRAM COMPLETE")) for side in ("left", "right")}
     waits = {side: min(t for t, s_, text in lines if s_ == side and text.startswith("WORKFLOW WAIT: 0.3 s")) for side in ("left", "right")}
     assert min(waits.values()) > max(ends.values())                    # the Meet: neither goes on before both are there
+
+
+def test_a_run_records_the_controllers_feed_when_asked(server):
+    """The owner, 23 Oct: S2 can record the controllers' feed every 20 ms, a diagnostic asked per run: each runner call
+    its own file in the day's canfd folder, named in the job's log (on an emulated arm, its joints read in its place)."""
+    call(server, "PUT", f"{P}/workflow/left", {"steps": steps()})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": steps()})
+    sim = simulated(server)
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"],
+                                                                "record_feed": True}))
+    assert j["state"] == "done", j
+    said = events(j)
+    assert "Recording the controllers' feed every 20 ms (a diagnostic)" in said and "same 105 % stop" in said
+    day = next((server["data"] / "logs").iterdir())
+    for side in ("left", "right"):
+        files = sorted((day / "canfd").glob(f"*_{side.upper()}_s2_*.frames.jsonl"))
+        assert files, side
+        frames = [json.loads(x) for x in files[-1].read_text().splitlines()]
+        assert len(frames) > 5 and frames[0]["frame"]["emulated"]
+        gaps = np.diff([f["t_mono"] for f in frames])
+        assert 0.015 < float(np.median(gaps)) < 0.03                      # every 20 ms
+        assert f"{side.upper()}: its feed, {len(frames)} frame(s) every 20 ms: {files[-1].name}" in said
+    hw = [json.loads(x) for x in (day / "hardware.jsonl").read_text().splitlines()]
+    assert any(r["verb"] == "s2 feed" and r["ok"] and r["text"].endswith(" frames") for r in hw)
+    before = set((day / "canfd").glob("*_s2_*"))
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
+    assert j["state"] == "done", j
+    assert set((day / "canfd").glob("*_s2_*")) == before and "Recording the controllers' feed" not in events(j)   # not asked

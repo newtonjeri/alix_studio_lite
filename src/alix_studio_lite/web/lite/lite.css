@@ -744,6 +744,8 @@ body.lite-drag-locked .topbar #liteNormalBtn, body.lite-drag-locked .topbar .ems
 .lite-s2-header h3 { margin: 4px 0; }
 .lite-s2-exec, .lite-s2-control { margin: 0 0 12px; display: grid; gap: 10px; }
 .lite-s2-modes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.lite-s2-record { margin-top: 10px; width: fit-content; }
+.lite-s2-record[hidden] { display: none; }
 .lite-s2-modes > b { min-width: 120px; font-size: 13px; }
 .lite-s2-mode.active { background: var(--blue); color: var(--card); border-color: var(--blue); }
 .lite-s2-pick { flex: 1 1 280px; max-width: 560px; }

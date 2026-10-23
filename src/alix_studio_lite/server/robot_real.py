@@ -180,6 +180,12 @@ class _StopWatch:
         return Watch(rows, period_s)
 
 
+#: S2's recording of the controllers' feed (a diagnostic, asked per run): every 20 ms (the owner, 23 Oct: "let us use 20ms,
+#: which is more than enough, that is 50Hz"). The 23 Oct pace test (tools/push_pace.py, the left arm, L-R01): programs play
+#: 3.4 % slower with it on at 20 ms, 4.4 % at 10 ms (5 ms, 14-21 Oct: some 113 % of their lines' time).
+S2_FEED_CYCLE = 4
+
+
 def CycleRecorder(out_path, host_ip, port=None, log=print, cycle: int = 1):
     """ALIX's UdpRecorder pushing every ``cycle`` x 5 ms instead of every 5 ms (the owner, 23 Oct: "We can use 10ms or
     20ms"): with the push on at 5 ms, programs played some 13 % slower (21 Oct), past S2's 105 % stop. The config is
@@ -207,8 +213,8 @@ class _EmulatedCapture:
     watch, as ALIX's own test of this lane does (alix_dispatch test_track_canfd_channel.py, ``_NoCapture``), and
     written to the capture file, marked emulated. A real arm's capture is always ALIX's UdpRecorder."""
 
-    def __init__(self, out_path, host_ip, port=None, log=print, **_):
-        self.out_path, self.frames, self.monitor = Path(out_path), 0, None
+    def __init__(self, out_path, host_ip, port=None, log=print, period_s: float = 0.005, **_):
+        self.out_path, self.frames, self.monitor, self.period_s = Path(out_path), 0, None, float(period_s)
         self._stop, self._th, self._fh = threading.Event(), None, None
 
     def attach_monitor(self, monitor) -> None:
@@ -221,7 +227,7 @@ class _EmulatedCapture:
         self._fh = open(self.out_path, "w", encoding="utf-8")
 
         def feed():
-            while not self._stop.wait(0.005):
+            while not self._stop.wait(self.period_s):
                 try:
                     st = inner.rm_get_current_arm_state()[1]
                     frame = {"emulated": True, "err": [0], "arm_current_status": "run",
@@ -857,13 +863,14 @@ class RealArm:
 
     # ── Merge + Sequence S2: Page 02's steps through runner v14 (feedback v5, slide 9)
     def run_workflow(self, steps: list, overall_pct: int, restore_pct: int, timeout_s: float = 300.0, on_line=None,
-                     stop_hook=None) -> dict:
+                     stop_hook=None, record: Path | None = None) -> dict:
         """An arm's part of a Page 02 stage through runner v14's own ``run_workflow_sequence``, as V53
         runs it in a process of its own: one connection; the slots read once (a missing one refuses it
         all), the arm's errors and run state checked, the overall speed set, each step (Program, Pole,
         Hand, Wait, Global Point) run and checked, the speed put back to ``restore_pct`` in its
         ``finally``. ``stop_hook(fn)`` registers ``fn`` for STOP, which interrupts the runner as V53's
-        STOP does (Ctrl+C: its own slow stop of the arm, the pole stopped, the hand frozen)."""
+        STOP does (Ctrl+C: its own slow stop of the arm, the pole stopped, the hand frozen). ``record``: the
+        controller's feed recorded to that file around the call (S2_FEED_CYCLE; the result's ``feed``)."""
         rt = _runner()
         norm = [rt.normalize_workflow_step(st) for st in steps]
         a = SimpleNamespace(yes=True, side=self.side, workflow_overall_speed=int(overall_pct), restore_speed=int(restore_pct),
@@ -908,8 +915,10 @@ class RealArm:
 
         if stop_hook is not None:
             stop_hook(stop)
-        rc = 1
+        rc, feed, fed = 1, None, None
         with self.link.busy(f"sequence of {len(norm)} step(s)", expect_s=float(timeout_s) * max(1, len(norm))), _printed_to(line_out):
+            if record is not None:
+                feed = self._feed_start(Path(record), line_out)
             try:
                 try:
                     with guard:
@@ -932,12 +941,46 @@ class RealArm:
             except Exception as exc:                  # noqa: BLE001 - the runner's own lines say the rest
                 rc = 1
                 line_out(f"** WORKFLOW FAILED: {exc}")
+            finally:
+                fed = self._feed_stop(feed)
         said = log.getvalue()
         why = next((ln.strip(" *") for ln in reversed(said.splitlines()) if ln.strip().startswith("**")), None)
         self._hw("workflow", args=dict(steps=len(norm), overall_speed=int(overall_pct), restore_speed=int(restore_pct)),
                  ret=rc, ok=rc == 0, elapsed_s=time.monotonic() - t0, text=why)
         return dict(ok=rc == 0, rc=rc, why=why, stopped=state["stopped"], seconds=round(time.monotonic() - t0, 2),
-                    lines=said.splitlines())
+                    lines=said.splitlines(), feed=fed)
+
+    def _feed_start(self, cap: Path, say):
+        """S2's recording of this controller's feed, every S2_FEED_CYCLE x 5 ms (ALIX's UdpRecorder at that cycle; on an
+        emulated arm, its joints read as the stream's capture does). One that cannot start is said ("!!", the job's log)
+        and the run goes on without it: the recording is a diagnostic."""
+        cap.parent.mkdir(parents=True, exist_ok=True)
+        h = self.handle
+        try:
+            if self.link.emulated:
+                rec = _EmulatedCapture(cap, h.host_ip, port=UDP_PORT[self.side], log=self._alix_log(),
+                                       period_s=S2_FEED_CYCLE * 0.005)
+            else:
+                rec = CycleRecorder(cap, h.host_ip, port=UDP_PORT[self.side], log=self._alix_log(), cycle=S2_FEED_CYCLE)
+            rec.start(self.robot)
+        except Exception as exc:                                                    # noqa: BLE001
+            self._hw("s2 feed", ok=False, text=f"not recorded: {exc}")
+            say(f"!! {self.SIDE}: its feed is not recorded for this part ({exc})")
+            return None
+        self._hw("s2 feed", args=dict(cycle_ms=S2_FEED_CYCLE * 5, file=cap.name), ok=True, text="recording")
+        return rec
+
+    def _feed_stop(self, rec) -> dict | None:
+        """The recording stopped (the controller's push put back as it was); what it kept."""
+        if rec is None:
+            return None
+        try:
+            rec.stop(self.robot)
+        except Exception as exc:                                                    # noqa: BLE001
+            self._hw("s2 feed", ok=False, text=f"stopping it: {exc}")
+        n = int(getattr(rec, "frames", 0) or 0)
+        self._hw("s2 feed", args=dict(file=Path(rec.out_path).name), ok=n > 0, text=f"{n} frames")
+        return dict(file=str(rec.out_path), frames=n, cycle_ms=S2_FEED_CYCLE * 5)
 
     # ── the controller's global points (the control program's runner v14)
     def global_points(self) -> list[dict]:

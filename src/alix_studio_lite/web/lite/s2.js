@@ -39,6 +39,7 @@ const S = {
   sel: { left: null, right: null }, mode: 'sim', scope: 'sequence', pick: null, edited: false,
   sim: null, job: null, live: { left: 'IDLE', right: 'IDLE' }, status: 'PAGE 02 READY // Build LEFT and RIGHT sequences', runtime: 0,
   rows: { left: null, right: null }, mechanisms: {},
+  recordFeed: false,                // Real Machine Mode: record the controllers' feed (a diagnostic, asked per page)
 };
 const view = { frames: new Map(), shown: { left: null, right: null }, phase: null, three: null, clean: false, furthest: 0, token: 0 };
 let panel = null, built = false, player = null, saving = { left: null, right: null }, tools = null;
@@ -233,7 +234,12 @@ function build() {
         el('b', { text: 'What to run' }),
         ...SCOPES.map(([id, name]) => btn(name, () => setScope(id), 'btn light lite-s2-mode', { id: `liteS2Scope_${id}`, role: 'radio' })),
         el('button', { id: 'liteS2Pick', class: 'lite-picker-btn lite-s2-pick', type: 'button', hidden: true, 'aria-haspopup': 'listbox',
-          'aria-expanded': 'false', onclick: (e) => chooseTask(e.currentTarget) }, el('span', { id: 'liteS2PickText', class: 'lite-picker-value' })))),
+          'aria-expanded': 'false', onclick: (e) => chooseTask(e.currentTarget) }, el('span', { id: 'liteS2PickText', class: 'lite-picker-value' }))),
+      // the owner, 23 Oct: the controllers' feed recorded during a real run, every 20 ms (a diagnostic, off unless asked)
+      el('label', { id: 'liteS2RecordWrap', class: 'lite-stage-option lite-s2-record', hidden: true },
+        el('input', { id: 'liteS2Record', type: 'checkbox', onchange: (e) => { S.recordFeed = e.target.checked; } }),
+        el('span', { text: "Record the controllers' feed every 20 ms" }),
+        el('small', { text: '(a diagnostic: the Programs play about 3 % slower meanwhile)' }))),
     el('div', { class: 'card lite-s2-control' },
       el('div', { class: 'lite-s2-kicker', text: 'DUAL SEQUENCE CONTROL' }),
       el('div', { class: 'lite-row' },
@@ -746,6 +752,7 @@ function paintAll() {
   for (const m of ['sim', 'real']) $(`liteS2Mode_${m}`).setAttribute('aria-checked', String(S.mode === m));
   for (const [m] of SCOPES) $(`liteS2Scope_${m}`).setAttribute('aria-checked', String(S.scope === m));
   $('liteS2Pick').hidden = S.scope === 'sequence';
+  $('liteS2RecordWrap').hidden = S.mode !== 'real';
   $('liteS2PickText').textContent = pickText() || (S.scope === 'task' ? 'Choose the task: a Program row…' : 'Choose the dual-arm task: a part…');
   $('liteS2RunBoth').textContent = S.scope === 'task' ? 'RUN TASK' : S.scope === 'dual' ? 'RUN DUAL-ARM TASK' : 'RUN BOTH';
   for (const side of ARMS) $(`liteS2Run_${side}`).hidden = S.scope !== 'sequence';     // an arm's own sequence: Sequences only
@@ -876,7 +883,7 @@ async function simulate(w) {
 
 async function runReal(w) {
   const mode = w.mode;
-  const body = { mode, pick: w.pick };
+  const body = { mode, pick: w.pick, record_feed: S.recordFeed };
   let job;
   try {
     try {
