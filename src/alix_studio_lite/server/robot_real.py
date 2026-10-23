@@ -193,7 +193,10 @@ def CycleRecorder(out_path, host_ip, port=None, log=print, cycle: int = 1):
                 cfg.cycle = int(cycle)
             return super()._apply_push(robot, cfg, want, what)
 
-    rec = Recorder(out_path, host_ip, port=port, log=log)
+    def said(line):                              # ALIX's start line names its own 5 ms
+        log(str(line).replace("cycle 5 ms", f"cycle {int(cycle) * 5} ms"))
+
+    rec = Recorder(out_path, host_ip, port=port, log=said)
     rec.cycle = int(cycle)
     return rec
 
