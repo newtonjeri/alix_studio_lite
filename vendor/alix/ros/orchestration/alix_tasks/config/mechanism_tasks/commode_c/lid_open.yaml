@@ -192,7 +192,8 @@ left:
     # TAUGHT 2026-10-23, D_LID_OPEN.txt line 568: the fingertip at the closed lid's
     # front-left edge, at the lid's height (base_link 0.579, 0.171, 0.453), still
     # before the lift.
-    start_pose: [0.5889, 0.2946, -0.0735, 0.515099, 0.850793, 0.024721, 0.101056]
+    # start_pose: [0.5889, 0.2946, -0.0735, 0.515099, 0.850793, 0.024721, 0.101056]
+    start_pose: [0.59, 0.285, -0.0735, 0.515099, 0.850793, 0.024721, 0.101056]
 
     # source right.pre_start_pose: [0.68, -0.07, -0.05, 0.73938, 0.67302, 0.01891, -0.001467]   (no raw capture recorded)
     # pre_start_pose: [0.68, 0.318, -0.05, 0.673021, 0.739381, -0.001467, 0.01891]   # DRAFT: mirrored from right.pre_start_pose (UNCALIBRATED - teach + certify before use)
