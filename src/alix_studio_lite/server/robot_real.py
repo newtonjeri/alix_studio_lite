@@ -180,6 +180,24 @@ class _StopWatch:
         return Watch(rows, period_s)
 
 
+def CycleRecorder(out_path, host_ip, port=None, log=print, cycle: int = 1):
+    """ALIX's UdpRecorder pushing every ``cycle`` x 5 ms instead of every 5 ms (the owner, 23 Oct: "We can use 10ms or
+    20ms"): with the push on at 5 ms, programs played some 13 % slower (21 Oct), past S2's 105 % stop. The config is
+    ALIX's own, with its cycle set as it is written (``_apply_push``), and put back on stop exactly as ALIX's does.
+    ``tools/push_pace.py`` measures what each cycle costs a program's pace."""
+    from alix_dispatch import track
+
+    class Recorder(track.UdpRecorder):
+        def _apply_push(self, robot, cfg, want: dict, what: str):
+            if what == "capture":
+                cfg.cycle = int(cycle)
+            return super()._apply_push(robot, cfg, want, what)
+
+    rec = Recorder(out_path, host_ip, port=port, log=log)
+    rec.cycle = int(cycle)
+    return rec
+
+
 class _EmulatedCapture:
     """The 5 ms capture of an EMULATED arm only (``--robot emulated``): ALIX's emulator cannot push over UDP (it
     hands its frames to the SDK's callback), so its arm's own joints are read every 5 ms and fed to the stream's
