@@ -1082,3 +1082,5 @@
 {"t": 1792828582.520138, "side": "left", "verb": "stage", "args": {"pole_mm": 200.0, "hand": [555, 539, 534, 551, 502, 893], "speed_pct": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "pole 198 mm, hand [572, 553, 547, 561, 502, 874]"}
 {"t": 1792828582.905387, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1792828583.0382721, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792828705.1369705, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1792828705.2522433, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
