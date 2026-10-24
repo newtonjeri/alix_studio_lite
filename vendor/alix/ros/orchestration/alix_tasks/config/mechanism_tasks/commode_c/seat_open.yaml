@@ -204,8 +204,8 @@ left:
      rotation: [0.0, -15.0, 0.0]      # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
 
     retract_pose_2:   # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
-     translation: [0.22, 0.1, 0.15]
-     rotation: [0.0, -15.0, 0.0]
+     translation: [0.20, 0.15, 0.15]
+     rotation: [0.0, -15.0, 30.0]
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
   # Translation: [x, y, z] in meters
   # Rotation: [roll, pitch, yaw] in degrees
@@ -541,10 +541,10 @@ stage_sequence:
     contact_surface: seat_and_body
     additional_ik_frames: [L_glove_frame_2]
 
-  - stage: move_to_retract
+  - stage: move_to_retract_2
     speed_class: approach
     arm: left
-    pose_name: retract_pose
+    pose_name: retract_pose_2
     planning_group: rm75_arm_left
 
   - stage: move_to_rest
@@ -552,6 +552,11 @@ stage_sequence:
     arm: left
     pose_name: rest_pose
     planning_group: rm75_arm_left
+
+  - stage: hand_release
+    arm: left
+    pose_name: release
+    planning_group: inspire_hand_left
 
   # ---------------------------------------------------------------------------
   # 7. RIGHT arm traces its opening trajectory (-30 -> -110 deg), then rests

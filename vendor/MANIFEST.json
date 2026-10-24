@@ -698,8 +698,8 @@
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.json",
       "origin": "alix",
-      "sha256": "dd3344a86406d216cf660cfa136a78bde31cf42815408d6190bcbe053735bf1f",
-      "bytes": 3348
+      "sha256": "2f38bd91460d439c5ef0aee4407fba162eada33f930f3d1da126f9b43199c225",
+      "bytes": 3354
     },
     {
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.proj",
@@ -719,8 +719,8 @@
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.json",
       "origin": "alix",
-      "sha256": "20934bdf46d8d82c2bb72f696d4696171e26da11b2d49635ef3847b44af65223",
-      "bytes": 587480
+      "sha256": "42d4261f377ea3e6a80c070ab517116620f9ae2d08e0e36e6202a5b49af818b7",
+      "bytes": 643257
     },
     {
       "dest": "vendor/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
@@ -4732,8 +4732,8 @@
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/seat_open.yaml",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/seat_open.yaml",
       "origin": "alix",
-      "sha256": "36a0640800b6279a77583596af7632895de97d80f87346781059d9c434e47948",
-      "bytes": 28388
+      "sha256": "506af21d32c48ce0144193bb435284b6472c703a1c31f9d4e1740aaa79983e3c",
+      "bytes": 28494
     },
     {
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/task_parameters_defaults.yaml",

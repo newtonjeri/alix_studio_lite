@@ -204,7 +204,7 @@ def test_an_arms_back_to_back_moves_go_as_one_stream_and_the_final_check_comes_b
     arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]
     assert arm == [("move_to_inspect", "right"), ("move_to_pre_start + move_to_start + execute_path", "left"),
                    ("move_to_rest", "right"), ("move_to_pre_start + move_to_start", "right"), ("move_to_retract", "left"),
-                   ("move_to_retract + move_to_rest", "left"), ("execute_path + move_to_rest", "right"),   # 24 Oct 13:55: a 2nd retract
+                   ("move_to_retract_2 + move_to_rest", "left"), ("execute_path + move_to_rest", "right"),   # 24 Oct 15:07: retract_pose_2
                    ("move_to_inspect", "right"), ("back along move_to_inspect", "right")]   # the final check's way in, back
     assert [m[5] for m in moves(ex) if m[1] == "back along move_to_inspect"] == ["the final check's way in, reversed"]
     plan = mechanism.Plan("seat_open")
