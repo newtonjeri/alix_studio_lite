@@ -93,10 +93,10 @@
   {
    "type": "program",
    "id": 86,
-   "name": "86_L_merge_7_2.txt",
+   "name": "86_L_T06_DPGC.txt",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "4ce61ba0"
+   "uid": "6933821a"
   },
   {
    "type": "global",
@@ -225,5 +225,5 @@
    "uid": "df7d87d4"
   }
  ],
- "updated": "2026-10-24 23:25:02"
+ "updated": "2026-10-24 23:56:26"
 }

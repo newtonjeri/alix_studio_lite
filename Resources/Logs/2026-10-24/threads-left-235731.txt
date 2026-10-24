@@ -1,0 +1,39 @@
+Thread 0x000072c3a4ffb6c0 (most recent call first):
+  File "/home/alai-labs/alix_studio_lite/vendor/alix/external/butterfli-realman-alix/Python/Robotic_Arm/rm_robot_interface.py", line 2096 in rm_set_arm_stop
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_link.py", line 123 in call
+  File "/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_dispatch/src/alix_dispatch/staging.py", line 175 in _guard
+  File "/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_dispatch/src/alix_dispatch/staging.py", line 851 in stop_devices
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_link.py", line 441 in _stop_now
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_link.py", line 417 in stop
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 190 in control
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Current thread 0x000072c3a57fc6c0 (most recent call first):
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/logbook.py", line 55 in dump_threads
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 179 in heartbeat
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x000072c3a5ffd6c0 (most recent call first):
+  File "/usr/lib/python3.12/threading.py", line 359 in wait
+  File "/usr/lib/python3.12/threading.py", line 655 in wait
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_link.py", line 272 in _loop
+  File "/usr/lib/python3.12/threading.py", line 1010 in run
+  File "/usr/lib/python3.12/threading.py", line 1073 in _bootstrap_inner
+  File "/usr/lib/python3.12/threading.py", line 1030 in _bootstrap
+
+Thread 0x000072c3adc35740 (most recent call first):
+  File "/home/alai-labs/alix_studio_lite/vendor/alix/external/butterfli-realman-alix/Python/Robotic_Arm/rm_robot_interface.py", line 5525 in rm_get_realtime_push
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_link.py", line 123 in call
+  File "/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_dispatch/src/alix_dispatch/track.py", line 1038 in start
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_real.py", line 1075 in _feed_start
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_real.py", line 1103 in keep_s2_feed
+  File "/home/alai-labs/alix_studio_lite/src/alix_studio_lite/server/robot_process.py", line 243 in worker_main
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 108 in run
+  File "/usr/lib/python3.12/multiprocessing/process.py", line 314 in _bootstrap
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 135 in _main
+  File "/usr/lib/python3.12/multiprocessing/spawn.py", line 122 in spawn_main
+  File "<string>", line 1 in <module>
