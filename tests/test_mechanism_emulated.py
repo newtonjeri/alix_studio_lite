@@ -115,8 +115,21 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     retract = [r for r in streams if "move_to_retract" in r["args"]["label"]]
     assert retract and "bridged" in retract[0]["text"]          # 7.7 degrees from rung 1's end, by ALIX's MoveJ
     assert all(r["args"]["period_ms"] == 5.0 and r["args"]["rate_gate"] == "per_joint" for r in streams)
-    caps = list((Path(server["data"]) / "logs" / time.strftime("%Y-%m-%d") / "canfd").glob("*.frames.jsonl"))
-    assert len(caps) == len(streams)                            # each stream's 5 ms capture is kept
+    # each arm's 5 ms feed on once for the run (24 Oct: on and off around every move, 1.1 s each), every move watched on
+    # it over its own stretch, and off at the end; an arm's back-to-back moves are one stream
+    caps = sorted(p.name for p in (Path(server["data"]) / "logs" / time.strftime("%Y-%m-%d") / "canfd").glob("*.frames.jsonl"))
+    assert sorted(c.split("_", 2)[2] for c in caps) == ["LEFT_lid_open.frames.jsonl", "RIGHT_lid_open.frames.jsonl"], caps
+    assert {r["args"]["capture"] for r in streams} == set(caps) and all(len(r["args"]["t_mono"]) == 2 for r in streams)
+    feeds = [r for r in hardware(server) if r.get("verb") == "canfd feed"]
+    assert sorted(r["side"] for r in feeds if "kept for the run" in (r["text"] or "")) == ["left", "right"]
+    assert sorted(r["side"] for r in feeds if (r["text"] or "").startswith("off")) == ["left", "right"] and all(r["ok"] for r in feeds)
+    assert "LEFT arm move_to_pre_start + move_to_start + execute_path" in labels
+    # ALIX's emulator reports a 100 % global ratio, so each stream sets 50 and puts 100 back (the robot's controllers
+    # report none: 50 %, held across the run's moves; tests/test_robot_real.py)
+    assert not any(r["args"]["ratio_held"] for r in streams)
+    assert any(x.startswith("RIGHT arm back along move_to_inspect") for x in labels)   # the final check, back along its way in
+    hands = [r for r in hardware(server) if r.get("verb") == "hand move" and isinstance(r["args"]["speed_set"], list)]
+    assert hands and all(len(r["args"]["speed_set"]) == 6 for r in hands)   # the plan's hand moves: ALIX's executive's speeds
 
 
 def test_stop_in_the_middle_of_a_stream_stops_sending(server):

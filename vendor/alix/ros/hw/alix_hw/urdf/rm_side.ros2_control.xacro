@@ -1,0 +1,449 @@
+<?xml version="1.0"?>
+<!--
+  Combined per-side <ros2_control> block for REAL hardware
+  (alix_hw/RmSideSystem): 7 arm + 1 pole + 6 hand command joints plus the
+  6 mimic hand joints as state-only. When use_real_hardware:=true this block
+  REPLACES the three per-subsystem blocks (arm/pole/hand) of one side — the
+  pole and hand have their own hardware but share the arm controller's single
+  TCP/UDP transport (ROS2_CONTROL_HARDWARE_MIGRATION_REVIEW.md §A.4/§C.2).
+
+  Connection defaults mirror rm_driver/config/rm_75_{left,right}_config.yaml.
+  Bench-dependent parameters (D.0) keep today's proven behaviour as defaults:
+    trajectory_mode=0 radio=0 (full passthrough, bench-validated),
+    hand_command_api: modbus_rtu = ALL-MODBUS hand mode through the end port
+    (hardware-verified 2026-07-14: ANGLE_SET register writes move the hand,
+    ANGLE_ACT polling returns REAL measured feedback — the only real hand
+    feedback on fw 1.7.2; requires hand_feedback=modbus_rtu, the driver
+    forces the pairing). acked_angle = the legacy-proven rm_set_hand_angle
+    path with echo feedback (the hand protocol and end-port modbus are
+    mutually exclusive on fw 1.7.2 — never mixed). The follow APIs were
+    found non-functional on fw 1.7.2. Scale 0-1000.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="rm_side_ros2_control"
+               params="prefix hand_prefix hand_side arm_ip udp_ip
+                       tcp_port:=8080 udp_port:=8089 udp_cycle_ms:=5
+                       stream_period_ms:=10 stream_sync_to_command:=true
+                       high_follow:=true
+                       trajectory_mode:=0 radio:=0
+                       command_watchdog_ms:=100 lift_epsilon_m:=0.0005
+                       lift_min_speed_pct:=4 lift_send_interval_ms:=50
+                       hand_command_api:=modbus_rtu hand_command_scale_max:=1000
+                       hand_feedback:=modbus_rtu hand_feedback_scale_max:=1000
+                       hand_rate_divider:=2 hand_min_send_interval_ms:=100
+                       hand_speed:=0 hand_force:=0 hand_stroke_k:=373.0
+                       grasp_force_detection:=false grasp_force_threshold_g:=100
+                       grasp_min_fingers:=2 cross_side_halt:=true
+                       hand_modbus_device:=1 hand_modbus_baud:=115200
+                       hand_modbus_poll_ms:=200
+                       feedback_timeout_ms:=250 activation_timeout_ms:=3000
+                       sdk_ack_timeout_ms:=1500
+                       status_publish_divider:=50
+                       connection:=sdk record_dir:=''
+                       udp_log:=auto udp_log_dir:='' udp_log_rotate_s:=900
+                       udp_log_rotate_mb:=256 udp_log_min_free_mb:=2048
+                       replay_line_speed:=1.5 replay_line_acc:=6.0
+                       replay_angular_speed:=5.0 replay_angular_acc:=20.0
+                       replay_poll_ms:=100
+                       double_stop_policy:=aborts double_cut_at_fraction:=0.0
+                       double_soft_limit_joint:=0 double_soft_limit_deg:=0.0
+                       double_lag_tau_s:=0.03
+                       arm_channel:=canfd canfd_period_ms:=5.0
+                       canfd_rate_gate:=per_joint canfd_follow:=true
+                       canfd_trajectory_mode:=0 canfd_radio:=0
+                       canfd_stream_priority:=50
+                       canfd_lag_bound_s:=0.0 canfd_arrive_timeout_s:=2.0
+                       exclude_thumb:=false">
+
+    <ros2_control name="${prefix}_rm_side_hardware" type="system">
+      <hardware>
+        <plugin>alix_hw/RmSideSystem</plugin>
+        <param name="arm_ip">${arm_ip}</param>
+        <param name="tcp_port">${tcp_port}</param>
+        <param name="udp_ip">${udp_ip}</param>
+        <param name="udp_port">${udp_port}</param>
+        <param name="udp_cycle_ms">${udp_cycle_ms}</param>
+        <param name="stream_period_ms">${stream_period_ms}</param>
+        <!-- Phase-lock the canfd sender to write(). controller_manager updates
+             at 100 Hz and the sender ran at 100 Hz on its OWN clock; two loops
+             at the same rate with no shared clock BEAT, so the age of the
+             command each frame carried swept 0 -> one period and wrapped, and
+             consecutive frames carried deltas of 0, 2x, 1x... The frames were
+             perfectly spaced (0.028 ms jitter) but their CONTENT was resampled,
+             which on hardware reads as wavy, inconsistent TCP displacement —
+             observed 2026-08-01, against a legacy driver running the same
+             trajectory smoothly. Set false to restore the free-running sender
+             for an A/B without a rebuild. -->
+        <param name="stream_sync_to_command">${stream_sync_to_command}</param>
+        <!-- rm_movej_canfd follow flag: true = high follow (period <= 10 ms),
+             false = low follow — the controller may DISCARD points it cannot
+             reach in time (ROS2 manual); it is NOT a smoother, and dropping
+             points would destroy spacing-sets-execution-time. trajectory_mode/
+             radio are HIGH-follow only. Switchable live via ~/set_high_follow. -->
+        <param name="high_follow">${high_follow}</param>
+        <param name="trajectory_mode">${trajectory_mode}</param>
+        <param name="radio">${radio}</param>
+        <param name="command_watchdog_ms">${command_watchdog_ms}</param>
+        <param name="lift_epsilon_m">${lift_epsilon_m}</param>
+        <param name="lift_min_speed_pct">${lift_min_speed_pct}</param>
+        <param name="lift_send_interval_ms">${lift_send_interval_ms}</param>
+        <param name="hand_command_api">${hand_command_api}</param>
+        <param name="hand_command_scale_max">${hand_command_scale_max}</param>
+        <param name="hand_feedback">${hand_feedback}</param>
+        <param name="hand_feedback_scale_max">${hand_feedback_scale_max}</param>
+        <param name="hand_rate_divider">${hand_rate_divider}</param>
+        <param name="hand_min_send_interval_ms">${hand_min_send_interval_ms}</param>
+        <param name="hand_speed">${hand_speed}</param>
+        <!-- F8 grasp detection. OFF by default: validated on sponge and steel
+             but not yet on the cleaning brush, and it costs a second modbus
+             round trip per poll. Threshold swept over 12 measured cycles —
+             60 g leaves only 17 g above a FREE grasp, 150 g false-negatives a
+             real one; 100 g separates with margin on both hands. -->
+        <param name="grasp_force_detection">${grasp_force_detection}</param>
+        <param name="grasp_force_threshold_g">${grasp_force_threshold_g}</param>
+        <param name="grasp_min_fingers">${grasp_min_fingers}</param>
+        <!-- Cross-side halt: a fault or e-stop on EITHER side stops BOTH.
+             Before this existed, a right-side e-stop severed the right
+             transport and deactivated the right controllers while the left JTC
+             kept writing through its own loaned command interfaces and ran its
+             trajectory to completion — the operator pressed stop and one arm
+             carried on. Set false only if you accept that. -->
+        <param name="cross_side_halt">${cross_side_halt}</param>
+        <param name="hand_force">${hand_force}</param>
+        <!-- Slope of the measured stroke law stroke_ms = t_lat + k*span/speed
+             (bench_sync hand characterization, both hands 2026-07-27:
+             k = 370..376). Used to turn a goal's velocity into SPEED_SET.
+             Re-fit and override here if a hand is serviced or replaced. -->
+        <param name="hand_stroke_k">${hand_stroke_k}</param>
+        <param name="hand_modbus_device">${hand_modbus_device}</param>
+        <param name="hand_modbus_baud">${hand_modbus_baud}</param>
+        <param name="hand_modbus_poll_ms">${hand_modbus_poll_ms}</param>
+        <param name="feedback_timeout_ms">${feedback_timeout_ms}</param>
+        <param name="activation_timeout_ms">${activation_timeout_ms}</param>
+        <!-- SDK reply window (rm_set_timeout, process-global). 500 ms lost
+             set_realtime_push replies on a busy controller (F122, 2026-10-07). -->
+        <param name="sdk_ack_timeout_ms">${sdk_ack_timeout_ms}</param>
+        <param name="status_publish_divider">${status_publish_divider}</param>
+        <!-- Driver-level execution (docs/motion/DRIVER_EXECUTION_CONTRACTS.md §2.1).
+             connection: sdk = the real RM_API2 transport; double = ReplayDouble,
+             the offline stand-in (no network) that answers every verb and
+             synthesises the push. record_dir: where the FrameRecorder's NDJSON
+             captures go ('' = $ALIX_RUNS_DIR/tracks/<date>, else
+             <repo>/Resource/runs/tracks/<date>). udp_cycle_ms defaults to 5
+             (was 10): the CANFD watch's stall rule needs >= 25 push frames in
+             its 0.25 s window, impossible at 10 ms, and every tested stream ran
+             the push at 5 ms (CANFD_PRODUCTION_DRIVER.md §3); 5 is also the
+             recorder's target. -->
+        <param name="connection">${connection}</param>
+        <param name="record_dir">${record_dir}</param>
+        <!-- Continuous UDP channel log (CANFD_PRODUCTION_DRIVER.md §10): every
+             push frame from connect to shutdown, the capture schema, files
+             <runs>/udp/<date>/udp_<side>_<HHMMSS>.ndjson. udp_log auto = on for
+             connection=sdk, off for the double. Rotates at udp_log_rotate_s /
+             udp_log_rotate_mb; stops (and says so on ~/status) below
+             udp_log_min_free_mb free. -->
+        <param name="udp_log">${udp_log}</param>
+        <param name="udp_log_dir">${udp_log_dir}</param>
+        <param name="udp_log_rotate_s">${udp_log_rotate_s}</param>
+        <param name="udp_log_rotate_mb">${udp_log_rotate_mb}</param>
+        <param name="udp_log_min_free_mb">${udp_log_min_free_mb}</param>
+        <!-- THE CANFD PRODUCTION DRIVER (docs/motion/CANFD_PRODUCTION_DRIVER.md
+             §3). Newton 2026-09-21: an arm uses ONE channel, chosen at launch,
+             never switched. arm_channel canfd = the production stroke: the
+             <P>_stroke gpio below is exported and StrokeChannel plays a pinned
+             dense track at the driver's own clock; upload = the program channel
+             only (the <P>_program block stays for both until the separation
+             pass, §8).
+               canfd_period_ms       THE CLOCK (5.0 = the controller's cycle).
+                                     A track whose declared clock differs is
+                                     REFUSED at pin time, never re-timed.
+               canfd_rate_gate       the whole-file preflight: per_joint
+                                     (180/180/225x5 deg/s) | flat (180).
+               canfd_follow / canfd_trajectory_mode / canfd_radio
+                                     rm_movej_canfd's wire configuration — true /
+                                     0 / 0 is the only one ever run (94/94).
+               canfd_stream_priority SCHED_FIFO priority requested for the
+                                     player thread (0 = none); whether it took
+                                     is recorded in ~/stroke_result. -->
+        <param name="arm_channel">${arm_channel}</param>
+        <param name="canfd_period_ms">${canfd_period_ms}</param>
+        <param name="canfd_rate_gate">${canfd_rate_gate}</param>
+        <param name="canfd_follow">${canfd_follow}</param>
+        <param name="canfd_trajectory_mode">${canfd_trajectory_mode}</param>
+        <param name="canfd_radio">${canfd_radio}</param>
+        <param name="canfd_stream_priority">${canfd_stream_priority}</param>
+        <!-- Smoothing modes' lag (docs/motion/CANFD_PRODUCTION_DRIVER.md "Smoothing
+             modes and the vendor lag"): canfd_lag_bound_s is REQUIRED > 0 for
+             trajectory_mode 2 (the vendor gives no number); mode 1 uses
+             max(15 periods, it). canfd_arrive_timeout_s bounds the arrival tail. -->
+        <param name="canfd_lag_bound_s">${canfd_lag_bound_s}</param>
+        <param name="canfd_arrive_timeout_s">${canfd_arrive_timeout_s}</param>
+        <!-- The F124 replay envelope applied around a program (acc leads going
+             up, speed leads coming down, read back, restored on release).
+             Newton 2026-09-05: 1.5 m/s and 5 rad/s with 4x accelerations. -->
+        <param name="replay_line_speed">${replay_line_speed}</param>
+        <param name="replay_line_acc">${replay_line_acc}</param>
+        <param name="replay_angular_speed">${replay_angular_speed}</param>
+        <param name="replay_angular_acc">${replay_angular_acc}</param>
+        <param name="replay_poll_ms">${replay_poll_ms}</param>
+        <!-- ReplayDouble knobs (connection:=double only): G4's two answers,
+             the class-B cut, the class-A soft limit, the measured-joint lag. -->
+        <param name="double_stop_policy">${double_stop_policy}</param>
+        <param name="double_cut_at_fraction">${double_cut_at_fraction}</param>
+        <param name="double_soft_limit_joint">${double_soft_limit_joint}</param>
+        <param name="double_soft_limit_deg">${double_soft_limit_deg}</param>
+        <param name="double_lag_tau_s">${double_lag_tau_s}</param>
+        <!-- exclude_thumb (alix.urdf.xacro): the thumb joints below are left
+             out, and RmSideSystem HOLDS SDK channels 4/5 at their activation
+             seed. Emitted only when set, so the default block is unchanged. -->
+        <xacro:if value="${exclude_thumb}">
+        <param name="exclude_thumb">true</param>
+        </xacro:if>
+      </hardware>
+
+      <!-- Arm (RM75, rm_movej_canfd high-follow stream) -->
+      <!-- current / temperature / voltage are carried by EVERY realtime UDP
+           frame (rm_joint_status_t). They cost no extra traffic and no extra
+           poll; before 2026-08-29 this system parsed the frame and threw them
+           away, so the only consumer was the passive sniffer in
+           scripts/joint_logger.py. Exposed here so a broadcaster can publish
+           them: joint temperature is the only warning we get before a thermal
+           fault, and joint voltage bears on the F21a under-voltage hypothesis.
+
+           RESOLUTION - the header lies. rm_define.h:269-278 documents all three
+           at 0.001 (mA, C, V). Measured over 3 250 786 samples, every joint of
+           all 237 recorded DualArmConcept runs: the fractional part is exactly
+           zero in every single one. All three arrive INTEGER-QUANTISED.
+
+             current      +-26 653 mA seen (J4); ~9 300 distinct values. 1 mA
+                          steps are plenty - use it.
+             temperature  29-43 C, 15 distinct values across the whole corpus,
+                          J7 hottest. 1 C steps are enough for a thermal warning.
+             voltage      SIX distinct values in 3.25 M samples: 20, 21, 22, 23,
+                          24, 28. Median 22, floor 20. This channel cannot
+                          resolve a sag; do NOT build the F21a test on it, and
+                          do not report it with decimals it does not have. -->
+      <xacro:macro name="rm_side_arm_joint" params="index">
+        <joint name="${prefix}_joint${index}">
+          <command_interface name="position"/>
+          <state_interface name="position"/>
+          <state_interface name="velocity"/>
+          <state_interface name="current"/>
+          <state_interface name="temperature"/>
+          <state_interface name="voltage"/>
+        </joint>
+      </xacro:macro>
+      <xacro:rm_side_arm_joint index="1"/>
+      <xacro:rm_side_arm_joint index="2"/>
+      <xacro:rm_side_arm_joint index="3"/>
+      <xacro:rm_side_arm_joint index="4"/>
+      <xacro:rm_side_arm_joint index="5"/>
+      <xacro:rm_side_arm_joint index="6"/>
+      <xacro:rm_side_arm_joint index="7"/>
+
+      <!-- C16.2 chain signalling. In `planned` arm_command_mode the hardware
+           turns each NEW arm target into one controller-planned move, and this
+           says whether that move QUEUES (connect=1) or CLOSES the chain and
+           executes it (connect=0, one arrival event for the whole chain). A
+           chain of N targets issued unchained would buy N-1 stop->replan->go
+           cycles. Unused in the default `stream` mode. -->
+      <gpio name="${prefix}_arm_chain">
+        <command_interface name="connect"/>
+      </gpio>
+
+      <!-- The controller<->hardware seam of the online-program mode
+           (DRIVER_EXECUTION_CONTRACTS.md §2.2). TrackReplayController claims
+           every command interface here together with the 7 arm positions;
+           the hardware acts ONCE per new cmd_seq, on its own thread, never in
+           read()/write(). Names are the contract's, exactly. initial_value 0
+           so an unclaimed block reads as "no command", not NaN. -->
+      <gpio name="${prefix}_program">
+        <command_interface name="cmd"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="cmd_seq"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="slot"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="points"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="speed_pct"><param name="initial_value">50.0</param></command_interface>
+        <command_interface name="restore_speed_pct"><param name="initial_value">50.0</param></command_interface>
+        <command_interface name="bridge_speed_pct"><param name="initial_value">80.0</param></command_interface>
+        <command_interface name="bridge"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="bridge_target_0"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="bridge_target_1"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="bridge_target_2"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="bridge_target_3"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="bridge_target_4"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="bridge_target_5"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="bridge_target_6"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="record"><param name="initial_value">0.0</param></command_interface>
+        <state_interface name="phase"/>
+        <state_interface name="run_state"/>
+        <state_interface name="program_id"/>
+        <state_interface name="run_ret"/>
+        <state_interface name="bridge_ret"/>
+        <state_interface name="refusal"/>
+        <state_interface name="finish_seen"/>
+        <state_interface name="finish_program_id"/>
+        <state_interface name="arm_status"/>
+        <state_interface name="err_code"/>
+        <state_interface name="err_flag_any"/>
+        <state_interface name="record_seq"/>
+        <state_interface name="record_frames"/>
+        <state_interface name="t_run_mono"/>
+        <state_interface name="stop_rung"/>
+        <state_interface name="stop_verified"/>
+        <state_interface name="stop_elapsed_s"/>
+        <state_interface name="stop_travel_deg"/>
+        <!-- §2.8 tool-frame guard: a joint track carries no frame, but the
+             controller feeds the frame's payload/centroid to gravity
+             compensation and its collision stage, and both act on the joints,
+             so runs are compared at a deliberate, recorded frame. -->
+        <state_interface name="tool_frame_wanted"/>
+        <state_interface name="tool_frame_took"/>
+        <state_interface name="tool_frame_restored"/>
+      </gpio>
+
+      <!-- The CANFD stroke's seam (docs/motion/CANFD_PRODUCTION_DRIVER.md §3),
+           exported on a canfd arm only. TrackStreamController claims every
+           command interface here with the 7 arm positions and every state
+           interface; the hardware acts ONCE per new cmd_seq (run / stop /
+           release each carry a fresh one), on StrokeChannel's own threads, and
+           zeroes cmd/cmd_seq itself when the controller releases the block.
+           Names are the contract's, exactly. cmd: 0 none, 1 run, 2 stop,
+           3 release. initial_value so an unclaimed block reads "no command";
+           bridge and record default ON, as StrokeChannel::Command does. -->
+      <xacro:if value="${arm_channel == 'canfd'}">
+      <gpio name="${prefix}_stroke">
+        <command_interface name="cmd"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="cmd_seq"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="pin"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="points"><param name="initial_value">0.0</param></command_interface>
+        <command_interface name="speed_pct"><param name="initial_value">50.0</param></command_interface>
+        <command_interface name="restore_speed_pct"><param name="initial_value">50.0</param></command_interface>
+        <command_interface name="bridge_speed_pct"><param name="initial_value">80.0</param></command_interface>
+        <command_interface name="bridge"><param name="initial_value">1.0</param></command_interface>
+        <command_interface name="record"><param name="initial_value">1.0</param></command_interface>
+        <command_interface name="armed"><param name="initial_value">0.0</param></command_interface>
+        <state_interface name="phase"/>
+        <state_interface name="refusal"/>
+        <state_interface name="abort_reason"/>
+        <state_interface name="trip"/>
+        <state_interface name="cmd_seq"/>
+        <state_interface name="pin"/>
+        <state_interface name="points"/>
+        <state_interface name="lines_sent"/>
+        <state_interface name="sent"/>
+        <state_interface name="hold_frames"/>
+        <state_interface name="send_errors"/>
+        <state_interface name="first_bad_ret"/>
+        <state_interface name="completed"/>
+        <state_interface name="aborted"/>
+        <state_interface name="late_ms_max"/>
+        <state_interface name="late_ms_mean"/>
+        <state_interface name="late_ms_p99"/>
+        <state_interface name="frames_late_over_period"/>
+        <state_interface name="period_s"/>
+        <state_interface name="t_first_send_mono"/>
+        <state_interface name="t_last_line_mono"/>
+        <state_interface name="t_end_mono"/>
+        <state_interface name="gap_deg"/>
+        <state_interface name="gap_after_bridge_deg"/>
+        <state_interface name="bridge_ret"/>
+        <state_interface name="movej_s"/>
+        <state_interface name="arm_status"/>
+        <state_interface name="err_code"/>
+        <state_interface name="err_flag_any"/>
+        <state_interface name="record_seq"/>
+        <state_interface name="record_frames"/>
+        <state_interface name="at_rest"/>
+        <state_interface name="settle_waited_s"/>
+        <state_interface name="tool_frame_wanted"/>
+        <state_interface name="tool_frame_took"/>
+        <state_interface name="tool_frame_restored"/>
+        <state_interface name="caps_applied"/>
+        <state_interface name="global_speed_ret"/>
+        <state_interface name="stop_verified"/>
+        <state_interface name="stop_elapsed_s"/>
+        <state_interface name="stop_travel_deg"/>
+      </gpio>
+      </xacro:if>
+
+      <!-- Lift pole: single-target device (rm_set_lift_height + onboard
+           profile). The velocity command interface carries the goal's speed
+           from the ProfiledPositionController (m/s -> hardware speed %). -->
+      <joint name="${prefix}_sliding_plate_joint">
+        <command_interface name="position"/>
+        <command_interface name="velocity"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+
+      <!-- Inspire hand: 6 actuated. The velocity command interface carries
+           the goal's per-joint speed from the ProfiledPositionController and
+           is mapped to the per-channel SPEED_SET register
+           (SPEED_SET = k*v/max_rad, k = 373 measured on BOTH hands —
+           BENCHMARKS §3.9). Only consumed in modbus mode; with
+           hand_command_api:=acked_angle it is exported but ignored, and the
+           static hand_speed parameter applies as before. -->
+      <xacro:macro name="rm_side_hand_joint" params="suffix">
+        <joint name="${hand_prefix}_${hand_side}_${suffix}_joint">
+          <command_interface name="position"/>
+          <command_interface name="velocity"/>
+          <state_interface name="position"/>
+          <state_interface name="velocity"/>
+        </joint>
+      </xacro:macro>
+      <!-- HAND HEALTH (§2.9). The hand's own position feedback cannot answer
+           "is this hand being driven at all": in echo mode it is the command
+           read back, and a dead or unplugged hand simply stops changing, which
+           a settle test reads as "arrived". These two say what only the channel
+           knows — whether the last posture actually reached the wire, and
+           whether the ANGLE_ACT poll is still fresh. A goal that finishes while
+           either is set finished on the CLOCK, not on the hand. -->
+      <gpio name="${prefix}_hand_health">
+        <state_interface name="write_stuck"/>
+        <state_interface name="feedback_stale"/>
+        <state_interface name="feedback_is_echo"/>
+        <state_interface name="error_count"/>
+      </gpio>
+      <xacro:unless value="${exclude_thumb}">
+      <xacro:rm_side_hand_joint suffix="thumb_1"/>
+      <xacro:rm_side_hand_joint suffix="thumb_2"/>
+      </xacro:unless>
+      <xacro:rm_side_hand_joint suffix="index_1"/>
+      <xacro:rm_side_hand_joint suffix="middle_1"/>
+      <xacro:rm_side_hand_joint suffix="ring_1"/>
+      <xacro:rm_side_hand_joint suffix="little_1"/>
+
+      <xacro:unless value="${exclude_thumb}">
+      <!-- Inspire hand: 6 mimic joints, state-only (computed in read();
+           same param convention as inspire_*_hand.ros2_control.xacro) -->
+      <joint name="${hand_prefix}_${hand_side}_thumb_3_joint">
+        <param name="mimic">${hand_prefix}_${hand_side}_thumb_2_joint</param>
+        <param name="multiplier">1.1425</param>
+        <param name="offset">0</param>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="${hand_prefix}_${hand_side}_thumb_4_joint">
+        <param name="mimic">${hand_prefix}_${hand_side}_thumb_3_joint</param>
+        <param name="multiplier">0.7508</param>
+        <param name="offset">0.1</param>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      </xacro:unless>
+      <xacro:macro name="rm_side_hand_mimic" params="suffix source">
+        <joint name="${hand_prefix}_${hand_side}_${suffix}_joint">
+          <param name="mimic">${hand_prefix}_${hand_side}_${source}_joint</param>
+          <param name="multiplier">1.1169</param>
+          <param name="offset">-0.1865</param>
+          <state_interface name="position"/>
+          <state_interface name="velocity"/>
+        </joint>
+      </xacro:macro>
+      <xacro:rm_side_hand_mimic suffix="index_2" source="index_1"/>
+      <xacro:rm_side_hand_mimic suffix="middle_2" source="middle_1"/>
+      <xacro:rm_side_hand_mimic suffix="ring_2" source="ring_1"/>
+      <xacro:rm_side_hand_mimic suffix="little_2" source="little_1"/>
+    </ros2_control>
+  </xacro:macro>
+</robot>

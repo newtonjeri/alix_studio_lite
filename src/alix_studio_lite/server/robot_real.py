@@ -263,6 +263,11 @@ class RealArm:
     def __init__(self, link, log=None):
         self.link, self.log, self.side = link, log, link.side
         self.SIDE = link.side.upper()
+        self._feed = None            # (recorder, capture): the 5 ms feed kept on across a lid or seat run (keep_feed)
+        self._hand = None            # ALIX's HandModbus opened once for a lid or seat run (keep_hand)
+        self._hand_speeds = None     # the SPEED_SET each channel of the kept hand holds
+        self._pole_done = None       # when the last pole move ended (the controller's warm start)
+        self._ratio = None           # the global ratio this run left on the controller (None: not known)
 
     # ── plumbing
     @property
@@ -303,7 +308,13 @@ class RealArm:
 
         log = self._alix_log()
         with self.link.busy("staging the pole and the hand"):
-            pole, hand, opened = alix_staging.open_devices(self.handle, log=log, speed_set=HAND_SPEED_SET)
+            if self._hand is not None:               # a lid or seat run's hand, opened once (keep_hand), at the staging speed
+                from alix_dispatch import peripherals
+
+                pole, hand, opened = peripherals.Pole(self.robot, log=log), self._hand, {"ok": True}
+                self._hand_speeds_to(hand, [HAND_SPEED_SET] * 6)
+            else:
+                pole, hand, opened = alix_staging.open_devices(self.handle, log=log, speed_set=HAND_SPEED_SET)
             if hand is None:
                 self._hw("stage", text=f"refused: {_words(opened.get('refusal'))}", ok=False)
                 raise UserError(f"The {self.SIDE} hand cannot be reached (Modbus), so nothing was staged.",
@@ -327,13 +338,16 @@ class RealArm:
                             "Nothing else ran.", "Check the pole and the hand, then try again.")
         return out
 
-    def pole_to(self, mm: float) -> dict:
-        """The pole alone to ``mm`` (Prepare's Apply beside the pole, Advanced, a lid or seat plan's pole entry), at 50 %,
-        arrival verified; nothing else moves. A pole standing idle within its 5 mm goal tolerance of ``mm`` is not
-        commanded, as ALIX's stage_arm does: every controller code 4117 (undocumented) came within a second of a pole
-        command, three of them a command to where the pole stood (lid open's 150 -> 150 mm; the owner, 23 Oct: test it)."""
+    def pole_to(self, mm: float, duration_s: float | None = None) -> dict:
+        """The pole alone to ``mm`` (Prepare's Apply beside the pole, Advanced, a lid or seat plan's pole entry), arrival
+        verified; nothing else moves. At 50 %, or, for a plan's pole move (``duration_s``: its planned time), at the
+        speed ALIX's executive sets from that time (device_speed.pole_speed_pct; the owner, 24 Oct). A pole standing
+        idle within its 5 mm goal tolerance of ``mm`` is not commanded, as ALIX's stage_arm does: every controller code
+        4117 (undocumented) came within a second of a pole command, three of them a command to where the pole stood
+        (lid open's 150 -> 150 mm; the owner, 23 Oct: test it)."""
         from alix_dispatch import peripherals
 
+        pct = POLE_SPEED_PCT
         with self.link.busy("moving the pole"):
             pole = peripherals.Pole(self.robot, log=self._alix_log())
             st = pole.state()
@@ -345,8 +359,15 @@ class RealArm:
                 out = dict(ok=True, ret=None, target_m=float(mm) / 1000.0, start_m=here, final_m=here, t_s=0.0,
                            verified_by="no_op", no_op=True, no_op_source="getter", sent=False)
             else:
-                out = pole.move(float(mm) / 1000.0, speed_pct=POLE_SPEED_PCT)
-        self._hw("pole move", args=dict(mm=mm, speed_pct=POLE_SPEED_PCT), ret=out.get("ret"), ok=bool(out.get("ok")),
+                if duration_s is not None and here is not None:
+                    from .device_speed import pole_speed_pct
+
+                    warm = self._pole_done is not None and time.monotonic() - self._pole_done < 2.0
+                    pct, how = pole_speed_pct(self.side, here, float(mm) / 1000.0, float(duration_s), warm=warm)
+                    pole.log(f"   pole: {pct} % ({how})")
+                out = pole.move(float(mm) / 1000.0, speed_pct=pct)
+                self._pole_done = time.monotonic()
+        self._hw("pole move", args=dict(mm=mm, speed_pct=pct), ret=out.get("ret"), ok=bool(out.get("ok")),
                  elapsed_s=out.get("t_s"), text=f"final {out.get('final_m')} m, verified by {out.get('verified_by')}"
                  + ("; nothing sent: already there" if out.get("sent") is False else ""))
         if not out.get("ok"):
@@ -429,22 +450,75 @@ class RealArm:
                             "Check the pole and the hand, then run it again.")
         return out
 
-    def hand_to(self, counts: list) -> dict:
-        """The hand alone to six counts (Advanced), at 50 %, read back. Done as staging takes it
-        (_settled: the control program's Hand.command): ARRIVED, or SETTLED short of the target,
-        fingers stopped on force (on the lab's hand, 14 Oct, the thumb stopped 714 counts short)."""
+    def keep_hand(self) -> bool:
+        """The hand's Modbus mode and its speed set once for a lid or seat run: its hand moves and stagings then command
+        it at once (24 Oct: opening it again before each of a run's 13 hand moves took about 0.25 s each). False when
+        it cannot be opened: each hand move then opens it as before, and says why."""
+        if self._hand is not None:
+            return True
+        from alix_dispatch import peripherals
+
+        with self.link.busy("opening the hand"):
+            hand = peripherals.HandModbus(self.robot, self.side, log=self._alix_log())
+            ret = hand.open(speed_set=HAND_SPEED_SET)
+        if ret != 0:
+            self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
+            return False
+        self._hand, self._hand_speeds = hand, [HAND_SPEED_SET] * 6
+        return True
+
+    def drop_hand(self) -> None:
+        """The run's hand let go (its Modbus mode stays on, as every hand move leaves it): the next command opens it."""
+        self._hand = self._hand_speeds = None
+
+    def _hand_speeds_to(self, hand, sets: list, why: str = "") -> None:
+        """The hand's channels at these SPEED_SETs: one Modbus write, none when the kept hand holds them already. A
+        write that fails is said; the move then goes at the speeds the hand holds (its arrival is read back anyway)."""
+        from alix_dispatch import peripherals
+
+        sets = [int(v) for v in sets]
+        if hand is self._hand and self._hand_speeds == sets:
+            return
+        if len(set(sets)) == 1:
+            ok = hand.set_speed(sets[0]) == 0                 # "SPEED_SET n on all six channels"
+        else:
+            rep = hand.write_report(peripherals.HAND_REG_SPEED_SET, sets)
+            ok = bool(rep.get("ok"))
+            if ok:                                    # the stroke law's wait: the slowest channel's (longer, never shorter)
+                hand.speed_set = min(sets)
+            hand.log(f"   hand: SPEED_SET {sets}" + (f" ({why})" if why else "")
+                     + ("" if ok else f" — write FAILED ret={rep.get('ret')}"))
+        if hand is self._hand:
+            self._hand_speeds = sets if ok else None
+
+    def hand_to(self, counts: list, duration_s: float | None = None) -> dict:
+        """The hand alone to six counts, read back: at SPEED_SET 500 (Advanced), or, for a plan's hand move
+        (``duration_s``: its planned time), at the speeds ALIX's executive sets from that time, channel by channel
+        (device_speed.hand_speed_sets; the owner, 24 Oct). Done as staging takes it (_settled: the control program's
+        Hand.command): ARRIVED, or SETTLED short of the target, fingers stopped on force (on the lab's hand, 14 Oct, the
+        thumb stopped 714 counts short)."""
         from alix_dispatch import peripherals
 
         with self.link.busy("moving the hand"):
-            hand = peripherals.HandModbus(self.robot, self.side, log=self._alix_log())
-            ret = hand.open(speed_set=HAND_SPEED_SET)
-            if ret != 0:
-                self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
-                raise UserError(f"The {self.SIDE} hand cannot be reached (Modbus).", "Check the hand's cable and power.")
+            hand = self._hand
+            if hand is None:
+                hand = peripherals.HandModbus(self.robot, self.side, log=self._alix_log())
+                ret = hand.open(speed_set=HAND_SPEED_SET)
+                if ret != 0:
+                    self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
+                    raise UserError(f"The {self.SIDE} hand cannot be reached (Modbus).", "Check the hand's cable and power.")
+            used = HAND_SPEED_SET
+            if duration_s is not None:
+                from .device_speed import hand_speed_sets
+
+                used, how = hand_speed_sets(self.side, hand.read(), list(counts), float(duration_s))
+                self._hand_speeds_to(hand, used, how)
+            elif hand is self._hand:
+                self._hand_speeds_to(hand, [HAND_SPEED_SET] * 6)
             out = hand.command(list(counts), wait=True)
         done = bool(out.get("ok") and (out.get("arrived") or out.get("settled")))
         short = "" if out.get("arrived") or not done else " (settled short of the target: stopped on force)"
-        self._hw("hand move", args=dict(counts=list(counts), speed_set=HAND_SPEED_SET), ret=out.get("ret"),
+        self._hw("hand move", args=dict(counts=list(counts), speed_set=used), ret=out.get("ret"),
                  ok=done, elapsed_s=out.get("t_s"), text=f"read back {out.get('after')}{short}")
         if not done:
             raise UserError(f"The {self.SIDE} hand did not reach its pose (it reads {out.get('after')}).",
@@ -871,6 +945,7 @@ class RealArm:
         ``finally``. ``stop_hook(fn)`` registers ``fn`` for STOP, which interrupts the runner as V53's
         STOP does (Ctrl+C: its own slow stop of the arm, the pole stopped, the hand frozen). ``record``: the
         controller's feed recorded to that file around the call (S2_FEED_CYCLE; the result's ``feed``)."""
+        self.drop_feed()                             # a lid or seat run's kept feed never stays on under a program
         rt = _runner()
         norm = [rt.normalize_workflow_step(st) for st in steps]
         a = SimpleNamespace(yes=True, side=self.side, workflow_overall_speed=int(overall_pct), restore_speed=int(restore_pct),
@@ -1157,17 +1232,78 @@ class RealArm:
         return dict(name=name)
 
     # ── ALIX's CanFD lane: a lid or seat plan's arm move, streamed from this computer, one line every 5 ms
+    def _capture(self, label: str, records: Path | None):
+        """ALIX's capture of this controller's 5 ms push (``track.UdpRecorder``, a port per arm; an emulated arm: its
+        joints read every 5 ms), started: (recorder, path). Runs inside the link's busy(). Raises UserError when it
+        cannot be set up: nothing was streamed."""
+        from alix_dispatch import track
+
+        folder = Path(records) if records else Path(tempfile.gettempdir()) / "lite-canfd"
+        folder.mkdir(parents=True, exist_ok=True)
+        slug = "".join(ch if ch.isalnum() else "_" for ch in label)[:60]
+        cap = folder / f"{time.strftime('%Y%m%d_%H%M%S')}_{slug}.frames.jsonl"
+        alog = self._alix_log()
+
+        def log(*parts):
+            alog(" ".join(str(p) for p in parts))
+
+        capture = _EmulatedCapture if self.link.emulated else track.UdpRecorder
+        rec = capture(cap, self.handle.host_ip, port=UDP_PORT[self.side], log=log)
+        try:
+            rec.start(self.robot)
+        except Exception as exc:                                                # noqa: BLE001
+            self._hw("canfd capture", ok=False, text=f"refused: {exc}")
+            from .udp_push import capture_refused_hint       # who holds the port: this connection, or another program
+
+            hint = capture_refused_hint(UDP_PORT[self.side]) if "already bound" in str(exc) else None
+            raise UserError(f"The {self.SIDE} controller's 5 ms feed to this computer could not be set up ({exc}), so "
+                            "nothing was streamed.", hint or "Check that nothing else (ALIX's driver) takes the controller's push.") from None
+        return rec, cap
+
+    def keep_feed(self, label: str, records: Path | None = None) -> str:
+        """The controller's 5 ms push turned on and kept on, recorded on this computer, until ``drop_feed``: a lid or seat
+        run's moves attach their watches to it one after another, as ALIX's recorder is made to be used ("opened once
+        per RUN", a monitor per stroke), instead of turning it on and off around each move: four controller calls,
+        about 1.1 s a move on 24 Oct (12 moves, 13 s of a 79 s seat run). Returns the capture's name."""
+        if self._feed is None:
+            self._ratio = None
+            with self.link.busy(f"turning on the 5 ms feed ({label})"):
+                self._feed = self._capture(label, records)
+            self._hw("canfd feed", args=dict(label=label, capture=self._feed[1].name), ok=True, text="on, kept for the run's moves")
+        return self._feed[1].name
+
+    def drop_feed(self) -> dict | None:
+        """The kept feed turned off: the controller's push put back as it was found (ALIX's recorder). Never raises; one
+        that cannot be turned off now is kept, for the next drop_feed (and the next connection clears it)."""
+        kept, self._feed, self._ratio = self._feed, None, None
+        if kept is None:
+            return None
+        rec, cap = kept
+        rec.attach_monitor(None)
+        try:
+            with self.link.busy("turning off the 5 ms feed", wait_s=CLOSE_WAIT_S):
+                rec.stop(self.robot)
+        except Exception as exc:                                                    # noqa: BLE001
+            self._feed = kept
+            self._hw("canfd feed", args=dict(capture=cap.name), ok=False, text=f"not turned off ({exc})")
+            return None
+        restored = getattr(rec, "push_restored", None) or {}
+        self._hw("canfd feed", args=dict(capture=cap.name), ok=restored.get("ok") is not False,
+                 text=f"off, {rec.frames} frames kept")
+        return dict(capture=cap.name, frames=int(rec.frames))
+
     def stream(self, rows_millideg: list, label: str, *, speed: int = 50, restore_pct: int = RESTORE_PCT,
                bridge_speed: int | None = None, stop_hook=None, records: Path | None = None) -> dict:
         """One arm move of ALIX's lid and seat plans (mechanism.py), as ALIX's ROS-free lane plays a track
         (cleaning_tracks.run_one): the controller's 5 ms push captured on this computer (``track.UdpRecorder``, a
-        port per arm) and watched (``CanfdWatch``: a stop code, or an arm that does not follow, stops the
-        stream); refused when no frame comes or a stop code is live; then ``track.run_verified(channel="canfd")``:
-        the lines checked against the pass-through's limits (the per-joint gate), the arm at the first line
-        (within one frame's step) or, with ``bridge_speed``, brought there by ALIX's explicit MoveJ at that speed,
-        then one ``rm_movej_canfd`` per line on absolute 5 ms deadlines, and the arm left at rest. STOP
-        (``stop_hook``) stops the sending at once (the watch, and the thread interrupted); the arm holds the last
-        line it took, and Lite's STOP stops it on its controller. The capture is kept in ``records``."""
+        port per arm: the run's kept feed when ``keep_feed`` turned it on, else this move's own) and watched
+        (``CanfdWatch``: a stop code, or an arm that does not follow, stops the stream); refused when no frame comes
+        or a stop code is live; then ``track.run_verified(channel="canfd")``: the lines checked against the
+        pass-through's limits (the per-joint gate), the arm at the first line (within one frame's step) or, with
+        ``bridge_speed``, brought there by ALIX's explicit MoveJ at that speed, then one ``rm_movej_canfd`` per line on
+        absolute 5 ms deadlines, and the arm left at rest. STOP (``stop_hook``) stops the sending at once (the watch,
+        and the thread interrupted); the arm holds the last line it took, and Lite's STOP stops it on its controller.
+        The capture is kept in ``records``; the record names the stretch of it this move took (``t_mono``)."""
         from alix_dispatch import track
 
         rows = [[int(v) for v in r] for r in rows_millideg]
@@ -1175,10 +1311,6 @@ class RealArm:
         if n == 0:
             raise UserError(f"{label}: no lines to stream.")
         h = self.handle
-        folder = Path(records) if records else Path(tempfile.gettempdir()) / "lite-canfd"
-        folder.mkdir(parents=True, exist_ok=True)
-        slug = "".join(ch if ch.isalnum() else "_" for ch in label)[:60]
-        cap = folder / f"{time.strftime('%Y%m%d_%H%M%S')}_{slug}.frames.jsonl"
         stop = threading.Event()
         watch = _StopWatch(rows, CANFD_PERIOD_S, stop)
         tid, guard, state = threading.get_ident(), threading.Lock(), {"inside": False}
@@ -1196,25 +1328,32 @@ class RealArm:
         def log(*parts):
             alog(" ".join(str(p) for p in parts))
 
+        def first_frame() -> bool:
+            t_end = time.monotonic() + 1.0
+            while watch.n_frames == 0 and time.monotonic() < t_end:
+                time.sleep(0.02)
+            return watch.n_frames > 0
+
         t0 = time.monotonic()
         out: dict = {}
+        held = False
         with self.link.busy(f"streaming {label}", expect_s=n * CANFD_PERIOD_S + 60):
-            capture = _EmulatedCapture if self.link.emulated else track.UdpRecorder
-            rec = capture(cap, h.host_ip, port=UDP_PORT[self.side], log=log)
+            kept = self._feed is not None
+            rec, cap = self._feed if kept else self._capture(label, records)
             rec.attach_monitor(watch)
+            t_mono0 = time.monotonic()
             try:
-                rec.start(self.robot)
-            except Exception as exc:                                                # noqa: BLE001
-                self._hw("canfd capture", ok=False, text=f"refused: {exc}")
-                from .udp_push import capture_refused_hint       # who holds the port: this connection, or another program
-
-                hint = capture_refused_hint(UDP_PORT[self.side]) if "already bound" in str(exc) else None
-                raise UserError(f"The {self.SIDE} controller's 5 ms feed to this computer could not be set up ({exc}), so "
-                                "nothing was streamed.", hint or "Check that nothing else (ALIX's driver) takes the controller's push.") from None
-            try:
-                t_end = time.monotonic() + 1.0
-                while watch.n_frames == 0 and time.monotonic() < t_end:
-                    time.sleep(0.02)
+                if not first_frame() and kept:        # the kept feed went quiet: this move's own, kept from here on
+                    rec.attach_monitor(None)
+                    self._hw("canfd feed", args=dict(capture=cap.name), ok=False, text="no frame for 1 s: turned on again")
+                    try:
+                        rec.stop(self.robot)
+                    except Exception:                                                   # noqa: BLE001
+                        pass
+                    self._feed = None
+                    rec, cap = self._feed = self._capture(label, records)
+                    rec.attach_monitor(watch)
+                    first_frame()
                 if watch.n_frames == 0:
                     raise UserError(f"No 5 ms frame came from the {self.SIDE} controller to {h.host_ip}:{UDP_PORT[self.side]}, so "
                                     "nothing was streamed (the stream's stop check would be blind).",
@@ -1223,6 +1362,7 @@ class RealArm:
                     code = next(iter(watch.stop_codes))
                     raise UserError(f"The {self.SIDE} controller reports {code}, so nothing was streamed.",
                                     "Clear the error (Robot & mode), then run it again.")
+                held = self._feed is not None and self._ratio == int(speed) == int(restore_pct)
                 try:
                     with guard:
                         if stop.is_set():
@@ -1234,7 +1374,9 @@ class RealArm:
                         require_at_start=bridge_speed is None, movej_speed=bridge_speed, log=log, settle_after=True,
                         channel="canfd", track_rows_millideg=rows, canfd_watch=watch,
                         canfd={"period_s": CANFD_PERIOD_S, "rate_gate": "per_joint", "follow": True,
-                               "trajectory_mode": 0, "radio": 0})
+                               "trajectory_mode": 0, "radio": 0}, ratio_held=held)
+                    if not held:                      # put back to restore_pct (or not known, when that failed)
+                        self._ratio = int(restore_pct) if (out.get("restored") or {}).get("global_speed", {}).get("restored") else None
                 finally:
                     with guard:
                         state["inside"] = False
@@ -1243,7 +1385,11 @@ class RealArm:
             except KeyboardInterrupt:
                 out = dict(out, interrupted=True)
             finally:
-                rec.stop(self.robot)
+                if self._feed is not None and self._feed[0] is rec:
+                    rec.attach_monitor(None)          # the run's feed stays on for its next move
+                else:
+                    rec.stop(self.robot)
+            t_mono1 = time.monotonic()
         cs = out.get("canfd") or {}
         sent, ok = int(cs.get("lines_sent") or 0), bool(out.get("ok")) and not out.get("restore_failed")
         if not cs and out.get("interrupted"):         # STOP inside run_verified: no result, the stop checks saw the lines
@@ -1251,7 +1397,8 @@ class RealArm:
         bridged = out.get("gap_deg") if out.get("movej_ret") == 0 else None
         why = out.get("cut_reason") or cs.get("aborted") or ("STOP" if stop.is_set() else None)
         self._hw("canfd stream", args=dict(label=label, lines=n, period_ms=CANFD_PERIOD_S * 1000, rate_gate="per_joint",
-                                           bridge_speed=bridge_speed, capture=cap.name),
+                                           bridge_speed=bridge_speed, capture=cap.name, ratio_held=held,
+                                           t_mono=[round(t_mono0, 3), round(t_mono1, 3)]),
                  ret=out.get("verdict"), ok=ok, elapsed_s=time.monotonic() - t0,
                  text=f"{sent}/{n} lines" + (f", bridged {bridged:.2f} deg" if bridged else "") + (f"; {why}" if why and not ok else ""))
         if stop.is_set():
@@ -1272,6 +1419,7 @@ class RealArm:
         with self.link.busy("moving to the start", expect_s=120):
             out = alix_staging.park_arm(self.handle, {}, rest_deg=deg, rest_speed=int(speed), restore_speed=int(restore_pct),
                                         log=self._alix_log())
+            self._ratio = int(restore_pct) if out.get("ok") else None     # what park_arm put back
             gap = track.start_gap_deg(self.robot, list(target_millideg))
         ok = bool(out.get("ok")) and gap is not None and gap <= alix_staging.START_TOLERANCE_DEG
         self._hw("move to pose", args=dict(deg=[round(d, 2) for d in deg], speed=int(speed), restore_speed=int(restore_pct)), ok=ok,

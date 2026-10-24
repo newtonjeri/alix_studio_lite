@@ -873,8 +873,8 @@
       "dest": "vendor/alix/core/python/alix_dispatch/src/alix_dispatch/track.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_dispatch/src/alix_dispatch/track.py",
       "origin": "alix",
-      "sha256": "9eb618ba40db7d27be2223c23080371f915037ebd5717336ef996e6bb105f238",
-      "bytes": 227036
+      "sha256": "b8953473413cea397bf05e6707a9c72eaf49440c80f5fdbbbf0143998559e00b",
+      "bytes": 227690
     },
     {
       "dest": "vendor/alix/core/python/alix_dispatch/src/alix_dispatch/verdict.py",
@@ -1013,8 +1013,8 @@
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "origin": "alix",
-      "sha256": "316cd0cfc1b24a1018a4cf3bd86cfdc7c3c63f21bae4a5ec9d97d327612f7f83",
-      "bytes": 52581
+      "sha256": "ba11be2d04d7f34698f7f22e7f2800383227f362e80f5a0d962b3e33b895ee67",
+      "bytes": 54327
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/geometry.py",
@@ -1118,8 +1118,8 @@
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/seat_rise.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/seat_rise.py",
       "origin": "alix",
-      "sha256": "775529326367edc1d42bbc941098be962aabd514bfc6eeaee19ec2af7ce67b28",
-      "bytes": 28534
+      "sha256": "284e2ac8f02ef85366a59ab083186bf7ccf228c205bd6c3d66a9317816d05b22",
+      "bytes": 29508
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/seat_state.py",
@@ -4456,11 +4456,25 @@
       "bytes": 940
     },
     {
+      "dest": "vendor/alix/ros/hw/alix_hw/include/alix_hw/conversions.hpp",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/hw/alix_hw/include/alix_hw/conversions.hpp",
+      "origin": "alix",
+      "sha256": "8e759945bfbcec6b04e543cac5716fb756083f27eba4e1dad7b37218246b2525",
+      "bytes": 19455
+    },
+    {
       "dest": "vendor/alix/ros/hw/alix_hw/scripts/hand_units.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/hw/alix_hw/scripts/hand_units.py",
       "origin": "alix",
       "sha256": "bcee1a0a0ed4dd3a80edea02d3d67fc7e803467852f93e0e871956f94dfa3c1b",
       "bytes": 6395
+    },
+    {
+      "dest": "vendor/alix/ros/hw/alix_hw/urdf/rm_side.ros2_control.xacro",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/hw/alix_hw/urdf/rm_side.ros2_control.xacro",
+      "origin": "alix",
+      "sha256": "3555db39cfb3578b250bcbb96a22d07f47b1a5e76db4391cab055bb6d5fb8e09",
+      "bytes": 27810
     },
     {
       "dest": "vendor/alix/ros/manipulation/alix_moveit_config/config/alix.srdf",
@@ -4531,6 +4545,13 @@
       "origin": "alix",
       "sha256": "81989265ee7889adde86a47abbaf2f82c5c152787014af226ee65e6524f0ccbb",
       "bytes": 3330
+    },
+    {
+      "dest": "vendor/alix/ros/mobility/alix_control/config/controllers_real.yaml",
+      "source": "/home/newtonjeri/alix_ws/src/alix/ros/mobility/alix_control/config/controllers_real.yaml",
+      "origin": "alix",
+      "sha256": "a8e55c526a9474bc5bd9d5a9e7077fc4a275de3913e15bd8f65eb7af07eb5210",
+      "bytes": 25441
     },
     {
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_a/models/closed.stl",

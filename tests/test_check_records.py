@@ -28,6 +28,7 @@ def test_a_checks_record_holds_its_training_row(tmp_path):
     gc = GapCheck(records=tmp_path / "checks")
     a = gc.ask(rec["expect"], frame)
     assert a.success and a.fixture_state == rec["class"]
+    assert gc.flush()                                    # the records are written by their own thread
     row = json.loads(Path(a.record_path).read_text())
     assert row["context"] == context and row["split"] == ""
     assert row["colour_intrinsics"]["width"] == 1280 and row["colour_to_world"] == np.eye(4).tolist()

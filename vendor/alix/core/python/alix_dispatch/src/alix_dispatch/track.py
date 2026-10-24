@@ -419,8 +419,16 @@ def run_verified(robot, *, save_id: int, band_s, first_row_millideg,
                  channel: str = "upload",
                  track_rows_millideg=None,
                  canfd: Optional[dict] = None,
-                 canfd_watch: Optional["CanfdWatch"] = None) -> dict:
+                 canfd_watch: Optional["CanfdWatch"] = None,
+                 ratio_held: bool = False) -> dict:
     """The full run policy as a LIBRARY call — no prompts, no SystemExit.
+
+    *ratio_held* (CANFD only): the caller holds the global ratio at *speed*
+    already and *restore_pct* equals it, so setting it and putting it back
+    around the stream would change nothing; both calls are left out (ALIX
+    Studio Lite's lid and seat runs, 2026-10-24: 0.17 s a move). The verdict's
+    ``canfd_global_speed`` says ``held`` and ``restored.global_speed`` stays
+    empty. Ignored on the upload channel, whose program speed is its own.
 
     *channel* "canfd" plays *track_rows_millideg* from the host with
     :func:`stream_track` (options in *canfd*: period_s, follow,
@@ -676,16 +684,17 @@ def run_verified(robot, *, save_id: int, band_s, first_row_millideg,
         with lim.guard(robot, caps, log=log, verdict=caps_verdict) as caps_before:
             out["caps_before"] = caps_before
             out["caps_applied"] = dict(caps) if caps else None
-            with global_speed_guard(robot, restore_pct, log=log,
-                                    verdict=speed_verdict):
+            held = bool(ratio_held) and is_canfd and int(restore_pct) == int(speed)
+            with (contextlib.nullcontext() if held else
+                  global_speed_guard(robot, restore_pct, log=log, verdict=speed_verdict)):
                 if is_canfd:
                     # PARITY: the upload run plays under the global ratio its
                     # `speed` sets (rm_set_program_id_run == the pendant slider),
                     # so the stream runs under the same one. Whether the ratio
                     # reaches a pass-through stream at all is unmeasured; this
                     # keeps it from being the difference.
-                    out["canfd_global_speed"] = {"pct": int(speed),
-                                                 "ret": set_global_speed(robot, int(speed))}
+                    out["canfd_global_speed"] = ({"pct": int(speed), "held": True} if held else
+                                                 {"pct": int(speed), "ret": set_global_speed(robot, int(speed))})
                     stream_rec: dict = {}
                     out["canfd"] = stream_rec
                     # THE GATE IN FORCE BELONGS IN THE STREAM'S OWN BLOCK, not only in

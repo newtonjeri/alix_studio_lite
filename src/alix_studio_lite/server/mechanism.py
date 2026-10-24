@@ -378,17 +378,48 @@ def digest(name: str) -> str:
     return _sha256(cached(name).path)
 
 
-def reverse_block(block: list) -> list:
+def reverse_block(block: list, note: str = "re-lift restore, reversed") -> list:
     """The way back along a lift that did not take (seat_open has no pre-planned rung): the lifting arm's moves of
-    the block in reverse order, each played backwards on its own timing (ALIX planned a restore with MoveIt)."""
+    the block in reverse order, each played backwards on its own timing (ALIX planned a restore with MoveIt). Also
+    the final check's way back from its inspection pose (``note``): the way in's own path, the hand as it went."""
     out = []
     for e in reversed([x for x in block if x.kind == "arm"]):
         T = e.seconds
         t = (T - e.t)[::-1]
         q = e.q[::-1]
         out.append(Entry(-1, e.index, f"back along {e.stage}", "arm", e.side, list(e.joints), t, q, [],
-                         rows=emit_rows(t, q), note="re-lift restore, reversed"))
+                         rows=emit_rows(t, q), note=note))
     return out
+
+
+def joined_moves(entries: list, i: int, bridged=()) -> tuple:
+    """(``entries[i]`` with the same arm's moves straight after it as ONE stream, how many entries it takes): each
+    stream has its own start, stop and settle (24 Oct: 1.6 s a stream). Only a plan's own moves are joined (no re-lift
+    or rung move; a "one point" move is the plan's), none asking the camera or holding before it, none bridged, each
+    starting on the line the one before ends on (every pair in the four plans: 0 millidegrees apart)."""
+    e = entries[i]
+
+    def plain(x) -> bool:
+        return x.kind == "arm" and (not x.note or x.note.startswith("one point")) and x.rows is not None
+
+    if not plain(e):
+        return e, 1
+    group = [e]
+    for x in entries[i + 1:]:
+        if (not plain(x) or x.side != e.side or x.pre_actions or id(x) in bridged
+                or max(abs(a - b) for a, b in zip(group[-1].rows[-1], x.rows[0])) > 0):
+            break
+        group.append(x)
+    if len(group) == 1:
+        return e, 1
+    t, q, offset = [], [], 0.0
+    for x in group:
+        t.append(np.asarray(x.t, dtype=float) + offset)
+        q.append(np.asarray(x.q, dtype=float))
+        offset += x.seconds
+    return Entry(e.i, e.index, " + ".join(x.stage for x in group), "arm", e.side, list(e.joints), np.concatenate(t),
+                 np.concatenate(q), list(e.pre_actions), rows=[r for x in group for r in x.rows], group=e.group,
+                 note=" + ".join(x.note for x in group if x.note)), len(group)
 
 
 #: A joint this close to the reversed lift's first line (millidegrees) is where the lift ended.
@@ -465,11 +496,15 @@ class Runner:
 
     def run(self, name: str) -> dict:
         self.queue, self.k = [name], 0
-        while self.k < len(self.queue):
-            outcome = self._plan(self.queue[self.k])
-            if outcome == "prerequisite":
-                continue                             # it was put at k: it runs now, this plan again after it
-            self.k += 1
+        getattr(self.ex, "begin", lambda _name: None)(name)
+        try:
+            while self.k < len(self.queue):
+                outcome = self._plan(self.queue[self.k])
+                if outcome == "prerequisite":
+                    continue                         # it was put at k: it runs now, this plan again after it
+                self.k += 1
+        finally:
+            getattr(self.ex, "finish", lambda: None)()
         return dict(plans=self.done, checks=self.checks)
 
     def _plan(self, name: str) -> str:
@@ -504,8 +539,9 @@ class Runner:
                 raise UserError(verdict[1], "A person must look at the commode: nothing else was moved after this.",
                                 code="escalate")
             self.ex.check_stop()
-            self.ex.move(e, bridge=id(e) in state["bridge"])
-            i += 1
+            joined, used = joined_moves(entries, i, state["bridge"])
+            self.ex.move(joined, bridge=id(e) in state["bridge"])
+            i += used
         for a in self.final_actions(plan):
             self.ex.hold(float(a.get("seconds") or 0.0), a.get("stage") or "hold_pose")
         if not state["skipped"]:
@@ -529,7 +565,8 @@ class Runner:
 
     def _final_check(self, plan) -> None:
         """The plan's end state, seen by the camera (FINAL_CHECKS): the right arm to its inspection pose the way ALIX
-        planned it in that state, the camera asked, the right arm back to where the plan ended. A NOT stops the run there."""
+        planned it in that state, the camera asked, the right arm back along that way in (24 Oct: a MoveJ at the speed
+        slider took 3.2 s) and its pole and hand to where the plan ended. A NOT stops the run there."""
         fc = final_check(plan.name)
         a, expect, by = fc["action"], fc["expect"], fc["by"]
         self.say(f"FINAL CHECK {plan.title}: the right arm to its inspection pose ({by.title}'s way in), the camera checks "
@@ -551,6 +588,9 @@ class Runner:
             raise UserError(f"{plan.title} ran to its end, but the camera does not see {expect.replace('_', ' ')} after it "
                             f"(it reads {answer.fixture_state} at {float(answer.state_confidence):.2f}).",
                             "A person must look at the commode: nothing else was moved after this.", code="escalate")
+        for e in reverse_block(fc["look"], note="the final check's way in, reversed"):   # 24 Oct: a MoveJ at the slider, 3.2 s
+            self.ex.check_stop()
+            self.ex.move(e)
         self.ex.approach(plan, {"right": plan.targets("end")["right"]}, "end", words=f"where {plan.title} ended")
 
     def _cannot_judge(self, label, expect, answer, lead="", final=False):
@@ -726,6 +766,12 @@ class _Exec:
     def check_stop(self) -> None:
         self.job.check()
 
+    def begin(self, name: str) -> None:
+        """A run of plan ``name`` (and what follows it) starts."""
+
+    def finish(self) -> None:
+        """The run ends, however it ends."""
+
     def hold(self, seconds: float, label: str) -> None:
         if seconds > 0:
             self.job.progress(f"{label}: holding {seconds:g} s")
@@ -802,6 +848,7 @@ class RealExec(_Exec):
         super().__init__(job, log)
         self.robot, self.arms, self.kit = robot, arms, kit
         self.live = live or (lambda side, text: None)   # S2's live line of each arm
+        self._name, self._feeds, self._hands = "lid_seat", set(), set()
 
     def _arm(self, side):
         a = self.arms.get(side)
@@ -809,33 +856,101 @@ class RealExec(_Exec):
             raise UserError(f"The {side.upper()} arm is not connected.", "Connect it, then run the task again.")
         return a
 
+    def begin(self, name: str) -> None:
+        """The wrist camera opened at once, beside the arms' first moves, so its exposure settles while they move (24
+        Oct: opened at the first check, with its 1 s settle, 1.2 s of every run). One that cannot open says so at the
+        first check, as before."""
+        self._name = name
+        camera = self.kit.camera
+
+        def open_it():
+            try:
+                camera.open()
+            except Exception:                                                       # noqa: BLE001 - the check says it
+                pass
+
+        threading.Thread(target=open_it, name="lite-camera-open", daemon=True).start()
+
+    def finish(self) -> None:
+        """However the run ends: each arm's kept feed turned off (the controller's push put back), its hand let go, and
+        the check records written."""
+        for side in sorted(self._feeds):
+            try:
+                self._arm(side).drop_feed()
+            except Exception as exc:                                                # noqa: BLE001
+                self.say(f"{side.upper()}: its 5 ms feed was not turned off ({exc})", "warn")
+        for side in sorted(self._hands):
+            try:
+                self._arm(side).drop_hand()
+            except Exception:                                                       # noqa: BLE001 - nothing held on it
+                pass
+        self._feeds.clear()
+        self._hands.clear()
+        self.kit.gap.flush()
+
+    def _keep_feed(self, side) -> None:
+        """The arm's 5 ms feed on for the rest of the run, from its first move (robot_real.keep_feed)."""
+        if side not in self._feeds:
+            self._arm(side).keep_feed(f"{side.upper()}_{self._name}", records=self.kit.records_dir("canfd"))
+            self._feeds.add(side)
+
+    def _keep_hand(self, side) -> None:
+        """The arm's hand opened once for the run (robot_real.keep_hand); one that cannot be is opened by each move."""
+        if side not in self._hands:
+            self._hands.add(side)
+            if not self._arm(side).keep_hand():
+                self.say(f"{side.upper()}: its hand could not be opened for the run: each hand move opens it", "warn")
+
     def approach(self, plan, targets, at, words=None):
+        """Each arm to ``targets``: both arms' poles and hands at once (the owner, 24 Oct: one after the other took 2 s
+        more a run), then each arm's MoveJ at the speed slider's speed, one arm after the other, as before."""
         from . import staging
 
         pct = int(self.robot.speed_pct)
         where = words or f"{plan.title}'s {at}"
+        stages = {}
         for side, tg in targets.items():
-            self.check_stop()
-            arm = self._arm(side)
+            self._arm(side)
             pole, hand = self.robot._measured(side)
-            stage = staging.make_stage(tg.get("pole_mm", pole if pole is not None else 0.0),
-                                       tg.get("hand") or [None] * 6, where)
-            self.job.progress(f"{side.upper()}: pole and hand to {where}")
-            arm.stage(stage)
+            stages[side] = staging.make_stage(tg.get("pole_mm", pole if pole is not None else 0.0),
+                                              tg.get("hand") or [None] * 6, where)
+        self.check_stop()
+        self.job.progress(f"{' and '.join(s.upper() for s in stages)}: pole and hand to {where}")
+        failed = {}
+
+        def one(side):
+            try:
+                self._keep_hand(side)
+                self._arm(side).stage(stages[side])
+            except BaseException as exc:                                            # noqa: BLE001 - raised below
+                failed[side] = exc
+
+        threads = [threading.Thread(target=one, args=(side,), name=f"lite-stage-{side}", daemon=True) for side in stages]
+        for t in threads:
+            t.start()
+        for t in threads:
+            while t.is_alive():
+                t.join(0.1)
+        for side in stages:
+            if side in failed:
+                raise failed[side]
+        for side, tg in targets.items():
             if "arm_deg" in tg:
                 self.check_stop()
                 self.job.progress(f"{side.upper()}: MoveJ to {where} at {pct} %")
-                arm.move_to([round(v * 1000) for v in tg["arm_deg"]], speed=pct, restore_pct=self.robot.found_speed(side))
+                self._arm(side).move_to([round(v * 1000) for v in tg["arm_deg"]], speed=pct,
+                                        restore_pct=self.robot.found_speed(side))
             self.say(f"{side.upper()}: at {where}")
 
     def move(self, e, bridge=False):
         arm = self._arm(e.side)
         self.job.progress(f"{e.label()}: {e.seconds:.2f} s")
         self.live(e.side, f"{e.stage}{f' ({e.note})' if e.note else ''} // RUNNING")
-        if e.kind == "pole":
-            arm.pole_to(e.last()[0] * 1000.0)
+        if e.kind == "pole":                          # at the speed ALIX's executive sets from its planned time
+            arm.pole_to(e.last()[0] * 1000.0, duration_s=e.seconds)
         elif e.kind == "hand":
-            arm.hand_to(e.hand_counts())
+            self._keep_hand(e.side)
+            arm.hand_to(e.hand_counts(), duration_s=e.seconds)
         else:
             rows = e.rows
             if e.note == "re-lift restore, reversed":      # from where the arm stands (hold_short)
@@ -847,6 +962,7 @@ class RealExec(_Exec):
                         self.say(f"{e.label()}: from where the arm stands: " + ", ".join(
                             f"J{j} held where it stopped, {d:.1f} degrees short of the lift's end" for j, d in held)
                             + ", until the way back comes past it")
+            self._keep_feed(e.side)
             out = arm.stream(rows, e.label(), speed=50, restore_pct=self.robot.found_speed(e.side),
                              bridge_speed=int(self.robot.speed_pct) if bridge else None,
                              stop_hook=self.job.on_cancel, records=self.kit.records_dir("canfd"))
@@ -1057,6 +1173,15 @@ def kit(robot) -> Kit:
             k = Kit(robot)
             robot._mechanism_kit = k
         return k
+
+
+def warm_up(robot) -> str:
+    """The wrist camera's perception made ready as Lite starts with the real arms (its core, the colour model loaded and
+    run once): on 24 Oct the first check after a start took 17.5 s, 12 s of it loading them. Never raises."""
+    try:
+        return kit(robot).gap.warm()
+    except Exception as exc:                                                        # noqa: BLE001
+        return f"not warmed ({exc})"
 
 
 def camera_required(robot, stage: str | None = None) -> dict:

@@ -368,6 +368,11 @@ def main(argv=None) -> int:
     except OSError:
         return _port_taken(a.port, root, url, a.no_browser)
 
+    if a.robot == "realman":                         # the wrist camera's perception loaded now, not at the first check
+        from . import mechanism
+
+        threading.Thread(target=mechanism.warm_up, args=(app.robot,), name="lite-perception-warm", daemon=True).start()
+
     def _terminate(signum, frame):        # a service manager's stop behaves like Ctrl+C
         raise KeyboardInterrupt
 

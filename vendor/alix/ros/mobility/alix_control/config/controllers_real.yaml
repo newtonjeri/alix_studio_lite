@@ -1,0 +1,585 @@
+# =============================================================================
+# controllers_real.yaml — REAL-HARDWARE controller set
+# =============================================================================
+# Same layout as controllers.yaml (sim) with ONE deliberate divergence:
+# pole and hand run alix_hw/ProfiledPositionController instead of the
+# JTC, because the real devices are PROFILED positioners (onboard motion
+# profile that restarts on every command — hardware-verified 2026-07-11:
+# retargeting produces stepwise motion). Arms keep the JTC: the RM75
+# passthrough stream is a true servo interface (bench: ~0.1 deg tracking).
+# Simulation keeps controllers.yaml unchanged (gz joints are servo axes).
+# =============================================================================
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    left_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    right_arm_controller:
+      type: joint_trajectory_controller/JointTrajectoryController
+
+    left_hand_controller:
+      type: alix_hw/ProfiledPositionController
+
+    right_hand_controller:
+      type: alix_hw/ProfiledPositionController
+
+    left_pole_controller:
+      type: alix_hw/ProfiledPositionController
+
+    right_pole_controller:
+      type: alix_hw/ProfiledPositionController
+
+    # Track replay (DRIVER_EXECUTION_CONTRACTS.md §4): claims the same 7 arm
+    # position interfaces as the JTC, so controller_manager makes the two
+    # mutually exclusive — activate one, deactivate the other. Loaded
+    # INACTIVE; the executive switches per track group.
+    # No longer production (CANFD_PRODUCTION_DRIVER.md §7): the bringup
+    # spawns these only with with_upload_replay:=true, until the separation
+    # pass (§8) moves the upload lane out of ros2_control.
+    left_track_replay_controller:
+      type: alix_hw/TrackReplayController
+
+    right_track_replay_controller:
+      type: alix_hw/TrackReplayController
+
+    # THE PRODUCTION STROKE (CANFD_PRODUCTION_DRIVER.md §5): one pinned dense
+    # track per ~/stream_track goal on the CANFD pass-through, host-timed by
+    # the hardware's stroke channel. Same exclusivity as above (the 7 arm
+    # positions + the <P>_stroke gpio); loaded INACTIVE, per canfd side, once
+    # that side's JTC is up; the executive switches JTC -> this and back.
+    left_track_stream_controller:
+      type: alix_hw/TrackStreamController
+
+    right_track_stream_controller:
+      type: alix_hw/TrackStreamController
+
+    ugv_steering_controller:
+      type: position_controllers/JointGroupPositionController
+
+    ugv_driving_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+
+left_arm_controller:
+  ros__parameters:
+    joints:
+      - L_joint1
+      - L_joint2
+      - L_joint3
+      - L_joint4
+      - L_joint5
+      - L_joint6
+      - L_joint7
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    # REAL-HARDWARE tolerances: path (trajectory) tolerance is DISABLED —
+    # cleaning is contact-rich, and surface drag makes tracking error grow as
+    # a matter of physics, not fault (field finding 2026-07-12: 0.20 rad
+    # aborted valid wipes). The goal check remains: a genuinely stuck arm
+    # still fails at trajectory end + goal_time. Legacy never path-checked.
+    constraints:
+      stopped_velocity_tolerance: 0.05
+      goal_time: 2.0
+      L_joint1:
+        trajectory: 0.0
+        goal: 0.05
+      L_joint2:
+        trajectory: 0.0
+        goal: 0.05
+      L_joint3:
+        trajectory: 0.0
+        goal: 0.05
+      L_joint4:
+        trajectory: 0.0
+        goal: 0.05
+      L_joint5:
+        trajectory: 0.0
+        goal: 0.05
+      L_joint6:
+        trajectory: 0.0
+        goal: 0.05
+      L_joint7:
+        trajectory: 0.0
+        goal: 0.05
+
+right_arm_controller:
+  ros__parameters:
+    joints:
+      - R_joint1
+      - R_joint2
+      - R_joint3
+      - R_joint4
+      - R_joint5
+      - R_joint6
+      - R_joint7
+    command_interfaces:
+      - position
+    state_interfaces:
+      - position
+      - velocity
+    # REAL-HARDWARE tolerances: path (trajectory) tolerance is DISABLED —
+    # cleaning is contact-rich, and surface drag makes tracking error grow as
+    # a matter of physics, not fault (field finding 2026-07-12: 0.20 rad
+    # aborted valid wipes). The goal check remains: a genuinely stuck arm
+    # still fails at trajectory end + goal_time. Legacy never path-checked.
+    constraints:
+      stopped_velocity_tolerance: 0.05
+      goal_time: 2.0
+      R_joint1:
+        trajectory: 0.0
+        goal: 0.05
+      R_joint2:
+        trajectory: 0.0
+        goal: 0.05
+      R_joint3:
+        trajectory: 0.0
+        goal: 0.05
+      R_joint4:
+        trajectory: 0.0
+        goal: 0.05
+      R_joint5:
+        trajectory: 0.0
+        goal: 0.05
+      R_joint6:
+        trajectory: 0.0
+        goal: 0.05
+      R_joint7:
+        trajectory: 0.0
+        goal: 0.05
+
+left_hand_controller:
+  ros__parameters:
+    # §2.9: never call a hand goal done while the hardware says the posture
+    # did not reach the hand (write_stuck) or its ANGLE_ACT feedback is
+    # stale. A grasp that stops ON an object still succeeds — that is a
+    # healthy hand short of its target, and goal_tolerance stays open for it.
+    health_gpio: L_hand_health
+    # ProfiledPositionController: one target posture per goal (the hand
+    # profiles motion internally). Commands + feedback run in all-modbus mode
+    # by default (ANGLE_SET writes / measured ANGLE_ACT states, 2026-07-14);
+    # hold_until_duration keeps the goal open until the trajectory's nominal
+    # duration so downstream sequencing does not race the fingers (~800 ms
+    # full stroke no-load, RH56 series manual).
+    joints:
+      - ILH_left_thumb_1_joint
+      - ILH_left_thumb_2_joint
+      - ILH_left_index_1_joint
+      - ILH_left_middle_1_joint
+      - ILH_left_ring_1_joint
+      - ILH_left_little_1_joint
+    # COMPLETION MODE (DRIVER_EXECUTION_CONTRACTS.md §4, 2026-09-15). The
+    # default `tolerance` is the duration-based behaviour described below,
+    # byte for byte. A grasp goal that must be judged as HandModbus.command
+    # judges it — SETTLED (ANGLE_ACT unchanged <= 3 counts across two
+    # samples 200 ms apart, after the stroke law) or ARRIVED (within 15
+    # counts of target), bounded by 3x the law — sends its FollowJT goal with
+    # goal_time_tolerance = -1 s; the result's error_string then carries
+    # `arrived=<0/1> settled=<0/1>`. Set `completion: settle` to make that the
+    # controller-wide default instead. arrive_tolerance 0.02 rad = 15 counts
+    # on the 1.344 rad fingers; settle_eps 0.003 rad ~ 2-3 counts.
+    completion: tolerance
+    settle_eps: 0.003
+    arrive_tolerance: 0.02
+    settle_sample_gap: 0.2
+    # goal_tolerance spans the full joint travel (max 1.344 rad) ON PURPOSE:
+    # with real ANGLE_ACT feedback (modbus mode, 2026-07-14) a finger that
+    # closes ON AN OBJECT stops short of its position target — legacy
+    # semantics treat that as a successful grasp, not a tolerance violation.
+    # Completion is therefore duration-based (hold_until_duration); measured
+    # feedback still flows to /joint_states. Tighten only if position-based
+    # grasp-failure detection is explicitly wanted.
+    goal_tolerance: 1.5
+    goal_time_margin: 3.0
+    # SYNC (bench_sync 3-way campaign, BOTH hands 2026-07-27 —
+    # alix_hw/doc/BENCHMARKS.md §3.9 "HAND VERDICT"). The feasibility
+    # gate passed on both hands, so hand goals now finish on their planned
+    # timeline the same way pole goals do.
+    #
+    # MEASURED stroke law: stroke_ms = t_lat + k*span/SPEED_SET, with
+    # k = 370-376 on BOTH hands across three sessions (t_lat ~ 0). The
+    # hardware interface maps the velocity command per channel with
+    # SPEED_SET = k*v/max_rad, so a commanded rad/s is the delivered rad/s.
+    #
+    # accel: 0.0 ON PURPOSE — unlike the pole, the hand shows no measurable
+    # ramp (t_lat is 1-27 ms over a 150-3000 ms stroke), so the profile is
+    # v = distance/duration. CL-5 in BENCHMARKS §3.10 would refine this.
+    #
+    # Velocity limits follow from the SPEED_SET range [100, 1000] and the
+    # channel travels (1.344 rad fingers, 0.5236 rad thumb flexor):
+    #   min_match_speed 0.3603 = 100*1.344/373  (the LARGEST-travel channel;
+    #     below this a finger is floored -> the goal finishes early)
+    #   max_match_speed 1.4038 = 1000*0.5236/373 (the SMALLEST-travel channel;
+    #     above this the thumb flexor is capped)
+    # Both are conservative: the binding channel is clamped exactly at the
+    # limit, others have headroom. The hardware interface clamps per channel
+    # regardless, and the controller logs SATURATED when it hits the floor.
+    #
+    # CONSEQUENCE: a full-span grasp cannot be stretched beyond ~3.7 s
+    # (1.344 / 0.3603). Longer goals finish early and wait — benign, and
+    # reported, but NOT matched.
+    #
+    # start_latency 0.115 = the measured command latency (115 ms, sigma 15,
+    # both hands). No lead is applied anywhere: the measured hand-arm start
+    # skew already lands inside +/-100 ms with none.
+    use_velocity_interface: true
+    match_trajectory_duration: true
+    accel: 0.0
+    start_latency: 0.115
+    min_match_speed: 0.3603
+    max_match_speed: 1.4038
+    # ~0.37 s full stroke (1.344 rad) at SPEED_SET 1000 -> ~3.6 rad/s; but
+    # velocity-less goals keep the legacy-parity 1.7 rad/s (~0.8 s stroke).
+    default_speed: 1.7
+    hold_until_duration: true
+
+right_hand_controller:
+  ros__parameters:
+    # §2.9: never call a hand goal done while the hardware says the posture
+    # did not reach the hand (write_stuck) or its ANGLE_ACT feedback is
+    # stale. A grasp that stops ON an object still succeeds — that is a
+    # healthy hand short of its target, and goal_tolerance stays open for it.
+    health_gpio: R_hand_health
+    # ProfiledPositionController: one target posture per goal (the hand
+    # profiles motion internally). Commands + feedback run in all-modbus mode
+    # by default (ANGLE_SET writes / measured ANGLE_ACT states, 2026-07-14);
+    # hold_until_duration keeps the goal open until the trajectory's nominal
+    # duration so downstream sequencing does not race the fingers (~800 ms
+    # full stroke no-load, RH56 series manual).
+    joints:
+      - IRH_right_thumb_1_joint
+      - IRH_right_thumb_2_joint
+      - IRH_right_index_1_joint
+      - IRH_right_middle_1_joint
+      - IRH_right_ring_1_joint
+      - IRH_right_little_1_joint
+    # Completion mode — see left_hand_controller: `tolerance` keeps the
+    # duration-based semantics; a goal with goal_time_tolerance = -1 s (or
+    # `completion: settle`) is judged settled/arrived as HandModbus.command.
+    completion: tolerance
+    settle_eps: 0.003
+    arrive_tolerance: 0.02
+    settle_sample_gap: 0.2
+    # Same duration-based completion rationale as left_hand_controller.
+    goal_tolerance: 1.5
+    goal_time_margin: 3.0
+    # SYNC (bench_sync 3-way campaign, BOTH hands 2026-07-27 —
+    # alix_hw/doc/BENCHMARKS.md §3.9 "HAND VERDICT"). The feasibility
+    # gate passed on both hands, so hand goals now finish on their planned
+    # timeline the same way pole goals do.
+    #
+    # MEASURED stroke law: stroke_ms = t_lat + k*span/SPEED_SET, with
+    # k = 370-376 on BOTH hands across three sessions (t_lat ~ 0). The
+    # hardware interface maps the velocity command per channel with
+    # SPEED_SET = k*v/max_rad, so a commanded rad/s is the delivered rad/s.
+    #
+    # accel: 0.0 ON PURPOSE — unlike the pole, the hand shows no measurable
+    # ramp (t_lat is 1-27 ms over a 150-3000 ms stroke), so the profile is
+    # v = distance/duration. CL-5 in BENCHMARKS §3.10 would refine this.
+    #
+    # Velocity limits follow from the SPEED_SET range [100, 1000] and the
+    # channel travels (1.344 rad fingers, 0.5236 rad thumb flexor):
+    #   min_match_speed 0.3603 = 100*1.344/373  (the LARGEST-travel channel;
+    #     below this a finger is floored -> the goal finishes early)
+    #   max_match_speed 1.4038 = 1000*0.5236/373 (the SMALLEST-travel channel;
+    #     above this the thumb flexor is capped)
+    # Both are conservative: the binding channel is clamped exactly at the
+    # limit, others have headroom. The hardware interface clamps per channel
+    # regardless, and the controller logs SATURATED when it hits the floor.
+    #
+    # CONSEQUENCE: a full-span grasp cannot be stretched beyond ~3.7 s
+    # (1.344 / 0.3603). Longer goals finish early and wait — benign, and
+    # reported, but NOT matched.
+    #
+    # start_latency 0.115 = the measured command latency (115 ms, sigma 15,
+    # both hands). No lead is applied anywhere: the measured hand-arm start
+    # skew already lands inside +/-100 ms with none.
+    use_velocity_interface: true
+    match_trajectory_duration: true
+    accel: 0.0
+    start_latency: 0.115
+    min_match_speed: 0.3603
+    max_match_speed: 1.4038
+    # ~0.37 s full stroke (1.344 rad) at SPEED_SET 1000 -> ~3.6 rad/s; but
+    # velocity-less goals keep the legacy-parity 1.7 rad/s (~0.8 s stroke).
+    default_speed: 1.7
+    hold_until_duration: true
+
+left_pole_controller:
+  ros__parameters:
+    # ProfiledPositionController: ONE rm_set_lift_height per goal (final
+    # waypoint + trajectory peak velocity as speed); completion = real mm
+    # feedback within goal_tolerance. Streaming/retargeting this device
+    # produces stepwise motion (onboard profile restarts per command).
+    #
+    # MEASURED device profile (bench_pole_profile 7-stroke x 5-speed matrix,
+    # both poles, 2026-07-14 — alix_hw/doc/BENCHMARKS.md §3.5). These are
+    # the hardware's numbers, not tuning choices:
+    #   accel         0.166 m/s^2  (trapezoid ramp, global fit rms 6.8 mm/s)
+    #   start_latency 0.38 s       (observed max: up-moves 305-378 ms are
+    #   ~100 ms slower to start than down-moves — 2026-07-15 directional
+    #   matrix; velocity itself is direction-symmetric)
+    #   commanded velocity == delivered cruise (LiftChannel uses the measured
+    #   0.00185 m/s-per-% mapping — converged matrix rows k~1.85; the
+    #   earlier 0.0018 rounding ran ~3% fast and finished goals early),
+    #   valid up to 0.185 m/s (100%).
+    # goal_time_margin now only absorbs model residuals + settle detection
+    # (the old 3.0 s was padding for the unmodeled latency/accel).
+    # default_speed applies only to velocity-less trajectories: 0.09 m/s
+    # = 50%, the legacy stack's fixed lift speed.
+    joints:
+      - L_sliding_plate_joint
+    goal_tolerance: 0.005
+    goal_time_margin: 1.0
+    use_velocity_interface: true
+    default_speed: 0.09
+    accel: 0.166
+    start_latency: 0.38
+    # Stall-based abort (field finding 2026-07-14): the bench profile was
+    # measured on DOWNWARD strokes only; an upward 0.219 m move (lifting the
+    # arm) ran slower than the model and the strict deadline aborted it
+    # mid-travel while still converging. The deadline now only ARMS the
+    # abort; the goal aborts when progress also stalls for stall_timeout s.
+    stall_timeout: 1.0
+    # 0.5 mm = HALF the feedback quantum. Must stay strictly below it: the
+    # pole units were harmonized 1:1 with MoveIt (feedback quantum 1.5 mm ->
+    # 1.0 mm), which put the previous 0.001 exactly ON the quantum, so a
+    # one-count improvement stopped registering as progress and a healthy
+    # slow move could abort as stalled.
+    progress_epsilon: 0.0005
+    # SYNC (bench_sync 2026-07-21 — MoveIt is the sole source of command;
+    # all synchronization intelligence lives HERE, trajectories arrive
+    # unmodified): duration-matched speed makes pole goals FINISH on their
+    # planned timeline; direction-aware start latencies (down 0.23 s /
+    # up 0.33 s measured), warm-start penalty (+0.12 s when a goal follows
+    # the previous one within 2 s), and matched speeds clamped to the
+    # calibrated range (early finish is benign — the device waits at target).
+    #
+    # min_match_speed 0.0074 = 4% (LOWERED from 0.0185 = 10% on 2026-07-25).
+    # The 3-way ladder (T = 2/4/8 s x 6 strokes x both directions, both poles,
+    # BENCHMARKS §3.9) measured the implied cruise constant down to 2%:
+    #   pct    2      4      5      9    10-19   26-45
+    #   k    0.159  0.182  0.180  0.182  0.185   0.178
+    # i.e. kLiftCruiseMpsPerPct holds to ~2% down to 4% — the old "the model
+    # is only calibrated >= 10%" assumption was wrong, and the 10% clamp was
+    # itself the cause of the 1.5-2 s early finishes seen at MoveIt scaling
+    # <= 0.2 (every slow goal was forced up to 10%). 2% is excluded: k sags
+    # 14% there, which cost +1.5 s LATE on the T=8 s / 20 HW mm cell.
+    # Residual low-% error is integer quantization of speed%, handled by
+    # lift_speed_percent rounding UP (conversions.hpp).
+    #
+    # ⚠ COUPLED PARAMETER: `lift_min_speed_pct` in rm_side.ros2_control.xacro
+    # (default lowered 10 -> 4 at the same time) is a SECOND floor, applied
+    # inside LiftChannel after this one. If it is left above min_match_speed
+    # every duration-matched slow goal is clamped back up in the hardware
+    # component and this setting does nothing at all. Keep
+    # lift_min_speed_pct <= min_match_speed / 0.00185.
+    #
+    # NOTE (not a tunable): the residual START skew is duration-dependent —
+    # +160 ms at T=2 s, +35..+89 at T=4 s, -60..-110 at T=8 s — because a
+    # trajectory's visible onset moves with its own initial acceleration.
+    # The direction latencies below were fitted at T=4 s and are only valid
+    # near it; do not chase a single fixed lead across durations.
+    match_trajectory_duration: true
+    start_latency_down: 0.23
+    start_latency_up: 0.33
+    warm_latency_extra: 0.12
+    warm_window: 2.0
+    min_match_speed: 0.0074
+
+right_pole_controller:
+  ros__parameters:
+    # Same measured device profile as left_pole_controller (poles identical
+    # within ~1% in the 2026-07-14 matrix) — see comments there.
+    joints:
+      - R_sliding_plate_joint
+    goal_tolerance: 0.005
+    goal_time_margin: 1.0
+    use_velocity_interface: true
+    default_speed: 0.09
+    accel: 0.166
+    start_latency: 0.38
+    stall_timeout: 1.0
+    # 0.5 mm = HALF the feedback quantum. Must stay strictly below it: the
+    # pole units were harmonized 1:1 with MoveIt (feedback quantum 1.5 mm ->
+    # 1.0 mm), which put the previous 0.001 exactly ON the quantum, so a
+    # one-count improvement stopped registering as progress and a healthy
+    # slow move could abort as stalled.
+    progress_epsilon: 0.0005
+    # SYNC — identical to left_pole_controller; see the comment block there
+    # for the measured basis of every value (BENCHMARKS §3.9). Right pole
+    # start skews run ~50 ms slower than left but the speed mapping and the
+    # 4% floor are the same within 1%.
+    match_trajectory_duration: true
+    start_latency_down: 0.23
+    start_latency_up: 0.33
+    warm_latency_extra: 0.12
+    warm_window: 2.0
+    min_match_speed: 0.0074
+
+left_track_replay_controller:
+  ros__parameters:
+    # TrackReplayController (DRIVER_EXECUTION_CONTRACTS.md §4): plays ONE
+    # uploaded program slot per ~/replay_track goal on the controller's own
+    # player, through the hardware's L_program gpio (§2.2). It selects
+    # nothing (ruling 2, 2026-09-15): the executive pins slot/sha/points/band/
+    # first row from the plan's track_groups; the hardware refuses on pins and
+    # state (§2.4); this controller refuses only the accept-time start gap.
+    #
+    # Claims: L_joint1..7/position commands (EXCLUSIVE with left_arm_controller
+    # — controller_manager will not activate both) + every L_program/* command;
+    # states: L_joint1..7 position + velocity + every L_program/* state. It
+    # never writes the joint positions after holding them at the measured pose
+    # on activation, and on deactivation the hardware reseeds the stream (§2.3).
+    side: left
+    joints:
+      - L_joint1
+      - L_joint2
+      - L_joint3
+      - L_joint4
+      - L_joint5
+      - L_joint6
+      - L_joint7
+    program_prefix: L_program
+    # The hardware node (services ~/track_path for the pinned .txt of a slot
+    # and the capture path of a record; the CM lowercases the component name).
+    hardware_status_topic: /l_rm_side_hardware/status
+    track_path_service: /l_rm_side_hardware/track_path
+    # The ordered coverage matcher of track.verify_replay_from_frames: points
+    # behind / ahead of the nominal-clock index the arm may be matched within.
+    coverage_lag_behind: 400
+    coverage_lag_ahead: 150
+    # complete = finish_seen AND coverage >= complete_coverage AND the resting
+    # pose within rest_tolerance_deg (max-norm) of the commanded point it
+    # ended nearest (§1.1).
+    rest_tolerance_deg: 2.0
+    complete_coverage: 0.99
+    # The player's nominal clock, ms per point (F98). Ratios only — hardware
+    # runs 5.5-6.0 ms/pt and varies +-6 % on the same bytes (F108).
+    nominal_clock_ms: 5.5545
+    # Bounds: the whole run after cmd 1 (run_program's timeout class), the
+    # stop ladder (3 rungs x 1.5 s + margin), and how long the hardware gets
+    # to answer cmd 1 with a fresh phase before the goal is called unanswered.
+    run_timeout_s: 180.0
+    stop_timeout_s: 6.0
+    issue_grace_s: 1.0
+
+right_track_replay_controller:
+  ros__parameters:
+    # Mirror of left_track_replay_controller; see the comments there.
+    side: right
+    joints:
+      - R_joint1
+      - R_joint2
+      - R_joint3
+      - R_joint4
+      - R_joint5
+      - R_joint6
+      - R_joint7
+    program_prefix: R_program
+    hardware_status_topic: /r_rm_side_hardware/status
+    track_path_service: /r_rm_side_hardware/track_path
+    coverage_lag_behind: 400
+    coverage_lag_ahead: 150
+    rest_tolerance_deg: 2.0
+    complete_coverage: 0.99
+    nominal_clock_ms: 5.5545
+    run_timeout_s: 180.0
+    stop_timeout_s: 6.0
+    issue_grace_s: 1.0
+
+left_track_stream_controller:
+  ros__parameters:
+    # TrackStreamController (CANFD_PRODUCTION_DRIVER.md §5). Plays the pinned
+    # dense track through the hardware's L_stroke gpio (§3): the executive pins
+    # it (~/pin_track: path, sha, points, clock_s, tool frame) and this
+    # controller posts run / stop / release and judges the result. Every value
+    # below is the contract's §5 default.
+    #
+    # Claims: L_joint1..7/position commands (EXCLUSIVE with left_arm_controller
+    # and left_track_replay_controller) + every L_stroke/* command; states:
+    # L_joint1..7 position + every L_stroke/* state. Never writes the joint
+    # positions.
+    side: left
+    joints:
+      - L_joint1
+      - L_joint2
+      - L_joint3
+      - L_joint4
+      - L_joint5
+      - L_joint6
+      - L_joint7
+    stroke_prefix: L_stroke
+    # THE CLOCK, seconds per line: the hardware's canfd_period_ms (5.0 ms,
+    # alix.urdf.xacro). A goal whose clock_s differs by > 1e-6 is REJECTED
+    # (refusal clock_mismatch) — the driver never re-times a track (§0).
+    # 0.005 is the DEFAULT only: alix_real_hardware.launch.py layers a
+    # generated overlay after this file that sets period_s = canfd_period_ms
+    # / 1000 on both stream controllers, so the launch arg is the one knob for
+    # hardware and controllers (the executive's --canfd-period-ms is the only
+    # other, a separate process). Do not edit this to change the clock.
+    period_s: 0.005
+    # The ordered coverage matcher (replay::verify_replay at clock = period_s)
+    # over the controller's own (t, q) samples of the streaming window, with
+    # lines_sent/points as the second witness: points behind / ahead of the
+    # nominal index the arm may be matched within.
+    coverage_lag_behind: 400
+    coverage_lag_ahead: 150
+    # complete = hw.completed AND NOT hw.aborted AND coverage >=
+    # complete_coverage AND the resting pose within rest_tolerance_deg of the
+    # last line. The upload duration band is NOT applied (host-timed).
+    complete_coverage: 0.99
+    rest_tolerance_deg: 2.0
+    # Bounds: time for the hardware to answer a run with a fresh phase; the
+    # whole stroke; a posted stop; an armed (pair) stroke waiting for ~/release.
+    issue_grace_s: 1.0
+    run_timeout_s: 600.0
+    stop_timeout_s: 6.0
+    armed_timeout_s: 120.0
+
+right_track_stream_controller:
+  ros__parameters:
+    # Mirror of left_track_stream_controller; see the comments there.
+    side: right
+    joints:
+      - R_joint1
+      - R_joint2
+      - R_joint3
+      - R_joint4
+      - R_joint5
+      - R_joint6
+      - R_joint7
+    stroke_prefix: R_stroke
+    period_s: 0.005   # the default; the bringup overrides it from canfd_period_ms
+    coverage_lag_behind: 400
+    coverage_lag_ahead: 150
+    complete_coverage: 0.99
+    rest_tolerance_deg: 2.0
+    issue_grace_s: 1.0
+    run_timeout_s: 600.0
+    stop_timeout_s: 6.0
+    armed_timeout_s: 120.0
+
+ugv_steering_controller:
+  ros__parameters:
+    joints:
+      - UGV_front_left_suspension_joint
+      - UGV_front_right_suspension_joint
+      - UGV_rear_left_suspension_joint
+      - UGV_rear_right_suspension_joint
+    interface_name: position
+
+ugv_driving_controller:
+  ros__parameters:
+    joints:
+      - UGV_front_left_wheel_joint
+      - UGV_front_right_wheel_joint
+      - UGV_rear_left_wheel_joint
+      - UGV_rear_right_wheel_joint

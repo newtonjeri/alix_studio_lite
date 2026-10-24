@@ -597,3 +597,69 @@ def test_what_a_controller_stores_is_deleted_only_when_asked_and_read_back(serve
     hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
     done = {r["verb"]: r for r in hw if r["verb"].startswith("delete")}
     assert done["delete program"]["ret"] == 0 and done["delete global point"]["ret"] == 0 and done["delete track"]["ret"] == -4
+
+
+def test_a_lid_or_seat_run_keeps_one_feed_on_and_holds_the_global_ratio(monkeypatch, tmp_path):
+    """24 Oct: every move turned the controller's 5 ms feed on and off (four controller calls, 1.1 s) and set and put back
+    the global ratio (0.17 s). A run keeps one feed on (keep_feed ... drop_feed), each move's watch attached to it in
+    turn; once the run has left the ratio at the streams' 50 %, and 50 % is what goes back, a move neither sets nor
+    puts it back (ALIX's run_verified, ratio_held)."""
+    import time as _time
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    vendor_paths.activate()
+    from alix_dispatch import staging as alix_staging, track
+
+    from alix_studio_lite.server import robot_real
+
+    made, calls = [], []
+
+    class Recorder:
+        def __init__(self, out_path, host_ip, port=None, log=print, **kw):
+            self.out_path, self.frames, self.monitor, self.stopped = Path(out_path), 0, None, False
+            made.append(self)
+
+        def start(self, robot):
+            pass
+
+        def stop(self, robot):
+            self.stopped = True
+
+        def attach_monitor(self, m):
+            self.monitor = m
+            if m is not None:                                 # the feed is running: a frame comes at once
+                m.on_frame(_time.monotonic(), {"err": [0], "arm_current_status": "idle",
+                                                "joint_status": {"joint_position": [0] * 7, "joint_err_code": [0] * 7}})
+
+    def run_verified(robot, **kw):
+        calls.append((kw["ratio_held"], kw["restore_pct"]))
+        held = kw["ratio_held"]
+        return dict(ok=True, verdict="host_timed", canfd={"lines_sent": kw["points"], "replay_s": 0.01},
+                    restored={"global_speed": {} if held else {"restored": True}})
+
+    class Link:
+        side, ip, emulated = "left", "192.168.1.10", False
+        handle = SimpleNamespace(robot=object(), host_ip="192.168.1.239")
+
+        @contextmanager
+        def busy(self, what, **kw):
+            yield
+
+    monkeypatch.setattr(track, "UdpRecorder", Recorder)
+    monkeypatch.setattr(track, "run_verified", run_verified)
+    monkeypatch.setattr(alix_staging, "park_arm", lambda *a, **kw: dict(ok=True))
+    monkeypatch.setattr(track, "start_gap_deg", lambda *a, **kw: 0.0)
+    arm = robot_real.RealArm(Link())
+    rows = [[0] * 7] * 3
+    assert arm.keep_feed("LEFT_seat_open", records=tmp_path) == made[0].out_path.name and len(made) == 1
+    for _ in range(3):
+        arm.stream(rows, "LEFT arm move", speed=50, restore_pct=50, records=tmp_path)
+    arm.move_to([0] * 7, speed=15, restore_pct=50)            # a MoveJ puts 50 back too
+    arm.stream(rows, "LEFT arm move", speed=50, restore_pct=50, records=tmp_path)
+    arm.stream(rows, "LEFT arm move", speed=50, restore_pct=100, records=tmp_path)   # 100 to put back: set, then put back
+    assert len(made) == 1 and not made[0].stopped and made[0].monitor is None       # one feed, kept on, nothing watching
+    assert calls == [(False, 50), (True, 50), (True, 50), (True, 50), (False, 100)]
+    assert arm.drop_feed()["capture"] == made[0].out_path.name and made[0].stopped
+    arm.stream(rows, "LEFT arm move", speed=50, restore_pct=50, records=tmp_path)   # no run: its own feed, as before
+    assert len(made) == 2 and made[1].stopped and calls[-1] == (False, 50)

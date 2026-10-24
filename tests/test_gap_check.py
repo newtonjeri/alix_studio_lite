@@ -121,6 +121,7 @@ def test_every_doubt_is_not_lifted_and_every_check_is_recorded(tmp_path):
     assert not a.success and "only 0 % of the ROI carries depth" in a.message
     a = gc.ask("lid_lifted", frame)
     assert a.success and a.fixture_state == "lid_lifted" and a.record_path
+    assert gc.flush()                                    # the records are written by their own thread
     files = {p.name for p in (tmp_path / "checks").iterdir()}
     stem = Path(a.record_path).stem
     assert {f"{stem}.json", f"{stem}_depth.npy", f"{stem}_depth.png"} <= files

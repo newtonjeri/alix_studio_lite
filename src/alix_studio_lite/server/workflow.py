@@ -996,7 +996,7 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
     plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
     hand as Lite moves them, a hold where the plan holds, a moment where the camera is asked. The commode is in the
     task's end state from its end; then its final check (mechanism.FINAL_CHECKS): the right arm to its inspection pose by
-    the way in ALIX planned in that state, the camera, and the right arm back to where the plan ended."""
+    the way in ALIX planned in that state, the camera, back along that way in, and to where the plan ended."""
     from . import mechanism, staging
 
     plan = mechanism.cached(st["task"])
@@ -1060,6 +1060,12 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
             sim.hand = vals
         done(sim, a, dur)
 
+    def back(owner, e):                              # an arm move played backwards (the final check's way out)
+        sim, a = act(e.side, "stream", e.seconds, f"{title}: back along {e.stage} ({owner.title}'s way in)",
+                     file=f"mechanism:{owner.name}:{e.i}:back", drawn=True, lines=len(e.rows), traj_t0=round(clock[0], 4))
+        sim.q, sim.known = [v / 1000.0 for v in e.rows[0]], True
+        done(sim, a, e.seconds)
+
     approach(plan.targets("start"), "its start")
     for e in plan.entries:
         for pa in e.pre_actions:
@@ -1079,6 +1085,8 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
         for e in fc["look"]:
             entry(fc["by"], e)
         check(fc["expect"], ", the final check")
+        for e in reversed([x for x in fc["look"] if x.kind == "arm"]):     # back along its way in, as Lite runs it
+            back(fc["by"], e)
         approach({"right": plan.targets("end")["right"]}, "where it ended")
     return clock[0]
 
@@ -1405,8 +1413,9 @@ def _md_reader(root=None):
         if path not in cache and str(path).startswith("mechanism:"):     # mechanism:<task>:<entry>: ALIX's plan, its lines
             from . import mechanism
 
-            _, task, i = str(path).split(":")
-            cache[path] = np.asarray(mechanism.cached(task).entries[int(i)].rows, dtype=float)
+            part = str(path).split(":")                                  # ...:back: the move played backwards
+            rows = mechanism.cached(part[1]).entries[int(part[2])].rows
+            cache[path] = np.asarray(rows[::-1] if part[3:] == ["back"] else rows, dtype=float)
         if path not in cache:
             try:
                 cache[path] = np.asarray(track.read_md(resolve_file(path, root)), dtype=float)

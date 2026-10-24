@@ -618,7 +618,10 @@ _LABELS = {"stage": "staging the pole and the hand", "pole_to": "moving the pole
            "set_run_mode": "switching the run mode", "restore_run_mode": "restoring the run mode", "teach_start": "drag teaching",
            "teach_stop": "saving the recording", "upload": "uploading a program", "run": "running a program",
            "run_workflow": "running a sequence", "move_point": "MoveJ / MoveL to a global point", "move_to": "moving to a pose",
-           "stream": "streaming a move", "read_speed": "reading the global speed", "restore_speed": "restoring the global speed"}
+           "stream": "streaming a move", "read_speed": "reading the global speed", "restore_speed": "restoring the global speed",
+           "keep_feed": "turning on the 5 ms feed", "drop_feed": "turning off the 5 ms feed", "keep_hand": "opening the hand",
+           "drop_hand": "letting the hand go"}
 #: The commands a job's ``finally`` makes, which never raise (RealArm's own never do): their hardware log verb, and what
 #: they return when the worker cannot be reached.
-_NEVER_RAISES = {"restore_run_mode": ("restore run mode", None), "restore_speed": ("restore global speed", False)}
+_NEVER_RAISES = {"restore_run_mode": ("restore run mode", None), "restore_speed": ("restore global speed", False),
+                 "drop_feed": ("canfd feed", None), "drop_hand": ("hand", None)}
