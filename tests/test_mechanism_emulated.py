@@ -84,7 +84,7 @@ def hardware(ctx) -> list:
 
 def test_the_catalogue_lists_the_four_tasks(server):
     cat = call(server, "GET", "/api/mechanism")
-    assert [t["name"] for t in cat["tasks"]] == ["lid_open", "seat_close_right", "seat_open", "lid_close_right"]
+    assert [t["name"] for t in cat["tasks"]] == ["lid_open", "seat_close", "seat_open", "lid_close"]
     assert cat["standoff_mm"] == 250 and cat["rows"]["L-T01"] == "lid_open"
 
 
@@ -112,8 +112,11 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     assert streams and all(r["ok"] for r in streams), [r.get("text") for r in streams if not r["ok"]]
     labels = [r["args"]["label"] for r in streams]
     assert any("re-lift 1, pre-planned" in x for x in labels)
-    retract = [r for r in streams if "move_to_retract" in r["args"]["label"]]
-    assert retract and "bridged" in retract[0]["text"]          # 7.7 degrees from rung 1's end, by ALIX's MoveJ
+    # the left's next move after the re-lift (since 24 Oct 21:39 its way out, after the right's push) starts where the
+    # ORIGINAL lift ended: 148.8 degrees from rung 1's end, bridged by ALIX's MoveJ
+    left = [r for r in streams if r["args"]["label"].startswith("LEFT")]
+    after = left[max(i for i, r in enumerate(left) if "re-lift 1" in r["args"]["label"]) + 1]
+    assert "bridged" in after["text"], after["args"]["label"]
     assert all(r["args"]["period_ms"] == 5.0 and r["args"]["rate_gate"] == "per_joint" for r in streams)
     # each arm's 5 ms feed on once for the run (24 Oct: on and off around every move, 1.1 s each), every move watched on
     # it over its own stretch, and off at the end; an arm's back-to-back moves are one stream
@@ -130,6 +133,36 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     assert any(x.startswith("RIGHT arm back along move_to_inspect") for x in labels)   # the final check, back along its way in
     hands = [r for r in hardware(server) if r.get("verb") == "hand move" and isinstance(r["args"]["speed_set"], list)]
     assert hands and all(len(r["args"]["speed_set"]) == 6 for r in hands)   # the plan's hand moves: ALIX's executive's speeds
+
+
+def test_real_seat_close_pulls_with_the_left_at_full_pole_and_the_right_lets_the_seat_down(server):
+    """25 Oct, the compound Close the seat on the emulated arms: three camera questions in the config's order (the seat
+    up, the lid open, then its own end check: the seat down), the left pole to full length before its pull and back to
+    half at the end, no hand command (the hands as they are: the sequence's rule), the right's hold and release."""
+    server["script"].write_text(json.dumps(["seat_lifted", "lid_open", "seat_closed"]))
+    before = len(hardware(server))                                         # this run's rows alone (the server is shared)
+    job = call(server, "POST", "/api/mechanism/seat_close/run", {"confirmed": True})
+    done = wait(server, job)
+    assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-8:])
+    res = done["result"]
+    assert [(p["plan"], p["outcome"]) for p in res["plans"]] == [("seat_close", "done")]
+    assert [(c["check"], c["verdict"]) for c in res["checks"]] == [("verify_seat_open", "PASS"), ("verify_lid_open", "PASS"),
+                                                                   ("verify_seat_closed", "PASS")]
+    assert not [c for c in res["checks"] if c.get("final")]
+    rows = hardware(server)[before:]
+    streams = [r["args"]["label"] for r in rows if r.get("verb") == "canfd stream"]
+    # the right's release runs on into its last look (one stream: nothing between them); the end check rides
+    # move_to_rest, so rest is its own stream after the check
+    assert streams[:1] == ["RIGHT arm move_to_inspect"]
+    assert streams[-2:] == ["RIGHT arm execute_path + move_to_inspect", "RIGHT arm move_to_rest"]
+    assert any(lab.startswith("LEFT arm") and "execute_path" in lab for lab in streams)
+    assert any(lab.startswith("RIGHT arm") and "execute_path" in lab for lab in streams)
+    poles = [round(r["args"]["mm"]) for r in rows if r.get("verb") == "pole move" and r.get("side") == "left"]
+    assert 300 in poles and poles[-1] == 150, poles
+    assert not [r for r in rows if r.get("verb") in ("hand move", "pole and hand", "hand open")], "no hand command: the hands stay as they are"
+    said = " | ".join(e["text"] for e in done["events"])
+    assert "its own last check looked at the end state" in said
+    server["script"].write_text(json.dumps(["lid_closed"]))                # the STOP test's answer, from the first
 
 
 def test_stop_in_the_middle_of_a_stream_stops_sending(server):
@@ -168,9 +201,9 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     assert {"stream", "pole", "hand", "global", "check"} <= kinds
     assert sim["phases"][-1][1] == "lid_open"
     right = sim["acts"]["right"]                 # drawn as it runs: the seat under the lifted lid not judged, Close the seat
-    assert any(a["kind"] == "stream" and a.get("file") == "mechanism:seat_close_right:2" for a in right)   # looks first
-    assert [a["expect"] for a in right if a["kind"] == "check"][-2:] == ["lid_open", "seat_open"]          # and ends there
-    looks = [a for a in right if a["kind"] == "stream" and a.get("file") == "mechanism:seat_close_right:2"][0]
+    assert any(a["kind"] == "stream" and a.get("file") == "mechanism:seat_close:0" for a in right)   # looks first
+    assert [a["expect"] for a in right if a["kind"] == "check"][-1] == "seat_open"                   # and ends there
+    looks = [a for a in right if a["kind"] == "stream" and a.get("file") == "mechanism:seat_close:0"][0]
     assert looks["t0"] > next(t for t, ph in sim["phases"] if ph == "lid_open")      # with the lid open
     assert any("Close the seat runs after it and looks first" in f["text"] for f in sim["findings"])
     assert any("left out of this collision check" in f["text"] for f in sim["findings"])

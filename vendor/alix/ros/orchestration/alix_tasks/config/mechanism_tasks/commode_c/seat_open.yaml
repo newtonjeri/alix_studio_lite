@@ -66,89 +66,79 @@ task_parameters:
 # =============================================================================
 right:
   task_parameters:
-    ik_frame: R_glove_frame_3
-    primary_planning_group: rm75_arm_right
+    # ik_frame: "R_glove_frame_3"
+    ik_frame: "R_tip_frame"
+    primary_planning_group: "rm75_arm_right"
 
   # CARTESIAN POSES (Position + Orientation)
   # Format: [x, y, z, qx, qy, qz, qw]
   # ---------------------------------------------------------------------------
-  # DRAFT 2026-10-05: no FULL-open pose has been taught for the right arm on
-  # commode_c. Every value below is the base_link Y=0 mirror of the LEFT
-  # block's former (taught) full-open values: position y' = 0.248 - y in
-  # alix_ref_frame, quaternion [qx, qy, qz, qw] -> [qy, qx, qw, qz] (the map
-  # the 2026-08-16 lid_close / seat_close pairs obey), path deltas
-  # [x, y, z] -> [x, -y, z] and [r, p, y] -> [-r, p, -y]. The mirror is taken
-  # from the left's CONFIG values; the raw capture line above each pose is the
-  # left's taught capture, kept for provenance exactly as the original did.
-  # The RIGHT wrist carries the D435 + camera holder the left does not, so this
-  # is the block a mirror is most likely to get wrong (camera clearance):
-  # IK/collision PROBE ONLY -> MUST BE TAUGHT on the robot before any
-  # hardware run.
+  # The inspect move (stage 1) is NOT a Cartesian pose: it names the SRDF group
+  # state inspection_pose_4 of rm75_arm_right (the lift-check viewpoint,
+  # Newton 2026-10-05, pole at quarter length). The ik_frame of this block is
+  # the glove frame, not the camera, so a Cartesian inspect pose is not drafted.
+  # No retract_pose: the right finishes the arc and goes to rest, as the left
+  # did before the reversal (the pre-reversal right retract moved to the LEFT
+  # block, mirrored).
   cartesian_poses:
-    # 0.51541; -0.014256; 0.026096, -0.20138; 0.93128; 0.12737; 0.27557
-    start_pose: [0.51541, -0.014256, 0.026096, -0.20138, 0.93128, 0.12737, 0.27557]
+    # 0.65474; -0.15255; 0.46745, -0.24912; 0.93219; 0.058472; 0.25601
+    # [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
+    start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
 
-    # source left.pre_start_pose: [0.59, 0.33, 0.0, 0.70011, 0.71386, 0.0025908, -0.015498]   (no raw capture recorded)
-    # pre_start_pose: [0.59, -0.082, 0.0, 0.713861, 0.700111, -0.015498, 0.002591] 
-
-    pre_start_pose: [0.51541, -0.014256, 0.026096, -0.20138, 0.93128, 0.12737, 0.27557]   # DRAFT: mirrored from left.pre_start_pose (UNCALIBRATED - teach + certify before use)
-
-
+    pre_start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
   # Translation: [x, y, z] in meters
   # Rotation: [roll, pitch, yaw] in degrees
   # Relative to vector_frame_id (alix_ref_frame)
   # ---------------------------------------------------------------------------
-  # Full-open arc from the seat already lifted to -30 deg (knot 0 = start_pose).
-  # Former RIGHT partial-lift points (superseded, now the LEFT's source):
-  #   point2 [0.005, 0.0, 0.05] [0.0, 2.0, -2.0] ... point5 [0.035, 0.0, 0.2] [0.0, 15.0, -10.0]
+  # Full-open arc from the lid already lifted to -30 by the left hand. Mirrored
+  # as deltas from the pre-reversal left path ([x,-y,z], [-r,p,-y]); the whole
+  # arc MUST BE TAUGHT on this wrist (camera clearance is not mirror-symmetric).
   # cleaning_points:
-  #   point1:
-  #     translation: [0.0, 0.0, 0.0]      # DRAFT: mirrored from left.cleaning_points.point1 (UNCALIBRATED - teach + certify before use)
-  #     rotation: [0.0, 0.0, -10.0]       # DRAFT: mirrored from left.cleaning_points.point1 (UNCALIBRATED - teach + certify before use)
-  #   point2:
-  #     translation: [0.02, 0.01, 0.03]    # DRAFT: mirrored from left.cleaning_points.point2 (UNCALIBRATED - teach + certify before use)
-  #     rotation: [0.0, -5.0, -15.0]      # DRAFT: mirrored from left.cleaning_points.point2 (UNCALIBRATED - teach + certify before use)
-  #   point3:
-  #     translation: [0.035, 0.02, 0.06]   # DRAFT: mirrored from left.cleaning_points.point3 (UNCALIBRATED - teach + certify before use)
-  #     rotation: [0.0, -15.0, -10.0]     # DRAFT: mirrored from left.cleaning_points.point3 (UNCALIBRATED - teach + certify before use)
-  #   point4:
-  #     translation: [0.095, 0.03, 0.1]    # DRAFT: mirrored from left.cleaning_points.point4 (UNCALIBRATED - teach + certify before use)
-  #     rotation: [0.0, -20.0, -8.0]      # DRAFT: mirrored from left.cleaning_points.point4 (UNCALIBRATED - teach + certify before use)
-  #   point5:
-  #     translation: [0.17, 0.035, 0.15]    # DRAFT: mirrored from left.cleaning_points.point5 (UNCALIBRATED - teach + certify before use)
-  #     rotation: [0.0, -30.0, -4.0]      # DRAFT: mirrored from left.cleaning_points.point5 (UNCALIBRATED - teach + certify before use)
-  #   point6:
-  #     translation: [0.24, 0.04, 0.21]    # DRAFT: mirrored from left.cleaning_points.point6 (UNCALIBRATED - teach + certify before use)
-  #     rotation: [0.0, -50.0, 0.0]       # DRAFT: mirrored from left.cleaning_points.point6 (UNCALIBRATED - teach + certify before use)
-  #   point7:
-  #     translation: [0.33, 0.05, 0.27]    # DRAFT: mirrored from left.cleaning_points.point7 (UNCALIBRATED - teach + certify before use)
-  #     rotation: [0.0, -60.0, 0.0]       # DRAFT: mirrored from left.cleaning_points.point7 (UNCALIBRATED - teach + certify before use)
+  #   point1:   # DRAFT: mirrored from left.point1 (UNCALIBRATED - teach + certify before use)
+  #     translation: [0.0, 0.0, 0.0]
+  #     rotation: [0.0, 0.0, -10.0]
+  #   point2:   # DRAFT: mirrored from left.point2 (UNCALIBRATED - teach + certify before use)
+  #     translation: [0.02, 0.01, 0.03]
+  #     rotation: [0.0, -5.0, -15.0]
+  #   point3:   # DRAFT: mirrored from left.point3 (UNCALIBRATED - teach + certify before use)
+  #     translation: [0.03, 0.02, 0.06]
+  #     rotation: [0.0, -15.0, -10.0]
+  #   point4:   # DRAFT: mirrored from left.point4 (UNCALIBRATED - teach + certify before use)
+  #     translation: [0.08, 0.03, 0.1]
+  #     rotation: [0.0, -20.0, -8.0]
+  #   point5:   # DRAFT: mirrored from left.point5 (UNCALIBRATED - teach + certify before use)
+  #     translation: [0.15, 0.04, 0.15]
+  #     rotation: [0.0, -30.0, -4.0]
+  #   point6:   # DRAFT: mirrored from left.point6 (UNCALIBRATED - teach + certify before use)
+  #     translation: [0.22, 0.05, 0.18]
+  #     rotation: [0.0, -50.0, 0.0]
+  #   point7:   # DRAFT: mirrored from left.point7 (UNCALIBRATED - teach + certify before use)
+  #     translation: [0.34, 0.045, 0.26]
+  #     rotation: [0.0, -60.0, 0.0]
+
   cleaning_points:
     point1:
       translation: [0.0, 0.0, 0.0]
       rotation: [0.0, 0.0, 0.0]
     point2:
-      translation: [0.02, 0.0, 0.03]
+      translation: [0.01, 0.005, 0.03]
       rotation: [0.0, 0.0, 0.0]
     point3:
-      translation: [0.03, 0.02, 0.06]
-      rotation: [0.0, -5.0, 0.0]
+      translation: [0.02, 0.01, 0.06]
+      rotation: [0.0, 0.0, 0.0]
     point4:
-      translation: [0.08, 0.03, 0.1]
-      rotation: [0.0, -10.0, 0.0]
+      translation: [0.05, 0.01, 0.1]
+      rotation: [0.0, -5.0, 0.0]
     point5:
-      translation: [0.15, 0.04, 0.15]
-      rotation: [0.0, -15.0, 0.0]
+      translation: [0.10, 0.01, 0.125]
+      rotation: [0.0, -10.0, 0.0]
     point6:
-      translation: [0.25, 0.05, 0.18]
-      rotation: [0.0, -10.0, 0.0]
+      translation: [0.175, 0.01, 0.15]
+      rotation: [0.0, -12.0, 0.0]
     point7:
-      translation: [0.30, 0.05, 0.18]
-      rotation: [0.0, -10.0, 0.0]
-    point8:
-      translation: [0.37, 0.05, 0.16]
-      rotation: [0.0, -30.0, 0.0]
+      translation: [0.28, 0.01, 0.16]
+      rotation: [0.0, -20.0, 0.0]
 
   # CLEANING SEQUENCE
   # Format: [from, to] - pairs of point names
@@ -160,7 +150,6 @@ right:
     - [point4, point5]
     - [point5, point6]
     - [point6, point7]
-    - [point7, point8]
 
 
 # =============================================================================
@@ -243,31 +232,6 @@ left:
     - [point4, point5]
 
 
-# =============================================================================
-# MECHANISM TASK SEQUENCE (Compound - both arms, in order)
-# =============================================================================
-# Defines the execution order of stages for the dual-arm mechanism manipulation.
-# Each motion stage is tagged with `arm:` so the planner uses that arm's
-# ik_frame, poses, and trajectory.
-#
-# Stage types supported:
-#   - Movement stages: move_to_pre_start / move_to_start / move_to_retract /
-#     move_to_rest (Cartesian or SRDF pose), move_to_inspect (SRDF pose),
-#     hand_grasp / hand_release, move_to_quarter_pole_length
-#   - allow_collision / forbid_collision: toggle hand<->surface collision pairs
-#   - trace_trajectory: Follow a 6DOF trajectory with interpolation
-#   - update_fixture_scene: move the dynamic lid/seat collision object in-place
-#   - <any name> + hold_time: a dwell, deferred to execution (hold_pose effect)
-#   - <any name> + check: a perception CHECK, deferred to execution (a
-#     check_fixture_state pre_action in the saved plan; fail-closed)
-#
-# Speed classes are the C3 table of task_parameters_defaults.yaml (approach
-# 0.2 / carry 0.5 / freespace 0.8), unchanged (Newton 2026-10-05): approach on
-# every pre_start / start / retract leg, carry on every execute_path, freespace
-# on rest and inspect moves. Linearity-critical legs (move_to_start,
-# move_to_retract) carry NO planner key. The ik_frame decides the collision
-# allowance: no collisions / extra_collisions / additional_ik_frames here.
-#
 # Pose resolution order (matches single-arm behavior):
 #   1. Check joint_space_poses[planning_group][pose_name]
 #   2. Check cartesian_poses[pose_name]
@@ -352,9 +316,9 @@ stage_sequence:
     pose_name: release
     planning_group: inspire_hand_left
 
-  - stage: move_to_quarter_pole_length
+  - stage: move_to_half_pole_length
     arm: left
-    pose_name: quarter_length
+    pose_name: half_length
     planning_group: pole_left
 
   - stage: hand_grasp
@@ -474,20 +438,10 @@ stage_sequence:
     pose_name: rest_pose
     planning_group: rm75_arm_right
 
-  # - stage: hand_release
-  #   arm: right
-  #   pose_name: release
-  #   planning_group: inspire_hand_right
-
-  - stage: move_to_quarter_pole_length
+  - stage: move_to_half_pole_length
     arm: right
     pose_name: half_length
     planning_group: pole_right
-
-  # - stage: hand_grasp
-  #   arm: right
-  #   pose_name: half_grasp
-  #   planning_group: inspire_hand_right
 
   - stage: move_to_pre_start
     speed_class: approach

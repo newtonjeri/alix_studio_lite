@@ -61,21 +61,21 @@
 task_parameters:
   # Operation Parameters
   # -------------------------------------------------------------------------
-  operation: "open"
-  initial_state: "CLOSED"
-  final_state: "OPEN"
-  mechanism_type: "lid"
+  operation: open
+  initial_state: CLOSED
+  final_state: OPEN
+  mechanism_type: lid
   enable_washroom_scene: true
 
   # Compound (dual-arm) control
   # -------------------------------------------------------------------------
   compound: true
-  arms: ["right", "left"]
+  arms: [right, left]
 
   # scene control
   # -------------------------------------------------------------------------
   # Lid opening starts from a fully-closed commode (lid + seat down).
-  commode_fixture_type: "closed"               # Options: "closed", "lid_open", "lid_seat_open"
+  commode_fixture_type: closed               # Options: closed, lid_open, lid_seat_open
   enable_washroom_structure: true
 
 
@@ -84,8 +84,9 @@ task_parameters:
 # =============================================================================
 right:
   task_parameters:
-    ik_frame: "R_glove_frame_3"
-    primary_planning_group: "rm75_arm_right"
+    # ik_frame: R_glove_frame_3
+    ik_frame: R_tip_frame
+    primary_planning_group: rm75_arm_right
 
   # CARTESIAN POSES (Position + Orientation)
   # Format: [x, y, z, qx, qy, qz, qw]
@@ -98,70 +99,33 @@ right:
   # did before the reversal (the pre-reversal right retract moved to the LEFT
   # block, mirrored).
   cartesian_poses:
-    # start_pose: [0.61, -0.032, 0.02, 0.713861, 0.700111, -0.015498, 0.002591]   # DRAFT: mirrored from left.start_pose (UNCALIBRATED - teach + certify before use) MUST BE TAUGHT: the camera holder + D435 ride this wrist and the mirror cannot see them
-    # start_pose: [0.61, -0.025, 0.02, 0.713861, 0.700111, -0.015498, 0.002591] 
+    # [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
+    start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
 
-    # 0.51541; -0.014256; 0.026096, -0.20138; 0.93128; 0.12737; 0.27557
-    start_pose: [0.51541, -0.014256, 0.026096, -0.20138, 0.93128, 0.12737, 0.27557]
-
-    # source left.pre_start_pose: [0.59, 0.33, 0.0, 0.70011, 0.71386, 0.0025908, -0.015498]   (no raw capture recorded)
-    # pre_start_pose: [0.59, -0.082, 0.0, 0.713861, 0.700111, -0.015498, 0.002591] 
-
-    pre_start_pose: [0.51541, -0.014256, 0.026096, -0.20138, 0.93128, 0.12737, 0.27557]   # DRAFT: mirrored from left.pre_start_pose (UNCALIBRATED - teach + certify before use)
-
-  # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
-  # Translation: [x, y, z] in meters
-  # Rotation: [roll, pitch, yaw] in degrees
-  # Relative to vector_frame_id (alix_ref_frame)
-  # ---------------------------------------------------------------------------
-  # Full-open arc from the lid already lifted to -30 by the left hand. Mirrored
-  # as deltas from the pre-reversal left path ([x,-y,z], [-r,p,-y]); the whole
-  # arc MUST BE TAUGHT on this wrist (camera clearance is not mirror-symmetric).
-  # cleaning_points:
-  #   point1:   # DRAFT: mirrored from left.point1 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.0, 0.0, 0.0]
-  #     rotation: [0.0, 0.0, -10.0]
-  #   point2:   # DRAFT: mirrored from left.point2 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.02, 0.01, 0.03]
-  #     rotation: [0.0, -5.0, -15.0]
-  #   point3:   # DRAFT: mirrored from left.point3 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.03, 0.02, 0.06]
-  #     rotation: [0.0, -15.0, -10.0]
-  #   point4:   # DRAFT: mirrored from left.point4 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.08, 0.03, 0.1]
-  #     rotation: [0.0, -20.0, -8.0]
-  #   point5:   # DRAFT: mirrored from left.point5 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.15, 0.04, 0.15]
-  #     rotation: [0.0, -30.0, -4.0]
-  #   point6:   # DRAFT: mirrored from left.point6 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.22, 0.05, 0.18]
-  #     rotation: [0.0, -50.0, 0.0]
-  #   point7:   # DRAFT: mirrored from left.point7 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.34, 0.045, 0.26]
-  #     rotation: [0.0, -60.0, 0.0]
+    pre_start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
 
   cleaning_points:
     point1:
       translation: [0.0, 0.0, 0.0]
       rotation: [0.0, 0.0, 0.0]
     point2:
-      translation: [0.02, 0.0, 0.03]
+      translation: [0.01, 0.005, 0.03]
       rotation: [0.0, 0.0, 0.0]
     point3:
-      translation: [0.03, 0.02, 0.06]
-      rotation: [0.0, -5.0, 0.0]
+      translation: [0.02, 0.01, 0.06]
+      rotation: [0.0, 0.0, 0.0]
     point4:
-      translation: [0.08, 0.03, 0.1]
-      rotation: [0.0, -10.0, 0.0]
+      translation: [0.05, 0.01, 0.1]
+      rotation: [0.0, -5.0, 0.0]
     point5:
-      translation: [0.15, 0.04, 0.15]
-      rotation: [0.0, -15.0, 0.0]
-    point6:
-      translation: [0.25, 0.05, 0.18]
+      translation: [0.10, 0.01, 0.125]
       rotation: [0.0, -10.0, 0.0]
+    point6:
+      translation: [0.175, 0.01, 0.15]
+      rotation: [0.0, -12.0, 0.0]
     point7:
-      translation: [0.37, 0.05, 0.16]
-      rotation: [0.0, -30.0, 0.0]
+      translation: [0.28, 0.01, 0.16]
+      rotation: [0.0, -20.0, 0.0]
 
   # CLEANING SEQUENCE
   # Format: [from, to] - pairs of point names
@@ -175,41 +139,25 @@ right:
     - [point6, point7]
 
 
+
 # =============================================================================
 # LEFT ARM   (partial lift: TAUGHT 2026-10-23 from D_LID_OPEN.txt, see the header)
 # =============================================================================
 left:
   task_parameters:
-    ik_frame: "L_glove_frame_3"
-    primary_planning_group: "rm75_arm_left"
+    ik_frame: L_glove_frame_3
+    primary_planning_group: rm75_arm_left
 
   # CARTESIAN POSES (Position + Orientation)
   # Format: [x, y, z, qx, qy, qz, qw]
   # ---------------------------------------------------------------------------
   cartesian_poses:
-    # 0.72984; -0.060367; -0.093483, 0.73938; 0.67302; 0.018905; -0.0014671   (RIGHT raw capture, the mirror source)
-    # start_pose: [0.7298, 0.3084, -0.09, 0.673021, 0.739381, -0.001467, 0.01891]   # DRAFT: mirrored from right.start_pose (UNCALIBRATED - teach + certify before use)
-    # TAUGHT 2026-10-23, D_LID_OPEN.txt line 568: the fingertip at the closed lid's
-    # front-left edge, at the lid's height (base_link 0.579, 0.171, 0.453), still
-    # before the lift.
-    # start_pose: [0.5889, 0.2946, -0.0735, 0.515099, 0.850793, 0.024721, 0.101056]
     start_pose: [0.59, 0.275, -0.1035, 0.515099, 0.850793, 0.024721, 0.101056]
-
-    # source right.pre_start_pose: [0.68, -0.07, -0.05, 0.73938, 0.67302, 0.01891, -0.001467]   (no raw capture recorded)
-    # pre_start_pose: [0.68, 0.318, -0.05, 0.673021, 0.739381, -0.001467, 0.01891]   # DRAFT: mirrored from right.pre_start_pose (UNCALIBRATED - teach + certify before use)
-    # TAUGHT 2026-10-23, D_LID_OPEN.txt line 302, on the recorded approach: 35 mm
-    # left of the start (outside the lid) and 50 mm above it; the hand turns
-    # 14.5 deg on the way to the start, as recorded.
-    # pre_start_pose: [0.5819, 0.3293, -0.0238, 0.404604, 0.910175, 0.018847, 0.086732]
     pre_start_pose: [0.5819, 0.3293, -0.0738, 0.404604, 0.910175, 0.018847, 0.086732]
 
-    # Relative to THIS block's start_pose (translation added in alix_ref_frame,
-    # rotation onto the start orientation), not to the end of the arc. Needed
-    # now: the left releases at -30 and backs off while the right holds (stage 6).
-    # source right.retract_pose: translation [-0.04, -0.02, 0.12] rotation [0.0, 0.0, 0.0]
-    retract_pose:   # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
-     translation: [-0.04, 0.02, 0.12]
-     rotation: [0.0, 0.0, 0.0]
+    retract_pose: 
+      translation: [0.04, 0.02, 0.15]
+      rotation: [0.0, 0.0, 0.0]
 
 
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
@@ -287,17 +235,17 @@ left:
 # Pose resolution order (matches single-arm behavior):
 #   1. Check joint_space_poses[planning_group][pose_name]
 #   2. Check cartesian_poses[pose_name]
-#   3. Fall back to SRDF named state (e.g., "grasp", "open", "ready")
+#   3. Fall back to SRDF named state (e.g., grasp, open, ready)
 #   (compound: per-arm joint_space_poses are dropped at load, so step 1 is
 #    empty and a joint-space goal such as inspection_pose_4 is the SRDF's)
 # =============================================================================
 stage_sequence:
   # Add washroom scene setup stage
-  - stage: "setup_washroom_scene"
+  - stage: setup_washroom_scene
     conditional: true
-    condition_param: "enable_washroom_scene"
+    condition_param: enable_washroom_scene
 
-  - stage: "current_state"
+  - stage: current_state
 
   # ---------------------------------------------------------------------------
   # 1. RIGHT arm frames the closed lid (wrist camera) BEFORE anything moves
@@ -309,17 +257,17 @@ stage_sequence:
   # back); half length lifts the hand 75 mm clear of the -30 deg edge (z 0.65 m
   # in base_link) and is the height the right-arm poses are taught at, so
   # block 5 needs no pole move.
-  - stage: "move_to_inspect_pole_length"
-    arm: "right"
-    pose_name: "half_length"
-    planning_group: "pole_right"
+  - stage: move_to_inspect_pole_length
+    arm: right
+    pose_name: half_length
+    planning_group: pole_right
 
   # Fingers CLOSED (grasp) while the camera watches: an open hand dangles its
   # fingertips ~100 mm below the palm, into the path of the rising lid.
-  - stage: "hand_grasp"
-    arm: "right"
-    pose_name: "grasp"
-    planning_group: "inspire_hand_right"
+  - stage: hand_grasp
+    arm: right
+    pose_name: grasp
+    planning_group: inspire_hand_right
 
   # inspection_pose_4: the LIFT CHECK VIEWPOINT (Newton 2026-10-05, his RViz
   # goal state, arm joints unchanged, pole raised to half length 15:40; SRDF group_state of
@@ -330,66 +278,66 @@ stage_sequence:
   # planning_group is explicit because state names repeat across groups. The
   # arm then stays put through the lift, the dwell and the check: no camera
   # motion between the baseline frame and the check.
-  - stage: "move_to_inspect"
+  - stage: move_to_inspect
     speed_class: freespace
-    arm: "right"
-    pose_name: "inspection_pose_4"
-    planning_group: "rm75_arm_right"
+    arm: right
+    pose_name: inspection_pose_4
+    planning_group: rm75_arm_right
 
   # THE STATE THIS PLAN NEEDS (Newton 2026-10-07, flow): the lid must be CLOSED
   # (the centre ROI at its closed height). NO -> on_fail skip: the lid is
   # already up, this plan's outcome holds, it ends here as done and the arms
   # are parked at its end state. A check_fixture_state pre_action of the next
   # sub-trajectory, fail-closed like the lift check below.
-  - stage: "verify_lid_closed"
-    check: "fixture_gap"
-    expect: "lid_closed"
-    arm: "right"
-    on_fail: "skip"
+  - stage: verify_lid_closed
+    check: fixture_gap
+    expect: lid_closed
+    arm: right
+    on_fail: skip
 
   # ---------------------------------------------------------------------------
   # 2. LEFT arm lifts the lid to -30 deg
   # ---------------------------------------------------------------------------
-  - stage: "hand_release"
-    arm: "left"
-    pose_name: "release"
-    planning_group: "inspire_hand_left"
+  - stage: hand_release
+    arm: left
+    pose_name: release
+    planning_group: inspire_hand_left
 
-  - stage: "move_to_half_pole_length"
-    arm: "left"
-    pose_name: "half_length"
-    planning_group: "pole_left"
+  - stage: move_to_half_pole_length
+    arm: left
+    pose_name: half_length
+    planning_group: pole_left
 
-  - stage: "hand_grasp"
-    arm: "left"
-    pose_name: "half_grasp"
-    planning_group: "inspire_hand_left"
+  - stage: hand_grasp
+    arm: left
+    pose_name: half_grasp
+    planning_group: inspire_hand_left
 
-  - stage: "move_to_pre_start"
+  - stage: move_to_pre_start
     speed_class: approach
-    arm: "left"
-    pose_name: "pre_start_pose"
-    planning_group: "rm75_arm_left"
+    arm: left
+    pose_name: pre_start_pose
+    planning_group: rm75_arm_left
     conditional: true
-    condition_param: "use_prestart_stage"
+    condition_param: use_prestart_stage
 
   # Allow collision between hand and commode lid (+ seat below it) before opening.
   # Newton 2026-10-09: the BODY too — the retry ladder's third rung (z -5 mm) sweeps
   # the middle fingertip into commode_body early in the arc (0.46 s), and the
   # fingers under the lid lip do meet the bowl rim there on the real fixture.
-  - stage: "allow_collision"
-    arm: "left"
-    contact_surface: "all"
+  - stage: allow_collision
+    arm: left
+    contact_surface: all
 
-  - stage: "move_to_start"
+  - stage: move_to_start
     speed_class: approach
-    arm: "left"
-    pose_name: "start_pose"
-    planning_group: "rm75_arm_left"
+    arm: left
+    pose_name: start_pose
+    planning_group: rm75_arm_left
 
-  - stage: "execute_path"
+  - stage: execute_path
     speed_class: carry
-    arm: "left"
+    arm: left
 
   # ---------------------------------------------------------------------------
   # 3. Settle, then CHECK that the lid is lifted (executive, fail-closed)
@@ -397,7 +345,7 @@ stage_sequence:
   # Settle dwell (the `hold_time:` key makes it one): the left hand holds the
   # lid still for 1 s before the image; recorded in the saved plan as a
   # hold_pose pre_action of the next sub-trajectory.
-  - stage: "settle_before_check"
+  - stage: settle_before_check
     hold_time: 1.0
 
   # THE LIFT CHECK. A `check:` key makes this a perception check, as
@@ -429,11 +377,11 @@ stage_sequence:
   #          after this row, so the established state is lid_open — not
   #          lid_seat_open — and the seat row later finds a closed seat.
   #          Neither key changes this check's verdict.
-  - stage: "verify_lid_lifted"
-    check: "fixture_gap"
-    expect: "lid_lifted"
-    arm: "right"
-    on_fail: "retry_lift"
+  - stage: verify_lid_lifted
+    check: fixture_gap
+    expect: lid_lifted
+    arm: right
+    on_fail: retry_lift
     max_retries: 3
     # The retry ladder (Newton 2026-10-09). The miss is the hook fingers not
     # getting far enough between lid and seat along -y, so each retry plays a
@@ -445,8 +393,8 @@ stage_sequence:
       - {x: -0.01, y: -0.01}
       - {x: -0.01, y: -0.01, z: -0.01}
       - {x: 0.01, y: 0.005, z: -0.01}
-    also_observe: "seat_lifted"
-    if_observed: "seat_close_right"
+    also_observe: seat_lifted
+    if_observed: seat_close_right
 
   # ---------------------------------------------------------------------------
   # 4. Scene: lid to -30 deg (only reached on PASS)
@@ -458,102 +406,89 @@ stage_sequence:
   # intentionally NOT listed here. Does NOT modify commode_fixture_type.
   # (The hand<->lid allowance is re-asserted automatically on this stage, for
   # both hands' contact links.)
-  - stage: "update_fixture_scene"
+  - stage: update_fixture_scene
     lid_angle_deg: -30.0
 
   # ---------------------------------------------------------------------------
   # 5. RIGHT arm takes the hold (pre-start, then start)
   # ---------------------------------------------------------------------------
-  # - stage: "hand_release"
-  #   arm: "right"
-  #   pose_name: "release"
-  #   planning_group: "inspire_hand_right"
+  # - stage: hand_release
+  #   arm: right
+  #   pose_name: release
+  #   planning_group: inspire_hand_right
 
   # Pole already at half_length since the inspect block: this stage is a no-op
   # kept so the block reads like every other approach.
-  - stage: "move_to_half_pole_length"
-    arm: "right"
-    pose_name: "half_length"
-    planning_group: "pole_right"
+  - stage: move_to_half_pole_length
+    arm: right
+    pose_name: half_length
+    planning_group: pole_right
 
-  - stage: "hand_grasp"
-    arm: "right"
-    pose_name: "half_grasp"
-    planning_group: "inspire_hand_right"
+  - stage: hand_grasp
+    arm: right
+    pose_name: half_grasp
+    planning_group: inspire_hand_right
 
-  - stage: "move_to_pre_start"
+  - stage: move_to_pre_start
     speed_class: approach
-    arm: "right"
-    pose_name: "pre_start_pose"
-    planning_group: "rm75_arm_right"
+    arm: right
+    pose_name: pre_start_pose
+    planning_group: rm75_arm_right
     conditional: true
-    condition_param: "use_prestart_stage"
+    condition_param: use_prestart_stage
 
   # Allow collision between hand and commode lid (+ seat below it) before holding
-  - stage: "allow_collision"
-    arm: "right"
-    contact_surface: "seat_and_lid"
-    additional_ik_frames: ["R_glove_frame_2"]
+  - stage: allow_collision
+    arm: right
+    contact_surface: seat_and_lid
+    additional_ik_frames: [R_glove_frame_2]
 
-  - stage: "move_to_start"
+  - stage: move_to_start
     speed_class: approach
-    arm: "right"
-    pose_name: "start_pose"
-    planning_group: "rm75_arm_right"
+    arm: right
+    pose_name: start_pose
+    planning_group: rm75_arm_right
 
-  - stage: "hand_release"
-    arm: "right"
-    pose_name: "release"
-    planning_group: "inspire_hand_right"
-
-  # ---------------------------------------------------------------------------
-  # 6. LEFT arm releases the lid, retracts (to retract_pose), then rests
-  # ---------------------------------------------------------------------------
-  - stage: "hand_release"
-    arm: "left"
-    pose_name: "release"
-    planning_group: "inspire_hand_left"
-
-  - stage: "move_to_retract"
-    speed_class: approach
-    arm: "left"
-    pose_name: "retract_pose"
-    planning_group: "rm75_arm_left"
-
-  - stage: "hand_grasp"
-    arm: "left"
-    pose_name: "grasp"
-    planning_group: "inspire_hand_left"
-
-  # Hand has left the lid -> restore normal hand<->lid collision checking.
-  - stage: "forbid_collision"
-    arm: "left"
-    contact_surface: "seat_and_lid"
-
-  - stage: "move_to_rest"
-    speed_class: freespace
-    arm: "left"
-    pose_name: "rest_pose"
-    planning_group: "rm75_arm_left"
+  - stage: hand_release
+    arm: right
+    pose_name: release
+    planning_group: inspire_hand_right
 
   # ---------------------------------------------------------------------------
   # 7. RIGHT arm traces its opening trajectory to -110 deg
   # ---------------------------------------------------------------------------
-  - stage: "execute_path"
+  - stage: execute_path
     speed_class: carry
-    arm: "right"
+    arm: right
 
   # Lid now fully open -> move only the lid to -110°; seat stays closed.
-  - stage: "update_fixture_scene"
+  - stage: update_fixture_scene
     lid_angle_deg: -110.0
 
-  - stage: "move_to_rest"
+  - stage: move_to_pre_start
+    speed_class: approach
+    arm: left
+    pose_name: pre_start_pose
+    planning_group: rm75_arm_left
+
+      # Hand has left the lid -> restore normal hand<->lid collision checking.
+  - stage: forbid_collision
+    arm: left
+    contact_surface: seat_and_lid
+
+  - stage: move_to_rest
     speed_class: freespace
-    arm: "right"
-    pose_name: "rest_pose"
-    planning_group: "rm75_arm_right"
+    arm: left
+    pose_name: rest_pose
+    planning_group: rm75_arm_left
+
+  - stage: move_to_rest
+    speed_class: freespace
+    arm: right
+    pose_name: rest_pose
+    planning_group: rm75_arm_right
 
   # Forbid collisions between hand and commode after opening
-  - stage: "forbid_collision"
-    arm: "right"
-    contact_surface: "seat_and_lid"
+  - stage: forbid_collision
+    arm: right
+    contact_surface: seat_and_lid

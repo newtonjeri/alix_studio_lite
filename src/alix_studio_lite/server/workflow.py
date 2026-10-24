@@ -1190,8 +1190,8 @@ def stage_off(S: str, row, pid: int, st, pole, hand, set_pole: bool, set_hand: b
 
 #: The commode as each task leaves it, in the camera checks' words: the expectations that hold there (a plan that runs
 #: after another, a follow-up, has its checks answered by them in the simulation; a plan's own are answered as expected).
-HOLDS_AFTER = {"lid_open": {"lid_open", "seat_closed"}, "seat_close_right": {"lid_open", "seat_closed"},
-               "seat_open": {"lid_open", "seat_open"}, "lid_close_right": {"lid_closed", "seat_closed"}}
+HOLDS_AFTER = {"lid_open": {"lid_open", "seat_closed"}, "seat_close": {"lid_open", "seat_closed"},
+               "seat_open": {"lid_open", "seat_open"}, "lid_close": {"lid_closed", "seat_closed"}}
 
 
 def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=()) -> float:
@@ -1293,7 +1293,7 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                     if holds is not None and expect not in holds and pa.get("on_fail") == "skip":
                         return True, follow
                     if pa.get("also_observe") and pa.get("if_observed"):    # the part it also looks at: not judged here
-                        follow = pa["if_observed"]
+                        follow = mechanism.task_name(pa["if_observed"])
             entry(owner, e)
         return False, follow
 

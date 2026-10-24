@@ -32,7 +32,7 @@ never move at the same time inside a plan); a plan's checks before the entry tha
 the check's own policy: skip (the plan's outcome already holds), run_prerequisite (the plan that makes the
 state runs first, then this one again from its start), retry_lift (the lifting arm's block again, from the
 next pre-planned rung), abort (a person must look). A PASS with also_observe asks the second question:
-seat_close_right follows when the seat came up with the lid.
+Close the seat follows when the seat came up with the lid (ALIX names it seat_close_right: task_name maps the name).
 
 After a plan has run, its end state is checked (FINAL_CHECKS; the owner, 21 Oct: a lid opening whose right side
 did not open the lid ran to its end all the same): the right arm goes to its inspection pose the way ALIX planned it
@@ -71,38 +71,49 @@ TASKS = {
         does="The right arm looks with the wrist camera; if the lid is closed, the left arm lifts it, the camera "
              "checks it is up (up to three re-lifts, each a little further in), then the right arm takes it and "
              "opens it fully. If the seat came up with the lid, it is closed again after (Close the seat)."),
-    "seat_close_right": dict(
+    "seat_close": dict(
         title="Close the seat", short="SEAT CLOSE", start="lid and seat open", end="lid open, seat down",
-        does="The camera checks the lid is open (else it stops) and the seat is up (else there is nothing to do); "
-             "the right arm closes the seat."),
+        does="The camera checks the seat is up (else there is nothing to do) and the lid is open (else it stops); the "
+             "left arm hooks the seat's top edge and pulls it over onto the right hand, which lets it down; the camera "
+             "checks it is down."),
     "seat_open": dict(
         title="Open the seat", short="SEAT OPEN", start="lid open, seat down", end="lid and seat open",
         does="The camera checks the lid is open (else Open the lid runs first) and the seat is down; the left arm "
              "lifts the seat, the camera checks it is up (one re-lift), then the right arm opens it fully."),
-    "lid_close_right": dict(
-        title="Close the lid", short="LID CLOSE", start="lid open", end="lid and seat closed",
+    "lid_close": dict(
+        title="Close the lid", short="LID CLOSE", start="lid open, seat down", end="lid and seat closed",
         does="The camera checks the lid is open (else there is nothing to do) and the seat is down (else Close the "
-             "seat runs first); the right arm closes the lid."),
+             "seat runs first); the left arm hooks the lid's top edge and pulls it over onto the right hand, which lets "
+             "it down; the camera checks it is down."),
 }
+#: ALIX's names for the closings before 25 Oct (the single-arm plans of 7 Oct, superseded by the compound ones above):
+#: what Open the lid's follow-up (if_observed) and the older configs' prerequisites still say, and the plan Lite runs for it
+ALIASES = {"seat_close_right": "seat_close", "lid_close_right": "lid_close"}
+
+
+def task_name(name: str) -> str:
+    """A plan named by ALIX's configs (a follow-up, a prerequisite) as Lite knows it."""
+    return ALIASES.get(name, name)
+
+
 #: After each plan its end state, checked by the wrist camera (the owner, 21 Oct, after a lid opening whose right side did
 #: not open the lid and ran to its end all the same: "add a status check after completion to confirm the final state was
 #: reached"). The camera sees the lid and the seat from the right arm's inspection pose alone, so the right arm goes there
 #: as ALIX planned it in the state the plan leaves: the way in of the plan that starts in that state (its pole, its hand,
 #: its move_to_inspect); the camera is asked, judged as the plans' own checks are (lift_check); the right arm goes back to
 #: where the plan ended. A NOT stops the run: a person must look. {plan: (what the camera must see, whose way in looks)}
+#: The closings (25 Oct) carry their own end check: their last stage looks from inspection_pose_1 before the right arm
+#: goes to rest, so Lite adds none after them.
 FINAL_CHECKS = {
     "lid_open": ("lid_open", "seat_open"),                    # lid open, seat down: Open the seat starts there
-    "seat_open": ("seat_open", "seat_close_right"),           # lid and seat open: Close the seat starts there
-    "seat_close_right": ("seat_closed", "seat_open"),         # lid open, seat down
-    "lid_close_right": ("lid_closed", "lid_open"),            # lid and seat closed: Open the lid starts there
+    "seat_open": ("seat_open", "seat_close"),                 # lid and seat open: Close the seat starts there
 }
 
 #: Lite's catalogue rows (docs/region_catalogue_commode_c.csv) and the plan each one runs
-ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T02": "seat_close_right", "R-T02": "seat_close_right",
-        "L-T03": "seat_open", "R-T03": "seat_open", "L-T05": "lid_close_right", "R-T09": "lid_close_right"}
+ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T02": "seat_close", "R-T02": "seat_close",
+        "L-T03": "seat_open", "R-T03": "seat_open", "L-T05": "lid_close", "R-T09": "lid_close"}
 #: the commode's state after each, for the 3D and the collision check (Lite's phases)
-PHASE_AFTER = {"lid_open": "lid_open", "seat_close_right": "lid_open", "seat_open": "seat_open",
-               "lid_close_right": "lid_closed"}
+PHASE_AFTER = {"lid_open": "lid_open", "seat_close": "lid_open", "seat_open": "seat_open", "lid_close": "lid_closed"}
 
 SIDE_OF = {"R": "right", "L": "left"}
 
@@ -551,8 +562,10 @@ class Runner:
             if state["follow_up"]:                   # it looks first thing, with its own checks (a NOT there stops it)
                 self.say(f"FINAL CHECK {plan.title}: {TASKS[state['follow_up']]['title']} runs next and looks first, with its "
                          "own checks")
-            else:
+            elif plan.name in FINAL_CHECKS:
                 self._final_check(plan)
+            else:                                     # the closings: their last check looked at the end state already
+                self.say(f"FINAL CHECK {plan.title}: its own last check looked at the end state")
         if state["follow_up"]:
             nxt = state["follow_up"]
             if nxt not in TASKS:
@@ -659,7 +672,7 @@ class Runner:
 
     def _observe_also(self, a, state) -> None:
         what = str(a.get("also_observe") or "")
-        follow = str(a.get("if_observed") or "")
+        follow = task_name(str(a.get("if_observed") or ""))
         seconds = getattr(self.ex, "observed", None)
         if seconds:
             # ALIX's _observe_also: the check's own frames answered it, decided by the same vote (lift_check.observe)
@@ -704,7 +717,7 @@ class Runner:
             self.say(f"{label}: NOT {expect} — this plan's outcome already holds; it ends here as done (on_fail skip)")
             return ("skip",)
         if policy == "run_prerequisite":
-            task = str(failed.get("prerequisite") or "")
+            task = task_name(str(failed.get("prerequisite") or ""))
             budget = max(1, int(failed.get("max_retries", 1) or 1))
             key = (plan.name, task)
             done = self.prereq.get(key, 0)
@@ -915,30 +928,39 @@ class RealExec(_Exec):
 
         pct = int(self.robot.speed_pct)
         where = words or f"{plan.title}'s {at}"
-        stages = {}
+        stages, poles = {}, {}
         for side, tg in targets.items():
+            if "hand" not in tg and "pole_mm" not in tg:    # the plan names neither for this arm (the closings): kept as they are
+                continue
             self._arm(side)
             pole, hand = self.robot._measured(side)
-            stages[side] = staging.make_stage(tg.get("pole_mm", pole if pole is not None else 0.0),
-                                              tg.get("hand") or [None] * 6, where)
+            if "hand" in tg:
+                stages[side] = staging.make_stage(tg.get("pole_mm", pole if pole is not None else 0.0), tg["hand"], where)
+            else:
+                poles[side] = float(tg["pole_mm"])              # the pole alone; the hand as it is
         self.check_stop()
-        self.job.progress(f"{' and '.join(s.upper() for s in stages)}: pole and hand to {where}")
+        if stages or poles:
+            self.job.progress(f"{' and '.join(s.upper() for s in sorted(set(stages) | set(poles)))}: pole and hand to {where}")
         failed = {}
 
         def one(side):
             try:
-                self._keep_hand(side)
-                self._arm(side).stage(stages[side])
+                if side in stages:
+                    self._keep_hand(side)
+                    self._arm(side).stage(stages[side])
+                else:
+                    self._arm(side).pole_to(poles[side])
             except BaseException as exc:                                            # noqa: BLE001 - raised below
                 failed[side] = exc
 
-        threads = [threading.Thread(target=one, args=(side,), name=f"lite-stage-{side}", daemon=True) for side in stages]
+        threads = [threading.Thread(target=one, args=(side,), name=f"lite-stage-{side}", daemon=True)
+                   for side in sorted(set(stages) | set(poles))]
         for t in threads:
             t.start()
         for t in threads:
             while t.is_alive():
                 t.join(0.1)
-        for side in stages:
+        for side in sorted(set(stages) | set(poles)):
             if side in failed:
                 raise failed[side]
         for side, tg in targets.items():
