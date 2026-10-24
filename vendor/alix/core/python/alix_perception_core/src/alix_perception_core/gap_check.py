@@ -138,6 +138,12 @@ class GapCheckSession:
     #: lid decisions after which the closed seat frame no longer describes the fixture
     _SEAT_REF_CLEARING_LID = ("lid_closed", "lid_lifted", "lid_between")
 
+    #: The colour models asked once per check (the owner, 24 Oct: 0.2-0.4 s a frame on the robot): a frame asking the
+    #: same question from the same camera pose (1 mm, 1e-3) with the same registration, this soon after the frame that
+    #: asked them, takes their answer, each frame judged against it on its own geometry. A frame their answer
+    #: contradicted makes the next frame ask them again, and so does a new pose or a check's later frames.
+    MODELS_REUSE_S = 2.5
+
     def __init__(self, param: Callable[[str], Any], locator: Callable[[], Any] = lambda: None,
                  fixture_in_world: Callable[[], Optional[np.ndarray]] = lambda: None, world_frame: str = "base_link",
                  log=None, now: Callable[[], float] = time.time):
@@ -152,32 +158,52 @@ class GapCheckSession:
         self._last_lid: dict = {}               # registration key -> the last lid class decided there
         self._seat_geo = None                   # seat_rise.SeatGeometry, built once
         self._hinged = None                     # seat_state.HingedFixture, built once (False: none)
+        self._models_last = None                # (key, time, result): the colour models' last answer (MODELS_REUSE_S)
 
     def record_params(self) -> dict:
         return {k: self._p(k) for k in self.RECORD_PARAMS}
 
-    def _models_verdict(self, gap_class: str, models, at_pose: str) -> dict:
+    def _models_verdict(self, gap_class: str, models, at_pose: str, asked: str = "", camera_to_world=None) -> dict:
         """The fused state (colour + registered depth) for this frame from `models()` — the caller's
         PerceptionCore.check_status on the same moment's colour frame and aligned depth, or None — and whether it
         contradicts `gap_class`. {} when the class is a lifted one (no model knows a part at -30 deg) or nothing
-        could be asked. A confident closed decision there teaches the registration (the fused path's rule)."""
+        could be asked. A confident closed decision there teaches the registration (the fused path's rule). The
+        models are asked once per check (MODELS_REUSE_S): ``reused`` says a frame took an earlier frame's answer."""
         agrees = self.GAP_CLASS_AGREES.get(gap_class)
         if not agrees or models is None:
             return {}
-        try:
-            result = models()
-        except Exception as exc:                                   # noqa: BLE001 — the geometry answers alone
-            self.log.warn(f"gap_check: the models could not be asked ({exc}); the geometry answers alone")
-            return {}
-        if result is None:
-            return {}
-        self._learn_registration(at_pose, result)
+        key = None
+        if camera_to_world is not None:
+            m = np.asarray(camera_to_world, dtype=float)
+            key = (asked, at_pose, tuple(np.round(m[:3, 3] * 1000.0).astype(int).tolist()),
+                   tuple(np.round(m[:3, :3] * 1000.0).astype(int).ravel().tolist()), round(self._registration_for(at_pose) * 1e4))
+        last, now = self._models_last, float(self.now())
+        reused = key is not None and last is not None and last[0] == key and 0.0 <= now - last[1] <= self.MODELS_REUSE_S
+        if reused:
+            result = last[2]
+        else:
+            self._models_last = None
+            try:
+                result = models()
+            except Exception as exc:                                   # noqa: BLE001 — the geometry answers alone
+                self.log.warn(f"gap_check: the models could not be asked ({exc}); the geometry answers alone")
+                return {}
+            if result is None:
+                return {}
+            self._learn_registration(at_pose, result)
+            if key is not None:
+                self._models_last = (key, now, result)
         fused = result.fixture_state or ""
         confident = bool(fused) and float(result.state_confidence) >= float(self._p("confidence_threshold"))
-        return {"fused_state": fused, "state_source": result.state_source, "confidence": round(float(result.state_confidence), 3),
-                "fusion": result.diagnostics.get("fusion", ""), "colour_state": result.diagnostics.get("colour_state", ""),
-                "depth_state": result.diagnostics.get("depth_state", ""),
-                "contradiction": bool(confident and fused not in agrees)}
+        contradiction = bool(confident and fused not in agrees)
+        if contradiction:                                              # the next frame asks them again
+            self._models_last = None
+        out = {"fused_state": fused, "state_source": result.state_source, "confidence": round(float(result.state_confidence), 3),
+               "fusion": result.diagnostics.get("fusion", ""), "colour_state": result.diagnostics.get("colour_state", ""),
+               "depth_state": result.diagnostics.get("depth_state", ""), "contradiction": contradiction}
+        if reused:
+            out["reused"] = True
+        return out
 
     def refusal(self, asked: str, text: str, record_extra: dict | None = None) -> GapDecision:
         """A refusal (success False, class "refused"): the caller's own (no frame, no pose, no intrinsics) or this
@@ -450,7 +476,7 @@ class GapCheckSession:
         # and the registered depth state on the same moment's colour frame and aligned
         # depth. A closed/open class the fused state confidently contradicts is not a
         # proof of anything: "uncertain", which no expectation matches.
-        cross = self._models_verdict(state, models, at_pose) \
+        cross = self._models_verdict(state, models, at_pose, asked, camera_to_world) \
             if (bool(self._p("gap_cross_check")) and models is not None) else {}
         if cross.get("contradiction"):
             self.log.warn(f"gap_check: {state} contradicted by the models ({cross['fused_state']} from "
@@ -467,7 +493,7 @@ class GapCheckSession:
         if state == "refused":
             # Neither reading could judge: a refusal that says so, never "NOT lifted" (Newton 2026-10-23:
             # a check that cannot judge stops for a person, it does not start a re-lift).
-            text = seat_refusal + (f"; seat: {seat_note}" if seat_note else "") + f"; {source}, {frame}{detail}"
+            text = (seat_refusal or "cannot judge") + (f"; seat: {seat_note}" if seat_note else "") + f"; {source}, {frame}{detail}"
             self.log.warn(f"gap_check: {text}")
             return GapDecision(part=part, expect=asked, success=False, state="refused", confidence=0.0,
                                recommendation="re-clean", message=text,
@@ -618,6 +644,11 @@ class GapCheckSession:
             return state, conf, f"fit failed ({exc})"
         fit = whole.seat
         info = whole.as_dict()
+        if whole.seat_hidden:
+            # the lid reads lifted: the seat is under it, and no reading of this frame judges it (the owner, 2026-10-24)
+            info["outcome"] = "refused"
+            record_extra["seat_fit"] = info
+            return "refused", 0.0, f"the seat is under the lifted lid, not judged ({fit.reason})"
         if not fit.state:
             info["outcome"] = state
             record_extra["seat_fit"] = info

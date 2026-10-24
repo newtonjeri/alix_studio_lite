@@ -43,7 +43,6 @@ footprint (its mesh cells placed closed, or a fixed xy box when the meshes canno
 from __future__ import annotations
 
 import math
-import warnings
 from dataclasses import dataclass, field
 from typing import Iterable, Optional
 
@@ -207,6 +206,21 @@ def pose_difference(a, b) -> tuple[float, float]:
     return dt, float(math.degrees(math.acos(max(-1.0, min(1.0, c)))))
 
 
+def nanmedian0(stack: np.ndarray) -> np.ndarray:
+    """``np.nanmedian(stack, axis=0)``, value for value (the middle value, or the mean of the middle two; NaN where a
+    pixel has none), from one sort: for a few frames numpy takes a masked-array path that warns once per empty pixel
+    (88 743 warnings, 0.1 s of a 0.6 s seat frame, 24 Oct)."""
+    s = np.sort(stack, axis=0)                                  # NaN last
+    n = np.sum(~np.isnan(stack), axis=0)
+    h = n // 2
+    lo = np.where(n % 2 == 1, h, h - 1)
+    lo_v = np.take_along_axis(s, np.maximum(lo, 0)[None], axis=0)[0]
+    hi_v = np.take_along_axis(s, np.minimum(h, s.shape[0] - 1)[None], axis=0)[0]
+    out = (lo_v + hi_v) / 2.0
+    out[n == 0] = np.nan
+    return out
+
+
 def _near_hands(points: np.ndarray, hands: Iterable, radius: float) -> np.ndarray:
     """True for each point (N, 3) within `radius` of any hand position."""
     out = np.zeros(len(points), dtype=bool)
@@ -288,17 +302,16 @@ def _view(frames: list, frame) -> np.ndarray:
 def _build(frames: list, views: list, seat_top_m: float, geometry: SeatGeometry, time_s: float, hands,
            params: SeatRiseParams) -> SeatReference:
     depth0, cam0, k0 = frames[0]
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)          # a pixel with no depth in any frame stays nan
-        median = np.nanmedian(np.stack(views), axis=0) if len(views) > 1 else views[0]
+    median = nanmedian0(np.stack(views)) if len(views) > 1 else views[0]     # a pixel with no depth in any frame: nan
     pts, valid = deproject(np.nan_to_num(median, nan=0.0), k0, cam0)
     points = pts[valid]
     ring = (np.abs(points[:, 2] - seat_top_m) <= params.ring_band_m)
     idx = np.flatnonzero(ring)
     ring[idx] = geometry.inside(points[idx, :2], params.footprint_margin_m)
     lid = points[:, 2] >= params.lid_min_z_m
-    if hands:
-        lid &= ~_near_hands(points, hands, params.hand_mask_m)
+    if hands:                                   # only the lid's points can be taken off it (24 Oct: all ~400 000 were measured)
+        li = np.flatnonzero(lid)
+        lid[li] = ~_near_hands(points[li], hands, params.hand_mask_m)
     return SeatReference(frames=list(frames), views=list(views), points=points, ring=ring, lid=lid,
                          s=geometry.distance_from_hinge(points), seat_top_m=float(seat_top_m), time_s=float(time_s))
 
@@ -399,8 +412,10 @@ def read_seat(ref: Optional[SeatReference], depth, camera_to_world, intrinsics, 
     win, valid, now_pts = c["winner"], c["valid"], c["points"]
     seen = (win >= 0) & valid                                  # a reference point on the ray, and depth now
     hand_now = np.zeros(len(win), dtype=bool)
-    if hands:
-        si = np.flatnonzero(seen)
+    if hands:                                   # where it is read: on the lid's and the ring's points (not every seen one)
+        wanted = seen.copy()
+        wanted[wanted] = ref.lid[win[wanted]] | ref.ring[win[wanted]]
+        si = np.flatnonzero(wanted)
         hand_now[si] = _near_hands(now_pts[si], hands, params.hand_mask_m)
     # THE LID GUARD, along this frame's rays: farther than the lid was = it left; nearer = occluded
     on_lid = seen & ~hand_now

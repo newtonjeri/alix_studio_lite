@@ -194,6 +194,27 @@ def test_seat_open_with_the_lid_closed_runs_lid_open_first_then_itself_again():
         ("seat_close_right", "start"), ("seat_open", "end")]     # seat_open's: Close the seat's way in, back
 
 
+def test_an_arms_back_to_back_moves_go_as_one_stream_and_the_final_check_comes_back_along_its_way_in():
+    """24 Oct: every stream has its own start, stop and settle (1.6 s each), and the final check went back by a MoveJ
+    at the speed slider (3.2 s). An arm's moves straight after one another, none asking the camera or holding before
+    it, are one stream (they meet on the same line in all four plans); the final check comes back along its way in."""
+    ex = FakeExec(["lid_open", "seat_closed", "seat_lifted", "seat_open"])
+    out = mechanism.Runner(ex).run("seat_open")
+    assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("seat_open", "done")]
+    arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]
+    assert arm == [("move_to_inspect", "right"), ("move_to_pre_start + move_to_start + execute_path", "left"),
+                   ("move_to_rest", "right"), ("move_to_pre_start + move_to_start", "right"), ("move_to_retract", "left"),
+                   ("move_to_retract + move_to_rest", "left"), ("execute_path + move_to_rest", "right"),   # 24 Oct 13:55: a 2nd retract
+                   ("move_to_inspect", "right"), ("back along move_to_inspect", "right")]   # the final check's way in, back
+    assert [m[5] for m in moves(ex) if m[1] == "back along move_to_inspect"] == ["the final check's way in, reversed"]
+    plan = mechanism.Plan("seat_open")
+    joined, used = mechanism.joined_moves(plan.entries, [e.stage for e in plan.entries].index("move_to_pre_start"))
+    parts = plan.entries[[e.stage for e in plan.entries].index("move_to_pre_start"):][:used]
+    assert used == 3 and joined.rows == [r for e in parts for r in e.rows]
+    assert abs(joined.seconds - sum(e.seconds for e in parts)) < 1e-9 and joined.side == "left"
+    assert [c[1:3] for c in ex.calls if c[0] == "approach"][-1] == ("seat_open", "end")      # pole and hand, as it ended
+
+
 def test_seat_open_re_lifts_back_along_its_lift_without_a_rung():
     ex = FakeExec(["lid_open", "seat_closed", "seat_closed", "seat_lifted", "seat_open"])
     out = mechanism.Runner(ex).run("seat_open")
@@ -437,7 +458,7 @@ def test_re_lifts_planned_for_another_version_of_the_plan_stop_the_run_before_an
         with pytest.raises(UserError) as err:
             mechanism.Runner(ex).run("lid_open")
         assert err.value.code == "escalate" and "re-lift 1's pre-planned rung starts 3.0 degrees" in str(err.value)
-        assert moves(ex)[-1][1] == "execute_path" and not any(m[5] for m in moves(ex))      # nothing of the re-lift moved
+        assert moves(ex)[-1][1].endswith("execute_path") and not any(m[5] for m in moves(ex))   # nothing of the re-lift moved
         assert mechanism.Plan("seat_open").rungs_note() is None                          # no rungs: back along its lift
     finally:
         mechanism.cached.cache_clear()

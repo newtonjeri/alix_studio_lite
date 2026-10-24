@@ -184,6 +184,8 @@ class GapCheck:
         self._locator = None
         self._manifest = Path(manifest) if manifest else MANIFEST
         self._named: dict | None = None        # the right arm's named poses (ALIX's MoveIt group states), read once
+        self._writes = None                    # the check records waiting for their writer (a thread of their own)
+        self._writes_lock = threading.Lock()
         vendor_paths.activate()
         from alix_perception_core.gap_check import GapCheckSession
 
@@ -256,6 +258,58 @@ class GapCheck:
                 "registration": {"lid_m": self.registration_for(at_pose), "seat_m": self._registration.get(key + ("seat",))},
                 "fixture": self.fixture_record(), "context": None if frame is None else frame.context,
                 "provenance": provenance(), "split": ""}
+
+    # ── the records, written by a thread of their own (24 Oct: written before the next frame, 0.13-0.25 s each, 2 s of
+    #    a seat run), in the order they were asked; a run ends with flush()
+    def _write_later(self, job: dict) -> None:
+        import queue
+
+        with self._writes_lock:
+            if self._writes is None:
+                self._writes = queue.Queue()
+                threading.Thread(target=self._writer, name="lite-check-records", daemon=True).start()
+        self._writes.put(job)
+
+    def _writer(self) -> None:
+        while True:
+            job = self._writes.get()
+            try:
+                written = write_check_record(**job)
+                if written:
+                    self._log(f"check record: {written}")
+            finally:
+                self._writes.task_done()
+
+    def flush(self, timeout_s: float = 30.0) -> bool:
+        """Every record asked for written (a run's end): True, or False after ``timeout_s``."""
+        q = self._writes
+        if q is None:
+            return True
+        t_end = time.monotonic() + float(timeout_s)
+        with q.all_tasks_done:
+            while q.unfinished_tasks:
+                left = t_end - time.monotonic()
+                if left <= 0:
+                    return False
+                q.all_tasks_done.wait(left)
+        return True
+
+    def warm(self) -> str:
+        """The core built and the colour model loaded and run once on a blank picture, before the first check needs
+        them (mechanism.warm_up, as Lite starts with the real arms; 24 Oct: 12 s of the first check after a start).
+        Never raises: what it could not do is said, and the first check does it."""
+        t0 = time.monotonic()
+        with self._lock:
+            try:
+                core = self.core()
+                if core is None:
+                    return self._core_error or "perception core unavailable"
+                core.backend.check_status(np.zeros((720, 1280, 3), dtype=np.uint8), "commode")
+            except Exception as exc:                                                # noqa: BLE001
+                self._log(f"perception not warmed up ({exc}): the first check loads it")
+                return f"not warmed ({exc})"
+        self._log(f"perception warmed up in {time.monotonic() - t0:.1f} s: its core built, the colour model loaded")
+        return "ok"
 
     def _load_locator(self):
         """ALIX's own placement (alix_perception_core.gap_check.load_fixture): the scene, the venue's yaw (until 24 Oct
@@ -468,12 +522,13 @@ class GapCheck:
             if not bool(p.get("save_check_frames", True)) or self._records is None:
                 return
             root = self._records() if callable(self._records) else self._records
-            written = write_check_record(root, mode, expect, decision, record_depth["arr"],
-                                         None if frame is None else frame.colour, rois_for_record,
-                                         aligned=None if frame is None else frame.aligned)
-            if written:
-                response.record_path = str(written)
-                self._log(f"check record: {written}")
+            if root is None:
+                return
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
+            response.record_path = str(Path(root) / f"{record_stem(mode, expect, decision, stamp)}.json")
+            self._write_later(dict(root=root, mode=mode, expect=expect, decision=dict(decision), depth=record_depth["arr"],
+                                   image=None if frame is None else frame.colour, rois=rois_for_record, stamp=stamp,
+                                   aligned=None if frame is None else frame.aligned))
 
         def answer(decision):
             response.success, response.message = decision.success, decision.message
@@ -509,6 +564,13 @@ class GapCheck:
 
 
 # ── the record of a check (perception_node.py `write_check_record`, lines 71-129)
+def record_stem(mode: str, expect: str, decision: dict, stamp: str) -> str:
+    """``<stamp>_<mode>_<expect>_<class>``: a record's files' common name (ALIX's)."""
+    cls = str(decision.get("class") or decision.get("fixture_state") or "refused")
+    safe = lambda s: "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in str(s)) or "none"   # noqa: E731
+    return f"{stamp}_{safe(mode)}_{safe(expect)}_{safe(cls)}"
+
+
 def write_check_record(root, mode: str, expect: str, decision: dict, depth=None, image=None,
                        rois: dict | None = None, stamp: str | None = None, aligned=None) -> Path | None:
     """``<root>/<stamp>_<mode>_<expect>_<class>.json`` (the decision), ``..._depth.npy`` (float32 metres, the array
@@ -521,8 +583,7 @@ def write_check_record(root, mode: str, expect: str, decision: dict, depth=None,
         out.mkdir(parents=True, exist_ok=True)
         stamp = stamp or datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]
         cls = str(decision.get("class") or decision.get("fixture_state") or "refused")
-        safe = lambda s: "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in str(s)) or "none"   # noqa: E731
-        stem = f"{stamp}_{safe(mode)}_{safe(expect)}_{safe(cls)}"
+        stem = record_stem(mode, expect, decision, stamp)
         files = {}
         if depth is not None:
             arr = np.asarray(depth, dtype=np.float32)
