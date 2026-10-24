@@ -146,6 +146,9 @@ right:
     point7:
       translation: [0.30, 0.05, 0.20]
       rotation: [0.0, -10.0, 0.0]
+    point8:
+      translation: [0.33, 0.05, 0.25]
+      rotation: [0.0, -10.0, 0.0]
 
   # CLEANING SEQUENCE
   # Format: [from, to] - pairs of point names
@@ -200,6 +203,9 @@ left:
      translation: [0.20, 0.0, 0.15]   # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
      rotation: [0.0, -15.0, 0.0]      # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
 
+    retract_pose_2:   # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
+     translation: [0.22, 0.1, 0.15]
+     rotation: [0.0, -15.0, 0.0]
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
   # Translation: [x, y, z] in meters
   # Rotation: [roll, pitch, yaw] in degrees
@@ -534,6 +540,12 @@ stage_sequence:
     arm: left
     contact_surface: seat_and_body
     additional_ik_frames: [L_glove_frame_2]
+
+  - stage: move_to_retract
+    speed_class: approach
+    arm: left
+    pose_name: retract_pose
+    planning_group: rm75_arm_left
 
   - stage: move_to_rest
     speed_class: freespace

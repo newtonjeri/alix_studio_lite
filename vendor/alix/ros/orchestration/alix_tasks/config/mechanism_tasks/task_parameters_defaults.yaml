@@ -46,15 +46,15 @@ task_parameters:
   # Going higher was NOT taken: 0.9 would sit on the §0 screen threshold with
   # no margin for the controller's own tracking error, and mechanism motion
   # moves a grasped fixture — the wrong place to spend the last 20 %.
-  max_velocity_scaling: 0.7                    # Velocity scaling for arm movements
+  max_velocity_scaling: 0.8                    # Velocity scaling for arm movements
   # Contract C3 motion-class speed table (2026-08-18): ABSOLUTE
   # velocity/acceleration scalings, adjustable HERE (config, not code).
   # Stages opt in via `speed_class:` in stage_sequence.
   speed_classes:
-    freespace: 0.6   # free-space moves
-    approach: 0.2    # approach to grasp/contact, retract to release
-    carry: 0.5       # carrying the seat / lid / bin
-  max_acceleration_scaling: 0.7              # Acceleration scaling for arm movements
+    freespace: 0.8   # free-space moves
+    approach: 0.3    # approach to grasp/contact, retract to release
+    carry: 0.6       # carrying the seat / lid / bin
+  max_acceleration_scaling: 0.8              # Acceleration scaling for arm movements
   # max_jerk_scaling: 0.35   # REMOVED 2026-08 — fed Ruckig Pro only. Jerk is now
   #                        # bounded by max_jerk in joint_limits.yaml.
   # DELIBERATELY LEFT AT 0.5 — this governs the approach onto the fixture and
