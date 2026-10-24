@@ -5,10 +5,11 @@
 # "Lid and seat closing: create one compound task"; the opening choreography of
 # seat_open.yaml, the other way round). Stages execute in order:
 #   1. Right arm to inspection_pose_1: the wrist camera confirms the seat is UP
-#      (else this plan skips itself: its outcome already holds) and the lid is
-#      open (a seat cannot stand open under a closed lid: a scene error, abort).
-#   2. Left arm (pole at full length, hand open) to its pre-start high in front
-#      of the commode, then to its start just before the open seat's top edge,
+#      (else this plan skips itself: its outcome already holds). One check, of
+#      the seat alone (the owner, 25 Oct): the sequence makes the lid's state,
+#      and a seat standing open means the lid is open.
+#   2. Left arm (pole at half length, hand open) to its pre-start on the
+#      approach line, then to its start just before the open seat's top edge,
 #      as recorded.
 #   3. Right arm to the HOLD: lid_open.yaml's and seat_open.yaml's right hold,
 #      the hand hanging from the wrist under the line the part rests on at about
@@ -20,16 +21,15 @@
 #      the hinge. There the hand stops; the seat falls onto the right hand (the
 #      brief's "Contact"). Not extended (the owner, 25 Oct): the recording's end
 #      is the release. Scene: the seat to -30 deg, on the right hand. The left
-#      retracts up and back, returns to rest, its pole back to half length.
+#      retracts straight up, returns to rest.
 #   5. Right arm releases: 10 cm outward (to the right, out from under the
 #      seat's edge) and 2 cm up; the seat drops from the hold angle onto the
 #      body. Scene: closed.
 #   6. Right arm to inspection_pose_1 again: the camera confirms the seat is
 #      DOWN; then rest.
 # Start and end state, the sequence's rule: both arms at rest_pose, both poles
-# at half_length, both hands open. The left pole goes to full_length for the
-# pull alone: the recording was made there (at half length the hand would reach
-# only half-way up the open seat).
+# at half_length, both hands open. The poles stay at half_length throughout
+# (the owner, 25 Oct: a forced 150 mm, no pole stage).
 #
 # WHY THE RIGHT HAND DOES NOT LOWER THE PART (2026-10-25). The brief asks the
 # right hand to lower the part at low speed and slide out from under it. The
@@ -48,15 +48,22 @@
 # are open.
 #
 # LEFT BLOCK, TAUGHT 2026-10-24: ST_CLOSE.txt (1383 lines at 5 ms, the left hand
-# open), ALIX's FK of L_tip_frame (the open hand's fingertips) in alix_ref_frame,
-# the left pole at 0.300 m. pre_start_pose = line 1 (the hand high in front of
-# the commode); start_pose = line 301 (11 cm in front of the open seat's face,
-# 7 cm below its top edge); the stroke = lines 301-1085: the hook over the top
-# edge (301-432), an 8 cm shift to the left along it (432-706), the pull
-# (706-1085). Eleven points (Douglas-Peucker 3 mm / 3 deg, no two closer than
-# 10 mm): straight between them the path stays within 3.7 mm and 1.2 deg of the
-# recording. retract_pose: the pull's end moved 8 cm toward the robot, 3 cm out
-# and 12 cm up, the hand's orientation kept. The seat is the scene's commode_c
+# open), ALIX's FK of L_tip_frame (the open hand's fingertips) in alix_ref_frame.
+# The recording was made with the left pole at 0.300 m (the film shows the hand
+# at the seat's top edge; at 0.150 the FK puts it half-way up); the hand path is
+# taken from it and planned with the pole at 0.150 m, where the same positions
+# are reachable from the lower base. start_pose = line 301 (11 cm in front of
+# the open seat's face, 7 cm below its top edge); the stroke = lines 301-1085:
+# the hook over the top edge (301-432), an 8 cm shift to the left along it
+# (432-706), the pull (706-1085). Eleven points (Douglas-Peucker 3 mm / 3 deg,
+# no two closer than 10 mm): straight between them the path stays within 3.7 mm
+# and 1.2 deg of the recording. pre_start_pose: the recorded one (line 1, high
+# and close to the shoulder) has no IK with the pole at 0.150, so the pre-start
+# is on the approach line: the start moved 10 cm toward the robot, 3 cm left
+# and 10 cm up, the start's orientation. retract_pose: the pull's end moved
+# straight up 12 cm, the wrist unwound half-way back toward the start's
+# orientation (the end orientation kept puts J6 0.2 deg from its limit at this
+# pole height). The seat is the scene's commode_c
 # at the lab's 250 mm standoff (hinge at base_link 0.89, 0, 0.44, open at
 # 110 deg): hooked, the recorded fingertips run 3-5 cm in front of the modelled
 # face, so the real seat stands a little closer or leans less than the model.
@@ -71,10 +78,11 @@
 # 7 cm outside the part's edge, the hand beside the commode. Speed class
 # approach.
 #
-# Checks (the owner, 25 Oct): before any movement and after all movements, from
-# inspection_pose_1. A `check:` stage plans nothing: the loader carries it in
-# the saved plan as a check_fixture_state pre_action of the next sub-trajectory
-# and the executive asks the camera there (fixture_gap), fail-closed.
+# Checks (the owner, 25 Oct): one before any movement (the seat is up) and one
+# after all movements (the seat is down), both from inspection_pose_1, nothing
+# about the lid. A `check:` stage plans nothing: the loader carries it in the
+# saved plan as a check_fixture_state pre_action of the next sub-trajectory and
+# the executive asks the camera there (fixture_gap), fail-closed.
 #
 # Task: Mechanism Manipulation - Seat Closing (Dual-Arm)
 # =============================================================================
@@ -151,18 +159,21 @@ left:
   # Format: [x, y, z, qx, qy, qz, qw], alix_ref_frame
   # ---------------------------------------------------------------------------
   # start_pose: line 301, base_link (0.899, -0.014, 0.796).
-  # pre_start_pose: line 1, base_link (0.481, 0.126, 0.874); the hand turns
-  # 83 deg on the way to the start, as recorded.
+  # pre_start_pose: on the approach line, the start moved 10 cm toward the
+  # robot, 3 cm left and 10 cm up, the start's orientation (the recorded line 1
+  # has no IK with the pole at half length; 25 Oct IK probe).
   cartesian_poses:
     start_pose: [0.909, 0.11, 0.2695, -0.603627, 0.611004, -0.44937, 0.245713]
-    pre_start_pose: [0.491, 0.2502, 0.3479, -0.979888, 0.174576, -0.088601, 0.03864]
+    pre_start_pose: [0.809, 0.14, 0.3695, -0.603627, 0.611004, -0.44937, 0.245713]
 
     # Relative to THIS block's start_pose (translation added in alix_ref_frame,
     # rotation onto the start orientation): the pull's end (point11) moved
-    # (-0.08, +0.03, +0.12) m, the orientation of the pull's end kept.
+    # straight up 12 cm, the wrist unwound half-way back toward the start's
+    # orientation (with the pole at half length the pull's end orientation
+    # kept would put J6 at its limit here: 25 Oct IK probe, R6).
     retract_pose:
-      translation: [-0.2788, 0.1148, 0.0227]
-      rotation: [21.4, 39.5, -7.9]
+      translation: [-0.1988, 0.0848, 0.0227]
+      rotation: [10.7, 19.8, -4.0]
 
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
   # Translation: [x, y, z] in metres, added in alix_ref_frame to start_pose
@@ -251,20 +262,9 @@ stage_sequence:
     arm: right
     on_fail: skip               # the seat is already down: this plan's outcome holds
 
-  - stage: verify_lid_open
-    check: fixture_gap
-    expect: lid_open
-    arm: right
-    on_fail: abort              # a seat cannot stand open under a closed lid: a scene error
-
   # ---------------------------------------------------------------------------
-  # 2. LEFT arm (pole at full length, as recorded) to the seat's top edge
+  # 2. LEFT arm to the seat's top edge (the pole stays at half length)
   # ---------------------------------------------------------------------------
-  - stage: move_pole_to_max_height
-    arm: left
-    pose_name: full_length
-    planning_group: pole_left
-
   - stage: move_to_pre_start
     speed_class: freespace
     arm: left
@@ -327,11 +327,6 @@ stage_sequence:
     arm: left
     pose_name: rest_pose
     planning_group: rm75_arm_left
-
-  - stage: move_to_half_pole_length
-    arm: left
-    pose_name: half_length
-    planning_group: pole_left
 
   # ---------------------------------------------------------------------------
   # 5. RIGHT arm releases the seat: out from under its edge; the seat drops

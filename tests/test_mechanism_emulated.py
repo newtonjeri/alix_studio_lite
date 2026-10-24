@@ -136,18 +136,17 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
 
 
 def test_real_seat_close_pulls_with_the_left_at_full_pole_and_the_right_lets_the_seat_down(server):
-    """25 Oct, the compound Close the seat on the emulated arms: three camera questions in the config's order (the seat
-    up, the lid open, then its own end check: the seat down), the left pole to full length before its pull and back to
-    half at the end, no hand command (the hands as they are: the sequence's rule), the right's hold and release."""
-    server["script"].write_text(json.dumps(["seat_lifted", "lid_open", "seat_closed"]))
+    """25 Oct, the compound Close the seat on the emulated arms: two camera questions (the seat up; after all the
+    moves, the seat down), no pole move (150 mm throughout) and no hand command (the hands as they are: the sequence's
+    rule), the left's pull, the right's hold and release."""
+    server["script"].write_text(json.dumps(["seat_lifted", "seat_closed"]))
     before = len(hardware(server))                                         # this run's rows alone (the server is shared)
     job = call(server, "POST", "/api/mechanism/seat_close/run", {"confirmed": True})
     done = wait(server, job)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-8:])
     res = done["result"]
     assert [(p["plan"], p["outcome"]) for p in res["plans"]] == [("seat_close", "done")]
-    assert [(c["check"], c["verdict"]) for c in res["checks"]] == [("verify_seat_open", "PASS"), ("verify_lid_open", "PASS"),
-                                                                   ("verify_seat_closed", "PASS")]
+    assert [(c["check"], c["verdict"]) for c in res["checks"]] == [("verify_seat_open", "PASS"), ("verify_seat_closed", "PASS")]
     assert not [c for c in res["checks"] if c.get("final")]
     rows = hardware(server)[before:]
     streams = [r["args"]["label"] for r in rows if r.get("verb") == "canfd stream"]
@@ -157,8 +156,7 @@ def test_real_seat_close_pulls_with_the_left_at_full_pole_and_the_right_lets_the
     assert streams[-2:] == ["RIGHT arm execute_path + move_to_inspect", "RIGHT arm move_to_rest"]
     assert any(lab.startswith("LEFT arm") and "execute_path" in lab for lab in streams)
     assert any(lab.startswith("RIGHT arm") and "execute_path" in lab for lab in streams)
-    poles = [round(r["args"]["mm"]) for r in rows if r.get("verb") == "pole move" and r.get("side") == "left"]
-    assert 300 in poles and poles[-1] == 150, poles
+    assert not [r for r in rows if r.get("verb") == "pole move"], "no pole command: 150 mm throughout"
     assert not [r for r in rows if r.get("verb") in ("hand move", "pole and hand", "hand open")], "no hand command: the hands stay as they are"
     said = " | ".join(e["text"] for e in done["events"])
     assert "its own last check looked at the end state" in said

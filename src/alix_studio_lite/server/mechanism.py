@@ -73,18 +73,16 @@ TASKS = {
              "opens it fully. If the seat came up with the lid, it is closed again after (Close the seat)."),
     "seat_close": dict(
         title="Close the seat", short="SEAT CLOSE", start="lid and seat open", end="lid open, seat down",
-        does="The camera checks the seat is up (else there is nothing to do) and the lid is open (else it stops); the "
-             "left arm hooks the seat's top edge and pulls it over onto the right hand, which lets it down; the camera "
-             "checks it is down."),
+        does="The camera checks the seat is up (else there is nothing to do); the left arm hooks the seat's top edge "
+             "and pulls it over onto the right hand, which lets it go; the camera checks it is down."),
     "seat_open": dict(
         title="Open the seat", short="SEAT OPEN", start="lid open, seat down", end="lid and seat open",
         does="The camera checks the lid is open (else Open the lid runs first) and the seat is down; the left arm "
              "lifts the seat, the camera checks it is up (one re-lift), then the right arm opens it fully."),
     "lid_close": dict(
         title="Close the lid", short="LID CLOSE", start="lid open, seat down", end="lid and seat closed",
-        does="The camera checks the lid is open (else there is nothing to do) and the seat is down (else Close the "
-             "seat runs first); the left arm hooks the lid's top edge and pulls it over onto the right hand, which lets "
-             "it down; the camera checks it is down."),
+        does="The camera checks the lid is open (else there is nothing to do); the left arm hooks the lid's top edge "
+             "and pulls it over onto the right hand, which lets it go; the camera checks it is down."),
 }
 #: ALIX's names for the closings before 25 Oct (the single-arm plans of 7 Oct, superseded by the compound ones above):
 #: what Open the lid's follow-up (if_observed) and the older configs' prerequisites still say, and the plan Lite runs for it
