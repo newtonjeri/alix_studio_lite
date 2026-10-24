@@ -485,9 +485,12 @@ def frames_said(answers: list) -> str:
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _observe_also, _after_check_failure, _try_relift, _run_prerequisite, _queue_follow_up)
 class Runner:
-    def __init__(self, ex, say=None):
+    def __init__(self, ex, say=None, leave=()):
         self.ex = ex
         self.say = say or (lambda *_: None)
+        # the arms whose next task's start follows the run (S2: workflow.next_after_tasks; the owner, 24 Oct): the run's
+        # last plan takes them to no end of its own (a skipped plan's end, the final check's way to where the plan ended)
+        self.leave = set(leave)
         self.queue: list = []
         self.k = 0
         self.prereq: dict = {}
@@ -558,7 +561,9 @@ class Runner:
             self.queue.insert(self.k + 1, nxt)
             self.say(f"FOLLOW-UP: {TASKS[nxt]['title']} runs next, so the plan leaves the state it declares")
         if state["skipped"] and self.k + 1 >= len(self.queue):
-            self.ex.approach(plan, plan.targets("end"), "end")
+            ends = {s: t for s, t in plan.targets("end").items() if s not in self.leave}
+            if ends:
+                self.ex.approach(plan, ends, "end")
         self.done.append(dict(plan=name, title=plan.title, outcome="skipped" if state["skipped"] else "done",
                               relifts=state["relifts"]))
         return "done"
@@ -566,7 +571,8 @@ class Runner:
     def _final_check(self, plan) -> None:
         """The plan's end state, seen by the camera (FINAL_CHECKS): the right arm to its inspection pose the way ALIX
         planned it in that state, the camera asked, the right arm back along that way in (24 Oct: a MoveJ at the speed
-        slider took 3.2 s) and its pole and hand to where the plan ended. A NOT stops the run there."""
+        slider took 3.2 s) and its pole and hand to where the plan ended, unless its next task's start follows the run
+        (``leave``). A NOT stops the run there."""
         fc = final_check(plan.name)
         a, expect, by = fc["action"], fc["expect"], fc["by"]
         self.say(f"FINAL CHECK {plan.title}: the right arm to its inspection pose ({by.title}'s way in), the camera checks "
@@ -591,7 +597,8 @@ class Runner:
         for e in reverse_block(fc["look"], note="the final check's way in, reversed"):   # 24 Oct: a MoveJ at the slider, 3.2 s
             self.ex.check_stop()
             self.ex.move(e)
-        self.ex.approach(plan, {"right": plan.targets("end")["right"]}, "end", words=f"where {plan.title} ended")
+        if "right" not in self.leave or self.k + 1 < len(self.queue):
+            self.ex.approach(plan, {"right": plan.targets("end")["right"]}, "end", words=f"where {plan.title} ended")
 
     def _cannot_judge(self, label, expect, answer, lead="", final=False):
         """A check its frames left undecided (FRAMES): a person must look; no plan policy runs, no re-lift (the owner,

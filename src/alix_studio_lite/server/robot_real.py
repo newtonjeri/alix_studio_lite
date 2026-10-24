@@ -252,6 +252,30 @@ class _EmulatedCapture:
             self._fh.close()
 
 
+def _hand_arrived(hand, rule, target: list, sent: float) -> tuple:
+    """The hand of S2's pole and hand (RealArm.pole_and_hand) by runner v14's own rule (the control program's
+    Hand.command, its numbers from its hand.py ``rule``): arrived (each channel set within HAND_ARRIVE_COUNTS of its
+    target) or settled (two reads within HAND_SETTLE_COUNTS once a whole stroke's time has passed), timed from the command
+    ``sent`` before the pole moved: the hand moved meanwhile, so it is neither sent again nor waited for from the start
+    (24 Oct: that took 0.6-1.0 s after every pole, 1.0-1.3 s of a step with no pole travel). (False, the last read) when
+    neither in three strokes' time and a second, as Hand.command's own limit."""
+    stroke = rule.HAND_LATENCY_S + rule.HAND_STROKE_K * 1000.0 / (hand.speed_set or 1) / 1000.0
+    prev, cur = None, None
+    while True:
+        cur = hand.read()
+        elapsed = time.monotonic() - sent
+        if cur is not None:
+            if all(t is None or abs(int(a) - int(t)) <= rule.HAND_ARRIVE_COUNTS for a, t in zip(cur, target)):
+                return True, cur
+            if (prev is not None and elapsed >= stroke
+                    and all(abs(int(a) - int(b)) <= rule.HAND_SETTLE_COUNTS for a, b in zip(cur, prev))):
+                return True, cur
+            prev = cur
+        if elapsed > 3.0 * stroke + 1.0:
+            return False, cur
+        time.sleep(hand.poll_s)
+
+
 def _interrupt(tid: int, exc=KeyboardInterrupt) -> None:
     """``exc`` raised in thread ``tid`` at its next Python step (None: forget one not yet raised)."""
     import ctypes
@@ -268,6 +292,7 @@ class RealArm:
         self._hand_speeds = None     # the SPEED_SET each channel of the kept hand holds
         self._pole_done = None       # when the last pole move ended (the controller's warm start)
         self._ratio = None           # the global ratio this run left on the controller (None: not known)
+        self._s2_feed = None         # S2's recording of the feed, kept across a stage's runner calls (keep_s2_feed)
 
     # ── plumbing
     @property
@@ -377,13 +402,17 @@ class RealArm:
 
     def pole_and_hand(self, mm: float, values: list, stop_hook=None) -> dict:
         """S2's Pole row with the Hand row straight after it, as one step (the owner, 22 Oct: "there is a delay when the
-        sequence moves from the pole movement to the hand movement"): the hand is sent first and moves while the pole
-        travels; the pole as runner v14 moves it (the control program's Pole.move at 100 %: done when idle at its height
-        and its travel model has run out, as the position it reads leads the pole by up to 73 mm); then the hand
-        confirmed as runner v14 confirms it (Hand.command: arrived, or settled on force). The arm does not move. STOP
-        (``stop_hook``) stops the pole and holds the hand where it is."""
+        sequence moves from the pole movement to the hand movement"), and a Program's own pole and hand (24 Oct): the
+        hand is sent first and moves while the pole travels; the pole as runner v14 moves it (the control program's
+        Pole.move at 100 %: done when idle at its height and its travel model has run out, as the position it reads leads
+        the pole by up to 73 mm); then the hand confirmed by runner v14's own rule (Hand.command: arrived, or settled on
+        force), timed from the command it moved by (``_hand_arrived``; sent again only when it has not arrived). A hand
+        channel None holds where it is. The arm does not move. STOP (``stop_hook``) stops the pole and holds the hand
+        where it is."""
         Hand, _counts, Pole = _runner().load_aux_classes()
-        target = [int(v) for v in values]
+        rule = next(m for c in Hand.__mro__ if hasattr(m := sys.modules.get(c.__module__), "HAND_ARRIVE_COUNTS"))
+        # ^ the control program's hand.py: its arrival rule's own numbers
+        target = [None if v is None else int(v) for v in values]
         tid, guard, state = threading.get_ident(), threading.Lock(), {"inside": False, "stopped": False}
 
         def on_stop():
@@ -408,12 +437,16 @@ class RealArm:
                     hand, pole = Hand(self.robot), Pole(self.robot)
                     start = pole.height_m()
                     hand.open()
+                    sent = time.monotonic()
                     hand.command(target, wait=False)                 # the hand moves while the pole travels
                     ok_p, final_m = pole.move(float(mm) / 1000.0, speed_pct=100, block=False)
                     out.update(pole_ok=bool(ok_p), pole_s=round(time.monotonic() - t0, 3), start_mm=None if start is None else round(start * 1000.0, 1),
                                pole_mm=None if final_m is None else round(final_m * 1000.0, 1))
                     if ok_p:
-                        ok_h, final_h = hand.command(target, wait=True)
+                        ok_h, final_h = _hand_arrived(hand, rule, target, sent)
+                        if not ok_h:                                 # not there in a whole stroke's time: as runner v14 does
+                            ok_h, final_h = hand.command(target, wait=True)
+                            out["hand_sent_again"] = True
                         out.update(hand_ok=bool(ok_h), hand=final_h)
                 finally:
                     with guard:
@@ -445,7 +478,8 @@ class RealArm:
         if why == "stop":
             raise Cancelled()
         if not ok:
-            raise UserError(f"The {self.SIDE} pole and hand did not reach {float(mm):g} mm and {','.join(map(str, target))} "
+            raise UserError(f"The {self.SIDE} pole and hand did not reach {float(mm):g} mm and "
+                            f"{','.join('hold' if v is None else str(v) for v in target)} "
                             f"({why or ('the pole did not arrive' if not out['pole_ok'] else 'the hand did not arrive')}).",
                             "Check the pole and the hand, then run it again.")
         return out
@@ -944,7 +978,8 @@ class RealArm:
         Hand, Wait, Global Point) run and checked, the speed put back to ``restore_pct`` in its
         ``finally``. ``stop_hook(fn)`` registers ``fn`` for STOP, which interrupts the runner as V53's
         STOP does (Ctrl+C: its own slow stop of the arm, the pole stopped, the hand frozen). ``record``: the
-        controller's feed recorded to that file around the call (S2_FEED_CYCLE; the result's ``feed``)."""
+        controller's feed recorded to that file around the call (S2_FEED_CYCLE; the result's ``feed``), unless a
+        recording kept for the stage (``keep_s2_feed``) is on."""
         self.drop_feed()                             # a lid or seat run's kept feed never stays on under a program
         rt = _runner()
         norm = [rt.normalize_workflow_step(st) for st in steps]
@@ -992,7 +1027,7 @@ class RealArm:
             stop_hook(stop)
         rc, feed, fed = 1, None, None
         with self.link.busy(f"sequence of {len(norm)} step(s)", expect_s=float(timeout_s) * max(1, len(norm))), _printed_to(line_out):
-            if record is not None:
+            if record is not None and self._s2_feed is None:
                 feed = self._feed_start(Path(record), line_out)
             try:
                 try:
@@ -1056,6 +1091,29 @@ class RealArm:
         n = int(getattr(rec, "frames", 0) or 0)
         self._hw("s2 feed", args=dict(file=Path(rec.out_path).name), ok=n > 0, text=f"{n} frames")
         return dict(file=str(rec.out_path), frames=n, cycle_ms=S2_FEED_CYCLE * 5)
+
+    def keep_s2_feed(self, cap: Path) -> str | None:
+        """S2's recording of this controller's feed (``_feed_start``) on for a whole stage, its runner calls and Lite's own
+        steps between them, until ``drop_s2_feed`` (24 Oct: turned on and off around each runner call, it took 0.46 s to
+        start and as long to stop at every call). Returns its file's name; None when it could not start (said in the
+        hardware log; the run goes on, the recording is a diagnostic)."""
+        if self._s2_feed is None:
+            self.drop_feed()                         # a lid or seat run's 5 ms feed never stays on under a stage
+            with self.link.busy("turning on the controller's feed"):
+                self._s2_feed = self._feed_start(Path(cap), lambda _text: None)
+        return None if self._s2_feed is None else Path(self._s2_feed.out_path).name
+
+    def drop_s2_feed(self) -> dict | None:
+        """The stage's recording stopped (the controller's push put back as it was): what it kept. Never raises."""
+        rec, self._s2_feed = self._s2_feed, None
+        if rec is None:
+            return None
+        try:
+            with self.link.busy("turning off the controller's feed", wait_s=CLOSE_WAIT_S):
+                return self._feed_stop(rec)
+        except Exception as exc:                                                    # noqa: BLE001
+            self._hw("s2 feed", ok=False, text=f"not stopped ({exc})")
+            return None
 
     # ── the controller's global points (the control program's runner v14)
     def global_points(self) -> list[dict]:
@@ -1266,6 +1324,7 @@ class RealArm:
         per RUN", a monitor per stroke), instead of turning it on and off around each move: four controller calls,
         about 1.1 s a move on 24 Oct (12 moves, 13 s of a 79 s seat run). Returns the capture's name."""
         if self._feed is None:
+            self.drop_s2_feed()                      # an S2 stage's recording never stays on under a lid or seat run
             self._ratio = None
             with self.link.busy(f"turning on the 5 ms feed ({label})"):
                 self._feed = self._capture(label, records)

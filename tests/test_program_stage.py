@@ -2,8 +2,7 @@
 values must be applied. They must not be replaced by the default pole and hand positions. This applies wherever the
 project runs"). Lite records the pole and hand with every program it sends (the stage of the very file sent, the one it
 was taught with); a run from the slot (Advanced's Run Stored, the Trajectory Viewer) stages them first; one Lite did not
-send runs only with the pole and hand the operator states; in S2 a Program whose own are not set before it stops Real
-Machine Mode."""
+send runs only with the pole and hand the operator states; in S2 Lite sets each Program's own before it (24 Oct)."""
 import json
 import threading
 import time
@@ -91,25 +90,26 @@ def test_a_program_lite_does_not_know_runs_only_with_what_the_operator_states(li
     assert done["state"] == "done" and "pole 80 mm, hand cleaning pose (as stated) first." in said(done), said(done)
 
 
-def test_s2_stops_a_program_whose_own_pole_and_hand_are_not_set_before_it():
-    """V53 stages nothing itself: the sequence's own Pole and Hand steps must set the Program's; otherwise Real Machine
-    Mode does not run it (a stop, not a question), with or without a simulation."""
-    from types import SimpleNamespace
-
+def test_s2_sets_each_programs_own_pole_and_hand_before_it():
+    """V53 stages nothing itself, and S2 stopped a Program whose own pole and hand its rows did not set (21 Oct); since
+    24 Oct (the owner: "for uploaded tasks, the app applies the stored pole and hand itself") Lite sets them before it:
+    own_of reads each Program's own from what Lite recorded when it sent it, and its first point; one Lite did not send
+    has none, and runs with its rows (the operator's), as before."""
     from alix_studio_lite.server import workflow
 
-    own = {"pole_mm": 50.0, "hand": [0, 0, 0, 0, 150, 1000]}
-    programs = {"left": {71: {"stage": own}}, "right": {}}
-    robot = SimpleNamespace(_measured=lambda side: (200.0, [1000] * 6))
-    run = lambda steps: {"steps": {"left": [dict(s, _row=i + 1) for i, s in enumerate(steps)], "right": []}}   # noqa: E731
-    stops = workflow._stage_stops(run([{"type": "program", "id": 71}]), programs, robot, ["left"])
-    assert stops == ["LEFT row 1, program 71: taught at pole 50 mm, hand grip, but the pole is at 200 mm here (as the arm "
-                     "stands: no Pole step before it in this run) and the hand is open here (as the arm stands: no Hand "
-                     "step before it). It runs only with its own: set them before it (a Pole step and a Hand step)."]
-    ok = [{"type": "pole", "mm": 50}, {"type": "hand", "values": [0, 0, 0, 0, 150, 1000]}, {"type": "program", "id": 71}]
-    assert workflow._stage_stops(run(ok), programs, robot, ["left"]) == []
-    unknown = {"left": {71: {"stage": None}}, "right": {}}                   # Lite did not send it: nothing to hold it to
-    assert workflow._stage_stops(run([{"type": "program", "id": 71}]), unknown, robot, ["left"]) == []
+    grip = [0, 0, 0, 0, 150, 1000]
+    programs = {"left": {71: {"stage": {"pole_mm": 50.0, "hand": grip}, "sent": True, "first_row": [1000, -2000, 0, 0, 0, 0, 0]},
+                         72: {"stage": None, "sent": False, "name": "72_other"}}, "right": {}}
+    rows = [{"type": "program", "id": 71}, {"type": "pole", "mm": 120}, {"type": "program", "id": 72}]
+    steps = {"left": workflow.check_steps(rows, "left"), "right": []}
+    own = workflow.own_of(programs, {"left": {}, "right": {}}, lambda _p: None, steps)
+    assert own["left"][71]["stage"]["pole_mm"] == 50.0 and own["left"][71]["stage"]["hand"] == grip
+    assert own["left"][71]["first_deg"] == [1.0, -2.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    assert own["left"][72] == {"stage": None, "first_deg": None}
+    run = workflow.plan_for(workflow._numbered(steps), "left", own=own)
+    lp = run["plan"][0]["left"]["steps"]
+    assert [(x["type"], x.get("_own")) for x in lp] == [("pole_hand", 71), ("program", None), ("pole", None), ("program", None)]
+    assert lp[0]["mm"] == 50.0 and lp[0]["values"] == grip
 
 
 def test_the_viewer_finds_the_programs_on_the_controllers_and_replays_one_with_its_own_pole_and_hand(lite):

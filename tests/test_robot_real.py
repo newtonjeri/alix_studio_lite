@@ -320,6 +320,92 @@ def test_s2_records_a_real_controllers_feed_every_20_ms_around_each_runner_call(
     assert arm.run_workflow([{"type": "program", "id": 71}], 15, 50)["feed"] is None and order[-1] == "runner"   # not asked
 
 
+def test_an_s2_stages_feed_is_kept_across_its_runner_calls(monkeypatch, tmp_path):
+    """24 Oct: S2's recording, turned on and off around each runner call, took 0.46 s to start and as long to stop, at
+    every call. A stage keeps one on for its whole part (keep_s2_feed): its runner calls start none of their own, and it
+    is stopped once (drop_s2_feed, which never raises)."""
+    class Recorder:
+        def __init__(self, order, out_path, host_ip, port=None, log=print, cycle=1):
+            self.order, self.out_path, self.frames = order, out_path, 0
+
+        def start(self, robot):
+            self.order.append("start")
+
+        def stop(self, robot):
+            self.order.append("stop")
+            self.frames = 977
+
+    arm, order = _workflow_arm(monkeypatch, Recorder)
+    cap = tmp_path / "canfd" / "x_LEFT_s2_02_PART_2.frames.jsonl"
+    assert arm.keep_s2_feed(cap) == cap.name and arm.keep_s2_feed(cap) == cap.name        # on once
+    for _ in range(2):
+        assert arm.run_workflow([{"type": "program", "id": 71}], 15, 50, record=tmp_path / "per_call.frames.jsonl")["feed"] is None
+    assert order == ["start", "runner", "runner"]
+    assert arm.drop_s2_feed() == dict(file=str(cap), frames=977, cycle_ms=20) and order[-1] == "stop"
+    assert arm.drop_s2_feed() is None and order.count("stop") == 1
+
+
+def test_s2s_pole_and_hand_confirms_the_hand_from_the_command_it_moved_by(monkeypatch):
+    """24 Oct: S2's Pole with the Hand took 0.6-1.0 s after every pole: its hand sent again and waited for from the
+    start, though it had moved while the pole travelled. It is confirmed by runner v14's own rule (arrived, or settled
+    once a stroke's time has passed), timed from the command it moved by, and not sent again; a channel held (None) is
+    not judged."""
+    from contextlib import contextmanager
+    from types import SimpleNamespace
+
+    vendor_paths.activate()
+    from alix_studio_lite.server import robot_real
+
+    Hand0, _counts, _pole = robot_real._runner().load_aux_classes()
+    writes = []
+
+    class Hand(Hand0):
+        reads: list = []
+
+        def open(self, speed_set=1000):
+            self.speed_set = speed_set
+
+        def close(self):
+            return 0
+
+        def read(self):
+            return list(Hand.reads.pop(0) if len(Hand.reads) > 1 else Hand.reads[0])
+
+        def _write(self, address, values):
+            writes.append(list(values))
+            return 0
+
+    class Pole:
+        def __init__(self, robot):
+            pass
+
+        def height_m(self):
+            return 0.2
+
+        def move(self, height_m, speed_pct=100, block=False):
+            time.sleep(0.6)                                        # the pole travels longer than the hand's stroke
+            return True, height_m
+
+    class Link:
+        side, handle = "left", SimpleNamespace(robot=object())
+
+        @contextmanager
+        def busy(self, what, **kw):
+            yield
+
+    monkeypatch.setattr(robot_real, "_runner", lambda: SimpleNamespace(load_aux_classes=lambda: (Hand, None, Pole)))
+    arm = robot_real.RealArm(Link())
+    grip, opened = [0, 0, 0, 0, 150, 1000], [1000] * 6
+    for reads, target in (([opened, [0, 3, 0, 9, 150, 1000]], grip),          # arrived while the pole travelled
+                          ([opened, [0, 0, 0, 0, 471, 1000]], grip),          # its thumb stopped on force: settled
+                          ([opened, [505, 498, 500, 503, 222, 931]], [500, 500, 500, 500, None, None])):   # the thumb held
+        Hand.reads, t0 = reads, time.monotonic()
+        writes.clear()
+        out = arm.pole_and_hand(150.0, target)
+        assert out["hand_ok"] and not out.get("hand_sent_again") and time.monotonic() - t0 < 0.95
+        assert len(writes) == 1                                    # sent once, before the pole moved
+
+
 def test_a_feed_that_cannot_be_recorded_is_said_and_the_run_goes_on(monkeypatch, tmp_path):
     class Recorder:
         def __init__(self, order, *a, **kw):

@@ -216,33 +216,132 @@ def test_a_move_after_a_program_clears_the_arms_4105_first():
     assert ready["plan"][-1]["kind"] == "mechanism" and "clear" not in ready["plan"][-1]
 
 
-def test_after_the_lid_and_seat_tasks_each_arm_gets_its_pole_and_hand_back():
-    """The owner, 22 Oct: "after the lid and seat opening tasks, each arm moves back to the pole and hand state it had
-    before those tasks started; then the dual-arm tasks that follow are triggered on both arms at the same time". On the
-    last task of each run of them (the stages keep their numbers): each arm's last Pole and Hand rows before the run's
-    first task, None where no row set them (then as the arm stood). A single task picked alone puts nothing back."""
+def test_after_the_lid_and_seat_tasks_each_arm_goes_to_its_next_tasks_start():
+    """The owner, 24 Oct: "after any lid or seat task, open or close, move to the start state of the next task: pole,
+    hand and arm", in place of 22 Oct's pole and hand put back as they were before the tasks. On the last task of each
+    run of them (the stages keep their numbers), each arm's next row that moves it: a Program, its own pole and hand
+    (else its rows') and its first point; a Global Point, its rows' pole and hand (its own row moves the arm). Its Pole
+    and Hand rows before it are that move's (out of the plan), past a Meet neither arm moves before; a Wait first:
+    nothing. A task picked alone goes nowhere after."""
     from alix_studio_lite.server import workflow
 
     lid, seat = {"type": "mechanism", "task": "lid_open"}, {"type": "mechanism", "task": "seat_open"}
-    grip, opened = [0, 0, 0, 0, 150, 1000], [1000] * 6
-    left = [{"type": "pole", "mm": 50}, {"type": "hand", "values": grip}, {"type": "meet"}, prog(80), {"type": "pole", "mm": 120},
-            lid, seat, prog(81), seat]
-    right = [{"type": "pole", "mm": 200}, {"type": "meet"}, prog(80), lid, seat, {"type": "hand", "values": opened}, prog(82), seat]
-    run = workflow.plan_for(numbered(left, right), "both")
-    kinds = [(st["kind"], st.get("task"), bool(st.get("restore"))) for st in run["plan"]]
-    assert kinds == [("parallel", None, False), ("parallel", None, False), ("mechanism", "lid_open", False),
-                     ("mechanism", "seat_open", True), ("parallel", None, False), ("mechanism", "seat_open", True)]
-    back = run["plan"][3]["restore"]
-    assert back["since"] == "Open the lid"
-    assert back["left"] == {"pole_mm": 120.0, "hand": grip} and back["right"] == {"pole_mm": 200.0, "hand": None}
-    again = run["plan"][5]["restore"]                           # the second run: the rows since the first one count
-    assert again["left"] == {"pole_mm": 120.0, "hand": grip} and again["right"] == {"pole_mm": 200.0, "hand": opened}
-    st = run["plan"][3]
-    assert workflow.restore_steps(st, "right", 75.0, [500] * 6) == [
-        {"type": "pole", "mm": 200.0, "_row": 5, "restore": True}, {"type": "hand", "values": [500] * 6, "_row": 5, "restore": True}]
-    assert "pole and hand back to before Open the lid" in workflow.restore_title(st)
-    alone = workflow.plan_for(numbered(left, right), "both", {"scope": "dual", "stage": 3})
-    assert alone["plan"][0]["kind"] == "mechanism" and "restore" not in alone["plan"][0]
+    grip, clean = [0, 0, 0, 0, 150, 1000], [1000, 1000, 1000, 1000, 0, 1000]
+    stp = {"type": "global", "name": "L_STP", "move": "movej", "speed": 100, "wait_s": 0}
+    left = [prog(80), lid, {"type": "pole", "mm": 200}, {"type": "hand", "values": clean}, {"type": "meet"}, prog(81), seat,
+            {"type": "pole", "mm": 120}, stp, prog(83)]
+    right = [prog(80), lid, {"type": "meet"}, {"type": "hand", "values": grip}, prog(54), seat, {"type": "wait", "seconds": 1},
+             prog(82)]
+    own = {"left": {81: {"stage": {"pole_mm": 210.0, "hand": clean}, "first_deg": [1, 2, 3, 4, 5, 6, 7]}},
+           "right": {54: {"stage": None, "first_deg": None}}}
+    run = workflow.plan_for(numbered(left, right), "both", own=own)
+    plan = run["plan"]
+    assert [(st["kind"], st.get("task"), sorted(st.get("then") or {})) for st in plan] == [
+        ("parallel", None, []), ("mechanism", "lid_open", ["left", "right"]), ("parallel", None, []), ("parallel", None, []),
+        ("mechanism", "seat_open", ["left"]), ("parallel", None, [])]
+    then = plan[1]["then"]
+    assert {k: then["left"][k] for k in ("row", "kind", "id", "pole_mm", "hand", "rows", "own", "arm_deg")} == dict(
+        row=6, kind="program", id=81, pole_mm=210.0, hand=clean, rows=[3, 4], own=True, arm_deg=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+    assert then["right"]["id"] == 54 and then["right"]["pole_mm"] is None and then["right"]["hand"] == grip
+    assert then["right"]["rows"] == [4] and "arm_deg" not in then["right"]           # its bytes not known: its own move
+    assert plan[2]["left"]["steps"] == [] and [x["type"] for x in plan[3]["right"]["steps"]] == ["program"]
+    assert [x["type"] for x in plan[3]["left"]["steps"]] == ["program"]               # 81 already at its own: nothing to set
+    assert {k: plan[4]["then"]["left"][k] for k in ("kind", "name", "pole_mm", "rows")} == dict(kind="global", name="L_STP",
+                                                                                              pole_mm=120.0, rows=[8])
+    assert [x["type"] for x in plan[5]["left"]["steps"]] == ["clear", "global", "program"] and plan[5]["right"]["steps"][0]["type"] == "wait"
+    assert workflow.then_title(plan[1]) == "Open the lid, then LEFT to Program 81's start and RIGHT to Program 54's start"
+    assert workflow.plan_shape(plan)[1]["then"] == plan[1]["then"]                    # another start: another simulation
+    alone = workflow.plan_for(numbered(left, right), "both", {"scope": "dual", "stage": 1})
+    assert alone["plan"][0]["kind"] == "mechanism" and "then" not in alone["plan"][0]
+    two = workflow.plan_for(numbered([lid, seat, prog(81)], [lid, seat, prog(82)]), "both")["plan"]
+    assert [sorted(st.get("then") or {}) for st in two] == [[], ["left", "right"], []]   # after the run of tasks only
+
+
+def test_each_program_runs_with_its_own_pole_and_hand_set_before_it():
+    """The owner, 24 Oct: "every task runs with its own pole and hand state, applied before the arm moves ... no delay
+    between pole and hand ... enforced in simulation and on hardware; for uploaded tasks the app applies the stored pole
+    and hand". Before each Program whose own Lite knows (own_of: recorded when Lite sent it), the Pole and Hand rows
+    right before it give way to its own, set where they differ from where the plan leaves the arm: both as one step (the
+    hand moving while the pole travels, the Program straight after), or the one that differs, or nothing; a hand with a
+    channel held is Lite's own step. A Program Lite knows no pole and hand of runs with its rows, as before."""
+    from alix_studio_lite.server import workflow
+
+    grip, clean, opened = [0, 0, 0, 0, 150, 1000], [1000, 1000, 1000, 1000, 0, 1000], [1000] * 6
+    stages = {80: (50.0, clean), 81: (200.0, clean), 82: (200.0, grip), 83: (20.0, grip), 85: (20.0, [500, 500, 500, 500, None, None])}
+    own = {"left": {pid: {"stage": {"pole_mm": p, "hand": h}} for pid, (p, h) in stages.items()}, "right": {}}
+    left = [prog(80), prog(81), {"type": "hand", "values": opened}, prog(82), {"type": "pole", "mm": 100}, prog(83), prog(84), prog(85)]
+    right = [{"type": "pole", "mm": 200}, prog(90)]
+    run = workflow.plan_for(numbered(left, right), "both", own=own)
+    lp = run["plan"][0]["left"]["steps"]
+    assert [(x["type"], x.get("_own")) for x in lp] == [
+        ("pole_hand", 80), ("program", None), ("pole", 81), ("program", None), ("hand", 82), ("program", None),
+        ("pole", 83), ("program", None), ("program", None), ("pole_hand", 85), ("program", None)]
+    assert lp[0]["mm"] == 50.0 and lp[0]["values"] == clean and lp[4]["values"] == grip and lp[6]["mm"] == 20.0
+    assert lp[9]["values"] == [500, 500, 500, 500, None, None]                       # the thumb held: Lite's own step
+    assert lp[5]["_own_stage"]["differ"] == [3] and lp[7]["_own_stage"]["differ"] == [5]   # the rows it set in place of
+    assert workflow._step_words(lp[0]) == "Program 80's own pole 50 mm with the hand 1000,1000,1000,1000,0,1000 moving meanwhile"
+    assert [x["type"] for x in run["plan"][0]["right"]["steps"]] == ["pole", "program"]   # none known: its rows, as before
+    assert workflow.plan_shape(run["plan"])[0]["left"][0] == ["own", "pole_hand", 1, 50.0, clean]
+    task = workflow.plan_for(numbered(left, right), "both", {"scope": "task", "side": "left", "row": 4, "id": 82}, own=own)
+    assert [(x["type"], x.get("_own")) for x in task["plan"][0]["left"]["steps"]] == [("pole_hand", 82), ("program", None)]
+    # in Simulation as on the robot: no Program runs at another pole or hand than its own (stage_off finds nothing)
+    files = {"/p.txt": np.zeros((41, 7))}
+    progs = {pid: dict(stage={"pole_mm": p, "hand": h}, file="/p.txt", sent=True, lines=41) for pid, (p, h) in stages.items() if pid != 85}
+    for plan, stops in ((run["plan"], 0), (workflow.plan_for(numbered(left, right), "both")["plan"], 4)):   # without: 80-83
+        said = []
+        sim = workflow._ArmSim("left", dict(pole_mm=300.0, hand=opened, q_deg=[0.0] * 7), [180, 180, 225, 225, 225, 225, 225], 100,
+                               progs, None, files.get, said)
+        sim.run([x for x in plan[0]["left"]["steps"] if x.get("id") != 85 and x.get("_own") != 85], 0.0, 0)
+        assert sum(1 for f in said if f["level"] == "stop") == stops
+
+
+def test_the_lab_times_its_moves_as_the_controller_runs_them():
+    """24 Oct: the RIGHT arm's MoveJ to R_R03_STP at 100 % (31.9 deg on J6) took 0.58 s, and S2 stopped both arms as
+    "less than the least it takes (1.42 s)": its MoveJ times held every move to a second at least and half a second to
+    settle. The controller's own law, from the lab's 133 MoveJs (movej_s), and its Programs' own moves to their first
+    point (transit_s, slower, and not by the global speed: Program 54's 32 deg took 3.0 s at a global 100 %, where
+    S2 allowed 1.1 s at most and stopped it)."""
+    from alix_studio_lite.server import workflow
+
+    rating = [180, 180, 225, 225, 225, 225, 225]
+    rest = [0.0, -81.99, -26.0, 97.99, 6.0, 62.0, 69.0]
+    stp = [-0.1, -86.08, -24.17, 76.39, 15.56, 93.87, 55.33]
+    assert workflow.movej_s(rest, stp, 100, rating) == pytest.approx(0.58, abs=0.03)
+    for q1, pct, lab in (([0, 0, 0, 0, 0, 0, 285.9], 15, 9.10), ([0, 0, 0, 0, 0, 0, 7.6], 15, 0.73),
+                         ([0, 0, 0, 37.5, 0, 0, 0], 20 * 15 / 100, 6.15), ([0, 0, 0, 0, 0, 0, 69.0], 20, 2.13)):
+        assert workflow.movej_s([0.0] * 7, q1, pct, rating) == pytest.approx(lab, rel=0.06)
+    first = [-0.1, -86.2, -24.1, 76.1, 15.7, 94.3, 55.2]
+    assert workflow.transit_s(rest, first, 30, rating) == pytest.approx(2.98, rel=0.03)
+    assert workflow.transit_s([0.0] * 7, [0, 0, 0, 0, 0, 139.0, 0], 30, rating) == pytest.approx(10.6, rel=0.03)
+    pts = {"points": {"R_R03_STP": stp}}
+    sim = workflow._ArmSim("right", dict(pole_mm=200.0, hand=[1000] * 6, q_deg=rest), rating, 100, {}, pts, lambda _p: None, [])
+    step = {"type": "global", "name": "R_R03_STP", "move": "movej", "speed": 100, "wait_s": 0.0, "_row": 9}
+    sim.run([step], 0.0, 0)
+    stopped = []
+    on_line, close = workflow._watch(None, "right", [step], stopped.append, lambda _t: None)
+    try:
+        on_line("WORKFLOW STEP START 1/1: GLOBAL")
+        time.sleep(0.61)
+        on_line("WORKFLOW STEP COMPLETE 1/1: GLOBAL")
+    finally:
+        close()
+    assert not stopped                                                           # 0.61 s: as the controller runs it
+
+
+def test_a_pole_with_the_hand_is_timed_as_the_lab_ran_it():
+    """24 Oct, Lite's Pole with the Hand: 3.49 s from 150 to 199 mm (S2 allowed 2.27-2.97 s and stopped both arms), 4.29
+    and 4.46 s from 200 to 50 mm, 1.0-1.3 s with the pole already there; each within its range now."""
+    from alix_studio_lite.server import workflow
+
+    clean = [1000, 1000, 1000, 1000, 0, 1000]
+    for pole0, mm, hand0, lab in ((150.0, 200.0, clean, (3.49,)), (200.0, 50.0, [997, 1000, 995, 1000, 528, 960], (4.29, 4.46)),
+                                  (200.0, 200.0, [1000, 1000, 1000, 1000, 0, 1000], ()), (200.0, 200.0, clean, ())):
+        sim = workflow._ArmSim("right", dict(pole_mm=pole0, hand=hand0, q_deg=[0.0] * 7), [180] * 7, 100, {}, None, lambda _p: None, [])
+        target = [0, 0, 0, 0, 150, 1000] if not lab else clean
+        sim.run([{"type": "pole_hand", "mm": mm, "values": target, "_row": 2, "_rows": [1, 2]}], 0.0, 0)
+        lo, _, hi = sim.acts[0]["own_times"]
+        for t in lab or (1.0, 1.3):
+            assert lo * (1 - workflow.STOP_STEP_MARGIN) - 0.15 < t < hi * (1 + workflow.STOP_STEP_MARGIN) + 0.15
 
 
 def test_a_pole_with_the_hand_after_it_is_one_step():
@@ -324,7 +423,8 @@ def test_each_step_is_timed_as_the_robot_runs_it():
                             pts, files.get, said := [])
     away.run([dict(prog(80), _row=1)], 0.0, 0)
     tr = away.acts[0]["transit"]
-    assert tr[0] == pytest.approx(30 / (0.3 * 180) + 0.5, abs=1e-3) and tr[2] == pytest.approx(30 / (0.3 * 0.15 * 180) + 0.5, abs=1e-3)
+    law = 30 / (0.3 * workflow.TRANSIT_RATING_SHARE * 180) + workflow.TRANSIT_ACCEL_S        # the controller's own, at 30 %
+    assert tr == pytest.approx([round(law * f, 3) for f in workflow.TRANSIT_BAND], abs=2e-3)
     assert away.acts[0]["traj_t0"] > away.acts[0]["move_t0"] and "first moves the arm 30 deg" in said[0]["text"]
 
 
@@ -511,27 +611,29 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     assert st[0]["t1_range"][0] <= st[0]["t1"] <= st[0]["t1_range"][1]                  # as fast and as slow as they run
     assert sim["drift"]["clearance_mm"] == 50 and sim["drift"]["timings"] >= 1          # both arms, at every timing
     la, ra = sim["acts"]["left"], sim["acts"]["right"]
-    # rows 1-2, a Pole with the Hand after it: one step, the hand moving while the pole travels (the owner, 22 Oct)
-    assert [a["kind"] for a in la] == ["pole_hand", "pole", "program", "program"] and [a["row"] for a in la] == [2, 3, 4, 5]
+    # rows 1-3 give way to Program 71's own pole and hand (the owner, 24 Oct), one step: the hand moving while the pole
+    # travels (22 Oct), the Program straight after
+    assert [a["kind"] for a in la] == ["pole_hand", "program", "program"] and [a["row"] for a in la] == [4, 4, 5]
     assert la[0]["pole_s"] > 0 and la[0]["hand_s"] > 0 and la[0]["t1"] - la[0]["t0"] >= max(la[0]["pole_s"], la[0]["hand_s"])
-    assert la[2]["drawn"] and la[2]["lines"] == 300 and 299 * la[2]["line_s"] == pytest.approx(299 * 0.005, abs=1e-3)
-    assert la[2]["t1"] > la[2]["traj_t0"] + 1.495 and la[2]["traj_t0"] > la[2]["t0"]      # the file read first, the end after
+    assert la[0]["pole1"] == 150.0 and la[0]["hand1"] == [0, 0, 0, 0, 150, 1000] and la[1]["t0"] == la[0]["t1"]
+    assert la[1]["drawn"] and la[1]["lines"] == 300 and 299 * la[1]["line_s"] == pytest.approx(299 * 0.005, abs=1e-3)
+    assert la[1]["t1"] > la[1]["traj_t0"] + 1.495 and la[1]["traj_t0"] > la[1]["t0"]      # the file read first, the end after
     assert sim["programs"]["left"]["71"]["seconds"] == pytest.approx(1.495)                  # its execution time travels with it
     src = call(lite, "GET", f"{P}/workflow/left/sources")
     assert next(p for p in src["programs"] if p["id"] == 71)["seconds"] == pytest.approx(1.495)
-    assert not la[3]["drawn"]                                    # program 72: Lite never sent it
+    assert not la[2]["drawn"]                                    # program 72: Lite never sent it
+    assert ra[0]["kind"] == "pole_hand" and ra[0]["pole1"] == 50.0                       # its 71's own, not its row's 200 mm
     assert ra[1]["t0"] == ra[0]["t1"] and ra[2]["kind"] == "wait" and ra[2]["stage"] == 0   # its own, straight after its 71
     texts = " | ".join(f["text"] for f in sim["findings"])
     assert "LEFT row 5: program 72 is not drawn (Lite has not sent this program; no file of its name in the project" in texts
     assert "From here the arm's pose is not known" in texts             # the check leaves that arm out after it
-    assert "RIGHT row 2, program 71: taught at pole 50 mm, hand grip, but the pole is at 200 mm here" in texts
-    stop = next(f for f in sim["findings"] if "RIGHT row 2, program 71: taught at" in f["text"])
-    assert stop["level"] == "stop" and "It runs only with its own" in stop["text"]     # Real Machine Mode does not run it
-    assert "hand" in texts and "no Hand step before it" in texts   # the right arm's hand was never set in this run
+    assert ("RIGHT row 2, program 71: it runs with its own pole and hand (pole 50 mm, hand grip), which Lite sets before it "
+            "in place of row 1.") in texts
+    assert not [f for f in sim["findings"] if f["level"] == "stop"]                     # no Program off its own any more
     col = sim["collisions"]
     assert col["samples"] > 100 and col["checked"]["two_arms"] and set(col["checked"]["arms"]) == {"left", "right"}
     fr = call(lite, "POST", f"{P}/workflow/frames", {"side": "left", "stage": 0})
-    assert fr["times"][0] == 0 and fr["times"][-1] == pytest.approx(la[3]["t1"], abs=1e-3) and len(fr["links"]) > 20
+    assert fr["times"][0] == 0 and fr["times"][-1] == pytest.approx(la[2]["t1"], abs=1e-3) and len(fr["links"]) > 20
     assert call(lite, "POST", f"{P}/workflow/frames", {"side": "right", "stage": -1})["times"] == [0.0]
 
     view = call(lite, "GET", f"{P}/workflow")["sim"]
@@ -545,14 +647,16 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     from alix_studio_lite.server.lite_units import LiteUnits
 
     units = LiteUnits(lite["app"].store.folder(PID), "commode_c")
-    run = workflow.plan_for(workflow._numbered(workflow.load(units)), "both", None)
+    steps = workflow._numbered(workflow.load(units))
     progs = {s: workflow.programs_known(lite["app"], units, s) for s in workflow.ARMS}
+    run = workflow.plan_for(steps, "both", None, own=workflow.own_for(lite["app"], units, progs, steps))
     same = workflow.identity_of(run, progs, {"left": None, "right": None}, int(lite["app"].robot.speed_pct))
     assert workflow.digest(same) == sim["hash"]
     other = dict(same, overall=same["overall"] + 1)
     assert "the speed (simulated at" in workflow._changed(workflow.load_sim(units), other)
     call(lite, "PUT", f"{P}/workflow/right", {"steps": right[:2]})
-    run2 = workflow.plan_for(workflow._numbered(workflow.load(units)), "both", None)
+    steps2 = workflow._numbered(workflow.load(units))
+    run2 = workflow.plan_for(steps2, "both", None, own=workflow.own_for(lite["app"], units, progs, steps2))
     assert "its steps" in workflow._changed(workflow.load_sim(units), workflow.identity_of(run2, progs, {"left": None, "right": None},
                                                                                            same["overall"]))
 

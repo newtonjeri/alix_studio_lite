@@ -215,6 +215,25 @@ def test_an_arms_back_to_back_moves_go_as_one_stream_and_the_final_check_comes_b
     assert [c[1:3] for c in ex.calls if c[0] == "approach"][-1] == ("seat_open", "end")      # pole and hand, as it ended
 
 
+def test_arms_whose_next_tasks_start_follows_go_to_no_plans_end():
+    """The owner, 24 Oct: after any lid or seat task each arm goes to the start of its next task (S2: the task's
+    ``then``, workflow.next_after_tasks). The run's last plan takes those arms (``leave``) to no end of its own: no
+    skipped plan's end, no way back to where the plan ended after its final check; an earlier plan's still are, as the
+    next plan starts from there."""
+    ex = FakeExec(["lid_open", "seat_closed", "seat_lifted", "seat_open"])
+    mechanism.Runner(ex, leave={"left", "right"}).run("seat_open")
+    assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("seat_open", "start"), ("seat_close_right", "start")]
+    ex = FakeExec(["lid_open"])                                   # the lid already open: Open the lid skipped
+    mechanism.Runner(ex, leave={"right"}).run("lid_open")
+    assert [(c[2], c[3]) for c in ex.calls if c[0] == "approach"] == [("start", ("right", "left")), ("end", ("left",))]
+    ex = FakeExec(["lid_closed", "lid_closed", "lid_lifted", "seat_closed", "lid_open", "lid_open", "seat_closed",
+                   "seat_lifted", "seat_open"])                   # Open the seat runs Open the lid first, then itself again
+    mechanism.Runner(ex, leave={"left", "right"}).run("seat_open")
+    assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [
+        ("seat_open", "start"), ("lid_open", "start"), ("seat_open", "start"), ("lid_open", "end"),   # not its last plan
+        ("seat_open", "start"), ("seat_close_right", "start")]
+
+
 def test_seat_open_re_lifts_back_along_its_lift_without_a_rung():
     ex = FakeExec(["lid_open", "seat_closed", "seat_closed", "seat_lifted", "seat_open"])
     out = mechanism.Runner(ex).run("seat_open")

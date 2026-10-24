@@ -11,6 +11,11 @@ Wait is a task of its own: its arm idles for its seconds. Each arm's part of a s
 waits for its arrival, after a Program, Lite clears the arm's 4105 warning when it holds one (``clear_before_moves``:
 the lab, 21 and 22 Oct). Saved and loaded as Lite's JSON (``LITE_FORMAT``); V53's own (``FORMAT``) loads too.
 
+What Lite moves itself (the owner, 24 Oct): each Program's own pole and hand, set before it, the pole and the hand
+together (``own_stages``: in place of the Pole and Hand rows right before it); after a lid or seat task, or a run of
+them, each arm to its next task's start, its pole and hand and then its arm (``next_after_tasks``: in place of 22 Oct's
+pole and hand put back as before the tasks).
+
 What Lite adds, none of it motion:
 - Simulation Mode: both arms in 3D through the same plan, with the collision check (walls, commode, the two arms
   against each other), and what would not be right on the robot: a Program whose pole or hand is not the one it was
@@ -59,29 +64,42 @@ MAX_STEPS = 500
 #: controller reads the file (the "start ack": 0.17-0.37 ms a line, 36 runs); its checks, the end's report and the
 #: runner's settle after it add 0.1-0.6 s. Runner v14's Hand (its raw hand at SPEED_SET 1000, opened and closed for the
 #: step): 0.82-1.22 s over 32 steps, longer with the stroke. A Pole: ALIX's law plus 0.02-0.10 s (21 steps). A Global
-#: Point's MoveJ: the move at its speed x the overall speed of each joint's rating (staging's law), measured 3 % longer
-#: (2 moves); 0.08 s when the arm is already there (6 moves). A Wait: its seconds. Each runner call (a stage's part, or
-#: its stretch to a Wait-for) starts in 0.10-0.30 s. Lite's read of an arm's errors before a move, with a clear of a
-#: 4105 (``clear``): four reads, then a clear and four reads again (not yet timed in the lab). A Pole with the Hand after
-#: it (``pole_hand``): the longer of the two, the hand by the control program's stroke law (hand.py: 0.115 s + 0.373 s
-#: per 1000 counts at SPEED_SET 1000, at most its own Hand step), plus its port opened with its speed, its target read
-#: and written, its arrival read and the port closed around the pole (``pair_extra_s``: some six calls of 40-60 ms; not
-#: yet timed in the lab).
+#: Point's MoveJ: the controller's MoveJ law (``movej_s``) within MOVEJ_BAND; 0.08 s when the arm is already there (6
+#: moves). A Wait: its seconds. Each runner call (a stage's part, or its stretch to a Wait-for) starts in 0.10-0.30 s.
+#: Lite's read of an arm's errors before a move, with a clear of a 4105 (``clear``): four reads, then a clear and four
+#: reads again (not yet timed in the lab). A Pole with the Hand after it, or a Program's own pole and hand (``pole_hand``,
+#: Lite's step): the hand's port opened at its speed, the hand sent and the pole read (``pair_open_s``), then the longer
+#: of the pole's travel (ALIX's law, which the control program's Pole.move waits out) and the hand's stroke (hand.py:
+#: 0.115 s + 0.373 s per 1000 counts at SPEED_SET 1000, at most its own Hand step), then the hand confirmed and its port
+#: closed (``pair_end_s``). The lab, 24 Oct (8 steps): 1.0-1.3 s with no pole travel, the law + 1.0-1.5 s with it, as its
+#: hand was then sent again and waited for from the start; since, it is timed from the command it moved by.
 ROBOT_TIMES = dict(
     play=(0.96, 1.00, 1.02),
     load_s_per_line=(0.17e-3, 0.23e-3, 0.37e-3),
     program_extra_s=(0.10, 0.20, 0.60),
     hand_s=(0.75, 0.82, 1.05), hand_s_per_1000=0.25,
     pole_extra_s=(0.0, 0.06, 0.15),
-    global_factor=(0.95, 1.03, 1.15), global_there_s=(0.05, 0.08, 0.15),
+    global_there_s=(0.05, 0.08, 0.15),
     wait_extra_s=(0.0, 0.005, 0.02),
     call_start_s=(0.10, 0.17, 0.30),
     clear_s=(0.03, 0.10, 0.60),
-    pair_extra_s=(0.25, 0.45, 0.80), hand_stroke_s=(0.115, 0.373),
+    pair_open_s=(0.30, 0.45, 0.60), pair_end_s=(0.05, 0.20, 1.00), hand_stroke_s=(0.115, 0.373),
 )
-#: A Program's move to its first point when the arm is not there (the controller's own MoveJ at the Program's Start %)
-#: is known only roughly: in the logs it took between the Start % of each joint's rating (the least) and that times the
-#: overall speed (the most): 139 deg on J6 at 30 % took 10.6 s, where those give 2.1 and 13.8 s.
+#: The controller's MoveJ (a Global Point's, and Lite's own to a start), as the lab's 133 MoveJs of 20-24 Oct ran (2 to
+#: 286 deg, at 15 to 100 %): each joint cruises at the move's % of its rating (the move's speed x the global speed), after
+#: MOVEJ_ACCEL_S of acceleration at any speed, the slowest joint setting the time; a move too short to cruise is a
+#: triangle (24 Oct, 31.9 deg on J6 at 100 %: 0.56 s; at 15 %, 7.6 deg in 0.73 s and 286 deg in 9.1 s). Against the 133:
+#: within -14 % (short moves at 15 %) and +9 % (J2, under load), MOVEJ_BAND.
+MOVEJ_ACCEL_S = 0.57
+MOVEJ_CALL_S = 0.03
+MOVEJ_BAND = (0.85, 1.0, 1.12)
+#: A Program's move to its first point when the arm is not there (the controller's own, at the Program's Start %): slower
+#: than a MoveJ, and not by the global speed: at a Start % of 30 its joints cruise at 0.2077 x 30 % of their rating (14.0
+#: deg/s on J6) after TRANSIT_ACCEL_S; the lab's three (32, 51 and 139 deg on J6 in 3.0, 4.4 and 10.6 s, at a global 100
+#: and 15 %) within 2 %. Another Start % is taken as proportional (not measured).
+TRANSIT_RATING_SHARE = 0.2077
+TRANSIT_ACCEL_S = 0.69
+TRANSIT_BAND = (0.90, 1.0, 1.15)
 TRANSIT_MIN_DEG = 0.5
 #: The owner, 22 Oct: on the robot, a step outside its range is said; a Program whose lines run past 105 % of their
 #: time, or that ends before 90 % of it (stopped on the controller: an E-stop gives no code), stops both arms; any other
@@ -122,32 +140,188 @@ def clear_before_moves(plan: list[dict]) -> list[dict]:
     return out
 
 
-def restore_after_tasks(plan: list[dict]) -> list[dict]:
-    """``plan`` (a whole sequence of both arms) with ``restore`` on the last lid or seat task of each run of them (the
-    owner, 22 Oct: "after the lid and seat opening tasks, each arm moves back to the pole and hand state it had before
-    those tasks started; then the dual-arm tasks that follow are triggered on both arms at the same time"): each arm's
-    pole and hand as its rows last set them before the run's first task (None: no row set it; then as the arm stood
-    there). The next stage then starts both arms together, as after every meeting point. On the task's stage, not a
-    stage of its own: the stages keep the numbers the Dual-arm task picks them by (``flow.build``)."""
-    out, last = [], {s: {"pole_mm": None, "hand": None} for s in ARMS}
-    before = None
+def next_after_tasks(plan: list[dict]) -> list[dict]:
+    """``plan`` (a whole sequence of both arms) with ``then`` on the last lid or seat task of each run of them (the owner,
+    24 Oct: "after any lid or seat task, open or close, move to the start state of the next task: pole, hand and arm", in
+    place of 22 Oct's pole and hand put back as they were before the tasks): for each arm, the next row that moves it,
+    past its Pole and Hand rows (that start's own: taken out of the plan, the move does them) and past a Meet that
+    neither arm moves before:
+    - a Program: its own pole and hand (``with_next_starts``; the rows' where Lite does not know its own), then the arm
+      to its first point; both arms at once, so that the next stage starts both arms at their Programs' first points;
+    - a Global Point: the rows' pole and hand; the point's own row moves the arm;
+    - a Wait, a Wait-for, another task, nothing: no ``then``; the arm ends at its plan's end, as before.
+    An arm with a ``then`` does not first go to its plan's end (a skipped plan's end, the final check's way back to where
+    the plan ended). On the task's stage, not a stage of its own: the stages keep the numbers the Dual-arm task picks
+    them by (``flow.build``)."""
+    plan = copy.deepcopy(plan)
     for i, st in enumerate(plan):
-        if st["kind"] != "mechanism":
-            for side, steps in _items(st):
-                for x in steps:
-                    if x["type"] == "pole":
-                        last[side]["pole_mm"] = float(x["mm"])
-                    elif x["type"] == "hand":
-                        last[side]["hand"] = [int(v) for v in x["values"]]
-            out.append(st)
+        if st["kind"] != "mechanism" or (i + 1 < len(plan) and plan[i + 1]["kind"] == "mechanism"):
             continue
-        if before is None:                             # the first task of a run: the arms' state before it
-            before = {"since": st.get("title"), **copy.deepcopy(last)}
-        if i + 1 < len(plan) and plan[i + 1]["kind"] == "mechanism":
-            out.append(st)
+        then = {s: t for s in ARMS if (t := _next_task(plan, i, s)) is not None}
+        for side, t in then.items():                    # the rows its start does
+            for j, x in t.pop("_taken"):
+                plan[j][side]["steps"][:] = [y for y in plan[j][side]["steps"] if y is not x]
+        if then:
+            st["then"] = then
+    return plan
+
+
+def _next_task(plan: list[dict], i: int, side: str) -> dict | None:
+    """An arm's next task after the lid or seat task of stage ``i`` (next_after_tasks): its row, kind (program, global),
+    Program id or point name, the pole and hand its rows set before it (None: not set), those rows, and ``_taken``
+    (stage, step) of each; None when the next row that moves the arm is neither."""
+    taken, pole, hand = [], None, None
+    for j in range(i + 1, len(plan)):
+        st = plan[j]
+        if st["kind"] != "parallel":
+            return None                                 # another lid or seat task
+        for x in (st.get(side) or {}).get("steps") or []:
+            if x["type"] == "pole":
+                taken.append((j, x))
+                pole = float(x["mm"])
+            elif x["type"] == "hand":
+                taken.append((j, x))
+                hand = [int(v) for v in x["values"]]
+            elif x["type"] in ("program", "global"):
+                return dict(row=x.get("_row"), kind=x["type"], id=int(x["id"]) if x["type"] == "program" else None,
+                            name=x.get("name"), pole_mm=pole, hand=hand, rows=[y.get("_row") for _, y in taken], _taken=taken)
+            else:
+                return None                             # a Wait, a Wait-for: its rows run as they are
+        other = (st.get(flow.OTHER[side]) or {}).get("steps") or []
+        if st.get("meet_kind") != "meet" or any(y["type"] not in ("pole", "hand") for y in other):
+            return None                                 # past this Meet the other arm would meet it elsewhere than it does
+    return None
+
+
+def with_next_starts(plan: list[dict], own: dict | None) -> list[dict]:
+    """Each ``then`` (next_after_tasks) with what its arm moves to: a next Program's own pole and hand (``own``: what Lite
+    recorded when it sent it), else its rows', and its first point (``arm_deg``) when Lite knows the Program's bytes; a
+    Global Point's start: its rows' pole and hand (its row moves the arm)."""
+    for st in plan:
+        for side, t in (st.get("then") or {}).items():
+            mine = ((own or {}).get(side) or {}).get(t["id"]) or {} if t["kind"] == "program" else {}
+            if mine.get("stage"):
+                t.update(pole_mm=float(mine["stage"]["pole_mm"]), hand=list(mine["stage"]["hand"]), own=True)
+            if mine.get("first_deg") is not None:
+                t["arm_deg"] = [round(float(v), 3) for v in mine["first_deg"]]
+    return plan
+
+
+def then_title(st: dict) -> str:
+    """A lid or seat task's title, with where its ``then`` takes each arm."""
+    then = st.get("then") or {}
+    if not then:
+        return st["title"]
+    where = [f"{s.upper()} to " + (f"Program {t['id']}'s start" if t["kind"] == "program" else f"{t.get('name')}'s pole and hand")
+             for s, t in sorted(then.items())]
+    return f"{st['title']}, then {' and '.join(where)}"
+
+
+def own_stages(plan: list[dict], own: dict | None) -> list[dict]:
+    """``plan`` with each Program's own pole and hand set before it (the owner, 24 Oct: "every task runs with its own pole
+    and hand state, applied before the arm moves ... for uploaded tasks, the app applies the stored pole and hand"):
+    before a Program whose pole and hand Lite knows (``own``: what it recorded when it sent it, or its file's found by
+    name), the Pole and Hand rows right before it give way to its own, set where they differ from what the plan leaves
+    the arm at: a Pole and a Hand (pole_with_hand makes them one step: the hand moving while the pole travels, the
+    Program straight after), or the one that differs. Followed through the whole plan: each arm's rows, and a lid or
+    seat task's end (its ``then``; without one, not known). Where not known (the run's start), both are set. A Program
+    Lite knows no pole and hand of runs with its rows' (the operator's), as before."""
+    if not own:
+        return plan
+    plan = copy.deepcopy(plan)
+    now = {s: [None, None] for s in ARMS}              # each arm's pole and hand as the plan leaves it (None: not known)
+    for st in plan:
+        if st["kind"] == "mechanism":
+            for s in ARMS:
+                t = (st.get("then") or {}).get(s) or {}
+                now[s] = [t.get("pole_mm"), t.get("hand")]
             continue
-        out.append(dict(st, restore=before))
-        before = None
+        for side, steps in _items(st):
+            mine, rows = [], []
+
+            def flush():
+                for y in rows:
+                    if y["type"] == "pole":
+                        now[side][0] = float(y["mm"])
+                    else:
+                        now[side][1] = [int(v) for v in y["values"]]
+                mine.extend(rows)
+                rows.clear()
+
+            for x in steps:
+                if x["type"] in ("pole", "hand"):
+                    rows.append(x)
+                    continue
+                stg = (((own.get(side) or {}).get(int(x["id"])) or {}).get("stage")) if x["type"] == "program" else None
+                if stg:
+                    mine.extend(_own_steps(x, stg, now[side], rows))
+                    rows.clear()
+                else:
+                    flush()
+                mine.append(x)
+            flush()
+            steps[:] = mine
+    return plan
+
+
+def _own_steps(x: dict, stg: dict, now: list, rows: list) -> list[dict]:
+    """The steps that put an arm at Program ``x``'s own pole and hand ``stg`` from ``now`` ([pole mm, hand], updated), in
+    place of the Pole and Hand rows right before it (``rows``; the Program keeps what they were, ``_own_stage``): a Pole
+    and a Hand, or the one that differs; with a hand channel held (None), Lite's own step (runner v14 sets all six)."""
+    from . import staging
+
+    pid, row = int(x["id"]), x.get("_row")
+    pole, hand = float(stg["pole_mm"]), list(stg["hand"])
+    pole_off = now[0] is None or abs(float(now[0]) - pole) > staging.POLE_TOL_MM
+    hand_off = now[1] is None or not staging.same_hand(list(now[1]), hand)
+    differ = [y.get("_row") for y in rows if (y["type"] == "pole" and abs(float(y["mm"]) - pole) > staging.POLE_TOL_MM)
+              or (y["type"] == "hand" and not staging.same_hand([int(v) for v in y["values"]], hand))]
+    x["_own_stage"] = dict(pole_mm=pole, hand=hand, rows=[y.get("_row") for y in rows], differ=differ)
+    mark = {"_row": row, "_own": pid}
+    out = []
+    if any(v is None for v in hand) and (pole_off or hand_off):
+        out.append({"type": "pole_hand", "mm": pole, "values": hand, "_rows": [], **mark})
+    else:
+        if pole_off:
+            out.append({"type": "pole", "mm": pole, **mark})
+        if hand_off:
+            out.append({"type": "hand", "values": [int(v) for v in hand], **mark})
+    now[0], now[1] = pole, [h if v is None else int(v) for v, h in zip(hand, now[1] or [None] * 6)]
+    return out
+
+
+def own_for(app, units, programs: dict, steps: dict) -> dict:
+    """own_of for a project's run, as Simulation and Real Machine Mode plan it (the same plan, the same identity)."""
+    return own_of(programs, {s: files_by_name(app, units, s) for s in ARMS}, _md_reader(units.root), steps)
+
+
+def own_of(programs: dict, named: dict, md_of, steps: dict) -> dict:
+    """{side: {program id: {stage, first_deg}}}: each Program of the run's rows with its own pole and hand as Lite knows
+    them (what it recorded when it sent the program; for one it did not send, its file's, found by name) and its first
+    point (deg) when Lite knows its very bytes (its record's first line, or a file of those bytes)."""
+    from . import staging
+
+    out = {}
+    for side in ARMS:
+        mine = {}
+        for x in steps.get(side) or []:
+            if x["type"] != "program" or int(x["id"]) in mine:
+                continue
+            pid = int(x["id"])
+            info = (programs.get(side) or {}).get(pid) or {}
+            found = None if info.get("file") or info.get("gone") else found_by_name((named or {}).get(side) or {}, pid, x, info)
+            stg = staging.stage_from(info.get("stage")) or (staging.stage_from(found.get("stage")) if found else None)
+            first = None
+            if info.get("sent") and not info.get("gone") and info.get("first_row"):
+                first = [float(v) / 1000.0 for v in info["first_row"]]
+            else:
+                path = info.get("file") if info.get("sent") and not info.get("gone") else (
+                    found["path"] if found and found.get("differs") is False else None)
+                md = md_of(path) if path else None
+                if md is not None and len(md):
+                    first = [float(v) / 1000.0 for v in md[0]]
+            mine[pid] = dict(stage=stg.as_dict() if stg else None, first_deg=first)
+        out[side] = mine
     return out
 
 
@@ -170,8 +344,10 @@ def pole_with_hand(plan: list[dict]) -> list[dict]:
                 x = steps[i]
                 if x["type"] == "pole" and i + 1 < len(steps) and steps[i + 1]["type"] == "hand":
                     h = steps[i + 1]
+                    own = x.get("_own") or h.get("_own")      # a Program's own: it finishes no row (its Program does)
                     mine.append({"type": "pole_hand", "mm": float(x["mm"]), "values": [int(v) for v in h["values"]],
-                                 "_row": h.get("_row"), "_rows": [x.get("_row"), h.get("_row")]})
+                                 "_row": h.get("_row"), "_rows": [] if own else [x.get("_row"), h.get("_row")],
+                                 **({"_own": own} if own else {})})
                     i += 2
                     continue
                 mine.append(x)
@@ -181,18 +357,32 @@ def pole_with_hand(plan: list[dict]) -> list[dict]:
     return out
 
 
+def _rows_done(step: dict) -> list:
+    """The rows a step finishes (a Wait-for on one is released by it): a Pole with the Hand after it, both its rows; a
+    Program's own pole and hand (own_stages), none: its Program finishes its row."""
+    rows = step.get("_rows")
+    return list(rows) if rows is not None else [step.get("_row")]
+
+
+def _rows_words(step: dict) -> str:
+    rows = step.get("_rows")
+    return f"rows {rows[0]}-{rows[1]}" if rows else f"row {step.get('_row')}"
+
+
 def plan_shape(plan: list[dict]) -> list[dict]:
     """The plan as a simulation's identity keeps it: each stage's kind and each arm's steps in it by row (a clear with its
-    row, a Wait-for with the row it waits for). The same steps planned otherwise (Lite's planner changed, as on 21 and 22
-    Oct) are not the run simulated."""
+    row, a Wait-for with the row it waits for, a Program's own pole and hand with what they set, a lid or seat task's
+    ``then``). The same steps planned otherwise (Lite's planner changed, as on 21, 22 and 24 Oct) are not the run
+    simulated."""
     out = []
     for st in plan:
         row = {"kind": st["kind"]}
         if st["kind"] == "mechanism":
-            row.update(task=st["task"], clear=st.get("clear") or [], restore=st.get("restore"))
+            row.update(task=st["task"], clear=st.get("clear") or [], then=st.get("then"))
         else:
             for side, steps in _items(st):
                 row[side] = [["clear", x.get("_row")] if x["type"] == "clear"
+                             else ["own", x["type"], x.get("_row"), x.get("mm"), x.get("values")] if x.get("_own")
                              else ["pole_hand", *x["_rows"]] if x["type"] == "pole_hand"
                              else ["wait_for", x.get("_row"), (x.get("_target") or {}).get("row")] if x["type"] == "wait_for"
                              else x.get("_row") for x in steps]
@@ -365,9 +555,16 @@ def _plan_error(exc) -> UserError:
     return UserError(f"Cannot run the sequence: {exc}", "Correct the Meet or Wait-for rows it names.", code="plan")
 
 
-def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
+def _finish(plan: list[dict], own: dict | None) -> list[dict]:
+    """A plan's own steps of Lite's: each Program's own pole and hand before it (own_stages, with each next task's start
+    after the lid and seat tasks, with_next_starts), the 4105 clears (clear_before_moves), a Pole with the Hand after it
+    as one step (pole_with_hand)."""
+    return pole_with_hand(clear_before_moves(own_stages(with_next_starts(plan, own), own)))
+
+
+def plan_for(steps: dict, mode: str, pick: dict | None = None, own: dict | None = None) -> dict:
     """What a run does (the owner, 16 Oct: "options to play a single task arm, dual arm task and sequences in both
-    simulation and real"):
+    simulation and real"), with each Program's own pole and hand (``own``, own_of; the owner, 24 Oct):
     - a sequence: ``mode`` both (RUN BOTH: both arms' rows, ``flow.build``) or left / right (RUN LEFT / RIGHT: that
       arm's rows in one runner call; its Meet and Wait-for rows passed over, the other arm not running);
     - a single task: ``pick`` {scope: task, side, row}, that Program row alone on its arm, with the Pole and Hand in
@@ -392,7 +589,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
             raise UserError(f"{side.upper()} row {row} holds Program {mine[row - 1]['id']} now, not Program {pick.get('id')}: "
                             "the steps changed since the task was chosen.", "Choose the task again.", code="pick")
         picked = {side: _staged(mine, row) + [mine[row - 1]]}
-        plan = pole_with_hand(clear_before_moves([{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}]))
+        plan = _finish([{"kind": "single", "program_id": int(mine[row - 1]["id"]), side: {"side": side, "steps": picked[side]}}], own)
         return dict(mode=side, pick=dict(scope="task", side=side, row=row), first_row={side: row}, steps=picked, plan=plan,
                     counts=flow.counts(plan), said=[])
     if scope == "dual":
@@ -432,7 +629,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
                     if (x.get("_target") or {}).get("row") not in rows:
                         x["_target"] = dict(x.get("_target") or {}, done=True)
             stage[f"{side}_program_ids"] = [int(x["id"]) for x in picked[side] if x["type"] == "program"]
-        plan = pole_with_hand(clear_before_moves([stage]))
+        plan = _finish([stage], own)
         first = {side: min(x.get("_row") or 1 for x in parts[side]) for side in ARMS}
         return dict(mode="both", pick=dict(scope="dual", stage=k, label=st.get("program_id") or st.get("title")), first_row=first,
                     steps=picked, plan=plan, counts=flow.counts(plan), said=[])
@@ -458,8 +655,8 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None) -> dict:
             raise UserError(f"The {mode.upper()} sequence has only Meet and Wait-for rows: nothing to run on its own.")
         plan = [{"kind": "single", "program_id": None, mode: {"side": mode, "steps": mine}}]
     if mode == "both":
-        plan = restore_after_tasks(plan)
-    plan = pole_with_hand(clear_before_moves(plan))
+        plan = next_after_tasks(plan)
+    plan = _finish(plan, own)
     return dict(mode=mode, pick=dict(scope="sequence"), first_row={side: 1 for side in picked}, steps=picked, plan=plan,
                 counts=flow.counts(plan), said=said)
 
@@ -536,7 +733,7 @@ def programs_known(app, units, side: str) -> dict:
             except OSError:
                 pass
         out[int(pid)] = dict(id=int(pid), name=r.get("name"), lines=r.get("lines"), seconds=track.duration_s(r.get("lines")),
-                             sha256=r.get("sha256"), stage=r.get("stage"),
+                             sha256=r.get("sha256"), stage=r.get("stage"), first_row=r.get("first_row"),
                              sent=True, file=f.get("path"), file_name=f.get("name"), phase=f.get("phase"),
                              placement=f.get("placement"), region=f.get("region"))
     held = None
@@ -677,14 +874,34 @@ def _ease(f):
     return 0.5 - 0.5 * np.cos(np.pi * np.clip(f, 0.0, 1.0))
 
 
-def _move_s(q0, q1, pct: float, rating) -> float:
-    """A joint move's time at ``pct`` % of each joint's rating, as Lite's 3D times the move to a start
-    (staging.execution_times): at least a second, and half a second to settle."""
+def _trapezoid(x: float, accel_s: float) -> float:
+    """A move of ``x`` s at its cruise speed with ``accel_s`` of acceleration and as much to stop: x + accel_s, or a
+    triangle when it is too short to cruise."""
+    import math
+
+    return x + accel_s if x >= accel_s else 2.0 * math.sqrt(max(0.0, x) * accel_s)
+
+
+def _cruise_s(q0, q1, share: float, rating) -> float:
+    """The slowest joint's travel from ``q0`` to ``q1`` (deg) at ``share`` of its rating."""
     import numpy as np
 
-    frac = max(1.0, min(100.0, float(pct))) / 100.0
     d = np.abs(np.asarray(q1, dtype=float) - np.asarray(q0, dtype=float))
-    return max(1.0, float(np.max(d / (frac * np.asarray(rating, dtype=float))))) + 0.5
+    return float(np.max(d / (max(1e-3, float(share)) * np.asarray(rating, dtype=float))))
+
+
+def movej_s(q0, q1, pct: float, rating) -> float:
+    """The controller's MoveJ from ``q0`` to ``q1`` at ``pct`` % (the move's speed x the global speed), as the lab timed
+    it (MOVEJ_ACCEL_S, MOVEJ_CALL_S)."""
+    share = max(1.0, min(100.0, float(pct))) / 100.0
+    return _trapezoid(_cruise_s(q0, q1, share, rating), MOVEJ_ACCEL_S) + MOVEJ_CALL_S
+
+
+def transit_s(q0, q1, start_pct: float, rating) -> float:
+    """A Program's own move to its first point at its Start % (TRANSIT_RATING_SHARE, TRANSIT_ACCEL_S): the global speed
+    does not change it."""
+    share = max(1.0, min(100.0, float(start_pct))) / 100.0 * TRANSIT_RATING_SHARE
+    return _trapezoid(_cruise_s(q0, q1, share, rating), TRANSIT_ACCEL_S)
 
 
 def _at(r, lam) -> float:
@@ -695,6 +912,46 @@ def _at(r, lam) -> float:
 
 def _plus(*rs):
     return tuple(sum(float(r[i]) for r in rs) for i in range(3))
+
+
+def found_by_name(named: dict, pid: int, step: dict, info: dict) -> dict | None:
+    """A Program Lite did not send (the control program, or V53, sent it), found by its file's name (the
+    owner, 16 Oct: the sequence must play in the simulation): the name the sequence gives it (V53's JSON),
+    else the controller's ("<slot>_<file>", cut to 31 characters by RealMan's API). With the controller's
+    stored size known, the file whose project file has that size; else the first found, said so."""
+    import re
+
+    sha = info.get("sent") and info.get("sha256")
+    if sha:                                      # Lite sent it: the file of those very bytes, wherever it is now
+        for fs in named.values():
+            for f in fs:
+                if f.get("sha256") == sha:
+                    return dict(f, how="the very bytes Lite sent to the controller", differs=False)
+    names = [str(step["name"])] if step.get("name") else []
+    held = str(info.get("name") or "")
+    if held:
+        names.append(re.sub(rf"^{pid}_", "", held))
+    cands = []
+    for n in names:
+        low = n.lower()
+        hit = named.get(low) or named.get(low + ".txt") or []
+        if not hit and held and len(held) >= 31 and n is names[-1]:     # cut to 31 characters: its start
+            hit = [f for k, fs in named.items() if k.startswith(low) for f in fs]
+        cands += [f for f in hit if f not in cands]
+    if not cands:
+        return None
+    if sha:
+        return dict(cands[0], how="Lite sent other bytes to this slot: they may differ", differs=True)
+    size = info.get("size")
+    if size:
+        for f in cands:
+            b = proj_bytes(f["path"])
+            if b is not None and abs(int(size) - b) <= max(64, b // 1000):
+                return dict(f, how="its bytes make the size the controller holds")
+        b = proj_bytes(cands[0]["path"])
+        return dict(cands[0], how=f"the controller's program is {int(size):,} bytes, this file makes {b or 0:,}: they may differ",
+                    differs=True)
+    return dict(cands[0], how="not compared with the controller's program (connect the arm to compare)", differs=None)
 
 
 class _ArmSim:
@@ -761,17 +1018,32 @@ class _ArmSim:
                 r = tuple(float(step["seconds"]) + x for x in T["wait_extra_s"])
                 a = self._act(stage, step, "wait", t, _at(r, lam), _step_words(step), times=r)
             elif kind == "pole_hand":                # the hand while the pole travels (pole_with_hand), then the next call
-                mm, vals = float(step["mm"]), [int(v) for v in step["values"]]
-                rp = tuple(staging.pole_travel_s(self.pole, mm) + x for x in T["pole_extra_s"])
+                mm = float(step["mm"])
+                vals = [int(h) if v is None else int(v) for v, h in zip(step["values"], self.hand)]   # None: held
+                law = staging.pole_travel_s(self.pole, mm)
+                rp = tuple(law + x for x in T["pole_extra_s"]) if law > 0 else (0.0, 0.0, 0.0)
                 span = max(abs(int(a_) - int(b_)) for a_, b_ in zip(self.hand, vals))
-                law = T["hand_stroke_s"][0] + T["hand_stroke_s"][1] * span / 1000.0         # the control program's stroke law
-                rh = (law, law + 0.05, T["hand_s"][2] + T["hand_s_per_1000"] * span / 1000.0)
-                own = _plus(tuple(max(x, y) for x, y in zip(rp, rh)), T["pair_extra_s"])      # Lite times this part itself
-                r = _plus(own, T["call_start_s"])
+                stroke = T["hand_stroke_s"][0] + T["hand_stroke_s"][1] * span / 1000.0      # the control program's stroke law
+                rh = (stroke, stroke + 0.05, T["hand_s"][2] + T["hand_s_per_1000"] * span / 1000.0) if span else (0.0, 0.0, 0.0)
+                own = _plus(T["pair_open_s"], tuple(max(x, y) for x, y in zip(rp, rh)), T["pair_end_s"])   # Lite times it
+                r = own if step.get("_then") else _plus(own, T["call_start_s"])        # then the next runner call
+                opened = _at(T["pair_open_s"], lam)
                 a = self._act(stage, step, "pole_hand", t, _at(r, lam), _step_words(step), times=r, own_times=own,
-                              pole_s=round(_at(rp, lam), 4), hand_s=round(_at(rh, lam), 4))
+                              pole_s=round(opened + _at(rp, lam), 4), hand_s=round(opened + _at(rh, lam), 4))
                 self.pole, self.hand = mm, vals
                 self.set_pole = self.set_hand = True
+            elif kind == "move_to":                  # Lite's MoveJ to a pose (a next task's start): the speed slider's %, the
+                q1 = [float(v) for v in step["deg"]]  # global speed at 100 % for it (staging.park_arm)
+                import numpy as np
+
+                if float(np.max(np.abs(np.asarray(q1) - np.asarray(self.q)))) < 0.2:
+                    r = T["global_there_s"]
+                else:
+                    r = tuple(movej_s(self.q, q1, float(step["speed"]), self.rating) * f for f in MOVEJ_BAND)
+                mv = _at(r, lam)
+                a = self._act(stage, step, "global", t, mv, _step_words(step), move_s=round(mv, 4), drawn=True, times=r,
+                              move_times=r)
+                self.q, self.known = q1, True
             elif kind == "clear":                    # Lite's read (and clear) between runner calls, then the next call
                 r = T["clear_s"] if step.get("_alone") else _plus(T["clear_s"], T["call_start_s"])
                 a = self._act(stage, step, "wait", t, _at(r, lam), _step_words(step), times=r)
@@ -785,8 +1057,7 @@ class _ArmSim:
                     if float(np.max(np.abs(np.asarray(q1) - np.asarray(self.q)))) < 0.2:
                         r = T["global_there_s"]                   # already there: the controller answers at once
                     else:
-                        mv = _move_s(self.q, q1, pct, self.rating)
-                        r = tuple(mv * f for f in T["global_factor"])
+                        r = tuple(movej_s(self.q, q1, pct, self.rating) * f for f in MOVEJ_BAND)
                         if not self.known:                         # from a pose not known: from no move to the move from
                             r = (T["global_there_s"][0], r[1], r[2])   # where the arm was last known
                     mv = _at(r, lam)
@@ -815,57 +1086,18 @@ class _ArmSim:
         return t
 
     def _found(self, pid: int, step: dict, info: dict) -> dict | None:
-        """A Program Lite did not send (the control program, or V53, sent it), found by its file's name (the
-        owner, 16 Oct: the sequence must play in the simulation): the name the sequence gives it (V53's JSON),
-        else the controller's ("<slot>_<file>", cut to 31 characters by RealMan's API). With the controller's
-        stored size known, the file whose project file has that size; else the first found, said so."""
-        import re
-
-        sha = info.get("sent") and info.get("sha256")
-        if sha:                                      # Lite sent it: the file of those very bytes, wherever it is now
-            for fs in self.named.values():
-                for f in fs:
-                    if f.get("sha256") == sha:
-                        return dict(f, how="the very bytes Lite sent to the controller", differs=False)
-        names = [str(step["name"])] if step.get("name") else []
-        held = str(info.get("name") or "")
-        if held:
-            names.append(re.sub(rf"^{pid}_", "", held))
-        cands = []
-        for n in names:
-            low = n.lower()
-            hit = self.named.get(low) or self.named.get(low + ".txt") or []
-            if not hit and held and len(held) >= 31 and n is names[-1]:     # cut to 31 characters: its start
-                hit = [f for k, fs in self.named.items() if k.startswith(low) for f in fs]
-            cands += [f for f in hit if f not in cands]
-        if not cands:
-            return None
-        if sha:
-            return dict(cands[0], how="Lite sent other bytes to this slot: they may differ", differs=True)
-        size = info.get("size")
-        if size:
-            for f in cands:
-                b = proj_bytes(f["path"])
-                if b is not None and abs(int(size) - b) <= max(64, b // 1000):
-                    return dict(f, how="its bytes make the size the controller holds")
-            b = proj_bytes(cands[0]["path"])
-            return dict(cands[0], how=f"the controller's program is {int(size):,} bytes, this file makes {b or 0:,}: they may differ",
-                        differs=True)
-        return dict(cands[0], how="not compared with the controller's program (connect the arm to compare)", differs=None)
+        return found_by_name(self.named, pid, step, info)
 
     def _transit(self, q_first, transit_pct: float):
-        """The controller's own move to a Program's first point: (least, as a rule, most) and the joint gap, or no
-        move when the arm is within TRANSIT_MIN_DEG of it."""
+        """The controller's own move to a Program's first point at its Start % (``transit_s``; the global speed does not
+        change it): (least, as a rule, most) and the joint gap, or no move when the arm is within TRANSIT_MIN_DEG of it."""
         import numpy as np
 
-        d = np.abs(np.asarray(q_first, dtype=float) - np.asarray(self.q, dtype=float))
-        gap = float(np.max(d))
+        gap = float(np.max(np.abs(np.asarray(q_first, dtype=float) - np.asarray(self.q, dtype=float))))
         if gap < TRANSIT_MIN_DEG:
             return (0.0, 0.0, 0.0), gap
-        rating = np.asarray(self.rating, dtype=float)
-        fast = float(np.max(d / (max(1.0, float(transit_pct)) / 100.0 * rating))) + 0.5
-        slow = float(np.max(d / (max(1.0, float(transit_pct)) / 100.0 * max(1.0, float(self.overall)) / 100.0 * rating))) + 0.5
-        return (fast, 0.5 * (fast + slow), max(fast, slow)), gap
+        t = transit_s(self.q, q_first, float(transit_pct), self.rating)
+        return tuple(t * f for f in TRANSIT_BAND), gap
 
     def _program(self, step, t, stage) -> dict:
         from . import staging
@@ -883,7 +1115,12 @@ class _ArmSim:
                 self._say(level, step, f"{S} row {step.get('_row')}, program {pid}: drawn from {found['name']} ({found['source']}), "
                           f"found by its name; {found['how']}.")
         st = staging.stage_from(info.get("stage"))
-        if st is not None:                           # V53 stages nothing itself: its own Pole and Hand steps must set it
+        mine = step.get("_own_stage") or {}
+        if mine.get("differ") and self.lam is None:  # its own in place of the rows before it (own_stages)
+            self._say("note", step, f"{S} row {step.get('_row')}, program {pid}: it runs with its own pole and hand "
+                      f"({staging.describe(staging.make_stage(mine['pole_mm'], mine['hand']))}), which Lite sets before it "
+                      f"in place of row{'s' if len(mine['differ']) > 1 else ''} {', '.join(str(r) for r in mine['differ'])}.")
+        if st is not None:                           # its own set before it (own_stages); a Pole or Hand step after that
             said = stage_off(S, step.get("_row"), pid, st, self.pole, self.hand, self.set_pole, self.set_hand)
             if said:                                 # a stop: Real Machine Mode does not run it (the owner, 21 Oct)
                 self._say("stop", step, said)
@@ -951,52 +1188,25 @@ def stage_off(S: str, row, pid: int, st, pole, hand, set_pole: bool, set_hand: b
             + ". It runs only with its own: set them before it (a Pole step and a Hand step).")
 
 
-def _stage_stops(run: dict, programs: dict, robot, sides) -> list[str]:
-    """For a run not simulated, what the simulation would stop on: each Program whose own pole and hand are not the ones in
-    effect before it, from each arm as it stands, through its Pole, Hand and lid or seat steps."""
-    from . import mechanism, staging
-
-    out = []
-    restores = {(x, (st.get("rows") or {}).get(x)): st for st in run.get("plan") or [] if st.get("restore") for x in ARMS}
-    for s in sides:
-        pole, hand = robot._measured(s)
-        set_pole = set_hand = False
-        before = None                                # the arm before a run of lid and seat tasks
-        for st in run["steps"][s]:
-            k = st["type"]
-            if k == "pole":
-                pole, set_pole = float(st["mm"]), True
-            elif k == "hand":
-                hand, set_hand = [int(v) for v in st["values"]], True
-            elif k == "mechanism":                   # the arm leaves a lid or seat task at the plan's end
-                if before is None:
-                    before = (pole, hand)
-                tg = mechanism.cached(st["task"]).targets("end").get(s) or {}
-                pole = tg.get("pole_mm", pole)
-                hand = [h if h is not None else (hand[i] if hand else None) for i, h in enumerate(tg["hand"])] if tg.get("hand") else hand
-                last = restores.get((s, st.get("_row")))
-                if last is not None:                 # ...then back to before the run (restore_after_tasks)
-                    for y in restore_steps(last, s, *before):
-                        if y["type"] == "pole":
-                            pole = y["mm"]
-                        else:
-                            hand = y["values"]
-                    before = None
-            elif k == "program":
-                stg = staging.stage_from((programs[s].get(int(st["id"])) or {}).get("stage"))
-                said = stage_off(s.upper(), st.get("_row"), int(st["id"]), stg, pole, hand, set_pole, set_hand) if stg else None
-                if said:
-                    out.append(said)
-    return out
+#: The commode as each task leaves it, in the camera checks' words: the expectations that hold there (a plan that runs
+#: after another, a follow-up, has its checks answered by them in the simulation; a plan's own are answered as expected).
+HOLDS_AFTER = {"lid_open": {"lid_open", "seat_closed"}, "seat_close_right": {"lid_open", "seat_closed"},
+               "seat_open": {"lid_open", "seat_open"}, "lid_close_right": {"lid_closed", "seat_closed"}}
 
 
-def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> float:
-    """A lid or seat task in the simulation, as Lite runs it (mechanism.py) with its checks answered as expected (no
+def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=()) -> float:
+    """A lid or seat task in the simulation, as Lite runs it (mechanism.Runner) with its checks answered as expected (no
     camera here): each arm to the plan's start (its pole and hand, then the MoveJ at the speed slider's speed), then the
     plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
     hand as Lite moves them, a hold where the plan holds, a moment where the camera is asked. The commode is in the
-    task's end state from its end; then its final check (mechanism.FINAL_CHECKS): the right arm to its inspection pose by
-    the way in ALIX planned in that state, the camera, back along that way in, and to where the plan ended."""
+    task's end state from its end. Then, as on the robot:
+    - a check that also looks at a part the camera does not judge there (the seat under the lifted lid,
+      FixtureFit.seat_hidden) has its plan's follow-up run next (Close the seat after Open the lid): it looks first,
+      with its own checks, finds the commode as the plan left it (HOLDS_AFTER) and ends there, skipped: its arms to its
+      plan's end;
+    - else the plan's final check (mechanism.FINAL_CHECKS): the right arm to its inspection pose by the way in ALIX
+      planned in that state, the camera, back along that way in, and to where the plan ended.
+    The arms in ``leave`` (their next task's start follows, next_after_tasks) go to no plan's end."""
     from . import mechanism, staging
 
     plan = mechanism.cached(st["task"])
@@ -1032,7 +1242,7 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
                 sim.hand = vals
                 done(sim, a, dur)
             if "arm_deg" in tg:
-                mv = _move_s(sim.q, tg["arm_deg"], float(overall), sim.rating)
+                mv = movej_s(sim.q, tg["arm_deg"], float(overall), sim.rating)
                 sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({overall} %)", move_s=round(mv, 4), drawn=True)
                 sim.q, sim.known = [float(v) for v in tg["arm_deg"]], True
                 done(sim, a, mv)
@@ -1066,20 +1276,39 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
         sim.q, sim.known = [v / 1000.0 for v in e.rows[0]], True
         done(sim, a, e.seconds)
 
-    approach(plan.targets("start"), "its start")
-    for e in plan.entries:
-        for pa in e.pre_actions:
-            if pa.get("type") == "hold_pose" and float(pa.get("seconds") or 0) > 0:
-                dur = float(pa["seconds"])
-                sim, a = act(e.side, "wait", dur, f"{title}: {pa.get('stage') or 'hold'} {dur:g} s")
-                done(sim, a, dur)
-            elif pa.get("type") == "check_fixture_state":
-                check(pa.get("expect"), "")
-        entry(plan, e)
+    def play(owner, holds=None) -> tuple:
+        """``owner`` from its start: its entries and their checks, these answered by ``holds`` when given (ended at the
+        first that does not hold and skips). (skipped, the follow-up a check calls for)."""
+        approach(owner.targets("start"), "its start" if owner is plan else f"{owner.title}'s start")
+        follow = None
+        for e in owner.entries:
+            for pa in e.pre_actions:
+                if pa.get("type") == "hold_pose" and float(pa.get("seconds") or 0) > 0:
+                    dur = float(pa["seconds"])
+                    sim, a = act(e.side, "wait", dur, f"{title}: {pa.get('stage') or 'hold'} {dur:g} s")
+                    done(sim, a, dur)
+                elif pa.get("type") == "check_fixture_state":
+                    expect = pa.get("expect")
+                    check(expect, "" if owner is plan else f" ({owner.title}'s)")
+                    if holds is not None and expect not in holds and pa.get("on_fail") == "skip":
+                        return True, follow
+                    if pa.get("also_observe") and pa.get("if_observed"):    # the part it also looks at: not judged here
+                        follow = pa["if_observed"]
+            entry(owner, e)
+        return False, follow
+
+    _, follow = play(plan)
     sim, a = act(plan.sides()[0], "wait", 0.0, f"{title}: done, {mechanism.TASKS[plan.name]['end']}",
                  phase=mechanism.PHASE_AFTER[plan.name])
     done(sim, a, 0.0)
-    if plan.name in mechanism.FINAL_CHECKS:          # the commode in its end state from here: the final check sees it
+    if follow in mechanism.TASKS:                    # it runs next and looks first, with its own checks
+        nxt = mechanism.cached(follow)
+        sims[camera]._say("note", mark[camera], f"{title}: the camera does not judge the seat under the lifted lid, so "
+                          f"{nxt.title} runs after it and looks first, as on the robot; here it finds the seat down and ends "
+                          "there.")
+        if play(nxt, HOLDS_AFTER.get(plan.name, set()))[0]:
+            approach({s: tg for s, tg in nxt.targets("end").items() if s not in leave}, f"{nxt.title}'s end")
+    elif plan.name in mechanism.FINAL_CHECKS:        # the commode in its end state from here: the final check sees it
         fc = mechanism.final_check(plan.name)
         approach({"right": fc["by"].targets("start")["right"]}, f"the final check's way in, {fc['by'].title}'s start")
         for e in fc["look"]:
@@ -1087,32 +1316,31 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int) -> 
         check(fc["expect"], ", the final check")
         for e in reversed([x for x in fc["look"] if x.kind == "arm"]):     # back along its way in, as Lite runs it
             back(fc["by"], e)
-        approach({"right": plan.targets("end")["right"]}, "where it ended")
+        if "right" not in leave:
+            approach({"right": plan.targets("end")["right"]}, "where it ended")
     return clock[0]
 
 
+def _sim_then(st: dict, sims: dict, T: float, stage: int, overall: int) -> float:
+    """A run of lid and seat tasks' ``then`` (next_after_tasks) from ``T``: each arm to its next task's start, both arms
+    at once, as Lite moves them in Real: its pole and hand together (Lite's pole and hand step), then, to a Program's
+    first point, its errors read (a 4105 the plan's streams left cleared) and its MoveJ at the speed slider's speed (the
+    global speed at 100 % for it). The end's time."""
+    ends = [T]
+    for s, t in sorted((st.get("then") or {}).items()):
+        sim, row = sims[s], (st.get("rows") or {}).get(s)
+        steps = []
+        if t.get("pole_mm") is not None or t.get("hand") is not None:
+            steps.append({"type": "pole_hand", "mm": float(t["pole_mm"]) if t.get("pole_mm") is not None else sim.pole,
+                          "values": list(t["hand"]) if t.get("hand") is not None else list(sim.hand), "_row": row, "_then": t})
+        if t.get("arm_deg"):
+            steps += [{"type": "clear", "_row": row, "_alone": True},
+                      {"type": "move_to", "deg": list(t["arm_deg"]), "speed": int(overall), "_row": row, "_then": t}]
+        ends.append(sim.run(steps, T, stage))
+    return max(ends)
+
+
 CHECK_S = 0.5                    # a camera question, in the simulation (a frame, the check)
-
-
-def restore_steps(st: dict, side: str, pole_mm, hand) -> list[dict]:
-    """The Pole and Hand steps that put an arm back after a run of lid and seat tasks (``restore`` on its last task):
-    its rows' last values before the run, else as it stood then (``pole_mm``, ``hand``)."""
-    r = (st.get("restore") or {}).get(side) or {}
-    pole = r.get("pole_mm") if r.get("pole_mm") is not None else pole_mm
-    vals = r.get("hand") if r.get("hand") is not None else hand
-    row = (st.get("rows") or {}).get(side)
-    out = []
-    if pole is not None:
-        out.append({"type": "pole", "mm": float(pole), "_row": row, "restore": True})
-    if vals is not None and len(vals) == 6 and all(v is not None for v in vals):
-        out.append({"type": "hand", "values": [int(v) for v in vals], "_row": row, "restore": True})
-    return out
-
-
-def restore_title(st: dict) -> str:
-    if not st.get("restore"):
-        return st["title"]
-    return f"{st['title']}, then each arm's pole and hand back to before {st['restore'].get('since') or 'the tasks'}"
 
 
 def _start_state(app, side: str, home: dict) -> tuple[dict, str]:
@@ -1164,7 +1392,7 @@ def _sim_part(st: dict, sims: dict, T: float, stage: int, words) -> dict:
 
     def mark(s):
         def one(step, t1):
-            for r in step.get("_rows") or [step.get("_row")]:
+            for r in _rows_done(step):
                 done[s][r] = t1
         return one
 
@@ -1213,16 +1441,14 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
         kind = st["kind"]
         row = dict(index=i, kind=kind, label=str(st.get("program_id") or ""), t0=round(T, 4))
         if kind == "mechanism":                     # the arms' errors read first (clear_before_moves), then its own moves
-            if i == 0 or plan[i - 1]["kind"] != "mechanism":      # the arms as they stand before a run of tasks
-                stood = {s: (sims[s].pole, list(sims[s].hand)) for s in ARMS}
             ready = T
             for s in st.get("clear") or []:
                 ready = max(ready, sims[s].run([{"type": "clear", "_row": (st.get("rows") or {}).get(s), "_alone": True}], T, i))
-            T = _sim_mechanism(st, sims, ready, i, overall)
-            if st.get("restore"):                      # each arm's pole and hand back to before the run (restore_after_tasks)
-                ends = [sims[s].run(restore_steps(st, s, *stood[s]), T, i) for s in ARMS]
-                T = max(ends + [T])
-            row.update(t1=round(T, 4), title=restore_title(st), task=st["task"])
+            T = _sim_mechanism(st, sims, ready, i, overall, leave=set(st.get("then") or {}))
+            row["t1_plan"] = round(T, 4)                # ALIX's plans end here; Lite's own moves to the next starts follow
+            if st.get("then"):
+                T = _sim_then(st, sims, T, i, overall)
+            row.update(t1=round(T, 4), title=then_title(st), task=st["task"], task_title=st["title"])
         else:
             ends = _sim_part(st, sims, T, i, words) if any(st.get(s) for s in ARMS) else {}
             T = max(ends.values() or [T])
@@ -1574,7 +1800,8 @@ def simulate(app, units, mode: str, pick: dict | None):
     from ..motion.limits import load_limits
     from .routes_robot import _payload
 
-    run = plan_for(_numbered(load(units)), mode, pick)
+    steps = _numbered(load(units))
+    run = plan_for(steps, mode, pick)                 # refused here when it cannot run, before the job
     overall = int(app.robot.speed_pct)
     home = dict(_payload(app)["home"])
     cub = int(app.ui.get("cubicle_mm", 1400))         # the cubicle chosen, when the room is not measured
@@ -1582,14 +1809,16 @@ def simulate(app, units, mode: str, pick: dict | None):
     def work(job):
         import numpy as np
 
+        nonlocal run
         job.progress("Reading what the controllers hold", 0, 3)
         sides = list(run["steps"])
         programs = {s: programs_known(app, units, s) for s in ARMS}
         points = {s: points_known(app, s) for s in ARMS}
-        ident = identity_of(run, programs, points, overall)
         findings, md_of = [], _md_reader(units.root)
-        starts, start_how = {}, {}
         named = {s: files_by_name(app, units, s) for s in ARMS}
+        run = plan_for(steps, mode, pick, own=own_for(app, units, programs, run["steps"]))   # each Program's own pole and hand
+        ident = identity_of(run, programs, points, overall)
+        starts, start_how = {}, {}
         for s in ARMS:
             starts[s], start_how[s] = _start_state(app, s, home)
 
@@ -1626,17 +1855,20 @@ def simulate(app, units, mode: str, pick: dict | None):
         dt = max(SAMPLE_S, total / MAX_SAMPLES)
         times = np.arange(0.0, total + 1e-9, dt).tolist() if total > 0 else [0.0]
         arms = {}
-        spans = [(row["t0"], row["t1"], row["title"]) for row in stages if row["kind"] == "mechanism"]
+        spans = [(row["t0"], row.get("t1_plan", row["t1"]), row.get("task_title") or row["title"], row["t1"])
+                 for row in stages if row["kind"] == "mechanism"]
         for s in sides:
             pole, hand, q, known = sample(acts[s], times, starts[s], md_of, with_known=True)
-            for t0, t1, _title in spans:           # ALIX's planner checked these moves, the hands on the lid by design
+            for t0, t1, _title, _end in spans:     # ALIX's planner checked these moves, the hands on the lid by design
                 known[(np.asarray(times) >= t0) & (np.asarray(times) <= t1)] = False
             arms[s] = dict(pole=pole.tolist(), hand=hand.tolist(), q=q.tolist(), known=known.tolist())
-        for t0, t1, title in spans:
+        for t0, t1, title, end in spans:
             findings.append(dict(level="note", side=None, row=None, text=f"{title} ({t0:.1f}-{t1:.1f} s) is ALIX's plan: its "
                                  "hands hold the lid and the seat by design, so it is left out of this collision check (ALIX's "
                                  "planner checked it with the commode's contact allowances); its camera checks are assumed "
-                                 "here, and asked of the camera in Real."))
+                                 "here, and asked of the camera in Real."
+                                 + (f" Each arm's move to its next task's start after it ({t1:.1f}-{end:.1f} s) is Lite's own, "
+                                    "checked here." if end > t1 + 1e-6 else "")))
         job.progress(f"Checking collisions: {len(times):,} moments, both arms", 2, 4)
         phases = [_phase_at(changes, t) for t in times]
         fut = workers.pool().submit(collision_check.check_states, times, arms, base, scene, units.fixture, phases, cub)
@@ -1891,6 +2123,14 @@ def split_waits(steps: list) -> list:
 
 def _step_words(step: dict) -> str:
     k = step["type"]
+    if step.get("_own") and k in ("pole", "hand", "pole_hand"):        # a Program's own, set before it (own_stages)
+        return f"Program {step['_own']}'s own " + _step_words({x: v for x, v in step.items() if x != "_own"}).replace(
+            "Pole", "pole", 1).replace("Hand", "hand", 1)
+    if step.get("_then") and k in ("pole_hand", "move_to"):            # a next task's start (next_after_tasks)
+        t = step["_then"]
+        where = f"Program {t['id']}'s" if t["kind"] == "program" else f"{t.get('name')}'s"
+        return (f"to {where} start: MoveJ to its first point ({step['speed']} %)" if k == "move_to"
+                else f"{where} pole and hand: " + _step_words({x: v for x, v in step.items() if x != "_then"}))
     if k == "program":
         return f"Program {step['id']}" + (f" // {step['name']}" if step.get("name") else "")
     if k == "pole":
@@ -1902,7 +2142,10 @@ def _step_words(step: dict) -> str:
     if k == "clear":
         return "Clear the arm's 4105 warning, if it holds one, before the move"
     if k == "pole_hand":
-        return f"Pole {float(step['mm']):g} mm with the Hand " + ",".join(str(v) for v in step["values"]) + " moving meanwhile"
+        return (f"Pole {float(step['mm']):g} mm with the Hand " + ",".join("hold" if v is None else str(v) for v in step["values"])
+                + " moving meanwhile")
+    if k == "move_to":
+        return f"MoveJ to a pose ({step['speed']} %)"
     if k == "meet":
         return "Meet the other arm"
     if k == "wait_for":
@@ -2039,7 +2282,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     import threading
 
     robot = app.robot
-    run = plan_for(_numbered(load(units)), mode, pick)
+    steps = _numbered(load(units))
+    run = plan_for(steps, mode, pick)
     mode = run["mode"]                                      # the plan's arms (a task's, a dual task's), never the request's
     sides = list(run["steps"])
     if app.ui["mode"] != "real":                    # the owner, 17 Oct: a run on the real hardware says the mode it found
@@ -2065,6 +2309,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     overall = int(robot.speed_pct)
     programs = {s: programs_known(app, units, s) for s in ARMS}
     points = {s: points_known(app, s) for s in ARMS}
+    run = plan_for(steps, mode, pick, own=own_for(app, units, programs, run["steps"]))   # each Program's own pole and hand
     ident = identity_of(run, programs, points, overall)
     sim = load_sim(units)
     same = bool(sim and sim.get("hash") == digest(ident))
@@ -2090,11 +2335,12 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
         from . import mechanism
 
         mechanism.camera_required(robot)
-    # a Program at another pole or hand than its own is never run (the owner, 21 Oct): not a question, a stop
-    stops = [f["text"] for f in sim["findings"] if f["level"] == "stop"] if simulated else _stage_stops(run, programs, robot, sides)
+    # a Program at another pole or hand than its own is never run (the owner, 21 Oct): not a question, a stop. Lite sets
+    # each Program's own before it (own_stages, 24 Oct), so only a simulation made before that can still hold one
+    stops = [f["text"] for f in sim["findings"] if f["level"] == "stop"] if simulated else []
     if stops:
-        raise UserError("Not run: " + " ".join(stops), "Each Program runs with the pole and hand it was taught with: set them "
-                        "before it with a Pole step and a Hand step, simulate again, then run it.", code="stage")
+        raise UserError("Not run: " + " ".join(stops), "Each Program runs with the pole and hand it was taught with: "
+                        "simulate again, then run it.", code="stage")
     warns = [f["text"] for f in sim["findings"] if f["level"] == "warn"] if simulated else []
     col = sim["collisions"] if simulated else {"ok": True}
     if not col["ok"]:
@@ -2107,7 +2353,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     if not body.get("confirmed"):
         raise UserError("Real Machine Mode on the real robot needs your confirmation.", code="confirm")
     restore = {s: robot.found_speed(s) for s in sides}
-    # the controllers' feed recorded (feed_wanted): each runner call's own file, the day's canfd folder
+    # the controllers' feed recorded (feed_wanted): a file each arm's part of a stage, the day's canfd folder
     want_feed = feed_wanted(app, body)
     feeds = None
     if want_feed:
@@ -2178,11 +2424,6 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 job.on_cancel(fn)
 
             emulated = bool(getattr(robot.links.get(side), "emulated", False))      # ALIX's emulator keeps its own pace
-            cap = None
-            if feeds is not None:
-                feed_n[side] += 1
-                slug = "".join(ch if ch.isalnum() else "_" for ch in str(label))[:40]
-                cap = feeds / f"{time.strftime('%Y%m%d_%H%M%S')}_{side.upper()}_s2_{feed_n[side]:02d}_{slug}.frames.jsonl"
             watch_line, watch_close = _watch(job, side, steps,
                                              (lambda why: job.log(f"{why} (an emulated arm: said, not stopped)", "warn")) if emulated
                                              else (lambda why: stop_part(side, why)),
@@ -2224,14 +2465,10 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                     job.log(f"{side.upper()}: {text}", "error" if text.startswith("**") else "info")
 
             try:
-                out = reals[side].run_workflow(steps, overall, restore[side], timeout, on_line, stop_hook, record=cap)
+                out = reals[side].run_workflow(steps, overall, restore[side], timeout, on_line, stop_hook)
             finally:
                 stops.pop(side, None)
                 watch_close()
-            fed = out.get("feed")
-            if fed:
-                job.log(f"{side.upper()}: its feed, {fed['frames']} frame(s) every {fed['cycle_ms']} ms: {Path(fed['file']).name}",
-                        "info" if fed["frames"] else "warn")
             if stopped_why.get(side):
                 out = dict(out, ok=False, why=stopped_why[side])
             if out["ok"]:
@@ -2268,7 +2505,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             rows[side] = x.get("_row")
             job.set(rows=dict(rows))
             say(**{side: f"{label} // {_step_words(x)} // RUNNING"})
-            job.log(f"{side.upper()}: rows {x['_rows'][0]} and {x['_rows'][1]}: {_step_words(x)}.")
+            job.log(f"{side.upper()}: {_rows_words(x)}: {_step_words(x)}.")
             robot.estop_check(side, on_press=lambda: stopped_why.__setitem__(side, f"the {side.upper()} E-stop was pressed"))
             if stopped_why.get(side):
                 return dict(ok=False, rc=1, why=stopped_why[side])
@@ -2291,7 +2528,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             emulated = bool(getattr(robot.links.get(side), "emulated", False))      # ALIX's emulator keeps its own pace
             if r:
                 lo, hi = float(r[0]), float(r[2])
-                words = f"{side.upper()} rows {x['_rows'][0]}-{x['_rows'][1]} ({_step_words(x)}) took {dur:.2f} s"
+                words = f"{side.upper()} {_rows_words(x)} ({_step_words(x)}) took {dur:.2f} s"
                 if (dur > hi * (1.0 + STOP_STEP_MARGIN) + 0.15 or dur < lo * (1.0 - STOP_STEP_MARGIN) - 0.15) and emulated:
                     job.log(f"{words}, outside its range on the robot ({lo:.2f}-{hi:.2f} s) (an emulated arm: said, not stopped)", "warn")
                 elif dur > hi * (1.0 + STOP_STEP_MARGIN) + 0.15 or dur < lo * (1.0 - STOP_STEP_MARGIN) - 0.15:
@@ -2299,7 +2536,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                                 f"{STOP_STEP_MARGIN:.0%}: stopped, as the two arms' timings are no longer the ones checked")
                 if not lo - 0.05 <= dur <= hi + 0.05:
                     job.log(f"{words}, outside its range on the robot ({lo:.2f}-{hi:.2f} s).", "warn")
-            for n in x.get("_rows") or [x.get("_row")]:
+            for n in _rows_done(x):
                 finished(side, n)
             return dict(ok=True, rc=0, why=None)
 
@@ -2367,15 +2604,19 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 link = getattr(reals[side], "link", None)
                 try:
                     with link.reserved() if link is not None else contextlib.nullcontext():
+                        feed_on(side, label)                # the stage's recording, on before the two arms meet
                         try:
-                            barrier.wait(timeout=10)
-                        except threading.BrokenBarrierError:
-                            results[side] = dict(ok=False, rc=1, why="the other arm did not start")
-                            return
-                        try:
-                            results[side] = part(side, stage[side], label)
-                        except BaseException as exc:                       # noqa: BLE001 - said below
-                            results[side] = dict(ok=False, rc=1, why=str(exc) or type(exc).__name__)
+                            try:
+                                barrier.wait(timeout=10)
+                            except threading.BrokenBarrierError:
+                                results[side] = dict(ok=False, rc=1, why="the other arm did not start")
+                                return
+                            try:
+                                results[side] = part(side, stage[side], label)
+                            except BaseException as exc:                   # noqa: BLE001 - said below
+                                results[side] = dict(ok=False, rc=1, why=str(exc) or type(exc).__name__)
+                        finally:
+                            feed_off(side)
                 except UserError as exc:                                   # its controller is busy: neither starts
                     barrier.abort()
                     results[side] = dict(ok=False, rc=1, why=str(exc))
@@ -2411,44 +2652,72 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                                 + ": " + "; ".join(f"{s.upper()}: {results.get(s, {}).get('why') or 'see the hardware log'}" for s in bad),
                                 "Check the arms and their controllers' errors before anything else runs.")
 
-        stood = {}
+        def feed_on(side, label) -> None:
+            """The stage's recording of the arm's feed (feed_wanted): on once for the arm's whole part, its runner calls and
+            Lite's own steps between them (robot_real.keep_s2_feed), a file a stage."""
+            if feeds is None:
+                return
+            feed_n[side] += 1
+            slug = "".join(ch if ch.isalnum() else "_" for ch in str(label))[:40]
+            cap = feeds / f"{time.strftime('%Y%m%d_%H%M%S')}_{side.upper()}_s2_{feed_n[side]:02d}_{slug}.frames.jsonl"
+            try:
+                kept = reals[side].keep_s2_feed(cap)
+            except Exception as exc:                                       # noqa: BLE001 - a diagnostic: the run goes on
+                kept = None
+                job.log(f"{side.upper()}: its feed could not be turned on ({exc}).", "warn")
+            if kept is None:
+                job.log(f"{side.upper()}: its feed is not recorded for {label} (see the hardware log).", "warn")
 
-        def put_back(st, pid):
-            """After a run of lid and seat tasks: each arm's pole and hand back to before it (restore_after_tasks), both
-            arms at once; the next stage then starts both together."""
-            from . import staging
+        def feed_off(side) -> None:
+            fed = reals[side].drop_s2_feed() if feeds is not None else None
+            if fed:
+                job.log(f"{side.upper()}: its feed, {fed['frames']} frame(s) every {fed['cycle_ms']} ms: {Path(fed['file']).name}",
+                        "info" if fed["frames"] else "warn")
 
-            say(f"LID / SEAT // {restore_title(st)}", **{x: f"{pid} // POLE AND HAND BACK" for x in ARMS})
+        def to_next(st, pid):
+            """After a run of lid and seat tasks: each arm to its next task's start (next_after_tasks), both arms at once:
+            its pole and hand together (pole_and_hand), then, to a Program's first point, its errors read (a 4105 the
+            plan's streams left cleared, as before every move that waits for its arrival) and its MoveJ at the speed
+            slider's speed (the global speed at 100 % for it, put back after). The next stage then starts both arms at
+            their Programs' first points."""
+            then = st.get("then") or {}
+            say(f"LID / SEAT // {then_title(st)}", **{x: f"{pid} // TO THE NEXT START" for x in then})
             done, threads = {}, []
 
             def one(x):
-                steps = restore_steps(st, x, *stood.get(x, (None, None)))
-                pole = next((y["mm"] for y in steps if y["type"] == "pole"), None)
-                hand = next((y["values"] for y in steps if y["type"] == "hand"), None)
-                if pole is None or hand is None:
-                    done[x] = f"{x.upper()}: its pole and hand before the tasks are not known, left as they are"
-                    return
+                t, row = then[x], (st.get("rows") or {}).get(x)
                 try:
-                    reals[x].stage(staging.make_stage(pole, hand, f"before {(st.get('restore') or {}).get('since') or 'the tasks'}"))
+                    if t.get("pole_mm") is not None or t.get("hand") is not None:
+                        pole, hand = robot._measured(x)
+                        mm = float(t["pole_mm"]) if t.get("pole_mm") is not None else pole
+                        values = list(t["hand"]) if t.get("hand") is not None else hand
+                        if mm is None or values is None:
+                            raise UserError(f"its pole or hand is not read, so it is not moved to {then_title(st)}")
+                        reals[x].pole_and_hand(float(mm), list(values))
+                    if t.get("arm_deg"):
+                        got = clear(x, row)
+                        if not got["ok"]:
+                            raise UserError(got["why"])
+                        reals[x].move_to([round(float(v) * 1000) for v in t["arm_deg"]], speed=int(robot.speed_pct),
+                                         restore_pct=robot.found_speed(x))
                     done[x] = None
-                    job.log(f"{x.upper()}: pole {pole:g} mm and hand {','.join(str(v) for v in hand)} back, as before the tasks.")
+                    job.log(f"{x.upper()}: at the start of " + (f"Program {t['id']}" if t["kind"] == "program" else t.get("name") or "its next row")
+                            + (" (its own pole and hand" + (", its first point)" if t.get("arm_deg") else ")") if t.get("own") or t.get("arm_deg")
+                               else "") + ".")
                 except Exception as exc:                                   # noqa: BLE001 - said below
                     done[x] = f"{x.upper()}: {exc}"
 
-            for x in ARMS:
-                threads.append(threading.Thread(target=one, args=(x,), name=f"lite-s2-back-{x}", daemon=True))
+            for x in sorted(then):
+                threads.append(threading.Thread(target=one, args=(x,), name=f"lite-s2-next-{x}", daemon=True))
                 threads[-1].start()
             for t in threads:
                 while t.is_alive():
                     t.join(0.1)
             job.check()
-            bad = [w for w in done.values() if w and "not known" not in w]
-            for w in done.values():
-                if w and "not known" in w:
-                    job.log(w, "warn")
+            bad = [w for w in done.values() if w]
             if bad:
-                raise UserError(f"{st['title']}: the pole and hand were not put back: " + "; ".join(bad),
-                                "Check the poles and the hands, then run the sequence again.")
+                raise UserError(f"{st['title']}: the arms did not reach their next task's start: " + "; ".join(bad),
+                                "Check the arms, the poles and the hands, then run the sequence again.")
 
         t0 = time.monotonic()
         try:
@@ -2459,8 +2728,6 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 job.set(stage=i)
                 job.progress(f"Stage {i + 1} of {len(run['plan'])}", i, len(run["plan"]))
                 kind, pid = st["kind"], st.get("program_id")
-                if kind == "mechanism" and (i == 0 or run["plan"][i - 1]["kind"] != "mechanism"):
-                    stood = {x: robot._measured(x) for x in ARMS}       # the arms before a run of lid and seat tasks
                 if kind == "mechanism":                     # a lid or seat task: ALIX's plan on both arms, the camera's checks
                     from . import mechanism as mech
 
@@ -2478,12 +2745,12 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                                        live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}))
                     mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
                     with kit.camera.using():
-                        out = mech.Runner(ex, ex.say).run(st["task"])
+                        out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {})).run(st["task"])
                     did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
                                     for p in out["plans"])
                     job.log(f"{st['title']}: {did}.")
-                    if st.get("restore"):                   # each arm's pole and hand back to before the run of tasks
-                        put_back(st, pid)
+                    if st.get("then"):                      # each arm to its next task's start (next_after_tasks)
+                        to_next(st, pid)
                     say(f"LID / SEAT // {st['title']} // DONE", **{x: f"{pid} // COMPLETE" for x in ARMS})
                 elif kind == "parallel":
                     arms_here = [s for s in ARMS if st.get(s)]
