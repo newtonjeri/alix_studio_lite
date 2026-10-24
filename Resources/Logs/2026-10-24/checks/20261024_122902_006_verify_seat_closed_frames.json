@@ -1,0 +1,29 @@
+{
+  "check_id": "20261024_122902_006_verify_seat_closed",
+  "stage": "verify_seat_closed",
+  "expect": "seat_closed",
+  "decided": true,
+  "state": "seat_closed",
+  "confidence": 1.0,
+  "message": "3 frames (seat_closed, seat_closed, seat_closed): seat surface median z 0.442 m in base_link (closed top 0.442 = nominal 0.440 registered +2 mm by the seat, rise 0 mm vs 50 mm bar); 68 % of the ROI valid, median range 0.584 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 26 % of the ROI, 10/90 % heights 0.436/0.445, 0 % masked around 17 hand frames; models: lid_open from colour at 0.90",
+  "frames": [
+    {
+      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122902_343_gap_check_seat_closed_seat_closed.json",
+      "success": true,
+      "state": "seat_closed",
+      "confidence": 1.0
+    },
+    {
+      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122903_107_gap_check_seat_closed_seat_closed.json",
+      "success": true,
+      "state": "seat_closed",
+      "confidence": 1.0
+    },
+    {
+      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122903_808_gap_check_seat_closed_seat_closed.json",
+      "success": true,
+      "state": "seat_closed",
+      "confidence": 1.0
+    }
+  ]
+}

@@ -1,0 +1,377 @@
+{
+  "class": "lid_closed",
+  "success": true,
+  "confidence": 0.9915276286470978,
+  "passes_expectation": false,
+  "part": "lid",
+  "height_m": 0.4588939331536237,
+  "closed_top_m": 0.45906338058068175,
+  "nominal_top_m": 0.45,
+  "color_used": true,
+  "color_note": "",
+  "registration_m": 0.009063380580681735,
+  "registration_source": "lid",
+  "registration_pose": "",
+  "rise_m": -0.00016944742705804483,
+  "roi_valid": 1.0,
+  "median_range_m": 0.46,
+  "message": "lid surface median z 0.459 m in base_link (closed top 0.459 = nominal 0.450 registered +9 mm by the lid, rise -0 mm vs 50 mm bar); 100 % of the ROI valid, median range 0.460 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); models: closed from colour at 0.93",
+  "models": {
+    "fused_state": "closed",
+    "state_source": "colour",
+    "confidence": 0.927,
+    "fusion": "colour",
+    "colour_state": "closed",
+    "depth_state": "",
+    "contradiction": false
+  },
+  "decision_wall_s": 1792813299.132,
+  "depth_header_stamp_s": 1792813298.94639,
+  "depth_age_s": 0.016,
+  "color_age_s": null,
+  "depth_frame_id": "camera_depth_optical_frame",
+  "source": "native depth (D435, pyrealsense2)",
+  "frame": "camera_depth_optical_frame",
+  "world_frame": "base_link",
+  "camera_to_world": [
+    [
+      0.481646,
+      -0.813966,
+      0.324771,
+      0.554335
+    ],
+    [
+      -0.876312,
+      -0.443205,
+      0.188804,
+      -0.12524
+    ],
+    [
+      -0.00974,
+      -0.375538,
+      -0.926756,
+      0.885627
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "intrinsics": {
+    "fx": 432.6650695800781,
+    "fy": 432.6650695800781,
+    "cx": 420.2126159667969,
+    "cy": 237.48733520507812,
+    "width": 848,
+    "height": 480
+  },
+  "hands": {
+    "ILH_plam": [
+      0.5457,
+      0.2344,
+      0.7565
+    ],
+    "ILH_left_index_1": [
+      0.5854,
+      0.2232,
+      0.6311
+    ],
+    "ILH_left_index_tip": [
+      0.6116,
+      0.1547,
+      0.6208
+    ],
+    "ILH_left_middle_1": [
+      0.5677,
+      0.2155,
+      0.6303
+    ],
+    "ILH_left_middle_tip": [
+      0.5944,
+      0.1436,
+      0.6233
+    ],
+    "ILH_left_ring_1": [
+      0.55,
+      0.2079,
+      0.6303
+    ],
+    "ILH_left_ring_tip": [
+      0.5743,
+      0.1386,
+      0.6217
+    ],
+    "ILH_left_little_1": [
+      0.5322,
+      0.2006,
+      0.6313
+    ],
+    "ILH_left_little_tip": [
+      0.5519,
+      0.1379,
+      0.6167
+    ],
+    "ILH_left_thumb_1": [
+      0.5764,
+      0.2166,
+      0.7032
+    ],
+    "ILH_left_thumb_tip": [
+      0.6312,
+      0.2036,
+      0.6236
+    ],
+    "IRH_plam": [
+      0.5225,
+      -0.1617,
+      0.798
+    ],
+    "IRH_right_index_tip": [
+      0.5013,
+      -0.1407,
+      0.6326
+    ],
+    "IRH_right_middle_tip": [
+      0.504,
+      -0.1622,
+      0.6398
+    ],
+    "IRH_right_ring_tip": [
+      0.5171,
+      -0.1778,
+      0.6392
+    ],
+    "IRH_right_little_tip": [
+      0.5421,
+      -0.1887,
+      0.629
+    ],
+    "IRH_right_thumb_tip": [
+      0.5292,
+      -0.1088,
+      0.6542
+    ]
+  },
+  "params": {
+    "gap_lid_top_z": 0.45,
+    "gap_seat_top_z": 0.44,
+    "gap_lift_m": 0.05,
+    "gap_roi": [
+      0.4,
+      0.6,
+      0.4,
+      0.6
+    ],
+    "gap_seat_roi": [
+      0.58,
+      0.78,
+      0.3,
+      0.7
+    ],
+    "gap_seat_band_z": [
+      0.38,
+      0.47
+    ],
+    "gap_seat_min_band": 0.03,
+    "gap_seat_absent_m": 0.012,
+    "gap_hand_mask_m": 0.14,
+    "gap_lid_closed_tol_m": 0.02,
+    "gap_lid_open_m": 0.05,
+    "gap_lid_wide_roi": [
+      0.3,
+      0.75,
+      0.3,
+      0.7
+    ],
+    "gap_lid_deep_m": 0.1,
+    "gap_lid_hole_min": 0.08,
+    "gap_lid_top_rows": 0.35,
+    "gap_lid_standing_range_m": 0.35,
+    "gap_lid_standing_min": 0.1
+  },
+  "colour_intrinsics": {
+    "fx": 904.5462646484375,
+    "fy": 904.3150634765625,
+    "cx": 656.8598022460938,
+    "cy": 382.82379150390625,
+    "width": 1280,
+    "height": 720
+  },
+  "colour_to_world": [
+    [
+      0.481646,
+      -0.813966,
+      0.324771,
+      0.547111
+    ],
+    [
+      -0.876312,
+      -0.443205,
+      0.188804,
+      -0.112095
+    ],
+    [
+      -0.00974,
+      -0.375538,
+      -0.926756,
+      0.885773
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "ref_to_world": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      -0.01
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      -0.124
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.526
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "named_pose": null,
+  "registration": {
+    "lid_m": 0.009063380580681735,
+    "seat_m": null
+  },
+  "fixture": {
+    "model": "commode_c",
+    "fixture_type": "commode",
+    "scene_yaml": "/home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/scene.yaml",
+    "scene_sha256": "9142df18ce56b59bbcc662fd3e902eb14520ef8b0b283c6b1541d624a5cf3a07",
+    "regions_dir": "/home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models",
+    "calibration": {
+      "seat": {
+        "seat_ring": 0.0086
+      },
+      "lid": {
+        "toplid": 0.0092
+      }
+    },
+    "pose_in_world": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        1.005
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.42
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "ugv_standoff_m": -1.0
+  },
+  "context": {
+    "arms": {
+      "left": {
+        "q_deg": [
+          -19.75,
+          -76.834,
+          24.29,
+          93.319,
+          0.999,
+          66.051,
+          90.681
+        ],
+        "pole_mm": 150.0,
+        "hand": [
+          562,
+          531,
+          527,
+          539,
+          507,
+          926
+        ]
+      },
+      "right": {
+        "q_deg": [
+          32.0,
+          -95.997,
+          9.994,
+          112.0,
+          -24.996,
+          60.004,
+          -13.993
+        ],
+        "pole_mm": 150.0,
+        "hand": [
+          584,
+          472,
+          464,
+          520,
+          224,
+          922
+        ]
+      }
+    },
+    "check": {
+      "check_id": "20261024_114138_769_verify_lid_lifted",
+      "stage": "verify_lid_lifted",
+      "expect": "lid_lifted",
+      "observe": false,
+      "frame": 1
+    },
+    "camera": {
+      "name": "Intel RealSense D435",
+      "serial": "425122070189"
+    }
+  },
+  "provenance": {
+    "lite_commit": "740185b612191b71ef6d61653e56de5bfa13e3b3",
+    "alix_vendored": {
+      "commit": "842c0e59797242f548fb1378a3097506c939fce0",
+      "branch": "feature/alix_studio",
+      "dirty": true
+    },
+    "models": {
+      "commode_status_synthetic_real_v10.pt": "c9997b9d50fcf9be3b2550588f14445cfd22193fb08cd27fd8e5a68cfb605830"
+    }
+  },
+  "split": "",
+  "stamp": "20261024_114139_132",
+  "mode": "gap_check",
+  "expect": "lid_lifted",
+  "files": {
+    "depth_npy": "20261024_114139_132_gap_check_lid_lifted_lid_closed_depth.npy",
+    "depth_png": "20261024_114139_132_gap_check_lid_lifted_lid_closed_depth.png",
+    "color_png": "20261024_114139_132_gap_check_lid_lifted_lid_closed_color.png",
+    "aligned_depth_npz": "20261024_114139_132_gap_check_lid_lifted_lid_closed_aligned_depth.npz"
+  }
+}

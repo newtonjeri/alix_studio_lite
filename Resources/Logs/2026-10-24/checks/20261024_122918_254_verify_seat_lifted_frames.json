@@ -1,0 +1,41 @@
+{
+  "check_id": "20261024_122918_254_verify_seat_lifted",
+  "stage": "verify_seat_lifted",
+  "expect": "seat_lifted",
+  "decided": false,
+  "state": "cannot_judge",
+  "confidence": 0.0,
+  "message": "no decision in 5 frames (refused, refused, refused, refused, refused); the last: only 0 % of the seat ROI lies in the 0.38-0.47 m seat band after masking the hands -> NOT lifted",
+  "frames": [
+    {
+      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122918_420_gap_check_seat_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    },
+    {
+      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122919_054_gap_check_seat_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    },
+    {
+      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122919_754_gap_check_seat_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    },
+    {
+      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122920_389_gap_check_seat_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    },
+    {
+      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122920_989_gap_check_seat_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    }
+  ]
+}
