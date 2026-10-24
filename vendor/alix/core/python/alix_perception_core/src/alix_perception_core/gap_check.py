@@ -467,7 +467,7 @@ class GapCheckSession:
         if state == "refused":
             # Neither reading could judge: a refusal that says so, never "NOT lifted" (Newton 2026-10-23:
             # a check that cannot judge stops for a person, it does not start a re-lift).
-            text = seat_refusal + (f"; seat: {seat_note}" if seat_note else "") + f"; {source}, {frame}{detail}"
+            text = (seat_refusal or "cannot judge") + (f"; seat: {seat_note}" if seat_note else "") + f"; {source}, {frame}{detail}"
             self.log.warn(f"gap_check: {text}")
             return GapDecision(part=part, expect=asked, success=False, state="refused", confidence=0.0,
                                recommendation="re-clean", message=text,
@@ -618,6 +618,11 @@ class GapCheckSession:
             return state, conf, f"fit failed ({exc})"
         fit = whole.seat
         info = whole.as_dict()
+        if whole.seat_hidden:
+            # the lid reads lifted: the seat is under it, and no reading of this frame judges it (the owner, 2026-10-24)
+            info["outcome"] = "refused"
+            record_extra["seat_fit"] = info
+            return "refused", 0.0, f"the seat is under the lifted lid, not judged ({fit.reason})"
         if not fit.state:
             info["outcome"] = state
             record_extra["seat_fit"] = info

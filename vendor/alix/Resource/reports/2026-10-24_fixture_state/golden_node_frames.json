@@ -71,13 +71,13 @@
   {
    "stamp": "20261010_174151_498",
    "expect": "seat_lifted",
-   "success": true,
-   "state": "seat_closed",
-   "confidence": 1.0,
+   "success": false,
+   "state": "not_lifted",
+   "confidence": 0.0,
    "recommendation": "re-clean",
-   "message": "seat surface median z 0.437 m in base_link (closed top 0.440, rise -3 mm vs 50 mm bar); 69 % of the ROI valid, median range 0.217 m; native depth (test), camera_depth_optical_frame; seat band 5 % of the ROI, 10/90 % heights 0.433/0.438, 0 % masked around 0 hand frames (17 missing: ['ILH_plam', 'ILH_left_index_1', 'ILH_left_index_tip']); seat: its own fit gives no answer (seat_closed and seat_lifted explain the frame alike: seat_closed 8978 vs seat_lifted 8611, margin +0.04; best: lid 35 deg, seat 0 deg (lid) over 19658 pixels at 1/3, the fixture -10 mm from its registration); vs its closed frame: no answer (no closed reference at this placement)",
-   "record_class": "seat_closed",
-   "height_m": 0.4368271131988985,
+   "message": "cannot judge; seat: the seat is under the lifted lid, not judged (not judged: the seat is under the lifted lid (lid 35 deg); it leaned seat_closed and seat_lifted explain the frame alike: seat_closed 8978 vs seat_lifted 8611, margin +0.04; best: lid 35 deg, seat 0 deg (lid) over 19658 pixels at 1/3, the fixture -10 mm from its registration); vs its closed frame: no answer (no closed reference at this placement); native depth (test), camera_depth_optical_frame; seat band 5 % of the ROI, 10/90 % heights 0.433/0.438, 0 % masked around 0 hand frames (17 missing: ['ILH_plam', 'ILH_left_index_1', 'ILH_left_index_tip'])",
+   "record_class": "refused",
+   "height_m": null,
    "closed_top_m": 0.44,
    "registration_m": 0.0,
    "lid_fit": null,
@@ -419,6 +419,22 @@
    "lid_fit": null,
    "seat_fit": "seat_lifted",
    "seat_rise": "seat_lifted"
+  },
+  {
+   "stamp": "20261024_155335_115",
+   "expect": "seat_lifted",
+   "success": false,
+   "state": "not_lifted",
+   "confidence": 0.0,
+   "recommendation": "re-clean",
+   "message": "cannot judge; seat: the seat is under the lifted lid, not judged (not judged: the seat is under the lifted lid (lid 35 deg); it leaned seat_lifted 3424 vs seat_closed 2608, margin +0.24; best: lid 35 deg, seat 35 deg (both) over 11365 pixels at 1/3, the fixture +10 mm from its registration); vs its closed frame: no answer (the closed frame is 12273 s old (limit 900 s)); native depth (test), camera_depth_optical_frame; seat band 15 % of the ROI, 10/90 % heights 0.435/0.446, 57 % masked around 17 hand frames",
+   "record_class": "refused",
+   "height_m": null,
+   "closed_top_m": 0.4421342500847692,
+   "registration_m": 0.002134250084769196,
+   "lid_fit": null,
+   "seat_fit": "",
+   "seat_rise": ""
   }
  ]
 }

@@ -149,6 +149,7 @@ class FixtureFit:
     zone_px: int = 0
     hand_px: int = 0
     height_offset_m: float = 0.0     # the fixture's height found by the fit, against the registration given
+    seat_hidden: bool = False        # the lid reads lifted: the seat is under it, and its question is not judged
     cached: bool = False
     reason: str = ""
     time_ms: float = 0.0
@@ -426,6 +427,14 @@ def fit_fixture_state(depth, intrinsics, camera_to_world, fixture_pose, fixture:
                              reason=f"not closed: {away.reason}; " + (f"{name}: {which.reason}" if which.state else
                                                                       f"lifted or open not told apart ({which.reason}), the better named"))
     out.seat = _part_answer(scores, seat_class, "seat", params)
+    # THE SEAT UNDER A LIFTED LID IS NOT JUDGED (the owner, 2026-10-24): with the lid between closed and open the seat
+    # is mostly hidden, and its ring (down) and the bowl's rim (came up with the lid) differ by ~2 cm there, inside the
+    # model's own uncertainty: 24 Oct 15:53 the fit leaned "came along" at margin 0.27 with the seat down
+    if lid_class(best_k) == "lid_lifted":
+        out.seat_hidden = True
+        out.seat = PartAnswer(margin=out.seat.margin, classes=out.seat.classes,
+                              reason=f"not judged: the seat is under the lifted lid (lid {out.lid_deg:.0f} deg); "
+                                     f"it leaned {out.seat.reason}")
     out.lid.deg, out.seat.deg = out.lid_deg, out.seat_deg
     where = (f"best: lid {out.lid_deg:.0f} deg, seat {out.seat_deg:.0f} deg ({out.family}) over {out.zone_px} pixels at 1/{s}, "
              f"the fixture {best_o * 1000:+.0f} mm from its registration")

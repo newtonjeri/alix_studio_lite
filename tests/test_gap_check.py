@@ -16,12 +16,14 @@ from alix_studio_lite.server.gap_check import DepthFrame, GapCheck, Intrinsics, 
 DATA = Path(__file__).parent / "data" / "gap_checks"
 
 #: the robot's lid_open run of 12 October, in order: the closed lid (it learns the placement), the left arm's lift
-#: missed three times (re-lifts 1 and 2 too), the third re-lift lifted it, the seat came up with it, the lid open,
-#: then seat_close_right's question (the seat read closed: it skipped itself)
+#: missed three times (re-lifts 1 and 2 too), the third re-lift lifted it, "did the seat come along?" (the robot's
+#: window read seat_lifted; the image shows the seat down), the lid open, then seat_close_right's question (the seat
+#: read closed: it skipped itself)
 RUN_12_OCT = ["20261012_093917_987_gap_check_lid_closed_lid_closed", "20261012_093924_332_gap_check_lid_lifted_lid_closed",
               "20261012_093930_236_gap_check_lid_lifted_lid_closed", "20261012_093936_247_gap_check_lid_lifted_lid_closed",
               "20261012_093942_104_gap_check_lid_lifted_lid_lifted", "20261012_093942_368_gap_check_seat_lifted_seat_lifted",
               "20261012_094001_199_gap_check_lid_open_lid_open", "20261012_094001_358_gap_check_seat_open_seat_closed"]
+HIDDEN_SEAT = "20261012_093942_368_gap_check_seat_lifted_seat_lifted"
 
 
 def frame_of(stem: str):
@@ -44,7 +46,12 @@ def test_the_robots_lid_open_run_of_12_october_replays_to_its_own_answers(tmp_pa
     gc = GapCheck(records=tmp_path / "checks", log=said.append)
     for stem in RUN_12_OCT:
         rec, frame = frame_of(stem)
-        same_answer(gc.ask(rec["expect"], frame), rec, stem)
+        a = gc.ask(rec["expect"], frame)
+        if stem == HIDDEN_SEAT:
+            # since 24 Oct (the owner) the seat under a lifted lid is not judged: the robot's seat_lifted is now "cannot judge"
+            assert not a.success and a.message.startswith("cannot judge") and "under the lifted lid" in a.message, a.message
+            continue
+        same_answer(a, rec, stem)
         if stem == RUN_12_OCT[0]:
             # the closed lid teaches the placement: +12.2 mm on the robot
             assert abs(gc.registration_for("") * 1000 - rec["registration_m"] * 1000) < 2.0
