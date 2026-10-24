@@ -160,8 +160,8 @@ right:
       translation: [0.25, 0.05, 0.18]
       rotation: [0.0, -10.0, 0.0]
     point7:
-      translation: [0.30, 0.05, 0.20]
-      rotation: [0.0, -10.0, 0.0]
+      translation: [0.37, 0.05, 0.16]
+      rotation: [0.0, -30.0, 0.0]
 
   # CLEANING SEQUENCE
   # Format: [from, to] - pairs of point names
