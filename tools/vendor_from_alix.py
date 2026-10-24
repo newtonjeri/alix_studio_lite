@@ -15,6 +15,11 @@ commit it came from. Patches applied to copied files are listed in ``vendor/PATC
 Usage:
     python3 tools/vendor_from_alix.py                    # default sources, see --help
     python3 tools/vendor_from_alix.py --alix /path/to/alix --dry-run
+    python3 tools/vendor_from_alix.py --only 'Resource/plans/commode_c/hardware/*'   # some files only
+
+``--only GLOB`` (repeatable) copies only the listed ALIX files whose path in ALIX matches GLOB (fnmatch: ``*`` also
+crosses ``/``) and updates their manifest entries in place, every other entry kept: the owner's re-planned lid and
+seat plans, for one, without copying everything again.
 """
 from __future__ import annotations
 
@@ -50,6 +55,8 @@ ALIX_TREES = [
     # the wrist camera's perception, ROS-free (the colour models, the depth state, the fixture's regions): what
     # perception_node.py builds and asks for the lid and seat checks (the owner, 18 Oct: the visual models too)
     ("core/python/alix_perception_core/src/alix_perception_core", []),
+    # the recorded frames ALIX's node and Lite must answer alike (tests/test_alix_equivalence.py, 24 Oct)
+    ("core/python/alix_perception_core/test/data/seat_rise", []),
 ]
 ALIX_FILES = [
     # alix_taskgen: only the light modules Lite uses (no generator, no Studio server)
@@ -138,6 +145,13 @@ ALIX_FILES = [
     *[f"ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/{p}.yaml"
       for p in ("lid_open", "seat_open", "lid_close_right", "seat_close_right")],
     "ros/perception/alix_perception/config/perception.yaml",
+    # ALIX's node on those frames (Resource/reports/2026-10-24_fixture_state/golden_node_frames.py)
+    "Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
+    # a plan's pole and hand speeds as ALIX's robot executive sets them (server/device_speed.py, 24 Oct): the pole and
+    # hand controllers' parameters, and the hardware constants tests/test_device_speed.py holds the port to
+    "ros/mobility/alix_control/config/controllers_real.yaml",
+    "ros/hw/alix_hw/include/alix_hw/conversions.hpp",
+    "ros/hw/alix_hw/urdf/rm_side.ros2_control.xacro",
     # the status model the robot's bringup uses (models_synthetic_real_v10.yaml; the stain model is for cleaning
     # inspections, not the lid and seat), and the fixture's corrected region meshes its locator and depth state read
     "core/python/alix_perception_core/models/commode_status_synthetic_real_v10.pt",
@@ -308,9 +322,13 @@ def main() -> None:
     ap.add_argument("--alix", type=Path, default=DEFAULT_ALIX, help="ALIX repo root (default ~/alix_ws/src/alix)")
     ap.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE, help="alix_studio_lite_ws root")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--only", action="append", metavar="GLOB",
+                    help="copy only the ALIX files matching GLOB (their path in ALIX; repeatable); other manifest entries kept")
     args = ap.parse_args()
     alix, ws = args.alix.resolve(), args.workspace.resolve()
     va = LITE / "vendor" / "alix"
+    if args.only:
+        return only(alix, ws, args.only, args.dry_run)
     c = Copier(args.dry_run)
 
     for rel, excl in ALIX_TREES:
@@ -384,6 +402,55 @@ def main() -> None:
         print(f"  {k:40s} {v / 1e6:7.2f} MB")
     if c.missing:
         print("MISSING:", *c.missing, sep="\n  ")
+
+
+def collect(alix: Path) -> list[dict]:
+    """What a full run copies from ALIX (its listed trees and files and the URDF's meshes), copying nothing."""
+    va = LITE / "vendor" / "alix"
+    c = Copier(dry_run=True)
+    for rel, excl in ALIX_TREES:
+        c.tree(alix / rel, va / rel, "alix", excl)
+    for rel in ALIX_FILES:
+        c.file(alix / rel, va / rel, "alix")
+    return c.entries
+
+
+def only(alix: Path, ws: Path, globs: list[str], dry_run: bool) -> None:
+    """``--only``: the listed ALIX files matching ``globs`` copied, their manifest entries updated in place (an entry
+    that is new is put in its place by dest), every other entry kept as it is."""
+    va = LITE / "vendor" / "alix"
+    picked = [e for e in collect(alix)
+              if any(fnmatch.fnmatch(Path(e["dest"]).relative_to(va.relative_to(LITE)).as_posix(), g) for g in globs)]
+    path = LITE / "vendor" / "MANIFEST.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    files = manifest["files"]
+    changed = []
+    for e in picked:
+        same = [f for f in files if f["dest"] == e["dest"]]
+        if same and all(f.get("sha256") == e["sha256"] for f in same):
+            continue
+        changed.append(e)
+        if dry_run:
+            continue
+        dst = LITE / e["dest"]
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        kept = dst.stat().st_mode if dst.exists() else None
+        shutil.copy2(e["source"], dst)
+        if kept is not None:
+            dst.chmod(kept)
+        for f in same:
+            f.update(sha256=e["sha256"], bytes=e["bytes"], source=e["source"])
+        if not same:
+            at = next((i for i, f in enumerate(files) if f["dest"] > e["dest"]), len(files))
+            files.insert(at, e)
+    if changed and not dry_run:
+        path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    print(f"{len(picked)} listed file(s) match; {len(changed)} {'would change' if dry_run else 'copied'} "
+          f"(the others are as ALIX has them)")
+    for e in changed:
+        print(f"  {e['dest']}")
+    if not picked:
+        print("nothing matches: the globs are matched against the paths in ALIX, e.g. 'Resource/plans/commode_c/hardware/*'")
 
 
 if __name__ == "__main__":
