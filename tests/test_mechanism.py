@@ -260,6 +260,20 @@ def test_each_check_writes_its_frames_and_what_they_decided(tmp_path):
     assert [(f["success"], f["state"]) for f in s["frames"]] == [(True, "seat_lifted"), (True, "seat_lifted"), (False, "not_lifted")]
 
 
+def test_a_checks_frames_are_named_beside_it_so_pulled_logs_open_them(tmp_path):
+    """The owner, 24 Oct: the lab's ``_frames.json`` named its frames by the lab computer's absolute paths
+    (/home/alai-labs/...), which do not open once the logs are pulled. Each record is named relative to the file."""
+    from dataclasses import replace
+
+    checks = tmp_path / "checks"
+    ex, _ = _frames_exec([replace(_seen("lid_lifted"), record_path=str(checks / f"20261024_1141{k}0_000_gap_check_x.json"))
+                          for k in range(2)] + [replace(REFUSED, record_path=None)])
+    ex.kit.records_dir = lambda what: tmp_path / what
+    ex.ask({"stage": "verify_lid_lifted"}, "lid_lifted")
+    s = json.loads(next(checks.glob("*_frames.json")).read_text())
+    assert [f["record"] for f in s["frames"]] == ["20261024_114100_000_gap_check_x.json", "20261024_114110_000_gap_check_x.json", None]
+
+
 def test_each_check_is_decided_on_three_frames_or_five():
     """The owner, 23 Oct: "for every check we should be using 3 frames ... for a failed classification in 3, we add 2
     more frames, a total of 5". Frames that cannot judge do not vote; 0.3 s between frames."""

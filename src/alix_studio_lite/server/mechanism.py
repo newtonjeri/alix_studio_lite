@@ -875,13 +875,23 @@ class RealExec(_Exec):
 
     def _summary(self, check_id, action, expect, answers, answer) -> None:
         """``<check_id>_frames.json`` beside the frames' records: each frame's record and answer, and what they decided
-        (a dataset tells a check's frames apart from its decision). Never fails a check."""
+        (a dataset tells a check's frames apart from its decision). Each record is named relative to this file (the
+        owner, 24 Oct: the lab computer's absolute paths did not open once the logs were pulled). Never fails a check."""
         root = self.kit.records_dir("checks")
         if root is None:
             return
+
+        def beside(path):
+            if not path:
+                return None
+            try:
+                return Path(path).resolve().relative_to(root.resolve()).as_posix()
+            except ValueError:
+                return str(path)
+
         try:
             root.mkdir(parents=True, exist_ok=True)
-            frames = [dict(record=a.record_path, success=bool(a.success), state=a.fixture_state,
+            frames = [dict(record=beside(a.record_path), success=bool(a.success), state=a.fixture_state,
                            confidence=round(float(a.state_confidence), 3)) for a in answers]
             (root / f"{check_id}_frames.json").write_text(json.dumps(dict(
                 check_id=check_id, stage=action.get("stage"), expect=expect, decided=bool(answer.success),

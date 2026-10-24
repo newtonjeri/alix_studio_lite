@@ -8,19 +8,19 @@
   "message": "3 frames (lid_open, lid_open, lid_open): lid surface median z 0.266 m in base_link (closed top 0.459 = nominal 0.450 registered +9 mm by the lid, rise -193 mm vs 50 mm bar; ABSENT from its closed place, the bowl shows); 88 % of the ROI valid, median range 0.676 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 47 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); models: lid_open from colour at 0.86",
   "frames": [
     {
-      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122900_217_gap_check_lid_open_lid_open.json",
+      "record": "20261024_122900_217_gap_check_lid_open_lid_open.json",
       "success": true,
       "state": "lid_open",
       "confidence": 1.0
     },
     {
-      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122900_986_gap_check_lid_open_lid_open.json",
+      "record": "20261024_122900_986_gap_check_lid_open_lid_open.json",
       "success": true,
       "state": "lid_open",
       "confidence": 1.0
     },
     {
-      "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-24/checks/20261024_122901_847_gap_check_lid_open_lid_open.json",
+      "record": "20261024_122901_847_gap_check_lid_open_lid_open.json",
       "success": true,
       "state": "lid_open",
       "confidence": 1.0
