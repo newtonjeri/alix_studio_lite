@@ -193,14 +193,15 @@ left:
     # front-left edge, at the lid's height (base_link 0.579, 0.171, 0.453), still
     # before the lift.
     # start_pose: [0.5889, 0.2946, -0.0735, 0.515099, 0.850793, 0.024721, 0.101056]
-    start_pose: [0.59, 0.285, -0.0735, 0.515099, 0.850793, 0.024721, 0.101056]
+    start_pose: [0.59, 0.27, -0.1035, 0.515099, 0.850793, 0.024721, 0.101056]
 
     # source right.pre_start_pose: [0.68, -0.07, -0.05, 0.73938, 0.67302, 0.01891, -0.001467]   (no raw capture recorded)
     # pre_start_pose: [0.68, 0.318, -0.05, 0.673021, 0.739381, -0.001467, 0.01891]   # DRAFT: mirrored from right.pre_start_pose (UNCALIBRATED - teach + certify before use)
     # TAUGHT 2026-10-23, D_LID_OPEN.txt line 302, on the recorded approach: 35 mm
     # left of the start (outside the lid) and 50 mm above it; the hand turns
     # 14.5 deg on the way to the start, as recorded.
-    pre_start_pose: [0.5819, 0.3293, -0.0238, 0.404604, 0.910175, 0.018847, 0.086732]
+    # pre_start_pose: [0.5819, 0.3293, -0.0238, 0.404604, 0.910175, 0.018847, 0.086732]
+    pre_start_pose: [0.5819, 0.3293, -0.0738, 0.404604, 0.910175, 0.018847, 0.086732]
 
     # Relative to THIS block's start_pose (translation added in alix_ref_frame,
     # rotation onto the start orientation), not to the end of the arc. Needed
@@ -234,21 +235,22 @@ left:
       rotation: [0.0, -0.8, 0.2]
     point3:   # line 680, +26 mm
       translation: [0.0031, 0.0023, 0.0259]
-      rotation: [0.3, -0.7, -0.5]
+      rotation: [0.005, 0.0, 0.0]
     point4:   # line 738, +41 mm
-      translation: [-0.0007, -0.0002, 0.041]
+      translation: [0.01, -0.0002, 0.041]
       rotation: [0.6, -0.3, -1.6]
     point5:   # line 822, +58 mm
-      translation: [-0.0109, -0.0065, 0.0583]
+      translation: [0.015, -0.0065, 0.0583]
       rotation: [-0.4, 1.3, -2.3]
     point6:   # line 893, +78 mm
-      translation: [-0.0101, -0.0076, 0.0775]
+      translation: [0.02, -0.0076, 0.0775]
       rotation: [-1.5, 2.6, -3.1]
     point7:   # line 1018, +136 mm
-      translation: [0.0004, -0.0075, 0.1363]
+      translation: [0.025, -0.0075, 0.1513]
       rotation: [-3.5, 5.4, -6.1]
     point8:   # line 1083, +176 mm: the hand-over, the lid at least 30 deg
-      translation: [0.0147, -0.0081, 0.1757]
+      # translation: [0.0147, -0.0081, 0.1757]
+      translation: [0.03, -0.0081, 0.2057]
       rotation: [-6.0, 5.7, -4.9]
 
   # CLEANING SEQUENCE
