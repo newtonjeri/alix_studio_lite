@@ -1,0 +1,95 @@
+{
+ "class": "lid_open",
+ "success": true,
+ "confidence": 0.7124255952380951,
+ "passes_expectation": false,
+ "part": "lid",
+ "height_m": 0.5994609496756967,
+ "closed_top_m": 0.45,
+ "rise_m": 0.14946094967569673,
+ "roi_valid": 1.0,
+ "median_range_m": 0.308400422334671,
+ "message": "lid surface median z 0.599 m in base_link (closed top 0.450, rise 149 mm vs 50 mm bar; ABSENT from its closed place, the bowl shows); 100 % of the ROI valid, median range 0.308 m; native depth /camera/camera/depth/image_rect_raw, camera_depth_optical_frame; opening visible 5 % of the wide ROI, standing-lid pixels 14 % of the top rows",
+ "source": "native depth /camera/camera/depth/image_rect_raw",
+ "frame": "camera_depth_optical_frame",
+ "world_frame": "base_link",
+ "camera_to_world": [
+  [
+   0.481759,
+   -0.81386,
+   0.324869,
+   0.554327
+  ],
+  [
+   -0.876251,
+   -0.443331,
+   0.18879,
+   -0.125221
+  ],
+  [
+   -0.009624,
+   -0.375618,
+   -0.926725,
+   0.885143
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "params": {
+  "gap_lid_top_z": 0.45,
+  "gap_seat_top_z": 0.44,
+  "gap_lift_m": 0.05,
+  "gap_roi": [
+   0.4,
+   0.6,
+   0.4,
+   0.6
+  ],
+  "gap_seat_roi": [
+   0.58,
+   0.78,
+   0.3,
+   0.7
+  ],
+  "gap_seat_band_z": [
+   0.38,
+   0.47
+  ],
+  "gap_seat_min_band": 0.03,
+  "gap_seat_absent_m": 0.012,
+  "gap_hand_mask_m": 0.14,
+  "gap_lid_closed_tol_m": 0.02,
+  "gap_lid_open_m": 0.05,
+  "gap_lid_wide_roi": [
+   0.3,
+   0.75,
+   0.3,
+   0.7
+  ],
+  "gap_lid_deep_m": 0.1,
+  "gap_lid_hole_min": 0.08,
+  "gap_lid_top_rows": 0.35,
+  "gap_lid_standing_range_m": 0.35,
+  "gap_lid_standing_min": 0.1
+ },
+ "stamp": "20261007_131501_547",
+ "mode": "gap_check",
+ "expect": "lid_lifted",
+ "files": {
+  "depth_npz": "20261007_131501_547.npz"
+ },
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "intrinsics_source": "the robot D435 native 848x480 as Lite recorded it on 21-23 Oct (this record carried none)",
+ "fixture_source": "Resource/captures/2026-10-07/checks/20261007_131501_547_gap_check_lid_lifted_lid_open.json"
+}

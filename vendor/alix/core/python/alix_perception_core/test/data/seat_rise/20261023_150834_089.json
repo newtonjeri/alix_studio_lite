@@ -1,0 +1,178 @@
+{
+ "class": "refused",
+ "success": false,
+ "message": "only 0 % of the seat ROI lies in the 0.38-0.47 m seat band after masking the hands -> NOT lifted",
+ "decision_wall_s": 1792739314.089,
+ "depth_header_stamp_s": 1792739314.03741,
+ "depth_age_s": 0.015,
+ "color_age_s": null,
+ "depth_frame_id": "camera_depth_optical_frame",
+ "source": "native depth (D435, pyrealsense2)",
+ "frame": "camera_depth_optical_frame",
+ "world_frame": "base_link",
+ "camera_to_world": [
+  [
+   0.481693,
+   -0.813905,
+   0.324854,
+   0.554336
+  ],
+  [
+   -0.876286,
+   -0.443254,
+   0.188806,
+   -0.125236
+  ],
+  [
+   -0.009677,
+   -0.375612,
+   -0.926727,
+   0.88564
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "hands": {
+  "ILH_plam": [
+   0.6535,
+   0.0124,
+   0.7313
+  ],
+  "ILH_left_index_1": [
+   0.6556,
+   -0.0171,
+   0.6026
+  ],
+  "ILH_left_index_tip": [
+   0.5869,
+   -0.0326,
+   0.5791
+  ],
+  "ILH_left_middle_1": [
+   0.6505,
+   0.0015,
+   0.6023
+  ],
+  "ILH_left_middle_tip": [
+   0.5776,
+   -0.0142,
+   0.5826
+  ],
+  "ILH_left_ring_1": [
+   0.6454,
+   0.02,
+   0.6028
+  ],
+  "ILH_left_ring_tip": [
+   0.5754,
+   0.0064,
+   0.5831
+  ],
+  "ILH_left_little_1": [
+   0.6403,
+   0.0386,
+   0.6043
+  ],
+  "ILH_left_little_tip": [
+   0.5779,
+   0.0285,
+   0.5823
+  ],
+  "ILH_left_thumb_1": [
+   0.6398,
+   -0.012,
+   0.6737
+  ],
+  "ILH_left_thumb_tip": [
+   0.6312,
+   -0.0609,
+   0.5892
+  ],
+  "IRH_plam": [
+   0.5225,
+   -0.1617,
+   0.798
+  ],
+  "IRH_right_index_tip": [
+   0.5034,
+   -0.1394,
+   0.6291
+  ],
+  "IRH_right_middle_tip": [
+   0.504,
+   -0.1622,
+   0.6398
+  ],
+  "IRH_right_ring_tip": [
+   0.5174,
+   -0.1776,
+   0.6386
+  ],
+  "IRH_right_little_tip": [
+   0.5387,
+   -0.19,
+   0.6331
+  ],
+  "IRH_right_thumb_tip": [
+   0.5274,
+   -0.1067,
+   0.6538
+  ]
+ },
+ "params": {
+  "gap_lid_top_z": 0.45,
+  "gap_seat_top_z": 0.44,
+  "gap_lift_m": 0.05,
+  "gap_roi": [
+   0.4,
+   0.6,
+   0.4,
+   0.6
+  ],
+  "gap_seat_roi": [
+   0.58,
+   0.78,
+   0.3,
+   0.7
+  ],
+  "gap_seat_band_z": [
+   0.38,
+   0.47
+  ],
+  "gap_seat_min_band": 0.03,
+  "gap_seat_absent_m": 0.012,
+  "gap_hand_mask_m": 0.14,
+  "gap_lid_closed_tol_m": 0.02,
+  "gap_lid_open_m": 0.05,
+  "gap_lid_wide_roi": [
+   0.3,
+   0.75,
+   0.3,
+   0.7
+  ],
+  "gap_lid_deep_m": 0.1,
+  "gap_lid_hole_min": 0.08,
+  "gap_lid_top_rows": 0.35,
+  "gap_lid_standing_range_m": 0.35,
+  "gap_lid_standing_min": 0.1
+ },
+ "stamp": "20261023_150834_089",
+ "mode": "gap_check",
+ "expect": "seat_lifted",
+ "files": {
+  "depth_npz": "20261023_150834_089.npz"
+ },
+ "fixture_source": "Resource/captures/lite_2026-10-2x/checks/20261023_150834_089_gap_check_seat_lifted_refused.json"
+}

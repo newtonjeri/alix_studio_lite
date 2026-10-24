@@ -402,17 +402,17 @@ def render_hypothesis(points_body: np.ndarray, body_from_cam: np.ndarray, fx: fl
     w, h = width // stride, height // stride
     ok = (u >= 0) & (u < w) & (v >= 0) & (v < h)
     u, v, z = u[ok], v[ok], cam[ok, 2].astype(np.float32)
-    img = np.full((h, w), _EMPTY, np.float32)
-    order = np.argsort(-z)                       # far first, near overwrites
-    img[v[order], u[order]] = z[order]
-    img = cv2.erode(img, np.ones((5, 5), np.uint8))   # minimum filter: fills the gaps between cells
+    img = np.full(h * w, _EMPTY, np.float32)
+    pix = v * w + u
+    np.minimum.at(img, pix, z)                   # the nearest cell per pixel (2026-10-24: was a far-first argsort, 3x slower)
+    img = cv2.erode(img.reshape(h, w), np.ones((5, 5), np.uint8))   # minimum filter: fills the gaps between cells
     img[img >= _EMPTY * 0.5] = 0.0
     if flags is None:
         return img
-    rz = np.full((h, w), _EMPTY, np.float32)                   # the raised cells' own depth image
+    rz = np.full(h * w, _EMPTY, np.float32)                    # the raised cells' own depth image
     fr = flags[ok]
-    rz[v[order][fr[order]], u[order][fr[order]]] = z[order][fr[order]]
-    rz = cv2.erode(rz, np.ones((5, 5), np.uint8))
+    np.minimum.at(rz, pix[fr], z[fr])
+    rz = cv2.erode(rz.reshape(h, w), np.ones((5, 5), np.uint8))
     raised_mask = (img > 0) & (rz < _EMPTY * 0.5) & (rz <= img + 0.002)   # the nearest surface here is raised
     return img, raised_mask
 

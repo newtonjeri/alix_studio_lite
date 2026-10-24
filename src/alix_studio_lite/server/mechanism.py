@@ -426,28 +426,25 @@ def assumed(expect: str):
 
 
 #: Every camera check on 3 frames, 2 more when they do not decide (the owner, 23 Oct: "for every check we should be
-#: using 3 frames ... for a failed classification in 3, we add 2 more frames, a total of 5"). A frame that cannot judge
-#: (refused: its window covered, no depth) does not vote; a check left undecided stops the run for a person and never
-#: re-lifts (the seat checks of 22-23 Oct read a lifted seat as NOT through a glove and re-lifted).
-FRAMES = (3, 2)                      # the first frames, then more when they do not decide
-FRAME_GAP_S = 0.3                    # between frames: 33 ms apart they are the same picture
+#: using 3 frames ... for a failed classification in 3, we add 2 more frames, a total of 5"), each voting yes / no /
+#: nothing on the expectation and ruled by ALIX's own lift_check.decide (24 Oct: the same vote as ALIX's senders,
+#: the same result for the same frames). A frame that cannot judge (refused: its window covered, no depth) does not
+#: vote; a check left undecided stops the run for a person and never re-lifts (the seat checks of 22-23 Oct read a
+#: lifted seat as NOT through a glove and re-lifted).
 CANNOT_JUDGE = "cannot_judge"
 
 
-def vote(answers: list, need: int):
-    """The frames' decision, or None: the state at least ``need`` of the frames that could judge agree on, as the first
-    of them answered it, with their mean confidence."""
-    from collections import Counter
-    from dataclasses import replace
+def frames_rule():
+    """(the first frames, the most frames, the spacing in seconds): lift_check's CHECK_FRAMES_FIRST, CHECK_FRAMES_MAX,
+    CHECK_FRAME_SPACING_S."""
+    lc = lift_check()
+    return int(lc.CHECK_FRAMES_FIRST), int(lc.CHECK_FRAMES_MAX), float(lc.CHECK_FRAME_SPACING_S)
 
-    judged = [a for a in answers if a.success]
-    if not judged:
-        return None
-    state, n = Counter(a.fixture_state for a in judged).most_common(1)[0]
-    if n < need:
-        return None
-    agree = [a for a in judged if a.fixture_state == state]
-    return replace(agree[0], state_confidence=sum(float(a.state_confidence) for a in agree) / len(agree))
+
+def observation(action) -> dict:
+    """A check's second question (`also_observe`) as lift_check.observe asks it: the check's kind, the observed state."""
+    return {"check": action.get("check"), "expect": str(action.get("also_observe") or ""),
+            "classifier_may_prove": action.get("classifier_may_prove", False)}
 
 
 def frames_said(answers: list) -> str:
@@ -616,6 +613,27 @@ class Runner:
     def _observe_also(self, a, state) -> None:
         what = str(a.get("also_observe") or "")
         follow = str(a.get("if_observed") or "")
+        seconds = getattr(self.ex, "observed", None)
+        if seconds:
+            # ALIX's _observe_also: the check's own frames answered it, decided by the same vote (lift_check.observe)
+            lc = lift_check()
+            verdict = lc.decide(observation(a), seconds)
+            answered = sum(1 for x in seconds if x.success)
+            if verdict == lc.UNDECIDED:
+                self.say(f"OBSERVED {a.get('stage')}: {what} = unknown ({answered} of the check's {len(seconds)} frame(s) "
+                         f"answered it)", "warn")
+                if follow:                   # its own check decides: it skips when the part is not up
+                    state["follow_up"] = follow
+                return
+            seen = verdict == lc.PASS
+            last = seconds[[lc.frame_vote(observation(a), x) for x in seconds].index("yes" if seen else "no")]
+            self.checks.append(dict(check=f"{a.get('stage')} (also)", expect=what, state=last.fixture_state,
+                                    confidence=round(float(last.state_confidence), 2), verdict="YES" if seen else "no",
+                                    message=last.message, record=getattr(last, "record_path", None)))
+            self.say(f"OBSERVED {a.get('stage')}: {what} = {'YES' if seen else 'no'} (on the check's own {len(seconds)} frames)")
+            if seen and follow:
+                state["follow_up"] = follow
+            return
         answer = self.ex.ask(dict(a, expect=what), what, observe=True)
         if not answer.success:
             self.say(f"OBSERVED {a.get('stage')}: {what} = unknown ({answer.message[:140]})", "warn")
@@ -836,37 +854,55 @@ class RealExec(_Exec):
                      + (f", bridged {out['bridged_deg']:.1f} degrees first" if out.get("bridged_deg") else ""))
 
     def ask(self, action, expect, observe=False):
-        """The camera's answer on its frames (FRAMES): decided by 2 of the first 3, or by 3 of 5; else CANNOT_JUDGE
-        (success False), which stops the run for a person. Each frame keeps its own check record."""
+        """The camera's answer on its frames, ruled by ALIX's lift_check.decide: after 3 frames, and after 5 when the
+        3 do not settle it. PASS -> the first frame that voted yes; FAIL -> the first that voted no; UNDECIDED ->
+        CANNOT_JUDGE (success False), which stops the run for a person. A check's `also_observe` is answered on the
+        SAME frames (ALIX's node answers a second region on the same depth frame), kept in ``observed`` for the
+        runner to decide by the same vote. Each frame keeps its own check record."""
         from dataclasses import replace
 
         from .gap_check import Answer
 
+        self.observed = None
         self.check_stop()
         self.job.progress(f"{action.get('stage')}: asking the camera ({expect})")
         self.live("right", f"CAMERA // {action.get('stage')}: {expect}?")
         scripted = self.kit.scripted(expect)
         if scripted is not None:                    # a test harness only (LITE_CHECK_SCRIPT): never on the robot
             return scripted
-        answers, decided, first = [], None, FRAMES[0]
+        lc = lift_check()
+        first, most, spacing = frames_rule()
+        also = "" if observe else str(action.get("also_observe") or "")
+        answers, seconds, verdict = [], [], lc.UNDECIDED
         check_id = f"{time.strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000) % 1000:03d}_{action.get('stage') or 'check'}"
-        for k in range(sum(FRAMES)):
+        for k in range(most):
             if k:
                 self.check_stop()
-                self.job.sleep(FRAME_GAP_S)
-            answers.append(self._frame(expect, dict(check_id=check_id, stage=action.get("stage"), expect=expect,
-                                                    observe=observe, frame=k + 1)))
-            if k + 1 == first and (decided := vote(answers, 2)) is not None:
-                break
-            if k + 1 == sum(FRAMES):
-                decided = vote(answers, 3)
+                self.job.sleep(spacing)
+            check = dict(check_id=check_id, stage=action.get("stage"), expect=expect, observe=observe, frame=k + 1)
+            if also:
+                got, second = self._frame_pair(expect, also, check)
+                seconds.append(second)
+            else:
+                got = self._frame(expect, check)
+            answers.append(got)
+            if len(answers) in (first, most):
+                verdict = lc.decide(action, answers)
+                if verdict != lc.UNDECIDED:
+                    break
+        votes = [lc.frame_vote(action, x) for x in answers]
         seen = frames_said(answers)
-        if decided is not None:
-            answer = replace(decided, message=f"{len(answers)} frames ({seen}): {decided.message}")
+        tally = (f"{votes.count('yes')} yes, {votes.count('no')} no, "
+                 f"{len(votes) - votes.count('yes') - votes.count('no')} no vote")
+        if verdict in (lc.PASS, lc.FAIL):
+            decided = answers[votes.index("yes" if verdict == lc.PASS else "no")]
+            answer = replace(decided, message=f"{len(answers)} frames ({seen}; {tally}): {decided.message}")
         else:
             last = answers[-1]
             answer = Answer(success=False, fixture_state=CANNOT_JUDGE, record=last.record, record_path=last.record_path,
-                            message=f"no decision in {len(answers)} frames ({seen}); the last: {last.message}")
+                            message=f"no decision in {len(answers)} frames ({seen}; {tally}); the last: {last.message}")
+        if also:
+            self.observed = seconds
         self.job.set(check=dict(stage=action.get("stage"), expect=expect, state=answer.fixture_state,
                                 confidence=round(float(answer.state_confidence), 2), message=answer.message,
                                 record=answer.record_path, observe=observe))
@@ -900,9 +936,9 @@ class RealExec(_Exec):
         except OSError:
             pass
 
-    def _frame(self, expect, check=None):
-        """One frame: both arms read, the camera's shot, the gap check's answer (its record written, a training row:
-        both arms' readings, ``check`` (which check, which frame) and the camera in its context)."""
+    def _shot(self, check=None):
+        """One shot: both arms read, the camera's frame, posed by FK (None when the camera gave no frame), and the right
+        arm's joints (the named pose the check is at)."""
         from . import robot_fk
         from .gap_check import DepthFrame
 
@@ -924,7 +960,22 @@ class RealExec(_Exec):
                                colour_to_base=frames.get("colour"), ref_to_base=frames.get("ref"),
                                stamp_s=None if shot.camera_ms is None else shot.camera_ms / 1000.0, age_s=shot.age_s,
                                context=context)
-        return self.kit.gap.ask(expect, frame, q_deg=(readings.get("right") or {}).get("q_deg"))
+        return frame, (readings.get("right") or {}).get("q_deg")
+
+    def _frame(self, expect, check=None):
+        """One frame: the gap check's answer (its record written, a training row: both arms' readings, ``check``
+        (which check, which frame) and the camera in its context)."""
+        frame, q = self._shot(check)
+        return self.kit.gap.ask(expect, frame, q_deg=q)
+
+    def _frame_pair(self, expect, also, check=None):
+        """One frame, two questions: the check's and its `also_observe`, on the same depth frame (ALIX's node,
+        _gap_check_regions), each with its own record."""
+        frame, q = self._shot(check)
+        main = self.kit.gap.ask(expect, frame, q_deg=q)
+        if frame is not None and frame.context is not None:
+            frame.context = dict(frame.context, check=dict(frame.context.get("check") or {}, observe=True, expect=also))
+        return main, self.kit.gap.ask(also, frame, q_deg=q)
 
 
 def camera_check(robot) -> dict:

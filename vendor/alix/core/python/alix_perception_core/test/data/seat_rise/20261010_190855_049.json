@@ -1,0 +1,117 @@
+{
+ "class": "seat_closed",
+ "success": true,
+ "confidence": 1.0,
+ "passes_expectation": true,
+ "part": "seat",
+ "height_m": 0.4431433310152158,
+ "closed_top_m": 0.4431433310152158,
+ "nominal_top_m": 0.44,
+ "color_used": true,
+ "color_note": "",
+ "registration_m": 0.0031433310152158,
+ "registration_source": "seat",
+ "registration_pose": "",
+ "rise_m": 0.0,
+ "roi_valid": 0.7498463618485742,
+ "median_range_m": 0.5750000000000001,
+ "message": "seat surface median z 0.443 m in base_link (closed top 0.443 = nominal 0.440 registered +3 mm by the seat, rise 0 mm vs 50 mm bar); 75 % of the ROI valid, median range 0.575 m; native depth /camera/camera/depth/image_rect_raw, camera_depth_optical_frame; seat band 26 % of the ROI, 10/90 % heights 0.435/0.448, 0 % masked around 17 hand frames; models: no state from - at 0.00",
+ "models": {
+  "fused_state": "",
+  "state_source": "",
+  "confidence": 0.0,
+  "fusion": "",
+  "colour_state": "",
+  "depth_state": "",
+  "contradiction": false
+ },
+ "decision_wall_s": 1791630535.048,
+ "depth_header_stamp_s": 1791630534.9561,
+ "color_header_stamp_s": 1791630534.9561,
+ "color_minus_depth_s": 0.0,
+ "depth_age_s": 0.029,
+ "color_age_s": 0.03,
+ "depth_frame_id": "camera_depth_optical_frame",
+ "source": "native depth /camera/camera/depth/image_rect_raw",
+ "frame": "camera_depth_optical_frame",
+ "world_frame": "base_link",
+ "camera_to_world": [
+  [
+   0.4837,
+   -0.812969,
+   0.324215,
+   0.554095
+  ],
+  [
+   -0.875193,
+   -0.445688,
+   0.188145,
+   -0.125127
+  ],
+  [
+   -0.008457,
+   -0.374757,
+   -0.927085,
+   0.885275
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "params": {
+  "gap_lid_top_z": 0.45,
+  "gap_seat_top_z": 0.44,
+  "gap_lift_m": 0.05,
+  "gap_roi": [
+   0.4,
+   0.6,
+   0.4,
+   0.6
+  ],
+  "gap_seat_roi": [
+   0.58,
+   0.78,
+   0.3,
+   0.7
+  ],
+  "gap_seat_band_z": [
+   0.38,
+   0.47
+  ],
+  "gap_seat_min_band": 0.03,
+  "gap_seat_absent_m": 0.012,
+  "gap_hand_mask_m": 0.14,
+  "gap_lid_closed_tol_m": 0.02,
+  "gap_lid_open_m": 0.05,
+  "gap_lid_wide_roi": [
+   0.3,
+   0.75,
+   0.3,
+   0.7
+  ],
+  "gap_lid_deep_m": 0.1,
+  "gap_lid_hole_min": 0.08,
+  "gap_lid_top_rows": 0.35,
+  "gap_lid_standing_range_m": 0.35,
+  "gap_lid_standing_min": 0.1
+ },
+ "stamp": "20261010_190855_049",
+ "mode": "gap_check",
+ "expect": "seat_closed",
+ "files": {
+  "depth_npz": "20261010_190855_049.npz"
+ },
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "intrinsics_source": "the robot D435 native 848x480 as Lite recorded it on 21-23 Oct (this record carried none)",
+ "fixture_source": "Resource/captures/2026-10-10/checks/20261010_190855_049_gap_check_seat_closed_seat_closed.json"
+}

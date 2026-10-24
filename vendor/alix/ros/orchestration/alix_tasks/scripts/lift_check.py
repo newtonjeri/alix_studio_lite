@@ -51,6 +51,35 @@ LIFTED_STATES = {'lid_lifted': ('lid_open', 'lid_seat_open', 'lid_lifted'),
                  'seat_open': ('lid_seat_open', 'seat_lifted', 'seat_open'),
                  'seat_closed': ('closed', 'lid_open', 'seat_closed')}
 
+#: Which answers prove the OPPOSITE of each expectation: the states its
+#: counterpart accepts (lid_lifted / lid_open <-> lid_closed, seat_lifted /
+#: seat_open <-> seat_closed). An answer in neither table — refused, uncertain,
+#: lid_between, not_lifted — proves nothing either way.
+OPPOSITE_STATES = {'lid_lifted': LIFTED_STATES['lid_closed'],
+                   'seat_lifted': LIFTED_STATES['seat_closed'],
+                   'lid_open': LIFTED_STATES['lid_closed'],
+                   'lid_closed': LIFTED_STATES['lid_open'],
+                   'seat_open': LIFTED_STATES['seat_closed'],
+                   'seat_closed': LIFTED_STATES['seat_open']}
+
+# ── The vote over frames (Newton 2026-10-23, shared by ALIX and Studio Lite) ──
+# One frame is one answer, and one answer is not a verdict: on 22-23 Oct the
+# left hand that lifts the seat filled the seat ROI and a single refused frame
+# counted as NOT lifted, which started a false re-lift. A check therefore asks
+# CHECK_FRAMES_FIRST frames CHECK_FRAME_SPACING_S apart, each votes yes / no /
+# nothing (frame_vote), and `decide` rules; when the three do not settle it, two
+# more are taken. A check that is still UNDECIDED after CHECK_FRAMES_MAX frames
+# cannot judge, and a check that cannot judge stops for a person: the senders
+# escalate it whatever the plan's on_fail says (never a re-lift, a skip or a
+# prerequisite).
+CHECK_FRAMES_FIRST = 3
+CHECK_FRAMES_MAX = 5
+CHECK_FRAME_SPACING_S = 0.3
+
+#: `decide` verdicts
+PASS, FAIL, UNDECIDED = 'pass', 'fail', 'undecided'
+
+
 #: Expectations that are LIFTS (or ring states the classifier confuses), and
 #: the only check kinds that may prove one.
 LIFT_EXPECTATIONS = ('lid_lifted', 'seat_lifted', 'seat_open', 'seat_closed')
@@ -101,6 +130,93 @@ def evaluate_fixture_check(action, response) -> bool:
     state = getattr(response, 'fixture_state', '')
     confidence = float(getattr(response, 'state_confidence', 0.0) or 0.0)
     return state in accepted and confidence >= CHECK_MIN_CONFIDENCE
+
+
+def frame_vote(action, answer) -> str | None:
+    """One frame's vote on *action*'s expectation: 'yes' when the answer is a
+    state that proves it (LIFTED_STATES) at confidence >= CHECK_MIN_CONFIDENCE,
+    'no' when it is a state that proves the opposite (OPPOSITE_STATES) at that
+    confidence, otherwise None — a refusal, 'uncertain', 'lid_between', no frame
+    or a low confidence proves nothing either way. A check whose kind could not
+    prove the expectation (mode_for) never votes."""
+    mode, _why = mode_for(action)
+    expect = action.get('expect')
+    if mode is None or answer is None or not getattr(answer, 'success', False):
+        return None
+    state = getattr(answer, 'fixture_state', '')
+    confidence = float(getattr(answer, 'state_confidence', 0.0) or 0.0)
+    if confidence < CHECK_MIN_CONFIDENCE:
+        return None
+    if state in LIFTED_STATES.get(expect, ()):
+        return 'yes'
+    if state in OPPOSITE_STATES.get(expect, ()):
+        return 'no'
+    return None
+
+
+def decide(action, answers) -> str:
+    """PASS, FAIL or UNDECIDED from the frames asked so far.
+
+    After CHECK_FRAMES_FIRST (3) frames: >= 2 yes and 0 no -> PASS; >= 2 no and
+    0 yes -> FAIL; anything else -> UNDECIDED (take two more).
+    After CHECK_FRAMES_MAX (5) frames: (>= 2 yes and 0 no) or (>= 3 yes and
+    <= 1 no) -> PASS; the same for no -> FAIL; else UNDECIDED.
+    Fewer than three frames is always UNDECIDED; a sender consults this at three
+    frames and at five."""
+    votes = [frame_vote(action, a) for a in answers or []]
+    yes, no = votes.count('yes'), votes.count('no')
+    if len(votes) < CHECK_FRAMES_FIRST:
+        return UNDECIDED
+    if len(votes) < CHECK_FRAMES_MAX:
+        if yes >= 2 and no == 0:
+            return PASS
+        if no >= 2 and yes == 0:
+            return FAIL
+        return UNDECIDED
+    if (yes >= 2 and no == 0) or (yes >= 3 and no <= 1):
+        return PASS
+    if (no >= 2 and yes == 0) or (no >= 3 and yes <= 1):
+        return FAIL
+    return UNDECIDED
+
+
+def second_answer(response, region: str):
+    """The answer to a FURTHER region asked in the same request — perception_node
+    measures it on the same depth frame and returns it in the roi arrays
+    (roi_regions[i] = the region, roi_recommendations[i] = the class,
+    roi_confidences[i] = its confidence) — as an answer frame_vote can read, or
+    None when the response carries no answer for it (an older node, no frame)."""
+    if response is None:
+        return None
+    regions = [str(r) for r in (getattr(response, 'roi_regions', None) or [])]
+    if region not in regions:
+        return None
+    i = regions.index(region)
+    classes = list(getattr(response, 'roi_recommendations', None) or [])
+    confidences = list(getattr(response, 'roi_confidences', None) or [])
+    state = str(classes[i]) if i < len(classes) else ''
+    confidence = float(confidences[i]) if i < len(confidences) else 0.0
+    return _Answer(success=bool(state) and state != 'refused', fixture_state=state, state_confidence=confidence)
+
+
+def observe(action, answers) -> tuple[str, int]:
+    """A check's SECOND question (`also_observe`, Newton 2026-10-05: "the same
+    frame also says whether the seat came up with the lid") decided over the
+    SAME frames the check itself took, by the same vote. -> (PASS = observed,
+    FAIL = not, UNDECIDED = unknown; how many of the frames answered it)."""
+    what = str(action.get('also_observe') or '')
+    question = {'check': action.get('check'), 'expect': what,
+                'classifier_may_prove': action.get('classifier_may_prove', False)}
+    seconds = [second_answer(a, what) for a in answers or []]
+    return decide(question, seconds), sum(1 for s in seconds if s is not None)
+
+
+class _Answer:
+    """The three fields of an AnalyzeScene response the vote reads."""
+    __slots__ = ('success', 'fixture_state', 'state_confidence')
+
+    def __init__(self, success: bool, fixture_state: str, state_confidence: float):
+        self.success, self.fixture_state, self.state_confidence = success, fixture_state, state_confidence
 
 
 # ── The retry ladder (Newton 2026-10-09) ─────────────────────────────────────

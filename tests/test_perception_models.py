@@ -42,6 +42,7 @@ def test_the_core_is_alix_s_own_built_from_lite_s_files():
 
     assert "vendor/alix/core/python/alix_perception_core" in alix_perception_core.__file__
     assert gc._fixture_in_world[:3, 3].round(3).tolist() == [1.005, 0.0, 0.42]
+    assert gc._fixture_in_world[0, 0] == pytest.approx(-1.0)      # the venue's 180 deg yaw: the commode faces the robot (24 Oct)
     assert any("models_synthetic_real_v10.yaml" in s and "21 regions" in s for s in said)
 
 
@@ -69,6 +70,8 @@ def test_status_check_answers_as_alix_s_core_on_the_robot_s_frames():
     answers were recorded on a CPU, and the lab computer runs the model on its GPU, whose arithmetic differs in the
     third decimal (19 Oct, pose 4 lid and seat open: 0.870 against 0.871), so it is matched within 0.01."""
     expected = json.loads((DATA / "perception/expected_status.json").read_text())["frames"]
+    # one checker for all 15, in order, as one running node (each answer uses the registration learned so far); ALIX's
+    # answers made by Resource/reports/2026-10-24_fixture_state/expected_status_from_core.py with the node's placement
     gc = GapCheck()
     for row in expected:
         a = gc.status(DepthFrame(depth=None, intrinsics=None, cam_to_base=None, **recorded(row["file"])))

@@ -245,6 +245,9 @@ def _seen(state, conf=0.9):
 
 
 REFUSED = Answer(success=False, message="only 0 % of the seat ROI lies in the seat band after masking the hands")
+#: the checks as the plans carry them (check: fixture_gap: the gap check may prove a lift, lift_check.mode_for)
+SEAT_LIFTED = {"stage": "verify_seat_lifted", "check": "fixture_gap", "expect": "seat_lifted"}
+LID_LIFTED = {"stage": "verify_lid_lifted", "check": "fixture_gap", "expect": "lid_lifted"}
 
 
 def test_each_check_writes_its_frames_and_what_they_decided(tmp_path):
@@ -252,7 +255,7 @@ def test_each_check_writes_its_frames_and_what_they_decided(tmp_path):
     tells a check's frames from its decision; the owner, 23 Oct: every frame's record kept)."""
     ex, _ = _frames_exec([_seen("seat_lifted"), _seen("seat_lifted"), REFUSED])
     ex.kit.records_dir = lambda what: tmp_path / what
-    ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
+    ex.ask(SEAT_LIFTED, "seat_lifted")
     rows = list((tmp_path / "checks").glob("*_verify_seat_lifted_frames.json"))
     assert len(rows) == 1, rows
     s = json.loads(rows[0].read_text())
@@ -269,30 +272,50 @@ def test_a_checks_frames_are_named_beside_it_so_pulled_logs_open_them(tmp_path):
     ex, _ = _frames_exec([replace(_seen("lid_lifted"), record_path=str(checks / f"20261024_1141{k}0_000_gap_check_x.json"))
                           for k in range(2)] + [replace(REFUSED, record_path=None)])
     ex.kit.records_dir = lambda what: tmp_path / what
-    ex.ask({"stage": "verify_lid_lifted"}, "lid_lifted")
+    ex.ask(LID_LIFTED, "lid_lifted")
     s = json.loads(next(checks.glob("*_frames.json")).read_text())
     assert [f["record"] for f in s["frames"]] == ["20261024_114100_000_gap_check_x.json", "20261024_114110_000_gap_check_x.json", None]
 
 
 def test_each_check_is_decided_on_three_frames_or_five():
     """The owner, 23 Oct: "for every check we should be using 3 frames ... for a failed classification in 3, we add 2
-    more frames, a total of 5". Frames that cannot judge do not vote; 0.3 s between frames."""
+    more frames, a total of 5", ruled by ALIX's own lift_check.decide (24 Oct: the same vote as ALIX's senders): each
+    frame votes yes / no / nothing on the expectation (a refused frame, or below 0.5, nothing); after 3, 2 yes and no
+    no pass, 2 no and no yes fail; after 5, also 3 yes with at most 1 no. 0.3 s between frames."""
     ex, slept = _frames_exec([_seen("seat_lifted", 0.8), _seen("seat_lifted", 1.0), REFUSED, _seen("seat_closed")])
-    a = ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
-    assert a.success and a.fixture_state == "seat_lifted" and a.state_confidence == pytest.approx(0.9)
-    assert a.message.startswith("3 frames (seat_lifted, seat_lifted, refused)") and slept == [0.3, 0.3]
+    a = ex.ask(SEAT_LIFTED, "seat_lifted")
+    assert a.success and a.fixture_state == "seat_lifted" and a.state_confidence == pytest.approx(0.8)   # the first yes
+    assert a.message.startswith("3 frames (seat_lifted, seat_lifted, refused; 2 yes, 0 no, 1 no vote)") and slept == [0.3, 0.3]
     ex, slept = _frames_exec([_seen("seat_lifted"), _seen("seat_closed"), REFUSED, _seen("seat_lifted"), _seen("seat_lifted")])
-    a = ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
+    a = ex.ask(SEAT_LIFTED, "seat_lifted")
     assert a.success and a.fixture_state == "seat_lifted" and a.message.startswith("5 frames") and len(slept) == 4
     ex, _ = _frames_exec([_seen("seat_closed")] * 3)               # a clear NOT: the plan's own policy follows
-    a = ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
+    a = ex.ask(SEAT_LIFTED, "seat_lifted")
     assert a.success and a.fixture_state == "seat_closed"
     ex, _ = _frames_exec([REFUSED] * 5)                            # the lab's glove over the window, five times
-    a = ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted")
+    a = ex.ask(SEAT_LIFTED, "seat_lifted")
     assert not a.success and a.fixture_state == mechanism.CANNOT_JUDGE
-    assert a.message.startswith("no decision in 5 frames (refused, refused, refused, refused, refused)")
+    assert a.message.startswith("no decision in 5 frames (refused, refused, refused, refused, refused; 0 yes, 0 no, 5 no vote)")
     ex, _ = _frames_exec([_seen("seat_lifted"), _seen("seat_closed"), REFUSED, _seen("seat_closed"), REFUSED])
-    assert not ex.ask({"stage": "verify_seat_lifted"}, "seat_lifted").success     # 1 against 2 of 5: no decision
+    assert not ex.ask(SEAT_LIFTED, "seat_lifted").success          # 1 yes against 2 no of 5: no decision
+    ex, _ = _frames_exec([_seen("seat_lifted"), _seen("seat_lifted"), _seen("seat_closed"), REFUSED, REFUSED])
+    assert not ex.ask(SEAT_LIFTED, "seat_lifted").success          # 2 yes but 1 no: neither 3 nor 5 frames settle it
+
+
+def test_the_observation_is_decided_on_the_checks_own_frames():
+    """ALIX's senders ask the check's also_observe in the SAME requests (the node answers it on the same depth frame)
+    and decide it over those frames by the same vote (lift_check.observe): no second look."""
+    ex, _ = _frames_exec([])
+    pairs = iter([(_seen("lid_lifted"), _seen("seat_closed")), (_seen("lid_lifted"), REFUSED), (_seen("lid_lifted"), _seen("seat_closed"))])
+    ex._frame_pair = lambda expect, also, check=None: next(pairs)
+    a = ex.ask(dict(LID_LIFTED, also_observe="seat_lifted", if_observed="seat_close_right"), "lid_lifted")
+    assert a.success and a.fixture_state == "lid_lifted" and [x.fixture_state for x in ex.observed] == ["seat_closed", "not_lifted", "seat_closed"]
+    runner, state = mechanism.Runner(ex), {}
+    runner._observe_also(dict(LID_LIFTED, also_observe="seat_lifted", if_observed="seat_close_right"), state)
+    assert runner.checks[-1]["verdict"] == "no" and "follow_up" not in state      # 2 frames said closed: nothing to close
+    ex.observed = [REFUSED, REFUSED, REFUSED]                                      # unanswered: its own check decides
+    runner._observe_also(dict(LID_LIFTED, also_observe="seat_lifted", if_observed="seat_close_right"), state)
+    assert state["follow_up"] == "seat_close_right"
 
 
 def test_no_camera_refuses_a_lid_or_seat_task(monkeypatch):

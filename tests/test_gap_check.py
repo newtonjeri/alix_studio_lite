@@ -91,12 +91,16 @@ def test_the_robots_seat_checks_of_10_october_with_the_registration_they_had(tmp
 
 
 def test_a_seat_hidden_by_the_lid_is_refused_as_on_the_robot(tmp_path):
+    """Refused on the robot then ("... -> NOT lifted"); since 23 Oct ALIX's check says it CANNOT JUDGE, never "not
+    lifted" (the owner: a check that cannot judge stops for a person), after its seat comparison and its fixture fit
+    could not answer either (the seat under the lid held at 30 deg)."""
     rec, frame = frame_of("20261010_190702_419_gap_check_seat_lifted_refused")
     gc = GapCheck(records=tmp_path / "checks")
     gc._registration[gc.registration_key("")] = 0.0076146446132198675
     a = gc.ask(rec["expect"], frame)
     assert not a.success and a.fixture_state == "not_lifted"
-    assert "seat band after masking the hands -> NOT lifted" in a.message
+    assert a.message.startswith("cannot judge (") and "NOT lifted" not in a.message, a.message
+    assert a.record["seat_fit"]["seat"]["state"] == "" and a.record["class"] == "refused"
 
 
 def test_every_doubt_is_not_lifted_and_every_check_is_recorded(tmp_path):
