@@ -852,8 +852,7 @@ def identity_of(run: dict, programs: dict, points: dict, overall: int) -> dict:
     if tasks:                                       # ALIX's plan files as they are: another plan is another run
         from . import mechanism
 
-        looks = {mechanism.FINAL_CHECKS[t][1] for t in tasks if t in mechanism.FINAL_CHECKS}   # whose way in each final check takes
-        used["mechanisms"] = {t: mechanism.digest(t) for t in sorted(set(tasks) | looks)}
+        used["mechanisms"] = {t: mechanism.digest(t) for t in sorted(set(tasks))}
     return dict(mode=run["mode"], pick=run["pick"], steps={s: [{k: v for k, v in st.items() if k != "_row"} for st in steps]
                                                                for s, steps in run["steps"].items()},
                 plan=plan_shape(run["plan"]), used=used, overall=int(overall))
@@ -1198,9 +1197,7 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     camera here): each arm to the plan's start (its pole and hand, then the MoveJ at the speed slider's speed), then the
     plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
     hand as Lite moves them, a hold where the plan holds, a moment where the camera is asked. The commode is in the
-    task's end state from its end. Then, as on the robot:
-    - the plan's final check (mechanism.FINAL_CHECKS): the right arm to its inspection pose by the way in ALIX
-      planned in that state, the camera, back along that way in, and to where the plan ended.
+    task's end state from its end; the plan's own end look (its last check, since 26 Oct) is among its entries.
     The arms in ``leave`` (their next task's start follows, next_after_tasks) go to no plan's end."""
     from . import mechanism, staging
 
@@ -1293,16 +1290,6 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     sim, a = act(plan.sides()[0], "wait", 0.0, f"{title}: done, {mechanism.TASKS[plan.name]['end']}",
                  phase=mechanism.PHASE_AFTER[plan.name])
     done(sim, a, 0.0)
-    if plan.name in mechanism.FINAL_CHECKS:          # the commode in its end state from here: the final check sees it
-        fc = mechanism.final_check(plan.name)
-        approach({"right": fc["by"].targets("start")["right"]}, f"the final check's way in, {fc['by'].title}'s start")
-        for e in fc["look"]:
-            entry(fc["by"], e)
-        check(fc["expect"], ", the final check")
-        for e in reversed([x for x in fc["look"] if x.kind == "arm"]):     # back along its way in, as Lite runs it
-            back(fc["by"], e)
-        if "right" not in leave:
-            approach({"right": plan.targets("end")["right"]}, "where it ended")
     return clock[0]
 
 

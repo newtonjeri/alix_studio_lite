@@ -379,6 +379,31 @@ stage_sequence:
   - stage: update_fixture_scene
     seat_angle_deg: -110.0
 
+  # ---------------------------------------------------------------------------
+  # 8. The END-STATE CHECK (Newton 2026-10-26): the right hand in its grasp (the
+  #    fist of the first look), the right arm to inspection_pose_1, where the
+  #    camera sees the open seat with the lid behind it (from pose 4 it sees
+  #    only the seat's lower part: the 12:20 run read "uncertain" five times),
+  #    the camera confirms the seat is OPEN (fail-closed; NO -> a person), then
+  #    the arm rests. The check rides move_to_rest as its pre_action.
+  # ---------------------------------------------------------------------------
+  - stage: hand_grasp
+    arm: right
+    pose_name: grasp
+    planning_group: inspire_hand_right
+
+  - stage: move_to_inspect
+    speed_class: freespace
+    arm: right
+    pose_name: inspection_pose_1
+    planning_group: rm75_arm_right
+
+  - stage: verify_seat_open
+    check: fixture_gap
+    expect: seat_open
+    arm: right
+    on_fail: abort
+
   - stage: move_to_rest
     speed_class: freespace
     arm: right

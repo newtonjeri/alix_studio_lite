@@ -36,9 +36,10 @@ lifted lid; if_observed: Close the seat after) is not asked since 26 Oct (the ow
 there, the look costs time, and the seat is judged once, at the end). After a hand lets go, the run goes on only when
 the hand did let go (``released``: every channel open, the wrist unloaded before a retract), else it stops for a person.
 
-After a plan has run, its end state is checked (FINAL_CHECKS; the owner, 21 Oct: a lid opening whose right side
-did not open the lid ran to its end all the same): the right arm goes to its inspection pose the way ALIX planned it
-in that state, the camera is asked, and a NOT stops the run. ALIX's plans check only on the way in.
+Each plan's end state is checked by the plan itself (the owner, 26 Oct: the end look belongs in ALIX's task configs, not
+in Lite): after the right arm's carry, its hand grasps, it moves to inspection_pose_1 and the camera confirms the end
+state before it rests (a check stage, on_fail abort: a NOT stops the run for a person). Until 26 Oct Lite added that
+look itself (FINAL_CHECKS, 21 Oct: a lid opening whose right side did not open the lid ran to its end all the same).
 """
 from __future__ import annotations
 
@@ -86,19 +87,6 @@ TASKS = {
 #: The closings (Close the seat, Close the lid) are not offered (the owner, 26 Oct: the plans of 25 Oct are not the
 #: final ones, removed and never run; the correct ones come later). The rows that ran them are plain arm steps until then.
 
-
-#: After each plan its end state, checked by the wrist camera (the owner, 21 Oct, after a lid opening whose right side did
-#: not open the lid and ran to its end all the same: "add a status check after completion to confirm the final state was
-#: reached"). The camera sees the lid and the seat from the right arm's inspection pose alone, so the right arm goes there
-#: as ALIX planned it in the state the plan leaves: the way in of the plan that starts in that state (its pole, its hand,
-#: its move_to_inspect); the camera is asked, judged as the plans' own checks are (lift_check); the right arm goes back to
-#: where the plan ended. A NOT stops the run: a person must look. {plan: (what the camera must see, whose way in looks)}
-#: Open the seat's end (lid and seat open) is looked at by its own way in (pose 4, since 26 Oct: no plan starts in that
-#: state now that the closings are gone; until then Close the seat's way in, pose 1).
-FINAL_CHECKS = {
-    "lid_open": ("lid_open", "seat_open"),                    # lid open, seat down: Open the seat starts there
-    "seat_open": ("seat_open", "seat_open"),                  # lid and seat open: its own way in
-}
 
 #: Lite's catalogue rows (docs/region_catalogue_commode_c.csv) and the plan each one runs
 ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T03": "seat_open", "R-T03": "seat_open"}
@@ -359,21 +347,6 @@ def cached(name: str) -> "Plan":
     return Plan(name)
 
 
-def final_check(name: str) -> dict:
-    """Plan ``name``'s end-state check (FINAL_CHECKS): {expect, action (written as the plans write a check), by (the plan
-    whose way in looks), look (its entries up to its move_to_inspect: the right arm's pole, hand and move)}."""
-    expect, by_name = FINAL_CHECKS[name]
-    by = cached(by_name)
-    k = next(i for i, e in enumerate(by.entries) if e.kind == "arm")
-    look = by.entries[: k + 1]
-    if look[-1].stage != "move_to_inspect" or any(e.side != "right" for e in look):
-        raise UserError(f"{by.title}'s way in is not the right arm's move to its inspection pose, so {TASKS[name]['title']}'s "
-                        "end state cannot be checked: nothing was moved.")
-    action = dict(type="check_fixture_state", stage=f"verify_{expect}_after", check="fixture_gap", expect=expect, arm="right",
-                  on_fail="abort", max_retries=0, prerequisite="")
-    return dict(expect=expect, action=action, by=by, look=look)
-
-
 def digest(name: str) -> str:
     """The plan file's sha256: what the simulation's identity holds, so another plan is another run."""
     return _sha256(cached(name).path)
@@ -545,8 +518,6 @@ class Runner:
             i += used
         for a in self.final_actions(plan):
             self.ex.hold(float(a.get("seconds") or 0.0), a.get("stage") or "hold_pose")
-        if not state["skipped"]:
-            self._final_check(plan)
         if state["skipped"] and self.k + 1 >= len(self.queue):
             ends = {s: t for s, t in plan.targets("end").items() if s not in self.leave}
             if ends:
@@ -554,42 +525,6 @@ class Runner:
         self.done.append(dict(plan=name, title=plan.title, outcome="skipped" if state["skipped"] else "done",
                               relifts=state["relifts"]))
         return "done"
-
-    def _final_check(self, plan) -> None:
-        """The plan's end state, seen by the camera (FINAL_CHECKS): the right arm to its inspection pose the way ALIX
-        planned it in that state, the camera asked, the right arm back along that way in (24 Oct: a MoveJ at the speed
-        slider took 3.2 s) and its pole and hand to where the plan ended, unless its next task's start follows the run
-        (``leave``). A NOT stops the run there."""
-        fc = final_check(plan.name)
-        a, expect, by = fc["action"], fc["expect"], fc["by"]
-        self.say(f"FINAL CHECK {plan.title}: the right arm to its inspection pose ({by.title}'s way in), the camera checks "
-                 f"{expect}")
-        self.ex.approach(by, {"right": by.targets("start")["right"]}, "start", words=f"the final check of {plan.title}")
-        for e in fc["look"]:
-            self.ex.check_stop()
-            self.ex.move(e)
-        answer = self.ex.ask(a, expect)
-        if not answer.success:
-            self._cannot_judge(a["stage"], expect, answer, f"{plan.title} ran to its end, but ", final=True)
-        passed = lift_check().evaluate_fixture_check(a, answer)
-        self.checks.append(dict(check=a["stage"], expect=expect, state=answer.fixture_state,
-                                confidence=round(float(answer.state_confidence), 2), verdict="PASS" if passed else "NO",
-                                message=answer.message, record=getattr(answer, "record_path", None), final=True))
-        self.say(f"FINAL CHECK {a['stage']}: expect {expect}, the camera says {answer.fixture_state} at "
-                 f"{float(answer.state_confidence):.2f} -> {'PASS' if passed else 'NO'}", "info" if passed else "error")
-        if not passed:
-            raise UserError(f"{plan.title} ran to its end, but the camera does not see {expect.replace('_', ' ')} after it "
-                            f"(it reads {answer.fixture_state} at {float(answer.state_confidence):.2f}).",
-                            "A person must look at the commode: nothing else was moved after this.", code="escalate")
-        if answer.fixture_state != expect:            # proven by a state that says more: the seat under the opened lid came up
-            self.say(f"FINAL CHECK {plan.title}: the camera reads {answer.fixture_state}, which proves {expect.replace('_', ' ')}"
-                     + ("; the seat came up with the lid: Open the seat finds it up and skips itself"
-                        if (plan.name, answer.fixture_state) == ("lid_open", "lid_seat_open") else ""), "warn")
-        for e in reverse_block(fc["look"], note="the final check's way in, reversed"):   # 24 Oct: a MoveJ at the slider, 3.2 s
-            self.ex.check_stop()
-            self.ex.move(e)
-        if "right" not in self.leave or self.k + 1 < len(self.queue):
-            self.ex.approach(plan, {"right": plan.targets("end")["right"]}, "end", words=f"where {plan.title} ended")
 
     def _cannot_judge(self, label, expect, answer, lead="", final=False):
         """A check its frames left undecided (FRAMES): a person must look; no plan policy runs, no re-lift (the owner,

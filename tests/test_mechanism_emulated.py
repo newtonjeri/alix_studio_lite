@@ -105,9 +105,9 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     res = done["result"]
     assert [(p["plan"], p["outcome"], p["relifts"]) for p in res["plans"]] == [("lid_open", "done", 1)]
     assert [c["verdict"] for c in res["checks"]] == ["PASS", "NO", "PASS", "PASS"]       # no second question (26 Oct)
-    assert res["checks"][-1]["check"] == "verify_lid_open_after" and res["checks"][-1]["final"]     # the end state, seen
+    assert res["checks"][-1]["check"] == "verify_lid_open" and not res["checks"][-1].get("final")   # the plan's own end look (26 Oct)
     said = " | ".join(e["text"] for e in done["events"])
-    assert "the right arm to its inspection pose (Open the seat's way in)" in said and "at where Open the lid ended" in said
+    assert "Open the seat's way in" not in said and "at where Open the lid ended" not in said   # no look of Lite's own (26 Oct)
     streams = [r for r in hardware(server) if r.get("verb") == "canfd stream"]
     assert streams and all(r["ok"] for r in streams), [r.get("text") for r in streams if not r["ok"]]
     labels = [r["args"]["label"] for r in streams]
@@ -130,7 +130,7 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     # ALIX's emulator reports a 100 % global ratio, so each stream sets 50 and puts 100 back (the robot's controllers
     # report none: 50 %, held across the run's moves; tests/test_robot_real.py)
     assert not any(r["args"]["ratio_held"] for r in streams)
-    assert any(x.startswith("RIGHT arm back along move_to_inspect") for x in labels)   # the final check, back along its way in
+    assert labels.count("RIGHT arm move_to_inspect") == 2 and labels[-1] == "RIGHT arm move_to_rest"   # the plan's two looks; its own end check rides rest
     hands = [r for r in hardware(server) if r.get("verb") == "hand move" and isinstance(r["args"]["speed_set"], list)]
     assert hands and all(len(r["args"]["speed_set"]) == 6 for r in hands)   # the plan's hand moves: ALIX's executive's speeds
 
@@ -171,11 +171,12 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     kinds = {a["kind"] for side in ("left", "right") for a in sim["acts"][side]}
     assert {"stream", "pole", "hand", "global", "check"} <= kinds
     assert sim["phases"][-1][1] == "lid_open"
-    right = sim["acts"]["right"]                 # drawn as it runs: the end check (lid open, seat down) by Open the seat's way in
+    right = sim["acts"]["right"]                 # drawn as it runs: the plan's own end check (lid open) from inspection pose 1
     assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_closed", "lid_lifted", "lid_open"]   # no seat under the lid
-    looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:seat_open:")]
-    assert looks and looks[0]["t0"] > next(t for t, ph in sim["phases"] if ph == "lid_open")      # with the lid open
-    assert not any("seat_close" in str(a.get("file")) for a in right)
+    looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:lid_open:")]
+    last_check = [a for a in right if a["kind"] == "check"][-1]
+    assert looks[-2]["t0"] < last_check["t0"] < looks[-1]["t0"]            # the look to pose 1, the camera, then the rest
+    assert not any("seat_close" in str(a.get("file")) or "seat_open" in str(a.get("file")) for a in right)
     assert any("left out of this collision check" in f["text"] for f in sim["findings"])
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
     server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))
