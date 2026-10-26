@@ -1,0 +1,636 @@
+08:56:24.483 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+08:56:24.526 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+08:56:24.526 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+08:56:27.026 [activity] - page: NAVIGATION · Open screen
+08:56:27.026 [activity] - page: SYSTEM · ASL frontend initialized
+08:56:27.899 [activity] - POST /api/auth/login
+08:56:28.718 [activity] operator:2094ad page: AUTH · Operator login
+08:56:28.718 [activity] operator:2094ad page: NAVIGATION · Open screen
+08:56:28.718 [activity] operator:2094ad page: AUTH · Setting changed
+08:56:29.138 [RIGHT] camera · perception warmed up in 5.6 s: its core built, the colour model loaded
+08:56:31.622 [activity] operator:2094ad page: UI · Button action
+08:56:31.633 [activity] operator:2094ad page: NAVIGATION · Task loaded
+08:56:31.636 [activity] operator:2094ad page: SETUP · Arm selected
+08:56:31.638 [activity] operator:2094ad page: NAVIGATION · Teaching stage changed
+08:56:31.640 [activity] operator:2094ad page: SETUP · Arm selected
+08:56:31.641 [activity] operator:2094ad page: NAVIGATION · Open screen
+08:56:35.780 [activity] operator:2094ad POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid and seat_close_right and Open the seat is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+08:56:36.077 [activity] operator:2094ad page: SYSTEM · 3D device
+08:56:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+08:57:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+08:57:36.181 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:57:36.416 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:57:43.367 [activity] operator:2094ad page: UI · Button action
+08:57:43.577 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:57:43.643 [LEFT] read global speed ret=0 · not reported
+08:57:43.644 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+08:57:43.733 [LEFT] read drag sensitivity ret=0 · 100 %
+08:57:43.733 [activity] operator:2094ad POST /api/robots/left/connect
+08:57:44.368 [LEFT] program list · 25 programs
+08:57:44.468 [LEFT] global points · 18 point(s)
+08:57:44.706 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:57:44.821 [RIGHT] read global speed ret=0 · not reported
+08:57:44.821 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+08:57:44.906 [RIGHT] read drag sensitivity ret=0 · 100 %
+08:57:44.906 [activity] operator:2094ad POST /api/robots/right/connect
+08:57:45.119 [RIGHT] program list · 18 programs
+08:57:45.238 [RIGHT] global points · 14 point(s)
+08:57:46.143 [activity] operator:2094ad POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+08:57:46.943 [activity] operator:2094ad page: ROBOT · Button action
+08:57:47.155 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:57:47.333 [LEFT] run mode REAL
+08:57:47.436 [RIGHT] run mode REAL
+08:57:47.436 [activity] operator:2094ad POST /api/robots/mode
+08:57:48.030 [activity] operator:2094ad page: ROBOT · Button action
+08:57:48.241 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:57:51.583 [activity] operator:2094ad page: UI · Button action
+08:57:51.583 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:57:51.794 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:57:55.657 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:57:58.665 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:57:58.665 [activity] operator:2094ad page: SYSTEM · Session active
+08:58:14.941 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:58:14.941 [activity] operator:2094ad page: UI · Button action
+08:58:15.682 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:58:16.990 [activity] operator:2094ad page: NAVIGATION · Button action
+08:58:16.990 [activity] operator:2094ad page: NAVIGATION · Open screen
+08:58:17.201 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:58:22.332 [RIGHT] program list · 18 programs
+08:58:22.339 [LEFT] program list · 25 programs
+08:58:22.434 [RIGHT] global points · 14 point(s)
+08:58:22.523 [LEFT] global points · 18 point(s)
+08:58:22.999 [activity] operator:2094ad page: SETUP · Button action
+08:58:22.999 [activity] operator:2094ad page: NAVIGATION · Open screen
+08:58:23.209 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:58:26.382 [activity] operator:2094ad page: UI · Button action
+08:58:26.595 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:58:27.541 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:58:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+08:58:30.516 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:58:43.412 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:58:46.200 [activity] operator:2094ad page: UI · Button action
+08:58:46.338 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:58:47.758 [activity] operator:2094ad page: TEACH · Button action
+08:58:47.758 [activity] operator:2094ad page: NAVIGATION · Open screen
+08:58:47.968 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:58:54.222 [activity] operator:2094ad page: UI · Button action
+08:58:54.433 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:58:55.334 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:58:57.926 [LEFT] program list · 25 programs
+08:58:57.936 [RIGHT] program list · 18 programs
+08:58:58.023 [RIGHT] global points · 14 point(s)
+08:58:58.029 [LEFT] global points · 18 point(s)
+08:58:58.401 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:58:58.402 [activity] operator:2094ad page: SEQUENCE · Button action
+08:58:58.402 [activity] operator:2094ad page: NAVIGATION · Open screen
+08:58:58.402 [activity] operator:2094ad page: SYSTEM · Session active
+08:58:58.645 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:59:00.640 [LEFT] controller data · 25 programs; IO default 0; tracks not available
+08:59:00.750 [LEFT] global points · 18 point(s)
+08:59:01.207 [activity] operator:2094ad page: UI · Button action
+08:59:01.423 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:59:02.250 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:59:03.534 [activity] operator:2094ad page: UI · Button action
+08:59:03.745 [activity] operator:2094ad PUT /api/projects/alix_mvbvk1fk_zti6s
+08:59:05.451 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:59:21.275 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:59:24.332 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:59:27.706 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:59:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+08:59:30.762 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:59:33.867 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+08:59:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:00:28.821 [activity] operator:2094ad page: SYSTEM · Session active
+09:00:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:01:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:01:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:02:28.721 [activity] operator:2094ad page: SYSTEM · Session active
+09:02:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:03:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:03:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:04:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:04:28.720 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+09:04:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:05:09.184 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+09:05:16.184 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+09:05:19.193 [activity] operator:2094ad page: NAVIGATION · Scrolled view
+09:05:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:05:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:06:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:06:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:07:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:07:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:08:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:08:58.822 [activity] operator:2094ad page: SYSTEM · Session active
+09:09:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:09:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:10:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:10:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:11:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:11:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:12:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:12:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:13:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:13:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:14:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:14:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:15:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:15:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:16:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:16:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:17:28.814 [activity] operator:2094ad page: SYSTEM · Session active
+09:17:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:18:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:18:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:19:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:19:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:20:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:20:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:21:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:21:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:22:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:22:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:23:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:23:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:24:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:24:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:25:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:25:58.809 [activity] operator:2094ad page: SYSTEM · Session active
+09:26:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:26:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:27:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:27:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:28:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:28:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:29:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:29:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:30:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:30:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:31:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:31:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:32:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:32:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:33:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:33:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:34:28.791 [activity] operator:2094ad page: SYSTEM · Session active
+09:34:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:35:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:35:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:36:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:36:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:37:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:37:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:38:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:38:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:39:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:39:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:40:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:40:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:41:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:41:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:42:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:42:58.798 [activity] operator:2094ad page: SYSTEM · Session active
+09:43:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:43:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:44:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:44:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:45:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:45:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:46:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:46:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:47:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:47:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:48:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:48:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:49:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:49:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:50:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:50:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:51:28.804 [activity] operator:2094ad page: SYSTEM · Session active
+09:51:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:52:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:52:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:53:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:53:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:54:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:54:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:55:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:55:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:56:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:56:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:57:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:57:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:58:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+09:58:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:59:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+09:59:58.806 [activity] operator:2094ad page: SYSTEM · Session active
+10:00:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:00:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:01:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+10:01:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+10:02:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:02:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:03:28.720 [activity] operator:2094ad page: SYSTEM · Session active
+10:03:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:04:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:04:58.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:05:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:05:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+10:06:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:06:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+10:07:28.719 [activity] operator:2094ad page: SYSTEM · Session active
+10:07:58.720 [activity] operator:2094ad page: SYSTEM · Session active
+10:08:28.809 [activity] operator:2094ad page: SYSTEM · Session active
+10:08:54.294 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+10:08:58.114 [LEFT] ALERT ERROR · LEFT: STOP sent, not confirmed by its controller within 5 s. (Press the red E-stop button on the robot if it is still moving.)
+10:09:13.459 [LEFT] ALERT ERROR · LEFT: its controller has not answered rm_set_arm_stop for 20 s (a reading). Lite gives that connection up and connects the arm again. What each thread was doing: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/threads-100913.txt. (Press the red E-stop button if the arm is moving.)
+10:09:13.463 [LEFT] restore global speed · not restored (The LEFT controller's connection ended during restoring the global speed: the arm must be connected again.)
+10:09:13.463 [LEFT] stop confirmed late (20.350 s) · LEFT: STOP not confirmed (no answer from its connection's process)
+10:09:13.465 [LEFT] ALERT ERROR · LEFT: STOP not confirmed (no answer from its connection's process) (confirmed after 20.4 s). (Press the red E-stop button on the robot if it is still moving.)
+10:09:13.575 [RIGHT] restore global speed {"pct": 50} ret=0
+10:10:18.056 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+10:10:18.100 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+10:10:18.100 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+10:10:19.730 [activity] - page: NAVIGATION · Open screen
+10:10:19.731 [activity] - page: SYSTEM · ASL frontend initialized
+10:10:20.132 [activity] - page: SYSTEM · Browser closing
+10:10:21.519 [RIGHT] camera · perception warmed up in 4.5 s: its core built, the colour model loaded
+10:10:55.820 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+10:10:55.866 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+10:10:55.866 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+10:10:57.522 [activity] - page: NAVIGATION · Open screen
+10:10:57.524 [activity] - page: SYSTEM · ASL frontend initialized
+10:10:59.252 [RIGHT] camera · perception warmed up in 4.5 s: its core built, the colour model loaded
+10:11:00.390 [activity] - POST /api/auth/login
+10:11:01.200 [activity] operator:a8e369 page: AUTH · Operator login
+10:11:01.201 [activity] operator:a8e369 page: NAVIGATION · Open screen
+10:11:01.201 [activity] operator:a8e369 page: AUTH · Setting changed
+10:11:02.580 [activity] operator:a8e369 page: UI · Button action
+10:11:03.389 [activity] operator:a8e369 page: NAVIGATION · Task loaded
+10:11:03.394 [activity] operator:a8e369 page: SETUP · Arm selected
+10:11:03.395 [activity] operator:a8e369 page: NAVIGATION · Teaching stage changed
+10:11:03.404 [activity] operator:a8e369 page: SETUP · Arm selected
+10:11:03.404 [activity] operator:a8e369 page: NAVIGATION · Open screen
+10:11:06.802 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid and seat_close_right and Open the seat is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+10:11:07.042 [activity] operator:a8e369 page: SYSTEM · 3D device
+10:11:07.042 [activity] operator:a8e369 page: NAVIGATION · Scrolled view
+10:11:11.154 [activity] operator:a8e369 page: NAVIGATION · Scrolled view
+10:11:18.542 [activity] operator:a8e369 page: NAVIGATION · Scrolled view
+10:11:21.515 [activity] operator:a8e369 page: UI · Button action
+10:11:21.515 [activity] operator:a8e369 page: NAVIGATION · Scrolled view
+10:11:21.727 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:31.203 [activity] operator:a8e369 page: SYSTEM · Session active
+10:11:39.474 [activity] operator:a8e369 page: UI · Button action
+10:11:39.686 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:43.979 [activity] operator:a8e369 page: UI · Button action
+10:11:44.191 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:44.365 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+10:11:44.906 [activity] operator:a8e369 page: UI · Button action
+10:11:44.906 [activity] operator:a8e369 page: NAVIGATION · Scrolled view
+10:11:44.907 [activity] operator:a8e369 page: UI · Button action
+10:11:45.117 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:45.802 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+10:11:45.824 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:46.346 [activity] operator:a8e369 page: UI · Button action
+10:11:46.557 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:50.219 [activity] operator:a8e369 page: UI · Button action
+10:11:50.219 [activity] operator:a8e369 page: NAVIGATION · Scrolled view
+10:11:50.429 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:52.304 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+10:11:52.305 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+10:11:52.842 [activity] operator:a8e369 page: UI · Button action
+10:11:53.054 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:55.068 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:55.172 [LEFT] read global speed ret=0 · not reported
+10:11:55.173 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+10:11:55.259 [LEFT] read drag sensitivity ret=0 · 100 %
+10:11:55.260 [activity] operator:a8e369 POST /api/robots/left/connect
+10:11:55.482 [LEFT] program list · 25 programs
+10:11:55.540 [activity] operator:a8e369 page: UI · Button action
+10:11:55.588 [LEFT] global points · 18 point(s)
+10:11:55.713 [RIGHT] read global speed ret=0 · not reported
+10:11:55.714 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+10:11:55.752 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:11:55.802 [RIGHT] read drag sensitivity ret=0 · 100 %
+10:11:55.802 [activity] operator:a8e369 POST /api/robots/right/connect
+10:11:56.043 [RIGHT] program list · 18 programs
+10:11:56.156 [RIGHT] global points · 14 point(s)
+10:11:56.373 [activity] operator:a8e369 page: NAVIGATION · Scrolled view
+10:12:01.202 [activity] operator:a8e369 page: SYSTEM · Session active
+10:12:04.810 [activity] operator:a8e369 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+10:12:05.610 [activity] operator:a8e369 page: ROBOT · Button action
+10:12:05.820 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:12:05.963 [LEFT] run mode REAL
+10:12:06.062 [RIGHT] run mode REAL
+10:12:06.063 [activity] operator:a8e369 POST /api/robots/mode
+10:12:06.659 [activity] operator:a8e369 page: ROBOT · Button action
+10:12:06.869 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:12:11.346 [activity] operator:a8e369 page: UI · Button action
+10:12:11.557 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:12:12.878 [activity] operator:a8e369 page: UI · Button action
+10:12:13.087 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:12:16.996 [LEFT] program list · 25 programs
+10:12:17.028 [activity] operator:a8e369 page: NAVIGATION · Scrolled view
+10:12:17.031 [activity] operator:a8e369 page: UI · Button action
+10:12:17.188 [RIGHT] program list · 18 programs
+10:12:17.287 [LEFT] global points · 18 point(s)
+10:12:17.429 [RIGHT] global points · 14 point(s)
+10:12:17.626 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT programs Lite sent, the RIGHT global points (as read from the controller), ALIX's plan of Open the lid and seat_close_right and Open the seat (revised since).
+10:12:17.789 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:12:18.986 [LEFT] program list · 25 programs
+10:12:19.286 [RIGHT] program list · 18 programs
+10:12:19.346 [activity] operator:a8e369 page: ROBOT · Button action
+10:12:19.449 [LEFT] global points · 18 point(s)
+10:12:19.556 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:12:19.561 [RIGHT] global points · 14 point(s)
+10:12:19.868 [LEFT] program list · 25 programs
+10:12:20.055 [RIGHT] program list · 18 programs
+10:12:20.167 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+10:12:31.151 [LEFT] program list · 25 programs
+10:12:31.204 [activity] operator:a8e369 page: SYSTEM · Session active
+10:12:31.206 [activity] operator:a8e369 page: ROBOT · Button action
+10:12:31.425 [RIGHT] program list · 18 programs
+10:12:31.537 [LEFT] global points · 18 point(s)
+10:12:31.707 [RIGHT] global points · 14 point(s)
+10:12:31.820 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:12:32.017 [LEFT] program list · 25 programs
+10:12:32.141 [RIGHT] program list · 18 programs
+10:12:32.575 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+10:12:32.678 [LEFT] run mode REAL
+10:12:32.818 [RIGHT] run mode REAL
+10:12:32.848 [LEFT] clear warning · clean
+10:12:32.946 [RIGHT] clear warning · clean
+10:12:33.190 [-] mechanism · PLAN 1/1: Open the lid (lid_open_toppra.json, 18 entries, 16.8 s of motion)
+10:12:33.357 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+10:12:33.408 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+10:12:33.440 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+10:12:33.487 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+10:12:33.568 [RIGHT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+10:12:33.569 [RIGHT] alix · hand: None (the state the stroke was planned with)
+10:12:33.628 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 992, 996, 994, 979, 955]; law 0.15 s)
+10:12:33.654 [LEFT] alix · hand: OPEN before the pole moves — from peripherals.HAND_OPEN — this plan authors no release stage and the caller named none
+10:12:33.714 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [994, 541, 987, 993, 981, 960]; law 0.46 s)
+10:12:33.792 [RIGHT] alix · hand: arrived at [1000, 993, 996, 994, 1000, 990] after 0.10 s (per-channel travel [0, 1, 0, 0, 21, 35])
+10:12:33.869 [RIGHT] stage {"pole_mm": 150.1, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [1000, 993, 996, 994, 1000, 990]
+10:12:34.215 [LEFT] alix · hand: arrived at [993, 1000, 994, 993, 997, 986] after 0.43 s (per-channel travel [1, 459, 7, 0, 16, 26])
+10:12:34.420 [LEFT] alix · pole: 75 mm -> 150 mm at 50 % (rm_set_lift_height non-blocking + getter wait, expect 3.05 s, timeout 9.1 s)
+10:12:35.280 [RIGHT] camera · camera open: Intel RealSense D435 425122070189, depth 848x480 (fx 432.7, scale 1 mm), colour 1280x720 (fx 904.5); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+10:12:36.636 [LEFT] alix · pole: at 148 mm after 2.21 s (verified_by=getter, moved 73 mm through 34 distinct readings)
+10:12:36.637 [LEFT] alix · hand: None (the state the stroke was planned with)
+10:12:36.698 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [993, 1000, 997, 993, 997, 986]; law 0.13 s)
+10:12:36.850 [LEFT] alix · hand: arrived at [993, 1000, 997, 993, 997, 986] after 0.10 s (per-channel travel [0, 0, 0, 0, 0, 0])
+10:12:36.932 [LEFT] stage {"pole_mm": 150.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 148 mm, hand [993, 1000, 997, 993, 997, 986]
+10:12:36.934 [RIGHT] alix · rest: movej to the plan's caller at speed 15 of a 100 % global ratio
+10:12:39.905 [RIGHT] alix · global speed restored to 50 (ret=0)
+10:12:40.001 [RIGHT] move to pose {"deg": [-0.0, -81.99, -26.0, 97.99, 6.0, 61.99, 69.0], "speed": 15, "restore_speed": 50} · gap 24.65799994087219 deg
+10:12:40.680 [RIGHT] camera · camera closed
+10:12:41.063 [LEFT] restore global speed {"pct": 50} ret=0
+10:12:41.160 [RIGHT] restore global speed {"pct": 50} ret=0
+10:12:41.162 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: The RIGHT arm did not reach the start (24.7 degrees away).
+10:12:41.162 [BOTH] ALERT ERROR · S2 Real Machine: both arms: The RIGHT arm did not reach the start (24.7 degrees away). (Check the arm on its pendant, then try again.)
+10:13:01.202 [activity] operator:a8e369 page: SYSTEM · Session active
+10:13:31.202 [activity] operator:a8e369 page: SYSTEM · Session active
+10:14:00.796 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:14:01.202 [activity] operator:a8e369 page: SYSTEM · Session active
+10:14:04.043 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:14:05.578 [LEFT] program list · 25 programs
+10:14:05.859 [RIGHT] program list · 18 programs
+10:14:06.015 [LEFT] global points · 18 point(s)
+10:14:06.097 [activity] operator:a8e369 page: UI · Button action
+10:14:06.106 [RIGHT] global points · 14 point(s)
+10:14:06.261 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT programs Lite sent, the RIGHT global points (as read from the controller), ALIX's plan of Open the lid and seat_close_right and Open the seat (revised since).
+10:14:06.850 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:14:07.335 [LEFT] program list · 25 programs
+10:14:07.827 [RIGHT] program list · 18 programs
+10:14:07.914 [activity] operator:a8e369 page: ROBOT · Button action
+10:14:07.941 [LEFT] global points · 18 point(s)
+10:14:08.126 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:14:08.146 [RIGHT] global points · 14 point(s)
+10:14:08.582 [LEFT] program list · 25 programs
+10:14:08.846 [RIGHT] program list · 18 programs
+10:14:08.958 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+10:14:11.125 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:14:13.063 [LEFT] program list · 25 programs
+10:14:13.299 [RIGHT] program list · 18 programs
+10:14:13.405 [LEFT] global points · 18 point(s)
+10:14:13.525 [RIGHT] global points · 14 point(s)
+10:14:13.569 [activity] operator:a8e369 page: ROBOT · Button action
+10:14:13.890 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:14:13.917 [LEFT] program list · 25 programs
+10:14:14.343 [RIGHT] program list · 18 programs
+10:14:14.614 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+10:14:14.723 [LEFT] run mode REAL
+10:14:14.826 [RIGHT] run mode REAL
+10:14:14.866 [LEFT] clear warning · clean
+10:14:15.017 [RIGHT] clear warning · clean
+10:14:15.300 [RIGHT] camera · camera open: Intel RealSense D435 425122070189, depth 848x480 (fx 432.7, scale 1 mm), colour 1280x720 (fx 904.5); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+10:14:15.306 [-] mechanism · PLAN 1/1: Open the lid (lid_open_toppra.json, 18 entries, 16.8 s of motion)
+10:14:15.472 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+10:14:15.520 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+10:14:15.547 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+10:14:15.595 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+10:14:15.624 [RIGHT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+10:14:15.624 [RIGHT] alix · hand: None (the state the stroke was planned with)
+10:14:15.674 [LEFT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+10:14:15.674 [LEFT] alix · hand: None (the state the stroke was planned with)
+10:14:15.678 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 993, 996, 994, 999, 985]; law 0.13 s)
+10:14:15.740 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [993, 1000, 997, 993, 997, 986]; law 0.13 s)
+10:14:15.861 [RIGHT] alix · hand: arrived at [1000, 993, 996, 994, 999, 985] after 0.11 s (per-channel travel [0, 0, 0, 0, 0, 0])
+10:14:15.913 [LEFT] alix · hand: arrived at [993, 1000, 997, 993, 997, 986] after 0.11 s (per-channel travel [0, 0, 0, 0, 0, 0])
+10:14:15.947 [RIGHT] stage {"pole_mm": 150.1, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [1000, 993, 996, 994, 999, 985]
+10:14:15.994 [LEFT] stage {"pole_mm": 150.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [993, 1000, 997, 993, 997, 986]
+10:14:16.024 [RIGHT] alix · rest: movej to the plan's caller at speed 15 of a 100 % global ratio
+10:14:17.352 [RIGHT] alix · global speed restored to 50 (ret=0)
+10:14:17.452 [RIGHT] move to pose {"deg": [-0.0, -81.99, -26.0, 97.99, 6.0, 61.99, 69.0], "speed": 15, "restore_speed": 50} · gap 23.40799994087219 deg
+10:14:17.747 [RIGHT] camera · camera closed
+10:14:18.124 [LEFT] restore global speed {"pct": 50} ret=0
+10:14:18.229 [RIGHT] restore global speed {"pct": 50} ret=0
+10:14:18.231 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: The RIGHT arm did not reach the start (23.4 degrees away).
+10:14:18.232 [BOTH] ALERT ERROR · S2 Real Machine: both arms: The RIGHT arm did not reach the start (23.4 degrees away). (Check the arm on its pendant, then try again.)
+10:14:29.207 [activity] operator:a8e369 page: SYSTEM · Application hidden
+10:15:13.891 [activity] operator:a8e369 page: SYSTEM · Application visible
+10:15:14.893 [LEFT] program list · 25 programs
+10:15:15.081 [activity] operator:a8e369 page: UI · Button action
+10:15:15.089 [RIGHT] program list · 18 programs
+10:15:15.216 [LEFT] global points · 18 point(s)
+10:15:15.295 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:15:15.413 [RIGHT] global points · 14 point(s)
+10:15:15.567 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT programs Lite sent, the RIGHT global points (as read from the controller), ALIX's plan of Open the lid and seat_close_right and Open the seat (revised since).
+10:15:16.954 [LEFT] program list · 25 programs
+10:15:17.150 [RIGHT] program list · 18 programs
+10:15:17.249 [LEFT] global points · 18 point(s)
+10:15:17.349 [RIGHT] global points · 14 point(s)
+10:15:17.521 [activity] operator:a8e369 page: ROBOT · Button action
+10:15:17.710 [LEFT] program list · 25 programs
+10:15:17.733 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:15:18.081 [RIGHT] program list · 18 programs
+10:15:18.193 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+10:15:18.744 [activity] operator:a8e369 page: UI · Button action
+10:15:18.955 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:15:20.108 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:15:20.767 [LEFT] program list · 25 programs
+10:15:21.003 [RIGHT] program list · 18 programs
+10:15:21.152 [LEFT] global points · 18 point(s)
+10:15:21.169 [activity] operator:a8e369 page: ROBOT · Button action
+10:15:21.279 [RIGHT] global points · 14 point(s)
+10:15:21.381 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:15:21.703 [LEFT] program list · 25 programs
+10:15:21.853 [RIGHT] program list · 18 programs
+10:15:22.240 [activity] operator:a8e369 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+10:15:22.349 [LEFT] run mode REAL
+10:15:22.441 [RIGHT] run mode REAL
+10:15:22.463 [LEFT] clear warning · clean
+10:15:22.582 [RIGHT] clear warning · clean
+10:15:22.850 [RIGHT] camera · camera open: Intel RealSense D435 425122070189, depth 848x480 (fx 432.7, scale 1 mm), colour 1280x720 (fx 904.5); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+10:15:22.856 [-] mechanism · PLAN 1/1: Open the lid (lid_open_toppra.json, 18 entries, 16.8 s of motion)
+10:15:23.008 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+10:15:23.058 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+10:15:23.083 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+10:15:23.130 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+10:15:23.182 [RIGHT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+10:15:23.183 [RIGHT] alix · hand: None (the state the stroke was planned with)
+10:15:23.230 [LEFT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+10:15:23.231 [LEFT] alix · hand: None (the state the stroke was planned with)
+10:15:23.232 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 993, 996, 994, 999, 986]; law 0.13 s)
+10:15:23.284 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [993, 1000, 997, 993, 997, 986]; law 0.13 s)
+10:15:23.409 [RIGHT] alix · hand: arrived at [1000, 993, 996, 994, 999, 985] after 0.11 s (per-channel travel [0, 0, 0, 0, 0, 1])
+10:15:23.474 [LEFT] alix · hand: arrived at [993, 1000, 997, 993, 997, 986] after 0.12 s (per-channel travel [0, 0, 0, 0, 0, 0])
+10:15:23.508 [RIGHT] stage {"pole_mm": 150.1, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [1000, 993, 996, 994, 999, 985]
+10:15:23.544 [LEFT] stage {"pole_mm": 150.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [993, 1000, 997, 993, 997, 986]
+10:15:23.580 [RIGHT] alix · rest: movej to the plan's caller at speed 15 of a 100 % global ratio
+10:15:25.810 [RIGHT] alix · global speed restored to 50 (ret=0)
+10:15:25.956 [RIGHT] move to pose {"deg": [-0.0, -81.99, -26.0, 97.99, 6.0, 61.99, 69.0], "speed": 15, "restore_speed": 50} · gap 23.40199989891052 deg
+10:15:26.279 [RIGHT] camera · camera closed
+10:15:26.614 [LEFT] restore global speed {"pct": 50} ret=0
+10:15:26.733 [RIGHT] restore global speed {"pct": 50} ret=0
+10:15:26.735 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: The RIGHT arm did not reach the start (23.4 degrees away).
+10:15:26.735 [BOTH] ALERT ERROR · S2 Real Machine: both arms: The RIGHT arm did not reach the start (23.4 degrees away). (Check the arm on its pendant, then try again.)
+10:15:31.203 [activity] operator:a8e369 page: SYSTEM · Session active
+10:15:31.941 [activity] operator:a8e369 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:15:46.419 [LEFT] restore global speed {"pct": 50} ret=0
+10:15:46.522 [RIGHT] restore global speed {"pct": 50} ret=0
+10:16:18.744 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+10:16:18.788 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+10:16:18.791 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+10:16:20.511 [activity] - page: NAVIGATION · Open screen
+10:16:20.512 [activity] - page: SYSTEM · ASL frontend initialized
+10:16:22.233 [RIGHT] camera · perception warmed up in 4.5 s: its core built, the colour model loaded
+10:16:26.935 [activity] - POST /api/auth/login
+10:16:26.942 [activity] operator:2bab49 page: UI · Button action
+10:16:27.744 [activity] operator:2bab49 page: AUTH · Operator login
+10:16:27.744 [activity] operator:2bab49 page: NAVIGATION · Open screen
+10:16:31.303 [activity] operator:2bab49 page: PROJECT · Button action
+10:16:31.305 [activity] operator:2bab49 page: NAVIGATION · Task loaded
+10:16:31.310 [activity] operator:2bab49 page: SETUP · Arm selected
+10:16:31.315 [activity] operator:2bab49 page: NAVIGATION · Teaching stage changed
+10:16:31.331 [activity] operator:2bab49 page: SETUP · Arm selected
+10:16:31.339 [activity] operator:2bab49 page: NAVIGATION · Open screen
+10:16:35.519 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid and seat_close_right and Open the seat is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+10:16:35.712 [activity] operator:2bab49 page: SYSTEM · 3D device
+10:16:38.721 [activity] operator:2bab49 page: NAVIGATION · Scrolled view
+10:16:57.746 [activity] operator:2bab49 page: SYSTEM · Session active
+10:17:16.096 [activity] operator:2bab49 page: NAVIGATION · Scrolled view
+10:17:27.113 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/simulate
+10:17:27.130 [activity] operator:2bab49 page: NAVIGATION · Scrolled view
+10:17:27.130 [activity] operator:2bab49 page: SYSTEM · Session active
+10:17:27.131 [activity] operator:2bab49 page: UI · Button action
+10:17:28.124 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:17:32.660 [activity] - job simulate done: S2 simulation (both arms)
+10:17:33.096 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+10:17:33.500 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+10:17:33.600 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+10:17:34.060 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+10:17:39.553 [activity] operator:2bab49 page: NAVIGATION · Scrolled view
+10:17:42.558 [activity] operator:2bab49 page: NAVIGATION · Scrolled view
+10:17:57.746 [activity] operator:2bab49 page: SYSTEM · Session active
+10:18:18.307 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/played
+10:18:24.217 [activity] operator:2bab49 page: NAVIGATION · Scrolled view
+10:18:27.407 [activity] operator:2bab49 page: UI · Button action
+10:18:27.407 [activity] operator:2bab49 page: NAVIGATION · Scrolled view
+10:18:27.407 [activity] operator:2bab49 page: SYSTEM · Session active
+10:18:27.619 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:18:36.148 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:18:37.599 [activity] operator:2bab49 POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+10:18:38.399 [activity] operator:2bab49 page: ROBOT · Button action
+10:18:38.399 [activity] operator:2bab49 page: ROBOT · Robot & mode opened
+10:18:38.611 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:18:42.813 [LEFT] read global speed ret=0 · not reported
+10:18:42.813 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+10:18:42.899 [LEFT] read drag sensitivity ret=0 · 100 %
+10:18:42.900 [activity] operator:2bab49 POST /api/robots/left/connect
+10:18:43.173 [activity] operator:2bab49 page: UI · Button action
+10:18:43.342 [RIGHT] read global speed ret=0 · not reported
+10:18:43.343 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+10:18:43.386 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:18:43.439 [RIGHT] read drag sensitivity ret=0 · 100 %
+10:18:43.440 [activity] operator:2bab49 POST /api/robots/right/connect
+10:18:43.595 [LEFT] program list · 25 programs
+10:18:43.661 [RIGHT] program list · 18 programs
+10:18:43.716 [LEFT] global points · 18 point(s)
+10:18:43.779 [RIGHT] global points · 14 point(s)
+10:18:53.549 [activity] operator:2bab49 page: UI · Button action
+10:18:53.760 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:18:57.745 [activity] operator:2bab49 page: SYSTEM · Session active
+10:19:11.145 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: The robot is in Visual sim, not Real: Real Machine Mode runs the sequence on the physical arms.
+10:19:11.945 [activity] operator:2bab49 page: UI · Button action
+10:19:11.945 [activity] operator:2bab49 page: ROBOT · Robot & mode opened
+10:19:12.190 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:19:16.763 [activity] operator:2bab49 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+10:19:17.563 [activity] operator:2bab49 page: ROBOT · Button action
+10:19:17.774 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:19:20.090 [LEFT] run mode REAL
+10:19:20.298 [RIGHT] run mode REAL
+10:19:20.298 [activity] operator:2bab49 POST /api/robots/mode
+10:19:20.791 [activity] operator:2bab49 page: ROBOT · Button action
+10:19:21.003 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:19:23.858 [activity] operator:2bab49 page: UI · Button action
+10:19:24.071 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:19:27.746 [activity] operator:2bab49 page: SYSTEM · Session active
+10:19:27.747 [activity] operator:2bab49 page: UI · Button action
+10:19:27.994 [LEFT] program list · 25 programs
+10:19:28.221 [RIGHT] program list · 18 programs
+10:19:28.316 [LEFT] global points · 18 point(s)
+10:19:28.442 [RIGHT] global points · 14 point(s)
+10:19:28.743 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:19:28.809 [LEFT] program list · 25 programs
+10:19:28.928 [RIGHT] program list · 18 programs
+10:19:29.039 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+10:19:34.736 [LEFT] program list · 25 programs
+10:19:35.110 [activity] operator:2bab49 page: ROBOT · Button action
+10:19:35.132 [RIGHT] program list · 18 programs
+10:19:35.317 [LEFT] global points · 18 point(s)
+10:19:35.324 [activity] operator:2bab49 PUT /api/projects/alix_mvbvk1fk_zti6s
+10:19:35.411 [RIGHT] global points · 14 point(s)
+10:19:35.749 [LEFT] program list · 25 programs
+10:19:35.950 [RIGHT] program list · 18 programs
+10:19:36.222 [activity] operator:2bab49 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+10:19:36.337 [LEFT] run mode REAL
+10:19:36.439 [RIGHT] run mode REAL
+10:19:36.474 [LEFT] clear warning · clean
+10:19:36.651 [RIGHT] clear warning · clean
+10:19:36.888 [-] mechanism · PLAN 1/1: Open the lid (lid_open_toppra.json, 18 entries, 16.8 s of motion)
+10:19:37.042 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+10:19:37.069 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+10:19:37.114 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+10:19:37.145 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+10:19:37.237 [RIGHT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+10:19:37.237 [RIGHT] alix · hand: None (the state the stroke was planned with)
+10:19:37.280 [LEFT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+10:19:37.280 [LEFT] alix · hand: None (the state the stroke was planned with)
+10:19:37.291 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [1000, 993, 996, 994, 999, 971]; law 0.14 s)
+10:19:37.335 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [993, 1000, 997, 993, 997, 973]; law 0.14 s)
+10:19:37.456 [RIGHT] alix · hand: arrived at [1000, 993, 996, 994, 999, 989] after 0.09 s (per-channel travel [0, 0, 0, 0, 0, 18])
+10:19:37.499 [LEFT] alix · hand: arrived at [993, 1000, 997, 993, 997, 992] after 0.10 s (per-channel travel [0, 0, 0, 0, 0, 19])
+10:19:37.524 [RIGHT] stage {"pole_mm": 150.1, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [1000, 993, 996, 994, 999, 989]
+10:19:37.616 [LEFT] stage {"pole_mm": 150.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [993, 1000, 997, 993, 997, 992]
+10:19:37.619 [RIGHT] alix · rest: movej to the plan's caller at speed 15 of a 100 % global ratio
+10:19:38.965 [RIGHT] alix · global speed restored to 50 (ret=0)
+10:19:38.966 [RIGHT] camera · camera open: Intel RealSense D435 425122070189, depth 848x480 (fx 432.7, scale 1 mm), colour 1280x720 (fx 904.5); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+10:19:39.085 [RIGHT] move to pose {"deg": [-0.0, -81.99, -26.0, 97.99, 6.0, 61.99, 69.0], "speed": 15, "restore_speed": 50} · gap 23.38300008392334 deg
+10:19:39.475 [RIGHT] camera · camera closed
+10:19:39.866 [LEFT] restore global speed {"pct": 50} ret=0
+10:19:40.062 [RIGHT] restore global speed {"pct": 50} ret=0
+10:19:40.064 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: The RIGHT arm did not reach the start (23.4 degrees away).
+10:19:40.064 [BOTH] ALERT ERROR · S2 Real Machine: both arms: The RIGHT arm did not reach the start (23.4 degrees away). (Check the arm on its pendant, then try again.)
+10:19:52.959 [LEFT] restore global speed {"pct": 50} ret=0
+10:19:53.052 [RIGHT] restore global speed {"pct": 50} ret=0

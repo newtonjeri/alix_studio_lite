@@ -2,7 +2,7 @@
  "id": "alix_mvbvk1fk_zti6s",
  "name": "Commode_C_17_10_2026",
  "createdAt": "2026-10-17T04:06:33.536Z",
- "updatedAt": "2026-10-24T15:58:09.885Z",
+ "updatedAt": "2026-10-26T02:19:35.312Z",
  "archived": false,
  "state": {
   "currentView": "sequence",
@@ -3395,7 +3395,7 @@
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-24T15:58:09.883Z"
+      "savedAt": "2026-10-26T02:19:35.310Z"
      }
     },
     "ugvPositionByArm": {
@@ -3421,7 +3421,7 @@
      "Thumb Bend": 150,
      "Thumb Rotate": 1000
     },
-    "leftStartPose": "gp:L_HME_POS",
+    "leftStartPose": "gp:L_R11_STP",
     "rightStartPose": "gp:R_T06_STP",
     "trajectoryFileName": "R_TASK_11B_trajectory.txt",
     "leftProgramId": 63,
@@ -3429,7 +3429,7 @@
     "leftApproved": true,
     "rightApproved": false,
     "completed": false,
-    "lastUpdated": "2026-10-24T15:58:09.883Z",
+    "lastUpdated": "2026-10-26T02:19:35.310Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -4166,7 +4166,7 @@
    150,
    1000
   ],
-  "leftPose": "gp:L_HME_POS",
+  "leftPose": "gp:L_R11_STP",
   "rightPose": "gp:R_T06_STP",
   "programId": "63",
   "fileName": "R_TASK_11B_trajectory.txt",
@@ -4459,7 +4459,7 @@
   "sequenceVisualConfirmed": false,
   "fullSimulationApproved": false,
   "elapsed": 0,
-  "savedAt": "2026-10-24T15:58:09.885Z"
+  "savedAt": "2026-10-26T02:19:35.312Z"
  },
  "lastSaveReason": "Workflow updated",
  "lite": {
