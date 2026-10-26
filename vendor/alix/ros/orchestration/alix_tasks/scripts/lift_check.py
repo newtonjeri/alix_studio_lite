@@ -72,9 +72,9 @@ OPPOSITE_STATES = {'lid_lifted': LIFTED_STATES['lid_closed'],
 # cannot judge, and a check that cannot judge stops for a person: the senders
 # escalate it whatever the plan's on_fail says (never a re-lift, a skip or a
 # prerequisite).
-CHECK_FRAMES_FIRST = 3
+CHECK_FRAMES_FIRST = 2      # 26 Oct: two frames that agree decide (was 3; a third and more only when they disagree)
 CHECK_FRAMES_MAX = 5
-CHECK_FRAME_SPACING_S = 0.3
+CHECK_FRAME_SPACING_S = 0.15   # 26 Oct: the depth noise is independent frame to frame (was 0.3)
 
 #: `decide` verdicts
 PASS, FAIL, UNDECIDED = 'pass', 'fail', 'undecided'
@@ -157,12 +157,12 @@ def frame_vote(action, answer) -> str | None:
 def decide(action, answers) -> str:
     """PASS, FAIL or UNDECIDED from the frames asked so far.
 
-    After CHECK_FRAMES_FIRST (3) frames: >= 2 yes and 0 no -> PASS; >= 2 no and
-    0 yes -> FAIL; anything else -> UNDECIDED (take two more).
-    After CHECK_FRAMES_MAX (5) frames: (>= 2 yes and 0 no) or (>= 3 yes and
+    From CHECK_FRAMES_FIRST (2) frames on: >= 2 yes and 0 no -> PASS; >= 2 no and
+    0 yes -> FAIL; anything else -> UNDECIDED (take one more, up to five).
+    At CHECK_FRAMES_MAX (5) frames: (>= 2 yes and 0 no) or (>= 3 yes and
     <= 1 no) -> PASS; the same for no -> FAIL; else UNDECIDED.
-    Fewer than three frames is always UNDECIDED; a sender consults this at three
-    frames and at five."""
+    Fewer than two frames is always UNDECIDED; a sender consults this at every
+    frame from the second on (26 Oct; before: at three and at five)."""
     votes = [frame_vote(action, a) for a in answers or []]
     yes, no = votes.count('yes'), votes.count('no')
     if len(votes) < CHECK_FRAMES_FIRST:

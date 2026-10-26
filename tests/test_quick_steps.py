@@ -18,7 +18,7 @@ def _arm(joints_deg, hw):
     arm.side, arm.SIDE = "left", "LEFT"
     robot = SimpleNamespace(rm_get_current_arm_state=lambda: (0, {"joint": list(joints_deg)}))
     arm.link = SimpleNamespace(busy=lambda *a, **k: contextlib.nullcontext(), emulated=True, handle=SimpleNamespace(robot=robot))
-    arm._ratio, arm._hand, arm._hand_speeds = None, None, None
+    arm._ratio, arm._hand, arm._hand_speeds, arm._hand_last = None, None, None, None
     arm._hw = lambda verb, **kw: hw.append((verb, kw))
     arm._alix_log = lambda: (lambda *a: None)
     return arm
@@ -249,3 +249,163 @@ def test_a_move_the_arm_has_crept_from_is_bridged_at_40_percent_up_to_3_degrees(
     mechanism.RealExec.move(fake(crept), retract, bridge=True)             # a re-lift's own bridge keeps the slider's speed
     assert streams[-1] == 15
     assert (mechanism.BRIDGE_MAX_DEG, mechanism.BRIDGE_SPEED_PCT) == (3.0, 40) and mechanism.start_tol_deg() == pytest.approx(0.72, abs=0.01)
+
+
+HAND_ARRIVE_COUNTS, HAND_SETTLE_COUNTS, HAND_DOF, HAND_DEADBAND_COUNTS = 15, 3, 6, 10     # ALIX's hand rules, for the stand-in below
+
+
+class _HandBase:
+    """ALIX's HandModbus as _quick_hand needs it: command(wait=False) writes and reports, read() follows a script on the
+    fake clock, _sleep turns the clock."""
+    poll_s = 0.05
+
+    def __init__(self, clock, series, before, log):
+        self.clock, self.series, self.before, self.log, self.t0 = clock, series, before, log, None
+
+    def _sleep(self, dt):
+        self.clock.sleep(dt)
+
+    def read(self):
+        if self.t0 is None:
+            return list(self.before)
+        e = self.clock.t - self.t0
+        return list(next((v for t, v in reversed(self.series) if e >= t), self.before))
+
+    def command(self, counts, wait=True, timeout_s=None):
+        self.t0 = self.clock.t
+        return dict(ok=True, ret=0, target=list(counts), before=list(self.before), after=None, settled=False, arrived=False,
+                    t_s=0.0, law_s=0.9, timeout_s=3.7, series=[], moved=[0] * 6, stuck=[], miss=None, held=[], write=None, partial=False)
+
+
+def test_a_hand_stopped_on_the_glove_is_done_before_the_strokes_time(monkeypatch):
+    """26 Oct: a grasp the glove stops at about 450 counts within 0.3 s waited ALIX's whole 0.9 s stroke before two alike
+    reads counted; now three reads in a row alike after the hand moved, from 0.25 s on, end it (the owner). A hand that
+    arrives is arrived; one that never moves waits the stroke and is reported stuck, as ALIX reports it."""
+    clock = _Clock()
+    monkeypatch.setattr(robot_real, "time", clock)
+    said = []
+    Hand = robot_real._quick_hand(_HandBase)
+    grasp = [33, 33, 33, 33, 133, 944]
+    glove = [(0.0, [1000] * 6), (0.1, [800, 800, 800, 800, 600, 950]), (0.2, [470, 460, 475, 500, 180, 940]), (0.3, [470, 460, 475, 500, 180, 940])]
+    h = Hand(clock, glove, [1000] * 6, said.append)
+    out = h.command(grasp)
+    assert out["ok"] and out["settled"] and out["stalled"] and not out["arrived"] and 0.3 <= out["t_s"] <= 0.45
+    assert out["after"] == [470, 460, 475, 500, 180, 940] and "stopped on force, done before the stroke's 0.90 s" in said[0]
+    said.clear()
+    arrive = [(0.0, [1000] * 6), (0.1, [800] * 6), (0.2, [600] * 6), (0.3, [400] * 6), (0.4, [40, 35, 33, 33, 140, 944])]
+    out = Hand(clock, arrive, [1000] * 6, said.append).command(grasp)
+    assert out["ok"] and out["arrived"] and not out.get("stalled") and 0.4 <= out["t_s"] <= 0.5
+    said.clear()
+    dead = [(0.0, [1000] * 6)]
+    out = Hand(clock, dead, [1000] * 6, said.append).command(grasp)
+    assert out["ok"] and out["settled"] and not out.get("stalled") and out["t_s"] >= 0.9                 # ALIX's rule: the stroke, then alike
+    assert out["stuck"] == [1, 2, 3, 4, 5, 6] and any("did NOT" in x for x in said)
+    assert (robot_real.HAND_STALL_PAIRS, robot_real.HAND_STALL_MIN_S) == (3, 0.25)
+
+
+def test_a_hand_asked_for_the_counts_it_settled_short_of_is_not_sent_again(monkeypatch):
+    """The plan's half-grasp after the approach's: the hand stands at 582 where the glove stopped it, 66 counts from the
+    516 asked, so the within-20-counts rule sent it again (1.25 s); asked for the very counts its last move settled
+    short of, and still there, it is not sent (26 Oct). Anything else that moves the hand forgets that."""
+    from alix_dispatch import peripherals
+
+    sent, hw = [], []
+
+    class FakeHand:
+        poll_s, speed_set = 0.01, 500
+        at = [582, 534, 541, 577, 445, 927]
+
+        def __init__(self, robot, side, log=None):
+            pass
+
+        def open(self, speed_set=500):
+            return 0
+
+        def read(self):
+            return list(self.at)
+
+        def set_speed(self, v):
+            return 0
+
+        def command(self, counts, wait=True):
+            sent.append(list(counts))
+            return dict(ok=True, arrived=False, settled=True, after=list(self.at), ret=0, t_s=0.9)
+
+    monkeypatch.setattr(peripherals, "HandModbus", FakeHand)
+    half = [516, 516, 516, 516, 133, 944]
+    arm = _arm([0.0] * 7, hw)
+    arm._hand_last = None
+    out = arm.hand_to(half)                                                    # sent: settled short on the glove
+    assert sent == [half] and out["settled"] and arm._hand_last == dict(counts=half, after=FakeHand.at)
+    out = arm.hand_to(half)                                                    # asked again where it still stands: not sent
+    assert out["skipped"] and sent == [half] and "already commanded to these counts and settled at" in hw[-1][1]["text"]
+    arm._hand_last = None                                                      # a runner call or a staging moved it since
+    arm.hand_to(half)
+    assert sent == [half, half]
+    FakeHand.at = [993, 993, 993, 993, 981, 992]                               # it moved (something else opened it): sent
+    arm.hand_to(half)
+    assert sent == [half, half, half]
+
+
+def test_the_approachs_two_movejs_go_at_once_when_their_paths_are_checked_clear(monkeypatch):
+    """26 Oct: the two MoveJs to a plan's start went one after the other, 1.6 to 3.2 s a task. With S2's world (home,
+    scene, fixture) each arm's straight joint-space path is sampled and every pair of the two samples checked
+    (collision_check.check_states, 49 states) while the poles and hands move; clear, both MoveJs go at once; not clear,
+    or no world (a task run on its own), one after the other as before, with the reason said."""
+    import threading
+    import time as _time
+
+    from alix_studio_lite.server import collision_check
+
+    plan = mechanism.Plan("lid_open")
+    asked, said, moved = [], [], []
+
+    def check_states(times, arms, home, scene, fid, phases, cubicle_mm=1400, progress=None):
+        asked.append(dict(n=len(times), sides=sorted(arms), phase=phases[0], fid=fid, q0=arms["left"]["q"][0], q1=arms["left"]["q"][-1],
+                          pole=arms["right"]["pole"][0], hand=arms["right"]["hand"][0]))
+        return dict(ok=not scene.get("blocked"), seconds=0.1, first=dict(what=["the two arms"]), events=[1])
+
+    monkeypatch.setattr(collision_check, "check_states", check_states)
+
+    class Arm:
+        def __init__(self, side):
+            self.side = side
+
+        def drop_hand(self):
+            pass
+
+        def pole_and_hand(self, mm, hand, stop_hook=None):
+            _time.sleep(0.05)
+            return dict(pole_ok=True, hand_ok=True, pole_mm=mm, hand=list(hand))
+
+        def move_to(self, target, speed, restore_pct):
+            t0 = _time.monotonic()
+            _time.sleep(0.1)
+            moved.append((self.side, t0, _time.monotonic(), threading.current_thread().name))
+            return dict(gap_deg=0.1)
+
+    def fake(scene):
+        here = {"left": [0.0, -82.0, 26.0, 98.0, -6.0, 62.0, 111.0], "right": [10.0, -80.0, -26.0, 98.0, 6.0, 62.0, 69.0]}
+        links = {s: SimpleNamespace(view=lambda s=s: dict(reader=True, view_age_s=0.0, feedback=dict(age_s=0.1, joints_deg=here[s])),
+                                    read_fresh=lambda s=s: dict(joints_deg=here[s])) for s in ("left", "right")}
+        return SimpleNamespace(robot=SimpleNamespace(speed_pct=40, _measured=lambda side: (150.0, [1000] * 6), found_speed=lambda side: 50, links=links),
+                               job=SimpleNamespace(progress=lambda *a, **k: None, on_cancel=None), check_stop=lambda: None,
+                               say=lambda text, level="info": said.append(text), _arm=lambda side: Arm(side), _frames=None,
+                               room=None if scene is None else dict(home={}, scene=scene, fid="commode_c", cubicle_mm=1400),
+                               _reading=lambda link: link.view()["feedback"],
+                               _paths_clear=lambda *a, **k: mechanism.RealExec._paths_clear(fake_self[0], *a, **k))
+    fake_self = [None]
+    for scene, together in ((None, False), ({"blocked": True}, False), ({"blocked": False}, True)):
+        moved.clear(); said.clear(); asked.clear()
+        ex = fake(scene); fake_self[0] = ex
+        mechanism.RealExec.approach(ex, plan, plan.targets("start"), "start")
+        assert len(moved) == 2
+        overlap = moved[0][1] < moved[1][2] and moved[1][1] < moved[0][2]
+        assert overlap == together, (scene, moved, said)
+        if scene is not None:
+            assert asked and asked[0]["n"] == 49 and asked[0]["phase"] == "lid_closed" and asked[0]["sides"] == ["left", "right"]
+            assert asked[0]["q1"] == plan.targets("start")["left"]["arm_deg"] and asked[0]["q0"] == [0.0, -82.0, 26.0, 98.0, -6.0, 62.0, 111.0]
+            assert asked[0]["pole"] == pytest.approx(150.1, abs=0.1) and asked[0]["hand"] == [33, 33, 33, 33, 133, 944]
+        if scene is not None and not together:
+            assert any("one after the other: the paths would meet: the two arms" in t for t in said)
+    assert mechanism.APPROACH_GRID == 7 and mechanism.PHASE_BEFORE == {"lid_open": "lid_closed", "seat_open": "lid_open"}

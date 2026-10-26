@@ -299,7 +299,7 @@ def test_each_check_writes_its_frames_and_what_they_decided(tmp_path):
     assert len(rows) == 1, rows
     s = json.loads(rows[0].read_text())
     assert s["decided"] and s["state"] == "seat_lifted" and s["expect"] == "seat_lifted"
-    assert [(f["success"], f["state"]) for f in s["frames"]] == [(True, "seat_lifted"), (True, "seat_lifted"), (False, "not_lifted")]
+    assert [(f["success"], f["state"]) for f in s["frames"]] == [(True, "seat_lifted"), (True, "seat_lifted")]   # decided on two (26 Oct)
 
 
 def test_a_checks_frames_are_named_beside_it_so_pulled_logs_open_them(tmp_path):
@@ -309,26 +309,29 @@ def test_a_checks_frames_are_named_beside_it_so_pulled_logs_open_them(tmp_path):
 
     checks = tmp_path / "checks"
     ex, _ = _frames_exec([replace(_seen("lid_lifted"), record_path=str(checks / f"20261024_1141{k}0_000_gap_check_x.json"))
-                          for k in range(2)] + [replace(REFUSED, record_path=None)])
+                          for k in range(2)])
     ex.kit.records_dir = lambda what: tmp_path / what
     ex.ask(LID_LIFTED, "lid_lifted")
     s = json.loads(next(checks.glob("*_frames.json")).read_text())
-    assert [f["record"] for f in s["frames"]] == ["20261024_114100_000_gap_check_x.json", "20261024_114110_000_gap_check_x.json", None]
+    assert [f["record"] for f in s["frames"]] == ["20261024_114100_000_gap_check_x.json", "20261024_114110_000_gap_check_x.json"]
 
 
-def test_each_check_is_decided_on_three_frames_or_five():
-    """The owner, 23 Oct: "for every check we should be using 3 frames ... for a failed classification in 3, we add 2
-    more frames, a total of 5", ruled by ALIX's own lift_check.decide (24 Oct: the same vote as ALIX's senders): each
-    frame votes yes / no / nothing on the expectation (a refused frame, or below 0.5, nothing); after 3, 2 yes and no
-    no pass, 2 no and no yes fail; after 5, also 3 yes with at most 1 no. 0.3 s between frames."""
-    ex, slept = _frames_exec([_seen("seat_lifted", 0.8), _seen("seat_lifted", 1.0), REFUSED, _seen("seat_closed")])
+def test_each_check_is_decided_on_two_frames_that_agree_or_more_one_at_a_time():
+    """The owner, 23 Oct: three frames, two more when they do not settle it; 26 Oct: two frames that agree decide (the
+    depth noise is independent frame to frame), a third and more one at a time up to five, ruled by ALIX's own
+    lift_check.decide: yes / no / nothing per frame; from two frames on, 2 yes and no no pass, 2 no and no yes fail;
+    at five, also 3 yes with at most 1 no. 0.15 s between frames."""
+    ex, slept = _frames_exec([_seen("seat_lifted", 0.8), _seen("seat_lifted", 1.0), REFUSED])
     a = ex.ask(SEAT_LIFTED, "seat_lifted")
     assert a.success and a.fixture_state == "seat_lifted" and a.state_confidence == pytest.approx(0.8)   # the first yes
-    assert a.message.startswith("3 frames (seat_lifted, seat_lifted, refused; 2 yes, 0 no, 1 no vote)") and slept == [0.3, 0.3]
+    assert a.message.startswith("2 frames (seat_lifted, seat_lifted; 2 yes, 0 no, 0 no vote)") and slept == [0.15]
+    ex, slept = _frames_exec([_seen("seat_lifted"), REFUSED, _seen("seat_lifted")])             # a refused frame: one more
+    a = ex.ask(SEAT_LIFTED, "seat_lifted")
+    assert a.success and a.message.startswith("3 frames") and slept == [0.15, 0.15]
     ex, slept = _frames_exec([_seen("seat_lifted"), _seen("seat_closed"), REFUSED, _seen("seat_lifted"), _seen("seat_lifted")])
     a = ex.ask(SEAT_LIFTED, "seat_lifted")
     assert a.success and a.fixture_state == "seat_lifted" and a.message.startswith("5 frames") and len(slept) == 4
-    ex, _ = _frames_exec([_seen("seat_closed")] * 3)               # a clear NOT: the plan's own policy follows
+    ex, _ = _frames_exec([_seen("seat_closed")] * 2)               # a clear NOT: the plan's own policy follows
     a = ex.ask(SEAT_LIFTED, "seat_lifted")
     assert a.success and a.fixture_state == "seat_closed"
     ex, _ = _frames_exec([REFUSED] * 5)                            # the lab's glove over the window, five times
@@ -338,7 +341,58 @@ def test_each_check_is_decided_on_three_frames_or_five():
     ex, _ = _frames_exec([_seen("seat_lifted"), _seen("seat_closed"), REFUSED, _seen("seat_closed"), REFUSED])
     assert not ex.ask(SEAT_LIFTED, "seat_lifted").success          # 1 yes against 2 no of 5: no decision
     ex, _ = _frames_exec([_seen("seat_lifted"), _seen("seat_lifted"), _seen("seat_closed"), REFUSED, REFUSED])
-    assert not ex.ask(SEAT_LIFTED, "seat_lifted").success          # 2 yes but 1 no: neither 3 nor 5 frames settle it
+    assert ex.ask(SEAT_LIFTED, "seat_lifted").success              # decided on the first two, before the no came
+
+
+def test_two_checks_at_one_pose_judge_the_same_frames():
+    """The seat's start asks lid open, then seat closed, from inspection pose 4: the second check judges the frames the
+    first took (26 Oct: 2.5 s of new frames a run), as long as nothing moved since; a move, an approach or a hold
+    forgets them, and so does FRAMES_REUSE_S."""
+    from types import SimpleNamespace
+
+    from alix_studio_lite.server.gap_check import DepthFrame
+
+    slept, shots, judged = [], [], []
+    job = SimpleNamespace(progress=lambda *a, **k: None, set=lambda **k: None, sleep=slept.append, check=lambda: None)
+    gap = SimpleNamespace(ask=lambda expect, frame, q_deg=None: judged.append((expect, frame.context["check"]["frame"], frame.context["check"].get("reused", False)))
+                          or _seen(expect), p={"gap_hand_frames": []}, flush=lambda: None)
+    ex = mechanism.RealExec(job, SimpleNamespace(), {}, SimpleNamespace(scripted=lambda expect: None, records_dir=lambda what: None, gap=gap))
+
+    def shot(check=None):
+        shots.append(check["frame"])
+        return DepthFrame(depth=None, intrinsics=None, cam_to_base=None, context=dict(check=check)), [0.0] * 7
+
+    ex._shot = shot
+    a = ex.ask({"stage": "verify_lid_open", "check": "fixture_gap", "expect": "lid_open"}, "lid_open")
+    assert a.success and shots == [1, 2] and slept == [0.15]
+    b = ex.ask({"stage": "verify_seat_closed", "check": "fixture_gap", "expect": "seat_closed"}, "seat_closed")
+    assert b.success and b.fixture_state == "seat_closed" and shots == [1, 2]                  # no new frame
+    assert judged[2:] == [("seat_closed", 1, True), ("seat_closed", 2, True)] and slept == [0.15]
+    ex.hold(0.0, "settle")                                                                      # anything that moves forgets them
+    ex.ask({"stage": "verify_seat_lifted", "check": "fixture_gap", "expect": "seat_lifted"}, "seat_lifted")
+    assert shots == [1, 2, 1, 2]
+    ex._frames = (ex._frames[0] - mechanism.FRAMES_REUSE_S - 1, ex._frames[1])                   # too old
+    ex.ask({"stage": "verify_seat_lifted", "check": "fixture_gap", "expect": "seat_lifted"}, "seat_lifted")
+    assert shots == [1, 2, 1, 2, 1, 2]
+
+
+def test_a_plans_final_release_is_not_sent_when_the_next_start_sets_the_hand():
+    """S2 sets each arm's pole and hand for its next task's start right after a lid or seat task (24 Oct), so the plan's
+    final hand release of that arm is not sent (the owner, 26 Oct); an arm with no such start keeps it, and a final
+    move is never dropped."""
+    ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])
+    mechanism.Runner(ex, leave={"right"}, hand_set={"right"}).run("lid_open")
+    assert moves(ex)[-1][1:3] == ("move_to_rest", "right") and not [m for m in moves(ex) if m[1:3] == ("hand_release", "right") and m is moves(ex)[-1]]
+    assert [m[1:3] for m in moves(ex)].count(("hand_release", "right")) == 1              # the one before the push stays
+    ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])
+    mechanism.Runner(ex, leave={"right"}).run("lid_open")                                    # no hand set next: sent
+    assert moves(ex)[-1][1:3] == ("hand_release", "right")
+    ex = FakeExec(["lid_open", "seat_closed", "seat_lifted", "seat_open"])
+    mechanism.Runner(ex, hand_set={"left", "right"}).run("seat_open")
+    left = [m for m in moves(ex) if m[2] == "left"]
+    assert left[-1][1].endswith("move_to_rest") and moves(ex)[-1][1:3] == ("move_to_rest", "right")   # both trailing releases unsent
+    entries = list(mechanism.Plan("seat_open").entries)
+    assert len(mechanism.trailing_releases(entries, {"left", "right"})) == 2 and not mechanism.trailing_releases(entries, ())
 
 
 def test_the_seat_is_not_looked_for_under_the_lifted_lid():

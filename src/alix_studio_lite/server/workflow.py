@@ -1192,7 +1192,13 @@ def stage_off(S: str, row, pid: int, st, pole, hand, set_pole: bool, set_hand: b
 HOLDS_AFTER = {"lid_open": {"lid_open", "seat_closed"}, "seat_open": {"lid_open", "seat_open"}}
 
 
-def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=()) -> float:
+def hand_set(st: dict) -> set:
+    """The arms whose next task's start sets the hand (``then`` with a hand): the plan's final release of that hand is
+    not sent (mechanism.trailing_releases)."""
+    return {s for s, t in (st.get("then") or {}).items() if t.get("hand") is not None}
+
+
+def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=(), hand_set=()) -> float:
     """A lid or seat task in the simulation, as Lite runs it (mechanism.Runner) with its checks answered as expected (no
     camera here): each arm to the plan's start (its pole and hand, then the MoveJ at the speed slider's speed), then the
     plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
@@ -1229,15 +1235,21 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                 sim, a = act(side, "pole_hand", dur, f"{title}: pole {mm:g} mm with the hand " + ",".join(str(v) for v in vals) + f" ({where})")
                 sim.pole, sim.hand = mm, vals
                 done(sim, a, dur)
+        t_start, ends = clock[0], []                       # both arms' MoveJs at once (26 Oct: their paths checked in Real)
+        for side, tg in targets.items():
             if "arm_deg" in tg:
+                sim = sims[side]
+                clock[0] = t_start
                 if sim.known and max(abs(a - b) for a, b in zip(sim.q, tg["arm_deg"])) <= staging.MOVEJ_SKIP_DEG:
                     mv = ROBOT_TIMES["global_there_s"][1]       # already there: one reading, no MoveJ (26 Oct)
                     sim, a = act(side, "wait", mv, f"{title}: already at {where}, no MoveJ")
                 else:
                     mv = movej_s(sim.q, tg["arm_deg"], float(overall), sim.rating)
-                    sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({overall} %)", move_s=round(mv, 4), drawn=True)
+                    sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({overall} %, both arms at once)", move_s=round(mv, 4), drawn=True)
                 sim.q, sim.known = [float(v) for v in tg["arm_deg"]], True
                 done(sim, a, mv)
+                ends.append(clock[0])
+        clock[0] = max(ends) if ends else clock[0]
 
     def check(expect, words):
         sim, a = act(camera, "check", CHECK_S, f"{title}: the camera checks {expect}{words} (assumed here)", expect=expect)
@@ -1272,6 +1284,7 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         """``owner`` from its start: its entries and their checks, these answered by ``holds`` when given (ended at the
         first that does not hold and skips). True when it skipped."""
         approach(owner.targets("start"), "its start" if owner is plan else f"{owner.title}'s start")
+        unsent = mechanism.trailing_releases(list(owner.entries), hand_set if owner is plan else ())
         for e in owner.entries:
             for pa in e.pre_actions:
                 if pa.get("type") == "hold_pose" and float(pa.get("seconds") or 0) > 0:
@@ -1283,6 +1296,8 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                     check(expect, "" if owner is plan else f" ({owner.title}'s)")
                     if holds is not None and expect not in holds and pa.get("on_fail") == "skip":
                         return True
+            if id(e) in unsent:                      # its hand is set for its next task's start right after
+                continue
             entry(owner, e)
         return False
 
@@ -1416,7 +1431,7 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
             ready = T
             for s in st.get("clear") or []:
                 ready = max(ready, sims[s].run([{"type": "clear", "_row": (st.get("rows") or {}).get(s), "_alone": True}], T, i))
-            T = _sim_mechanism(st, sims, ready, i, overall, leave=set(st.get("then") or {}))
+            T = _sim_mechanism(st, sims, ready, i, overall, leave=set(st.get("then") or {}), hand_set=hand_set(st))
             row["t1_plan"] = round(T, 4)                # ALIX's plans end here; Lite's own moves to the next starts follow
             if st.get("then"):
                 T = _sim_then(st, sims, T, i, overall)
@@ -2713,13 +2728,17 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                         **{x: f"{pid} // RUNNING" for x in ARMS})
                     kit = mech.kit(robot)
                     hw = getattr(robot, "log", None)
+                    from .routes_robot import _payload
+
+                    room = (dict(home=dict(_payload(app)["home"]), scene=sim["scene"], fid=units.fixture,
+                                 cubicle_mm=int(app.ui.get("cubicle_mm", 1400))) if simulated and sim.get("scene") else None)
                     ex = mech.RealExec(job, robot, {x: reals.get(x) or robot._real(x) for x in ARMS}, kit,
                                        (lambda text: hw.hardware(None, "mechanism", text=text)) if hw is not None else None,
-                                       live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}))
+                                       live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}), room=room)
                     mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
                     mech.joints_cool(robot, st["title"])
                     with kit.camera.using():
-                        out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {})).run(st["task"])
+                        out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st)).run(st["task"])
                     did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
                                     for p in out["plans"])
                     job.log(f"{st['title']}: {did}.")

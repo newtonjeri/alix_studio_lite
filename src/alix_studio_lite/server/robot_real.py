@@ -37,6 +37,10 @@ from .robot_link import CLOSE_WAIT_S, return_text
 
 POLE_SPEED_PCT = 50       # the pole in Real (the owner's choice, 14 Oct; ALIX itself ran it at 100 %)
 HAND_SPEED_SET = 500      # the hand's SPEED_SET, of 1000: 50 %
+HAND_STALL_PAIRS = 3      #: a hand that stopped on force (the glove): this many reads in a row alike (ALIX's HAND_SETTLE_COUNTS)
+                          #: after it has moved end its move (the owner, 26 Oct: a grasp the glove stops at about 450 counts within
+                          #: 0.3 s waited the whole planned stroke, 0.9 s, before ALIX counted it settled)
+HAND_STALL_MIN_S = 0.25   #: never sooner than this after the command
 # MoveJ / MoveL (a move to a start, to a global point, the controller's own move to a program's first
 # point) go at the top bar's speed slider, the same for both arms (the owner, 15 Oct), passed in by the
 # caller: ALIX's way (staging.park_arm), the controller's global speed at 100 % while Lite moves, the
@@ -299,6 +303,76 @@ class _EmulatedCapture:
             self._fh.close()
 
 
+def _quick_hand(HandModbus):
+    """ALIX's HandModbus with Lite's earlier end for a hand that stops on force (the owner, 26 Oct): ALIX counts a hand
+    settled only once the whole planned stroke has passed and two reads agree, and the glove stops a grasp at about 450
+    counts within 0.3 s, so every grasp waited the stroke's 0.9 s. Now HAND_STALL_PAIRS reads in a row within ALIX's
+    HAND_SETTLE_COUNTS, after the hand has moved and HAND_STALL_MIN_S has passed, end it: stopped on force, done. A hand
+    that arrives, or one that never moves (a dead channel), is judged as ALIX judges it; the result carries ALIX's own
+    fields. A channel crawling under 3 counts a poll would look alike too: the plans' slowest SPEED_SET (100) moves
+    well over that, and a hand ended early is read back and gated as any other (the release gate, the plan's hand
+    counts). A stand-in without ALIX's result fields is returned unchanged."""
+    m = sys.modules.get(getattr(HandModbus, "__module__", "") or "")
+    if m is None or not hasattr(m, "HAND_ARRIVE_COUNTS"):
+        return HandModbus
+    ARRIVE, SETTLE, DOF = m.HAND_ARRIVE_COUNTS, m.HAND_SETTLE_COUNTS, m.HAND_DOF
+    DEAD = getattr(m, "HAND_DEADBAND_COUNTS", SETTLE)
+
+    class Hand(HandModbus):
+        def command(self, counts, wait=True, timeout_s=None):
+            out = super().command(counts, wait=False, **({} if timeout_s is None else {"timeout_s": timeout_s}))
+            if not wait or not out.get("ok") or "law_s" not in out:
+                return out
+            target, before, law = out["target"], out["before"], float(out["law_s"])
+            held = [c - 1 for c in out.get("held") or []]
+            out["ok"] = False
+            t0, prev, pairs, cur = time.monotonic(), None, 0, before
+            while True:
+                self._sleep(self.poll_s)
+                cur = self.read()
+                elapsed = time.monotonic() - t0
+                if cur is not None:
+                    out["series"].append([round(elapsed, 3), list(cur)])
+                    arrived = all(abs(a - b) <= ARRIVE for a, b in zip(cur, target))
+                    same = prev is not None and all(abs(a - b) <= SETTLE for a, b in zip(cur, prev))
+                    pairs = pairs + 1 if same else 0
+                    moved = before is not None and any(abs(a - b) > SETTLE for a, b in zip(cur, before))
+                    stalled = moved and pairs >= HAND_STALL_PAIRS and elapsed >= HAND_STALL_MIN_S
+                    settled = same and (elapsed >= law or stalled)
+                    if arrived or settled:
+                        out.update(ok=True, arrived=arrived, settled=settled, stalled=bool(stalled and not arrived and elapsed < law))
+                        break
+                    prev = cur
+                if elapsed > float(out.get("timeout_s") or 0.0):
+                    self.log(f"   hand: TIMEOUT after {elapsed:.1f} s at {cur}")
+                    break
+            out["after"], out["t_s"] = cur, time.monotonic() - t0
+            if out["series"]:
+                vals = [v for _, v in out["series"]]
+                for ch in range(DOF):
+                    col = [v[ch] for v in vals] + ([before[ch]] if before else [])
+                    out["moved"][ch] = max(col) - min(col)
+                want = [ch for ch in range(DOF) if before and ch not in held and abs(target[ch] - before[ch]) > DEAD]
+                out["stuck"] = [ch + 1 for ch in want if out["moved"][ch] <= SETTLE]
+            if cur:
+                out["miss"] = [abs(a - b) for a, b in zip(cur, target)]
+            if out["ok"]:
+                self.log(f"   hand: {'arrived' if out['arrived'] else 'settled'} at {cur} after {out['t_s']:.2f} s "
+                         f"(per-channel travel {out['moved']})"
+                         + (f" — stopped on force, done before the stroke's {law:.2f} s (Lite)" if out.get("stalled") else ""))
+            if out["stuck"]:
+                self.log(f"   ** hand: channel(s) {out['stuck']} were commanded to move and did NOT — target {target}, "
+                         f"readback {cur}. Either that channel is dead or the readback is not the device.")
+            elif out["ok"] and not out["arrived"] and out["miss"]:
+                worst = max(range(DOF), key=lambda i: out["miss"][i])
+                self.log(f"   ** hand: settled without arriving — worst channel {worst + 1} is {out['miss'][worst]} counts "
+                         f"short (target {target[worst]}, readback {cur[worst]})")
+            return out
+
+    Hand.__name__, Hand.__qualname__ = HandModbus.__name__, HandModbus.__qualname__
+    return Hand
+
+
 def _quick_pole(Pole):
     """The control program's Pole with Lite's arrival (the owner, 26 Oct): done when the controller reads the pole idle
     within its tolerance (LIFT_TOL_M, 5 mm) and the slew time plus POLE_RAMP_S has passed, instead of the model's 1.5 s
@@ -381,6 +455,7 @@ class RealArm:
         self._tap = _FrameTap()      # the kept feed's latest frame (hand_load)
         self._hand = None            # ALIX's HandModbus opened once for a lid or seat run (keep_hand)
         self._hand_speeds = None     # the SPEED_SET each channel of the kept hand holds
+        self._hand_last = None       # (counts, after) of the last hand move of Lite's: asked again where it still stands, not sent
         self._pole_done = None       # when the last pole move ended (the controller's warm start)
         self._ratio = None           # the global ratio this run left on the controller (None: not known)
         self._s2_feed = None         # S2's recording of the feed, kept across a stage's runner calls (keep_s2_feed)
@@ -423,6 +498,7 @@ class RealArm:
         from alix_dispatch import staging as alix_staging
 
         log = self._alix_log()
+        self._hand_last = None                       # staging moves the hand its own way
         with self.link.busy("staging the pole and the hand"):
             if self._hand is not None:               # a lid or seat run's hand, opened once (keep_hand), at the staging speed
                 from alix_dispatch import peripherals
@@ -516,6 +592,7 @@ class RealArm:
             stop_hook(on_stop)
         t0 = time.monotonic()
         hand = pole = None
+        self._hand_last = None
         out = dict(pole_ok=False, hand_ok=False)
         why = None
         with self.link.busy("moving the pole and the hand", expect_s=60):
@@ -539,6 +616,7 @@ class RealArm:
                             ok_h, final_h = hand.command(target, wait=True)
                             out["hand_sent_again"] = True
                         out.update(hand_ok=bool(ok_h), hand=final_h)
+                        self._hand_last = dict(counts=list(target), after=list(final_h)) if ok_h and final_h else None
                 finally:
                     with guard:
                         state["inside"] = False
@@ -584,7 +662,7 @@ class RealArm:
         from alix_dispatch import peripherals
 
         with self.link.busy("opening the hand"):
-            hand = peripherals.HandModbus(self.robot, self.side, log=self._alix_log())
+            hand = _quick_hand(peripherals.HandModbus)(self.robot, self.side, log=self._alix_log())
             ret = hand.open(speed_set=HAND_SPEED_SET)
         if ret != 0:
             self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
@@ -627,7 +705,7 @@ class RealArm:
         with self.link.busy("moving the hand"):
             hand = self._hand
             if hand is None:
-                hand = peripherals.HandModbus(self.robot, self.side, log=self._alix_log())
+                hand = _quick_hand(peripherals.HandModbus)(self.robot, self.side, log=self._alix_log())
                 ret = hand.open(speed_set=HAND_SPEED_SET)
                 if ret != 0:
                     self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
@@ -638,6 +716,13 @@ class RealArm:
             if now is not None and all(c is None or abs(int(c) - int(a)) <= HAND_SAME_COUNTS for c, a in zip(counts, now)):
                 self._hw("hand move", args=dict(counts=list(counts), speed_set=None), ok=True, elapsed_s=0.0,
                          text=f"already at {now} (within {HAND_SAME_COUNTS} counts), nothing sent")
+                return dict(ok=True, arrived=True, after=now, skipped=True)
+            last = self._hand_last                     # asked for the counts its last move settled short of (the glove): there
+            if (now is not None and last is not None and len(last["counts"]) == len(counts)
+                    and all((c is None) == (l is None) and (c is None or int(c) == int(l)) for c, l in zip(counts, last["counts"]))
+                    and len(last["after"]) == len(now) and all(abs(int(a) - int(b)) <= HAND_SAME_COUNTS for a, b in zip(now, last["after"]))):
+                self._hw("hand move", args=dict(counts=list(counts), speed_set=None), ok=True, elapsed_s=0.0,
+                         text=f"already commanded to these counts and settled at {now} (stopped on force: the glove), nothing sent")
                 return dict(ok=True, arrived=True, after=now, skipped=True)
             used = HAND_SPEED_SET
             if duration_s is not None:
@@ -655,6 +740,7 @@ class RealArm:
         if not done:
             raise UserError(f"The {self.SIDE} hand did not reach its pose (it reads {out.get('after')}).",
                             "Check the hand, then try again.")
+        self._hand_last = dict(counts=list(counts), after=list(out.get("after") or [])) if out.get("after") else None
         return out
 
     # ── the controller's run mode
@@ -1078,6 +1164,7 @@ class RealArm:
         STOP does (Ctrl+C: its own slow stop of the arm, the pole stopped, the hand frozen). ``record``: the
         controller's feed recorded to that file around the call (S2_FEED_CYCLE; the result's ``feed``), unless a
         recording kept for the stage (``keep_s2_feed``) is on."""
+        self._hand_last = None                       # runner v14's own Hand steps move it
         self.drop_feed()                             # a lid or seat run's kept feed never stays on under a program
         rt = _runner()
         norm = [rt.normalize_workflow_step(st) for st in steps]

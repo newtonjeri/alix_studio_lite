@@ -436,6 +436,7 @@ class LinkProcess:
             seen, dead, busy = self._seen, self._dead, self._busy
         v["abandoned"] = self.abandoned
         silent = time.monotonic() - seen if seen else None
+        v["view_age_s"] = None if silent is None else round(silent, 3)       # how long ago the worker pushed it
         if dead and dead != "closed":
             v["quality"] = dict(level="none", text="the connection's process ended" if dead == "ended" else "the connection was given up")
         elif silent is not None and silent > WORKER_LOST_S:

@@ -92,6 +92,10 @@ TASKS = {
 ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T03": "seat_open", "R-T03": "seat_open"}
 #: the commode's state after each, for the 3D and the collision check (Lite's phases)
 PHASE_AFTER = {"lid_open": "lid_open", "seat_open": "seat_open"}
+#: the commode's state as each starts (the approach's two MoveJs are checked in it)
+PHASE_BEFORE = {"lid_open": "lid_closed", "seat_open": "lid_open"}
+APPROACH_GRID = 7         #: each arm's MoveJ path sampled at this many points; every pair of the two arms' samples is checked
+                          #: (49 states), as their timing against each other is not known
 
 SIDE_OF = {"R": "right", "L": "left"}
 
@@ -465,6 +469,23 @@ def assumed(expect: str):
 CANNOT_JUDGE = "cannot_judge"
 
 
+FRAMES_REUSE_S = 3.0      #: the frames a check took are judged again for the check right after at the same pose, within this
+                          #: (the seat's start: lid open, then seat closed, from the same frames; the owner, 26 Oct)
+FRESH_READING_S = 0.5     #: an arm's latest reading, on its link's own connection, serves a frame when it is this fresh (else one read now)
+
+
+def trailing_releases(entries: list, sides) -> set:
+    """ids of each of ``sides``' last entry when it is a hand release with no move of that arm after it: S2 sets the
+    hand for the arm's next task's start right after (its ``then``), so the plan's final release is not sent (the owner,
+    26 Oct: 0.8 s a task). A side whose last entry is a move keeps everything."""
+    out = set()
+    for side in sides:
+        last = next((e for e in reversed(entries) if e.side == side), None)
+        if last is not None and last.kind == "hand" and str(last.stage).startswith("hand_release"):
+            out.add(id(last))
+    return out
+
+
 def frames_rule():
     """(the first frames, the most frames, the spacing in seconds): lift_check's CHECK_FRAMES_FIRST, CHECK_FRAMES_MAX,
     CHECK_FRAME_SPACING_S."""
@@ -479,12 +500,13 @@ def frames_said(answers: list) -> str:
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
 class Runner:
-    def __init__(self, ex, say=None, leave=()):
+    def __init__(self, ex, say=None, leave=(), hand_set=()):
         self.ex = ex
         self.say = say or (lambda *_: None)
         # the arms whose next task's start follows the run (S2: workflow.next_after_tasks; the owner, 24 Oct): the run's
         # last plan takes them to no end of its own (a skipped plan's end, the final check's way to where the plan ended)
         self.leave = set(leave)
+        self.hand_set = set(hand_set)                # the arms whose next task's start sets the hand: no final release
         self.queue: list = []
         self.k = 0
         self.prereq: dict = {}
@@ -513,6 +535,7 @@ class Runner:
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
                  f"{plan.seconds():.1f} s of motion)")
         self.ex.approach(plan, plan.targets("start"), "start")
+        unsent = trailing_releases(entries, self.hand_set)
         i = 0
         while i < len(entries):
             e = entries[i]
@@ -536,6 +559,10 @@ class Runner:
                 raise UserError(verdict[1], "A person must look at the commode: nothing else was moved after this.",
                                 code="escalate")
             self.ex.check_stop()
+            if id(e) in unsent:
+                self.say(f"{e.label()}: not sent, the {e.side.upper()} hand is set for its next task's start right after")
+                i += 1
+                continue
             joined, used = joined_moves(entries, i, state["bridge"])
             self.ex.move(joined, bridge=id(e) in state["bridge"])
             if joined.kind == "hand" and joined.stage.startswith("hand_release"):      # it let go, or the run stops here
@@ -763,11 +790,13 @@ class DryExec(_Exec):
 class RealExec(_Exec):
     """Real: the arms move. Streams, the pole and the hand, the camera."""
 
-    def __init__(self, job, robot, arms: dict, kit, log=None, live=None):
+    def __init__(self, job, robot, arms: dict, kit, log=None, live=None, room=None):
         super().__init__(job, log)
         self.robot, self.arms, self.kit = robot, arms, kit
         self.live = live or (lambda side, text: None)   # S2's live line of each arm
         self._name, self._feeds, self._hands = "lid_seat", set(), set()
+        self._frames, self._taken = None, []            # (when, [(frame, q)]) of the last check, for the next at the same pose
+        self.room = room                                # home, scene, fid, cubicle_mm: the collision check's world (S2 gives it)
 
     def _arm(self, side):
         a = self.arms.get(side)
@@ -791,13 +820,19 @@ class RealExec(_Exec):
         threading.Thread(target=open_it, name="lite-camera-open", daemon=True).start()
 
     def finish(self) -> None:
-        """However the run ends: each arm's kept feed turned off (the controller's push put back), its hand let go, and
-        the check records written."""
-        for side in sorted(self._feeds):
+        """However the run ends: each arm's kept feed turned off (the controller's push put back), both at once (26 Oct:
+        one after the other, 0.6 s each), its hand let go, and the check records written."""
+        def off(side):
             try:
                 self._arm(side).drop_feed()
             except Exception as exc:                                                # noqa: BLE001
                 self.say(f"{side.upper()}: its 5 ms feed was not turned off ({exc})", "warn")
+
+        threads = [threading.Thread(target=off, args=(side,), name=f"lite-feed-off-{side}", daemon=True) for side in sorted(self._feeds)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
         for side in sorted(self._hands):
             try:
                 self._arm(side).drop_hand()
@@ -828,6 +863,7 @@ class RealExec(_Exec):
         each arm's MoveJ at the speed slider's speed, one arm after the other, not sent when the arm is already there."""
         pct = int(self.robot.speed_pct)
         where = words or f"{plan.title}'s {at}"
+        self._frames = None
         if at == "start":
             first = plan.first_move_targets()
             targets = {side: dict(tg, **{k: v for k, v in first.get(side, {}).items() if k in tg}) for side, tg in targets.items()}
@@ -840,6 +876,12 @@ class RealExec(_Exec):
             mm = float(tg["pole_mm"]) if "pole_mm" in tg else (pole if pole is not None else 0.0)
             steps[side] = (mm, [None if v is None else int(v) for v in tg["hand"]] if "hand" in tg else [None] * 6)
         self.check_stop()
+        moves = {side: list(tg["arm_deg"]) for side, tg in targets.items() if "arm_deg" in tg}
+        clear = {}                                            # both MoveJs at once when their paths are clear: checked meanwhile
+        room = getattr(self, "room", None)
+        if len(moves) == 2 and room is not None:
+            threading.Thread(target=lambda: clear.update(self._paths_clear(plan, at, moves, steps)), name="lite-approach-check",
+                             daemon=True).start()
         if steps:
             self.job.progress(f"{' and '.join(s.upper() for s in sorted(steps))}: pole and hand to {where}")
         failed = {}
@@ -866,15 +908,93 @@ class RealExec(_Exec):
         for side in sorted(steps):
             if side in failed:
                 raise failed[side]
+
+        def movej(side):
+            self._arm(side).move_to([round(v * 1000) for v in moves[side]], speed=pct, restore_pct=self.robot.found_speed(side))
+
+        together = False
+        if len(moves) == 2 and room is not None:
+            t_end = time.monotonic() + 20.0
+            while not clear and time.monotonic() < t_end:  # the check ran while the poles and hands moved
+                time.sleep(0.02)
+            together = bool(clear.get("ok"))
+            if not together:
+                self.say(f"MoveJs to {where} one after the other: {clear.get('why') or 'the paths were not checked in time'}", "warn")
+        if together:                                          # the owner, 26 Oct: 1.6-3.2 s a task
+            self.check_stop()
+            self.job.progress(f"LEFT and RIGHT: MoveJ to {where} at {pct} %, both at once (their paths checked clear)")
+            failed.clear()
+
+            def one_move(side):
+                try:
+                    movej(side)
+                except BaseException as exc:                                        # noqa: BLE001 - raised below
+                    failed[side] = exc
+
+            threads = [threading.Thread(target=one_move, args=(side,), name=f"lite-movej-{side}", daemon=True) for side in sorted(moves)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                while t.is_alive():
+                    t.join(0.1)
+            for side in sorted(moves):
+                if side in failed:
+                    raise failed[side]
+            for side in targets:
+                self.say(f"{side.upper()}: at {where}")
+            return
         for side, tg in targets.items():
             if "arm_deg" in tg:
                 self.check_stop()
                 self.job.progress(f"{side.upper()}: MoveJ to {where} at {pct} %")
-                self._arm(side).move_to([round(v * 1000) for v in tg["arm_deg"]], speed=pct,
-                                        restore_pct=self.robot.found_speed(side))
+                movej(side)
             self.say(f"{side.upper()}: at {where}")
 
+    def _paths_clear(self, plan, at: str, moves: dict, steps: dict) -> dict:
+        """Whether the two arms' MoveJs to ``moves`` can go at once: each arm's straight joint-space path from where it
+        stands, sampled APPROACH_GRID times, every pair of the two arms' samples checked against each other, the commode
+        in the task's state then (PHASE_BEFORE / PHASE_AFTER), the walls and the bin, with the poles and hands the step
+        sets (``collision_check.check_states``, S2's own check). {ok, why}; never raises (not clear when it cannot tell)."""
+        try:
+            from . import collision_check
+
+            q0 = {}
+            for side in moves:
+                link = self.robot.links.get(side)
+                fb = self._reading(link) if link is not None else {}
+                if not fb.get("joints_deg"):
+                    return dict(ok=False, why=f"the {side.upper()} arm's joints were not read")
+                q0[side] = [float(v) for v in fb["joints_deg"]]
+            n = APPROACH_GRID
+            sides = sorted(moves)
+            grid = [(i, j) for i in range(n) for j in range(n)]
+            arms = {}
+            for k, side in enumerate(sides):
+                mm, hand = steps.get(side, (None, None))
+                if mm is None or hand is None or any(v is None for v in hand):
+                    pole, now = self.robot._measured(side)
+                    mm = pole if mm is None else mm
+                    hand = [h if h is not None else (int(now[i]) if now else 1000) for i, h in enumerate(hand or [None] * 6)]
+                path = [[a + (b - a) * (t / (n - 1)) for a, b in zip(q0[side], moves[side])] for t in range(n)]
+                arms[side] = dict(pole=[float(mm)] * len(grid), hand=[list(hand)] * len(grid), q=[path[g[k]] for g in grid],
+                                  known=[True] * len(grid))
+            phase = (PHASE_BEFORE if at == "start" else PHASE_AFTER).get(plan.name, "lid_closed")
+            times = [0.02 * k for k in range(len(grid))]
+            out = collision_check.check_states(times, arms, self.room["home"], self.room["scene"], self.room["fid"], [phase] * len(grid),
+                                               int(self.room.get("cubicle_mm") or 1400))
+            if out.get("ok"):
+                return dict(ok=True, why=f"{len(grid)} states clear in {out.get('seconds')} s")
+            first = out.get("first") or {}
+            return dict(ok=False, why=f"the paths would meet: {', '.join(first.get('what') or [])} ({len(out.get('events') or [])} event(s))")
+        except Exception as exc:                                                    # noqa: BLE001
+            return dict(ok=False, why=f"the paths could not be checked ({type(exc).__name__}: {exc})")
+
+    def hold(self, seconds: float, label: str) -> None:
+        self._frames = None                           # what the camera saw before the hold is not what it sees after
+        super().hold(seconds, label)
+
     def move(self, e, bridge=False):
+        self._frames = None                           # the frames of the check before: taken before this move
         arm = self._arm(e.side)
         self.job.progress(f"{e.label()}: {e.seconds:.2f} s")
         self.live(e.side, f"{e.stage}{f' ({e.note})' if e.note else ''} // RUNNING")
@@ -952,19 +1072,27 @@ class RealExec(_Exec):
             return scripted
         lc = lift_check()
         first, most, spacing = frames_rule()
+        reuse = self._reusable_frames()
+        self._taken = []
         answers, verdict = [], lc.UNDECIDED
         check_id = f"{time.strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000) % 1000:03d}_{action.get('stage') or 'check'}"
         for k in range(most):
-            if k:
-                self.check_stop()
-                self.job.sleep(spacing)
             check = dict(check_id=check_id, stage=action.get("stage"), expect=expect, frame=k + 1)
-            got = self._frame(expect, check)
+            if k < len(reuse):                      # the check before, at this pose: its frames judged for this expectation
+                frame, q = reuse[k]
+                got = self._judge(expect, frame, q, dict(check, reused=True))
+            else:
+                if k > len(reuse):                  # a pause between the camera's frames (none before the first new one)
+                    self.check_stop()
+                    self.job.sleep(spacing)
+                got = self._frame(expect, check)
             answers.append(got)
-            if len(answers) in (first, most):
+            if len(answers) >= first:               # decided as soon as the frames allow (26 Oct: two that agree), one more at a time
                 verdict = lc.decide(action, answers)
                 if verdict != lc.UNDECIDED:
                     break
+        kept = list(reuse) + list(self._taken)
+        self._frames = (time.monotonic(), kept) if kept else None
         votes = [lc.frame_vote(action, x) for x in answers]
         seen = frames_said(answers)
         tally = (f"{votes.count('yes')} yes, {votes.count('no')} no, "
@@ -1017,7 +1145,7 @@ class RealExec(_Exec):
 
         readings = {}
         for side, link in self.robot.links.items():
-            fb = link.read_fresh()
+            fb = self._reading(link)
             readings[side] = dict(q_deg=fb.get("joints_deg"), pole_mm=fb.get("pole_mm"), hand=fb.get("hand"))
         context = dict(arms=readings, check=check, camera=getattr(self.kit.camera, "device", None))
         try:
@@ -1037,9 +1165,38 @@ class RealExec(_Exec):
 
     def _frame(self, expect, check=None):
         """One frame: the gap check's answer (its record written, a training row: both arms' readings, ``check``
-        (which check, which frame) and the camera in its context)."""
+        (which check, which frame) and the camera in its context). The frame is kept for a check right after."""
         frame, q = self._shot(check)
+        if frame is not None:
+            self._taken.append((frame, q))
+        return self._judge(expect, frame, q, check)
+
+    def _judge(self, expect, frame, q, check=None):
+        """The gap check's answer on ``frame`` for ``expect``; a frame judged again (the check before's) carries this
+        check in its record."""
+        if frame is not None and check is not None and getattr(frame, "context", None) is not None:
+            from dataclasses import replace
+
+            frame = replace(frame, context=dict(frame.context, check=check))
         return self.kit.gap.ask(expect, frame, q_deg=q)
+
+    def _reusable_frames(self) -> list:
+        """The frames the check just before took, when nothing has moved since (move, approach and hold forget them)
+        and they are under FRAMES_REUSE_S old: judged again for a new expectation before any new frame is taken."""
+        kept = self._frames
+        if not kept or time.monotonic() - kept[0] > FRAMES_REUSE_S:
+            return []
+        return list(kept[1])
+
+    def _reading(self, link) -> dict:
+        """The arm's latest reading when its link reads on a connection of its own and it is within FRESH_READING_S,
+        else one read now (a round of the SDK's reads, 0.1-0.2 s an arm: 26 Oct, three frames a check, two arms)."""
+        v = link.view() if hasattr(link, "view") else {}
+        fb = v.get("feedback") or {}
+        age = (9.0 if fb.get("age_s") is None else float(fb["age_s"])) + float(v.get("view_age_s") or 0.0)
+        if v.get("reader") and fb.get("joints_deg") and age <= FRESH_READING_S:
+            return fb
+        return link.read_fresh()
 
 def camera_check(robot) -> dict:
     """What the wrist camera sees now, as the perception node's status_check answers it: the colour model's state of
