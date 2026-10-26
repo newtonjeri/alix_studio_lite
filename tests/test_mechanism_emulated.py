@@ -1,85 +1,25 @@
-"""The lid and the seat in Real on ALIX's emulated arms: ALIX's lid_open plan streamed over each arm's CanFD
-pass-through at 5 ms (alix_dispatch's lane: the 5 ms capture, its watch), the pole and the hand, a re-lift from the
-pre-planned rung and the bridged move after it, and STOP in the middle of a stream. The camera's answers are
-scripted (LITE_CHECK_SCRIPT, a test harness only): what the gap check decides is tests/test_gap_check.py's."""
+"""The lid in Real on ALIX's emulated arms: ALIX's lid_open plan streamed over each arm's CanFD pass-through at 5 ms
+(alix_dispatch's lane: the 5 ms capture, its watch), the pole and the hand, a re-lift from the pre-planned rung and the
+bridged move after it, and STOP in the middle of a stream. The camera's answers are scripted (LITE_CHECK_SCRIPT, a test
+harness only): what the gap check decides is tests/test_gap_check.py's. S2's runs of a lid task: test_s2_mechanism_emulated.py
+(its own Lite, so the two files run side by side under pytest -n)."""
 import json
-import socket
-import subprocess
-import sys
 import time
-import urllib.request
 from pathlib import Path
 
 import pytest
 
-from alix_studio_lite import vendor_paths
-
-PID = "alix_lid"
-P = f"/api/projects/{PID}"
+from mech_emulated import call, hardware, refused, start, wait
 
 
 @pytest.fixture(scope="module")
 def server(tmp_path_factory):
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        port = s.getsockname()[1]
-    data = tmp_path_factory.mktemp("lite-mech")
-    script = data / "answers.json"
     # lid_open: closed (it runs); the lift missed (re-lift 1 from rung 1); lifted (the seat under it not asked, 26 Oct);
     # its final check sees the lid open. Then the STOP test's lid_open: closed, then STOP before its next question.
-    script.write_text(json.dumps(["lid_closed", "lid_closed", "lid_lifted", "lid_open", "lid_closed"]))
-    env = dict(__import__("os").environ, LITE_CHECK_SCRIPT=str(script))
-    proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
-                             "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"),
-                             "--projects", str(data / "projects")],
-                            cwd=str(vendor_paths.LITE_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
-    ctx = {"base": f"http://127.0.0.1:{port}", "data": data}
-    for _ in range(150):
-        try:
-            ctx["tok"] = call(ctx, "POST", "/api/auth/login", {"pin": "1234"})["token"]
-            break
-        except OSError:
-            time.sleep(0.2)
-    ctx["script"] = script
-    call(ctx, "PUT", P, {"id": PID, "name": "Lid", "archived": False, "state": {"currentTask": 0}})
-    for side in ("left", "right"):
-        assert call(ctx, "POST", f"/api/robots/{side}/connect", {})["connected"]
-    assert call(ctx, "POST", "/api/robots/mode", {"mode": "real", "confirmed": True})["mode"] == "real"
+    ctx, proc = start(tmp_path_factory, "lite-mech", ["lid_closed", "lid_closed", "lid_lifted", "lid_open", "lid_closed"])
     yield ctx
     proc.terminate()
     proc.wait(10)
-
-
-def call(ctx, method, path, body=None):
-    headers = {"Content-Type": "application/json"}
-    if ctx.get("tok"):
-        headers["X-Lite-Token"] = ctx["tok"]
-    r = urllib.request.Request(ctx["base"] + path, method=method, headers=headers,
-                               data=None if body is None else json.dumps(body).encode())
-    with urllib.request.urlopen(r, timeout=120) as resp:
-        return json.loads(resp.read())
-
-
-def refused(ctx, method, path, body=None) -> dict:
-    out = call(ctx, method, path, body)                         # Lite answers a refusal with its words, not an HTTP error
-    assert "error" in out, out
-    return out
-
-
-def wait(ctx, job, limit=300, until=None):
-    t0 = time.time()
-    while True:
-        j = call(ctx, "GET", f"/api/jobs/{job['id']}")
-        if j["state"] != "running" or (until and until(j)):
-            return j
-        assert time.time() - t0 < limit, j
-        time.sleep(0.2)
-
-
-def hardware(ctx) -> list:
-    day = time.strftime("%Y-%m-%d")
-    path = Path(ctx["data"]) / "logs" / day / "hardware.jsonl"
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
 def test_the_catalogue_lists_the_two_openings(server):
@@ -154,89 +94,3 @@ def test_stop_in_the_middle_of_a_stream_stops_sending(server):
     assert not last["ok"] and 0 < sent < last["args"]["lines"], last  # the lines it sent, not "0/200" (23 Oct, the lab)
     for side in ("left", "right"):                               # STOP holds the arms until Recover, as everywhere
         call(server, "POST", f"/api/robots/{side}/recover", {})
-
-
-def test_s2_runs_a_lid_open_put_in_its_sequence(server):
-    """The owner, 18 Oct: a pre-recorded task injected at a point in the sequence: Open the lid on both arms' lists,
-    simulated (its stage on the run's clock, the lid open after it, left out of the collision check and said so), then
-    run in Real by S2 on the emulated arms."""
-    lid = {"type": "mechanism", "task": "lid_open"}
-    wait_1 = {"type": "wait", "seconds": 1}
-    call(server, "PUT", f"{P}/workflow/left", {"steps": [lid, wait_1]})
-    call(server, "PUT", f"{P}/workflow/right", {"steps": [lid]})
-    j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "both"}))
-    assert j["state"] == "done", j
-    sim = j["result"]
-    assert [s["kind"] for s in sim["stages"]] == ["mechanism", "parallel"] and sim["counts"]["mechanisms"] == 1   # then the left's Wait
-    kinds = {a["kind"] for side in ("left", "right") for a in sim["acts"][side]}
-    assert {"stream", "pole", "hand", "global", "check"} <= kinds
-    assert sim["phases"][-1][1] == "lid_open"
-    right = sim["acts"]["right"]                 # drawn as it runs: the plan's own end check (lid open) from inspection pose 1
-    assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_closed", "lid_lifted", "lid_open"]   # no seat under the lid
-    looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:lid_open:")]
-    last_check = [a for a in right if a["kind"] == "check"][-1]
-    assert looks[-2]["t0"] < last_check["t0"] < looks[-1]["t0"]            # the look to pose 1, the camera, then the rest
-    assert not any("seat_close" in str(a.get("file")) or "seat_open" in str(a.get("file")) for a in right)
-    assert any("left out of this collision check" in f["text"] for f in sim["findings"])
-    assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))
-    job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
-    done = wait(server, job)
-    assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])
-    said = " | ".join(e["text"] for e in done["events"])
-    assert "Open the lid: Open the lid done." in said and "CHECK verify_lid_lifted" in said
-
-
-def test_s2_refuses_a_lid_or_seat_task_with_no_camera_before_anything_moves(server):
-    """The owner, 23 Oct: with no camera every check read NOT, and Open the lid's "is it closed?" NOT ended it as done,
-    the lid closed (the lab, 14:38). A run with a lid or seat task now needs the wrist camera before anything moves.
-    Here the harness's answers are taken away and this computer has no D435."""
-    lid = {"type": "mechanism", "task": "lid_open"}
-    call(server, "PUT", f"{P}/workflow/left", {"steps": [lid]})
-    call(server, "PUT", f"{P}/workflow/right", {"steps": [lid]})
-    j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "both"}))
-    assert j["state"] == "done", j
-    sim = j["result"]
-    assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    before = len(hardware(server))
-    away = server["script"].with_suffix(".away")
-    server["script"].rename(away)
-    try:
-        out = refused(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
-    finally:
-        away.rename(server["script"])
-    assert out["code"] == "camera" and "wrist camera cannot be read" in out["error"] and "Nothing moved" in out["error"], out
-    moved = [r for r in hardware(server)[before:] if r.get("verb") in ("canfd stream", "stage", "move to pose", "pole move",
-                                                                      "hand move", "workflow")]
-    assert not moved, moved
-
-
-def test_s2_after_a_lid_task_with_a_wait_next_each_arm_stays_where_its_plan_ended(server):
-    """The owner, 24 Oct: after a lid or seat task each arm goes to its next task's start (in place of 22 Oct's pole and
-    hand put back as before the tasks). With a Wait next (no row that moves the arm) there is no start to go to: nothing
-    is put back, the arms stay where the plan left them, and the stage after starts both arms together, in Simulation
-    and on the robot. (A Program next: test_s2_lid_emulated.py.)"""
-    lid = {"type": "mechanism", "task": "lid_open"}
-    left = [{"type": "pole", "mm": 120}, {"type": "hand", "values": [1000, 1000, 1000, 1000, 0, 1000]}, lid, {"type": "wait", "seconds": 0.5}]
-    right = [{"type": "pole", "mm": 150}, {"type": "hand", "values": [0, 0, 0, 0, 150, 1000]}, lid, {"type": "wait", "seconds": 0.5}]
-    call(server, "PUT", f"{P}/workflow/left", {"steps": left})
-    call(server, "PUT", f"{P}/workflow/right", {"steps": right})
-    plan = call(server, "POST", f"{P}/workflow/plan", {"mode": "both"})
-    assert [s["kind"] for s in plan["stages"]] == ["parallel", "mechanism", "parallel"] and plan["stages"][1]["title"] == "Open the lid"
-    j = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "both"}))
-    assert j["state"] == "done", j
-    sim = j["result"]
-    assert sim["stages"][1]["title"] == "Open the lid" and sim["stages"][1]["t1_plan"] == sim["stages"][1]["t1"]
-    nxt = {side: min(a["t0"] for a in sim["acts"][side] if a["stage"] == 2) for side in ("left", "right")}
-    assert nxt["left"] == pytest.approx(nxt["right"], abs=1e-6)          # both arms start the next stage together
-    assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))
-    job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
-    done = wait(server, job)
-    assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])
-    said = " | ".join(e["text"] for e in done["events"])
-    assert "back, as before the tasks" not in said and "at the start of" not in said
-    arms = call(server, "GET", "/api/robots/status")["arms"]
-    assert abs(arms["left"]["link"]["feedback"]["pole_mm"] - 150) < 3 and abs(arms["right"]["link"]["feedback"]["pole_mm"] - 150) < 3
-
-

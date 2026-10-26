@@ -25,7 +25,7 @@ dependencies = [
 toppra = ["toppra==0.6.10"]
 # Re-baking the robot overlay with ALIX's own tool (source build: needs a C++ compiler).
 bake = ["meshoptimizer==0.2.30a0", "rtree==1.4.1"]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "pytest-xdist>=3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -38,7 +38,10 @@ alix_studio_lite = ["web/*.html", "web/lite/*.js", "web/lite/*.css",
 testpaths = ["tests"]
 # ROS 2's own pytest plugins load from a sourced workspace's PYTHONPATH and fail inside Lite's
 # venv; Lite needs no ROS, so they are blocked (blocking a plugin that is not installed is a no-op).
-addopts = "-ra -p no:launch_testing -p no:launch_ros -p no:launch_pytest -p no:ament_copyright -p no:ament_flake8 -p no:ament_lint -p no:ament_xmllint -p no:ament_pep257"
+# The suite runs on 8 workers, a file per worker (pytest-xdist; the owner, 26 Oct: 7-8 minutes in one process was too
+# long; the emulated lid runs stream their plans at the real 5 ms and the collision checks are long). A file's tests
+# stay together and in order, as the files with one Lite server per module need. One test or file: add "-n 0".
+addopts = "-ra -n 8 --dist loadfile -p no:launch_testing -p no:launch_ros -p no:launch_pytest -p no:ament_copyright -p no:ament_flake8 -p no:ament_lint -p no:ament_xmllint -p no:ament_pep257"
 markers = [
     "slow: builds robot meshes or collision worlds (seconds, no hardware)",
 ]

@@ -15,3 +15,4 @@ python-fcl==0.7.0.11
 pycollada==0.9.3
 networkx==3.6.1
 pytest==8.3.5
+pytest-xdist==3.8.0
