@@ -1,0 +1,41 @@
+{
+  "check_id": "20261026_124824_785_verify_seat_open_after",
+  "stage": "verify_seat_open_after",
+  "expect": "seat_open",
+  "decided": false,
+  "state": "cannot_judge",
+  "confidence": 0.0,
+  "message": "no decision in 5 frames (uncertain, uncertain, uncertain, uncertain, uncertain; 0 yes, 0 no, 5 no vote); the last: seat surface median z 0.430 m in base_link (closed top 0.430 = nominal 0.440 registered -10 mm by the seat, rise -0 mm vs 50 mm bar); 67 % of the ROI valid, median range 0.581 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 22 % of the ROI, 10/90 % heights 0.425/0.433, 0 % masked around 17 hand frames; seat: its own fit says seat_closed (seat_closed 4237 vs seat_lifted 2695, margin +0.36; best: lid 105 deg, seat 0 deg (lid) over 18757 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain; vs its closed frame: seat_lifted CONTRADICTS the band reading's seat_closed -> uncertain (lifted: 10744 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (100 % down), hand 0 %; the rim shows where the ring was)",
+  "frames": [
+    {
+      "record": "20261026_124825_519_gap_check_seat_open_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261026_124826_568_gap_check_seat_open_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261026_124827_369_gap_check_seat_open_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261026_124828_123_gap_check_seat_open_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261026_124828_961_gap_check_seat_open_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    }
+  ]
+}
