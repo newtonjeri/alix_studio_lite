@@ -61,6 +61,79 @@ def test_a_command_waits_for_a_reading_under_way_and_none_starts_meanwhile():
     assert len(reads) == 2                                    # read again as the command ended
 
 
+def test_with_its_own_connection_the_link_reads_through_a_command_and_the_hand_between_them(monkeypatch):
+    """The owner, 26 Oct: the vendor's GUI shows the joints, temperatures and currents while a program plays, on a
+    connection of its own; a reading on its own connection costs the commands nothing and the controller's clock
+    nothing. So each link opens a second connection for its readings: the arm, the pole, the controller and IO3 are
+    read whether a command runs or not; the hand (Modbus on the end port) only between commands, as before."""
+    from types import SimpleNamespace
+
+    from alix_studio_lite.server.robot_link import ArmLink
+
+    link = ArmLink("left", "127.0.0.1")
+    cmd, rd = SimpleNamespace(robot=object()), SimpleNamespace(robot=object())
+    link.handle, link.reader = cmd, rd
+    link.feedback = {"hand": [1, 2, 3, 4, 5, 6]}
+    reads = []
+    link._read_all = lambda robot=None, hand=True: reads.append((robot, hand)) or {}
+    link._read_if_idle()
+    assert reads == [(rd.robot, True)]                           # idle: everything, on the readings' connection
+    with link.busy("running program 81"):
+        link._read_if_idle()
+        link._read_if_idle()
+    assert reads[1:3] == [(rd.robot, False), (rd.robot, False)]   # a command runs: read still, the hand left out
+    assert reads[-1] == (None, True) and len(reads) == 4          # busy()'s own reading as the command ended (read_once: the reader's robot inside)
+    assert link.view()["reader"] is True
+    link.reader = None
+    with link.busy("running program 81"):
+        link._read_if_idle()
+        assert len(reads) == 4                                    # no reader: nothing while busy, as before
+    assert reads[-1] == (None, True) and len(reads) == 5
+    assert link.view()["reader"] is False
+
+
+def test_the_readings_connection_is_opened_first_and_a_refused_one_leaves_the_old_way(monkeypatch):
+    """ALIX's emulator stamps its arrival events with the handle made last, which must be the commands'; on the robot the
+    order does not matter. A second connection the controller refuses is not an error: the readings then pause while a
+    command runs, as before. LITE_LINK_READER=0 asks for that."""
+    from types import SimpleNamespace
+
+    from alix_dispatch import connect
+
+    from alix_studio_lite.server.robot_link import ArmLink
+
+    opened, answers = [], []
+    monkeypatch.setattr(connect, "open_arm", lambda side, ip=None, port=None, **kw: opened.append((side, ip)) or answers.pop(0))
+    monkeypatch.setattr(connect, "sdk_provenance", lambda robot: "emulated")
+    monkeypatch.setattr(connect, "close_arm", lambda h: None)
+
+    def make():
+        link = ArmLink("left", "127.0.0.1")
+        link._read_all = lambda robot=None, hand=True: {}
+        return link
+
+    answers[:] = [SimpleNamespace(robot=SimpleNamespace(), tag="reader"), SimpleNamespace(robot=SimpleNamespace(), tag="commands")]
+    link = make().open()
+    try:
+        assert len(opened) == 2 and link.reader.tag == "reader" and link.handle.tag == "commands"
+    finally:
+        link.close()
+    answers[:] = [None, SimpleNamespace(robot=SimpleNamespace(), tag="commands")]        # the second connection refused
+    link = make().open()
+    try:
+        assert link.reader is None and link.handle.tag == "commands" and link.view()["reader"] is False
+    finally:
+        link.close()
+    monkeypatch.setenv("LITE_LINK_READER", "0")
+    opened.clear()
+    answers[:] = [SimpleNamespace(robot=SimpleNamespace(), tag="commands")]
+    link = make().open()
+    try:
+        assert len(opened) == 1 and link.reader is None
+    finally:
+        link.close()
+
+
 def test_the_end_of_a_long_command_is_not_a_link_that_stopped_reading():
     """The lab's logs (16 Oct): after every long command (a program run, an upload, a saved take) "No fresh
     reading" was raised in the moment between the command's end and the reading that follows it, and the
@@ -135,6 +208,7 @@ def test_connect_and_read_the_three_devices(server):
     st = call(server, "GET", "/api/robots/status")
     assert "Live link" in st["label"] and st["backend"] == "emulated"
     assert all(st["arms"][s]["link"]["feedback"]["age_s"] < 1 for s in ("left", "right"))
+    assert all(st["arms"][s]["link"]["reader"] for s in ("left", "right"))           # the readings' own connection (26 Oct)
 
 
 def test_real_robot_is_available_with_the_link(server):

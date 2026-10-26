@@ -75,6 +75,16 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     assert labels.count("RIGHT arm move_to_inspect") == 2 and labels[-1] == "RIGHT arm move_to_rest"   # the plan's two looks; its own end check rides rest
     hands = [r for r in hardware(server) if r.get("verb") == "hand move" and isinstance(r["args"]["speed_set"], list)]
     assert hands and all(len(r["args"]["speed_set"]) == 6 for r in hands)   # the plan's hand moves: ALIX's executive's speeds
+    # the readings go on through the run, on each link's own connection (26 Oct): the status log is not blind while the
+    # arms stream (before, nothing was read while a command held the connection: 15:07's run left 81 s of blank rows)
+    t0, t1 = streams[0]["t"], streams[-1]["t"]
+    rows = [json.loads(l) for l in (Path(server["data"]) / "logs" / time.strftime("%Y-%m-%d") / "status.jsonl").read_text().splitlines() if l.strip()]
+    during = [r for r in rows if t0 <= r["t"] <= t1 and any(str(r["arms"][s]["busy"] or "").startswith("streaming") for s in ("left", "right"))]
+    assert len(during) >= 10, len(during)
+    fresh = [r for r in during if all((9 if r["arms"][s]["age_s"] is None else r["arms"][s]["age_s"]) < 1.0 and not r["arms"][s]["stale"]
+                                      for s in ("left", "right"))]
+    assert len(fresh) >= 0.9 * len(during), (len(fresh), len(during))
+    assert len({tuple(r["arms"]["left"]["joints_deg"]) for r in during}) > 3            # the left arm seen moving
 
 
 def test_stop_in_the_middle_of_a_stream_stops_sending(server):

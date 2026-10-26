@@ -4,6 +4,7 @@ confirmed, new connections hung, and only killing Lite cleared it. Lite now sees
 how long, writes every thread's stack to the day's log folder, ends the job on that arm, gives the connection up (the
 stuck call left behind, its handle never deleted) and connects the arm again on a new handle; a STOP pressed meanwhile
 goes through the new connection; Connect is never refused as "busy" by the stuck call; the arm is held until Recover."""
+import os
 import threading
 import time
 from contextlib import contextmanager
@@ -66,11 +67,16 @@ def lite(tmp_path, monkeypatch, watch_s):
     monkeypatch.setattr(robot_standin, "LINK_PROCESS", False)             # the link in this process (robot_process has its own test)
     monkeypatch.setattr(robot_link.ArmLink, "_stop_now",
                         lambda self, hard, drag=False: dict(ok=True, text=f"{self.side.upper()}: stopped on its controller"))
-    made = []
+    made, conns = [], []                                      # the commands' controllers (one per link); every connection
+    per_link = 1 if os.environ.get("LITE_LINK_READER") == "0" else 2     # a link opens the readings' connection first (26 Oct)
 
     def open_arm(side, ip=None, port=None, **kw):
-        made.append(Controller(stuck=not made))                  # the first connection's controller is the one that hangs
-        return connect.ArmHandle(side, ip or "192.168.1.103", port or 8080, made[-1], len(made), "127.0.0.1")
+        commands = len(conns) % per_link == per_link - 1          # the last of a link's connections is the commands'
+        c = Controller(stuck=commands and not made)               # the first link's commands' controller is the one that hangs
+        conns.append(c)
+        if commands:
+            made.append(c)
+        return connect.ArmHandle(side, ip or "192.168.1.103", port or 8080, c, len(conns), "127.0.0.1")
 
     monkeypatch.setattr(connect, "open_arm", open_arm)
     monkeypatch.setattr(connect, "close_arm", lambda h: None)
@@ -79,7 +85,7 @@ def lite(tmp_path, monkeypatch, watch_s):
     try:
         yield r, jobs, log, made
     finally:
-        for c in made:
+        for c in conns:
             c.block.set()
         time.sleep(0.3)
 

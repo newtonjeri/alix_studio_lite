@@ -143,7 +143,19 @@ def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log
             except Exception:                                               # noqa: BLE001 - the server is gone
                 pass
 
-    link = ArmLink(side, ip, port, on_read=lambda: push(feed, ("view", link.view(), link.stuck(), link.in_flight())))
+    state = dict(hook=None, dumped=False)
+
+    def report() -> None:
+        """The link's view to the server, with every reading and every heartbeat; the first stuck call seen writes this
+        process's threads (the reading goes on during a command since 26 Oct, so a reading may see it before the heartbeat
+        does, and the server gives the connection up as soon as it is told)."""
+        stuck = link.stuck()
+        push(feed, ("view", link.view(), stuck, link.in_flight()))
+        if stuck and not state["dumped"] and log_root:               # what this process's threads were doing
+            state["dumped"] = True
+            dump_threads(log_root, prefix=f"threads-{side}-")
+
+    link = ArmLink(side, ip, port, on_read=report)
     try:
         link.open()
     except BaseException as exc:                                            # noqa: BLE001
@@ -167,16 +179,11 @@ def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log
     push(cmd, ("opened", dict(emulated=link.emulated, view=link.view(), push=left)))
     log = _LogForwarder(lambda msg: push(cmd, msg))
     arm = RealArm(link, log)
-    state = dict(hook=None, dumped=False)
     stop_event = threading.Event()
 
     def heartbeat() -> None:
         while not stop_event.wait(HEARTBEAT_S):
-            stuck = link.stuck()
-            push(feed, ("view", link.view(), stuck, link.in_flight()))
-            if stuck and not state["dumped"] and log_root:               # what this process's threads were doing
-                state["dumped"] = True
-                dump_threads(log_root, prefix=f"threads-{side}-")
+            report()
 
     def control() -> None:
         while True:

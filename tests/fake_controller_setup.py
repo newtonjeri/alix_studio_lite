@@ -1,7 +1,7 @@
 """A fake controller for an arm's worker process (robot_process: LITE_WORKER_SETUP names this file), for
-tests/test_link_process.py: enough of the SDK for a reading, and one call that never answers on the connection
-made while the marker file LITE_FAKE_STUCK_MARKER exists (the first; it is removed as that connection opens, so the
-next one answers). Anything else answers -1. With LITE_FAKE_RUNNER, runner v14 is ``FakeRunner``.
+tests/test_link_process.py: enough of the SDK for a reading, and one call that never answers on the connections
+of the process whose first connection was made while the marker file LITE_FAKE_STUCK_MARKER exists (it is removed
+then, so the next process's answer). Anything else answers -1. With LITE_FAKE_RUNNER, runner v14 is ``FakeRunner``.
 
 With LITE_FAKE_PUSH_FILE, the controller's realtime push setting (a JSON file, so that it is the same controller
 for every process that connects to it) and the RealMan SDK's own listener as measured with its library (triple-thread
@@ -127,11 +127,14 @@ def setup():
 
         robot_real._RUNNER = FakeRunner
     marker = os.environ.get("LITE_FAKE_STUCK_MARKER")
+    state: dict = {}                                        # this process's connections hang (the marker was there at its first)
 
     def open_arm(side, ip=None, port=None, **kw):
-        stuck = bool(marker) and Path(marker).exists()
-        if stuck:
-            Path(marker).unlink()
+        if "stuck" not in state:                            # the link opens two connections (26 Oct: the readings' first, then
+            state["stuck"] = bool(marker) and Path(marker).exists()   # the commands'): both of this process hang the one call,
+            if state["stuck"]:                              # which only the commands' connection ever makes
+                Path(marker).unlink()
+        stuck = state["stuck"]
         cfg = _push()
         if cfg is not None:                                 # connecting reads the push setting, as the SDK does
             _sdk_listens(cfg)

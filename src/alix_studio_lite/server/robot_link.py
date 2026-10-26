@@ -1,6 +1,6 @@
 """A live link to the real arms, through ALIX's own robot I/O code (``alix_dispatch``).
 
-It connects each controller (``connect.open_arm``) and reads, about five times a second, the
+It connects each controller (``connect.open_arm``, twice: the commands' connection and the readings' own) and reads, about five times a second, the
 feedback of the three devices ALIX drives on each side (alix_hw: one transport per side):
 
 - the RM75 arm: its seven joints and error codes, and the controller's run mode (SIM or REAL);
@@ -205,6 +205,7 @@ class ArmLink:
         self.period_s, self.estop_active = period_s, estop_active
         self.on_read = on_read
         self.handle = None
+        self.reader = None                          # a second connection to the same controller, for the readings only (26 Oct)
         self.emulated = False
         self.feedback: dict = {}
         self._hand = None
@@ -234,18 +235,32 @@ class ArmLink:
         except Exception:                                                # noqa: BLE001
             raise UserError("The RealMan SDK does not load on this computer, so Lite cannot connect to the arms.",
                             "The robot link needs Linux (x86-64 or ARM), like the control program.") from None
+        # The readings' own connection, opened first (ALIX's emulator stamps its arrival events with the handle made last,
+        # which must be the commands'). The vendor's GUI reads the same way, on a connection of its own, while a program
+        # plays (the owner, 26 Oct: "Lite is our company's version of the vendor's GUI"); one that cannot be opened leaves
+        # the readings on the commands' connection, between commands, as before. LITE_LINK_READER=0 keeps it that way.
+        reader = None
+        if os.environ.get("LITE_LINK_READER", "1") != "0":
+            try:
+                reader = connect.open_arm(self.side, ip=self.ip, port=self.port)
+            except Exception:                                            # noqa: BLE001
+                reader = None
         h = connect.open_arm(self.side, ip=self.ip, port=self.port)
         if h is None:
+            connect.close_arm(reader)
             raise UserError(f"Lite cannot reach the {self.side.upper()} arm's controller at {self.ip}:{self.port}.",
                             "Check that the controller is on, the cable, and the address in Robot & mode.")
-        self.handle = h
+        self.handle, self.reader = h, reader
         self.emulated = connect.sdk_provenance(h.robot) == "emulated"
         watch_calls(h.robot, self)
+        if reader is not None:
+            watch_calls(reader.robot, self)
         try:
             self.read_once()
         except Exception:
             connect.close_arm(h)
-            self.handle = None
+            connect.close_arm(reader)
+            self.handle = self.reader = None
             raise
         self._thread = threading.Thread(target=self._loop, name=f"lite-link-{self.side}", daemon=True)
         self._thread.start()
@@ -318,8 +333,11 @@ class ArmLink:
             stop = self._stop_lock.acquire(timeout=CLOSE_WAIT_S if cmd else 0)
             try:
                 h, self.handle = self.handle, None      # no caller takes it from here on
+                r, self.reader = self.reader, None      # the readings' connection: this thread's alone
                 if cmd and stop:
                     connect.close_arm(h)
+                if r is not None:
+                    connect.close_arm(r)
             finally:
                 if stop:
                     self._stop_lock.release()
@@ -494,7 +512,7 @@ class ArmLink:
     def _read_hand(self, robot):
         from alix_dispatch import peripherals
 
-        if self._hand is None:
+        if self._hand is None or self._hand.robot is not robot:          # the hand as read on this connection
             self._hand = peripherals.HandModbus(robot, self.side, log=lambda *_: None)
         counts = self._hand.read()
         if counts is None and not self._modbus_set:                  # the end port is not in Modbus mode yet
@@ -521,17 +539,22 @@ class ArmLink:
             return self._read_all()
 
     def _read_if_idle(self) -> None:
-        """The loop's reading: none while a command runs (busy() waits for one under way, so the
-        two never overlap: on the lab's first run a reading overlapping the hand's staging made
-        the hand's command time out)."""
+        """The loop's reading. With the readings' own connection (``reader``) the arm, the pole, the controller and IO3
+        are read whether a command runs or not (a reading on a connection of its own costs the commands nothing and
+        the controller's clock nothing: the owner, 26 Oct); the hand, Modbus on the end port, only between commands
+        (busy() waits for a reading under way, so the two never overlap: on the lab's first run a reading overlapping
+        the hand's staging made the hand's command time out). Without it, nothing is read while a command runs."""
         with self._read_lock:
-            if not self._busy:                      # a command owns the connection: it alone talks
+            if self.reader is not None:
+                self._read_all(self.reader.robot, hand=not self._busy)
+            elif not self._busy:                    # a command owns the connection: it alone talks
                 self._read_all()
 
-    def _read_all(self) -> dict:
+    def _read_all(self, robot=None, hand: bool = True) -> dict:
         from alix_dispatch import peripherals, runmode
 
-        robot = self.handle.robot
+        if robot is None:
+            robot = (self.reader or self.handle).robot
         fb: dict = {"t": time.time()}
         t0 = time.monotonic()
         try:
@@ -554,7 +577,7 @@ class ArmLink:
         fb["run_mode"] = {0: "SIM", 1: "REAL"}.get(mode) if r == 0 else None
         height = peripherals.Pole(robot, log=lambda *_: None).height_m()
         fb["pole_mm"] = None if height is None else round(height * 1000.0, 1)
-        fb["hand"] = self._read_hand(robot)
+        fb["hand"] = self._read_hand(robot) if hand else self.feedback.get("hand")   # a command runs: the last read
         if hasattr(robot, "rm_get_io_state"):
             fb["estop"], fb["io3"] = estop_state(lambda: robot.rm_get_io_state(ESTOP_IO), self.estop_active)
         elif self.emulated:                                              # ALIX's emulator models no IO
@@ -587,7 +610,8 @@ class ArmLink:
         fb.pop("t", None)
         call = self.in_flight()
         fb["call"] = None if call is None or call[1] < CALL_SLOW_S else dict(name=call[0], age_s=round(call[1], 1))
-        return dict(ip=self.ip, port=self.port, emulated=self.emulated, abandoned=self.abandoned, feedback=fb, quality=self.quality())
+        return dict(ip=self.ip, port=self.port, emulated=self.emulated, abandoned=self.abandoned, reader=self.reader is not None,
+                    feedback=fb, quality=self.quality())
 
     def quality(self) -> dict:
         """The connection as the arm's indicator shows it (the owner, 17 Oct: "green a good connection,
