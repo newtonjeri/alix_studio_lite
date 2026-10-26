@@ -31,9 +31,8 @@ def server(tmp_path_factory):
         port = s.getsockname()[1]
     data = tmp_path_factory.mktemp("lite-s2-lid")
     script = data / "answers.json"
-    # Open the lid: closed, lifted, the seat under it not judged (Close the seat follows and looks first); Close the
-    # seat: the lid open, the seat down (its outcome holds: it ends there)
-    script.write_text(json.dumps(["lid_closed", "lid_lifted", None, "lid_open", "seat_closed"]))
+    # Open the lid: closed, lifted (the seat under it not asked, 26 Oct), its end check: the lid open
+    script.write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
                              "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"),
                              "--projects", str(data / "projects")],
@@ -113,7 +112,7 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
     res = sim["result"]
     assert call(server, "POST", f"{P}/workflow/played", {"hash": res["hash"]})["completed"]
     texts = " | ".join(f["text"] for f in res["findings"])
-    assert "Close the seat runs after it and looks first" in texts and "move to its next task's start" in texts
+    assert "Close the seat" not in texts and "move to its next task's start" in texts    # no closing after Open the lid (26 Oct)
     assert not [f for f in res["findings"] if f["level"] == "stop"]
     lid_row = next(r for r in res["stages"] if r["kind"] == "mechanism")
     assert lid_row["title"] == "Open the lid, then LEFT to Program 72's start and RIGHT to Program 72's start"
@@ -131,7 +130,7 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
     j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": res["hash"]}))
     said = " | ".join(e["text"] for e in j.get("events") or [])
     assert j["state"] == "done", (j.get("error"), said[-1500:])
-    assert "Open the lid done; Close the seat skipped" in said
+    assert "Open the lid done" in said and "Close the seat" not in said              # no closing follows (26 Oct)
     for side in ("LEFT", "RIGHT"):
         assert f"{side}: at the start of Program 72 (its own pole and hand, its first point)." in said
     hw = hardware(server, t0)

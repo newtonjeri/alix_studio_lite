@@ -159,6 +159,24 @@ def watch_calls(robot, link: "ArmLink") -> bool:
     return done
 
 
+JOINT_WARN_C = 60.0       #: a joint at or above this is said (an alert) in the status snapshots (app.py)
+
+
+def _joint_floats(robot, name: str, scale: float, digits: int) -> list | None:
+    """One of the SDK's per-joint reads (rm_get_current_joint_temperature, _current), scaled and rounded, or None when
+    the controller does not answer it (ALIX's emulator has no such call)."""
+    fn = getattr(robot, name, None)
+    if fn is None:
+        return None
+    try:
+        ret, values = fn()
+    except Exception:                                                    # noqa: BLE001
+        return None
+    if ret != 0 or not values:
+        return None
+    return [round(float(v) * scale, digits) for v in values]
+
+
 class ArmLink:
     """One controller: connected once, read by one thread, which also owns the SDK handle (it
     closes it when it stops, so nothing uses a deleted handle). ``on_read`` is called after every
@@ -508,6 +526,10 @@ class ArmLink:
         fb["joints_deg"] = [round(float(v), 3) for v in (st.get("joint") or [])] if ok else None
         fb["pose"] = [round(float(v), 6) for v in (st.get("pose") or [])[:6]] if ok and st.get("pose") else None   # m, rad
         fb["errors"] = error_codes(st.get("err")) if ok else None
+        # the joints' temperatures (C) and currents (A) with every reading (the owner, 26 Oct: the right arm's joint 3 ran to
+        # 80 C at a high current and stopped following; only the 5 ms captures had shown temperatures, and only during streams)
+        fb["temps_c"] = _joint_floats(robot, "rm_get_current_joint_temperature", 1.0, 1) if ok else None
+        fb["currents_a"] = _joint_floats(robot, "rm_get_current_joint_current", 0.001, 2) if ok else None
         r, mode = runmode.read_run_mode(robot)
         fb["run_mode"] = {0: "SIM", 1: "REAL"}.get(mode) if r == 0 else None
         height = peripherals.Pole(robot, log=lambda *_: None).height_m()

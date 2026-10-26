@@ -13,9 +13,8 @@
 #      lid is lifted (depth gap between lid and seat, fail-closed). NO -> the
 #      left re-lifts up to three times (max_retries 3), then the row escalates to a human. Only PASS
 #      continues.
-#      The same frame also says whether the SEAT came up with the lid
-#      (also_observe: seat_lifted); if it did, the row ends with
-#      seat_close_right (if_observed) so the state left behind is lid_open.
+#      The seat is not looked at here (Newton 2026-10-26: hidden under the
+#      lifted lid and the hand); its state is judged once, at the task's end.
 #   4. The scene's lid collision object is moved to match (-30 deg).
 #   5. Right arm approaches the partially-open lid (pre-start -> start) and
 #      takes the hold.
@@ -368,15 +367,13 @@ stage_sequence:
   #          top, lid_lifted iff 50 mm higher (Isaac: 160 mm at -30 deg).
   #          fixture_state would ask the status classifier instead, which
   #          answered lid_open at 0.49-0.50 confidence on the lifted lid.
-  #   also_observe / if_observed (Newton 2026-10-05, flow): the SAME frame
-  #          also says whether the SEAT came up with the lid (the hook sits
-  #          under both lips where the lid does not overhang the seat: the
-  #          seat ring is then ABSENT from its closed place, the rim shows).
-  #          When it did, the executive runs `if_observed` (seat_close_right,
-  #          a saved plan of the same mode, else the task node live) right
-  #          after this row, so the established state is lid_open — not
-  #          lid_seat_open — and the seat row later finds a closed seat.
-  #          Neither key changes this check's verdict.
+  #   The seat is NOT looked at here (Newton 2026-10-26): under the lifted
+  #          lid it is hidden by the lid and the hand (the 26 Oct run: 0 of 3
+  #          frames could answer it), so the also_observe / if_observed pair
+  #          of 2026-10-05 (the SAME frame saying whether the seat came up,
+  #          then seat_close_right) is gone. The seat's state is judged once,
+  #          at the end of the task: the end-state check reads the seat with
+  #          the lid (lid_seat_open: it came up) and the seat task finds it up.
   - stage: verify_lid_lifted
     check: fixture_gap
     expect: lid_lifted
@@ -393,8 +390,6 @@ stage_sequence:
       - {x: -0.01, y: -0.01}
       - {x: -0.01, y: -0.01, z: -0.01}
       - {x: 0.01, y: 0.005, z: -0.01}
-    also_observe: seat_lifted
-    if_observed: seat_close_right
 
   # ---------------------------------------------------------------------------
   # 4. Scene: lid to -30 deg (only reached on PASS)

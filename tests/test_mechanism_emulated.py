@@ -25,9 +25,9 @@ def server(tmp_path_factory):
         port = s.getsockname()[1]
     data = tmp_path_factory.mktemp("lite-mech")
     script = data / "answers.json"
-    # lid_open: closed (it runs); the lift missed (re-lift 1 from rung 1); lifted; the seat stayed down; its final check
-    # sees the lid open. Then the STOP test's lid_open: closed, then STOP before its next question.
-    script.write_text(json.dumps(["lid_closed", "lid_closed", "lid_lifted", "seat_closed", "lid_open", "lid_closed"]))
+    # lid_open: closed (it runs); the lift missed (re-lift 1 from rung 1); lifted (the seat under it not asked, 26 Oct);
+    # its final check sees the lid open. Then the STOP test's lid_open: closed, then STOP before its next question.
+    script.write_text(json.dumps(["lid_closed", "lid_closed", "lid_lifted", "lid_open", "lid_closed"]))
     env = dict(__import__("os").environ, LITE_CHECK_SCRIPT=str(script))
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
                              "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"),
@@ -82,9 +82,9 @@ def hardware(ctx) -> list:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
-def test_the_catalogue_lists_the_four_tasks(server):
+def test_the_catalogue_lists_the_two_openings(server):
     cat = call(server, "GET", "/api/mechanism")
-    assert [t["name"] for t in cat["tasks"]] == ["lid_open", "seat_close", "seat_open", "lid_close"]
+    assert [t["name"] for t in cat["tasks"]] == ["lid_open", "seat_open"]        # the closings withdrawn (the owner, 26 Oct)
     assert cat["standoff_mm"] == 250 and cat["rows"]["L-T01"] == "lid_open"
 
 
@@ -104,7 +104,7 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-8:])
     res = done["result"]
     assert [(p["plan"], p["outcome"], p["relifts"]) for p in res["plans"]] == [("lid_open", "done", 1)]
-    assert [c["verdict"] for c in res["checks"]] == ["PASS", "NO", "PASS", "no", "PASS"]
+    assert [c["verdict"] for c in res["checks"]] == ["PASS", "NO", "PASS", "PASS"]       # no second question (26 Oct)
     assert res["checks"][-1]["check"] == "verify_lid_open_after" and res["checks"][-1]["final"]     # the end state, seen
     said = " | ".join(e["text"] for e in done["events"])
     assert "the right arm to its inspection pose (Open the seat's way in)" in said and "at where Open the lid ended" in said
@@ -135,35 +135,8 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     assert hands and all(len(r["args"]["speed_set"]) == 6 for r in hands)   # the plan's hand moves: ALIX's executive's speeds
 
 
-def test_real_seat_close_pulls_with_the_left_at_full_pole_and_the_right_lets_the_seat_down(server):
-    """25 Oct, the compound Close the seat on the emulated arms: two camera questions (the seat up; after all the
-    moves, the seat down), no pole move (150 mm throughout) and no hand command (the hands as they are: the sequence's
-    rule), the left's pull, the right's hold and release."""
-    server["script"].write_text(json.dumps(["seat_lifted", "seat_closed"]))
-    before = len(hardware(server))                                         # this run's rows alone (the server is shared)
-    job = call(server, "POST", "/api/mechanism/seat_close/run", {"confirmed": True})
-    done = wait(server, job)
-    assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-8:])
-    res = done["result"]
-    assert [(p["plan"], p["outcome"]) for p in res["plans"]] == [("seat_close", "done")]
-    assert [(c["check"], c["verdict"]) for c in res["checks"]] == [("verify_seat_open", "PASS"), ("verify_seat_closed", "PASS")]
-    assert not [c for c in res["checks"] if c.get("final")]
-    rows = hardware(server)[before:]
-    streams = [r["args"]["label"] for r in rows if r.get("verb") == "canfd stream"]
-    # the right's release runs on into its last look (one stream: nothing between them); the end check rides
-    # move_to_rest, so rest is its own stream after the check
-    assert streams[:1] == ["RIGHT arm move_to_inspect"]
-    assert streams[-2:] == ["RIGHT arm execute_path + move_to_inspect", "RIGHT arm move_to_rest"]
-    assert any(lab.startswith("LEFT arm") and "execute_path" in lab for lab in streams)
-    assert any(lab.startswith("RIGHT arm") and "execute_path" in lab for lab in streams)
-    assert not [r for r in rows if r.get("verb") == "pole move"], "no pole command: 150 mm throughout"
-    assert not [r for r in rows if r.get("verb") in ("hand move", "pole and hand", "hand open")], "no hand command: the hands stay as they are"
-    said = " | ".join(e["text"] for e in done["events"])
-    assert "its own last check looked at the end state" in said
-    server["script"].write_text(json.dumps(["lid_closed"]))                # the STOP test's answer, from the first
-
-
 def test_stop_in_the_middle_of_a_stream_stops_sending(server):
+    server["script"].write_text(json.dumps(["lid_closed"]))                # its first answer: the lid closed, the lift follows
     before = len(hardware(server))
     job = call(server, "POST", "/api/mechanism/lid_open/run", {"confirmed": True})
     running = wait(server, job, until=lambda j: "move_to_inspect" in (j.get("stage") or "") and "move_to_inspect_pole" not in (j.get("stage") or ""))
@@ -198,15 +171,14 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     kinds = {a["kind"] for side in ("left", "right") for a in sim["acts"][side]}
     assert {"stream", "pole", "hand", "global", "check"} <= kinds
     assert sim["phases"][-1][1] == "lid_open"
-    right = sim["acts"]["right"]                 # drawn as it runs: the seat under the lifted lid not judged, Close the seat
-    assert any(a["kind"] == "stream" and a.get("file") == "mechanism:seat_close:0" for a in right)   # looks first
-    assert [a["expect"] for a in right if a["kind"] == "check"][-1] == "seat_open"                   # and ends there
-    looks = [a for a in right if a["kind"] == "stream" and a.get("file") == "mechanism:seat_close:0"][0]
-    assert looks["t0"] > next(t for t, ph in sim["phases"] if ph == "lid_open")      # with the lid open
-    assert any("Close the seat runs after it and looks first" in f["text"] for f in sim["findings"])
+    right = sim["acts"]["right"]                 # drawn as it runs: the end check (lid open, seat down) by Open the seat's way in
+    assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_closed", "lid_lifted", "lid_open"]   # no seat under the lid
+    looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:seat_open:")]
+    assert looks and looks[0]["t0"] > next(t for t, ph in sim["phases"] if ph == "lid_open")      # with the lid open
+    assert not any("seat_close" in str(a.get("file")) for a in right)
     assert any("left out of this collision check" in f["text"] for f in sim["findings"])
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "seat_closed", "lid_open"]))
+    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     done = wait(server, job)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])
@@ -257,7 +229,7 @@ def test_s2_after_a_lid_task_with_a_wait_next_each_arm_stays_where_its_plan_ende
     nxt = {side: min(a["t0"] for a in sim["acts"][side] if a["stage"] == 2) for side in ("left", "right")}
     assert nxt["left"] == pytest.approx(nxt["right"], abs=1e-6)          # both arms start the next stage together
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "seat_closed", "lid_open"]))
+    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     done = wait(server, job)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])

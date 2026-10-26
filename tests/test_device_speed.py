@@ -59,11 +59,9 @@ def test_alix_s_plans_pole_and_hand_moves():
     from alix_studio_lite.server import mechanism
 
     vendor_paths.activate()
-    # Open the seat keeps both poles at half length since 24 Oct 21:42: the single-arm Close the seat's pole move
-    # (150 -> 75 mm; ALIX's plan of 7 Oct, vendored still, by its path: Lite offers the compound closing since 25 Oct)
-    pole = next(e for e in mechanism.Plan("seat_close_right", mechanism.PLANS / "seat_close_right_toppra.json").entries
-                if e.kind == "pole" and e.seconds > 0)
-    assert ds.pole_speed_pct(pole.side, pole.first()[0], pole.last()[0], pole.seconds)[0] == 100
+    # Open the seat keeps both poles at half length since 24 Oct 21:42; the single-arm Close the seat's pole move of
+    # 7 Oct (move_to_quarter_pole_length, 150 -> 75 mm in 1.344 s; its plan no longer vendored, 26 Oct) ran at 100 %
+    assert ds.pole_speed_pct("right", 0.15, 0.075, 1.34441)[0] == 100
     plan = mechanism.Plan("seat_open")
     hand = next(e for e in plan.entries if e.kind == "hand" and e.side == "right" and e.seconds > 0)
     assert ds.hand_speed_sets("right", hand.hand_counts("first"), hand.hand_counts(), hand.seconds)[0] == [390, 390, 390, 390, 1000, 420]

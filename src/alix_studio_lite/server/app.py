@@ -110,7 +110,8 @@ class LiteApp:
                     if link is not None:
                         fb = link.view()["feedback"]
                         rec.update({k: fb.get(k) for k in ("joints_deg", "errors", "run_mode", "pole_mm", "hand", "io3",
-                                                           "age_s", "busy", "stale")})
+                                                           "age_s", "busy", "stale", "temps_c", "currents_a")})
+                        self._hot_joint_alert(side, fb.get("temps_c") or [])
                     else:
                         rec.update(pole_mm=round(a.pole_mm, 1), hand=list(a.hand), stand_in=True)
                     arms[side] = rec
@@ -119,6 +120,22 @@ class LiteApp:
                     self.log.status(dict(t=round(time.time(), 3), mode=self.ui["mode"], arms=arms, jobs=jobs))
             except Exception:                                   # noqa: BLE001 - a log never stops Lite
                 pass
+
+    def _hot_joint_alert(self, side: str, temps: list) -> None:
+        """A joint at JOINT_WARN_C or more: one alert per arm until it is 5 degrees under it again (the owner, 26 Oct: the
+        right arm's joint 3 at 80 C went unnoticed in Lite; a run refuses to start at mechanism.JOINT_HOT_C)."""
+        from .robot_link import JOINT_WARN_C
+
+        latch = self.__dict__.setdefault("_hot_joints", {})
+        hot = [(j + 1, v) for j, v in enumerate(temps) if v is not None and v >= JOINT_WARN_C]
+        if hot and not latch.get(side):
+            latch[side] = True
+            j, v = max(hot, key=lambda jv: jv[1])
+            self.log.alert("warn", f"{side.upper()}: joint {j} at {v:.0f} C" + (f" ({len(hot)} joints over {JOINT_WARN_C:.0f} C)" if len(hot) > 1 else ""),
+                           hint="Let it cool and check that joint on its pendant; a run does not start with a joint at 65 C or more.",
+                           side=side)
+        elif latch.get(side) and temps and all(v is None or v < JOINT_WARN_C - 5 for v in temps):
+            latch[side] = False
 
     def _job_ended(self, job) -> None:
         """Every job's end goes to the log; a robot job that failed is a hardware alert too. A

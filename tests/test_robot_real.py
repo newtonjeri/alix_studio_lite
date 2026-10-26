@@ -744,7 +744,8 @@ def test_a_lid_or_seat_run_keeps_one_feed_on_and_holds_the_global_ratio(monkeypa
     arm.move_to([0] * 7, speed=15, restore_pct=50)            # a MoveJ puts 50 back too
     arm.stream(rows, "LEFT arm move", speed=50, restore_pct=50, records=tmp_path)
     arm.stream(rows, "LEFT arm move", speed=50, restore_pct=100, records=tmp_path)   # 100 to put back: set, then put back
-    assert len(made) == 1 and not made[0].stopped and made[0].monitor is None       # one feed, kept on, nothing watching
+    assert len(made) == 1 and not made[0].stopped                                     # one feed, kept on
+    assert isinstance(made[0].monitor, robot_real._FrameTap)                           # no stream's watch: the arm's own frame tap (hand_load)
     assert calls == [(False, 50), (True, 50), (True, 50), (True, 50), (False, 100)]
     assert arm.drop_feed()["capture"] == made[0].out_path.name and made[0].stopped
     arm.stream(rows, "LEFT arm move", speed=50, restore_pct=50, records=tmp_path)   # no run: its own feed, as before

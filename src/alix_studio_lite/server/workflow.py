@@ -1190,8 +1190,7 @@ def stage_off(S: str, row, pid: int, st, pole, hand, set_pole: bool, set_hand: b
 
 #: The commode as each task leaves it, in the camera checks' words: the expectations that hold there (a plan that runs
 #: after another, a follow-up, has its checks answered by them in the simulation; a plan's own are answered as expected).
-HOLDS_AFTER = {"lid_open": {"lid_open", "seat_closed"}, "seat_close": {"lid_open", "seat_closed"},
-               "seat_open": {"lid_open", "seat_open"}, "lid_close": {"lid_closed", "seat_closed"}}
+HOLDS_AFTER = {"lid_open": {"lid_open", "seat_closed"}, "seat_open": {"lid_open", "seat_open"}}
 
 
 def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=()) -> float:
@@ -1200,11 +1199,7 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
     hand as Lite moves them, a hold where the plan holds, a moment where the camera is asked. The commode is in the
     task's end state from its end. Then, as on the robot:
-    - a check that also looks at a part the camera does not judge there (the seat under the lifted lid,
-      FixtureFit.seat_hidden) has its plan's follow-up run next (Close the seat after Open the lid): it looks first,
-      with its own checks, finds the commode as the plan left it (HOLDS_AFTER) and ends there, skipped: its arms to its
-      plan's end;
-    - else the plan's final check (mechanism.FINAL_CHECKS): the right arm to its inspection pose by the way in ALIX
+    - the plan's final check (mechanism.FINAL_CHECKS): the right arm to its inspection pose by the way in ALIX
       planned in that state, the camera, back along that way in, and to where the plan ended.
     The arms in ``leave`` (their next task's start follows, next_after_tasks) go to no plan's end."""
     from . import mechanism, staging
@@ -1278,9 +1273,8 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
 
     def play(owner, holds=None) -> tuple:
         """``owner`` from its start: its entries and their checks, these answered by ``holds`` when given (ended at the
-        first that does not hold and skips). (skipped, the follow-up a check calls for)."""
+        first that does not hold and skips). True when it skipped."""
         approach(owner.targets("start"), "its start" if owner is plan else f"{owner.title}'s start")
-        follow = None
         for e in owner.entries:
             for pa in e.pre_actions:
                 if pa.get("type") == "hold_pose" and float(pa.get("seconds") or 0) > 0:
@@ -1291,24 +1285,15 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                     expect = pa.get("expect")
                     check(expect, "" if owner is plan else f" ({owner.title}'s)")
                     if holds is not None and expect not in holds and pa.get("on_fail") == "skip":
-                        return True, follow
-                    if pa.get("also_observe") and pa.get("if_observed"):    # the part it also looks at: not judged here
-                        follow = mechanism.task_name(pa["if_observed"])
+                        return True
             entry(owner, e)
-        return False, follow
+        return False
 
-    _, follow = play(plan)
+    play(plan)
     sim, a = act(plan.sides()[0], "wait", 0.0, f"{title}: done, {mechanism.TASKS[plan.name]['end']}",
                  phase=mechanism.PHASE_AFTER[plan.name])
     done(sim, a, 0.0)
-    if follow in mechanism.TASKS:                    # it runs next and looks first, with its own checks
-        nxt = mechanism.cached(follow)
-        sims[camera]._say("note", mark[camera], f"{title}: the camera does not judge the seat under the lifted lid, so "
-                          f"{nxt.title} runs after it and looks first, as on the robot; here it finds the seat down and ends "
-                          "there.")
-        if play(nxt, HOLDS_AFTER.get(plan.name, set()))[0]:
-            approach({s: tg for s, tg in nxt.targets("end").items() if s not in leave}, f"{nxt.title}'s end")
-    elif plan.name in mechanism.FINAL_CHECKS:        # the commode in its end state from here: the final check sees it
+    if plan.name in mechanism.FINAL_CHECKS:          # the commode in its end state from here: the final check sees it
         fc = mechanism.final_check(plan.name)
         approach({"right": fc["by"].targets("start")["right"]}, f"the final check's way in, {fc['by'].title}'s start")
         for e in fc["look"]:
@@ -2335,6 +2320,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
         from . import mechanism
 
         mechanism.camera_required(robot)
+        mechanism.joints_cool(robot)                          # and no joint hot (the owner, 26 Oct)
     # a Program at another pole or hand than its own is never run (the owner, 21 Oct): not a question, a stop. Lite sets
     # each Program's own before it (own_stages, 24 Oct), so only a simulation made before that can still hold one
     stops = [f["text"] for f in sim["findings"] if f["level"] == "stop"] if simulated else []
@@ -2744,6 +2730,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                                        (lambda text: hw.hardware(None, "mechanism", text=text)) if hw is not None else None,
                                        live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}))
                     mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
+                    mech.joints_cool(robot, st["title"])
                     with kit.camera.using():
                         out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {})).run(st["task"])
                     did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")

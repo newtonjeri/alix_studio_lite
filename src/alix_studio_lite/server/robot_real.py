@@ -23,6 +23,7 @@ callers never compete for one controller (ALIX measured reply timeouts when they
 from __future__ import annotations
 
 import io
+import math
 import sys
 import tempfile
 import threading
@@ -160,16 +161,56 @@ def _printed_to(sink):
             sink(rest.rstrip())
 
 
-class _StopWatch:
-    """ALIX's CanfdWatch with Lite's STOP: the stream's stop check also trips when STOP was pressed. It keeps the last
-    line a check saw sent: a STOP raised inside run_verified leaves no result, and the lab read "0/397 lines" for a way
-    back that had moved (23 Oct 15:08:34)."""
+FORCE_CUT_N = 120.0       #: a stream stops when the wrist carries more than this (the owner, 26 Oct: a gate, not a note;
+#: 23 Oct: the way back dragged the seat at 160 N to the E-stop; the lifts carry 72-80 N)
+FORCE_CUT_FRAMES = 10     #: for this many 5 ms frames in a row (50 ms): a load, not one spike
 
-    def __new__(cls, rows, period_s, stop):
+
+def wrist_load_n(frame: dict) -> float | None:
+    """The six-axis sensor's load in N from one push frame: its force less its zero reference (both in mN)."""
+    sensor = frame.get("six_force_sensor") or {}
+    f, z = sensor.get("force"), sensor.get("zero_force")
+    if not f or len(f) < 3:
+        return None
+    z = z if z and len(z) >= 3 else [0, 0, 0]
+    return math.sqrt(sum(((a - b) / 1000.0) ** 2 for a, b in zip(f[:3], z[:3])))
+
+
+class _FrameTap:
+    """The kept feed's latest frame, read between streams (the wrist's load after a hand let go: RealArm.hand_load)."""
+
+    def __init__(self):
+        self.t_mono, self.frame = None, None
+
+    def on_frame(self, t, frame):
+        self.t_mono, self.frame = t, frame
+
+
+class _StopWatch:
+    """ALIX's CanfdWatch with Lite's STOP: the stream's stop check also trips when STOP was pressed, and when the wrist
+    carries more than FORCE_CUT_N for FORCE_CUT_FRAMES frames (the owner, 26 Oct). It keeps the last line a check saw
+    sent: a STOP raised inside run_verified leaves no result, and the lab read "0/397 lines" for a way back that had
+    moved (23 Oct 15:08:34). ``tap`` also sees every frame (the arm's latest-frame reading)."""
+
+    def __new__(cls, rows, period_s, stop, tap=None):
         from alix_dispatch import track
 
         class Watch(track.CanfdWatch):
             last_line = -1                    # checked every CANFD_CHECK_EVERY_S (10 lines): a count at most 9 short
+            over = 0                          # frames in a row with the wrist over FORCE_CUT_N
+
+            def on_frame(self, t, frame):
+                super().on_frame(t, frame)
+                if tap is not None:
+                    tap(t, frame)
+                load = wrist_load_n(frame)
+                if load is None:
+                    return
+                self.over = self.over + 1 if load > FORCE_CUT_N else 0
+                if self.over >= FORCE_CUT_FRAMES and self.tripped is None:
+                    self.tripped = {"why": "force", "t_mono": t, "line": self.last_line,
+                                    "detail": f"{load:.0f} N on the wrist for {FORCE_CUT_FRAMES * 5} ms "
+                                              f"(a stream stops above {FORCE_CUT_N:.0f} N)"}
 
             def check(self, now, i_sent):
                 self.last_line = max(self.last_line, int(i_sent))
@@ -288,6 +329,7 @@ class RealArm:
         self.link, self.log, self.side = link, log, link.side
         self.SIDE = link.side.upper()
         self._feed = None            # (recorder, capture): the 5 ms feed kept on across a lid or seat run (keep_feed)
+        self._tap = _FrameTap()      # the kept feed's latest frame (hand_load)
         self._hand = None            # ALIX's HandModbus opened once for a lid or seat run (keep_hand)
         self._hand_speeds = None     # the SPEED_SET each channel of the kept hand holds
         self._pole_done = None       # when the last pole move ended (the controller's warm start)
@@ -1328,8 +1370,18 @@ class RealArm:
             self._ratio = None
             with self.link.busy(f"turning on the 5 ms feed ({label})"):
                 self._feed = self._capture(label, records)
+            self._feed[0].attach_monitor(self._tap)
             self._hw("canfd feed", args=dict(label=label, capture=self._feed[1].name), ok=True, text="on, kept for the run's moves")
         return self._feed[1].name
+
+    def hand_load(self) -> dict | None:
+        """The wrist's load now (N) from the kept feed's latest frame, and that frame's age, or None without a feed or
+        a six-axis reading (an emulated arm)."""
+        t, frame = self._tap.t_mono, self._tap.frame
+        load = None if frame is None else wrist_load_n(frame)
+        if load is None:
+            return None
+        return dict(load_n=round(load, 1), age_s=round(time.monotonic() - t, 2))
 
     def drop_feed(self) -> dict | None:
         """The kept feed turned off: the controller's push put back as it was found (ALIX's recorder). Never raises; one
@@ -1371,7 +1423,7 @@ class RealArm:
             raise UserError(f"{label}: no lines to stream.")
         h = self.handle
         stop = threading.Event()
-        watch = _StopWatch(rows, CANFD_PERIOD_S, stop)
+        watch = _StopWatch(rows, CANFD_PERIOD_S, stop, tap=self._tap.on_frame)
         tid, guard, state = threading.get_ident(), threading.Lock(), {"inside": False}
 
         def on_stop():
@@ -1445,7 +1497,7 @@ class RealArm:
                 out = dict(out, interrupted=True)
             finally:
                 if self._feed is not None and self._feed[0] is rec:
-                    rec.attach_monitor(None)          # the run's feed stays on for its next move
+                    rec.attach_monitor(self._tap)     # the run's feed stays on for its next move, its frames still read
                 else:
                     rec.stop(self.robot)
             t_mono1 = time.monotonic()

@@ -31,8 +31,10 @@ The order is ALIX's: the entries one after the other, each one done before the n
 never move at the same time inside a plan); a plan's checks before the entry that carries them; on a NO,
 the check's own policy: skip (the plan's outcome already holds), run_prerequisite (the plan that makes the
 state runs first, then this one again from its start), retry_lift (the lifting arm's block again, from the
-next pre-planned rung), abort (a person must look). A PASS with also_observe asks the second question:
-Close the seat follows when the seat came up with the lid (ALIX names it seat_close_right: task_name maps the name).
+next pre-planned rung), abort (a person must look). A check's second question (also_observe: the seat under the
+lifted lid; if_observed: Close the seat after) is not asked since 26 Oct (the owner: the lid and the hand hide the seat
+there, the look costs time, and the seat is judged once, at the end). After a hand lets go, the run goes on only when
+the hand did let go (``released``: every channel open, the wrist unloaded before a retract), else it stops for a person.
 
 After a plan has run, its end state is checked (FINAL_CHECKS; the owner, 21 Oct: a lid opening whose right side
 did not open the lid ran to its end all the same): the right arm goes to its inspection pose the way ALIX planned it
@@ -63,6 +65,9 @@ SINGLE_POINT_S = 0.5                 # a one-point move at t = 0 gets this long 
 MODE = "toppra"
 STANDOFF_MM = 250                    # the UGV placement the plans were made at, with no offset
 RATE_GATE = "per_joint"              # ALIX's lane since 2026-09-21 (cleaning_tracks, run_verified's default)
+HAND_RELEASE_SHORT = 150             # a released channel this many counts short of its target did not let go (26 Oct: 449)
+HAND_FREE_N = 25.0                   # a hand that let go carries less than this on its wrist (the lifts: 72-80 N; idle 3 N)
+HAND_CHANNELS = ("little", "ring", "middle", "index", "thumb bend", "thumb rotation")   # ALIX's hand_units order
 
 #: what each task does, in the operator's words (from each plan's config, ALIX's mechanism_tasks/commode_c)
 TASKS = {
@@ -70,28 +75,16 @@ TASKS = {
         title="Open the lid", short="LID OPEN", start="lid closed", end="lid open, seat down",
         does="The right arm looks with the wrist camera; if the lid is closed, the left arm lifts it, the camera "
              "checks it is up (up to three re-lifts, each a little further in), then the right arm takes it and "
-             "opens it fully. If the seat came up with the lid, it is closed again after (Close the seat)."),
-    "seat_close": dict(
-        title="Close the seat", short="SEAT CLOSE", start="lid and seat open", end="lid open, seat down",
-        does="The camera checks the seat is up (else there is nothing to do); the left arm hooks the seat's top edge "
-             "and pulls it over onto the right hand, which lets it go; the camera checks it is down."),
+             "opens it fully. At the end the camera checks the lid is open and reads the seat: one that came up with "
+             "the lid is said (Open the seat then finds it up and skips itself)."),
     "seat_open": dict(
         title="Open the seat", short="SEAT OPEN", start="lid open, seat down", end="lid and seat open",
         does="The camera checks the lid is open (else Open the lid runs first) and the seat is down; the left arm "
-             "lifts the seat, the camera checks it is up (one re-lift), then the right arm opens it fully."),
-    "lid_close": dict(
-        title="Close the lid", short="LID CLOSE", start="lid open, seat down", end="lid and seat closed",
-        does="The camera checks the lid is open (else there is nothing to do); the left arm hooks the lid's top edge "
-             "and pulls it over onto the right hand, which lets it go; the camera checks it is down."),
+             "lifts the seat, the camera checks it is up (one re-lift), then the right arm opens it fully; at the end "
+             "the camera checks the lid and the seat are open."),
 }
-#: ALIX's names for the closings before 25 Oct (the single-arm plans of 7 Oct, superseded by the compound ones above):
-#: what Open the lid's follow-up (if_observed) and the older configs' prerequisites still say, and the plan Lite runs for it
-ALIASES = {"seat_close_right": "seat_close", "lid_close_right": "lid_close"}
-
-
-def task_name(name: str) -> str:
-    """A plan named by ALIX's configs (a follow-up, a prerequisite) as Lite knows it."""
-    return ALIASES.get(name, name)
+#: The closings (Close the seat, Close the lid) are not offered (the owner, 26 Oct: the plans of 25 Oct are not the
+#: final ones, removed and never run; the correct ones come later). The rows that ran them are plain arm steps until then.
 
 
 #: After each plan its end state, checked by the wrist camera (the owner, 21 Oct, after a lid opening whose right side did
@@ -100,18 +93,17 @@ def task_name(name: str) -> str:
 #: as ALIX planned it in the state the plan leaves: the way in of the plan that starts in that state (its pole, its hand,
 #: its move_to_inspect); the camera is asked, judged as the plans' own checks are (lift_check); the right arm goes back to
 #: where the plan ended. A NOT stops the run: a person must look. {plan: (what the camera must see, whose way in looks)}
-#: The closings (25 Oct) carry their own end check: their last stage looks from inspection_pose_1 before the right arm
-#: goes to rest, so Lite adds none after them.
+#: Open the seat's end (lid and seat open) is looked at by its own way in (pose 4, since 26 Oct: no plan starts in that
+#: state now that the closings are gone; until then Close the seat's way in, pose 1).
 FINAL_CHECKS = {
     "lid_open": ("lid_open", "seat_open"),                    # lid open, seat down: Open the seat starts there
-    "seat_open": ("seat_open", "seat_close"),                 # lid and seat open: Close the seat starts there
+    "seat_open": ("seat_open", "seat_open"),                  # lid and seat open: its own way in
 }
 
 #: Lite's catalogue rows (docs/region_catalogue_commode_c.csv) and the plan each one runs
-ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T02": "seat_close", "R-T02": "seat_close",
-        "L-T03": "seat_open", "R-T03": "seat_open", "L-T05": "lid_close", "R-T09": "lid_close"}
+ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T03": "seat_open", "R-T03": "seat_open"}
 #: the commode's state after each, for the 3D and the collision check (Lite's phases)
-PHASE_AFTER = {"lid_open": "lid_open", "seat_close": "lid_open", "seat_open": "seat_open", "lid_close": "lid_closed"}
+PHASE_AFTER = {"lid_open": "lid_open", "seat_open": "seat_open"}
 
 SIDE_OF = {"R": "right", "L": "left"}
 
@@ -299,7 +291,7 @@ class Plan:
 
     def checks(self) -> list:
         return [dict(entry=e.stage, **{k: a.get(k) for k in ("stage", "check", "expect", "on_fail", "max_retries",
-                                                              "also_observe", "if_observed", "prerequisite")})
+                                                              "prerequisite")})
                 for e in self.entries for a in e.pre_actions if a.get("type") == "check_fixture_state"]
 
     def rung_block(self, k: int, lifter: str) -> list | None:
@@ -378,7 +370,7 @@ def final_check(name: str) -> dict:
         raise UserError(f"{by.title}'s way in is not the right arm's move to its inspection pose, so {TASKS[name]['title']}'s "
                         "end state cannot be checked: nothing was moved.")
     action = dict(type="check_fixture_state", stage=f"verify_{expect}_after", check="fixture_gap", expect=expect, arm="right",
-                  on_fail="abort", max_retries=0, also_observe="", if_observed="", prerequisite="")
+                  on_fail="abort", max_retries=0, prerequisite="")
     return dict(expect=expect, action=action, by=by, look=look)
 
 
@@ -481,18 +473,12 @@ def frames_rule():
     return int(lc.CHECK_FRAMES_FIRST), int(lc.CHECK_FRAMES_MAX), float(lc.CHECK_FRAME_SPACING_S)
 
 
-def observation(action) -> dict:
-    """A check's second question (`also_observe`) as lift_check.observe asks it: the check's kind, the observed state."""
-    return {"check": action.get("check"), "expect": str(action.get("also_observe") or ""),
-            "classifier_may_prove": action.get("classifier_may_prove", False)}
-
-
 def frames_said(answers: list) -> str:
     return ", ".join(a.fixture_state if a.success else "refused" for a in answers)
 
 
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
-#    _observe_also, _after_check_failure, _try_relift, _run_prerequisite, _queue_follow_up)
+#    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
 class Runner:
     def __init__(self, ex, say=None, leave=()):
         self.ex = ex
@@ -522,7 +508,7 @@ class Runner:
     def _plan(self, name: str) -> str:
         plan = Plan(name)
         entries = list(plan.entries)
-        state = dict(relifts=0, follow_up="", skipped=False,
+        state = dict(relifts=0, skipped=False,
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
                                                         for s in plan.sides()) if first is not None))   # after the approach
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
@@ -553,24 +539,14 @@ class Runner:
             self.ex.check_stop()
             joined, used = joined_moves(entries, i, state["bridge"])
             self.ex.move(joined, bridge=id(e) in state["bridge"])
+            if joined.kind == "hand" and joined.stage.startswith("hand_release"):      # it let go, or the run stops here
+                nxt = next((x for x in entries[i + used:] if x.kind == "arm" and x.side == joined.side), None)
+                getattr(self.ex, "released", lambda *_: None)(joined, nxt.stage if nxt is not None else None)
             i += used
         for a in self.final_actions(plan):
             self.ex.hold(float(a.get("seconds") or 0.0), a.get("stage") or "hold_pose")
         if not state["skipped"]:
-            if state["follow_up"]:                   # it looks first thing, with its own checks (a NOT there stops it)
-                self.say(f"FINAL CHECK {plan.title}: {TASKS[state['follow_up']]['title']} runs next and looks first, with its "
-                         "own checks")
-            elif plan.name in FINAL_CHECKS:
-                self._final_check(plan)
-            else:                                     # the closings: their last check looked at the end state already
-                self.say(f"FINAL CHECK {plan.title}: its own last check looked at the end state")
-        if state["follow_up"]:
-            nxt = state["follow_up"]
-            if nxt not in TASKS:
-                raise UserError(f"{plan.title}: its follow-up {nxt} is not one of Lite's plans: the commode is not left as "
-                                "the plan declares.", "A person must look at the commode.", code="escalate")
-            self.queue.insert(self.k + 1, nxt)
-            self.say(f"FOLLOW-UP: {TASKS[nxt]['title']} runs next, so the plan leaves the state it declares")
+            self._final_check(plan)
         if state["skipped"] and self.k + 1 >= len(self.queue):
             ends = {s: t for s, t in plan.targets("end").items() if s not in self.leave}
             if ends:
@@ -605,6 +581,10 @@ class Runner:
             raise UserError(f"{plan.title} ran to its end, but the camera does not see {expect.replace('_', ' ')} after it "
                             f"(it reads {answer.fixture_state} at {float(answer.state_confidence):.2f}).",
                             "A person must look at the commode: nothing else was moved after this.", code="escalate")
+        if answer.fixture_state != expect:            # proven by a state that says more: the seat under the opened lid came up
+            self.say(f"FINAL CHECK {plan.title}: the camera reads {answer.fixture_state}, which proves {expect.replace('_', ' ')}"
+                     + ("; the seat came up with the lid: Open the seat finds it up and skips itself"
+                        if (plan.name, answer.fixture_state) == ("lid_open", "lid_seat_open") else ""), "warn")
         for e in reverse_block(fc["look"], note="the final check's way in, reversed"):   # 24 Oct: a MoveJ at the slider, 3.2 s
             self.ex.check_stop()
             self.ex.move(e)
@@ -659,52 +639,12 @@ class Runner:
                                                                     + (", CONTRADICTS: uncertain" if models.get("contradiction") else "") + ")"
                                                                     if models else "")
                          + f" -> {'PASS' if passed else 'NO'}", "info" if passed else "warn")
-                if passed and a.get("also_observe"):
-                    self._observe_also(a, state)
                 if not passed:
                     return a
             else:
                 self.say(f"{e.stage}: the plan carries an action Lite does not implement ({kind!r}) — refusing (fail-closed)", "error")
                 return dict(a, on_fail="abort", stage=a.get("stage") or kind)
         return None
-
-    def _observe_also(self, a, state) -> None:
-        what = str(a.get("also_observe") or "")
-        follow = task_name(str(a.get("if_observed") or ""))
-        seconds = getattr(self.ex, "observed", None)
-        if seconds:
-            # ALIX's _observe_also: the check's own frames answered it, decided by the same vote (lift_check.observe)
-            lc = lift_check()
-            verdict = lc.decide(observation(a), seconds)
-            answered = sum(1 for x in seconds if x.success)
-            if verdict == lc.UNDECIDED:
-                self.say(f"OBSERVED {a.get('stage')}: {what} = unknown ({answered} of the check's {len(seconds)} frame(s) "
-                         f"answered it)", "warn")
-                if follow:                   # its own check decides: it skips when the part is not up
-                    state["follow_up"] = follow
-                return
-            seen = verdict == lc.PASS
-            last = seconds[[lc.frame_vote(observation(a), x) for x in seconds].index("yes" if seen else "no")]
-            self.checks.append(dict(check=f"{a.get('stage')} (also)", expect=what, state=last.fixture_state,
-                                    confidence=round(float(last.state_confidence), 2), verdict="YES" if seen else "no",
-                                    message=last.message, record=getattr(last, "record_path", None)))
-            self.say(f"OBSERVED {a.get('stage')}: {what} = {'YES' if seen else 'no'} (on the check's own {len(seconds)} frames)")
-            if seen and follow:
-                state["follow_up"] = follow
-            return
-        answer = self.ex.ask(dict(a, expect=what), what, observe=True)
-        if not answer.success:
-            self.say(f"OBSERVED {a.get('stage')}: {what} = unknown ({answer.message[:140]})", "warn")
-            if follow:                       # its own check decides: it skips when the part is not up
-                state["follow_up"] = follow
-            return
-        seen = answer.fixture_state == what
-        self.checks.append(dict(check=f"{a.get('stage')} (also)", expect=what, state=answer.fixture_state,
-                                confidence=round(float(answer.state_confidence), 2), verdict="YES" if seen else "no",
-                                message=answer.message, record=getattr(answer, "record_path", None)))
-        self.say(f"OBSERVED {a.get('stage')}: {what} = {'YES' if seen else 'no'}")
-        if seen and follow:
-            state["follow_up"] = follow
 
     def _after_failure(self, plan, entries, k, failed, state) -> tuple:
         lc = lift_check()
@@ -715,7 +655,7 @@ class Runner:
             self.say(f"{label}: NOT {expect} — this plan's outcome already holds; it ends here as done (on_fail skip)")
             return ("skip",)
         if policy == "run_prerequisite":
-            task = task_name(str(failed.get("prerequisite") or ""))
+            task = str(failed.get("prerequisite") or "")
             budget = max(1, int(failed.get("max_retries", 1) or 1))
             key = (plan.name, task)
             done = self.prereq.get(key, 0)
@@ -977,7 +917,7 @@ class RealExec(_Exec):
             arm.pole_to(e.last()[0] * 1000.0, duration_s=e.seconds)
         elif e.kind == "hand":
             self._keep_hand(e.side)
-            arm.hand_to(e.hand_counts(), duration_s=e.seconds)
+            self.__dict__.setdefault("_hand_results", {})[e.side] = arm.hand_to(e.hand_counts(), duration_s=e.seconds)
         else:
             rows = e.rows
             if e.note == "re-lift restore, reversed":      # from where the arm stands (hold_short)
@@ -996,17 +936,38 @@ class RealExec(_Exec):
             self.say(f"{e.label()}: {out['lines_sent']}/{out['lines']} lines in {out['seconds']:.2f} s"
                      + (f", bridged {out['bridged_deg']:.1f} degrees first" if out.get("bridged_deg") else ""))
 
-    def ask(self, action, expect, observe=False):
+    def released(self, e, next_stage):
+        """After a hand let go (a plan's hand_release): the run goes on only when it did, else it stops here for a
+        person (the owner, 26 Oct: a gate that prevents the next move, not a note after it). Every commanded channel
+        within HAND_RELEASE_SHORT of its target; and when that arm's next move is a retract or its rest, the wrist's
+        load back under HAND_FREE_N (the 26 Oct seat run: the ring finger stayed at 544 of 993 under the seat, 56 N
+        still on the hand, and only the stream's start gate kept the retract from dragging it, as the 23 Oct way back
+        did at 160 N)."""
+        out = getattr(self, "_hand_results", {}).get(e.side) or {}
+        target = [int(v) for v in e.hand_counts()]
+        after = [int(v) for v in (out.get("after") or [])]
+        short = [(k + 1, t - a) for k, (t, a) in enumerate(zip(target, after)) if t - a > HAND_RELEASE_SHORT]
+        if short:
+            raise UserError(f"The {e.side.upper()} hand did not let go: " + ", ".join(
+                f"channel {k} ({HAND_CHANNELS[k - 1]}) {d} counts short of {target[k - 1]}" for k, d in short)
+                + f" (it reads {after}).", "A person must look at the commode and the hand: nothing else was moved after this.",
+                code="escalate")
+        if next_stage and (next_stage.startswith("move_to_retract") or next_stage.startswith("move_to_rest")):
+            load = self._arm(e.side).hand_load()
+            if load is not None and load["load_n"] > HAND_FREE_N:
+                raise UserError(f"The {e.side.upper()} hand is still loaded after it let go: {load['load_n']:.0f} N on its "
+                                f"wrist (free is under {HAND_FREE_N:.0f} N), so {next_stage} was not started.",
+                                "A person must look at the commode and the hand: nothing else was moved after this.", code="escalate")
+            self.say(f"{e.side.upper()} hand free: " + ("no wrist reading" if load is None else f"{load['load_n']:.0f} N on the wrist"))
+
+    def ask(self, action, expect):
         """The camera's answer on its frames, ruled by ALIX's lift_check.decide: after 3 frames, and after 5 when the
         3 do not settle it. PASS -> the first frame that voted yes; FAIL -> the first that voted no; UNDECIDED ->
-        CANNOT_JUDGE (success False), which stops the run for a person. A check's `also_observe` is answered on the
-        SAME frames (ALIX's node answers a second region on the same depth frame), kept in ``observed`` for the
-        runner to decide by the same vote. Each frame keeps its own check record."""
+        CANNOT_JUDGE (success False), which stops the run for a person. Each frame keeps its own check record."""
         from dataclasses import replace
 
         from .gap_check import Answer
 
-        self.observed = None
         self.check_stop()
         self.job.progress(f"{action.get('stage')}: asking the camera ({expect})")
         self.live("right", f"CAMERA // {action.get('stage')}: {expect}?")
@@ -1015,19 +976,14 @@ class RealExec(_Exec):
             return scripted
         lc = lift_check()
         first, most, spacing = frames_rule()
-        also = "" if observe else str(action.get("also_observe") or "")
-        answers, seconds, verdict = [], [], lc.UNDECIDED
+        answers, verdict = [], lc.UNDECIDED
         check_id = f"{time.strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000) % 1000:03d}_{action.get('stage') or 'check'}"
         for k in range(most):
             if k:
                 self.check_stop()
                 self.job.sleep(spacing)
-            check = dict(check_id=check_id, stage=action.get("stage"), expect=expect, observe=observe, frame=k + 1)
-            if also:
-                got, second = self._frame_pair(expect, also, check)
-                seconds.append(second)
-            else:
-                got = self._frame(expect, check)
+            check = dict(check_id=check_id, stage=action.get("stage"), expect=expect, frame=k + 1)
+            got = self._frame(expect, check)
             answers.append(got)
             if len(answers) in (first, most):
                 verdict = lc.decide(action, answers)
@@ -1044,11 +1000,9 @@ class RealExec(_Exec):
             last = answers[-1]
             answer = Answer(success=False, fixture_state=CANNOT_JUDGE, record=last.record, record_path=last.record_path,
                             message=f"no decision in {len(answers)} frames ({seen}; {tally}); the last: {last.message}")
-        if also:
-            self.observed = seconds
         self.job.set(check=dict(stage=action.get("stage"), expect=expect, state=answer.fixture_state,
                                 confidence=round(float(answer.state_confidence), 2), message=answer.message,
-                                record=answer.record_path, observe=observe))
+                                record=answer.record_path))
         self._summary(check_id, action, expect, answers, answer)
         return answer
 
@@ -1110,16 +1064,6 @@ class RealExec(_Exec):
         (which check, which frame) and the camera in its context)."""
         frame, q = self._shot(check)
         return self.kit.gap.ask(expect, frame, q_deg=q)
-
-    def _frame_pair(self, expect, also, check=None):
-        """One frame, two questions: the check's and its `also_observe`, on the same depth frame (ALIX's node,
-        _gap_check_regions), each with its own record."""
-        frame, q = self._shot(check)
-        main = self.kit.gap.ask(expect, frame, q_deg=q)
-        if frame is not None and frame.context is not None:
-            frame.context = dict(frame.context, check=dict(frame.context.get("check") or {}, observe=True, expect=also))
-        return main, self.kit.gap.ask(also, frame, q_deg=q)
-
 
 def camera_check(robot) -> dict:
     """What the wrist camera sees now, as the perception node's status_check answers it: the colour model's state of
@@ -1228,6 +1172,27 @@ def camera_required(robot, stage: str | None = None) -> dict:
     return have
 
 
+JOINT_HOT_C = 65.0        #: no run starts with a joint at or above this (the owner, 26 Oct)
+
+
+def joints_cool(robot, stage: str | None = None) -> dict:
+    """Every linked arm's joints under JOINT_HOT_C before a Real run with a lid or seat task (the owner, 26 Oct: the
+    right arm's joint 3 ran hot, 80 °C at a high current, and stopped following its commands; a gate, not a note). The
+    temperatures are the arms' status readings (robot_link: rm_get_current_joint_temperature with every reading); an
+    arm whose controller does not answer them passes (an emulated arm). ``stage``: the S2 stage about to start."""
+    hot, temps = [], {}
+    for side, link in (getattr(robot, "links", None) or {}).items():
+        fb = ((link.view() if link is not None else None) or {}).get("feedback") or {}
+        temps[side] = fb.get("temps_c")
+        hot += [f"the {side.upper()} arm's joint {j + 1} at {v:.0f} °C" for j, v in enumerate(temps[side] or [])
+                if v is not None and v >= JOINT_HOT_C]
+    if hot:
+        why = ", ".join(hot) + f" (a run needs every joint under {JOINT_HOT_C:.0f} °C)"
+        raise UserError(f"{stage} STOPPED: {why}." if stage else f"Not run: {why}. Nothing moved.",
+                        "Let the arm cool and check that joint on its pendant, then run it again.", code="hot")
+    return temps
+
+
 def run(robot, name: str, mode: str | None = None):
     """A lid or seat task as a job on both arms, in ``mode`` (the robot's own by default): Real moves the arms and
     asks the camera, Hardware sim checks it all and sends nothing, Visual sim and the stand-in take its time."""
@@ -1236,6 +1201,7 @@ def run(robot, name: str, mode: str | None = None):
     title = f"{plan.title} (ALIX's {plan.path.name})"
     if mode == "real" and all(robot._real(s) for s in ("left", "right")):
         camera_required(robot)                   # refused at once, before the job starts
+        joints_cool(robot)
 
     def work(job):
         robot._same_mode(mode, "nothing was moved")
@@ -1249,6 +1215,7 @@ def run(robot, name: str, mode: str | None = None):
         if mode == "real" and all(linked.values()):
             k = kit(robot)
             camera_required(robot)                   # again: it may have been unplugged since
+            joints_cool(robot)
             ex = RealExec(job, robot, linked, k, say)
             with k.camera.using():
                 return _finish(Runner(ex, ex.say).run(name), plan, mode)
