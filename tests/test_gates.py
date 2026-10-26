@@ -101,11 +101,11 @@ def test_the_runner_asks_the_release_gate_after_each_hand_release():
 
     ex = Exec(["lid_open", "seat_closed", "seat_lifted", "seat_open"])
     mechanism.Runner(ex).run("seat_open")
-    assert [c[1:] for c in ex.calls if c[0] == "released"] == [("left", "hand_release", "move_to_pre_start"),       # before the lift: no retract next
-                                                               ("right", "hand_release", "execute_path"),
-                                                               ("left", "hand_release", "move_to_retract"),
-                                                               ("left", "hand_release", None),                      # its last: nothing after
-                                                               ("right", "hand_release", None)]
+    assert [c[1:] for c in ex.calls if c[0] == "released"] == [
+        ("right", "hand_release", "execute_path"),      # the right lets go of the lifted seat: its opening path is next, no retract
+        ("left", "hand_release", "move_to_retract"),    # the left lets go: its retract is next (the gate's 25 N case)
+        ("left", "hand_release", None),                 # the plan's last of the left: nothing after it
+        ("right", "hand_release", None)]                # ... and of the right (the left's start release is gone, 26 Oct)
     ex = FakeExec(["lid_open", "seat_closed", "seat_lifted", "seat_open"])        # an executor without the gate runs as before
     assert mechanism.Runner(ex).run("seat_open")["plans"][0]["outcome"] == "done"
 

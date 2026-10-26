@@ -297,11 +297,8 @@ stage_sequence:
   # ---------------------------------------------------------------------------
   # 2. LEFT arm lifts the lid to -30 deg
   # ---------------------------------------------------------------------------
-  - stage: hand_release
-    arm: left
-    pose_name: release
-    planning_group: inspire_hand_left
-
+  # (26 Oct: no hand_release here. The executive sets the hand to the half_grasp
+  # below before the plan starts; the release then re-grasp cost 2.4 s a run.)
   - stage: move_to_half_pole_length
     arm: left
     pose_name: half_length
@@ -342,10 +339,12 @@ stage_sequence:
   # 3. Settle, then CHECK that the lid is lifted (executive, fail-closed)
   # ---------------------------------------------------------------------------
   # Settle dwell (the `hold_time:` key makes it one): the left hand holds the
-  # lid still for 1 s before the image; recorded in the saved plan as a
-  # hold_pose pre_action of the next sub-trajectory.
+  # lid still for 0.5 s before the image (26 Oct: the three frames taken 0, 0.7
+  # and 1.3 s after a 1 s hold agreed in lid height within 0.2 mm, so the lid
+  # is still by then); recorded in the saved plan as a hold_pose pre_action of
+  # the next sub-trajectory.
   - stage: settle_before_check
-    hold_time: 1.0
+    hold_time: 0.5
 
   # THE LIFT CHECK. A `check:` key makes this a perception check, as
   # `hold_time:` makes a dwell: no MTC stage, no trajectory. The saved plan is

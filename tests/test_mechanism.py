@@ -157,7 +157,7 @@ def test_lid_open_as_on_the_robot_on_12_october(fitted):
     out = mechanism.Runner(ex).run("lid_open")
     assert [(p["plan"], p["outcome"], p["relifts"]) for p in out["plans"]] == [("lid_open", "done", 3)]
     notes = [m[5] for m in moves(ex) if m[5]]
-    assert notes[:6] == ["re-lift 1, pre-planned"] * 6 and "re-lift 3, pre-planned" in notes
+    assert notes[:5] == ["re-lift 1, pre-planned"] * 5 and "re-lift 3, pre-planned" in notes   # a rung: pole, hand, three moves (26 Oct)
     # the left's next move (since 24 Oct 21:39 its way out, after the right's push) starts where the ORIGINAL lift ended,
     # 149.5 degrees from rung 3's end: bridged
     left = [m for m in moves(ex) if m[2] == "left" and m[3] == "arm"]
@@ -204,14 +204,20 @@ def test_an_arms_back_to_back_moves_go_as_one_stream_and_the_plan_ends_with_its_
     assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("seat_open", "done")]
     arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]
     assert arm == [("move_to_inspect", "right"), ("move_to_pre_start + move_to_start + execute_path", "left"),
-                   ("move_to_rest", "right"), ("move_to_pre_start + move_to_start", "right"), ("move_to_retract", "left"),
-                   ("move_to_retract_2 + move_to_rest", "left"), ("execute_path", "right"),   # 24 Oct 15:07: retract_pose_2
+                   ("move_to_pre_start + move_to_start", "right"),                         # 26 Oct trims: no rest before pre-start
+                   ("move_to_retract + move_to_retract_2 + move_to_rest", "left"),         # ... and no fist between the retracts
+                   ("execute_path", "right"),
                    ("move_to_inspect", "right"), ("move_to_rest", "right")]   # 26 Oct: the plan's own end look (pose 1), its check, rest
     plan = mechanism.Plan("seat_open")
     joined, used = mechanism.joined_moves(plan.entries, [e.stage for e in plan.entries].index("move_to_pre_start"))
     parts = plan.entries[[e.stage for e in plan.entries].index("move_to_pre_start"):][:used]
     assert used == 3 and joined.rows == [r for e in parts for r in e.rows]
     assert abs(joined.seconds - sum(e.seconds for e in parts)) < 1e-9 and joined.side == "left"
+    # the right's move_to_start is the planner's one point where its pre-start ends (26 Oct's plan): named, not streamed again
+    k = [(e.side, e.stage) for e in plan.entries].index(("right", "move_to_pre_start"))
+    joined, used = mechanism.joined_moves(plan.entries, k)
+    assert used == 2 and joined.stage == "move_to_pre_start + move_to_start" and joined.rows == plan.entries[k].rows
+    assert abs(joined.seconds - plan.entries[k].seconds) < 1e-9
     assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("seat_open", "start")]      # no move of Lite's after the plan
 
 

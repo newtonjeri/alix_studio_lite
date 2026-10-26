@@ -408,22 +408,26 @@ def joined_moves(entries: list, i: int, bridged=()) -> tuple:
 
     if not plain(e):
         return e, 1
-    group = [e]
+    group, still = [e], []                      # ``still``: one-point moves to the line the stream already ends on
     for x in entries[i + 1:]:
         if (not plain(x) or x.side != e.side or x.pre_actions or id(x) in bridged
                 or max(abs(a - b) for a, b in zip(group[-1].rows[-1], x.rows[0])) > 0):
             break
+        if all(r == group[-1].rows[-1] for r in x.rows):   # the planner's one-point move to where the move before ends (26 Oct:
+            still.append(x)                                  # seat_open's right move_to_start): its half second of the same line not sent
+            continue
         group.append(x)
-    if len(group) == 1:
+    if len(group) == 1 and not still:
         return e, 1
     t, q, offset = [], [], 0.0
     for x in group:
         t.append(np.asarray(x.t, dtype=float) + offset)
         q.append(np.asarray(x.q, dtype=float))
         offset += x.seconds
-    return Entry(e.i, e.index, " + ".join(x.stage for x in group), "arm", e.side, list(e.joints), np.concatenate(t),
+    names = [x.stage for x in group] + [x.stage for x in still]
+    return Entry(e.i, e.index, " + ".join(names), "arm", e.side, list(e.joints), np.concatenate(t),
                  np.concatenate(q), list(e.pre_actions), rows=[r for x in group for r in x.rows], group=e.group,
-                 note=" + ".join(x.note for x in group if x.note)), len(group)
+                 note=" + ".join(x.note for x in group + still if x.note and not x.note.startswith("one point"))), len(group) + len(still)
 
 
 #: A joint this close to the reversed lift's first line (millidegrees) is where the lift ended.

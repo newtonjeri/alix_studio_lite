@@ -38,15 +38,16 @@ def test_real_seat_open_streams_every_move_and_ends_with_its_own_look(server):
     assert streams and all(r["ok"] for r in streams), [r.get("text") for r in streams if not r["ok"]]
     labels = [r["args"]["label"] for r in streams]
     assert labels[0] == "RIGHT arm move_to_inspect" and labels[-1] == "RIGHT arm move_to_rest"
-    assert "LEFT arm move_to_pre_start + move_to_start + execute_path" in labels and "LEFT arm move_to_retract" in labels
-    assert sum(len(r["args"]["label"].split(" + ")) for r in streams) == sum(1 for e in plan.entries if e.kind == "arm")   # every move streamed
+    assert "LEFT arm move_to_pre_start + move_to_start + execute_path" in labels
+    assert "LEFT arm move_to_retract + move_to_retract_2 + move_to_rest" in labels         # 26 Oct trims: one stream, no fist between
+    assert sum(len(r["args"]["label"].split(" + ")) for r in streams) == sum(1 for e in plan.entries if e.kind == "arm")   # every move named
     assert all((r["args"].get("settle") or {}).get("by") == "feed" for r in streams)       # each ended on the feed's frames
     assert not any("bridged" in (r.get("text") or "") for r in streams)                    # the emulated arm does not creep
     said = " | ".join(e["text"] for e in done["events"])
     assert "LEFT hand free" in said and "cannot judge" not in said                          # the release gate passed
     assert "not sent, the" not in said                                                      # a task on its own: its final releases sent
     hands = [r for r in hw if r.get("verb") == "hand move"]
-    assert [r["side"] for r in hands].count("left") >= 4 and [r["side"] for r in hands].count("right") >= 3
+    assert [r["side"] for r in hands].count("left") >= 3 and [r["side"] for r in hands].count("right") >= 3
     feeds = [r for r in hw if r.get("verb") == "canfd feed" and str(r.get("text") or "").startswith("off")]
     assert sorted(r["side"] for r in feeds) == ["left", "right"] and abs(feeds[0]["t"] - feeds[1]["t"]) < 1.0   # both off at once
     caps = sorted(p.name for p in (Path(server["data"]) / "logs" / time.strftime("%Y-%m-%d") / "canfd").glob("*.frames.jsonl"))

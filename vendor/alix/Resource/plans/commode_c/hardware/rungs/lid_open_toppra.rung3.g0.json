@@ -2,7 +2,7 @@
   "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung3.json",
   "emitter": "alix_tasks track_emit (C++ port of cleaning_tracks.py emit_fastpath: the plan's own timing, resampled duration-preserving onto the 5.0 ms emit clock = the CANFD stream period)",
   "group": 0,
-  "stage_indices": [5],
+  "stage_indices": [4],
   "stages": [{"stage": "execute_path", "points": [0, 470]}],
   "stage_names": ["execute_path"],
   "join_gap_deg": [],
