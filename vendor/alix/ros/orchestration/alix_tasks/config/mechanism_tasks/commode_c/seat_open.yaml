@@ -66,57 +66,15 @@ task_parameters:
 # =============================================================================
 right:
   task_parameters:
-    # ik_frame: "R_glove_frame_3"
-    ik_frame: "R_tip_frame"
-    primary_planning_group: "rm75_arm_right"
+    ik_frame: R_tip_frame
+    primary_planning_group: rm75_arm_right
 
-  # CARTESIAN POSES (Position + Orientation)
-  # Format: [x, y, z, qx, qy, qz, qw]
-  # ---------------------------------------------------------------------------
-  # The inspect move (stage 1) is NOT a Cartesian pose: it names the SRDF group
-  # state inspection_pose_4 of rm75_arm_right (the lift-check viewpoint,
-  # Newton 2026-10-05, pole at quarter length). The ik_frame of this block is
-  # the glove frame, not the camera, so a Cartesian inspect pose is not drafted.
-  # No retract_pose: the right finishes the arc and goes to rest, as the left
-  # did before the reversal (the pre-reversal right retract moved to the LEFT
-  # block, mirrored).
   cartesian_poses:
     # 0.65474; -0.15255; 0.46745, -0.24912; 0.93219; 0.058472; 0.25601
     # [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
     start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
-
     pre_start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
-  # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
-  # Translation: [x, y, z] in meters
-  # Rotation: [roll, pitch, yaw] in degrees
-  # Relative to vector_frame_id (alix_ref_frame)
-  # ---------------------------------------------------------------------------
-  # Full-open arc from the lid already lifted to -30 by the left hand. Mirrored
-  # as deltas from the pre-reversal left path ([x,-y,z], [-r,p,-y]); the whole
-  # arc MUST BE TAUGHT on this wrist (camera clearance is not mirror-symmetric).
-  # cleaning_points:
-  #   point1:   # DRAFT: mirrored from left.point1 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.0, 0.0, 0.0]
-  #     rotation: [0.0, 0.0, -10.0]
-  #   point2:   # DRAFT: mirrored from left.point2 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.02, 0.01, 0.03]
-  #     rotation: [0.0, -5.0, -15.0]
-  #   point3:   # DRAFT: mirrored from left.point3 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.03, 0.02, 0.06]
-  #     rotation: [0.0, -15.0, -10.0]
-  #   point4:   # DRAFT: mirrored from left.point4 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.08, 0.03, 0.1]
-  #     rotation: [0.0, -20.0, -8.0]
-  #   point5:   # DRAFT: mirrored from left.point5 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.15, 0.04, 0.15]
-  #     rotation: [0.0, -30.0, -4.0]
-  #   point6:   # DRAFT: mirrored from left.point6 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.22, 0.05, 0.18]
-  #     rotation: [0.0, -50.0, 0.0]
-  #   point7:   # DRAFT: mirrored from left.point7 (UNCALIBRATED - teach + certify before use)
-  #     translation: [0.34, 0.045, 0.26]
-  #     rotation: [0.0, -60.0, 0.0]
-
+  
   cleaning_points:
     point1:
       translation: [0.0, 0.0, 0.0]
@@ -159,36 +117,13 @@ left:
   task_parameters:
     ik_frame: L_glove_frame_3
     primary_planning_group: rm75_arm_left
-
-  # CARTESIAN POSES (Position + Orientation)
-  # Format: [x, y, z, qx, qy, qz, qw]
-  # ---------------------------------------------------------------------------
-  # DRAFT 2026-10-05: no PARTIAL-lift pose has been taught for the left arm on
-  # commode_c. Every value below is the base_link Y=0 mirror of the RIGHT
-  # block's former (taught 2026-08-16) partial-lift values, by the same map as
-  # the right block (y' = 0.248 - y; [qx, qy, qz, qw] -> [qy, qx, qw, qz];
-  # deltas [x, -y, z] / [-r, p, -y]). The right's taught start sits at
-  # base_link y = +0.006, on the centreline, so its mirror is only 12 mm away:
-  # both hands reach the same seat-front point. The certified left-arm taught
-  # slot 109 (LID SEAT OPEN, pole 0.2 m, fingers 50 %, L_glove_frame_2) is the
-  # reference for the left lift's geometry and grasp when this is taught.
+    
   cartesian_poses:
-    # Former LEFT full-open poses (taught; superseded here on 2026-10-05 --
-    # they now seed the RIGHT block as a mirror):
-    # start_pose: [0.61, 0.28, 0.02, 0.70011, 0.71386, 0.0025908, -0.015498]
-    # pre_start_pose: [0.57, 0.30, -0.045, 0.705, 0.70895, 0.016624, -0.0096141]
-
-    # 0.52879; 0.14178; -0.11611, 0.04812; 0.99669; 0.0032849; 0.065393   (RIGHT taught raw, source of the mirror)
-    # start_pose: [0.53, 0.118, -0.11, 0.99669, 0.04812, 0.065393, 0.0032849]   
     start_pose: [0.535, 0.118, -0.11, 0.99669, 0.04812, 0.065393, 0.0032849]
     
     # 0.58456; 0.13676; -0.14306, 0.048186; 0.99669; 0.003265; 0.065462   (RIGHT taught raw, source of the mirror)
     pre_start_pose: [0.58456, 0.11124, -0.14306, 0.99669, 0.048186, 0.065462, 0.003265]   # DRAFT: mirrored from right.pre_start_pose (UNCALIBRATED - teach + certify before use)
 
-    # Relative to THIS block's start_pose (translation added in alix_ref_frame,
-    # rotation applied onto the start orientation; config_loader.cpp:437-471),
-    # not to the end of the lift arc -- the same semantics the right's had.
-    # A delta mirrors as [x, -y, z] / [-r, p, -y], which leaves this one as it was.
     retract_pose:   # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
      translation: [0.20, 0.0, 0.15]   # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
      rotation: [0.0, -15.0, 0.0]      # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
@@ -196,31 +131,23 @@ left:
     retract_pose_2:   # DRAFT: mirrored from right.retract_pose (UNCALIBRATED - teach + certify before use)
      translation: [0.20, 0.15, 0.15]
      rotation: [0.0, -15.0, 30.0]
-  # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
-  # Translation: [x, y, z] in meters
-  # Rotation: [roll, pitch, yaw] in degrees
-  # Relative to vector_frame_id (alix_ref_frame)
-  # ---------------------------------------------------------------------------
-  # Partial-lift arc: 0 -> -30 deg, a 0.2 m rise of the seat front edge
-  # (knot 0 = start_pose).
-  # Former LEFT full-open points (superseded, now the RIGHT's source):
-  #   point1 rotation [0.0, 0.0, 10.0] ... point7 [0.33, 0.0, 0.25] [0.0, -60.0, 0.0]
+
   cleaning_points:
     point1:
-      translation: [0.0, 0.0, 0.0]      # DRAFT: mirrored from right.cleaning_points.point1 (UNCALIBRATED - teach + certify before use)
-      rotation: [0.0, 0.0, 0.0]         # DRAFT: mirrored from right.cleaning_points.point1 (UNCALIBRATED - teach + certify before use)
+      translation: [0.0, 0.0, 0.0]      
+      rotation: [0.0, 0.0, 0.0]
     point2:
-      translation: [0.0, 0.0, 0.05]   # DRAFT: mirrored from right.cleaning_points.point2 (UNCALIBRATED - teach + certify before use)
-      rotation: [0.0, 2.0, 2.0]         # DRAFT: mirrored from right.cleaning_points.point2 (UNCALIBRATED - teach + certify before use)
+      translation: [0.0, 0.0, 0.05]
+      rotation: [0.0, 2.0, 2.0]         
     point3:
-      translation: [0.005, 0.0, 0.1]     # DRAFT: mirrored from right.cleaning_points.point3 (UNCALIBRATED - teach + certify before use)
-      rotation: [0.0, 5.0, 5.0]         # DRAFT: mirrored from right.cleaning_points.point3 (UNCALIBRATED - teach + certify before use)
+      translation: [0.005, 0.0, 0.1]     
+      rotation: [0.0, 5.0, 5.0]         
     point4:
-      translation: [0.0175, 0.0, 0.15]    # DRAFT: mirrored from right.cleaning_points.point4 (UNCALIBRATED - teach + certify before use)
-      rotation: [0.0, 10.0, 7.0]        # DRAFT: mirrored from right.cleaning_points.point4 (UNCALIBRATED - teach + certify before use)
+      translation: [0.0175, 0.0, 0.15]    
+      rotation: [0.0, 10.0, 7.0]        
     point5:
-      translation: [0.035, 0.0, 0.18]  
-      rotation: [0.0, 15.0, 10.0]
+      translation: [0.04, 0.0, 0.17]  
+      rotation: [0.0, 12.0, 10.0]
 
   # CLEANING SEQUENCE
   # Format: [from, to] - pairs of point names
@@ -248,11 +175,6 @@ stage_sequence:
   # ---------------------------------------------------------------------------
   # 1. RIGHT arm goes to its inspect pose FIRST (baseline frame of the closed seat)
   # ---------------------------------------------------------------------------
-  # Pole first, so the camera height is pinned for the baseline frame and the
-  # check. HALF length (Newton, 2026-10-05 15:40): at quarter length the right
-  # hand hung inside the part's swing (lid_open, sim); half length keeps the
-  # fingers clear of the -30 deg edge. Block 5 brings the pole to the seat
-  # task's working height, quarter_length, before the right arm approaches.
   - stage: move_to_inspect_pole_length
     arm: right
     pose_name: half_length
@@ -265,14 +187,6 @@ stage_sequence:
     pose_name: grasp
     planning_group: inspire_hand_right
 
-  # A free move with no contact: freespace. inspection_pose_4 is the LIFT
-  # CHECK VIEWPOINT (Newton 2026-10-05, his RViz goal state, pole raised to
-  # half length 15:40; SRDF group_state of rm75_arm_right, source
-  # alix_moveit_config/config/group_states/arms_group_states.yaml): the wrist
-  # camera frames the seat front edge and the rim below it, with the lid
-  # standing at -110 behind. planning_group is explicit because state names
-  # repeat across groups. The arm then stays put through the lift, the dwell
-  # and the check: no camera motion between the baseline frame and the check.
   - stage: move_to_inspect
     speed_class: freespace
     arm: right
@@ -334,32 +248,6 @@ stage_sequence:
     conditional: true
     condition_param: use_prestart_stage
 
-  # Allow hand<->fixture contact BEFORE moving onto the seat.
-  #
-  # FIXED 2026-08-17 -- this task could not plan at all. It failed with
-  #   PLANNING_FAILED: stage 'move_to_start/joint' -- IK failed for pose target
-  # which is a MISLEADING MESSAGE: the pose is reachable. MTC's ComputeIK
-  # discards solutions that are in collision and reports the discard as an IK
-  # failure, so a contact pose whose contact is not yet allowed reads as
-  # unreachable.
-  #
-  # THE ACTUAL CAUSE was the SURFACE, not the ordering. `contact_surface` was
-  # seat, but the hand reaching the seat's front edge also touches the
-  # commode BODY (the bowl rim). One unallowed pair is enough to reject every
-  # solution. Widening to seat_and_body makes the task plan first time.
-  #
-  # Evidence, so the next person does not repeat the search:
-  #   * the pose solves standalone through /compute_ik on R_glove_frame_3 at
-  #     every pole extension and with collisions on -- tools/probe_task_ik.py;
-  #   * with commode_fixture_type forced to closed the failure moves EARLIER,
-  #     to move_to_pre_start, which is what proved the fixture geometry (not
-  #     the arm's reach) was gating these stages.
-  # Moving allow_collision ahead of move_to_start was tried first and did NOT
-  # fix it; it is kept because a contact pose should have its allowance in
-  # force before the arm is sent there, which is also what lid_open does.
-  # 2026-10-05: that evidence was gathered on the RIGHT arm's taught start;
-  # the LEFT's mirrored start is the same seat-front point 12 mm across, so
-  # the same surface applies -- re-probe on L_glove_frame_3 when it is taught.
   - stage: allow_collision
     arm: left
     contact_surface: seat_and_body
@@ -378,33 +266,9 @@ stage_sequence:
   # ---------------------------------------------------------------------------
   # 3. Settle, then the camera CHECK (the saved plan is CUT here)
   # ---------------------------------------------------------------------------
-  # Settle dwell so the seat is still when it is measured. The `hold_time` key
-  # marks a dwell: a trajectory-less stage, a hold_pose pre_action of the next
-  # sub-trajectory at execution, played before the check that follows it. It
-  # carries no speed class.
   - stage: settle_before_check
-    hold_time: 1.0
+    hold_time: 0.5
 
-  # THE LIFT CHECK. A `check:` key makes this a perception check, as
-  # `hold_time:` makes a dwell: no MTC stage, no trajectory. The saved plan is
-  # CUT here: the loader carries the stage as a check_fixture_state pre_action
-  # of the next sub-trajectory, and the executive (dual_arm_trajectory_sender /
-  # arm_executive) asks perception at that boundary from the right wrist
-  # camera, FAIL-CLOSED: no service, no answer, a refused mode, low confidence
-  # or an unexpected state all read as NOT lifted. PASS -> the row continues
-  # below. NO -> on_fail retry_lift: the LEFT (lifting) arm alone is taken back
-  # to the lift block's recorded start on a collision-planned path and the lift
-  # legs replay, check included, up to max_retries times (1 here); the camera
-  # arm never moves; one more NO escalates the row to a human
-  # (escalate_to_human). The fixture
-  # scene is never advanced on NO. The task node's own controller execution
-  # refuses the check (it has no perception client): generate with plan_only
-  # and replay the saved plan through the executive.
-  #   check: fixture_gap - the depth-gap mode (perception_node gap_check,
-  #          2026-10-05): the central ROI's median height against the closed
-  #          top, seat_lifted iff 50 mm higher (Isaac: 160 mm at -30 deg).
-  #          fixture_state would ask the status classifier instead, which
-  #          answered lid_open at 0.49-0.50 confidence on the lifted lid.
   - stage: verify_seat_lifted
     check: fixture_gap
     expect: seat_lifted
@@ -415,15 +279,6 @@ stage_sequence:
   # ---------------------------------------------------------------------------
   # 4. Scene: seat -30 deg (the PASS branch)
   # ---------------------------------------------------------------------------
-  # Seat is now physically (partially) open -> update the dynamic collision scene
-  # so the right arm plans against the moved seat. Plan-time only
-  # (task_base.cpp:4576): the finish legs below are PLANNED against the lifted
-  # seat, and at execution they are only REACHED on a PASS of the check above.
-  # Only the SEAT angle is given: the lid is already fully open
-  # (commode_fixture_type: lid_open) and must stay put, so it is intentionally
-  # NOT listed here. Does NOT modify commode_fixture_type.
-  # (The hand<->seat allowance of BOTH arms' ik_frames is re-asserted
-  # automatically on this stage.)
   - stage: update_fixture_scene
     seat_angle_deg: -30.0
 

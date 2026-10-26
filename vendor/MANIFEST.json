@@ -621,50 +621,50 @@
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.json",
       "origin": "alix",
-      "sha256": "24fb54ff71e58d88a116079d1a888f7dc1ea89e3249a21ec5e5ba48907af54e3",
-      "bytes": 3073
+      "sha256": "6347c23ce7d363bdce9bc99e8edc0e54aae992fdf21dde8361bf4122123302d4",
+      "bytes": 3081
     },
     {
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.proj",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.proj",
       "origin": "alix",
-      "sha256": "3d4879777f2b2bb19e8128965e4d6fc48aeefce49df7e15da572af52fa925400",
-      "bytes": 22848
+      "sha256": "44480d48ec2dc35ad671c1e2581c0ebdcfbc886fe1acc92d4ec203ed7077fb5b",
+      "bytes": 22278
     },
     {
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.txt",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g0.txt",
       "origin": "alix",
-      "sha256": "07864c1783173e721b020d4ce0e126d90ef708f93615f5fbd5513aaf963e99e6",
-      "bytes": 22373
+      "sha256": "112b0260d9f47097290481591e0504edaf3c6168fe01e8901606f1444411b22b",
+      "bytes": 21813
     },
     {
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.json",
       "origin": "alix",
-      "sha256": "7c504b8784c54495505d2d440403d41841c9ecfd26e0c08653558c5adc402fd1",
-      "bytes": 3107
+      "sha256": "705a74d1053cd3e9668a2702b5c6fcd32d90efbaa5478221ccfd201e65e888cc",
+      "bytes": 3122
     },
     {
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.proj",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.proj",
       "origin": "alix",
-      "sha256": "ee4bbe201dc901c0eb8f1fd2fa16814b98401041b1b676b4e1e9e6f8d6e56ba6",
+      "sha256": "810b9f05ca2e61e4882bd53ed69686e0c08b3bcfe313a28134ff2e3f3959bda7",
       "bytes": 17632
     },
     {
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.txt",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.g1.txt",
       "origin": "alix",
-      "sha256": "2b13e8757165df2663e776f602ffbde9a50b2610b05221f7bf06f5b5186ffc89",
+      "sha256": "f96df6407aff8037fe2b220896f658db7a84bc3a96f5127c7c16632b595382ee",
       "bytes": 17250
     },
     {
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/seat_open_toppra.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/seat_open_toppra.json",
       "origin": "alix",
-      "sha256": "ecf26f6591079ff66335a51e6c5d39e3cd680e4db898be92057bc375b6689eb4",
-      "bytes": 559187
+      "sha256": "6ba200ccd372056e9c7ab3c515df0c7229b9dca61fb43f08aacea9788117ead0",
+      "bytes": 553858
     },
     {
       "dest": "vendor/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
@@ -4662,8 +4662,8 @@
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/seat_open.yaml",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/seat_open.yaml",
       "origin": "alix",
-      "sha256": "5352f41e961cca2adc451fc1245cf7653af7d696d42ee39961911d9baf4baef0",
-      "bytes": 25252
+      "sha256": "45d20ed605b8502d1e83e3c55253444f184de3956a127d9a73bd5c3a4f6875c1",
+      "bytes": 14927
     },
     {
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/task_parameters_defaults.yaml",
