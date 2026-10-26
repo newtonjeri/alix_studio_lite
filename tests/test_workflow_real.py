@@ -309,15 +309,15 @@ def test_a_wait_for_and_a_meet_order_the_two_arms_on_the_robot(server):
     assert min(waits.values()) > max(ends.values())                    # the Meet: neither goes on before both are there
 
 
-def test_a_run_records_the_controllers_feed_by_default(server):
-    """The owner, 23 Oct: S2 records the controllers' feed every 20 ms, on by default ("for now we can put it on by default
-    at 20ms"): each runner call its own file in the day's canfd folder, named in the job's log (on an emulated arm, its
-    joints read in its place); a run sent with record_feed false (the page's box unticked) goes without it."""
+def test_a_run_records_the_controllers_feed_when_asked(server):
+    """The owner, 23 Oct: S2 records the controllers' feed every 20 ms ("for now we can put it on by default at 20ms"):
+    each runner call its own file in the day's canfd folder, named in the job's log (on an emulated arm, its joints read
+    in its place). Since 26 Oct only when the page's box is ticked (record_feed true: 0.6 s a runner call otherwise)."""
     assert call(server, "GET", "/api/robots/status")["feed_ms"] == 20
     call(server, "PUT", f"{P}/workflow/left", {"steps": steps()})
     call(server, "PUT", f"{P}/workflow/right", {"steps": steps()})
     sim = simulated(server)
-    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"], "record_feed": True}))
     assert j["state"] == "done", j
     said = events(j)
     assert "Recording the controllers' feed every 20 ms (a diagnostic)" in said and "same 105 % stop" in said

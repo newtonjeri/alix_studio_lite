@@ -184,9 +184,9 @@ def test_s2_can_record_the_controllers_feed_in_real_machine_mode():
     with a way to turn it off: a ticked checkbox in the Execution mode card, shown in Real Machine Mode unless Lite was
     started with --feed off (status ``feed_ms``), sent with the run (``record_feed``); the run card stays the two bullets."""
     s2 = (WEB / "lite/s2.js").read_text(encoding="utf-8")
-    assert "recordFeed: true," in s2 and "import { feedMs, speedPct } from './status.js';" in s2
+    assert "recordFeed: false," in s2 and "import { feedMs, speedPct } from './status.js';" in s2   # off unless ticked (26 Oct)
     assert "el('label', { id: 'liteS2RecordWrap', class: 'lite-stage-option lite-s2-record', hidden: true }" in s2
-    assert "el('input', { id: 'liteS2Record', type: 'checkbox', checked: true," in s2
+    assert "el('input', { id: 'liteS2Record', type: 'checkbox', checked: false," in s2
     assert "$('liteS2RecordWrap').hidden = S.mode !== 'real' || !feedMs();" in s2
     assert "export const feedMs = () => (last && last.feed_ms ? last.feed_ms : null);" in (WEB / "lite/status.js").read_text(encoding="utf-8")
     assert "const body = { mode, pick: w.pick, record_feed: S.recordFeed };" in s2

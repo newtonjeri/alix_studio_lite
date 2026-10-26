@@ -127,7 +127,8 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
         assert nxt["transit"] == [0.0, 0.0, 0.0]                       # at its first point: no move of the controller's
 
     t0 = time.time()
-    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": res["hash"]}))
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": res["hash"],
+                                                                "record_feed": True}))                 # the feed: only when asked (26 Oct)
     said = " | ".join(e["text"] for e in j.get("events") or [])
     assert j["state"] == "done", (j.get("error"), said[-1500:])
     assert "Open the lid done" in said and "Close the seat" not in said              # no closing follows (26 Oct)
@@ -135,8 +136,10 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
         assert f"{side}: at the start of Program 72 (its own pole and hand, its first point)." in said
     hw = hardware(server, t0)
     pairs = [(r["side"], r["args"]["mm"], r["args"]["hand"]) for r in hw if r["verb"] == "pole and hand"]
-    for side in ("left", "right"):                                    # 71's own; 72's own after the lid, at its start
-        assert [(mm, hand) for s, mm, hand in pairs if s == side] == [(150.0, GRIP), (200.0, CLEAN)]
+    # 71's own; Open the lid's start (its pole and the hand its first move needs, one step since 26 Oct); 72's own after it
+    start = {"left": (150.0, [516, 516, 516, 516, 133, 944]), "right": (150.1, [33, 33, 33, 33, 133, 944])}
+    for side in ("left", "right"):
+        assert [(mm, hand) for s, mm, hand in pairs if s == side] == [(150.0, GRIP), start[side], (200.0, CLEAN)]
     for side in ("left", "right"):                                    # its last MoveJ: to 72's first point
         last = [r for r in hw if r["verb"] == "move to pose" and r["side"] == side][-1]
         assert last["ok"] and last["args"]["deg"] == pytest.approx(server["first"][(side, 72)], abs=0.01)

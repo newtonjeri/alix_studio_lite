@@ -1019,7 +1019,7 @@ class _ArmSim:
             elif kind == "pole_hand":                # the hand while the pole travels (pole_with_hand), then the next call
                 mm = float(step["mm"])
                 vals = [int(h) if v is None else int(v) for v, h in zip(step["values"], self.hand)]   # None: held
-                law = staging.pole_travel_s(self.pole, mm)
+                law = staging.pole_quick_s(self.pole, mm)      # Lite's step: idle within 5 mm after the ramp (26 Oct)
                 rp = tuple(law + x for x in T["pole_extra_s"]) if law > 0 else (0.0, 0.0, 0.0)
                 span = max(abs(int(a_) - int(b_)) for a_, b_ in zip(self.hand, vals))
                 stroke = T["hand_stroke_s"][0] + T["hand_stroke_s"][1] * span / 1000.0      # the control program's stroke law
@@ -1035,8 +1035,8 @@ class _ArmSim:
                 q1 = [float(v) for v in step["deg"]]  # global speed at 100 % for it (staging.park_arm)
                 import numpy as np
 
-                if float(np.max(np.abs(np.asarray(q1) - np.asarray(self.q)))) < 0.2:
-                    r = T["global_there_s"]
+                if float(np.max(np.abs(np.asarray(q1) - np.asarray(self.q)))) <= staging.MOVEJ_SKIP_DEG:
+                    r = T["global_there_s"]                       # already there: no MoveJ is sent (26 Oct)
                 else:
                     r = tuple(movej_s(self.q, q1, float(step["speed"]), self.rating) * f for f in MOVEJ_BAND)
                 mv = _at(r, lam)
@@ -1222,20 +1222,20 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     def approach(targets, where):
         for side, tg in targets.items():
             sim = sims[side]
-            if "pole_mm" in tg:
-                dur = staging.pole_travel_s(sim.pole, tg["pole_mm"])
-                sim, a = act(side, "pole", dur, f"{title}: pole {tg['pole_mm']:g} mm ({where})")
-                sim.pole = float(tg["pole_mm"])
-                done(sim, a, dur)
-            if "hand" in tg:
-                vals = [int(c) if c is not None else int(h) for c, h in zip(tg["hand"], sim.hand)]
-                dur = staging.hand_move_s(sim.hand, vals)
-                sim, a = act(side, "hand", dur, f"{title}: hand " + ",".join(str(v) for v in vals) + f" ({where})")
-                sim.hand = vals
+            if "pole_mm" in tg or "hand" in tg:            # one step: the hand moving while the pole travels (26 Oct)
+                mm = float(tg["pole_mm"]) if "pole_mm" in tg else sim.pole
+                vals = [int(c) if c is not None else int(h) for c, h in zip(tg.get("hand") or [None] * 6, sim.hand)]
+                dur = max(staging.pole_quick_s(sim.pole, mm), staging.hand_move_s(sim.hand, vals))
+                sim, a = act(side, "pole_hand", dur, f"{title}: pole {mm:g} mm with the hand " + ",".join(str(v) for v in vals) + f" ({where})")
+                sim.pole, sim.hand = mm, vals
                 done(sim, a, dur)
             if "arm_deg" in tg:
-                mv = movej_s(sim.q, tg["arm_deg"], float(overall), sim.rating)
-                sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({overall} %)", move_s=round(mv, 4), drawn=True)
+                if sim.known and max(abs(a - b) for a, b in zip(sim.q, tg["arm_deg"])) <= staging.MOVEJ_SKIP_DEG:
+                    mv = ROBOT_TIMES["global_there_s"][1]       # already there: one reading, no MoveJ (26 Oct)
+                    sim, a = act(side, "wait", mv, f"{title}: already at {where}, no MoveJ")
+                else:
+                    mv = movej_s(sim.q, tg["arm_deg"], float(overall), sim.rating)
+                    sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({overall} %)", move_s=round(mv, 4), drawn=True)
                 sim.q, sim.known = [float(v) for v in tg["arm_deg"]], True
                 done(sim, a, mv)
 
@@ -2235,7 +2235,7 @@ def feed_wanted(app, body: dict) -> bool:
     """Whether a Real Machine run records the controllers' feed: on by default (the owner, 23 Oct: "for now we can put it
     on by default at 20ms, but we should have a way to disable it"), off when Lite was started with ``--feed off``
     (``app.feed_ms`` None) or when the page sends ``record_feed`` false (its checkbox unticked)."""
-    return bool(body.get("record_feed", True)) and bool(getattr(app, "feed_ms", None))
+    return bool(body.get("record_feed", False)) and bool(getattr(app, "feed_ms", None))   # off unless ticked (26 Oct)
 
 
 def run_real(app, units, mode: str, pick: dict | None, body: dict):

@@ -330,11 +330,13 @@ def test_the_lab_times_its_moves_as_the_controller_runs_them():
 
 def test_a_pole_with_the_hand_is_timed_as_the_lab_ran_it():
     """24 Oct, Lite's Pole with the Hand: 3.49 s from 150 to 199 mm (S2 allowed 2.27-2.97 s and stopped both arms), 4.29
-    and 4.46 s from 200 to 50 mm, 1.0-1.3 s with the pole already there; each within its range now."""
+    and 4.46 s from 200 to 50 mm, 1.0-1.3 s with the pole already there; each within its range then. Since 26 Oct the step
+    ends when the pole reads idle within 5 mm after its ramp, 0.75 s before the control program's creep allowance did
+    (staging.POLE_RAMP_S against LIFT_CREEP_S 1.5): the lab's times less that, until the next pull measures them."""
     from alix_studio_lite.server import workflow
 
     clean = [1000, 1000, 1000, 1000, 0, 1000]
-    for pole0, mm, hand0, lab in ((150.0, 200.0, clean, (3.49,)), (200.0, 50.0, [997, 1000, 995, 1000, 528, 960], (4.29, 4.46)),
+    for pole0, mm, hand0, lab in ((150.0, 200.0, clean, (3.49 - 0.75,)), (200.0, 50.0, [997, 1000, 995, 1000, 528, 960], (4.29 - 0.75, 4.46 - 0.75)),
                                   (200.0, 200.0, [1000, 1000, 1000, 1000, 0, 1000], ()), (200.0, 200.0, clean, ())):
         sim = workflow._ArmSim("right", dict(pole_mm=pole0, hand=hand0, q_deg=[0.0] * 7), [180] * 7, 100, {}, None, lambda _p: None, [])
         target = [0, 0, 0, 0, 150, 1000] if not lab else clean
@@ -809,10 +811,10 @@ def test_a_saved_sequence_is_the_file_and_loads_back(lite):
         assert resp.headers.get("X-Lite-Raw") is None and "empty" in json.loads(resp.read())["error"]
 
 
-def test_the_feed_is_recorded_by_default_and_run_lite_feed_off_turns_it_off():
+def test_the_feed_is_recorded_only_when_ticked_and_run_lite_feed_off_turns_it_off():
     """The owner, 23 Oct: "for now we can put it on by default at 20ms, but we should have a way to disable it, either a
-    flag similar to the --robot flag": run_lite --feed 20 (the default) | off; a run the page sends with its checkbox
-    unticked (record_feed false) goes without it too."""
+    flag similar to the --robot flag": run_lite --feed 20 (the default) | off. Since 26 Oct (the delay analysis: 0.6 s a
+    runner call) a run records only when the page's box is ticked (record_feed true)."""
     import os
     import subprocess
     import sys
@@ -821,7 +823,7 @@ def test_the_feed_is_recorded_by_default_and_run_lite_feed_off_turns_it_off():
     from alix_studio_lite.server.workflow import feed_wanted
 
     on, off = SimpleNamespace(feed_ms=20), SimpleNamespace(feed_ms=None)
-    assert feed_wanted(on, {}) and feed_wanted(on, {"record_feed": True}) and not feed_wanted(on, {"record_feed": False})
+    assert not feed_wanted(on, {}) and feed_wanted(on, {"record_feed": True}) and not feed_wanted(on, {"record_feed": False})
     assert not feed_wanted(off, {}) and not feed_wanted(off, {"record_feed": True})
     out = subprocess.run([sys.executable, "-m", "alix_studio_lite.server", "--help"], capture_output=True, text=True,
                          env=dict(os.environ, PYTHONPATH=str(vendor_paths.LITE_ROOT / "src")), timeout=120)

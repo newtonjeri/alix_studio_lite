@@ -274,6 +274,25 @@ class Plan:
                 b[key] = e.hand_counts("first" if at == "start" else "last")
         return out
 
+    def first_move_targets(self) -> dict:
+        """``targets("start")`` with each arm's pole and hand as they must be when that arm FIRST moves: the last pole
+        and hand entries before its first arm entry (the plans open the hand, set the pole and grasp before the arm
+        goes). Set together by one step at the approach (the owner, 26 Oct: the plans' hand open, pole, hand re-read,
+        MoveJ, pole no-op and grasp took 5-7 s an arm before any arm moved), after which those entries are already met.
+        An arm with no pole or hand entry before its first move keeps its start state."""
+        out = {side: dict(tg) for side, tg in self.targets("start").items()}
+        for side in out:
+            for e in self.entries:
+                if e.side != side:
+                    continue
+                if e.kind == "arm":
+                    break
+                if e.kind == "pole":
+                    out[side]["pole_mm"] = round(e.last()[0] * 1000.0, 1)
+                elif e.kind == "hand":
+                    out[side]["hand"] = e.hand_counts()
+        return out
+
     def seconds(self) -> float:
         return round(sum(e.seconds for e in self.entries), 2)
 
@@ -796,44 +815,48 @@ class RealExec(_Exec):
 
     def approach(self, plan, targets, at, words=None):
         """Each arm to ``targets``: both arms' poles and hands at once (the owner, 24 Oct: one after the other took 2 s
-        more a run), then each arm's MoveJ at the speed slider's speed, one arm after the other, as before."""
-        from . import staging
-
+        more a run), each arm's pole and hand together in Lite's own step (the hand moving while the pole travels, as
+        a Program's own are set; the owner, 26 Oct) — at a plan's start to the state the arm needs when it first moves
+        (``Plan.first_move_targets``), so the plan's own pole and hand entries before that move are already met — then
+        each arm's MoveJ at the speed slider's speed, one arm after the other, not sent when the arm is already there."""
         pct = int(self.robot.speed_pct)
         where = words or f"{plan.title}'s {at}"
-        stages, poles = {}, {}
+        if at == "start":
+            first = plan.first_move_targets()
+            targets = {side: dict(tg, **{k: v for k, v in first.get(side, {}).items() if k in tg}) for side, tg in targets.items()}
+        steps = {}
         for side, tg in targets.items():
-            if "hand" not in tg and "pole_mm" not in tg:    # the plan names neither for this arm (the closings): kept as they are
+            if "hand" not in tg and "pole_mm" not in tg:    # the plan names neither for this arm: kept as they are
                 continue
             self._arm(side)
             pole, hand = self.robot._measured(side)
-            if "hand" in tg:
-                stages[side] = staging.make_stage(tg.get("pole_mm", pole if pole is not None else 0.0), tg["hand"], where)
-            else:
-                poles[side] = float(tg["pole_mm"])              # the pole alone; the hand as it is
+            mm = float(tg["pole_mm"]) if "pole_mm" in tg else (pole if pole is not None else 0.0)
+            steps[side] = (mm, [None if v is None else int(v) for v in tg["hand"]] if "hand" in tg else [None] * 6)
         self.check_stop()
-        if stages or poles:
-            self.job.progress(f"{' and '.join(s.upper() for s in sorted(set(stages) | set(poles)))}: pole and hand to {where}")
+        if steps:
+            self.job.progress(f"{' and '.join(s.upper() for s in sorted(steps))}: pole and hand to {where}")
         failed = {}
 
         def one(side):
             try:
-                if side in stages:
-                    self._keep_hand(side)
-                    self._arm(side).stage(stages[side])
-                else:
-                    self._arm(side).pole_to(poles[side])
+                arm = self._arm(side)
+                arm.drop_hand()                                   # the step's own hand session; the plan's opens again
+                mm, hand = steps[side]
+                out = arm.pole_and_hand(mm, hand, stop_hook=self.job.on_cancel)
+                if not out.get("pole_ok") or not out.get("hand_ok"):
+                    raise UserError(f"The {side.upper()} arm was not staged for {where}: pole {out.get('pole_mm')} mm of {mm:.0f}, "
+                                    f"hand {out.get('hand')}. Nothing else ran.", "Check the pole and the hand, then try again.")
             except BaseException as exc:                                            # noqa: BLE001 - raised below
                 failed[side] = exc
 
         threads = [threading.Thread(target=one, args=(side,), name=f"lite-stage-{side}", daemon=True)
-                   for side in sorted(set(stages) | set(poles))]
+                   for side in sorted(steps)]
         for t in threads:
             t.start()
         for t in threads:
             while t.is_alive():
                 t.join(0.1)
-        for side in sorted(set(stages) | set(poles)):
+        for side in sorted(steps):
             if side in failed:
                 raise failed[side]
         for side, tg in targets.items():

@@ -293,6 +293,49 @@ class _EmulatedCapture:
             self._fh.close()
 
 
+def _quick_pole(Pole):
+    """The control program's Pole with Lite's arrival (the owner, 26 Oct): done when the controller reads the pole idle
+    within its tolerance (LIFT_TOL_M, 5 mm) and the slew time plus POLE_RAMP_S has passed, instead of the model's 1.5 s
+    creep allowance for the last millimetre (which held S2's pole steps 1.2 s after the pole stood: the 15:07 run,
+    49 mm in 1.3 s, the step 2.54 s). The getter still leads a moving pole, so the slew floor stays."""
+    from .staging import POLE_RAMP_S
+
+    m = sys.modules.get(Pole.__module__)
+    if not all(hasattr(m, k) for k in ("LIFT_TOL_M", "LIFT_STROKE_M", "LIFT_TIMEOUT_MARGIN", "LIFT_SLEW_UP_MPS", "LIFT_SLEW_DOWN_MPS", "lift_travel_s")):
+        return Pole                                   # a stand-in Pole (the tests'): its own move
+
+    class QuickPole(Pole):
+        def move(self, height_m, speed_pct=100, tol_m=None, block=False):
+            tol_m = m.LIFT_TOL_M if tol_m is None else tol_m
+            start = self.height_m()
+            dist = abs(height_m - start) if start is not None else m.LIFT_STROKE_M
+            up = None if start is None else height_m > start
+            slew = (m.LIFT_SLEW_DOWN_MPS if up is False else m.LIFT_SLEW_UP_MPS) * max(1, min(100, speed_pct)) / 100
+            expected = POLE_RAMP_S + dist / slew
+            timeout = m.LIFT_TIMEOUT_MARGIN * m.lift_travel_s(dist, up, speed_pct)
+            if start is not None and dist <= tol_m:
+                return True, start
+            ret = self.robot.rm_set_lift_height(int(speed_pct), int(round(height_m * 1000)), 1 if block else 0)
+            if ret != 0:
+                raise RuntimeError(f"rm_set_lift_height refused, ret={ret}")
+            t0, pos = time.monotonic(), start
+            while True:
+                elapsed = time.monotonic() - t0
+                ret, st = self.robot.rm_get_lift_state()
+                if ret == 0 and st:
+                    pos = float(st["pos"]) / 1000.0
+                    if int(st.get("err_flag", 0) or 0):
+                        raise RuntimeError(f"pole err_flag {st['err_flag']}")
+                    if int(st.get("mode", 0) or 0) == 0 and abs(pos - height_m) <= tol_m and elapsed >= expected:
+                        return True, pos
+                if elapsed > timeout:
+                    self.stop()
+                    return False, pos
+                time.sleep(self.poll_s)
+
+    return QuickPole
+
+
 def _hand_arrived(hand, rule, target: list, sent: float) -> tuple:
     """The hand of S2's pole and hand (RealArm.pole_and_hand) by runner v14's own rule (the control program's
     Hand.command, its numbers from its hand.py ``rule``): arrived (each channel set within HAND_ARRIVE_COUNTS of its
@@ -476,7 +519,7 @@ class RealArm:
                         if state["stopped"]:
                             raise KeyboardInterrupt
                         state["inside"] = True
-                    hand, pole = Hand(self.robot), Pole(self.robot)
+                    hand, pole = Hand(self.robot), _quick_pole(Pole)(self.robot)
                     start = pole.height_m()
                     hand.open()
                     sent = time.monotonic()
@@ -583,11 +626,18 @@ class RealArm:
                 if ret != 0:
                     self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
                     raise UserError(f"The {self.SIDE} hand cannot be reached (Modbus).", "Check the hand's cable and power.")
+            from .staging import HAND_SAME_COUNTS
+
+            now = getattr(hand, "read", lambda: None)()
+            if now is not None and all(c is None or abs(int(c) - int(a)) <= HAND_SAME_COUNTS for c, a in zip(counts, now)):
+                self._hw("hand move", args=dict(counts=list(counts), speed_set=None), ok=True, elapsed_s=0.0,
+                         text=f"already at {now} (within {HAND_SAME_COUNTS} counts), nothing sent")
+                return dict(ok=True, arrived=True, after=now, skipped=True)
             used = HAND_SPEED_SET
             if duration_s is not None:
                 from .device_speed import hand_speed_sets
 
-                used, how = hand_speed_sets(self.side, hand.read(), list(counts), float(duration_s))
+                used, how = hand_speed_sets(self.side, now, list(counts), float(duration_s))
                 self._hand_speeds_to(hand, used, how)
             elif hand is self._hand:
                 self._hand_speeds_to(hand, [HAND_SPEED_SET] * 6)
@@ -1526,8 +1576,15 @@ class RealArm:
         from alix_dispatch import staging as alix_staging
         from alix_dispatch import track
 
+        from .staging import MOVEJ_SKIP_DEG
+
         deg = [v / 1000.0 for v in target_millideg]
         with self.link.busy("moving to the start", expect_s=120):
+            gap0 = track.start_gap_deg(self.robot, list(target_millideg))
+            if gap0 is not None and gap0 <= MOVEJ_SKIP_DEG:      # already there (the owner, 26 Oct): the MoveJ's second is not spent
+                self._hw("move to pose", args=dict(deg=[round(d, 2) for d in deg], speed=int(speed), restore_speed=int(restore_pct)),
+                         ok=True, text=f"already there: {gap0:.2f} deg away (within {MOVEJ_SKIP_DEG:g}), nothing sent")
+                return dict(gap_deg=gap0, skipped=True)
             out = alix_staging.park_arm(self.handle, {}, rest_deg=deg, rest_speed=int(speed), restore_speed=int(restore_pct),
                                         log=self._alix_log())
             self._ratio = int(restore_pct) if out.get("ok") else None     # what park_arm put back

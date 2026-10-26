@@ -187,6 +187,29 @@ def same_hand(a, b, tol: int = HAND_TOL) -> bool:
 
 
 
+#: A MoveJ to a pose the arm already stands within this of is not sent (the owner, 26 Oct, after the delay analysis of
+#: the 15:07 run: 12 MoveJs of 0.2-0.4 deg, 0.9-1.4 s each; the controller's MoveJ has a floor of about a second).
+MOVEJ_SKIP_DEG = 0.5
+#: A hand already within this of every channel it is sent to is not sent again (the control program's own arrival rule
+#: is 15 counts; the thumb's rotation settles 8-16 short).
+HAND_SAME_COUNTS = 20
+#: Lite's pole step (pole_and_hand): the pole is done when its controller reads idle within LIFT_TOL_M (5 mm) and its
+#: slew time plus this ramp has passed; the control program's model keeps a 1.5 s creep allowance for the last
+#: millimetre, which held the step 1.2 s after the pole stood (26 Oct, the owner: within 5 mm is enough). From the
+#: 26 Oct captures: the pole is within 5 mm after 0.75 s + distance / 0.097 m/s (49 mm 1.3 s, 150 mm 2.3 s, 180 mm 2.6 s).
+POLE_RAMP_S = 0.75
+
+
+def pole_quick_s(from_mm: float, to_mm: float) -> float:
+    """Lite's pole step's time (pole_and_hand): POLE_RAMP_S + the distance at the slew, 0 within the tolerance."""
+    d = abs(float(to_mm) - float(from_mm)) / 1000.0
+    if d < POLE_TOL_MM / 1000.0:
+        return 0.0
+    per = _alix()[0]
+    slew = per.LIFT_SLEW_DOWN_MPS if to_mm < from_mm else per.LIFT_SLEW_UP_MPS
+    return POLE_RAMP_S + d / slew
+
+
 def pole_travel_s(from_mm: float, to_mm: float) -> float:
     d = abs(float(to_mm) - float(from_mm)) / 1000.0
     if d < POLE_TOL_MM / 1000.0:
