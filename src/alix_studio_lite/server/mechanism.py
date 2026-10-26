@@ -178,6 +178,13 @@ def start_tol_deg() -> float:
     return 0.8 * track.canfd_frame0_limit_deg(CLOCK_S, RATE_GATE)
 
 
+BRIDGE_MAX_DEG = 3.0      #: a move whose first line the arm has crept from by up to this is bridged first (26 Oct: the left wrist,
+                          #: at its 9 A plateau holding the seat up for the 9 s the right arm needs, crept 0.5-1.1 degrees once warm;
+                          #: 1.0 was refused at the retract's first line, 17:14); farther, something else is wrong: refused as before
+BRIDGE_SPEED_PCT = 40     #: the bridge's MoveJ speed (the owner, 26 Oct: "40 % for that task, because it is a short movement";
+                          #: the re-lifts' long bridge keeps the speed slider's)
+
+
 def _gap_deg(a, b) -> float:
     return float(np.degrees(np.max(np.abs(np.asarray(a, dtype=float) - np.asarray(b, dtype=float)))))
 
@@ -878,8 +885,9 @@ class RealExec(_Exec):
             self.__dict__.setdefault("_hand_results", {})[e.side] = arm.hand_to(e.hand_counts(), duration_s=e.seconds)
         else:
             rows = e.rows
+            bridge_speed = int(self.robot.speed_pct) if bridge else None     # a re-lift's long bridge: the slider's speed
+            link = self.robot.links.get(e.side)
             if e.note == "re-lift restore, reversed":      # from where the arm stands (hold_short)
-                link = self.robot.links.get(e.side)
                 q = (link.read_fresh() if link is not None else {}).get("joints_deg")
                 if q:
                     rows, held = hold_short(e.rows, q)
@@ -887,9 +895,19 @@ class RealExec(_Exec):
                         self.say(f"{e.label()}: from where the arm stands: " + ", ".join(
                             f"J{j} held where it stopped, {d:.1f} degrees short of the lift's end" for j, d in held)
                             + ", until the way back comes past it")
+            elif not bridge:                               # crept from its first line while it held (the seat): bridged at 40 %
+                q = (link.read_fresh() if link is not None else {}).get("joints_deg")
+                gap = max(abs(float(a) - b / 1000.0) for a, b in zip(q, rows[0])) if q and len(q) == len(rows[0]) else None
+                if gap is not None and gap > start_tol_deg():
+                    if gap <= BRIDGE_MAX_DEG:
+                        bridge_speed = BRIDGE_SPEED_PCT
+                        self.say(f"{e.label()}: the arm is {gap:.2f} degrees from its first line (it crept while it held): "
+                                 f"a MoveJ at {BRIDGE_SPEED_PCT} % closes that first")
+                    else:
+                        self.say(f"{e.label()}: the arm is {gap:.1f} degrees from its first line, more than the {BRIDGE_MAX_DEG:g} "
+                                 "Lite bridges: the stream is refused at its first line", "warn")
             self._keep_feed(e.side)
-            out = arm.stream(rows, e.label(), speed=50, restore_pct=self.robot.found_speed(e.side),
-                             bridge_speed=int(self.robot.speed_pct) if bridge else None,
+            out = arm.stream(rows, e.label(), speed=50, restore_pct=self.robot.found_speed(e.side), bridge_speed=bridge_speed,
                              stop_hook=self.job.on_cancel, records=self.kit.records_dir("canfd"))
             self.say(f"{e.label()}: {out['lines_sent']}/{out['lines']} lines in {out['seconds']:.2f} s"
                      + (f", bridged {out['bridged_deg']:.1f} degrees first" if out.get("bridged_deg") else ""))

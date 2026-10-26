@@ -207,3 +207,45 @@ def test_a_stream_ends_on_the_feeds_frames_at_its_last_line(monkeypatch):
     arm._tap = robot_real._FrameTap()                                              # no frame at all (the feed quiet): polled
     assert arm._stream_end(last, t_after=clock.t)["by"] == "polled" and len(polled) == 3
     assert (robot_real.END_TOL_DEG, robot_real.END_STILL_DEG_S, robot_real.END_FRAMES, robot_real.END_WAIT_S) == (0.5, 1.6, 3, 1.0)
+
+
+def test_a_move_the_arm_has_crept_from_is_bridged_at_40_percent_up_to_3_degrees():
+    """26 Oct 17:14: the left wrist, at its 9 A plateau holding the seat up for the 9 s the right arm needs, crept 1.0 deg
+    from the retract's first line, and ALIX refused the stream (one 5 ms line's step, 0.72 deg at Lite's gate). The owner:
+    the left arm lifts and cannot let go before the right has moved, so the move is bridged first, at 40 % (a short move);
+    beyond 3 deg something else is wrong and the stream is refused as before, the gap said."""
+    from types import SimpleNamespace
+
+    plan = mechanism.Plan("seat_open")
+    retract = next(e for e in plan.entries if e.kind == "arm" and e.side == "left" and e.stage == "move_to_retract")
+    first = [v / 1000.0 for v in retract.rows[0]]
+    streams, said = [], []
+
+    class Arm:
+        def stream(self, rows, label, speed, restore_pct, bridge_speed, stop_hook, records):
+            streams.append(bridge_speed)
+            return dict(lines=len(rows), lines_sent=len(rows), seconds=0.8, bridged_deg=None)
+
+    def fake(joints):
+        link = SimpleNamespace(read_fresh=lambda: {"joints_deg": joints})
+        return SimpleNamespace(_arm=lambda side: Arm(), job=SimpleNamespace(progress=lambda *a, **k: None, on_cancel=None),
+                               live=lambda *a, **k: None, say=lambda text, level="info": said.append((level, text)),
+                               _keep_feed=lambda side: None, _keep_hand=lambda side: None,
+                               robot=SimpleNamespace(links={"left": link}, speed_pct=15, found_speed=lambda side: 50),
+                               kit=SimpleNamespace(records_dir=lambda what: None))
+
+    def note():                                                            # what the run said about the first line
+        return [x for x in said if "first line" in x[1]][-1]
+
+    crept = list(first); crept[5] += 1.01                                  # J6, as at 17:14
+    mechanism.RealExec.move(fake(crept), retract)
+    assert streams == [40] and "1.01 degrees from its first line" in note()[1] and "40 %" in note()[1]
+    near = list(first); near[5] += 0.5                                     # within one line's step: nothing added
+    mechanism.RealExec.move(fake(near), retract)
+    assert streams == [40, None]
+    far = list(first); far[5] += 4.0                                       # beyond 3 degrees: refused at its first line, said
+    mechanism.RealExec.move(fake(far), retract)
+    assert streams == [40, None, None] and note()[0] == "warn" and "4.0 degrees from its first line, more than the 3" in note()[1]
+    mechanism.RealExec.move(fake(crept), retract, bridge=True)             # a re-lift's own bridge keeps the slider's speed
+    assert streams[-1] == 15
+    assert (mechanism.BRIDGE_MAX_DEG, mechanism.BRIDGE_SPEED_PCT) == (3.0, 40) and mechanism.start_tol_deg() == pytest.approx(0.72, abs=0.01)
