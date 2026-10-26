@@ -2728,10 +2728,19 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                         **{x: f"{pid} // RUNNING" for x in ARMS})
                     kit = mech.kit(robot)
                     hw = getattr(robot, "log", None)
+                    from . import placement
                     from .routes_robot import _payload
 
-                    room = (dict(home=dict(_payload(app)["home"]), scene=sim["scene"], fid=units.fixture,
-                                 cubicle_mm=int(app.ui.get("cubicle_mm", 1400))) if simulated and sim.get("scene") else None)
+                    # the collision check's world for the approach's two MoveJs at once: the plans' own placement (the UGV at
+                    # STANDOFF_MM, no offset), whether or not this run was simulated (the evening of 26 Oct: five runs, none
+                    # simulated first, so the MoveJs went one after the other)
+                    plans_at = {"standoff_mm": float(mech.STANDOFF_MM), "front_mm": 0.0, "rear_mm": 0.0, "left_mm": 0.0, "right_mm": 0.0}
+                    try:
+                        room = dict(home=dict(_payload(app)["home"]), scene=placement.scene(units.fixture, placement.load(units)["room"], plans_at),
+                                    fid=units.fixture, cubicle_mm=int(app.ui.get("cubicle_mm", 1400)))
+                    except Exception as exc:                                        # noqa: BLE001 - then one after the other, said
+                        room = None
+                        say(None, **{x: f"{pid} // the MoveJs' collision check has no world ({type(exc).__name__}): one after the other" for x in ARMS})
                     ex = mech.RealExec(job, robot, {x: reals.get(x) or robot._real(x) for x in ARMS}, kit,
                                        (lambda text: hw.hardware(None, "mechanism", text=text)) if hw is not None else None,
                                        live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}), room=room)
