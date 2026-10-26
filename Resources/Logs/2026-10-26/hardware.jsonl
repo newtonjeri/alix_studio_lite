@@ -14174,3 +14174,5 @@
 {"t": 1793022163.564005, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "camera closed"}
 {"t": 1793022163.9927075, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1793022164.11092, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793022359.080937, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793022359.203477, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}

@@ -16482,3 +16482,5 @@
 21:44:30.208 [activity] operator:66b1a4 page: SYSTEM · Session active
 21:45:00.208 [activity] operator:66b1a4 page: SYSTEM · Session active
 21:45:30.207 [activity] operator:66b1a4 page: SYSTEM · Session active
+21:45:59.080 [LEFT] restore global speed {"pct": 50} ret=0
+21:45:59.203 [RIGHT] restore global speed {"pct": 50} ret=0
