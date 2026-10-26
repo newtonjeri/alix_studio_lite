@@ -1,0 +1,23 @@
+{
+  "check_id": "20261026_205830_305_verify_lid_open",
+  "stage": "verify_lid_open",
+  "expect": "lid_open",
+  "decided": true,
+  "state": "lid_open",
+  "confidence": 1.0,
+  "message": "2 frames (lid_open, lid_open; 2 yes, 0 no, 0 no vote): lid surface median z 0.452 m in base_link (closed top 0.461 = nominal 0.450 registered +11 mm by the lid, rise -10 mm vs 50 mm bar; ABSENT from its closed place, the bowl shows); 97 % of the ROI valid, median range 0.617 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 24 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: lid_open at 1.00 from the fixture fit (not closed: lid_away 9250 vs lid_closed -6158, margin +1.67; lid_open: lid_open 9250 vs lid_lifted 838, margin +0.91; best: lid 110 deg, seat 0 deg (seat) over 25557 pixels at 1/3, the fixture -5 mm from its registration); models: lid_open from colour at 0.96",
+  "frames": [
+    {
+      "record": "20261026_205830_867_gap_check_lid_open_lid_open.json",
+      "success": true,
+      "state": "lid_open",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261026_205831_542_gap_check_lid_open_lid_open.json",
+      "success": true,
+      "state": "lid_open",
+      "confidence": 1.0
+    }
+  ]
+}

@@ -2,7 +2,7 @@
  "id": "alix_mvbvk1fk_zti6s",
  "name": "Commode_C_17_10_2026",
  "createdAt": "2026-10-17T04:06:33.536Z",
- "updatedAt": "2026-10-26T11:29:18.859Z",
+ "updatedAt": "2026-10-26T13:22:43.875Z",
  "archived": false,
  "state": {
   "currentView": "sequence",
@@ -3395,7 +3395,7 @@
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-26T11:29:18.858Z"
+      "savedAt": "2026-10-26T13:22:43.873Z"
      }
     },
     "ugvPositionByArm": {
@@ -3429,7 +3429,7 @@
     "leftApproved": true,
     "rightApproved": false,
     "completed": false,
-    "lastUpdated": "2026-10-26T11:29:18.858Z",
+    "lastUpdated": "2026-10-26T13:22:43.873Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -4459,7 +4459,7 @@
   "sequenceVisualConfirmed": false,
   "fullSimulationApproved": false,
   "elapsed": 0,
-  "savedAt": "2026-10-26T11:29:18.859Z"
+  "savedAt": "2026-10-26T13:22:43.875Z"
  },
  "lastSaveReason": "Workflow updated",
  "lite": {
