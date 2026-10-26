@@ -1095,3 +1095,299 @@
 10:55:58.181 [activity] operator:bd162e page: SYSTEM · Session active
 10:56:10.180 [LEFT] restore global speed {"pct": 50} ret=0
 10:56:10.282 [RIGHT] restore global speed {"pct": 50} ret=0
+12:17:19.989 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+12:17:20.037 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+12:17:20.038 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+12:17:21.846 [activity] - page: NAVIGATION · Open screen
+12:17:21.846 [activity] - page: SYSTEM · ASL frontend initialized
+12:17:23.781 [RIGHT] camera · perception warmed up in 5.0 s: its core built, the colour model loaded
+12:17:30.690 [activity] - POST /api/auth/login
+12:17:30.698 [activity] operator:6265ca page: UI · Button action
+12:17:31.500 [activity] operator:6265ca page: AUTH · Operator login
+12:17:31.500 [activity] operator:6265ca page: NAVIGATION · Open screen
+12:18:01.502 [activity] operator:6265ca page: SYSTEM · Session active
+12:18:31.504 [activity] operator:6265ca page: SYSTEM · Session active
+12:19:01.502 [activity] operator:6265ca page: SYSTEM · Session active
+12:19:17.445 [activity] operator:6265ca page: UI · Button action
+12:19:18.461 [activity] operator:6265ca page: NAVIGATION · Task loaded
+12:19:18.464 [activity] operator:6265ca page: SETUP · Arm selected
+12:19:18.467 [activity] operator:6265ca page: NAVIGATION · Teaching stage changed
+12:19:18.468 [activity] operator:6265ca page: SETUP · Arm selected
+12:19:18.471 [activity] operator:6265ca page: NAVIGATION · Open screen
+12:19:22.366 [activity] operator:6265ca POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the seat is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+12:19:22.544 [activity] operator:6265ca page: SYSTEM · 3D device
+12:19:22.544 [activity] operator:6265ca page: UI · Button action
+12:19:22.771 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:22.939 [LEFT] read global speed ret=0 · not reported
+12:19:22.940 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+12:19:23.039 [LEFT] read drag sensitivity ret=0 · 100 %
+12:19:23.040 [activity] operator:6265ca POST /api/robots/left/connect
+12:19:23.443 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:23.534 [RIGHT] read global speed ret=0 · not reported
+12:19:23.534 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 15 %
+12:19:23.651 [RIGHT] read drag sensitivity ret=0 · 100 %
+12:19:23.665 [activity] operator:6265ca POST /api/robots/right/connect
+12:19:23.840 [RIGHT] program list · 18 programs
+12:19:23.843 [LEFT] program list · 25 programs
+12:19:23.959 [RIGHT] global points · 14 point(s)
+12:19:24.015 [LEFT] global points · 18 point(s)
+12:19:24.106 [activity] operator:6265ca page: NAVIGATION · Scrolled view
+12:19:28.741 [activity] operator:6265ca POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+12:19:29.541 [activity] operator:6265ca page: ROBOT · Button action
+12:19:29.755 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:30.056 [LEFT] run mode REAL
+12:19:30.193 [RIGHT] run mode REAL
+12:19:30.193 [activity] operator:6265ca POST /api/robots/mode
+12:19:30.613 [activity] operator:6265ca page: ROBOT · Button action
+12:19:30.826 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:31.502 [activity] operator:6265ca page: SYSTEM · Session active
+12:19:32.999 [activity] operator:6265ca page: UI · Button action
+12:19:33.146 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:33.917 [activity] operator:6265ca page: UI · Button action
+12:19:34.129 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:36.463 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:37.400 [activity] operator:6265ca page: NAVIGATION · Scrolled view
+12:19:37.962 [LEFT] program list · 25 programs
+12:19:38.215 [RIGHT] program list · 18 programs
+12:19:38.323 [LEFT] global points · 18 point(s)
+12:19:38.421 [activity] operator:6265ca page: UI · Button action
+12:19:38.556 [RIGHT] global points · 14 point(s)
+12:19:38.634 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:38.796 [activity] operator:6265ca POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, ALIX's plan of Open the lid and Open the seat (revised since).
+12:19:39.777 [LEFT] program list · 25 programs
+12:19:40.046 [RIGHT] program list · 18 programs
+12:19:40.109 [activity] operator:6265ca page: ROBOT · Button action
+12:19:40.109 [activity] operator:6265ca page: NAVIGATION · Scrolled view
+12:19:40.255 [LEFT] global points · 18 point(s)
+12:19:40.323 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:40.383 [RIGHT] global points · 14 point(s)
+12:19:40.770 [LEFT] program list · 25 programs
+12:19:41.056 [RIGHT] program list · 18 programs
+12:19:41.167 [activity] operator:6265ca POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+12:19:42.604 [LEFT] program list · 25 programs
+12:19:42.818 [RIGHT] program list · 18 programs
+12:19:42.955 [LEFT] global points · 18 point(s)
+12:19:43.062 [RIGHT] global points · 14 point(s)
+12:19:43.135 [activity] operator:6265ca page: ROBOT · Button action
+12:19:43.344 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:19:43.404 [LEFT] program list · 25 programs
+12:19:43.740 [RIGHT] program list · 18 programs
+12:19:44.229 [activity] operator:6265ca POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+12:19:44.344 [LEFT] run mode REAL
+12:19:44.539 [RIGHT] run mode REAL
+12:19:44.566 [LEFT] clear warning · clean
+12:19:44.734 [RIGHT] clear warning · clean
+12:19:44.985 [-] mechanism · PLAN 1/1: Open the seat (seat_open_toppra.json, 23 entries, 16.5 s of motion)
+12:19:45.169 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+12:19:45.210 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+12:19:45.242 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+12:19:45.283 [LEFT] alix · hand: SPEED_SET 500 on all six channels
+12:19:45.339 [RIGHT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+12:19:45.340 [RIGHT] alix · hand: None (the state the stroke was planned with)
+12:19:45.384 [LEFT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+12:19:45.384 [LEFT] alix · hand: None (the state the stroke was planned with)
+12:19:45.395 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [993, 990, 997, 996, 976, 968]; law 0.14 s)
+12:19:45.442 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [994, 538, 995, 993, 981, 975]; law 0.46 s)
+12:19:45.562 [RIGHT] alix · hand: arrived at [993, 990, 997, 996, 1000, 993] after 0.10 s (per-channel travel [0, 0, 0, 0, 24, 25])
+12:19:45.662 [RIGHT] stage {"pole_mm": 150.1, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [993, 990, 997, 996, 1000, 993]
+12:19:45.942 [LEFT] alix · hand: arrived at [994, 1000, 995, 993, 997, 990] after 0.43 s (per-channel travel [0, 462, 0, 0, 16, 15])
+12:19:46.040 [LEFT] stage {"pole_mm": 150.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [994, 1000, 995, 993, 997, 990]
+12:19:46.059 [RIGHT] alix · rest: movej to the plan's caller at speed 15 of a 100 % global ratio
+12:19:47.067 [RIGHT] camera · camera open: Intel RealSense D435 425122070189, depth 848x480 (fx 432.7, scale 1 mm), colour 1280x720 (fx 904.5); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+12:19:48.600 [RIGHT] alix · global speed restored to 50 (ret=0)
+12:19:48.701 [RIGHT] move to pose {"deg": [-0.01, -81.99, -26.0, 97.99, 6.0, 62.0, 69.01], "speed": 15, "restore_speed": 50} · gap 0.07500002670288097 deg
+12:19:48.701 [-] mechanism · RIGHT: at Open the seat's start
+12:19:48.797 [LEFT] alix · rest: movej to the plan's caller at speed 15 of a 100 % global ratio
+12:19:51.035 [LEFT] alix · global speed restored to 50 (ret=0)
+12:19:51.140 [LEFT] move to pose {"deg": [0.0, -81.99, 26.0, 98.0, -6.0, 62.0, 111.0], "speed": 15, "restore_speed": 50} · gap 0.04999813842773193 deg
+12:19:51.140 [-] mechanism · LEFT: at Open the seat's start
+12:19:51.182 [RIGHT] alix · pole: already at 150 mm, the 150 mm asked (within 5 mm, idle): nothing sent
+12:19:51.266 [RIGHT] pole move {"mm": 150.077, "speed_pct": 50} (0.000 s) · final 0.15 m, verified by no_op; nothing sent: already there
+12:19:51.432 [RIGHT] alix · hand: SPEED_SET [390, 390, 390, 390, 1000, 420] (1.404 rad/s for the plan's 0.89 s after a 0.115 s start, as ALIX's executive sets it)
+12:19:51.481 [RIGHT] alix · hand: ANGLE_SET [33, 33, 33, 33, 133, 944] (from [993, 997, 997, 996, 1000, 985]; law 1.04 s)
+12:19:52.617 [RIGHT] alix · hand: settled at [661, 510, 499, 561, 208, 934] after 1.08 s (per-channel travel [362, 488, 509, 457, 816, 67])
+12:19:52.618 [RIGHT] alix · ** hand: settled without arriving — worst channel 1 is 628 counts short (target 33, readback 661)
+12:19:52.705 [RIGHT] hand move {"counts": [33, 33, 33, 33, 133, 944], "speed_set": [390, 390, 390, 390, 1000, 420]} ret=0 (1.076 s) · read back [661, 510, 499, 561, 208, 934] (settled short of the target: stopped on force)
+12:19:53.034 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/canfd/20261026_121952_RIGHT_seat_open.frames.jsonl (target 192.168.1.239:8090, cycle 5 ms, all sections on)
+12:19:53.134 [RIGHT] canfd feed {"label": "RIGHT_seat_open", "capture": "20261026_121952_RIGHT_seat_open.frames.jsonl"} · on, kept for the run's moves
+12:19:53.167 [RIGHT] alix · CANFD: 169 lines at 5.0000 ms/line, per_joint rate gate, peak 180.0 deg/s on J7 = 0.800 of its 225; start gap must be <= 0.720 deg
+12:19:53.167 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+12:19:54.169 [RIGHT] alix · global speed restored to 50 (ret=0)
+12:19:54.369 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 0.84 s
+12:19:54.370 [RIGHT] alix · stream 0.84 s at the host's 5.000 ms period — the player's advisory band [0.9239999999999999, 0.9408] s does not apply to a host-timed stream; worst send lateness 0.12 ms
+12:19:54.509 [RIGHT] canfd stream {"label": "RIGHT arm move_to_inspect", "lines": 169, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": 15, "capture": "20261026_121952_RIGHT_seat_open.frames.jsonl", "ratio_held": false, "t_mono": [13368.655, 13369.889]} ret=host_timed (1.374 s) · 169/169 lines
+12:19:54.509 [-] mechanism · RIGHT arm move_to_inspect: 169/169 lines in 0.84 s
+12:19:55.679 [RIGHT] camera · gap_check: lid surface median z 0.266 m in base_link (closed top 0.450, rise -184 mm vs 50 mm bar; ABSENT from its closed place, the bowl shows); 89 % of the ROI valid, median range 0.677 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 45 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: lid_open at 1.00 from the fixture fit (not closed: lid_away 5323 vs lid_closed 296, margin +0.94; lid_open: lid_open 5323 vs lid_lifted -391, margin +1.07; best: lid 110 deg, seat 0 deg (seat) over 19057 pixels at 1/3, the fixture -5 mm from its registration); models: lid_open from depth+colour at 0.98 -> lid_open
+12:19:55.870 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_121955_698_gap_check_lid_open_lid_open.json
+12:19:56.884 [RIGHT] camera · gap_check: lid surface median z 0.267 m in base_link (closed top 0.450, rise -183 mm vs 50 mm bar; ABSENT from its closed place, the bowl shows); 88 % of the ROI valid, median range 0.676 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 44 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: lid_open at 1.00 from the fixture fit (not closed: lid_away 5425 vs lid_closed 289, margin +0.95; lid_open: lid_open 5425 vs lid_lifted -190, margin +1.04; best: lid 110 deg, seat 0 deg (seat) over 18950 pixels at 1/3, the fixture -5 mm from its registration); models: lid_open from depth+colour at 0.98 -> lid_open
+12:19:57.043 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_121956_885_gap_check_lid_open_lid_open.json
+12:19:57.621 [RIGHT] camera · gap_check: lid surface median z 0.266 m in base_link (closed top 0.450, rise -184 mm vs 50 mm bar; ABSENT from its closed place, the bowl shows); 89 % of the ROI valid, median range 0.680 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 45 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: lid_open at 1.00 from the fixture fit (not closed: lid_away 5395 vs lid_closed 234, margin +0.96; lid_open: lid_open 5395 vs lid_lifted -279, margin +1.05; best: lid 110 deg, seat 0 deg (seat) over 19070 pixels at 1/3, the fixture -5 mm from its registration); models: lid_open from depth+colour at 0.98 -> lid_open
+12:19:57.639 [-] mechanism · CHECK verify_lid_open: expect lid_open, the camera says lid_open at 1.00 (models: lid_open from depth+colour at 0.98) -> PASS
+12:19:57.780 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_121957_622_gap_check_lid_open_lid_open.json
+12:19:58.006 [RIGHT] camera · seat comparison: hinge [0.89, 0.0, 0.44] in base_link, seat towards [-1.0, 0.0, 0.0], from the seat mesh (25150 cells) and its joint in /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/scene.yaml
+12:19:58.319 [RIGHT] camera · seat closed reference at (any pose): started — 1 closed frame(s), 32898 ring points, 11164 open-lid points
+12:19:58.319 [RIGHT] camera · gap_check: seat surface median z 0.443 m in base_link (closed top 0.440, rise 3 mm vs 50 mm bar); 63 % of the ROI valid, median range 0.584 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 27 % of the ROI, 10/90 % heights 0.435/0.448, 0 % masked around 17 hand frames; seat: seat_closed at 1.00 from its own fit (seat_closed 5348 vs seat_lifted 1692, margin +0.68; best: lid 110 deg, seat 0 deg (seat) over 19007 pixels at 1/3, the fixture -5 mm from its registration); vs its closed frame: no answer (no closed reference at this placement); models: lid_open from depth+colour at 0.98 -> seat_closed
+12:19:58.539 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_121958_320_gap_check_seat_closed_seat_closed.json
+12:19:59.513 [RIGHT] camera · seat closed reference at (any pose): added — 2 closed frame(s), 33306 ring points, 11594 open-lid points
+12:19:59.514 [RIGHT] camera · gap_check: seat surface median z 0.443 m in base_link (closed top 0.440, rise 3 mm vs 50 mm bar); 63 % of the ROI valid, median range 0.581 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 28 % of the ROI, 10/90 % heights 0.436/0.447, 0 % masked around 17 hand frames; seat: seat_closed at 1.00 from its own fit (seat_closed 5528 vs seat_lifted 1848, margin +0.67; best: lid 110 deg, seat 0 deg (seat) over 18998 pixels at 1/3, the fixture -5 mm from its registration); vs its closed frame: agrees: seat_closed (closed as in the reference: 11556 ring pixels near the hinge: 98 % unchanged, 0 % moved >= 8 mm (0 % down), hand 0 %); models: lid_open from depth+colour at 0.98 -> seat_closed
+12:19:59.746 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_121959_514_gap_check_seat_closed_seat_closed.json
+12:20:00.722 [RIGHT] camera · seat closed reference at (any pose): added — 3 closed frame(s), 33435 ring points, 11700 open-lid points
+12:20:00.722 [RIGHT] camera · gap_check: seat surface median z 0.443 m in base_link (closed top 0.440, rise 3 mm vs 50 mm bar); 63 % of the ROI valid, median range 0.583 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 27 % of the ROI, 10/90 % heights 0.436/0.448, 1 % masked around 17 hand frames; seat: seat_closed at 1.00 from its own fit (seat_closed 5571 vs seat_lifted 1890, margin +0.66; best: lid 110 deg, seat 0 deg (seat) over 18952 pixels at 1/3, the fixture -5 mm from its registration); vs its closed frame: agrees: seat_closed (closed as in the reference: 11600 ring pixels near the hinge: 98 % unchanged, 0 % moved >= 8 mm (0 % down), hand 0 %); models: lid_open from depth+colour at 0.98 -> seat_closed
+12:20:00.724 [-] mechanism · CHECK verify_seat_closed: expect seat_closed, the camera says seat_closed at 1.00 (models: lid_open from depth+colour at 0.98) -> PASS
+12:20:00.907 [LEFT] alix · hand: SPEED_SET [100, 100, 100, 100, 257, 108] (0.360 rad/s for the plan's 0.10 s after a 0.115 s start, as ALIX's executive sets it)
+12:20:00.957 [LEFT] alix · hand: ANGLE_SET [993, 993, 993, 993, 981, 992] (from [994, 1000, 995, 993, 997, 990]; law 0.17 s)
+12:20:00.974 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_122000_723_gap_check_seat_closed_seat_closed.json
+12:20:01.253 [LEFT] alix · hand: settled at [994, 1000, 995, 993, 978, 976] after 0.23 s (per-channel travel [0, 0, 0, 0, 20, 14])
+12:20:01.253 [LEFT] alix · ** hand: settled without arriving — worst channel 6 is 16 counts short (target 992, readback 976)
+12:20:01.347 [LEFT] hand move {"counts": [993, 993, 993, 993, 981, 992], "speed_set": [100, 100, 100, 100, 257, 108]} ret=0 (0.225 s) · read back [994, 1000, 995, 993, 978, 976] (settled short of the target: stopped on force)
+12:20:01.355 [LEFT] alix · pole: already at 150 mm, the 150 mm asked (within 5 mm, idle): nothing sent
+12:20:01.449 [LEFT] pole move {"mm": 150.04799999999997, "speed_pct": 50} (0.000 s) · final 0.15 m, verified by no_op; nothing sent: already there
+12:20:01.507 [activity] operator:6265ca page: SYSTEM · Session active
+12:20:01.707 [LEFT] alix · hand: SPEED_SET [390, 390, 390, 390, 1000, 420] (1.404 rad/s for the plan's 0.56 s after a 0.115 s start, as ALIX's executive sets it)
+12:20:01.747 [LEFT] alix · hand: ANGLE_SET [516, 516, 516, 516, 133, 944] (from [994, 996, 995, 993, 977, 976]; law 0.92 s)
+12:20:02.747 [LEFT] alix · hand: settled at [592, 520, 540, 579, 512, 926] after 0.95 s (per-channel travel [430, 476, 455, 432, 522, 50])
+12:20:02.747 [LEFT] alix · ** hand: settled without arriving — worst channel 5 is 379 counts short (target 133, readback 512)
+12:20:02.841 [LEFT] hand move {"counts": [516, 516, 516, 516, 133, 944], "speed_set": [390, 390, 390, 390, 1000, 420]} ret=0 (0.945 s) · read back [592, 520, 540, 579, 512, 926] (settled short of the target: stopped on force)
+12:20:03.249 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/canfd/20261026_122002_LEFT_seat_open.frames.jsonl (target 192.168.1.239:8089, cycle 5 ms, all sections on)
+12:20:03.345 [LEFT] canfd feed {"label": "LEFT_seat_open", "capture": "20261026_122002_LEFT_seat_open.frames.jsonl"} · on, kept for the run's moves
+12:20:03.459 [LEFT] alix · CANFD: 786 lines at 5.0000 ms/line, per_joint rate gate, peak 99.8 deg/s on J4 = 0.444 of its 225; start gap must be <= 0.720 deg
+12:20:03.475 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+12:20:07.544 [LEFT] alix · global speed restored to 50 (ret=0)
+12:20:07.739 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 3.93 s
+12:20:07.744 [LEFT] alix · stream 3.93 s at the host's 5.000 ms period — the player's advisory band [4.3175, 4.396] s does not apply to a host-timed stream; worst send lateness 0.17 ms
+12:20:07.838 [LEFT] canfd stream {"label": "LEFT arm move_to_pre_start + move_to_start + execute_path", "lines": 786, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": 15, "capture": "20261026_122002_LEFT_seat_open.frames.jsonl", "ratio_held": false, "t_mono": [13378.957, 13383.253]} ret=host_timed (4.483 s) · 786/786 lines
+12:20:07.844 [-] mechanism · LEFT arm move_to_pre_start + move_to_start + execute_path: 786/786 lines in 3.92 s
+12:20:09.150 [RIGHT] camera · gap_check: seat: the band reading cannot judge (84 % of the seat's place covered by the hand; only 0 % of the seat ROI lies in the 0.38-0.47 m seat band) (closed top 0.440); 67 % of the ROI valid, median range 0.272 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; 84 % of the seat ROI masked around 17 hand frames; seat: seat_lifted at 1.00 from its own fit (seat_lifted 2287 vs seat_closed 1711, margin +0.25; best: lid 110 deg, seat 35 deg (seat) over 8583 pixels at 1/3, the fixture -10 mm from its registration); vs its closed frame: seat_lifted at 1.00 against the closed frame (lifted: 5329 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (32 % down), hand 47 %; hinge fit 35.2 deg about a hinge -2 mm from the model's (3310 pixels; needs >= 10 deg within 40 mm)) -> seat_lifted
+12:20:09.311 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_122009_151_gap_check_seat_lifted_seat_lifted.json
+12:20:09.947 [RIGHT] camera · gap_check: seat: the band reading cannot judge (84 % of the seat's place covered by the hand; only 0 % of the seat ROI lies in the 0.38-0.47 m seat band) (closed top 0.440); 68 % of the ROI valid, median range 0.272 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; 84 % of the seat ROI masked around 17 hand frames; seat: seat_lifted at 1.00 from its own fit (seat_lifted 2285 vs seat_closed 1740, margin +0.24; best: lid 110 deg, seat 35 deg (seat) over 8633 pixels at 1/3, the fixture -10 mm from its registration); vs its closed frame: seat_lifted at 1.00 against the closed frame (lifted: 5374 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (31 % down), hand 46 %; hinge fit 35.7 deg about a hinge +1 mm from the model's (3456 pixels; needs >= 10 deg within 40 mm)) -> seat_lifted
+12:20:10.097 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_122009_947_gap_check_seat_lifted_seat_lifted.json
+12:20:10.756 [RIGHT] camera · gap_check: seat: the band reading cannot judge (84 % of the seat's place covered by the hand; only 0 % of the seat ROI lies in the 0.38-0.47 m seat band) (closed top 0.440); 68 % of the ROI valid, median range 0.272 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; 84 % of the seat ROI masked around 17 hand frames; seat: seat_lifted at 1.00 from its own fit (seat_lifted 2262 vs seat_closed 1687, margin +0.25; best: lid 110 deg, seat 35 deg (seat) over 8587 pixels at 1/3, the fixture -10 mm from its registration); vs its closed frame: seat_lifted at 1.00 against the closed frame (lifted: 5281 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (32 % down), hand 47 %; hinge fit 35.5 deg about a hinge +0 mm from the model's (3375 pixels; needs >= 10 deg within 40 mm)) -> seat_lifted
+12:20:10.758 [-] mechanism · CHECK verify_seat_lifted: expect seat_lifted, the camera says seat_lifted at 1.00 -> PASS
+12:20:10.780 [RIGHT] alix · CANFD: 169 lines at 5.0000 ms/line, per_joint rate gate, peak 180.0 deg/s on J7 = 0.800 of its 225; start gap must be <= 0.720 deg
+12:20:10.780 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+12:20:10.918 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_122010_756_gap_check_seat_lifted_seat_lifted.json
+12:20:11.926 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 0.84 s
+12:20:11.927 [RIGHT] alix · stream 0.84 s at the host's 5.000 ms period — the player's advisory band [0.9239999999999999, 0.9408] s does not apply to a host-timed stream; worst send lateness 0.12 ms
+12:20:12.023 [RIGHT] canfd stream {"label": "RIGHT arm move_to_rest", "lines": 169, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261026_121952_RIGHT_seat_open.frames.jsonl", "ratio_held": true, "t_mono": [13386.279, 13387.446]} ret=host_timed (1.264 s) · 169/169 lines
+12:20:12.023 [-] mechanism · RIGHT arm move_to_rest: 169/169 lines in 0.84 s
+12:20:12.127 [RIGHT] alix · pole: already at 150 mm, the 150 mm asked (within 5 mm, idle): nothing sent
+12:20:12.248 [RIGHT] pole move {"mm": 150.077, "speed_pct": 50} (0.000 s) · final 0.15 m, verified by no_op; nothing sent: already there
+12:20:12.281 [RIGHT] alix · CANFD: 319 lines at 5.0000 ms/line, per_joint rate gate, peak 67.6 deg/s on J7 = 0.300 of its 225; start gap must be <= 0.720 deg
+12:20:12.282 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+12:20:14.191 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 1.59 s
+12:20:14.191 [RIGHT] alix · stream 1.59 s at the host's 5.000 ms period — the player's advisory band [1.7489999999999999, 1.7808] s does not apply to a host-timed stream; worst send lateness 0.26 ms
+12:20:14.319 [RIGHT] canfd stream {"label": "RIGHT arm move_to_pre_start + move_to_start", "lines": 319, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261026_121952_RIGHT_seat_open.frames.jsonl", "ratio_held": true, "t_mono": [13387.77, 13389.711]} ret=host_timed (2.068 s) · 319/319 lines
+12:20:14.319 [-] mechanism · RIGHT arm move_to_pre_start + move_to_start: 319/319 lines in 1.59 s
+12:20:14.565 [RIGHT] alix · hand: SPEED_SET [253, 253, 253, 253, 649, 273] (0.911 rad/s for the plan's 0.85 s after a 0.115 s start, as ALIX's executive sets it)
+12:20:14.625 [RIGHT] alix · hand: ANGLE_SET [993, 993, 993, 993, 981, 992] (from [657, 510, 498, 562, 208, 935]; law 1.25 s)
+12:20:15.481 [RIGHT] alix · hand: arrived at [993, 990, 997, 992, 976, 984] after 0.77 s (per-channel travel [336, 480, 499, 430, 769, 49])
+12:20:15.558 [RIGHT] hand move {"counts": [993, 993, 993, 993, 981, 992], "speed_set": [253, 253, 253, 253, 649, 273]} ret=0 (0.771 s) · read back [993, 990, 997, 992, 976, 984]
+12:20:15.681 [LEFT] alix · hand: ANGLE_SET [993, 993, 993, 993, 981, 992] (from [602, 526, 541, 581, 512, 926]; law 0.56 s)
+12:20:16.382 [LEFT] alix · hand: settled at [1000, 1000, 995, 994, 974, 975] after 0.64 s (per-channel travel [398, 474, 454, 413, 462, 60])
+12:20:16.382 [LEFT] alix · ** hand: settled without arriving — worst channel 6 is 17 counts short (target 992, readback 975)
+12:20:16.481 [LEFT] hand move {"counts": [993, 993, 993, 993, 981, 992], "speed_set": [390, 390, 390, 390, 1000, 420]} ret=0 (0.641 s) · read back [1000, 1000, 995, 994, 974, 975] (settled short of the target: stopped on force)
+12:20:16.483 [-] mechanism · LEFT hand free: 3 N on the wrist
+12:20:16.615 [LEFT] alix · CANFD: 163 lines at 5.0000 ms/line, per_joint rate gate, peak 67.6 deg/s on J6 = 0.300 of its 225; start gap must be <= 0.720 deg
+12:20:16.615 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+12:20:17.717 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 0.81 s
+12:20:17.718 [LEFT] alix · stream 0.81 s at the host's 5.000 ms period — the player's advisory band [0.8909999999999999, 0.9072] s does not apply to a host-timed stream; worst send lateness 0.25 ms
+12:20:17.822 [LEFT] canfd stream {"label": "LEFT arm move_to_retract", "lines": 163, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261026_122002_LEFT_seat_open.frames.jsonl", "ratio_held": true, "t_mono": [13392.11, 13393.237]} ret=host_timed (1.338 s) · 163/163 lines
+12:20:17.822 [-] mechanism · LEFT arm move_to_retract: 163/163 lines in 0.81 s
+12:20:18.067 [LEFT] alix · hand: ANGLE_SET [33, 33, 33, 33, 133, 944] (from [994, 1000, 995, 994, 974, 975]; law 1.04 s)
+12:20:19.252 [LEFT] alix · hand: settled at [617, 521, 541, 585, 458, 923] after 1.12 s (per-channel travel [392, 479, 461, 412, 526, 53])
+12:20:19.252 [LEFT] alix · ** hand: settled without arriving — worst channel 1 is 584 counts short (target 33, readback 617)
+12:20:19.351 [LEFT] hand move {"counts": [33, 33, 33, 33, 133, 944], "speed_set": [390, 390, 390, 390, 1000, 420]} ret=0 (1.118 s) · read back [617, 521, 541, 585, 458, 923] (settled short of the target: stopped on force)
+12:20:19.469 [LEFT] alix · CANFD: 293 lines at 5.0000 ms/line, per_joint rate gate, peak 119.4 deg/s on J2 = 0.663 of its 180; start gap must be <= 0.720 deg
+12:20:19.470 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+12:20:21.253 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 1.46 s
+12:20:21.253 [LEFT] alix · stream 1.46 s at the host's 5.000 ms period — the player's advisory band [1.6059999999999999, 1.6352] s does not apply to a host-timed stream; worst send lateness 0.28 ms
+12:20:21.386 [LEFT] canfd stream {"label": "LEFT arm move_to_retract_2 + move_to_rest", "lines": 293, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261026_122002_LEFT_seat_open.frames.jsonl", "ratio_held": true, "t_mono": [13394.968, 13396.768]} ret=host_timed (2.030 s) · 293/293 lines
+12:20:21.387 [-] mechanism · LEFT arm move_to_retract_2 + move_to_rest: 293/293 lines in 1.46 s
+12:20:21.637 [LEFT] alix · hand: SPEED_SET [241, 241, 241, 241, 619, 260] (0.869 rad/s for the plan's 0.85 s after a 0.115 s start, as ALIX's executive sets it)
+12:20:21.698 [LEFT] alix · hand: ANGLE_SET [993, 993, 993, 993, 981, 992] (from [617, 521, 541, 585, 459, 922]; law 0.92 s)
+12:20:22.554 [LEFT] alix · hand: arrived at [994, 992, 994, 994, 980, 984] after 0.77 s (per-channel travel [377, 471, 453, 409, 521, 62])
+12:20:22.664 [LEFT] hand move {"counts": [993, 993, 993, 993, 981, 992], "speed_set": [241, 241, 241, 241, 619, 260]} ret=0 (0.765 s) · read back [994, 992, 994, 994, 980, 984]
+12:20:22.754 [RIGHT] alix · CANFD: 494 lines at 5.0000 ms/line, per_joint rate gate, peak 180.0 deg/s on J7 = 0.800 of its 225; start gap must be <= 0.720 deg
+12:20:22.755 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+12:20:25.524 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 2.47 s
+12:20:25.525 [RIGHT] alix · stream 2.47 s at the host's 5.000 ms period — the player's advisory band [2.7115, 2.7608] s does not apply to a host-timed stream; worst send lateness 0.15 ms
+12:20:25.628 [RIGHT] canfd stream {"label": "RIGHT arm execute_path + move_to_rest", "lines": 494, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261026_121952_RIGHT_seat_open.frames.jsonl", "ratio_held": true, "t_mono": [13398.245, 13401.03]} ret=host_timed (2.962 s) · 494/494 lines
+12:20:25.628 [-] mechanism · RIGHT arm execute_path + move_to_rest: 494/494 lines in 2.46 s
+12:20:25.867 [RIGHT] alix · hand: SPEED_SET [472, 472, 472, 472, 1000, 509] (the controller's default 1.70 rad/s (no planned time to match), as ALIX's executive sets it)
+12:20:25.925 [RIGHT] alix · hand: ANGLE_SET [993, 993, 993, 993, 981, 992] (from [994, 990, 997, 992, 976, 984]; law 0.12 s)
+12:20:26.106 [RIGHT] alix · hand: arrived at [994, 990, 997, 992, 976, 984] after 0.11 s (per-channel travel [0, 0, 0, 0, 0, 0])
+12:20:26.227 [RIGHT] hand move {"counts": [993, 993, 993, 993, 981, 992], "speed_set": [472, 472, 472, 472, 1000, 509]} ret=0 (0.112 s) · read back [994, 990, 997, 992, 976, 984]
+12:20:26.229 [-] mechanism · FINAL CHECK Open the seat: the right arm to its inspection pose (Open the seat's way in), the camera checks seat_open
+12:20:26.403 [RIGHT] alix · hand: SPEED_SET 500 on all six channels
+12:20:26.425 [RIGHT] alix · pole: already at 150 mm, the plan's 150 mm (within 5 mm, read from the getter)
+12:20:26.425 [RIGHT] alix · hand: None (the state the stroke was planned with)
+12:20:26.491 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [994, 990, 997, 992, 976, 984]; law 0.13 s)
+12:20:26.763 [RIGHT] alix · hand: settled at [994, 991, 997, 992, 1000, 984] after 0.21 s (per-channel travel [0, 1, 0, 0, 24, 0])
+12:20:26.763 [RIGHT] alix · ** hand: settled without arriving — worst channel 6 is 16 counts short (target 1000, readback 984)
+12:20:26.866 [RIGHT] stage {"pole_mm": 150.1, "hand": [1000, 1000, 1000, 1000, 1000, 1000], "speed_pct": 50} · pole 150 mm, hand [994, 991, 997, 992, 1000, 984]
+12:20:26.866 [RIGHT] alix · rest: movej to the plan's caller at speed 15 of a 100 % global ratio
+12:20:26.970 [RIGHT] alix · global speed restored to 50 (ret=0)
+12:20:27.092 [RIGHT] move to pose {"deg": [-0.01, -81.99, -26.0, 97.99, 6.0, 62.0, 69.01], "speed": 15, "restore_speed": 50} · gap 0.009997802734375227 deg
+12:20:27.093 [-] mechanism · RIGHT: at the final check of Open the seat
+12:20:27.098 [RIGHT] alix · pole: already at 150 mm, the 150 mm asked (within 5 mm, idle): nothing sent
+12:20:27.192 [RIGHT] pole move {"mm": 150.077, "speed_pct": 50} (0.000 s) · final 0.15 m, verified by no_op; nothing sent: already there
+12:20:27.409 [RIGHT] alix · hand: SPEED_SET [390, 390, 390, 390, 1000, 420] (1.404 rad/s for the plan's 0.89 s after a 0.115 s start, as ALIX's executive sets it)
+12:20:27.459 [RIGHT] alix · hand: ANGLE_SET [33, 33, 33, 33, 133, 944] (from [994, 996, 997, 995, 1000, 984]; law 1.04 s)
+12:20:28.667 [RIGHT] alix · hand: settled at [613, 498, 481, 538, 212, 934] after 1.13 s (per-channel travel [410, 514, 516, 483, 802, 62])
+12:20:28.667 [RIGHT] alix · ** hand: settled without arriving — worst channel 1 is 580 counts short (target 33, readback 613)
+12:20:28.835 [RIGHT] hand move {"counts": [33, 33, 33, 33, 133, 944], "speed_set": [390, 390, 390, 390, 1000, 420]} ret=0 (1.129 s) · read back [613, 498, 481, 538, 212, 934] (settled short of the target: stopped on force)
+12:20:28.996 [RIGHT] alix · CANFD: 169 lines at 5.0000 ms/line, per_joint rate gate, peak 180.0 deg/s on J7 = 0.800 of its 225; start gap must be <= 0.720 deg
+12:20:28.996 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+12:20:30.160 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 0.84 s
+12:20:30.161 [RIGHT] alix · stream 0.84 s at the host's 5.000 ms period — the player's advisory band [0.9239999999999999, 0.9408] s does not apply to a host-timed stream; worst send lateness 0.12 ms
+12:20:30.270 [RIGHT] canfd stream {"label": "RIGHT arm move_to_inspect", "lines": 169, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": null, "capture": "20261026_121952_RIGHT_seat_open.frames.jsonl", "ratio_held": true, "t_mono": [13404.495, 13405.668]} ret=host_timed (1.434 s) · 169/169 lines
+12:20:30.271 [-] mechanism · RIGHT arm move_to_inspect: 169/169 lines in 0.84 s
+12:20:30.502 [RIGHT] camera · seat registration at (any pose): -9.7 mm (the ring read 0.430 m over 21 % of the ROI, nominal 0.440; the lid's offset is +0.0 mm)
+12:20:30.641 [RIGHT] camera · gap_check: the seat against its closed frame says seat_lifted, the band says seat_closed -> uncertain
+12:20:31.073 [RIGHT] camera · gap_check: seat its own fit says seat_closed (seat_closed 4091 vs seat_lifted 2715, margin +0.34; best: lid 105 deg, seat 0 deg (lid) over 18779 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain
+12:20:31.073 [RIGHT] camera · gap_check: seat surface median z 0.430 m in base_link (closed top 0.430 = nominal 0.440 registered -10 mm by the seat, rise 0 mm vs 50 mm bar); 66 % of the ROI valid, median range 0.580 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 21 % of the ROI, 10/90 % heights 0.426/0.433, 1 % masked around 17 hand frames; seat: its own fit says seat_closed (seat_closed 4091 vs seat_lifted 2715, margin +0.34; best: lid 105 deg, seat 0 deg (lid) over 18779 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain; vs its closed frame: seat_lifted CONTRADICTS the band reading's seat_closed -> uncertain (lifted: 11128 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (100 % down), hand 0 %; the rim shows where the ring was) -> uncertain
+12:20:31.237 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_122031_074_gap_check_seat_open_uncertain.json
+12:20:31.503 [activity] operator:6265ca page: SYSTEM · Session active
+12:20:31.775 [RIGHT] camera · gap_check: the seat against its closed frame says seat_lifted, the band says seat_closed -> uncertain
+12:20:32.207 [RIGHT] camera · gap_check: seat its own fit says seat_closed (seat_closed 4180 vs seat_lifted 2857, margin +0.32; best: lid 105 deg, seat 0 deg (lid) over 18768 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain
+12:20:32.208 [RIGHT] camera · gap_check: seat surface median z 0.430 m in base_link (closed top 0.430 = nominal 0.440 registered -10 mm by the seat, rise -0 mm vs 50 mm bar); 66 % of the ROI valid, median range 0.583 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 21 % of the ROI, 10/90 % heights 0.425/0.433, 0 % masked around 17 hand frames; seat: its own fit says seat_closed (seat_closed 4180 vs seat_lifted 2857, margin +0.32; best: lid 105 deg, seat 0 deg (lid) over 18768 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain; vs its closed frame: seat_lifted CONTRADICTS the band reading's seat_closed -> uncertain (lifted: 11099 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (100 % down), hand 0 %; the rim shows where the ring was) -> uncertain
+12:20:32.371 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_122032_208_gap_check_seat_open_uncertain.json
+12:20:32.937 [RIGHT] camera · gap_check: the seat against its closed frame says seat_lifted, the band says seat_closed -> uncertain
+12:20:33.005 [RIGHT] camera · gap_check: seat its own fit says seat_closed (seat_closed 4131 vs seat_lifted 2657, margin +0.36; best: lid 105 deg, seat 0 deg (lid) over 18718 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain
+12:20:33.006 [RIGHT] camera · gap_check: seat surface median z 0.430 m in base_link (closed top 0.430 = nominal 0.440 registered -10 mm by the seat, rise -0 mm vs 50 mm bar); 66 % of the ROI valid, median range 0.582 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 22 % of the ROI, 10/90 % heights 0.424/0.433, 0 % masked around 17 hand frames; seat: its own fit says seat_closed (seat_closed 4131 vs seat_lifted 2657, margin +0.36; best: lid 105 deg, seat 0 deg (lid) over 18718 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain; vs its closed frame: seat_lifted CONTRADICTS the band reading's seat_closed -> uncertain (lifted: 11053 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (100 % down), hand 0 %; the rim shows where the ring was) -> uncertain
+12:20:33.178 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_122033_006_gap_check_seat_open_uncertain.json
+12:20:33.742 [RIGHT] camera · gap_check: the seat against its closed frame says seat_lifted, the band says seat_closed -> uncertain
+12:20:33.811 [RIGHT] camera · gap_check: seat its own fit says seat_closed (seat_closed 4100 vs seat_lifted 2687, margin +0.34; best: lid 105 deg, seat 0 deg (lid) over 18741 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain
+12:20:33.811 [RIGHT] camera · gap_check: seat surface median z 0.430 m in base_link (closed top 0.430 = nominal 0.440 registered -10 mm by the seat, rise -1 mm vs 50 mm bar); 66 % of the ROI valid, median range 0.582 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 22 % of the ROI, 10/90 % heights 0.423/0.433, 0 % masked around 17 hand frames; seat: its own fit says seat_closed (seat_closed 4100 vs seat_lifted 2687, margin +0.34; best: lid 105 deg, seat 0 deg (lid) over 18741 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain; vs its closed frame: seat_lifted CONTRADICTS the band reading's seat_closed -> uncertain (lifted: 11112 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (100 % down), hand 0 %; the rim shows where the ring was) -> uncertain
+12:20:33.972 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_122033_812_gap_check_seat_open_uncertain.json
+12:20:34.600 [RIGHT] camera · gap_check: the seat against its closed frame says seat_lifted, the band says seat_closed -> uncertain
+12:20:34.667 [RIGHT] camera · gap_check: seat its own fit says seat_closed (seat_closed 4171 vs seat_lifted 2783, margin +0.33; best: lid 105 deg, seat 0 deg (lid) over 18747 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain
+12:20:34.668 [RIGHT] camera · gap_check: seat surface median z 0.430 m in base_link (closed top 0.430 = nominal 0.440 registered -10 mm by the seat, rise -0 mm vs 50 mm bar); 66 % of the ROI valid, median range 0.581 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 22 % of the ROI, 10/90 % heights 0.424/0.433, 1 % masked around 17 hand frames; seat: its own fit says seat_closed (seat_closed 4171 vs seat_lifted 2783, margin +0.33; best: lid 105 deg, seat 0 deg (lid) over 18747 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain; vs its closed frame: seat_lifted CONTRADICTS the band reading's seat_closed -> uncertain (lifted: 11125 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (100 % down), hand 0 %; the rim shows where the ring was) -> uncertain
+12:20:34.670 [-] mechanism · FINAL CHECK verify_seat_open_after: expect seat_open, the camera cannot judge it (no decision in 5 frames (uncertain, uncertain, uncertain, uncertain, uncertain; 0 yes, 0 no, 5 no vote); the last: seat surface median z 0.430 m in base_link (closed top 0.430 = nominal 0.440 registered -10 mm by the seat, rise -0 mm vs 50 mm bar); 66 % of the ROI valid, median range 0.581 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 22 % of the ROI, 10/90 % heights 0.424/0.433, 1 % masked around 17 hand frames; seat: its own fit says seat_closed (seat_closed 4171 vs seat_lifted 2783, margin +0.33; best: lid 105 deg, seat 0 deg (lid) over 18747 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain; vs its closed frame: seat_lifted CONTRADICTS the band reading's seat_closed -> uncertain (lifted: 11125 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (100 % down), hand 0 %; the rim shows where the ring was)) -> STOP
+12:20:34.834 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-26/checks/20261026_122034_668_gap_check_seat_open_uncertain.json
+12:20:35.265 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+12:20:35.265 [LEFT] alix · recorded 6306 frames
+12:20:35.364 [LEFT] canfd feed {"capture": "20261026_122002_LEFT_seat_open.frames.jsonl"} · off, 6306 frames kept
+12:20:35.834 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+12:20:35.834 [RIGHT] alix · recorded 8442 frames
+12:20:35.932 [RIGHT] canfd feed {"capture": "20261026_121952_RIGHT_seat_open.frames.jsonl"} · off, 8442 frames kept
+12:20:36.491 [RIGHT] camera · camera closed
+12:20:37.012 [LEFT] restore global speed {"pct": 50} ret=0
+12:20:37.124 [RIGHT] restore global speed {"pct": 50} ret=0
+12:20:37.126 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: Open the seat ran to its end, but verify_seat_open_after: the camera cannot judge whether it is seat open (no decision in 5 frames (uncertain, uncertain, uncertain, uncertain, uncertain; 0 yes, 0 no, 5 no vote); the last: seat surface median z 0.430 m in base_link (closed top 0.430 = nominal 0.440 registered -10 mm by the seat, rise -0 mm vs 50 mm bar); 66 % of the ROI valid, median range 0.581 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 22 % of the ROI, 10/90 % heights 0.424/0.433, 1 % masked around 17 hand frames; seat: its own fit says seat_closed (seat_closed 4171 vs seat_lifted 2783, margin +0.33; best: lid 105 deg, seat 0 deg (lid) over 18747 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain; vs its closed frame: seat_lifted CONTRADICTS the band reading's seat_closed -> uncertain (lifted: 11125 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (100 % down), hand 0 %; the rim shows where the ring was)).
+12:20:37.126 [BOTH] ALERT ERROR · S2 Real Machine: both arms: Open the seat ran to its end, but verify_seat_open_after: the camera cannot judge whether it is seat open (no decision in 5 frames (uncertain, uncertain, uncertain, uncertain, uncertain; 0 yes, 0 no, 5 no vote); the last: seat surface median z 0.430 m in base_link (closed top 0.430 = nominal 0.440 registered -10 mm by the seat, rise -0 mm vs 50 mm bar); 66 % of the ROI valid, median range 0.581 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 22 % of the ROI, 10/90 % heights 0.424/0.433, 1 % masked around 17 hand frames; seat: its own fit says seat_closed (seat_closed 4171 vs seat_lifted 2783, margin +0.33; best: lid 105 deg, seat 0 deg (lid) over 18747 pixels at 1/3, the fixture -10 mm from its registration) but its closed frame says seat_lifted at 1.00 -> uncertain; vs its closed frame: seat_lifted CONTRADICTS the band reading's seat_closed -> uncertain (lifted: 11125 ring pixels near the hinge: 0 % unchanged, 100 % moved >= 8 mm (100 % down), hand 0 %; the rim shows where the ring was)). (A person must look at the commode: nothing else was moved after this.)
+12:21:01.502 [activity] operator:6265ca page: SYSTEM · Session active
+12:21:14.074 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:21:14.969 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:21:23.440 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:21:30.959 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:21:31.502 [activity] operator:6265ca page: SYSTEM · Session active
+12:21:35.667 [activity] operator:6265ca page: UI · Button action
+12:21:35.880 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:22:01.502 [activity] operator:6265ca page: SYSTEM · Session active
+12:22:31.502 [activity] operator:6265ca page: SYSTEM · Session active
+12:22:41.171 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:22:41.986 [activity] operator:6265ca PUT /api/projects/alix_mvbvk1fk_zti6s
+12:23:01.502 [activity] operator:6265ca page: SYSTEM · Session active
+12:23:08.456 [LEFT] restore global speed {"pct": 50} ret=0
+12:23:08.572 [RIGHT] restore global speed {"pct": 50} ret=0
