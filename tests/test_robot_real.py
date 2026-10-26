@@ -721,7 +721,17 @@ def test_a_lid_or_seat_run_keeps_one_feed_on_and_holds_the_global_ratio(monkeypa
     def run_verified(robot, **kw):
         calls.append((kw["ratio_held"], kw["restore_pct"]))
         held = kw["ratio_held"]
-        return dict(ok=True, verdict="host_timed", canfd={"lines_sent": kw["points"], "replay_s": 0.01},
+        assert kw["settle_after"] is False                    # ALIX's polled settle is not asked (26 Oct): Lite reads the end from the feed
+        t_last = _time.monotonic()
+
+        def frames():                                         # the feed goes on after the last line: the arm at it, still
+            for _ in range(8):
+                _time.sleep(0.005)
+                kw["canfd_watch"].on_frame(_time.monotonic(), {"err": [0], "arm_current_status": "idle",
+                                                               "joint_status": {"joint_position": [0] * 7, "joint_err_code": [0] * 7}})
+
+        __import__("threading").Thread(target=frames, daemon=True).start()
+        return dict(ok=True, verdict="host_timed", canfd={"lines_sent": kw["points"], "replay_s": 0.01, "t_last_line": t_last},
                     restored={"global_speed": {} if held else {"restored": True}})
 
     class Link:
@@ -740,7 +750,8 @@ def test_a_lid_or_seat_run_keeps_one_feed_on_and_holds_the_global_ratio(monkeypa
     rows = [[0] * 7] * 3
     assert arm.keep_feed("LEFT_seat_open", records=tmp_path) == made[0].out_path.name and len(made) == 1
     for _ in range(3):
-        arm.stream(rows, "LEFT arm move", speed=50, restore_pct=50, records=tmp_path)
+        out = arm.stream(rows, "LEFT arm move", speed=50, restore_pct=50, records=tmp_path)
+        assert out["settle"]["by"] == "feed" and out["settle"]["at_rest"] and out["settle"]["gap_deg"] == 0.0
     arm.move_to([0] * 7, speed=15, restore_pct=50)            # a MoveJ puts 50 back too
     arm.stream(rows, "LEFT arm move", speed=50, restore_pct=50, records=tmp_path)
     arm.stream(rows, "LEFT arm move", speed=50, restore_pct=100, records=tmp_path)   # 100 to put back: set, then put back

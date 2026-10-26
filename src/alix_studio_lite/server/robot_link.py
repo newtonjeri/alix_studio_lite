@@ -177,6 +177,22 @@ def _joint_floats(robot, name: str, scale: float, digits: int) -> list | None:
     return [round(float(v) * scale, digits) for v in values]
 
 
+def _controller_state(robot) -> dict | None:
+    """The controller's own voltage (V), current (A) and temperature (C), as the vendor's GUI shows them under Controller
+    Info (rm_get_controller_state), or None when the controller does not answer it (ALIX's emulator)."""
+    fn = getattr(robot, "rm_get_controller_state", None)
+    if fn is None:
+        return None
+    try:
+        st = fn()
+    except Exception:                                                    # noqa: BLE001
+        return None
+    if not isinstance(st, dict) or st.get("return_code") != 0:
+        return None
+    return dict(voltage_v=round(float(st.get("voltage") or 0.0), 1), current_a=round(float(st.get("current") or 0.0), 2),
+                temp_c=round(float(st.get("temperature") or 0.0), 1), sys_err=int(st.get("system_error") or 0))
+
+
 class ArmLink:
     """One controller: connected once, read by one thread, which also owns the SDK handle (it
     closes it when it stops, so nothing uses a deleted handle). ``on_read`` is called after every
@@ -526,10 +542,14 @@ class ArmLink:
         fb["joints_deg"] = [round(float(v), 3) for v in (st.get("joint") or [])] if ok else None
         fb["pose"] = [round(float(v), 6) for v in (st.get("pose") or [])[:6]] if ok and st.get("pose") else None   # m, rad
         fb["errors"] = error_codes(st.get("err")) if ok else None
-        # the joints' temperatures (C) and currents (A) with every reading (the owner, 26 Oct: the right arm's joint 3 ran to
-        # 80 C at a high current and stopped following; only the 5 ms captures had shown temperatures, and only during streams)
+        # the joints' temperatures (C), currents (A) and voltages (V), and the controller's own, with every reading, asked
+        # over the arm's connection as the vendor's GUI asks them (no realtime push; the owner, 26 Oct: the right arm's joint
+        # 3 ran to 80 C at a high current and stopped following; only the 5 ms captures had shown temperatures, and only
+        # during streams; "Lite is our company's version of the vendor's GUI")
         fb["temps_c"] = _joint_floats(robot, "rm_get_current_joint_temperature", 1.0, 1) if ok else None
         fb["currents_a"] = _joint_floats(robot, "rm_get_current_joint_current", 0.001, 2) if ok else None
+        fb["voltages_v"] = _joint_floats(robot, "rm_get_current_joint_voltage", 1.0, 1) if ok else None
+        fb["controller"] = _controller_state(robot) if ok else None
         r, mode = runmode.read_run_mode(robot)
         fb["run_mode"] = {0: "SIM", 1: "REAL"}.get(mode) if r == 0 else None
         height = peripherals.Pole(robot, log=lambda *_: None).height_m()

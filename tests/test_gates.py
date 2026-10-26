@@ -134,6 +134,19 @@ def test_each_status_reading_carries_the_joints_temperatures_and_currents():
     assert robot_link._joint_floats(SimpleNamespace(rm_get_current_joint_current=lambda: (-2, [])), "rm_get_current_joint_current", 0.001, 2) is None
 
 
+def test_the_controllers_own_voltage_current_and_temperature_are_read_as_the_vendors_gui_reads_them():
+    """26 Oct: the vendor's GUI's Controller Info (22.4 V, 0.7 A, 47 C) and its per-joint voltages come from the plain
+    reads over the connection, no realtime push; Lite's status readings carry the same (robot_link._read_all)."""
+    from alix_studio_lite.server import robot_link
+
+    robot = SimpleNamespace(rm_get_controller_state=lambda: dict(return_code=0, voltage=22.39, current=0.713, temperature=47.04, system_error=0),
+                            rm_get_current_joint_voltage=lambda: (0, [22.0, 22.0, 22.0, 22.0, 22.0, 21.0, 21.0]))
+    assert robot_link._controller_state(robot) == dict(voltage_v=22.4, current_a=0.71, temp_c=47.0, sys_err=0)
+    assert robot_link._joint_floats(robot, "rm_get_current_joint_voltage", 1.0, 1) == [22.0, 22.0, 22.0, 22.0, 22.0, 21.0, 21.0]
+    assert robot_link._controller_state(SimpleNamespace()) is None                                    # ALIX's emulator
+    assert robot_link._controller_state(SimpleNamespace(rm_get_controller_state=lambda: dict(return_code=-2))) is None
+
+
 def test_a_joint_at_60_degrees_is_one_alert_until_it_has_cooled():
     alerts = []
     fake = SimpleNamespace(log=SimpleNamespace(alert=lambda level, text, **kw: alerts.append((level, text, kw.get("side")))))

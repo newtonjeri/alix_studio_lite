@@ -164,6 +164,12 @@ def _printed_to(sink):
 FORCE_CUT_N = 120.0       #: a stream stops when the wrist carries more than this (the owner, 26 Oct: a gate, not a note;
 #: 23 Oct: the way back dragged the seat at 160 N to the E-stop; the lifts carry 72-80 N)
 FORCE_CUT_FRAMES = 10     #: for this many 5 ms frames in a row (50 ms): a load, not one spike
+END_TOL_DEG = 0.5         #: a stream has ended when the feed shows the arm within this of its last line (26 Oct: within 0.08 in
+                          #: all 72 streams captured, by the time the last line was sent) ...
+END_STILL_DEG_S = 1.6     #: ... and under this (ALIX's at-rest gate, wait_until_at_rest) ...
+END_FRAMES = 3            #: ... for this many frames in a row (15 ms). ALIX's settle after a stream (six polls of the controller
+                          #: 25 ms apart) took 0.24 s a stream and never had to wait (the owner, 26 Oct: redundant for a stream)
+END_WAIT_S = 1.0          #: the feed not showing it within this: ALIX's polled wait takes over (the frames gone quiet, a lagging arm)
 
 
 def wrist_load_n(frame: dict) -> float | None:
@@ -1433,6 +1439,39 @@ class RealArm:
             return None
         return dict(load_n=round(load, 1), age_s=round(time.monotonic() - t, 2))
 
+    def _stream_end(self, last_row_millideg: list, t_after: float | None) -> dict:
+        """The stream's end, read from the feed's frames instead of ALIX's six polls of the controller (the owner, 26 Oct):
+        at rest when END_FRAMES frames in a row, taken after the last line went (``t_after``), show every joint within
+        END_TOL_DEG of the last line and under END_STILL_DEG_S (the frame's own speed, and the step between frames).
+        When the feed does not show it within END_WAIT_S, ALIX's ``wait_until_at_rest`` takes over, as before. Returns
+        {'waited_s', 'at_rest', 'gap_deg', 'peak_deg_s', 'by': 'feed' | 'polled'}; recorded, never raised on."""
+        from alix_dispatch import track
+
+        t0 = time.monotonic()
+        last = [float(v) / 1000.0 for v in last_row_millideg]
+        seen, prev, quiet, peak, gap = None, None, 0, 0.0, None
+        while time.monotonic() - t0 < END_WAIT_S:
+            t, frame = self._tap.t_mono, self._tap.frame
+            js = (frame or {}).get("joint_status") or {}
+            pos = js.get("joint_position")
+            if t is None or t == seen or (t_after is not None and t < t_after) or not pos:
+                time.sleep(0.002)
+                continue
+            seen = t
+            pos = [float(v) / 1000.0 for v in pos]
+            gap = max(abs(a - b) for a, b in zip(pos, last))
+            speed = max((abs(float(v)) / 1000.0 for v in (js.get("joint_speed") or [])), default=0.0)
+            if prev is not None:
+                speed = max(speed, max(abs(a - b) for a, b in zip(pos, prev[1])) / max(t - prev[0], 1e-3))
+            prev, peak = (t, pos), max(peak, speed)
+            quiet = quiet + 1 if gap <= END_TOL_DEG and speed < END_STILL_DEG_S else 0
+            if quiet >= END_FRAMES:
+                return dict(waited_s=round(time.monotonic() - t0, 3), at_rest=True, gap_deg=round(gap, 3), peak_deg_s=round(peak, 2), by="feed")
+            time.sleep(0.002)
+        rest = track.wait_until_at_rest(self.robot)
+        return dict(waited_s=round(float(rest.get("waited_s") or 0.0) + (time.monotonic() - t0), 3), at_rest=bool(rest.get("at_rest")),
+                    gap_deg=None if gap is None else round(gap, 3), peak_deg_s=round(float(rest.get("peak_deg_s") or 0.0), 2), by="polled")
+
     def drop_feed(self) -> dict | None:
         """The kept feed turned off: the controller's push put back as it was found (ALIX's recorder). Never raises; one
         that cannot be turned off now is kept, for the next drop_feed (and the next connection clears it)."""
@@ -1462,7 +1501,8 @@ class RealArm:
         or a stop code is live; then ``track.run_verified(channel="canfd")``: the lines checked against the
         pass-through's limits (the per-joint gate), the arm at the first line (within one frame's step) or, with
         ``bridge_speed``, brought there by ALIX's explicit MoveJ at that speed, then one ``rm_movej_canfd`` per line on
-        absolute 5 ms deadlines, and the arm left at rest. STOP (``stop_hook``) stops the sending at once (the watch,
+        absolute 5 ms deadlines; then its end read from the feed's frames (``_stream_end``: the arm within END_TOL_DEG of
+        the last line and still, in place of ALIX's polled settle). STOP (``stop_hook``) stops the sending at once (the watch,
         and the thread interrupted); the arm holds the last line it took, and Lite's STOP stops it on its controller.
         The capture is kept in ``records``; the record names the stretch of it this move took (``t_mono``)."""
         from alix_dispatch import track
@@ -1532,10 +1572,13 @@ class RealArm:
                     out = track.run_verified(
                         self.robot, save_id=0, band_s=track.expected_band_s(n), first_row_millideg=rows[0], points=n,
                         speed=int(speed), restore_pct=int(restore_pct), start_tolerance_deg=2.0,
-                        require_at_start=bridge_speed is None, movej_speed=bridge_speed, log=log, settle_after=True,
+                        require_at_start=bridge_speed is None, movej_speed=bridge_speed, log=log, settle_after=False,
                         channel="canfd", track_rows_millideg=rows, canfd_watch=watch,
                         canfd={"period_s": CANFD_PERIOD_S, "rate_gate": "per_joint", "follow": True,
                                "trajectory_mode": 0, "radio": 0}, ratio_held=held)
+                    if out.get("ok"):                 # its end: the arm at the last line and still, from the feed (26 Oct)
+                        cs0 = out.get("canfd") or {}
+                        out["settle"] = self._stream_end(rows[-1], cs0.get("t_last_line") or cs0.get("t_end"))
                     if not held:                      # put back to restore_pct (or not known, when that failed)
                         self._ratio = int(restore_pct) if (out.get("restored") or {}).get("global_speed", {}).get("restored") else None
                 finally:
@@ -1557,18 +1600,22 @@ class RealArm:
             sent = watch.last_line + 1
         bridged = out.get("gap_deg") if out.get("movej_ret") == 0 else None
         why = out.get("cut_reason") or cs.get("aborted") or ("STOP" if stop.is_set() else None)
+        settle = out.get("settle") or {}
+        end_words = ("" if not settle else f", end {settle['waited_s'] * 1000:.0f} ms" if settle.get("by") == "feed"
+                     else f", at rest by the polled wait after {settle['waited_s']:.2f} s" if settle.get("at_rest")
+                     else f", NOT at rest after {settle['waited_s']:.1f} s")
         self._hw("canfd stream", args=dict(label=label, lines=n, period_ms=CANFD_PERIOD_S * 1000, rate_gate="per_joint",
                                            bridge_speed=bridge_speed, capture=cap.name, ratio_held=held,
-                                           t_mono=[round(t_mono0, 3), round(t_mono1, 3)]),
+                                           t_mono=[round(t_mono0, 3), round(t_mono1, 3)], settle=settle or None),
                  ret=out.get("verdict"), ok=ok, elapsed_s=time.monotonic() - t0,
-                 text=f"{sent}/{n} lines" + (f", bridged {bridged:.2f} deg" if bridged else "") + (f"; {why}" if why and not ok else ""))
+                 text=f"{sent}/{n} lines" + end_words + (f", bridged {bridged:.2f} deg" if bridged else "") + (f"; {why}" if why and not ok else ""))
         if stop.is_set():
             raise Cancelled()
         if not ok:
             raise UserError(f"{label}: the stream did not complete ({why or out.get('verdict') or 'no verdict'}; {sent} of {n} lines sent).",
                             "The arm holds where it stopped: check it, then press STOP or run the task again.")
         return dict(lines=n, lines_sent=sent, seconds=round(float(cs.get("replay_s") or 0.0), 3), bridged_deg=bridged,
-                    capture=str(cap), verdict=out.get("verdict"))
+                    capture=str(cap), verdict=out.get("verdict"), settle=settle or None)
 
     def move_to(self, target_millideg: list, speed: int = RESTORE_PCT, restore_pct: int = RESTORE_PCT) -> dict:
         """A MoveJ to a joint pose at ``speed`` % (the speed slider), ALIX's park move (the global speed at

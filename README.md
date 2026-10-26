@@ -185,7 +185,8 @@ Every activity is logged, one folder per day in **`Resources/Logs/<date>/`** in 
 
 ```bash
 cd alix_studio_lite
-.venv/bin/python -m pytest -q          # Windows: .venv\Scripts\python -m pytest -q   (about 4 minutes; no robot, no network)
+.venv/bin/python -m pytest -q          # Windows: .venv\Scripts\python -m pytest -q   (8 workers, about 1.5 minutes; no robot, no network)
+.venv/bin/python -m pytest -q -n 0 tests/test_gates.py     # one file or one test: in this process, no workers
 ```
 
 The tests cover:

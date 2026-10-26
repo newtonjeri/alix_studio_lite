@@ -163,3 +163,47 @@ def test_the_s2_feed_recording_is_off_unless_ticked():
     assert workflow.feed_wanted(app, {}) is False and workflow.feed_wanted(app, {"record_feed": False}) is False
     assert workflow.feed_wanted(app, {"record_feed": True}) is True
     assert workflow.feed_wanted(SimpleNamespace(feed_ms=None), {"record_feed": True}) is False
+
+
+class _Tap:
+    """A feed as _stream_end reads it: a frame every 5 ms of the fake clock, at ``at`` (millidegrees) with ``speed``."""
+
+    def __init__(self, clock, at, speed_millideg_s=0):
+        self.clock, self.at, self.speed, self._n = clock, list(at), speed_millideg_s, 0
+
+    @property
+    def t_mono(self):
+        self._n += 1
+        return self.clock.t + 0.005 * self._n
+
+    @property
+    def frame(self):
+        return {"joint_status": {"joint_position": list(self.at), "joint_speed": [self.speed] * 7}}
+
+
+def test_a_stream_ends_on_the_feeds_frames_at_its_last_line(monkeypatch):
+    """26 Oct captures, 72 streams: the arm within 0.08 deg of its end by the last line and under 1.6 deg/s after it, every
+    time; ALIX's settle (six polls 25 ms apart, 0.24 s a stream) never had to wait. Now three frames at the last line and
+    still end the stream (15 ms); the polled wait takes over only when the feed does not show it within a second."""
+    from alix_dispatch import track
+
+    clock = _Clock()
+    monkeypatch.setattr(robot_real, "time", clock)
+    polled = []
+    monkeypatch.setattr(track, "wait_until_at_rest", lambda robot, **kw: polled.append(robot) or dict(waited_s=0.17, at_rest=True, peak_deg_s=0.3))
+    last = [0, -82000, -26000, 98000, 6000, 62000, 69000]
+    arm = _arm([0.0] * 7, [])
+    arm._tap = _Tap(clock, [0, -81990, -26005, 97992, 6003, 61995, 69003])       # 0.01 deg off, speed 0: at rest at once
+    t0 = clock.t
+    out = arm._stream_end(last, t_after=t0)
+    assert out["by"] == "feed" and out["at_rest"] and out["gap_deg"] == 0.01 and not polled
+    assert clock.t - t0 < 0.05 and out["waited_s"] < 0.05                         # three frames, not 0.24 s
+    arm._tap = _Tap(clock, [0, -81990, -26005, 97992, 6003, 61995, 69003], speed_millideg_s=3000)   # 3 deg/s: still moving
+    t0 = clock.t
+    out = arm._stream_end(last, t_after=t0)
+    assert out["by"] == "polled" and out["at_rest"] and polled == [arm.robot] and clock.t - t0 == pytest.approx(1.0, abs=0.05)
+    arm._tap = _Tap(clock, [0, -81000, -26000, 98000, 6000, 62000, 69000])         # 1 deg from the last line: not there
+    assert arm._stream_end(last, t_after=clock.t)["by"] == "polled" and len(polled) == 2
+    arm._tap = robot_real._FrameTap()                                              # no frame at all (the feed quiet): polled
+    assert arm._stream_end(last, t_after=clock.t)["by"] == "polled" and len(polled) == 3
+    assert (robot_real.END_TOL_DEG, robot_real.END_STILL_DEG_S, robot_real.END_FRAMES, robot_real.END_WAIT_S) == (0.5, 1.6, 3, 1.0)
