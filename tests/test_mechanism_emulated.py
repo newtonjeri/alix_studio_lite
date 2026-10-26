@@ -58,6 +58,8 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     after = left[max(i for i, r in enumerate(left) if "re-lift 1" in r["args"]["label"]) + 1]
     assert "bridged" in after["text"], after["args"]["label"]
     assert all(r["args"]["period_ms"] == 5.0 and r["args"]["rate_gate"] == "per_joint" for r in streams)
+    assert all((r["args"]["settle"] or {}).get("by") == "feed" and r["args"]["settle"]["at_rest"] for r in streams)   # its end from the feed (26 Oct)
+    assert all(", end " in r["text"] and r["args"]["settle"]["waited_s"] < 0.5 for r in streams), [r["text"] for r in streams]
     # each arm's 5 ms feed on once for the run (24 Oct: on and off around every move, 1.1 s each), every move watched on
     # it over its own stretch, and off at the end; an arm's back-to-back moves are one stream
     caps = sorted(p.name for p in (Path(server["data"]) / "logs" / time.strftime("%Y-%m-%d") / "canfd").glob("*.frames.jsonl"))

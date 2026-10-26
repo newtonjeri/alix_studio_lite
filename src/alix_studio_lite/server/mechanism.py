@@ -387,7 +387,7 @@ def reverse_block(block: list, note: str = "re-lift restore, reversed") -> list:
 
 def joined_moves(entries: list, i: int, bridged=()) -> tuple:
     """(``entries[i]`` with the same arm's moves straight after it as ONE stream, how many entries it takes): each
-    stream has its own start, stop and settle (24 Oct: 1.6 s a stream). Only a plan's own moves are joined (no re-lift
+    stream has its own start and end (24 Oct: 1.6 s a stream; 26 Oct: about 0.15 s, its end read from the feed). Only a plan's own moves are joined (no re-lift
     or rung move; a "one point" move is the plan's), none asking the camera or holding before it, none bridged, each
     starting on the line the one before ends on (every pair in the four plans: 0 millidegrees apart)."""
     e = entries[i]
