@@ -1,0 +1,83 @@
+--- before/lid_open.yaml	2026-10-26 15:06:38.081096077 +0300
++++ after/lid_open.yaml	2026-10-26 15:06:38.110756670 +0300
+@@ -297,11 +297,8 @@
+   # ---------------------------------------------------------------------------
+   # 2. LEFT arm lifts the lid to -30 deg
+   # ---------------------------------------------------------------------------
+-  - stage: hand_release
+-    arm: left
+-    pose_name: release
+-    planning_group: inspire_hand_left
+-
++  # (26 Oct: no hand_release here. The executive sets the hand to the half_grasp
++  # below before the plan starts; the release then re-grasp cost 2.4 s a run.)
+   - stage: move_to_half_pole_length
+     arm: left
+     pose_name: half_length
+@@ -342,10 +339,12 @@
+   # 3. Settle, then CHECK that the lid is lifted (executive, fail-closed)
+   # ---------------------------------------------------------------------------
+   # Settle dwell (the `hold_time:` key makes it one): the left hand holds the
+-  # lid still for 1 s before the image; recorded in the saved plan as a
+-  # hold_pose pre_action of the next sub-trajectory.
++  # lid still for 0.5 s before the image (26 Oct: the three frames taken 0, 0.7
++  # and 1.3 s after a 1 s hold agreed in lid height within 0.2 mm, so the lid
++  # is still by then); recorded in the saved plan as a hold_pose pre_action of
++  # the next sub-trajectory.
+   - stage: settle_before_check
+-    hold_time: 1.0
++    hold_time: 0.5
+ 
+   # THE LIFT CHECK. A `check:` key makes this a perception check, as
+   # `hold_time:` makes a dwell: no MTC stage, no trajectory. The saved plan is
+--- before/seat_open.yaml	2026-10-26 15:06:38.081346272 +0300
++++ after/seat_open.yaml	2026-10-26 15:06:38.110943129 +0300
+@@ -225,11 +225,8 @@
+   # ---------------------------------------------------------------------------
+   # 2. LEFT arm lifts the seat (partial lift, 0 -> -30 deg)
+   # ---------------------------------------------------------------------------
+-  - stage: hand_release
+-    arm: left
+-    pose_name: release
+-    planning_group: inspire_hand_left
+-
++  # (26 Oct: no hand_release here. The executive sets the hand to the half_grasp
++  # below before the plan starts; the release then re-grasp cost 2.4 s a run.)
+   - stage: move_to_half_pole_length
+     arm: left
+     pose_name: half_length
+@@ -285,14 +282,10 @@
+   # ---------------------------------------------------------------------------
+   # 5. RIGHT arm takes the hold (pre-start -> start on the lifted seat)
+   # ---------------------------------------------------------------------------
+-  # P20: leave the inspect pose through rest BEFORE the pole drops to quarter length
+-  # (lowering the plate at the inspect pose met the lifted seat / lifting arm in planning).
+-  - stage: move_to_rest
+-    speed_class: freespace
+-    arm: right
+-    pose_name: rest_pose
+-    planning_group: rm75_arm_right
+-
++  # (26 Oct: no move_to_rest here. P20 left the inspect pose through rest because
++  # the pole then dropped to quarter length there; the pole stays at half length
++  # throughout now, so the right goes from the inspect pose to pre_start, 1.2 s
++  # less a run. If the planner refuses the direct path, put the rest back.)
+   - stage: move_to_half_pole_length
+     arm: right
+     pose_name: half_length
+@@ -340,11 +333,10 @@
+     pose_name: retract_pose
+     planning_group: rm75_arm_left
+ 
+-  - stage: hand_grasp
+-    arm: left
+-    pose_name: grasp
+-    planning_group: inspire_hand_left
+-
++  # (26 Oct: no hand_grasp (fist) here. retract_pose_2 and rest are planned with
++  # the open hand, 1.9 s less a run and one stream instead of two; the fist was
++  # there for the hand<->seat collision checking restored below. If the planner
++  # finds the open hand against the seat ring on the way, put the fist back.)
+   # Hand has left the seat -> restore normal hand<->seat collision checking.
+   - stage: forbid_collision
+     arm: left
