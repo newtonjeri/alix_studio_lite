@@ -142,6 +142,10 @@ def emit_rows(t, q_rad) -> list:
     return [[int(v) for v in row] for row in np.round(qq * 1000.0).astype(np.int64)]
 
 
+def flow_other(side: str) -> str:
+    return "right" if side == "left" else "left"
+
+
 def kind_of(joints: list) -> tuple[str, str] | None:
     """('arm' | 'pole' | 'hand', side) of one plan entry (arm_trajectory_sender.joint_controller_key)."""
     first = joints[0]
@@ -676,6 +680,7 @@ class Runner:
                  f"{plan.seconds():.1f} s of motion)")
         self.ex.approach(plan, plan.targets("start"), "start")
         unsent = trailing_releases(entries, self.hand_set)
+        freed: set = set()
         i = 0
         while i < len(entries):
             e = entries[i]
@@ -702,6 +707,7 @@ class Runner:
             if id(e) in unsent:
                 self.say(f"{e.label()}: not sent, the {e.side.upper()} hand is set for its next task's start right after")
                 i += 1
+                self._free(plan, entries, i, freed)
                 continue
             joined, used = joined_moves(entries, i, state["bridge"])
             self.ex.move(joined, bridge=id(e) in state["bridge"])
@@ -709,6 +715,7 @@ class Runner:
                 nxt = next((x for x in entries[i + used:] if x.kind == "arm" and x.side == joined.side), None)
                 getattr(self.ex, "released", lambda *_: None)(joined, nxt.stage if nxt is not None else None)
             i += used
+            self._free(plan, entries, i, freed)
         for a in self.final_actions(plan):
             self.ex.hold(float(a.get("seconds") or 0.0), a.get("stage") or "hold_pose")
         if state["skipped"] and self.k + 1 >= len(self.queue):
@@ -718,6 +725,37 @@ class Runner:
         self.done.append(dict(plan=name, title=plan.title, outcome="skipped" if state["skipped"] else "done",
                               relifts=state["relifts"]))
         return "done"
+
+    @staticmethod
+    def check_needs(action: dict, side: str) -> bool:
+        """Whether a check still to come could call on ``side``: a re-lift is the lifting arm's (the arm the check names
+        is the camera's), a prerequisite plan takes both arms."""
+        if action.get("type") != "check_fixture_state":
+            return False
+        policy = str(action.get("on_fail") or "abort")
+        if policy == "run_prerequisite":
+            return True
+        lifter = "left" if action.get("arm", "right") == "right" else "right"
+        return policy == "retry_lift" and lifter == side
+
+    def _free(self, plan, entries, i, freed: set) -> None:
+        """The arms whose part of the plan is over before the plan's end, said once each to the exec (``arm_free``): an
+        arm in ``leave`` (its next task's start follows the run) with no entry of its own from ``i`` on and no check
+        still to come that could call on it (check_needs), in the run's last plan (a prerequisite's run comes back to
+        the plan after it). 27 Oct: the left's part of Open the seat ends 8 to 10 s before the right's end check, and
+        Open the lid's 5 s before; its move to its next Program's start, and the Program, can begin meanwhile."""
+        hook = getattr(self.ex, "arm_free", None)
+        if hook is None or i >= len(entries) or self.k + 1 < len(self.queue):
+            return
+        rest = entries[i:]
+        for side in sorted(self.leave - freed):
+            if any(x.side == side for x in rest) or any(self.check_needs(a, side) for x in rest for a in x.pre_actions):
+                continue
+            freed.add(side)
+            left = sum(x.seconds for x in rest)
+            self.say(f"{side.upper()}: its part of {plan.title} is over; the {flow_other(side).upper()} arm's {len(rest)} entries "
+                     f"({left:.1f} s of motion, its checks) remain: free for its next task's start")
+            hook(side)
 
     def _cannot_judge(self, label, expect, answer, lead="", final=False):
         """A check its frames left undecided (FRAMES): a person must look; no plan policy runs, no re-lift (the owner,
@@ -936,6 +974,8 @@ class RealExec(_Exec):
         self.live = live or (lambda side, text: None)   # S2's live line of each arm
         self.feeds_after = bool(feeds_after)            # the caller turns the arms' feeds off after the run (S2: in its next pole
         self._name, self._feeds, self._hands = "lid_seat", set(), set()   # and hand step's travel), not finish()
+        self.on_free = None                             # S2: called with an arm whose part of the plan is over before its end
+        self._free: set = set()                         # those arms: finish() leaves them alone (arm_free let their hands go)
         self._frames, self._taken = None, []            # (when, [(frame, q)]) of the last check, for the next at the same pose
         self.room = room                                # home, scene, fid, cubicle_mm: the collision check's world (S2 gives it)
 
@@ -985,6 +1025,31 @@ class RealExec(_Exec):
         self._feeds.clear()
         self._hands.clear()
         self.kit.gap.flush()
+
+    def arm_free(self, side) -> None:
+        """An arm whose part of the plan is over before the plan's end (Runner._free): its hand let go now, its feed
+        turned off now unless the caller turns it off (feeds_after), then ``on_free(side)``: S2 moves that arm to its
+        next task's start and starts its Programs while the other arm finishes the task (27 Oct). finish() then leaves
+        the arm alone; the plan never moves it again (no entry of its own, no check that could call on it)."""
+        if side in self._free:
+            return
+        self._free.add(side)
+        if side in self._hands:
+            self._hands.discard(side)
+            try:
+                self._arm(side).drop_hand()
+            except Exception:                                                       # noqa: BLE001 - nothing held on it
+                pass
+        if side in self._feeds:
+            self._feeds.discard(side)
+            if not self.feeds_after:
+                try:
+                    self._arm(side).drop_feed()
+                except Exception as exc:                                            # noqa: BLE001
+                    self.say(f"{side.upper()}: its 5 ms feed was not turned off ({exc})", "warn")
+        hook = self.on_free
+        if hook is not None:
+            hook(side)
 
     def _keep_feed(self, side) -> None:
         """The arm's 5 ms feed on for the rest of the run, from its first move (robot_real.keep_feed)."""
