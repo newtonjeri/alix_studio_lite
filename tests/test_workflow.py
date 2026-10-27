@@ -855,7 +855,8 @@ def test_after_a_lid_or_seat_task_each_arm_starts_the_next_stage_as_its_own_move
     sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, {"/f.txt": md}.get, []) for s in ("left", "right")}
     stages, total = workflow.schedule(run, sims, 15)
     L, R = sims["left"].acts, sims["right"].acts
-    then = {s: [a for a in acts if a["stage"] == 1 and a["t1"] > a["t0"]][-3:] for s, acts in (("left", L), ("right", R))}
+    then = {s: [a for a in acts if a["stage"] == 1 and a["t0"] >= stages[1]["t1_plan"] - 1e-6 and a["t1"] > a["t0"]]
+            for s, acts in (("left", L), ("right", R))}
     for s in ("left", "right"):                       # its pole and hand, its errors read, its MoveJ to its first point
         assert [a["kind"] for a in then[s]] == ["pole_hand", "wait", "global"], then[s]
     assert then["right"][0]["t1"] - then["right"][0]["t0"] > then["left"][0]["t1"] - then["left"][0]["t0"] + 0.5     # 100 mm against 10
@@ -867,11 +868,3 @@ def test_after_a_lid_or_seat_task_each_arm_starts_the_next_stage_as_its_own_move
     assert stages[1]["t1"] == pytest.approx(then["right"][-1]["t1"], abs=1e-6)            # the task's stage ends with the slower arm
     assert stages[2]["t0"] == pytest.approx(then["left"][-1]["t1"], abs=1e-6)             # the next starts with the faster
     assert total == pytest.approx(max(L[-1]["t1"], R[-1]["t1"]), abs=1e-3)
-    # the left's part of Open the lid is over before the right's end check (27 Oct): its move to its next start begins
-    # then, while the right finishes the task, and a note says so; the right's begins at the plan's end
-    last_left = max(a["t1"] for a in L if a["stage"] == 1 and a["kind"] == "stream")
-    assert then["left"][0]["t0"] == pytest.approx(last_left, abs=1e-6) and then["left"][0]["t0"] < stages[1]["t1_plan"] - 3.0
-    assert then["right"][0]["t0"] == pytest.approx(stages[1]["t1_plan"], abs=1e-6)
-    notes = [f for f in sims["left"].findings if f["level"] == "note" and "free of Open the lid" in f["text"]]
-    assert len(notes) == 1 and "before its end" in notes[0]["text"] and "collision check covers both arms" in notes[0]["text"]
-    assert not [f for f in sims["right"].findings if "free of" in f["text"]]

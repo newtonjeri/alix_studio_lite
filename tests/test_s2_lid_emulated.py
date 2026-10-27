@@ -121,15 +121,10 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
         acts = res["acts"][side]
         first = next(a for a in acts if a["kind"] == "pole_hand")       # Program 71's own, before it, nothing between
         assert first["pole1"] == 150.0 and first["hand1"] == GRIP and acts[acts.index(first) + 1]["kind"] == "program"
-        then = [a for a in acts if a["stage"] == lid_row["index"] and a["t1"] > a["t0"]][-3:]   # its pole and hand, its clear, its MoveJ
+        then = [a for a in acts if a["stage"] == lid_row["index"] and a["t0"] >= lid_row["t1_plan"] - 1e-6 and a["t1"] > a["t0"]]
         assert [a["kind"] for a in then][::2] == ["pole_hand", "global"] and then[0]["pole1"] == 200.0 and then[0]["hand1"] == CLEAN
         nxt = next(a for a in acts if a["kind"] == "program" and a["program"] == 72)
         assert nxt["transit"] == [0.0, 0.0, 0.0]                       # at its first point: no move of the controller's
-        if side == "left":                                             # free of the lid task before its end (27 Oct): on it goes
-            assert then[0]["t0"] < lid_row["t1_plan"] - 3.0 and nxt["t0"] < lid_row["t1_plan"]
-        else:
-            assert then[0]["t0"] == pytest.approx(lid_row["t1_plan"], abs=1e-6)
-    assert any("LEFT is free of Open the lid" in f["text"] and "before its end" in f["text"] for f in res["findings"])
 
     t0 = time.time()
     j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": res["hash"],
@@ -151,13 +146,5 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
         assert last["ok"] and last["args"]["deg"] == pytest.approx(server["first"][(side, 72)], abs=0.01)
     starts = [r for r in hw if r["verb"] == "runner v14" and str(r.get("text") or "").startswith("WORKFLOW PROGRAM 1/1: slot 72")]
     assert len(starts) == 2
-    # the left, free of the lid task before its end (a simulated run), moved to 72's start and began 72 while the right
-    # finished the task: its MoveJ and its Program's start come before the right's last stream (27 Oct)
-    right_last = max(r["t"] for r in hw if r["verb"] == "canfd stream" and r["side"] == "right")
-    left_move = [r for r in hw if r["verb"] == "move to pose" and r["side"] == "left"][-1]["t"]
-    left_start = next(r["t"] for r in starts if r["side"] == "left")
-    assert left_move < right_last and left_start < right_last, (left_move, left_start, right_last)
-    assert ("LEFT: free of Open the lid before its end: to its next task's start and on with its part of PART 2 while the RIGHT arm "
-            "finishes the task (as simulated).") in said
     feeds = [r for r in hw if r["verb"] == "s2 feed" and r.get("text") == "recording"]
     assert len(feeds) == 4                                            # one an arm a stage (2 stages), not one a runner call
