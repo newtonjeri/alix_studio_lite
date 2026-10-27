@@ -1,8 +1,8 @@
 {
-  "generated_utc": "2026-10-21T15:14:37+00:00",
+  "generated_utc": "2026-10-27T04:31:41+00:00",
   "alix_root": "/home/newtonjeri/alix_ws/src/alix",
   "alix_git": {
-    "commit": "842c0e59797242f548fb1378a3097506c939fce0",
+    "commit": "2aa0e26bcf1d1ffce74ca5e828827486e28d5487",
     "branch": "feature/alix_studio",
     "dirty": true
   },
@@ -483,6 +483,55 @@
       "origin": "alix",
       "sha256": "176720e4cf83b72e2e6fbfc95505be6802e187a278e5683f5310ba35c8a2dc26",
       "bytes": 5442
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g0.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g0.json",
+      "origin": "alix",
+      "sha256": "46925ff1bb284039ca3aa834c4db4d58ac6466fa3a23756998ce5542e4e49e62",
+      "bytes": 3251
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g0.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g0.proj",
+      "origin": "alix",
+      "sha256": "419727528993940878a5b51716892a3d1cdf4f148491b02f4004de377967e945",
+      "bytes": 55835
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g0.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g0.txt",
+      "origin": "alix",
+      "sha256": "d361d9b5a619c0c20e3a4f07f3ddaef75e6a352f748cac793ed5f0b187604053",
+      "bytes": 54842
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g1.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g1.json",
+      "origin": "alix",
+      "sha256": "15f2eee95683ba4fefcafc8c844ff728de01bdb26818be10c01e4ed673601a1f",
+      "bytes": 3117
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g1.proj",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g1.proj",
+      "origin": "alix",
+      "sha256": "b7be5bccc3c59e9ccb154995bb39215e26456e95c87be5422ceff191c90973be",
+      "bytes": 15560
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g1.txt",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.g1.txt",
+      "origin": "alix",
+      "sha256": "3859d5b36f29c68cbf83d7f0cddf2359d8dd7f9f5f14c67fe219430e7fc3002d",
+      "bytes": 15213
+    },
+    {
+      "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.json",
+      "origin": "alix",
+      "sha256": "f96a6ef630e7c1d57bbb18913ddcaa0085d7b66bea9319283ba44a51670a2b86",
+      "bytes": 631370
     },
     {
       "dest": "vendor/alix/Resource/plans/commode_c/hardware/lid_open_toppra.g0.json",
@@ -4473,8 +4522,8 @@
       "dest": "vendor/alix/ros/manipulation/alix_moveit_config/config/alix.srdf",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/manipulation/alix_moveit_config/config/alix.srdf",
       "origin": "alix",
-      "sha256": "b645ada3c299bbc97d5c3ef180885bd045010089ab41d4002e4f8f6ade4662f4",
-      "bytes": 255126
+      "sha256": "f337ee0aaa2c109dd20a2f513501b9c5f0f01af6fc6a3bfad24c90e0c64af753",
+      "bytes": 255558
     },
     {
       "dest": "vendor/alix/ros/manipulation/alix_moveit_config/config/group_states/arm_poles_group_states.yaml",
@@ -4487,8 +4536,8 @@
       "dest": "vendor/alix/ros/manipulation/alix_moveit_config/config/group_states/arms_group_states.yaml",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/manipulation/alix_moveit_config/config/group_states/arms_group_states.yaml",
       "origin": "alix",
-      "sha256": "07ee71df64b9cc0c9b56af814da00d9afa56eaeb9e5071ac272a234dd0c179ad",
-      "bytes": 26850
+      "sha256": "732021976ce5cc2958f1adfd95afb091dca23bc31b3c8538156334d275212ec3",
+      "bytes": 27766
     },
     {
       "dest": "vendor/alix/ros/manipulation/alix_moveit_config/config/group_states/candidate_poses.yaml",
@@ -4704,8 +4753,8 @@
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/lid_open.yaml",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/lid_open.yaml",
       "origin": "alix",
-      "sha256": "c4c98d60cce10cf616eec17a54add7715683a76e3880d257f678fc72c0fc5529",
-      "bytes": 23586
+      "sha256": "6464e9509d4c2070f5e4256a3a484b997f874b15f84a82e076ff0f73525fc2b7",
+      "bytes": 25599
     },
     {
       "dest": "vendor/alix/ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/seat_open.yaml",

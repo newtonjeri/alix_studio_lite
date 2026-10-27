@@ -131,7 +131,7 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
                                                                 "record_feed": True}))                 # the feed: only when asked (26 Oct)
     said = " | ".join(e["text"] for e in j.get("events") or [])
     assert j["state"] == "done", (j.get("error"), said[-1500:])
-    assert "Open the lid done" in said and "Close the seat" not in said              # no closing follows (26 Oct)
+    assert "Open the lid (in a sequence) done" in said and "Close the seat" not in said   # its sequence plan (27 Oct); no closing follows (26 Oct)
     assert "RIGHT hand hand_release: not sent, the RIGHT hand is set for its next task's start right after" in said   # 26 Oct
     for side in ("LEFT", "RIGHT"):
         assert f"{side}: at the start of Program 72 (its own pole and hand, its first point)." in said

@@ -627,3 +627,34 @@ def test_the_stops_at_the_junctions_of_joined_moves_are_taken_out_on_the_same_pa
     assert joined.rows[-len(parts[2].rows):] == parts[2].rows                               # the lift's lines untouched
     assert len(joined.rows) < sum(len(e.rows) for e in parts)                              # pre_start -> start blended
     assert mechanism.blend_junction([[0] * 7] * 10, 5) == [[0] * 7] * 10                   # nothing moving: left alone
+
+
+def test_a_plan_knows_the_streams_a_run_makes_of_its_moves_and_the_3d_view_reads_them():
+    """The owner, 27 Oct: "post-processing of the generated plans to make sure we remove the stops between stages". The
+    run's streams (joined_moves, their junctions blended) are the plan's ``streams``; its ``streamed`` view says what the
+    moves take streamed and how much of the planner's stops came out; the simulation plays the same streams and names
+    them mechanism:<task>:<i>:joined:<n>, which the 3D view's reader turns back into the very same lines."""
+    from alix_studio_lite.server import workflow
+
+    for name in ("lid_open", "seat_open", "seat_open_seq"):
+        plan = mechanism.Plan(name)
+        streams = plan.streams(start_checks=False)
+        moves = [e for e in plan.entries if e.kind == "arm"]
+        assert sum(n for _, n in streams) == len(moves) and len(streams) < len(moves)     # every move in exactly one stream
+        st = plan.streamed(start_checks=False)
+        assert st == dict(seconds=round(sum(j.seconds for j, _ in streams), 2), blended_s=round(sum(j.blended_s for j, _ in streams), 2),
+                          streams=len(streams), moves=len(moves))
+        assert 0.5 < st["blended_s"] < 2.0 and st["seconds"] < plan.seconds() - st["blended_s"] + 0.01   # the stops out, the stills not sent
+        assert plan.view()["streamed"] == plan.streamed()
+        for j, n in streams:
+            if n > 1:
+                assert mechanism.joined_rows(name, j.i, n) == j.rows                        # the 3D view's lines are the stream's
+                assert len(j.rows) <= sum(len(e.rows) for e in plan.entries[j.i:j.i + n])
+    seat = mechanism.Plan("seat_open")
+    k = [(e.side, e.stage) for e in seat.entries].index(("left", "move_to_retract"))
+    md = workflow._md_reader()
+    assert md(f"mechanism:seat_open:{k}:joined:3").shape == (len(mechanism.joined_rows("seat_open", k, 3)), 7)
+    assert md(f"mechanism:seat_open:{k}").shape == (len(seat.entries[k].rows), 7)          # one move, as before
+    with pytest.raises(UserError, match="do not join into one stream"):
+        mechanism.joined_rows("seat_open", k, 5)                                             # across the right's push: no stream
+

@@ -84,10 +84,14 @@ TASKS = {
              "lifts the seat, the camera checks it is up (one re-lift), then the right arm opens it fully; at the end "
              "the camera checks the lid and the seat are open."),
     # the plans a SEQUENCE runs (the owner, 27 Oct): the same configs planned with inspect_before_lift false, so there is
-    # no look before the lift (the sequence's own order made that state); the lifted check and the end look stay
-    # (no lid_open_seq yet: planned without the look, the right arm's push meets the lid with its thumb, as its pre-start
-    #  and start take another IK solution from rest than from pose 4; the owner's config decision. In a sequence Open the
-    #  lid keeps its look move and skips only the check.)
+    # no look before the lift (the sequence's own order made that state); the lifted check and the end look stay. The
+    # lid's goes to its hold by a joint-space move from rest (the config's direct_approach: the very joints the plan with
+    # the look reaches), and its push may touch the lid with the thumb's base link as it does with the thumb's tip (the
+    # config's allow_collision; without it the push planned from rest met the lid 49 mm in with that link).
+    "lid_open_seq": dict(
+        title="Open the lid (in a sequence)", short="LID OPEN", start="lid closed", end="lid open, seat down", variant_of="lid_open",
+        does="The left arm lifts the lid at once, the camera checks it is up (up to three re-lifts), then the right arm "
+             "takes it from its rest and opens it fully; at the end the camera checks the lid is open and reads the seat."),
     "seat_open_seq": dict(
         title="Open the seat (in a sequence)", short="SEAT OPEN", start="lid open, seat down", end="lid and seat open", variant_of="seat_open",
         does="The left arm lifts the seat at once, the camera checks it is up, the right arm opens it fully and the "
@@ -107,9 +111,9 @@ def sequence_plan(task: str) -> str:
 #: Lite's catalogue rows (docs/region_catalogue_commode_c.csv) and the plan each one runs
 ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T03": "seat_open", "R-T03": "seat_open"}
 #: the commode's state after each, for the 3D and the collision check (Lite's phases)
-PHASE_AFTER = {"lid_open": "lid_open", "seat_open": "seat_open", "seat_open_seq": "seat_open"}
+PHASE_AFTER = {"lid_open": "lid_open", "lid_open_seq": "lid_open", "seat_open": "seat_open", "seat_open_seq": "seat_open"}
 #: the commode's state as each starts (the approach's two MoveJs are checked in it)
-PHASE_BEFORE = {"lid_open": "lid_closed", "seat_open": "lid_open", "seat_open_seq": "lid_open"}
+PHASE_BEFORE = {"lid_open": "lid_closed", "lid_open_seq": "lid_closed", "seat_open": "lid_open", "seat_open_seq": "lid_open"}
 APPROACH_GRID = 7         #: each arm's MoveJ path sampled at this many points; every pair of the two arms' samples is checked
                           #: (49 states), as their timing against each other is not known
 
@@ -326,6 +330,29 @@ class Plan:
     def seconds(self) -> float:
         return round(sum(e.seconds for e in self.entries), 2)
 
+    def streams(self, start_checks: bool = True) -> list:
+        """The arm moves as a run streams them: [(the joined entry, how many entries it takes)] (joined_moves over the
+        entries as a task run on its own plays them, or, ``start_checks`` False, as a sequence does: its start checks
+        dropped first, so the moves either side of a dropped check join too)."""
+        entries = list(self.entries) if start_checks else without_start_checks(list(self.entries))[0]
+        out, i = [], 0
+        while i < len(entries):
+            if entries[i].kind != "arm":
+                i += 1
+                continue
+            joined, used = joined_moves(entries, i)
+            out.append((joined, used))
+            i += used
+        return out
+
+    def streamed(self, start_checks: bool = True) -> dict:
+        """What the run's streams make of the plan's arm moves: ``seconds`` the moves take streamed (their stops at the
+        junctions taken out), ``blended_s`` how much those stops were, ``streams`` how many streams, ``moves`` how many
+        plan moves they carry."""
+        st = self.streams(start_checks)
+        return dict(seconds=round(sum(j.seconds for j, _ in st), 2), blended_s=round(sum(j.blended_s for j, _ in st), 2),
+                    streams=len(st), moves=sum(n for _, n in st))
+
     def checks(self) -> list:
         return [dict(entry=e.stage, **{k: a.get(k) for k in ("stage", "check", "expect", "on_fail", "max_retries",
                                                               "prerequisite")})
@@ -385,7 +412,7 @@ class Plan:
                     end=t.get("end"), file=self.path.name, made=self.made, seconds=self.seconds(), sides=self.sides(),
                     entries=[dict(stage=e.stage, kind=e.kind, side=e.side, seconds=round(e.seconds, 2),
                                   lines=len(e.rows) if e.rows else None, track=e.group is not None) for e in self.entries],
-                    checks=self.checks(), standoff_mm=STANDOFF_MM, rungs_note=self.rungs_note(),
+                    checks=self.checks(), standoff_mm=STANDOFF_MM, rungs_note=self.rungs_note(), streamed=self.streamed(),
                     rungs=sorted(int(m.group(1)) for p in (self.path.parent / "rungs").glob(f"{self.rungs_stem}.rung*.json")
                                  if (m := re.fullmatch(re.escape(self.rungs_stem) + r"\.rung(\d+)\.json", p.name))))
 
@@ -455,6 +482,20 @@ def blend_junction(rows: list, j: int, w: int | None = None) -> list:
         f = 0.0 if d[i] <= 0 else min(1.0, (s_ - cum[i]) / d[i])
         out.append([int(round(x + (y - x) * f)) for x, y in zip(win[i], win[i + 1])])
     return rows[:a] + out + rows[b + 1:]
+
+
+def joined_rows(name: str, i: int, n: int) -> list:
+    """The lines of the stream a run (Real or the simulation) made of plan ``name``'s entries ``i`` to ``i + n - 1``
+    (joined_moves, its junctions blended): the 3D view's ``mechanism:<task>:<i>:joined:<n>``. The entries after the
+    first are taken without their actions (a join never crosses one; a sequence's start checks were dropped before)."""
+    from dataclasses import replace
+
+    part = list(cached(name).entries[i:i + n])
+    part = part[:1] + [replace(e, pre_actions=[]) for e in part[1:]]
+    joined, used = joined_moves(part, 0)
+    if used != n:
+        raise UserError(f"{name}: entries {i}..{i + n - 1} do not join into one stream (they did when the simulation was made).")
+    return joined.rows
 
 
 def joined_moves(entries: list, i: int, bridged=()) -> tuple:

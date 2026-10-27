@@ -434,6 +434,22 @@ group_states:
       R_joint7: -0.2443
 
     # -------------------------------------------------------------------------
+    # LID OPEN, the right arm's hold on the lifted lid (mechanism_tasks/commode_c/lid_open.yaml, 2026-10-27): the
+    # joint solution the plan WITH the look reaches from inspection_pose_4 (its move_to_pre_start's end, the push's first
+    # point). A sequence plans the approach without the look, from rest: the Cartesian hold pose then takes another IK
+    # solution whose thumb meets the lid during the push, so the direct approach goes to this joint state first.
+    # Degrees: j1 44.29, j2 -75.66, j3 -22.21, j4 119.91, j5 -40.79, j6 14.48, j7 -23.58.
+    # -------------------------------------------------------------------------
+    lid_open_hold_right:
+      R_joint1: 0.77301
+      R_joint2: -1.32049
+      R_joint3: -0.38760
+      R_joint4: 2.09282
+      R_joint5: -0.71184
+      R_joint6: 0.25267
+      R_joint7: -0.41150
+
+    # -------------------------------------------------------------------------
     # FLUSH PRESS (mechanism_tasks/commode_c/flush_press.yaml) — right-arm
     # inspect pose: camera_link at base_link [0.75, -0.25, 1.05], body +X axis
     # aimed at the flush button [1.105, 0.0, 0.95] from 0.45 m (searched over

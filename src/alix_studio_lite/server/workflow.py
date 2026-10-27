@@ -1255,11 +1255,14 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         sim, a = act(camera, "check", CHECK_S, f"{title}: the camera checks {expect}{words} (assumed here)", expect=expect)
         done(sim, a, CHECK_S)
 
-    def entry(owner, e):
+    def entry(owner, e, used=1):
         sim = sims[e.side]
-        if e.kind == "arm":
-            sim, a = act(e.side, "stream", e.seconds, f"{title}: {e.stage}" + (f" ({owner.title}'s)" if owner is not plan else ""),
-                         file=f"mechanism:{owner.name}:{e.i}", drawn=True, lines=len(e.rows), traj_t0=round(clock[0], 4))
+        if e.kind == "arm":                          # ``e``: the stream of ``used`` plan moves a run makes (joined_moves)
+            words = f"{title}: {e.stage}" + (f" ({owner.title}'s)" if owner is not plan else "")
+            if used > 1:
+                words += f" as one stream ({e.blended_s:.2f} s of stops at its junctions taken out)" if e.blended_s else " as one stream"
+            file = f"mechanism:{owner.name}:{e.i}" + (f":joined:{used}" if used > 1 else "")
+            sim, a = act(e.side, "stream", e.seconds, words, file=file, drawn=True, lines=len(e.rows), traj_t0=round(clock[0], 4))
             sim.q, sim.known = [v / 1000.0 for v in e.rows[-1]], True
             dur = e.seconds
         elif e.kind == "pole":
@@ -1288,7 +1291,10 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         if not start_checks and owner is plan:         # a sequence: the checks before the first lift are not asked (27 Oct)
             entries, _dropped = mechanism.without_start_checks(entries)
         unsent = mechanism.trailing_releases(entries, hand_set if owner is plan else ())
-        for e in entries:
+        i = 0
+        while i < len(entries):                      # as mechanism.Runner walks them: an arm's moves in a row as ONE stream
+            e = entries[i]
+            i += 1
             for pa in e.pre_actions:
                 if pa.get("type") == "hold_pose" and float(pa.get("seconds") or 0) > 0:
                     dur = float(pa["seconds"])
@@ -1301,7 +1307,9 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                         return True
             if id(e) in unsent:                      # its hand is set for its next task's start right after
                 continue
-            entry(owner, e)
+            joined, used = mechanism.joined_moves(entries, i - 1)
+            entry(owner, joined, used)
+            i += used - 1
         return False
 
     play(plan)
@@ -1630,7 +1638,10 @@ def _md_reader(root=None):
             from . import mechanism
 
             part = str(path).split(":")                                  # ...:back: the move played backwards
-            rows = mechanism.cached(part[1]).entries[int(part[2])].rows
+            if part[3:4] == ["joined"]:                                  # ...:joined:<n>: the stream of n moves a run makes
+                rows = mechanism.joined_rows(part[1], int(part[2]), int(part[4]))
+            else:
+                rows = mechanism.cached(part[1]).entries[int(part[2])].rows
             cache[path] = np.asarray(rows[::-1] if part[3:] == ["back"] else rows, dtype=float)
         if path not in cache:
             try:

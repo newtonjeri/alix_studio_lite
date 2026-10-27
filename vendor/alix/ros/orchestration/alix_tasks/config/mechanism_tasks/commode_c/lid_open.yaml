@@ -70,6 +70,11 @@ task_parameters:
   # because its top was just cleaned, the seat closed because its top was, so the task starts with the lift). Lite keeps
   # both plans: <task>_toppra.json and <task>_seq_toppra.json (planned with this false).
   inspect_before_lift: true
+  # The right arm's approach to its hold without the look (the plan a SEQUENCE runs): a joint-space move to the hold's
+  # joint state (SRDF lid_open_hold_right, the solution the plan with the look reaches) before the Cartesian pre-start
+  # and start stages, which are then zero-length; false for the plan a task runs on its own. Set with inspect_before_lift
+  # false when the sequence plan is made (27 Oct).
+  direct_approach: false
 
   # Compound (dual-arm) control
   # -------------------------------------------------------------------------
@@ -272,6 +277,7 @@ stage_sequence:
     arm: right
     pose_name: grasp
     planning_group: inspire_hand_right
+    # (not conditional: the plan a sequence runs keeps the fist, which rotates the thumb in)
 
   # inspection_pose_4: the LIFT CHECK VIEWPOINT (Newton 2026-10-05, his RViz
   # goal state, arm joints unchanged, pole raised to half length 15:40; SRDF group_state of
@@ -282,9 +288,6 @@ stage_sequence:
   # planning_group is explicit because state names repeat across groups. The
   # arm then stays put through the lift, the dwell and the check: no camera
   # motion between the baseline frame and the check.
-    # (not conditional: the fist rotates the thumb in; without it the right's push met the lid with the
-    #  thumb, IRH_right_thumb_2 <-> commode_lid, when the sequence plan was tried without the look, 27 Oct)
-
   - stage: move_to_inspect
     speed_class: freespace
     arm: right
@@ -435,6 +438,19 @@ stage_sequence:
     pose_name: half_grasp
     planning_group: inspire_hand_right
 
+  # The direct approach (direct_approach: the plan a sequence runs, no look first): a joint-space move from rest to
+  # the hold's joint state, the solution the plan with the look reaches (SRDF lid_open_hold_right). The Cartesian
+  # pre-start and start below then find the arm there and plan zero-length moves, so the push starts from the same
+  # joints as in the plan with the look, whatever IK solution a Cartesian approach from rest would take (27 Oct;
+  # the push's thumb collision seen without the look was the thumb's base link's clearance, see allow_collision).
+  - stage: move_to_hold_direct
+    speed_class: approach
+    arm: right
+    pose_name: lid_open_hold_right
+    planning_group: rm75_arm_right
+    conditional: true
+    condition_param: direct_approach
+
   - stage: move_to_pre_start
     speed_class: approach
     arm: right
@@ -448,6 +464,15 @@ stage_sequence:
     arm: right
     contact_surface: seat_and_lid
     additional_ik_frames: [R_glove_frame_2]
+    # The thumb's base link too (27 Oct): the push's allowance (R_tip_frame + R_glove_frame_2) lets thumb_3, thumb_4
+    # and the thumb tip touch the lid, and thumb_2 passes it within a hair: the plan WITH the look clears it, the
+    # same push from the same hold planned without the look (a sequence's plan, psi 35.68 vs 35.70 deg) met it
+    # 49 mm into the stroke (IRH_right_thumb_2 <-> commode_lid). Forbidden again after the push, below.
+    collisions:
+      - [IRH_right_thumb_2, commode_lid]
+      - [IRH_right_thumb_2, commode_seat]
+      - [IRH_right_thumb_rubber_1, commode_lid]
+      - [IRH_right_thumb_rubber_1, commode_seat]
 
   - stage: move_to_start
     speed_class: approach
@@ -523,6 +548,11 @@ stage_sequence:
   - stage: forbid_collision
     arm: right
     contact_surface: seat_and_lid
+    collisions:                                  # the thumb's base link, allowed for the push above
+      - [IRH_right_thumb_2, commode_lid]
+      - [IRH_right_thumb_2, commode_seat]
+      - [IRH_right_thumb_rubber_1, commode_lid]
+      - [IRH_right_thumb_rubber_1, commode_seat]
 
   - stage: hand_release
     arm: right
