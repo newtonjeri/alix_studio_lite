@@ -41,7 +41,12 @@ def test_real_seat_open_streams_every_move_and_ends_with_its_own_look(server):
     assert "LEFT arm move_to_pre_start + move_to_start + execute_path" in labels
     assert "LEFT arm move_to_retract + move_to_retract_2 + move_to_rest" in labels         # 26 Oct trims: one stream, no fist between
     assert sum(len(r["args"]["label"].split(" + ")) for r in streams) == sum(1 for e in plan.entries if e.kind == "arm")   # every move named
-    assert all((r["args"].get("settle") or {}).get("by") == "feed" for r in streams)       # each ended on the feed's frames
+    settles = [r for r in hw if r.get("verb") == "canfd settle"]                           # the ends waited for: on the feed's frames
+    assert settles and all(r["args"]["settle"]["by"] == "feed" and r["args"]["settle"]["at_rest"] for r in settles)
+    when = lambda verb, label: next(r["t"] for r in hw if r.get("verb") == verb and r["args"]["label"] == label)   # noqa: E731
+    # ... and only when something needs the arm still (27 Oct): the left's retract ends before the right pushes, its end
+    # is waited for at the check after, not before the push
+    assert when("canfd settle", "LEFT arm move_to_retract + move_to_retract_2 + move_to_rest") > when("canfd stream", "RIGHT arm execute_path")
     assert not any("bridged" in (r.get("text") or "") for r in streams)                    # the emulated arm does not creep
     said = " | ".join(e["text"] for e in done["events"])
     assert "LEFT hand free" in said and "cannot judge" not in said                          # the release gate passed

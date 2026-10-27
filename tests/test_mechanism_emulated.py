@@ -58,8 +58,16 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     after = left[max(i for i, r in enumerate(left) if "re-lift 1" in r["args"]["label"]) + 1]
     assert "bridged" in after["text"], after["args"]["label"]
     assert all(r["args"]["period_ms"] == 5.0 and r["args"]["rate_gate"] == "per_joint" for r in streams)
-    assert all((r["args"]["settle"] or {}).get("by") == "feed" and r["args"]["settle"]["at_rest"] for r in streams)   # its end from the feed (26 Oct)
-    assert all(", end " in r["text"] and r["args"]["settle"]["waited_s"] < 0.5 for r in streams), [r["text"] for r in streams]
+    # its end from the feed (26 Oct), waited for when something needs the arm still (27 Oct night: a check, a hold, the same
+    # arm's next stream or pole move, the plan's end), as its own row; a stream whose end nothing needed says so
+    settles = [r for r in hardware(server) if r.get("verb") == "canfd settle"]
+    assert settles and all(r["args"]["settle"]["by"] == "feed" and r["args"]["settle"]["at_rest"] and r["ok"] for r in settles)
+    assert all(r["text"].startswith("end ") and r["args"]["settle"]["waited_s"] < 0.5 for r in settles), [r["text"] for r in settles]
+    assert all("its end waited for later" in r["text"] for r in streams)
+    rows_hw = hardware(server)
+    when = lambda verb, label: next(r["t"] for r in rows_hw if r.get("verb") == verb and r["args"]["label"] == label)   # noqa: E731
+    # the right's push ends and the left retreats at once: the push's end is waited for later (the open check), not before the retreat
+    assert when("canfd settle", "RIGHT arm execute_path") > when("canfd stream", "LEFT arm move_to_pre_start + move_to_rest")
     # each arm's 5 ms feed on once for the run (24 Oct: on and off around every move, 1.1 s each), every move watched on
     # it over its own stretch, and off at the end; an arm's back-to-back moves are one stream
     caps = sorted(p.name for p in (Path(server["data"]) / "logs" / time.strftime("%Y-%m-%d") / "canfd").glob("*.frames.jsonl"))

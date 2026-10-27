@@ -546,7 +546,6 @@ def joined_moves(entries: list, i: int, bridged=()) -> tuple:
 #: A joint this close to the reversed lift's first line (millidegrees) is where the lift ended.
 AT_END_MDEG = 50
 
-
 def hold_short(rows: list, now_deg) -> tuple[list, list]:
     """A re-lift restore's lines (``reverse_block``: the way back along a lift that did not take) from where the arm
     stands, on the robot: a joint the contact stopped short of the lift's end (the restore's first line) is held where
@@ -937,6 +936,7 @@ class RealExec(_Exec):
         self.feeds_after = bool(feeds_after)            # the caller turns the arms' feeds off after the run (S2: in its next pole
         self._name, self._feeds, self._hands = "lid_seat", set(), set()   # and hand step's travel), not finish()
         self._settled_s = 0.0                           # the last stream's own settle, as the feed measured it (hold)
+        self._unsettled: dict = {}                      # side -> (last line, label) of a stream whose end is not yet waited for
         self._frames, self._taken = None, []            # (when, [(frame, q)]) of the last check, for the next at the same pose
         self.room = room                                # home, scene, fid, cubicle_mm: the collision check's world (S2 gives it)
 
@@ -965,7 +965,13 @@ class RealExec(_Exec):
         """However the run ends: each arm's kept feed turned off (the controller's push put back), both at once (26 Oct:
         one after the other, 0.6 s each), its hand let go, and the check records written. With ``feeds_after`` the
         feeds stay on for the caller to turn off in its next step's pole travel (27 Oct: 0.6 to 0.9 s a task with both
-        arms standing); robot_real.run_workflow turns one off itself before any Program."""
+        arms standing); robot_real.run_workflow turns one off itself before any Program. An arm whose last stream's end
+        was not yet waited for is waited for first: nothing moves on from a plan while an arm still settles."""
+        try:
+            self._settle_all()
+        except Exception as exc:                                                    # noqa: BLE001 - the run is ending anyway
+            self.say(f"a stream's end could not be read as the run ended ({exc})", "warn")
+
         def off(side):
             try:
                 self._arm(side).drop_feed()
@@ -1009,6 +1015,7 @@ class RealExec(_Exec):
         pct = int(self.robot.speed_pct)
         where = words or f"{plan.title}'s {at}"
         self._frames = None
+        self._settle_all()                                    # nothing is staged or moved while an arm still settles
         if at == "start":
             first = plan.first_move_targets()
             targets = {side: dict(tg, **{k: v for k, v in first.get(side, {}).items() if k in tg}) for side, tg in targets.items()}
@@ -1140,12 +1147,31 @@ class RealExec(_Exec):
         except Exception as exc:                                                    # noqa: BLE001
             return dict(ok=False, why=f"the paths could not be checked ({type(exc).__name__}: {exc})")
 
+    def _settle(self, side) -> None:
+        """A stream's end waited for now (robot_real.settle_end), when this arm's last stream left it: before this arm's
+        next stream or pole move, a check, a hold, the plan's end. Not before the other arm's move or this arm's hand
+        move (27 Oct night: 1.6 s a run waited for by moves that did not need the arm settled). The time it took is
+        what a settle hold then counts (``_settled_s``)."""
+        pending = self._unsettled.pop(side, None)
+        if pending is None:
+            return
+        last, label = pending
+        settle = self._arm(side).settle_end(list(last), label) or {}
+        self._settled_s = float(settle.get("waited_s") or 0.0) if settle.get("by") == "feed" and settle.get("at_rest") else 0.0
+        self.say(f"{label}: end {settle.get('waited_s', 0) * 1000:.0f} ms" + ("" if settle.get("at_rest") else " (NOT at rest)"),
+                 "info" if settle.get("at_rest") else "warn")
+
+    def _settle_all(self) -> None:
+        for side in sorted(self._unsettled):
+            self._settle(side)
+
     def hold(self, seconds: float, label: str) -> None:
         """A plan's hold. One that lets the mechanism settle before a check (``settle_before_check``, 0.5 s in the lid
         and seat plans) counts the time the arm's own settle already took: the stream before it ends only when the
         feed shows the arm within END_TOL_DEG of its last line and still (robot_real._stream_end, 0.37 to 0.65 s after
         a lift), which is the rest the hold was there to give (27 Oct night: 0.5 s twice a run on top of it)."""
         self._frames = None                           # what the camera saw before the hold is not what it sees after
+        self._settle_all()                            # the hold counts from the arms standing still
         if str(label).startswith("settle") and self._settled_s > 0:
             rest = max(0.0, float(seconds) - self._settled_s)
             self.say(f"{label} {seconds:g} s: the arm's own settle took {self._settled_s:.2f} s of it"
@@ -1159,6 +1185,7 @@ class RealExec(_Exec):
         self.job.progress(f"{e.label()}: {e.seconds:.2f} s")
         self.live(e.side, f"{e.stage}{f' ({e.note})' if e.note else ''} // RUNNING")
         if e.kind == "pole":                          # at the speed ALIX's executive sets from its planned time
+            self._settle(e.side)                      # the pole never moves while its arm does (the manufacturer, 27 Oct)
             arm.pole_to(e.last()[0] * 1000.0, duration_s=e.seconds)
         elif e.kind == "hand":
             self._keep_hand(e.side)
@@ -1166,6 +1193,7 @@ class RealExec(_Exec):
         else:
             rows = e.rows
             bridge_speed = int(self.robot.speed_pct) if bridge else None     # a re-lift's long bridge: the slider's speed
+            self._settle(e.side)                           # its last stream's end, if not yet waited for: its first line is judged from there
             self._keep_feed(e.side)                        # its frames give the arm's joints (joints_now): no reading before the stream
             if e.note == "re-lift restore, reversed":      # from where the arm stands (hold_short)
                 q = self._joints(e.side)
@@ -1187,9 +1215,8 @@ class RealExec(_Exec):
                         self.say(f"{e.label()}: the arm is {gap:.1f} degrees from its first line, more than the {BRIDGE_MAX_DEG:g} "
                                  "Lite bridges: the stream is refused at its first line", "warn")
             out = arm.stream(rows, e.label(), speed=50, restore_pct=self.robot.found_speed(e.side), bridge_speed=bridge_speed,
-                             stop_hook=self.job.on_cancel, records=self.kit.records_dir("canfd"))
-            settle = out.get("settle") or {}
-            self._settled_s = float(settle.get("waited_s") or 0.0) if settle.get("by") == "feed" and settle.get("at_rest") else 0.0
+                             stop_hook=self.job.on_cancel, records=self.kit.records_dir("canfd"), settle=False)
+            self._unsettled[e.side] = (list(rows[-1]), e.label())     # its end waited for when something needs it (_settle)
             self.say(f"{e.label()}: {out['lines_sent']}/{out['lines']} lines in {out['seconds']:.2f} s"
                      + (f" ({e.blended_s:.2f} s of stops at its junctions taken out)" if getattr(e, "blended_s", 0) else "")
                      + (f", bridged {out['bridged_deg']:.1f} degrees first" if out.get("bridged_deg") else ""))
@@ -1240,6 +1267,7 @@ class RealExec(_Exec):
         from .gap_check import Answer
 
         self.check_stop()
+        self._settle_all()                          # the camera reads the scene with both arms still
         self.job.progress(f"{action.get('stage')}: asking the camera ({expect})")
         self.live("right", f"CAMERA // {action.get('stage')}: {expect}?")
         scripted = self.kit.scripted(expect)

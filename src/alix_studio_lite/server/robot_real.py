@@ -445,6 +445,17 @@ def _hand_arrived(hand, rule, target: list, sent: float) -> tuple:
         time.sleep(hand.poll_s)
 
 
+def _end_words(settle: dict) -> str:
+    """A stream's end as its record says it (``_stream_end``'s result)."""
+    if not settle:
+        return ""
+    if settle.get("by") == "feed":
+        return f", end {settle['waited_s'] * 1000:.0f} ms"
+    if settle.get("at_rest"):
+        return f", at rest by the polled wait after {settle['waited_s']:.2f} s"
+    return f", NOT at rest after {settle['waited_s']:.1f} s"
+
+
 def _interrupt(tid: int, exc=KeyboardInterrupt) -> None:
     """``exc`` raised in thread ``tid`` at its next Python step (None: forget one not yet raised)."""
     import ctypes
@@ -1656,7 +1667,7 @@ class RealArm:
         return dict(capture=cap.name, frames=int(rec.frames))
 
     def stream(self, rows_millideg: list, label: str, *, speed: int = 50, restore_pct: int = RESTORE_PCT,
-               bridge_speed: int | None = None, stop_hook=None, records: Path | None = None) -> dict:
+               bridge_speed: int | None = None, stop_hook=None, records: Path | None = None, settle: bool = True) -> dict:
         """One arm move of ALIX's lid and seat plans (mechanism.py), as ALIX's ROS-free lane plays a track
         (cleaning_tracks.run_one): the controller's 5 ms push captured on this computer (``track.UdpRecorder``, a
         port per arm: the run's kept feed when ``keep_feed`` turned it on, else this move's own) and watched
@@ -1667,7 +1678,11 @@ class RealArm:
         absolute 5 ms deadlines; then its end read from the feed's frames (``_stream_end``: the arm within END_TOL_DEG of
         the last line and still, in place of ALIX's polled settle). STOP (``stop_hook``) stops the sending at once (the watch,
         and the thread interrupted); the arm holds the last line it took, and Lite's STOP stops it on its controller.
-        The capture is kept in ``records``; the record names the stretch of it this move took (``t_mono``)."""
+        The capture is kept in ``records``; the record names the stretch of it this move took (``t_mono``). With
+        ``settle`` False the stream returns as its last line is sent (the controller's hold frames after it): the arm's
+        arrival is waited for by ``settle_end`` when something needs it (mechanism.RealExec: a check, a hold, this arm's
+        next stream or pole move, the plan's end), not when the other arm or this arm's hand moves next (27 Oct night:
+        0.25 to 0.65 s after a lift, a push or a retreat, 1.6 s a run, waited for by moves that did not need it)."""
         from alix_dispatch import track
 
         rows = [[int(v) for v in r] for r in rows_millideg]
@@ -1739,7 +1754,7 @@ class RealArm:
                         channel="canfd", track_rows_millideg=rows, canfd_watch=watch,
                         canfd={"period_s": CANFD_PERIOD_S, "rate_gate": "per_joint", "follow": True,
                                "trajectory_mode": 0, "radio": 0}, ratio_held=held)
-                    if out.get("ok"):                 # its end: the arm at the last line and still, from the feed (26 Oct)
+                    if out.get("ok") and settle:      # its end: the arm at the last line and still, from the feed (26 Oct)
                         cs0 = out.get("canfd") or {}
                         out["settle"] = self._stream_end(rows[-1], cs0.get("t_last_line") or cs0.get("t_end"))
                     if not held:                      # put back to restore_pct (or not known, when that failed)
@@ -1764,9 +1779,7 @@ class RealArm:
         bridged = out.get("gap_deg") if out.get("movej_ret") == 0 else None
         why = out.get("cut_reason") or cs.get("aborted") or ("STOP" if stop.is_set() else None)
         settle = out.get("settle") or {}
-        end_words = ("" if not settle else f", end {settle['waited_s'] * 1000:.0f} ms" if settle.get("by") == "feed"
-                     else f", at rest by the polled wait after {settle['waited_s']:.2f} s" if settle.get("at_rest")
-                     else f", NOT at rest after {settle['waited_s']:.1f} s")
+        end_words = _end_words(settle) if settle else (", its end waited for later" if ok and not settle else "")
         self._hw("canfd stream", args=dict(label=label, lines=n, period_ms=CANFD_PERIOD_S * 1000, rate_gate="per_joint",
                                            bridge_speed=bridge_speed, capture=cap.name, ratio_held=held,
                                            t_mono=[round(t_mono0, 3), round(t_mono1, 3)], settle=settle or None),
@@ -1779,6 +1792,25 @@ class RealArm:
                             "The arm holds where it stopped: check it, then press STOP or run the task again.")
         return dict(lines=n, lines_sent=sent, seconds=round(float(cs.get("replay_s") or 0.0), 3), bridged_deg=bridged,
                     capture=str(cap), verdict=out.get("verdict"), settle=settle or None)
+
+    def settle_end(self, last_row_millideg: list, label: str = "") -> dict:
+        """The arm's arrival at a stream's last line, waited for now (``stream(settle=False)`` left it): on the kept
+        feed's frames (``_stream_end``), else ALIX's polled wait. Recorded as its own row; what ``stream`` returns as
+        ``settle`` otherwise."""
+        from alix_dispatch import track
+
+        t0 = time.monotonic()
+        last = [int(v) for v in last_row_millideg]
+        if self._feed is not None:
+            settle = self._stream_end(last, None)
+        else:
+            with self.link.busy(f"waiting for the arm to settle ({label})", expect_s=10):
+                rest = track.wait_until_at_rest(self.robot)
+            settle = dict(waited_s=round(float(rest.get("waited_s") or 0.0), 3), at_rest=bool(rest.get("at_rest")), gap_deg=None,
+                          peak_deg_s=round(float(rest.get("peak_deg_s") or 0.0), 2), by="polled")
+        self._hw("canfd settle", args=dict(label=label, settle=settle), ok=bool(settle.get("at_rest")), elapsed_s=time.monotonic() - t0,
+                 text=_end_words(settle).lstrip(", "))
+        return settle
 
     def move_to(self, target_millideg: list, speed: int = RESTORE_PCT, restore_pct: int = RESTORE_PCT) -> dict:
         """A MoveJ to a joint pose at ``speed`` % (the speed slider), ALIX's park move (the global speed at

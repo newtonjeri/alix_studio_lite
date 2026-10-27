@@ -149,7 +149,7 @@ def test_a_plans_pole_and_hand_are_set_together_to_the_state_its_first_move_need
     plan = mechanism.Plan("lid_open")
     fake = SimpleNamespace(robot=SimpleNamespace(speed_pct=50, _measured=lambda side: (150.0, [1000] * 6), found_speed=lambda side: 50),
                            job=SimpleNamespace(progress=lambda *a, **k: None, on_cancel=None), check_stop=lambda: None,
-                           say=lambda *a, **k: None, _arm=lambda side: Arm(side))
+                           say=lambda *a, **k: None, _arm=lambda side: Arm(side), _settle_all=lambda: None)
     mechanism.RealExec.approach(fake, plan, plan.targets("start"), "start")
     steps = [c for c in calls if c[1] == "pole_and_hand"]
     assert sorted(steps) == [("left", "pole_and_hand", 150.0, [516, 516, 516, 516, 133, 944]),
@@ -222,7 +222,7 @@ def test_a_move_the_arm_has_crept_from_is_bridged_at_40_percent_up_to_3_degrees(
     streams, said = [], []
 
     class Arm:
-        def stream(self, rows, label, speed, restore_pct, bridge_speed, stop_hook, records):
+        def stream(self, rows, label, speed, restore_pct, bridge_speed, stop_hook, records, settle=True):
             streams.append(bridge_speed)
             return dict(lines=len(rows), lines_sent=len(rows), seconds=0.8, bridged_deg=None)
 
@@ -232,6 +232,7 @@ def test_a_move_the_arm_has_crept_from_is_bridged_at_40_percent_up_to_3_degrees(
                                live=lambda *a, **k: None, say=lambda text, level="info": said.append((level, text)),
                                _keep_feed=lambda side: None, _keep_hand=lambda side: None,
                                _joints=lambda side: link.read_fresh().get("joints_deg"),      # the feed's frame, else a reading (27 Oct)
+                               _settle=lambda side: None, _unsettled={},
                                robot=SimpleNamespace(links={"left": link}, speed_pct=15, found_speed=lambda side: 50),
                                kit=SimpleNamespace(records_dir=lambda what: None))
 
@@ -398,6 +399,7 @@ def test_the_approachs_two_movejs_go_at_once_when_their_paths_are_checked_clear(
         return SimpleNamespace(robot=SimpleNamespace(speed_pct=40, _measured=lambda side: (150.0, [1000] * 6), found_speed=lambda side: 50, links=links),
                                job=SimpleNamespace(progress=lambda *a, **k: None, on_cancel=None), check_stop=lambda: None,
                                say=lambda text, level="info": said.append(text), _arm=lambda side: Arm(side), _frames=None,
+                               _settle_all=lambda: None,
                                room=None if scene is None else dict(home={}, scene=scene, fid="commode_c", cubicle_mm=1400),
                                _reading=lambda link: link.view()["feedback"],
                                _paths_clear=lambda *a, **k: mechanism.RealExec._paths_clear(fake_self[0], *a, **k))
@@ -610,7 +612,7 @@ def test_a_plans_settle_hold_counts_the_arms_own_settle():
     slept, said = [], []
     ex = mechanism.RealExec.__new__(mechanism.RealExec)
     ex.job = SimpleNamespace(progress=lambda *a, **k: None, sleep=lambda s: slept.append(round(s, 3)), log=lambda *a, **k: None)
-    ex._log, ex._frames, ex._settled_s = None, None, 0.49
+    ex._log, ex._frames, ex._settled_s, ex._unsettled = None, None, 0.49, {}
     ex.say = lambda text, level="info": said.append(text)
     ex.hold(0.5, "settle_before_check")
     assert slept == [0.01] and "the arm's own settle took 0.49 s" in said[-1] and "holding 0.01 s more" in said[-1]
@@ -651,3 +653,82 @@ def test_the_colour_models_are_asked_once_a_check(tmp_path):
     assert gc._models(SimpleNamespace(aligned=None), None, "", True, "c2", reused)() is None     # no aligned depth: no models
     plain = gc._models(frame, None, "", True, None, reused)()                      # no check id: asked, kept for none
     assert plain == dict(n=3) and gc._models_kept == ("c2", other)
+
+
+def test_a_streams_end_is_waited_for_only_where_something_needs_the_arm_still():
+    """27 Oct night: every stream's end (the arm within 0.5 degrees of its last line and still) was waited for before the
+    next entry, 0.25 to 0.65 s after a lift, a push or a retreat, 1.6 s a run, although the next entry was the other
+    arm's move or this arm's hand. Now the stream returns as its last line goes and the end is waited for (settle_end)
+    before a check, a hold, this arm's next stream or pole move, and at the plan's end; the hold then counts it."""
+    from types import SimpleNamespace
+
+    calls, slept = [], []
+
+    class Arm:
+        def __init__(self, side):
+            self.side = side
+
+        def stream(self, rows, label, speed, restore_pct, bridge_speed, stop_hook, records, settle=True):
+            calls.append((self.side, "stream", label, settle))
+            return dict(lines=len(rows), lines_sent=len(rows), seconds=0.5, bridged_deg=None, settle=None)
+
+        def settle_end(self, last_row, label=""):
+            calls.append((self.side, "settle", label))
+            return dict(waited_s=0.4, at_rest=True, by="feed", gap_deg=0.3, peak_deg_s=2.0)
+
+        def hand_to(self, counts, duration_s=None):
+            calls.append((self.side, "hand"))
+            return dict(ok=True, arrived=True, after=list(counts))
+
+        def pole_to(self, mm, duration_s=None):
+            calls.append((self.side, "pole", round(mm)))
+            return dict(ok=True)
+
+        def joints_now(self):
+            return dict(joints_deg=[0.0] * 7, by="feed")
+
+    arms = {s: Arm(s) for s in ("left", "right")}
+    ex = mechanism.RealExec.__new__(mechanism.RealExec)
+    ex.job = SimpleNamespace(progress=lambda *a, **k: None, sleep=lambda s: slept.append(round(s, 3)), log=lambda *a, **k: None,
+                             on_cancel=None, check=lambda: None)
+    ex.robot = SimpleNamespace(speed_pct=60, found_speed=lambda side: 50, links={})
+    ex.kit = SimpleNamespace(records_dir=lambda what: None, scripted=lambda expect: None)
+    ex._log, ex._frames, ex._settled_s, ex._unsettled = None, None, 0.0, {}
+    ex._feeds, ex._hands, ex.feeds_after, ex.live = {"left", "right"}, {"left", "right"}, True, lambda *a, **k: None
+    ex.say = lambda text, level="info": None
+    ex._arm = lambda side: arms[side]
+    ex._keep_feed = lambda side: None
+    ex._keep_hand = lambda side: None
+
+    def entry(side, kind, stage, rows=None):
+        import numpy as np
+
+        rows = rows or [[0] * 7, [10] * 7]
+        q = np.radians(np.asarray(rows, dtype=float) / 1000.0) if kind == "arm" else np.zeros((2, 7 if kind == "arm" else 6 if kind == "hand" else 1))
+        e = mechanism.Entry(0, 0, stage, kind, side, [f"j{i}" for i in range(q.shape[1])], np.array([0.0, 0.5]), q, [], rows=rows if kind == "arm" else None)
+        if kind == "hand":
+            e.hand_counts = lambda at="last": [1000] * 6
+        return e
+
+    ex.move(entry("right", "arm", "move_to_inspect"))                 # a stream: returned without its settle
+    assert calls[-1] == ("right", "stream", "RIGHT arm move_to_inspect", False) and "right" in ex._unsettled
+    ex.move(entry("left", "arm", "lift"))                             # the other arm's stream: the right's end not waited for
+    assert [c[1] for c in calls] == ["stream", "stream"]
+    ex.move(entry("left", "hand", "hand_release"))                    # this arm's hand: not waited for either
+    assert [c[1] for c in calls] == ["stream", "stream", "hand"] and set(ex._unsettled) == {"left", "right"}
+    ex.move(entry("left", "arm", "retract"))                          # this arm's next stream: its end first
+    assert calls[-2:] == [("left", "settle", "LEFT arm lift"), ("left", "stream", "LEFT arm retract", False)]
+    ex.move(entry("right", "pole", "pole_half", rows=None))           # this arm's pole: the arm must stand first (the manufacturer)
+    assert calls[-2] == ("right", "settle", "RIGHT arm move_to_inspect") and calls[-1] == ("right", "pole", 0)
+    assert set(ex._unsettled) == {"left"}
+    ex.hold(0.5, "settle_before_check")                               # a hold: every arm still first, and the hold counts it
+    assert calls[-1] == ("left", "settle", "LEFT arm retract") and slept == [0.1] and not ex._unsettled
+    ex.move(entry("left", "arm", "rest"))
+    ex.finish = mechanism.RealExec.finish.__get__(ex)
+    ex._arm("left").drop_feed = lambda: None
+    ex._arm("right").drop_feed = lambda: None
+    ex._arm("left").drop_hand = lambda: None
+    ex._arm("right").drop_hand = lambda: None
+    ex.kit.gap = SimpleNamespace(flush=lambda: None)
+    ex.finish()                                                       # the plan's end: nothing moves on while an arm settles
+    assert calls[-1] == ("left", "settle", "LEFT arm rest") and not ex._unsettled
