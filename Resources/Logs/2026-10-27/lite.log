@@ -1,0 +1,396 @@
+09:28:30.727 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+09:28:30.770 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+09:28:30.770 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+09:28:33.167 [activity] - page: NAVIGATION · Open screen
+09:28:33.167 [activity] - page: SYSTEM · ASL frontend initialized
+09:28:34.628 [activity] - POST /api/auth/login
+09:28:35.511 [activity] operator:554abe page: AUTH · Operator login
+09:28:35.512 [activity] operator:554abe page: NAVIGATION · Open screen
+09:28:35.512 [activity] operator:554abe page: AUTH · Setting changed
+09:28:35.660 [RIGHT] camera · perception warmed up in 5.9 s: its core built, the colour model loaded
+09:28:37.889 [activity] operator:554abe page: UI · Button action
+09:28:37.895 [activity] operator:554abe page: NAVIGATION · Task loaded
+09:28:37.906 [activity] operator:554abe page: SETUP · Arm selected
+09:28:37.912 [activity] operator:554abe page: NAVIGATION · Teaching stage changed
+09:28:37.925 [activity] operator:554abe page: SETUP · Arm selected
+09:28:37.930 [activity] operator:554abe page: NAVIGATION · Open screen
+09:28:41.850 [activity] operator:554abe POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+09:28:41.997 [activity] operator:554abe page: SYSTEM · 3D device
+09:28:43.033 [activity] operator:554abe POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+09:28:43.265 [activity] operator:554abe POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+09:28:45.496 [activity] operator:554abe page: UI · Button action
+09:28:45.710 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:46.410 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:47.199 [activity] operator:554abe page: UI · Button action
+09:28:47.265 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:47.415 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:48.054 [activity] operator:554abe page: UI · Button action
+09:28:49.582 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:50.339 [activity] operator:554abe page: UI · Button action
+09:28:52.538 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:53.206 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:53.296 [activity] operator:554abe page: UI · Button action
+09:28:53.297 [activity] operator:554abe page: UI · Button action
+09:28:53.445 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:53.592 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:54.271 [activity] operator:554abe page: UI · Button action
+09:28:54.271 [activity] operator:554abe page: UI · Button action
+09:28:55.098 [activity] operator:554abe page: UI · Button action
+09:28:55.223 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:55.981 [activity] operator:554abe page: UI · Button action
+09:28:56.376 [activity] operator:554abe PUT /api/projects/alix_mvbvk1fk_zti6s
+09:28:57.129 [activity] operator:554abe page: PROJECT · Button action
+09:29:05.439 [activity] operator:554abe page: SYSTEM · Session active
+12:50:11.547 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+12:50:11.595 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+12:50:11.596 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+12:50:13.673 [activity] - page: NAVIGATION · Open screen
+12:50:13.675 [activity] - page: SYSTEM · ASL frontend initialized
+12:50:14.767 [RIGHT] camera · perception warmed up in 4.2 s: its core built, the colour model loaded
+12:50:22.076 [activity] - POST /api/auth/login
+12:50:22.082 [activity] operator:4a8756 page: UI · Button action
+12:50:22.884 [activity] operator:4a8756 page: AUTH · Operator login
+12:50:22.884 [activity] operator:4a8756 page: NAVIGATION · Open screen
+12:50:33.245 [activity] operator:4a8756 page: UI · Button action
+12:50:34.114 [activity] operator:4a8756 page: NAVIGATION · Task loaded
+12:50:34.116 [activity] operator:4a8756 page: SETUP · Arm selected
+12:50:34.118 [activity] operator:4a8756 page: NAVIGATION · Teaching stage changed
+12:50:34.119 [activity] operator:4a8756 page: SETUP · Arm selected
+12:50:34.120 [activity] operator:4a8756 page: NAVIGATION · Open screen
+12:50:37.587 [activity] operator:4a8756 page: SYSTEM · 3D device
+12:50:38.721 [activity] operator:4a8756 page: NAVIGATION · Scrolled view
+12:50:40.183 [activity] operator:4a8756 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+12:50:41.410 [activity] operator:4a8756 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+12:50:41.639 [activity] operator:4a8756 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+12:50:43.088 [activity] operator:4a8756 page: NAVIGATION · Scrolled view
+12:50:44.828 [activity] operator:4a8756 POST /api/auth/engineer/lock
+12:50:45.628 [activity] operator:4a8756 page: UI · Button action
+12:50:45.629 [activity] operator:4a8756 page: NAVIGATION · Scrolled view
+12:50:45.843 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:50:47.230 [activity] engineer:4a8756 POST /api/auth/engineer
+12:50:47.608 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:50:50.021 [activity] engineer:4a8756 page: ROBOT · Button action
+12:50:50.232 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:50:50.247 [activity] operator:4a8756 POST /api/auth/engineer/lock
+12:50:51.048 [activity] operator:4a8756 page: UI · Button action
+12:50:51.735 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:50:52.380 [activity] operator:4a8756 page: UI · Button action
+12:50:52.380 [activity] operator:4a8756 page: SYSTEM · Session active
+12:50:52.590 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:50:54.799 [activity] operator:4a8756 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+12:50:58.000 [activity] operator:4a8756 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+12:51:22.886 [activity] operator:4a8756 page: SYSTEM · Session active
+12:51:52.886 [activity] operator:4a8756 page: SYSTEM · Session active
+12:52:22.885 [activity] operator:4a8756 page: SYSTEM · Session active
+12:52:52.886 [activity] operator:4a8756 page: SYSTEM · Session active
+12:53:22.887 [activity] operator:4a8756 page: SYSTEM · Session active
+12:53:52.886 [activity] operator:4a8756 page: SYSTEM · Session active
+12:54:12.868 [activity] operator:4a8756 page: UI · Button action
+12:54:13.081 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:13.820 [LEFT] ALERT ERROR · IO3 is not in the controller's E-stop mode (5): its E-stop button would not stop the arm. (An engineer sets IO3 to mode 5 at the pendant. Motion stays blocked until then.)
+12:54:13.975 [LEFT] read global speed ret=0 · not reported
+12:54:13.975 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+12:54:14.348 [LEFT] read drag sensitivity ret=0 · 100 %
+12:54:14.348 [activity] operator:4a8756 POST /api/robots/left/connect
+12:54:14.785 [LEFT] program list · 25 programs
+12:54:15.050 [LEFT] global points · 18 point(s)
+12:54:16.072 [RIGHT] ALERT ERROR · IO3 is not in the controller's E-stop mode (5): its E-stop button would not stop the arm. (An engineer sets IO3 to mode 5 at the pendant. Motion stays blocked until then.)
+12:54:16.178 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+12:54:16.236 [RIGHT] read global speed ret=0 · not reported
+12:54:16.236 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+12:54:16.599 [RIGHT] read drag sensitivity ret=0 · 100 %
+12:54:16.600 [activity] operator:4a8756 POST /api/robots/right/connect
+12:54:17.089 [RIGHT] program list · 18 programs
+12:54:17.487 [RIGHT] global points · 14 point(s)
+12:54:20.955 [activity] operator:4a8756 POST /api/robots/left/recover
+12:54:21.755 [activity] operator:4a8756 page: UI · Button action
+12:54:21.967 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:22.885 [activity] operator:4a8756 page: SYSTEM · Session active
+12:54:27.491 [activity] operator:4a8756 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+12:54:28.291 [activity] operator:4a8756 page: ROBOT · Button action
+12:54:28.524 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:30.492 [LEFT] run mode REAL
+12:54:30.606 [RIGHT] run mode REAL
+12:54:30.607 [activity] operator:4a8756 POST /api/robots/mode
+12:54:31.107 [activity] operator:4a8756 page: ROBOT · Button action
+12:54:31.328 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:32.595 [activity] operator:4a8756 page: UI · Button action
+12:54:32.815 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:34.155 [activity] operator:4a8756 page: UI · Button action
+12:54:34.366 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:36.236 [activity] operator:4a8756 POST /api/auth/engineer/lock
+12:54:37.035 [activity] operator:4a8756 page: UI · Button action
+12:54:37.917 [activity] engineer:4a8756 POST /api/auth/engineer
+12:54:38.375 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:38.761 [activity] engineer:4a8756 page: NAVIGATION · Scrolled view
+12:54:42.075 [activity] engineer:4a8756 page: UI · Button action
+12:54:42.288 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:43.978 [activity] engineer:4a8756 page: NAVIGATION · Scrolled view
+12:54:47.378 [activity] engineer:4a8756 page: NAVIGATION · Scrolled view
+12:54:51.465 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:52.457 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:52.886 [activity] engineer:4a8756 page: SYSTEM · Session active
+12:54:52.886 [activity] engineer:4a8756 page: NAVIGATION · Scrolled view
+12:54:52.886 [activity] engineer:4a8756 page: UI · Button action
+12:54:53.247 [LEFT] program list · 25 programs
+12:54:53.435 [LEFT] global points · 18 point(s)
+12:54:53.924 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:54.800 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:55.676 [activity] engineer:4a8756 POST /api/robots/left/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+12:54:55.884 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:56.476 [activity] engineer:4a8756 page: ROBOT · Button action
+12:54:56.618 [activity] engineer:4a8756 POST /api/robots/left/points/move
+12:54:56.688 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:56.841 [LEFT] run mode REAL
+12:54:56.935 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 60%
+12:54:57.403 [activity] engineer:4a8756 page: ROBOT · Button action
+12:54:57.615 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:54:57.915 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+12:54:57.936 [LEFT] alix · global speed restored to 50 (ret=0)
+12:54:58.141 [LEFT] movej global point {"name": "L_HME_POS", "speed": 60, "wait_s": 0.0} ret=0 (1.296 s) · gap 0.43 deg
+12:54:58.264 [activity] - job move done: LEFT MoveJ to L_HME_POS
+12:55:02.603 [activity] engineer:4a8756 page: UI · Button action
+12:55:02.816 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:04.714 [RIGHT] program list · 18 programs
+12:55:04.874 [RIGHT] global points · 14 point(s)
+12:55:05.139 [activity] engineer:4a8756 page: UI · Button action
+12:55:05.373 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:08.246 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:08.475 [activity] engineer:4a8756 POST /api/robots/right/points/move -> REFUSED: Moving the arm to a global point on the real robot needs your confirmation.
+12:55:09.275 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:09.465 [activity] engineer:4a8756 POST /api/robots/right/points/move
+12:55:09.498 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:09.662 [RIGHT] run mode REAL
+12:55:09.827 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 60%
+12:55:10.202 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:10.414 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:10.944 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+12:55:10.964 [RIGHT] alix · global speed restored to 50 (ret=0)
+12:55:11.193 [RIGHT] movej global point {"name": "R_HME_POS", "speed": 60, "wait_s": 0.0} ret=0 (1.529 s) · gap 0.26 deg
+12:55:11.490 [activity] - job move done: RIGHT MoveJ to R_HME_POS
+12:55:13.715 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:13.927 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:16.107 [activity] engineer:4a8756 POST /api/robots/right/hand -> REFUSED: Moving the hand on the real robot needs your confirmation.
+12:55:16.283 [activity] engineer:4a8756 page: UI · Button action
+12:55:16.283 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:16.746 [activity] engineer:4a8756 POST /api/robots/right/hand
+12:55:16.930 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+12:55:17.015 [RIGHT] alix · hand: SPEED_SET 1000 on all six channels
+12:55:17.125 [RIGHT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [996, 996, 996, 993, 977, 960]; law 0.48 s)
+12:55:17.531 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:17.763 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:17.964 [RIGHT] alix · hand: settled at [996, 996, 996, 993, 165, 978] after 0.77 s (per-channel travel [0, 0, 1, 0, 847, 18])
+12:55:17.965 [RIGHT] alix · ** hand: settled without arriving — worst channel 5 is 165 counts short (target 0, readback 165)
+12:55:18.103 [RIGHT] hand move {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": [1000, 1000, 1000, 1000, 1000, 1000]} ret=0 (0.775 s) · read back [996, 996, 996, 993, 165, 978] (settled short of the target: stopped on force)
+12:55:18.103 [activity] - job hand done: Hand RIGHT
+12:55:20.299 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:20.511 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:22.875 [activity] engineer:4a8756 page: UI · Button action
+12:55:22.875 [activity] engineer:4a8756 page: SYSTEM · Session active
+12:55:22.875 [activity] engineer:4a8756 page: NAVIGATION · Scrolled view
+12:55:23.087 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:23.154 [activity] engineer:4a8756 POST /api/robots/left/hand -> REFUSED: Moving the hand on the real robot needs your confirmation.
+12:55:23.954 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:24.010 [activity] engineer:4a8756 POST /api/robots/left/hand
+12:55:24.165 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:24.228 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+12:55:24.332 [LEFT] alix · hand: SPEED_SET 1000 on all six channels
+12:55:24.456 [LEFT] alix · hand: ANGLE_SET [1000, 1000, 1000, 1000, 0, 1000] (from [1000, 994, 995, 995, 974, 967]; law 0.48 s)
+12:55:24.795 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:25.025 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:25.168 [LEFT] alix · hand: settled at [1000, 994, 995, 995, 513, 982] after 0.65 s (per-channel travel [0, 0, 0, 0, 467, 15])
+12:55:25.168 [LEFT] alix · ** hand: settled without arriving — worst channel 5 is 513 counts short (target 0, readback 513)
+12:55:25.282 [LEFT] hand move {"counts": [1000, 1000, 1000, 1000, 0, 1000], "speed_set": [1000, 1000, 1000, 1000, 1000, 1000]} ret=0 (0.647 s) · read back [1000, 994, 995, 995, 513, 982] (settled short of the target: stopped on force)
+12:55:25.283 [activity] - job hand done: Hand LEFT
+12:55:26.763 [activity] engineer:4a8756 page: UI · Button action
+12:55:26.975 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:31.059 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:31.272 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:33.492 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:34.347 [activity] engineer:4a8756 page: ROBOT · Input updated
+12:55:34.459 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:35.248 [activity] engineer:4a8756 page: ROBOT · Input updated
+12:55:35.248 [activity] engineer:4a8756 page: ROBOT · Setting changed
+12:55:35.291 [activity] engineer:4a8756 POST /api/robots/left/pole -> REFUSED: Moving the pole on the real robot needs your confirmation.
+12:55:36.090 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:36.219 [activity] engineer:4a8756 POST /api/robots/left/pole
+12:55:36.232 [LEFT] alix · pole: 150 mm -> 50 mm at 100 % (rm_set_lift_height non-blocking + getter wait, expect 2.53 s, timeout 7.6 s)
+12:55:36.302 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:37.003 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:37.232 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:38.244 [LEFT] alix · pole: at 51 mm after 2.01 s (verified_by=getter, moved 99 mm through 30 distinct readings)
+12:55:38.419 [LEFT] pole move {"mm": 50.0, "speed_pct": 100} ret=0 (2.008 s) · final 0.051 m, verified by getter
+12:55:38.420 [activity] - job pole done: Pole LEFT to 50 mm
+12:55:38.882 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:39.671 [activity] engineer:4a8756 page: ROBOT · Input updated
+12:55:39.672 [activity] engineer:4a8756 page: ROBOT · Setting changed
+12:55:39.731 [activity] engineer:4a8756 POST /api/robots/right/pole -> REFUSED: Moving the pole on the real robot needs your confirmation.
+12:55:40.568 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:40.577 [activity] engineer:4a8756 POST /api/robots/right/pole
+12:55:40.592 [RIGHT] alix · pole: 150 mm -> 200 mm at 100 % (rm_set_lift_height non-blocking + getter wait, expect 2.02 s, timeout 6.0 s)
+12:55:40.743 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:41.363 [activity] engineer:4a8756 page: ROBOT · Button action
+12:55:41.592 [activity] engineer:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:42.096 [RIGHT] alix · pole: at 198 mm after 1.50 s (verified_by=getter, moved 48 mm through 21 distinct readings)
+12:55:42.192 [RIGHT] pole move {"mm": 200.0, "speed_pct": 100} ret=0 (1.498 s) · final 0.198 m, verified by getter
+12:55:42.192 [activity] - job pole done: Pole RIGHT to 200 mm
+12:55:51.387 [activity] operator:4a8756 POST /api/auth/engineer/lock
+12:55:52.207 [activity] operator:4a8756 page: UI · Button action
+12:55:52.208 [activity] operator:4a8756 page: SYSTEM · Session active
+12:55:52.401 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:54.171 [activity] operator:4a8756 page: UI · Button action
+12:55:54.382 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:55:56.115 [activity] operator:4a8756 page: NAVIGATION · Scrolled view
+12:55:59.441 [activity] operator:4a8756 page: NAVIGATION · Scrolled view
+12:56:05.194 [LEFT] program list · 25 programs
+12:56:05.445 [RIGHT] program list · 18 programs
+12:56:05.589 [LEFT] global points · 18 point(s)
+12:56:05.729 [RIGHT] global points · 14 point(s)
+12:56:05.750 [activity] operator:4a8756 page: UI · Button action
+12:56:06.074 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:56:06.114 [activity] operator:4a8756 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: what is run (the sequence, the task or the arms), its steps.
+12:56:07.295 [LEFT] program list · 25 programs
+12:56:07.652 [RIGHT] program list · 18 programs
+12:56:07.763 [activity] operator:4a8756 page: ROBOT · Button action
+12:56:07.763 [activity] operator:4a8756 page: NAVIGATION · Scrolled view
+12:56:07.786 [LEFT] global points · 18 point(s)
+12:56:07.929 [RIGHT] global points · 14 point(s)
+12:56:07.979 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:56:08.435 [LEFT] program list · 25 programs
+12:56:08.613 [LEFT] global points · 18 point(s)
+12:56:08.867 [RIGHT] program list · 18 programs
+12:56:09.216 [RIGHT] global points · 14 point(s)
+12:56:09.326 [activity] operator:4a8756 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+12:56:10.420 [LEFT] program list · 25 programs
+12:56:10.707 [RIGHT] program list · 18 programs
+12:56:10.829 [LEFT] global points · 18 point(s)
+12:56:10.883 [activity] operator:4a8756 page: ROBOT · Button action
+12:56:10.969 [RIGHT] global points · 14 point(s)
+12:56:11.190 [activity] operator:4a8756 PUT /api/projects/alix_mvbvk1fk_zti6s
+12:56:11.665 [LEFT] program list · 25 programs
+12:56:11.827 [LEFT] global points · 18 point(s)
+12:56:12.020 [RIGHT] program list · 18 programs
+12:56:12.235 [RIGHT] global points · 14 point(s)
+12:56:12.691 [activity] operator:4a8756 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+12:56:12.814 [LEFT] run mode REAL
+12:56:12.926 [RIGHT] run mode REAL
+12:56:12.962 [LEFT] clear warning · clean
+12:56:13.051 [RIGHT] clear warning · clean
+12:56:13.069 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+12:56:13.069 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+12:56:13.080 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 20% // wait 0s
+12:56:13.101 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+12:56:13.101 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+12:56:13.127 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 20%
+12:56:13.154 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+12:56:13.154 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+12:56:13.165 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 20% // wait 0s
+12:56:13.182 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+12:56:13.183 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+12:56:13.183 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 0.1 s
+12:56:13.186 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+12:56:13.186 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+12:56:13.202 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+12:56:13.221 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 20%
+12:56:13.276 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+12:56:13.276 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+12:56:13.277 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 0.1 s
+12:56:13.296 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+12:56:13.307 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (0.238 s)
+12:56:13.403 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (0.249 s)
+12:56:14.308 [LEFT] pole and hand {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (0.986 s) · pole 50.0 -> 50.0 mm in 0.387 s, the hand moving meanwhile; hand [1000, 994, 995, 995, 513, 981]
+12:56:14.486 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (1.075 s) · pole 200.0 -> 200.0 mm in 0.384 s, the hand moving meanwhile; hand [996, 996, 997, 993, 165, 978]
+12:56:14.487 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+12:56:14.488 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+12:56:14.494 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+12:56:14.495 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+12:56:14.582 [RIGHT] runner v14 ·   01. PROGRAM: Program 80 80_R_merge_1_2.txt // start/transit 30% // stored trajectory timing
+12:56:14.605 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+12:56:14.606 [LEFT] runner v14 ·   01. PROGRAM: Program 80 80_L_merge_1.txt // start/transit 30% // stored trajectory timing
+12:56:14.606 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: PROGRAM
+12:56:14.625 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+12:56:14.625 [LEFT] runner v14 · WORKFLOW STEP START 1/1: PROGRAM
+12:56:14.638 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/1: slot 80 (80_R_merge_1_2.txt) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+12:56:14.657 [LEFT] runner v14 · WORKFLOW PROGRAM 1/1: slot 80 (80_L_merge_1.txt) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+12:56:16.100 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 1/1: slot 80 // start ack 1.445 s
+12:56:16.122 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 1/1: slot 80 // start ack 1.431 s
+12:56:17.037 [LEFT] ALERT ERROR · The controller reports 4105 (0x1009 Speed out of limit). (Check the arm and its pendant; clear the error there before running.)
+12:56:17.132 [LEFT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 1.0 s
+12:56:22.885 [activity] operator:4a8756 page: SYSTEM · Session active
+12:56:38.224 [RIGHT] ALERT ERROR · The controller reports 4105 (0x1009 Speed out of limit). (Check the arm and its pendant; clear the error there before running.)
+12:56:38.636 [RIGHT] runner v14 ·   !! arm reports 4105 (0x1009: joint speed over its limit (a warning; the run goes on)) at 22.5 s
+12:56:47.316 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/1: 31.228 s
+12:56:47.317 [LEFT] runner v14 · WORKFLOW FAST SWITCH 1/1: 0.123 s
+12:56:47.317 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: PROGRAM
+12:56:47.318 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 32.7 s
+12:56:47.337 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+12:56:47.386 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (32.898 s)
+12:56:48.137 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/1: 32.053 s
+12:56:48.137 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 1/1: 0.189 s
+12:56:48.138 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: PROGRAM
+12:56:48.138 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 33.5 s
+12:56:48.153 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+12:56:48.213 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (33.725 s)
+12:56:48.276 [LEFT] clear warning · clean
+12:56:48.357 [RIGHT] clear warning · clean
+12:56:48.670 [-] mechanism · PLAN 1/1: Open the lid (in a sequence) (lid_open_seq_toppra.json, 20 entries, 18.2 s of motion)
+12:56:50.745 [RIGHT] camera · camera open: Intel RealSense D435 425122070189, depth 848x480 (fx 432.7, scale 1 mm), colour 1280x720 (fx 904.5); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+12:56:50.930 [RIGHT] pole and hand {"mm": 150.1, "hand": [33, 33, 33, 33, 133, 944]} (2.257 s) · pole 200.0 -> 151.0 mm in 1.874 s, the hand moving meanwhile; hand [513, 446, 460, 544, 167, 936]
+12:56:51.281 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-27/canfd/20261027_125650_RIGHT_lid_open_seq.frames.jsonl (target 192.168.1.239:8090, cycle 5 ms, all sections on)
+12:56:51.417 [RIGHT] canfd feed {"label": "RIGHT_lid_open_seq", "capture": "20261027_125650_RIGHT_lid_open_seq.frames.jsonl"} · on, kept for the run's moves
+12:56:51.417 [LEFT] pole and hand {"mm": 150.0, "hand": [516, 516, 516, 516, 133, 944]} (2.738 s) · pole 50.0 -> 148.0 mm in 2.386 s, the hand moving meanwhile; hand [526, 512, 513, 547, 514, 933]
+12:56:51.784 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-27/canfd/20261027_125651_LEFT_lid_open_seq.frames.jsonl (target 192.168.1.239:8089, cycle 5 ms, all sections on)
+12:56:51.879 [LEFT] canfd feed {"label": "LEFT_lid_open_seq", "capture": "20261027_125651_LEFT_lid_open_seq.frames.jsonl"} · on, kept for the run's moves
+12:56:51.889 [LEFT] alix · rest: movej to the plan's caller at speed 60 of a 100 % global ratio
+12:56:51.950 [RIGHT] alix · rest: movej to the plan's caller at speed 60 of a 100 % global ratio
+12:56:52.794 [RIGHT] alix · global speed restored to 50 (ret=0)
+12:56:52.886 [activity] operator:4a8756 page: SYSTEM · Session active
+12:56:52.920 [LEFT] alix · global speed restored to 50 (ret=0)
+12:56:52.979 [RIGHT] move to pose {"deg": [-0.0, -81.99, -26.0, 97.99, 6.0, 61.99, 69.0], "speed": 60, "restore_speed": 50} · gap 0.29400146484375256 deg
+12:56:53.046 [LEFT] move to pose {"deg": [-0.0, -81.99, 26.0, 98.0, -6.0, 62.01, 111.0], "speed": 60, "restore_speed": 50} · gap 0.32300347900390136 deg
+12:56:53.052 [-] mechanism · RIGHT: at Open the lid (in a sequence)'s start
+12:56:53.053 [-] mechanism · LEFT: at Open the lid (in a sequence)'s start
+12:56:53.092 [RIGHT] alix · pole: already at 150 mm, the 150 mm asked (within 5 mm, idle): nothing sent
+12:56:53.200 [RIGHT] pole move {"mm": 150.09300000000002, "speed_pct": 100} (0.000 s) · final 0.15 m, verified by no_op; nothing sent: already there
+12:56:53.585 [RIGHT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+12:56:53.686 [RIGHT] alix · hand: SPEED_SET 1000 on all six channels
+12:56:54.118 [RIGHT] hand move {"counts": [33, 33, 33, 33, 133, 944], "speed_set": null} (0.000 s) · already commanded to these counts and settled at [513, 446, 460, 544, 167, 936] (stopped on force: the glove), nothing sent
+12:56:54.319 [LEFT] alix · pole: already at 150 mm, the 150 mm asked (within 5 mm, idle): nothing sent
+12:56:54.381 [LEFT] pole move {"mm": 150.037, "speed_pct": 100} (0.000 s) · final 0.15 m, verified by no_op; nothing sent: already there
+12:56:54.652 [LEFT] alix · hand: end-port modbus mode on (baud 115200, device 1)
+12:56:54.720 [LEFT] alix · hand: SPEED_SET 1000 on all six channels
+12:56:54.919 [LEFT] hand move {"counts": [516, 516, 516, 516, 133, 944], "speed_set": null} (0.000 s) · already commanded to these counts and settled at [526, 512, 513, 547, 513, 932] (stopped on force: the glove), nothing sent
+12:56:55.119 [LEFT] alix · CANFD: 1151 lines at 5.0000 ms/line, per_joint rate gate, peak 203.6 deg/s on J5 = 0.905 of its 225; start gap must be <= 0.720 deg
+12:56:55.120 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 2 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+12:56:58.723 [activity] operator:4a8756 page: NAVIGATION · Scrolled view
+12:57:00.990 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 5.75 s
+12:57:00.991 [LEFT] alix · stream 5.75 s at the host's 5.000 ms period — the player's advisory band [6.324999999999999, 6.4399999999999995] s does not apply to a host-timed stream; worst send lateness 1.24 ms
+12:57:01.658 [LEFT] canfd stream {"label": "LEFT arm move_to_pre_start + move_to_start + execute_path", "lines": 1151, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": 60, "capture": "20261027_125651_LEFT_lid_open_seq.frames.jsonl", "ratio_held": true, "t_mono": [13642.202, 13648.623], "settle": {"waited_s": 0.539, "at_rest": true, "gap_deg": 0.46, "peak_deg_s": 6.03, "by": "feed"}} ret=host_timed (6.559 s) · 1151/1151 lines, end 539 ms
+12:57:01.659 [-] mechanism · LEFT arm move_to_pre_start + move_to_start + execute_path: 1151/1151 lines in 5.75 s (0.21 s of stops at its junctions taken out)
+12:57:02.207 [RIGHT] camera · gap_check: lid surface at an implausible 0.025 m in base_link -> NOT lifted
+12:57:02.394 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-27/checks/20261027_125702_232_gap_check_lid_lifted_refused.json
+12:57:02.395 [RIGHT] camera · gap_check: lid surface at an implausible 0.026 m in base_link -> NOT lifted
+12:57:02.525 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-27/checks/20261027_125702_395_gap_check_lid_lifted_refused.json
+12:57:02.562 [RIGHT] camera · gap_check: lid surface at an implausible 0.025 m in base_link -> NOT lifted
+12:57:02.686 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-27/checks/20261027_125702_562_gap_check_lid_lifted_refused.json
+12:57:02.729 [RIGHT] camera · gap_check: lid surface at an implausible 0.025 m in base_link -> NOT lifted
+12:57:02.859 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-27/checks/20261027_125702_729_gap_check_lid_lifted_refused.json
+12:57:02.895 [RIGHT] camera · gap_check: lid surface at an implausible 0.026 m in base_link -> NOT lifted
+12:57:02.897 [-] mechanism · CHECK verify_lid_lifted: expect lid_lifted, the camera cannot judge it (no decision in 5 frames (refused, refused, refused, refused, refused; 0 yes, 0 no, 5 no vote); the last: lid surface at an implausible 0.026 m in base_link -> NOT lifted) -> STOP
+12:57:03.026 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-10-27/checks/20261027_125702_896_gap_check_lid_lifted_refused.json
+12:57:03.359 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+12:57:03.359 [RIGHT] alix · recorded 2342 frames
+12:57:03.437 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+12:57:03.437 [LEFT] alix · recorded 2228 frames
+12:57:03.476 [RIGHT] canfd feed {"capture": "20261027_125650_RIGHT_lid_open_seq.frames.jsonl"} · off, 2342 frames kept
+12:57:03.559 [LEFT] canfd feed {"capture": "20261027_125651_LEFT_lid_open_seq.frames.jsonl"} · off, 2228 frames kept
+12:57:04.169 [RIGHT] camera · camera closed
+12:57:04.584 [LEFT] restore global speed {"pct": 50} ret=0
+12:57:04.731 [RIGHT] restore global speed {"pct": 50} ret=0
+12:57:04.734 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: verify_lid_lifted: the camera cannot judge whether it is lid lifted (no decision in 5 frames (refused, refused, refused, refused, refused; 0 yes, 0 no, 5 no vote); the last: lid surface at an implausible 0.026 m in base_link -> NOT lifted).
+12:57:04.734 [BOTH] ALERT ERROR · S2 Real Machine: both arms: verify_lid_lifted: the camera cannot judge whether it is lid lifted (no decision in 5 frames (refused, refused, refused, refused, refused; 0 yes, 0 no, 5 no vote); the last: lid surface at an implausible 0.026 m in base_link -> NOT lifted). (A person must look at the commode: nothing else was moved after this.)
+12:57:22.886 [activity] operator:4a8756 page: SYSTEM · Session active
+12:57:52.886 [activity] operator:4a8756 page: SYSTEM · Session active
+12:58:22.886 [activity] operator:4a8756 page: SYSTEM · Session active
+12:58:28.746 [LEFT] restore global speed {"pct": 50} ret=0
+12:58:28.907 [RIGHT] restore global speed {"pct": 50} ret=0

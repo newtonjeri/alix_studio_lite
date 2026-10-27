@@ -1,0 +1,41 @@
+{
+  "check_id": "20261027_125702_159_verify_lid_lifted",
+  "stage": "verify_lid_lifted",
+  "expect": "lid_lifted",
+  "decided": false,
+  "state": "cannot_judge",
+  "confidence": 0.0,
+  "message": "no decision in 5 frames (refused, refused, refused, refused, refused; 0 yes, 0 no, 5 no vote); the last: lid surface at an implausible 0.026 m in base_link -> NOT lifted",
+  "frames": [
+    {
+      "record": "20261027_125702_232_gap_check_lid_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261027_125702_395_gap_check_lid_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261027_125702_562_gap_check_lid_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261027_125702_729_gap_check_lid_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261027_125702_896_gap_check_lid_lifted_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    }
+  ]
+}

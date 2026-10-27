@@ -16484,3 +16484,92 @@
 21:45:30.207 [activity] operator:66b1a4 page: SYSTEM · Session active
 21:45:59.080 [LEFT] restore global speed {"pct": 50} ret=0
 21:45:59.203 [RIGHT] restore global speed {"pct": 50} ret=0
+21:59:48.568 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+21:59:48.614 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+21:59:48.614 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+21:59:50.412 [activity] - page: NAVIGATION · Open screen
+21:59:50.412 [activity] - page: SYSTEM · ASL frontend initialized
+21:59:51.199 [activity] - POST /api/auth/login
+21:59:52.014 [activity] operator:2c6ab0 page: AUTH · Operator login
+21:59:52.014 [activity] operator:2c6ab0 page: NAVIGATION · Open screen
+21:59:52.015 [activity] operator:2c6ab0 page: AUTH · Setting changed
+21:59:52.403 [RIGHT] camera · perception warmed up in 4.9 s: its core built, the colour model loaded
+21:59:55.289 [activity] operator:2c6ab0 page: UI · Button action
+21:59:56.126 [activity] operator:2c6ab0 page: NAVIGATION · Task loaded
+21:59:56.127 [activity] operator:2c6ab0 page: SETUP · Arm selected
+21:59:56.127 [activity] operator:2c6ab0 page: NAVIGATION · Teaching stage changed
+21:59:56.128 [activity] operator:2c6ab0 page: SETUP · Arm selected
+21:59:56.128 [activity] operator:2c6ab0 page: NAVIGATION · Open screen
+21:59:59.549 [activity] operator:2c6ab0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+21:59:59.694 [activity] operator:2c6ab0 page: SYSTEM · 3D device
+22:00:00.777 [activity] operator:2c6ab0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+22:00:01.015 [activity] operator:2c6ab0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+22:00:04.140 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:05.672 [activity] operator:2c6ab0 page: UI · Button action
+22:00:05.883 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s
+22:00:06.016 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+22:00:06.544 [activity] operator:2c6ab0 page: UI · Button action
+22:00:06.544 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:06.545 [activity] operator:2c6ab0 page: UI · Button action
+22:00:07.432 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s
+22:00:07.461 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+22:00:07.992 [activity] operator:2c6ab0 page: UI · Button action
+22:00:08.263 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s
+22:00:12.111 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:13.568 [activity] operator:2c6ab0 page: UI · Button action
+22:00:13.780 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s
+22:00:15.703 [activity] operator:2c6ab0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/left/load
+22:00:16.363 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s
+22:00:16.501 [activity] operator:2c6ab0 page: SEQUENCE · Setting changed
+22:00:16.502 [activity] operator:2c6ab0 page: UI · Input updated
+22:00:18.544 [activity] operator:2c6ab0 page: UI · Button action
+22:00:18.785 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s
+22:00:20.535 [activity] operator:2c6ab0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/right/load
+22:00:21.197 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s
+22:00:21.333 [activity] operator:2c6ab0 page: SEQUENCE · Setting changed
+22:00:21.334 [activity] operator:2c6ab0 page: UI · Input updated
+22:00:21.334 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:00:25.406 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:28.951 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:33.188 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:38.239 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:43.755 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:47.839 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:51.288 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:00:51.289 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:01:15.585 [activity] operator:2c6ab0 page: ROBOT · Button action
+22:01:15.797 [activity] operator:2c6ab0 PUT /api/projects/alix_mvbvk1fk_zti6s
+22:01:17.337 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:01:20.359 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:01:22.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:01:23.553 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:01:33.603 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:01:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:02:01.636 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:02:22.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:02:22.956 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:02:26.134 [activity] operator:2c6ab0 page: NAVIGATION · Scrolled view
+22:02:35.714 [activity] operator:2c6ab0 page: SYSTEM · Application hidden
+22:02:45.862 [activity] operator:2c6ab0 page: SYSTEM · Application visible
+22:02:45.862 [activity] operator:2c6ab0 page: SYSTEM · Application hidden
+22:02:48.789 [activity] operator:2c6ab0 page: SYSTEM · Application visible
+22:02:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:03:22.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:03:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:04:22.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:04:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:05:22.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:05:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:06:22.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:06:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:07:22.017 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:07:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:08:22.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:08:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:09:22.015 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:09:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:10:22.017 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:10:52.018 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:11:22.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:11:52.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
+22:12:22.016 [activity] operator:2c6ab0 page: SYSTEM · Session active
