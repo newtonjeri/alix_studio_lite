@@ -181,6 +181,7 @@ class GapCheck:
         self._log = log or (lambda _text: None)
         self._lock = threading.Lock()          # one check at a time: they share the session
         self._core, self._core_error, self._fixture_in_world = core, None, None
+        self._models_kept = None                # (check_id, the colour models' result): asked once a check
         self._locator = None
         self._manifest = Path(manifest) if manifest else MANIFEST
         self._named: dict | None = None        # the right arm's named poses (ALIX's MoveIt group states), read once
@@ -340,21 +341,31 @@ class GapCheck:
     def _learn_registration(self, pose: str, result) -> None:
         self.session._learn_registration(pose, result)
 
-    def _models(self, frame: "DepthFrame", roll_tf, at_pose: str = "", depth_ok: bool = True):
+    def _models(self, frame: "DepthFrame", roll_tf, at_pose: str = "", depth_ok: bool = True, check_id: str | None = None,
+                reused: dict | None = None):
         """-> the colour models' call for GapCheckSession.check (the node's `_gap_models`): PerceptionCore.check_status
         on this frame's colour image and aligned depth (the session judges whether it contradicts the geometry), None
-        without the aligned depth; the depth state only where the pose gate allows it, as the node."""
+        without the aligned depth; the depth state only where the pose gate allows it, as the node. With a ``check_id``
+        the result is kept for the check's later frames: asked once a check (``reused`` says when it was taken)."""
         def models():
             if frame.aligned is None:
                 return None
+            kept = self._models_kept
+            if check_id and kept is not None and kept[0] == check_id:
+                if reused is not None:
+                    reused["models"] = True
+                return kept[1]
             core = self.core()
             if core is None:
                 raise RuntimeError(self._core_error or "perception core unavailable")
             geo = self._geometry(frame)
-            return core.check_status(geo["image"], camera_to_world=roll_tf, fixture_hint="commode",
-                                     depth_image=geo["depth"] if depth_ok else None, intrinsics=geo["intrinsics"],
-                                     camera_to_target=geo["transform"], fixture_pose=geo["fixture_pose"],
-                                     depth_registration_m=self.registration_for(at_pose))
+            result = core.check_status(geo["image"], camera_to_world=roll_tf, fixture_hint="commode",
+                                       depth_image=geo["depth"] if depth_ok else None, intrinsics=geo["intrinsics"],
+                                       camera_to_target=geo["transform"], fixture_pose=geo["fixture_pose"],
+                                       depth_registration_m=self.registration_for(at_pose))
+            if check_id:
+                self._models_kept = (check_id, result)
+            return result
         return models
 
     # ── status_check (perception_node.py's status mode): the fixture's state, the colour model's, the depth deciding
@@ -482,14 +493,17 @@ class GapCheck:
         return (True, f"at {at}", at) if at else (False, f"not at any of {sorted(gate)}", "")
 
     # ── the check: ALIX's GapCheckSession.check, given what the node gives it
-    def ask(self, expect: str, frame: DepthFrame | None, q_deg=None) -> Answer:
+    def ask(self, expect: str, frame: DepthFrame | None, q_deg=None, check_id: str | None = None) -> Answer:
         """``q_deg``: the right arm's joints (degrees) when read, the node's /joint_states: the named pose the
-        registration belongs to, and the depth-state gate of the models' cross-check."""
+        registration belongs to, and the depth-state gate of the models' cross-check. ``check_id``: the check this frame
+        belongs to (mechanism.RealExec.ask): the colour models are asked once a check, on its first frame that needs
+        them, and that result cross-checks the check's later frames (27 Oct night: the models took 0.45 s of each
+        frame of the open check, 0.9 s a task, on frames 0.15 s apart at the same pose)."""
         with self._lock:
             depth_ok, _why, at_pose = self.pose_gate(q_deg)
-            return self._ask(str(expect or ""), frame, at_pose, depth_ok)
+            return self._ask(str(expect or ""), frame, at_pose, depth_ok, check_id)
 
-    def _ask(self, expect: str, frame: DepthFrame | None, at_pose: str, depth_ok: bool = True) -> Answer:
+    def _ask(self, expect: str, frame: DepthFrame | None, at_pose: str, depth_ok: bool = True, check_id: str | None = None) -> Answer:
         p = self.p
         mode = "gap_check"
         response = Answer()
@@ -499,12 +513,15 @@ class GapCheck:
         source = frame.source if frame is not None else "native depth (D435)"
         frame_name = frame.frame if frame is not None else DEPTH_FRAME
         roll_tf = None if frame is None else frame.cam_to_base
+        reused = {"models": False}             # the models' result taken from the check's first frame (check_id)
         rois_for_record = {"lid_roi": [float(v) for v in p["gap_roi"]], "seat_roi": [float(v) for v in p["gap_seat_roi"]],
                            "lid_wide_roi": [float(v) for v in p["gap_lid_wide_roi"]]}
         record_depth = {"arr": None}
 
         def keep(decision):                    # the node's `keep`: the record of this decision, Lite's clock and training row
             decision = dict(decision)
+            if reused["models"]:
+                decision["models_from_first_frame"] = True     # the colour models' result is the check's first frame's
             decision.update({
                 "decision_wall_s": round(time.time(), 3),
                 "depth_header_stamp_s": None if frame is None or frame.stamp_s is None else round(frame.stamp_s, 6),
@@ -556,7 +573,7 @@ class GapCheck:
         intrinsics = frame.intrinsics
         if (intrinsics.width, intrinsics.height) != (w, h):
             intrinsics = intrinsics.scaled_to(w, h)
-        models = self._models(frame, roll_tf, at_pose, depth_ok) if frame.colour is not None else None
+        models = self._models(frame, roll_tf, at_pose, depth_ok, check_id, reused) if frame.colour is not None else None
         decision = self.session.check(expect, depth, intrinsics, roll_tf, frame.hands or {}, at_pose=at_pose,
                                       source=source, frame=frame_name, models=models,
                                       color_used=frame.colour is not None, color_note=colour_note)

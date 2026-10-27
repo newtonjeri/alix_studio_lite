@@ -365,7 +365,7 @@ def test_two_checks_at_one_pose_judge_the_same_frames():
 
     slept, shots, judged = [], [], []
     job = SimpleNamespace(progress=lambda *a, **k: None, set=lambda **k: None, sleep=slept.append, check=lambda: None)
-    gap = SimpleNamespace(ask=lambda expect, frame, q_deg=None: judged.append((expect, frame.context["check"]["frame"], frame.context["check"].get("reused", False)))
+    gap = SimpleNamespace(ask=lambda expect, frame, q_deg=None, check_id=None: judged.append((expect, frame.context["check"]["frame"], frame.context["check"].get("reused", False)))
                           or _seen(expect), p={"gap_hand_frames": []}, flush=lambda: None)
     ex = mechanism.RealExec(job, SimpleNamespace(), {}, SimpleNamespace(scripted=lambda expect: None, records_dir=lambda what: None, gap=gap))
 

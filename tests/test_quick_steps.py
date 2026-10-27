@@ -598,3 +598,56 @@ def test_the_feed_is_turned_on_or_off_while_the_pole_travels(monkeypatch):
     arm.keep_feed = refused
     with pytest.raises(UserError, match="5 ms feed"):
         arm.pole_and_hand(150.0, [0, 0, 0, 0, 150, 1000], feed=dict(on="LEFT_lid_open_seq"))
+
+
+def test_a_plans_settle_hold_counts_the_arms_own_settle():
+    """27 Oct night: the plans hold 0.5 s before the lifted check (settle_before_check) on top of the stream's own end,
+    which already waits for the arm to be within 0.5 degrees of its last line and still (0.37 to 0.65 s after a lift).
+    The hold counts that measured rest: 0.49 s settled leaves 0.01 s to hold; an arm still at once (a short move)
+    leaves the whole hold; a hold of another name is as the plan says."""
+    from types import SimpleNamespace
+
+    slept, said = [], []
+    ex = mechanism.RealExec.__new__(mechanism.RealExec)
+    ex.job = SimpleNamespace(progress=lambda *a, **k: None, sleep=lambda s: slept.append(round(s, 3)), log=lambda *a, **k: None)
+    ex._log, ex._frames, ex._settled_s = None, None, 0.49
+    ex.say = lambda text, level="info": said.append(text)
+    ex.hold(0.5, "settle_before_check")
+    assert slept == [0.01] and "the arm's own settle took 0.49 s" in said[-1] and "holding 0.01 s more" in said[-1]
+    ex._settled_s = 0.008                                                  # a short move: still at once, the hold stays
+    ex.hold(0.5, "settle_before_check")
+    assert slept[-1] == pytest.approx(0.492, abs=1e-6)
+    ex._settled_s = 0.6                                                    # settled longer than the hold: nothing more
+    ex.hold(0.5, "settle_before_check")
+    assert len(slept) == 2 and "nothing more to wait" in said[-1]
+    ex.hold(0.5, "hold_pose")                                              # another hold: the plan's seconds
+    assert slept[-1] == 0.5
+
+
+def test_the_colour_models_are_asked_once_a_check(tmp_path):
+    """27 Oct night: the open check's two frames each ran the colour model, 0.45 s a frame, on frames 0.15 s apart at
+    the same pose. With the check's id the first frame's result serves the check's later frames (said in their records);
+    another check asks again."""
+    from types import SimpleNamespace
+
+    from alix_studio_lite.server.gap_check import GapCheck
+
+    gc = GapCheck.__new__(GapCheck)
+    calls = []
+    gc._models_kept = None
+    gc.core = lambda: SimpleNamespace(check_status=lambda image, **kw: calls.append(kw.get("depth_registration_m")) or dict(n=len(calls)))
+    gc._geometry = lambda frame: {"image": None, "depth": None, "intrinsics": None, "transform": None, "fixture_pose": None}
+    gc.registration_for = lambda pose: 0.0
+    frame = SimpleNamespace(aligned=object())
+    reused = {"models": False}
+    first = gc._models(frame, None, "inspection_pose_1", True, "c1", reused)()
+    assert first == dict(n=1) and calls == [0.0] and not reused["models"]
+    reused = {"models": False}
+    again = gc._models(frame, None, "inspection_pose_1", True, "c1", reused)()     # the check's second frame: no call
+    assert again is first and calls == [0.0] and reused["models"]
+    reused = {"models": False}
+    other = gc._models(frame, None, "inspection_pose_1", True, "c2", reused)()      # another check: asked again
+    assert other == dict(n=2) and len(calls) == 2 and not reused["models"]
+    assert gc._models(SimpleNamespace(aligned=None), None, "", True, "c2", reused)() is None     # no aligned depth: no models
+    plain = gc._models(frame, None, "", True, None, reused)()                      # no check id: asked, kept for none
+    assert plain == dict(n=3) and gc._models_kept == ("c2", other)
