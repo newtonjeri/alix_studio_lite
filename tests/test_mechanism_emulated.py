@@ -66,8 +66,12 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     assert all("its end waited for later" in r["text"] for r in streams)
     rows_hw = hardware(server)
     when = lambda verb, label: next(r["t"] for r in rows_hw if r.get("verb") == verb and r["args"]["label"] == label)   # noqa: E731
-    # the right's push ends and the left retreats at once: the push's end is waited for later (the open check), not before the retreat
-    assert when("canfd settle", "RIGHT arm execute_path") > when("canfd stream", "LEFT arm move_to_pre_start + move_to_rest")
+    # the right's push ends and the left retreats while the right grasps (both arms at once, 27 Oct night): the push's end is
+    # waited for before the right's own next stream, after its grasp, not as the push ends
+    push = next(k for k, r in enumerate(rows_hw) if r.get("verb") == "canfd stream" and r["args"]["label"] == "RIGHT arm execute_path")
+    grasp = next(r for r in rows_hw[push + 1:] if r.get("verb") == "hand move" and r["side"] == "right")
+    assert when("canfd settle", "RIGHT arm execute_path") > grasp["t"] > rows_hw[push]["t"]
+    assert "both arms at once: LEFT move_to_rest || RIGHT hand_grasp + move_to_inspect" in " | ".join(e["text"] for e in done["events"])
     # each arm's 5 ms feed on once for the run (24 Oct: on and off around every move, 1.1 s each), every move watched on
     # it over its own stretch, and off at the end; an arm's back-to-back moves are one stream
     caps = sorted(p.name for p in (Path(server["data"]) / "logs" / time.strftime("%Y-%m-%d") / "canfd").glob("*.frames.jsonl"))

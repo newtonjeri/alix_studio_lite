@@ -762,3 +762,49 @@ def test_a_lid_or_seat_run_keeps_one_feed_on_and_holds_the_global_ratio(monkeypa
     assert arm.drop_feed()["capture"] == made[0].out_path.name and made[0].stopped
     arm.stream(rows, "LEFT arm move", speed=50, restore_pct=50, records=tmp_path)   # no run: its own feed, as before
     assert len(made) == 2 and made[1].stopped and calls[-1] == (False, 50)
+
+
+def test_a_runner_call_forgets_the_hand_and_the_pole_only_when_its_steps_moved_them(monkeypatch):
+    """27 Oct night: every runner call made Lite forget what it knew of the hand, the pole and the end port's Modbus
+    mode, so the pole and hand step after a run of Programs alone opened the port again (0.2 to 0.4 s). The runner's
+    own lines say which steps ran: a Hand step moves the hand and closes the port (AUX HAND CLOSED), a Pole step moves
+    the pole; Programs alone leave what Lite knew. A call that did not complete forgets everything."""
+    from alix_studio_lite.server import robot_real
+
+    lines = {"v": ["WORKFLOW STEP START 1/1: PROGRAM", "WORKFLOW STEP COMPLETE 1/1: PROGRAM"], "rc": 0}
+
+    class Recorder:
+        def __init__(self, order, out_path, host_ip, port=None, log=print, cycle=1):
+            self.out_path, self.frames = out_path, 0
+
+        def start(self, robot):
+            pass
+
+        def stop(self, robot):
+            pass
+
+    arm, order = _workflow_arm(monkeypatch, Recorder)
+    rt = robot_real._runner()
+
+    def run_workflow_sequence(robot, a, ip, norm):
+        for ln in lines["v"]:
+            print(ln)
+        return lines["rc"]
+
+    monkeypatch.setattr(rt, "run_workflow_sequence", staticmethod(run_workflow_sequence))
+    known = dict(counts=[1000] * 6, after=[1000] * 6)
+    arm._hand_last, arm._hand_port, arm._pole_last = dict(known), dict(speeds=[1000] * 6), 150.0
+    assert arm.run_workflow([{"type": "program", "id": 71}], 15, 50)["ok"]
+    assert arm._hand_last == known and arm._hand_port == dict(speeds=[1000] * 6) and arm._pole_last == 150.0   # Programs alone: kept
+    lines["v"] = ["WORKFLOW STEP START 1/2: PROGRAM", "WORKFLOW STEP COMPLETE 1/2: PROGRAM", "WORKFLOW STEP START 2/2: POLE",
+                  "MANUAL POLE START: 50 mm", "WORKFLOW STEP COMPLETE 2/2: POLE"]
+    assert arm.run_workflow([{"type": "program", "id": 71}, {"type": "pole", "mm": 50}], 15, 50)["ok"]
+    assert arm._pole_last is None and arm._hand_last == known and arm._hand_port is not None     # a Pole step: the pole forgotten
+    arm._pole_last = 50.0
+    lines["v"] = ["WORKFLOW STEP START 1/1: HAND", "MANUAL HAND RAW START: little=1000", "AUX HAND CLOSED", "WORKFLOW STEP COMPLETE 1/1: HAND"]
+    assert arm.run_workflow([{"type": "hand", "values": [1000] * 6}], 15, 50)["ok"]
+    assert arm._hand_last is None and arm._hand_port is None and arm._pole_last == 50.0       # a Hand step: the hand and the port
+    arm._hand_last, arm._hand_port = dict(known), dict(speeds=[1000] * 6)
+    lines["v"], lines["rc"] = ["WORKFLOW STEP START 1/1: PROGRAM", "** WORKFLOW FAILED: step 1/1 (program) returned 1"], 1
+    assert not arm.run_workflow([{"type": "program", "id": 71}], 15, 50)["ok"]
+    assert arm._hand_last is None and arm._hand_port is None and arm._pole_last is None         # not completed: everything forgotten

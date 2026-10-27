@@ -1225,16 +1225,23 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         a.update(pole1=sim.pole, hand1=list(sim.hand), q1=list(sim.q))
         clock[0] += dur
 
-    def approach(targets, where):
+    def approach(targets, where, owner=None):
+        if owner is not None and where.endswith("start"):  # the state each arm needs when it first moves (Plan.first_move_targets),
+            first = owner.first_move_targets()              # as RealExec.approach sets it: the plan's own pole and hand entries
+            targets = {side: dict(tg, **{k: v for k, v in first.get(side, {}).items() if k in tg}) for side, tg in targets.items()}
+        t_start, ends = clock[0], []                       # both arms' poles and hands at once (the owner, 24 Oct), as Real
         for side, tg in targets.items():
             sim = sims[side]
             if "pole_mm" in tg or "hand" in tg:            # one step: the hand moving while the pole travels (26 Oct)
+                clock[0] = t_start
                 mm = float(tg["pole_mm"]) if "pole_mm" in tg else sim.pole
                 vals = [int(c) if c is not None else int(h) for c, h in zip(tg.get("hand") or [None] * 6, sim.hand)]
                 dur = max(staging.pole_quick_s(sim.pole, mm), staging.hand_move_s(sim.hand, vals))
                 sim, a = act(side, "pole_hand", dur, f"{title}: pole {mm:g} mm with the hand " + ",".join(str(v) for v in vals) + f" ({where})")
                 sim.pole, sim.hand = mm, vals
                 done(sim, a, dur)
+                ends.append(clock[0])
+        clock[0] = max(ends) if ends else clock[0]
         t_start, ends = clock[0], []                       # both arms' MoveJs at once (26 Oct: their paths checked in Real)
         for side, tg in targets.items():
             if "arm_deg" in tg:
@@ -1286,11 +1293,12 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     def play(owner, holds=None) -> tuple:
         """``owner`` from its start: its entries and their checks, these answered by ``holds`` when given (ended at the
         first that does not hold and skips). True when it skipped."""
-        approach(owner.targets("start"), "its start" if owner is plan else f"{owner.title}'s start")
+        approach(owner.targets("start"), "its start" if owner is plan else f"{owner.title}'s start", owner)
         entries = list(owner.entries)
         if not start_checks and owner is plan:         # a sequence: the checks before the first lift are not asked (27 Oct)
             entries, _dropped = mechanism.without_start_checks(entries)
         unsent = mechanism.trailing_releases(entries, hand_set if owner is plan else ())
+        legs_run = []
         i = 0
         while i < len(entries):                      # as mechanism.Runner walks them: an arm's moves in a row as ONE stream
             e = entries[i]
@@ -1307,9 +1315,25 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                         return True
             if id(e) in unsent:                      # its hand is set for its next task's start right after
                 continue
+            leg = mechanism.two_arm_leg(entries, i - 1, unsent, (), owner.name) if owner is plan else None
+            if leg is not None:                      # the two arms at once where the plan allows it (27 Oct night), as Real runs it
+                t_leg, ends = clock[0], []           # when their clearance is checked clear (RealExec.prepare_legs)
+                for side in leg.sides:
+                    clock[0] = t_leg
+                    for je, _bridge, _nxt in leg.part(side):
+                        entry(owner, je, len(je.stage.split(" + ")) if je.kind == "arm" else 1)
+                    ends.append(clock[0])
+                clock[0] = max(ends)
+                legs_run.append(leg)
+                i += leg.used - 1
+                continue
             joined, used = mechanism.joined_moves(entries, i - 1)
             entry(owner, joined, used)
             i += used - 1
+        if legs_run and owner is plan:
+            sims[camera]._say("note", mark[camera], f"{title}: the two arms move at once in {len(legs_run)} stretch(es) where the commode "
+                              "stands still (" + "; ".join(leg.label() for leg in legs_run) + "): the plan's own moves, their clearance "
+                              f"checked on the robot before the task (within {mechanism.LEG_CLEARANCE_MM:g} mm: one after the other, as the plan).")
         return False
 
     play(plan)

@@ -1239,9 +1239,7 @@ class RealArm:
         STOP does (Ctrl+C: its own slow stop of the arm, the pole stopped, the hand frozen). ``record``: the
         controller's feed recorded to that file around the call (S2_FEED_CYCLE; the result's ``feed``), unless a
         recording kept for the stage (``keep_s2_feed``) is on."""
-        self._hand_last = self._hand_port = self._pole_last = None   # runner v14's own Hand and Pole steps move them; its Hand
-        self.drop_feed()                             # steps close the end port's Modbus mode. A lid or seat run's kept feed
-                                                     # never stays on under a program
+        self.drop_feed()                             # a lid or seat run's kept feed never stays on under a program
         rt = _runner()
         norm = [rt.normalize_workflow_step(st) for st in steps]
         a = SimpleNamespace(yes=True, side=self.side, workflow_overall_speed=int(overall_pct), restore_speed=int(restore_pct),
@@ -1250,10 +1248,16 @@ class RealArm:
         t0 = time.monotonic()
 
         tid, guard = threading.get_ident(), threading.Lock()
-        state = {"inside": False, "stopped": False, "talking": False, "held": False, "raised": False}
+        state = {"inside": False, "stopped": False, "talking": False, "held": False, "raised": False,
+                 "hand": False, "pole": False}       # runner v14's own Hand and Pole steps, seen in its lines
 
         def line_out(line):
             log.write(line + "\n")
+            text = line.strip()
+            if text.startswith("WORKFLOW STEP START") and text.endswith(": HAND") or "AUX HAND CLOSED" in text or "MANUAL HAND" in text:
+                state["hand"] = True                 # its Hand step moves the hand and closes the end port's Modbus mode
+            if text.startswith("WORKFLOW STEP START") and text.endswith(": POLE") or "MANUAL POLE" in text:
+                state["pole"] = True
             self._runner_line(line)
             if on_line is None:
                 return
@@ -1316,6 +1320,10 @@ class RealArm:
                 fed = self._feed_stop(feed)
         said = log.getvalue()
         why = next((ln.strip(" *") for ln in reversed(said.splitlines()) if ln.strip().startswith("**")), None)
+        if rc != 0 or state["hand"]:                 # what Lite knew of the hand and the end port stands unless a Hand step ran
+            self._hand_last = self._hand_port = None  # (its Hand steps close the Modbus mode; before 27 Oct night every call forgot
+        if rc != 0 or state["pole"]:                 # them, and the next pole and hand step opened the port again, 0.2 to 0.4 s)
+            self._pole_last = None
         self._hw("workflow", args=dict(steps=len(norm), overall_speed=int(overall_pct), restore_speed=int(restore_pct)),
                  ret=rc, ok=rc == 0, elapsed_s=time.monotonic() - t0, text=why)
         return dict(ok=rc == 0, rc=rc, why=why, stopped=state["stopped"], seconds=round(time.monotonic() - t0, 2),

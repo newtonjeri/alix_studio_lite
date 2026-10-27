@@ -171,6 +171,7 @@ class Entry:
     group: int | None = None         # the plan's track group it came from
     note: str = ""                   # "rung 2", "reverse of execute_path" ...
     blended_s: float = 0.0           # a joined stream: the stops at its junctions taken out, this much (27 Oct)
+    members: list | None = None      # a joined stream: [(stage, first line)] of the moves it is made of
 
     @property
     def seconds(self) -> float:
@@ -528,23 +529,293 @@ def joined_moves(entries: list, i: int, bridged=()) -> tuple:
     for x in group[:-1]:
         at += len(x.rows)
         cuts.append(at)
-    blended = 0
+    blended, removed = 0, [0] * len(cuts)        # the lines each junction's blend took out
     for k in range(len(cuts) - 1, -1, -1):      # the stop between two joined moves taken out (the owner, 27 Oct), a carry's never
         if group[k].stage in NO_BLEND_STAGES or group[k + 1].stage in NO_BLEND_STAGES or (group[k].note or group[k + 1].note):
             continue
         before = len(rows)
         rows = blend_junction(rows, cuts[k])
-        blended += before - len(rows)
+        removed[k] = before - len(rows)
+        blended += removed[k]
+    members = [(group[0].stage, 0)]             # each move's first line in the stream (a blend straddles its junction: half each side)
+    for k, cut in enumerate(cuts):
+        members.append((group[k + 1].stage, cut - sum(removed[:k]) - removed[k] // 2))
     t = np.arange(len(rows), dtype=float) * CLOCK_S
     q = np.radians(np.asarray(rows, dtype=float) / 1000.0)
     names = [x.stage for x in group] + [x.stage for x in still]
     return Entry(e.i, e.index, " + ".join(names), "arm", e.side, list(e.joints), t, q, list(e.pre_actions), rows=rows,
                  group=e.group, note=" + ".join(x.note for x in group + still if x.note and not x.note.startswith("one point")),
-                 blended_s=round(blended * CLOCK_S, 3)), len(group) + len(still)
+                 blended_s=round(blended * CLOCK_S, 3), members=members), len(group) + len(still)
 
 
 #: A joint this close to the reversed lift's first line (millidegrees) is where the lift ended.
 AT_END_MDEG = 50
+
+# ── two arms at once inside a plan (the user, 27 Oct night: "the left arm and right arm can move together for some
+# canfd tasks, for example moving to the start poses"; ALIX's executive runs a plan's entries one after the other)
+LEG_MARGIN_S = 0.3        #: the other arm's moves end this long before a carry's lines begin in the stream they run alongside
+LEG_SHIFTS_S = (-0.3, 0.0, 0.3, 0.6)   #: the two arms' clearance checked with one arm this much early or late too (a hand move's real
+                          #: time, the two streams' start apart)
+LEG_GRID_S = 0.02         #: the clearance check's step
+LEG_WAIT_S = 20.0         #: a leg waits this long for its check (started as the plan loads), then runs one arm after the other
+LEG_CLEARANCE_MM = 50.0   #: the two arms this far apart throughout (S2's own rule for the two arms, the owner, 22 Oct)
+
+
+def carries_fixture(e) -> bool:
+    """Whether the (joined) move carries the lid or the seat (NO_BLEND_STAGES: the lift, the push)."""
+    return e.kind == "arm" and any(st.startswith(NO_BLEND_STAGES) for st in str(e.stage).split(" + "))
+
+
+def fixture_offset_s(e) -> float:
+    """When, from the (joined) move's start, its carry begins: the first line of its member that carries (0 for a carry
+    alone, or one not joined)."""
+    for stage, line in (e.members or []):
+        if stage.startswith(NO_BLEND_STAGES):
+            return line * CLOCK_S
+    return 0.0
+
+
+def fixture_phase_at(entries: list, i: int, plan_name: str) -> str | None:
+    """The commode's state as entry ``i`` starts: PHASE_BEFORE until the first carry, PHASE_AFTER after the last; None in
+    between (the lid or the seat lifted and held: a state the room check has no meshes for)."""
+    carries = [k for k, e in enumerate(entries) if carries_fixture(e)]
+    done = sum(1 for k in carries if k < i)
+    if done == 0:
+        return PHASE_BEFORE.get(plan_name)
+    if done == len(carries):
+        return PHASE_AFTER.get(plan_name)
+    return None
+
+
+@dataclass
+class Leg:
+    """A stretch of a plan the two arms run at once: ``order`` the (joined) entries in plan order, each with its bridge flag
+    and, for a hand release, the arm's next move's stage (the release gate); ``used`` the plan entries it covers (the
+    trailing releases not sent among them, ``skipped``); ``phase`` the commode's state meanwhile; ``key`` names it."""
+    order: list
+    used: int
+    phase: str
+    skipped: list = field(default_factory=list)
+    zero: set = field(default_factory=set)        # ids of the entries that take no time here: each arm's first hand move,
+                                                  # set by the approach already (Plan.first_move_targets)
+
+    @property
+    def sides(self) -> list:
+        return sorted({e.side for e, _, _ in self.order})
+
+    def part(self, side) -> list:
+        return [(e, b, n) for e, b, n in self.order if e.side == side]
+
+    def took(self, e) -> float:
+        return 0.0 if id(e) in self.zero else float(e.seconds)
+
+    def seconds(self, side) -> float:
+        return sum(self.took(e) for e, _, _ in self.part(side))
+
+    @property
+    def key(self) -> tuple:
+        return tuple((e.side, e.stage, len(e.rows or [])) for e, _, _ in self.order)
+
+    def label(self) -> str:
+        return " || ".join(f"{s.upper()} " + " + ".join(e.stage.split(" + ")[-1] if e.kind == "arm" else e.stage for e, _, _ in self.part(s))
+                           for s in self.sides)
+
+
+def two_arm_leg(entries: list, i: int, unsent=(), bridged=(), plan_name: str = "") -> Leg | None:
+    """The stretch from entry ``i`` the two arms can run at once, or None (the plan's order stands). The rules, every one
+    of them a physical one:
+    - only while the commode stands in a known state (fixture_phase_at): never while the lid or the seat is lifted and
+      held (the room check has no meshes for it);
+    - an arm's entries keep their order; a check or a hold ends the stretch before it (the camera reads both arms
+      still); a re-lift's moves run alone;
+    - a carry (the lift, the push) stays alone against the other arm: the other arm's moves in the stretch come before
+      it in the plan and end LEG_MARGIN_S before its lines begin (the planner moved one arm at a time while the
+      mechanism moved; the hand-offs — the left supporting the lid until the right has pushed it over, the left out of
+      the seat's ring before the right pushes — are these orderings);
+    - a trailing release not sent (trailing_releases) is passed over.
+    The stretch is then one of the plan's own moves run alongside another: the two arms' clearance over it is what is
+    new, and RealExec checks it (LEG_CLEARANCE_MM, with the arms shifted against each other by LEG_SHIFTS_S) before
+    the two go together; not clear, the plan's order stands."""
+    phase = fixture_phase_at(entries, i, plan_name)
+    if phase is None:
+        return None
+    zero = set()                                 # each arm's first hand move before its first arm move: the approach set it
+    for side in {e.side for e in entries}:
+        for e in entries:
+            if e.side != side:
+                continue
+            if e.kind == "arm":
+                break
+            if e.kind == "hand":
+                zero.add(id(e))
+                break
+    order, skipped, clock, carry_side, j = [], [], {}, None, i
+    while j < len(entries):
+        e = entries[j]
+        if id(e) in unsent:
+            skipped.append(e)
+            j += 1
+            continue
+        if (e.pre_actions and j > i) or e.note or (e.kind == "arm" and e.rows is None):
+            break
+        joined, used = joined_moves(entries, j, bridged) if e.kind == "arm" else (e, 1)
+        side = e.side
+        took = 0.0 if id(e) in zero else float(joined.seconds)
+        if carries_fixture(joined):
+            if carry_side is not None:
+                break
+            t_f = clock.get(side, 0.0) + fixture_offset_s(joined)
+            if any(clock[s] + LEG_MARGIN_S > t_f for s in clock if s != side):
+                break
+            carry_side = side
+        elif carry_side is not None and side != carry_side:
+            break
+        nxt = next((x.stage for x in entries[j + used:] if x.kind == "arm" and x.side == side), None) if e.kind == "hand" else None
+        order.append((joined, id(e) in bridged, nxt))
+        clock[side] = clock.get(side, 0.0) + took
+        j += used
+    if len({e.side for e, _, _ in order}) < 2:
+        return None
+    return Leg(order=order, used=j - i, phase=phase, skipped=skipped, zero=zero)
+
+
+def leg_states(leg: Leg, side: str, q0: list, hand0: list, pole_mm: float, times, shift_s: float = 0.0, hands: str = "after") -> dict:
+    """The arm's pole, hand counts and joints at ``times`` through its part of the leg, started ``shift_s`` late (early when
+    negative), the hand as ``hands`` says: 'after' switches to each hand move's counts as it starts, 'before' keeps the
+    counts from before it until it ends (the clearance is checked both ways)."""
+    q, hand, out_q, out_h = list(q0), list(hand0), [], []
+    moves = []                                               # (t0, t1, entry)
+    t = shift_s
+    for e, _, _ in leg.part(side):
+        moves.append((t, t + leg.took(e), e))
+        t += leg.took(e)
+    for tt in times:
+        qq, hh = list(q0), list(hand0)
+        for t0, t1, e in moves:
+            if tt < t0:
+                break
+            if e.kind == "arm":
+                k = max(0, min(len(e.rows) - 1, int(round((min(tt, t1) - t0) / CLOCK_S))))
+                qq = [v / 1000.0 for v in e.rows[k]]
+            elif e.kind == "hand":
+                target = [int(c) if c is not None else h for c, h in zip(e.hand_counts(), hh)]
+                hh = target if (hands == "after" or tt >= t1) else hh
+        out_q.append(qq)
+        out_h.append(hh)
+    return dict(pole=[float(pole_mm)] * len(times), hand=out_h, q=out_q, known=[True] * len(times))
+
+
+def leg_start_state(plan, entries: list, i: int, side: str) -> tuple:
+    """Where the arm stands and what its hand holds as the leg at entry ``i`` begins: the last of its moves before it in
+    the plan (the plan's start pose, and the pole and hand its first move needs, before any). (q_deg, hand counts, pole mm)."""
+    first = plan.first_move_targets().get(side) or {}
+    start = plan.targets("start").get(side) or {}
+    q = list(start.get("arm_deg") or [0.0] * 7)
+    hand = list(first.get("hand") or start.get("hand") or [1000] * 6)
+    pole = float(first.get("pole_mm") if first.get("pole_mm") is not None else start.get("pole_mm", 150.0))
+    for e in entries[:i]:
+        if e.side != side:
+            continue
+        if e.kind == "arm" and e.rows:
+            q = [v / 1000.0 for v in e.rows[-1]]
+        elif e.kind == "hand":
+            hand = [int(c) if c is not None else h for c, h in zip(e.hand_counts(), hand)]
+        elif e.kind == "pole":
+            pole = e.last()[0] * 1000.0
+    return q, hand, pole
+
+
+def plan_legs(plan, entries: list, unsent=(), bridged=()) -> list:
+    """Every stretch of the plan the two arms run at once (two_arm_leg), with the entry index each starts at: [(i, Leg)]."""
+    out, i = [], 0
+    while i < len(entries):
+        leg = two_arm_leg(entries, i, unsent, bridged, plan.name)
+        if leg is None:
+            i += 1
+            continue
+        out.append((i, leg))
+        i += leg.used
+    return out
+
+
+_LEG_CLEAR: dict = {}            # (plan name, leg key) -> {ok, why}: the two arms' clearance over a leg, a pure function of the plan
+_LEG_CLEAR_LOCK = threading.Lock()
+
+
+def _leg_home() -> dict:
+    from alix_workspace.collision import RobotCollisionModel
+
+    from . import robot_model
+
+    return robot_model._home(robot_model.fk_model(), RobotCollisionModel.from_file(str(vendor_paths.URDF), tag="visual").index)
+
+
+def leg_clearance(plan, entries: list, i: int, leg: Leg) -> dict:
+    """The two arms against each other over the leg (collision_check.clearance_states, LEG_CLEARANCE_MM): their poses
+    from the plan's own lines at LEG_GRID_S, the hands as they are before and as each hand move sets them, one arm
+    shifted against the other by each of LEG_SHIFTS_S, over the window up to the carry's lines (leg_window_s). The
+    commode and the walls are not checked again here: every move is the planner's own, checked by it; what is new is
+    the two arms at the same moment. {'ok', 'why', 'closest_mm'}; kept per plan and leg (_LEG_CLEAR)."""
+    from . import collision_check, staging
+
+    key = (plan.name, leg.key)
+    with _LEG_CLEAR_LOCK:
+        kept = _LEG_CLEAR.get(key)
+    if kept is not None:
+        return kept
+    t0 = time.monotonic()
+    try:
+        sides = leg.sides
+        starts = {s: leg_start_state(plan, entries, i, s) for s in sides}
+        home = dict(_leg_home())
+        for s in sides:
+            q, hand, pole = starts[s]
+            home = staging.start_values(s, home, dict(pole_mm=pole, hand=hand, q_deg=q))
+        window = leg_window_s(leg)
+        later = max(sides, key=lambda s: next((k for k, (e, _, _) in enumerate(leg.order) if e.side == s), 0))   # the side whose part starts later
+        scenarios = []
+        for shift in LEG_SHIFTS_S:
+            times = [k * LEG_GRID_S for k in range(int(round((window + max(shift, 0.0)) / LEG_GRID_S)) + 1)]
+            for hands in ("before", "after"):
+                arms = {s: leg_states(leg, s, starts[s][0], starts[s][1], starts[s][2], times, shift if s == later else 0.0, hands)
+                        for s in sides}
+                scenarios.append(dict(times=times, arms=arms, shift=shift, hands=hands))
+        outs = collision_check.clearance_states([dict(times=sc["times"], arms=sc["arms"]) for sc in scenarios], home, LEG_CLEARANCE_MM)
+        closest, worst = None, None
+        for sc, out in zip(scenarios, outs):
+            for ev in out.get("events") or []:
+                mm = ev.get("exact_mm", ev.get("min_mm"))
+                if mm is not None and (closest is None or mm < closest):
+                    closest, worst = mm, dict(ev, shift=sc["shift"], hands=sc["hands"])
+        if worst is None:
+            result = dict(ok=True, closest_mm=None, seconds=round(time.monotonic() - t0, 2),
+                          why=f"never within {LEG_CLEARANCE_MM:g} mm over {window:.1f} s, one arm up to {max(LEG_SHIFTS_S):g} s late or "
+                              f"{-min(LEG_SHIFTS_S):g} s early")
+        else:
+            result = dict(ok=False, closest_mm=round(float(closest), 1), seconds=round(time.monotonic() - t0, 2),
+                          why=f"the arms would come {closest:.0f} mm apart ({', '.join(worst.get('links') or [])}) at {worst.get('first_t', 0):.2f} s"
+                              + (f" with the {later.upper()} arm {abs(worst['shift']):g} s {'late' if worst['shift'] > 0 else 'early'}" if worst.get("shift") else ""))
+    except Exception as exc:                                                    # noqa: BLE001 - not clear when it cannot tell
+        result = dict(ok=False, closest_mm=None, seconds=round(time.monotonic() - t0, 2), why=f"their clearance could not be checked ({type(exc).__name__}: {exc})")
+    with _LEG_CLEAR_LOCK:
+        _LEG_CLEAR[key] = result
+    return result
+
+
+def leg_window_s(leg: Leg) -> float:
+    """How long the two arms are both to be checked: until the later of the two parts ends, but never past a carry's
+    lines (the other arm's moves ended LEG_MARGIN_S before them by construction)."""
+    ends = {}
+    for side in leg.sides:
+        t, cut = 0.0, None
+        for e, _, _ in leg.part(side):
+            if carries_fixture(e):
+                cut = t + fixture_offset_s(e)
+                break
+            t += leg.took(e)
+        ends[side] = cut if cut is not None else t
+    return max(ends.values()) + LEG_MARGIN_S
+
 
 def hold_short(rows: list, now_deg) -> tuple[list, list]:
     """A re-lift restore's lines (``reverse_block``: the way back along a lift that did not take) from where the arm
@@ -634,9 +905,10 @@ def frames_said(answers: list) -> str:
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
 class Runner:
-    def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True):
+    def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True, together=True):
         self.ex = ex
         self.say = say or (lambda *_: None)
+        self.together = bool(together)               # the two arms at once where the plan allows it (two_arm_leg)
         # the arms whose next task's start follows the run (S2: workflow.next_after_tasks; the owner, 24 Oct): the run's
         # last plan takes them to no end of its own (a skipped plan's end, the final check's way to where the plan ended)
         self.leave = set(leave)
@@ -673,8 +945,10 @@ class Runner:
                                                         for s in plan.sides()) if first is not None))   # after the approach
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
                  f"{plan.seconds():.1f} s of motion)")
-        self.ex.approach(plan, plan.targets("start"), "start")
         unsent = trailing_releases(entries, self.hand_set)
+        if self.together and hasattr(self.ex, "prepare_legs"):
+            self.ex.prepare_legs(plan, entries, unsent, state["bridge"])
+        self.ex.approach(plan, plan.targets("start"), "start")
         i = 0
         while i < len(entries):
             e = entries[i]
@@ -701,6 +975,14 @@ class Runner:
             if id(e) in unsent:
                 self.say(f"{e.label()}: not sent, the {e.side.upper()} hand is set for its next task's start right after")
                 i += 1
+                continue
+            mover = getattr(self.ex, "move_together", None) if self.together else None
+            leg = two_arm_leg(entries, i, unsent, state["bridge"], plan.name) if mover is not None else None
+            if leg is not None:                          # the two arms at once where the plan allows it (the user, 27 Oct night)
+                for x in leg.skipped:
+                    self.say(f"{x.label()}: not sent, the {x.side.upper()} hand is set for its next task's start right after")
+                mover(leg)
+                i += leg.used
                 continue
             joined, used = joined_moves(entries, i, state["bridge"])
             self.ex.move(joined, bridge=id(e) in state["bridge"])
@@ -862,6 +1144,14 @@ class _Exec:
             self.job.progress(f"{label}: holding {seconds:g} s")
             self.job.sleep(seconds)
 
+    def move_together(self, leg: "Leg") -> None:
+        """A leg the two arms could run at once: here one move after the other, in the plan's order (the stand-in and
+        Hardware sim; the simulation models the two at once itself)."""
+        for e, bridge, nxt in leg.order:
+            self.move(e, bridge=bridge)
+            if e.kind == "hand" and str(e.stage).startswith("hand_release"):
+                getattr(self, "released", lambda *_: None)(e, nxt)
+
 
 class StandInExec(_Exec):
     """The stand-in robot and Simulation: each entry takes its time, checks answered as expected."""
@@ -937,6 +1227,7 @@ class RealExec(_Exec):
         self._name, self._feeds, self._hands = "lid_seat", set(), set()   # and hand step's travel), not finish()
         self._settled_s = 0.0                           # the last stream's own settle, as the feed measured it (hold)
         self._unsettled: dict = {}                      # side -> (last line, label) of a stream whose end is not yet waited for
+        self._legs: dict = {}                           # leg key -> its clearance (leg_clearance), filled by prepare_legs' thread
         self._frames, self._taken = None, []            # (when, [(frame, q)]) of the last check, for the next at the same pose
         self.room = room                                # home, scene, fid, cubicle_mm: the collision check's world (S2 gives it)
 
@@ -1146,6 +1437,60 @@ class RealExec(_Exec):
             return dict(ok=False, why=f"the paths would meet: {', '.join(first.get('what') or [])} ({len(out.get('events') or [])} event(s))")
         except Exception as exc:                                                    # noqa: BLE001
             return dict(ok=False, why=f"the paths could not be checked ({type(exc).__name__}: {exc})")
+
+    def prepare_legs(self, plan, entries: list, unsent=(), bridged=()) -> None:
+        """The two arms' clearance over each leg of the plan (leg_clearance), worked out in a thread of its own while the
+        arms approach the plan's start; move_together waits for it (LEG_WAIT_S)."""
+        legs = plan_legs(plan, entries, unsent, bridged)
+        if not legs:
+            return
+        self.say(f"{plan.title}: {len(legs)} stretch(es) the two arms can run at once: " + "; ".join(leg.label() for _, leg in legs)
+                 + " (their clearance is checked first)")
+
+        def work():
+            for i, leg in legs:
+                self._legs[leg.key] = leg_clearance(plan, entries, i, leg)
+
+        threading.Thread(target=work, name="lite-legs-check", daemon=True).start()
+
+    def move_together(self, leg: "Leg") -> None:
+        """A leg of the plan on both arms at once (two_arm_leg), when their clearance over it is checked clear
+        (prepare_legs, LEG_CLEARANCE_MM): each arm's moves in order on a thread of its own, the two started together.
+        Not checked in time, or not clear: one move after the other in the plan's order, the reason said. A move that
+        fails stops the run once the other arm's move has ended (the arms stand at their lines)."""
+        from .jobs import Cancelled
+
+        t_end = time.monotonic() + LEG_WAIT_S
+        while leg.key not in self._legs and time.monotonic() < t_end:
+            self.check_stop()
+            time.sleep(0.05)
+        verdict = self._legs.get(leg.key) or dict(ok=False, why=f"their clearance was not checked within {LEG_WAIT_S:g} s")
+        if not verdict.get("ok"):
+            self.say(f"{leg.label()}: one arm after the other: {verdict.get('why')}", "warn")
+            return super().move_together(leg)
+        self.job.progress(f"both arms at once: {leg.label()}")
+        self.say(f"both arms at once: {leg.label()} ({verdict.get('why')})")
+        failed, barrier = {}, threading.Barrier(len(leg.sides))
+
+        def run(side):
+            try:
+                barrier.wait(timeout=10)
+                for e, bridge, nxt in leg.part(side):
+                    self.move(e, bridge=bridge)
+                    if e.kind == "hand" and str(e.stage).startswith("hand_release"):
+                        self.released(e, nxt)
+            except BaseException as exc:                                            # noqa: BLE001 - raised below
+                failed[side] = exc
+
+        threads = [threading.Thread(target=run, args=(side,), name=f"lite-leg-{side}", daemon=True) for side in leg.sides]
+        for t in threads:
+            t.start()
+        for t in threads:
+            while t.is_alive():
+                t.join(0.1)
+        if failed:
+            first = next((exc for exc in failed.values() if isinstance(exc, Cancelled)), None) or failed[sorted(failed)[0]]
+            raise first
 
     def _settle(self, side) -> None:
         """A stream's end waited for now (robot_real.settle_end), when this arm's last stream left it: before this arm's

@@ -146,5 +146,13 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
         assert last["ok"] and last["args"]["deg"] == pytest.approx(server["first"][(side, 72)], abs=0.01)
     starts = [r for r in hw if r["verb"] == "runner v14" and str(r.get("text") or "").startswith("WORKFLOW PROGRAM 1/1: slot 72")]
     assert len(starts) == 2
+    # the two arms at once where the plan allows it (27 Oct night): the right's move to inspect pose streamed while the
+    # left approaches and lifts, their clearance checked clear first; the left's retreat with the right's grasp and look
+    spans = lambda label: [r["args"]["t_mono"] for r in hw if r["verb"] == "canfd stream" and r["args"]["label"] == label]   # noqa: E731
+    looks, lift = spans("RIGHT arm move_to_inspect"), spans("LEFT arm move_to_pre_start + move_to_start + execute_path")[0]
+    assert looks[0][0] < lift[1] and lift[0] < looks[0][1] and looks[0][1] < lift[1], (looks, lift)   # the first look, in the lift's time
+    retreat = spans("LEFT arm move_to_pre_start + move_to_rest")[0]
+    assert retreat[0] < looks[-1][1] and looks[-1][0] < retreat[1], (retreat, looks)                   # the last look, in the retreat's
+    assert "both arms at once: LEFT move_to_half_pole_length + hand_grasp + execute_path || RIGHT" in said
     feeds = [r for r in hw if r["verb"] == "s2 feed" and r.get("text") == "recording"]
     assert len(feeds) == 4                                            # one an arm a stage (2 stages), not one a runner call

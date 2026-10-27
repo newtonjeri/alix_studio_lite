@@ -868,3 +868,39 @@ def test_after_a_lid_or_seat_task_each_arm_starts_the_next_stage_as_its_own_move
     assert stages[1]["t1"] == pytest.approx(then["right"][-1]["t1"], abs=1e-6)            # the task's stage ends with the slower arm
     assert stages[2]["t0"] == pytest.approx(then["left"][-1]["t1"], abs=1e-6)             # the next starts with the faster
     assert total == pytest.approx(max(L[-1]["t1"], R[-1]["t1"]), abs=1e-3)
+
+
+def test_the_simulation_plays_a_plans_two_arm_stretches_at_once():
+    """27 Oct night: where the plan allows the two arms at once (mechanism.two_arm_leg) the simulation plays them so, as
+    Real runs them when their clearance is clear: Open the lid's right move to inspect pose starts with the left's
+    approach and lift, its retreat to rest with the right's grasp and look; a note says which stretches."""
+    import numpy as np
+
+    from alix_studio_lite.server import mechanism, workflow
+
+    lid = {"type": "mechanism", "task": "lid_open"}
+    run = workflow.plan_for(numbered([prog(80), lid, prog(81)], [prog(80), lid, prog(54)]), "both")
+    md = np.zeros((1001, 7))
+    progs = {i: dict(file="/f.txt", sent=True, lines=1001) for i in (80, 81, 54)}
+    start = dict(pole_mm=150.0, hand=[0, 0, 0, 0, 150, 1000], q_deg=[0.0] * 7)
+    sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, {"/f.txt": md}.get, []) for s in ("left", "right")}
+    workflow.schedule(run, sims, 15)
+    L, R = sims["left"].acts, sims["right"].acts
+    plan = mechanism.Plan(mechanism.sequence_plan("lid_open"))
+    look = next(a for a in R if a["kind"] == "stream" and a["stage"] == 1 and "move_to_inspect" in a["text"])
+    lift = next(a for a in L if a["kind"] == "stream" and a["stage"] == 1 and "execute_path" in a["text"])
+    assert look["t0"] == pytest.approx(lift["t0"], abs=1e-6)                    # the first stretch: started together
+    assert look["t1"] < lift["t0"] + 1.3                                         # the right's move ends before the lift's lines
+    retreat = next(a for a in L if a["kind"] == "stream" and a["stage"] == 1 and "move_to_rest" in a["text"])
+    grasp = next(a for a in R if a["kind"] == "hand" and a["stage"] == 1 and a["t0"] >= retreat["t0"] - 1e-6)
+    assert grasp["t0"] == pytest.approx(retreat["t0"], abs=1e-6)                # the second: the right's grasp with the left's retreat
+    looks = [a for a in R if a["kind"] == "stream" and a["stage"] == 1 and "move_to_inspect" in a["text"]]
+    assert looks[-1]["t0"] == pytest.approx(grasp["t1"], abs=1e-6)                 # the right's look right after its grasp
+    check_open = next(a for a in R if a["kind"] == "check" and a["expect"] == "lid_open")
+    assert check_open["t0"] == pytest.approx(max(retreat["t1"], looks[-1]["t1"]), abs=1e-6)   # the stretch ends with the later arm
+    notes = [f for f in sims["right"].findings if f["level"] == "note" and "two arms move at once in 2 stretch" in f["text"]]
+    assert len(notes) == 1 and "LEFT move_to_rest || RIGHT hand_grasp + move_to_inspect" in notes[0]["text"]
+    # the plan's time as the simulation gives it is shorter by the moves run alongside
+    serial = sum(e.seconds for e in plan.entries if e.kind == "arm")
+    played = [a for a in L + R if a["kind"] == "stream" and a["stage"] == 1 and a["t1"] > a["t0"]]
+    assert max(a["t1"] for a in played) - min(a["t0"] for a in played) < serial + 20   # (the hands and checks between: a loose bound)
