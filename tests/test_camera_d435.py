@@ -222,3 +222,38 @@ def test_the_top_bars_camera_circle(monkeypatch):
     finally:
         bare.stop_status()
 
+
+
+def test_the_camera_closes_in_the_background_and_the_next_open_waits_for_it(monkeypatch):
+    """27 Oct: the pipeline's stop took 0.8 s at every lid or seat task's end, both arms standing. The last user's exit
+    returns at once and the pipeline stops in a thread of its own; an open that comes before it has ended waits for it,
+    and runs the new pipeline alone (the old thread's stop is its own)."""
+    import threading
+
+    monkeypatch.setattr("alix_studio_lite.server.camera_d435.WARM_UP_S", 0.0)
+    rs = FakeRS()
+    stopped, Pipeline = [], rs.pipeline
+
+    class SlowPipeline(Pipeline):
+        def stop(self):
+            time.sleep(0.4)
+            super().stop()
+            stopped.append(time.monotonic())
+
+    rs.pipeline = SlowPipeline
+    cam = D435(rs=rs)
+    cam.open()                                                                         # the session's first open resets the device
+    with cam.using():
+        cam.shot()
+        run = cam._thread
+        t0 = time.monotonic()
+    assert time.monotonic() - t0 < 0.3 and cam._pipe is None and not stopped          # back at once, closed for its users
+    closer = cam._closer
+    assert closer is not None and closer.is_alive()
+    t1 = time.monotonic()
+    with cam.using():
+        cam.shot()                                                                     # opened again before the stop has ended: it waits
+        assert stopped and time.monotonic() - t1 >= 0.2
+        assert cam._thread is not run and cam._thread.is_alive() and not run.is_alive()   # the new pipeline's thread alone
+    cam.close()                                                                        # a plain close waits, as before
+    assert len(stopped) == 2 and cam._pipe is None and not threading.current_thread().name.startswith("lite-camera")

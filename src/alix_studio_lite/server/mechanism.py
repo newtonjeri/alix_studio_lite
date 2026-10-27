@@ -930,11 +930,12 @@ class DryExec(_Exec):
 class RealExec(_Exec):
     """Real: the arms move. Streams, the pole and the hand, the camera."""
 
-    def __init__(self, job, robot, arms: dict, kit, log=None, live=None, room=None):
+    def __init__(self, job, robot, arms: dict, kit, log=None, live=None, room=None, feeds_after=False):
         super().__init__(job, log)
         self.robot, self.arms, self.kit = robot, arms, kit
         self.live = live or (lambda side, text: None)   # S2's live line of each arm
-        self._name, self._feeds, self._hands = "lid_seat", set(), set()
+        self.feeds_after = bool(feeds_after)            # the caller turns the arms' feeds off after the run (S2: in its next pole
+        self._name, self._feeds, self._hands = "lid_seat", set(), set()   # and hand step's travel), not finish()
         self._frames, self._taken = None, []            # (when, [(frame, q)]) of the last check, for the next at the same pose
         self.room = room                                # home, scene, fid, cubicle_mm: the collision check's world (S2 gives it)
 
@@ -961,14 +962,17 @@ class RealExec(_Exec):
 
     def finish(self) -> None:
         """However the run ends: each arm's kept feed turned off (the controller's push put back), both at once (26 Oct:
-        one after the other, 0.6 s each), its hand let go, and the check records written."""
+        one after the other, 0.6 s each), its hand let go, and the check records written. With ``feeds_after`` the
+        feeds stay on for the caller to turn off in its next step's pole travel (27 Oct: 0.6 to 0.9 s a task with both
+        arms standing); robot_real.run_workflow turns one off itself before any Program."""
         def off(side):
             try:
                 self._arm(side).drop_feed()
             except Exception as exc:                                                # noqa: BLE001
                 self.say(f"{side.upper()}: its 5 ms feed was not turned off ({exc})", "warn")
 
-        threads = [threading.Thread(target=off, args=(side,), name=f"lite-feed-off-{side}", daemon=True) for side in sorted(self._feeds)]
+        threads = [threading.Thread(target=off, args=(side,), name=f"lite-feed-off-{side}", daemon=True)
+                   for side in ([] if self.feeds_after else sorted(self._feeds))]
         for t in threads:
             t.start()
         for t in threads:
@@ -1029,14 +1033,18 @@ class RealExec(_Exec):
         def one(side):
             try:
                 arm = self._arm(side)
-                arm.drop_hand()                                   # the step's own hand session; the plan's opens again
+                arm.drop_hand()                                   # the step's own hand session; the plan's takes it over
                 mm, hand = steps[side]
-                out = arm.pole_and_hand(mm, hand, stop_hook=self.job.on_cancel)
+                feed = None                                       # its 5 ms feed on while its pole travels (27 Oct; before: after the
+                if at == "start" and hasattr(self, "_feeds") and side not in self._feeds:    # pair, 0.5 s on the slower arm)
+                    records = self.kit.records_dir("canfd")
+                    feed = dict(on=f"{side.upper()}_{self._name}", records=None if records is None else str(records))
+                out = arm.pole_and_hand(mm, hand, stop_hook=self.job.on_cancel, **({"feed": feed} if feed else {}))
+                if feed is not None and out.get("feed"):
+                    self._feeds.add(side)
                 if not out.get("pole_ok") or not out.get("hand_ok"):
                     raise UserError(f"The {side.upper()} arm was not staged for {where}: pole {out.get('pole_mm')} mm of {mm:.0f}, "
                                     f"hand {out.get('hand')}. Nothing else ran.", "Check the pole and the hand, then try again.")
-                if at == "start" and hasattr(self, "_keep_feed"):  # its 5 ms feed on now, while the other arm still moves (27 Oct)
-                    self._keep_feed(side)
             except BaseException as exc:                                            # noqa: BLE001 - raised below
                 failed[side] = exc
 
@@ -1148,9 +1156,9 @@ class RealExec(_Exec):
         else:
             rows = e.rows
             bridge_speed = int(self.robot.speed_pct) if bridge else None     # a re-lift's long bridge: the slider's speed
-            link = self.robot.links.get(e.side)
+            self._keep_feed(e.side)                        # its frames give the arm's joints (joints_now): no reading before the stream
             if e.note == "re-lift restore, reversed":      # from where the arm stands (hold_short)
-                q = (link.read_fresh() if link is not None else {}).get("joints_deg")
+                q = self._joints(e.side)
                 if q:
                     rows, held = hold_short(e.rows, q)
                     if held:
@@ -1158,7 +1166,7 @@ class RealExec(_Exec):
                             f"J{j} held where it stopped, {d:.1f} degrees short of the lift's end" for j, d in held)
                             + ", until the way back comes past it")
             elif not bridge:                               # crept from its first line while it held (the seat): bridged at 40 %
-                q = (link.read_fresh() if link is not None else {}).get("joints_deg")
+                q = self._joints(e.side)
                 gap = max(abs(float(a) - b / 1000.0) for a, b in zip(q, rows[0])) if q and len(q) == len(rows[0]) else None
                 if gap is not None and gap > start_tol_deg():
                     if gap <= BRIDGE_MAX_DEG:
@@ -1168,12 +1176,24 @@ class RealExec(_Exec):
                     else:
                         self.say(f"{e.label()}: the arm is {gap:.1f} degrees from its first line, more than the {BRIDGE_MAX_DEG:g} "
                                  "Lite bridges: the stream is refused at its first line", "warn")
-            self._keep_feed(e.side)
             out = arm.stream(rows, e.label(), speed=50, restore_pct=self.robot.found_speed(e.side), bridge_speed=bridge_speed,
                              stop_hook=self.job.on_cancel, records=self.kit.records_dir("canfd"))
             self.say(f"{e.label()}: {out['lines_sent']}/{out['lines']} lines in {out['seconds']:.2f} s"
                      + (f" ({e.blended_s:.2f} s of stops at its junctions taken out)" if getattr(e, "blended_s", 0) else "")
                      + (f", bridged {out['bridged_deg']:.1f} degrees first" if out.get("bridged_deg") else ""))
+
+    def _joints(self, side) -> list | None:
+        """The arm's joints (deg) now: from its kept feed's latest frame (robot_real.joints_now, no controller call), else
+        one reading of its link."""
+        arm = self._arm(side)
+        now = getattr(arm, "joints_now", None)
+        if now is not None:
+            try:
+                return (now() or {}).get("joints_deg")
+            except (AttributeError, TypeError):            # a stand-in arm without it
+                pass
+        link = self.robot.links.get(side)
+        return (link.read_fresh() if link is not None else {}).get("joints_deg")
 
     def released(self, e, next_stage):
         """After a hand let go (a plan's hand_release): the run goes on only when it did, else it stops here for a

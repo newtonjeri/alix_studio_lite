@@ -231,6 +231,7 @@ def test_a_move_the_arm_has_crept_from_is_bridged_at_40_percent_up_to_3_degrees(
         return SimpleNamespace(_arm=lambda side: Arm(), job=SimpleNamespace(progress=lambda *a, **k: None, on_cancel=None),
                                live=lambda *a, **k: None, say=lambda text, level="info": said.append((level, text)),
                                _keep_feed=lambda side: None, _keep_hand=lambda side: None,
+                               _joints=lambda side: link.read_fresh().get("joints_deg"),      # the feed's frame, else a reading (27 Oct)
                                robot=SimpleNamespace(links={"left": link}, speed_pct=15, found_speed=lambda side: 50),
                                kit=SimpleNamespace(records_dir=lambda what: None))
 
@@ -314,6 +315,7 @@ def test_a_hand_asked_for_the_counts_it_settled_short_of_is_not_sent_again(monke
     class FakeHand:
         poll_s, speed_set = 0.01, 500
         at = [582, 534, 541, 577, 445, 927]
+        reads: list = []
 
         def __init__(self, robot, side, log=None):
             pass
@@ -322,6 +324,7 @@ def test_a_hand_asked_for_the_counts_it_settled_short_of_is_not_sent_again(monke
             return 0
 
         def read(self):
+            FakeHand.reads.append(list(self.at))
             return list(self.at)
 
         def set_speed(self, v):
@@ -337,12 +340,16 @@ def test_a_hand_asked_for_the_counts_it_settled_short_of_is_not_sent_again(monke
     arm._hand_last = None
     out = arm.hand_to(half)                                                    # sent: settled short on the glove
     assert sent == [half] and out["settled"] and arm._hand_last == dict(counts=half, after=FakeHand.at)
-    out = arm.hand_to(half)                                                    # asked again where it still stands: not sent
-    assert out["skipped"] and sent == [half] and "already commanded to these counts and settled at" in hw[-1][1]["text"]
-    arm._hand_last = None                                                      # a runner call or a staging moved it since
+    reads = len(FakeHand.reads)
+    out = arm.hand_to(half)                                                    # asked again: not sent, and not read either (27 Oct)
+    assert out["skipped"] and sent == [half] and out["after"] == FakeHand.at
+    assert "already commanded to these counts and settled at" in hw[-1][1]["text"] and "nothing read" in hw[-1][1]["text"]
+    assert len(FakeHand.reads) == reads
+    arm._hand_last = None                                                      # a runner call or a staging moved it since: forgotten
     arm.hand_to(half)
-    assert sent == [half, half]
-    FakeHand.at = [993, 993, 993, 993, 981, 992]                               # it moved (something else opened it): sent
+    assert sent == [half, half] and len(FakeHand.reads) == reads + 1
+    arm._hand_last = None
+    FakeHand.at = [993, 993, 993, 993, 981, 992]                               # it moved (something else opened it): read, sent
     arm.hand_to(half)
     assert sent == [half, half, half]
 
@@ -409,3 +416,185 @@ def test_the_approachs_two_movejs_go_at_once_when_their_paths_are_checked_clear(
         if scene is not None and not together:
             assert any("one after the other: the paths would meet: the two arms" in t for t in said)
     assert mechanism.APPROACH_GRID == 7 and mechanism.PHASE_BEFORE["lid_open"] == "lid_closed" and mechanism.PHASE_BEFORE["seat_open"] == "lid_open"
+
+
+def test_the_pole_asked_for_the_height_lite_last_confirmed_is_neither_sent_nor_read(monkeypatch):
+    """27 Oct: before every plan entry with a pole target the pole's getter was asked (0.07 to 0.17 s), and none of them
+    moved the pole: the approach had set it. Asked for the height Lite itself last confirmed (its own pole moves), the
+    getter is not asked either; a runner call or a staging forgets it, and the getter decides as before."""
+    from alix_dispatch import peripherals
+
+    hw, asked = [], []
+
+    class FakePole:
+        def __init__(self, robot, log=None):
+            self.log = log or (lambda *a: None)
+
+        def state(self):
+            asked.append("state")
+            return {"pos": 150.0 * peripherals.LIFT_UNITS_PER_METRE / 1000.0, "mode": 0, "err_flag": 0}
+
+        def move(self, height_m, speed_pct=100):
+            asked.append(("move", height_m))
+            return dict(ok=True, ret=0, final_m=height_m, t_s=1.0, verified_by="getter")
+
+    monkeypatch.setattr(peripherals, "Pole", FakePole)
+    arm = _arm([0.0] * 7, hw)
+    arm._pole_last, arm._pole_done = 150.0, None
+    out = arm.pole_to(150.093)
+    assert out["no_op"] and out["no_op_source"] == "lite" and not asked and "nothing sent, nothing read" in hw[-1][1]["text"]
+    arm._pole_last = None                                                      # forgotten (a runner call, a staging): the getter decides
+    out = arm.pole_to(150.093)
+    assert out["no_op"] and out["no_op_source"] == "getter" and asked == ["state"] and "already there" in hw[-1][1]["text"]
+    assert arm._pole_last == pytest.approx(150.0)                              # ... and what it read is what Lite now knows
+    out = arm.pole_to(200.0)                                                   # a move: sent, its final height kept
+    assert asked[-1] == ("move", 0.2) and arm._pole_last == pytest.approx(200.0) and not out.get("no_op")
+
+
+def test_the_hands_modbus_session_is_kept_across_the_pole_and_hand_step(monkeypatch):
+    """27 Oct: S2's pole and hand step closed the end port's Modbus mode as it ended, so the plan's first hand move
+    after it opened it again (0.3 s) and set its speed (0.07 s), although that move had nothing to send; and the next
+    step opened it again too. The step leaves the mode on at the hand's SPEED_SET, the run's hand (keep_hand) takes
+    that session as its own with nothing sent, and a step that follows does not open it again. A runner call forgets
+    it (its Hand steps close the mode)."""
+    import contextlib
+    from types import SimpleNamespace
+
+    from alix_dispatch import peripherals
+
+    Hand0, _counts, _pole = robot_real._runner().load_aux_classes()
+    opened, closed = [], []
+
+    class Hand(Hand0):
+        def open(self, speed_set=1000):
+            opened.append(speed_set)
+            self.speed_set = speed_set
+
+        def close(self):
+            closed.append(1)
+            return 0
+
+        def read(self):
+            return [0, 0, 0, 0, 150, 1000]
+
+        def _write(self, address, values):
+            return 0
+
+    Hand.__module__ = Hand0.__module__          # its arrival rule's numbers are the control program's (this module has stand-ins)
+
+    class Pole:
+        def __init__(self, robot):
+            pass
+
+        def height_m(self):
+            return 0.15
+
+        def move(self, height_m, speed_pct=100, block=False):
+            return True, height_m
+
+    class ModbusHand:
+        poll_s, speed_set = 0.01, None
+        opens: list = []
+
+        def __init__(self, robot, side, log=None):
+            self.opened = False
+
+        def open(self, speed_set=1000):
+            ModbusHand.opens.append(speed_set)
+            self.opened = True
+            return 0
+
+    monkeypatch.setattr(robot_real, "_runner", lambda: SimpleNamespace(load_aux_classes=lambda: (Hand, None, Pole)))
+    monkeypatch.setattr(peripherals, "HandModbus", ModbusHand)
+    arm = robot_real.RealArm(SimpleNamespace(side="left", handle=SimpleNamespace(robot=object()), emulated=True,
+                                             busy=lambda *a, **k: contextlib.nullcontext()))
+    arm._hw = lambda verb, **kw: None
+    arm._alix_log = lambda: (lambda *a: None)
+    grip = [0, 0, 0, 0, 150, 1000]
+    assert arm.pole_and_hand(150.0, grip)["hand_ok"] and opened == [1000] and not closed       # opened once, never closed
+    assert arm._hand_port == dict(speeds=[1000] * 6) and arm._pole_last == pytest.approx(150.0)
+    assert arm.pole_and_hand(150.0, grip)["hand_ok"] and opened == [1000]                      # the step after: not opened again
+    assert arm.keep_hand() and arm._hand is not None and arm._hand.opened and not ModbusHand.opens   # the run's hand: nothing sent
+    assert arm._hand_speeds == [1000] * 6 and arm._hand.speed_set == 1000
+    arm.drop_hand()
+    arm._hand_port = None                                                                      # as a runner call leaves it
+    assert arm.keep_hand() and ModbusHand.opens == [1000]                                      # not known: opened, as before
+    assert arm._hand_port == dict(speeds=[1000] * 6)
+
+
+def test_the_arms_joints_come_from_the_feeds_frame_when_it_is_fresh():
+    """27 Oct: before every stream the arm was read for the start check (0.1 to 0.2 s). With the run's feed kept on,
+    its latest frame, under FEED_FRESH_S old, is that reading; a stale frame or no feed falls back to one reading."""
+    from types import SimpleNamespace
+
+    arm = _arm([1.0, -82.0, -26.0, 98.0, 6.0, 62.0, 69.0], [])
+    arm.link.read_fresh = lambda: {"joints_deg": [1.0, -82.0, -26.0, 98.0, 6.0, 62.0, 69.0]}
+    arm._feed = (object(), object())
+    arm._tap = SimpleNamespace(t_mono=robot_real.time.monotonic(), frame={"joint_status": {"joint_position": [0, -81990, -26005, 97992, 6003, 61995, 69003]}})
+    out = arm.joints_now()
+    assert out["by"] == "feed" and out["joints_deg"] == pytest.approx([0.0, -81.99, -26.005, 97.992, 6.003, 61.995, 69.003])
+    arm._tap = SimpleNamespace(t_mono=robot_real.time.monotonic() - 0.5, frame=arm._tap.frame)                 # stale: read
+    assert arm.joints_now()["by"] == "read" and arm.joints_now()["joints_deg"][0] == 1.0
+    arm._feed = None                                                                                      # no feed kept: read
+    arm._tap = SimpleNamespace(t_mono=robot_real.time.monotonic(), frame=arm._tap.frame)
+    assert arm.joints_now()["by"] == "read" and robot_real.FEED_FRESH_S == 0.1
+
+
+def test_the_feed_is_turned_on_or_off_while_the_pole_travels(monkeypatch):
+    """27 Oct: a task's feed was turned on after the pole and hand step (0.5 s on the slower arm's path) and off at the
+    task's end with the camera's close (1.4 to 1.8 s, both arms standing). The step takes the feed's call in the pole's
+    travel, between the pole's command and its arrival (the ramp alone is 0.75 s); a pole already at its height has it
+    done right after; a feed that could not be turned on is raised after the pole and the hand are judged."""
+    from types import SimpleNamespace
+
+    from alix_studio_lite.server.jobs import UserError
+
+    Hand0, _counts, _Pole0 = robot_real._runner().load_aux_classes()
+    quick = robot_real._quick_pole
+
+    def fresh_pole(**kw):                             # a QuickPole on a fake clock (_pole), handed to pole_and_hand as its pole
+        monkeypatch.setattr(robot_real, "_quick_pole", quick)
+        pole, clock, t0 = _pole(monkeypatch, **kw)
+        pole.poll_s = 0.01
+        monkeypatch.setattr(robot_real, "_quick_pole", lambda P: (lambda robot: pole))
+        return pole, clock, t0
+
+    pole, clock, t0 = fresh_pole(reads_target_after_s=0.05, idle_after_s=0.2)
+
+    class Hand(Hand0):
+        def open(self, speed_set=1000):
+            self.speed_set = speed_set
+
+        def read(self):
+            return [0, 0, 0, 0, 150, 1000]
+
+        def _write(self, address, values):
+            return 0
+
+    Hand.__module__ = Hand0.__module__
+    arm = robot_real.RealArm(SimpleNamespace(side="left", handle=SimpleNamespace(robot=pole.robot), emulated=True,
+                                             busy=lambda *a, **k: contextlib.nullcontext()))
+    arm._hw = lambda verb, **kw: None
+    arm._alix_log = lambda: (lambda *a: None)
+    when = []
+    arm.keep_feed = lambda label, records=None: when.append(("on", label, records, clock.t)) or f"{label}.frames.jsonl"
+    arm.drop_feed = lambda: when.append(("off", None, None, clock.t)) or dict(frames=5)
+    monkeypatch.setattr(robot_real, "_runner", lambda: SimpleNamespace(load_aux_classes=lambda: (Hand, None, type(pole))))
+    out = arm.pole_and_hand(199.0, [0, 0, 0, 0, 150, 1000], feed=dict(on="LEFT_lid_open_seq", records="/tmp/x"))
+    assert out["pole_ok"] and out["hand_ok"] and out["feed"] == "LEFT_lid_open_seq.frames.jsonl"
+    assert when[0][:2] == ("on", "LEFT_lid_open_seq") and str(when[0][2]) == "/tmp/x" and t0["v"] is not None
+    assert when[0][3] - t0["v"] < 0.05                                       # right after the pole's command, in its travel
+    pole, clock, t0 = fresh_pole(reads_target_after_s=1e9, idle_after_s=0.0)             # the pole at its height already
+    when.clear()
+    out = arm.pole_and_hand(150.0, [0, 0, 0, 0, 150, 1000], feed="off")
+    assert out["pole_ok"] and out["feed"] == dict(frames=5, off=True) and when == [("off", None, None, clock.t)] and t0["v"] is None
+    when.clear()
+    out = arm.pole_and_hand(150.0, [0, 0, 0, 0, 150, 1000])                  # no feed asked: nothing of it
+    assert out["pole_ok"] and "feed" not in out and not when
+
+    def refused(label, records=None):
+        raise UserError("The LEFT controller's 5 ms feed to this computer could not be set up (port taken).", "Check.")
+
+    arm.keep_feed = refused
+    with pytest.raises(UserError, match="5 ms feed"):
+        arm.pole_and_hand(150.0, [0, 0, 0, 0, 150, 1000], feed=dict(on="LEFT_lid_open_seq"))

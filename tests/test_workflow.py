@@ -828,3 +828,43 @@ def test_the_feed_is_recorded_only_when_ticked_and_run_lite_feed_off_turns_it_of
     out = subprocess.run([sys.executable, "-m", "alix_studio_lite.server", "--help"], capture_output=True, text=True,
                          env=dict(os.environ, PYTHONPATH=str(vendor_paths.LITE_ROOT / "src")), timeout=120)
     assert out.returncode == 0 and "--feed {20,off}" in out.stdout, out.stdout + out.stderr
+
+
+def test_after_a_lid_or_seat_task_each_arm_starts_the_next_stage_as_its_own_move_ends():
+    """27 Oct: after a lid or seat task both arms' Programs started together, after the slower arm's pole and hand and
+    MoveJ (the right's 150 to 50 mm after the seat gated the left's start by 1 to 2 s). Each arm now starts its part of
+    the next stage as its own move to its next start ends: here in the simulation (the next stage's first act of each
+    arm), as on the robot (run_real: together's ``before``)."""
+    import numpy as np
+
+    from alix_studio_lite.server import mechanism, workflow
+
+    lid = {"type": "mechanism", "task": "lid_open"}
+    grip, clean = [0, 0, 0, 0, 150, 1000], [1000, 1000, 1000, 1000, 0, 1000]
+    ends = mechanism.Plan(mechanism.sequence_plan("lid_open")).targets("end")
+    # the left's next Program: 10 mm of pole; the right's: 100 mm (150 to 50, as 56_R after the seat); both at their first points
+    own = {"left": {80: {"stage": {"pole_mm": 150.0, "hand": grip}, "first_deg": None},
+                    81: {"stage": {"pole_mm": 160.0, "hand": clean}, "first_deg": ends["left"]["arm_deg"]}},
+           "right": {80: {"stage": {"pole_mm": 150.0, "hand": grip}, "first_deg": None},
+                     54: {"stage": {"pole_mm": 50.0, "hand": grip}, "first_deg": ends["right"]["arm_deg"]}}}
+    run = workflow.plan_for(numbered([prog(80), lid, prog(81)], [prog(80), lid, prog(54)]), "both", own=own)
+    assert [sorted(st.get("then") or {}) for st in run["plan"]] == [[], ["left", "right"], []]
+    md = np.zeros((1001, 7))
+    progs = {i: dict(file="/f.txt", sent=True, lines=1001) for i in (80, 81, 54)}
+    start = dict(pole_mm=150.0, hand=grip, q_deg=[0.0] * 7)
+    sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, {"/f.txt": md}.get, []) for s in ("left", "right")}
+    stages, total = workflow.schedule(run, sims, 15)
+    L, R = sims["left"].acts, sims["right"].acts
+    then = {s: [a for a in acts if a["stage"] == 1 and a["t0"] >= stages[1]["t1_plan"] - 1e-6 and a["t1"] > a["t0"]]
+            for s, acts in (("left", L), ("right", R))}
+    for s in ("left", "right"):                       # its pole and hand, its errors read, its MoveJ to its first point
+        assert [a["kind"] for a in then[s]] == ["pole_hand", "wait", "global"], then[s]
+    assert then["right"][0]["t1"] - then["right"][0]["t0"] > then["left"][0]["t1"] - then["left"][0]["t0"] + 0.5     # 100 mm against 10
+    first = {s: min(a["t0"] for a in acts if a["stage"] == 2) for s, acts in (("left", L), ("right", R))}
+    call = workflow.ROBOT_TIMES["call_start_s"][1]
+    assert first["left"] == pytest.approx(then["left"][-1]["t1"] + call, abs=1e-6)       # each as its own move ends ...
+    assert first["right"] == pytest.approx(then["right"][-1]["t1"] + call, abs=1e-6)
+    assert first["right"] - first["left"] > 0.5                                           # ... not together after the slower
+    assert stages[1]["t1"] == pytest.approx(then["right"][-1]["t1"], abs=1e-6)            # the task's stage ends with the slower arm
+    assert stages[2]["t0"] == pytest.approx(then["left"][-1]["t1"], abs=1e-6)             # the next starts with the faster
+    assert total == pytest.approx(max(L[-1]["t1"], R[-1]["t1"]), abs=1e-3)

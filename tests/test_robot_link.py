@@ -82,14 +82,80 @@ def test_with_its_own_connection_the_link_reads_through_a_command_and_the_hand_b
         link._read_if_idle()
         link._read_if_idle()
     assert reads[1:3] == [(rd.robot, False), (rd.robot, False)]   # a command runs: read still, the hand left out
-    assert reads[-1] == (None, True) and len(reads) == 4          # busy()'s own reading as the command ended (read_once: the reader's robot inside)
+    # as the command ends nothing is read on its connection (27 Oct: that reading held every command's caller 0.1 to
+    # 0.35 s); the loop is woken to read what it left, on the readings' connection, the caller not waiting for it
+    assert len(reads) == 3 and link._wake.is_set()
     assert link.view()["reader"] is True
     link.reader = None
     with link.busy("running program 81"):
         link._read_if_idle()
-        assert len(reads) == 4                                    # no reader: nothing while busy, as before
-    assert reads[-1] == (None, True) and len(reads) == 5
+        assert len(reads) == 3                                    # no reader: nothing while busy, as before
+    assert reads[-1] == (None, True) and len(reads) == 4          # ... and busy()'s own reading as the command ended, as before
     assert link.view()["reader"] is False
+
+
+def test_the_hand_is_read_in_a_lull_and_a_command_waits_only_for_a_hand_read_under_way(monkeypatch):
+    """27 Oct: a command arriving during the loop's reading waited for it to end (up to 0.2 s, some 60 times a run of
+    S2). On a link with its own readings connection only the hand's Modbus read is shared with the commands (the end
+    port), so a command waits for that alone; and the hand is read only in a lull, HAND_LULL_S after the last command
+    ended (a run's commands come closer than that, so none waits for a hand read). Without the readings' connection
+    everything is as before: a command waits for the whole reading under way."""
+    import threading
+    from types import SimpleNamespace
+
+    from alix_studio_lite.server import robot_link
+    from alix_studio_lite.server.robot_link import ArmLink
+
+    monkeypatch.setattr(robot_link, "HAND_LULL_S", 0.3)
+    link = ArmLink("left", "127.0.0.1")
+    link.handle, link.reader = SimpleNamespace(robot=object()), SimpleNamespace(robot=object())
+    hands = []
+    link._read_hand = lambda robot: hands.append(time.monotonic()) or [7] * 6
+    monkeypatch.setattr(robot_link, "_joint_floats", lambda *a, **k: None)
+    monkeypatch.setattr(robot_link, "_controller_state", lambda robot: None)
+    from alix_dispatch import peripherals, runmode
+
+    monkeypatch.setattr(runmode, "read_run_mode", lambda robot: (0, 1))
+    monkeypatch.setattr(peripherals, "Pole", lambda robot, log=None: SimpleNamespace(height_m=lambda: 0.15))
+    link.feedback = {"t": time.time(), "hand": [1] * 6}
+    with link.busy("moving the hand"):
+        pass
+    link._read_if_idle()
+    assert not hands and link.feedback["hand"] == [1] * 6        # right after a command: the hand is not read (the lull)
+    time.sleep(0.35)
+    link._read_if_idle()
+    assert len(hands) == 1 and link.feedback["hand"] == [7] * 6   # in the lull: read
+
+    def slow_hand(robot):                                         # a hand read under way as a command arrives
+        time.sleep(0.3)
+        hands.append(time.monotonic())
+        return [8] * 6
+
+    link._read_hand = slow_hand
+    reading = threading.Thread(target=link._read_if_idle)
+    reading.start()
+    time.sleep(0.1)
+    t0 = time.monotonic()
+    with link.busy("moving the hand"):
+        waited = time.monotonic() - t0
+    reading.join()
+    assert 0.15 < waited < 0.6                                    # it waited for the hand read, not longer
+    link._read_hand = lambda robot: [9] * 6
+    link._ended = 0.0
+
+    def slow_arm_state():                                         # a reading under way, past its hand: not waited for
+        time.sleep(0.3)
+        return 0, {"joint": [0.0] * 7, "pose": [0.0] * 6, "err": None}
+
+    link.reader = SimpleNamespace(robot=SimpleNamespace(rm_get_current_arm_state=slow_arm_state))
+    reading = threading.Thread(target=link._read_if_idle)
+    reading.start()
+    time.sleep(0.05)
+    t0 = time.monotonic()
+    with link.busy("moving the pole"):
+        waited = time.monotonic() - t0
+    reading.join()
+    assert waited < 0.1
 
 
 def test_the_readings_connection_is_opened_first_and_a_refused_one_leaves_the_old_way(monkeypatch):

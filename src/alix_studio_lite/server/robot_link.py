@@ -49,6 +49,8 @@ LATE_S = 0.8                       # no reading for this long: weak
 SLOW_S = 0.5                       # a reading that took this long, among the last ten: weak
 LOST_S = 3.0                       # no reading answered for this long: none
 HELD_S = 60.0                      # a command that has not ended in this long (unless it says it takes longer): weak
+HAND_LULL_S = 0.5                  # the hand (Modbus on the shared end port) is read on the readings' connection only this long after
+                                   # the last command ended: a run's commands come closer than that, and none waits for a hand read
 # A call into the SDK that does not come back (the lab, 19 Oct: three times a call made right after "run mode REAL"
 # never returned; nothing on that controller answered, STOP included, until Lite was killed). The SDK answers a
 # request within its reply timeout (1.5 s, connect.ACK_TIMEOUT_MS), so a call that has not returned in CALL_STUCK_S
@@ -215,8 +217,11 @@ class ArmLink:
         self._busy_since, self._busy_expect = 0.0, HELD_S   # when the command took the link, and how long it may take
         self._recent: collections.deque = collections.deque(maxlen=10)   # (when, answered, seconds) of the last readings
         self._freed = 0.0                           # when the last command ended (its reading follows at once)
+        self._ended = 0.0                           # ... on the monotonic clock (the hand's lull, HAND_LULL_S)
         self._fresh_before = False                  # the reading was fresh as the commands began (their grace is due)
         self._read_lock = threading.Lock()          # one reading at a time
+        self._hand_lock = threading.Lock()          # the hand's Modbus read under way (the end port is shared with the commands)
+        self._wake = threading.Event()              # a reading asked for now (what a command left, on the readings' connection)
         self._cmd = threading.RLock()               # one command at a time (busy)
         self._stop_lock = threading.Lock()          # one STOP at a time
         self._stop_hard = False                     # the STOP being sent is the E-stop's way
@@ -270,6 +275,7 @@ class ArmLink:
         """Stop reading. The thread closes the controller connection itself once its last read is
         done, so a slow controller cannot have its handle deleted under a running call."""
         self._stop.set()
+        self._wake.set()
         if self._thread:
             self._thread.join(timeout=2.0)
 
@@ -313,12 +319,17 @@ class ArmLink:
         on a new link (robot_standin)."""
         self.abandoned = True
         self._stop.set()
+        self._wake.set()
 
     def _loop(self) -> None:
         from alix_dispatch import connect
 
         try:
-            while not self._stop.wait(self.period_s):
+            while not self._stop.is_set():
+                self._wake.wait(self.period_s)       # every period, or at once when a command has just ended (busy)
+                self._wake.clear()
+                if self._stop.is_set():
+                    break
                 if self._stopping.is_set():
                     continue
                 try:
@@ -358,13 +369,19 @@ class ArmLink:
 
     @contextmanager
     def busy(self, what: str, wait_s: float | None = None, expect_s: float | None = None):
-        """A command runs on this controller (robot_real.py): meanwhile the reading loop does not
-        read, and no other command starts: it waits for this one (at most CMD_WAIT_S, or ``wait_s``),
-        then is refused, saying what holds the controller (the lab, 17 Oct: three MoveJ's switched the
-        RIGHT controller's run mode while it saved a 24 s recording, each read back "not taken", and a
-        global point list read in those seconds answered -2). A STOP being sent is waited for the same
-        way; STOP never waits (stop()). The panel shows what is running, with the last reading;
-        everything is read again as the command ends (after the STOP, when one is being sent)."""
+        """A command runs on this controller (robot_real.py): no other command starts meanwhile: it waits for this one
+        (at most CMD_WAIT_S, or ``wait_s``), then is refused, saying what holds the controller (the lab, 17 Oct: three
+        MoveJ's switched the RIGHT controller's run mode while it saved a 24 s recording, each read back "not taken",
+        and a global point list read in those seconds answered -2). A STOP being sent is waited for the same way; STOP
+        never waits (stop()). The panel shows what is running, with the last reading.
+
+        With the readings' own connection (``reader``, 26 Oct) the loop reads through the command; the command waits
+        only for a hand read under way (the end port's Modbus is shared: the lab's first run, a reading overlapping the
+        hand's staging), and as it ends the loop is woken to read what it left, on that connection, while the caller
+        goes on (27 Oct: the reading made here on the command's connection, 0.1 to 0.35 s with the hand, held every
+        command's caller for it, some 60 times a run of S2; and a command arriving during a reading waited for it to
+        end, up to 0.2 s more). Without it, as before: nothing is read while a command runs, a reading under way ends
+        first, and everything is read again here as the command ends."""
         self._take(wait_s)
         try:
             with self._lock:
@@ -374,7 +391,7 @@ class ArmLink:
                     self._busy_since, self._busy_expect = now, max(HELD_S, float(expect_s or 0))
                 self._busy.append(what)
                 self.feedback = dict(self.feedback, busy=what)
-            with self._read_lock:                   # a reading already under way ends before the command starts
+            with (self._hand_lock if self.reader is not None else self._read_lock):   # ... under way ends before the command starts
                 pass
             try:
                 yield
@@ -384,11 +401,15 @@ class ArmLink:
                     idle = not self._busy
                     if idle:                        # the grace for the reading that follows: only for a link that was fresh
                         self._freed = time.time() if self._fresh_before else 0.0
+                        self._ended = time.monotonic()
                 if idle and self.handle is not None and not self._stopping.is_set():
-                    try:                            # what the command left, read at once (not 0.2 s later)
-                        self.read_once()
-                    except Exception:                                            # noqa: BLE001
-                        pass
+                    if self.reader is not None:     # what the command left, read at once (not 0.2 s later) by the loop, on
+                        self._wake.set()            # the readings' connection: the caller does not wait for it
+                    else:
+                        try:
+                            self.read_once()
+                        except Exception:                                            # noqa: BLE001
+                            pass
         finally:
             self._cmd.release()
 
@@ -538,12 +559,21 @@ class ArmLink:
         with self._read_lock:
             return self._read_all()
 
+    def hand_seen(self, counts) -> None:
+        """The hand as a command of Lite's read it back (robot_real: a staging, a hand move, the pole and hand step): the
+        panel shows it at once, as the loop reads the hand only in a lull between commands (HAND_LULL_S)."""
+        if counts is None:
+            return
+        with self._lock:
+            self.feedback = dict(self.feedback, hand=[int(v) for v in counts])
+
     def _read_if_idle(self) -> None:
         """The loop's reading. With the readings' own connection (``reader``) the arm, the pole, the controller and IO3
         are read whether a command runs or not (a reading on a connection of its own costs the commands nothing and
-        the controller's clock nothing: the owner, 26 Oct); the hand, Modbus on the end port, only between commands
-        (busy() waits for a reading under way, so the two never overlap: on the lab's first run a reading overlapping
-        the hand's staging made the hand's command time out). Without it, nothing is read while a command runs."""
+        the controller's clock nothing: the owner, 26 Oct); the hand, Modbus on the end port, only between commands,
+        in a lull (``_read_all``: HAND_LULL_S after the last; busy() waits for a hand read under way, so the two never
+        overlap: on the lab's first run a reading overlapping the hand's staging made the hand's command time out).
+        Without it, nothing is read while a command runs."""
         with self._read_lock:
             if self.reader is not None:
                 self._read_all(self.reader.robot, hand=not self._busy)
@@ -577,7 +607,12 @@ class ArmLink:
         fb["run_mode"] = {0: "SIM", 1: "REAL"}.get(mode) if r == 0 else None
         height = peripherals.Pole(robot, log=lambda *_: None).height_m()
         fb["pole_mm"] = None if height is None else round(height * 1000.0, 1)
-        fb["hand"] = self._read_hand(robot) if hand else self.feedback.get("hand")   # a command runs: the last read
+        if hand and self.reader is not None:       # the end port is the commands' too: not under one, nor between two that
+            with self._hand_lock:                   # come close (HAND_LULL_S); busy() waits for a read under way here
+                hand = not self._busy and time.monotonic() - self._ended >= HAND_LULL_S
+                fb["hand"] = self._read_hand(robot) if hand else self.feedback.get("hand")
+        else:
+            fb["hand"] = self._read_hand(robot) if hand else self.feedback.get("hand")   # a command runs: the last read
         if hasattr(robot, "rm_get_io_state"):
             fb["estop"], fb["io3"] = estop_state(lambda: robot.rm_get_io_state(ESTOP_IO), self.estop_active)
         elif self.emulated:                                              # ALIX's emulator models no IO

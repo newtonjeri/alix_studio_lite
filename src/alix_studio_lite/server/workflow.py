@@ -1319,12 +1319,12 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     return clock[0]
 
 
-def _sim_then(st: dict, sims: dict, T: float, stage: int, overall: int) -> float:
+def _sim_then(st: dict, sims: dict, T: float, stage: int, overall: int) -> dict:
     """A run of lid and seat tasks' ``then`` (next_after_tasks) from ``T``: each arm to its next task's start, both arms
     at once, as Lite moves them in Real: its pole and hand together (Lite's pole and hand step), then, to a Program's
     first point, its errors read (a 4105 the plan's streams left cleared) and its MoveJ at the speed slider's speed (the
-    global speed at 100 % for it). The end's time."""
-    ends = [T]
+    global speed at 100 % for it). Each arm's end time (an arm with no next start: ``T``)."""
+    ends = {s: T for s in ARMS}
     for s, t in sorted((st.get("then") or {}).items()):
         sim, row = sims[s], (st.get("rows") or {}).get(s)
         steps = []
@@ -1334,8 +1334,8 @@ def _sim_then(st: dict, sims: dict, T: float, stage: int, overall: int) -> float
         if t.get("arm_deg"):
             steps += [{"type": "clear", "_row": row, "_alone": True},
                       {"type": "move_to", "deg": list(t["arm_deg"]), "speed": int(overall), "_row": row, "_then": t}]
-        ends.append(sim.run(steps, T, stage))
-    return max(ends)
+        ends[s] = sim.run(steps, T, stage)
+    return ends
 
 
 CHECK_S = 0.5                    # a camera question, in the simulation (a frame, the check)
@@ -1378,14 +1378,16 @@ def _row_words(steps: list, row) -> str:
     return f"row {row}" + (f" ({_step_words(st)})" if st else "")
 
 
-def _sim_part(st: dict, sims: dict, T: float, stage: int, words) -> dict:
-    """A stage's parts on one clock from ``T``: each arm through its rows in its runner calls (each starting in
-    ROBOT_TIMES call_start_s); at a Wait-for the arm holds until the other arm has finished the row it names (``words``
-    says that row). Each arm's end time."""
+def _sim_part(st: dict, sims: dict, T, stage: int, words) -> dict:
+    """A stage's parts on one clock from ``T`` (one time, or each arm's own: after a lid or seat task each arm starts
+    its part as its own move to its next start ends, 27 Oct): each arm through its rows in its runner calls (each
+    starting in ROBOT_TIMES call_start_s); at a Wait-for the arm holds until the other arm has finished the row it names
+    (``words`` says that row). Each arm's end time."""
     parts = {s: st[s]["steps"] for s in ARMS if st.get(s)}
     segs = {s: _segments(parts[s]) for s in parts}
     pos = {s: 0 for s in parts}
-    clock = {s: T + _at(ROBOT_TIMES["call_start_s"], sims[s].lam) for s in parts}
+    at = T if isinstance(T, dict) else {s: float(T) for s in parts}
+    clock = {s: at.get(s, max(at.values())) + _at(ROBOT_TIMES["call_start_s"], sims[s].lam) for s in parts}
     done: dict = {s: {} for s in parts}                 # each arm's rows finished in this stage: row -> when
 
     def mark(s):
@@ -1435,6 +1437,7 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
              for s in ARMS}
     words = lambda side, row: _row_words(every.get(side) or [], row)                  # noqa: E731
     plan = run["plan"]
+    starts = None                                   # after a lid or seat task: each arm's own start of the next stage (27 Oct)
     for i, st in enumerate(plan):
         kind = st["kind"]
         row = dict(index=i, kind=kind, label=str(st.get("program_id") or ""), t0=round(T, 4))
@@ -1444,11 +1447,19 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
                 ready = max(ready, sims[s].run([{"type": "clear", "_row": (st.get("rows") or {}).get(s), "_alone": True}], T, i))
             T = _sim_mechanism(st, sims, ready, i, overall, leave=set(st.get("then") or {}), hand_set=hand_set(st), start_checks=False)
             row["t1_plan"] = round(T, 4)                # ALIX's plans end here; Lite's own moves to the next starts follow
+            starts = None
             if st.get("then"):
-                T = _sim_then(st, sims, T, i, overall)
+                ends = _sim_then(st, sims, T, i, overall)
+                nxt = plan[i + 1] if i + 1 < len(plan) else None
+                if nxt is not None and nxt["kind"] == "parallel":     # each arm's part of the next stage starts as its own move ends
+                    starts = {s: ends[s] for s in ARMS if nxt.get(s)}
+                T = max(ends.values())
             row.update(t1=round(T, 4), title=then_title(st), task=st["task"], task_title=st["title"])
         else:
-            ends = _sim_part(st, sims, T, i, words) if any(st.get(s) for s in ARMS) else {}
+            if starts:
+                row["t0"] = round(min(starts.values()), 4)
+            ends = _sim_part(st, sims, starts or T, i, words) if any(st.get(s) for s in ARMS) else {}
+            starts = None
             T = max(ends.values() or [T])
             if kind == "parallel" and i + 1 < len(plan):          # the one that ended first holds for the other at the Meet
                 nxt = plan[i + 1]
@@ -2589,7 +2600,11 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             say(**{side: f"{label} // COMPLETE" if out["ok"] else f"{label} // FAILED rc={out['rc']}"})
             return out
 
-        def together(stage, label, status):
+        def together(stage, label, status, before=None):
+            """Both arms' parts of a stage, started together (each arm's controller taken before the two meet). ``before``:
+            an arm's move to its next task's start after a lid or seat task (to_next), made at the start of its own part,
+            the other arm not waited for (27 Oct: both arms' Programs started after the slower arm's pole and hand and
+            MoveJ, 1 to 2 s on the faster arm's path)."""
             mine = [s for s in ARMS if stage.get(s)]
             say(status, **{s: f"{label} // RUNNING" for s in mine})
             barrier, results = threading.Barrier(len(mine)), {}
@@ -2614,6 +2629,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                                 results[side] = dict(ok=False, rc=1, why="the other arm did not start")
                                 return
                             try:
+                                if before and before.get(side) is not None:
+                                    before[side]()                          # this arm to its next task's start, its own time
                                 results[side] = part(side, stage[side], label)
                             except BaseException as exc:                   # noqa: BLE001 - said below
                                 results[side] = dict(ok=False, rc=1, why=str(exc) or type(exc).__name__)
@@ -2676,13 +2693,14 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 job.log(f"{side.upper()}: its feed, {fed['frames']} frame(s) every {fed['cycle_ms']} ms: {Path(fed['file']).name}",
                         "info" if fed["frames"] else "warn")
 
-        def to_next(st, pid):
-            """After a run of lid and seat tasks: each arm to its next task's start (next_after_tasks), both arms at once:
-            its pole and hand together (pole_and_hand), then, to a Program's first point, its errors read (a 4105 the
-            plan's streams left cleared, as before every move that waits for its arrival) and its MoveJ at the speed
-            slider's speed (the global speed at 100 % for it, put back after). The next stage then starts both arms at
-            their Programs' first points."""
-            then = st.get("then") or {}
+        def to_next(st, pid, sides=None):
+            """After a run of lid and seat tasks: each arm (``sides``: these arms; all with a next start by default) to its
+            next task's start (next_after_tasks): its pole and hand together (pole_and_hand), then, to a Program's first
+            point, its errors read (a 4105 the plan's streams left cleared, as before every move that waits for its
+            arrival) and its MoveJ at the speed slider's speed (the global speed at 100 % for it, put back after). An arm
+            whose next stage is a part of both arms makes this move at the start of its own part (together's ``before``),
+            so its Programs start as soon as it stands at their first point (27 Oct); the others move here."""
+            then = {x: t for x, t in (st.get("then") or {}).items() if sides is None or x in sides}
             say(f"LID / SEAT // {then_title(st)}", **{x: f"{pid} // TO THE NEXT START" for x in then})
             done, threads = {}, []
 
@@ -2695,7 +2713,9 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                         values = list(t["hand"]) if t.get("hand") is not None else hand
                         if mm is None or values is None:
                             raise UserError(f"its pole or hand is not read, so it is not moved to {then_title(st)}")
-                        reals[x].pole_and_hand(float(mm), list(values))
+                        reals[x].pole_and_hand(float(mm), list(values), feed="off")   # the task's 5 ms feed off while the pole travels
+                    else:
+                        reals[x].drop_feed()                                    # (27 Oct; before: at the task's end, both arms standing)
                     if t.get("arm_deg"):
                         got = clear(x, row)
                         if not got["ok"]:
@@ -2709,7 +2729,9 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 except Exception as exc:                                   # noqa: BLE001 - said below
                     done[x] = f"{x.upper()}: {exc}"
 
-            for x in sorted(then):
+            if len(then) == 1:                      # one arm (together's before: its own thread holds its controller): here
+                one(next(iter(then)))
+            for x in (sorted(then) if len(then) > 1 else ()):
                 threads.append(threading.Thread(target=one, args=(x,), name=f"lite-s2-next-{x}", daemon=True))
                 threads[-1].start()
             for t in threads:
@@ -2722,6 +2744,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                                 "Check the arms, the poles and the hands, then run the sequence again.")
 
         t0 = time.monotonic()
+        pending: dict = {}                          # after a lid or seat task: each arm's move to its next start, made as its part of the next stage begins
         try:
             for s in sides:
                 originals[s] = reals[s].set_run_mode("REAL")
@@ -2755,23 +2778,35 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                     except Exception as exc:                                        # noqa: BLE001 - then one after the other, said
                         room = None
                         say(None, **{x: f"{pid} // the MoveJs' collision check has no world ({type(exc).__name__}): one after the other" for x in ARMS})
-                    ex = mech.RealExec(job, robot, {x: reals.get(x) or robot._real(x) for x in ARMS}, kit,
+                    arms_real = {x: reals.get(x) or robot._real(x) for x in ARMS}
+                    ex = mech.RealExec(job, robot, arms_real, kit,
                                        (lambda text: hw.hardware(None, "mechanism", text=text)) if hw is not None else None,
-                                       live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}), room=room)
+                                       live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}), room=room,
+                                       feeds_after=bool(st.get("then")))   # the feeds off in the next starts' pole travel (27 Oct)
                     mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
                     mech.joints_cool(robot, st["title"])
-                    with kit.camera.using():
-                        out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st),
-                                          start_checks=False).run(mech.sequence_plan(st["task"]))
-                    did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
-                                    for p in out["plans"])
-                    job.log(f"{st['title']}: {did}.")
-                    if st.get("then"):                      # each arm to its next task's start (next_after_tasks)
-                        to_next(st, pid)
+                    try:
+                        with kit.camera.using():                         # closed in the background as the run ends (27 Oct)
+                            out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st),
+                                              start_checks=False).run(mech.sequence_plan(st["task"]))
+                        did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
+                                        for p in out["plans"])
+                        job.log(f"{st['title']}: {did}.")
+                        then = st.get("then") or {}         # each arm to its next task's start (next_after_tasks): now, or (27 Oct)
+                        nxt = run["plan"][i + 1] if i + 1 < len(run["plan"]) else None    # as its part of the next stage begins
+                        later = {x for x in then if nxt is not None and nxt["kind"] == "parallel" and nxt.get(x)}
+                        if set(then) - later:
+                            to_next(st, pid, sides=set(then) - later)
+                        pending = {x: (lambda x=x, st=st, pid=pid: to_next(st, pid, sides={x})) for x in later}
+                    finally:
+                        for x, real in arms_real.items():   # a feed still on (no next start for the arm, a run that stopped): off
+                            if real is not None and x not in pending:   # (an arm moving later turns its off in that move)
+                                real.drop_feed()
                     say(f"LID / SEAT // {st['title']} // DONE", **{x: f"{pid} // COMPLETE" for x in ARMS})
                 elif kind == "parallel":
                     arms_here = [s for s in ARMS if st.get(s)]
-                    together(st, str(pid or "PART"), f"PAGE 02 // {pid} // " + (" + ".join(s.upper() for s in arms_here)))
+                    before, pending = pending, {}
+                    together(st, str(pid or "PART"), f"PAGE 02 // {pid} // " + (" + ".join(s.upper() for s in arms_here)), before=before)
                 else:                                                     # one arm's whole sequence, or a single task
                     item = st[sides[0]]
                     label = "SEQUENCE" if kind == "single" and pid is None else f"Program {pid}"

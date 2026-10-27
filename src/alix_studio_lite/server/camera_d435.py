@@ -96,6 +96,7 @@ class D435:
         self._seq = 0
         self._thread = None
         self._stop = threading.Event()
+        self._closer = None                                # close(wait=False): the thread stopping the pipeline
         self._error: str | None = None
         self._users = 0                                  # a task, a camera check: open while any of them uses it
         self.device = None                              # name and serial, for the page and the logs
@@ -172,6 +173,9 @@ class D435:
         return dict(level="none", text=have["why"] or "no D435 is plugged into this computer")
 
     def open(self) -> None:
+        closer = self._closer
+        if closer is not None and closer.is_alive():       # the last close still stopping its pipeline: it ends first
+            closer.join(timeout=5.0)
         with self._lock:
             if self._pipe is not None:
                 return
@@ -207,8 +211,8 @@ class D435:
             if s["auto_exposure"]:
                 self._auto_exposure(rs, dev)
             self._pipe, self._opened_at, self._error = pipe, time.monotonic(), None
-            self._stop.clear()
-            self._thread = threading.Thread(target=self._run, args=(rs, pipe), name="lite-d435", daemon=True)
+            self._stop = stop = threading.Event()          # this pipeline's own: a close in the background stops it alone
+            self._thread = threading.Thread(target=self._run, args=(rs, pipe, stop), name="lite-d435", daemon=True)
             self._thread.start()
             on = [f"{k} filter" for k in ("spatial", "temporal") if s[k]] + (["depth aligned to colour"] if s["align"] else [])
             self._log(f"camera open: {self.device['name']} {self.device['serial']}, depth {dw}x{dh} "
@@ -243,14 +247,15 @@ class D435:
             time.sleep(0.25)
         self._reset_done = True
 
-    def _run(self, rs, pipe) -> None:
+    def _run(self, rs, pipe, stop=None) -> None:
         """Every frameset, as the driver processes it: the native depth kept as it is; the depth filtered (spatial,
         temporal) and aligned to the colour frame; the newest kept for shot()."""
         s = self.spec
+        stop = self._stop if stop is None else stop
         spatial = rs.spatial_filter() if s["spatial"] else None
         temporal = rs.temporal_filter() if s["temporal"] else None
         align = rs.align(rs.stream.color) if s["align"] else None
-        while not self._stop.is_set():
+        while not stop.is_set():
             try:
                 ok, frames = pipe.try_wait_for_frames(1000)
                 if not ok:
@@ -307,7 +312,9 @@ class D435:
 
     @contextmanager
     def using(self):
-        """The camera open for the caller (a lid or seat task, a camera check) and closed after the last of them."""
+        """The camera open for the caller (a lid or seat task, a camera check) and closed after the last of them, in the
+        background: the caller goes on while the pipeline stops (27 Oct: 0.8 s at every task's end, both arms standing);
+        the next open waits for it."""
         with self._lock:
             self._users += 1
         try:
@@ -317,18 +324,30 @@ class D435:
                 self._users -= 1
                 last = self._users == 0
             if last:
-                self.close()
+                self.close(wait=False)
 
-    def close(self) -> None:
+    def close(self, wait: bool = True) -> None:
+        """The pipeline stopped: here, or (``wait`` False) in a thread of its own, which ``open`` waits for."""
+        closer = self._closer
+        if wait and closer is not None and closer.is_alive() and closer is not threading.current_thread():
+            closer.join(timeout=5.0)                       # a close in the background still stopping its pipeline: ended first
         with self._lock:
             pipe, self._pipe = self._pipe, None
             self._stop.set()
             thread, self._thread = self._thread, None
-        if thread is not None:
-            thread.join(timeout=2.0)
-        if pipe is not None:
-            try:
-                pipe.stop()
-            except Exception:                                                       # noqa: BLE001
-                pass
-            self._log("camera closed")
+
+        def stop_it():
+            if thread is not None:
+                thread.join(timeout=2.0)
+            if pipe is not None:
+                try:
+                    pipe.stop()
+                except Exception:                                                   # noqa: BLE001
+                    pass
+                self._log("camera closed")
+
+        if wait or (pipe is None and thread is None):
+            stop_it()
+            return
+        self._closer = threading.Thread(target=stop_it, name="lite-camera-close", daemon=True)
+        self._closer.start()

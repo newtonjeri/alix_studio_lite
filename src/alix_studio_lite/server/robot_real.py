@@ -174,6 +174,7 @@ END_STILL_DEG_S = 1.6     #: ... and under this (ALIX's at-rest gate, wait_until
 END_FRAMES = 3            #: ... for this many frames in a row (15 ms). ALIX's settle after a stream (six polls of the controller
                           #: 25 ms apart) took 0.24 s a stream and never had to wait (the owner, 26 Oct: redundant for a stream)
 END_WAIT_S = 1.0          #: the feed not showing it within this: ALIX's polled wait takes over (the frames gone quiet, a lagging arm)
+FEED_FRESH_S = 0.1        #: a kept feed's latest frame under this old stands for a reading of the arm's joints (joints_now)
 
 
 def wrist_load_n(frame: dict) -> float | None:
@@ -385,7 +386,9 @@ def _quick_pole(Pole):
         return Pole                                   # a stand-in Pole (the tests'): its own move
 
     class QuickPole(Pole):
-        def move(self, height_m, speed_pct=100, tol_m=None, block=False):
+        lite_meanwhile = True             # move() takes ``meanwhile``: a call made on the arm's connection while the pole travels
+
+        def move(self, height_m, speed_pct=100, tol_m=None, block=False, meanwhile=None):
             tol_m = m.LIFT_TOL_M if tol_m is None else tol_m
             start = self.height_m()
             dist = abs(height_m - start) if start is not None else m.LIFT_STROKE_M
@@ -399,6 +402,8 @@ def _quick_pole(Pole):
             if ret != 0:
                 raise RuntimeError(f"rm_set_lift_height refused, ret={ret}")
             t0, pos = time.monotonic(), start
+            if meanwhile is not None:     # the pole travels at least its ramp (POLE_RAMP_S): the controller's time for other calls
+                meanwhile()
             while True:
                 elapsed = time.monotonic() - t0
                 ret, st = self.robot.rm_get_lift_state()
@@ -456,6 +461,9 @@ class RealArm:
         self._hand = None            # ALIX's HandModbus opened once for a lid or seat run (keep_hand)
         self._hand_speeds = None     # the SPEED_SET each channel of the kept hand holds
         self._hand_last = None       # (counts, after) of the last hand move of Lite's: asked again where it still stands, not sent
+        self._hand_port = None       # {'speeds'}: the end port in Modbus mode at these SPEED_SETs since Lite's own hand open, nothing
+                                     # having closed it (keep_hand, pole_and_hand); None: not known (a runner call, a staging, connect)
+        self._pole_last = None       # the pole's height (mm) as Lite last confirmed it (pole_to, pole_and_hand); None: not known
         self._pole_done = None       # when the last pole move ended (the controller's warm start)
         self._ratio = None           # the global ratio this run left on the controller (None: not known)
         self._s2_feed = None         # S2's recording of the feed, kept across a stage's runner calls (keep_s2_feed)
@@ -473,6 +481,15 @@ class RealArm:
 
     def _alix_log(self):
         return self.log.hw_logger(self.side) if self.log is not None else (lambda *_: None)
+
+    def _hand_seen(self, counts) -> None:
+        """What a hand command read back, shown by the link at once (robot_link.hand_seen)."""
+        seen = getattr(self.link, "hand_seen", None)
+        if seen is not None and counts:
+            try:
+                seen(list(counts))
+            except Exception:                                                   # noqa: BLE001 - the panel's word only
+                pass
 
     def _hw(self, verb, args=None, ret=None, ok=None, elapsed_s=None, text=None) -> None:
         if self.log is not None:
@@ -498,7 +515,7 @@ class RealArm:
         from alix_dispatch import staging as alix_staging
 
         log = self._alix_log()
-        self._hand_last = None                       # staging moves the hand its own way
+        self._hand_last = self._hand_port = self._pole_last = None     # staging moves the hand and the pole its own way
         with self.link.busy("staging the pole and the hand"):
             if self._hand is not None:               # a lid or seat run's hand, opened once (keep_hand), at the staging speed
                 from alix_dispatch import peripherals
@@ -521,6 +538,8 @@ class RealArm:
             self._hw("hand settled", args=dict(target=list(stage.hand)), ok=True,
                      text=f"stopped at {h.get('read')} (on the tool): done, as the control program takes it")
         found = p.get("found_m")
+        self._pole_last = found * 1000.0 if out.get("ok") and found is not None else None
+        self._hand_seen(h.get("read"))
         self._hw("stage", args=dict(pole_mm=stage.pole_mm, hand=list(stage.hand), speed_pct=POLE_SPEED_PCT),
                  ok=bool(out.get("ok")), text=(f"pole {found * 1000:.0f} mm" if found is not None else "pole not read")
                  + f", hand {h.get('read')}" + ("" if out.get("ok") else f"; refused: {_words(out.get('refusal'))}"))
@@ -536,34 +555,45 @@ class RealArm:
         executive set from its planned time, device_speed.pole_speed_pct, 24 Oct). A pole standing
         idle within its 5 mm goal tolerance of ``mm`` is not commanded, as ALIX's stage_arm does: every controller code
         4117 (undocumented) came within a second of a pole command, three of them a command to where the pole stood
-        (lid open's 150 -> 150 mm; the owner, 23 Oct: test it)."""
+        (lid open's 150 -> 150 mm; the owner, 23 Oct: test it). Asked for the height Lite itself last confirmed (its
+        own pole moves; a runner call or a staging forgets it), the getter is not asked either (27 Oct: 0.07 to 0.17 s
+        before every plan entry with a pole target, none of them moving the pole)."""
         from alix_dispatch import peripherals
 
         pct = POLE_SPEED_PCT
-        with self.link.busy("moving the pole"):
-            pole = peripherals.Pole(self.robot, log=self._alix_log())
-            st = pole.state()
-            here = None if st is None else float(st["pos"]) / peripherals.LIFT_UNITS_PER_METRE
-            idle = st is not None and not int(st.get("mode", 0) or 0) and not int(st.get("err_flag", 0) or 0)
-            if idle and abs(here - float(mm) / 1000.0) <= peripherals.LIFT_TOL_M:
-                pole.log(f"   pole: already at {here * 1000:.0f} mm, the {float(mm):.0f} mm asked (within "
-                         f"{peripherals.LIFT_TOL_M * 1000:.0f} mm, idle): nothing sent")
-                out = dict(ok=True, ret=None, target_m=float(mm) / 1000.0, start_m=here, final_m=here, t_s=0.0,
-                           verified_by="no_op", no_op=True, no_op_source="getter", sent=False)
-            else:
-                if duration_s is not None:                 # a plan's pole move: 100 % too (the owner, 27 Oct; the planned time's
-                    pole.log(f"   pole: {pct} % (the owner, 27 Oct: every pole move at 100 %)")   # speed from 24 Oct)
-                out = pole.move(float(mm) / 1000.0, speed_pct=pct)
-                self._pole_done = time.monotonic()
+        last = self._pole_last
+        if last is not None and abs(last - float(mm)) <= peripherals.LIFT_TOL_M * 1000.0:
+            self._alix_log()(f"   pole: at {last:.0f} mm as Lite last confirmed it, the {float(mm):.0f} mm asked (within "
+                             f"{peripherals.LIFT_TOL_M * 1000:.0f} mm): nothing sent, nothing read")
+            out = dict(ok=True, ret=None, target_m=float(mm) / 1000.0, start_m=last / 1000.0, final_m=last / 1000.0, t_s=0.0,
+                       verified_by="no_op", no_op=True, no_op_source="lite", sent=False)
+        else:
+            with self.link.busy("moving the pole"):
+                pole = peripherals.Pole(self.robot, log=self._alix_log())
+                st = pole.state()
+                here = None if st is None else float(st["pos"]) / peripherals.LIFT_UNITS_PER_METRE
+                idle = st is not None and not int(st.get("mode", 0) or 0) and not int(st.get("err_flag", 0) or 0)
+                if idle and abs(here - float(mm) / 1000.0) <= peripherals.LIFT_TOL_M:
+                    pole.log(f"   pole: already at {here * 1000:.0f} mm, the {float(mm):.0f} mm asked (within "
+                             f"{peripherals.LIFT_TOL_M * 1000:.0f} mm, idle): nothing sent")
+                    out = dict(ok=True, ret=None, target_m=float(mm) / 1000.0, start_m=here, final_m=here, t_s=0.0,
+                               verified_by="no_op", no_op=True, no_op_source="getter", sent=False)
+                else:
+                    if duration_s is not None:                 # a plan's pole move: 100 % too (the owner, 27 Oct; the planned time's
+                        pole.log(f"   pole: {pct} % (the owner, 27 Oct: every pole move at 100 %)")   # speed from 24 Oct)
+                    out = pole.move(float(mm) / 1000.0, speed_pct=pct)
+                    self._pole_done = time.monotonic()
+            self._pole_last = float(out["final_m"]) * 1000.0 if out.get("ok") and out.get("final_m") is not None else None
         self._hw("pole move", args=dict(mm=mm, speed_pct=pct), ret=out.get("ret"), ok=bool(out.get("ok")),
                  elapsed_s=out.get("t_s"), text=f"final {out.get('final_m')} m, verified by {out.get('verified_by')}"
-                 + ("; nothing sent: already there" if out.get("sent") is False else ""))
+                 + ("; nothing sent: already there" if out.get("sent") is False and out.get("no_op_source") == "getter" else "")
+                 + ("; nothing sent, nothing read: where Lite left it" if out.get("no_op_source") == "lite" else ""))
         if not out.get("ok"):
             raise UserError(f"The {self.SIDE} pole did not reach {mm:.0f} mm ({out.get('error') or return_text(out.get('ret'))}).",
                             "Check the pole, then try again.")
         return out
 
-    def pole_and_hand(self, mm: float, values: list, stop_hook=None) -> dict:
+    def pole_and_hand(self, mm: float, values: list, stop_hook=None, feed=None) -> dict:
         """S2's Pole row with the Hand row straight after it, as one step (the owner, 22 Oct: "there is a delay when the
         sequence moves from the pole movement to the hand movement"), and a Program's own pole and hand (24 Oct): the
         hand is sent first and moves while the pole travels; the pole as runner v14 moves it (the control program's
@@ -571,7 +601,16 @@ class RealArm:
         the pole by up to 73 mm); then the hand confirmed by runner v14's own rule (Hand.command: arrived, or settled on
         force), timed from the command it moved by (``_hand_arrived``; sent again only when it has not arrived). A hand
         channel None holds where it is. The arm does not move. STOP (``stop_hook``) stops the pole and holds the hand
-        where it is."""
+        where it is. The end port's Modbus mode is left on at the hand's SPEED_SET when the step ends (27 Oct: closed
+        after every step, it was opened again, 0.3 s, by the hand move after it, and by the next step), and not set
+        again when Lite knows it is on (``_hand_port``).
+
+        ``feed``: the arm's 5 ms feed turned on ({'on': label, 'records': folder}, ``keep_feed``) or off ('off',
+        ``drop_feed``) WHILE the pole travels, on the same connection, between the pole's command and its arrival (27
+        Oct: turned on after the pair, it held the slower arm's task start 0.5 s; turned off at a task's end, with the
+        camera's close, 1.4 to 1.8 s with both arms standing). A pole already at its height, or one refused, has it
+        done right after. The result's ``feed`` is the capture's name, or 'off'; a feed that could not be turned on is
+        raised after the pole and the hand are judged, as before."""
         Hand, _counts, Pole = _runner().load_aux_classes()
         rule = next(m for c in Hand.__mro__ if hasattr(m := sys.modules.get(c.__module__), "HAND_ARRIVE_COUNTS"))
         # ^ the control program's hand.py: its arrival rule's own numbers
@@ -591,6 +630,22 @@ class RealArm:
         self._hand_last = None
         out = dict(pole_ok=False, hand_ok=False)
         why = None
+        slot = {"done": feed is None, "error": None}
+
+        def feed_now():
+            """The feed, once: in the pole's travel when the pole takes the slot (lite_meanwhile), else right after it."""
+            if slot["done"]:
+                return
+            slot["done"] = True
+            try:
+                if feed == "off":
+                    fed = self.drop_feed()
+                    out["feed"] = "off" if fed is None else dict(fed, off=True)
+                else:
+                    out["feed"] = self.keep_feed(str(feed["on"]), records=Path(feed["records"]) if feed.get("records") else None)
+            except Exception as exc:                                        # noqa: BLE001 - said after the pole and the hand
+                slot["error"] = exc
+
         with self.link.busy("moving the pole and the hand", expect_s=60):
             try:
                 try:
@@ -600,12 +655,22 @@ class RealArm:
                         state["inside"] = True
                     hand, pole = Hand(self.robot), _quick_pole(Pole)(self.robot)
                     start = pole.height_m()
-                    hand.open()
+                    port, most = self._hand_port, int(getattr(rule, "HAND_SPEED_SET_MAX", HAND_SPEED_SET))
+                    if port is not None and port.get("speeds") == [most] * 6:
+                        hand.speed_set = most                         # Modbus mode on at this SPEED_SET already: nothing to send
+                    else:
+                        hand.open()                                   # modbus mode on, SPEED_SET at its most (the control program's)
+                        self._hand_port = dict(speeds=[most] * 6)
                     sent = time.monotonic()
                     hand.command(target, wait=False)                 # the hand moves while the pole travels
-                    ok_p, final_m = pole.move(float(mm) / 1000.0, speed_pct=100, block=False)
+                    if getattr(pole, "lite_meanwhile", False):
+                        ok_p, final_m = pole.move(float(mm) / 1000.0, speed_pct=100, block=False, meanwhile=feed_now)
+                    else:
+                        ok_p, final_m = pole.move(float(mm) / 1000.0, speed_pct=100, block=False)
+                    feed_now()                                       # not taken in the travel (at its height already): now
                     out.update(pole_ok=bool(ok_p), pole_s=round(time.monotonic() - t0, 3), start_mm=None if start is None else round(start * 1000.0, 1),
                                pole_mm=None if final_m is None else round(final_m * 1000.0, 1))
+                    self._pole_last = float(final_m) * 1000.0 if ok_p and final_m is not None else None
                     if ok_p:
                         ok_h, final_h = _hand_arrived(hand, rule, target, sent)
                         if not ok_h:                                 # not there in a whole stroke's time: as runner v14 does
@@ -613,6 +678,7 @@ class RealArm:
                             out["hand_sent_again"] = True
                         out.update(hand_ok=bool(ok_h), hand=final_h)
                         self._hand_last = dict(counts=list(target), after=list(final_h)) if ok_h and final_h else None
+                        self._hand_seen(final_h)
                 finally:
                     with guard:
                         state["inside"] = False
@@ -629,12 +695,7 @@ class RealArm:
                 why = "stop"
             except Exception as exc:                                            # noqa: BLE001 - the pole or the hand refused
                 why = str(exc)
-            finally:
-                try:
-                    if hand is not None:
-                        hand.close()
-                except Exception:                                               # noqa: BLE001
-                    pass
+                self._hand_port = None                # what the port holds is not known after a refusal
         out["t_s"] = round(time.monotonic() - t0, 3)
         ok = why is None and out["pole_ok"] and out["hand_ok"]
         self._hw("pole and hand", args=dict(mm=float(mm), hand=target), ok=ok, elapsed_s=out["t_s"],
@@ -647,6 +708,8 @@ class RealArm:
                             f"{','.join('hold' if v is None else str(v) for v in target)} "
                             f"({why or ('the pole did not arrive' if not out['pole_ok'] else 'the hand did not arrive')}).",
                             "Check the pole and the hand, then run it again.")
+        if slot["error"] is not None:
+            raise slot["error"]
         return out
 
     def keep_hand(self) -> bool:
@@ -657,13 +720,21 @@ class RealArm:
             return True
         from alix_dispatch import peripherals
 
+        hand = _quick_hand(peripherals.HandModbus)(self.robot, self.side, log=self._alix_log())
+        port = self._hand_port
+        if port is not None:                         # the end port in Modbus mode at these SPEED_SETs already (Lite's own open,
+            speeds = [int(v) for v in port["speeds"]]   # nothing closed since): the session is this one's, nothing sent (27 Oct)
+            hand.opened, hand.speed_set = True, min(speeds)
+            self._hand, self._hand_speeds = hand, speeds
+            self._hw("hand open", ok=True, elapsed_s=0.0, text=f"end port in modbus mode at SPEED_SET {min(speeds)} already: nothing sent")
+            return True
         with self.link.busy("opening the hand"):
-            hand = _quick_hand(peripherals.HandModbus)(self.robot, self.side, log=self._alix_log())
             ret = hand.open(speed_set=HAND_SPEED_SET)
         if ret != 0:
             self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
             return False
         self._hand, self._hand_speeds = hand, [HAND_SPEED_SET] * 6
+        self._hand_port = dict(speeds=[HAND_SPEED_SET] * 6)
         return True
 
     def drop_hand(self) -> None:
@@ -689,6 +760,7 @@ class RealArm:
                      + ("" if ok else f" — write FAILED ret={rep.get('ret')}"))
         if hand is self._hand:
             self._hand_speeds = sets if ok else None
+            self._hand_port = dict(speeds=list(sets)) if ok else None
 
     def hand_to(self, counts: list, duration_s: float | None = None) -> dict:
         """The hand alone to six counts, read back: at SPEED_SET 500 (Advanced), or, for a plan's hand move
@@ -698,6 +770,14 @@ class RealArm:
         thumb stopped 714 counts short)."""
         from alix_dispatch import peripherals
 
+        from .staging import HAND_SAME_COUNTS
+
+        last = self._hand_last                         # asked for the very counts of Lite's last hand move (which may have settled
+        if (last is not None and len(last["counts"]) == len(counts)      # short of them, on the glove): nothing has moved the hand
+                and all((c is None) == (l is None) and (c is None or int(c) == int(l)) for c, l in zip(counts, last["counts"]))):
+            self._hw("hand move", args=dict(counts=list(counts), speed_set=None), ok=True, elapsed_s=0.0,      # since (a runner call
+                     text=f"already commanded to these counts and settled at {last['after']}: nothing sent, nothing read")   # or a staging
+            return dict(ok=True, arrived=True, after=list(last["after"]), skipped=True)                         # forgets it)
         with self.link.busy("moving the hand"):
             hand = self._hand
             if hand is None:
@@ -706,19 +786,11 @@ class RealArm:
                 if ret != 0:
                     self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
                     raise UserError(f"The {self.SIDE} hand cannot be reached (Modbus).", "Check the hand's cable and power.")
-            from .staging import HAND_SAME_COUNTS
-
+                self._hand_port = dict(speeds=[HAND_SPEED_SET] * 6)
             now = getattr(hand, "read", lambda: None)()
             if now is not None and all(c is None or abs(int(c) - int(a)) <= HAND_SAME_COUNTS for c, a in zip(counts, now)):
                 self._hw("hand move", args=dict(counts=list(counts), speed_set=None), ok=True, elapsed_s=0.0,
                          text=f"already at {now} (within {HAND_SAME_COUNTS} counts), nothing sent")
-                return dict(ok=True, arrived=True, after=now, skipped=True)
-            last = self._hand_last                     # asked for the counts its last move settled short of (the glove): there
-            if (now is not None and last is not None and len(last["counts"]) == len(counts)
-                    and all((c is None) == (l is None) and (c is None or int(c) == int(l)) for c, l in zip(counts, last["counts"]))
-                    and len(last["after"]) == len(now) and all(abs(int(a) - int(b)) <= HAND_SAME_COUNTS for a, b in zip(now, last["after"]))):
-                self._hw("hand move", args=dict(counts=list(counts), speed_set=None), ok=True, elapsed_s=0.0,
-                         text=f"already commanded to these counts and settled at {now} (stopped on force: the glove), nothing sent")
                 return dict(ok=True, arrived=True, after=now, skipped=True)
             used = [HAND_SPEED_SET] * 6                # every hand move at 100 % (the owner, 27 Oct; a plan's move went at the
             if hand is self._hand:                     # speeds ALIX's executive set from its planned time, 24-26 Oct)
@@ -732,6 +804,7 @@ class RealArm:
             raise UserError(f"The {self.SIDE} hand did not reach its pose (it reads {out.get('after')}).",
                             "Check the hand, then try again.")
         self._hand_last = dict(counts=list(counts), after=list(out.get("after") or [])) if out.get("after") else None
+        self._hand_seen(out.get("after"))
         return out
 
     # ── the controller's run mode
@@ -1155,8 +1228,9 @@ class RealArm:
         STOP does (Ctrl+C: its own slow stop of the arm, the pole stopped, the hand frozen). ``record``: the
         controller's feed recorded to that file around the call (S2_FEED_CYCLE; the result's ``feed``), unless a
         recording kept for the stage (``keep_s2_feed``) is on."""
-        self._hand_last = None                       # runner v14's own Hand steps move it
-        self.drop_feed()                             # a lid or seat run's kept feed never stays on under a program
+        self._hand_last = self._hand_port = self._pole_last = None   # runner v14's own Hand and Pole steps move them; its Hand
+        self.drop_feed()                             # steps close the end port's Modbus mode. A lid or seat run's kept feed
+                                                     # never stays on under a program
         rt = _runner()
         norm = [rt.normalize_workflow_step(st) for st in steps]
         a = SimpleNamespace(yes=True, side=self.side, workflow_overall_speed=int(overall_pct), restore_speed=int(restore_pct),
@@ -1507,6 +1581,17 @@ class RealArm:
             self._feed[0].attach_monitor(self._tap)
             self._hw("canfd feed", args=dict(label=label, capture=self._feed[1].name), ok=True, text="on, kept for the run's moves")
         return self._feed[1].name
+
+    def joints_now(self, max_age_s: float = FEED_FRESH_S) -> dict:
+        """The arm's joints now (deg): the kept feed's latest frame when it is under ``max_age_s`` old (a 5 ms frame, no
+        call to the controller: 27 Oct, a reading before every stream took 0.1 to 0.2 s), else one reading of the
+        controller (robot_link.read_fresh). {'joints_deg', 'by': 'feed' | 'read', 'age_s'}."""
+        t, frame = self._tap.t_mono, self._tap.frame
+        pos = ((frame or {}).get("joint_status") or {}).get("joint_position")
+        if self._feed is not None and t is not None and pos and time.monotonic() - t <= max_age_s:
+            return dict(joints_deg=[float(v) / 1000.0 for v in pos], by="feed", age_s=round(time.monotonic() - t, 3))
+        fb = self.link.read_fresh()
+        return dict(joints_deg=fb.get("joints_deg"), by="read", age_s=0.0)
 
     def hand_load(self) -> dict | None:
         """The wrist's load now (N) from the kept feed's latest frame, and that frame's age, or None without a feed or

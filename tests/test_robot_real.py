@@ -204,6 +204,7 @@ def test_a_hand_settled_short_on_force_is_in_pose(monkeypatch):
     arm, pose = RealArm(Link()), [1000, 1000, 1000, 1000, 0, 1000]
     said["out"] = dict(ok=True, arrived=False, settled=True, ret=0, after=[1000, 999, 1000, 1000, 714, 992], t_s=0.89)
     assert arm.hand_to(pose)["after"][4] == 714
+    arm._hand_last = None                            # asked for its last move's counts again it would not be sent (27 Oct)
     said["out"] = dict(ok=False, arrived=False, settled=False, ret=0, after=None, t_s=3.0)       # timed out
     with pytest.raises(UserError, match="did not reach its pose"):
         arm.hand_to(pose)
