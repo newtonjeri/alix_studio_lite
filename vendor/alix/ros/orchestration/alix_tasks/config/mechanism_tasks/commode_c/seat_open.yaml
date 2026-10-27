@@ -47,9 +47,11 @@ task_parameters:
   final_state: SEAT_OPEN
   mechanism_type: seat
   enable_washroom_scene: true
-  # The right arm's look from inspection pose 4 before the lift, with its check(s): true for the plan a task runs on its
-  # own; false for the plan a SEQUENCE runs (the owner, 27 Oct: the sequence's own order made that state, the lid closed
-  # because its top was just cleaned, the seat closed because its top was, so the task starts with the lift). Lite keeps
+  # The checks at the task's start (verify_lid_open, verify_seat_closed, from inspection pose 4): true for the plan a
+  # task runs on its own; false for the plan a SEQUENCE runs (the owner, 27 Oct: the sequence's own order made that
+  # state, the lid open by Open the lid, the seat closed because its top was just cleaned, so no check is asked before
+  # the lift). The MOVE to inspection pose 4 (and the fist before it) stays in both: the lifted check is taken from
+  # there (27 Oct 12:56, a plan without it took that check from rest and the camera could not judge it). Lite keeps
   # both plans: <task>_toppra.json and <task>_seq_toppra.json (planned with this false).
   inspect_before_lift: true
 
@@ -191,8 +193,6 @@ stage_sequence:
     arm: right
     pose_name: grasp
     planning_group: inspire_hand_right
-    conditional: true
-    condition_param: inspect_before_lift
 
   - stage: move_to_inspect
     speed_class: freespace
@@ -215,8 +215,6 @@ stage_sequence:
   #                      height in the front ROI). NO -> on_fail skip: the
   #                      seat is already up, this plan's outcome holds, it ends
   #                      here as done and the arms are parked at its end state.
-    conditional: true
-    condition_param: inspect_before_lift
   - stage: verify_lid_open
     check: fixture_gap
     expect: lid_open
@@ -232,14 +230,14 @@ stage_sequence:
     expect: seat_closed
     arm: right
     on_fail: skip
+    conditional: true                            # not asked in a sequence (inspect_before_lift false)
+    condition_param: inspect_before_lift
 
   # ---------------------------------------------------------------------------
   # 2. LEFT arm lifts the seat (partial lift, 0 -> -30 deg)
   # ---------------------------------------------------------------------------
   # (26 Oct: no hand_release here. The executive sets the hand to the half_grasp
   # below before the plan starts; the release then re-grasp cost 2.4 s a run.)
-    conditional: true
-    condition_param: inspect_before_lift
   - stage: move_to_half_pole_length
     arm: left
     pose_name: half_length

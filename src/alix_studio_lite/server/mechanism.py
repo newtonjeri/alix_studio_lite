@@ -83,19 +83,20 @@ TASKS = {
         does="The camera checks the lid is open (else Open the lid runs first) and the seat is down; the left arm "
              "lifts the seat, the camera checks it is up (one re-lift), then the right arm opens it fully; at the end "
              "the camera checks the lid and the seat are open."),
-    # the plans a SEQUENCE runs (the owner, 27 Oct): the same configs planned with inspect_before_lift false, so there is
-    # no look before the lift (the sequence's own order made that state); the lifted check and the end look stay. The
-    # lid's goes to its hold by a joint-space move from rest (the config's direct_approach: the very joints the plan with
-    # the look reaches), and its push may touch the lid with the thumb's base link as it does with the thumb's tip (the
-    # config's allow_collision; without it the push planned from rest met the lid 49 mm in with that link).
+    # the plans a SEQUENCE runs (the owner, 27 Oct): the same configs planned with inspect_before_lift false: the checks
+    # before the lift are not in them (the sequence's own order made that state), the moves are the task's own. The right
+    # arm's move to inspection pose 4 STAYS: the lifted check is taken from there (the lab, 27 Oct 12:56: a plan without
+    # that move took the lifted check from rest and the camera could not judge it, five frames refused; the owner: only
+    # the first inspection, at the task's start, is skipped).
     "lid_open_seq": dict(
         title="Open the lid (in a sequence)", short="LID OPEN", start="lid closed", end="lid open, seat down", variant_of="lid_open",
-        does="The left arm lifts the lid at once, the camera checks it is up (up to three re-lifts), then the right arm "
-             "takes it from its rest and opens it fully; at the end the camera checks the lid is open and reads the seat."),
+        does="The right arm goes to its inspection pose with no check asked; the left arm lifts the lid, the camera "
+             "checks it is up (up to three re-lifts), then the right arm takes it and opens it fully; at the end the "
+             "camera checks the lid is open and reads the seat."),
     "seat_open_seq": dict(
         title="Open the seat (in a sequence)", short="SEAT OPEN", start="lid open, seat down", end="lid and seat open", variant_of="seat_open",
-        does="The left arm lifts the seat at once, the camera checks it is up, the right arm opens it fully and the "
-             "camera checks it at the end."),
+        does="The right arm goes to its inspection pose with no check asked; the left arm lifts the seat, the camera "
+             "checks it is up (one re-lift), then the right arm opens it fully and the camera checks it at the end."),
 }
 
 

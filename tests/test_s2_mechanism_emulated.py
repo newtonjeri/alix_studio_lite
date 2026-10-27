@@ -33,11 +33,13 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     assert sim["phases"][-1][1] == "lid_open"
     right = sim["acts"]["right"]                 # drawn as it runs: the plan's own end check (lid open) from inspection pose 1
     assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_lifted", "lid_open"]   # no seat under the lid; no start check in a sequence (27 Oct)
+    first_look = next(a for a in right if a["kind"] == "stream")                   # the look move stays: the lifted check is taken from
+    lifted = next(a for a in right if a["kind"] == "check")                        # inspection pose 4 (the owner, 27 Oct, after the 12:56
+    assert "move_to_inspect" in first_look["text"] and first_look["t0"] < lifted["t0"]   # run: taken from rest, five frames refused)
     looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:lid_open_seq:")]   # the sequence's own plan
     joined = sorted((a for a in sim["acts"]["left"] + right if ":joined:" in str(a.get("file"))), key=lambda a: a["t0"])
-    assert [a["file"].split(":")[-1] for a in joined] == ["3", "3", "2"]              # the run's streams (27 Oct): the left's
+    assert [a["file"].split(":")[-1] for a in joined] == ["3", "2", "2"]              # the run's streams (27 Oct): the left's
     assert "move_to_pre_start + move_to_start + execute_path as one stream" in joined[0]["text"]   # approach and lift, the right's
-    assert "move_to_hold_direct + move_to_pre_start + move_to_start as one stream" in joined[1]["text"]   # way from rest to its
     assert any("stops at its junctions taken out" in a["text"] for a in joined)
     last_check = [a for a in right if a["kind"] == "check"][-1]
     assert looks[-2]["t0"] < last_check["t0"] < looks[-1]["t0"]            # the look to pose 1, the camera, then the rest

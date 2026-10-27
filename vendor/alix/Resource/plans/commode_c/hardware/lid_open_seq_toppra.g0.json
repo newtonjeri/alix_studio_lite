@@ -2,7 +2,7 @@
   "source": "/home/newtonjeri/alix_ws/src/alix/Resource/plans/commode_c/hardware/lid_open_seq_toppra.json",
   "emitter": "alix_tasks track_emit (C++ port of cleaning_tracks.py emit_fastpath: the plan's own timing, resampled duration-preserving onto the 5.0 ms emit clock = the CANFD stream period)",
   "group": 0,
-  "stage_indices": [6],
+  "stage_indices": [7],
   "stages": [{"stage": "execute_path", "points": [0, 910]}],
   "stage_names": ["execute_path"],
   "join_gap_deg": [],
@@ -30,7 +30,7 @@
   "position_margin_min_deg": 7.502999999999997,
   "position_margin_min_joint": 5,
   "pre_stroke": {"pole_m": 0.15, "pole_stage": "move_to_half_pole_length", "hand_counts": [516, 516, 516, 516, 133, 944], "hand_stage": "hand_grasp"},
-  "retreat_stage_index": 9,
+  "retreat_stage_index": 10,
   "gates": {
     "position_margin_deg": 7.502999999999997,
     "position_margin_min_joint": 5,
