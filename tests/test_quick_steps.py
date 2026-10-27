@@ -408,4 +408,4 @@ def test_the_approachs_two_movejs_go_at_once_when_their_paths_are_checked_clear(
             assert asked[0]["pole"] == pytest.approx(150.1, abs=0.1) and asked[0]["hand"] == [33, 33, 33, 33, 133, 944]
         if scene is not None and not together:
             assert any("one after the other: the paths would meet: the two arms" in t for t in said)
-    assert mechanism.APPROACH_GRID == 7 and mechanism.PHASE_BEFORE == {"lid_open": "lid_closed", "seat_open": "lid_open"}
+    assert mechanism.APPROACH_GRID == 7 and mechanism.PHASE_BEFORE["lid_open"] == "lid_closed" and mechanism.PHASE_BEFORE["seat_open"] == "lid_open"

@@ -83,7 +83,23 @@ TASKS = {
         does="The camera checks the lid is open (else Open the lid runs first) and the seat is down; the left arm "
              "lifts the seat, the camera checks it is up (one re-lift), then the right arm opens it fully; at the end "
              "the camera checks the lid and the seat are open."),
+    # the plans a SEQUENCE runs (the owner, 27 Oct): the same configs planned with inspect_before_lift false, so there is
+    # no look before the lift (the sequence's own order made that state); the lifted check and the end look stay
+    # (no lid_open_seq yet: planned without the look, the right arm's push meets the lid with its thumb, as its pre-start
+    #  and start take another IK solution from rest than from pose 4; the owner's config decision. In a sequence Open the
+    #  lid keeps its look move and skips only the check.)
+    "seat_open_seq": dict(
+        title="Open the seat (in a sequence)", short="SEAT OPEN", start="lid open, seat down", end="lid and seat open", variant_of="seat_open",
+        does="The left arm lifts the seat at once, the camera checks it is up, the right arm opens it fully and the "
+             "camera checks it at the end."),
 }
+
+
+def sequence_plan(task: str) -> str:
+    """The plan a sequence runs for ``task``: its ``<task>_seq`` plan when Lite holds one (no look before the lift), else
+    the task's own (its start checks then not asked: Runner start_checks)."""
+    seq = f"{task}_seq"
+    return seq if seq in TASKS and (PLANS / f"{seq}_{MODE}.json").is_file() else task
 #: The closings (Close the seat, Close the lid) are not offered (the owner, 26 Oct: the plans of 25 Oct are not the
 #: final ones, removed and never run; the correct ones come later). The rows that ran them are plain arm steps until then.
 
@@ -91,9 +107,9 @@ TASKS = {
 #: Lite's catalogue rows (docs/region_catalogue_commode_c.csv) and the plan each one runs
 ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T03": "seat_open", "R-T03": "seat_open"}
 #: the commode's state after each, for the 3D and the collision check (Lite's phases)
-PHASE_AFTER = {"lid_open": "lid_open", "seat_open": "seat_open"}
+PHASE_AFTER = {"lid_open": "lid_open", "seat_open": "seat_open", "seat_open_seq": "seat_open"}
 #: the commode's state as each starts (the approach's two MoveJs are checked in it)
-PHASE_BEFORE = {"lid_open": "lid_closed", "seat_open": "lid_open"}
+PHASE_BEFORE = {"lid_open": "lid_closed", "seat_open": "lid_open", "seat_open_seq": "lid_open"}
 APPROACH_GRID = 7         #: each arm's MoveJ path sampled at this many points; every pair of the two arms' samples is checked
                           #: (49 states), as their timing against each other is not known
 
@@ -256,6 +272,7 @@ class Plan:
             raise UserError(f"ALIX's plan {self.path.name} is not in Lite.", "Run tools/vendor_from_alix.py.")
         self.data = json.loads(self.path.read_text(encoding="utf-8"))
         self.title = TASKS.get(name, {}).get("title", name)
+        self.rungs_stem = f"{TASKS.get(name, {}).get('variant_of', name)}_{MODE}"   # a sequence plan's re-lifts: its task's own
         self.entries = _entries(self.data, self.path.parent, self.path.name)
         self.final_actions = list(self.data.get("final_actions") or [])
         self.made = self.data.get("timestamp_human")
@@ -294,6 +311,7 @@ class Plan:
         An arm with no pole or hand entry before its first move keeps its start state."""
         out = {side: dict(tg) for side, tg in self.targets("start").items()}
         for side in out:
+            hand_seen = False
             for e in self.entries:
                 if e.side != side:
                     continue
@@ -301,8 +319,8 @@ class Plan:
                     break
                 if e.kind == "pole":
                     out[side]["pole_mm"] = round(e.last()[0] * 1000.0, 1)
-                elif e.kind == "hand":
-                    out[side]["hand"] = e.hand_counts()
+                elif e.kind == "hand" and not hand_seen:                     # the first hand entry (27 Oct)
+                    out[side]["hand"], hand_seen = e.hand_counts(), True
         return out
 
     def seconds(self) -> float:
@@ -315,7 +333,7 @@ class Plan:
 
     def rung_block(self, k: int, lifter: str) -> list | None:
         """rungs/<plan>.rung<k>.json: the lifting arm's block for re-lift k (relift.rung_file_block), or None."""
-        path = self.path.parent / "rungs" / f"{self.path.stem}.rung{k}.json"
+        path = self.path.parent / "rungs" / f"{self.rungs_stem}.rung{k}.json"
         if not path.is_file():
             return None
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -332,7 +350,7 @@ class Plan:
     def rung_made(self, k: int) -> str | None:
         """When re-lift ``k``'s rung was planned (its file's timestamp), or None."""
         try:
-            return json.loads((self.path.parent / "rungs" / f"{self.path.stem}.rung{k}.json").read_text(encoding="utf-8")).get("timestamp_human")
+            return json.loads((self.path.parent / "rungs" / f"{self.rungs_stem}.rung{k}.json").read_text(encoding="utf-8")).get("timestamp_human")
         except (OSError, ValueError):
             return None
 
@@ -368,8 +386,8 @@ class Plan:
                     entries=[dict(stage=e.stage, kind=e.kind, side=e.side, seconds=round(e.seconds, 2),
                                   lines=len(e.rows) if e.rows else None, track=e.group is not None) for e in self.entries],
                     checks=self.checks(), standoff_mm=STANDOFF_MM, rungs_note=self.rungs_note(),
-                    rungs=sorted(int(m.group(1)) for p in (self.path.parent / "rungs").glob(f"{self.path.stem}.rung*.json")
-                                 if (m := re.fullmatch(re.escape(self.path.stem) + r"\.rung(\d+)\.json", p.name))))
+                    rungs=sorted(int(m.group(1)) for p in (self.path.parent / "rungs").glob(f"{self.rungs_stem}.rung*.json")
+                                 if (m := re.fullmatch(re.escape(self.rungs_stem) + r"\.rung(\d+)\.json", p.name))))
 
 
 @lru_cache(maxsize=8)
@@ -1450,7 +1468,7 @@ def _finish(out: dict, plan, mode) -> dict:
 
 
 def catalogue() -> list:
-    return [Plan(n).view() for n in TASKS]
+    return [Plan(n).view() for n in TASKS if "variant_of" not in TASKS[n]]    # the tasks; their sequence plans are theirs
 
 
 #: ALIX's inspection poses of the right arm (its MoveIt group states; the owner, 18 Oct: "the inspection poses 1 and 4").

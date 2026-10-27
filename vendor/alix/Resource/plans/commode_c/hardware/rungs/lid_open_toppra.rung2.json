@@ -1,6 +1,6 @@
 {
   "task_name": "lid_open_toppra.rung2",
-  "timestamp_human": "2026-10-27 06:17:47",
+  "timestamp_human": "2026-10-27 06:48:41",
   "cleaning_path_mode": "toppra",
   "path_source": "spline",
   "time_parameterization_mode": "toppra",
@@ -2265,6 +2265,7 @@
     "enable_visualization": true,
     "enable_washroom_scene": true,
     "enable_washroom_structure": true,
+    "inspect_before_lift": true,
     "plan_only": true,
     "record_trajectory": true,
     "replan_block": true

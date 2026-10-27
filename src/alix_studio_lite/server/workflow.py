@@ -852,7 +852,7 @@ def identity_of(run: dict, programs: dict, points: dict, overall: int) -> dict:
     if tasks:                                       # ALIX's plan files as they are: another plan is another run
         from . import mechanism
 
-        used["mechanisms"] = {t: mechanism.digest(t) for t in sorted(set(tasks))}
+        used["mechanisms"] = {t: mechanism.digest(mechanism.sequence_plan(t)) for t in sorted(set(tasks))}
     return dict(mode=run["mode"], pick=run["pick"], steps={s: [{k: v for k, v in st.items() if k != "_row"} for st in steps]
                                                                for s, steps in run["steps"].items()},
                 plan=plan_shape(run["plan"]), used=used, overall=int(overall))
@@ -1207,7 +1207,7 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     The arms in ``leave`` (their next task's start follows, next_after_tasks) go to no plan's end."""
     from . import mechanism, staging
 
-    plan = mechanism.cached(st["task"])
+    plan = mechanism.cached(mechanism.sequence_plan(st["task"]))     # the sequence's own plan: no look before the lift (27 Oct)
     title, rows = plan.title, st.get("rows") or {}
     mark = {s: {"_row": rows.get(s)} for s in ARMS}
     stale = plan.rungs_note()
@@ -1558,7 +1558,7 @@ def plans_changed(sim: dict | None) -> list[str]:
     out = []
     for task, sha in sorted(made.items()):
         try:
-            same = mechanism.digest(task) == sha
+            same = mechanism.digest(mechanism.sequence_plan(task)) == sha
         except UserError:
             same = False
         if not same:
@@ -2750,7 +2750,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                     mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
                     mech.joints_cool(robot, st["title"])
                     with kit.camera.using():
-                        out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st), start_checks=False).run(st["task"])
+                        out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st),
+                                          start_checks=False).run(mech.sequence_plan(st["task"]))
                     did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
                                     for p in out["plans"])
                     job.log(f"{st['title']}: {did}.")

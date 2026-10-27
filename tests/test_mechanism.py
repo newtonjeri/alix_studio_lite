@@ -416,7 +416,8 @@ def test_the_seat_is_not_looked_for_under_the_lifted_lid():
     assert [c[1:3] for c in ex.calls if c[0] == "ask"] == [("verify_lid_closed", "lid_closed"), ("verify_lid_lifted", "lid_lifted"),
                                                            ("verify_lid_open", "lid_open")]
     assert [p["plan"] for p in out["plans"]] == ["lid_open"]
-    assert not {"seat_close", "lid_close", "seat_close_right"} & set(mechanism.TASKS) and set(mechanism.ROWS.values()) == set(mechanism.TASKS)
+    tasks = {n for n in mechanism.TASKS if "variant_of" not in mechanism.TASKS[n]}          # the tasks; a _seq plan is a task's own (27 Oct)
+    assert not {"seat_close", "lid_close", "seat_close_right"} & set(mechanism.TASKS) and set(mechanism.ROWS.values()) == tasks
     assert not any("also_observe" in c or "if_observed" in c for c in mechanism.Plan("lid_open").checks())
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_seat_open"])            # the seat came up with the lid: the end check reads it
     out = mechanism.Runner(ex).run("lid_open")
@@ -471,9 +472,9 @@ def test_a_plan_whose_end_state_the_camera_does_not_see_stops_the_run():
         assert np.allclose(np.degrees(np.asarray(look.last(), dtype=float)), poses["inspection_pose_1"], atol=0.5), name
 def test_the_catalogue_says_what_each_task_does_and_the_rows_it_runs_for():
     cat = {c["name"]: c for c in mechanism.catalogue()}
-    assert set(cat) == set(mechanism.TASKS)
+    assert set(cat) == {n for n in mechanism.TASKS if "variant_of" not in mechanism.TASKS[n]}   # the tasks, not their sequence plans
     assert cat["lid_open"]["standoff_mm"] == 250 and cat["lid_open"]["seconds"] > 5
-    assert set(mechanism.ROWS.values()) == set(mechanism.TASKS)
+    assert set(mechanism.ROWS.values()) == set(cat)
     # ALIX's inspection poses of the right arm, from its group states; pose 4 is where lid_open's move_to_inspect ends
     poses = {p["name"]: p for p in mechanism.poses()}
     assert list(poses) == ["inspection_pose_1", "inspection_pose_4"] and all(p["arm"] == "right" for p in poses.values())
@@ -514,7 +515,7 @@ def test_a_simulation_made_with_a_plan_revised_since_is_never_played_and_says_so
     changed instead of failing."""
     from alix_studio_lite.server import workflow
 
-    now = mechanism.digest("seat_open")
+    now = mechanism.digest(mechanism.sequence_plan("seat_open"))
     sim = {"identity": {"used": {"mechanisms": {"lid_open": "0" * 64, "seat_open": now}}}}
     assert workflow.plans_changed(sim) == ["Open the lid"]
     with pytest.raises(UserError) as err:

@@ -47,6 +47,11 @@ task_parameters:
   final_state: SEAT_OPEN
   mechanism_type: seat
   enable_washroom_scene: true
+  # The right arm's look from inspection pose 4 before the lift, with its check(s): true for the plan a task runs on its
+  # own; false for the plan a SEQUENCE runs (the owner, 27 Oct: the sequence's own order made that state, the lid closed
+  # because its top was just cleaned, the seat closed because its top was, so the task starts with the lift). Lite keeps
+  # both plans: <task>_toppra.json and <task>_seq_toppra.json (planned with this false).
+  inspect_before_lift: true
 
   # Compound (dual-arm) control
   # -------------------------------------------------------------------------
@@ -186,6 +191,8 @@ stage_sequence:
     arm: right
     pose_name: grasp
     planning_group: inspire_hand_right
+    conditional: true
+    condition_param: inspect_before_lift
 
   - stage: move_to_inspect
     speed_class: freespace
@@ -208,6 +215,8 @@ stage_sequence:
   #                      height in the front ROI). NO -> on_fail skip: the
   #                      seat is already up, this plan's outcome holds, it ends
   #                      here as done and the arms are parked at its end state.
+    conditional: true
+    condition_param: inspect_before_lift
   - stage: verify_lid_open
     check: fixture_gap
     expect: lid_open
@@ -215,6 +224,8 @@ stage_sequence:
     on_fail: run_prerequisite
     prerequisite: lid_open
     max_retries: 1
+    conditional: true
+    condition_param: inspect_before_lift
 
   - stage: verify_seat_closed
     check: fixture_gap
@@ -227,6 +238,8 @@ stage_sequence:
   # ---------------------------------------------------------------------------
   # (26 Oct: no hand_release here. The executive sets the hand to the half_grasp
   # below before the plan starts; the release then re-grasp cost 2.4 s a run.)
+    conditional: true
+    condition_param: inspect_before_lift
   - stage: move_to_half_pole_length
     arm: left
     pose_name: half_length
