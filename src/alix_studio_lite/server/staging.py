@@ -45,7 +45,7 @@ PRESETS = {
 TRANSIT_FRACTION = 0.30               # a merge's join: its moves between files, as a fraction of each joint's rating
 CYCLE_S = 0.005
 SPEED_FOUND_PCT = 50                  # the controller's global speed when it does not say: what ALIX and the runner leave
-DEFAULT_MOVE_PCT = 15                 # the speed slider when Lite starts (the owner, 17 Oct: "the default speed should be 15%")
+DEFAULT_MOVE_PCT = 60                 # the speed slider when Lite starts (the owner, 27 Oct: "the default speed for movej and other movements should be 60%"; 15 % from 17 Oct)
 _move_pct = float(DEFAULT_MOVE_PCT)   # Lite's MoveJ / MoveL speed, the top bar's slider (both arms)
 
 

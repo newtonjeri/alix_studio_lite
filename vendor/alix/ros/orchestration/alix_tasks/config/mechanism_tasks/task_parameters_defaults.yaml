@@ -33,34 +33,20 @@ task_parameters:
   # ---------------------------------------------------------------------------
   # Velocity / acceleration scaling (cross-arm; per-task YAML overrides)
   # ---------------------------------------------------------------------------
-  # TUNED 2026-08-17: 0.5 -> 0.7 on transit, measured on all six commode_c
-  # mechanism tasks. Why it is safe to raise, and why only this far:
-  #   * These are FREE-SPACE moves (pre_start / start / retract / rest). The
-  #     contact motion is `execute_path`, which is governed separately by
-  #     start_pose_* below and by the per-move Cartesian speed.
-  #   * Scaling bounds joint rate as a fraction of the joint limit, so 0.7
-  #     puts the worst joint at 70 % of its limit — inside the <=90 % screen
-  #     that CLEANING_MOTION_SPEC §0 item 1 gates on, with margin.
-  #   * H63 keys on dwell at >=98 % of a limit. At 0.7 that band is
-  #     unreachable by construction, so this cannot create an H63 exposure.
-  # Going higher was NOT taken: 0.9 would sit on the §0 screen threshold with
-  # no margin for the controller's own tracking error, and mechanism motion
-  # moves a grasped fixture — the wrong place to spend the last 20 %.
-  max_velocity_scaling: 0.8                    # Velocity scaling for arm movements
-  # Contract C3 motion-class speed table (2026-08-18): ABSOLUTE
-  # velocity/acceleration scalings, adjustable HERE (config, not code).
+  max_velocity_scaling: 1.0                    # Velocity scaling for arm movements
+
   # Stages opt in via `speed_class:` in stage_sequence.
   speed_classes:
     freespace: 0.8   # free-space moves
-    approach: 0.3    # approach to grasp/contact, retract to release
-    carry: 0.6       # carrying the seat / lid / bin
-  max_acceleration_scaling: 0.8              # Acceleration scaling for arm movements
+    approach: 0.4    # approach to grasp/contact, retract to release
+    carry: 0.8       # carrying the seat / lid / bin
+  max_acceleration_scaling: 1.0              # Acceleration scaling for arm movements
   # max_jerk_scaling: 0.35   # REMOVED 2026-08 — fed Ruckig Pro only. Jerk is now
   #                        # bounded by max_jerk in joint_limits.yaml.
   # DELIBERATELY LEFT AT 0.5 — this governs the approach onto the fixture and
   # the traced opening arc, where the hand is in contact with a moving part.
-  start_pose_velocity_scaling: 0.5
-  start_pose_acceleration_scaling: 0.5
+  start_pose_velocity_scaling: 0.8
+  start_pose_acceleration_scaling: 0.8
 
   # ---------------------------------------------------------------------------
   # Pole scaling (mechanism tasks share full-speed pole motion)

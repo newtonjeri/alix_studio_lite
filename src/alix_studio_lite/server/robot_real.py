@@ -35,8 +35,8 @@ from types import SimpleNamespace
 from .jobs import Cancelled, UserError
 from .robot_link import CLOSE_WAIT_S, return_text
 
-POLE_SPEED_PCT = 50       # the pole in Real (the owner's choice, 14 Oct; ALIX itself ran it at 100 %)
-HAND_SPEED_SET = 500      # the hand's SPEED_SET, of 1000: 50 %
+POLE_SPEED_PCT = 100      # the pole in Real: 100 % (the owner, 27 Oct: "the pole and hand movement are 100 % speed"; 50 % from 14 Oct)
+HAND_SPEED_SET = 1000     # the hand's SPEED_SET, of 1000: 100 % (the owner, 27 Oct; 500 from 14 Oct)
 HAND_STALL_PAIRS = 3      #: a hand that stopped on force (the glove): this many reads in a row alike (ALIX's HAND_SETTLE_COUNTS)
                           #: after it has moved end its move (the owner, 26 Oct: a grasp the glove stops at about 450 counts within
                           #: 0.3 s waited the whole planned stroke, 0.9 s, before ALIX counted it settled)
@@ -532,8 +532,8 @@ class RealArm:
 
     def pole_to(self, mm: float, duration_s: float | None = None) -> dict:
         """The pole alone to ``mm`` (Prepare's Apply beside the pole, Advanced, a lid or seat plan's pole entry), arrival
-        verified; nothing else moves. At 50 %, or, for a plan's pole move (``duration_s``: its planned time), at the
-        speed ALIX's executive sets from that time (device_speed.pole_speed_pct; the owner, 24 Oct). A pole standing
+        verified; nothing else moves. At 100 % (the owner, 27 Oct; before: 50 %, and a plan's move at the speed ALIX's
+        executive set from its planned time, device_speed.pole_speed_pct, 24 Oct). A pole standing
         idle within its 5 mm goal tolerance of ``mm`` is not commanded, as ALIX's stage_arm does: every controller code
         4117 (undocumented) came within a second of a pole command, three of them a command to where the pole stood
         (lid open's 150 -> 150 mm; the owner, 23 Oct: test it)."""
@@ -551,12 +551,8 @@ class RealArm:
                 out = dict(ok=True, ret=None, target_m=float(mm) / 1000.0, start_m=here, final_m=here, t_s=0.0,
                            verified_by="no_op", no_op=True, no_op_source="getter", sent=False)
             else:
-                if duration_s is not None and here is not None:
-                    from .device_speed import pole_speed_pct
-
-                    warm = self._pole_done is not None and time.monotonic() - self._pole_done < 2.0
-                    pct, how = pole_speed_pct(self.side, here, float(mm) / 1000.0, float(duration_s), warm=warm)
-                    pole.log(f"   pole: {pct} % ({how})")
+                if duration_s is not None:                 # a plan's pole move: 100 % too (the owner, 27 Oct; the planned time's
+                    pole.log(f"   pole: {pct} % (the owner, 27 Oct: every pole move at 100 %)")   # speed from 24 Oct)
                 out = pole.move(float(mm) / 1000.0, speed_pct=pct)
                 self._pole_done = time.monotonic()
         self._hw("pole move", args=dict(mm=mm, speed_pct=pct), ret=out.get("ret"), ok=bool(out.get("ok")),
@@ -724,14 +720,9 @@ class RealArm:
                 self._hw("hand move", args=dict(counts=list(counts), speed_set=None), ok=True, elapsed_s=0.0,
                          text=f"already commanded to these counts and settled at {now} (stopped on force: the glove), nothing sent")
                 return dict(ok=True, arrived=True, after=now, skipped=True)
-            used = HAND_SPEED_SET
-            if duration_s is not None:
-                from .device_speed import hand_speed_sets
-
-                used, how = hand_speed_sets(self.side, now, list(counts), float(duration_s))
-                self._hand_speeds_to(hand, used, how)
-            elif hand is self._hand:
-                self._hand_speeds_to(hand, [HAND_SPEED_SET] * 6)
+            used = [HAND_SPEED_SET] * 6                # every hand move at 100 % (the owner, 27 Oct; a plan's move went at the
+            if hand is self._hand:                     # speeds ALIX's executive set from its planned time, 24-26 Oct)
+                self._hand_speeds_to(hand, used, "100 % (the owner, 27 Oct)" if duration_s is not None else "")
             out = hand.command(list(counts), wait=True)
         done = bool(out.get("ok") and (out.get("arrived") or out.get("settled")))
         short = "" if out.get("arrived") or not done else " (settled short of the target: stopped on force)"

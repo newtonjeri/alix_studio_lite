@@ -32,7 +32,7 @@ def server(tmp_path_factory):
     data = tmp_path_factory.mktemp("lite-s2-lid")
     script = data / "answers.json"
     # Open the lid: closed, lifted (the seat under it not asked, 26 Oct), its end check: the lid open
-    script.write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))
+    script.write_text(json.dumps(["lid_lifted", "lid_open"]))          # a sequence: no "lid closed" asked (27 Oct)
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
                              "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"),
                              "--projects", str(data / "projects")],

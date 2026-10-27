@@ -32,14 +32,14 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     assert {"stream", "pole", "hand", "global", "check"} <= kinds
     assert sim["phases"][-1][1] == "lid_open"
     right = sim["acts"]["right"]                 # drawn as it runs: the plan's own end check (lid open) from inspection pose 1
-    assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_closed", "lid_lifted", "lid_open"]   # no seat under the lid
+    assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_lifted", "lid_open"]   # no seat under the lid; no start check in a sequence (27 Oct)
     looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:lid_open:")]
     last_check = [a for a in right if a["kind"] == "check"][-1]
     assert looks[-2]["t0"] < last_check["t0"] < looks[-1]["t0"]            # the look to pose 1, the camera, then the rest
     assert not any("seat_close" in str(a.get("file")) or "seat_open" in str(a.get("file")) for a in right)
     assert any("left out of this collision check" in f["text"] for f in sim["findings"])
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))
+    server["script"].write_text(json.dumps(["lid_lifted", "lid_open"]))          # a sequence: no "lid closed" asked (27 Oct)
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     done = wait(server, job)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])
@@ -90,7 +90,7 @@ def test_s2_after_a_lid_task_with_a_wait_next_each_arm_stays_where_its_plan_ende
     nxt = {side: min(a["t0"] for a in sim["acts"][side] if a["stage"] == 2) for side in ("left", "right")}
     assert nxt["left"] == pytest.approx(nxt["right"], abs=1e-6)          # both arms start the next stage together
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))
+    server["script"].write_text(json.dumps(["lid_lifted", "lid_open"]))          # a sequence: no "lid closed" asked (27 Oct)
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     done = wait(server, job)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])

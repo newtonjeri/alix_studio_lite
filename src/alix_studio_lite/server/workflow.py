@@ -1198,7 +1198,7 @@ def hand_set(st: dict) -> set:
     return {s for s, t in (st.get("then") or {}).items() if t.get("hand") is not None}
 
 
-def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=(), hand_set=()) -> float:
+def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=(), hand_set=(), start_checks=False) -> float:
     """A lid or seat task in the simulation, as Lite runs it (mechanism.Runner) with its checks answered as expected (no
     camera here): each arm to the plan's start (its pole and hand, then the MoveJ at the speed slider's speed), then the
     plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
@@ -1284,8 +1284,11 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         """``owner`` from its start: its entries and their checks, these answered by ``holds`` when given (ended at the
         first that does not hold and skips). True when it skipped."""
         approach(owner.targets("start"), "its start" if owner is plan else f"{owner.title}'s start")
-        unsent = mechanism.trailing_releases(list(owner.entries), hand_set if owner is plan else ())
-        for e in owner.entries:
+        entries = list(owner.entries)
+        if not start_checks and owner is plan:         # a sequence: the checks before the first lift are not asked (27 Oct)
+            entries, _dropped = mechanism.without_start_checks(entries)
+        unsent = mechanism.trailing_releases(entries, hand_set if owner is plan else ())
+        for e in entries:
             for pa in e.pre_actions:
                 if pa.get("type") == "hold_pose" and float(pa.get("seconds") or 0) > 0:
                     dur = float(pa["seconds"])
@@ -1431,7 +1434,7 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
             ready = T
             for s in st.get("clear") or []:
                 ready = max(ready, sims[s].run([{"type": "clear", "_row": (st.get("rows") or {}).get(s), "_alone": True}], T, i))
-            T = _sim_mechanism(st, sims, ready, i, overall, leave=set(st.get("then") or {}), hand_set=hand_set(st))
+            T = _sim_mechanism(st, sims, ready, i, overall, leave=set(st.get("then") or {}), hand_set=hand_set(st), start_checks=False)
             row["t1_plan"] = round(T, 4)                # ALIX's plans end here; Lite's own moves to the next starts follow
             if st.get("then"):
                 T = _sim_then(st, sims, T, i, overall)
@@ -2747,7 +2750,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                     mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
                     mech.joints_cool(robot, st["title"])
                     with kit.camera.using():
-                        out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st)).run(st["task"])
+                        out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st), start_checks=False).run(st["task"])
                     did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
                                     for p in out["plans"])
                     job.log(f"{st['title']}: {did}.")

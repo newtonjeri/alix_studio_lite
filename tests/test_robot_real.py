@@ -488,7 +488,7 @@ def test_the_speed_slider_moves_both_arms_and_each_controller_gets_its_speed_bac
     park move and guard), and the speed found is put back after it, on disconnecting and on closing."""
     sp = call(server, "GET", "/api/robots/speed")
     assert sp["found"]["left"]["read"] and sp["found"]["left"]["pct"] == 100 and sp["assumed"] == 50
-    assert sp["pct"] == 15                      # the slider starts at 15 % (the owner, 17 Oct) and connecting leaves it there
+    assert sp["pct"] == 60                      # the slider starts at 60 % (the owner, 27 Oct; 15 % from 17 Oct) and connecting leaves it there
     assert "1 to 100" in call(server, "POST", "/api/robots/speed", {"pct": 0})["error"]
     assert call(server, "POST", "/api/robots/speed", {"pct": 35})["pct"] == 35
     assert call(server, "GET", "/api/robots/status")["speed"]["pct"] == 35

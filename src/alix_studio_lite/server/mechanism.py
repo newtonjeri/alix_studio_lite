@@ -149,6 +149,7 @@ class Entry:
     rows: list | None = None         # an arm move's 5 ms lines (millidegrees)
     group: int | None = None         # the plan's track group it came from
     note: str = ""                   # "rung 2", "reverse of execute_path" ...
+    blended_s: float = 0.0           # a joined stream: the stops at its junctions taken out, this much (27 Oct)
 
     @property
     def seconds(self) -> float:
@@ -396,6 +397,48 @@ def reverse_block(block: list, note: str = "re-lift restore, reversed") -> list:
     return out
 
 
+JUNCTION_WINDOW_S = 0.3   #: the planner stops at every junction of two moves: slowing this long before it, speeding up this long
+                          #: after (the plans of 26-27 Oct: ramps of 0.2-0.4 s); the window Lite re-times (the owner, 27 Oct)
+JUNCTION_MIN_DEG_S = 5.0  #: a junction the moves already pass slower than this on their fastest joint is left alone
+NO_BLEND_STAGES = ("execute_path",)   #: a carry (the lift, the push) keeps its own start and end: never blended into or out of
+
+
+def blend_junction(rows: list, j: int, w: int | None = None) -> list:
+    """``rows`` (5 ms lines, millidegrees) with the stop at line ``j`` (the first line of the move after) taken out: the
+    window of JUNCTION_WINDOW_S each side is re-timed on the very same path (its lines interpolated along it) so the arm
+    passes through at the speed it enters the window with, easing to the speed it leaves at (the fastest joint's speed,
+    linear across the window); nothing before or after the window changes. Rows untouched when a side of the window is
+    missing or the moves already pass under JUNCTION_MIN_DEG_S."""
+    import bisect
+
+    w = int(round(JUNCTION_WINDOW_S / CLOCK_S)) if w is None else int(w)
+    a, b = max(1, j - w), min(len(rows) - 2, j + w)
+    if a >= j or b <= j:
+        return rows
+    v_in = max(abs(x - y) for x, y in zip(rows[a], rows[a - 1])) / 1000.0 / CLOCK_S
+    v_out = max(abs(x - y) for x, y in zip(rows[b + 1], rows[b])) / 1000.0 / CLOCK_S
+    if min(v_in, v_out) < JUNCTION_MIN_DEG_S:
+        return rows
+    win = rows[a:b + 1]
+    d = [max(abs(x - y) for x, y in zip(win[k], win[k - 1])) / 1000.0 for k in range(1, len(win))]
+    L = sum(d)
+    if L <= 0:
+        return rows
+    cum = [0.0]
+    for dk in d:
+        cum.append(cum[-1] + dk)
+    T = 2.0 * L / (v_in + v_out)
+    n = max(2, int(round(T / CLOCK_S)) + 1)
+    out = []
+    for k in range(n):
+        t = T * k / (n - 1)
+        s_ = min(max(v_in * t + (v_out - v_in) * t * t / (2.0 * T), 0.0), L)
+        i = min(max(bisect.bisect_right(cum, s_) - 1, 0), len(d) - 1)
+        f = 0.0 if d[i] <= 0 else min(1.0, (s_ - cum[i]) / d[i])
+        out.append([int(round(x + (y - x) * f)) for x, y in zip(win[i], win[i + 1])])
+    return rows[:a] + out + rows[b + 1:]
+
+
 def joined_moves(entries: list, i: int, bridged=()) -> tuple:
     """(``entries[i]`` with the same arm's moves straight after it as ONE stream, how many entries it takes): each
     stream has its own start and end (24 Oct: 1.6 s a stream; 26 Oct: about 0.15 s, its end read from the feed). Only a plan's own moves are joined (no re-lift
@@ -419,15 +462,25 @@ def joined_moves(entries: list, i: int, bridged=()) -> tuple:
         group.append(x)
     if len(group) == 1 and not still:
         return e, 1
-    t, q, offset = [], [], 0.0
-    for x in group:
-        t.append(np.asarray(x.t, dtype=float) + offset)
-        q.append(np.asarray(x.q, dtype=float))
-        offset += x.seconds
+    rows = [r for x in group for r in x.rows]
+    cuts = []                                   # the junctions, each the first line of the move after; blended last to first
+    at = 0
+    for x in group[:-1]:
+        at += len(x.rows)
+        cuts.append(at)
+    blended = 0
+    for k in range(len(cuts) - 1, -1, -1):      # the stop between two joined moves taken out (the owner, 27 Oct), a carry's never
+        if group[k].stage in NO_BLEND_STAGES or group[k + 1].stage in NO_BLEND_STAGES or (group[k].note or group[k + 1].note):
+            continue
+        before = len(rows)
+        rows = blend_junction(rows, cuts[k])
+        blended += before - len(rows)
+    t = np.arange(len(rows), dtype=float) * CLOCK_S
+    q = np.radians(np.asarray(rows, dtype=float) / 1000.0)
     names = [x.stage for x in group] + [x.stage for x in still]
-    return Entry(e.i, e.index, " + ".join(names), "arm", e.side, list(e.joints), np.concatenate(t),
-                 np.concatenate(q), list(e.pre_actions), rows=[r for x in group for r in x.rows], group=e.group,
-                 note=" + ".join(x.note for x in group + still if x.note and not x.note.startswith("one point"))), len(group) + len(still)
+    return Entry(e.i, e.index, " + ".join(names), "arm", e.side, list(e.joints), t, q, list(e.pre_actions), rows=rows,
+                 group=e.group, note=" + ".join(x.note for x in group + still if x.note and not x.note.startswith("one point")),
+                 blended_s=round(blended * CLOCK_S, 3)), len(group) + len(still)
 
 
 #: A joint this close to the reversed lift's first line (millidegrees) is where the lift ended.
@@ -478,6 +531,24 @@ FRAMES_REUSE_S = 3.0      #: the frames a check took are judged again for the ch
 FRESH_READING_S = 0.5     #: an arm's latest reading, on its link's own connection, serves a frame when it is this fresh (else one read now)
 
 
+def without_start_checks(entries: list) -> tuple:
+    """(``entries`` with the camera checks before the plan's first lift taken out, those checks): in a sequence the
+    task's start state is the sequence's own doing (the owner, 27 Oct: the lid is closed because the top of the lid was
+    just cleaned; the seat is closed because its top was), so Open the lid's "lid closed" and Open the seat's "lid open"
+    and "seat closed" are not asked; the lifted checks and the end looks stay. A task run on its own keeps them all."""
+    from dataclasses import replace
+
+    first_lift = next((i for i, e in enumerate(entries) if e.kind == "arm" and e.stage == "execute_path"), len(entries))
+    out, dropped = [], []
+    for i, e in enumerate(entries):
+        checks = [a for a in (e.pre_actions or []) if a.get("type") == "check_fixture_state"]
+        if i < first_lift and checks:
+            dropped.extend(checks)
+            e = replace(e, pre_actions=[a for a in e.pre_actions if a.get("type") != "check_fixture_state"])
+        out.append(e)
+    return out, dropped
+
+
 def trailing_releases(entries: list, sides) -> set:
     """ids of each of ``sides``' last entry when it is a hand release with no move of that arm after it: S2 sets the
     hand for the arm's next task's start right after (its ``then``), so the plan's final release is not sent (the owner,
@@ -504,13 +575,14 @@ def frames_said(answers: list) -> str:
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
 class Runner:
-    def __init__(self, ex, say=None, leave=(), hand_set=()):
+    def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True):
         self.ex = ex
         self.say = say or (lambda *_: None)
         # the arms whose next task's start follows the run (S2: workflow.next_after_tasks; the owner, 24 Oct): the run's
         # last plan takes them to no end of its own (a skipped plan's end, the final check's way to where the plan ended)
         self.leave = set(leave)
         self.hand_set = set(hand_set)                # the arms whose next task's start sets the hand: no final release
+        self.start_checks = bool(start_checks)       # False in a sequence: the checks before the first lift are not asked
         self.queue: list = []
         self.k = 0
         self.prereq: dict = {}
@@ -533,6 +605,10 @@ class Runner:
     def _plan(self, name: str) -> str:
         plan = Plan(name)
         entries = list(plan.entries)
+        if not self.start_checks:
+            entries, dropped = without_start_checks(entries)
+            for a in dropped:
+                self.say(f"{a.get('stage')}: not asked, the sequence's own order says {a.get('expect')} (the owner, 27 Oct)")
         state = dict(relifts=0, skipped=False,
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
                                                         for s in plan.sides()) if first is not None))   # after the approach
@@ -899,6 +975,8 @@ class RealExec(_Exec):
                 if not out.get("pole_ok") or not out.get("hand_ok"):
                     raise UserError(f"The {side.upper()} arm was not staged for {where}: pole {out.get('pole_mm')} mm of {mm:.0f}, "
                                     f"hand {out.get('hand')}. Nothing else ran.", "Check the pole and the hand, then try again.")
+                if at == "start" and hasattr(self, "_keep_feed"):  # its 5 ms feed on now, while the other arm still moves (27 Oct)
+                    self._keep_feed(side)
             except BaseException as exc:                                            # noqa: BLE001 - raised below
                 failed[side] = exc
 
@@ -1034,6 +1112,7 @@ class RealExec(_Exec):
             out = arm.stream(rows, e.label(), speed=50, restore_pct=self.robot.found_speed(e.side), bridge_speed=bridge_speed,
                              stop_hook=self.job.on_cancel, records=self.kit.records_dir("canfd"))
             self.say(f"{e.label()}: {out['lines_sent']}/{out['lines']} lines in {out['seconds']:.2f} s"
+                     + (f" ({e.blended_s:.2f} s of stops at its junctions taken out)" if getattr(e, "blended_s", 0) else "")
                      + (f", bridged {out['bridged_deg']:.1f} degrees first" if out.get("bridged_deg") else ""))
 
     def released(self, e, next_stage):

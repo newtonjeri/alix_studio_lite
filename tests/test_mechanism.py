@@ -211,13 +211,18 @@ def test_an_arms_back_to_back_moves_go_as_one_stream_and_the_plan_ends_with_its_
     plan = mechanism.Plan("seat_open")
     joined, used = mechanism.joined_moves(plan.entries, [e.stage for e in plan.entries].index("move_to_pre_start"))
     parts = plan.entries[[e.stage for e in plan.entries].index("move_to_pre_start"):][:used]
-    assert used == 3 and joined.rows == [r for e in parts for r in e.rows]
-    assert abs(joined.seconds - sum(e.seconds for e in parts)) < 1e-9 and joined.side == "left"
-    # the right's move_to_start is the planner's one point where its pre-start ends (26 Oct's plan): named, not streamed again
+    assert used == 3 and joined.side == "left" and joined.rows[-len(parts[2].rows):] == parts[2].rows   # the lift's own lines (27 Oct: the
+    assert len(joined.rows) < sum(len(e.rows) for e in parts) and joined.seconds < sum(e.seconds for e in parts)   # junction before it blended)
+    # the right's pre-start and start are one stream (27 Oct's plan: a 0.05 s start move, their junction blended)
     k = [(e.side, e.stage) for e in plan.entries].index(("right", "move_to_pre_start"))
     joined, used = mechanism.joined_moves(plan.entries, k)
+    assert used == 2 and joined.stage == "move_to_pre_start + move_to_start"
+    assert len(joined.rows) <= len(plan.entries[k].rows) + len(plan.entries[k + 1].rows)
+    # a one-point move to the line the stream already ends on is named with the stream and not streamed again
+    one = mechanism.Entry(99, 99, "move_to_start", "arm", "right", list(plan.entries[k].joints), np.array([0.0, 0.5]),
+                          np.array([plan.entries[k].q[-1], plan.entries[k].q[-1]]), [], rows=[plan.entries[k].rows[-1]] * 101, note="one point")
+    joined, used = mechanism.joined_moves([plan.entries[k], one], 0)
     assert used == 2 and joined.stage == "move_to_pre_start + move_to_start" and joined.rows == plan.entries[k].rows
-    assert abs(joined.seconds - plan.entries[k].seconds) < 1e-9
     assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("seat_open", "start")]      # no move of Lite's after the plan
 
 
@@ -567,3 +572,57 @@ def test_a_re_lift_restore_goes_back_from_where_the_arm_stands():
     assert same == back.rows and none == []
 
 
+
+
+def test_in_a_sequence_the_checks_before_the_first_lift_are_not_asked():
+    """The owner, 27 Oct: in a sequence the task's start state is the sequence's own doing (the lid is closed because
+    its top was just cleaned; the seat because its top was), so Open the lid's "lid closed" and Open the seat's "lid
+    open" and "seat closed" are not asked; the lifted check and the end look stay. A task on its own keeps them all."""
+    ex = FakeExec(["lid_lifted", "lid_open"])
+    out = mechanism.Runner(ex, start_checks=False).run("lid_open")
+    assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("lid_open", "done")]
+    assert [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_lid_lifted", "verify_lid_open"]
+    assert [m[1] for m in moves(ex) if m[3] == "arm"][0] == "move_to_inspect"      # the right's first look's move stays
+    ex = FakeExec(["seat_lifted", "seat_open"])
+    out = mechanism.Runner(ex, start_checks=False).run("seat_open")
+    assert out["plans"][0]["outcome"] == "done" and [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_seat_lifted", "verify_seat_open"]
+    ex = FakeExec(["lid_open", "seat_closed", "seat_lifted", "seat_open"])              # on its own: all four
+    mechanism.Runner(ex).run("seat_open")
+    assert [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_lid_open", "verify_seat_closed", "verify_seat_lifted", "verify_seat_open"]
+    entries, dropped = mechanism.without_start_checks(list(mechanism.Plan("seat_open").entries))
+    assert [a["stage"] for a in dropped] == ["verify_lid_open", "verify_seat_closed"] and len(entries) == len(mechanism.Plan("seat_open").entries)
+
+
+def test_the_stops_at_the_junctions_of_joined_moves_are_taken_out_on_the_same_path():
+    """The owner, 27 Oct: the planner stops at every stage boundary (retract_pose, then retract_pose_2); the stops between
+    joined moves are taken out by re-timing the window around each junction on the very same path, passing through at
+    the speed the arm arrives with and easing to the speed it leaves at. A carry (the lift, the push) keeps its start
+    and end; the lines outside the windows are the planner's own."""
+    plan = mechanism.Plan("seat_open")
+    stages = [(e.side, e.stage) for e in plan.entries]
+    k = stages.index(("left", "move_to_retract"))
+    parts = plan.entries[k:k + 3]
+    joined, used = mechanism.joined_moves(plan.entries, k)
+    assert used == 3 and joined.stage == "move_to_retract + move_to_retract_2 + move_to_rest"
+    raw = [r for e in parts for r in e.rows]
+    assert len(joined.rows) < len(raw) and joined.blended_s > 0.1 and not joined.note
+    assert joined.rows[0] == raw[0] and joined.rows[-1] == raw[-1] and abs(joined.seconds - len(joined.rows) * 0.005) < 0.006
+    w = int(round(mechanism.JUNCTION_WINDOW_S / 0.005))
+    assert joined.rows[:len(parts[0].rows) - w] == raw[:len(parts[0].rows) - w]          # before the first window: the planner's lines
+    step = lambda rows: max(max(abs(x - y) for x, y in zip(rows[i], rows[i - 1])) for i in range(1, len(rows)))   # noqa: E731
+    assert step(joined.rows) <= step(raw) + 1                                             # no line steps faster than the planner's
+    # every new line lies on the planner's path: within a line's step of some original line
+    orig = raw[len(parts[0].rows) - w - 1:len(parts[0].rows) + w + 2]
+    for r in joined.rows[len(parts[0].rows) - w:len(parts[0].rows) - w + 40]:
+        assert min(max(abs(x - y) for x, y in zip(r, o)) for o in orig) <= step(raw) + 1
+    cut = len(parts[0].rows)                                                              # the old stop: zero speed at the junction
+    assert max(abs(x - y) for x, y in zip(raw[cut], raw[cut - 1])) == 0
+    # the lid's lift keeps its start: the junction into execute_path is not blended
+    lid = mechanism.Plan("lid_open")
+    j = [(e.side, e.stage) for e in lid.entries].index(("left", "move_to_pre_start"))
+    joined, used = mechanism.joined_moves(lid.entries, j)
+    assert used == 3 and joined.stage.endswith("execute_path")
+    parts = lid.entries[j:j + 3]
+    assert joined.rows[-len(parts[2].rows):] == parts[2].rows                               # the lift's lines untouched
+    assert len(joined.rows) < sum(len(e.rows) for e in parts)                              # pre_start -> start blended
+    assert mechanism.blend_junction([[0] * 7] * 10, 5) == [[0] * 7] * 10                   # nothing moving: left alone
