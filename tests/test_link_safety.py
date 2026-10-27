@@ -65,7 +65,7 @@ def test_one_stop_at_a_time_and_stop_both_acts_at_once():
     k, sent, arm_stops = link(), [], []
     k.handle = SimpleNamespace(robot=SimpleNamespace(rm_set_arm_stop=lambda: arm_stops.append("rm_set_arm_stop")))
 
-    def stop_now(hard, drag=False):
+    def stop_now(hard, drag=False, h=None):
         sent.append(hard)
         time.sleep(0.4)
         return dict(ok=True, text="RIGHT: stopped on its controller; the arm is still")

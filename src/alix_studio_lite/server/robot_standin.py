@@ -776,6 +776,8 @@ class StandInRobot:
 
     def _recover(self, side: str, link, stuck: tuple) -> None:
         try:
+            if link.stop_in_progress():                 # the call that never came back is a STOP's own (STOP_STUCK_S): the STOP
+                self._stop_wanted.add(side)             # is sent again through the new connection
             self._give_up(side, link, stuck)
             self._reconnect(side)
         finally:
@@ -976,16 +978,16 @@ class StandInRobot:
         t_sent = time.time()
 
         def one(s, link):
-            stuck = self._stuck(link)
-            if stuck:                                   # its handle answers nothing: STOP goes through a new connection
-                self._stop_wanted.add(s)
+            r = link.stop(hard=every, drag=s in teaching)  # drag teaching ends first, within the stop; the link picks the connection
+            if r.get("stuck"):                          # that answers (robot_link._stop_handle: the readings' when a command's call
+                stuck = self._stuck(link) or tuple(r.get("stuck_call") or ("a call", 0.0))   # never came back). None does: STOP
+                self._stop_wanted.add(s)                # goes through a new connection
                 got[s] = dict(ok=False, text=f"{s.upper()}: its connection is stuck ({stuck[0]} not answered for "
                               f"{stuck[1]:.0f} s): STOP will go through a new connection (up to {CONNECT_WAIT_S:g} s)")
                 if s not in self._recovering:
                     self._recovering.add(s)
                     threading.Thread(target=self._recover, args=(s, link, stuck), name=f"lite-recover-{s}", daemon=True).start()
                 return
-            r = link.stop(hard=every, drag=s in teaching)  # drag teaching ends first, within the stop
             if s in teaching and self.log is not None and r.get("drag") is not None:
                 self.log.hardware(s, "rm_stop_drag_teach", ret=r["drag"], ok=r["drag"] == 0, text="STOP: drag teaching left first")
             got[s] = r

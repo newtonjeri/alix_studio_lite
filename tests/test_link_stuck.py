@@ -66,7 +66,8 @@ def lite(tmp_path, monkeypatch, watch_s):
     monkeypatch.setattr(robot_standin, "WATCH_PERIOD_S", watch_s)
     monkeypatch.setattr(robot_standin, "LINK_PROCESS", False)             # the link in this process (robot_process has its own test)
     monkeypatch.setattr(robot_link.ArmLink, "_stop_now",
-                        lambda self, hard, drag=False: dict(ok=True, text=f"{self.side.upper()}: stopped on its controller"))
+                        lambda self, hard, drag=False, h=None: dict(ok=True, text=f"{self.side.upper()}: stopped on its controller",
+                                                                     through="reader" if h is not None and h is self.reader else "cmd"))
     made, conns = [], []                                      # the commands' controllers (one per link); every connection
     per_link = 1 if os.environ.get("LITE_LINK_READER") == "0" else 2     # a link opens the readings' connection first (26 Oct)
 
@@ -134,13 +135,33 @@ def test_a_call_that_never_comes_back_is_seen_given_up_and_the_arm_connected_aga
         assert job.state == "failed" and any("came back" in e["text"] for e in job.events)
 
 
-def test_stop_pressed_while_a_call_is_stuck_goes_through_the_new_connection(tmp_path, monkeypatch):
-    with lite(tmp_path, monkeypatch, watch_s=30.0) as (r, jobs, log, made):         # the watch inert: STOP finds it
+def test_stop_pressed_while_a_call_is_stuck_goes_through_the_readings_connection(tmp_path, monkeypatch):
+    """27 Oct night: a STOP went through the commands' connection alone, so a call stuck there held it until the new
+    connection (20 s). The link's readings' connection (26 Oct) is never inside a command's call: the STOP goes through it
+    at once; the stuck connection is the watch's business."""
+    with lite(tmp_path, monkeypatch, watch_s=30.0) as (r, jobs, log, made):         # the watch inert: STOP alone acts
         r.connect("right")
         first, job = stuck_move(r, jobs)
         time.sleep(0.6)                                          # past CALL_STUCK_S
         q = r.view()["right"]["quality"]
         assert q["level"] == "none" and q["text"].startswith("stuck: rm_set_plan_speed has not answered")
+        assert first.reader is not None and first.stuck("cmd") and first.stuck("reader") is None
+        out = r.stop("right")
+        c = out["controllers"]["right"]
+        assert out["ok"] and c["ok"] and c["through"] == "reader" and "stopped on its controller" in c["text"]
+        assert r.links.get("right") is first and "right" not in r._stop_wanted   # nothing waits for a new connection
+        assert first.stuck("reader") is None                      # the STOP's own calls came back
+
+
+def test_stop_pressed_while_a_call_is_stuck_goes_through_the_new_connection_without_a_readings_connection(tmp_path, monkeypatch):
+    """Without the readings' connection (LITE_LINK_READER=0) the stuck commands' connection is the only one: the STOP
+    never goes through it; the link is given up at once and the STOP goes through the new connection."""
+    monkeypatch.setenv("LITE_LINK_READER", "0")
+    with lite(tmp_path, monkeypatch, watch_s=30.0) as (r, jobs, log, made):         # the watch inert: STOP finds it
+        r.connect("right")
+        first, job = stuck_move(r, jobs)
+        time.sleep(0.6)                                          # past CALL_STUCK_S
+        assert first.reader is None
         out = r.stop("right")                                    # never through the stuck handle
         assert not out["ok"] and "is stuck (rm_set_plan_speed" in out["controllers"]["right"]["text"]
         assert "right" in r._recovering or r.links.get("right") is not first
@@ -149,6 +170,41 @@ def test_stop_pressed_while_a_call_is_stuck_goes_through_the_new_connection(tmp_
         said = [a["text"] for a in log.alerts_view()]
         assert any("STOP sent through the new connection: RIGHT: stopped on its controller" in s for s in said)
         assert job.state == "failed"
+
+
+def test_a_stops_own_call_that_never_comes_back_is_given_up_in_seconds_and_the_stop_sent_again(tmp_path, monkeypatch):
+    """26 Oct 10:09: rm_set_arm_stop was not answered for 20 s before the connection was given up. A STOP's own calls are
+    bounded by STOP_STUCK_S: the watch gives the link up, and the new connection sends the STOP again."""
+    monkeypatch.setattr(robot_link, "STOP_STUCK_S", 0.3)
+    monkeypatch.setattr(robot_standin, "STOP_WAIT_S", 0.5)
+    block, stops = threading.Event(), []
+
+    def stop_now(self, hard, drag=False, h=None):
+        stops.append(self)
+        if len(stops) == 1:                                      # the first STOP's own call never comes back
+            self._stopping.set()
+            self._enter("rm_set_arm_stop", h.robot)
+            block.wait()
+            self._leave()
+            self._stopping.clear()
+            return dict(ok=False, text="RIGHT: STOP not confirmed")
+        return dict(ok=True, text=f"{self.side.upper()}: stopped on its controller")
+
+    try:
+        with lite(tmp_path, monkeypatch, watch_s=0.2) as (r, jobs, log, made):
+            monkeypatch.setattr(robot_link.ArmLink, "_stop_now", stop_now)
+            r.connect("right")
+            first = r.links["right"]
+            out = r.stop("right")
+            assert not out["ok"] and "not confirmed by its controller within 0.5 s" in out["controllers"]["right"]["text"]
+            new = recovered(r, first)                            # the watch: the STOP's call stuck after 0.3 s, the link given up
+            assert new is not None and new is not first and first.abandoned
+            said = [a["text"] for a in log.alerts_view()]
+            assert any("has not answered rm_set_arm_stop for" in s for s in said)
+            assert any("STOP sent through the new connection: RIGHT: stopped on its controller" in s for s in said)
+            assert len(stops) == 2 and stops[1] is new
+    finally:
+        block.set()
 
 
 def test_connect_again_is_not_refused_by_the_stuck_call(tmp_path, monkeypatch):

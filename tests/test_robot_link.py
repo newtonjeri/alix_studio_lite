@@ -366,3 +366,61 @@ def test_a_hand_read_that_fails_puts_the_end_port_back_in_modbus_mode(monkeypatc
     time.sleep(0.35)
     assert link._read_hand(silent) is None and state["sets"] == 3                     # a dead hand: one set per HAND_REOPEN_S
     assert link._read_hand(silent) is None and state["sets"] == 3
+
+
+def test_a_stop_goes_through_the_readings_connection_and_a_stuck_command_call_does_not_hold_it(monkeypatch):
+    """27 Oct night: a STOP went through the commands' connection, behind whatever call was stuck on it (20 s before the
+    watch gave the link up). With the readings' connection (26 Oct) the STOP goes through it; the commands' connection
+    carries it only when the readings' has a stuck call of its own; with both stuck nothing passes (a new connection)."""
+    from types import SimpleNamespace
+
+    from alix_dispatch import staging, track
+
+    from alix_studio_lite.server.robot_link import ArmLink
+
+    cmd, rdr, used = SimpleNamespace(name="cmd"), SimpleNamespace(name="reader"), []
+    monkeypatch.setattr(staging, "stop_devices", lambda h, **kw: used.append((h.robot, kw.get("hand").robot if kw.get("hand") else None))
+                        or dict(stop=dict(arm=dict(ok=True, verb="rm_set_arm_stop", ret=0), pole=dict(ok=True), hand=dict(ok=True))))
+    monkeypatch.setattr(track, "stop_program", lambda robot, **kw: dict(stopped=True))
+    k = ArmLink("right", "192.168.1.103", period_s=10.0)
+    k.handle, k.reader = SimpleNamespace(robot=cmd), SimpleNamespace(robot=rdr)
+    k.feedback = {"hand": [0, 0, 0, 0, 150, 1000]}
+    out = k.stop(hard=True)
+    assert out["ok"] and out["through"] == "reader" and used[-1] == (rdr, rdr)     # the hand frozen through the same connection
+    k._calls[1] = ("rm_set_plan_speed", time.monotonic() - 100, "cmd", False)      # a command's call that never came back
+    assert k.stuck() and k.stuck("cmd") and k.stuck("reader") is None
+    out = k.stop(hard=True)
+    assert out["ok"] and out["through"] == "reader" and used[-1][0] is rdr
+    k._calls[2] = ("rm_get_current_arm_state", time.monotonic() - 100, "reader", False)   # the readings' connection too
+    out = k.stop(hard=True)
+    assert not out["ok"] and out["stuck"] and out["stuck_call"][0] in ("rm_set_plan_speed", "rm_get_current_arm_state")
+    assert "its connections are stuck" in out["text"] and len(used) == 2
+    del k._calls[1]                                                                # the readings' alone: the commands' carries it
+    out = k.stop(hard=False)
+    assert out["ok"] and out["through"] == "cmd" and used[-1][0] is cmd
+    assert k.leave_drag() == -1                                                    # through a handle whose robot has no SDK: -1, no raise
+
+
+def test_a_stops_own_call_is_stuck_after_three_seconds():
+    """A STOP's own call (made while the STOP is being sent) is bounded by STOP_STUCK_S, not the 20 s of a command's
+    (26 Oct 10:09: rm_set_arm_stop unanswered 20 s); the watch then gives the link up and the STOP goes again."""
+    from types import SimpleNamespace
+
+    from alix_studio_lite.server.robot_link import STOP_STUCK_S, ArmLink
+
+    rdr = SimpleNamespace(name="reader")
+    k = ArmLink("right", "192.168.1.103", period_s=10.0)
+    k.handle, k.reader = SimpleNamespace(robot=SimpleNamespace()), SimpleNamespace(robot=rdr)
+    assert STOP_STUCK_S == 3.0 and k._conn_of(rdr) == "reader" and k._conn_of(k.handle.robot) == "cmd" and k._conn_of(None) == "cmd"
+    k._stopping.set()
+    k._enter("rm_set_arm_stop", rdr)
+    tid = next(iter(k._calls))
+    name, t0, conn, stopping = k._calls[tid]
+    assert (name, conn, stopping) == ("rm_set_arm_stop", "reader", True)
+    k._calls[tid] = (name, time.monotonic() - 2.0, conn, stopping)
+    assert k.stuck() is None and k.in_flight()[0] == "rm_set_arm_stop"
+    k._calls[tid] = (name, time.monotonic() - 3.5, conn, stopping)
+    assert k.stuck()[0] == "rm_set_arm_stop" and k.stuck("reader") and k.stuck("cmd") is None
+    k._stopping.clear()
+    k._calls[tid] = ("rm_get_current_arm_state", time.monotonic() - 3.5, "reader", False)    # a reading's call: the 20 s bound
+    assert k.stuck() is None

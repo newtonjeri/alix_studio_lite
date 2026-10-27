@@ -558,20 +558,27 @@ class LinkProcess:
         return str(out) if out else "UNKNOWN"
 
     def stop_in_progress(self) -> bool:
-        return False
+        """A STOP being sent by the worker's link, as its last view said (robot_link.ArmLink.view ``stopping``)."""
+        with self._state:
+            return bool(self._view.get("stopping"))
 
     def leave_drag(self) -> int:
         out = self._control(("leave_drag",), 10.0) if not self._dead else None
         return -1 if out is None else int(out)
 
     def stop(self, hard: bool = True, drag: bool = False) -> dict:
-        """STOP through the worker's own control thread: never behind a command. A worker that does not answer in
-        the time the server waits (STOP_WAIT_S) is said so by the server; a stuck one is replaced (robot_standin)."""
+        """STOP through the worker's own control thread: never behind a command, and through the link's readings' connection
+        when a command's call never came back (the link decides, robot_link.ArmLink.stop; until 27 Oct night a stuck call
+        refused the STOP here, and it waited for the new connection). A worker that does not answer in the time the server
+        waits (STOP_WAIT_S) is said so by the server; a dead or silent one, or a link whose connections are all stuck
+        (``stuck`` in the answer), is replaced (robot_standin)."""
         S = self.side.upper()
         stuck = self.stuck()
-        if stuck or self._dead:
+        gone = self._dead or (stuck and stuck[0] == "the connection's process")
+        if gone:
             why = f"{stuck[0]} not answered for {stuck[1]:.0f} s" if stuck else self._dead
-            return dict(ok=False, stuck=True, text=f"{S}: its connection is stuck ({why}), so STOP cannot pass through it")
+            return dict(ok=False, stuck=True, stuck_call=tuple(stuck) if stuck else (str(self._dead), 0.0),
+                        text=f"{S}: its connection's process is gone ({why}), so STOP cannot pass through it")
         out = self._control(("stop", bool(hard), bool(drag)), 60.0)
         return out if isinstance(out, dict) else dict(ok=False, text=f"{S}: STOP not confirmed (no answer from its connection's process)")
 

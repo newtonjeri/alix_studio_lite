@@ -60,6 +60,8 @@ HAND_REOPEN_S = 2.0                # a hand read that fails has the end port put
 # saved) are judged by the command's own expectation (busy(expect_s)), never by CALL_STUCK_S.
 CALL_SLOW_S = float(os.environ.get("LITE_CALL_SLOW_S", 5.0))      # a call not answered in this long: weak, and named
 CALL_STUCK_S = float(os.environ.get("LITE_CALL_STUCK_S", 20.0))   # ... in this long: stuck (the env: the tests' arm workers)
+STOP_STUCK_S = 3.0                 # a STOP's own call not answered in this long: stuck (the link is given up at once and the STOP goes
+#                                    through a new connection; 26 Oct 10:09: rm_set_arm_stop unanswered 20 s before that happened)
 LONG_CALLS = frozenset({"rm_movej", "rm_movel", "rm_movec", "rm_movej_p", "rm_moves", "rm_save_trajectory",
                         "rm_send_project", "rm_set_program_id_run", "rm_run_drag_trajectory"})
 
@@ -121,7 +123,7 @@ def error_codes(err) -> list[int]:
 def _noted(fn, name: str, link: "ArmLink"):
     @functools.wraps(fn)
     def call(self, *a, **kw):
-        link._enter(name)
+        link._enter(name, self)
         try:
             return fn(self, *a, **kw)
         finally:
@@ -281,9 +283,17 @@ class ArmLink:
             self._thread.join(timeout=2.0)
 
     # ── the calls into the SDK, as they are made (watch_calls)
-    def _enter(self, name: str) -> None:
+    def _enter(self, name: str, robot=None) -> None:
+        """A call into the SDK begins on this thread: its name, when, the connection it is on (the readings' or the
+        commands') and whether it is a STOP's own (bounded by STOP_STUCK_S)."""
         with self._lock:
-            self._calls[threading.get_ident()] = (name, time.monotonic())
+            self._calls[threading.get_ident()] = (name, time.monotonic(), self._conn_of(robot), self._stopping.is_set())
+
+    def _conn_of(self, robot) -> str:
+        r = self.reader
+        if r is not None and robot is not None and (robot is r.robot or robot is getattr(r.robot, "_emulated_inner", None)):
+            return "reader"
+        return "cmd"
 
     def _leave(self) -> None:
         with self._lock:
@@ -296,23 +306,36 @@ class ArmLink:
             calls = list(self._calls.values())
         if not calls:
             return None
-        name, t0 = min(calls, key=lambda c: c[1])
+        name, t0 = min(calls, key=lambda c: c[1])[:2]
         return name, now - t0
 
-    def stuck(self) -> tuple[str, float] | None:
-        """A call that has not come back within its bound (name, seconds): CALL_STUCK_S, or for the calls that last
-        as long as their work (LONG_CALLS) the command's own expectation."""
+    def stuck(self, conn: str | None = None) -> tuple[str, float] | None:
+        """A call that has not come back within its bound (name, seconds): CALL_STUCK_S; for the calls that last as long
+        as their work (LONG_CALLS) the command's own expectation; for a STOP's own calls STOP_STUCK_S. ``conn``: the calls
+        on that connection alone ("reader", "cmd")."""
         now = time.monotonic()
         with self._lock:
             calls = list(self._calls.values())
             expect = self._busy_expect if self._busy else HELD_S
         worst = None
-        for name, t0 in calls:
+        for name, t0, on, stopping in calls:
+            if conn is not None and on != conn:
+                continue
             age = now - t0
-            bound = max(CALL_STUCK_S, expect) if name in LONG_CALLS else CALL_STUCK_S
+            bound = STOP_STUCK_S if stopping else max(CALL_STUCK_S, expect) if name in LONG_CALLS else CALL_STUCK_S
             if age > bound and (worst is None or age > worst[1]):
                 worst = (name, age)
         return worst
+
+    def _stop_handle(self):
+        """The connection a STOP goes through: the readings' (never inside a command's long call, and quiet during a STOP),
+        else the commands' when the readings' has a call of its own that never came back, else None: both have one, so
+        nothing passes and the STOP goes through a new connection (robot_standin). Until 27 Oct night a STOP went through
+        the commands' connection alone, and a stuck call there held it 20 s before the new connection."""
+        for h, conn in ((self.reader, "reader"), (self.handle, "cmd")):
+            if h is not None and self.stuck(conn) is None:
+                return h
+        return None
 
     def abandon(self) -> None:
         """Given up: a call on its handle never came back. The thread stops reading; the handle is never deleted
@@ -448,7 +471,7 @@ class ArmLink:
         controller): never waits for a command, never alongside a reading or a STOP. Its return code
         (-1: not connected, or it raised)."""
         with self._stop_lock:
-            h = self.handle
+            h = self._stop_handle() or self.handle
             if h is None:
                 return -1
             self._quiet()
@@ -472,14 +495,16 @@ class ArmLink:
         sent stop after stop at once, none confirmed, and the links did not recover); a STOP BOTH that
         comes during one arm's STOP still stops that arm the E-stop's way at once (one call). ``drag``: the
         arm is in drag teaching, which it leaves first (``rm_stop_drag_teach``, its return code in ``drag``).
-        No reading starts meanwhile, and one under way ends first (at most READ_WAIT_S)."""
-        stuck = self.stuck()
-        if stuck:                                   # nothing passes through this handle: STOP goes through a new one (robot_standin)
-            return dict(ok=False, stuck=True, text=f"{self.side.upper()}: its connection is stuck ({stuck[0]} not answered "
-                        f"for {stuck[1]:.0f} s), so STOP cannot pass through it")
+        No reading starts meanwhile, and one under way ends first (at most READ_WAIT_S). The STOP goes through the
+        readings' connection when there is one (``_stop_handle``): a command's call that never came back no longer
+        holds it; ``stuck`` True (with ``stuck_call``) only when every connection has such a call."""
+        h = self._stop_handle()
+        if h is None:                               # nothing passes through this link: STOP goes through a new one (robot_standin)
+            stuck = self.stuck() or ("a call", 0.0)
+            return dict(ok=False, stuck=True, stuck_call=stuck, text=f"{self.side.upper()}: its connections are stuck "
+                        f"({stuck[0]} not answered for {stuck[1]:.0f} s), so STOP cannot pass through them")
         if not self._stop_lock.acquire(blocking=False):
-            h = self.handle
-            if hard and not self._stop_hard and h is not None:
+            if hard and not self._stop_hard:
                 try:
                     h.robot.rm_set_arm_stop()
                 except Exception:                                                # noqa: BLE001
@@ -488,16 +513,17 @@ class ArmLink:
                 return dict(self._stop_last or dict(ok=False, text=f"{self.side.upper()}: STOP not confirmed"), joined=True)
         try:
             self._stop_hard = hard
-            self._stop_last = self._stop_now(hard, drag)
+            self._stop_last = self._stop_now(hard, drag, h)
             return dict(self._stop_last)
         finally:
             self._stop_hard = False
             self._stop_lock.release()
 
-    def _stop_now(self, hard: bool, drag: bool = False) -> dict:
+    def _stop_now(self, hard: bool, drag: bool = False, h=None) -> dict:
         from alix_dispatch import peripherals, staging, track
 
-        side, h = self.side.upper(), self.handle
+        side = self.side.upper()
+        h = self.handle if h is None else h
         if h is None:
             return dict(ok=False, text=f"{side}: not connected, so STOP could not be sent")
         quiet = lambda *_: None                                                     # noqa: E731
@@ -509,9 +535,11 @@ class ArmLink:
                     dragged = int(h.robot.rm_stop_drag_teach())
                 except Exception:                                                # noqa: BLE001
                     dragged = -1
-            hand = self._hand if self.feedback.get("hand") else None
-            if hand is not None:
-                hand.opened = True              # its port is in Modbus mode: the last reading came through it
+            hand = None
+            if self.feedback.get("hand"):       # it reads back: frozen through the STOP's own connection (the end port's Modbus
+                hand = self._hand if self._hand is not None and self._hand.robot is h.robot else \
+                    peripherals.HandModbus(h.robot, self.side, log=quiet)   # mode is the controller's, not a connection's)
+                hand.opened = True
             st = staging.stop_devices(h, pole=peripherals.Pole(h.robot, log=quiet), hand=hand, log=quiet,
                                       hard=hard).get("stop") or {}
             proof = track.stop_program(h.robot, log=quiet, **({"rungs": ("stop",)} if hard else {}))
@@ -529,7 +557,8 @@ class ArmLink:
                 + ([f"the pole: {pole.get('error') or pole.get('ret')}"] if not pole.get("ok") else []) \
                 + ([f"the arm is not proven still ({proof.get('refusal') or 'no proof'})"] if not proof.get("stopped") else [])
             text = f"{side}: STOP not confirmed: " + "; ".join(bad)
-        return dict(ok=ok, text=text, arm=arm, pole=pole, hand=hand_out, still=proof.get("stopped"), drag=dragged)
+        return dict(ok=ok, text=text, arm=arm, pole=pole, hand=hand_out, still=proof.get("stopped"), drag=dragged,
+                    through="reader" if h is self.reader else "cmd")
 
     def _read_hand(self, robot):
         """The hand's six counts over the end port's Modbus, None when the read fails. The end port is in Modbus mode only
@@ -654,7 +683,7 @@ class ArmLink:
         call = self.in_flight()
         fb["call"] = None if call is None or call[1] < CALL_SLOW_S else dict(name=call[0], age_s=round(call[1], 1))
         return dict(ip=self.ip, port=self.port, emulated=self.emulated, abandoned=self.abandoned, reader=self.reader is not None,
-                    feedback=fb, quality=self.quality())
+                    stopping=self._stop_lock.locked(), feedback=fb, quality=self.quality())
 
     def quality(self) -> dict:
         """The connection as the arm's indicator shows it (the owner, 17 Oct: "green a good connection,
