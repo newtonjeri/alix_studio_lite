@@ -102,7 +102,7 @@
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
-   "speed": 20,
+   "speed": 60,
    "wait_s": 0.0,
    "uid": "2c2d273c"
   }
@@ -220,7 +220,7 @@
    "type": "global",
    "name": "R_HME_POS",
    "move": "movej",
-   "speed": 20,
+   "speed": 60,
    "wait_s": 0.0,
    "uid": "df7d87d4"
   }
