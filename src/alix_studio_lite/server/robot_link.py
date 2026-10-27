@@ -51,6 +51,7 @@ LOST_S = 3.0                       # no reading answered for this long: none
 HELD_S = 60.0                      # a command that has not ended in this long (unless it says it takes longer): weak
 HAND_LULL_S = 0.5                  # the hand (Modbus on the shared end port) is read on the readings' connection only this long after
                                    # the last command ended: a run's commands come closer than that, and none waits for a hand read
+HAND_REOPEN_S = 2.0                # a hand read that fails has the end port put back in Modbus mode, at most this often
 # A call into the SDK that does not come back (the lab, 19 Oct: three times a call made right after "run mode REAL"
 # never returned; nothing on that controller answered, STOP included, until Lite was killed). The SDK answers a
 # request within its reply timeout (1.5 s, connect.ACK_TIMEOUT_MS), so a call that has not returned in CALL_STUCK_S
@@ -211,7 +212,7 @@ class ArmLink:
         self.emulated = False
         self.feedback: dict = {}
         self._hand = None
-        self._modbus_set = False
+        self._modbus_reopened = 0.0                 # when the end port was last put back in Modbus mode for a reading
         self._stopping = threading.Event()          # a STOP is being sent: no new reading starts
         self._busy: list = []                       # commands running (robot_real.py): no reading meanwhile
         self._busy_since, self._busy_expect = 0.0, HELD_S   # when the command took the link, and how long it may take
@@ -531,13 +532,20 @@ class ArmLink:
         return dict(ok=ok, text=text, arm=arm, pole=pole, hand=hand_out, still=proof.get("stopped"), drag=dragged)
 
     def _read_hand(self, robot):
+        """The hand's six counts over the end port's Modbus, None when the read fails. The end port is in Modbus mode only
+        while someone has set it (rm_set_modbus_mode) and no one has closed it: runner v14's Hand steps and, until 27 Oct,
+        Lite's own pole and hand step closed it after each use (rm_close_modbus_mode), and every reading after that
+        failed until Lite's next hand command set it again (27 Oct lab: the panel's hand empty for 21 to 56 % of the
+        readings, for minutes at a time). A failed read now puts the mode back, at most every HAND_REOPEN_S, and reads
+        again. The vendor's web GUI, running on the controller, never closes the mode, which is why it never loses the hand."""
         from alix_dispatch import peripherals
 
         if self._hand is None or self._hand.robot is not robot:          # the hand as read on this connection
             self._hand = peripherals.HandModbus(robot, self.side, log=lambda *_: None)
         counts = self._hand.read()
-        if counts is None and not self._modbus_set:                  # the end port is not in Modbus mode yet
-            self._modbus_set = True
+        now = time.monotonic()
+        if counts is None and now - self._modbus_reopened >= HAND_REOPEN_S:   # the end port not in Modbus mode (closed since)
+            self._modbus_reopened = now
             try:
                 robot.rm_set_modbus_mode(peripherals.HAND_MODBUS_PORT, peripherals.HAND_MODBUS_BAUD, 2)
             except Exception:                                            # noqa: BLE001

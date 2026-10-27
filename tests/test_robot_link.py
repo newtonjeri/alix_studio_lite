@@ -320,3 +320,49 @@ def test_an_unreachable_controller_is_refused_plainly(server):
     r = call(server, "POST", "/api/robots/right/connect", {"ip": "192.168.1.77"})
     assert "cannot reach the RIGHT arm's controller at 192.168.1.77:8080" in r["error"]
     assert not call(server, "GET", "/api/robots/status")["arms"]["right"]["connected"]
+
+
+def test_a_hand_read_that_fails_puts_the_end_port_back_in_modbus_mode(monkeypatch):
+    """27 Oct lab: the panel's hand was empty for 21 to 56 % of the readings, for minutes at a time: runner v14's Hand steps
+    (and Lite's own pole and hand step, until that night) close the end port's Modbus mode after each use, and the
+    readings' connection set it only once per link, so every read after a close failed until Lite's next hand command.
+    A failed read now sets the mode again, at most every HAND_REOPEN_S, and reads again; a hand that stays silent is
+    not hammered. The vendor's web GUI never closes the mode, which is why it never loses the hand."""
+    from types import SimpleNamespace
+
+    from alix_dispatch import peripherals
+
+    from alix_studio_lite.server import robot_link
+    from alix_studio_lite.server.robot_link import ArmLink
+
+    monkeypatch.setattr(robot_link, "HAND_REOPEN_S", 0.3)
+    state = {"mode": False, "sets": 0}
+
+    class Hand:
+        def __init__(self, robot, side, log=None):
+            self.robot = robot
+
+        def read(self):
+            return [1, 2, 3, 4, 5, 6] if state["mode"] else None
+
+    def set_mode(port, baud, timeout):
+        state["sets"] += 1
+        state["mode"] = True
+        return 0
+
+    monkeypatch.setattr(peripherals, "HandModbus", Hand)
+    link = ArmLink("left", "127.0.0.1")
+    robot = SimpleNamespace(rm_set_modbus_mode=set_mode)
+    assert link._read_hand(robot) == [1, 2, 3, 4, 5, 6] and state["sets"] == 1       # closed: set, then read
+    assert link._read_hand(robot) == [1, 2, 3, 4, 5, 6] and state["sets"] == 1       # open: read alone
+    state["mode"] = False                                                           # a Hand step of runner v14 closed it
+    assert link._read_hand(robot) is None and state["sets"] == 1                     # within HAND_REOPEN_S of the last set: not yet
+    time.sleep(0.35)
+    assert link._read_hand(robot) == [1, 2, 3, 4, 5, 6] and state["sets"] == 2       # set again, read
+    silent = SimpleNamespace(rm_set_modbus_mode=lambda *a: state.__setitem__("sets", state["sets"] + 1) or 0)
+    link._hand = None
+    monkeypatch.setattr(peripherals, "HandModbus", type("Dead", (), {"__init__": lambda self, robot, side, log=None: setattr(self, "robot", robot),
+                                                                       "read": lambda self: None}))
+    time.sleep(0.35)
+    assert link._read_hand(silent) is None and state["sets"] == 3                     # a dead hand: one set per HAND_REOPEN_S
+    assert link._read_hand(silent) is None and state["sets"] == 3
