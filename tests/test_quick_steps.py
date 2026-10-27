@@ -732,3 +732,111 @@ def test_a_streams_end_is_waited_for_only_where_something_needs_the_arm_still():
     ex.kit.gap = SimpleNamespace(flush=lambda: None)
     ex.finish()                                                       # the plan's end: nothing moves on while an arm settles
     assert calls[-1] == ("left", "settle", "LEFT arm rest") and not ex._unsettled
+
+
+def test_the_poles_command_goes_out_before_the_hands_whose_read_before_angle_set_is_lites_last(monkeypatch):
+    """27 Oct night: the pole does not move for the first 0.75 s after its command (the push), and the hand's command before
+    it, with its read, put every pole step's start 0.1 to 0.2 s later. The pole's command goes first; the hand's follows in
+    the pole's travel, its read before ANGLE_SET being what Lite last read of the hand (its last move's readback) when Lite
+    knows it, the device otherwise; a pole at its height already has the hand commanded right after; the pole's own move
+    takes the step's one height read."""
+    from types import SimpleNamespace
+
+    Hand0, _counts, _Pole0 = robot_real._runner().load_aux_classes()
+    quick, order = robot_real._quick_pole, []
+
+    def fresh_pole(**kw):
+        monkeypatch.setattr(robot_real, "_quick_pole", quick)
+        pole, clock, t0 = _pole(monkeypatch, **kw)
+        pole.poll_s = 0.01
+        set_height, gets = pole.robot.rm_set_lift_height, []
+        pole.robot.rm_set_lift_height = lambda speed, mm, block: order.append("pole command") or set_height(speed, mm, block)
+        pole.height_m = lambda h=pole.height_m: gets.append(1) or h()
+        monkeypatch.setattr(robot_real, "_quick_pole", lambda P: (lambda robot: pole))
+        return pole, clock, t0, gets
+
+    class Hand(Hand0):
+        def open(self, speed_set=1000):
+            self.speed_set = speed_set
+
+        def read(self):
+            order.append("hand read")
+            return [0, 0, 0, 0, 150, 1000]
+
+        def _write(self, address, values):
+            order.append("hand write")
+            return 0
+
+    Hand.__module__ = Hand0.__module__
+    pole, clock, t0, gets = fresh_pole(reads_target_after_s=0.05, idle_after_s=0.2)
+    arm = robot_real.RealArm(SimpleNamespace(side="left", handle=SimpleNamespace(robot=pole.robot), emulated=True,
+                                             busy=lambda *a, **k: contextlib.nullcontext()))
+    arm._hw = lambda verb, **kw: None
+    arm._alix_log = lambda: (lambda *a: None)
+    monkeypatch.setattr(robot_real, "_runner", lambda: SimpleNamespace(load_aux_classes=lambda: (Hand, None, type(pole))))
+    grip = [0, 0, 0, 0, 150, 1000]
+    arm._hand_last = dict(counts=[1000] * 6, after=[1000, 1000, 1000, 997, 489, 990])    # the hand as Lite last read it
+    out = arm.pole_and_hand(199.0, grip)
+    assert out["pole_ok"] and out["hand_ok"]
+    assert order[:2] == ["pole command", "hand write"] and "hand read" not in order[:2]   # the pole first; no read before ANGLE_SET
+    assert order.count("hand read") >= 1 and len(gets) == 1                              # read back after the pole; one height read
+    order.clear()
+    pole, clock, t0, gets = fresh_pole(reads_target_after_s=0.05, idle_after_s=0.2)
+    monkeypatch.setattr(robot_real, "_runner", lambda: SimpleNamespace(load_aux_classes=lambda: (Hand, None, type(pole))))
+    assert arm._hand_last is not None and arm._hand_last["counts"] == grip
+    arm._hand_last = None                                                                 # not known (a runner call forgot it)
+    arm.pole_and_hand(199.0, grip)                                                        # (the fake pole stands at 150 mm again)
+    assert order[:3] == ["pole command", "hand read", "hand write"]                       # the device read, after the pole's command
+    order.clear()
+    pole, clock, t0, gets = fresh_pole(reads_target_after_s=1e9, idle_after_s=0.0)        # at its height already: nothing sent
+    monkeypatch.setattr(robot_real, "_runner", lambda: SimpleNamespace(load_aux_classes=lambda: (Hand, None, type(pole))))
+    out = arm.pole_and_hand(150.0, grip)
+    assert out["pole_ok"] and out["hand_ok"] and t0["v"] is None and order[0] == "hand write"   # the hand right after
+
+
+def test_a_hand_move_takes_what_lite_last_read_for_its_read_before_angle_set(monkeypatch):
+    """hand_to: Lite's own check that the hand is not there already, and ALIX's read before ANGLE_SET, take the readback
+    of Lite's last hand move when it is known (27 Oct night: two reads, 0.1 s, before every hand command); the device is
+    read as before when it is not, and read back after the command as always."""
+    from types import SimpleNamespace
+
+    from alix_dispatch import peripherals
+
+    events = []
+
+    class Fake:
+        poll_s, speed_set = 0.01, 1000
+
+        def __init__(self, robot, side, log=None):
+            self.opened, self._sleep, self.log = True, lambda dt: None, log or (lambda *a: None)
+
+        def open(self, speed_set=1000):
+            return 0
+
+        def set_speed(self, v):
+            return 0
+
+        def read(self):
+            events.append("read")
+            return [0, 0, 0, 0, 150, 1000]
+
+        def command(self, counts, wait=True, timeout_s=None):          # ALIX's: its one read before the write
+            before = self.read()
+            events.append("write")
+            return dict(ok=True, ret=0, target=list(counts), before=before, after=None, settled=False, arrived=False, t_s=0.0,
+                        law_s=0.3, timeout_s=1.9, series=[], moved=[0] * 6, stuck=[], miss=None, held=[], write=None, partial=False)
+
+    Fake.__module__ = peripherals.__name__                                # wrapped by _quick_hand as ALIX's hand is
+    monkeypatch.setattr(peripherals, "HandModbus", Fake)
+    arm = _arm([0.0] * 7, [])
+    arm._hand_last = dict(counts=[1000] * 6, after=[1000, 1000, 1000, 997, 489, 990])
+    out = arm.hand_to([0, 0, 0, 0, 150, 1000])
+    assert out["ok"] and events[0] == "write" and events.count("read") >= 1               # no read before the write; read back after
+    events.clear()
+    arm._hand_last = None
+    arm.hand_to([1000] * 6)                                                            # the device reads the grip: a real move
+    assert events[:2] == ["read", "read"] and events[2] == "write"                       # not known: Lite's check and ALIX's read
+    events.clear()
+    arm._hand_last = dict(counts=[0, 0, 0, 0, 150, 1000], after=[0, 3, 0, 9, 150, 1000])
+    out = arm.hand_to([0, 0, 0, 0, 160, 990])                                          # within 20 counts of the last readback
+    assert out["skipped"] and not events                                               # nothing read, nothing sent

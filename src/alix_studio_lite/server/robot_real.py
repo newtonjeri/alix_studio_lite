@@ -320,6 +320,14 @@ def _quick_hand(HandModbus):
     DEAD = getattr(m, "HAND_DEADBAND_COUNTS", SETTLE)
 
     class Hand(HandModbus):
+        before_hint = None            # the counts Lite last read the hand at: ALIX's one read before ANGLE_SET (the stroke law's
+        #                               "from", the stuck-channel check's start) takes them, and the device is not asked again
+        #                               (27 Oct night: 0.13 to 0.24 s of reads before every ANGLE_SET); its other reads are the device's
+
+        def read(self):
+            hint, self.before_hint = self.before_hint, None
+            return list(hint) if hint is not None else super().read()
+
         def command(self, counts, wait=True, timeout_s=None):
             out = super().command(counts, wait=False, **({} if timeout_s is None else {"timeout_s": timeout_s}))
             if not wait or not out.get("ok") or "law_s" not in out:
@@ -374,6 +382,23 @@ def _quick_hand(HandModbus):
     return Hand
 
 
+def _hinted_hand(Hand):
+    """The control program's Hand whose one read before ANGLE_SET (its stroke law's "from") takes ``before_hint``, the counts
+    Lite last read the hand at, when it is set; consumed by that read alone, every other read is the device's. A stand-in
+    whose class cannot be subclassed is returned unchanged."""
+    try:
+        class HintedHand(Hand):
+            before_hint = None
+
+            def read(self):
+                hint, self.before_hint = self.before_hint, None
+                return list(hint) if hint is not None else super().read()
+    except TypeError:
+        return Hand
+    HintedHand.__name__, HintedHand.__qualname__ = Hand.__name__, Hand.__qualname__
+    return HintedHand
+
+
 def _quick_pole(Pole):
     """The control program's Pole with Lite's arrival (the owner, 26 Oct): done when the controller reads the pole idle
     within its tolerance (LIFT_TOL_M, 5 mm) and the slew time plus POLE_RAMP_S has passed, instead of the model's 1.5 s
@@ -388,9 +413,9 @@ def _quick_pole(Pole):
     class QuickPole(Pole):
         lite_meanwhile = True             # move() takes ``meanwhile``: a call made on the arm's connection while the pole travels
 
-        def move(self, height_m, speed_pct=100, tol_m=None, block=False, meanwhile=None):
+        def move(self, height_m, speed_pct=100, tol_m=None, block=False, meanwhile=None, start_m=None):
             tol_m = m.LIFT_TOL_M if tol_m is None else tol_m
-            start = self.height_m()
+            start = self.height_m() if start_m is None else float(start_m)   # ``start_m``: the caller's own read, not asked again
             dist = abs(height_m - start) if start is not None else m.LIFT_STROKE_M
             up = None if start is None else height_m > start
             slew = (m.LIFT_SLEW_DOWN_MPS if up is False else m.LIFT_SLEW_UP_MPS) * max(1, min(100, speed_pct)) / 100
@@ -403,7 +428,7 @@ def _quick_pole(Pole):
                 raise RuntimeError(f"rm_set_lift_height refused, ret={ret}")
             t0, pos = time.monotonic(), start
             if meanwhile is not None:     # the pole travels at least its ramp (POLE_RAMP_S): the controller's time for other calls
-                meanwhile()
+                meanwhile()               # (the hand's command, the feed's switch)
             while True:
                 elapsed = time.monotonic() - t0
                 ret, st = self.robot.rm_get_lift_state()
@@ -621,10 +646,18 @@ class RealArm:
         Oct: turned on after the pair, it held the slower arm's task start 0.5 s; turned off at a task's end, with the
         camera's close, 1.4 to 1.8 s with both arms standing). A pole already at its height, or one refused, has it
         done right after. The result's ``feed`` is the capture's name, or 'off'; a feed that could not be turned on is
-        raised after the pole and the hand are judged, as before."""
+        raised after the pole and the hand are judged, as before.
+
+        The pole's command goes out first, the hand's right after it, in the pole's travel (27 Oct night: the pole does
+        not move for the first 0.75 s after its command, measured on the push, and the hand's command before it, with
+        its read, put the pole's start 0.1 to 0.2 s later on every step; the hand's stroke, under a second, still ends
+        within the pole's travel). The hand's read before ANGLE_SET is what Lite last read of it (``_hand_last``) when it
+        knows, the device otherwise; its end port's Modbus mode is set before the pole's command, as before, so a port
+        that refuses leaves the pole still. A hand command that fails in the travel is raised once the pole has arrived."""
         Hand, _counts, Pole = _runner().load_aux_classes()
         rule = next(m for c in Hand.__mro__ if hasattr(m := sys.modules.get(c.__module__), "HAND_ARRIVE_COUNTS"))
         # ^ the control program's hand.py: its arrival rule's own numbers
+        Hand = _hinted_hand(Hand)
         target = [None if v is None else int(v) for v in values]
         tid, guard, state = threading.get_ident(), threading.Lock(), {"inside": False, "stopped": False}
 
@@ -638,10 +671,25 @@ class RealArm:
             stop_hook(on_stop)
         t0 = time.monotonic()
         hand = pole = None
-        self._hand_last = None
+        known, self._hand_last = self._hand_last, None    # what Lite last read of the hand, for the read before ANGLE_SET
         out = dict(pole_ok=False, hand_ok=False)
         why = None
         slot = {"done": feed is None, "error": None}
+        sent = {"t": None, "error": None}
+
+        def hand_now():
+            """The hand's command, once: in the pole's travel right after the pole's command (lite_meanwhile), else right
+            after the pole's move (a pole at its height already, a Pole without the hook). One that fails is raised after
+            the pole has arrived, never in its travel (the pole would travel with no one reading it)."""
+            if sent["t"] is not None or sent["error"] is not None:
+                return
+            try:
+                if known is not None and known.get("after") and all(v is not None for v in target):
+                    hand.before_hint = list(known["after"])
+                hand.command(target, wait=False)
+                sent["t"] = time.monotonic()
+            except Exception as exc:                                        # noqa: BLE001
+                sent["error"] = exc
 
         def feed_now():
             """The feed, once: in the pole's travel when the pole takes the slot (lite_meanwhile), else right after it."""
@@ -665,25 +713,32 @@ class RealArm:
                             raise KeyboardInterrupt
                         state["inside"] = True
                     hand, pole = Hand(self.robot), _quick_pole(Pole)(self.robot)
-                    start = pole.height_m()
+                    start = pole.height_m()                          # one read: the pole's own move takes it (start_m)
                     port, most = self._hand_port, int(getattr(rule, "HAND_SPEED_SET_MAX", HAND_SPEED_SET))
                     if port is not None and port.get("speeds") == [most] * 6:
                         hand.speed_set = most                         # Modbus mode on at this SPEED_SET already: nothing to send
                     else:
                         hand.open()                                   # modbus mode on, SPEED_SET at its most (the control program's)
                         self._hand_port = dict(speeds=[most] * 6)
-                    sent = time.monotonic()
-                    hand.command(target, wait=False)                 # the hand moves while the pole travels
+
+                    def meanwhile():                                  # in the pole's travel: the hand's command, then the feed's call
+                        hand_now()
+                        feed_now()
+
                     if getattr(pole, "lite_meanwhile", False):
-                        ok_p, final_m = pole.move(float(mm) / 1000.0, speed_pct=100, block=False, meanwhile=feed_now)
+                        ok_p, final_m = pole.move(float(mm) / 1000.0, speed_pct=100, block=False, meanwhile=meanwhile, start_m=start)
                     else:
+                        hand_now()                                    # a Pole without the hook: the hand first, as before
                         ok_p, final_m = pole.move(float(mm) / 1000.0, speed_pct=100, block=False)
-                    feed_now()                                       # not taken in the travel (at its height already): now
+                    hand_now()                                       # not taken in the travel (at its height already): now
+                    feed_now()
+                    if sent["error"] is not None:
+                        raise sent["error"]
                     out.update(pole_ok=bool(ok_p), pole_s=round(time.monotonic() - t0, 3), start_mm=None if start is None else round(start * 1000.0, 1),
                                pole_mm=None if final_m is None else round(final_m * 1000.0, 1))
                     self._pole_last = float(final_m) * 1000.0 if ok_p and final_m is not None else None
                     if ok_p:
-                        ok_h, final_h = _hand_arrived(hand, rule, target, sent)
+                        ok_h, final_h = _hand_arrived(hand, rule, target, sent["t"])
                         if not ok_h:                                 # not there in a whole stroke's time: as runner v14 does
                             ok_h, final_h = hand.command(target, wait=True)
                             out["hand_sent_again"] = True
@@ -798,14 +853,17 @@ class RealArm:
                     self._hw("hand open", ret=ret, ok=False, text=return_text(ret))
                     raise UserError(f"The {self.SIDE} hand cannot be reached (Modbus).", "Check the hand's cable and power.")
                 self._hand_port = dict(speeds=[HAND_SPEED_SET] * 6)
-            now = getattr(hand, "read", lambda: None)()
+            known = list(last["after"]) if last is not None and last.get("after") and len(last["after"]) == len(counts) else None
+            now = known if known is not None else getattr(hand, "read", lambda: None)()   # what Lite last read stands for a read
             if now is not None and all(c is None or abs(int(c) - int(a)) <= HAND_SAME_COUNTS for c, a in zip(counts, now)):
                 self._hw("hand move", args=dict(counts=list(counts), speed_set=None), ok=True, elapsed_s=0.0,
-                         text=f"already at {now} (within {HAND_SAME_COUNTS} counts), nothing sent")
+                         text=f"already at {now} (within {HAND_SAME_COUNTS} counts{', as Lite last read it' if known is not None else ''}), nothing sent")
                 return dict(ok=True, arrived=True, after=now, skipped=True)
             used = [HAND_SPEED_SET] * 6                # every hand move at 100 % (the owner, 27 Oct; a plan's move went at the
             if hand is self._hand:                     # speeds ALIX's executive set from its planned time, 24-26 Oct)
                 self._hand_speeds_to(hand, used, "100 % (the owner, 27 Oct)" if duration_s is not None else "")
+            if known is not None and all(c is not None for c in counts):
+                hand.before_hint = known               # the quick hand's one read before ANGLE_SET: not asked of the device
             out = hand.command(list(counts), wait=True)
         done = bool(out.get("ok") and (out.get("arrived") or out.get("settled")))
         short = "" if out.get("arrived") or not done else " (settled short of the target: stopped on force)"
