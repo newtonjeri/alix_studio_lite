@@ -37,8 +37,27 @@ def test_lites_lid_and_seat_copies_are_the_files_the_manifest_recorded():
 @pytest.mark.skipif(alix_sync.alix_root() is None or os.environ.get("LITE_SYNC_SKIP") == "1",
                     reason="ALIX's checkout is not on this computer (or LITE_SYNC_SKIP=1)")
 def test_alix_and_lite_hold_the_same_lid_and_seat_tasks_and_plans():
-    rep = alix_sync.status()
-    assert rep.in_sync, "\n".join(rep.lines() + ["Run: python3 tools/mechanism_sync.py (pull / push)"])
+    """The same files on both sides (a plan that is not its config's fails the test above, once, on Lite's copy)."""
+    rep = alix_sync.status(deep=False)
+    assert not rep.files, "\n".join(rep.lines() + ["Run: python3 tools/mechanism_sync.py link (or start Lite)"])
+
+
+def test_link_pulls_what_alix_changed_and_pushes_what_lite_changed(tmp_path):
+    """Both ways at once (the user, 29 Oct: the two linked): ALIX's change reaches Lite, Lite's reaches ALIX, a file
+    changed on both is left for a person."""
+    alix, lite = _two_sides(tmp_path)
+    cfg = f"{CONFIGS}/lid_close.yaml"
+    plan = f"{PLANS}/lid_close_toppra.json"
+    (alix / cfg).write_text((alix / cfg).read_text() + "\n# edited in ALIX\n")
+    (lite / alix_sync.VENDOR / plan).write_text((lite / alix_sync.VENDOR / plan).read_text().replace("{", "{ ", 1))
+    pulled, pushed = alix_sync.link(alix, lite)
+    assert [p for p, _ in pulled] == [cfg] and [p for p, _ in pushed] == [plan]
+    assert (lite / alix_sync.VENDOR / cfg).read_text() == (alix / cfg).read_text()
+    assert (alix / plan).read_text() == (lite / alix_sync.VENDOR / plan).read_text()
+    assert not alix_sync.file_states(alix, lite)[0]
+    (alix / cfg).write_text("# ALIX's\n")
+    (lite / alix_sync.VENDOR / cfg).write_text("# Lite's\n")
+    assert alix_sync.link(alix, lite) == ([], []) and [f.state for f in alix_sync.file_states(alix, lite)[0]] == ["conflict"]
 
 
 def _two_sides(tmp_path):

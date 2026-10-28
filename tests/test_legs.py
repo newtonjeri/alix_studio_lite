@@ -21,24 +21,33 @@ def _entries(task, hand_set=("right",)):
     return plan, entries, unsent, bridged
 
 
-def test_the_plans_stretches_the_two_arms_run_at_once():
-    """Open the lid: the right's move to inspect pose with the left's approach and lift (the lift's lines begin 1.2 s in,
-    the right's move ends 0.84 s in: LEG_MARGIN_S kept), and the left's retreat to rest with the right's grasp and look;
-    nothing while the lid is lifted and held (no meshes for that state), nothing across a check. Open the seat: the
-    first stretch alone (after the left's release every move is a hand-off the plan orders). Each arm's first hand move
-    takes no time in a stretch: the approach set it."""
+def test_the_plans_stretches_the_two_arms_run_at_once(monkeypatch):
+    """Open the lid (the owner's order since 29 Oct: the right's look first, then its pole and grasp): the right's look,
+    pole and grasp with the left's pole and half grasp (set at the approach: no time); the left's approach and lift stay
+    out, its lift's lines would begin 1.2 s in, before the right's grasp ends (1.7 s: its fingers closed before the lid
+    rises); the left's retreat to rest with the right's grasp and look; nothing while the lid is lifted and held (no
+    meshes for that state), nothing across a check. Open the seat: the first stretch alone (after the left's release
+    every move is a hand-off the plan orders). With the right's look alone before the lift (the order before 29 Oct),
+    the lift joins the stretch: the right's move ends LEG_MARGIN_S before its lines begin."""
     plan, entries, unsent, bridged = _entries("lid_open")
     legs = m.plan_legs(plan, entries, unsent, bridged)
-    assert [(i, leg.used, leg.phase) for i, leg in legs] == [(0, 8, "lid_closed"), (14, 4, "lid_open")]
+    assert [(i, leg.used, leg.phase) for i, leg in legs] == [(0, 5, "lid_closed"), (14, 4, "lid_open")]
     first, second = legs[0][1], legs[1][1]
-    assert first.label() == ("LEFT move_to_half_pole_length + hand_grasp + execute_path || "
-                             "RIGHT move_to_inspect_pole_length + hand_grasp + move_to_inspect")
-    carry = next(e for e, _, _ in first.order if m.carries_fixture(e))
+    assert first.label() == ("LEFT move_to_half_pole_length + hand_grasp || "
+                             "RIGHT move_to_inspect + move_to_inspect_pole_length + hand_grasp")
+    assert first.seconds("left") == 0.0 and first.seconds("right") == pytest.approx(1.73, abs=0.02)
+    carry = m.joined_moves(entries, first.used, bridged)[0]
+    assert carry.side == "left" and m.carries_fixture(carry) and 1.0 < m.fixture_offset_s(carry) < 1.5
+    assert first.seconds("right") + m.LEG_MARGIN_S > m.fixture_offset_s(carry)             # so the lift is not in it
+    looked_first = [e for k, e in enumerate(entries) if not (k in (1, 2) and e.side == "right")]   # the right's pole and grasp
+    with monkeypatch.context() as mp:                                   # out: its look alone before the lift, a margin it keeps
+        mp.setattr(m, "LEG_MARGIN_S", 0.2)
+        leg = m.two_arm_leg(looked_first, 0, unsent, bridged, plan.name)
+    carry = next(e for e, _, _ in leg.order if m.carries_fixture(e))
     assert carry.side == "left" and carry.stage == "move_to_pre_start + move_to_start + execute_path"
-    assert 1.1 < m.fixture_offset_s(carry) < 1.5 and first.seconds("right") == pytest.approx(0.84, abs=0.02)
-    assert first.seconds("right") + m.LEG_MARGIN_S <= m.fixture_offset_s(carry)         # the right's move ends before the lift's lines
-    assert m.leg_window_s(first) == pytest.approx(m.fixture_offset_s(carry) + m.LEG_MARGIN_S, abs=1e-6)
-    assert [e.took if False else first.took(e) for e, _, _ in first.order][:2] == [0.0, 0.0]    # the right's pole and first hand: set already
+    assert leg.seconds("right") == pytest.approx(0.84, abs=0.02) and leg.seconds("right") + 0.2 <= m.fixture_offset_s(carry)
+    assert m.leg_window_s(leg) == pytest.approx(m.fixture_offset_s(carry) + m.LEG_MARGIN_S, abs=1e-6)
+    assert [leg.took(e) for e, _, _ in leg.order if e.side == "left"][:2] == [0.0, 0.0]    # the left's pole and first hand: set already
     assert [(e.side, e.kind) for e, _, _ in second.order] == [("left", "arm"), ("right", "hand"), ("right", "arm")]
     assert second.label() == "LEFT move_to_rest || RIGHT hand_grasp + move_to_inspect"
     release = next((e, n) for e, _, n in second.order if e.kind == "hand")
@@ -47,7 +56,7 @@ def test_the_plans_stretches_the_two_arms_run_at_once():
     assert m.fixture_phase_at(entries, 8, plan.name) is None and m.fixture_phase_at(entries, 14, plan.name) == "lid_open"
     plan, entries, unsent, bridged = _entries("seat_open")
     legs = m.plan_legs(plan, entries, unsent, bridged)
-    assert [(i, leg.used, leg.phase) for i, leg in legs] == [(0, 8, "lid_open")]
+    assert [(i, leg.used, leg.phase) for i, leg in legs] == [(0, 5, "lid_open")]
     assert m.two_arm_leg(entries, 13, unsent, bridged, plan.name) is None                   # after the left's release: the plan's order
     assert (m.LEG_MARGIN_S, m.LEG_CLEARANCE_MM, m.LEG_GRID_S, m.LEG_SHIFTS_S) == (0.3, 50.0, 0.02, (-0.3, 0.0, 0.3, 0.6))
 

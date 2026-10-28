@@ -131,14 +131,18 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
                                                                 "record_feed": True}))                 # the feed: only when asked (26 Oct)
     said = " | ".join(e["text"] for e in j.get("events") or [])
     assert j["state"] == "done", (j.get("error"), said[-1500:])
-    assert "Open the lid (in a sequence) done" in said and "Close the seat" not in said   # its sequence plan (27 Oct); no closing follows (26 Oct)
+    assert "Open the lid done" in said and "Close the seat" not in said   # its sequence plan (27 Oct); no closing follows (26 Oct)
     assert "RIGHT hand hand_release: not sent, the RIGHT hand is set for its next task's start right after" in said   # 26 Oct
     for side in ("LEFT", "RIGHT"):
         assert f"{side}: at the start of Program 72 (its own pole and hand, its first point)." in said
     hw = hardware(server, t0)
     pairs = [(r["side"], r["args"]["mm"], r["args"]["hand"]) for r in hw if r["verb"] == "pole and hand"]
     # 71's own; Open the lid's start (its pole and the hand its first move needs, one step since 26 Oct); 72's own after it
-    start = {"left": (150.0, [516, 516, 516, 516, 133, 944]), "right": (150.1, [33, 33, 33, 33, 133, 944])}
+    from alix_studio_lite.server import mechanism                     # in a sequence (no start check): the left's pole and half
+    lid = mechanism.Plan("lid_open")                                  # grasp; the right's grasp after its look (29 Oct)
+    first = lid.first_move_targets(mechanism.without_start_checks(list(lid.entries))[0])
+    start = {s: (first[s]["pole_mm"], first[s]["hand"]) for s in ("left", "right")}
+    assert start["left"][1] == [516, 516, 516, 516, 133, 944] and start["right"][1] == [1000] * 6
     for side in ("left", "right"):
         assert [(mm, hand) for s, mm, hand in pairs if s == side] == [(150.0, GRIP), start[side], (200.0, CLEAN)]
     for side in ("left", "right"):                                    # its last MoveJ: to 72's first point
@@ -146,13 +150,13 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
         assert last["ok"] and last["args"]["deg"] == pytest.approx(server["first"][(side, 72)], abs=0.01)
     starts = [r for r in hw if r["verb"] == "runner v14" and str(r.get("text") or "").startswith("WORKFLOW PROGRAM 1/1: slot 72")]
     assert len(starts) == 2
-    # the two arms at once where the plan allows it (27 Oct night): the right's move to inspect pose streamed while the
-    # left approaches and lifts, their clearance checked clear first; the left's retreat with the right's grasp and look
+    # the two arms at once where the plan allows it (27 Oct night): the right's look, pole and grasp with the left's set-up,
+    # the left's approach and lift once the right's fingers are closed (29 Oct); the left's retreat with the right's grasp and look
     spans = lambda label: [r["args"]["t_mono"] for r in hw if r["verb"] == "canfd stream" and r["args"]["label"] == label]   # noqa: E731
     looks, lift = spans("RIGHT arm move_to_inspect"), spans("LEFT arm move_to_pre_start + move_to_start + execute_path")[0]
-    assert looks[0][0] < lift[1] and lift[0] < looks[0][1] and looks[0][1] < lift[1], (looks, lift)   # the first look, in the lift's time
+    assert looks[0][1] <= lift[0], (looks, lift)                                        # the first look, then the lift
     retreat = spans("LEFT arm move_to_pre_start + move_to_rest")[0]
     assert retreat[0] < looks[-1][1] and looks[-1][0] < retreat[1], (retreat, looks)                   # the last look, in the retreat's
-    assert "both arms at once: LEFT move_to_half_pole_length + hand_grasp + execute_path || RIGHT" in said
+    assert "both arms at once: LEFT move_to_half_pole_length + hand_grasp || RIGHT move_to_inspect" in said
     feeds = [r for r in hw if r["verb"] == "s2 feed" and r.get("text") == "recording"]
     assert len(feeds) == 4                                            # one an arm a stage (2 stages), not one a runner call

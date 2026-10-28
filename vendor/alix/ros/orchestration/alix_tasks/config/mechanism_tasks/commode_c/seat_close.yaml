@@ -157,8 +157,8 @@ right:
       translation: [0.0, 0.0, 0.0]
       rotation: [0.0, 0.0, 0.0]
     point2:   # the release: out from under the lid's right edge, a little up
-      translation: [0.0, -0.05, 0.02]
-      rotation: [-15.0, 0.0, 0.0]
+      translation: [0.0, -0.08, 0.02]
+      rotation: [-25.0, 0.0, 0.0]
 
   cleaning_sequence:
     - [point1, point2]
@@ -186,7 +186,7 @@ left:
   # 2026-10-25_lid_seat_close/seat_close_left_block_2026-10-25.yaml).
   cartesian_poses:
     pre_start_pose: [0.95, 0.185532, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
-    start_pose: [1.0, 0.2, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
+    start_pose: [0.99, 0.2, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
 
     # Relative to THIS block's start_pose (translation added in alix_ref_frame,
     # rotation onto the start orientation). UNCHANGED from the 2026-10-24
@@ -195,8 +195,12 @@ left:
     # at point8 (-0.15, -0.06, -0.17): this retract lies 31 cm to its left,
     # 7 cm further back and 2 cm higher -- to be re-derived from the new end.
     retract_pose:
-      translation: [-0.20, 0.05, -0.2]
-      rotation: [-5.0, 35.0, 10.0]
+      translation: [-0.35, -0.02, -0.17]
+      rotation: [-5.0, 45.0, 10.0]
+
+    retract_pose_2:
+      translation: [-0.40, 0.05, -0.10]
+      rotation: [-5.0, 35.0, 25.0]
 
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
   # Translation: [x, y, z] in metres, added in alix_ref_frame to start_pose
@@ -212,15 +216,15 @@ left:
       rotation: [-5.0, 0.0, 5.0]
 
     point3:
-      translation: [0.0, 0.03, -0.03]
+      translation: [0.0, 0.04, -0.03]
       rotation: [-5.0, 0.0, 7.0]
 
     point4:
-      translation: [-0.02, 0.03, -0.01]
+      translation: [-0.02, 0.04, -0.01]
       rotation: [-5.0, 0.0, 10.0]
     
     point5:
-      translation: [-0.04, 0.03, -0.04]
+      translation: [-0.04, 0.035, -0.04]
       rotation: [-5.0, 5.0, 10.0]
 
     point6:
@@ -228,12 +232,12 @@ left:
       rotation: [-5.0, 10.0, 10.0]
 
     point7:
-      translation: [-0.1, -0.02, -0.12]
+      translation: [-0.13, -0.02, -0.12]
       rotation: [-5.0, 15.0, 10.0]
 
     point8:
-      translation: [-0.15, -0.06, -0.17]
-      rotation: [-5.0, 25.0, 10.0]
+      translation: [-0.20, -0.06, -0.17]
+      rotation: [-5.0, 35.0, 10.0]
 
   # CLEANING SEQUENCE
   # Format: [from, to] - pairs of point names
@@ -264,16 +268,6 @@ stage_sequence:
 
   - stage: current_state
 
-  - stage: move_to_half_length
-    arm: left
-    pose_name: half_length
-    planning_group: pole_left
-
-  - stage: move_to_half_length
-    arm: right
-    pose_name: half_length
-    planning_group: pole_right
-
   # ---------------------------------------------------------------------------
   # 1. The check before any movement: RIGHT arm to inspection_pose_1
   # ---------------------------------------------------------------------------
@@ -291,6 +285,26 @@ stage_sequence:
     conditional: true                            # not asked in a sequence (inspect_before_close false)
     condition_param: inspect_before_close
 
+  - stage: move_to_half_length
+    arm: left
+    pose_name: half_length
+    planning_group: pole_left
+
+  - stage: hand_tenth_grasp
+    arm: left
+    pose_name: tenth_grasp
+    planning_group: inspire_hand_left
+
+  - stage: move_to_half_length
+    arm: right
+    pose_name: half_length
+    planning_group: pole_right
+
+  - stage: hand_tenth_grasp
+    arm: right
+    pose_name: tenth_grasp
+    planning_group: inspire_hand_right
+
   # ---------------------------------------------------------------------------
   # 2. LEFT arm to the seat's top edge (the pole stays at half length)
   # ---------------------------------------------------------------------------
@@ -305,7 +319,7 @@ stage_sequence:
     arm: left
     contact_surface: seat_and_lid
     additional_ik_frames: [L_glove_frame_1]   
-    collisions: [[commode_seat, L_Link6], [commode_seat, L_Link7]]
+    collisions: [[commode_seat, L_CameraHolderLink], [commode_seat, L_Link7]]
 
   - stage: move_to_start
     speed_class: approach
@@ -341,7 +355,7 @@ stage_sequence:
     arm: left
 
   - stage: update_fixture_scene
-    seat_angle_deg: -60.0
+    seat_angle_deg: -75.0
     lid_angle_deg: -110.0
 
   # - stage: allow_collision
@@ -349,11 +363,25 @@ stage_sequence:
   #   contact_surface: seat
     
 
-  # - stage: move_to_retract
-  #   speed_class: approach
-  #   arm: left
-  #   pose_name: retract_pose
-  #   planning_group: rm75_arm_left
+  - stage: move_to_retract
+    speed_class: approach
+    arm: left
+    pose_name: retract_pose
+    planning_group: rm75_arm_left
+
+  - stage: update_fixture_scene
+    seat_angle_deg: -60.0
+    lid_angle_deg: -110.0
+
+  - stage: move_to_retract_2
+    speed_class: approach
+    arm: left
+    pose_name: retract_pose_2
+    planning_group: rm75_arm_left
+
+  - stage: update_fixture_scene
+    seat_angle_deg: -45.0
+    lid_angle_deg: -110.0
 
   - stage: move_to_rest
     speed_class: freespace
@@ -361,12 +389,21 @@ stage_sequence:
     pose_name: rest_pose
     planning_group: rm75_arm_left
 
+  - stage: hand_release
+    arm: left
+    pose_name: release
+    planning_group: inspire_hand_left
+
   - stage: forbid_collision
     arm: left
     contact_surface: seat_and_lid
     additional_ik_frames: [L_glove_frame_1]
-    collisions: [[commode_seat, L_Link6], [commode_seat, L_Link7]]
+    collisions: [[commode_seat, L_CameraHolderLink], [commode_seat, L_Link7]]
 
+
+  - stage: update_fixture_scene
+    seat_angle_deg: -20.0
+    lid_angle_deg: -110.0
 
   # ---------------------------------------------------------------------------
   # 5. RIGHT arm releases the seat: out from under its edge; the seat drops
@@ -404,3 +441,9 @@ stage_sequence:
     arm: right
     pose_name: rest_pose
     planning_group: rm75_arm_right
+
+  - stage: hand_release
+    arm: right
+    pose_name: release
+    planning_group: inspire_hand_right
+

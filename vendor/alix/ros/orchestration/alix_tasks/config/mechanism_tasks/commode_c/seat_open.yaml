@@ -50,9 +50,10 @@ task_parameters:
   # The checks at the task's start (verify_lid_open, verify_seat_closed, from inspection pose 4): true for the plan a
   # task runs on its own; false for the plan a SEQUENCE runs (the owner, 27 Oct: the sequence's own order made that
   # state, the lid open by Open the lid, the seat closed because its top was just cleaned, so no check is asked before
-  # the lift). The MOVE to inspection pose 4 (and the fist before it) stays in both: the lifted check is taken from
-  # there (27 Oct 12:56, a plan without it took that check from rest and the camera could not judge it). Lite keeps
-  # both plans: <task>_toppra.json and <task>_seq_toppra.json (planned with this false).
+  # the lift). The MOVE to inspection pose 4 (and the fist after it) stays in both: the lifted check is taken from
+  # there (27 Oct 12:56, a plan without it took that check from rest and the camera could not judge it). Lite keeps ONE plan, <task>_toppra.json, and
+  # drops these checks itself in a sequence (29 Oct, as the closings: the <task>_seq_toppra.json plans of 27 Oct, planned
+  # with this false, are no longer used).
   inspect_before_lift: true
 
   # Compound (dual-arm) control
@@ -182,18 +183,6 @@ stage_sequence:
   # ---------------------------------------------------------------------------
   # 1. RIGHT arm goes to its inspect pose FIRST (baseline frame of the closed seat)
   # ---------------------------------------------------------------------------
-  - stage: move_to_inspect_pole_length
-    arm: right
-    pose_name: half_length
-    planning_group: pole_right
-
-  # Fingers CLOSED (grasp) while the camera watches: an open hand dangles its
-  # fingertips ~100 mm below the palm, into the path of the rising seat.
-  - stage: hand_grasp
-    arm: right
-    pose_name: grasp
-    planning_group: inspire_hand_right
-
   - stage: move_to_inspect
     speed_class: freespace
     arm: right
@@ -232,6 +221,23 @@ stage_sequence:
     on_fail: skip
     conditional: true                            # not asked in a sequence (inspect_before_lift false)
     condition_param: inspect_before_lift
+
+  # The right's pole and grasp AFTER the checks (the owner, 29 Oct: seat_close.yaml's
+  # order in every lid and seat task; nothing but the look moves before the checks,
+  # so a NO wastes no movement), both before the lift. The pole is at half length at
+  # the task's start (the sequence's start state), so this stage moves it 0 mm and
+  # the camera stays where the checks took their frames.
+  - stage: move_to_inspect_pole_length
+    arm: right
+    pose_name: half_length
+    planning_group: pole_right
+
+  # Fingers CLOSED (grasp) before the left lifts: an open hand dangles its
+  # fingertips ~100 mm below the palm, into the path of the rising seat.
+  - stage: hand_grasp
+    arm: right
+    pose_name: grasp
+    planning_group: inspire_hand_right
 
   # ---------------------------------------------------------------------------
   # 2. LEFT arm lifts the seat (partial lift, 0 -> -30 deg)

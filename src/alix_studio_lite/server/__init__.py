@@ -393,16 +393,21 @@ def main(argv=None) -> int:
             print(f"   copied from {app.store.home}: {p['name']}" + (f" (was “{p['renamed']}”)" if p["renamed"] else ""), flush=True)
     print(f"Logs:  {app.log.root}  (tail -f {app.log.root}/$(date +%F)/lite.log)", flush=True)
     print(f"Python:  {sys.executable}", flush=True)
-    try:                                  # the lid and seat files against ALIX's, where its checkout is on this computer (28 Oct)
-        from . import alix_sync
+    try:                                  # the lid and seat files linked with ALIX's, where its checkout is on this computer
+        from . import alix_sync          # (28 Oct; both ways at every start since 29 Oct: alix_sync.link)
 
         if alix_sync.alix_root() is not None:
-            rep = alix_sync.status(deep=False)
+            pulled, pushed = alix_sync.link()
+            for path, what in pulled + pushed:
+                print(f"Lid and seat: {what}: {path}", flush=True)
+            if pushed:
+                print(f"Lid and seat: {len(pushed)} file(s) copied into ALIX: commit them there", flush=True)
+            rep = alix_sync.status(deep=True)
             if not rep.in_sync:
-                print(f"Lid and seat: {len(rep.files)} file(s) differ from ALIX's ({', '.join(sorted({f.state for f in rep.files}))}): "
-                      "python3 tools/mechanism_sync.py", flush=True)
+                for line in rep.lines()[1:-1]:
+                    print(f"Lid and seat: {line.strip()}", flush=True)
     except Exception as exc:                                                        # noqa: BLE001 - a note, never a stop
-        print(f"Lid and seat: not compared with ALIX's ({type(exc).__name__}: {exc})", flush=True)
+        print(f"Lid and seat: not linked with ALIX's ({type(exc).__name__}: {exc})", flush=True)
     if hasattr(signal, "SIGUSR1"):              # what each thread is doing, on demand, for a Lite that stops answering
         import faulthandler
 

@@ -123,20 +123,19 @@ def test_the_pole_step_is_done_idle_within_5_mm_after_its_ramp(monkeypatch):
 
 
 def test_a_plans_pole_and_hand_are_set_together_to_the_state_its_first_move_needs():
-    """lid_open: the right opens, sets the pole and grasps before its move_to_inspect; the left opens, sets the pole and
-    half-grasps before its lift. One pole+hand step per arm to those states; the plan's entries then find them met. Only
-    what comes before the run's first check (the owner, 29 Oct: nothing but the look moves before it): in a sequence,
-    which does not ask the start check, both arms; run on its own, the left's come after its check and wait for it."""
+    """lid_open (the owner's order since 29 Oct: the right's look and check first, then its pole and grasp, then the
+    left's pole and half grasp before its lift): one pole+hand step per arm at the approach to the state its first move
+    needs, the plan's entries then find them met. Only what comes before the run's first check (nothing but the look
+    moves before it): in a sequence, which does not ask the start check, the left's; run on its own, nothing (both
+    arms' come after the check); the right's grasp after its look runs where the plan has it, in both."""
     plan = mechanism.Plan("lid_open")
+    start = plan.targets("start")
     in_sequence = mechanism.without_start_checks(list(plan.entries))[0]
     first = plan.first_move_targets(in_sequence)
-    assert first["right"]["pole_mm"] == pytest.approx(150.1, abs=0.1) and first["right"]["hand"] == [33, 33, 33, 33, 133, 944]
-    assert first["left"]["pole_mm"] == pytest.approx(150.0, abs=0.1) and first["left"]["hand"] == [516, 516, 516, 516, 133, 944]
-    assert first["right"]["arm_deg"] == plan.targets("start")["right"]["arm_deg"]
-    alone = plan.first_move_targets()
-    assert alone["left"] == plan.targets("start")["left"]                                   # its pole and grasp after the check
-    k = mechanism.first_check_at(plan.entries)
-    assert all(e.side == "right" for e in plan.entries[:k] if e.kind != "arm") and alone["right"] == first["right"]
+    assert first["left"]["pole_mm"] == pytest.approx(150.1, abs=0.1) and first["left"]["hand"] == [516, 516, 516, 516, 133, 944]
+    assert first["right"] == start["right"] and start["right"]["hand"] == [1000] * 6           # its look is its first entry
+    assert plan.first_move_targets() == start                                                # on its own: all after the check
+    assert mechanism.first_check_at(plan.entries) == 1 and plan.entries[0].stage == "move_to_inspect"
     calls = []
 
     class Arm:
@@ -157,12 +156,12 @@ def test_a_plans_pole_and_hand_are_set_together_to_the_state_its_first_move_need
     fake = SimpleNamespace(robot=SimpleNamespace(speed_pct=50, _measured=lambda side: (150.0, [1000] * 6), found_speed=lambda side: 50),
                            job=SimpleNamespace(progress=lambda *a, **k: None, on_cancel=None), check_stop=lambda: None,
                            say=lambda *a, **k: None, _arm=lambda side: Arm(side), _settle_all=lambda: None)
-    for entries, left_hand in ((in_sequence, [516, 516, 516, 516, 133, 944]), (None, plan.targets("start")["left"]["hand"])):
+    for entries, left_hand in ((in_sequence, [516, 516, 516, 516, 133, 944]), (None, start["left"]["hand"])):
         calls.clear()
-        mechanism.RealExec.approach(fake, plan, plan.targets("start"), "start", entries=entries)
+        mechanism.RealExec.approach(fake, plan, start, "start", entries=entries)
         steps = [c for c in calls if c[1] == "pole_and_hand"]
-        assert sorted(steps) == [("left", "pole_and_hand", 150.0, left_hand),
-                                 ("right", "pole_and_hand", 150.1, [33, 33, 33, 33, 133, 944])]
+        assert sorted(steps) == [("left", "pole_and_hand", round(start["left"]["pole_mm"], 1), left_hand),
+                                 ("right", "pole_and_hand", round(start["right"]["pole_mm"], 1), [1000] * 6)]
         assert [c for c in calls if c[1] == "move_to"] == [("right", "move_to", 50), ("left", "move_to", 50)]   # the camera arm first
         assert all(("left", "drop_hand") in calls for _ in [0]) and ("right", "drop_hand") in calls
 
@@ -423,7 +422,7 @@ def test_the_approachs_two_movejs_go_at_once_when_their_paths_are_checked_clear(
         if scene is not None:
             assert asked and asked[0]["n"] == 49 and asked[0]["phase"] == "lid_closed" and asked[0]["sides"] == ["left", "right"]
             assert asked[0]["q1"] == plan.targets("start")["left"]["arm_deg"] and asked[0]["q0"] == [0.0, -82.0, 26.0, 98.0, -6.0, 62.0, 111.0]
-            assert asked[0]["pole"] == pytest.approx(150.1, abs=0.1) and asked[0]["hand"] == [33, 33, 33, 33, 133, 944]
+            assert asked[0]["pole"] == pytest.approx(150.0, abs=0.1) and asked[0]["hand"] == [1000] * 6   # its grasp after its look
         if scene is not None and not together:
             assert any("one after the other: the paths would meet: the two arms" in t for t in said)
     assert mechanism.APPROACH_GRID == 7 and mechanism.PHASE_BEFORE["lid_open"] == "lid_closed" and mechanism.PHASE_BEFORE["seat_open"] == "lid_open"

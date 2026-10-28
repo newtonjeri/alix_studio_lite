@@ -129,7 +129,9 @@ class Report:
             out.append(f"  {f.state.upper():9s} {f.path}: {f.words()}")
         for lv, where, text in self.checks:
             out.append(f"  {lv.upper():9s} {where}: {text}")
-        out.append("IN SYNC" if self.in_sync else "NOT IN SYNC")
+        errors = sum(1 for lv, _, _ in self.checks if lv == "error")
+        out.append("IN SYNC" if self.in_sync else "NOT IN SYNC" if self.files else
+                   f"THE SAME FILES ON BOTH SIDES; {errors} plan error(s) above: re-plan in ALIX (then Lite links it)")
         return out
 
 
@@ -596,3 +598,14 @@ def push(alix: Path, lite: Path = LITE, take_lite: bool = False, dry_run: bool =
             _record(lite, alix, f.path)
         done.append((f.path, "copied into ALIX"))
     return done
+
+
+def link(alix: Path | None = None, lite: Path = LITE) -> tuple[list, list]:
+    """Both ways at once, so a change on either side is the other's too (the user, 29 Oct: "make sure the lite and alix
+    ws files are linked"): what changed only in ALIX pulled into Lite, what changed only in Lite pushed into ALIX; a file
+    changed on both sides is left for a person (FileState conflict: pull --take-alix or push --take-lite). Lite runs it
+    at every start where ALIX's checkout is on the computer (none at the lab: nothing done). (pulled, pushed)."""
+    alix = alix if alix is not None else alix_root()
+    if alix is None:
+        return [], []
+    return pull(alix, lite), push(alix, lite)

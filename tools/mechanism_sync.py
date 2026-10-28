@@ -2,14 +2,16 @@
 """Keep Lite's lid and seat tasks and plans the same as ALIX's (server/alix_sync.py says what is compared and checked).
 
     python3 tools/mechanism_sync.py                  # status: what differs, which side changed it, the plans' checks
+    python3 tools/mechanism_sync.py link             # both ways at once, as every Lite start does (pull, then push)
     python3 tools/mechanism_sync.py pull             # ALIX -> Lite: what changed (or is new) in ALIX
     python3 tools/mechanism_sync.py push             # Lite -> ALIX: what changed in Lite (the owner commits ALIX)
     python3 tools/mechanism_sync.py pull --take-alix # a file changed on both sides: ALIX's kept
     python3 tools/mechanism_sync.py push --take-lite # ... Lite's kept
     --alix PATH (default: $LITE_ALIX_ROOT or ~/alix_ws/src/alix), --dry-run
 
-Exit 0 when both sides hold the same files and every check passes, 1 when not. Run it after any change to a lid or seat
-config or plan, on either side, and before committing Lite (tests/test_alix_sync.py fails while they differ).
+Exit 0 when both sides hold the same files and every check passes, 1 when not. Lite links them itself at every start on
+a computer with ALIX's checkout (alix_sync.link); run it after a change made while Lite runs, and before committing Lite
+(tests/test_alix_sync.py fails while they differ).
 """
 from __future__ import annotations
 
@@ -26,7 +28,7 @@ from alix_studio_lite.server import alix_sync  # noqa: E402
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("what", nargs="?", default="status", choices=("status", "pull", "push"))
+    ap.add_argument("what", nargs="?", default="status", choices=("status", "pull", "push", "link"))
     ap.add_argument("--alix", type=Path, default=None)
     ap.add_argument("--take-alix", action="store_true", help="pull: a file changed on both sides takes ALIX's")
     ap.add_argument("--take-lite", action="store_true", help="push: a file changed on both sides takes Lite's")
@@ -36,7 +38,12 @@ def main() -> int:
     if args.what != "status" and alix is None:
         print("ALIX's checkout is not on this computer: pass --alix PATH or set LITE_ALIX_ROOT.")
         return 2
-    if args.what == "pull":
+    if args.what == "link":
+        pulled, pushed = (alix_sync.pull(alix, dry_run=args.dry_run), alix_sync.push(alix, dry_run=args.dry_run))
+        for path, what in pulled + pushed:
+            print(f"  {'would be ' if args.dry_run else ''}{what}: {path}")
+        print(f"{len(pulled)} file(s) pulled, {len(pushed)} pushed" + (" (commit those in ALIX)" if pushed and not args.dry_run else ""))
+    elif args.what == "pull":
         done = alix_sync.pull(alix, take_alix=args.take_alix, dry_run=args.dry_run)
         for path, what in done:
             print(f"  {'would be ' if args.dry_run else ''}{what}: {path}")

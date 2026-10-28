@@ -137,8 +137,8 @@ ALIX_FILES = [
     # and, since 28 Oct, the owner's two compound closings (seat_close 26 Oct, lid_close 28 Oct, trimmed and re-planned)
     "Resource/plans/README.md",
     *[f"Resource/plans/commode_c/hardware/{p}_toppra{s}"
-      for p, groups in (("lid_open", 2), ("seat_open", 2), ("lid_open_seq", 2), ("seat_open_seq", 2),   # _seq: a sequence's plan, no look first (27 Oct)
-                        ("seat_close", 2), ("lid_close", 2))   # the closings: no _seq plan, a sequence drops their first check (28 Oct)
+      for p, groups in (("lid_open", 2), ("seat_open", 2),
+                        ("seat_close", 2), ("lid_close", 2))   # no _seq plans: a sequence drops a task's first checks (28-29 Oct)
       for s in [".json"] + [f".g{k}{e}" for k in range(groups) for e in (".json", ".proj", ".txt")]],
     *[f"Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung{k}{e}"
       for k in (1, 2, 3) for e in (".json", ".g0.json", ".g0.proj", ".g0.txt")],

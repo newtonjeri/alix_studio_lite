@@ -83,20 +83,6 @@ TASKS = {
         does="The camera checks the lid is open (else Open the lid runs first) and the seat is down; the left arm "
              "lifts the seat, the camera checks it is up (one re-lift), then the right arm opens it fully; at the end "
              "the camera checks the lid and the seat are open."),
-    # the plans a SEQUENCE runs (the owner, 27 Oct): the same configs planned with inspect_before_lift false: the checks
-    # before the lift are not in them (the sequence's own order made that state), the moves are the task's own. The right
-    # arm's move to inspection pose 4 STAYS: the lifted check is taken from there (the lab, 27 Oct 12:56: a plan without
-    # that move took the lifted check from rest and the camera could not judge it, five frames refused; the owner: only
-    # the first inspection, at the task's start, is skipped).
-    "lid_open_seq": dict(
-        title="Open the lid (in a sequence)", short="LID OPEN", start="lid closed", end="lid open, seat down", variant_of="lid_open",
-        does="The right arm goes to its inspection pose with no check asked; the left arm lifts the lid, the camera "
-             "checks it is up (up to three re-lifts), then the right arm takes it and opens it fully; at the end the "
-             "camera checks the lid is open and reads the seat."),
-    "seat_open_seq": dict(
-        title="Open the seat (in a sequence)", short="SEAT OPEN", start="lid open, seat down", end="lid and seat open", variant_of="seat_open",
-        does="The right arm goes to its inspection pose with no check asked; the left arm lifts the seat, the camera "
-             "checks it is up (one re-lift), then the right arm opens it fully and the camera checks it at the end."),
     # the closings (the owner's compound plans: seat_close 26 Oct, lid_close 28 Oct; trimmed and vendored 28 Oct): the right
     # arm looks from inspection pose 1, the left hooks the part's top edge and pulls it over onto the right hand, which
     # waits under the part's line and then slides out; the part drops; the camera checks it is down from pose 1
@@ -110,9 +96,12 @@ TASKS = {
         does="The right arm looks with the wrist camera; if the lid is up, the left arm hooks its top edge and pulls it "
              "over while the right hand waits under its line and catches it; the right hand slides out and the lid drops "
              "onto the seat. At the end the camera checks the lid is down (else the run stops for a person)."),
-    # no sequence plans of their own (28 Oct, afternoon): a sequence runs the task's plan with its check before any movement
-    # not asked (Runner start_checks, without_start_checks), the same moves to the line; the separately planned ones of the
-    # morning came out on another arm configuration about the same hand path (the seat's left start, joint 5 14 deg apart)
+    # no sequence plans of their own (the closings 28 Oct, afternoon; the openings' lid_open_seq and seat_open_seq of 27 Oct
+    # retired 29 Oct, when every task took seat_close's order and its plan was made again): a sequence runs the task's plan
+    # with its checks before the first lift not asked (Runner start_checks, without_start_checks), the same moves to the
+    # line; the right arm's move to its inspection pose stays (the lifted check is taken from there: the lab, 27 Oct 12:56).
+    # Separately planned sequence plans came out on another arm configuration about the same hand path (the seat's left
+    # start, joint 5 14 deg apart, 28 Oct; seat_open_seq's right push, joint 5 17.6 deg, 27 Oct).
 }
 
 
@@ -128,11 +117,9 @@ def sequence_plan(task: str) -> str:
 ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T03": "seat_open", "R-T03": "seat_open",
         "L-T02": "seat_close", "R-T02": "seat_close", "L-T05": ("seat_close", "lid_close"), "R-T09": ("seat_close", "lid_close")}
 #: the commode's state after each, for the 3D and the collision check (Lite's phases)
-PHASE_AFTER = {"lid_open": "lid_open", "lid_open_seq": "lid_open", "seat_open": "seat_open", "seat_open_seq": "seat_open",
-               "seat_close": "lid_open", "lid_close": "lid_closed"}
+PHASE_AFTER = {"lid_open": "lid_open", "seat_open": "seat_open", "seat_close": "lid_open", "lid_close": "lid_closed"}
 #: the commode's state as each starts (the approach's two MoveJs are checked in it)
-PHASE_BEFORE = {"lid_open": "lid_closed", "lid_open_seq": "lid_closed", "seat_open": "lid_open", "seat_open_seq": "lid_open",
-                "seat_close": "seat_open", "lid_close": "lid_open"}
+PHASE_BEFORE = {"lid_open": "lid_closed", "seat_open": "lid_open", "seat_close": "seat_open", "lid_close": "lid_open"}
 #: each state in the operator's words
 PHASE_WORDS = {"lid_closed": "the lid and the seat are down", "lid_open": "the lid is open and the seat down",
                "seat_open": "the lid and the seat are open"}

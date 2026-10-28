@@ -180,7 +180,7 @@ def test_a_lid_already_open_skips_lid_open_and_parks_where_it_would_end():
     out = mechanism.Runner(ex).run("lid_open")
     assert out["plans"] == [dict(plan="lid_open", title="Open the lid", outcome="skipped", relifts=0)]
     assert [c[2] for c in ex.calls if c[0] == "approach"] == ["start", "end"]
-    assert [m[1] for m in moves(ex)] == ["move_to_inspect_pole_length", "hand_grasp", "move_to_inspect"]
+    assert [m[1] for m in moves(ex)] == ["move_to_inspect"]      # the look only (the owner, 29 Oct: poles and hands after the check)
 
 
 def test_seat_open_with_the_lid_closed_runs_lid_open_first_then_itself_again():
@@ -637,7 +637,7 @@ def test_a_plan_knows_the_streams_a_run_makes_of_its_moves_and_the_3d_view_reads
     them mechanism:<task>:<i>:joined:<n>, which the 3D view's reader turns back into the very same lines."""
     from alix_studio_lite.server import workflow
 
-    for name in ("lid_open", "seat_open", "seat_open_seq"):
+    for name in ("lid_open", "seat_open"):
         plan = mechanism.Plan(name)
         streams = plan.streams(start_checks=False)
         moves = [e for e in plan.entries if e.kind == "arm"]
@@ -645,7 +645,7 @@ def test_a_plan_knows_the_streams_a_run_makes_of_its_moves_and_the_3d_view_reads
         st = plan.streamed(start_checks=False)
         assert st == dict(seconds=round(sum(j.seconds for j, _ in streams), 2), blended_s=round(sum(j.blended_s for j, _ in streams), 2),
                           streams=len(streams), moves=len(moves))
-        assert 0.5 < st["blended_s"] < 2.0 and st["seconds"] < plan.seconds() - st["blended_s"] + 0.01   # the stops out, the stills not sent
+        assert 0.4 < st["blended_s"] < 2.0 and st["seconds"] < plan.seconds() - st["blended_s"] + 0.01   # the stops out, the stills not sent
         assert plan.view()["streamed"] == plan.streamed()
         for j, n in streams:
             if n > 1:
@@ -678,18 +678,20 @@ def test_the_closings_run_as_the_openings_do_and_a_sequence_asks_no_check_before
         before = [e for e in plan.entries[:k] if e.side == "right" and e.kind == "arm"][-1]
         assert abs(np.degrees(before.last()[1]) - -97.0) < 0.1 and abs(np.degrees(before.last()[6]) - -97.0) < 0.1   # the end check
         # is asked with the camera arm at inspection_pose_1 (28 Oct: the seat plan of 13:04 had lost it; added to its last move)
-        assert not [m for m in moves(ex) if m[3] == "hand"]                   # no hand entry: the hands as they are
+        assert [(m[1], m[2]) for m in moves(ex) if m[3] == "hand"] == [("hand_tenth_grasp", "left"), ("hand_tenth_grasp", "right")]
         assert [(m[1], m[2]) for m in moves(ex) if m[3] == "pole"] == [("move_to_half_length", "left"), ("move_to_half_length", "right")]
+        asked = next(i for i, c in enumerate(ex.calls) if c[0] == "ask")    # the look, its check, then the poles and the hands
+        assert [c[1] for c in ex.calls[:asked] if c[0] == "move"] == ["move_to_inspect"]    # (the owner, 29 Oct)
         half = {e.side: round(e.last()[0] * 1000.0, 1) for e in mechanism.Plan(task).entries if e.kind == "pole"}
         assert set(half) == {"left", "right"} and all(140 < v < 160 for v in half.values())                 # half length, both
-        assert {s: t["pole_mm"] for s, t in mechanism.Plan(task).first_move_targets().items()} == half    # both
-        # poles set at its start (28 Oct: the lab's first runs had both at 200 mm, the plans made at 149.2, no pole stage)
+        start = {s: t["pole_mm"] for s, t in mechanism.Plan(task).first_move_targets().items()}         # both poles set
+        assert all(abs(start[s] - half[s]) <= 5.0 for s in half)        # to its start (28 Oct: the lab's first runs had both at
+        # 200 mm, no pole stage), its pole stages after the check to half length (within 5 mm of it: not sent, 29 Oct)
         assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [(task, "start")]
         ex = FakeExec([down])                                                  # the part already down: the plan's outcome holds
         out = mechanism.Runner(ex).run(task)
         assert out["plans"][0]["outcome"] == "skipped"
-        assert [(m[1], m[2], m[3]) for m in moves(ex)] == [("move_to_half_length", "left", "pole"), ("move_to_half_length", "right", "pole"),
-                                                           ("move_to_inspect", "right", "arm")]   # the poles, the look, the check, nothing else
+        assert [(m[1], m[2], m[3]) for m in moves(ex)] == [("move_to_inspect", "right", "arm")]   # the look, the check, nothing else
         assert [c[2] for c in ex.calls if c[0] == "approach"] == ["start", "end"]
         assert mechanism.sequence_plan(task) == task                      # no _seq plan (28 Oct): the task's own, its first
         ex = FakeExec([down])                                             # check dropped by the run

@@ -36,7 +36,7 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     first_look = next(a for a in right if a["kind"] == "stream")                   # the look move stays: the lifted check is taken from
     lifted = next(a for a in right if a["kind"] == "check")                        # inspection pose 4 (the owner, 27 Oct, after the 12:56
     assert "move_to_inspect" in first_look["text"] and first_look["t0"] < lifted["t0"]   # run: taken from rest, five frames refused)
-    looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:lid_open_seq:")]   # the sequence's own plan
+    looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:lid_open:")]   # the task's own plan, its first check dropped (29 Oct)
     joined = sorted((a for a in sim["acts"]["left"] + right if ":joined:" in str(a.get("file"))), key=lambda a: a["t0"])
     assert [a["file"].split(":")[-1] for a in joined] == ["3", "2", "2"]              # the run's streams (27 Oct): the left's
     assert "move_to_pre_start + move_to_start + execute_path as one stream" in joined[0]["text"]   # approach and lift, the right's
@@ -44,7 +44,6 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     last_check = [a for a in right if a["kind"] == "check"][-1]
     assert looks[-2]["t0"] < last_check["t0"] < looks[-1]["t0"]            # the look to pose 1, the camera, then the rest
     assert not any("seat_close" in str(a.get("file")) or "seat_open" in str(a.get("file")) for a in right)
-    assert not any(str(a.get("file", "")).startswith("mechanism:lid_open:") for a in right)      # not the plan with the look
     assert any("left out of this collision check" in f["text"] for f in sim["findings"])
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
     server["script"].write_text(json.dumps(["lid_lifted", "lid_open"]))          # a sequence: no "lid closed" asked (27 Oct)
@@ -52,7 +51,7 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     done = wait(server, job)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])
     said = " | ".join(e["text"] for e in done["events"])
-    assert "Open the lid: Open the lid (in a sequence) done." in said and "CHECK verify_lid_lifted" in said   # the sequence's plan
+    assert "Open the lid: Open the lid done." in said and "CHECK verify_lid_lifted" in said   # the task's plan, no start check
 
 
 def test_s2_refuses_a_lid_or_seat_task_with_no_camera_before_anything_moves(server):

@@ -18,17 +18,16 @@ Nothing reads plans from the package share, and `plans` is not in the
 package's `install(DIRECTORY …)`.
 
 **ALIX Studio Lite runs commode C's lid and seat plans** (`commode_c/hardware/`
-`lid_open`, `seat_open`, `seat_close`, `lid_close`, the openings' `_seq` sequence
-plans, `rungs/lid_open_*`; the closings have no `_seq` plan: Lite drops their first
-check itself in a sequence) and their configs (`mechanism_tasks/commode_c/<task>.yaml`)
-from its own copies. After changing any of them, on either side, run Lite's
-`python3 tools/mechanism_sync.py` (in `alix_studio_lite/`): it says which side
-changed each file and whether each plan is still its config's (a config edited
-and its re-planning failed leaves the old plan here); `pull` brings ALIX's
-changes into Lite, `push` brings Lite's here. Lite's test suite fails while the
-two differ. An opening's sequence plan is re-made with its task: plan the task with its
-`inspect_before_lift` flag true, then false, and save the second as
-`<task>_seq_toppra.*` (`Resource/reports/2026-10-26_end_look/helpers/plan_seq_mock43.sh`).
+`lid_open`, `seat_open`, `seat_close`, `lid_close`, `rungs/lid_open_*`; no `_seq`
+plans since 29 Oct: Lite drops a task's first checks itself in a sequence, and the
+openings' `_seq` plans of 27 Oct are no longer used) and their configs
+(`mechanism_tasks/commode_c/<task>.yaml`) from its own copies, linked with these:
+every Lite start on this computer pulls what changed here and pushes what changed in
+Lite (a file changed on both sides is left for a person). After changing any of them
+while Lite runs, run Lite's `python3 tools/mechanism_sync.py link` (in
+`alix_studio_lite/`; without `link` it only says which side changed each file and
+whether each plan is still its config's: a config edited and its re-planning failed
+leaves the old plan here). Lite's test suite fails while the two differ.
 
 ---
 

@@ -167,11 +167,11 @@ left:
       rotation: [0.0, 5.0, -5.0]      
 
     point2:
-      translation: [0.0, -0.01, 0.05]
+      translation: [0.0, 0.0, 0.05]
       rotation: [-5.0, 15.0, -5.0]
 
     point3:
-      translation: [-0.07, -0.04, 0.08]
+      translation: [-0.07, -0.02, 0.08]
       rotation: [-10.0, 20.0, -5.0]
 
     point4:
@@ -209,16 +209,6 @@ stage_sequence:
     condition_param: enable_washroom_scene
 
   - stage: current_state
-    
-  - stage: move_to_half_length
-    arm: left
-    pose_name: half_length
-    planning_group: pole_left
-
-  - stage: move_to_half_length
-    arm: right
-    pose_name: half_length
-    planning_group: pole_right
 
   # ---------------------------------------------------------------------------
   # 1. The check before any movement: RIGHT arm to inspection_pose_1
@@ -237,8 +227,28 @@ stage_sequence:
     conditional: true                            # not asked in a sequence (inspect_before_close false)
     condition_param: inspect_before_close
 
-  # (28 Oct: no pole stage. The poles stay at half length throughout, as the header says and as seat_close.yaml has it;
-  # the stage moved the pole 0 mm.)
+  # The poles and the hands after the check (the owner, 29 Oct: seat_close.yaml's order in every lid and seat task;
+  # nothing but the look moves before the check, so a NO wastes no movement).
+  - stage: move_to_half_length
+    arm: left
+    pose_name: half_length
+    planning_group: pole_left
+
+  - stage: hand_tenth_grasp
+    arm: left
+    pose_name: tenth_grasp
+    planning_group: inspire_hand_left
+
+  - stage: move_to_half_length
+    arm: right
+    pose_name: half_length
+    planning_group: pole_right
+
+  - stage: hand_tenth_grasp
+    arm: right
+    pose_name: tenth_grasp
+    planning_group: inspire_hand_right
+
   # ---------------------------------------------------------------------------
   # 2. LEFT arm to the lid's top edge (the pole stays at half length)
   # ---------------------------------------------------------------------------

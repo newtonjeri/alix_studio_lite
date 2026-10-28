@@ -69,8 +69,9 @@ task_parameters:
   # false for the plan a SEQUENCE runs (the owner, 27 Oct: the sequence's own order made that state, the lid closed
   # because its top was just cleaned, so no check is asked before the lift). The MOVE to inspection pose 4 stays in
   # both: the lifted check is taken from there (27 Oct 12:56, a plan without it took that check from rest and the
-  # camera could not judge it). Lite keeps both plans: <task>_toppra.json and <task>_seq_toppra.json (planned with
-  # this false).
+  # camera could not judge it). Lite keeps ONE plan, <task>_toppra.json, and
+  # drops these checks itself in a sequence (29 Oct, as the closings: the <task>_seq_toppra.json plans of 27 Oct, planned
+  # with this false, are no longer used).
   inspect_before_lift: true
 
   # Compound (dual-arm) control
@@ -256,25 +257,6 @@ stage_sequence:
   # ---------------------------------------------------------------------------
   # 1. RIGHT arm frames the closed lid (wrist camera) BEFORE anything moves
   # ---------------------------------------------------------------------------
-  # Pole first, so the camera height is pinned for the baseline frame and the
-  # check (the pole does not move between them). HALF length (Newton, 2026-10-05
-  # 15:40): at quarter length the right hand hung inside the lid's swing and
-  # the rising lid met its fingers at ~15 deg (sim, depth 0.392 -> 0.337 m and
-  # back); half length lifts the hand 75 mm clear of the -30 deg edge (z 0.65 m
-  # in base_link) and is the height the right-arm poses are taught at, so
-  # block 5 needs no pole move.
-  - stage: move_to_inspect_pole_length
-    arm: right
-    pose_name: half_length
-    planning_group: pole_right
-
-  # Fingers CLOSED (grasp) while the camera watches: an open hand dangles its
-  # fingertips ~100 mm below the palm, into the path of the rising lid.
-  - stage: hand_grasp
-    arm: right
-    pose_name: grasp
-    planning_group: inspire_hand_right
-
   # inspection_pose_4: the LIFT CHECK VIEWPOINT (Newton 2026-10-05, his RViz
   # goal state, arm joints unchanged, pole raised to half length 15:40; SRDF group_state of
   # rm75_arm_right, source alix_moveit_config/config/group_states/
@@ -302,6 +284,28 @@ stage_sequence:
     on_fail: skip
     conditional: true                            # not asked in a sequence (inspect_before_lift false)
     condition_param: inspect_before_lift
+
+  # The right's pole and grasp AFTER the check (the owner, 29 Oct: seat_close.yaml's
+  # order in every lid and seat task; nothing but the look moves before the check,
+  # so a NO wastes no movement), both before the lift. The pole is at half length
+  # at the task's start (the sequence's start state), so this stage moves it 0 mm
+  # and the camera stays where the check took its frame. HALF length (Newton,
+  # 2026-10-05 15:40): at quarter length the right hand hung inside the lid's
+  # swing and the rising lid met its fingers at ~15 deg (sim, depth 0.392 ->
+  # 0.337 m and back); half length lifts the hand 75 mm clear of the -30 deg
+  # edge (z 0.65 m in base_link) and is the height the right-arm poses are
+  # taught at, so block 5 needs no pole move.
+  - stage: move_to_inspect_pole_length
+    arm: right
+    pose_name: half_length
+    planning_group: pole_right
+
+  # Fingers CLOSED (grasp) before the left lifts: an open hand dangles its
+  # fingertips ~100 mm below the palm, into the path of the rising lid.
+  - stage: hand_grasp
+    arm: right
+    pose_name: grasp
+    planning_group: inspire_hand_right
 
   # ---------------------------------------------------------------------------
   # 2. LEFT arm lifts the lid to -30 deg
