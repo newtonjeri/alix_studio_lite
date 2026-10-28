@@ -110,17 +110,9 @@ TASKS = {
         does="The right arm looks with the wrist camera; if the lid is up, the left arm hooks its top edge and pulls it "
              "over while the right hand waits under its line and catches it; the right hand slides out and the lid drops "
              "onto the seat. At the end the camera checks the lid is down (else the run stops for a person)."),
-    # their sequence plans (28 Oct): the check before any movement is not asked (the sequence's own order made the state);
-    # the right arm's move to inspection pose 1 STAYS: from rest its approach to the hold lands on another wrist
-    # configuration, and from it the release stroke runs the wrist into the washroom structure (the plannings of 28 Oct)
-    "seat_close_seq": dict(
-        title="Close the seat (in a sequence)", short="SEAT CLOSE", start="lid and seat open", end="lid open, seat down", variant_of="seat_close",
-        does="The right arm goes to its inspection pose with no check asked; the left arm pulls the seat over onto the "
-             "right hand, which slides out; at the end the camera checks the seat is down."),
-    "lid_close_seq": dict(
-        title="Close the lid (in a sequence)", short="LID CLOSE", start="lid open, seat down", end="lid and seat down", variant_of="lid_close",
-        does="The right arm goes to its inspection pose with no check asked; the left arm pulls the lid over onto the "
-             "right hand, which slides out; at the end the camera checks the lid is down."),
+    # no sequence plans of their own (28 Oct, afternoon): a sequence runs the task's plan with its check before any movement
+    # not asked (Runner start_checks, without_start_checks), the same moves to the line; the separately planned ones of the
+    # morning came out on another arm configuration about the same hand path (the seat's left start, joint 5 14 deg apart)
 }
 
 
@@ -137,10 +129,10 @@ ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T03": "seat_open", "R-T03":
         "L-T02": "seat_close", "R-T02": "seat_close", "L-T05": ("seat_close", "lid_close"), "R-T09": ("seat_close", "lid_close")}
 #: the commode's state after each, for the 3D and the collision check (Lite's phases)
 PHASE_AFTER = {"lid_open": "lid_open", "lid_open_seq": "lid_open", "seat_open": "seat_open", "seat_open_seq": "seat_open",
-               "seat_close": "lid_open", "seat_close_seq": "lid_open", "lid_close": "lid_closed", "lid_close_seq": "lid_closed"}
+               "seat_close": "lid_open", "lid_close": "lid_closed"}
 #: the commode's state as each starts (the approach's two MoveJs are checked in it)
 PHASE_BEFORE = {"lid_open": "lid_closed", "lid_open_seq": "lid_closed", "seat_open": "lid_open", "seat_open_seq": "lid_open",
-                "seat_close": "seat_open", "seat_close_seq": "seat_open", "lid_close": "lid_open", "lid_close_seq": "lid_open"}
+                "seat_close": "seat_open", "lid_close": "lid_open"}
 #: each state in the operator's words
 PHASE_WORDS = {"lid_closed": "the lid and the seat are down", "lid_open": "the lid is open and the seat down",
                "seat_open": "the lid and the seat are open"}

@@ -1,5 +1,5 @@
 """S2 with the closings on ALIX's emulated arms (its own Lite): TASK 15's Close the seat then Close the lid after Open the
-seat, each on its sequence plan (no check before the pull, the look move kept); and TASK 4's Close the seat right after
+seat, each on its own plan with the check before the pull not asked (the look move kept); and TASK 4's Close the seat right after
 Open the lid, which the sequence's own order makes needless (the seat is down): not run, nothing moves. The camera's
 answers are scripted (LITE_CHECK_SCRIPT, a test harness only)."""
 import json
@@ -32,8 +32,8 @@ def test_s2_closes_the_seat_then_the_lid_after_opening_the_seat(server):
     right = sim["acts"]["right"]
     assert [a["expect"] for a in right if a["kind"] == "check"] == ["seat_lifted", "seat_open", "seat_closed", "lid_closed"]   # no check before a pull
     files = {str(a.get("file", "")).split(":")[1] for a in sim["acts"]["left"] + right if str(a.get("file", "")).startswith("mechanism:")}
-    assert files == {"seat_open_seq", "seat_close_seq", "lid_close_seq"}                   # the sequence's own plans
-    for task in ("seat_close_seq", "lid_close_seq"):
+    assert files == {"seat_open_seq", "seat_close", "lid_close"}           # the closings: their own plans, first check dropped
+    for task in ("seat_close", "lid_close"):
         mine = [a for a in right if str(a.get("file", "")).startswith(f"mechanism:{task}:") and a["kind"] == "stream"]
         assert "move_to_inspect" in mine[0]["text"] and "move_to_rest" in mine[-1]["text"]   # the look move first, the rest last (a Wait next)
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
@@ -43,8 +43,9 @@ def test_s2_closes_the_seat_then_the_lid_after_opening_the_seat(server):
     done = wait(server, job, limit=400)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-8:])
     said = " | ".join(e["text"] for e in done["events"])
-    for words in ("Open the seat: Open the seat (in a sequence) done", "Close the seat: Close the seat (in a sequence) done",
-                  "Close the lid: Close the lid (in a sequence) done", "CHECK verify_seat_closed", "CHECK verify_lid_closed"):
+    for words in ("Open the seat: Open the seat (in a sequence) done", "Close the seat: Close the seat done",
+                  "Close the lid: Close the lid done", "verify_seat_open: not asked", "verify_lid_open: not asked",
+                  "CHECK verify_seat_closed", "CHECK verify_lid_closed"):
         assert words in said, words
     assert "verify_seat_open" not in said.replace("CHECK verify_seat_open: expect seat_open", "") or "not asked" in said
     assert "CHECK verify_lid_open" not in said                                              # the sequence's own order says it
@@ -77,6 +78,6 @@ def test_s2_does_not_run_a_closing_whose_end_state_the_sequence_already_made(ser
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-8:])
     said = " | ".join(e["text"] for e in done["events"])
     assert "Close the seat: not run, the sequence's own order says the lid is open and the seat down already." in said
-    assert "Close the seat (in a sequence)" not in said and "verify_seat" not in said
+    assert "Close the seat done" not in said and "verify_seat" not in said
     labels = [r["args"]["label"] for r in hardware(server)[n0:] if r.get("verb") == "canfd stream"]
     assert labels and not any("execute_path + move_to_rest" in lb for lb in labels)         # no pull of the closing

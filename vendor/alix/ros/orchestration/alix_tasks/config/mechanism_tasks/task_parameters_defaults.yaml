@@ -38,8 +38,8 @@ task_parameters:
   # Stages opt in via `speed_class:` in stage_sequence.
   speed_classes:
     freespace: 0.8   # free-space moves
-    approach: 0.4    # approach to grasp/contact, retract to release
-    carry: 0.8       # carrying the seat / lid / bin
+    approach: 0.5    # approach to grasp/contact, retract to release
+    carry: 0.5       # carrying the seat / lid / bin
   max_acceleration_scaling: 1.0              # Acceleration scaling for arm movements
   # max_jerk_scaling: 0.35   # REMOVED 2026-08 — fed Ruckig Pro only. Jerk is now
   #                        # bounded by max_jerk in joint_limits.yaml.

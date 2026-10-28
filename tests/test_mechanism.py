@@ -662,11 +662,11 @@ def test_a_plan_knows_the_streams_a_run_makes_of_its_moves_and_the_3d_view_reads
 
 
 def test_the_closings_run_as_the_openings_do_and_a_sequence_asks_no_check_before_the_pull():
-    """The owner's compound closings (seat_close 26 Oct, lid_close 28 Oct): the right arm looks from inspection pose 1
-    (the part up, else the plan skips itself), the left hooks the part's top edge and pulls it over onto the right hand,
-    the right slides out, the camera checks the part is down from pose 1. In a sequence the check before the pull is not
-    asked and the look move stays (28 Oct: planned from rest the right arm reaches the hold on another wrist configuration
-    and the release runs into the washroom structure)."""
+    """The owner's compound closings: the right arm looks from inspection pose 1 (the part up, else the plan skips itself),
+    the left hooks the part's top edge and pulls it over onto the right hand, the right slides out, the camera checks the
+    part is down from pose 1. In a sequence the check before the pull is not asked and the look move stays (28 Oct:
+    planned from rest the right arm reaches the hold on another wrist configuration and the release runs into the
+    washroom structure); it is the task's own plan with that check dropped, no plan of its own (28 Oct, afternoon)."""
     for task, up, down in (("seat_close", "seat_open", "seat_closed"), ("lid_close", "lid_open", "lid_closed")):
         ex = FakeExec([up, down])
         out = mechanism.Runner(ex).run(task)
@@ -675,21 +675,23 @@ def test_the_closings_run_as_the_openings_do_and_a_sequence_asks_no_check_before
         assert [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"] == [
             ("move_to_inspect", "right"), ("move_to_pre_start + move_to_start", "left"), ("move_to_pre_start + move_to_start", "right"),
             ("execute_path + move_to_rest", "left"), ("execute_path + move_to_inspect", "right"), ("move_to_rest", "right")]
-        assert not [m for m in moves(ex) if m[3] in ("hand", "pole")]          # no hand or pole entry: the hands open, the poles at half
+        assert not [m for m in moves(ex) if m[3] == "hand"]                   # no hand entry: the hands as they are
+        assert [(m[1], m[2]) for m in moves(ex) if m[3] == "pole"] == [("move_to_half_length", "left"), ("move_to_half_length", "right")]
+        assert {s: t["pole_mm"] for s, t in mechanism.Plan(task).first_move_targets().items()} == {"left": 149.6, "right": 149.6}   # both
+        # poles set at its start (28 Oct: the lab's first runs had both at 200 mm, the plans made at 149.2, no pole stage)
         assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [(task, "start")]
         ex = FakeExec([down])                                                  # the part already down: the plan's outcome holds
         out = mechanism.Runner(ex).run(task)
         assert out["plans"][0]["outcome"] == "skipped"
-        assert [(m[1], m[2]) for m in moves(ex)] == [("move_to_inspect", "right")]      # the look, the check, nothing else
+        assert [(m[1], m[2], m[3]) for m in moves(ex)] == [("move_to_half_length", "left", "pole"), ("move_to_half_length", "right", "pole"),
+                                                           ("move_to_inspect", "right", "arm")]   # the poles, the look, the check, nothing else
         assert [c[2] for c in ex.calls if c[0] == "approach"] == ["start", "end"]
-        seq = mechanism.sequence_plan(task)
-        assert seq == f"{task}_seq" and mechanism.TASKS[seq]["variant_of"] == task
-        ex = FakeExec([down])
-        out = mechanism.Runner(ex, start_checks=False).run(seq)
+        assert mechanism.sequence_plan(task) == task                      # no _seq plan (28 Oct): the task's own, its first
+        ex = FakeExec([down])                                             # check dropped by the run
+        out = mechanism.Runner(ex, start_checks=False).run(task)
         assert out["plans"][0]["outcome"] == "done" and [c[1] for c in ex.calls if c[0] == "ask"] == [f"verify_{down}"]
         assert [m[1] for m in moves(ex) if m[3] == "arm"][0] == "move_to_inspect"      # the look move stays
-        plan = mechanism.Plan(seq)
-        assert [c["stage"] for c in plan.checks()] == [f"verify_{down}"] and plan.rungs_note() is None
+        assert mechanism.Plan(task).rungs_note() is None
         assert mechanism.PHASE_BEFORE[task] == up.replace("_closed", "_open") and mechanism.PHASE_AFTER[task] in ("lid_open", "lid_closed")
     assert mechanism.PHASE_AFTER["seat_close"] == "lid_open" and mechanism.PHASE_AFTER["lid_close"] == "lid_closed"
 

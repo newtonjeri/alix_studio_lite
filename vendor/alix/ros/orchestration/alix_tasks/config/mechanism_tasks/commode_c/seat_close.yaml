@@ -110,8 +110,9 @@ task_parameters:
   # own order made that state, so no check is asked before the pull). The right arm's MOVE to inspection_pose_1 stays in
   # both (the owner's rule of 27 Oct, and a reason of its own found on 28 Oct: planned from rest instead, the right arm
   # reaches the hold on another wrist configuration, and from it the release stroke runs R_Link5 into the washroom
-  # structure; from inspection_pose_1 the hold and the release are clear). Lite keeps both plans: <task>_toppra.json and
-  # <task>_seq_toppra.json (planned with this false).
+  # structure; from inspection_pose_1 the hold and the release are clear). Lite keeps ONE plan, <task>_toppra.json, and
+  # drops this check itself in a sequence (28 Oct, afternoon: a separately planned <task>_seq plan came out on another
+  # arm configuration about the same hand path, so none is made).
   inspect_before_close: true
 
   # Compound (dual-arm) control
@@ -184,7 +185,7 @@ left:
   # 2026-10-25_lid_seat_close/seat_close_left_block_2026-10-25.yaml).
   cartesian_poses:
     pre_start_pose: [0.95, 0.185532, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
-    start_pose: [0.98, 0.19, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
+    start_pose: [1.0, 0.19, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
 
     # Relative to THIS block's start_pose (translation added in alix_ref_frame,
     # rotation onto the start orientation). UNCHANGED from the 2026-10-24
@@ -262,6 +263,16 @@ stage_sequence:
 
   - stage: current_state
 
+  - stage: move_to_half_length
+    arm: left
+    pose_name: half_length
+    planning_group: pole_left
+
+  - stage: move_to_half_length
+    arm: right
+    pose_name: half_length
+    planning_group: pole_right
+
   # ---------------------------------------------------------------------------
   # 1. The check before any movement: RIGHT arm to inspection_pose_1
   # ---------------------------------------------------------------------------
@@ -292,6 +303,7 @@ stage_sequence:
   - stage: allow_collision
     arm: left
     contact_surface: seat_and_lid
+    additional_ik_frames: [L_glove_frame_1]   
     collisions: [[commode_seat, L_Link6], [commode_seat, L_Link7]]
 
   - stage: move_to_start
@@ -331,9 +343,9 @@ stage_sequence:
     seat_angle_deg: -60.0
     lid_angle_deg: -110.0
 
-  - stage: allow_collision
-    arm: left
-    contact_surface: seat
+  # - stage: allow_collision
+  #   arm: left
+  #   contact_surface: seat
     
 
   # - stage: move_to_retract
@@ -351,6 +363,7 @@ stage_sequence:
   - stage: forbid_collision
     arm: left
     contact_surface: seat_and_lid
+    additional_ik_frames: [L_glove_frame_1]
     collisions: [[commode_seat, L_Link6], [commode_seat, L_Link7]]
 
 

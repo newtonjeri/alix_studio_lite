@@ -33,12 +33,14 @@ def test_real_closing_streams_every_move_with_its_two_looks(server, task, up, do
     assert streams and all(r["ok"] for r in streams), [r.get("text") for r in streams if not r["ok"]]
     labels = [r["args"]["label"] for r in streams]           # each arm's streams in the plan's order (the two arms' first stretch
     assert [lb for lb in labels if lb.startswith("LEFT")] == ["LEFT arm move_to_pre_start + move_to_start", "LEFT arm execute_path + move_to_rest"]
-    assert [lb for lb in labels if lb.startswith("RIGHT")] == ["RIGHT arm move_to_inspect", "RIGHT arm move_to_pre_start + move_to_start",
-                                                               "RIGHT arm execute_path + move_to_inspect", "RIGHT arm move_to_rest"]
-    assert labels[0] == "RIGHT arm move_to_inspect" and labels[-1] == "RIGHT arm move_to_rest"   # runs at once, so their logging order varies)
-    assert sum(len(lb.split(" + ")) for lb in labels) == sum(1 for e in plan.entries if e.kind == "arm")   # every move named
+    right = [lb for lb in labels if lb.startswith("RIGHT")]                 # (the owner's 11:47 plans: the right's first look a one point
+    assert [lb.split(" (")[0] for lb in right] == ["RIGHT arm move_to_inspect", "RIGHT arm move_to_pre_start + move_to_start",   # move, the
+                                                   "RIGHT arm execute_path + move_to_inspect", "RIGHT arm move_to_rest"]   # arm at pose 1
+    assert labels[0].startswith("RIGHT arm move_to_inspect") and labels[-1] == "RIGHT arm move_to_rest"   # when planned; at once, so
+    poles = [(r["side"], r["args"]["mm"]) for r in hw if r.get("verb") == "pole and hand"]                 # the logging order varies)
+    assert sorted(poles) == [("left", 149.6), ("right", 149.6)], poles    # both poles set at its start (28 Oct: the lab ran them at 200)
+    assert sum(len(lb.split(" (")[0].split(" + ")) for lb in labels) == sum(1 for e in plan.entries if e.kind == "arm")   # every move named
     assert not [r for r in hw if r.get("verb") == "hand move"]                              # no hand entry: the hands stay as they are
-    assert not [r for r in hw if r.get("verb") == "pole move" and r.get("ok") and (r.get("args") or {}).get("sent")]   # the poles stay at half length
     said = " | ".join(e["text"] for e in done["events"])
     assert "cannot judge" not in said and f"CHECK verify_{down}" in said
     assert "not sent, the" not in said                                                       # a task on its own: its rest streamed
