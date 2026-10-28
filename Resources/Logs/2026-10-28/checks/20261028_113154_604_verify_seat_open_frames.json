@@ -1,0 +1,29 @@
+{
+  "check_id": "20261028_113154_604_verify_seat_open",
+  "stage": "verify_seat_open",
+  "expect": "seat_open",
+  "decided": true,
+  "state": "seat_lifted",
+  "confidence": 0.665,
+  "message": "3 frames (refused, seat_lifted, seat_lifted; 2 yes, 0 no, 1 no vote): seat surface median z 0.424 m in base_link (closed top 0.440, rise -16 mm vs 50 mm bar; ABSENT from its closed place, the rim shows); 62 % of the ROI valid, median range 0.603 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 41 % of the ROI, 10/90 % heights 0.419/0.444, 2 % masked around 17 hand frames; seat: seat_lifted at 0.66 from its own fit (seat_lifted 6825 vs seat_closed 5010, margin +0.27; best: lid 110 deg, seat 110 deg (seat) over 24498 pixels at 1/3, the fixture +0 mm from its registration); vs its closed frame: no answer (no closed reference at this placement)",
+  "frames": [
+    {
+      "record": "20261028_113154_963_gap_check_seat_open_refused.json",
+      "success": false,
+      "state": "not_lifted",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261028_113155_733_gap_check_seat_open_seat_lifted.json",
+      "success": true,
+      "state": "seat_lifted",
+      "confidence": 0.665
+    },
+    {
+      "record": "20261028_113155_960_gap_check_seat_open_seat_lifted.json",
+      "success": true,
+      "state": "seat_lifted",
+      "confidence": 0.714
+    }
+  ]
+}
