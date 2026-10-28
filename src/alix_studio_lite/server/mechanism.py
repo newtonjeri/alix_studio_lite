@@ -336,16 +336,21 @@ class Plan:
                 b[key] = e.hand_counts("first" if at == "start" else "last")
         return out
 
-    def first_move_targets(self) -> dict:
+    def first_move_targets(self, entries=None) -> dict:
         """``targets("start")`` with each arm's pole and hand as they must be when that arm FIRST moves: the last pole
         and hand entries before its first arm entry (the plans open the hand, set the pole and grasp before the arm
         goes). Set together by one step at the approach (the owner, 26 Oct: the plans' hand open, pole, hand re-read,
         MoveJ, pole no-op and grasp took 5-7 s an arm before any arm moved), after which those entries are already met.
-        An arm with no pole or hand entry before its first move keeps its start state."""
+        An arm with no pole or hand entry before its first move keeps its start state. Only the entries before the run's
+        first check (first_check_at): nothing but the look moves before a check, so a NO wastes no movement (the owner,
+        29 Oct); ``entries`` the run's own, a sequence's without the start checks it does not ask (without_start_checks),
+        else the plan's."""
+        entries = list(self.entries if entries is None else entries)
+        entries = entries[:first_check_at(entries)]
         out = {side: dict(tg) for side, tg in self.targets("start").items()}
         for side in out:
             hand_seen = False
-            for e in self.entries:
+            for e in entries:
                 if e.side != side:
                     continue
                 if e.kind == "arm":
@@ -666,9 +671,9 @@ def two_arm_leg(entries: list, i: int, unsent=(), bridged=(), plan_name: str = "
     phase = fixture_phase_at(entries, i, plan_name)
     if phase is None:
         return None
-    zero = set()                                 # each arm's first hand move before its first arm move: the approach set it
-    for side in {e.side for e in entries}:
-        for e in entries:
+    zero = set()                                 # each arm's first hand move before its first arm move and the run's first
+    for side in {e.side for e in entries}:       # check: the approach set it (Plan.first_move_targets)
+        for e in entries[:first_check_at(entries)]:
             if e.side != side:
                 continue
             if e.kind == "arm":
@@ -735,7 +740,7 @@ def leg_states(leg: Leg, side: str, q0: list, hand0: list, pole_mm: float, times
 def leg_start_state(plan, entries: list, i: int, side: str) -> tuple:
     """Where the arm stands and what its hand holds as the leg at entry ``i`` begins: the last of its moves before it in
     the plan (the plan's start pose, and the pole and hand its first move needs, before any). (q_deg, hand counts, pole mm)."""
-    first = plan.first_move_targets().get(side) or {}
+    first = plan.first_move_targets(entries).get(side) or {}
     start = plan.targets("start").get(side) or {}
     q = list(start.get("arm_deg") or [0.0] * 7)
     hand = list(first.get("hand") or start.get("hand") or [1000] * 6)
@@ -906,6 +911,13 @@ def without_start_checks(entries: list) -> tuple:
     return out, dropped
 
 
+def first_check_at(entries: list) -> int:
+    """The index of the first of ``entries`` a camera check is asked before (its check_fixture_state pre_action), else
+    their count: nothing after it is set early (Plan.first_move_targets)."""
+    return next((i for i, e in enumerate(entries) if any(a.get("type") == "check_fixture_state" for a in e.pre_actions or [])),
+                len(entries))
+
+
 def trailing_releases(entries: list, sides) -> set:
     """ids of each of ``sides``' last entry when it is a hand release with no move of that arm after it: S2 sets the
     hand for the arm's next task's start right after (its ``then``), so the plan's final release is not sent (the owner,
@@ -988,7 +1000,7 @@ class Runner:
         unsent = trailing_releases(entries, self.hand_set) | rests
         if self.together and hasattr(self.ex, "prepare_legs"):
             self.ex.prepare_legs(plan, entries, unsent, state["bridge"])
-        self.ex.approach(plan, plan.targets("start"), "start")
+        self.ex.approach(plan, plan.targets("start"), "start", entries=entries)
         i = 0
         while i < len(entries):
             e = entries[i]
@@ -1202,7 +1214,7 @@ class StandInExec(_Exec):
         super().__init__(job, log)
         self.scale, self.words = scale, words
 
-    def approach(self, plan, targets, at, words=None):
+    def approach(self, plan, targets, at, words=None, entries=None):
         self.say(f"{words or f'{plan.title}: to its {at}'} ({', '.join(f'{s.upper()} arm' for s in targets)}), on {self.words}")
 
     def move(self, e, bridge=False):
@@ -1223,7 +1235,7 @@ class DryExec(_Exec):
         super().__init__(job, log)
         self.robot = robot
 
-    def approach(self, plan, targets, at, words=None):
+    def approach(self, plan, targets, at, words=None, entries=None):
         from alix_dispatch import track
 
         where = words or f"{plan.title}'s {at}"
@@ -1339,18 +1351,19 @@ class RealExec(_Exec):
             if not self._arm(side).keep_hand():
                 self.say(f"{side.upper()}: its hand could not be opened for the run: each hand move opens it", "warn")
 
-    def approach(self, plan, targets, at, words=None):
+    def approach(self, plan, targets, at, words=None, entries=None):
         """Each arm to ``targets``: both arms' poles and hands at once (the owner, 24 Oct: one after the other took 2 s
         more a run), each arm's pole and hand together in Lite's own step (the hand moving while the pole travels, as
         a Program's own are set; the owner, 26 Oct) — at a plan's start to the state the arm needs when it first moves
-        (``Plan.first_move_targets``), so the plan's own pole and hand entries before that move are already met — then
-        each arm's MoveJ at the speed slider's speed, one arm after the other, not sent when the arm is already there."""
+        (``Plan.first_move_targets`` of the run's ``entries``: those before its first check), so the plan's own pole and
+        hand entries before that move are already met — then each arm's MoveJ at the speed slider's speed, one arm after
+        the other, not sent when the arm is already there."""
         pct = int(self.robot.speed_pct)
         where = words or f"{plan.title}'s {at}"
         self._frames = None
         self._settle_all()                                    # nothing is staged or moved while an arm still settles
         if at == "start":
-            first = plan.first_move_targets()
+            first = plan.first_move_targets(entries)
             targets = {side: dict(tg, **{k: v for k, v in first.get(side, {}).items() if k in tg}) for side, tg in targets.items()}
         steps = {}
         for side, tg in targets.items():

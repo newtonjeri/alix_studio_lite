@@ -124,11 +124,19 @@ def test_the_pole_step_is_done_idle_within_5_mm_after_its_ramp(monkeypatch):
 
 def test_a_plans_pole_and_hand_are_set_together_to_the_state_its_first_move_needs():
     """lid_open: the right opens, sets the pole and grasps before its move_to_inspect; the left opens, sets the pole and
-    half-grasps before its lift. One pole+hand step per arm to those states; the plan's entries then find them met."""
-    first = mechanism.Plan("lid_open").first_move_targets()
+    half-grasps before its lift. One pole+hand step per arm to those states; the plan's entries then find them met. Only
+    what comes before the run's first check (the owner, 29 Oct: nothing but the look moves before it): in a sequence,
+    which does not ask the start check, both arms; run on its own, the left's come after its check and wait for it."""
+    plan = mechanism.Plan("lid_open")
+    in_sequence = mechanism.without_start_checks(list(plan.entries))[0]
+    first = plan.first_move_targets(in_sequence)
     assert first["right"]["pole_mm"] == pytest.approx(150.1, abs=0.1) and first["right"]["hand"] == [33, 33, 33, 33, 133, 944]
     assert first["left"]["pole_mm"] == pytest.approx(150.0, abs=0.1) and first["left"]["hand"] == [516, 516, 516, 516, 133, 944]
-    assert first["right"]["arm_deg"] == mechanism.Plan("lid_open").targets("start")["right"]["arm_deg"]
+    assert first["right"]["arm_deg"] == plan.targets("start")["right"]["arm_deg"]
+    alone = plan.first_move_targets()
+    assert alone["left"] == plan.targets("start")["left"]                                   # its pole and grasp after the check
+    k = mechanism.first_check_at(plan.entries)
+    assert all(e.side == "right" for e in plan.entries[:k] if e.kind != "arm") and alone["right"] == first["right"]
     calls = []
 
     class Arm:
@@ -146,16 +154,17 @@ def test_a_plans_pole_and_hand_are_set_together_to_the_state_its_first_move_need
             calls.append((self.side, "move_to", speed))
             return dict(gap_deg=0.1)
 
-    plan = mechanism.Plan("lid_open")
     fake = SimpleNamespace(robot=SimpleNamespace(speed_pct=50, _measured=lambda side: (150.0, [1000] * 6), found_speed=lambda side: 50),
                            job=SimpleNamespace(progress=lambda *a, **k: None, on_cancel=None), check_stop=lambda: None,
                            say=lambda *a, **k: None, _arm=lambda side: Arm(side), _settle_all=lambda: None)
-    mechanism.RealExec.approach(fake, plan, plan.targets("start"), "start")
-    steps = [c for c in calls if c[1] == "pole_and_hand"]
-    assert sorted(steps) == [("left", "pole_and_hand", 150.0, [516, 516, 516, 516, 133, 944]),
-                             ("right", "pole_and_hand", 150.1, [33, 33, 33, 33, 133, 944])]
-    assert [c for c in calls if c[1] == "move_to"] == [("right", "move_to", 50), ("left", "move_to", 50)]   # the camera arm first
-    assert all(("left", "drop_hand") in calls for _ in [0]) and ("right", "drop_hand") in calls
+    for entries, left_hand in ((in_sequence, [516, 516, 516, 516, 133, 944]), (None, plan.targets("start")["left"]["hand"])):
+        calls.clear()
+        mechanism.RealExec.approach(fake, plan, plan.targets("start"), "start", entries=entries)
+        steps = [c for c in calls if c[1] == "pole_and_hand"]
+        assert sorted(steps) == [("left", "pole_and_hand", 150.0, left_hand),
+                                 ("right", "pole_and_hand", 150.1, [33, 33, 33, 33, 133, 944])]
+        assert [c for c in calls if c[1] == "move_to"] == [("right", "move_to", 50), ("left", "move_to", 50)]   # the camera arm first
+        assert all(("left", "drop_hand") in calls for _ in [0]) and ("right", "drop_hand") in calls
 
 
 def test_the_s2_feed_recording_is_off_unless_ticked():

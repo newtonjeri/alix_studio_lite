@@ -1253,9 +1253,9 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         a.update(pole1=sim.pole, hand1=list(sim.hand), q1=list(sim.q))
         clock[0] += dur
 
-    def approach(targets, where, owner=None):
+    def approach(targets, where, owner=None, entries=None):
         if owner is not None and where.endswith("start"):  # the state each arm needs when it first moves (Plan.first_move_targets),
-            first = owner.first_move_targets()              # as RealExec.approach sets it: the plan's own pole and hand entries
+            first = owner.first_move_targets(entries)       # as RealExec.approach sets it: the plan's own pole and hand entries
             targets = {side: dict(tg, **{k: v for k, v in first.get(side, {}).items() if k in tg}) for side, tg in targets.items()}
         t_start, ends = clock[0], []                       # both arms' poles and hands at once (the owner, 24 Oct), as Real
         for side, tg in targets.items():
@@ -1321,10 +1321,10 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     def play(owner, holds=None) -> tuple:
         """``owner`` from its start: its entries and their checks, these answered by ``holds`` when given (ended at the
         first that does not hold and skips). True when it skipped."""
-        approach(owner.targets("start"), "its start" if owner is plan else f"{owner.title}'s start", owner)
         entries = list(owner.entries)
         if not start_checks and owner is plan:         # a sequence: the checks before the first lift are not asked (27 Oct)
             entries, _dropped = mechanism.without_start_checks(entries)
+        approach(owner.targets("start"), "its start" if owner is plan else f"{owner.title}'s start", owner, entries)
         unsent = mechanism.trailing_releases(entries, hand_set if owner is plan else ()) | mechanism.final_rests(entries, leave if owner is plan else ())
         legs_run = []
         i = 0

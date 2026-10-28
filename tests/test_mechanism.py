@@ -97,7 +97,7 @@ class FakeExec:
     def __init__(self, answers):
         self.answers, self.calls = list(answers), []
 
-    def approach(self, plan, targets, at, words=None):
+    def approach(self, plan, targets, at, words=None, entries=None):
         self.calls.append(("approach", plan.name, at, tuple(targets)))
 
     def move(self, e, bridge=False):
