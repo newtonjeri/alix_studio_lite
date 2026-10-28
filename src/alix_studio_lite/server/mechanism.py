@@ -5,9 +5,9 @@ stream"; "the mechanism tasks should just be like other tasks, but these are pre
 are not subjected to teaching procedure ... tasks that are available to be injected at a point in the
 sequence"; "Lite should be ROS 2 independent".
 
-What runs is ALIX's own: commode C's four hardware plans (vendor/alix/Resource/plans/commode_c/hardware,
-planned at a 250 mm standoff with no UGV offset; run on the robot and in Isaac Sim), with their camera
-checks, re-lifts and prerequisites. What runs them is ALIX's arm_trajectory_sender.py
+What runs is ALIX's own: commode C's hardware plans (vendor/alix/Resource/plans/commode_c/hardware, planned at a
+250 mm standoff with no UGV offset; the openings run on the robot and in Isaac Sim, the closings of 26-28 Oct planned on
+the owner's Isaac bringup), with their camera checks, re-lifts and prerequisites. What runs them is ALIX's arm_trajectory_sender.py
 (ros/orchestration/alix_tasks/scripts, commit 842c0e59), ported here with ROS replaced:
 
 - each arm move is streamed over the controller's CanFD pass-through, one line every 5 ms, by ALIX's
@@ -97,6 +97,30 @@ TASKS = {
         title="Open the seat (in a sequence)", short="SEAT OPEN", start="lid open, seat down", end="lid and seat open", variant_of="seat_open",
         does="The right arm goes to its inspection pose with no check asked; the left arm lifts the seat, the camera "
              "checks it is up (one re-lift), then the right arm opens it fully and the camera checks it at the end."),
+    # the closings (the owner's compound plans: seat_close 26 Oct, lid_close 28 Oct; trimmed and vendored 28 Oct): the right
+    # arm looks from inspection pose 1, the left hooks the part's top edge and pulls it over onto the right hand, which
+    # waits under the part's line and then slides out; the part drops; the camera checks it is down from pose 1
+    "seat_close": dict(
+        title="Close the seat", short="SEAT CLOSE", start="lid and seat open", end="lid open, seat down",
+        does="The right arm looks with the wrist camera; if the seat is up, the left arm hooks its top edge and pulls it "
+             "over while the right hand waits under its line and catches it; the right hand slides out and the seat drops "
+             "onto the body. At the end the camera checks the seat is down (else the run stops for a person)."),
+    "lid_close": dict(
+        title="Close the lid", short="LID CLOSE", start="lid open, seat down", end="lid and seat down",
+        does="The right arm looks with the wrist camera; if the lid is up, the left arm hooks its top edge and pulls it "
+             "over while the right hand waits under its line and catches it; the right hand slides out and the lid drops "
+             "onto the seat. At the end the camera checks the lid is down (else the run stops for a person)."),
+    # their sequence plans (28 Oct): the check before any movement is not asked (the sequence's own order made the state);
+    # the right arm's move to inspection pose 1 STAYS: from rest its approach to the hold lands on another wrist
+    # configuration, and from it the release stroke runs the wrist into the washroom structure (the plannings of 28 Oct)
+    "seat_close_seq": dict(
+        title="Close the seat (in a sequence)", short="SEAT CLOSE", start="lid and seat open", end="lid open, seat down", variant_of="seat_close",
+        does="The right arm goes to its inspection pose with no check asked; the left arm pulls the seat over onto the "
+             "right hand, which slides out; at the end the camera checks the seat is down."),
+    "lid_close_seq": dict(
+        title="Close the lid (in a sequence)", short="LID CLOSE", start="lid open, seat down", end="lid and seat down", variant_of="lid_close",
+        does="The right arm goes to its inspection pose with no check asked; the left arm pulls the lid over onto the "
+             "right hand, which slides out; at the end the camera checks the lid is down."),
 }
 
 
@@ -105,16 +129,27 @@ def sequence_plan(task: str) -> str:
     the task's own (its start checks then not asked: Runner start_checks)."""
     seq = f"{task}_seq"
     return seq if seq in TASKS and (PLANS / f"{seq}_{MODE}.json").is_file() else task
-#: The closings (Close the seat, Close the lid) are not offered (the owner, 26 Oct: the plans of 25 Oct are not the
-#: final ones, removed and never run; the correct ones come later). The rows that ran them are plain arm steps until then.
 
 
-#: Lite's catalogue rows (docs/region_catalogue_commode_c.csv) and the plan each one runs
-ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T03": "seat_open", "R-T03": "seat_open"}
+#: Lite's catalogue rows (docs/region_catalogue_commode_c.csv) and the plan each one runs; a row that closes both parts
+#: (TASK 15 CLOSE SEAT + LID) runs two plans in this order
+ROWS = {"L-T01": "lid_open", "R-T01": "lid_open", "L-T03": "seat_open", "R-T03": "seat_open",
+        "L-T02": "seat_close", "R-T02": "seat_close", "L-T05": ("seat_close", "lid_close"), "R-T09": ("seat_close", "lid_close")}
 #: the commode's state after each, for the 3D and the collision check (Lite's phases)
-PHASE_AFTER = {"lid_open": "lid_open", "lid_open_seq": "lid_open", "seat_open": "seat_open", "seat_open_seq": "seat_open"}
+PHASE_AFTER = {"lid_open": "lid_open", "lid_open_seq": "lid_open", "seat_open": "seat_open", "seat_open_seq": "seat_open",
+               "seat_close": "lid_open", "seat_close_seq": "lid_open", "lid_close": "lid_closed", "lid_close_seq": "lid_closed"}
 #: the commode's state as each starts (the approach's two MoveJs are checked in it)
-PHASE_BEFORE = {"lid_open": "lid_closed", "lid_open_seq": "lid_closed", "seat_open": "lid_open", "seat_open_seq": "lid_open"}
+PHASE_BEFORE = {"lid_open": "lid_closed", "lid_open_seq": "lid_closed", "seat_open": "lid_open", "seat_open_seq": "lid_open",
+                "seat_close": "seat_open", "seat_close_seq": "seat_open", "lid_close": "lid_open", "lid_close_seq": "lid_open"}
+#: each state in the operator's words
+PHASE_WORDS = {"lid_closed": "the lid and the seat are down", "lid_open": "the lid is open and the seat down",
+               "seat_open": "the lid and the seat are open"}
+
+
+def row_tasks(code: str) -> list:
+    """The plans a catalogue row runs, in order (ROWS): [] for a row that runs none."""
+    t = ROWS.get(code)
+    return [] if t is None else list(t) if isinstance(t, (tuple, list)) else [t]
 APPROACH_GRID = 7         #: each arm's MoveJ path sampled at this many points; every pair of the two arms' samples is checked
                           #: (49 states), as their timing against each other is not known
 
@@ -652,12 +687,12 @@ def two_arm_leg(entries: list, i: int, unsent=(), bridged=(), plan_name: str = "
     order, skipped, clock, carry_side, j = [], [], {}, None, i
     while j < len(entries):
         e = entries[j]
+        if (e.pre_actions and j > i) or e.note or (e.kind == "arm" and e.rows is None):
+            break                                # (an unsent move carrying a check ends the stretch too: its check is asked)
         if id(e) in unsent:
             skipped.append(e)
             j += 1
             continue
-        if (e.pre_actions and j > i) or e.note or (e.kind == "arm" and e.rows is None):
-            break
         joined, used = joined_moves(entries, j, bridged) if e.kind == "arm" else (e, 1)
         side = e.side
         took = 0.0 if id(e) in zero else float(joined.seconds)
@@ -891,6 +926,18 @@ def trailing_releases(entries: list, sides) -> set:
     return out
 
 
+def final_rests(entries: list, leave) -> set:
+    """ids of the plan's last arm move when it is a ``move_to_rest`` of an arm in ``leave`` (its next task's start follows
+    the run: S2's ``then``) with no other arm move after it: not streamed, the arm's move to its next start goes from where
+    it stands (28 Oct: every plan ends with the camera arm's rest from inspection pose 1, 1.3 s, and the next start's MoveJ
+    went from rest; one MoveJ from the inspection pose does both). The check that move carries (the plan's end look) is
+    still asked before it. An arm whose last move is not the plan's last (the left, resting while the right looks) keeps it."""
+    last = next((e for e in reversed(entries) if e.kind == "arm"), None)
+    if last is not None and last.side in leave and str(last.stage).startswith("move_to_rest") and not last.note:
+        return {id(last)}
+    return set()
+
+
 def frames_rule():
     """(the first frames, the most frames, the spacing in seconds): lift_check's CHECK_FRAMES_FIRST, CHECK_FRAMES_MAX,
     CHECK_FRAME_SPACING_S."""
@@ -945,7 +992,8 @@ class Runner:
                                                         for s in plan.sides()) if first is not None))   # after the approach
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
                  f"{plan.seconds():.1f} s of motion)")
-        unsent = trailing_releases(entries, self.hand_set)
+        rests = final_rests(entries, self.leave)
+        unsent = trailing_releases(entries, self.hand_set) | rests
         if self.together and hasattr(self.ex, "prepare_legs"):
             self.ex.prepare_legs(plan, entries, unsent, state["bridge"])
         self.ex.approach(plan, plan.targets("start"), "start")
@@ -973,14 +1021,16 @@ class Runner:
                                 code="escalate")
             self.ex.check_stop()
             if id(e) in unsent:
-                self.say(f"{e.label()}: not sent, the {e.side.upper()} hand is set for its next task's start right after")
+                self.say(f"{e.label()}: not sent, the {e.side.upper()} arm goes to its next task's start from here (28 Oct)" if id(e) in rests
+                         else f"{e.label()}: not sent, the {e.side.upper()} hand is set for its next task's start right after")
                 i += 1
                 continue
             mover = getattr(self.ex, "move_together", None) if self.together else None
             leg = two_arm_leg(entries, i, unsent, state["bridge"], plan.name) if mover is not None else None
             if leg is not None:                          # the two arms at once where the plan allows it (the user, 27 Oct night)
                 for x in leg.skipped:
-                    self.say(f"{x.label()}: not sent, the {x.side.upper()} hand is set for its next task's start right after")
+                    self.say(f"{x.label()}: not sent, the {x.side.upper()} arm goes to its next task's start from here (28 Oct)" if id(x) in rests
+                             else f"{x.label()}: not sent, the {x.side.upper()} hand is set for its next task's start right after")
                 mover(leg)
                 i += leg.used
                 continue

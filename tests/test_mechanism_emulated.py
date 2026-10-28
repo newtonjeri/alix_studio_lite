@@ -22,10 +22,10 @@ def server(tmp_path_factory):
     proc.wait(10)
 
 
-def test_the_catalogue_lists_the_two_openings(server):
+def test_the_catalogue_lists_the_openings_and_the_closings(server):
     cat = call(server, "GET", "/api/mechanism")
-    assert [t["name"] for t in cat["tasks"]] == ["lid_open", "seat_open"]        # the closings withdrawn (the owner, 26 Oct)
-    assert cat["standoff_mm"] == 250 and cat["rows"]["L-T01"] == "lid_open"
+    assert [t["name"] for t in cat["tasks"]] == ["lid_open", "seat_open", "seat_close", "lid_close"]   # the owner's closings (28 Oct)
+    assert cat["standoff_mm"] == 250 and cat["rows"]["L-T01"] == "lid_open" and cat["rows"]["L-T05"] == ["seat_close", "lid_close"]
 
 
 def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):

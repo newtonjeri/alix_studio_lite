@@ -134,17 +134,18 @@ ALIX_FILES = [
     # the lid and the seat (the owner, 17-18 Oct: ALIX's mechanism tasks, pre-recorded, run by Lite with no ROS):
     # commode C's hardware plans with their 5 ms track groups and lid_open's pre-planned re-lift rungs, the check
     # policy (ROS-free), each plan's config (what it does, its checks) and the gap check's parameters: the two openings
-    # Lite runs (the closings withdrawn by the owner, 26 Oct, until their correct plans come)
+    # and, since 28 Oct, the owner's two compound closings (seat_close 26 Oct, lid_close 28 Oct, trimmed and re-planned)
     "Resource/plans/README.md",
     *[f"Resource/plans/commode_c/hardware/{p}_toppra{s}"
-      for p, groups in (("lid_open", 2), ("seat_open", 2), ("lid_open_seq", 2), ("seat_open_seq", 2))   # _seq: a sequence's plan, no look first (27 Oct)
+      for p, groups in (("lid_open", 2), ("seat_open", 2), ("lid_open_seq", 2), ("seat_open_seq", 2),   # _seq: a sequence's plan, no look first (27 Oct)
+                        ("seat_close", 2), ("lid_close", 2), ("seat_close_seq", 2), ("lid_close_seq", 2))   # _seq: no check first (28 Oct)
       for s in [".json"] + [f".g{k}{e}" for k in range(groups) for e in (".json", ".proj", ".txt")]],
     *[f"Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung{k}{e}"
       for k in (1, 2, 3) for e in (".json", ".g0.json", ".g0.proj", ".g0.txt")],
     "ros/orchestration/alix_tasks/scripts/lift_check.py",
     "ros/orchestration/alix_tasks/config/mechanism_tasks/task_parameters_defaults.yaml",
     *[f"ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/{p}.yaml"
-      for p in ("lid_open", "seat_open")],
+      for p in ("lid_open", "seat_open", "seat_close", "lid_close")],
     "ros/perception/alix_perception/config/perception.yaml",
     # ALIX's node on those frames (Resource/reports/2026-10-24_fixture_state/golden_node_frames.py)
     "Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",

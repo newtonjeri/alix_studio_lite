@@ -393,7 +393,7 @@ def test_a_plans_final_release_is_not_sent_when_the_next_start_sets_the_hand():
     move is never dropped."""
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])
     mechanism.Runner(ex, leave={"right"}, hand_set={"right"}).run("lid_open")
-    assert moves(ex)[-1][1:3] == ("move_to_rest", "right") and not [m for m in moves(ex) if m[1:3] == ("hand_release", "right") and m is moves(ex)[-1]]
+    assert moves(ex)[-1][1:3] == ("move_to_inspect", "right") and not [m for m in moves(ex) if m[1:3] == ("hand_release", "right") and m is moves(ex)[-1]]   # 28 Oct: its final rest not streamed either (final_rests)
     assert [m[1:3] for m in moves(ex)].count(("hand_release", "right")) == 1              # the one before the push stays
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])
     mechanism.Runner(ex, leave={"right"}).run("lid_open")                                    # no hand set next: sent
@@ -417,7 +417,7 @@ def test_the_seat_is_not_looked_for_under_the_lifted_lid():
                                                            ("verify_lid_open", "lid_open")]
     assert [p["plan"] for p in out["plans"]] == ["lid_open"]
     tasks = {n for n in mechanism.TASKS if "variant_of" not in mechanism.TASKS[n]}          # the tasks; a _seq plan is a task's own (27 Oct)
-    assert not {"seat_close", "lid_close", "seat_close_right"} & set(mechanism.TASKS) and set(mechanism.ROWS.values()) == tasks
+    assert "seat_close_right" not in mechanism.TASKS and {t for code in mechanism.ROWS for t in mechanism.row_tasks(code)} == tasks   # the owner's closings since 28 Oct
     assert not any("also_observe" in c or "if_observed" in c for c in mechanism.Plan("lid_open").checks())
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_seat_open"])            # the seat came up with the lid: the end check reads it
     out = mechanism.Runner(ex).run("lid_open")
@@ -474,7 +474,8 @@ def test_the_catalogue_says_what_each_task_does_and_the_rows_it_runs_for():
     cat = {c["name"]: c for c in mechanism.catalogue()}
     assert set(cat) == {n for n in mechanism.TASKS if "variant_of" not in mechanism.TASKS[n]}   # the tasks, not their sequence plans
     assert cat["lid_open"]["standoff_mm"] == 250 and cat["lid_open"]["seconds"] > 5
-    assert set(mechanism.ROWS.values()) == set(cat)
+    assert {t for code in mechanism.ROWS for t in mechanism.row_tasks(code)} == set(cat)       # a row may run two (TASK 15)
+    assert mechanism.row_tasks("L-T05") == ["seat_close", "lid_close"] and mechanism.row_tasks("L-R01") == []
     # ALIX's inspection poses of the right arm, from its group states; pose 4 is where lid_open's move_to_inspect ends
     poses = {p["name"]: p for p in mechanism.poses()}
     assert list(poses) == ["inspection_pose_1", "inspection_pose_4"] and all(p["arm"] == "right" for p in poses.values())
@@ -658,3 +659,57 @@ def test_a_plan_knows_the_streams_a_run_makes_of_its_moves_and_the_3d_view_reads
     with pytest.raises(UserError, match="do not join into one stream"):
         mechanism.joined_rows("seat_open", k, 5)                                             # across the right's push: no stream
 
+
+
+def test_the_closings_run_as_the_openings_do_and_a_sequence_asks_no_check_before_the_pull():
+    """The owner's compound closings (seat_close 26 Oct, lid_close 28 Oct): the right arm looks from inspection pose 1
+    (the part up, else the plan skips itself), the left hooks the part's top edge and pulls it over onto the right hand,
+    the right slides out, the camera checks the part is down from pose 1. In a sequence the check before the pull is not
+    asked and the look move stays (28 Oct: planned from rest the right arm reaches the hold on another wrist configuration
+    and the release runs into the washroom structure)."""
+    for task, up, down in (("seat_close", "seat_open", "seat_closed"), ("lid_close", "lid_open", "lid_closed")):
+        ex = FakeExec([up, down])
+        out = mechanism.Runner(ex).run(task)
+        assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [(task, "done")]
+        assert [c[1] for c in ex.calls if c[0] == "ask"] == [f"verify_{up}", f"verify_{down}"]
+        assert [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"] == [
+            ("move_to_inspect", "right"), ("move_to_pre_start + move_to_start", "left"), ("move_to_pre_start + move_to_start", "right"),
+            ("execute_path + move_to_rest", "left"), ("execute_path + move_to_inspect", "right"), ("move_to_rest", "right")]
+        assert not [m for m in moves(ex) if m[3] in ("hand", "pole")]          # no hand or pole entry: the hands open, the poles at half
+        assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [(task, "start")]
+        ex = FakeExec([down])                                                  # the part already down: the plan's outcome holds
+        out = mechanism.Runner(ex).run(task)
+        assert out["plans"][0]["outcome"] == "skipped"
+        assert [(m[1], m[2]) for m in moves(ex)] == [("move_to_inspect", "right")]      # the look, the check, nothing else
+        assert [c[2] for c in ex.calls if c[0] == "approach"] == ["start", "end"]
+        seq = mechanism.sequence_plan(task)
+        assert seq == f"{task}_seq" and mechanism.TASKS[seq]["variant_of"] == task
+        ex = FakeExec([down])
+        out = mechanism.Runner(ex, start_checks=False).run(seq)
+        assert out["plans"][0]["outcome"] == "done" and [c[1] for c in ex.calls if c[0] == "ask"] == [f"verify_{down}"]
+        assert [m[1] for m in moves(ex) if m[3] == "arm"][0] == "move_to_inspect"      # the look move stays
+        plan = mechanism.Plan(seq)
+        assert [c["stage"] for c in plan.checks()] == [f"verify_{down}"] and plan.rungs_note() is None
+        assert mechanism.PHASE_BEFORE[task] == up.replace("_closed", "_open") and mechanism.PHASE_AFTER[task] in ("lid_open", "lid_closed")
+    assert mechanism.PHASE_AFTER["seat_close"] == "lid_open" and mechanism.PHASE_AFTER["lid_close"] == "lid_closed"
+
+
+def test_a_plans_final_rest_is_not_streamed_when_the_arms_next_start_follows():
+    """28 Oct: every plan ends with the camera arm's rest from inspection pose 1 (1.3 s), and the arm's move to its next
+    task's start went from rest. With that start following (``leave``, S2's ``then``) the rest is not streamed: the end
+    look is still asked there, and the one MoveJ to the next start goes from the inspection pose. The left arm's rest,
+    not the plan's last move, is streamed as before; a plan run on its own ends at rest."""
+    ex = FakeExec(["seat_open", "seat_closed"])
+    mechanism.Runner(ex, leave={"right"}).run("seat_close")
+    arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]
+    assert arm[-1] == ("execute_path + move_to_inspect", "right") and ("execute_path + move_to_rest", "left") in arm
+    assert [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_seat_open", "verify_seat_closed"]   # the end look asked all the same
+    ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])
+    mechanism.Runner(ex, leave={"left", "right"}, hand_set={"left", "right"}).run("lid_open")
+    arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]
+    assert arm[-1] == ("move_to_inspect", "right") and ("move_to_pre_start + move_to_rest", "left") in arm
+    ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])                    # the left's next start only: the right rests
+    mechanism.Runner(ex, leave={"left"}).run("lid_open")
+    assert [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"][-1] == ("move_to_rest", "right")
+    entries = list(mechanism.Plan("seat_open").entries)
+    assert mechanism.final_rests(entries, {"right"}) and not mechanism.final_rests(entries, {"left"}) and not mechanism.final_rests(entries, ())

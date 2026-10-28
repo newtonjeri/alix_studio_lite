@@ -611,12 +611,15 @@ class LiteUnits(Project):
 
 
 def _mechanism_of(u: dict) -> dict | None:
-    """The lid or seat task an arm step runs (mechanism.ROWS): ALIX's plan, pre-recorded, never taught (the owner,
-    18 Oct), or None."""
-    from .mechanism import ROWS, TASKS
+    """The lid or seat task(s) an arm step runs (mechanism.ROWS): ALIX's plans, pre-recorded, never taught (the owner,
+    18 Oct), or None. A row that closes both parts runs two (``tasks``, in order); ``task`` is the first."""
+    from .mechanism import TASKS, row_tasks
 
-    task = ROWS.get(u.get("code"))
-    return None if task is None else dict(task=task, title=TASKS[task]["title"], short=TASKS[task]["short"])
+    tasks = row_tasks(u.get("code"))
+    if not tasks:
+        return None
+    return dict(task=tasks[0], tasks=tasks, title=", then ".join(TASKS[t]["title"] for t in tasks),
+                short=" + ".join(TASKS[t]["short"] for t in tasks))
 
 
 def display_name(u: dict) -> str:

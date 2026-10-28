@@ -904,3 +904,58 @@ def test_the_simulation_plays_a_plans_two_arm_stretches_at_once():
     serial = sum(e.seconds for e in plan.entries if e.kind == "arm")
     played = [a for a in L + R if a["kind"] == "stream" and a["stage"] == 1 and a["t1"] > a["t0"]]
     assert max(a["t1"] for a in played) - min(a["t0"] for a in played) < serial + 20   # (the hands and checks between: a loose bound)
+
+
+def test_a_task_whose_end_state_the_sequence_already_made_is_not_run():
+    """28 Oct: the sequence's own order stands in for the check at a task's start both ways. A state it made is not asked
+    for (27 Oct); a task whose end state the last lid or seat task before it already made is not run: TASK 4 CLOSE SEAT
+    ONLY after TASK 3, which runs Open the lid alone, finds the seat down. Nothing moves for it, its stage says so, and
+    its ``then`` still takes each arm to its next start; the simulation gives it no time. TASK 15's Close the seat then
+    Close the lid after Open the seat both run. A plan's final rest is not drawn when the arm's next start follows."""
+    import numpy as np
+
+    from alix_studio_lite.server import mechanism, workflow
+
+    lid = {"type": "mechanism", "task": "lid_open"}
+    seat = {"type": "mechanism", "task": "seat_open"}
+    sc = {"type": "mechanism", "task": "seat_close"}
+    lc = {"type": "mechanism", "task": "lid_close"}
+    run = workflow.plan_for(numbered([prog(80), lid, sc, prog(81), seat, sc, lc], [prog(80), lid, sc, prog(54), seat, sc, lc]), "both")
+    plan = run["plan"]
+    assert [(st["kind"], st.get("task"), st.get("held")) for st in plan] == [
+        ("parallel", None, None), ("mechanism", "lid_open", None), ("mechanism", "seat_close", "lid_open"), ("parallel", None, None),
+        ("mechanism", "seat_open", None), ("mechanism", "seat_close", None), ("mechanism", "lid_close", None)]
+    assert plan[2]["title"] == "Close the seat" and workflow.then_title(plan[2]).startswith(
+        "Close the seat (not run: the lid is open and the seat down already), then LEFT to Program 81's start")
+    assert "clear" not in plan[2] and plan[1].get("clear") and workflow.plan_shape(plan)[2]["held"] == "lid_open"
+    assert workflow.plan_shape(plan)[2] != workflow.plan_shape(workflow.plan_for(numbered([prog(80), seat, sc, prog(81)], [prog(80), seat, sc, prog(54)]), "both")["plan"])[2]
+    grip, clean = [0, 0, 0, 0, 150, 1000], [1000, 1000, 1000, 1000, 0, 1000]
+    ends = mechanism.Plan(mechanism.sequence_plan("lid_open")).targets("end")
+    own = {"left": {80: {"stage": {"pole_mm": 150.0, "hand": grip}, "first_deg": None}, 81: {"stage": {"pole_mm": 160.0, "hand": clean}, "first_deg": ends["left"]["arm_deg"]}},
+           "right": {80: {"stage": {"pole_mm": 150.0, "hand": grip}, "first_deg": None}, 54: {"stage": {"pole_mm": 50.0, "hand": grip}, "first_deg": ends["right"]["arm_deg"]}}}
+    run = workflow.plan_for(numbered([prog(80), lid, sc, prog(81)], [prog(80), lid, sc, prog(54)]), "both", own=own)
+    assert [sorted(st.get("then") or {}) for st in run["plan"]] == [[], [], ["left", "right"], []]
+    md = np.zeros((1001, 7))
+    progs = {i: dict(file="/f.txt", sent=True, lines=1001) for i in (80, 81, 54)}
+    start = dict(pole_mm=150.0, hand=grip, q_deg=[0.0] * 7)
+    sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, {"/f.txt": md}.get, []) for s in ("left", "right")}
+    stages, _total = workflow.schedule(run, sims, 15)
+    L, R = sims["left"].acts, sims["right"].acts
+    held = [a for a in L + R if a["stage"] == 2 and "not run" in a["text"]]
+    assert len(held) == 1 and "not run, the sequence's own order says the lid is open and the seat down already" in held[0]["text"]
+    assert stages[2]["t1_plan"] == pytest.approx(stages[2]["t0"], abs=1e-6) and stages[2]["title"].startswith("Close the seat (not run")
+    assert held[0]["phase"] == "lid_open" and held[0]["t1"] == held[0]["t0"] and stages[2]["t1"] > stages[2]["t0"]   # its then: each arm to its next start
+    kinds = {a["kind"] for a in L + R if a["stage"] == 2 and a["t1"] > a["t0"]}        # ... (its pole and hand, its errors read, its
+    assert {"pole_hand", "global"} <= kinds <= {"pole_hand", "global", "wait"}, kinds      # MoveJ) and nothing of the plan's
+    assert any("move_to_rest" in a["text"] for a in R if a["stage"] == 1 and a["kind"] == "stream")   # another task next: Open the lid's rest drawn
+    run = workflow.plan_for(numbered([prog(80), lid, prog(81)], [prog(80), lid, prog(54)]), "both", own=own)   # a Program next: its then
+    sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, {"/f.txt": md}.get, []) for s in ("left", "right")}
+    workflow.schedule(run, sims, 15)
+    L, R = sims["left"].acts, sims["right"].acts
+    streams = [a for a in R if a["stage"] == 1 and a["kind"] == "stream"]
+    assert streams and "move_to_inspect" in streams[-1]["text"] and not any("move_to_rest" in a["text"] for a in streams)   # the right's last rest not drawn
+    assert any("move_to_rest" in a["text"] for a in L if a["stage"] == 1 and a["kind"] == "stream")                # the left's is
+    run = workflow.plan_for(numbered([prog(80), lid, {"type": "wait", "seconds": 1.0}], [prog(80), lid, {"type": "wait", "seconds": 1.0}]), "both", own=own)
+    sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, {"/f.txt": md}.get, []) for s in ("left", "right")}
+    workflow.schedule(run, sims, 15)
+    assert any("move_to_rest" in a["text"] for a in sims["right"].acts if a["stage"] == 1 and a["kind"] == "stream")   # no next start: rest drawn

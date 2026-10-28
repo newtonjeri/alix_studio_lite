@@ -121,6 +121,9 @@ def clear_before_moves(plan: list[dict]) -> list[dict]:
     out = []
     for st in plan:
         if st["kind"] == "mechanism":
+            if st.get("held"):                     # not run: nothing of its own moves (held_tasks)
+                out.append(st)
+                continue
             mine = [s for s in ARMS if moved[s]]
             out.append(dict(st, clear=mine) if mine else st)
             moved = {s: True for s in ARMS}        # its own streams may leave one too
@@ -138,6 +141,26 @@ def clear_before_moves(plan: list[dict]) -> list[dict]:
             steps[:] = mine
         out.append(st)
     return out
+
+
+def held_tasks(plan: list[dict]) -> list[dict]:
+    """``plan`` with ``held`` (the commode's state) on each lid or seat task whose end state the sequence's own order has
+    already made: the state after the last lid or seat task before it (mechanism.PHASE_AFTER) is the one this task would
+    make, so it is not run and nothing moves for it (its ``then`` still takes each arm to its next start). The sequence's
+    own order stands in for the check at a task's start both ways: a state it made is not asked for (the owner, 27 Oct;
+    mechanism.without_start_checks), an outcome it made is not run (28 Oct: TASK 4 CLOSE SEAT ONLY after TASK 3, which
+    runs Open the lid alone, finds the seat down already). Before the first lid or seat task the state is not known."""
+    from . import mechanism
+
+    state = None
+    for st in plan:
+        if st["kind"] != "mechanism":
+            continue
+        after = mechanism.PHASE_AFTER.get(st["task"])
+        if state is not None and after == state:
+            st["held"] = state
+        state = after
+    return plan
 
 
 def next_after_tasks(plan: list[dict]) -> list[dict]:
@@ -208,13 +231,17 @@ def with_next_starts(plan: list[dict], own: dict | None) -> list[dict]:
 
 
 def then_title(st: dict) -> str:
-    """A lid or seat task's title, with where its ``then`` takes each arm."""
+    """A lid or seat task's title (with "not run" and why when the sequence's own order holds its end state already,
+    held_tasks), with where its ``then`` takes each arm."""
+    from . import mechanism
+
     then = st.get("then") or {}
+    head = st["title"] + (f" (not run: {mechanism.PHASE_WORDS.get(st['held'], st['held'])} already)" if st.get("held") else "")
     if not then:
-        return st["title"]
+        return head
     where = [f"{s.upper()} to " + (f"Program {t['id']}'s start" if t["kind"] == "program" else f"{t.get('name')}'s pole and hand")
              for s, t in sorted(then.items())]
-    return f"{st['title']}, then {' and '.join(where)}"
+    return f"{head}, then {' and '.join(where)}"
 
 
 def own_stages(plan: list[dict], own: dict | None) -> list[dict]:
@@ -378,7 +405,7 @@ def plan_shape(plan: list[dict]) -> list[dict]:
     for st in plan:
         row = {"kind": st["kind"]}
         if st["kind"] == "mechanism":
-            row.update(task=st["task"], clear=st.get("clear") or [], then=st.get("then"))
+            row.update(task=st["task"], clear=st.get("clear") or [], then=st.get("then"), held=st.get("held"))
         else:
             for side, steps in _items(st):
                 row[side] = [["clear", x.get("_row")] if x["type"] == "clear"
@@ -655,7 +682,7 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None, own: dict | None 
             raise UserError(f"The {mode.upper()} sequence has only Meet and Wait-for rows: nothing to run on its own.")
         plan = [{"kind": "single", "program_id": None, mode: {"side": mode, "steps": mine}}]
     if mode == "both":
-        plan = next_after_tasks(plan)
+        plan = next_after_tasks(held_tasks(plan))
     plan = _finish(plan, own)
     return dict(mode=mode, pick=dict(scope="sequence"), first_row={side: 1 for side in picked}, steps=picked, plan=plan,
                 counts=flow.counts(plan), said=said)
@@ -1189,7 +1216,8 @@ def stage_off(S: str, row, pid: int, st, pole, hand, set_pole: bool, set_hand: b
 
 #: The commode as each task leaves it, in the camera checks' words: the expectations that hold there (a plan that runs
 #: after another, a follow-up, has its checks answered by them in the simulation; a plan's own are answered as expected).
-HOLDS_AFTER = {"lid_open": {"lid_open", "seat_closed"}, "seat_open": {"lid_open", "seat_open"}}
+HOLDS_AFTER = {"lid_open": {"lid_open", "seat_closed"}, "seat_open": {"lid_open", "seat_open"},
+               "seat_close": {"lid_open", "seat_closed"}, "lid_close": {"lid_closed", "seat_closed"}}
 
 
 def hand_set(st: dict) -> set:
@@ -1297,7 +1325,7 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         entries = list(owner.entries)
         if not start_checks and owner is plan:         # a sequence: the checks before the first lift are not asked (27 Oct)
             entries, _dropped = mechanism.without_start_checks(entries)
-        unsent = mechanism.trailing_releases(entries, hand_set if owner is plan else ())
+        unsent = mechanism.trailing_releases(entries, hand_set if owner is plan else ()) | mechanism.final_rests(entries, leave if owner is plan else ())
         legs_run = []
         i = 0
         while i < len(entries):                      # as mechanism.Runner walks them: an arm's moves in a row as ONE stream
@@ -1336,6 +1364,12 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                               f"checked on the robot before the task (within {mechanism.LEG_CLEARANCE_MM:g} mm: one after the other, as the plan).")
         return False
 
+    if st.get("held"):                           # not run: the sequence's own order made its end state already (held_tasks)
+        words = mechanism.PHASE_WORDS.get(st["held"], st["held"])
+        sim, a = act(camera, "wait", 0.0, f"{title}: not run, the sequence's own order says {words} already (no check asked, "
+                     "nothing moves)", phase=mechanism.PHASE_AFTER[plan.name])
+        done(sim, a, 0.0)
+        return clock[0]
     play(plan)
     sim, a = act(plan.sides()[0], "wait", 0.0, f"{title}: done, {mechanism.TASKS[plan.name]['end']}",
                  phase=mechanism.PHASE_AFTER[plan.name])
@@ -2367,7 +2401,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     if missing:
         raise UserError("Not on the controllers: " + "; ".join(missing) + ". Nothing moved.",
                         "Upload the programs or save the points, simulate again, then run it.", code="missing")
-    if any(st["kind"] == "mechanism" for st in run["plan"]):     # its checks need the wrist camera (the owner, 23 Oct)
+    if any(st["kind"] == "mechanism" and not st.get("held") for st in run["plan"]):     # its checks need the wrist camera (the owner, 23 Oct)
         from . import mechanism
 
         mechanism.camera_required(robot)
@@ -2780,6 +2814,17 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 if kind == "mechanism":                     # a lid or seat task: ALIX's plan on both arms, the camera's checks
                     from . import mechanism as mech
 
+                    if st.get("held"):                      # not run: the sequence's own order made its end state (held_tasks)
+                        words = mech.PHASE_WORDS.get(st["held"], st["held"])
+                        job.log(f"{st['title']}: not run, the sequence's own order says {words} already.")
+                        say(f"LID / SEAT // {st['title']} // NOT RUN: {words} already", **{x: f"{pid} // NOT RUN" for x in ARMS})
+                        then = st.get("then") or {}         # each arm to its next task's start all the same
+                        nxt = run["plan"][i + 1] if i + 1 < len(run["plan"]) else None
+                        later = {x for x in then if nxt is not None and nxt["kind"] == "parallel" and nxt.get(x)}
+                        if set(then) - later:
+                            to_next(st, pid, sides=set(then) - later)
+                        pending = {x: (lambda x=x, st=st, pid=pid: to_next(st, pid, sides={x})) for x in later}
+                        continue
                     for x in st.get("clear") or []:         # its moves wait for their arrival (clear_before_moves)
                         got = clear(x, (st.get("rows") or {}).get(x))
                         if not got["ok"]:

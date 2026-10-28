@@ -1,0 +1,338 @@
+# =============================================================================
+# LID MECHANISM TASK CONFIGURATION (Close - Compound / Dual-Arm)
+# =============================================================================
+# One compound task closes the lid with both arms (the owner's brief of 24 Oct,
+# "Lid and seat closing: create one compound task"): the choreography of
+# seat_close.yaml, on the lid, with the seat already down. Stages execute in
+# order:
+#   1. Right arm to inspection_pose_1: the wrist camera confirms the lid is UP
+#      (else this plan skips itself). One check, of the lid alone (the owner,
+#      25 Oct): the sequence brings the seat down before this task.
+#   2. Left arm (pole at half length, hand open) to its pre-start on the
+#      approach line, then to its start just before the open lid's top edge.
+#   3. Right arm to the HOLD: lid_open.yaml's right hold, the hand hanging from
+#      the wrist under the line the lid rests on at about 30 deg, by the lid's
+#      right edge; the lid lands on the back of the hand. It goes there once
+#      the left has hooked the lid, so the left's swing over the top never
+#      crosses the right arm.
+#   4. Left arm hooks the lid's top edge and pulls it over, on the path recorded
+#      for the seat (ST_CLOSE.txt, 24 Oct; the lid closing of the same day,
+#      filmed, is the same move): the hooked fingertips from 104 to 54 deg
+#      about the hinge. There the hand stops; the lid falls onto the right hand.
+#      Not extended (the owner, 25 Oct). Scene: the lid to -30 deg, on the
+#      right hand. The left retracts straight up, returns to rest.
+#   5. Right arm releases: 10 cm outward (to the right, out from under the
+#      lid's edge) and 2 cm up; the lid drops from the hold angle onto the
+#      seat. Scene: closed.
+#   6. Right arm to inspection_pose_1 again: the camera confirms the lid is
+#      DOWN; then rest.
+# Start and end state, the sequence's rule: both arms at rest_pose, both poles
+# at half_length, both hands open. The poles stay at half_length throughout
+# (the owner, 25 Oct: a forced 150 mm, no pole stage).
+#
+# Why the right hand does not lower the lid: seat_close.yaml's header (the
+# right arm cannot lay its hand flat under the part; hanging from the wrist, the
+# palm is 19 cm above fingertips that already stand 1.7 cm above the seat).
+#
+# LEFT BLOCK REVISED 2026-10-26: a lid stroke of its own (see the block): the
+# seat's revised stroke works through the seat ring's hole, which the lid does
+# not have, and the 32 mm offset below puts the start out of the left arm's
+# reach (0.728 m, no IK). The fingertips hook the lid's TOP EDGE from the front,
+# hand pitched 40 deg down, and follow the edge's arc from 110 to 60 deg; the
+# lid then falls onto the right hand (update_fixture_scene: lid -60). The wrist
+# (L_Link6, L_Link7) may touch the lid as it may touch the seat; the stages
+# follow the revised seat sequence (no retract). Derived from the model, not
+# taught: Newton's RViz check decides the poses. The paragraph below is the
+# 2026-10-25 derivation it replaced.
+#
+# LEFT BLOCK: the seat's taught block (seat_close.yaml, ST_CLOSE.txt by ALIX's
+# FK of L_tip_frame; recorded at the full pole, planned at 0.150 m), its
+# start_pose and pre_start_pose moved 32 mm back along the open part's face normal (+0.030 x,
+# -0.011 z in alix_ref_frame): with the lid and the seat open the seat stacks
+# in front of the lid, so the lid's front face (its underside) stands one seat
+# thickness (seat.stl, 32 mm) behind the face the recording hooked. The lid is
+# the seat's length (0.418 vs 0.420 m) and width. The stroke points and the
+# retract_pose are the seat's, relative to this start.
+#
+# RIGHT BLOCK: seat_close.yaml's, unchanged (the brief: the same right-arm
+# process and pose for both): lid_open.yaml's taught hold, a pre-start 3 cm
+# toward the robot and 8 cm above it, the release 10 cm to the right and 2 cm
+# up.
+#
+# Checks (the owner, 25 Oct): one before any movement (the lid is up) and one
+# after all movements (the lid is down), both from inspection_pose_1, nothing
+# about the seat; deferred to execution (fixture_gap), fail-closed.
+#
+# Task: Mechanism Manipulation - Lid Closing (Dual-Arm)
+# =============================================================================
+
+# =============================================================================
+# TASK PARAMETERS
+# =============================================================================
+task_parameters:
+  # Operation Parameters
+  # -------------------------------------------------------------------------
+  operation: close
+  initial_state: LID_OPEN
+  final_state: CLOSED
+  mechanism_type: lid
+  enable_washroom_scene: true
+  # The check before any movement (that the part is still UP, from inspection_pose_1): true for the plan a task runs on
+  # its own; false for the plan a SEQUENCE runs (28 Oct, as the openings' inspect_before_lift of 27 Oct: the sequence's
+  # own order made that state, so no check is asked before the pull). The right arm's MOVE to inspection_pose_1 stays in
+  # both (the owner's rule of 27 Oct, and a reason of its own found on 28 Oct: planned from rest instead, the right arm
+  # reaches the hold on another wrist configuration, and from it the release stroke runs R_Link5 into the washroom
+  # structure; from inspection_pose_1 the hold and the release are clear). Lite keeps both plans: <task>_toppra.json and
+  # <task>_seq_toppra.json (planned with this false).
+  inspect_before_close: true
+
+  # Compound (dual-arm) control
+  # -------------------------------------------------------------------------
+  compound: true
+  arms: [right, left]
+
+  # scene control
+  # -------------------------------------------------------------------------
+  # Lid closing starts with the lid open and the seat down.
+  commode_fixture_type: lid_open             # Options: closed, lid_open, lid_seat_open
+  enable_washroom_structure: true
+
+
+# =============================================================================
+# RIGHT ARM   (the hold, then the release; seat_close.yaml's block)
+# =============================================================================
+right:
+  task_parameters:
+    ik_frame: R_tip_frame
+    primary_planning_group: rm75_arm_right
+
+  # CARTESIAN POSES (Position + Orientation)
+  # Format: [x, y, z, qx, qy, qz, qw], alix_ref_frame
+  # ---------------------------------------------------------------------------
+  # start_pose: lid_open.yaml's right start_pose, the taught hold: the
+  # fingertips at base_link (0.655, -0.153, 0.467), 2.8 cm inside the lid's
+  # right edge. pre_start_pose: 3 cm toward the robot and 8 cm above it.
+  cartesian_poses:
+    start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
+    pre_start_pose: [0.63474, -0.02855, 0.02145, -0.24912, 0.93219, 0.058472, 0.25601]
+
+  # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
+  # Translation: [x, y, z] in metres, added in alix_ref_frame to start_pose
+  # Rotation: [roll, pitch, yaw] in degrees, onto the start orientation
+  # ---------------------------------------------------------------------------
+  cleaning_points:
+    point1:   # the hold
+      translation: [0.0, 0.0, 0.0]
+      rotation: [0.0, 0.0, 0.0]
+    point2:   # the release: out from under the lid's right edge, a little up
+      translation: [0.0, -0.10, 0.02]
+      rotation: [0.0, 0.0, 0.0]
+
+  # CLEANING SEQUENCE
+  # Format: [from, to] - pairs of point names
+  # ---------------------------------------------------------------------------
+  cleaning_sequence:
+    - [point1, point2]
+
+
+# =============================================================================
+# LEFT ARM   (the pull: hook the lid's top edge, follow its arc to 60 deg)
+# =============================================================================
+left:
+  task_parameters:
+    # ik_frame: L_tip_frame
+    ik_frame: L_glove_frame_3
+    primary_planning_group: rm75_arm_left
+
+  cartesian_poses:
+    start_pose: [0.9664, 0.265, 0.0486, 0.50117, 0.65235, 0.3346, 0.45968]
+
+    pre_start_pose: [0.9664, 0.285, 0.06, 0.50117, 0.65235, 0.3346, 0.45968]
+    
+
+  # =============================================================================
+  # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
+  # Translation: [x, y, z] in meters
+  # Rotation: [roll, pitch, yaw] in degrees
+  # Relative to vector_frame_id (alix_ref_frame)
+  # =============================================================================
+  cleaning_points:
+    point1:
+      translation: [0.0, 0.0, 0.0]
+      rotation: [0.0, 5.0, -5.0]      
+
+    point2:
+      translation: [-0.03, -0.01, 0.03]
+      rotation: [-5.0, 15.0, -5.0]
+
+    point3:
+      translation: [-0.12, -0.03, 0.07]
+      rotation: [-5.0, 20.0, -5.0]
+
+    point4:
+      translation: [-0.25, -0.05, 0.05]
+      rotation: [-5.0, 30.0, -5.0]
+
+    point5:
+      translation: [-0.35, -0.06, 0.02]
+      rotation: [-5.0, 40.0, 0.0]        
+  # ============================================================================
+  # CLEANING SEQUENCE
+  # Defines the order of trajectory points during execution
+  # Format: [from, to, from, to, ...] - pairs of point names
+  # =============================================================================
+  cleaning_sequence:
+    - [point1, point2]
+    - [point2, point3]
+    - [point3, point4]
+    - [point4, point2]
+    # - [point5, point2]
+
+# =============================================================================
+# MECHANISM TASK SEQUENCE (Compound - both arms, in order)
+# =============================================================================
+# Each motion stage is tagged with `arm:` so the planner uses that arm's
+# ik_frame, poses and trajectory. A stage with `check:` is a perception gate,
+# deferred to execution. Pose resolution: cartesian_poses[pose_name] of the
+# tagged arm's block, else an SRDF named state (inspection_pose_1, rest_pose,
+# the pole states). The order is seat_close.yaml's (revised 2026-10-26), on
+# the lid.
+# =============================================================================
+stage_sequence:
+  - stage: setup_washroom_scene
+    conditional: true
+    condition_param: enable_washroom_scene
+
+  - stage: current_state
+
+  # ---------------------------------------------------------------------------
+  # 1. The check before any movement: RIGHT arm to inspection_pose_1
+  # ---------------------------------------------------------------------------
+  - stage: move_to_inspect
+    speed_class: freespace
+    arm: right
+    pose_name: inspection_pose_1
+    planning_group: rm75_arm_right
+
+  - stage: verify_lid_open
+    check: fixture_gap
+    expect: lid_open
+    arm: right
+    on_fail: skip               # the lid is already down: this plan's outcome holds
+    conditional: true                            # not asked in a sequence (inspect_before_close false)
+    condition_param: inspect_before_close
+
+  # (28 Oct: no pole stage. The poles stay at half length throughout, as the header says and as seat_close.yaml has it;
+  # the stage moved the pole 0 mm.)
+  # ---------------------------------------------------------------------------
+  # 2. LEFT arm to the lid's top edge (the pole stays at half length)
+  # ---------------------------------------------------------------------------
+  - stage: move_to_pre_start
+    speed_class: freespace
+    arm: left
+    pose_name: pre_start_pose
+    planning_group: rm75_arm_left
+
+  # The hand against the lid (contact_links.yaml) and the left WRIST too: at
+  # the pull's end the lid swings onto the right hand and the model overlaps
+  # L_Link6 / L_Link7 (the seat did by 2.6 mm, 2026-10-26). Explicit pairs,
+  # not derived from contact_links.yaml.
+  - stage: allow_collision
+    arm: left
+    contact_surface: seat_and_lid
+    collisions: [[commode_lid, ILH_left_little_1]]
+
+  - stage: move_to_start
+    speed_class: approach
+    arm: left
+    pose_name: start_pose
+    planning_group: rm75_arm_left
+
+  # ---------------------------------------------------------------------------
+  # 3. RIGHT arm to the hold (the lid will land on it: allow the contact first)
+  # ---------------------------------------------------------------------------
+  - stage: allow_collision
+    arm: right
+    contact_surface: seat_and_lid
+    additional_ik_frames: [R_glove_frame_2]   # the palm and its pad too: the part lands on the back of the hand
+
+  - stage: move_to_pre_start
+    speed_class: approach
+    arm: right
+    pose_name: pre_start_pose
+    planning_group: rm75_arm_right
+
+  - stage: move_to_start
+    speed_class: approach
+    arm: right
+    pose_name: start_pose
+    planning_group: rm75_arm_right
+
+  # ---------------------------------------------------------------------------
+  # 4. LEFT arm pulls the lid over; it lands on the right hand; LEFT away
+  # ---------------------------------------------------------------------------
+  - stage: execute_path
+    speed_class: carry
+    arm: left
+
+  - stage: update_fixture_scene
+    lid_angle_deg: -30.0
+    seat_angle_deg: -30.0
+
+  - stage: allow_collision
+    arm: left
+    contact_surface: lid
+
+  # - stage: move_to_retract
+  #   speed_class: approach
+  #   arm: left
+  #   pose_name: retract_pose
+  #   planning_group: rm75_arm_left
+
+  - stage: move_to_rest
+    speed_class: freespace
+    arm: left
+    pose_name: rest_pose
+    planning_group: rm75_arm_left
+
+  - stage: forbid_collision
+    arm: left
+    contact_surface: seat_and_lid
+    collisions: [[commode_lid, L_Link6], [commode_lid, L_Link7]]
+
+  # ---------------------------------------------------------------------------
+  # 5. RIGHT arm releases the lid: out from under its edge; the lid drops
+  # ---------------------------------------------------------------------------
+  - stage: execute_path
+    speed_class: approach
+    arm: right
+
+  - stage: update_fixture_scene
+    lid_angle_deg: 0.0
+    seat_angle_deg: 0.0
+
+  - stage: forbid_collision
+    arm: right
+    contact_surface: seat_and_lid
+    additional_ik_frames: [R_glove_frame_2]
+
+  # ---------------------------------------------------------------------------
+  # 6. The check after all movements: RIGHT arm to inspection_pose_1, then rest
+  # ---------------------------------------------------------------------------
+  - stage: move_to_inspect
+    speed_class: freespace
+    arm: right
+    pose_name: inspection_pose_1
+    planning_group: rm75_arm_right
+
+  - stage: verify_lid_closed
+    check: fixture_gap
+    expect: lid_closed
+    arm: right
+    on_fail: abort              # the lid did not come down: a person must look
+
+  - stage: move_to_rest
+    speed_class: freespace
+    arm: right
+    pose_name: rest_pose
+    planning_group: rm75_arm_right
