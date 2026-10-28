@@ -1,0 +1,41 @@
+{
+  "check_id": "20261028_145928_671_verify_lid_closed",
+  "stage": "verify_lid_closed",
+  "expect": "lid_closed",
+  "decided": false,
+  "state": "cannot_judge",
+  "confidence": 0.0,
+  "message": "no decision in 5 frames (uncertain, uncertain, uncertain, uncertain, uncertain; 0 yes, 0 no, 5 no vote); the last: lid surface median z 0.471 m in base_link (closed top 0.474 = nominal 0.450 registered +24 mm by the lid, rise -3 mm vs 50 mm bar); 100 % of the ROI valid, median range 0.649 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 2 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_lifted (not closed: lid_away 4854 vs lid_closed 2202, margin +0.55; lid_lifted: lid_lifted 4854 vs lid_open -2669, margin +1.55; best: lid 10 deg, seat 0 deg (lid) over 21884 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_closed at 0.83 -> uncertain",
+  "frames": [
+    {
+      "record": "20261028_145929_054_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261028_145929_675_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261028_145930_220_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261028_145930_474_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261028_145930_721_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    }
+  ]
+}
