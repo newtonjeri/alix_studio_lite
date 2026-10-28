@@ -139,10 +139,14 @@ right:
   # Format: [x, y, z, qx, qy, qz, qw], alix_ref_frame
   # ---------------------------------------------------------------------------
   # start_pose: lid_open.yaml's right start_pose, the taught hold.
-  # pre_start_pose: 3 cm toward the robot and 8 cm above it.
   cartesian_poses:
-    start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
-    pre_start_pose: [0.63474, -0.02855, 0.02145, -0.24912, 0.93219, 0.058472, 0.25601]
+    # start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
+    # pre_start_pose: [0.63474, -0.02855, 0.02145, -0.24912, 0.93219, 0.058472, 0.25601]
+    # pre_start_pose: 0.67016; -0.025262; -0.064651, 0.78788; 0.56896; 0.22048; -0.083185
+    pre_start_pose: [0.67016, -0.025262, -0.064651, 0.78788, 0.56896, 0.22048, -0.083185]
+
+    #  0.67016; -0.025262; -0.064651, 0.78788; 0.56896; 0.22048; -0.083185
+    start_pose: [0.67016, -0.025262, -0.064651, 0.78788, 0.56896, 0.22048, -0.083185]
 
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
   # Translation: [x, y, z] in metres, added in alix_ref_frame to start_pose
@@ -152,15 +156,9 @@ right:
     point1:   # the hold
       translation: [0.0, 0.0, 0.0]
       rotation: [0.0, 0.0, 0.0]
-    point2:   # the release: out from under the part's right edge, a little up
-      translation: [0.0, -0.10, 0.02]
-      rotation: [0.0, 0.0, 0.0]
-
-  # CLEANING SEQUENCE
-  # Format: [from, to] - pairs of point names
-  # ---------------------------------------------------------------------------
-  cleaning_sequence:
-    - [point1, point2]
+    point2:   # the release: out from under the lid's right edge, a little up
+      translation: [0.0, -0.05, 0.02]
+      rotation: [-15.0, 0.0, 0.0]
 
 
 # =============================================================================
@@ -185,7 +183,7 @@ left:
   # 2026-10-25_lid_seat_close/seat_close_left_block_2026-10-25.yaml).
   cartesian_poses:
     pre_start_pose: [0.95, 0.185532, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
-    start_pose: [1.0, 0.19, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
+    start_pose: [1.0, 0.2, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
 
     # Relative to THIS block's start_pose (translation added in alix_ref_frame,
     # rotation onto the start orientation). UNCHANGED from the 2026-10-24
@@ -203,15 +201,15 @@ left:
   # ---------------------------------------------------------------------------
   cleaning_points:
     point1:
-      translation: [0.0, 0.0, 0.0]
+      translation: [0.0, 0.01, 0.0]
       rotation: [0.0, 0.0, 0.0]
 
     point2:
-      translation: [0.0, 0.02, 0.00]
+      translation: [0.0, 0.025, 0.00]
       rotation: [-5.0, 0.0, 5.0]
 
     point3:
-      translation: [0.0, 0.03, -0.01]
+      translation: [0.0, 0.03, -0.03]
       rotation: [-5.0, 0.0, 7.0]
 
     point4:
@@ -227,7 +225,7 @@ left:
       rotation: [-5.0, 10.0, 10.0]
 
     point7:
-      translation: [-0.1, -0.03, -0.12]
+      translation: [-0.1, -0.02, -0.12]
       rotation: [-5.0, 15.0, 10.0]
 
     point8:

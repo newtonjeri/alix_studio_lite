@@ -114,8 +114,13 @@ right:
   # fingertips at base_link (0.655, -0.153, 0.467), 2.8 cm inside the lid's
   # right edge. pre_start_pose: 3 cm toward the robot and 8 cm above it.
   cartesian_poses:
-    start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
-    pre_start_pose: [0.63474, -0.02855, 0.02145, -0.24912, 0.93219, 0.058472, 0.25601]
+    # start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
+    # pre_start_pose: [0.63474, -0.02855, 0.02145, -0.24912, 0.93219, 0.058472, 0.25601]
+    # pre_start_pose: 0.67016; -0.025262; -0.064651, 0.78788; 0.56896; 0.22048; -0.083185
+    pre_start_pose: [0.67016, -0.025262, -0.064651, 0.78788, 0.56896, 0.22048, -0.083185]
+
+    #  0.67016; -0.025262; -0.064651, 0.78788; 0.56896; 0.22048; -0.083185
+    start_pose: [0.67016, -0.025262, -0.064651, 0.78788, 0.56896, 0.22048, -0.083185]
 
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
   # Translation: [x, y, z] in metres, added in alix_ref_frame to start_pose
@@ -126,8 +131,8 @@ right:
       translation: [0.0, 0.0, 0.0]
       rotation: [0.0, 0.0, 0.0]
     point2:   # the release: out from under the lid's right edge, a little up
-      translation: [0.0, -0.10, 0.02]
-      rotation: [0.0, 0.0, 0.0]
+      translation: [0.0, -0.05, 0.02]
+      rotation: [-15.0, 0.0, 0.0]
 
   # CLEANING SEQUENCE
   # Format: [from, to] - pairs of point names
@@ -150,8 +155,7 @@ left:
 
     pre_start_pose: [0.9664, 0.285, 0.06, 0.50117, 0.65235, 0.3346, 0.45968]
     
-
-  # =============================================================================
+       # =============================================================================
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
   # Translation: [x, y, z] in meters
   # Rotation: [roll, pitch, yaw] in degrees
@@ -163,20 +167,20 @@ left:
       rotation: [0.0, 5.0, -5.0]      
 
     point2:
-      translation: [-0.03, -0.01, 0.03]
+      translation: [0.0, -0.01, 0.05]
       rotation: [-5.0, 15.0, -5.0]
 
     point3:
-      translation: [-0.12, -0.04, 0.07]
-      rotation: [-5.0, 20.0, -5.0]
+      translation: [-0.07, -0.04, 0.08]
+      rotation: [-10.0, 20.0, -5.0]
 
     point4:
-      translation: [-0.24, -0.07, 0.1]
-      rotation: [-5.0, 30.0, -5.0]
+      translation: [-0.15, -0.07, 0.12]
+      rotation: [-15.0, 30.0, -5.0]
 
     point5:
-      translation: [-0.35, -0.06, 0.1]
-      rotation: [-5.0, 40.0, 0.0]        
+      translation: [-0.20, -0.08, 0.13]
+      rotation: [-15.0, 40.0, 0.0]        
   # ============================================================================
   # CLEANING SEQUENCE
   # Defines the order of trajectory points during execution
@@ -186,8 +190,8 @@ left:
     - [point1, point2]
     - [point2, point3]
     - [point3, point4]
-    - [point4, point2]
-    # - [point5, point3]
+    - [point4, point5]
+    - [point5, point3]
 
 # =============================================================================
 # MECHANISM TASK SEQUENCE (Compound - both arms, in order)
@@ -251,6 +255,7 @@ stage_sequence:
   - stage: allow_collision
     arm: left
     contact_surface: seat_and_lid
+    additional_ik_frames: [L_glove_frame_1]
     collisions: [[commode_lid, ILH_left_little_1]]
 
   - stage: move_to_start
@@ -309,6 +314,7 @@ stage_sequence:
   - stage: forbid_collision
     arm: left
     contact_surface: seat_and_lid
+    additional_ik_frames: [L_glove_frame_1]
     collisions: [[commode_lid, L_Link6], [commode_lid, L_Link7]]
 
   # ---------------------------------------------------------------------------

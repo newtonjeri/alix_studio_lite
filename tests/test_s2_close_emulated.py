@@ -35,7 +35,8 @@ def test_s2_closes_the_seat_then_the_lid_after_opening_the_seat(server):
     assert files == {"seat_open_seq", "seat_close", "lid_close"}           # the closings: their own plans, first check dropped
     for task in ("seat_close", "lid_close"):
         mine = [a for a in right if str(a.get("file", "")).startswith(f"mechanism:{task}:") and a["kind"] == "stream"]
-        assert "move_to_inspect" in mine[0]["text"] and "move_to_rest" in mine[-1]["text"]   # the look move first, the rest last (a Wait next)
+        last = [j.stage for j, _ in __import__("alix_studio_lite.server.mechanism", fromlist=["Plan"]).Plan(task).streams(False) if j.side == "right"][-1]
+        assert "move_to_inspect" in mine[0]["text"] and mine[-1]["text"].endswith(last)   # the look move first, the plan's last (a Wait next)
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
     server["script"].write_text(json.dumps(["seat_lifted", "seat_open", "seat_closed", "lid_closed"]))
     n0 = len(hardware(server))
@@ -50,7 +51,11 @@ def test_s2_closes_the_seat_then_the_lid_after_opening_the_seat(server):
     assert "verify_seat_open" not in said.replace("CHECK verify_seat_open: expect seat_open", "") or "not asked" in said
     assert "CHECK verify_lid_open" not in said                                              # the sequence's own order says it
     labels = [r["args"]["label"] for r in hardware(server)[n0:] if r.get("verb") == "canfd stream"]
-    assert labels.count("LEFT arm execute_path + move_to_rest") == 2 and labels.count("RIGHT arm execute_path + move_to_inspect") == 2
+    assert labels.count("LEFT arm execute_path + move_to_rest") == 2                  # each closing's pull, as its plan has it
+    from alix_studio_lite.server import mechanism
+    for task in ("seat_close", "lid_close"):                                           # and each closing's right-arm streams
+        right = [f"RIGHT arm {j.stage}" for j, _ in mechanism.Plan(task).streams(False) if j.side == "right"]
+        assert all(lb in labels for lb in right), (task, right)
 
 
 def test_s2_does_not_run_a_closing_whose_end_state_the_sequence_already_made(server):

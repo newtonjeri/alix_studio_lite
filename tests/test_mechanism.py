@@ -672,9 +672,12 @@ def test_the_closings_run_as_the_openings_do_and_a_sequence_asks_no_check_before
         out = mechanism.Runner(ex).run(task)
         assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [(task, "done")]
         assert [c[1] for c in ex.calls if c[0] == "ask"] == [f"verify_{up}", f"verify_{down}"]
-        assert [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"] == [
-            ("move_to_inspect", "right"), ("move_to_pre_start + move_to_start", "left"), ("move_to_pre_start + move_to_start", "right"),
-            ("execute_path + move_to_rest", "left"), ("execute_path + move_to_inspect", "right"), ("move_to_rest", "right")]
+        plan = mechanism.Plan(task)                                       # the owner's plan as generated: its moves streamed
+        assert [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"] == [(j.stage, j.side) for j, _ in plan.streams()]
+        k = next(i for i, e in enumerate(plan.entries) if any(a.get("stage") == f"verify_{down}" for a in e.pre_actions))
+        before = [e for e in plan.entries[:k] if e.side == "right" and e.kind == "arm"][-1]
+        assert abs(np.degrees(before.last()[1]) - -97.0) < 0.1 and abs(np.degrees(before.last()[6]) - -97.0) < 0.1   # the end check
+        # is asked with the camera arm at inspection_pose_1 (28 Oct: the seat plan of 13:04 had lost it; added to its last move)
         assert not [m for m in moves(ex) if m[3] == "hand"]                   # no hand entry: the hands as they are
         assert [(m[1], m[2]) for m in moves(ex) if m[3] == "pole"] == [("move_to_half_length", "left"), ("move_to_half_length", "right")]
         assert {s: t["pole_mm"] for s, t in mechanism.Plan(task).first_move_targets().items()} == {"left": 149.6, "right": 149.6}   # both
@@ -701,11 +704,11 @@ def test_a_plans_final_rest_is_not_streamed_when_the_arms_next_start_follows():
     task's start went from rest. With that start following (``leave``, S2's ``then``) the rest is not streamed: the end
     look is still asked there, and the one MoveJ to the next start goes from the inspection pose. The left arm's rest,
     not the plan's last move, is streamed as before; a plan run on its own ends at rest."""
-    ex = FakeExec(["seat_open", "seat_closed"])
-    mechanism.Runner(ex, leave={"right"}).run("seat_close")
+    ex = FakeExec(["lid_open", "lid_closed"])
+    mechanism.Runner(ex, leave={"right"}).run("lid_close")
     arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]
     assert arm[-1] == ("execute_path + move_to_inspect", "right") and ("execute_path + move_to_rest", "left") in arm
-    assert [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_seat_open", "verify_seat_closed"]   # the end look asked all the same
+    assert [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_lid_open", "verify_lid_closed"]   # the end look asked all the same
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])
     mechanism.Runner(ex, leave={"left", "right"}, hand_set={"left", "right"}).run("lid_open")
     arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]

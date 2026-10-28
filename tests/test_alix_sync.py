@@ -91,31 +91,32 @@ def test_each_difference_says_which_side_changed_and_pull_and_push_carry_it(tmp_
 
 def test_a_plan_its_config_has_moved_on_from_is_found():
     """28 Oct: a config edited and its re-planning failed leaves the old plan in place. A stage added, a pose moved, a
-    stroke's point moved: each shows; the plan as made passes."""
+    stroke's point moved: each shows; the plan as made passes (the lid closing: the seat closing of 13:04 is itself
+    one its config has moved on from, its right release stroke missing)."""
     root = vendor_paths.LITE_ROOT / alix_sync.VENDOR
-    cfg = yaml.safe_load((root / CONFIGS / "seat_close.yaml").read_text())
-    plan = json.loads((root / PLANS / "seat_close_toppra.json").read_text())
-    assert alix_sync.plan_against_config(plan, cfg, root, "seat_close") == []
+    cfg = yaml.safe_load((root / CONFIGS / "lid_close.yaml").read_text())
+    plan = json.loads((root / PLANS / "lid_close_toppra.json").read_text())
+    assert alix_sync.plan_against_config(plan, cfg, root, "lid_close") == []
     more = copy.deepcopy(cfg)
     more["stage_sequence"].insert(3, {"stage": "hand_grasp", "arm": "left", "pose_name": "grasp", "planning_group": "inspire_hand_left"})
-    assert "the plan is not its config's" in alix_sync.plan_against_config(plan, more, root, "seat_close")[0][2]
+    assert "the plan is not its config's" in alix_sync.plan_against_config(plan, more, root, "lid_close")[0][2]
     moved = copy.deepcopy(cfg)
     moved["left"]["cartesian_poses"]["start_pose"][0] += 0.01
-    texts = [r[2] for r in alix_sync.plan_against_config(plan, moved, root, "seat_close")]
+    texts = [r[2] for r in alix_sync.plan_against_config(plan, moved, root, "lid_close")]
     assert any("move_to_start (left) ends 10.0 mm" in t for t in texts), texts
     point = copy.deepcopy(cfg)
     point["left"]["cleaning_points"]["point5"]["translation"][2] -= 0.02
-    assert any("passes its config's point5" in r[2] for r in alix_sync.plan_against_config(plan, point, root, "seat_close"))
+    assert any("passes its config's point5" in r[2] for r in alix_sync.plan_against_config(plan, point, root, "lid_close"))
     seq = copy.deepcopy(plan)                                                 # a sequence plan: the same, its flag false and its
     seq["task_flags"]["inspect_before_close"] = False                         # check before any movement gone
     for t in seq["sub_trajectories"]:
-        t["pre_actions"] = [a for a in t.get("pre_actions") or [] if a.get("stage") != "verify_seat_open"]
-    assert alix_sync.plan_against_config(seq, cfg, root, "seat_close_seq") == []
-    assert alix_sync.seq_against_task(seq, plan, cfg, "seat_close_seq") == []
+        t["pre_actions"] = [a for a in t.get("pre_actions") or [] if a.get("stage") != "verify_lid_open"]
+    assert alix_sync.plan_against_config(seq, cfg, root, "lid_close_seq") == []
+    assert alix_sync.seq_against_task(seq, plan, cfg, "lid_close_seq") == []
     other = copy.deepcopy(seq)
     arm = next(t for t in other["sub_trajectories"] if t["stage_name"] == "execute_path" and t["joint_names"][0].startswith("L_"))
     arm["waypoints"][-1]["positions"][0] += 0.05                                  # 2.9 degrees of joint 1: the hand moves
-    assert alix_sync.seq_against_task(other, plan, cfg, "seat_close_seq")[0][0] == "error"
+    assert alix_sync.seq_against_task(other, plan, cfg, "lid_close_seq")[0][0] == "error"
 
 
 def test_lites_registry_is_checked_against_itself(monkeypatch):
