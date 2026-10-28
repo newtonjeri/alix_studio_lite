@@ -1225,7 +1225,7 @@ class RealExec(_Exec):
         self.live = live or (lambda side, text: None)   # S2's live line of each arm
         self.feeds_after = bool(feeds_after)            # the caller turns the arms' feeds off after the run (S2: in its next pole
         self._name, self._feeds, self._hands = "lid_seat", set(), set()   # and hand step's travel), not finish()
-        self._settled_s = 0.0                           # the last stream's own settle, as the feed measured it (hold)
+        self._settled_s = 0.0                           # the longest settle of the streams since the last one started (hold)
         self._unsettled: dict = {}                      # side -> (last line, label) of a stream whose end is not yet waited for
         self._legs: dict = {}                           # leg key -> its clearance (leg_clearance), filled by prepare_legs' thread
         self._frames, self._taken = None, []            # (when, [(frame, q)]) of the last check, for the next at the same pose
@@ -1496,13 +1496,16 @@ class RealExec(_Exec):
         """A stream's end waited for now (robot_real.settle_end), when this arm's last stream left it: before this arm's
         next stream or pole move, a check, a hold, the plan's end. Not before the other arm's move or this arm's hand
         move (27 Oct night: 1.6 s a run waited for by moves that did not need the arm settled). The time it took is
-        what a settle hold then counts (``_settled_s``)."""
+        what a settle hold then counts (``_settled_s``): the longest of the arms' settles since the last stream started (28
+        Oct runs: the hold took the last settle made, the right's inspect move's 0.01 s, after the left's lift had settled
+        0.52 s a moment before, and held 0.49 s more at every lifted check)."""
         pending = self._unsettled.pop(side, None)
         if pending is None:
             return
         last, label = pending
         settle = self._arm(side).settle_end(list(last), label) or {}
-        self._settled_s = float(settle.get("waited_s") or 0.0) if settle.get("by") == "feed" and settle.get("at_rest") else 0.0
+        waited = float(settle.get("waited_s") or 0.0) if settle.get("by") == "feed" and settle.get("at_rest") else 0.0
+        self._settled_s = max(self._settled_s, waited)
         self.say(f"{label}: end {settle.get('waited_s', 0) * 1000:.0f} ms" + ("" if settle.get("at_rest") else " (NOT at rest)"),
                  "info" if settle.get("at_rest") else "warn")
 
@@ -1517,9 +1520,10 @@ class RealExec(_Exec):
         a lift), which is the rest the hold was there to give (27 Oct night: 0.5 s twice a run on top of it)."""
         self._frames = None                           # what the camera saw before the hold is not what it sees after
         self._settle_all()                            # the hold counts from the arms standing still
-        if str(label).startswith("settle") and self._settled_s > 0:
-            rest = max(0.0, float(seconds) - self._settled_s)
-            self.say(f"{label} {seconds:g} s: the arm's own settle took {self._settled_s:.2f} s of it"
+        settled, self._settled_s = self._settled_s, 0.0   # counted once: the next hold counts the settles after it
+        if str(label).startswith("settle") and settled > 0:
+            rest = max(0.0, float(seconds) - settled)
+            self.say(f"{label} {seconds:g} s: the arm's own settle took {settled:.2f} s of it"
                      + (f", holding {rest:.2f} s more" if rest > 0.005 else ", nothing more to wait"))
             seconds = rest
         super().hold(seconds, label)
@@ -1559,6 +1563,8 @@ class RealExec(_Exec):
                     else:
                         self.say(f"{e.label()}: the arm is {gap:.1f} degrees from its first line, more than the {BRIDGE_MAX_DEG:g} "
                                  "Lite bridges: the stream is refused at its first line", "warn")
+            if carries_fixture(e):                         # the settle hold after a carry counts the settles from this carry on
+                self._settled_s = 0.0
             out = arm.stream(rows, e.label(), speed=50, restore_pct=self.robot.found_speed(e.side), bridge_speed=bridge_speed,
                              stop_hook=self.job.on_cancel, records=self.kit.records_dir("canfd"), settle=False)
             self._unsettled[e.side] = (list(rows[-1]), e.label())     # its end waited for when something needs it (_settle)

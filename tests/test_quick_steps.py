@@ -840,3 +840,26 @@ def test_a_hand_move_takes_what_lite_last_read_for_its_read_before_angle_set(mon
     arm._hand_last = dict(counts=[0, 0, 0, 0, 150, 1000], after=[0, 3, 0, 9, 150, 1000])
     out = arm.hand_to([0, 0, 0, 0, 160, 990])                                          # within 20 counts of the last readback
     assert out["skipped"] and not events                                               # nothing read, nothing sent
+
+
+def test_a_settle_hold_counts_the_longest_settle_of_the_arms_since_the_last_stream_started():
+    """28 Oct runs: with the two-arm stretch the last stream settled before the lifted check was the right's move to
+    inspect pose (0.01 s, long done), and the hold took that: it held 0.49 s more after the left's lift had settled
+    0.52 s, at every lifted check. The hold counts the longest settle since the last stream started, once; the next
+    hold counts only the settles after it."""
+    from types import SimpleNamespace
+
+    slept, said = [], []
+    ex = mechanism.RealExec.__new__(mechanism.RealExec)
+    ex.job = SimpleNamespace(progress=lambda *a, **k: None, sleep=lambda s: slept.append(round(s, 3)), log=lambda *a, **k: None)
+    ex._log, ex._frames, ex._settled_s = None, None, 0.0
+    ex.say = lambda text, level="info": said.append(text)
+    arms = {side: SimpleNamespace(settle_end=lambda last, label, w=w: dict(waited_s=w, by="feed", at_rest=True, gap_deg=0.4))
+            for side, w in (("left", 0.52), ("right", 0.008))}
+    ex.arms = arms
+    ex._unsettled = {"left": ([1, 2, 3], "LEFT lift"), "right": ([4, 5, 6], "RIGHT inspect")}   # settled in this order at the hold
+    ex.hold(0.5, "settle_before_check")
+    assert not ex._unsettled and "the arm's own settle took 0.52 s" in said[-1] and "nothing more to wait" in said[-1]
+    assert not slept                                                       # the lift's own settle was the hold
+    ex.hold(0.5, "settle_before_check")                                    # no stream since: the whole hold
+    assert slept == [0.5]
