@@ -106,7 +106,7 @@ def test_a_plan_its_config_has_moved_on_from_is_found():
     assert any("move_to_start (left) ends 10.0 mm" in t for t in texts), texts
     point = copy.deepcopy(cfg)
     point["left"]["cleaning_points"]["point5"]["translation"][2] -= 0.02
-    assert any("passes its config's point5" in r[2] for r in alix_sync.plan_against_config(plan, point, root, "lid_close"))
+    assert any("leaves its config's path" in r[2] for r in alix_sync.plan_against_config(plan, point, root, "lid_close"))
     seq = copy.deepcopy(plan)                                                 # a sequence plan: the same, its flag false and its
     seq["task_flags"]["inspect_before_close"] = False                         # check before any movement gone
     for t in seq["sub_trajectories"]:

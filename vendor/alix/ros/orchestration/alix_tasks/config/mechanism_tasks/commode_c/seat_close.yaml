@@ -160,6 +160,9 @@ right:
       translation: [0.0, -0.05, 0.02]
       rotation: [-15.0, 0.0, 0.0]
 
+  cleaning_sequence:
+    - [point1, point2]
+
 
 # =============================================================================
 # LEFT ARM   (the pull: REVISED 2026-10-26 by Newton, see the header)

@@ -39,7 +39,8 @@ def test_real_closing_streams_every_move_with_its_two_looks(server, task, up, do
     assert [lb.split(" (")[0] for lb in labels if lb.startswith("LEFT")] == [w for w in want if w.startswith("LEFT")]
     assert labels[0].startswith("RIGHT arm move_to_inspect") and labels[-1] == want[-1]
     poles = [(r["side"], r["args"]["mm"]) for r in hw if r.get("verb") == "pole and hand"]
-    assert sorted(poles) == [("left", 149.6), ("right", 149.6)], poles    # both poles set at its start (28 Oct: the lab ran them at 200)
+    half = {e.side: round(e.last()[0] * 1000.0, 1) for e in plan.entries if e.kind == "pole"}               # the plan's half length
+    assert sorted(poles) == sorted(half.items()), poles    # both poles set at its start (28 Oct: the lab ran them at 200)
     assert sum(len(lb.split(" (")[0].split(" + ")) for lb in labels) == sum(1 for e in plan.entries if e.kind == "arm")   # every move named
     assert not [r for r in hw if r.get("verb") == "hand move"]                              # no hand entry: the hands stay as they are
     said = " | ".join(e["text"] for e in done["events"])

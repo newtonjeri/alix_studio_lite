@@ -680,7 +680,9 @@ def test_the_closings_run_as_the_openings_do_and_a_sequence_asks_no_check_before
         # is asked with the camera arm at inspection_pose_1 (28 Oct: the seat plan of 13:04 had lost it; added to its last move)
         assert not [m for m in moves(ex) if m[3] == "hand"]                   # no hand entry: the hands as they are
         assert [(m[1], m[2]) for m in moves(ex) if m[3] == "pole"] == [("move_to_half_length", "left"), ("move_to_half_length", "right")]
-        assert {s: t["pole_mm"] for s, t in mechanism.Plan(task).first_move_targets().items()} == {"left": 149.6, "right": 149.6}   # both
+        half = {e.side: round(e.last()[0] * 1000.0, 1) for e in mechanism.Plan(task).entries if e.kind == "pole"}
+        assert set(half) == {"left", "right"} and all(140 < v < 160 for v in half.values())                 # half length, both
+        assert {s: t["pole_mm"] for s, t in mechanism.Plan(task).first_move_targets().items()} == half    # both
         # poles set at its start (28 Oct: the lab's first runs had both at 200 mm, the plans made at 149.2, no pole stage)
         assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [(task, "start")]
         ex = FakeExec([down])                                                  # the part already down: the plan's outcome holds

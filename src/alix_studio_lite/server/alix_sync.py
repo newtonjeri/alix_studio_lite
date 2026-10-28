@@ -11,7 +11,8 @@ What is checked besides (on either tree, ALIX's or Lite's vendored copy):
 - each plan is its config's: the config's stages in order (its conditions evaluated with the plan's own task flags, then
   the config's task parameters, then ALIX's defaults) are the plan's entries, checks and holds in order; each move to a
   pose of the arm's block ends there (forward kinematics of the block's ik_frame, ALIX's URDF), each move to a named
-  state ends at the SRDF's values, each stroke passes its sequence's points. A config edited and its re-planning failed
+  state ends at the SRDF's values, each stroke stays on its sequence's polyline (from the start pose, as the planner
+  prepends that leg; its corners rounded by a few mm) and ends at its last point. A config edited and its re-planning failed
   (the planner then leaves the old plan in place: 28 Oct, twice) shows here;
 - a sequence plan (``<task>_seq``) is its task's plan less the checks its flag drops, the same moves;
 - the pre-planned re-lifts chain from where the lift ends (mechanism.Plan.rungs_note);
@@ -47,6 +48,17 @@ PREFIXES = (f"{PLANS_REL}/", "Resource/plans/README.md", f"{CONFIGS_REL}/",
 #: ALIX's planner defaults for the condition flags it knows by name (config_loader.hpp: use_prestart_stage true)
 PLANNER_DEFAULTS = {"use_prestart_stage": True}
 POSE_MM, POSE_DEG, POINT_MM, STATE_DEG, POLE_MM = 3.0, 1.5, 5.0, 0.1, 1.0
+STROKE_DEV_MM = 6.0       #: a stroke's samples off its config's polyline (the planner's own "deviation from polyline": <= 3 mm)
+
+
+def _to_segment(X, a, b):
+    """Each row of X (n x 3)'s distance to the segment a-b (metres)."""
+    import numpy as np
+
+    ab = b - a
+    L2 = float(ab @ ab)
+    t = np.zeros(len(X)) if L2 < 1e-12 else np.clip((X - a) @ ab / L2, 0.0, 1.0)
+    return np.linalg.norm(X - (a + t[:, None] * ab), axis=1)
 SEQ_DEG = 0.5            #: a sequence plan's moves end within this of its task's (the plannings' IK spread: 0.06-0.23 deg)
 
 
@@ -335,16 +347,21 @@ def plan_against_config(plan: dict, cfg: dict, root: Path, what: str) -> list:
             order = [p for pair in seq for p in pair]
             if not frame or "start_pose" not in poses or not order:
                 continue
-            Ts = fk(side, frame, q, pm)
-            for p in dict.fromkeys(order):
-                if p not in pts:
-                    continue
-                Tt = _rel_T(poses["start_pose"], pts[p])
-                d = float(np.min(np.linalg.norm(Ts[:, :3, 3] - Tt[:3, 3], axis=1))) * 1000.0
-                worst[(side, stage)] = max(worst.get((side, stage), 0.0), d)
-                if d > POINT_MM:
-                    rows.append(("error", what, f"the {side} stroke passes its config's {p} {d:.1f} mm away: the config's "
-                                                "points changed after the plan: re-plan it in ALIX"))
+            if any(p not in pts for p in order):
+                continue
+            X = fk(side, frame, q, pm)[:, :3, 3]
+            start = _pose_T(poses["start_pose"])[:3, 3]
+            V = [start] + [_rel_T(poses["start_pose"], pts[p])[:3, 3] for p in order[:1]]    # the planner's leg from the start
+            segs = [(V[0], V[1])] + [(_rel_T(poses["start_pose"], pts[a])[:3, 3], _rel_T(poses["start_pose"], pts[b])[:3, 3])
+                                     for a, b in seq]
+            dev = np.min(np.stack([_to_segment(X, a, b) for a, b in segs], axis=1), axis=1) * 1000.0
+            k = int(np.argmax(dev))
+            end = float(np.linalg.norm(X[-1] - _rel_T(poses["start_pose"], pts[order[-1]])[:3, 3])) * 1000.0
+            worst[(side, stage)] = max(float(dev[k]), end)
+            if dev[k] > STROKE_DEV_MM or end > POINT_MM:
+                rows.append(("error", what, f"the {side} stroke leaves its config's path by {dev[k]:.1f} mm (the planner rounds its "
+                                            f"corners by a few mm) and ends {end:.1f} mm from its last point {order[-1]}: the "
+                                            "config's points changed after the plan: re-plan it in ALIX"))
             continue
         if pose_name in poses and frame:
             p = poses[pose_name]
