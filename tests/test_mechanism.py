@@ -678,7 +678,9 @@ def test_the_closings_run_as_the_openings_do_and_a_sequence_asks_no_check_before
         before = [e for e in plan.entries[:k] if e.side == "right" and e.kind == "arm"][-1]
         assert abs(np.degrees(before.last()[1]) - -97.0) < 0.1 and abs(np.degrees(before.last()[6]) - -97.0) < 0.1   # the end check
         # is asked with the camera arm at inspection_pose_1 (28 Oct: the seat plan of 13:04 had lost it; added to its last move)
-        assert [(m[1], m[2]) for m in moves(ex) if m[3] == "hand"] == [("hand_tenth_grasp", "left"), ("hand_tenth_grasp", "right")]
+        hands = [(e.stage, e.side) for e in mechanism.Plan(task).entries if e.kind == "hand"]          # the plan's own: each
+        assert [(m[1], m[2]) for m in moves(ex) if m[3] == "hand"] == hands and hands[:2] == [("hand_tenth_grasp", "left"),
+                                                                                        ("hand_tenth_grasp", "right")]   # tenth grasp
         assert [(m[1], m[2]) for m in moves(ex) if m[3] == "pole"] == [("move_to_half_length", "left"), ("move_to_half_length", "right")]
         asked = next(i for i, c in enumerate(ex.calls) if c[0] == "ask")    # the look, its check, then the poles and the hands
         assert [c[1] for c in ex.calls[:asked] if c[0] == "move"] == ["move_to_inspect"]    # (the owner, 29 Oct)
