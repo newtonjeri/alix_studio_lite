@@ -17,6 +17,18 @@ through `alix_taskgen.paths.plan_roots()`, which lists this directory first.
 Nothing reads plans from the package share, and `plans` is not in the
 package's `install(DIRECTORY …)`.
 
+**ALIX Studio Lite runs commode C's lid and seat plans** (`commode_c/hardware/`
+`lid_open`, `seat_open`, `seat_close`, `lid_close`, their `_seq` sequence plans,
+`rungs/lid_open_*`) and their configs (`mechanism_tasks/commode_c/<task>.yaml`)
+from its own copies. After changing any of them, on either side, run Lite's
+`python3 tools/mechanism_sync.py` (in `alix_studio_lite/`): it says which side
+changed each file and whether each plan is still its config's (a config edited
+and its re-planning failed leaves the old plan here); `pull` brings ALIX's
+changes into Lite, `push` brings Lite's here. Lite's test suite fails while the
+two differ. A sequence plan is re-made with its task: plan the task with its
+`inspect_before_*` flag true, then false, and save the second as
+`<task>_seq_toppra.*` (`Resource/reports/2026-10-28_lid_seat_close_trims/helpers/plan_close_mock43.sh`).
+
 ---
 
 ## Layout

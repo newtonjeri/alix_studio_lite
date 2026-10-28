@@ -393,6 +393,16 @@ def main(argv=None) -> int:
             print(f"   copied from {app.store.home}: {p['name']}" + (f" (was “{p['renamed']}”)" if p["renamed"] else ""), flush=True)
     print(f"Logs:  {app.log.root}  (tail -f {app.log.root}/$(date +%F)/lite.log)", flush=True)
     print(f"Python:  {sys.executable}", flush=True)
+    try:                                  # the lid and seat files against ALIX's, where its checkout is on this computer (28 Oct)
+        from . import alix_sync
+
+        if alix_sync.alix_root() is not None:
+            rep = alix_sync.status(deep=False)
+            if not rep.in_sync:
+                print(f"Lid and seat: {len(rep.files)} file(s) differ from ALIX's ({', '.join(sorted({f.state for f in rep.files}))}): "
+                      "python3 tools/mechanism_sync.py", flush=True)
+    except Exception as exc:                                                        # noqa: BLE001 - a note, never a stop
+        print(f"Lid and seat: not compared with ALIX's ({type(exc).__name__}: {exc})", flush=True)
     if hasattr(signal, "SIGUSR1"):              # what each thread is doing, on demand, for a Lite that stops answering
         import faulthandler
 
