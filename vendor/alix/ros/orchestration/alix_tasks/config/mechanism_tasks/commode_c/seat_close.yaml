@@ -138,7 +138,9 @@ right:
   # CARTESIAN POSES (Position + Orientation)
   # Format: [x, y, z, qx, qy, qz, qw], alix_ref_frame
   # ---------------------------------------------------------------------------
-  # start_pose: lid_open.yaml's right start_pose, the taught hold.
+  # start_pose: lid_open.yaml's right start_pose, the taught hold: the
+  # fingertips at base_link (0.655, -0.153, 0.467), 2.8 cm inside the lid's
+  # right edge. pre_start_pose: 3 cm toward the robot and 8 cm above it.
   cartesian_poses:
     # start_pose: [0.66474, -0.02855, -0.05855, -0.24912, 0.93219, 0.058472, 0.25601]
     # pre_start_pose: [0.63474, -0.02855, 0.02145, -0.24912, 0.93219, 0.058472, 0.25601]
@@ -156,12 +158,19 @@ right:
     point1:   # the hold
       translation: [0.0, 0.0, 0.0]
       rotation: [0.0, 0.0, 0.0]
-    point2:   # the release: out from under the lid's right edge, a little up
-      translation: [0.0, -0.08, 0.02]
-      rotation: [-25.0, 0.0, 0.0]
+    point2:
+      translation: [0.03, -0.12, -0.01]
+      rotation: [-30.0, 0.0, 0.0]
+    point3: 
+      translation: [0.03, -0.12, 0.04]
+      rotation: [-30.0, 0.0, 0.0]
 
+  # CLEANING SEQUENCE
+  # Format: [from, to] - pairs of point names
+  # ---------------------------------------------------------------------------
   cleaning_sequence:
     - [point1, point2]
+    - [point2, point3]
 
 
 # =============================================================================
@@ -212,19 +221,19 @@ left:
       rotation: [0.0, 0.0, 0.0]
 
     point2:
-      translation: [0.0, 0.025, 0.00]
+      translation: [0.01, 0.025, 0.00]
       rotation: [-5.0, 0.0, 5.0]
 
     point3:
-      translation: [0.0, 0.04, -0.03]
+      translation: [0.01, 0.04, -0.03]
       rotation: [-5.0, 0.0, 7.0]
 
     point4:
-      translation: [-0.02, 0.04, -0.01]
+      translation: [-0.02, 0.04, -0.05]
       rotation: [-5.0, 0.0, 10.0]
     
     point5:
-      translation: [-0.04, 0.035, -0.04]
+      translation: [-0.04, 0.035, -0.06]
       rotation: [-5.0, 5.0, 10.0]
 
     point6:

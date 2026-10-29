@@ -130,15 +130,19 @@ right:
     point1:   # the hold
       translation: [0.0, 0.0, 0.0]
       rotation: [0.0, 0.0, 0.0]
-    point2:   # the release: out from under the lid's right edge, a little up
-      translation: [0.0, -0.05, 0.02]
-      rotation: [-15.0, 0.0, 0.0]
+    point2:
+      translation: [0.03, -0.12, -0.01]
+      rotation: [-30.0, 0.0, 0.0]
+    point3: 
+      translation: [0.03, -0.12, 0.04]
+      rotation: [-30.0, 0.0, 0.0]
 
   # CLEANING SEQUENCE
   # Format: [from, to] - pairs of point names
   # ---------------------------------------------------------------------------
   cleaning_sequence:
     - [point1, point2]
+    - [point2, point3]
 
 
 # =============================================================================
@@ -151,7 +155,7 @@ left:
     primary_planning_group: rm75_arm_left
 
   cartesian_poses:
-    start_pose: [0.9664, 0.265, 0.0486, 0.50117, 0.65235, 0.3346, 0.45968]
+    start_pose: [0.9664, 0.275, 0.0486, 0.50117, 0.65235, 0.3346, 0.45968]
 
     pre_start_pose: [0.9664, 0.285, 0.06, 0.50117, 0.65235, 0.3346, 0.45968]
     
@@ -164,18 +168,18 @@ left:
   cleaning_points:
     point1:
       translation: [0.0, 0.0, 0.0]
-      rotation: [0.0, 5.0, -5.0]      
+      rotation: [0.0, 5.0, 0.0]      
 
     point2:
-      translation: [0.0, 0.0, 0.05]
-      rotation: [-5.0, 15.0, -5.0]
+      translation: [-0.02, 0.0, 0.06]
+      rotation: [-5.0, 10.0, -5.0]
 
     point3:
-      translation: [-0.07, -0.02, 0.08]
+      translation: [-0.1, -0.01, 0.12]
       rotation: [-10.0, 20.0, -5.0]
 
     point4:
-      translation: [-0.15, -0.07, 0.12]
+      translation: [-0.15, -0.07, 0.15]
       rotation: [-15.0, 30.0, -5.0]
 
     point5:
@@ -191,7 +195,7 @@ left:
     - [point2, point3]
     - [point3, point4]
     - [point4, point5]
-    - [point5, point3]
+    - [point5, point4]
 
 # =============================================================================
 # MECHANISM TASK SEQUENCE (Compound - both arms, in order)
