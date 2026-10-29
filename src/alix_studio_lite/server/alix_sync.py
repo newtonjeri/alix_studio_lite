@@ -7,6 +7,13 @@ any plan or rung ALIX holds for one of Lite's tasks that Lite has not vendored. 
 copy and the manifest's sha256 (the file as it was when last copied, the common ancestor), so each difference says which
 side changed: ALIX (pull it into Lite), Lite (push it into ALIX), both (a conflict, a person decides).
 
+ALIX's copy is taken only when it is newer than Lite's, as git records them: an edit not committed in ALIX's checkout,
+or committed there after Lite's last commit of the file and a version Lite has never had. An ALIX checkout behind Lite's
+(the lab's, 29 Oct: at ALIX's commit of 24 Oct, the later ones not pushed) differs from the manifest too, and the three-way
+comparison alone took that for ALIX's change: its older plans copied over Lite's, the closings it lacks removed. Such a
+copy is now ALIX_BEHIND (or MISSING_ALIX): Lite keeps its own and nothing is written either side. Linking never removes a
+file (a removal is said; ``pull`` run by hand removes it).
+
 What is checked besides (on either tree, ALIX's or Lite's vendored copy):
 - each plan is its config's: the config's stages in order (its conditions evaluated with the plan's own task flags, then
   the config's task parameters, then ALIX's defaults) are the plan's entries, checks and holds in order; each move to a
@@ -63,13 +70,99 @@ SEQ_DEG = 0.5            #: a sequence plan's moves end within this of its task'
 
 
 def alix_root() -> Path | None:
-    """ALIX's checkout on this computer (LITE_ALIX_ROOT, else ~/alix_ws/src/alix), or None (the lab: Lite runs alone)."""
+    """ALIX's checkout on this computer (LITE_ALIX_ROOT, else ~/alix_ws/src/alix), or None. The lab has one too, at
+    whatever ALIX commit it was last pulled to (often older than Lite's copies: _Git says which is newer)."""
     p = Path(os.environ.get("LITE_ALIX_ROOT") or DEFAULT_ALIX)
     return p if (p / PLANS_REL).is_dir() else None
 
 
 def _sha(p: Path) -> str | None:
     return hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else None
+
+
+def _blob(p: Path) -> str | None:
+    """The file's git object id (as ``git hash-object``), to find it among a tree's past versions."""
+    if not p.is_file():
+        return None
+    data = p.read_bytes()
+    return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+
+
+@dataclass
+class _Git:
+    """What git records of some files of one tree (ALIX's checkout, or Lite's), by their path in that tree: each one's
+    last commit time, every version it has had (object ids), the ones whose copy on disk is not the committed one
+    (modified, added, untracked, ignored) and the ones deleted from disk. ``ok`` False: git did not answer (then
+    nothing is taken from that tree)."""
+    ok: bool = True
+    last: dict = field(default_factory=dict)
+    versions: dict = field(default_factory=dict)
+    edited: set = field(default_factory=set)
+    deleted: set = field(default_factory=set)
+
+
+def _git(root: Path, rels, ignored: bool = True) -> _Git | None:
+    """``rels`` (paths in ``root``) as git records them (``ignored``: a file git ignores counts as edited); None when
+    ``root`` is not in a git checkout (a copy: the manifest's three-way comparison alone decides, as for the tests')."""
+    root = root.resolve()
+    top = next((p for p in (root, *root.parents) if (p / ".git").exists()), None)
+    if top is None:
+        return None
+    pre = root.relative_to(top).as_posix()
+    pre = "" if pre == "." else pre + "/"
+    specs = [pre + r for r in rels]
+    g = _Git()
+    if not specs:
+        return g
+    try:
+        st = subprocess.run(["git", "-C", str(top), "status", "--porcelain=v1", "-z", "--no-renames", "--untracked-files=all",
+                             "--ignored=" + ("matching" if ignored else "no"), "--", *specs], capture_output=True, timeout=30)
+        lg = subprocess.run(["git", "-C", str(top), "log", "--format=@%ct", "--raw", "--no-abbrev", "--no-renames", "--",
+                             *specs], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return _Git(ok=False)
+    if st.returncode or lg.returncode:
+        return _Git(ok=False)
+    for e in st.stdout.decode(errors="replace").split("\0"):
+        if len(e) > 3 and e[3:].startswith(pre):
+            rel = e[3 + len(pre):]
+            if "D" in e[:2] and not (root / rel).exists():
+                g.deleted.add(rel)
+            elif e[:2] in ("??", "!!") or any(c in "MAT" for c in e[:2]):
+                g.edited.add(rel)
+    t = None
+    for line in lg.stdout.splitlines():
+        if line.startswith("@"):
+            t = int(line[1:])
+        elif line.startswith(":") and "\t" in line:
+            meta, path = line.split("\t", 1)
+            if not path.startswith(pre):
+                continue
+            rel = path[len(pre):]
+            g.last.setdefault(rel, t)
+            g.versions.setdefault(rel, set()).update(x for x in meta.split()[2:4] if x.strip("0"))
+    return g
+
+
+def _alix_newer(rel: str, alix: Path, ag: _Git | None, lg: _Git | None) -> bool:
+    """ALIX's copy of ``rel`` is newer than Lite's: ALIX not in a git checkout (its copy a working copy: the three-way
+    comparison decides), an edit not committed in ALIX's checkout (unless it is a version Lite has had, older than
+    Lite's last commit of it), or committed there after Lite's last commit of it and a version Lite has never had. A
+    checkout behind Lite's is never newer."""
+    if ag is None:
+        return True
+    if not ag.ok:
+        return False
+    lrel = f"{VENDOR}/{rel}"
+    lite_ok = lg is not None and lg.ok
+    had = lite_ok and _blob(alix / rel) in lg.versions.get(lrel, ())
+    tl = lg.last.get(lrel) if lite_ok else None
+    if rel in ag.edited:
+        return not (had and tl is not None and (alix / rel).stat().st_mtime < tl)
+    if not lite_ok or had:
+        return False
+    ta = ag.last.get(rel)
+    return ta is not None and (tl is None or ta > tl)
 
 
 def _tasks():
@@ -96,7 +189,7 @@ def _task_files(root: Path, names) -> set:
 class FileState:
     path: str              # its path in ALIX
     state: str             # same | alix | lite | conflict | new_alix | new_lite | gone_alix | gone_lite | manifest
-    alix: str | None = None
+    alix: str | None = None             # | alix_behind | missing_alix | old_alix | missing_lite (ALIX's checkout older)
     lite: str | None = None
     base: str | None = None
 
@@ -104,8 +197,17 @@ class FileState:
         return {"same": "the same", "alix": "changed in ALIX: pull", "lite": "changed in Lite: push",
                 "conflict": "changed in both: a person decides (pull --take alix, or push --take lite)",
                 "new_alix": "new in ALIX for one of Lite's tasks: pull", "new_lite": "in Lite only: push",
-                "gone_alix": "removed in ALIX: pull removes Lite's copy", "gone_lite": "removed from Lite: pull restores it",
-                "manifest": "the same on both sides, the manifest's record behind: pull records it"}[self.state]
+                "gone_alix": "removed in ALIX: pull removes Lite's copy (Lite's start keeps it)",
+                "gone_lite": "removed from Lite: pull restores it",
+                "manifest": "the same on both sides, the manifest's record behind: pull records it",
+                "alix_behind": "ALIX's copy here is older than Lite's: Lite keeps its own (git pull in ALIX brings it level)",
+                "missing_alix": "not in ALIX's checkout here (an older one): Lite keeps its own",
+                "old_alix": "in ALIX here only, older than Lite's copies: not taken",
+                "missing_lite": "missing from Lite's folder: `git restore vendor` brings Lite's own back"}[self.state]
+
+
+#: the states of an ALIX checkout older than Lite's copies: nothing is done, either side
+BEHIND = ("alix_behind", "missing_alix", "old_alix")
 
 
 @dataclass
@@ -119,19 +221,31 @@ class Report:
     def in_sync(self) -> bool:
         return not self.files and not any(lv == "error" for lv, _, _ in self.checks)
 
-    def lines(self) -> list:
+    def lines(self, brief: bool = False) -> list:
+        """What differs and what the checks found; ``brief`` (Lite's start): an older ALIX checkout's files in one line."""
         out = []
         if self.alix is None:
             out.append("ALIX's checkout is not on this computer (LITE_ALIX_ROOT): only Lite's own copies are checked.")
         else:
             out.append(f"ALIX: {self.alix}; {self.same} lid and seat file(s) the same on both sides.")
+        behind = [f for f in self.files if f.state in BEHIND]
         for f in self.files:
-            out.append(f"  {f.state.upper():9s} {f.path}: {f.words()}")
+            if not (brief and f in behind):
+                out.append(f"  {f.state.upper():9s} {f.path}: {f.words()}")
+        if brief and behind:
+            n = {s: sum(1 for f in behind if f.state == s) for s in BEHIND}
+            out.append(f"  ALIX's checkout here is older than Lite's copies ({n['alix_behind']} file(s) older, "
+                       f"{n['missing_alix'] + n['old_alix']} Lite's alone): Lite runs its own and writes nothing in "
+                       "either (git pull in ALIX brings it level)")
         for lv, where, text in self.checks:
             out.append(f"  {lv.upper():9s} {where}: {text}")
         errors = sum(1 for lv, _, _ in self.checks if lv == "error")
-        out.append("IN SYNC" if self.in_sync else "NOT IN SYNC" if self.files else
-                   f"THE SAME FILES ON BOTH SIDES; {errors} plan error(s) above: re-plan in ALIX (then Lite links it)")
+        out.append("IN SYNC" if self.in_sync else
+                   "LITE'S COPIES NEWER: ALIX's checkout here is behind (Lite runs its own)"
+                   if self.files and len(behind) == len(self.files) and not errors else "NOT IN SYNC" if self.files else
+                   f"THE SAME FILES ON BOTH SIDES; {errors} plan error(s) above: " +
+                   ("Lite's folder first (`git restore vendor`)" if any(w == "Lite git" and lv == "warn" for lv, w, _ in self.checks)
+                    else "re-plan in ALIX (then Lite links it)"))
         return out
 
 
@@ -148,9 +262,10 @@ def file_states(alix: Path, lite: Path = LITE) -> tuple[list, int]:
         if d.startswith(VENDOR + "/") and _ours(d[len(VENDOR) + 1:]):
             base[d[len(VENDOR) + 1:]] = f.get("sha256_after_patch") or f["sha256"]
     names = list(_tasks())
-    paths = set(base) | _task_files(alix, names) | _task_files(lite / VENDOR, names)
+    paths = sorted(set(base) | _task_files(alix, names) | _task_files(lite / VENDOR, names))
+    ag, lg = _git(alix, paths), _git(lite, [f"{VENDOR}/{rel}" for rel in paths])
     out, same = [], 0
-    for rel in sorted(paths):
+    for rel in paths:
         a, li, b = _sha(alix / rel), _sha(lite / VENDOR / rel), base.get(rel)
         if a is not None and a == li:
             if a == b:
@@ -158,16 +273,17 @@ def file_states(alix: Path, lite: Path = LITE) -> tuple[list, int]:
             else:
                 out.append(FileState(rel, "manifest", a, li, b))
             continue
+        newer = a is not None and _alix_newer(rel, alix, ag, lg)
         if b is None:
-            state = "new_alix" if li is None else "new_lite" if a is None else "conflict"
+            state = ("new_alix" if newer else "old_alix") if li is None else "new_lite" if a is None else "conflict"
         elif a is None and li is None:
             continue                                           # gone from both: the manifest's line is dropped by pull
-        elif a is None:
-            state = "gone_alix" if li == b else "conflict"
+        elif a is None:                                        # removed only when ALIX's checkout says so
+            state = "conflict" if li != b else "gone_alix" if ag is None or rel in ag.deleted else "missing_alix"
         elif li is None:
-            state = "gone_lite" if a == b else "conflict"
+            state = "gone_lite" if a == b else "alix" if newer else "missing_lite"
         elif li == b:
-            state = "alix"
+            state = "alix" if newer else "alix_behind"
         elif a == b:
             state = "lite"
         else:
@@ -527,13 +643,21 @@ def status(alix: Path | None = None, lite: Path = LITE, deep: bool = True) -> Re
     rep.checks += registry_checks(lite, alix)
     if deep:
         rep.checks += plan_checks(lite / VENDOR, "Lite")
-        if alix is not None and any(f.state not in ("same", "manifest") for f in rep.files):
+        if alix is not None and any(f.state in ("alix", "new_alix", "conflict") for f in rep.files):
             rep.checks += [r for r in plan_checks(alix, "ALIX") if r not in rep.checks]   # what a pull would bring
     if alix is not None:
         mine = sorted(_task_files(alix, list(_tasks())))
         loose = _uncommitted(alix, mine)
         if loose:
             rep.checks.append(("note", "ALIX git", f"{len(loose)} of the plan files Lite runs are not committed in ALIX"))
+    lg = _git(lite, [f"{VENDOR}/{p.rstrip('/')}" for p in PREFIXES], ignored=False)   # Lite's folder against its commit
+    if lg is not None and lg.deleted:
+        rep.checks.append(("warn", "Lite git", f"{len(lg.deleted)} lid and seat file(s) removed from Lite's folder (Lite's "
+                                               "commit has them): `git restore vendor` brings them back"))
+    if lg is not None and lg.edited:
+        rep.checks.append(("note", "Lite git", f"{len(lg.edited)} lid and seat file(s) in Lite's folder differ from Lite's "
+                                               "commit: ALIX's newer copies (commit them in Lite) or, where ALIX's "
+                                               "checkout is older, `git restore vendor` brings Lite's own back"))
     return rep
 
 
@@ -553,18 +677,21 @@ def _record(lite: Path, alix: Path, rel: str, gone: bool = False) -> None:
     path.write_text(json.dumps(man, indent=2), encoding="utf-8")
 
 
-def pull(alix: Path, lite: Path = LITE, take_alix: bool = False, dry_run: bool = False) -> list:
-    """ALIX -> Lite: every file changed or new in ALIX (with ``take_alix`` the conflicts too), the ones removed in ALIX
-    removed from Lite, the ones removed from Lite restored, the manifest's record brought up. [(path, what was done)]."""
+def pull(alix: Path, lite: Path = LITE, take_alix: bool = False, dry_run: bool = False, remove: bool = True) -> list:
+    """ALIX -> Lite: every file ALIX has newer (changed or new there, ``_alix_newer``), with ``take_alix`` the conflicts
+    and an older ALIX checkout's copies too; the ones removed in ALIX removed from Lite (not with ``remove`` False, as
+    Lite's start links them: said only), the ones removed from Lite restored when ALIX's is the recorded one, the
+    manifest's record brought up. A file an older ALIX checkout lacks is never removed. [(path, what was done)]."""
     states, _ = file_states(alix, lite)
+    take = {"alix", "new_alix", "manifest", "gone_lite"} | ({"gone_alix"} if remove else set())
+    if take_alix:
+        take |= {"conflict", "alix_behind", "old_alix", "missing_lite"}
     done = []
     for f in states:
-        if f.state == "conflict" and not take_alix:
-            continue
-        if f.state in ("lite", "new_lite"):
+        if f.state not in take:
             continue
         dst = lite / VENDOR / f.path
-        if f.state == "gone_alix" or (f.state == "conflict" and f.alix is None):
+        if f.alix is None:
             if not dry_run:
                 dst.unlink(missing_ok=True)
                 _record(lite, alix, f.path, gone=True)
@@ -584,12 +711,14 @@ def pull(alix: Path, lite: Path = LITE, take_alix: bool = False, dry_run: bool =
 
 
 def push(alix: Path, lite: Path = LITE, take_lite: bool = False, dry_run: bool = False) -> list:
-    """Lite -> ALIX: every file changed in Lite or in Lite only (with ``take_lite`` the conflicts too), the manifest's
-    record brought up. Nothing is removed from ALIX (a file removed from Lite is said; pull restores it). [(path, what)]."""
+    """Lite -> ALIX: every file changed in Lite or in Lite only (with ``take_lite`` the conflicts too, and Lite's newer
+    copies into an older ALIX checkout), the manifest's record brought up. Nothing is removed from ALIX (a file removed
+    from Lite is said; pull restores it). [(path, what)]."""
     states, _ = file_states(alix, lite)
+    take = {"lite", "new_lite"} | ({"conflict", "alix_behind", "missing_alix"} if take_lite else set())
     done = []
     for f in states:
-        if f.state not in ("lite", "new_lite") and not (take_lite and f.state == "conflict" and f.lite is not None):
+        if f.state not in take or f.lite is None:
             continue
         if not dry_run:
             dst = alix / f.path
@@ -600,12 +729,13 @@ def push(alix: Path, lite: Path = LITE, take_lite: bool = False, dry_run: bool =
     return done
 
 
-def link(alix: Path | None = None, lite: Path = LITE) -> tuple[list, list]:
+def link(alix: Path | None = None, lite: Path = LITE, dry_run: bool = False) -> tuple[list, list]:
     """Both ways at once, so a change on either side is the other's too (the user, 29 Oct: "make sure the lite and alix
-    ws files are linked"): what changed only in ALIX pulled into Lite, what changed only in Lite pushed into ALIX; a file
-    changed on both sides is left for a person (FileState conflict: pull --take-alix or push --take-lite). Lite runs it
-    at every start where ALIX's checkout is on the computer (none at the lab: nothing done). (pulled, pushed)."""
+    ws files are linked"): what ALIX has newer pulled into Lite, what changed only in Lite pushed into ALIX; a file
+    changed on both sides is left for a person (FileState conflict: pull --take-alix or push --take-lite), and so is a
+    removal. An ALIX checkout older than Lite's copies (the lab's) is left as it is and Lite keeps its own. Lite runs it
+    at every start where ALIX's checkout is on the computer. (pulled, pushed)."""
     alix = alix if alix is not None else alix_root()
     if alix is None:
         return [], []
-    return pull(alix, lite), push(alix, lite)
+    return pull(alix, lite, dry_run=dry_run, remove=False), push(alix, lite, dry_run=dry_run)

@@ -6,6 +6,7 @@ import copy
 import json
 import os
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -58,6 +59,50 @@ def test_link_pulls_what_alix_changed_and_pushes_what_lite_changed(tmp_path):
     (alix / cfg).write_text("# ALIX's\n")
     (lite / alix_sync.VENDOR / cfg).write_text("# Lite's\n")
     assert alix_sync.link(alix, lite) == ([], []) and [f.state for f in alix_sync.file_states(alix, lite)[0]] == ["conflict"]
+
+
+def _git(root, *args, date=None):
+    env = dict(os.environ, GIT_AUTHOR_DATE=date or "", GIT_COMMITTER_DATE=date or "")
+    subprocess.run(["git", "-C", str(root), "-c", "user.name=t", "-c", "user.email=t@t", *args], check=True,
+                   capture_output=True, env={k: v for k, v in env.items() if v})
+
+
+def test_an_older_alix_checkout_is_left_as_it_is_and_lite_keeps_its_own(tmp_path):
+    """The lab, 29 Oct: its ALIX checkout at ALIX's commit of 24 Oct (the later ones not pushed), Lite's copies newer and
+    the closings ALIX lacks. Lite's start took ALIX's older copies and removed the closings; now nothing is written
+    either side. An edit not committed in ALIX, or a commit there newer than Lite's, is still pulled; a file removed
+    in ALIX's checkout is said and removed only by a pull run by hand."""
+    alix, lite = _two_sides(tmp_path)
+    cfg, only = f"{CONFIGS}/lid_close.yaml", f"{PLANS}/lid_close_toppra.g1.txt"
+    (alix / only).unlink()                                                   # never in this ALIX checkout
+    for root in (alix, lite):
+        _git(root, "init", "-q")
+        _git(root, "add", "-A")
+        _git(root, "commit", "-qm", "24 Oct", date="2026-10-24T12:00:00")
+    (lite / alix_sync.VENDOR / cfg).write_text((alix / cfg).read_text() + "\n# Lite's newer\n")   # Lite moved on
+    alix_sync._record(lite, alix, cfg)
+    _git(lite, "commit", "-qam", "29 Oct", date="2026-10-29T02:00:00")
+    lite_cfg, alix_cfg = (lite / alix_sync.VENDOR / cfg).read_text(), (alix / cfg).read_text()
+    assert alix_sync.link(alix, lite) == ([], [])
+    assert {f.path: f.state for f in alix_sync.file_states(alix, lite)[0]} == {cfg: "alix_behind", only: "missing_alix"}
+    assert (lite / alix_sync.VENDOR / cfg).read_text() == lite_cfg and (lite / alix_sync.VENDOR / only).is_file()
+    assert (alix / cfg).read_text() == alix_cfg                                       # nor ALIX's
+    lines = alix_sync.status(alix, lite, deep=False).lines(brief=True)
+    assert any("older than Lite's copies (1 file(s) older, 1 Lite's alone)" in x for x in lines), lines
+    (alix / cfg).write_text("# the owner's edit, not committed\n")                   # an edit in ALIX's checkout
+    os.utime(alix / cfg, (1793318400, 1793318400))                                    # 30 Oct, after Lite's commit
+    assert [p for p, _ in alix_sync.link(alix, lite)[0]] == [cfg]
+    _git(lite, "commit", "-qam", "30 Oct", date="2026-10-30T01:00:00")
+    (alix / cfg).write_text("# the owner's commit of 31 Oct\n")                       # a commit in ALIX newer than Lite's
+    _git(alix, "commit", "-qam", "31 Oct", date="2026-10-31T01:00:00")
+    assert [p for p, _ in alix_sync.link(alix, lite)[0]] == [cfg]
+    assert (lite / alix_sync.VENDOR / cfg).read_text() == "# the owner's commit of 31 Oct\n"
+    _git(lite, "commit", "-qam", "31 Oct", date="2026-10-31T02:00:00")
+    gone = f"{PLANS}/lid_close_toppra.g0.txt"
+    (alix / gone).unlink()                                                            # removed in ALIX's checkout
+    assert alix_sync.link(alix, lite) == ([], []) and (lite / alix_sync.VENDOR / gone).is_file()
+    assert [(f.path, f.state) for f in alix_sync.file_states(alix, lite)[0]] == [(gone, "gone_alix"), (only, "missing_alix")]
+    assert [p for p, _ in alix_sync.pull(alix, lite)] == [gone] and not (lite / alix_sync.VENDOR / gone).exists()
 
 
 def _two_sides(tmp_path):

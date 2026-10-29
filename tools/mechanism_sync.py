@@ -3,7 +3,7 @@
 
     python3 tools/mechanism_sync.py                  # status: what differs, which side changed it, the plans' checks
     python3 tools/mechanism_sync.py link             # both ways at once, as every Lite start does (pull, then push)
-    python3 tools/mechanism_sync.py pull             # ALIX -> Lite: what changed (or is new) in ALIX
+    python3 tools/mechanism_sync.py pull             # ALIX -> Lite: what ALIX has newer (git says which is newer)
     python3 tools/mechanism_sync.py push             # Lite -> ALIX: what changed in Lite (the owner commits ALIX)
     python3 tools/mechanism_sync.py pull --take-alix # a file changed on both sides: ALIX's kept
     python3 tools/mechanism_sync.py push --take-lite # ... Lite's kept
@@ -39,7 +39,7 @@ def main() -> int:
         print("ALIX's checkout is not on this computer: pass --alix PATH or set LITE_ALIX_ROOT.")
         return 2
     if args.what == "link":
-        pulled, pushed = (alix_sync.pull(alix, dry_run=args.dry_run), alix_sync.push(alix, dry_run=args.dry_run))
+        pulled, pushed = alix_sync.link(alix, dry_run=args.dry_run)
         for path, what in pulled + pushed:
             print(f"  {'would be ' if args.dry_run else ''}{what}: {path}")
         print(f"{len(pulled)} file(s) pulled, {len(pushed)} pushed" + (" (commit those in ALIX)" if pushed and not args.dry_run else ""))

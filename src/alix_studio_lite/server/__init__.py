@@ -404,7 +404,7 @@ def main(argv=None) -> int:
                 print(f"Lid and seat: {len(pushed)} file(s) copied into ALIX: commit them there", flush=True)
             rep = alix_sync.status(deep=True)
             if not rep.in_sync:
-                for line in rep.lines()[1:-1]:
+                for line in rep.lines(brief=True)[1:-1]:      # an older ALIX checkout (the lab's): one line
                     print(f"Lid and seat: {line.strip()}", flush=True)
     except Exception as exc:                                                        # noqa: BLE001 - a note, never a stop
         print(f"Lid and seat: not linked with ALIX's ({type(exc).__name__}: {exc})", flush=True)
