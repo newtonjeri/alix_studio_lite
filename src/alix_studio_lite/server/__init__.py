@@ -396,7 +396,7 @@ def main(argv=None) -> int:
     try:                                  # the lid and seat files linked with ALIX's, where its checkout is on this computer
         from . import alix_sync          # (28 Oct; both ways at every start since 29 Oct: alix_sync.link)
 
-        if alix_sync.alix_root() is not None:
+        if alix_sync.alix_root() is not None and os.environ.get("LITE_START_LINK") != "0":   # 0: the tests' servers
             pulled, pushed = alix_sync.link()
             for path, what in pulled + pushed:
                 print(f"Lid and seat: {what}: {path}", flush=True)

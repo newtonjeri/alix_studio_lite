@@ -1942,6 +1942,9 @@ def run(robot, name: str, mode: str | None = None):
             raise UserError(f"{plan.title} uses both arms: the {' and '.join(gone)} arm is not linked to its controller.",
                             "Connect both arms, then run it again.")
         if mode == "real" and all(linked.values()):
+            from . import contact_sim
+
+            contact_sim.gate(name, job)              # the hands' contact forces (the owner, 29 Oct): refused from 40 N
             k = kit(robot)
             camera_required(robot)                   # again: it may have been unplugged since
             joints_cool(robot)

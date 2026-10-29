@@ -13,6 +13,9 @@ os.environ.pop("ALIX_REPO_ROOT", None)          # vendor_paths forces its own va
 # tests start). Every step is still taken; a 15 s program plays in 1.5 s.
 os.environ.setdefault("LITE_STANDIN_TIME_SCALE", "10")
 os.environ.setdefault("RM_EMU_TIME_SCALE", "10")
+# The servers the tests start do not link Lite's lid and seat files with ALIX's at their start (alix_sync.link): they
+# would copy a change the owner is making in ALIX into this repository in the middle of the suite.
+os.environ["LITE_START_LINK"] = "0"
 
 from alix_studio_lite import vendor_paths  # noqa: E402
 

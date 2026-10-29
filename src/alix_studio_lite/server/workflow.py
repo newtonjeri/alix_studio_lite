@@ -1935,7 +1935,8 @@ def simulate(app, units, mode: str, pick: dict | None):
         for t0, t1, title, end in spans:
             findings.append(dict(level="note", side=None, row=None, text=f"{title} ({t0:.1f}-{t1:.1f} s) is ALIX's plan: its "
                                  "hands hold the lid and the seat by design, so it is left out of this collision check (ALIX's "
-                                 "planner checked it with the commode's contact allowances); its camera checks are assumed "
+                                 "planner allows the hands on the commode; a closing's contact forces are checked on their own, "
+                                 "in the finding about them); its camera checks are assumed "
                                  "here, and asked of the camera in Real."
                                  + (f" Each arm's move to its next task's start after it ({t1:.1f}-{end:.1f} s) is Lite's own, "
                                     "checked here." if end > t1 + 1e-6 else "")))
@@ -1948,6 +1949,8 @@ def simulate(app, units, mode: str, pick: dict | None):
         job.check()
         for e in check["events"]:                         # where in the sequence: each arm's row and line then
             e["at"] = [_where(acts[s], e["first_t"]) for s in (ARMS if "both" in e["sides"] else e["sides"]) if s in acts]
+        contact = _contact_checks(stages, acts, times, arms, base, scene, units.fixture, cub, job)
+        findings.extend(dict(level=c["level"], side=None, row=None, kind="contact", text=c["text"]) for c in contact)
         drift = _drift(dict(run, start=starts, md_of=md_of), lambda lam: make_sims(lam, []), overall, acts, base, job) \
             if run["mode"] == "both" else dict(timings=0, band_s=0.0, events=[], findings=[])
         findings.extend(drift.pop("findings"))
@@ -1960,7 +1963,7 @@ def simulate(app, units, mode: str, pick: dict | None):
         out = dict(made=time.strftime("%Y-%m-%d %H:%M:%S"), hash=digest(ident), identity=ident, completed=False,
                    mode=run["mode"], pick=run["pick"], overall=overall, counts=run["counts"], stages=stages,
                    total_s=round(total, 3), acts=acts, start=starts, start_from=start_how,
-                   findings=findings, collisions=check, drift=drift, scene=scene, phases=changes,
+                   findings=findings, collisions=check, contact=contact, drift=drift, scene=scene, phases=changes,
                    programs={s: {str(k): {kk: v.get(kk) for kk in ("name", "sent", "file_name", "region", "gone", "lines", "seconds")}
                                  for k, v in programs[s].items()} for s in ARMS},
                    points={s: (points[s] or {}).get("read") for s in ARMS})
@@ -1976,6 +1979,75 @@ def simulate(app, units, mode: str, pick: dict | None):
         return out
 
     return app.jobs.start("simulate", f"S2 simulation ({'both arms' if mode == 'both' else mode.upper() + ' arm'})", work)
+
+
+def _entry_ends(task: str, acts: dict) -> dict:
+    """{plan entry: when it ends on the run's clock}: each stream of the task's plan in the simulation, a joined one by its
+    members' first lines (mechanism.joined_moves, as the simulation joined them)."""
+    from . import mechanism
+
+    plan = mechanism.cached(mechanism.sequence_plan(task))
+    entries, _dropped = mechanism.without_start_checks(list(plan.entries))
+    pos = {e.i: k for k, e in enumerate(entries)}
+    out = {}
+    for side_acts in acts.values():
+        for a in side_acts:
+            f = str(a.get("file") or "").split(":")
+            if a.get("kind") != "stream" or f[:2] != ["mechanism", plan.name] or "back" in f or int(f[2]) not in pos:
+                continue
+            k = pos[int(f[2])]
+            je, used = mechanism.joined_moves(entries, k)
+            covered, t0 = entries[k:k + used], float(a.get("traj_t0", a["t0"]))
+            starts = [line * mechanism.CLOCK_S for _, line in (je.members or [])]
+            group, prev = [], None
+            for x in covered:
+                if prev is not None and x.rows and all(r == prev.rows[-1] for r in x.rows):
+                    out[x.i] = float(a["t1"])          # a one-point move to where the stream already is
+                    continue
+                group.append(x)
+                prev = x
+            for m, x in enumerate(group):
+                out[x.i] = t0 + starts[m + 1] if m + 1 < len(starts) else float(a["t1"])
+    return out
+
+
+def _contact_checks(stages: list, acts: dict, times, arms: dict, base: dict, scene: dict, fid: str, cub: int, job) -> list:
+    """Each lid or seat closing of the run through contact_sim on the run's clock (both arms as the simulation has them,
+    the room's wall and the UGV's offset): its result with ``text`` (the finding) and ``level`` (stop from
+    contact_sim.STOP_N: Real refuses it). LITE_CONTACT_CHECK=0 leaves it out (a test harness only)."""
+    import os
+
+    import numpy as np
+
+    from . import contact_sim, workers
+
+    if os.environ.get("LITE_CONTACT_CHECK") == "0":
+        return []
+    out, T = [], np.asarray(times, dtype=float)
+    rows = [r for r in stages if r["kind"] == "mechanism" and contact_sim.task_part(r.get("task"))
+            and r.get("t1_plan", r["t1"]) - r["t0"] > 1e-6]
+    for n, row in enumerate(rows):
+        t0, t1 = row["t0"], row.get("t1_plan", row["t1"])
+        title = row.get("task_title") or row["title"]
+        job.progress(f"Checking the contact forces of {title}", 3, 4)
+        idx = np.nonzero((T >= t0 - 1e-9) & (T <= t1 + 1e-9))[0]
+        sub = {s: {k: [arms[s][k][i] for i in idx] for k in ("pole", "hand", "q")} for s in arms}
+        ends = _entry_ends(row["task"], acts)
+        updates = [(ends[i], deg) for i, deg in contact_sim.fixture_updates(row["task"]) if i in ends]
+        fut = workers.pool().submit(contact_sim.simulate, row["task"], T[idx].tolist(), sub, base, fid, scene.get("back_mm"),
+                                    list(scene.get("offset_m") or [0.0, 0.0])[:2], cub, updates)
+        while not fut.done():                         # STOP is heard while it checks
+            job.sleep(0.2)
+        res = fut.result()
+        job.check()
+
+        def at(t, side, acts=acts, title=title):
+            w = _where(acts.get(side) or [], t) or {}
+            return str(w.get("text") or "").replace(f"{title}: ", "")
+
+        res.update(index=row["index"], title=title, t0=t0, t1=t1, text=contact_sim.words(res, title, at))
+        out.append(res)
+    return out
 
 
 def _where(acts: list[dict], t: float) -> dict | None:
@@ -2408,7 +2480,11 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
         mechanism.joints_cool(robot)                          # and no joint hot (the owner, 26 Oct)
     # a Program at another pole or hand than its own is never run (the owner, 21 Oct): not a question, a stop. Lite sets
     # each Program's own before it (own_stages, 24 Oct), so only a simulation made before that can still hold one
-    stops = [f["text"] for f in sim["findings"] if f["level"] == "stop"] if simulated else []
+    contact = [f["text"] for f in sim["findings"] if f["level"] == "stop" and f.get("kind") == "contact"] if simulated else []
+    if contact:                                   # the hands would press the lid or the seat too hard (the owner, 29 Oct)
+        raise UserError("Not run: " + " ".join(contact), "Edit the lid or seat path in ALIX so the hands press less (tools/"
+                        "contact_check.py says by how much before re-planning), re-plan it, then simulate again.", code="contact")
+    stops = [f["text"] for f in sim["findings"] if f["level"] == "stop" and f.get("kind") != "contact"] if simulated else []
     if stops:
         raise UserError("Not run: " + " ".join(stops), "Each Program runs with the pole and hand it was taught with: "
                         "simulate again, then run it.", code="stage")

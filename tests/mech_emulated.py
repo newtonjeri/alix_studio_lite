@@ -1,6 +1,7 @@
 """A Lite started on ALIX's emulated arms for the lid and seat tests (tests/emulated_lite.py): its own port, data folder
 and camera script (LITE_CHECK_SCRIPT, a test harness only), logged in, both arms connected, Real mode. Each test file
-starts one of its own, so the files run on separate workers (pytest -n, one file per worker)."""
+starts one of its own, so the files run on separate workers (pytest -n, one file per worker). The closings' contact
+check (contact_sim) is off unless asked (``contact``): these files run the plans through, test_contact_sim checks them."""
 import json
 import os
 import socket
@@ -16,7 +17,7 @@ PID = "alix_lid"
 P = f"/api/projects/{PID}"
 
 
-def start(tmp_path_factory, name: str, answers: list):
+def start(tmp_path_factory, name: str, answers: list, contact: bool = False):
     """Start Lite; returns (ctx, proc). ``answers`` are the camera script's first answers, in order."""
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -24,7 +25,7 @@ def start(tmp_path_factory, name: str, answers: list):
     data = tmp_path_factory.mktemp(name)
     script = data / "answers.json"
     script.write_text(json.dumps(list(answers)))
-    env = dict(os.environ, LITE_CHECK_SCRIPT=str(script))
+    env = dict(os.environ, LITE_CHECK_SCRIPT=str(script), LITE_CONTACT_CHECK="1" if contact else "0")
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
                              "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"),
                              "--projects", str(data / "projects")],
