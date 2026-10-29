@@ -23,10 +23,11 @@ The model (quasi-static, both arms on the run's clock):
   balance falls toward it and stops where a hand holds it, and that is said (29 Oct: the right's release did not let the
   lid down).
 
-Calibrated on the 29 Oct run (the plan alone through this model, against the wrist sensors' change): the left's start
-42 N (66 measured), its pull 40 to 126 N (50 to 90), the right's way up 76 to 148 N at 0.53 to 0.93 s after its release
-began (51 to 100 N at 0.6 to 1.0 s), the hold 10 N (6 to 8). The force moves about GLOVE_N_PER_MM for every millimetre
-the commode stands off its place, so ``simulate`` takes a placement shift.
+Calibrated on both closings the lab ran on 29 Oct (CALIBRATION, LAB_SHIFT_MM): with the commode where the arms met it
+that day, 20 mm further, 5 mm to the left and 10 mm lower than ALIX's place, and the glove at 3.5 N/mm, the model reads
+the five contacts measured within about a quarter. The force moves about GLOVE_N_PER_MM for every millimetre the
+commode stands off, so ``simulate`` takes a placement shift and a path is made to hold within about 10 mm of it. The model
+does not follow a finger hooking the seat's opening: the seat's tip-over is the plan's config's word for it.
 
 FCL is not safe across threads: like collision_check, this runs in the worker process (workers.pool()).
 """
@@ -40,7 +41,15 @@ from pathlib import Path
 import numpy as np
 
 GLOVE_MM = 20.0                 #: the glove over the model's hand links (collision_check: a real contact comes 20 mm early)
-GLOVE_N_PER_MM = 5.0            #: its stiffness (29 Oct: the wrist sensors against this model)
+GLOVE_N_PER_MM = 3.5            #: its stiffness (calibrated: CALIBRATION)
+LAB_SHIFT_MM = (20.0, 5.0, -10.0)   #: the commode as the arms met it at the lab on 29 Oct, off ALIX's nominal place (x away
+                                    #: from the robot, y to the left, z up; the room's own offset added): CALIBRATION
+#: The 29 Oct runs of both closings (the plans the lab ran, the wrist sensors' change) against the model with the commode
+#: shifted by 0 to 20 mm in x, 0 to 5 in y, 0 to -10 in z: at 20, 5, -10 and 3.5 N/mm it reads the lid's start 50 N (66
+#: measured), its pull 103 (90), the right's way up 96 (100), the seat's start 75 (66), its carry 92 (81); at the nominal
+#: place it read 42 / 133 / 145 / 151 / 152 at 5 N/mm. The placement moves with the UGV's: a path is made to hold within
+#: about 10 mm of it (tools/contact_check.py --band 10).
+CALIBRATION = "29 Oct 2026, Close the lid 15:17:57 and Close the seat 15:15:49 / 15:17:09"
 PART_KG = {"lid": 1.2, "seat": 1.0}     #: assumed, not weighed yet
 G = 9.81
 WARN_N, STOP_N = 20.0, 40.0     #: the owner, 29 Oct: a sensible contact is a few newtons (the hold: 6 to 8 N)
@@ -301,7 +310,7 @@ def _fall(fx: Fixture, arms: _Arms, a0: float, target: float) -> float:
 
 
 def simulate(task: str, times, arms: dict, home: dict | None = None, fid: str = "commode_c", back_mm: float | None = None,
-             offset_m=(0.0, 0.0), cubicle_mm: int = 1400, updates=(), shift_mm=(0.0, 0.0, 0.0), start_deg: float | None = None,
+             offset_m=(0.0, 0.0), cubicle_mm: int = 1400, updates=(), shift_mm=None, start_deg: float | None = None,
              progress=None) -> dict:
     """The contact forces of ``task`` over ``times`` (s, ascending; thinned to SAMPLE_S): ``arms`` {side: {pole: [n] mm,
     hand: [n][6] counts, q: [n][7] deg}} on those times, ``home`` the robot's other joints, ``updates`` [(t, deg)] where
@@ -313,6 +322,7 @@ def simulate(task: str, times, arms: dict, home: dict | None = None, fid: str = 
     from . import staging
 
     t_start = time.monotonic()
+    shift_mm = LAB_SHIFT_MM if shift_mm is None else tuple(float(v) for v in shift_mm)
     fx = Fixture(task, fid, back_mm, offset_m, cubicle_mm, shift_mm)
     poser = _Arms(fx)
     home = dict(home if home is not None else default_home())
@@ -497,7 +507,7 @@ def plan_samples(task: str, plan=None, dt: float = SAMPLE_S) -> tuple:
     return times.tolist(), arms, ends
 
 
-def check_plan(task: str, back_mm: float | None = None, offset_m=(0.0, 0.0), shift_mm=(0.0, 0.0, 0.0), home=None,
+def check_plan(task: str, back_mm: float | None = None, offset_m=(0.0, 0.0), shift_mm=None, home=None,
                fid: str = "commode_c", cubicle_mm: int = 1400, progress=None, plan_path=None, cfg_path=None) -> dict:
     """``task``'s plan on its own clock through ``simulate`` (a task run on its own, and the plans' preview); ``plan_path``
     and ``cfg_path`` another plan of it and its config (a kept one: tests/data/contact)."""
@@ -542,7 +552,8 @@ def words(out: dict, title: str, at=None) -> str:
         text += (f" The {out['part']} does not come down to {h['want_deg']:g} deg where the plan's config puts it: held at "
                  f"{h['at_deg']:g} deg by the {h['side'].upper()} hand ({h['link']}) at {h['t']:.1f} s.")
     text += (f" A sensible contact takes a few newtons (the 29 Oct hold: 6 to 8 N); Lite refuses Real over {STOP_N:g} N for "
-             f"{SUSTAIN_S:g} s or more (here {out['over_stop_s']:g} s; model: glove {GLOVE_MM:g} mm at {GLOVE_N_PER_MM:g} N/mm, the {out['part']} {PART_KG[out['part']]:g} kg, "
+             f"{SUSTAIN_S:g} s or more (here {out['over_stop_s']:g} s; model: glove {GLOVE_MM:g} mm at {GLOVE_N_PER_MM:g} N/mm, the commode "
+             f"{out['shift_mm']} mm off ALIX's place, the {out['part']} {PART_KG[out['part']]:g} kg, "
              f"open to {out['open_deg']:g} deg" + (" at the wall" if out["wall"] else "") + ").")
     return text
 

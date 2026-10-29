@@ -191,7 +191,7 @@ def edited(task: str, cfg_path: Path, plan=None) -> tuple:
     return EditedPlan(plan, out, Path(cfg_path)), notes
 
 
-def check(task: str, cfg_path: Path, back_mm: float | None = None, shift_mm=(0.0, 0.0, 0.0), progress=None) -> dict:
+def check(task: str, cfg_path: Path, back_mm: float | None = None, shift_mm=None, progress=None) -> dict:
     """The contact forces of ``task`` with its moves following ``cfg_path`` (contact_sim.check_plan's, on the edited moves)."""
     from . import contact_sim
 
