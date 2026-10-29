@@ -95,3 +95,21 @@ def test_an_edited_config_is_previewed_before_it_is_re_planned(tmp_path):
         data["stage_sequence"].append({"stage": "move_to_rest", "arm": "left", "pose_name": "rest_pose", "planning_group": "rm75_arm_left"})
         moved.write_text(yaml.safe_dump(data))
         contact_preview.edited("lid_close", moved)
+
+
+def test_the_owner_accepts_one_plan_file_over_a_refusal(lab, monkeypatch):
+    """The owner, 29 Oct: Close the seat of 13:25 runs although it reads over the limit (the Inspire fingers fold when
+    pressed from their back); the acceptance is that file's, so a plan made again is checked again."""
+    import hashlib
+
+    plan = mechanism.cached("seat_close")
+    assert contact_sim.accepted("seat_close", plan.path)["made"] == plan.made          # the vendored plan is the accepted one
+    key = ("seat_close", hashlib.sha256(plan.path.read_bytes()).hexdigest())
+    monkeypatch.setitem(contact_sim._GATE, key, dict(lab, task="seat_close", level="stop"))
+    out = contact_sim.gate("seat_close")                                    # a stop, accepted: it runs, said
+    assert out["level"] == "warn" and "accepted by the owner" in contact_sim.accepted_words(out)
+    assert contact_sim.accept(dict(lab), "lid_close", DATA / "lid_close_toppra.json")["level"] == "stop"   # another file
+    monkeypatch.setenv("LITE_CONTACT_ACCEPTED", "0")
+    with pytest.raises(UserError):
+        contact_sim.gate("seat_close")
+

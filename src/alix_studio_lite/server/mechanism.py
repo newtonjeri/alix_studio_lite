@@ -1944,7 +1944,9 @@ def run(robot, name: str, mode: str | None = None):
         if mode == "real" and all(linked.values()):
             from . import contact_sim
 
-            contact_sim.gate(name, job)              # the hands' contact forces (the owner, 29 Oct): refused from 40 N
+            ok = contact_sim.gate(name, job)         # the hands' contact forces (the owner, 29 Oct): refused from 40 N
+            if ok and ok.get("accepted") and say:
+                say(f"{plan.title}: contact check over the limit ({ok['peak_n']:g} N)," + contact_sim.accepted_words(ok)[len(" Over the limit,"):])
             k = kit(robot)
             camera_required(robot)                   # again: it may have been unplugged since
             joints_cool(robot)

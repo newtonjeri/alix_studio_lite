@@ -62,6 +62,14 @@ STEP_DEG, FINE_DEG = 1.0, 0.125
 TASK_PART = {"lid_close": "lid", "seat_close": "seat"}
 OTHER = {"lid": "seat", "seat": "lid"}
 HELD_DEG = 2.0                  #: a part this far short of closed where the plan's config has it closed is said to be held
+#: Plans the owner accepted over a refusal, by their file's sha256 (a re-generated plan is checked again): {task: [{sha256,
+#: made, by, why}]}. LITE_CONTACT_ACCEPTED=0 leaves them out (a test harness only).
+ACCEPTED = {
+    "seat_close": [dict(sha256="c507f54f38c8451abcd22a3fa2c35c4944c5164ce5148babca9c3528f7d489a9", made="2026-10-29 13:25:41",
+                        by="the owner, 29 Oct",
+                        why="the Inspire fingers fold when pressed from their back, so the press the model reads (92 to 103 N "
+                            "for 4 s, rigid fingers) is not the robot's: run it, with the feed recorded")],
+}
 
 
 def task_part(task: str) -> str | None:
@@ -558,6 +566,30 @@ def words(out: dict, title: str, at=None) -> str:
     return text
 
 
+def accepted(task: str, plan_path) -> dict | None:
+    """The owner's acceptance of this very plan file (ACCEPTED), or None."""
+    import hashlib
+    import os
+
+    if os.environ.get("LITE_CONTACT_ACCEPTED") == "0" or task not in ACCEPTED:
+        return None
+    sha = hashlib.sha256(Path(plan_path).read_bytes()).hexdigest()
+    return next((a for a in ACCEPTED[task] if a["sha256"] == sha), None)
+
+
+def accept(out: dict, task: str, plan_path) -> dict:
+    """``out`` (simulate's) with the owner's acceptance of its plan applied: a stop runs as a warning, said."""
+    a = accepted(task, plan_path) if out.get("level") == "stop" else None
+    if a is None:
+        return out
+    return dict(out, level="warn", accepted=dict(a))
+
+
+def accepted_words(out: dict) -> str:
+    a = out.get("accepted")
+    return (f" Over the limit, but run: this plan ({a['made']}) was accepted by {a['by']} ({a['why']}).") if a else ""
+
+
 _GATE: dict = {}
 
 
@@ -585,7 +617,7 @@ def gate(task: str, job=None) -> dict | None:
             else:
                 time.sleep(0.2)
         _GATE[key] = fut.result()
-    out = _GATE[key]
+    out = accept(_GATE[key], task, plan.path)
     if out["level"] == "stop":
         at = lambda t, s, st=out["stages"]: stage_at(st, t, s)          # noqa: E731
         raise UserError("Not run: " + words(out, plan.title, at), "Edit the path in ALIX so the hands press less (tools/"

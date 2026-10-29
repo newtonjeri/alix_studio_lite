@@ -2019,7 +2019,7 @@ def _contact_checks(stages: list, acts: dict, times, arms: dict, base: dict, sce
 
     import numpy as np
 
-    from . import contact_sim, workers
+    from . import contact_sim, mechanism, workers
 
     if os.environ.get("LITE_CONTACT_CHECK") == "0":
         return []
@@ -2045,7 +2045,8 @@ def _contact_checks(stages: list, acts: dict, times, arms: dict, base: dict, sce
             w = _where(acts.get(side) or [], t) or {}
             return str(w.get("text") or "").replace(f"{title}: ", "")
 
-        res.update(index=row["index"], title=title, t0=t0, t1=t1, text=contact_sim.words(res, title, at))
+        res = contact_sim.accept(res, row["task"], mechanism.cached(mechanism.sequence_plan(row["task"])).path)
+        res.update(index=row["index"], title=title, t0=t0, t1=t1, text=contact_sim.words(res, title, at) + contact_sim.accepted_words(res))
         out.append(res)
     return out
 

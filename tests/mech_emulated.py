@@ -25,7 +25,8 @@ def start(tmp_path_factory, name: str, answers: list, contact: bool = False):
     data = tmp_path_factory.mktemp(name)
     script = data / "answers.json"
     script.write_text(json.dumps(list(answers)))
-    env = dict(os.environ, LITE_CHECK_SCRIPT=str(script), LITE_CONTACT_CHECK="1" if contact else "0")
+    env = dict(os.environ, LITE_CHECK_SCRIPT=str(script), LITE_CONTACT_CHECK="1" if contact else "0",
+               LITE_CONTACT_ACCEPTED="0")              # the owner's accepted plans left out: a refusal is a refusal here
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
                              "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"),
                              "--projects", str(data / "projects")],
