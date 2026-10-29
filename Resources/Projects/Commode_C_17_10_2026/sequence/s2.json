@@ -3,15 +3,15 @@
   {
    "type": "mechanism",
    "task": "seat_close",
-   "uid": "1e57283b"
+   "uid": "ce299ef2"
   }
  ],
  "right": [
   {
    "type": "mechanism",
    "task": "seat_close",
-   "uid": "552c4b78"
+   "uid": "9618ad21"
   }
  ],
- "updated": "2026-10-28 20:02:10"
+ "updated": "2026-10-29 19:14:16"
 }

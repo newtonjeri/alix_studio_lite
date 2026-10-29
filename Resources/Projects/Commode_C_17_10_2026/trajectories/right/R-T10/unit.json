@@ -1,0 +1,155 @@
+{
+ "setup": {
+  "pole_mm": 200.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 200 mm, hand open",
+  "hand_text": "open"
+ },
+ "applied": {
+  "hand": {
+   "pole_mm": 50.0,
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+   ],
+   "at": "2026-10-29 15:32:18"
+  },
+  "pole": {
+   "pole_mm": 200.0,
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+   ],
+   "at": "2026-10-29 15:32:30"
+  }
+ },
+ "active": "20261029_153303_R-T10.txt",
+ "settings": {
+  "optimiser": "toppra",
+  "target_s": 5.0,
+  "segments": [],
+  "smooth_window": 101,
+  "program_id": null,
+  "max_dev_mm": null,
+  "trim": true,
+  "smooth": true,
+  "scale": true,
+  "time_mode": "target",
+  "idle_window": 11,
+  "idle_threshold_md": 8.0,
+  "idle_min_run": 20
+ },
+ "history": [
+  {
+   "label": "Start",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   }
+  },
+  {
+   "label": "Time-optimal (TOPP-RA)",
+   "settings": {
+    "optimiser": "toppra",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1793259196.7543373
+  },
+  {
+   "label": "Total time",
+   "settings": {
+    "optimiser": "toppra",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "target",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1793259255.2162237
+  },
+  {
+   "label": "Manual tuning",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": 5.0,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "target",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1793259260.2249744
+  },
+  {
+   "label": "Time-optimal (TOPP-RA)",
+   "settings": {
+    "optimiser": "toppra",
+    "target_s": 5.0,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": null,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "target",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1793259264.3849738
+  }
+ ],
+ "cursor": 4
+}

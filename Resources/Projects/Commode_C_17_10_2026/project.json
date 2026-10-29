@@ -2,7 +2,7 @@
  "id": "alix_mvbvk1fk_zti6s",
  "name": "Commode_C_17_10_2026",
  "createdAt": "2026-10-17T04:06:33.536Z",
- "updatedAt": "2026-10-28T12:03:03.098Z",
+ "updatedAt": "2026-10-29T11:15:24.964Z",
  "archived": false,
  "state": {
   "currentView": "sequence",
@@ -13,7 +13,7 @@
    "left": true,
    "right": false
   },
-  "armSelectionLocked": false,
+  "armSelectionLocked": true,
   "completed": {
    "0": true,
    "2": true,
@@ -3367,25 +3367,25 @@
        "Thumb Bend": 150,
        "Thumb Rotate": 1000
       },
-      "startPose": "gp:L_HME_POS",
+      "startPose": "gp:L_R11_STP",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-23T04:20:35.401Z"
+      "savedAt": "2026-10-29T07:31:43.695Z"
      },
      "right": {
       "arm": "right",
-      "poleHeightMm": 50,
-      "handPreset": "Grip / Cleaning",
+      "poleHeightMm": 200,
+      "handPreset": "All Open",
       "handChannels": {
-       "Little": 0,
-       "Ring": 0,
-       "Middle": 0,
-       "Index": 0,
-       "Thumb Bend": 150,
+       "Little": 1000,
+       "Ring": 1000,
+       "Middle": 1000,
+       "Index": 1000,
+       "Thumb Bend": 1000,
        "Thumb Rotate": 1000
       },
       "startPose": "gp:R_T06_STP",
@@ -3395,7 +3395,7 @@
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-10-28T12:03:03.097Z"
+      "savedAt": "2026-10-29T11:15:24.963Z"
      }
     },
     "ugvPositionByArm": {
@@ -3412,13 +3412,13 @@
       "rightMm": null
      }
     },
-    "poleHeightMm": 50,
+    "poleHeightMm": 200,
     "handChannels": {
-     "Little": 0,
-     "Ring": 0,
-     "Middle": 0,
-     "Index": 0,
-     "Thumb Bend": 150,
+     "Little": 1000,
+     "Ring": 1000,
+     "Middle": 1000,
+     "Index": 1000,
+     "Thumb Bend": 1000,
      "Thumb Rotate": 1000
     },
     "leftStartPose": "gp:L_R11_STP",
@@ -3429,7 +3429,7 @@
     "leftApproved": true,
     "rightApproved": false,
     "completed": false,
-    "lastUpdated": "2026-10-28T12:03:03.097Z",
+    "lastUpdated": "2026-10-29T11:15:24.963Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -3440,7 +3440,7 @@
      "scaleRegions": [],
      "trimRegions": [],
      "activeTrajectoryName": "R_TASK_11B_trajectory.txt",
-     "activeTrajectoryRows": 10000,
+     "activeTrajectoryRows": 2317,
      "tuningApplied": false,
      "tuningSourceFileName": "R_TASK_11B_trajectory.txt",
      "tunedOutputFileName": null
@@ -4156,14 +4156,14 @@
    true
   ],
   "targetSec": 10,
-  "poleHeight": 50,
-  "handPreset": "Grip / Cleaning",
+  "poleHeight": 200,
+  "handPreset": "All Open",
   "handValues": [
-   0,
-   0,
-   0,
-   0,
-   150,
+   1000,
+   1000,
+   1000,
+   1000,
+   1000,
    1000
   ],
   "leftPose": "gp:L_R11_STP",
@@ -4172,7 +4172,7 @@
   "fileName": "R_TASK_11B_trajectory.txt",
   "activeTrajectorySource": "recorded",
   "activeTrajectoryName": "R_TASK_11B_trajectory.txt",
-  "activeTrajectoryRows": 10000,
+  "activeTrajectoryRows": 2317,
   "tuningApplied": false,
   "tunedOutputFileName": "",
   "tuningSourceFileName": "R_TASK_11B_trajectory.txt",
@@ -4459,7 +4459,7 @@
   "sequenceVisualConfirmed": false,
   "fullSimulationApproved": false,
   "elapsed": 0,
-  "savedAt": "2026-10-28T12:03:03.098Z"
+  "savedAt": "2026-10-29T11:15:24.964Z"
  },
  "lastSaveReason": "Workflow updated",
  "lite": {
