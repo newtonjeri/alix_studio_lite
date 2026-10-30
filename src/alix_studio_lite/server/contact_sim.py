@@ -73,7 +73,11 @@ ACCEPTED = {
                         by="the owner, 30 Oct",
                         why="the left's carry on the seat's arc, for a supervised lab run with the feed recorded: the model "
                             "reads 72 N for 2.2 s in the carry (13:25: 101 N for 3.9 s) and cannot follow a finger hooking "
-                            "the seat, so the lab measures what it presses")],
+                            "the seat, so the lab measures what it presses"),
+                   dict(sha256="c02bc5048120580f67c31c63fa8ed55e0f80d54686277a8a407138b8800211ba", made="2026-10-30 10:46:10",
+                        by="the owner, 30 Oct",
+                        why="the left's start 10 mm further in +y after the afternoon's lab runs, for a supervised lab run: "
+                            "the model (its commode placed as on 29 Oct) reads the hook at 47 to 77 N, the lab decides")],
 }
 
 
