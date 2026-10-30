@@ -493,17 +493,20 @@ class GapCheck:
         return (True, f"at {at}", at) if at else (False, f"not at any of {sorted(gate)}", "")
 
     # ── the check: ALIX's GapCheckSession.check, given what the node gives it
-    def ask(self, expect: str, frame: DepthFrame | None, q_deg=None, check_id: str | None = None) -> Answer:
+    def ask(self, expect: str, frame: DepthFrame | None, q_deg=None, check_id: str | None = None,
+            closing: bool = False) -> Answer:
         """``q_deg``: the right arm's joints (degrees) when read, the node's /joint_states: the named pose the
         registration belongs to, and the depth-state gate of the models' cross-check. ``check_id``: the check this frame
         belongs to (mechanism.RealExec.ask): the colour models are asked once a check, on its first frame that needs
         them, and that result cross-checks the check's later frames (27 Oct night: the models took 0.45 s of each
-        frame of the open check, 0.9 s a task, on frames 0.15 s apart at the same pose)."""
+        frame of the open check, 0.9 s a task, on frames 0.15 s apart at the same pose). ``closing``: a closing's
+        outcome check (mechanism.CLOSING_OUTCOME): the part within gap_closing_max_deg of closed counts as closed."""
         with self._lock:
             depth_ok, _why, at_pose = self.pose_gate(q_deg)
-            return self._ask(str(expect or ""), frame, at_pose, depth_ok, check_id)
+            return self._ask(str(expect or ""), frame, at_pose, depth_ok, check_id, closing)
 
-    def _ask(self, expect: str, frame: DepthFrame | None, at_pose: str, depth_ok: bool = True, check_id: str | None = None) -> Answer:
+    def _ask(self, expect: str, frame: DepthFrame | None, at_pose: str, depth_ok: bool = True, check_id: str | None = None,
+             closing: bool = False) -> Answer:
         p = self.p
         mode = "gap_check"
         response = Answer()
@@ -576,7 +579,8 @@ class GapCheck:
         models = self._models(frame, roll_tf, at_pose, depth_ok, check_id, reused) if frame.colour is not None else None
         decision = self.session.check(expect, depth, intrinsics, roll_tf, frame.hands or {}, at_pose=at_pose,
                                       source=source, frame=frame_name, models=models,
-                                      color_used=frame.colour is not None, color_note=colour_note)
+                                      color_used=frame.colour is not None, color_note=colour_note,
+                                      closed_within_deg=float(p.get("gap_closing_max_deg") or 0.0) if closing else 0.0)
         return answer(decision)
 
 

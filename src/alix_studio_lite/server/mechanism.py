@@ -123,6 +123,10 @@ PHASE_BEFORE = {"lid_open": "lid_closed", "seat_open": "lid_open", "seat_close":
 #: each state in the operator's words
 PHASE_WORDS = {"lid_closed": "the lid and the seat are down", "lid_open": "the lid is open and the seat down",
                "seat_open": "the lid and the seat are open"}
+#: each closing's outcome check (the owner, 30 Oct): the part within the closing allowance of closed counts as closed
+#: (perception.yaml gap_closing_max_deg; the camera may look while a soft-close seat is still settling). The openings'
+#: own "is it closed?" checks keep the plain rule.
+CLOSING_OUTCOME = {"seat_close": "seat_closed", "lid_close": "lid_closed"}
 
 
 def row_tasks(code: str) -> list:
@@ -978,7 +982,7 @@ class Runner:
             entries, dropped = without_start_checks(entries)
             for a in dropped:
                 self.say(f"{a.get('stage')}: not asked, the sequence's own order says {a.get('expect')} (the owner, 27 Oct)")
-        state = dict(relifts=0, skipped=False,
+        state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(name),
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
                                                         for s in plan.sides()) if first is not None))   # after the approach
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
@@ -1074,7 +1078,8 @@ class Runner:
                     self.checks.append(dict(check=label, expect=a.get("expect"), verdict="refused", why=why))
                     self.say(f"{label}: {why} — NOT {a.get('expect')} (fail-closed)", "error")
                     return a
-                answer = self.ex.ask(a, str(a.get("expect") or ""))
+                closing = state.get("closing") is not None and a.get("expect") == state.get("closing")
+                answer = self.ex.ask(dict(a, closing_outcome=True) if closing else a, str(a.get("expect") or ""))
                 if not answer.success:
                     self._cannot_judge(label, a.get("expect"), answer)
                 passed = lc.evaluate_fixture_check(a, answer)
@@ -1673,7 +1678,8 @@ class RealExec(_Exec):
         answers, verdict = [], lc.UNDECIDED
         check_id = f"{time.strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000) % 1000:03d}_{action.get('stage') or 'check'}"
         for k in range(most):
-            check = dict(check_id=check_id, stage=action.get("stage"), expect=expect, frame=k + 1)
+            check = dict(check_id=check_id, stage=action.get("stage"), expect=expect, frame=k + 1,
+                         closing=bool(action.get("closing_outcome")))
             if k < len(reuse):                      # the check before, at this pose: its frames judged for this expectation
                 frame, q = reuse[k]
                 got = self._judge(expect, frame, q, dict(check, reused=True))
@@ -1769,12 +1775,13 @@ class RealExec(_Exec):
 
     def _judge(self, expect, frame, q, check=None):
         """The gap check's answer on ``frame`` for ``expect``; a frame judged again (the check before's) carries this
-        check in its record."""
+        check in its record. A closing's outcome check (``check["closing"]``) asks with the closing allowance."""
         if frame is not None and check is not None and getattr(frame, "context", None) is not None:
             from dataclasses import replace
 
             frame = replace(frame, context=dict(frame.context, check=check))
-        return self.kit.gap.ask(expect, frame, q_deg=q, check_id=(check or {}).get("check_id"))
+        return self.kit.gap.ask(expect, frame, q_deg=q, check_id=(check or {}).get("check_id"),
+                                closing=bool((check or {}).get("closing")))
 
     def _reusable_frames(self) -> list:
         """The frames the check just before took, when nothing has moved since (move, approach and hold forget them)

@@ -217,7 +217,7 @@ class GapCheckSession:
 
     def check(self, asked: str, depth, intrinsics, camera_to_world, hands: dict | None = None, at_pose: str = "",
               source: str = "native depth", frame: str = "camera_depth_optical_frame", models=None,
-              color_used: bool = False, color_note: str = "") -> GapDecision:
+              color_used: bool = False, color_note: str = "", closed_within_deg: float = 0.0) -> GapDecision:
         """mode 'gap_check' (P20, 2026-10-05): is the lid / seat LIFTED?
 
         Geometry from depth, not a model. The central ROI of the depth frame is
@@ -240,10 +240,22 @@ class GapCheckSession:
         `camera_to_world` the 4x4 camera -> world_frame pose; `hands` {frame name: position in world_frame} of the
         gap_hand_frames the caller could place (a missing one is named); `at_pose` the named pose the camera is at
         ('' = any); `source` / `frame` name the depth stream; `models()` -> the colour models' fused result on this
-        moment's colour frame, or None when there is no colour frame."""
+        moment's colour frame, or None when there is no colour frame.
+
+        `closed_within_deg` (the owner, 2026-10-30): THE CLOSING ALLOWANCE. A closing's outcome check (asked
+        lid_closed / seat_closed) counts the part within this angle of closed as closed: the camera may look while a
+        soft-close seat is still settling (30 Oct 15:36 the seat read 20, 15, 10, 10, 10 deg over 1.4 s, the band
+        reading closed: five frames uncertain, the run stopped). The caller passes it for that check only
+        (perception.yaml gap_closing_max_deg); 0 is the plain rule, as every other question asks. Only the angle
+        readings widen: the fixture fit and the seat's hinge fit call a part lifted from this angle, and the lid's
+        centre ROI reading lifted (it cannot tell an angle) no longer contradicts a fit inside it. A ring or a lid gone
+        from its place (the rim, the bowl shows) is never closed."""
         asked = asked or ""
         part = "seat" if "seat" in asked.lower() else "lid"
         record_extra: dict = {}
+        allow = float(closed_within_deg or 0.0) if asked in ("seat_closed", "lid_closed") else 0.0
+        if allow > 0.0:
+            record_extra["closed_within_deg"] = allow
         depth = np.asarray(depth, dtype=np.float64)
         h, w = depth.shape
         hands = {str(k): np.asarray(v, dtype=np.float64)[:3] for k, v in (hands or {}).items()}
@@ -376,10 +388,10 @@ class GapCheckSession:
             # the comparison's answer; both agree -> kept; they conflict -> "uncertain" (no vote).
             band_state, band_conf = state, conf
             state, conf, seat_note = self._consult_seat_rise(state, conf, depth, intrinsics, camera_to_world, seat_hands,
-                                                             top, at_pose, record_extra)
+                                                             top, at_pose, record_extra, allow)
             # the seat's own state from this frame decides; the readings above cross-check it
             state, conf, fit_note = self._consult_seat_fit(state, conf, band_state, band_conf, depth, intrinsics,
-                                                           camera_to_world, seat_hands, registration, record_extra)
+                                                           camera_to_world, seat_hands, registration, record_extra, allow)
             seat_note = "; ".join(n for n in (fit_note, seat_note and f"vs its closed frame: {seat_note}") if n)
         else:
             closed_tol = float(self._p("gap_lid_closed_tol_m"))
@@ -469,7 +481,7 @@ class GapCheckSession:
                       + (f", {len(hands_missing)} missing" if hands_missing else "") + ")")
             # the lid's own state from the whole fixture decides; the centre-ROI reading above cross-checks it
             state, conf, lid_note = self._consult_lid_fit(state, conf, depth, intrinsics, camera_to_world, lid_hands,
-                                                          registration, record_extra)
+                                                          registration, record_extra, allow)
             if lid_note:
                 detail += f"; lid: {lid_note}"
         # THE MODELS' ANSWER beside the geometry's (Newton, 2026-10-08): the colour model
@@ -529,7 +541,8 @@ class GapCheckSession:
                                         "registration_pose": at_pose, "rise_m": rise, "roi_valid": coverage,
                                         "median_range_m": median_range, "message": message, "models": cross}))
 
-    def _seat_rise_params(self):
+    def _seat_rise_params(self, allow: float = 0.0):
+        """``allow``: the closing allowance (check's `closed_within_deg`): the hinge fit calls the seat lifted from it."""
         from alix_perception_core.seat_rise import SeatRiseParams
         p = self._p
         return SeatRiseParams(
@@ -538,7 +551,7 @@ class GapCheckSession:
             hand_mask_m=float(p("gap_hand_mask_m")), min_pixels=int(p("gap_seat_rise_min_px")),
             closed_change_m=float(p("gap_seat_rise_closed_m")), closed_frac=float(p("gap_seat_rise_closed_frac")),
             moved_m=float(p("gap_seat_rise_moved_m")), moved_frac=float(p("gap_seat_rise_moved_frac")),
-            min_deg=float(p("gap_seat_lift_min_deg")), hinge_tol_m=float(p("gap_seat_rise_hinge_tol_m")),
+            min_deg=max(float(p("gap_seat_lift_min_deg")), allow), hinge_tol_m=float(p("gap_seat_rise_hinge_tol_m")),
             down_frac=float(p("gap_seat_rise_down_frac")), max_age_s=float(p("gap_seat_ref_max_age_s")),
             lid_min_z_m=float(p("gap_seat_ref_lid_z")), lid_unchanged_m=float(p("gap_seat_ref_lid_m")),
             lid_unchanged_frac=float(p("gap_seat_ref_lid_frac")), lid_min_pixels=int(p("gap_seat_ref_lid_min_px")),
@@ -576,7 +589,7 @@ class GapCheckSession:
         return geo
 
     def _consult_seat_rise(self, band_state, band_conf, depth, intrinsics, camera_to_world, hands, seat_top, at_pose,
-                           record_extra) -> tuple:
+                           record_extra, allow: float = 0.0) -> tuple:
         """-> (state, confidence, note): the band reading combined with the comparison against the
         closed frame. Band refused -> the comparison's answer; both agree -> kept (the surer of the
         two confidences); conflict -> "uncertain"; no comparison answer -> the band reading stands."""
@@ -586,7 +599,7 @@ class GapCheckSession:
         ref = self._seat_refs.get(self._registration_key(at_pose))
         try:
             reading = sr.read_seat(ref, depth, camera_to_world, intrinsics, self._seat_geometry(), float(self.now()),
-                                   hands=list(hands.values()), params=self._seat_rise_params())
+                                   hands=list(hands.values()), params=self._seat_rise_params(allow))
         except Exception as exc:                                       # noqa: BLE001 — the band reading answers alone
             self.log.warn(f"gap_check: the seat comparison failed ({exc}); the band reading stands")
             record_extra["seat_rise"] = {"error": str(exc), "band_reading": band_state}
@@ -627,17 +640,20 @@ class GapCheckSession:
         return self._hinged or None
 
     def _consult_seat_fit(self, state, conf, band_state, band_conf, depth, intrinsics, camera_to_world, hands,
-                          registration, record_extra) -> tuple:
+                          registration, record_extra, allow: float = 0.0) -> tuple:
         """-> (state, confidence, note): the seat's own state from this frame (seat_state.fit_seat_state)
         decides when it answers; the band reading or the closed-frame comparison confidently saying the
-        opposite makes it "uncertain". No answer from it: the earlier readings stand as combined."""
+        opposite makes it "uncertain". No answer from it: the earlier readings stand as combined. ``allow``: the
+        closing allowance (check's `closed_within_deg`): the fit calls the seat lifted from that angle."""
         if not bool(self._p("gap_seat_fit_enabled")):
             return state, conf, ""
         fixture = self._hinged_fixture()
         if fixture is None:
             return state, conf, ""
+        base_deg = float(self._p("gap_seat_lift_min_deg"))
         try:
-            whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, registration, hands)
+            whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, registration, hands,
+                                      seat_min_deg=max(base_deg, allow))
         except Exception as exc:                                       # noqa: BLE001 — the other readings answer
             self.log.warn(f"gap_check: the seat fit failed ({exc}); the other readings stand")
             record_extra["seat_fit"] = {"error": str(exc)}
@@ -665,35 +681,47 @@ class GapCheckSession:
             agree = [float(c) for _n, s, c in others if s == fit.state]
             out_state, out_conf = fit.state, max([float(fit.confidence)] + agree)
             note = f"{fit.state} at {out_conf:.2f} from its own fit ({fit.reason})"
+            if out_state == "seat_closed" and fit.deg is not None and base_deg <= float(fit.deg) < allow:
+                note += f"; nearly closed: {float(fit.deg):.0f} deg, inside the closing allowance of {allow:.0f} deg"
         info["outcome"] = out_state
         record_extra["seat_fit"] = info
         return out_state, out_conf, note
 
-    def _fixture_fit(self, depth, intrinsics, camera_to_world, fixture, registration, hands):
+    def _fixture_fit(self, depth, intrinsics, camera_to_world, fixture, registration, hands, seat_min_deg=None,
+                     lid_min_deg=None):
         """seat_state.fit_fixture_state with this node's parameters: the lid's and the seat's state from one fit (the
-        renders made once per camera pose, so a check's later frames and later checks from the same pose reuse them)."""
+        renders made once per camera pose, so a check's later frames and later checks from the same pose reuse them).
+        ``seat_min_deg`` / ``lid_min_deg``: the angle each part counts as lifted from, when not the parameters' (the
+        closing allowance)."""
         from alix_perception_core import seat_state as sst
+        seat_min = float(self._p("gap_seat_lift_min_deg")) if seat_min_deg is None else float(seat_min_deg)
+        lid_min = float(self._p("gap_lid_fit_min_deg")) if lid_min_deg is None else float(lid_min_deg)
         params = sst.SeatFitParams(stride=int(self._p("gap_seat_fit_stride")), step_deg=float(self._p("gap_seat_fit_step_deg")),
                                    tol_m=float(self._p("gap_seat_fit_tol_m")), min_zone_px=int(self._p("gap_seat_fit_min_px")),
-                                   min_margin=float(self._p("gap_seat_fit_margin")), min_deg=float(self._p("gap_seat_lift_min_deg")),
-                                   hand_mask_m=float(self._p("gap_hand_mask_m")), lid_min_deg=float(self._p("gap_lid_fit_min_deg")),
+                                   min_margin=float(self._p("gap_seat_fit_margin")), min_deg=seat_min,
+                                   hand_mask_m=float(self._p("gap_hand_mask_m")), lid_min_deg=lid_min,
                                    lid_open_min_deg=float(self._p("gap_lid_fit_open_min_deg")),
                                    height_search_m=float(self._p("gap_fit_height_search_m")),
                                    height_step_m=float(self._p("gap_fit_height_step_m")))
         return sst.fit_fixture_state(depth, intrinsics, camera_to_world, self.fixture_in_world(), fixture,
                                      registration_m=float(registration), hands=list(hands.values()), params=params)
 
-    def _consult_lid_fit(self, state, conf, depth, intrinsics, camera_to_world, hands, registration, record_extra) -> tuple:
+    def _consult_lid_fit(self, state, conf, depth, intrinsics, camera_to_world, hands, registration, record_extra,
+                         allow: float = 0.0) -> tuple:
         """-> (state, confidence, note): the lid's state from the whole fixture in this frame decides when the fit
         answers; the centre-ROI reading confidently on the other side (closed against lifted or open) makes it
-        "uncertain". No answer from the fit: the ROI reading stands."""
+        "uncertain". No answer from the fit: the ROI reading stands. ``allow``: the closing allowance (check's
+        `closed_within_deg`): the fit calls the lid lifted from that angle, and the ROI reading lifted (from the 50 mm
+        bar, ~6.5 deg at the lid's front: it cannot tell an angle) does not contradict a fit inside it."""
         if not bool(self._p("gap_lid_fit_enabled")):
             return state, conf, ""
         fixture = self._hinged_fixture()
         if fixture is None:
             return state, conf, ""
+        base_deg = float(self._p("gap_lid_fit_min_deg"))
         try:
-            whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, registration, hands)
+            whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, registration, hands,
+                                      lid_min_deg=max(base_deg, allow))
         except Exception as exc:                                       # noqa: BLE001 — the ROI reading answers
             self.log.warn(f"gap_check: the lid fit failed ({exc}); the ROI reading stands")
             record_extra["lid_fit"] = {"error": str(exc)}
@@ -705,7 +733,9 @@ class GapCheckSession:
             record_extra["lid_fit"] = info
             return state, conf, f"the fixture fit gives no answer ({fit.reason})"
         closed = lambda s: s == "lid_closed"
-        if state in ("lid_closed", "lid_lifted", "lid_open") and float(conf) >= 0.5 and closed(state) != closed(fit.state):
+        nearly = allow > 0.0 and fit.state == "lid_closed" and state == "lid_lifted"
+        if not nearly and state in ("lid_closed", "lid_lifted", "lid_open") and float(conf) >= 0.5 \
+                and closed(state) != closed(fit.state):
             out_state, out_conf = "uncertain", 0.0
             note = f"the fixture fit says {fit.state} ({fit.reason}) but the ROI reading says {state} at {conf:.2f} -> uncertain"
             self.log.warn(f"gap_check: lid {note}")
@@ -714,6 +744,8 @@ class GapCheckSession:
             out_conf = max(float(fit.confidence), float(conf) if state == fit.state else 0.0)
             note = f"{fit.state} at {out_conf:.2f} from the fixture fit ({fit.reason})" + (
                 f"; the ROI reading: {state}" if state != fit.state else "")
+            if out_state == "lid_closed" and fit.deg is not None and base_deg <= float(fit.deg) < allow:
+                note += f"; nearly closed: {float(fit.deg):.0f} deg, inside the closing allowance of {allow:.0f} deg"
         info["outcome"] = out_state
         record_extra["lid_fit"] = info
         return out_state, out_conf, note

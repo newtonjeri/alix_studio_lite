@@ -1,0 +1,129 @@
+{
+ "class": "uncertain",
+ "message": "lid surface median z 0.464 m in base_link (closed top 0.464 = nominal 0.450 registered +14 mm by the none, rise 0 mm vs 50 mm bar); 100 % of the ROI valid, median range 0.578 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_lifted (not closed: lid_away -525 vs lid_closed -1324, margin +0.60; lid_lifted: lid_lifted -525 vs lid_open -11637, margin +0.95; best: lid 15 deg, seat 0 deg (lid) over 21917 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_closed at 1.00 -> uncertain",
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "camera_to_world": [
+  [
+   0.831101,
+   -0.242702,
+   0.500367,
+   0.55374
+  ],
+  [
+   -0.316704,
+   -0.946147,
+   0.067114,
+   -0.080552
+  ],
+  [
+   0.457132,
+   -0.214247,
+   -0.863208,
+   0.961518
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "hands": {
+  "ILH_plam": [
+   0.5451,
+   0.2286,
+   0.8026
+  ],
+  "ILH_left_index_1": [
+   0.602,
+   0.2408,
+   0.6841
+  ],
+  "ILH_left_index_tip": [
+   0.6195,
+   0.2132,
+   0.6139
+  ],
+  "ILH_left_middle_1": [
+   0.5834,
+   0.2387,
+   0.6793
+  ],
+  "ILH_left_middle_tip": [
+   0.5993,
+   0.2091,
+   0.6059
+  ],
+  "ILH_left_ring_1": [
+   0.5647,
+   0.2366,
+   0.6753
+  ],
+  "ILH_left_ring_tip": [
+   0.5761,
+   0.2086,
+   0.6041
+  ],
+  "ILH_left_little_1": [
+   0.5458,
+   0.2345,
+   0.6724
+  ],
+  "ILH_left_little_tip": [
+   0.5524,
+   0.2104,
+   0.6072
+  ],
+  "ILH_left_thumb_1": [
+   0.5795,
+   0.2179,
+   0.7496
+  ],
+  "ILH_left_thumb_tip": [
+   0.6405,
+   0.213,
+   0.6746
+  ],
+  "IRH_plam": [
+   0.5821,
+   -0.1528,
+   0.8982
+  ],
+  "IRH_right_index_tip": [
+   0.6501,
+   -0.1604,
+   0.7065
+  ],
+  "IRH_right_middle_tip": [
+   0.6692,
+   -0.1694,
+   0.7132
+  ],
+  "IRH_right_ring_tip": [
+   0.6868,
+   -0.1751,
+   0.7273
+  ],
+  "IRH_right_little_tip": [
+   0.702,
+   -0.1789,
+   0.7454
+  ],
+  "IRH_right_thumb_tip": [
+   0.617,
+   -0.1531,
+   0.7505
+  ]
+ },
+ "source": "native depth (D435, pyrealsense2)",
+ "frame": "camera_depth_optical_frame",
+ "registration_m": 0.014336120485513026,
+ "from": "Resources/Logs/2026-10-29/checks/20261029_191333_508_gap_check_lid_closed_uncertain"
+}

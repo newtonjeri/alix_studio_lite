@@ -257,3 +257,10 @@ perception_node:
     gap_fit_height_search_m: 0.010       # each hypothesis at its own best height within this of the registration
     gap_fit_height_step_m: 0.005         # (the simulator's commode sat 9 mm below the calibrated model: a closed lid read open)
                                         # (a lid at -30 hides the seat under it: "did it come along?" stays inside here)
+    # THE CLOSING ALLOWANCE (the owner, 2026-10-30): a closing's outcome check (Close the seat's seat_closed, Close the
+    # lid's lid_closed) counts the part within this angle of closed as closed; the camera may look while a soft-close
+    # seat is still settling (30 Oct 15:36: 20, 15, 10, 10, 10 deg over 1.4 s, five frames uncertain). Only the angle
+    # readings widen (GapCheckSession.check `closed_within_deg`); a ring or lid gone from its place (the rim, the bowl
+    # shows) is never closed, and every other question keeps the 10 deg rule. The caller passes it for that check only
+    # (Studio Lite's runner; the AnalyzeScene request has no field to say which check asks, so this node does not).
+    gap_closing_max_deg: 25.0

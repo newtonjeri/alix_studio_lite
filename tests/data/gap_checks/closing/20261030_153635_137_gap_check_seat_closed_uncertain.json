@@ -1,0 +1,129 @@
+{
+ "class": "uncertain",
+ "message": "seat surface median z 0.456 m in base_link (closed top 0.440, rise 16 mm vs 50 mm bar); 41 % of the ROI valid, median range 0.556 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 17 % of the ROI, 10/90 % heights 0.427/0.467, 2 % masked around 17 hand frames; seat: its own fit says seat_lifted (seat_lifted 9146 vs seat_closed 6676, margin +0.27; best: lid 110 deg, seat 15 deg (seat) over 22289 pixels at 1/3, the fixture +5 mm from its registration) but the band reading says seat_closed at 1.00 -> uncertain; vs its closed frame: no answer (no closed reference at this placement)",
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "camera_to_world": [
+  [
+   0.845797,
+   0.070131,
+   0.528875,
+   0.512653
+  ],
+  [
+   0.045966,
+   -0.997215,
+   0.058723,
+   -0.074651
+  ],
+  [
+   0.53152,
+   -0.025358,
+   -0.846666,
+   0.965113
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "hands": {
+  "ILH_plam": [
+   0.5451,
+   0.2286,
+   0.8026
+  ],
+  "ILH_left_index_1": [
+   0.602,
+   0.2408,
+   0.6841
+  ],
+  "ILH_left_index_tip": [
+   0.619,
+   0.2284,
+   0.6096
+  ],
+  "ILH_left_middle_1": [
+   0.5834,
+   0.2387,
+   0.6793
+  ],
+  "ILH_left_middle_tip": [
+   0.5986,
+   0.2252,
+   0.6011
+  ],
+  "ILH_left_ring_1": [
+   0.5647,
+   0.2366,
+   0.6753
+  ],
+  "ILH_left_ring_tip": [
+   0.5751,
+   0.2241,
+   0.5997
+  ],
+  "ILH_left_little_1": [
+   0.5458,
+   0.2345,
+   0.6724
+  ],
+  "ILH_left_little_tip": [
+   0.5512,
+   0.2236,
+   0.6037
+  ],
+  "ILH_left_thumb_1": [
+   0.5795,
+   0.2179,
+   0.7496
+  ],
+  "ILH_left_thumb_tip": [
+   0.6742,
+   0.2064,
+   0.7023
+  ],
+  "IRH_plam": [
+   0.5666,
+   -0.1449,
+   0.9183
+  ],
+  "IRH_right_index_tip": [
+   0.6497,
+   -0.1662,
+   0.7338
+  ],
+  "IRH_right_middle_tip": [
+   0.67,
+   -0.1677,
+   0.7427
+  ],
+  "IRH_right_ring_tip": [
+   0.6873,
+   -0.1648,
+   0.758
+  ],
+  "IRH_right_little_tip": [
+   0.7012,
+   -0.1606,
+   0.777
+  ],
+  "IRH_right_thumb_tip": [
+   0.6143,
+   -0.1605,
+   0.7763
+  ]
+ },
+ "source": "native depth (D435, pyrealsense2)",
+ "frame": "camera_depth_optical_frame",
+ "registration_m": 0.0,
+ "from": "Resources/Logs/2026-10-30/checks/20261030_153635_137_gap_check_seat_closed_uncertain"
+}
