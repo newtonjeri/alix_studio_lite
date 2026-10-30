@@ -68,7 +68,12 @@ ACCEPTED = {
     "seat_close": [dict(sha256="c507f54f38c8451abcd22a3fa2c35c4944c5164ce5148babca9c3528f7d489a9", made="2026-10-29 13:25:41",
                         by="the owner, 29 Oct",
                         why="the Inspire fingers fold when pressed from their back, so the press the model reads (92 to 103 N "
-                            "for 4 s, rigid fingers) is not the robot's: run it, with the feed recorded")],
+                            "for 4 s, rigid fingers) is not the robot's: run it, with the feed recorded"),
+                   dict(sha256="6ed0296ee2d4e5dad2484a0e1bb337e8a8594ff922d477536a7f1493fb6f6960", made="2026-10-30 09:43:56",
+                        by="the owner, 30 Oct",
+                        why="the left's carry on the seat's arc, for a supervised lab run with the feed recorded: the model "
+                            "reads 72 N for 2.2 s in the carry (13:25: 101 N for 3.9 s) and cannot follow a finger hooking "
+                            "the seat, so the lab measures what it presses")],
 }
 
 
