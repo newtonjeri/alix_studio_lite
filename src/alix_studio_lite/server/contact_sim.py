@@ -77,7 +77,12 @@ ACCEPTED = {
                    dict(sha256="c02bc5048120580f67c31c63fa8ed55e0f80d54686277a8a407138b8800211ba", made="2026-10-30 10:46:10",
                         by="the owner, 30 Oct",
                         why="the left's start 10 mm further in +y after the afternoon's lab runs, for a supervised lab run: "
-                            "the model (its commode placed as on 29 Oct) reads the hook at 47 to 77 N, the lab decides")],
+                            "the model (its commode placed as on 29 Oct) reads the hook at 47 to 77 N, the lab decides"),
+                   dict(sha256="3347d8df3898bcf9738b50c61cf6f82450e6733f7511452a786102bfc430f698", made="2026-10-30 12:30:10",
+                        by="the owner, 30 Oct",
+                        why="the left's start 5 mm deeper and the carry's first points lower, for a supervised lab run: the "
+                            "model reads the hook at 44 to 85 N and the fingers slipping off; it cannot follow the hook, the "
+                            "lab decides")],
 }
 
 
