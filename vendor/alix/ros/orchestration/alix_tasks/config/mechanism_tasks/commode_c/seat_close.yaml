@@ -263,20 +263,20 @@ left:
       translation: [-0.0347, 0.02, -0.0081]
       rotation: [-5.0, -2.0, 10.0]
     point4:   # the seat at -93.6 deg, just past its balance point (-93.1)
-      translation: [-0.0523, 0.025, -0.0103]
+      translation: [-0.0523, 0.03, -0.0103]
       rotation: [-5.0, -3.0, 10.0]
     point5:
-      translation: [-0.0701, 0.025, -0.0112]
-      rotation: [-5.0, -4.0, 10.0]
+      translation: [-0.0701, 0.035, -0.0112]
+      rotation: [-5.0, -4.0, 15.0]
     point6:
-      translation: [-0.0879, 0.025, -0.0109]
-      rotation: [-5.0, -5.0, 10.0]
+      translation: [-0.0879, 0.035, -0.0109]
+      rotation: [-5.0, -5.0, 15.0]
     point7:
-      translation: [-0.1101, 0.025, -0.01]
-      rotation: [-5.0, -6.2, 10.0]
+      translation: [-0.14, 0.035, -0.02]
+      rotation: [-5.0, -6.2, 15.0]
     point8:   # the seat at -75 deg, where your update_fixture_scene puts it after the carry
-      translation: [-0.1346, 0.025, -0.01]
-      rotation: [-5.0, -7.6, 0.0]
+      translation: [-0.18, 0.035, -0.03]
+      rotation: [-5.0, -7.6, 15.0]
 
 
   # CLEANING SEQUENCE
@@ -395,7 +395,7 @@ stage_sequence:
     arm: left
 
   - stage: update_fixture_scene
-    seat_angle_deg: -75.0
+    seat_angle_deg: -70.0
     lid_angle_deg: -110.0
 
   # - stage: allow_collision

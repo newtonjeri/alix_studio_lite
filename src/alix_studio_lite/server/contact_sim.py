@@ -90,6 +90,10 @@ ACCEPTED = {
                    dict(sha256="01191322ce59f296ae456946537d6a26620034ff7d4c44d150c0c02f1b4ffc95", made="2026-10-30 13:01:46",
                         by="the owner, 30 Oct",
                         why="accepted as it came from ALIX, not checked here (the owner: sync it and take it as passing), "
+                            "for the lab's runs"),
+                   dict(sha256="d5bfa4762d17b505d45efce844c9f21b04e87eae9a367a556e50abbb6e6ac46a", made="2026-10-30 13:22:26",
+                        by="the owner, 30 Oct",
+                        why="accepted as it came from ALIX, not checked here (the owner: sync it and take it as passing), "
                             "for the lab's runs")],
 }
 
