@@ -163,6 +163,26 @@ def held_tasks(plan: list[dict]) -> list[dict]:
     return plan
 
 
+def next_lid_seat_task(plan: list[dict], i: int) -> dict | None:
+    """The sequence's next lid or seat task after stage ``i``, or None: the one Open the lid's seat link looks at
+    (mechanism.Runner ``next_task``, link_after_lid)."""
+    return next((x for x in plan[i + 1:] if x["kind"] == "mechanism"), None)
+
+
+def link_after_lid(nxt: dict | None, seat: str | None) -> str:
+    """After Open the lid read the seat (mechanism.Runner._after_lid, the owner, 30 Oct): a seat that came up with the lid
+    means the next Open the seat is not run (``held``: the lid and the seat are open; Close the seat was not run either);
+    a seat it could not judge makes that Open the seat ask its own start checks (it skips itself when the seat is up).
+    Any other next task: Open the lid's own run closed the seat already. -> what it did, in words ("" for nothing)."""
+    if nxt is None or nxt.get("held") or nxt["task"] != "seat_open" or seat not in ("up", "unknown"):
+        return ""
+    if seat == "up":
+        nxt["held"], nxt["held_why"] = "seat_open", "the seat came up with the lid"
+        return f"{nxt['title']}: not run, the seat came up with the lid (the lid and the seat are open)."
+    nxt["ask_start"] = True
+    return f"{nxt['title']}: asks its own start checks (the seat's state after Open the lid is not known)."
+
+
 def next_after_tasks(plan: list[dict]) -> list[dict]:
     """``plan`` (a whole sequence of both arms) with ``then`` on the last lid or seat task of each run of them (the owner,
     24 Oct: "after any lid or seat task, open or close, move to the start state of the next task: pole, hand and arm", in
@@ -2893,7 +2913,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
 
                     if st.get("held"):                      # not run: the sequence's own order made its end state (held_tasks)
                         words = mech.PHASE_WORDS.get(st["held"], st["held"])
-                        job.log(f"{st['title']}: not run, the sequence's own order says {words} already.")
+                        job.log(f"{st['title']}: not run, " + (f"{st['held_why']}: {words}." if st.get("held_why")
+                                                               else f"the sequence's own order says {words} already."))
                         say(f"LID / SEAT // {st['title']} // NOT RUN: {words} already", **{x: f"{pid} // NOT RUN" for x in ARMS})
                         then = st.get("then") or {}         # each arm to its next task's start all the same
                         nxt = run["plan"][i + 1] if i + 1 < len(run["plan"]) else None
@@ -2931,13 +2952,19 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                                        feeds_after=bool(st.get("then")))   # the feeds off in the next starts' pole travel (27 Oct)
                     mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
                     mech.joints_cool(robot, st["title"])
+                    nxt_task = next_lid_seat_task(run["plan"], i)      # Open the lid's seat link (the owner, 30 Oct)
                     try:
                         with kit.camera.using():                         # closed in the background as the run ends (27 Oct)
                             out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st),
-                                              start_checks=False).run(mech.sequence_plan(st["task"]))
+                                              start_checks=bool(st.get("ask_start")),
+                                              next_task=nxt_task["task"] if nxt_task and not nxt_task.get("held") else None,
+                                              ).run(mech.sequence_plan(st["task"]))
                         did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
                                         for p in out["plans"])
                         job.log(f"{st['title']}: {did}.")
+                        linked = link_after_lid(nxt_task, out.get("seat_after_lid"))
+                        if linked:
+                            job.log(linked)
                         then = st.get("then") or {}         # each arm to its next task's start (next_after_tasks): now, or (27 Oct)
                         nxt = run["plan"][i + 1] if i + 1 < len(run["plan"]) else None    # as its part of the next stage begins
                         later = {x for x in then if nxt is not None and nxt["kind"] == "parallel" and nxt.get(x)}

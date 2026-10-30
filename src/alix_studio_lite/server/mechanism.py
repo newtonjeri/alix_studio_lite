@@ -31,10 +31,13 @@ The order is ALIX's: the entries one after the other, each one done before the n
 never move at the same time inside a plan); a plan's checks before the entry that carries them; on a NO,
 the check's own policy: skip (the plan's outcome already holds), run_prerequisite (the plan that makes the
 state runs first, then this one again from its start), retry_lift (the lifting arm's block again, from the
-next pre-planned rung), abort (a person must look). A check's second question (also_observe: the seat under the
-lifted lid; if_observed: Close the seat after) is not asked since 26 Oct (the owner: the lid and the hand hide the seat
-there, the look costs time, and the seat is judged once, at the end). After a hand lets go, the run goes on only when
-the hand did let go (``released``: every channel open, the wrist unloaded before a retract), else it stops for a person.
+next pre-planned rung), abort (a person must look). A check's second question (also_observe: the seat under the lifted
+lid; if_observed: Close the seat after) is not asked since 26 Oct (the owner: the lid and the hand hide the seat
+there, the look costs time, and the seat is judged once, at the end). Since 30 Oct Lite asks one of its own: the seat
+on Open the lid's end frames (SEAT_WITH_LID); a seat that came up is closed by Close the seat right after, or, when
+the sequence opens the seat next, both are skipped (Runner._after_lid). After a hand lets go, the run goes on only
+when the hand did let go (``released``: every channel open, the wrist unloaded before a retract), else it stops for a
+person.
 
 Each plan's end state is checked by the plan itself (the owner, 26 Oct: the end look belongs in ALIX's task configs, not
 in Lite): after the right arm's carry, its hand grasps, it moves to inspection_pose_1 and the camera confirms the end
@@ -76,8 +79,9 @@ TASKS = {
         title="Open the lid", short="LID OPEN", start="lid closed", end="lid open, seat down",
         does="The right arm looks with the wrist camera; if the lid is closed, the left arm lifts it, the camera "
              "checks it is up (up to three re-lifts, each a little further in), then the right arm takes it and "
-             "opens it fully. At the end the camera checks the lid is open and reads the seat: one that came up with "
-             "the lid is said (Open the seat then finds it up and skips itself)."),
+             "opens it fully. At the end the camera checks the lid is open and, on the same frames, the seat: one that "
+             "came up with the lid is closed again by Close the seat right after (when Open the seat comes next in "
+             "a sequence, both are skipped instead)."),
     "seat_open": dict(
         title="Open the seat", short="SEAT OPEN", start="lid open, seat down", end="lid and seat open",
         does="The camera checks the lid is open (else Open the lid runs first) and the seat is down; the left arm "
@@ -127,6 +131,14 @@ PHASE_WORDS = {"lid_closed": "the lid and the seat are down", "lid_open": "the l
 #: (perception.yaml gap_closing_max_deg; the camera may look while a soft-close seat is still settling). The openings'
 #: own "is it closed?" checks keep the plain rule.
 CLOSING_OUTCOME = {"seat_close": "seat_closed", "lid_close": "lid_closed"}
+#: Open the lid's end check also reads the seat (the owner, 30 Oct): one that came up with the lid is closed again by
+#: Close the seat right after, unless the sequence's next lid or seat task is Open the seat, when both are skipped. Asked
+#: on the end check's own frames (inspection pose 1, as Close the seat's checks), as "is the seat closed?" with the
+#: closing allowance: a seat that came up stands at about 110 deg, while a flat seat read 15-20 deg where nothing
+#: learned the fixture's height (30 Oct 18:52) counts as down. Lite's own link between the tasks, not ALIX's
+#: also_observe / if_observed (that pair sat on the lifted check, where the lid and the hand hide the seat; gone 28 Oct).
+SEAT_WITH_LID = dict(type="check_fixture_state", stage="verify_seat_with_lid", check="fixture_gap", expect="seat_closed",
+                     arm="right", on_fail="skip", closing_outcome=True)
 
 
 def row_tasks(code: str) -> list:
@@ -947,7 +959,7 @@ def frames_said(answers: list) -> str:
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
 class Runner:
-    def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True, together=True):
+    def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True, together=True, next_task=None):
         self.ex = ex
         self.say = say or (lambda *_: None)
         self.together = bool(together)               # the two arms at once where the plan allows it (two_arm_leg)
@@ -956,11 +968,14 @@ class Runner:
         self.leave = set(leave)
         self.hand_set = set(hand_set)                # the arms whose next task's start sets the hand: no final release
         self.start_checks = bool(start_checks)       # False in a sequence: the checks before the first lift are not asked
+        self.next_task = next_task                   # S2: the sequence's next lid or seat task after this run (SEAT_WITH_LID)
         self.queue: list = []
         self.k = 0
         self.prereq: dict = {}
         self.done: list = []                         # each plan as it ended: done | skipped
         self.checks: list = []                       # every question asked, and its answer
+        self.seat_after_lid = None                   # Open the lid's end check on the seat: up | down | unknown
+        self._ask_start: set = set()                 # queued plans that ask their start checks even in a sequence
 
     def run(self, name: str) -> dict:
         self.queue, self.k = [name], 0
@@ -973,16 +988,18 @@ class Runner:
                 self.k += 1
         finally:
             getattr(self.ex, "finish", lambda: None)()
-        return dict(plans=self.done, checks=self.checks)
+        return dict(plans=self.done, checks=self.checks, seat_after_lid=self.seat_after_lid)
 
     def _plan(self, name: str) -> str:
         plan = Plan(name)
         entries = list(plan.entries)
-        if not self.start_checks:
+        ask_start = name in self._ask_start
+        self._ask_start.discard(name)
+        if not self.start_checks and not ask_start:
             entries, dropped = without_start_checks(entries)
             for a in dropped:
                 self.say(f"{a.get('stage')}: not asked, the sequence's own order says {a.get('expect')} (the owner, 27 Oct)")
-        state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(name),
+        state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(name), lid_end=name == "lid_open", seat=None,
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
                                                         for s in plan.sides()) if first is not None))   # after the approach
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
@@ -1043,7 +1060,62 @@ class Runner:
                 self.ex.approach(plan, ends, "end")
         self.done.append(dict(plan=name, title=plan.title, outcome="skipped" if state["skipped"] else "done",
                               relifts=state["relifts"]))
+        if state["seat"] is not None and not state["skipped"]:
+            self._after_lid(state["seat"])
         return "done"
+
+    def _seat_with_lid(self) -> str:
+        """Open the lid's end check has passed: the seat on its frames (SEAT_WITH_LID) -> up | down | unknown. Never a
+        verdict on the check: a seat the camera cannot judge is unknown, and the next task's own start check decides."""
+        lc = lift_check()
+        a = dict(SEAT_WITH_LID)
+        answer = self.ex.ask(a, a["expect"], observe=True)
+        state = answer.fixture_state
+        if answer.success and lc.evaluate_fixture_check(a, answer):
+            seat = "down"
+        elif answer.success and (state in lc.OPPOSITE_STATES[a["expect"]]):
+            seat = "up"
+        elif answer.success and state == "no_" + a["expect"]:
+            seat = "down"                           # Simulation, Hardware sim, the stand-in: nothing came along (assumed)
+        else:
+            seat = "unknown"
+        self.checks.append(dict(check=a["stage"], expect=a["expect"], state=state,
+                                confidence=round(float(answer.state_confidence), 2), verdict=seat, message=answer.message,
+                                record=getattr(answer, "record_path", None)))
+        self.say(f"SEAT WITH THE LID: the camera says {state} on Open the lid's end frames -> the seat is {seat}"
+                 + (" (it came up with the lid)" if seat == "up" else ""), "warn" if seat != "down" else "info")
+        return seat
+
+    def _after_lid(self, seat: str) -> None:
+        """Open the lid's end left the seat ``seat`` (_seat_with_lid): a seat up is closed again by Close the seat right
+        after, unless the next lid or seat task (the run's own queue, else the sequence's: next_task) is Open the seat,
+        when both are skipped (the owner, 30 Oct); unknown: the next task asks its start check and decides itself."""
+        self.seat_after_lid = seat
+        if seat == "down":
+            return
+        queued = self.queue[self.k + 1] if self.k + 1 < len(self.queue) else None
+        nxt = queued or self.next_task
+        if nxt == "seat_open":
+            if seat == "up":
+                if queued:                           # this run's own next plan (a prerequisite's): its outcome holds
+                    self.queue.pop(self.k + 1)
+                    self.done.append(dict(plan="seat_open", title=TASKS["seat_open"]["title"], outcome="skipped", relifts=0))
+                self.say("The seat came up with the lid: Open the seat is not run (the lid and the seat are open), and the "
+                         "seat is not closed first (the owner, 30 Oct)", "warn")
+            else:
+                if queued:
+                    self._ask_start.add("seat_open")
+                self.say("The seat's state after Open the lid is not known: Open the seat asks its own start check "
+                         "(it skips itself when the seat is up)", "warn")
+            return
+        gate = getattr(self.ex, "gate", None)        # the closing's contact forces, as any closing run on its own (Real)
+        if gate is not None:
+            gate("seat_close")
+        self.queue.insert(self.k + 1, "seat_close")
+        self._ask_start.add("seat_close")
+        self.say("FOLLOW-UP: Close the seat runs next, with its own check that the seat is up "
+                 + ("(the seat came up with the lid)" if seat == "up" else "(the seat's state is not known: it skips itself "
+                                                                        "when the seat is down)"), "warn")
 
     def _cannot_judge(self, label, expect, answer, lead="", final=False):
         """A check its frames left undecided (FRAMES): a person must look; no plan policy runs, no re-lift (the owner,
@@ -1096,6 +1168,8 @@ class Runner:
                          + f" -> {'PASS' if passed else 'NO'}", "info" if passed else "warn")
                 if not passed:
                     return a
+                if state.get("lid_end") and a.get("expect") == "lid_open":     # Open the lid's end: the seat too (30 Oct)
+                    state["seat"] = self._seat_with_lid()
             else:
                 self.say(f"{e.stage}: the plan carries an action Lite does not implement ({kind!r}) — refusing (fail-closed)", "error")
                 return dict(a, on_fail="abort", stage=a.get("stage") or kind)
@@ -1656,10 +1730,11 @@ class RealExec(_Exec):
                                 "A person must look at the commode and the hand: nothing else was moved after this.", code="escalate")
             self.say(f"{e.side.upper()} hand free: " + ("no wrist reading" if load is None else f"{load['load_n']:.0f} N on the wrist"))
 
-    def ask(self, action, expect):
+    def ask(self, action, expect, observe=False):
         """The camera's answer on its frames, ruled by ALIX's lift_check.decide: after 3 frames, and after 5 when the
         3 do not settle it. PASS -> the first frame that voted yes; FAIL -> the first that voted no; UNDECIDED ->
-        CANNOT_JUDGE (success False), which stops the run for a person. Each frame keeps its own check record."""
+        CANNOT_JUDGE (success False), which stops the run for a person. Each frame keeps its own check record.
+        ``observe``: a second question on the check just before (Runner._seat_with_lid), judged on its frames."""
         from dataclasses import replace
 
         from .gap_check import Answer
@@ -1668,7 +1743,7 @@ class RealExec(_Exec):
         self._settle_all()                          # the camera reads the scene with both arms still
         self.job.progress(f"{action.get('stage')}: asking the camera ({expect})")
         self.live("right", f"CAMERA // {action.get('stage')}: {expect}?")
-        scripted = self.kit.scripted(expect)
+        scripted = self.kit.scripted(expect, observe=True) if observe else self.kit.scripted(expect)
         if scripted is not None:                    # a test harness only (LITE_CHECK_SCRIPT): never on the robot
             return scripted
         lc = lift_check()
@@ -1711,6 +1786,16 @@ class RealExec(_Exec):
                                 record=answer.record_path))
         self._summary(check_id, action, expect, answers, answer)
         return answer
+
+    def gate(self, task: str) -> None:
+        """A closing queued as a follow-up (Runner._after_lid) passes the contact gate as a closing run on its own:
+        refused from contact_sim.STOP_N (UserError, code contact), an owner's accepted plan said."""
+        from . import contact_sim
+
+        ok = contact_sim.gate(task, self.job)
+        if ok and ok.get("accepted"):
+            self.say(f"{TASKS[task]['title']}: contact check over the limit ({ok['peak_n']:g} N),"
+                     + contact_sim.accepted_words(ok)[len(" Over the limit,"):])
 
     def _summary(self, check_id, action, expect, answers, answer) -> None:
         """``<check_id>_frames.json`` beside the frames' records: each frame's record and answer, and what they decided
@@ -1846,10 +1931,11 @@ class Kit:
         self.gap = GapCheck(records=lambda: self.records_dir("checks"), log=log)
         self._script = None
 
-    def scripted(self, expect: str):
+    def scripted(self, expect: str, observe: bool = False):
         """The camera's answers from a script, for a TEST HARNESS ONLY (as ALIX's ALIX_CHECK_SERVICE points its
         executives at a scripted answerer): ``LITE_CHECK_SCRIPT`` names a JSON list of states, one per question, in
-        order. Never set on the robot: the real checks are the camera's."""
+        order. Never set on the robot: the real checks are the camera's. A second question (``observe``: the seat after
+        Open the lid) takes the next entry only when it is ``{"also": state}``, else nothing came along."""
         path = os.environ.get("LITE_CHECK_SCRIPT")
         if not path:
             return None
@@ -1859,7 +1945,13 @@ class Kit:
             stamp = Path(path).stat().st_mtime_ns
             if self._script is None or self._script[0] != stamp:      # a new script: its answers from the first
                 self._script = (stamp, list(json.loads(Path(path).read_text(encoding="utf-8"))))
-            state = self._script[1].pop(0) if self._script[1] else None
+            if observe:
+                nxt = self._script[1][0] if self._script[1] else None
+                if not (isinstance(nxt, dict) and "also" in nxt):
+                    return assumed("no_" + expect)
+                state = self._script[1].pop(0)["also"]
+            else:
+                state = self._script[1].pop(0) if self._script[1] else None
         return Answer(success=state is not None, fixture_state=state or "not_lifted", state_confidence=1.0 if state else 0.0,
                       message=f"scripted ({path}): {state}", recommendation="pass" if state == expect else "re-clean")
 

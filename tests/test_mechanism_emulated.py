@@ -44,8 +44,9 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-8:])
     res = done["result"]
     assert [(p["plan"], p["outcome"], p["relifts"]) for p in res["plans"]] == [("lid_open", "done", 1)]
-    assert [c["verdict"] for c in res["checks"]] == ["PASS", "NO", "PASS", "PASS"]       # no second question (26 Oct)
-    assert res["checks"][-1]["check"] == "verify_lid_open" and not res["checks"][-1].get("final")   # the plan's own end look (26 Oct)
+    assert [c["verdict"] for c in res["checks"]] == ["PASS", "NO", "PASS", "PASS", "down"]   # none at the lift (26 Oct); the
+    assert res["checks"][-2]["check"] == "verify_lid_open" and not res["checks"][-2].get("final")   # seat on the end frames (30 Oct)
+    assert res["checks"][-1]["check"] == "verify_seat_with_lid" and res["seat_after_lid"] == "down"
     said = " | ".join(e["text"] for e in done["events"])
     assert "Open the seat's way in" not in said and "at where Open the lid ended" not in said   # no look of Lite's own (26 Oct)
     streams = [r for r in hardware(server) if r.get("verb") == "canfd stream"]

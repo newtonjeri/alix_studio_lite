@@ -107,7 +107,12 @@ class FakeExec:
         self.calls.append(("hold", label, seconds))
 
     def ask(self, action, expect, observe=False):
-        state = self.answers.pop(0)
+        if observe:                                 # a second question takes {"also": state}, else nothing came along
+            if not (self.answers and isinstance(self.answers[0], dict) and "also" in self.answers[0]):
+                return Answer(success=True, fixture_state="no_" + expect, state_confidence=1.0)
+            state = self.answers.pop(0)["also"]
+        else:
+            state = self.answers.pop(0)
         self.calls.append(("ask", action.get("stage"), expect, state))
         return Answer(success=state is not None, fixture_state=state or "not_lifted", state_confidence=1.0 if state else 0.0)
 
@@ -410,7 +415,7 @@ def test_the_seat_is_not_looked_for_under_the_lifted_lid():
     """The owner, 26 Oct: the lift check's second question (ALIX's also_observe seat_lifted / if_observed
     seat_close_right of 5 Oct, still in the vendored plan) is not asked: under the lifted lid the seat is hidden by the
     lid and the hand (26 Oct: 0 of 3 frames answered it), the look costs time, and the seat is judged once, by the end
-    check. No closing runs after Open the lid; none is offered."""
+    check (since 30 Oct on the end check's own frames: test_seat_with_lid.py; here it stayed down)."""
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])
     out = mechanism.Runner(ex).run("lid_open")
     assert [c[1:3] for c in ex.calls if c[0] == "ask"] == [("verify_lid_closed", "lid_closed"), ("verify_lid_lifted", "lid_lifted"),
@@ -422,7 +427,8 @@ def test_the_seat_is_not_looked_for_under_the_lifted_lid():
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_seat_open"])            # the seat came up with the lid: the end check reads it
     out = mechanism.Runner(ex).run("lid_open")
     assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("lid_open", "done")]
-    assert (out["checks"][-1]["check"], out["checks"][-1]["state"], out["checks"][-1]["verdict"]) == ("verify_lid_open", "lid_seat_open", "PASS")
+    end = next(c for c in out["checks"] if c["check"] == "verify_lid_open")
+    assert (end["state"], end["verdict"]) == ("lid_seat_open", "PASS") and out["checks"][-1]["check"] == "verify_seat_with_lid"
     ex = FakeExec(["lid_closed", "lid_lifted", "seat_lifted"])             # half up under the opened lid: not lid open, a person looks
     with pytest.raises(UserError, match=r"verify_lid_open: NOT lid_open \(on_fail abort\)") as e:
         mechanism.Runner(ex).run("lid_open")
