@@ -99,12 +99,16 @@ def test_an_edited_config_is_previewed_before_it_is_re_planned(tmp_path):
 
 def test_the_owner_accepts_one_plan_file_over_a_refusal(lab, monkeypatch):
     """The owner, 29 Oct: Close the seat of 13:25 runs although it reads over the limit (the Inspire fingers fold when
-    pressed from their back); the acceptance is that file's, so a plan made again is checked again."""
+    pressed from their back); the acceptance is that file's, so a plan made again is checked again (30 Oct 09:43: the
+    13:25 acceptance no longer applies). Here as if the vendored plan were the accepted one."""
     import hashlib
 
     plan = mechanism.cached("seat_close")
-    assert contact_sim.accepted("seat_close", plan.path)["made"] == plan.made          # the vendored plan is the accepted one
-    key = ("seat_close", hashlib.sha256(plan.path.read_bytes()).hexdigest())
+    sha = hashlib.sha256(plan.path.read_bytes()).hexdigest()
+    assert contact_sim.accepted("seat_close", plan.path) is None or plan.made == "2026-10-29 13:25:41"
+    monkeypatch.setitem(contact_sim.ACCEPTED, "seat_close", [dict(sha256=sha, made=plan.made, by="the owner", why="a test")])
+    assert contact_sim.accepted("seat_close", plan.path)["made"] == plan.made
+    key = ("seat_close", sha)
     monkeypatch.setitem(contact_sim._GATE, key, dict(lab, task="seat_close", level="stop"))
     out = contact_sim.gate("seat_close")                                    # a stop, accepted: it runs, said
     assert out["level"] == "warn" and "accepted by the owner" in contact_sim.accepted_words(out)

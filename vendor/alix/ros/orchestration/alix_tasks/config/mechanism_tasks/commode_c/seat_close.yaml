@@ -181,28 +181,69 @@ left:
     ik_frame: L_tip_frame
     primary_planning_group: rm75_arm_left
 
-  # CARTESIAN POSES (Position + Orientation)
-  # Format: [x, y, z, qx, qy, qz, qw], alix_ref_frame, of L_tip_frame
-  # ---------------------------------------------------------------------------
-  # 2026-10-26 (Newton): pre_start_pose is the left tip frame where he placed
-  # the arm in RViz (MotionPlanning panel, rm75_arm_left; TF alix_ref_frame ->
-  # L_tip_frame read 0.956407, 0.185532, 0.157808 at 11:49, x rounded to 0.95
-  # by him; the arm there: L_joint1..7 = 0.2876, -0.8062, 0.2428, 0.8628,
-  # -0.8216, 0.8945, -0.8106 rad, pole 0.149 m). start_pose: his, from the
-  # pre-start (3 cm forward, 0.5 cm to the left, the same orientation). The
-  # points and the sequence below are his of the same day; they replace the
-  # eleven ST_CLOSE.txt points of 2026-10-24 (kept in Resource/reports/
-  # 2026-10-25_lid_seat_close/seat_close_left_block_2026-10-25.yaml).
+  # cartesian_poses:
+  #   pre_start_pose: [0.95, 0.185532, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
+  #   start_pose: [0.97, 0.2, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
+
+  #   # Relative to THIS block's start_pose (translation added in alix_ref_frame,
+  #   # rotation onto the start orientation). UNCHANGED from the 2026-10-24
+  #   # stroke: derived from ITS end (the old point11 moved straight up 12 cm,
+  #   # the wrist unwound half-way back toward the start). The new stroke ends
+  #   # at point8 (-0.15, -0.06, -0.17): this retract lies 31 cm to its left,
+  #   # 7 cm further back and 2 cm higher -- to be re-derived from the new end.
+  #   retract_pose:
+  #     translation: [-0.35, -0.02, -0.17]
+  #     rotation: [-5.0, 45.0, 10.0]
+
+  #   retract_pose_2:
+  #     translation: [-0.40, 0.05, -0.10]
+  #     rotation: [-5.0, 35.0, 25.0]
+
+  # # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
+  # # Translation: [x, y, z] in metres, added in alix_ref_frame to start_pose
+  # # Rotation: [roll, pitch, yaw] in degrees, onto the start orientation
+  # # ---------------------------------------------------------------------------
+  # cleaning_points:
+  #   point1:
+  #     translation: [0.0, 0.01, 0.0]
+  #     rotation: [0.0, 0.0, 0.0]
+
+  #   point2:
+  #     translation: [0.01, 0.025, 0.00]
+  #     rotation: [-5.0, 0.0, 5.0]
+
+  #   point3:
+  #     translation: [0.01, 0.04, -0.03]
+  #     rotation: [-5.0, 0.0, 7.0]
+
+  #   point4:
+  #     translation: [-0.02, 0.04, -0.08]
+  #     rotation: [-5.0, 0.0, 10.0]
+    
+  #   point5:
+  #     translation: [-0.04, 0.035, -0.1]
+  #     rotation: [-5.0, 5.0, 10.0]
+
+  #   point6:
+  #     translation: [-0.08, 0.03, -0.12]
+  #     rotation: [-5.0, 10.0, 10.0]
+
+  #   point7:
+  #     translation: [-0.13, -0.02, -0.15]
+  #     rotation: [-5.0, 15.0, 10.0]
+
+  #   point8:
+  #     translation: [-0.20, -0.06, -0.17]
+  #     rotation: [-5.0, 35.0, 10.0]
+
+
+
+
+  # ====================================================================
   cartesian_poses:
     pre_start_pose: [0.95, 0.185532, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
-    start_pose: [0.99, 0.2, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
-
-    # Relative to THIS block's start_pose (translation added in alix_ref_frame,
-    # rotation onto the start orientation). UNCHANGED from the 2026-10-24
-    # stroke: derived from ITS end (the old point11 moved straight up 12 cm,
-    # the wrist unwound half-way back toward the start). The new stroke ends
-    # at point8 (-0.15, -0.06, -0.17): this retract lies 31 cm to its left,
-    # 7 cm further back and 2 cm higher -- to be re-derived from the new end.
+    start_pose: [0.975, 0.2, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
+    
     retract_pose:
       translation: [-0.35, -0.02, -0.17]
       rotation: [-5.0, 45.0, 10.0]
@@ -211,42 +252,32 @@ left:
       translation: [-0.40, 0.05, -0.10]
       rotation: [-5.0, 35.0, 25.0]
 
-  # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
-  # Translation: [x, y, z] in metres, added in alix_ref_frame to start_pose
-  # Rotation: [roll, pitch, yaw] in degrees, onto the start orientation
-  # ---------------------------------------------------------------------------
   cleaning_points:
-    point1:
+    point1:   # the hook, as yours
       translation: [0.0, 0.01, 0.0]
       rotation: [0.0, 0.0, 0.0]
-
-    point2:
-      translation: [0.01, 0.025, 0.00]
-      rotation: [-5.0, 0.0, 5.0]
-
+    point2:   # points 2-8: the fingertips on the seat's arc about its hinge, toward the robot and slightly up
+      translation: [-0.0172, 0.01, 0.0046]
+      rotation: [0.0, -1.0, 0.0]
     point3:
-      translation: [0.01, 0.04, -0.03]
-      rotation: [-5.0, 0.0, 7.0]
-
-    point4:
-      translation: [-0.02, 0.04, -0.05]
-      rotation: [-5.0, 0.0, 10.0]
-    
+      translation: [-0.0347, 0.01, 0.0081]
+      rotation: [0.0, -2.0, 0.0]
+    point4:   # the seat at -93.6 deg, just past its balance point (-93.1)
+      translation: [-0.0523, 0.01, 0.0103]
+      rotation: [0.0, -3.0, 0.0]
     point5:
-      translation: [-0.04, 0.035, -0.06]
-      rotation: [-5.0, 5.0, 10.0]
-
+      translation: [-0.0701, 0.01, 0.0112]
+      rotation: [0.0, -4.0, 0.0]
     point6:
-      translation: [-0.08, 0.03, -0.1]
-      rotation: [-5.0, 10.0, 10.0]
-
+      translation: [-0.0879, 0.01, 0.0109]
+      rotation: [0.0, -5.0, 0.0]
     point7:
-      translation: [-0.13, -0.02, -0.12]
-      rotation: [-5.0, 15.0, 10.0]
+      translation: [-0.1101, 0.01, 0.0089]
+      rotation: [0.0, -6.2, 0.0]
+    point8:   # the seat at -75 deg, where your update_fixture_scene puts it after the carry
+      translation: [-0.1346, 0.01, 0.0042]
+      rotation: [0.0, -7.6, 0.0]
 
-    point8:
-      translation: [-0.20, -0.06, -0.17]
-      rotation: [-5.0, 35.0, 10.0]
 
   # CLEANING SEQUENCE
   # Format: [from, to] - pairs of point names
