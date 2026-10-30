@@ -82,7 +82,11 @@ ACCEPTED = {
                         by="the owner, 30 Oct",
                         why="the left's start 5 mm deeper and the carry's first points lower, for a supervised lab run: the "
                             "model reads the hook at 44 to 85 N and the fingers slipping off; it cannot follow the hook, the "
-                            "lab decides")],
+                            "lab decides"),
+                   dict(sha256="73b2deca9eef4cbd1a189b61af0d420deefc69b9ac823ac931d3c97568727753", made="2026-10-30 12:52:30",
+                        by="the owner, 30 Oct",
+                        why="accepted as it came from ALIX, not checked here (the owner: sync it and take it as passing), "
+                            "for the lab's runs")],
 }
 
 

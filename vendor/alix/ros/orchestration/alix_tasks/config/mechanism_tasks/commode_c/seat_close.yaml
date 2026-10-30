@@ -242,7 +242,7 @@ left:
   # ====================================================================
   cartesian_poses:
     pre_start_pose: [0.95, 0.185532, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
-    start_pose: [0.98, 0.215, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
+    start_pose: [0.98, 0.22, 0.14, -0.495778, 0.783354, -0.267879, 0.262301]
     
     retract_pose:
       translation: [-0.35, -0.02, -0.17]
@@ -255,22 +255,22 @@ left:
   cleaning_points:
     point1:   # the hook, as yours
       translation: [0.0, 0.01, 0.0]
-      rotation: [0.0, 0.0, 0.0]
+      rotation: [-5.0, 0.0, 0.0]
     point2:   # points 2-8: the fingertips on the seat's arc about its hinge, toward the robot and slightly up
-      translation: [-0.0172, 0.01, -0.005]
-      rotation: [0.0, -1.0, 0.0]
+      translation: [-0.01, 0.01, -0.005]
+      rotation: [-5.0, -1.0, 5.0]
     point3:
-      translation: [-0.0347, 0.015, -0.0081]
-      rotation: [0.0, -2.0, 0.0]
+      translation: [-0.0347, 0.02, -0.0081]
+      rotation: [-5.0, -2.0, 10.0]
     point4:   # the seat at -93.6 deg, just past its balance point (-93.1)
-      translation: [-0.0523, 0.015, -0.0103]
-      rotation: [0.0, -3.0, 0.0]
+      translation: [-0.0523, 0.025, -0.0103]
+      rotation: [-5.0, -3.0, 10.0]
     point5:
-      translation: [-0.0701, 0.01, -0.0112]
+      translation: [-0.0701, 0.02, -0.0112]
       rotation: [0.0, -4.0, 0.0]
     point6:
-      translation: [-0.0879, 0.01, -0.0109]
-      rotation: [0.0, -5.0, 0.0]
+      translation: [-0.0879, 0.015, -0.0109]
+      rotation: [0.0, -5.0, 5.0]
     point7:
       translation: [-0.1101, 0.01, 0.0089]
       rotation: [0.0, -6.2, 0.0]
