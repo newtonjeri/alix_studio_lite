@@ -258,25 +258,25 @@ left:
       rotation: [-5.0, 0.0, 0.0]
     point2:   # points 2-8: the fingertips on the seat's arc about its hinge, toward the robot and slightly up
       translation: [-0.01, 0.01, -0.005]
-      rotation: [-5.0, -1.0, 5.0]
+      rotation: [-5.0, 0.0, 5.0]
     point3:
       translation: [-0.0347, 0.02, -0.0081]
-      rotation: [-5.0, -2.0, 10.0]
+      rotation: [-5.0, 0.0, 15.0]
     point4:   # the seat at -93.6 deg, just past its balance point (-93.1)
       translation: [-0.0523, 0.03, -0.0103]
-      rotation: [-5.0, -3.0, 10.0]
+      rotation: [-7.0, -5.0, 20.0]
     point5:
-      translation: [-0.0701, 0.035, -0.0112]
-      rotation: [-5.0, -4.0, 15.0]
+      translation: [-0.0701, 0.035, -0.03]
+      rotation: [-12.0, -5.0, 25.0]
     point6:
-      translation: [-0.0879, 0.035, -0.0109]
-      rotation: [-5.0, -5.0, 15.0]
+      translation: [-0.0879, 0.035, -0.05]
+      rotation: [-15.0, -5.0, 27.0]
     point7:
-      translation: [-0.14, 0.035, -0.02]
-      rotation: [-5.0, -6.2, 15.0]
+      translation: [-0.12, 0.020, -0.08]
+      rotation: [-20.0, 0.0, 30.0]
     point8:   # the seat at -75 deg, where your update_fixture_scene puts it after the carry
-      translation: [-0.18, 0.035, -0.03]
-      rotation: [-5.0, -7.6, 15.0]
+      translation: [-0.14, 0.005, -0.12]
+      rotation: [-20.0, 0.0, 35.0]
 
 
   # CLEANING SEQUENCE
@@ -359,8 +359,8 @@ stage_sequence:
     arm: left
     contact_surface: seat_and_lid
     additional_ik_frames: [L_glove_frame_1]   
-    collisions: [[commode_seat, L_CameraHolderLink], [commode_seat, L_Link7]]
-
+    collisions: [[commode_seat, L_CameraHolderLink], [commode_seat, L_Link7], [commode_seat, L_ConnectorLink]]
+   
   - stage: move_to_start
     speed_class: approach
     arm: left
@@ -395,7 +395,7 @@ stage_sequence:
     arm: left
 
   - stage: update_fixture_scene
-    seat_angle_deg: -70.0
+    seat_angle_deg: -75.0
     lid_angle_deg: -110.0
 
   # - stage: allow_collision
@@ -438,7 +438,7 @@ stage_sequence:
     arm: left
     contact_surface: seat_and_lid
     additional_ik_frames: [L_glove_frame_1]
-    collisions: [[commode_seat, L_CameraHolderLink], [commode_seat, L_Link7]]
+    collisions: [[commode_seat, L_CameraHolderLink], [commode_seat, L_Link7], [commode_seat, L_ConnectorLink]]
 
 
   - stage: update_fixture_scene
