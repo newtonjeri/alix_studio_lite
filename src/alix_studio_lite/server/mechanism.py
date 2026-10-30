@@ -132,7 +132,7 @@ PHASE_WORDS = {"lid_closed": "the lid and the seat are down", "lid_open": "the l
 #: own "is it closed?" checks keep the plain rule.
 CLOSING_OUTCOME = {"seat_close": "seat_closed", "lid_close": "lid_closed"}
 #: Open the lid's end check also reads the seat (the owner, 30 Oct): one that came up with the lid is closed again by
-#: Close the seat right after, unless the sequence's next lid or seat task is Open the seat, when both are skipped. Asked
+#: Close the seat right after, unless Open the seat comes right after it (nothing moving between), when both are skipped. Asked
 #: on the end check's own frames (inspection pose 1, as Close the seat's checks), as "is the seat closed?" with the
 #: closing allowance: a seat that came up stands at about 110 deg, while a flat seat read 15-20 deg where nothing
 #: learned the fixture's height (30 Oct 18:52) counts as down. Lite's own link between the tasks, not ALIX's
@@ -1088,8 +1088,9 @@ class Runner:
 
     def _after_lid(self, seat: str) -> None:
         """Open the lid's end left the seat ``seat`` (_seat_with_lid): a seat up is closed again by Close the seat right
-        after, unless the next lid or seat task (the run's own queue, else the sequence's: next_task) is Open the seat,
-        when both are skipped (the owner, 30 Oct); unknown: the next task asks its start check and decides itself."""
+        after, unless the next task (the run's own queue, else the sequence's: next_task, given only when nothing moves
+        between them) is Open the seat, when both are skipped (the owner, 30 Oct); unknown: the next task asks its start
+        check and decides itself."""
         self.seat_after_lid = seat
         if seat == "down":
             return

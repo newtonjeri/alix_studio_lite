@@ -56,6 +56,9 @@ def test_open_the_seat_next_skips_both():
     nxt = dict(kind="mechanism", task="seat_open", title="Open the seat")
     plan = [dict(kind="mechanism", task="lid_open", title="Open the lid"), dict(kind="parallel"), nxt]
     assert workflow.next_lid_seat_task(plan, 0) is nxt
+    cleaning = [plan[0], dict(kind="parallel", left=dict(steps=[dict(type="wait", seconds=1)]),
+                              right=dict(steps=[dict(type="program", id=2)])), nxt]
+    assert workflow.next_lid_seat_task(cleaning, 0) is None          # a Program between expects the seat down: closed first
     assert workflow.link_after_lid(nxt, out["seat_after_lid"]).startswith("Open the seat: not run, the seat came up")
     assert nxt["held"] == "seat_open"
     unknown = dict(kind="mechanism", task="seat_open", title="Open the seat")

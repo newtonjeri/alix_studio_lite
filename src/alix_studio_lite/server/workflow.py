@@ -164,9 +164,17 @@ def held_tasks(plan: list[dict]) -> list[dict]:
 
 
 def next_lid_seat_task(plan: list[dict], i: int) -> dict | None:
-    """The sequence's next lid or seat task after stage ``i``, or None: the one Open the lid's seat link looks at
-    (mechanism.Runner ``next_task``, link_after_lid)."""
-    return next((x for x in plan[i + 1:] if x["kind"] == "mechanism"), None)
+    """The lid or seat task that follows stage ``i`` with nothing moving either arm in between (a Wait or a Meet only), or
+    None: the one Open the lid's seat link looks at (mechanism.Runner ``next_task``, link_after_lid). A Program, a Global
+    Point, a Pole or a Hand step between them expects what Open the lid leaves (the lid open, the seat down), so a seat
+    that came up is closed before it (the morning sequence of 30 Oct cleans with the seat down between Open the lid and
+    Open the seat)."""
+    for x in plan[i + 1:]:
+        if x["kind"] == "mechanism":
+            return x
+        if any(s.get("type") in ("program", "global", "pole", "hand") for side in ARMS for s in ((x.get(side) or {}).get("steps") or [])):
+            return None
+    return None
 
 
 def link_after_lid(nxt: dict | None, seat: str | None) -> str:
