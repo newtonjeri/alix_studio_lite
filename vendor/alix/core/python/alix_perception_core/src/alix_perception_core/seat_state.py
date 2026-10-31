@@ -51,6 +51,8 @@ class SeatFitParams:
     height_search_m: float = 0.010   # the fixture fit also finds the fixture's height within +/- this of the registration
     height_step_m: float = 0.005     # (2026-10-24: the simulator's commode sat 9 mm below the calibrated model; a closed
                                      # lid then read "open" — the seat's top is only ~10 mm below the closed lid's)
+    seat_open_min_deg: float = 0.0   # the seat open (standing) from this angle, lifted between min_deg and it; 0 = no
+                                     # open class, a seat lifted from min_deg (2026-10-31: the gap check's parts reading)
 
 
 DEFAULT_FIT = SeatFitParams()
@@ -427,6 +429,17 @@ def fit_fixture_state(depth, intrinsics, camera_to_world, fixture_pose, fixture:
                              reason=f"not closed: {away.reason}; " + (f"{name}: {which.reason}" if which.state else
                                                                       f"lifted or open not told apart ({which.reason}), the better named"))
     out.seat = _part_answer(scores, seat_class, "seat", params)
+    if params.seat_open_min_deg > 0.0 and out.seat.state == "seat_lifted":
+        # the seat as the lid: lifted against down decides, then the better of lifted and open (standing) names it
+        def seat_away(key):
+            return "seat_open" if key[1] >= params.seat_open_min_deg else "seat_lifted"
+
+        up = out.seat
+        which = _part_answer({k: v for k, v in scores.items() if seat_class(k) == "seat_lifted"}, seat_away, "seat", params)
+        name = max(which.classes, key=lambda c: which.classes[c][0])
+        out.seat = PartAnswer(state=name, confidence=up.confidence, margin=up.margin, classes=dict(up.classes, **which.classes),
+                              reason=f"not down: {up.reason}; " + (f"{name}: {which.reason}" if which.state else
+                                                                   f"lifted or open not told apart ({which.reason}), the better named"))
     # THE SEAT UNDER A LIFTED LID IS NOT JUDGED (the owner, 2026-10-24): with the lid between closed and open the seat
     # is mostly hidden, and its ring (down) and the bowl's rim (came up with the lid) differ by ~2 cm there, inside the
     # model's own uncertainty: 24 Oct 15:53 the fit leaned "came along" at margin 0.27 with the seat down

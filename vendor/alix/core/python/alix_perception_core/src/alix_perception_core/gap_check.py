@@ -126,7 +126,9 @@ class GapCheckSession:
                         "gap_seat_ref_lid_m", "gap_seat_ref_lid_frac", "gap_seat_ref_lid_min_px", "gap_seat_ref_replace_m",
                         "gap_seat_fit_enabled", "gap_seat_fit_stride", "gap_seat_fit_step_deg", "gap_seat_fit_tol_m",
                         "gap_seat_fit_min_px", "gap_seat_fit_margin", "gap_lid_fit_enabled", "gap_lid_fit_min_deg",
-                        "gap_lid_fit_open_min_deg", "gap_fit_height_search_m", "gap_fit_height_step_m")
+                        "gap_lid_fit_open_min_deg", "gap_fit_height_search_m", "gap_fit_height_step_m",
+                        "gap_decider", "gap_parts_shadow", "gap_parts_height_search_m", "gap_parts_height_step_m",
+                        "gap_parts_seat_open_min_deg")
     _SEAT_RISE_PARAMS = SEAT_RISE_PARAMS
 
     #: every parameter a check record carries
@@ -282,6 +284,35 @@ class GapCheckSession:
             self.log.warn(f"gap_check: {text}")
             return GapDecision(part=part, expect=asked, success=False, state="refused", confidence=0.0, recommendation="re-clean",
                                message=text, record=keep({"class": "refused", "success": False, "message": text}))
+
+        # THE PARTS READING (read_parts; the owner, 2026-10-31): it decides when gap_decider is "parts" (depth only:
+        # the windows, the colour models and every learned value left out), and rides along in the record otherwise
+        # (gap_parts_shadow), so a lab day says how the two compare.
+        decider = str(self._p("gap_decider") or "windows")
+        if decider == "parts" or bool(self._p("gap_parts_shadow")):
+            if camera_to_world is None:
+                parts = {"state": "", "confidence": 0.0, "note": "no camera pose", "record": {"error": "no camera pose"}}
+            else:
+                try:
+                    parts = self.read_parts(asked, depth, intrinsics, camera_to_world, hands, allow)
+                except Exception as exc:                               # noqa: BLE001 — the windows answer alone
+                    parts = {"state": "", "confidence": 0.0, "note": f"failed ({exc})", "record": {"error": str(exc)}}
+            record_extra["parts"] = dict(parts["record"], answer=parts["state"] or "cannot judge",
+                                         confidence=round(float(parts["confidence"]), 3), note=parts["note"], decides=decider == "parts")
+            if decider == "parts":
+                record_extra["intrinsics"] = {"fx": float(intrinsics.fx), "fy": float(intrinsics.fy), "cx": float(intrinsics.cx),
+                                              "cy": float(intrinsics.cy), "width": int(w), "height": int(h)}
+                if not parts["state"]:
+                    return refuse(f"parts (depth only): cannot judge: {parts['note']}")
+                state, conf = parts["state"], float(parts["confidence"])
+                lifted = state == asked or (asked == "seat_open" and state == "seat_lifted")
+                message = f"parts (depth only): {parts['note']}"
+                self.log.info(f"gap_check: {message} -> {state}")
+                return GapDecision(part=part, expect=asked, success=True, state=state, confidence=conf,
+                                   recommendation="pass" if lifted else "re-clean", message=message,
+                                   record=keep({"class": state, "success": True, "confidence": conf, "passes_expectation": bool(lifted),
+                                                "part": part, "message": message}))
+            self.log.info(f"gap_check: parts (shadow): {parts['note']} -> {parts['state'] or 'cannot judge'}")
 
         nominal_top = float(self._p("gap_seat_top_z" if part == "seat" else "gap_lid_top_z"))
         lid_registration = self._registration_for(at_pose)
@@ -666,7 +697,7 @@ class GapCheckSession:
         base_deg = float(self._p("gap_seat_lift_min_deg"))
         try:
             whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, registration, hands,
-                                      seat_min_deg=max(base_deg, allow))
+                                      seat_min_deg=self._lifted_from(base_deg, allow))
         except Exception as exc:                                       # noqa: BLE001 — the other readings answer
             self.log.warn(f"gap_check: the seat fit failed ({exc}); the other readings stand")
             record_extra["seat_fit"] = {"error": str(exc)}
@@ -694,30 +725,80 @@ class GapCheckSession:
             agree = [float(c) for _n, s, c in others if s == fit.state]
             out_state, out_conf = fit.state, max([float(fit.confidence)] + agree)
             note = f"{fit.state} at {out_conf:.2f} from its own fit ({fit.reason})"
-            if out_state == "seat_closed" and fit.deg is not None and base_deg <= float(fit.deg) < allow:
+            if out_state == "seat_closed" and fit.deg is not None and base_deg <= float(fit.deg) <= allow:
                 note += f"; nearly closed: {float(fit.deg):.0f} deg, inside the closing allowance of {allow:.0f} deg"
         info["outcome"] = out_state
         record_extra["seat_fit"] = info
         return out_state, out_conf, note
 
+    def _lifted_from(self, base_deg: float, allow: float) -> float:
+        """The angle the fixture fit calls a part lifted from: ``base_deg`` (the parameters'), or past the closing
+        allowance ``allow`` when one applies, INCLUSIVE: the fit judges on its angle step's grid (gap_seat_fit_step_deg,
+        5 deg), so "within 25 deg" lifts from half a step past it (31 Oct: closed lids of 28 Oct read exactly 25 deg)."""
+        if allow <= 0.0:
+            return float(base_deg)
+        return max(float(base_deg), float(allow) + 0.5 * float(self._p("gap_seat_fit_step_deg")))
+
     def _fixture_fit(self, depth, intrinsics, camera_to_world, fixture, registration, hands, seat_min_deg=None,
-                     lid_min_deg=None):
+                     lid_min_deg=None, height_search_m=None, height_step_m=None, seat_open_min_deg=0.0):
         """seat_state.fit_fixture_state with this node's parameters: the lid's and the seat's state from one fit (the
         renders made once per camera pose, so a check's later frames and later checks from the same pose reuse them).
         ``seat_min_deg`` / ``lid_min_deg``: the angle each part counts as lifted from, when not the parameters' (the
-        closing allowance)."""
+        closing allowance); ``height_search_m`` / ``height_step_m``: the height searched about the registration and its
+        step, when not the parameters';
+        ``seat_open_min_deg``: the seat open from this angle (0: no open class; the parts reading's)."""
         from alix_perception_core import seat_state as sst
         seat_min = float(self._p("gap_seat_lift_min_deg")) if seat_min_deg is None else float(seat_min_deg)
         lid_min = float(self._p("gap_lid_fit_min_deg")) if lid_min_deg is None else float(lid_min_deg)
+        search = float(self._p("gap_fit_height_search_m")) if height_search_m is None else float(height_search_m)
+        step = float(self._p("gap_fit_height_step_m")) if height_step_m is None else float(height_step_m)
         params = sst.SeatFitParams(stride=int(self._p("gap_seat_fit_stride")), step_deg=float(self._p("gap_seat_fit_step_deg")),
                                    tol_m=float(self._p("gap_seat_fit_tol_m")), min_zone_px=int(self._p("gap_seat_fit_min_px")),
                                    min_margin=float(self._p("gap_seat_fit_margin")), min_deg=seat_min,
                                    hand_mask_m=float(self._p("gap_hand_mask_m")), lid_min_deg=lid_min,
                                    lid_open_min_deg=float(self._p("gap_lid_fit_open_min_deg")),
-                                   height_search_m=float(self._p("gap_fit_height_search_m")),
-                                   height_step_m=float(self._p("gap_fit_height_step_m")))
+                                   height_search_m=search, height_step_m=step,
+                                   seat_open_min_deg=float(seat_open_min_deg or 0.0))
         return sst.fit_fixture_state(depth, intrinsics, camera_to_world, self.fixture_in_world(), fixture,
                                      registration_m=float(registration), hands=list(hands.values()), params=params)
+
+    def read_parts(self, asked: str, depth, intrinsics, camera_to_world, hands: dict, allow: float = 0.0) -> dict:
+        """THE PARTS READING (the owner, 2026-10-31: depth only, each part measured against the commode in the same
+        frame; perception.yaml gap_decider). The lid's and the seat's angle from the whole fixture in this frame, the
+        fixture at its scene place with only gap_parts_height_search_m searched and NOTHING LEARNED (31 Oct: a learned
+        +32 mm made the next lift checks fail; on every lab day of 21-31 Oct the fit found the commode within 5 mm of
+        its scene place), no window and no colour model. The asked part's class by its angle: closed under its lift
+        angle (gap_seat_lift_min_deg / gap_lid_fit_min_deg, or the closing allowance ``allow``), open from
+        gap_lid_fit_open_min_deg / gap_parts_seat_open_min_deg, lifted between. A part lifted but not open does not
+        answer an "open?" question (no vote: from inspection pose 1, where the right hand hides the seat's front, a
+        closed seat reads 15-20 deg and a closed lid 10-15 deg; lift_check counts lifted as open for the windows, which
+        cannot tell an angle). -> {"state" ("" = cannot judge), "confidence", "note", "record"}."""
+        part = "seat" if "seat" in asked.lower() else "lid"
+        fixture = self._hinged_fixture()
+        if fixture is None:
+            return {"state": "", "confidence": 0.0, "note": "no fixture model", "record": {"error": "no fixture model"}}
+        base_seat, base_lid = float(self._p("gap_seat_lift_min_deg")), float(self._p("gap_lid_fit_min_deg"))
+        whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, 0.0, hands,
+                                  seat_min_deg=self._lifted_from(base_seat, allow), lid_min_deg=self._lifted_from(base_lid, allow),
+                                  height_search_m=float(self._p("gap_parts_height_search_m")),
+                                  height_step_m=float(self._p("gap_parts_height_step_m")),
+                                  seat_open_min_deg=float(self._p("gap_parts_seat_open_min_deg")))
+        ans = whole.seat if part == "seat" else whole.lid
+        record = whole.as_dict()
+        record.update(part=part, closed_within_deg=float(allow))
+        where = (f"lid {whole.lid_deg:.0f} deg, seat {whole.seat_deg:.0f} deg, the commode {whole.height_offset_m * 1000:+.0f} mm "
+                 f"from its scene place" if whole.lid_deg is not None else whole.reason)
+        if not ans.state:
+            return {"state": "", "confidence": 0.0, "record": record,
+                    "note": f"the {part} cannot be judged ({ans.reason or whole.reason})"}
+        state, conf = ans.state, float(ans.confidence)
+        note = f"the {part} {state.split('_', 1)[1]} at {ans.deg:.0f} deg (margin {ans.margin:+.2f}); {where}"
+        if asked in ("lid_open", "seat_open") and state in ("lid_lifted", "seat_lifted"):
+            state, conf = ("lid_between" if part == "lid" else "uncertain"), 0.0
+            note += f"; lifted, not open: no answer to {asked}"
+        if state == "seat_open":
+            state = "seat_lifted"                     # the gap check's word for a seat away from its place (LIFTED_STATES)
+        return {"state": state, "confidence": conf, "note": note, "record": record}
 
     def _consult_lid_fit(self, state, conf, depth, intrinsics, camera_to_world, hands, registration, record_extra,
                          allow: float = 0.0) -> tuple:
@@ -734,7 +815,7 @@ class GapCheckSession:
         base_deg = float(self._p("gap_lid_fit_min_deg"))
         try:
             whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, registration, hands,
-                                      lid_min_deg=max(base_deg, allow))
+                                      lid_min_deg=self._lifted_from(base_deg, allow))
         except Exception as exc:                                       # noqa: BLE001 — the ROI reading answers
             self.log.warn(f"gap_check: the lid fit failed ({exc}); the ROI reading stands")
             record_extra["lid_fit"] = {"error": str(exc)}
@@ -757,7 +838,7 @@ class GapCheckSession:
             out_conf = max(float(fit.confidence), float(conf) if state == fit.state else 0.0)
             note = f"{fit.state} at {out_conf:.2f} from the fixture fit ({fit.reason})" + (
                 f"; the ROI reading: {state}" if state != fit.state else "")
-            if out_state == "lid_closed" and fit.deg is not None and base_deg <= float(fit.deg) < allow:
+            if out_state == "lid_closed" and fit.deg is not None and base_deg <= float(fit.deg) <= allow:
                 note += f"; nearly closed: {float(fit.deg):.0f} deg, inside the closing allowance of {allow:.0f} deg"
         info["outcome"] = out_state
         record_extra["lid_fit"] = info

@@ -1,0 +1,139 @@
+{
+ "class": "lid_closed",
+ "message": "lid surface median z 0.459 m in base_link (closed top 0.459 = nominal 0.450 registered +9 mm by the lid, rise -0 mm vs 50 mm bar); 100 % of the ROI valid, median range 0.460 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); models: closed from colour at 0.93",
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "camera_to_world": [
+  [
+   0.481689,
+   -0.813925,
+   0.32481,
+   0.554332
+  ],
+  [
+   -0.876288,
+   -0.443236,
+   0.188842,
+   -0.125232
+  ],
+  [
+   -0.009736,
+   -0.37559,
+   -0.926735,
+   0.885639
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "hands": {
+  "ILH_plam": [
+   0.5457,
+   0.2444,
+   0.7565
+  ],
+  "ILH_left_index_1": [
+   0.5854,
+   0.2332,
+   0.6311
+  ],
+  "ILH_left_index_tip": [
+   0.6116,
+   0.1659,
+   0.6111
+  ],
+  "ILH_left_middle_1": [
+   0.5677,
+   0.2255,
+   0.6303
+  ],
+  "ILH_left_middle_tip": [
+   0.5943,
+   0.1541,
+   0.6138
+  ],
+  "ILH_left_ring_1": [
+   0.55,
+   0.2179,
+   0.6303
+  ],
+  "ILH_left_ring_tip": [
+   0.5723,
+   0.1514,
+   0.602
+  ],
+  "ILH_left_little_1": [
+   0.5322,
+   0.2106,
+   0.6313
+  ],
+  "ILH_left_little_tip": [
+   0.5504,
+   0.1495,
+   0.6073
+  ],
+  "ILH_left_thumb_1": [
+   0.5764,
+   0.2266,
+   0.7032
+  ],
+  "ILH_left_thumb_tip": [
+   0.6309,
+   0.2136,
+   0.6235
+  ],
+  "IRH_plam": [
+   0.5225,
+   -0.1617,
+   0.798
+  ],
+  "IRH_right_index_tip": [
+   0.5013,
+   -0.1407,
+   0.6326
+  ],
+  "IRH_right_middle_tip": [
+   0.504,
+   -0.1622,
+   0.6398
+  ],
+  "IRH_right_ring_tip": [
+   0.5171,
+   -0.1777,
+   0.6392
+  ],
+  "IRH_right_little_tip": [
+   0.5421,
+   -0.1887,
+   0.629
+  ],
+  "IRH_right_thumb_tip": [
+   0.5292,
+   -0.1088,
+   0.6543
+  ]
+ },
+ "source": "native depth (D435, pyrealsense2)",
+ "frame": "camera_depth_optical_frame",
+ "registration_m": 0.009063380580681735,
+ "expect": "lid_lifted",
+ "context": {
+  "check": {
+   "check_id": "20261024_114110_309_verify_lid_lifted",
+   "stage": "verify_lid_lifted",
+   "expect": "lid_lifted",
+   "observe": false,
+   "frame": 1
+  }
+ },
+ "from": "Resources/Logs/2026-10-24/checks/20261024_114110_625_gap_check_lid_lifted_lid_closed"
+}

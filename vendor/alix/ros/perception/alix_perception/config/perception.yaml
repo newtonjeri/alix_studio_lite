@@ -266,3 +266,15 @@ perception_node:
     # Such a check TEACHES NOTHING (31 Oct): no registration, no seat reference. Close the lid's end check taught +22 to
     # +32 mm from a lid resting 5-10 deg up, and the next sequence's lift checks could not judge (11:28, 11:36).
     gap_closing_max_deg: 25.0
+    # THE PARTS READING (the owner, 2026-10-31: depth only, each part measured against the commode in the same frame;
+    # GapCheckSession.read_parts). The fixture fit with the commode at its scene place (nothing learned: on every lab day
+    # of 21-31 Oct the fit found it within 5 mm of there) decides from the parts' angles: closed under the lift angle
+    # (or the closing allowance), open from the open angle, lifted between; a part lifted but not open answers no "open?"
+    # question. "windows": the windows, the fit and the colour models decide as before, the parts reading rides along in
+    # every record (gap_parts_shadow); "parts": the parts reading decides alone (no window, no colour model, nothing learned).
+    gap_decider: "windows"
+    gap_parts_shadow: true
+    gap_parts_height_search_m: 0.005     # the commode's height searched each frame about its scene place, in steps of
+    gap_parts_height_step_m: 0.0025      # this (wider lets a seat-down hypothesis sink onto the bare rim, 2 cm lower:
+                                        # +/-10 mm left 91 frames of a standing seat undecided, margin 0.09-0.13)
+    gap_parts_seat_open_min_deg: 80.0    # the seat open (standing) from this angle, as the lid (gap_lid_fit_open_min_deg)

@@ -1,0 +1,139 @@
+{
+ "class": "lid_open",
+ "message": "lid surface median z 0.423 m in base_link (closed top 0.450, rise -27 mm vs 50 mm bar; ABSENT from its closed place, the bowl shows); 99 % of the ROI valid, median range 0.637 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 26 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: lid_open at 1.00 from the fixture fit (not closed: lid_away 6847 vs lid_closed -8719, margin +1.79; lid_open: lid_open 6847 vs lid_lifted -1218, margin +1.18; best: lid 110 deg, seat 110 deg (seat) over 24688 pixels at 1/3, the fixture +0 mm from its registration); models: lid_seat_open from depth+colour at 0.99",
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "camera_to_world": [
+  [
+   0.8452,
+   0.066923,
+   0.530244,
+   0.513549
+  ],
+  [
+   0.041802,
+   -0.997368,
+   0.059248,
+   -0.074951
+  ],
+  [
+   0.532813,
+   -0.027911,
+   -0.845772,
+   0.965237
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "hands": {
+  "ILH_plam": [
+   0.5447,
+   0.2257,
+   0.8013
+  ],
+  "ILH_left_index_1": [
+   0.6016,
+   0.2356,
+   0.6826
+  ],
+  "ILH_left_index_tip": [
+   0.6138,
+   0.1707,
+   0.6473
+  ],
+  "ILH_left_middle_1": [
+   0.583,
+   0.2336,
+   0.6779
+  ],
+  "ILH_left_middle_tip": [
+   0.5936,
+   0.1632,
+   0.6468
+  ],
+  "ILH_left_ring_1": [
+   0.5642,
+   0.2315,
+   0.6739
+  ],
+  "ILH_left_ring_tip": [
+   0.5726,
+   0.1634,
+   0.6456
+  ],
+  "ILH_left_little_1": [
+   0.5454,
+   0.2294,
+   0.671
+  ],
+  "ILH_left_little_tip": [
+   0.5518,
+   0.1704,
+   0.6388
+  ],
+  "ILH_left_thumb_1": [
+   0.579,
+   0.2139,
+   0.7485
+  ],
+  "ILH_left_thumb_tip": [
+   0.6448,
+   0.2061,
+   0.6759
+  ],
+  "IRH_plam": [
+   0.5673,
+   -0.1452,
+   0.9183
+  ],
+  "IRH_right_index_tip": [
+   0.6201,
+   -0.2094,
+   0.79
+  ],
+  "IRH_right_middle_tip": [
+   0.6318,
+   -0.2111,
+   0.8082
+  ],
+  "IRH_right_ring_tip": [
+   0.6479,
+   -0.207,
+   0.8179
+  ],
+  "IRH_right_little_tip": [
+   0.669,
+   -0.1997,
+   0.8214
+  ],
+  "IRH_right_thumb_tip": [
+   0.6068,
+   -0.1651,
+   0.7695
+  ]
+ },
+ "source": "native depth (D435, pyrealsense2)",
+ "frame": "camera_depth_optical_frame",
+ "registration_m": 0.0,
+ "expect": "lid_open",
+ "context": {
+  "check": {
+   "check_id": "20261031_110500_151_verify_lid_open",
+   "stage": "verify_lid_open",
+   "expect": "lid_open",
+   "frame": 1,
+   "closing": false
+  }
+ },
+ "from": "Resources/Logs/2026-10-31/checks/20261031_110500_760_gap_check_lid_open_lid_open"
+}
