@@ -38,6 +38,8 @@ import numpy as np
 from .jobs import UserError
 
 MAX_MM = 30.0              #: the owner, 31 Oct: the commode farther than this from where the plan works is a person's to see
+DEAD_MM, DEAD_DEG = 5.0, 1.0   #: the owner, 31 Oct: "we can be able to open with a tolerance of plus or minus 5 mm": a
+                               #: commode nearer than this to where the plan works (1 deg: 5 mm at its ends) runs the plan
 MAX_YAW_DEG = 3.0
 MAX_DZ_MM = 15.0
 IK_EVERY = 4               #: every 4th line (20 ms) by IK, the lines between interpolated (contact_preview's)
@@ -69,6 +71,19 @@ class Move:
         D[:3, :3] = R
         D[:3, 3] = c - R @ c + np.array([self.dx_m, self.dy_m, self.dz_m if height else 0.0])
         return D
+
+    @classmethod
+    def from_change(cls, change: dict, about=CENTRE_XY) -> "Move":
+        """A place change (alix_perception_core.fixture_place.change: dx, dy, dz m of the commode's middle, dyaw deg) as
+        the move of the commode about its middle ``about`` (base_link x, y: where the reference reads it)."""
+        return cls(float(change["dx_m"]), float(change["dy_m"]), float(change["dz_m"]), float(change["dyaw_deg"]),
+                   (float(about[0]), float(about[1])))
+
+    @property
+    def small(self) -> bool:
+        """Within the owner's tolerance (DEAD_MM, DEAD_DEG): the plan runs as it is."""
+        return (math.hypot(self.dx_m, self.dy_m) * 1000.0 < DEAD_MM and abs(self.dz_m) * 1000.0 < DEAD_MM
+                and abs(self.dyaw_deg) < DEAD_DEG)
 
     @property
     def sideways(self) -> bool:

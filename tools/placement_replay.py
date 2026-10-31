@@ -5,7 +5,11 @@ the state of the lid and the seat, and how it held frame to frame, check to chec
 
     python3 tools/placement_replay.py                     # every day
     python3 tools/placement_replay.py --day 2026-10-31    # one day (repeatable)
-    --json PATH  every frame's place
+    --json PATH  every frame's place;  --from-json PATH  the places of an earlier run, not read again
+    --reference DAY  the shadow: that day's looks as where the plans work, and for every other check what the robot
+                 would have done (the commode's change from the look of the same pose and state; within the owner's
+                 5 mm the plan as it is, beyond it the plan of the task that starts from that look moved with it, or
+                 refused by plan_shift's gates; nothing moves)
 
 Its ABSOLUTE place is off by the wrist camera's mount (a CAD value): what it says is a CHANGE of place, between frames
 from the same arm pose (the named pose within 1 deg, the same pole height) with the lid and the seat in the same state.
@@ -20,6 +24,10 @@ pose 1: y -3.3 mm with the seat down, -3.6 with it open); pose 4 and pose 1 read
 apart along the commode) and from pose 1 (nothing to use); an open seat resting otherwise (lifted with the lid) moves
 the reading by up to 5 mm. The 21-24 Oct lid lifts that missed stood where the ones that lifted stood (within 4 mm):
 those misses were the plan's (revised 24 Oct), not the commode's place.
+The shadow with 26 Oct as the reference (--reference 2026-10-26): 27 Oct every closing's look within 5 mm (as planned);
+on 24, 28, 30 and 31 Oct some looks beyond it, mostly by a turn of 1 to 1.5 deg (30 Oct: x and y within 2.6 mm, every
+Close the seat passing at the lab as planned): Close the seat and Open the seat moved and followed (hands within
+0.6 mm), Open the lid and Close the lid refused (their carries at the wrist's singularity).
 """
 from __future__ import annotations
 
@@ -135,6 +143,75 @@ def report(res: list[dict]) -> None:
                     print(f"  {day} {state}: pose 4 minus pose 1 {_fmt(m - m1)}")
 
 
+#: the task that starts from each look (its first check's pose and state)
+STARTS = {("inspection_pose_4", "lid shut"): "lid_open", ("inspection_pose_4", "lid open, seat down"): "seat_open",
+          ("inspection_pose_1", "lid open, seat down"): "lid_close", ("inspection_pose_1", "lid open, seat open"): "seat_close"}
+
+
+def shadow(res: list[dict], reference: str) -> None:
+    """Each check against the reference day's look of the same pose, pole and state (the median of its checks): the
+    change, and what the run would do with it (plan_shift: the dead band, the move, its gates)."""
+    from alix_perception_core import fixture_place as fp
+
+    from alix_studio_lite.server import mechanism, plan_shift
+    from alix_studio_lite.server.jobs import UserError
+
+    gc = _gc()
+    if gc._fixture_in_world is None:
+        gc._locator, gc._fixture_in_world = gc._load_locator()
+    pose0 = gc._fixture_in_world
+    checks = defaultdict(list)
+    for r in res:
+        if r["ok"]:
+            checks[(r["check_id"], r["pose"], r["pole_mm"], r["state"])].append(r)
+
+    def place(rows):
+        m = np.median([[x[a] for a in AXES] for x in rows], axis=0)
+        return fp.Placement(ok=True, dx_m=m[0], dy_m=m[1], dz_m=m[2], dyaw_deg=m[3])
+
+    ref: dict = defaultdict(list)
+    for (cid, pose, pole, state), rows in checks.items():
+        if rows[0]["day"] == reference:
+            ref[(pose, pole, state)].append(place(rows))
+    refs = {k: fp.Placement(ok=True, **{a: float(np.median([getattr(p, a) for p in v])) for a in AXES}) for k, v in ref.items()}
+    if not refs:
+        print(f"\nthe shadow: no look of {reference} to take as the reference")
+        return
+    print(f"\nthe shadow: the looks of {reference} as where the plans work; each later check's change from the look of the "
+          f"same pose and state, and what the run would do (within {plan_shift.DEAD_MM:g} mm and {plan_shift.DEAD_DEG:g} deg: the "
+          "plan as it is)")
+    plans, said = {}, defaultdict(list)
+    for (cid, pose, pole, state), rows in sorted(checks.items(), key=lambda kv: kv[1][0]["stamp"]):
+        day, key = rows[0]["day"], (pose, pole, state)
+        if day == reference or key not in refs or (pose, state) not in STARTS:
+            continue
+        r0 = refs[key]
+        c = fp.change(r0, place(rows), pose0)
+        middle = r0.pose(pose0)[:3, :3] @ np.asarray(fp.DEFAULT_PLACE.centre_body) + r0.pose(pose0)[:3, 3]
+        move = plan_shift.Move.from_change(c, (middle[0], middle[1]))
+        task = STARTS[(pose, state)]
+        if move.small:
+            what = "as planned"
+        else:
+            try:
+                plan = plans.setdefault(task, mechanism.Plan(task))
+                moved = plan_shift.shift(plan, move)
+                what = f"moved, followed (hands within {max((x.get('hand_off_mm') or 0.0) for x in moved.shift_report):.1f} mm)"
+            except UserError as exc:
+                what = "REFUSED: " + str(exc).split(": ", 2)[-1][:110]
+        said[(day, pose, state, task)].append((move, what))
+    for (day, pose, state, task), got in sorted(said.items()):
+        planned = sum(1 for _, w in got if w == "as planned")
+        moves = np.array([[m.dx_m * 1000, m.dy_m * 1000, m.dz_m * 1000, m.dyaw_deg] for m, _ in got])
+        print(f"  {day} {pose[-6:]} {state:20s} ({TITLES.get(task, task)}): {len(got)} check(s), the commode "
+              f"x {moves[:, 0].min():+.1f}..{moves[:, 0].max():+.1f}, y {moves[:, 1].min():+.1f}..{moves[:, 1].max():+.1f}, "
+              f"z {moves[:, 2].min():+.1f}..{moves[:, 2].max():+.1f} mm, {moves[:, 3].min():+.2f}..{moves[:, 3].max():+.2f} deg: "
+              f"{planned} as planned" + "".join(f"; {w}" for w in sorted({w for _, w in got if w != 'as planned'})))
+
+
+TITLES = {"lid_open": "Open the lid", "seat_open": "Open the seat", "lid_close": "Close the lid", "seat_close": "Close the seat"}
+
+
 def _why(res: list[dict]) -> dict:
     out: dict = defaultdict(int)
     for r in res:
@@ -149,14 +226,21 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--day", action="append", help="a day's folder name (YYYY-MM-DD); default every day")
     ap.add_argument("--json", type=Path, default=None)
+    ap.add_argument("--from-json", type=Path, default=None)
+    ap.add_argument("--reference", default=None, help="a day's folder name: its looks as where the plans work (the shadow)")
     ap.add_argument("--workers", type=int, default=8)
     args = ap.parse_args()
-    rows = parts_replay.frames(args.day)
-    with ProcessPoolExecutor(args.workers) as pool:
-        res = list(pool.map(_one, rows, chunksize=4))
+    if args.from_json:
+        res = [r for r in json.loads(args.from_json.read_text()) if not args.day or r["day"] in args.day]
+    else:
+        rows = parts_replay.frames(args.day)
+        with ProcessPoolExecutor(args.workers) as pool:
+            res = list(pool.map(_one, rows, chunksize=4))
     report(res)
     if args.json:
         args.json.write_text(json.dumps(res))
+    if args.reference:
+        shadow(res, args.reference)
     return 0
 
 

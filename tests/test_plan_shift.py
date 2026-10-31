@@ -167,3 +167,33 @@ def test_the_runner_sends_the_moved_stretch():
     assert not any(c[3][-1] == next(e for e in mechanism.Plan("seat_open").entries if e.kind == "arm" and e.side == "left"
                                      and e.stage == "execute_path").rows[-1] for c in sent if c[1] == "left")
     assert any("moved with the commode" in t for t in said)
+
+
+def test_a_place_change_within_the_owners_tolerance_runs_the_plan_as_it_is():
+    """The owner, 31 Oct: the plans open with +/- 5 mm; 1 deg moves the commode's ends about that much."""
+    change = dict(dx_m=0.003, dy_m=-0.003, dz_m=0.004, dyaw_deg=0.8)
+    assert plan_shift.Move.from_change(change).small
+    assert not plan_shift.Move.from_change(dict(change, dx_m=0.004, dy_m=-0.004)).small        # 5.7 mm
+    assert not plan_shift.Move.from_change(dict(change, dyaw_deg=-1.2)).small
+    m = plan_shift.Move.from_change(dict(change, dyaw_deg=-1.2), about=(0.74, 0.02))
+    assert m.about == (0.74, 0.02) and m.dyaw_deg == -1.2
+
+
+def test_the_shadow_says_what_the_run_would_do(capsys):
+    """tools/placement_replay.py --reference: each check against the reference day's look of the same pose and state."""
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+    import placement_replay
+
+    def row(day, cid, dx, dy, dyaw):
+        return dict(ok=True, day=day, check_id=cid, stamp=cid, pose="inspection_pose_1", pole_mm=150.0,
+                    state="lid open, seat open", dx_m=dx, dy_m=dy, dz_m=0.004, dyaw_deg=dyaw)
+
+    res = [row("2026-10-26", "a", -0.006, 0.035, 6.0), row("2026-10-26", "b", -0.006, 0.035, 6.0),
+           row("2026-10-27", "c", -0.004, 0.032, 6.1), row("2026-10-28", "d", -0.016, 0.045, 6.0)]
+    placement_replay.shadow(res, "2026-10-26")
+    out = capsys.readouterr().out
+    assert "2026-10-27 pose_1 lid open, seat open  (Close the seat): 1 check(s)" in out and "1 as planned" in out
+    assert "2026-10-28" in out and "moved, followed" in out
