@@ -1827,14 +1827,20 @@ class RealExec(_Exec):
 
     def _shot(self, check=None):
         """One shot: both arms read, the camera's frame, posed by FK (None when the camera gave no frame), and the right
-        arm's joints (the named pose the check is at)."""
+        arm's joints (the named pose the check is at). The joints that pose the camera are the arm's now: its 5 ms feed's
+        latest frame, else one read of the controller (robot_real.joints_now), never the link's view, which may be half
+        a second old (31 Oct: a look right after the right arm's move into inspection pose 1 posed its first frame up to
+        18 deg short of where the arm stopped; 11:14:43 that frame read a lifted seat at 0 deg). Its pole and hand: the
+        view's (they do not move while the camera looks)."""
         from . import robot_fk
         from .gap_check import DepthFrame
 
         readings = {}
         for side, link in self.robot.links.items():
             fb = self._reading(link)
-            readings[side] = dict(q_deg=fb.get("joints_deg"), pole_mm=fb.get("pole_mm"), hand=fb.get("hand"))
+            arm = (self.arms or {}).get(side)
+            now = arm.joints_now() if arm is not None and hasattr(arm, "joints_now") else {}
+            readings[side] = dict(q_deg=now.get("joints_deg") or fb.get("joints_deg"), pole_mm=fb.get("pole_mm"), hand=fb.get("hand"))
         context = dict(arms=readings, check=check, camera=getattr(self.kit.camera, "device", None))
         try:
             shot = self.kit.camera.shot(wait_s=float(self.kit.gap.p.get("frame_wait_s", 2.0)))

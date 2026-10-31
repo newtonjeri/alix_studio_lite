@@ -360,6 +360,35 @@ def test_each_check_is_decided_on_two_frames_that_agree_or_more_one_at_a_time():
     assert ex.ask(SEAT_LIFTED, "seat_lifted").success              # decided on the first two, before the no came
 
 
+def test_a_frame_is_posed_where_the_arm_stopped_not_by_a_half_second_old_view():
+    """31 Oct: a look right after the right arm's move into inspection pose 1 posed its first frame by the link's view,
+    read before the arm stopped (11:35:57: 18 deg short; 11:14:43 that frame read a lifted seat at 0 deg). The camera is
+    posed by the arm's own reading now (its 5 ms feed, else a read); the view gives the pole and the hand."""
+    from types import SimpleNamespace
+
+    stale, stopped = [5.0, -92.0, -5.0, 87.0, 2.0, 65.0, -79.0], [5.0, -97.0, -2.0, 87.0, 0.0, 68.0, -97.0]
+    left = [0.0, -82.0, 26.0, 98.0, -6.0, 62.0, 111.0]
+
+    def link(q):
+        return SimpleNamespace(view=lambda: {"reader": True, "view_age_s": 0.0,
+                                             "feedback": {"joints_deg": q, "pole_mm": 150.0, "hand": [1000] * 6, "age_s": 0.3}})
+
+    robot = SimpleNamespace(links={"left": link(left), "right": link(stale)})
+    arms = {"left": SimpleNamespace(joints_now=lambda: {"joints_deg": left, "by": "feed"}),
+            "right": SimpleNamespace(joints_now=lambda: {"joints_deg": stopped, "by": "feed"})}
+    shot = SimpleNamespace(depth=np.zeros((48, 64)), intrinsics=None, colour=None, aligned=None, colour_intrinsics=None,
+                           camera_ms=None, age_s=0.0)
+    kit = SimpleNamespace(camera=SimpleNamespace(shot=lambda wait_s: shot, device=None),
+                          gap=SimpleNamespace(p={"frame_wait_s": 2.0, "gap_hand_frames": []}))
+    ex = mechanism.RealExec(SimpleNamespace(), robot, arms, kit)
+    frame, q = ex._shot(dict(stage="verify_seat_closed", frame=1))
+    assert q == stopped and frame.context["arms"]["right"] == dict(q_deg=stopped, pole_mm=150.0, hand=[1000] * 6)
+    want = robot_fk.camera_frames({s: dict(q_deg=v, pole_mm=150.0, hand=[1000] * 6) for s, v in (("left", left), ("right", stopped))})
+    assert np.allclose(frame.cam_to_base, want["depth"])
+    off = robot_fk.camera_frames({s: dict(q_deg=v, pole_mm=150.0, hand=[1000] * 6) for s, v in (("left", left), ("right", stale))})
+    assert not np.allclose(frame.cam_to_base, off["depth"], atol=1e-3)              # the view's would have posed it elsewhere
+
+
 def test_two_checks_at_one_pose_judge_the_same_frames():
     """The seat's start asks lid open, then seat closed, from inspection pose 4: the second check judges the frames the
     first took (26 Oct: 2.5 s of new frames a run), as long as nothing moved since; a move, an approach or a hold
