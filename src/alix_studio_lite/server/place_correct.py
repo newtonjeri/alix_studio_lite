@@ -29,9 +29,27 @@ THE REFERENCE, taught by itself (the owner, 31 Oct, agreed): the first look of t
 nothing moved (no move from either source, no re-lift) becomes the reference of its look; a run moved by either never
 changes it. Kept per robot (its camera's mount) in the logs folder (REFERENCE_FILE), each with the digest of the plan it
 was taught on: a re-planned task runs on the UGV's alone until a run of the new plan teaches it again.
+
+GENERATED AHEAD, while the robot runs (the owner, 1 Nov: "generate the first task, as it executes be generating the
+other tasks"; "proceed to second task planning as the first executes, and continue generation in parallel with
+execution"). A moved plan takes 1.2 to 2.8 s to make (plan_shift.shift 0.1 s, its collision check the rest; the plan's
+own run checked once, then half that), and each task waited for its own before it started. Now:
+- the run's start: its tasks (S2: its lid and seat stages, in order; a task on its own: itself) generated for the UGV's
+  placement one after the other in a process of their own (LANES[1]), the first first: the next while one runs; a task
+  takes its plan from there, and waits only for one not made yet (the run's first, when nothing runs before it);
+- a task's first look: the camera's move made in another process (LANES[0]: the task running's, its own run checked
+  there as the task starts), as the moves before its working stretch run (the Runner waits before the first move it
+  changes, as before);
+- the camera's move run on one task: the run's next tasks generated for it too (LANES[1]), the commode standing where it
+  stands for the run: a later task whose own look reads it within DEAD_MM of it (at the hands) runs that plan at once.
+Lite's own process makes none of them in a run (Correction.submit: in_workers): FCL, the collision check's, is not safe
+across threads (collision_check), and in a thread of Lite's process the check holds Python's lock up to 80 ms at a time
+against Lite's other threads (the page, STOP, the camera; measured 1 Nov: a 5 ms loop beside it ran 9.6 ms late on
+average). The arms' 5 ms streams run in each arm's own process (robot_process): they do not wait on it either way.
 """
 from __future__ import annotations
 
+import dataclasses
 import json
 import math
 import threading
@@ -52,6 +70,7 @@ WEAK_LOOKS = {             #: (pose, state) -> (scatter mm, why): the depth chec
 }
 POLE_STEP_MM = 5.0         #: a look's pole, to this (the reference's pole and the look's: the same height)
 REFERENCE_FILE = "place_reference.json"
+LANES = ("plans_now", "plans_ahead")   #: Lite's processes (workers.pool) for the task running's moved plans, the next tasks'
 
 
 def plans_placement() -> dict:
@@ -131,6 +150,10 @@ class References:
                     float(r["dz_m"]), float(r["dyaw_deg"])), True
 
         return start
+
+    def has_task(self, task: str, digest: str) -> bool:
+        """A reference look taught on this plan of ``task`` (its digest): its look can run the camera's move."""
+        return any(r.get("task") == task and r.get("plan") == digest for r in self._load().values())
 
     def teach(self, key: str, ref: dict) -> None:
         if self.path is None:
@@ -217,43 +240,210 @@ def decide(ugv: plan_shift.Move | None, look: dict | None, ref: dict | None, han
     return Decision(dm, "depth", f"{said}: the camera's runs (the UGV's compensated)", "warn", dm)
 
 
+def in_workers(lane: str, fn, *args):
+    """``fn(*args)`` in Lite's process ``lane`` (workers.pool): Correction.submit in Real and the emulated runs."""
+    from . import workers
+
+    return workers.pool(lane).submit(fn, *args)
+
+
+def _move_args(m: plan_shift.Move) -> tuple:
+    return (m.dx_m, m.dy_m, m.dz_m, m.dyaw_deg, (float(m.about[0]), float(m.about[1])))
+
+
+def _key(name: str, m: plan_shift.Move) -> tuple:
+    a = _move_args(m)
+    return (name,) + tuple(round(float(v), 5) for v in (*a[:4], *a[4]))
+
+
+def _world(digest, scene, fid, cubicle_mm) -> tuple:
+    return (digest, json.dumps(scene or {}, sort_keys=True, default=str), fid, int(cubicle_mm))
+
+
+_OWN: dict = {}            # in each process: _world -> the plan's own collision check (plan_shift.own_run), kept
+
+
+def prepare(name: str, path: str, digest: str, scene: dict | None, fid: str, cubicle_mm: int) -> float:
+    """``name``'s own collision check (plan_shift.own_run) made and kept in this process, ahead of a move asked of it
+    (generate then checks the moved run alone). -> seconds."""
+    t0 = time.monotonic()
+    from .. import vendor_paths
+
+    vendor_paths.activate()
+    from . import mechanism
+
+    world = _world(digest, scene, fid, cubicle_mm)
+    if world not in _OWN:
+        _OWN[world] = plan_shift.own_run(mechanism.Plan(name, Path(path)), scene, fid, cubicle_mm)
+    return round(time.monotonic() - t0, 2)
+
+
+def generate(name: str, path: str, digest: str | None, move: tuple, scene: dict | None, fid: str, cubicle_mm: int,
+             collide: bool = True) -> dict:
+    """``name``'s plan (its file ``path``, as ``digest``) moved by ``move`` (_move_args) through plan_shift's gates and,
+    ``collide``, the collision check against the plan's own run (kept in this process: prepare). In one of Lite's
+    processes (LANES, Correction.submit), else here. -> {"entries", "report", "state", "seconds"}, what
+    plan_shift.assemble takes; plan_shift's UserError (code "shift") when refused."""
+    t0 = time.monotonic()
+    from .. import vendor_paths
+
+    vendor_paths.activate()
+    from . import mechanism
+
+    plan0 = mechanism.Plan(name, Path(path))
+    if digest and _digest(plan0) != digest:
+        raise plan_shift.refuse(f"{plan0.title}: its plan's file changed while the run was on.")
+    m = plan_shift.Move(*move[:4], about=tuple(move[4]))
+    moved = plan_shift.shift(plan0, m)
+    if collide:
+        world = _world(digest, scene, fid, cubicle_mm)
+        got = plan_shift.collisions(plan0, moved, scene, fid, cubicle_mm, own=_OWN.get(world))
+        _OWN[world] = got["own"]
+        if not got["ok"]:
+            ev = got["new"][0]
+            raise plan_shift.refuse(f"{plan0.title}: moved {m.words()}, the arms would meet "
+                                    f"{', '.join(ev.get('what') or ['something'])} at {ev['first_t']:.1f} s, which the "
+                                    "plan's own run does not.")
+    return dict(entries=moved.entries, report=moved.shift_report, state=getattr(moved, "shift_state", None),
+                seconds=round(time.monotonic() - t0, 2))
+
+
+def _wait(fut, check_stop=None) -> dict:
+    """A lane's result (its refusal raised), ``check_stop`` asked every 50 ms meanwhile."""
+    from concurrent.futures import TimeoutError as Pending
+
+    while True:
+        try:
+            return fut.result(timeout=0.05)
+        except Pending:
+            if check_stop is not None:
+                check_stop()
+
+
 @dataclass
 class Correction:
     """A run's lid and seat tasks placed by the UGV and the depth (Runner(place=...)). ``ugv``: the UGV's move (ugv_move),
     None when it reported none; ``refs``: the reference looks; ``scene``, ``fid``, ``cubicle_mm``: the collision gate's
     world at the plans' placement (the moved run's moves the commode and the room with it). ``collide``: False skips the
-    collision gate (a test's)."""
+    collision gate (a test's). ``submit(lane, fn, *args) -> Future``: where the moved plans are made, ahead of the tasks
+    (in_workers: Lite's processes LANES); None: here, each as it is needed (the tests')."""
     ugv: plan_shift.Move | None = None
     refs: References = field(default_factory=lambda: References(None))
     fid: str = "commode_c"
     scene: dict | None = None
     cubicle_mm: int = 1400
     collide: bool = True
+    submit: object = None
     log: list = field(default_factory=list)       # one row a task: its look, the sources, what it ran with
+    order: list = field(default_factory=list)     # the run's tasks in its order (ahead), ``at`` the one running
+    at: int = -1
+    _jobs: dict = field(default_factory=dict, repr=False)      # _key -> (its move, its Future)
+    _others: list = field(default_factory=list, repr=False)    # the own runs' Futures (prepare)
+    _lock: object = field(default_factory=threading.Lock, repr=False)
 
-    def gated(self, plan0, move: plan_shift.Move | None, say) -> object:
+    def ahead(self, names: list, move: plan_shift.Move | None = None) -> int:
+        """``names`` (the first call: the run's tasks in its order), each one's plan moved by ``move`` (None: the UGV's)
+        generated in LANES[1] one after the other, the first first, the next while one runs (the owner, 1 Nov). A plan
+        the move leaves within DEAD_MM (at the hands) runs as it is: nothing to make. Without ``submit``: nothing.
+        -> how many plans are being made."""
+        if self.submit is None:
+            return 0
+        from . import mechanism
+
+        if not self.order:
+            self.order = list(names)
+        move = self.ugv if move is None else move
+        if move is None:
+            return 0
+        made = 0
+        for name in names:
+            plan0 = mechanism.Plan(name)
+            if plan_shift.hands_apart_mm(plan0, move) >= plan_shift.DEAD_MM:
+                self._job(plan0, move, LANES[1])
+                made += 1
+        return made
+
+    def _job(self, plan0, move: plan_shift.Move, lane: str) -> tuple:
+        key = _key(plan0.name, move)
+        with self._lock:
+            got = self._jobs.get(key)
+            if got is None:
+                got = self._jobs[key] = (move, self.submit(lane, generate, plan0.name, str(plan0.path), _digest(plan0),
+                                                           _move_args(move), self.scene, self.fid, self.cubicle_mm,
+                                                           self.collide))
+            return got
+
+    def started(self, plan0) -> None:
+        """A task of the run starts (TaskPlace): where the run is in its order; the plan's own collision run checked in
+        LANES[0] by its first look, when a reference look of it can bring the camera's move there."""
+        if plan0.name in self.order[self.at + 1:]:
+            self.at = self.order.index(plan0.name, self.at + 1)
+        if self.submit is not None and self.collide and self.refs.has_task(plan0.name, _digest(plan0)):
+            with self._lock:
+                self._others.append(self.submit(LANES[0], prepare, plan0.name, str(plan0.path), _digest(plan0), self.scene,
+                                                self.fid, self.cubicle_mm))
+
+    def take(self, plan0, move: plan_shift.Move | None, say, check_stop=None):
         """``plan0`` moved by ``move`` through plan_shift's gates and the collision check, or ``plan0`` for a move within
-        the dead band. UserError (code "shift") when refused: nothing of the plan is sent."""
+        the dead band: generated ahead (that one, waited for when it is not made yet), else made now (LANES[0], or here
+        without ``submit``). UserError (code "shift") when refused: nothing of the plan is sent."""
         if move is None or plan_shift.hands_apart_mm(plan0, move) < plan_shift.DEAD_MM:
             return plan0
-        moved = plan_shift.shift(plan0, move)
-        if self.collide:
-            got = plan_shift.collisions(plan0, moved, self.scene, self.fid, self.cubicle_mm)
-            if not got["ok"]:
-                ev = got["new"][0]
-                raise plan_shift.refuse(f"{plan0.title}: moved {move.words()}, the arms would meet "
-                                        f"{', '.join(ev.get('what') or ['something'])} at {ev['first_t']:.1f} s, which the "
-                                        "plan's own run does not.")
-        say(f"{plan0.title}: each arm's working stretch moved with the commode ({move.words()}): the hands within "
-            f"{max((r.get('hand_off_mm') or 0.0) for r in moved.shift_report):.1f} mm of the plan's, moved", "warn")
+        if self.submit is None:
+            return self._moved(plan0, move, generate(plan0.name, str(plan0.path), _digest(plan0), _move_args(move),
+                                                     self.scene, self.fid, self.cubicle_mm, self.collide), say)
+        t0 = time.monotonic()
+        got = self._jobs.get(_key(plan0.name, move))
+        fut = (got or self._job(plan0, move, LANES[0]))[1]
+        ready = fut.done()
+        parts = _wait(fut, check_stop)
+        waited = time.monotonic() - t0
+        return self._moved(plan0, move, parts, say, ", made while the run went on" if got is not None and ready else
+                           f", made while the run went on, {waited:.1f} s waited for it" if got is not None else
+                           f", made now in {waited:.1f} s")
+
+    def _moved(self, plan0, move, parts: dict, say, how: str = ""):
+        moved = plan_shift.assemble(plan0, move, parts["entries"], parts["report"], parts["state"])
+        say(f"{plan0.title}: each arm's working stretch moved with the commode ({move.words()}){how}: the hands within "
+            f"{max((r.get('hand_off_mm') or 0.0 for r in moved.shift_report), default=0.0):.1f} mm of the plan's, moved",
+            "warn")
         return moved
+
+    def near(self, plan0, move: plan_shift.Move, points=None) -> tuple | None:
+        """A plan of this task made ahead (after) for a move that puts the hands within DEAD_MM of where ``move`` puts
+        them: (its parts, its move, how far apart mm), the nearest; None."""
+        best = None
+        for key, (m, fut) in list(self._jobs.items()):
+            if key[0] != plan0.name or not fut.done() or fut.cancelled() or fut.exception() is not None:
+                continue
+            apart = plan_shift.hands_apart_mm(plan0, move, m, points)
+            if apart < plan_shift.DEAD_MM and (best is None or apart < best[2]):
+                best = (fut.result(), m, apart)
+        return best
+
+    def after(self, plan0, move: plan_shift.Move) -> None:
+        """The camera read the commode moved by ``move`` at ``plan0``'s look: the run's tasks after it generated for that
+        move too (their own looks read the same commode)."""
+        if self.submit is not None and self.order and 0 <= self.at < len(self.order):
+            try:
+                self.ahead(self.order[self.at + 1:], move)
+            except Exception:                                               # noqa: BLE001 - then made as they are needed
+                pass
+
+    def close(self) -> None:
+        """The run ended: what is still queued is dropped (a job already being made ends in its process, unused)."""
+        with self._lock:
+            for fut in [f for _m, f in self._jobs.values()] + self._others:
+                fut.cancel()
+            self._jobs.clear()
+            self._others.clear()
 
 
 class TaskPlace:
     """One task's run of a Correction: the UGV's move applied as it starts (``plan``), the first look decided
     (``look``), the reference taught as it ends (``end``)."""
 
-    def __init__(self, corr: Correction, plan0, say):
+    def __init__(self, corr: Correction, plan0, say, check_stop=None):
         from . import mechanism
 
         self.corr, self.plan0, self.say = corr, plan0, say
@@ -271,8 +461,9 @@ class TaskPlace:
         self._thread = None
         self._got = None
         self.plan = plan0
+        corr.started(plan0)
         if corr.ugv is not None:
-            self.plan = corr.gated(plan0, corr.ugv, say)
+            self.plan = corr.take(plan0, corr.ugv, say, check_stop)      # made ahead while the run went on (1 Nov)
             self.applied = corr.ugv if self.plan is not plan0 else None
             if self.plan is plan0:
                 say(f"{plan0.title}: the UGV's placement puts the commode {corr.ugv.words()} from where the plan was made: the "
@@ -317,20 +508,41 @@ class TaskPlace:
                 d = decide(self.corr.ugv, got, ref, self.hands)
                 plan = None
                 if d.refuse is None and d.source == "depth":
+                    seen = d.move
                     try:
-                        plan = self.corr.gated(self.plan0, d.move, self.say)
-                    except UserError as exc:            # the plan cannot follow the camera's: the UGV's runs, as before
-                        if exc.code != "shift":
-                            raise
-                        d = Decision(self.corr.ugv, "ugv" if self.corr.ugv is not None else "none",
-                                     f"{d.words}; but the plan cannot follow it ({str(exc).split(': ', 1)[-1]}): the UGV's "
-                                     "placement runs, as it would without the camera", "warn", d.depth)
+                        plan, d = self._camera_plan(d)
+                    finally:                            # the run's next tasks made for it too (the owner, 1 Nov)
+                        self.corr.after(self.plan0, seen)
                 self._got = ("done", d, plan, got)
             except BaseException as exc:                                            # noqa: BLE001 - raised in wait
                 self._got = ("failed", exc)
 
         self._thread = threading.Thread(target=work, name="lite-place-look", daemon=True)
         self._thread.start()
+
+    def _camera_plan(self, d: Decision) -> tuple:
+        """(the plan the camera's move runs, the decision): one made ahead for a move within DEAD_MM of it at the hands
+        (an earlier task's look read the commode there: Correction.after), else made now (Correction.take); a plan that
+        cannot follow it, or that could not be made, runs the UGV's as it would without the camera, said."""
+        def without(why: str) -> tuple:
+            return None, Decision(self.corr.ugv, "ugv" if self.corr.ugv is not None else "none",
+                                  f"{d.words}; but {why}: the UGV's placement runs, as it would without the camera", "warn",
+                                  d.depth)
+
+        try:
+            hit = self.corr.near(self.plan0, d.move, self.points)
+            if hit is not None:
+                parts, m, apart = hit
+                plan = self.corr._moved(self.plan0, m, parts, self.say, f", made ahead for an earlier task's look (the hands "
+                                        f"{apart:.1f} mm from the camera's move)")
+                return plan, dataclasses.replace(d, move=m)
+            return self.corr.take(self.plan0, d.move, self.say), d
+        except UserError as exc:                        # the plan cannot follow the camera's: the UGV's runs, as before
+            if exc.code != "shift":
+                raise
+            return without(f"the plan cannot follow it ({str(exc).split(': ', 1)[-1]})")
+        except Exception as exc:                        # noqa: BLE001 - its process lost: as without the camera
+            return without(f"its plan could not be made ({type(exc).__name__}: {exc})")
 
     def wait(self, check_stop) -> tuple:
         """(the decision, the plan to run from here or None to keep the one running); raises a refusal."""

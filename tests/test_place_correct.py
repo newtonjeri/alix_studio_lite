@@ -252,3 +252,105 @@ def test_a_plan_that_cannot_follow_the_camera_runs_as_without_it(tmp_path):
     assert carries(sent_rows(ex, "left", "execute_path"), pull.rows)
     row = out["places"][0]
     assert row["source"] == "none" and "cannot follow" in row["words"] and out["plans"][0]["outcome"] == "done"
+
+
+class Lanes:
+    """Correction.submit in threads, one a lane as Lite's processes are (in_workers), each job recorded: (lane, what,
+    task, the move's dx and dy mm)."""
+
+    def __init__(self):
+        from concurrent.futures import ThreadPoolExecutor
+
+        self.pools = {lane: ThreadPoolExecutor(1) for lane in place_correct.LANES}
+        self.jobs = []
+
+    def __call__(self, lane, fn, *args):
+        move = args[3] if fn is place_correct.generate else None
+        self.jobs.append((lane, fn.__name__, args[0], None if move is None else (round(move[0] * 1000, 1), round(move[1] * 1000, 1))))
+        return self.pools[lane].submit(fn, *args)
+
+    def drain(self, lane):
+        """Every job of ``lane`` made (one thread: those before a last one)."""
+        self.pools[lane].submit(lambda: None).result()
+
+    def made(self, lane):
+        return [(task, mm) for at, what, task, mm in self.jobs if what == "generate" and at == lane]
+
+
+def test_the_runs_next_tasks_are_made_while_one_runs(tmp_path):
+    """The UGV 12 mm further off: as the run starts each of its tasks is queued for its moved plan, in the run's order,
+    in a lane of their own (the owner, 1 Nov: "generate the first task, as it executes be generating the other tasks");
+    each task takes its own from there, the second made while the first ran: nothing is made as a task starts."""
+    lanes = Lanes()
+    ugv = plan_shift.Move(0.012)
+    corr = place_correct.Correction(ugv=ugv, refs=place_correct.References(tmp_path / "refs.json"), collide=False,
+                                    submit=lanes)
+    corr.ahead(["seat_open", "seat_close"])
+    assert lanes.made("plans_ahead") == [("seat_open", (12.0, 0.0)), ("seat_close", (12.0, 0.0))]
+    said = {}
+    for task in ("seat_open", "seat_close"):
+        plan = mechanism.Plan(task)
+        ex = LookExec([c["expect"] for c in plan.checks()], look(task, ok=False))
+        out, said[task] = run(task, ex, corr)
+        carry = next(e for e in plan_shift.shift(plan, ugv).entries
+                     if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+        assert carries(sent_rows(ex, "left", "execute_path"), carry.rows)
+        lanes.drain("plans_ahead")                     # a task runs 14 s, a plan is made in 1 to 3: the next made meanwhile
+    assert lanes.made("plans_now") == [] and len(lanes.made("plans_ahead")) == 2
+    assert any("made while the run went on: the hands" in t for t in said["seat_close"])
+    assert [r["task"] for r in corr.log] == ["seat_open", "seat_close"] and corr.at == 1
+
+
+def test_the_cameras_move_on_one_task_is_made_for_the_next(tmp_path):
+    """No placement from the UGV: the camera reads the commode 8 mm to the left at Open the seat's look; that task's plan
+    moved there is made at once (the running task's lane), and the run's next task, Close the seat, for the same move
+    meanwhile (the other lane). Its own look reading the commode 8.5 mm to the left (the hands within 5 mm of the move
+    made), Close the seat runs that plan: nothing is made as it runs."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    key = reference("seat_open", refs)
+    reference("seat_close", refs)
+    lanes = Lanes()
+    corr = place_correct.Correction(refs=refs, collide=False, submit=lanes)
+    corr.ahead(["seat_open", "seat_close"])
+    assert lanes.jobs == []                            # the plans' own placement: nothing to make before a look
+    plan = mechanism.Plan("seat_open")
+    out, said = run("seat_open", LookExec([c["expect"] for c in plan.checks()], look("seat_open", 0.0, 0.008)), corr)
+    assert out["places"][0]["source"] == "depth"
+    lanes.drain("plans_ahead")
+    assert [t for t, _ in lanes.made("plans_now")] == ["seat_open"]
+    assert [t for t, _ in lanes.made("plans_ahead")] == ["seat_close"]
+    plan = mechanism.Plan("seat_close")
+    ex = LookExec([c["expect"] for c in plan.checks()], look("seat_close", 0.0, 0.0085))
+    out, said = run("seat_close", ex, corr)
+    assert [t for t, _ in lanes.made("plans_now")] == ["seat_open"]           # none for Close the seat's look
+    row = out["places"][-1]
+    assert row["task"] == "seat_close" and row["source"] == "depth" and row["move"] != row["depth"]
+    assert any("made ahead for an earlier task's look" in t for t in said)
+    first = place_correct.depth_move(look("seat_open", 0.0, 0.008)["reading"], refs.get(key), POSE0)
+    carry = next(e for e in plan_shift.shift(plan, first).entries
+                 if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+    assert carries(sent_rows(ex, "left", "execute_path"), carry.rows)
+    assert row["move"] == first.words()
+
+
+def test_a_plan_made_in_a_process_of_its_own_is_the_one_made_here():
+    """In a run the moved plans are made in Lite's own processes (in_workers, workers.pool): the entries shift() makes
+    here, the re-lifts moved here when asked for; a refusal comes back as it was raised, its code with it."""
+    from alix_studio_lite.server import workers
+
+    plan = mechanism.Plan("lid_open")
+    move = plan_shift.Move(0.012, -0.004)
+    try:
+        parts = place_correct.in_workers(place_correct.LANES[1], place_correct.generate, plan.name, str(plan.path),
+                                         place_correct._digest(plan), place_correct._move_args(move), None, "commode_c",
+                                         1400, False).result(timeout=120)
+        made, here = plan_shift.assemble(plan, move, parts["entries"], parts["report"], parts["state"]), plan_shift.shift(plan, move)
+        assert [e.rows for e in made.entries] == [e.rows for e in here.entries] and made.shift_report == here.shift_report
+        assert [e.rows for e in made.rung_block(2, "left")] == [e.rows for e in here.rung_block(2, "left")]
+        with pytest.raises(UserError) as err:
+            place_correct.in_workers(place_correct.LANES[1], place_correct.generate, plan.name, str(plan.path),
+                                     place_correct._digest(plan), place_correct._move_args(plan_shift.Move(0.04)), None,
+                                     "commode_c", 1400, False).result(timeout=120)
+        assert err.value.code == "shift" and "beyond" in str(err.value)
+    finally:
+        workers.shutdown()

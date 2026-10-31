@@ -1,5 +1,5 @@
-"""Lite's exit after the optimiser process was used (server/workers.py): the pool's semaphores are released, so the
-resource tracker has nothing to report. The owner's terminal, 18 Oct, after a session with a collision check:
+"""Lite's exit after the optimiser process and a process of its own were used (server/workers.py): the pools'
+semaphores are released, so the resource tracker has nothing to report. The owner's terminal, 18 Oct, after a session with a collision check:
 "resource_tracker: There appear to be 5 leaked semaphore objects to clean up at shutdown"."""
 import subprocess
 import sys
@@ -11,6 +11,7 @@ SCRIPT = textwrap.dedent("""
 
     def main():
         assert workers.pool().submit(len, [1, 2, 3]).result() == 3
+        assert workers.pool("plans_ahead").submit(len, [1, 2]).result() == 2     # a process of its own (place_correct's)
         workers.shutdown()
         sys.stderr.flush()
         os._exit(0)                       # as Lite leaves (server/__init__.py)

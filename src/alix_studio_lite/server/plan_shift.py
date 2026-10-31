@@ -386,7 +386,24 @@ def shift(plan, move: Move):
     roles = stretches(plan.entries)
     out.entries = sh.entries(plan.entries, roles, _raise_at(plan.entries, roles))
     out.shift_report = sh.rows
+    out.shift_state = dict(frames=dict(sh.frames), pole=dict(sh.pole), raised=dict(sh.raised))
     out.rung_block = _rungs(plan, sh)
+    return out
+
+
+def assemble(plan, move: Move, entries: list | None, report: list, state: dict | None):
+    """``plan`` moved by ``move`` from what shift() made of it in another process (place_correct.generate, a worker's):
+    its moved entries, its report and its state (``shift_state``); its re-lifts moved here, when one is asked for."""
+    import copy
+    from types import SimpleNamespace
+
+    out = copy.copy(plan)
+    out.move, out.shift_report = move, list(report or [])
+    if entries is None or state is None:             # no move: the plan as it is
+        return out
+    out.entries = list(entries)
+    out.shift_state = dict(state)
+    out.rung_block = _rungs(plan, SimpleNamespace(move=move, **state))
     return out
 
 
@@ -427,32 +444,35 @@ MATCH_S = 0.5      #: an event of the moved run is the plan's own when it meets 
                    #: travel takes a little longer, and the run's clock with it)
 
 
-def collisions(plan, moved, scene: dict | None = None, fid: str = "commode_c", cubicle_mm: int = 1400, dt: float = 0.04,
-               progress=None) -> dict:
-    """The collision check over ``plan``'s run and over ``moved``'s (shift's), the commode and the room moved with it
-    (collision_check.check_states: the walls, the commode, the bin, the two arms; each entry after the other, as the
-    contact model lays a plan out). A lid or a seat held by a hand has no state the check has meshes for: those moments
-    take the task's end state in both runs alike. -> {"ok", "new": the moved run's events the plan's run has not,
-    "plan": its events, "moved": the moved run's events, "seconds"}."""
-    import time
-
+def own_run(plan, scene: dict | None = None, fid: str = "commode_c", cubicle_mm: int = 1400, dt: float = 0.04,
+            progress=None) -> dict:
+    """The collision check over ``plan``'s run as it is (collision_check.check_states: the walls, the commode, the bin,
+    the two arms; each entry after the other, as the contact model lays a plan out). A lid or a seat held by a hand has
+    no state the check has meshes for: those moments take the task's end state. The same for every move of the plan:
+    ``collisions`` takes it once made (``own``)."""
     from . import collision_check, contact_sim, mechanism
+
+    times, arms, ends = contact_sim.plan_samples(plan.name, plan, dt)
+    phases, k = [], 0
+    for t in times:
+        while k < len(ends) - 1 and t > ends[k] + 1e-9:
+            k += 1
+        phases.append(mechanism.fixture_phase_at(plan.entries, k, plan.name) or mechanism.PHASE_AFTER.get(plan.name, "lid_closed"))
+    return collision_check.check_states(times, arms, contact_sim.default_home(), dict(scene or {}), fid, phases, cubicle_mm,
+                                        progress=progress)
+
+
+def collisions(plan, moved, scene: dict | None = None, fid: str = "commode_c", cubicle_mm: int = 1400, dt: float = 0.04,
+               progress=None, own: dict | None = None) -> dict:
+    """The collision check over ``plan``'s run (own_run; ``own``: that check made before, for this plan and world) and
+    over ``moved``'s (shift's), the commode and the room moved with it. -> {"ok", "new": the moved run's events the
+    plan's run has not, "plan": its events, "moved": the moved run's events, "own": the plan's run's check, "seconds"}."""
+    import time
 
     t0 = time.monotonic()
     scene = dict(scene or {})
-    home = contact_sim.default_home()
-
-    def run(p, sc):
-        times, arms, ends = contact_sim.plan_samples(p.name, p, dt)
-        phases, k = [], 0
-        for t in times:
-            while k < len(ends) - 1 and t > ends[k] + 1e-9:
-                k += 1
-            phases.append(mechanism.fixture_phase_at(p.entries, k, p.name) or mechanism.PHASE_AFTER.get(p.name, "lid_closed"))
-        return collision_check.check_states(times, arms, home, sc, fid, phases, cubicle_mm, progress=progress)
-
-    before = run(plan, scene)
-    after = run(moved, dict(scene, move=moved.move.matrix().tolist()))
+    before = own if own is not None else own_run(plan, scene, fid, cubicle_mm, dt, progress)
+    after = own_run(moved, dict(scene, move=moved.move.matrix().tolist()), fid, cubicle_mm, dt, progress)
 
     def links(ev):
         return {(p["side"], p["link"], p["object"]) for p in ev.get("pairs") or []}
@@ -460,5 +480,5 @@ def collisions(plan, moved, scene: dict | None = None, fid: str = "commode_c", c
     new = [ev for ev in after.get("events") or []
            if not any(links(ev) & links(old) and ev["first_t"] <= old["last_t"] + MATCH_S and old["first_t"] <= ev["last_t"] + MATCH_S
                       for old in before.get("events") or [])]
-    return dict(ok=not new, new=new, plan=before.get("events") or [], moved=after.get("events") or [],
+    return dict(ok=not new, new=new, plan=before.get("events") or [], moved=after.get("events") or [], own=before,
                 seconds=round(time.monotonic() - t0, 1))

@@ -1,7 +1,8 @@
 """Work that runs in the optimiser process, away from the web server.
 
 numpy, scipy and toppra load here, not in the server, so the page stays responsive and a
-long solve never blocks a STOP.
+long solve never blocks a STOP. The lid and seat tasks' moved plans are made in processes of their
+own (``pool(name)``: place_correct's lanes), so that a run's next tasks are generated while one runs.
 """
 from __future__ import annotations
 
@@ -14,6 +15,7 @@ from pathlib import Path
 import numpy as np
 
 _POOL: ProcessPoolExecutor | None = None
+_NAMED: dict = {}                      # name -> ProcessPoolExecutor: the processes of their own (place_correct.LANES)
 _POOL_LOCK = threading.Lock()          # two first tunes at once still make one pool, one worker
 
 
@@ -23,12 +25,36 @@ def _worker_start() -> None:
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
-def pool() -> ProcessPoolExecutor:
+def _lane_start() -> None:
+    """A process of its own (``pool(name)``): Ctrl+C left to the server, and the arms' processes (robot_process: the 5 ms
+    streams) ahead of it when the computer's cores are all busy."""
+    _worker_start()
+    try:
+        import os                                                           # noqa: PLC0415
+
+        os.nice(5)
+    except OSError:
+        pass
+
+
+def pool(name: str | None = None) -> ProcessPoolExecutor:
+    """The optimiser's process (the tunes, the checks), or with ``name`` a process of its own, kept for Lite's life (its
+    imports and its meshes loaded once); one that died is started again."""
     global _POOL
     with _POOL_LOCK:
+        if name is not None:
+            got = _NAMED.get(name)
+            if got is None or getattr(got, "_broken", False):
+                got = _NAMED[name] = ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context("spawn"),
+                                                         initializer=_lane_start)
+            return got
         if _POOL is None:
             _POOL = ProcessPoolExecutor(max_workers=1, mp_context=mp.get_context("spawn"), initializer=_worker_start)
         return _POOL
+
+
+def _pools() -> list:
+    return ([_POOL] if _POOL is not None else []) + list(_NAMED.values())
 
 
 def shutdown() -> None:
@@ -43,12 +69,16 @@ def shutdown() -> None:
     suite's) would then never be released."""
     global _POOL
     with _POOL_LOCK:
-        if _POOL is not None:
-            for p in list((getattr(_POOL, "_processes", None) or {}).values()):
-                if p.is_alive():
-                    p.terminate()
-            _POOL.shutdown(wait=True, cancel_futures=True)
+        pools = _pools()
+        if pools:
+            for one in pools:
+                for p in list((getattr(one, "_processes", None) or {}).values()):
+                    if p.is_alive():
+                        p.terminate()
+            for one in pools:
+                one.shutdown(wait=True, cancel_futures=True)
             _POOL = None
+            _NAMED.clear()
             try:
                 import gc                                                   # noqa: PLC0415
                 from multiprocessing import util                             # noqa: PLC0415
@@ -63,12 +93,12 @@ def kill_now() -> None:
     """Lite is quitting at once (a second Ctrl+C, or its exit past its limit): the tuning worker is ended
     without waiting for any lock (a signal handler calls this). It ignores Ctrl+C, so it would outlive Lite,
     holding the terminal open."""
-    pool = _POOL
-    for p in list((getattr(pool, "_processes", None) or {}).values()) if pool is not None else []:
-        try:
-            p.kill()
-        except Exception:                                                   # noqa: BLE001
-            pass
+    for one in _pools():
+        for p in list((getattr(one, "_processes", None) or {}).values()):
+            try:
+                p.kill()
+            except Exception:                                               # noqa: BLE001
+                pass
 
 
 def _maxpool(u: np.ndarray, buckets: int = 1500) -> list[float]:

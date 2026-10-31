@@ -1007,7 +1007,8 @@ class Runner:
         if self.place is not None:
             from .place_correct import TaskPlace
 
-            place = TaskPlace(self.place, plan, self.say)   # the UGV's move, its gates: refused before anything is sent
+            # the UGV's move, its gates: refused before anything is sent (made ahead while the run went on: 1 Nov)
+            place = TaskPlace(self.place, plan, self.say, getattr(self.ex, "check_stop", None))
             plan = place.plan
         elif move is not None and (move.sideways or move.dz_m):
             from . import plan_shift
@@ -2153,14 +2154,25 @@ def joints_cool(robot, stage: str | None = None) -> dict:
 def correction(robot, ugv_placement: dict | None = None, fid: str = "commode_c", scene: dict | None = None,
                cubicle_mm: int = 1400):
     """A run's place correction (place_correct.Correction): the UGV's placement (placement.py's standoff and moves; None:
-    the plans' own), the robot's reference looks, the collision gate's world at the plans' placement."""
+    the plans' own), the robot's reference looks, the collision gate's world at the plans' placement; its moved plans
+    made in Lite's own processes (place_correct.in_workers), ahead of the tasks."""
     from . import place_correct, placement
 
     if scene is None:
         scene = placement.scene(fid, None, place_correct.plans_placement())
     return place_correct.Correction(ugv=place_correct.ugv_move(ugv_placement, fid),
                                     refs=place_correct.References(place_correct.reference_path(robot)), fid=fid, scene=scene,
-                                    cubicle_mm=int(cubicle_mm))
+                                    cubicle_mm=int(cubicle_mm), submit=place_correct.in_workers)
+
+
+def _placed(corr, runner, name: str) -> dict:
+    """``runner`` run on ``name`` with ``corr`` (correction): its plan made ahead as the run starts, what is still queued
+    dropped as it ends."""
+    corr.ahead([name])
+    try:
+        return runner.run(name)
+    finally:
+        corr.close()
 
 
 def run(robot, name: str, mode: str | None = None, ugv_placement: dict | None = None):
@@ -2194,14 +2206,16 @@ def run(robot, name: str, mode: str | None = None, ugv_placement: dict | None = 
             camera_required(robot)                   # again: it may have been unplugged since
             joints_cool(robot)
             ex = RealExec(job, robot, linked, k, say)
+            corr = correction(robot, ugv_placement)
             with k.camera.using():
-                return _finish(Runner(ex, ex.say, place=correction(robot, ugv_placement)).run(name), plan, mode)
+                return _finish(_placed(corr, Runner(ex, ex.say, place=corr), name), plan, mode)
         if mode == "hwsim" and all(linked.values()):
             ex = DryExec(job, robot, say)
         else:
             from .robot_standin import TIME_SCALE
             ex = StandInExec(job, say, TIME_SCALE, "the stand-in robot" if not any(linked.values()) else "Visual sim")
-        return _finish(Runner(ex, ex.say, place=correction(robot, ugv_placement)).run(name), plan, mode)
+        corr = correction(robot, ugv_placement)
+        return _finish(_placed(corr, Runner(ex, ex.say, place=corr), name), plan, mode)
 
     return robot._start("run", title, work, "both", mode)
 

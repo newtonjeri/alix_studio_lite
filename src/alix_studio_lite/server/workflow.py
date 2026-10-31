@@ -2939,6 +2939,24 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
         t0 = time.monotonic()
         pending: dict = {}                          # after a lid or seat task: each arm's move to its next start, made as its part of the next stage begins
         corr = None                                 # the lid and seat tasks' place: the UGV's, then the depth's (place_correct)
+        tasks = [st["task"] for st in run["plan"] if st["kind"] == "mechanism" and not st.get("held")]
+        if tasks:                                   # their moved plans made from now on, the next while one runs (1 Nov)
+            from . import mechanism as mech
+            from . import place_correct, placement
+
+            try:                                    # the collision gate's world: the room at the plans' own placement
+                plans_scene = placement.scene(units.fixture, placement.load(units)["room"], place_correct.plans_placement())
+            except Exception:                                                   # noqa: BLE001 - the gate without the room
+                plans_scene = None
+            corr = place_correct.Correction(
+                ugv=place_correct.ugv_move(ugv_place, units.fixture), refs=place_correct.References(
+                    place_correct.reference_path(robot)), fid=units.fixture, scene=plans_scene,
+                cubicle_mm=int(app.ui.get("cubicle_mm", 1400)), submit=place_correct.in_workers)
+            queued = corr.ahead([mech.sequence_plan(t) for t in tasks])
+            if queued:
+                job.log(f"The lid and seat tasks moved with the UGV's placement (the commode {corr.ugv.words()} from where "
+                        f"their plans were made): {queued} plan(s) being made from now on, in the run's order, the next "
+                        "while one runs.")
         try:
             for s in sides:
                 originals[s] = reals[s].set_run_mode("REAL")
@@ -2992,13 +3010,6 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                     mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
                     mech.joints_cool(robot, st["title"])
                     nxt_task = next_lid_seat_task(run["plan"], i)      # Open the lid's seat link (the owner, 30 Oct)
-                    if corr is None:                                   # the UGV's placement first, the depth's after (31 Oct)
-                        from . import place_correct
-
-                        corr = place_correct.Correction(
-                            ugv=place_correct.ugv_move(ugv_place, units.fixture), refs=place_correct.References(
-                                place_correct.reference_path(robot)), fid=units.fixture,
-                            scene=(room or {}).get("scene"), cubicle_mm=int(app.ui.get("cubicle_mm", 1400)))
                     try:
                         with kit.camera.using():                         # closed in the background as the run ends (27 Oct)
                             out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st),
@@ -3035,6 +3046,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             job.log(f"Sequence complete: {len(run['plan'])} stage(s) in {elapsed:.1f} s.")
             return dict(mode=run["mode"], stages=len(run["plan"]), seconds=round(elapsed, 1))
         finally:
+            if corr is not None:
+                corr.close()                        # what is still queued of the lid and seat plans, dropped
             for s, orig in originals.items():
                 reals[s].restore_run_mode(orig)
             for s in sides:                         # the runner gives the speed back in its finally; again here,

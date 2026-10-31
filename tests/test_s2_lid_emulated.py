@@ -77,9 +77,9 @@ def wait(ctx, job, limit=400):
         time.sleep(0.2)
 
 
-def program(ctx, side, key, pid, j1, pole, hand):
+def program(ctx, side, key, pid, j1, pole, hand, task=None):
     """A short file of the arm, from where it stands, as program ``pid`` on its controller with its own pole and hand
-    (S1: merged, then uploaded)."""
+    (S1: merged, then uploaded); taught at ``task``'s UGV placement when one is named."""
     from alix_studio_lite.motion import track
 
     fb = call(ctx, "GET", "/api/robots/status")["arms"][side]["link"]["feedback"]
@@ -89,7 +89,7 @@ def program(ctx, side, key, pid, j1, pole, hand):
     ctx.setdefault("first", {})[(side, pid)] = (md[0] / 1000.0).tolist()
     name = f"{side[0].upper()}_{pid}.txt"
     out = call(ctx, "POST", f"{P}/units/{key}/recordings", {"source": "upload", "name": name, "content": track.track_bytes(md).decode(),
-                                                            "pole_mm": pole, "hand": hand})
+                                                            "pole_mm": pole, "hand": hand, **({"task": task} if task else {})})
     assert "error" not in out, out
     item = next(i for i in call(ctx, "POST", f"{P}/merge-sources/{side}", {})["items"] if i["name"] == name)
     m = call(ctx, "POST", f"{P}/merges/{side}/from-project", {"name": name.replace(".txt", "_m"), "files": [item["ref"]]})
