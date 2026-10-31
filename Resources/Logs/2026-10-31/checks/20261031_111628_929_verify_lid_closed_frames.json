@@ -1,0 +1,23 @@
+{
+  "check_id": "20261031_111628_929_verify_lid_closed",
+  "stage": "verify_lid_closed",
+  "expect": "lid_closed",
+  "decided": true,
+  "state": "lid_closed",
+  "confidence": 1.0,
+  "message": "2 frames (lid_closed, lid_closed; 2 yes, 0 no, 0 no vote): lid surface median z 0.475 m in base_link (closed top 0.481 = nominal 0.450 registered +31 mm by the lid, rise -6 mm vs 50 mm bar); 100 % of the ROI valid, median range 0.578 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 0 % of the wide ROI, standing-lid pixels 4 % of the top rows (hands masked around 17 frames); lid: lid_closed at 1.00 from the fixture fit (lid_closed 3408 vs lid_away -2141, margin +1.63; best: lid 10 deg, seat 0 deg (lid) over 24079 pixels at 1/3, the fixture -10 mm from its registration); nearly closed: 10 deg, inside the closing allowance of 25 deg; models: closed from depth+colour at 0.99",
+  "frames": [
+    {
+      "record": "20261031_111629_425_gap_check_lid_closed_lid_closed.json",
+      "success": true,
+      "state": "lid_closed",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261031_111629_932_gap_check_lid_closed_lid_closed.json",
+      "success": true,
+      "state": "lid_closed",
+      "confidence": 1.0
+    }
+  ]
+}
