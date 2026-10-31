@@ -312,6 +312,17 @@ class GapCheck:
         self._log(f"perception warmed up in {time.monotonic() - t0:.1f} s: its core built, the colour model loaded")
         return "ok"
 
+    def place(self, frame: "DepthFrame", start=(0.0, 0.0, 0.0, 0.0)) -> dict:
+        """The commode's place in this frame against its scene place (ALIX's GapCheckSession.read_place,
+        alix_perception_core.fixture_place), searched about ``start`` (dx, dy, dz m, dyaw deg): only the region meshes
+        are loaded, never the colour models. Its absolute place is off by the camera's mount (31 Oct: inspection pose 4
+        and pose 1 read the same commode 11 and 15 mm and 3.2 deg apart): a place compares only with one read from the
+        same arm pose with the lid and the seat in the same ``state``."""
+        with self._lock:
+            if self._locator is None:
+                self._locator, self._fixture_in_world = self._load_locator()
+            return self.session.read_place(frame.depth, frame.intrinsics, frame.cam_to_base, frame.hands or {}, start)
+
     def _load_locator(self):
         """ALIX's own placement (alix_perception_core.gap_check.load_fixture): the scene, the venue's yaw (until 24 Oct
         Lite read an empty fixture_venue_yaml as "no venue" and placed the commode 0.5 m beyond the real one), the

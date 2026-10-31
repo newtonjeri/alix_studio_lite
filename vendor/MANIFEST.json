@@ -1052,11 +1052,18 @@
       "bytes": 8462
     },
     {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/fixture_place.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/fixture_place.py",
+      "origin": "alix",
+      "sha256": "9a0d630f9884e31c9c1241dbe7f2a34ff9f4b538870374a430bbba2d657cd663",
+      "bytes": 19418
+    },
+    {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "origin": "alix",
-      "sha256": "565e9d996fb9351c44fb2bb426f2a7482935ebcbc0d9e324b258a211ab929efb",
-      "bytes": 65382
+      "sha256": "6edb1dfb32cf843d6516966b12b33e52b6069e4b79ba929d07bd58ff79ffc47e",
+      "bytes": 68312
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/geometry.py",
@@ -1167,8 +1174,8 @@
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/seat_state.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/seat_state.py",
       "origin": "alix",
-      "sha256": "db42f9e10ba6e4a674ecb3742b2c5ea2b11a18c92a1a5048ef0abbe85b40936b",
-      "bytes": 24725
+      "sha256": "11ca23533861d5f3b5ddbedb9e897a66cec08ac4190d45e4b84e48211a1bee1a",
+      "bytes": 25284
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/types.py",

@@ -800,6 +800,36 @@ class GapCheckSession:
             state = "seat_lifted"                     # the gap check's word for a seat away from its place (LIFTED_STATES)
         return {"state": state, "confidence": conf, "note": note, "record": record}
 
+    def read_place(self, depth, intrinsics, camera_to_world, hands: dict, start=(0.0, 0.0, 0.0, 0.0)) -> dict:
+        """THE COMMODE'S PLACE (2026-10-31, the owner: the depth to place the arms where a task starts; fixture_place).
+        The parts' angles as the parts reading takes them (nothing learned); when both parts rest (closed, or open from
+        gap_lid_fit_open_min_deg) the commode's place against the scene's from the whole fixture in this frame, the
+        parts read again where it stands (fixture_place.read), searched about ``start`` (dx, dy, dz m, dyaw deg against
+        the scene place: where it was last read from this arm pose, else the scene place). Its absolute place is off by
+        the camera's mount: compare it only with a place read from the same arm pose in the same ``state``.
+        -> {"ok", "state", "dx_m", "dy_m", "dz_m", "dyaw_deg", "lid_deg", "seat_deg", "note", "record"}."""
+        from alix_perception_core import fixture_place as fp
+        from alix_perception_core import seat_state as sst
+        fixture, pose = self._hinged_fixture(), self.fixture_in_world()
+        if fixture is None or pose is None:
+            return {"ok": False, "state": "", "note": "no fixture model", "record": {"error": "no fixture model"}}
+        closed, open_from = float(self._p("gap_lid_fit_min_deg")), float(self._p("gap_lid_fit_open_min_deg"))
+        parts = sst.SeatFitParams(stride=int(self._p("gap_seat_fit_stride")), step_deg=float(self._p("gap_seat_fit_step_deg")),
+                                  tol_m=float(self._p("gap_seat_fit_tol_m")), min_zone_px=int(self._p("gap_seat_fit_min_px")),
+                                  min_margin=float(self._p("gap_seat_fit_margin")),
+                                  min_deg=float(self._p("gap_seat_lift_min_deg")), hand_mask_m=float(self._p("gap_hand_mask_m")),
+                                  lid_min_deg=closed, lid_open_min_deg=open_from,
+                                  height_search_m=float(self._p("gap_parts_height_search_m")),
+                                  height_step_m=float(self._p("gap_parts_height_step_m")),
+                                  seat_open_min_deg=float(self._p("gap_parts_seat_open_min_deg")))
+        place, whole = fp.read(depth, intrinsics, camera_to_world, pose, fixture, list(hands.values()), parts,
+                               fp.PlaceParams(hand_mask_m=float(self._p("gap_hand_mask_m"))), closed, open_from, start)
+        state = fp.state_key(place.lid_deg, place.seat_deg, closed) if place.lid_deg is not None else ""
+        return {"ok": place.ok, "state": state if place.ok else "", "dx_m": place.dx_m, "dy_m": place.dy_m,
+                "dz_m": place.dz_m, "dyaw_deg": place.dyaw_deg, "lid_deg": place.lid_deg, "seat_deg": place.seat_deg,
+                "note": (f"{state}: " if place.ok else "") + place.reason,
+                "record": dict(place.as_dict(), parts=whole.as_dict())}
+
     def _consult_lid_fit(self, state, conf, depth, intrinsics, camera_to_world, hands, registration, record_extra,
                          allow: float = 0.0) -> tuple:
         """-> (state, confidence, note): the lid's state from the whole fixture in this frame decides when the fit

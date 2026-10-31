@@ -72,6 +72,7 @@ class HingedFixture:
     the part's hinge frame, the joint origin and axis, the signed angle that opens it)."""
     body: np.ndarray
     parts: dict                     # name -> (cells (N, 3) hinge-relative, origin (3,), axis (3,), open_deg signed)
+    cell_normals: dict = field(default_factory=dict)   # name -> each cell's outward normal, as its cells (fixture_place)
 
     @classmethod
     def from_locator(cls, locator) -> "HingedFixture":
@@ -88,7 +89,9 @@ class HingedFixture:
                            np.asarray(joint.get("origin") or [0.0, 0.0, 0.0], dtype=float),
                            np.asarray(joint.get("axis") or [0.0, 1.0, 0.0], dtype=float),
                            float((joint.get("angles_deg") or {}).get("open", -110.0)))
-        return cls(body=np.asarray(locator.fields["body"].centers, dtype=float), parts=parts)
+        normals = {name: np.asarray(locator.fields[name].normals, dtype=float) for name in ("body", *parts)
+                   if getattr(locator.fields[name], "normals", None) is not None}
+        return cls(body=np.asarray(locator.fields["body"].centers, dtype=float), parts=parts, cell_normals=normals)
 
     def placed(self, name: str, opened_deg: float) -> np.ndarray:
         """`name`'s cells in the body frame with the part `opened_deg` away from closed (kept: they do not depend on
@@ -102,6 +105,10 @@ class HingedFixture:
 
     def open_deg(self, name: str) -> float:
         return abs(self.parts[name][3])
+
+    def normals(self, name: str) -> Optional[np.ndarray]:
+        """``name``'s cells' normals ("body", or a part's in its hinge frame, closed), or None when the model has none."""
+        return self.cell_normals.get(name)
 
 
 @dataclass

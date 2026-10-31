@@ -1,0 +1,137 @@
+{
+ "stage": "verify_seat_open",
+ "expect": "seat_open",
+ "lab_class": "seat_lifted",
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "camera_to_world": [
+  [
+   0.84502,
+   0.067608,
+   0.530444,
+   0.513475
+  ],
+  [
+   0.042505,
+   -0.997329,
+   0.059402,
+   -0.074853
+  ],
+  [
+   0.533043,
+   -0.02765,
+   -0.845636,
+   0.965272
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "hands": {
+  "ILH_plam": [
+   0.5451,
+   0.2286,
+   0.8026
+  ],
+  "ILH_left_index_1": [
+   0.602,
+   0.2408,
+   0.6841
+  ],
+  "ILH_left_index_tip": [
+   0.6189,
+   0.2288,
+   0.6095
+  ],
+  "ILH_left_middle_1": [
+   0.5834,
+   0.2388,
+   0.6793
+  ],
+  "ILH_left_middle_tip": [
+   0.5986,
+   0.2259,
+   0.601
+  ],
+  "ILH_left_ring_1": [
+   0.5647,
+   0.2367,
+   0.6754
+  ],
+  "ILH_left_ring_tip": [
+   0.5751,
+   0.2242,
+   0.5997
+  ],
+  "ILH_left_little_1": [
+   0.5458,
+   0.2345,
+   0.6724
+  ],
+  "ILH_left_little_tip": [
+   0.5512,
+   0.2236,
+   0.6037
+  ],
+  "ILH_left_thumb_1": [
+   0.5795,
+   0.2179,
+   0.7496
+  ],
+  "ILH_left_thumb_tip": [
+   0.6746,
+   0.2075,
+   0.7028
+  ],
+  "IRH_plam": [
+   0.5673,
+   -0.1451,
+   0.9184
+  ],
+  "IRH_right_index_tip": [
+   0.6287,
+   -0.2073,
+   0.7753
+  ],
+  "IRH_right_middle_tip": [
+   0.6403,
+   -0.2117,
+   0.7949
+  ],
+  "IRH_right_ring_tip": [
+   0.656,
+   -0.2075,
+   0.8067
+  ],
+  "IRH_right_little_tip": [
+   0.6791,
+   -0.197,
+   0.8086
+  ],
+  "IRH_right_thumb_tip": [
+   0.6131,
+   -0.1618,
+   0.7744
+  ]
+ },
+ "source": "native depth (D435, pyrealsense2)",
+ "right_q_deg": [
+  5.083,
+  -96.91,
+  -1.983,
+  86.941,
+  -0.065,
+  67.914,
+  -96.91
+ ],
+ "note": "camera_to_world as tools/parts_replay.py poses the frame (a stale first reading replaced by its check's settled one)"
+}
