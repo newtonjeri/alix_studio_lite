@@ -636,3 +636,26 @@ group_states:
       L_joint5: 0.6580
       L_joint6: 0.6686
       L_joint7: -0.3374
+
+    # -------------------------------------------------------------------------
+    # LID OPEN (mechanism_tasks/commode_c/lid_open.yaml)
+    # — left-arm pre-start, THE WRIST BENT. It is the config's pre_start_pose
+    # (L_glove_frame_3: the hand to 0.04 mm, 0.006 deg) with J6 away from 0,
+    # so the carry after it stays clear of the wrist's singularity: the plans of
+    # 29 Oct cross J6 = 0 and spin J5 and J7 ~150 deg against each other through
+    # the lift. Pins the branch as flush_prestart does (DLS + nullspace,
+    # Resource/reports/2026-10-31_lid_wrist_singularity; Close the lid's own,
+    # tried the same night, is not used: its approach met the lab's back wall).
+    # lid_open, J6 +63.3: degrees 11.9 -22.7 51.7 123.2 -92.9 63.3 164.0 (the
+    #   arm nearest the lift's start: the start IK of every retry rung lands on
+    #   the lift's branch; at J6 +39.6 the second rung's flipped to J6 -15)
+    # -------------------------------------------------------------------------
+    lid_open_pre_start_bent:
+      L_joint1: 0.2076
+      L_joint2: -0.3957
+      L_joint3: 0.9023
+      L_joint4: 2.1510
+      L_joint5: -1.6218
+      L_joint6: 1.1041
+      L_joint7: 2.8623
+

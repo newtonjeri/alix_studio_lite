@@ -39,7 +39,8 @@ from .jobs import UserError
 
 MAX_MM = 30.0              #: the owner, 31 Oct: the commode farther than this from where the plan works is a person's to see
 DEAD_MM, DEAD_DEG = 5.0, 1.0   #: the owner, 31 Oct: "we can be able to open with a tolerance of plus or minus 5 mm": a
-                               #: commode nearer than this to where the plan works (1 deg: 5 mm at its ends) runs the plan
+                               #: move that puts the hands' working path nearer than this to the plan's runs the plan as it
+                               #: is (hands_apart_mm; Move.small: at the commode's middle, 1 deg 5 mm at its ends)
 MAX_YAW_DEG = 3.0
 MAX_DZ_MM = 15.0
 IK_EVERY = 4               #: every 4th line (20 ms) by IK, the lines between interpolated (contact_preview's)
@@ -81,7 +82,8 @@ class Move:
 
     @property
     def small(self) -> bool:
-        """Within the owner's tolerance (DEAD_MM, DEAD_DEG): the plan runs as it is."""
+        """Within the owner's tolerance at the commode's middle (DEAD_MM, DEAD_DEG). A run decides where the hands work
+        instead (hands_apart_mm: a turn by the millimetres it moves them)."""
         return (math.hypot(self.dx_m, self.dy_m) * 1000.0 < DEAD_MM and abs(self.dz_m) * 1000.0 < DEAD_MM
                 and abs(self.dyaw_deg) < DEAD_DEG)
 
@@ -386,6 +388,39 @@ def shift(plan, move: Move):
     out.shift_report = sh.rows
     out.rung_block = _rungs(plan, sh)
     return out
+
+
+def hand_points(plan) -> np.ndarray:
+    """The hands' working path: each arm's stretch (stretches' "moved" entries) every IK_EVERY lines, its block's frame at
+    the pole it runs at, in alix_ref_frame (n x 3, metres)."""
+    from .contact_preview import _fk_ref
+
+    entries = plan.entries
+    roles = stretches(entries)
+    frames, pole, out = ik_frames(plan.name), dict(start_poles(plan.data)), []
+    for pos, e in enumerate(entries):
+        if e.kind == "pole":
+            pole[e.side] = float(e.last()[0])
+        elif e.kind == "arm" and roles.get(pos) == "moved" and e.rows and e.side in frames:
+            rows = np.asarray(e.rows, dtype=float)[::IK_EVERY] / 1000.0
+            out.append(_fk_ref(e.side, frames[e.side], pole.get(e.side, 0.15))(rows)[:, :3, 3])
+    return np.vstack(out) if out else np.zeros((0, 3))
+
+
+def hands_apart_mm(plan, a: Move | None, b: Move | None = None, points: np.ndarray | None = None) -> float:
+    """How far apart ``a`` and ``b`` (None: where the plan works) put the hands' working path (hand_points), mm: the
+    owner's tolerance is where the hands work (31 Oct: "we can open with a tolerance of plus or minus 5 mm"), so a turn
+    counts by the millimetres it moves them (1 deg about the commode's middle: 4 to 5 mm at its front)."""
+    P = hand_points(plan) if points is None else points
+    if not len(P):
+        return 0.0
+    T_ref = _ref()
+    H = np.c_[P, np.ones(len(P))]
+
+    def moved(m):
+        return H if m is None else H @ (np.linalg.inv(T_ref) @ m.matrix(height=True) @ T_ref).T
+
+    return float(np.max(np.linalg.norm(moved(a)[:, :3] - moved(b)[:, :3], axis=1))) * 1000.0
 
 
 MATCH_S = 0.5      #: an event of the moved run is the plan's own when it meets the same links within this (a raised pole's

@@ -5,8 +5,10 @@
   placement the camera has learned this session, and ALIX's inspection poses of the right arm (1, the colour
   viewpoint; 4, the depth viewpoint) with their joints, which the page moves the arm to through
   ``POST /api/robots/right/move-joints`` as it moves to any joint pose.
-- ``POST /api/mechanism/<task>/run`` ``{confirmed}``: one task as a job on both arms; Real needs the real
-  robot's confirmation, as every motion does.
+- ``POST /api/mechanism/<task>/run`` ``{confirmed, ugv_placement}``: one task as a job on both arms; Real needs the
+  real robot's confirmation, as every motion does. ``ugv_placement`` (optional: standoff_mm, front_mm, rear_mm, left_mm,
+  right_mm, as placement.py keeps them): where the UGV reports it stands; the plan's working moves follow it, and in Real
+  the wrist camera's reading at the task's first look compensates it (place_correct).
 - ``POST /api/mechanism/camera/check``: what the wrist camera sees now, as the perception node's status_check
   answers it (the colour model, the depth state); nothing moves.
 """
@@ -35,7 +37,7 @@ def post_mechanism_run(app, q, body, m):
         raise UserError(f"There is no lid or seat task {name!r}.", f"One of: {', '.join(mechanism.TASKS)}.")
     plan = mechanism.Plan(name)
     require_confirmed(app, body, f"{plan.title} (ALIX's plan; the wrist camera checks the lid and the seat)")
-    return mechanism.run(app.robot, name, app.ui["mode"]).view()
+    return mechanism.run(app.robot, name, app.ui["mode"], ugv_placement=body.get("ugv_placement") or None).view()
 
 
 @route("POST", r"/api/mechanism/camera/check")

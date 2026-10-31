@@ -800,12 +800,14 @@ class GapCheckSession:
             state = "seat_lifted"                     # the gap check's word for a seat away from its place (LIFTED_STATES)
         return {"state": state, "confidence": conf, "note": note, "record": record}
 
-    def read_place(self, depth, intrinsics, camera_to_world, hands: dict, start=(0.0, 0.0, 0.0, 0.0)) -> dict:
+    def read_place(self, depth, intrinsics, camera_to_world, hands: dict, start=(0.0, 0.0, 0.0, 0.0),
+                   reach_m: float | None = None) -> dict:
         """THE COMMODE'S PLACE (2026-10-31, the owner: the depth to place the arms where a task starts; fixture_place).
         The parts' angles as the parts reading takes them (nothing learned); when both parts rest (closed, or open from
         gap_lid_fit_open_min_deg) the commode's place against the scene's from the whole fixture in this frame, the
         parts read again where it stands (fixture_place.read), searched about ``start`` (dx, dy, dz m, dyaw deg against
-        the scene place: where it was last read from this arm pose, else the scene place). Its absolute place is off by
+        the scene place: where it was last read from this arm pose, else the scene place), ``reach_m`` about it (default
+        PlaceParams'; from a reference look's place 0.02 reads alike in half the time). Its absolute place is off by
         the camera's mount: compare it only with a place read from the same arm pose in the same ``state``.
         -> {"ok", "state", "dx_m", "dy_m", "dz_m", "dyaw_deg", "lid_deg", "seat_deg", "note", "record"}."""
         from alix_perception_core import fixture_place as fp
@@ -823,7 +825,9 @@ class GapCheckSession:
                                   height_step_m=float(self._p("gap_parts_height_step_m")),
                                   seat_open_min_deg=float(self._p("gap_parts_seat_open_min_deg")))
         place, whole = fp.read(depth, intrinsics, camera_to_world, pose, fixture, list(hands.values()), parts,
-                               fp.PlaceParams(hand_mask_m=float(self._p("gap_hand_mask_m"))), closed, open_from, start)
+                               fp.PlaceParams(hand_mask_m=float(self._p("gap_hand_mask_m")),
+                                              **({} if reach_m is None else {"reach_m": float(reach_m)})),
+                               closed, open_from, start)
         state = fp.state_key(place.lid_deg, place.seat_deg, closed) if place.lid_deg is not None else ""
         return {"ok": place.ok, "state": state if place.ok else "", "dx_m": place.dx_m, "dy_m": place.dy_m,
                 "dz_m": place.dz_m, "dyaw_deg": place.dyaw_deg, "lid_deg": place.lid_deg, "seat_deg": place.seat_deg,

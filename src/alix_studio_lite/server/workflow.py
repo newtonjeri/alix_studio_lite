@@ -1936,15 +1936,37 @@ def simulate(app, units, mode: str, pick: dict | None):
             findings.append(dict(level="warn", side=None, row=None, text="The Programs were taught at different UGV placements: "
                                  f"the 3D and the check use the first one's ({placement.words(place)})."))
         if any(row["kind"] == "mechanism" for row in stages):
-            from . import mechanism
+            from . import mechanism, place_correct, plan_shift
 
-            plans_at = {"standoff_mm": float(mechanism.STANDOFF_MM), "front_mm": 0.0, "rear_mm": 0.0, "left_mm": 0.0, "right_mm": 0.0}
-            off = sorted({placement.words(p) for p in places
-                          if p and placement.differences(plans_at, {k: v for k, v in p.items() if k != "room"})})
-            findings.append(dict(level="warn" if off else "note", side=None, row=None, text=(
-                f"The lid and seat tasks are ALIX's plans, made with the UGV at {mechanism.STANDOFF_MM} mm from the commode and no "
-                "offset" + (f"; Programs of this run were taught at {'; '.join(off)}: the UGV cannot be at both, so one of them will "
-                            "be off its commode." if off else ": place the UGV there for them (Lite cannot see the placement)."))))
+            ugv = place_correct.ugv_move(place, units.fixture)
+            if ugv is None:
+                findings.append(dict(level="note", side=None, row=None, text=(
+                    f"The lid and seat tasks are ALIX's plans, made with the UGV at {mechanism.STANDOFF_MM} mm from the commode "
+                    "and no offset: no UGV placement is recorded with this run's Programs, so they run where they were made, "
+                    "the wrist camera checking the commode's place at each task's first look.")))
+            else:
+                for row in stages:
+                    if row["kind"] != "mechanism" or row.get("held"):
+                        continue
+                    task = row.get("task") or ""
+                    try:
+                        plan = mechanism.Plan(task)
+                        apart = plan_shift.hands_apart_mm(plan, ugv)
+                        if apart < plan_shift.DEAD_MM:
+                            text = f"runs as planned (the hands {apart:.1f} mm from where the plan works)"
+                        else:
+                            moved = plan_shift.shift(plan, ugv)
+                            text = (f"moved with the commode, followed (the hands within "
+                                    f"{max((r.get('hand_off_mm') or 0.0) for r in moved.shift_report):.1f} mm of the plan's, moved)")
+                        level = "note"
+                    except UserError as exc:
+                        level, text = "stop", "refused: " + str(exc).split(": ", 1)[-1]
+                    except (KeyError, ValueError):
+                        continue
+                    findings.append(dict(level=level, side=None, row=None, kind="place", text=(
+                        f"{row.get('task_title') or row['title']}: the UGV's placement ({placement.words(place)}) puts the "
+                        f"commode {ugv.words()} from where ALIX's plan was made: {text}. The wrist camera checks it at the "
+                        "task's first look.")))
         scene = placement.scene(units.fixture, placement.load(units)["room"], place)
         base = dict(home)
         for s in ARMS:
@@ -2485,6 +2507,10 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     sim = load_sim(units)
     same = bool(sim and sim.get("hash") == digest(ident))
     simulated = same and bool(sim.get("completed"))
+    from . import place_correct
+
+    # the UGV's placement for the lid and seat tasks (place_correct): what the UGV reports with the run, else its Programs'
+    ugv_place = body.get("ugv_placement") or place_correct.run_placement(programs, run["steps"])
     if not simulated and not body.get("unsimulated_ok"):
         why = _changed(sim, ident) if not same else "its simulation was not played to its end"
         raise UserError(f"This run has not been run in Simulation Mode as it is now: {why}.",
@@ -2513,7 +2539,11 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     if contact:                                   # the hands would press the lid or the seat too hard (the owner, 29 Oct)
         raise UserError("Not run: " + " ".join(contact), "Edit the lid or seat path in ALIX so the hands press less (tools/"
                         "contact_check.py says by how much before re-planning), re-plan it, then simulate again.", code="contact")
-    stops = [f["text"] for f in sim["findings"] if f["level"] == "stop" and f.get("kind") != "contact"] if simulated else []
+    moved = [f["text"] for f in sim["findings"] if f["level"] == "stop" and f.get("kind") == "place"] if simulated else []
+    if moved:                                   # a lid or seat plan cannot follow the UGV's placement (place_correct, 31 Oct)
+        raise UserError("Not run: " + " ".join(moved), "Move the UGV nearer the placement the lid and seat plans were made at "
+                        "(or have them planned for this one), enter where it stands, simulate again, then run it.", code="place")
+    stops = [f["text"] for f in sim["findings"] if f["level"] == "stop" and f.get("kind") not in ("contact", "place")] if simulated else []
     if stops:
         raise UserError("Not run: " + " ".join(stops), "Each Program runs with the pole and hand it was taught with: "
                         "simulate again, then run it.", code="stage")
@@ -2908,6 +2938,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
 
         t0 = time.monotonic()
         pending: dict = {}                          # after a lid or seat task: each arm's move to its next start, made as its part of the next stage begins
+        corr = None                                 # the lid and seat tasks' place: the UGV's, then the depth's (place_correct)
         try:
             for s in sides:
                 originals[s] = reals[s].set_run_mode("REAL")
@@ -2961,12 +2992,19 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                     mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
                     mech.joints_cool(robot, st["title"])
                     nxt_task = next_lid_seat_task(run["plan"], i)      # Open the lid's seat link (the owner, 30 Oct)
+                    if corr is None:                                   # the UGV's placement first, the depth's after (31 Oct)
+                        from . import place_correct
+
+                        corr = place_correct.Correction(
+                            ugv=place_correct.ugv_move(ugv_place, units.fixture), refs=place_correct.References(
+                                place_correct.reference_path(robot)), fid=units.fixture,
+                            scene=(room or {}).get("scene"), cubicle_mm=int(app.ui.get("cubicle_mm", 1400)))
                     try:
                         with kit.camera.using():                         # closed in the background as the run ends (27 Oct)
                             out = mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st),
                                               start_checks=bool(st.get("ask_start")),
                                               next_task=nxt_task["task"] if nxt_task and not nxt_task.get("held") else None,
-                                              ).run(mech.sequence_plan(st["task"]))
+                                              place=corr).run(mech.sequence_plan(st["task"]))
                         did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
                                         for p in out["plans"])
                         job.log(f"{st['title']}: {did}.")

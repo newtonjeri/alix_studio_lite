@@ -24,10 +24,13 @@ pose 1: y -3.3 mm with the seat down, -3.6 with it open); pose 4 and pose 1 read
 apart along the commode) and from pose 1 (nothing to use); an open seat resting otherwise (lifted with the lid) moves
 the reading by up to 5 mm. The 21-24 Oct lid lifts that missed stood where the ones that lifted stood (within 4 mm):
 those misses were the plan's (revised 24 Oct), not the commode's place.
-The shadow with 26 Oct as the reference (--reference 2026-10-26): 27 Oct every closing's look within 5 mm (as planned);
-on 24, 28, 30 and 31 Oct some looks beyond it, mostly by a turn of 1 to 1.5 deg (30 Oct: x and y within 2.6 mm, every
-Close the seat passing at the lab as planned): Close the seat and Open the seat moved and followed (hands within
-0.6 mm), Open the lid and Close the lid refused (their carries at the wrist's singularity).
+The shadow with 26 Oct as the reference (--reference 2026-10-26), deciding as a run does (place_correct, no UGV
+placement recorded; since 31 Oct night the dead band is the hands' 5 mm, Open the lid re-planned with the wrist bent):
+Open the lid's look (the lid shut from pose 4) only checks: all 16 of 24 Oct as planned. The other tasks' looks of 24-31
+Oct within 5 mm at the hands run as planned (24 of 42 Open the seat, 4 of 13 Close the lid on 27 Oct), the seat tasks'
+others moved and followed, the hands within 0.6 mm of the plan's moved; Close the lid's (its plan of 29 Oct, at the
+wrist's singularity, follows a height only) as planned, said; none stopped. 30 Oct: every Close the seat would have been moved (turns of 0.7 to
+1.3 deg, 3 to 6 mm at the hands) where the lab ran them as planned and they passed.
 """
 from __future__ import annotations
 
@@ -178,35 +181,40 @@ def shadow(res: list[dict], reference: str) -> None:
         print(f"\nthe shadow: no look of {reference} to take as the reference")
         return
     print(f"\nthe shadow: the looks of {reference} as where the plans work; each later check's change from the look of the "
-          f"same pose and state, and what the run would do (within {plan_shift.DEAD_MM:g} mm and {plan_shift.DEAD_DEG:g} deg: the "
-          "plan as it is)")
+          "same pose and state, and what a run would do with it as place_correct decides (no UGV placement recorded: the "
+          f"plans' own; the hands within {plan_shift.DEAD_MM:g} mm: the plan as it is)")
+    from alix_studio_lite.server import place_correct
+
     plans, said = {}, defaultdict(list)
     for (cid, pose, pole, state), rows in sorted(checks.items(), key=lambda kv: kv[1][0]["stamp"]):
         day, key = rows[0]["day"], (pose, pole, state)
         if day == reference or key not in refs or (pose, state) not in STARTS:
             continue
-        r0 = refs[key]
-        c = fp.change(r0, place(rows), pose0)
-        middle = r0.pose(pose0)[:3, :3] @ np.asarray(fp.DEFAULT_PLACE.centre_body) + r0.pose(pose0)[:3, 3]
-        move = plan_shift.Move.from_change(c, (middle[0], middle[1]))
+        r0, now = refs[key], place(rows)
         task = STARTS[(pose, state)]
-        if move.small:
-            what = "as planned"
+        plan = plans.setdefault(task, mechanism.Plan(task))
+        look = dict(ok=True, reading={a: getattr(now, a) for a in AXES}, pose=pose, pole_mm=pole, state=state, pose0=pose0)
+        ref = dict(reading={a: getattr(r0, a) for a in AXES}, ugv=None, at=reference)
+        d = place_correct.decide(None, look, ref, lambda a, b, plan=plan: plan_shift.hands_apart_mm(plan, a, b))
+        move = d.depth
+        if d.refuse:
+            what = "STOPPED: the camera and the UGV's placement disagree"
+        elif d.source != "depth":
+            what = "as planned" if (pose, state) not in place_correct.WEAK_LOOKS else "as planned (a look that only checks)"
         else:
             try:
-                plan = plans.setdefault(task, mechanism.Plan(task))
                 moved = plan_shift.shift(plan, move)
                 what = f"moved, followed (hands within {max((x.get('hand_off_mm') or 0.0) for x in moved.shift_report):.1f} mm)"
-            except UserError as exc:
-                what = "REFUSED: " + str(exc).split(": ", 2)[-1][:110]
+            except UserError as exc:                   # as a run: the plan as it would run without the camera, said
+                what = "as planned, the plan cannot follow it: " + str(exc).split(": ", 2)[-1][:90]
         said[(day, pose, state, task)].append((move, what))
     for (day, pose, state, task), got in sorted(said.items()):
-        planned = sum(1 for _, w in got if w == "as planned")
+        planned = sum(1 for _, w in got if w.startswith("as planned"))
         moves = np.array([[m.dx_m * 1000, m.dy_m * 1000, m.dz_m * 1000, m.dyaw_deg] for m, _ in got])
         print(f"  {day} {pose[-6:]} {state:20s} ({TITLES.get(task, task)}): {len(got)} check(s), the commode "
               f"x {moves[:, 0].min():+.1f}..{moves[:, 0].max():+.1f}, y {moves[:, 1].min():+.1f}..{moves[:, 1].max():+.1f}, "
               f"z {moves[:, 2].min():+.1f}..{moves[:, 2].max():+.1f} mm, {moves[:, 3].min():+.2f}..{moves[:, 3].max():+.2f} deg: "
-              f"{planned} as planned" + "".join(f"; {w}" for w in sorted({w for _, w in got if w != 'as planned'})))
+              f"{planned} as planned" + "".join(f"; {w}" for w in sorted({w for _, w in got if not w.startswith('as planned')})))
 
 
 TITLES = {"lid_open": "Open the lid", "seat_open": "Open the seat", "lid_close": "Close the lid", "seat_close": "Close the seat"}

@@ -325,7 +325,10 @@ stage_sequence:
   - stage: move_to_pre_start
     speed_class: approach
     arm: left
-    pose_name: pre_start_pose
+    # The wrist bent (2026-10-31): the SRDF state lid_open_pre_start_bent is pre_start_pose's hand
+    # with J6 away from 0, so the carry after it is planned clear of the singularity
+    # (Resource/reports/2026-10-31_lid_wrist_singularity).
+    pose_name: lid_open_pre_start_bent
     planning_group: rm75_arm_left
     conditional: true
     condition_param: use_prestart_stage

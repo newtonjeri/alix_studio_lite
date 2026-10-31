@@ -106,14 +106,20 @@ def test_a_move_beyond_the_owners_bounds_is_refused(move):
     assert err.value.code == "shift" and "beyond 30 mm, 3 deg and 15 mm" in str(err.value)
 
 
-def test_a_carry_through_the_wrists_singularity_takes_no_move_sideways():
-    """Open the lid's lift starts at J6 -1.7 deg (its move to the start crosses 0): moved 5 mm, the arm's IK carries on
-    from the other side of the singularity, J6 ending near +77 deg where the plan has -68: another branch, refused. The
-    height alone goes through the pole."""
+def test_the_lids_left_carry_follows_the_commode_clear_of_the_wrists_singularity():
+    """Open the lid since 31 Oct: its left arm's pre-start bent (the SRDF's lid_open_pre_start_bent, J6 +63), the lift
+    from J6 +51 to +86 (the plan of 29 Oct started it at J6 -3 and crossed 0: moved 5 mm, the arm's IK carried on from
+    the other side, another branch, refused). Moved 30 mm away from the robot, the lift follows, its wrist 40 deg and
+    more from J6 0. The right arm's hand-over approach still sits at J6 14.5: the commode 15 mm nearer the robot takes
+    it to 13, refused. The height alone goes through the pole."""
+    plan = mechanism.Plan("lid_open")
+    moved = plan_shift.shift(plan, plan_shift.Move(0.03))
+    lift = next(r for r in moved.shift_report if r["side"] == "left" and r["stage"] == "execute_path")
+    assert lift["wrist_min_deg"][0] > 45.0 and lift["wrist_min_deg"][1] > 40.0 and lift["hand_off_mm"] <= 1.0
     with pytest.raises(UserError) as err:
-        plan_shift.shift(mechanism.Plan("lid_open"), plan_shift.Move(0.005))
-    assert err.value.code == "shift" and "another branch of the arm" in str(err.value)
-    assert plan_shift.shift(mechanism.Plan("lid_open"), plan_shift.Move(dz_m=0.008)).shift_report
+        plan_shift.shift(plan, plan_shift.Move(-0.015))
+    assert err.value.code == "shift" and "right arm's move_to_pre_start" in str(err.value) and "singularity" in str(err.value)
+    assert plan_shift.shift(plan, plan_shift.Move(dz_m=0.008)).shift_report
 
 
 def test_a_move_toward_the_wrists_singularity_is_refused():
@@ -192,8 +198,10 @@ def test_the_shadow_says_what_the_run_would_do(capsys):
                     state="lid open, seat open", dx_m=dx, dy_m=dy, dz_m=0.004, dyaw_deg=dyaw)
 
     res = [row("2026-10-26", "a", -0.006, 0.035, 6.0), row("2026-10-26", "b", -0.006, 0.035, 6.0),
-           row("2026-10-27", "c", -0.004, 0.032, 6.1), row("2026-10-28", "d", -0.016, 0.045, 6.0)]
+           row("2026-10-27", "c", -0.004, 0.032, 6.1), row("2026-10-28", "d", -0.012, 0.040, 6.0),
+           row("2026-10-29", "e", -0.016, 0.045, 6.0)]
     placement_replay.shadow(res, "2026-10-26")
     out = capsys.readouterr().out
     assert "2026-10-27 pose_1 lid open, seat open  (Close the seat): 1 check(s)" in out and "1 as planned" in out
     assert "2026-10-28" in out and "moved, followed" in out
+    assert "2026-10-29" in out and "STOPPED: the camera and the UGV's placement disagree" in out     # 14 mm: beyond 12

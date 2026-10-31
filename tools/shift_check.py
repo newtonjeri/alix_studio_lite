@@ -9,8 +9,11 @@ plan's own joints, every gate, and the collision check with the commode and the 
 
 On 31 Oct, ALIX's vendored plans: the seat plans follow most of the bounds (Open the seat not 30 mm toward the robot or
 to the left, nor turned -3 deg: its wrists would come within 15 deg of their singularity; Close the seat not 30 mm
-away from the robot: its left arm another branch); the lid plans follow a height only, every move sideways refused:
-their carries start at the wrist's singularity (J6 near 0), and a 5 mm move flips the wrist to its other branch.
+away from the robot: its left arm another branch). The lid plans of 29 Oct follow a height only (their carries start
+at the wrist's singularity, J6 near 0: a 5 mm move flips the wrist to its other branch). Open the lid, re-planned the
+night of 31 Oct with its left wrist bent (the SRDF's lid_open_pre_start_bent), follows every move away from the robot,
+to the right, turned + and in height; toward the robot, to the left or turned - its right arm's hand-over approach (J6
+14.5 deg in the plan) is refused nearer. Close the lid keeps its plan of 29 Oct (its bent approach met the lab's wall).
 """
 from __future__ import annotations
 
@@ -54,8 +57,9 @@ def main() -> int:
         rows = [r for r in moved.shift_report if "hand_off_mm" in r]
         worst = max((r["hand_off_mm"] for r in rows), default=0.0)
         rate = max((r["rate_util"] for r in rows), default=0.0)
-        wrist = min((r["wrist_min_deg"][1] for r in rows), default=None)
-        text = f"followed: hands within {worst:.2f} mm, peak rate {rate:.0%} of rated, wrist at least {wrist:.1f} deg from J6 0"
+        wrist = min((r["wrist_min_deg"][1] for r in rows if r.get("role") == "moved"), default=None)   # the IK-followed moves
+        text = (f"followed: hands within {worst:.2f} mm, peak rate {rate:.0%} of rated, the working moves' wrist at least "
+                f"{wrist:.1f} deg from J6 0")
         if not args.no_collisions:
             c = plan_shift.collisions(plan, moved)
             text += ("; no new collision" if c["ok"] else

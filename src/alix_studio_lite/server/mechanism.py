@@ -893,6 +893,7 @@ CANNOT_JUDGE = "cannot_judge"
 
 FRAMES_REUSE_S = 3.0      #: the frames a check took are judged again for the check right after at the same pose, within this
                           #: (the seat's start: lid open, then seat closed, from the same frames; the owner, 26 Oct)
+LOOK_REACH_M = 0.02       #: a first look's place searched this far about where its reference read it (0.6 s, not 1.1-2)
 FRESH_READING_S = 0.5     #: an arm's latest reading, on its link's own connection, serves a frame when it is this fresh (else one read now)
 
 
@@ -959,12 +960,16 @@ def frames_said(answers: list) -> str:
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
 class Runner:
-    def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True, together=True, next_task=None, move=None):
+    def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True, together=True, next_task=None, move=None,
+                 place=None):
         self.ex = ex
         # the commode's move from where the plans work (plan_shift.Move, or name -> Move | None): each plan's working
-        # stretch moved with it before anything of it is sent, refused by plan_shift's gates (the owner, 31 Oct: the
-        # depth camera's place and the UGV's offset; the collision gate, plan_shift.collisions, is the caller's)
+        # stretch moved with it before anything of it is sent, refused by plan_shift's gates (a tool's or a test's; the
+        # collision gate, plan_shift.collisions, is the caller's)
         self.move = move
+        # the UGV's placement first, compensated by the depth at each task's first look (place_correct.Correction; the
+        # owner, 31 Oct): None runs the plans where they were made
+        self.place = place
         self.say = say or (lambda *_: None)
         self.together = bool(together)               # the two arms at once where the plan allows it (two_arm_leg)
         # the arms whose next task's start follows the run (S2: workflow.next_after_tasks; the owner, 24 Oct): the run's
@@ -992,12 +997,19 @@ class Runner:
                 self.k += 1
         finally:
             getattr(self.ex, "finish", lambda: None)()
-        return dict(plans=self.done, checks=self.checks, seat_after_lid=self.seat_after_lid)
+        return dict(plans=self.done, checks=self.checks, seat_after_lid=self.seat_after_lid,
+                    places=list(self.place.log) if self.place is not None else [])
 
     def _plan(self, name: str) -> str:
         plan = Plan(name)
         move = self.move(name) if callable(self.move) else self.move
-        if move is not None and (move.sideways or move.dz_m):
+        place = None
+        if self.place is not None:
+            from .place_correct import TaskPlace
+
+            place = TaskPlace(self.place, plan, self.say)   # the UGV's move, its gates: refused before anything is sent
+            plan = place.plan
+        elif move is not None and (move.sideways or move.dz_m):
             from . import plan_shift
 
             plan = plan_shift.shift(plan, move)     # UserError (code "shift") before anything of the plan is sent
@@ -1006,7 +1018,8 @@ class Runner:
         entries = list(plan.entries)
         ask_start = name in self._ask_start
         self._ask_start.discard(name)
-        if not self.start_checks and not ask_start:
+        dropped_start = not self.start_checks and not ask_start
+        if dropped_start:
             entries, dropped = without_start_checks(entries)
             for a in dropped:
                 self.say(f"{a.get('stage')}: not asked, the sequence's own order says {a.get('expect')} (the owner, 27 Oct)")
@@ -1020,10 +1033,16 @@ class Runner:
         if self.together and hasattr(self.ex, "prepare_legs"):
             self.ex.prepare_legs(plan, entries, unsent, state["bridge"])
         self.ex.approach(plan, plan.targets("start"), "start", entries=entries)
+        if place is not None and dropped_start and hasattr(self.ex, "look_frame"):
+            # a sequence's first look, its check not asked: a frame all the same (the owner, 31 Oct), taken as the camera
+            # arm reaches its inspection pose (the other arm's moves of the same leg go on meanwhile)
+            self.ex.look_after = ("right", "move_to_inspect", lambda: place.start_look(self.ex, take=True))
         i = 0
         while i < len(entries):
             e = entries[i]
             failed = self._actions(e, state)
+            if place is not None and not place.started and not dropped_start and i >= place.look_at and failed is None:
+                place.start_look(self.ex, take=False)   # the first check's own frame
             if failed is not None:
                 verdict = self._after_failure(plan, entries, i, failed, state)
                 if verdict[0] == "retry":
@@ -1050,6 +1069,20 @@ class Runner:
                 continue
             mover = getattr(self.ex, "move_together", None) if self.together else None
             leg = two_arm_leg(entries, i, unsent, state["bridge"], plan.name) if mover is not None else None
+            if place is not None and not place.waited:  # the place decided before anything a move of the commode changes
+                span = i + (leg.used if leg is not None else joined_moves(entries, i, state["bridge"])[1])
+                if span > (place.changes_from if place.started else place.stretch_from):
+                    if not place.started:               # no look yet (no camera; the camera arm not at its look)
+                        place.start_look(self.ex, take=True)
+                    _decided, moved = place.wait(self.ex.check_stop)
+                    if moved is not None:               # the camera's move, not the UGV's: the rest of the plan from it
+                        late = [s for s, at in place.raise_at.items() if at < i] if moved.move.dz_m else []
+                        if late:
+                            self.say(f"{plan.title}: the height the camera reads ({moved.move.dz_m * 1000:+.1f} mm) is not "
+                                     f"run: the {' and '.join(late)} pole had moved already", "warn")
+                        plan, entries, unsent, rests = self._moved_from(plan, moved, entries, i, dropped_start, state)
+                        e = entries[i]
+                        leg = two_arm_leg(entries, i, unsent, state["bridge"], plan.name) if mover is not None else None
             if leg is not None:                          # the two arms at once where the plan allows it (the user, 27 Oct night)
                 for x in leg.skipped:
                     self.say(f"{x.label()}: not sent, the {x.side.upper()} arm goes to its next task's start from here (28 Oct)" if id(x) in rests
@@ -1071,9 +1104,32 @@ class Runner:
                 self.ex.approach(plan, ends, "end")
         self.done.append(dict(plan=name, title=plan.title, outcome="skipped" if state["skipped"] else "done",
                               relifts=state["relifts"]))
+        if place is not None:
+            place.end("skipped" if state["skipped"] else "done", state["relifts"])
         if state["seat"] is not None and not state["skipped"]:
             self._after_lid(state["seat"])
         return "done"
+
+    def _moved_from(self, plan, moved, entries: list, i: int, dropped_start: bool, state: dict) -> tuple:
+        """``entries`` from ``i`` on taken from ``moved`` (the same plan moved by the camera's place: its entries are the
+        plan's, one for one), what is worked out from them again: the unsent ones, the bridged moves, the two arms'
+        legs. -> (moved, the entries, unsent, rests)."""
+        new = list(moved.entries)
+        if dropped_start:
+            new, _ = without_start_checks(new)
+        old = entries
+        entries = old[:i] + new[i:]
+        for a, b in zip(old[i:], new[i:]):
+            if id(a) in state["bridge"]:
+                state["bridge"].add(id(b))
+        rests = final_rests(entries, self.leave)
+        unsent = trailing_releases(entries, self.hand_set) | rests
+        legs = getattr(self.ex, "_legs", None)
+        if isinstance(legs, dict):
+            legs.clear()                                 # their clearance was checked on the moves it replaces
+        if self.together and hasattr(self.ex, "prepare_legs"):
+            self.ex.prepare_legs(moved, entries, unsent, state["bridge"])
+        return moved, entries, unsent, rests
 
     def _seat_with_lid(self) -> str:
         """Open the lid's end check has passed: the seat on its frames (SEAT_WITH_LID) -> up | down | unknown. Never a
@@ -1361,6 +1417,8 @@ class RealExec(_Exec):
         self._unsettled: dict = {}                      # side -> (last line, label) of a stream whose end is not yet waited for
         self._legs: dict = {}                           # leg key -> its clearance (leg_clearance), filled by prepare_legs' thread
         self._frames, self._taken = None, []            # (when, [(frame, q)]) of the last check, for the next at the same pose
+        self._last_check = None                         # the last check's first frame's record (place_correct's look)
+        self.look_after = None                          # (side, stage, callback): called once that arm's move of that stage ends
         self.room = room                                # home, scene, fid, cubicle_mm: the collision check's world (S2 gives it)
 
     def _arm(self, side):
@@ -1704,6 +1762,10 @@ class RealExec(_Exec):
             self.say(f"{e.label()}: {out['lines_sent']}/{out['lines']} lines in {out['seconds']:.2f} s"
                      + (f" ({e.blended_s:.2f} s of stops at its junctions taken out)" if getattr(e, "blended_s", 0) else "")
                      + (f", bridged {out['bridged_deg']:.1f} degrees first" if out.get("bridged_deg") else ""))
+            hook = getattr(self, "look_after", None)   # a sequence's first look (Runner, place_correct): the camera arm there
+            if hook is not None and e.side == hook[0] and str(e.stage).split(" + ")[-1] == hook[1]:
+                self.look_after = None
+                hook[2]()
 
     def _joints(self, side) -> list | None:
         """The arm's joints (deg) now: from its kept feed's latest frame (robot_real.joints_now, no controller call), else
@@ -1782,6 +1844,7 @@ class RealExec(_Exec):
                     break
         kept = list(reuse) + list(self._taken)
         self._frames = (time.monotonic(), kept) if kept else None
+        self._last_check = getattr(answers[0], "record_path", None) if answers else None
         votes = [lc.frame_vote(action, x) for x in answers]
         seen = frames_said(answers)
         tally = (f"{votes.count('yes')} yes, {votes.count('no')} no, "
@@ -1798,6 +1861,54 @@ class RealExec(_Exec):
                                 record=answer.record_path))
         self._summary(check_id, action, expect, answers, answer)
         return answer
+
+    def look_frame(self, take: bool, task: str):
+        """The task's first look (place_correct): the check's own first frame when it was just asked, else (``take``: a
+        sequence, its check not asked) one taken now, the arms still, and recorded under the day's "place" folder.
+        -> (frame, the right arm's joints in degrees, its record) or None."""
+        if not take:
+            kept = self._frames
+            return (kept[1][0][0], kept[1][0][1], getattr(self, "_last_check", None)) if kept and kept[1] else None
+        from .gap_check import write_check_record
+
+        self.check_stop()
+        self._settle("right")                         # the camera arm still (the other may be on its way: a leg)
+        frame, q = self._shot(dict(stage="place_look", task=task))
+        if frame is None:
+            return None
+        self._frames = (time.monotonic(), [(frame, q)])          # a check right after at this pose judges it again
+        root = self.kit.records_dir("place")
+        rec = None
+        if root is not None:
+            k = frame.intrinsics
+            rec = write_check_record(root, "place_look", task, dict(
+                {"class": "look"}, intrinsics=dict(fx=k.fx, fy=k.fy, cx=k.cx, cy=k.cy, width=k.width, height=k.height),
+                camera_to_world=np.asarray(frame.cam_to_base).tolist(), hands=frame.hands, context=frame.context),
+                depth=frame.depth, image=frame.colour, aligned=frame.aligned)
+        return frame, q, None if rec is None else str(rec)
+
+    def read_look(self, shot, start_for=None) -> dict:
+        """The commode's place on a look_frame (GapCheck.place), with the look's arm pose (the right arm's named pose
+        within 1 deg) and pole: what place_correct compares with its reference. ``start_for(pose, pole_mm)``: where the
+        search starts (dx, dy, dz m, dyaw deg) and whether a reference look gave it (then LOOK_REACH_M about it).
+        Thread-safe (the gap check's lock)."""
+        frame, q, record = shot
+        right = ((getattr(frame, "context", None) or {}).get("arms") or {}).get("right") or {}
+        pose = None
+        for name, joints in self.kit.gap.named_poses().items():
+            want = np.degrees([joints.get(f"R_joint{i + 1}", np.nan) for i in range(7)])
+            if q is not None and np.all(np.abs(np.asarray(q, dtype=float)[:7] - want) <= 1.0):
+                pose = name
+                break
+        pole = right.get("pole_mm")
+        start, near = (start_for(pose, pole) if start_for is not None and pose is not None and pole is not None
+                       else ((0.0, 0.0, 0.0, 0.0), False))
+        r = self.kit.gap.place(frame, start, LOOK_REACH_M if near else None)
+        note = r.get("note") or ("" if pose is not None else "the camera arm is at no named pose") or \
+            ("" if pole is not None else "no pole reading")
+        return dict(ok=bool(r.get("ok")) and pose is not None and pole is not None, reading=r, state=r.get("state"), pose=pose,
+                    pole_mm=None if pole is None else float(pole), pose0=self.kit.gap._fixture_in_world, note=note,
+                    record=record)
 
     def gate(self, task: str) -> None:
         """A closing queued as a follow-up (Runner._after_lid) passes the contact gate as a closing run on its own:
@@ -2039,9 +2150,24 @@ def joints_cool(robot, stage: str | None = None) -> dict:
     return temps
 
 
-def run(robot, name: str, mode: str | None = None):
+def correction(robot, ugv_placement: dict | None = None, fid: str = "commode_c", scene: dict | None = None,
+               cubicle_mm: int = 1400):
+    """A run's place correction (place_correct.Correction): the UGV's placement (placement.py's standoff and moves; None:
+    the plans' own), the robot's reference looks, the collision gate's world at the plans' placement."""
+    from . import place_correct, placement
+
+    if scene is None:
+        scene = placement.scene(fid, None, place_correct.plans_placement())
+    return place_correct.Correction(ugv=place_correct.ugv_move(ugv_placement, fid),
+                                    refs=place_correct.References(place_correct.reference_path(robot)), fid=fid, scene=scene,
+                                    cubicle_mm=int(cubicle_mm))
+
+
+def run(robot, name: str, mode: str | None = None, ugv_placement: dict | None = None):
     """A lid or seat task as a job on both arms, in ``mode`` (the robot's own by default): Real moves the arms and
-    asks the camera, Hardware sim checks it all and sends nothing, Visual sim and the stand-in take its time."""
+    asks the camera, Hardware sim checks it all and sends nothing, Visual sim and the stand-in take its time. Its plan
+    follows the UGV's ``ugv_placement`` (placement.py's standoff and moves; None: the plans' own), and in Real the depth's
+    reading at its first look (place_correct)."""
     plan = Plan(name)                            # read and checked before anything starts
     mode = mode or robot.mode
     title = f"{plan.title} (ALIX's {plan.path.name})"
@@ -2069,13 +2195,13 @@ def run(robot, name: str, mode: str | None = None):
             joints_cool(robot)
             ex = RealExec(job, robot, linked, k, say)
             with k.camera.using():
-                return _finish(Runner(ex, ex.say).run(name), plan, mode)
+                return _finish(Runner(ex, ex.say, place=correction(robot, ugv_placement)).run(name), plan, mode)
         if mode == "hwsim" and all(linked.values()):
             ex = DryExec(job, robot, say)
         else:
             from .robot_standin import TIME_SCALE
             ex = StandInExec(job, say, TIME_SCALE, "the stand-in robot" if not any(linked.values()) else "Visual sim")
-        return _finish(Runner(ex, ex.say).run(name), plan, mode)
+        return _finish(Runner(ex, ex.say, place=correction(robot, ugv_placement)).run(name), plan, mode)
 
     return robot._start("run", title, work, "both", mode)
 
