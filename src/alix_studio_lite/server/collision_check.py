@@ -14,6 +14,8 @@ checked, at the pole height and hand pose it was taught with, against:
   not been measured;
 - the commode in the region's lid and seat state, where Lite's 3D puts it (``fixtures.spec``, moved
   by the task's UGV placement; its lid and seat open only as far as the wall behind lets them);
+- with ``scene["move"]`` (4 x 4, base_link: a plan moved with the commode, plan_shift) the commode and the
+  room together moved by it, as the robot sees them when it stands that much off;
 - the other arm, standing;
 - the robot's own bin, lowered as it stands for cleaning (the owner, 19 Oct: "include the bin body, the
   bin handles and the bin covers in the collision checking matrices"): the bin, its rail and carriage,
@@ -127,27 +129,36 @@ def _objects(scene: dict, fid: str, cubicle_mm: int, phase: str) -> tuple[list, 
         return m
 
     out = []
+    move = np.asarray(scene["move"], dtype=float) if scene.get("move") is not None else np.eye(4)
     walls = scene.get("walls")
     if walls:
         made = "the room measured in Prepare"
         for w in walls:
             T = np.eye(4)
             T[:3, 3] = w["center"]
-            out.append(("wall", f"{w['name']} wall", one(w["name"], trimesh.creation.box(extents=w["size"]), T)))
+            out.append(("wall", f"{w['name']} wall", one(w["name"], trimesh.creation.box(extents=w["size"]), move @ T)))
         if scene.get("front_x") is not None and scene.get("room_y"):
             y0, y1 = scene["room_y"]
             T = np.eye(4)
             T[:3, 3] = [scene["front_x"] - WALL_T_M / 2, (y0 + y1) / 2, WALL_H_M / 2]
-            out.append(("wall", "front wall", one("front", trimesh.creation.box(extents=[WALL_T_M, (y1 - y0) + 2 * WALL_T_M, WALL_H_M]), T)))
+            out.append(("wall", "front wall", one("front", trimesh.creation.box(extents=[WALL_T_M, (y1 - y0) + 2 * WALL_T_M, WALL_H_M]),
+                                                  move @ T)))
     else:
         from alix_workspace.plan_scene_validation import load_wall_manager
 
         from .. import vendor_paths
 
         made = f"ALIX's {cubicle_mm} mm cubicle (the room is not measured in Prepare)"
-        out.append(("wall", "cubicle wall", load_wall_manager(vendor_paths.cubicle_yaml(cubicle_mm))[0]))
+        mgr = load_wall_manager(vendor_paths.cubicle_yaml(cubicle_mm))[0]
+        if scene.get("move") is not None:
+            for name, o in list(mgr._objs.items()):
+                T = np.eye(4)
+                T[:3, :3], T[:3, 3] = o["obj"].getRotation(), o["obj"].getTranslation()
+                mgr.set_transform(name, move @ T)
+        out.append(("wall", "cubicle wall", mgr))
     shift = np.eye(4)
     shift[:2, 3] = (scene.get("offset_m") or [0.0, 0.0])[:2]
+    shift = move @ shift                       # the UGV's placement, then the commode's move with the room
     back = scene.get("back_mm")
     for name, mesh, M in _commode(fid, cubicle_mm, phase, None if back is None else round(float(back), 1)):
         out.append(("commode", name, one(name, mesh, shift @ M)))

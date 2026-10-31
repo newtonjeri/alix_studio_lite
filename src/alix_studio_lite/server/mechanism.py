@@ -959,8 +959,12 @@ def frames_said(answers: list) -> str:
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
 class Runner:
-    def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True, together=True, next_task=None):
+    def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True, together=True, next_task=None, move=None):
         self.ex = ex
+        # the commode's move from where the plans work (plan_shift.Move, or name -> Move | None): each plan's working
+        # stretch moved with it before anything of it is sent, refused by plan_shift's gates (the owner, 31 Oct: the
+        # depth camera's place and the UGV's offset; the collision gate, plan_shift.collisions, is the caller's)
+        self.move = move
         self.say = say or (lambda *_: None)
         self.together = bool(together)               # the two arms at once where the plan allows it (two_arm_leg)
         # the arms whose next task's start follows the run (S2: workflow.next_after_tasks; the owner, 24 Oct): the run's
@@ -992,6 +996,13 @@ class Runner:
 
     def _plan(self, name: str) -> str:
         plan = Plan(name)
+        move = self.move(name) if callable(self.move) else self.move
+        if move is not None and (move.sideways or move.dz_m):
+            from . import plan_shift
+
+            plan = plan_shift.shift(plan, move)     # UserError (code "shift") before anything of the plan is sent
+            self.say(f"{plan.title}: each arm's working stretch moved with the commode ({move.words()}): the hands within "
+                     f"{max((r.get('hand_off_mm') or 0.0) for r in plan.shift_report):.1f} mm of the plan's, moved", "warn")
         entries = list(plan.entries)
         ask_start = name in self._ask_start
         self._ask_start.discard(name)
