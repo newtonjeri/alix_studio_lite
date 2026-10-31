@@ -263,4 +263,6 @@ perception_node:
     # readings widen (GapCheckSession.check `closed_within_deg`); a ring or lid gone from its place (the rim, the bowl
     # shows) is never closed, and every other question keeps the 10 deg rule. The caller passes it for that check only
     # (Studio Lite's runner; the AnalyzeScene request has no field to say which check asks, so this node does not).
+    # Such a check TEACHES NOTHING (31 Oct): no registration, no seat reference. Close the lid's end check taught +22 to
+    # +32 mm from a lid resting 5-10 deg up, and the next sequence's lift checks could not judge (11:28, 11:36).
     gap_closing_max_deg: 25.0

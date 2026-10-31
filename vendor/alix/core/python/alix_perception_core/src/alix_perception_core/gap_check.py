@@ -163,12 +163,14 @@ class GapCheckSession:
     def record_params(self) -> dict:
         return {k: self._p(k) for k in self.RECORD_PARAMS}
 
-    def _models_verdict(self, gap_class: str, models, at_pose: str, asked: str = "", camera_to_world=None) -> dict:
+    def _models_verdict(self, gap_class: str, models, at_pose: str, asked: str = "", camera_to_world=None,
+                        teach: bool = True) -> dict:
         """The fused state (colour + registered depth) for this frame from `models()` — the caller's
         PerceptionCore.check_status on the same moment's colour frame and aligned depth, or None — and whether it
         contradicts `gap_class`. {} when the class is a lifted one (no model knows a part at -30 deg) or nothing
-        could be asked. A confident closed decision there teaches the registration (the fused path's rule). The
-        models are asked once per check (MODELS_REUSE_S): ``reused`` says a frame took an earlier frame's answer."""
+        could be asked. A confident closed decision there teaches the registration (the fused path's rule), unless
+        ``teach`` is False (a closing's outcome check: check's `closed_within_deg`). The models are asked once per
+        check (MODELS_REUSE_S): ``reused`` says a frame took an earlier frame's answer."""
         agrees = self.GAP_CLASS_AGREES.get(gap_class)
         if not agrees or models is None:
             return {}
@@ -190,7 +192,8 @@ class GapCheckSession:
                 return {}
             if result is None:
                 return {}
-            self._learn_registration(at_pose, result)
+            if teach:
+                self._learn_registration(at_pose, result)
             if key is not None:
                 self._models_last = (key, now, result)
         fused = result.fixture_state or ""
@@ -249,11 +252,17 @@ class GapCheckSession:
         (perception.yaml gap_closing_max_deg); 0 is the plain rule, as every other question asks. Only the angle
         readings widen: the fixture fit and the seat's hinge fit call a part lifted from this angle, and the lid's
         centre ROI reading lifted (it cannot tell an angle) no longer contradicts a fit inside it. A ring or a lid gone
-        from its place (the rim, the bowl shows) is never closed."""
+        from its place (the rim, the bowl shows) is never closed. Such a check TEACHES THE SESSION NOTHING (the owner,
+        31 Oct): it judges with the heights it measures, but learns no registration and fills no seat reference. A
+        part left nearly closed, seen from the closing's look, reads high: on 31 Oct Close the lid's end check taught
+        +22 to +32 mm (inspection pose 1), the fixture fit put the fixture at the model's own height, and the next
+        sequence's lift checks, their fit held 10 mm short of that, read the lifted lid closed and found no lifted seat
+        (11:28, 11:36: cannot judge, the run stopped)."""
         asked = asked or ""
         part = "seat" if "seat" in asked.lower() else "lid"
         record_extra: dict = {}
         allow = float(closed_within_deg or 0.0) if asked in ("seat_closed", "lid_closed") else 0.0
+        teach = allow <= 0.0                      # a closing's outcome check judges, it teaches nothing (31 Oct)
         if allow > 0.0:
             record_extra["closed_within_deg"] = allow
         depth = np.asarray(depth, dtype=np.float64)
@@ -341,15 +350,16 @@ class GapCheckSession:
                         and abs(seat_offset) <= float(self._p("gap_register_m")) \
                         and abs(seat_offset - lid_registration) <= float(self._p("gap_seat_register_tol_m")) \
                         and abs(seat_offset - registration) > self.REGISTRATION_RESET_M:
-                    old_reg = self._registration.get(seat_key)
-                    self._registration[seat_key] = float(seat_offset)
-                    self.log.warn(
-                        f"seat registration at {at_pose or '(any pose)'}: {seat_offset * 1000:+.1f} mm (the ring read {height:.3f} m over "
-                        f"{band_frac * 100:.0f} % of the ROI, nominal {nominal_top:.3f}; the lid's offset is {lid_registration * 1000:+.1f} mm)"
-                        + (f" — replaces {old_reg * 1000:+.1f} mm" if old_reg is not None else ""))
-                    if old_reg is not None:
-                        self._clear_seat_references(at_pose, "the seat's registration was reset")
-                    registration, registration_source = float(seat_offset), "seat"
+                    if teach:
+                        old_reg = self._registration.get(seat_key)
+                        self._registration[seat_key] = float(seat_offset)
+                        self.log.warn(
+                            f"seat registration at {at_pose or '(any pose)'}: {seat_offset * 1000:+.1f} mm (the ring read {height:.3f} m over "
+                            f"{band_frac * 100:.0f} % of the ROI, nominal {nominal_top:.3f}; the lid's offset is {lid_registration * 1000:+.1f} mm)"
+                            + (f" — replaces {old_reg * 1000:+.1f} mm" if old_reg is not None else ""))
+                        if old_reg is not None:
+                            self._clear_seat_references(at_pose, "the seat's registration was reset")
+                    registration, registration_source = float(seat_offset), "seat" if teach else "seat, this frame only"
                 detail = (f"; seat band {band_frac * 100:.0f} % of the ROI, 10/90 % heights {q10:.3f}/{q90:.3f}, "
                           f"{covered * 100:.0f} % masked around {len(masked_frames)} hand frames"
                           + (f" ({len(missing)} missing: {missing[:3]})" if missing else ""))
@@ -468,7 +478,10 @@ class GapCheckSession:
                 # key so both paths read one value; replaced, not averaged, when it moves.
                 learned = height - nominal_top
                 if abs(learned - registration) > self.REGISTRATION_RESET_M:
-                    self._learn_gap_registration(at_pose, learned, height, nominal_top)
+                    if teach:
+                        self._learn_gap_registration(at_pose, learned, height, nominal_top)
+                    else:
+                        registration_source = "lid, this frame only"
                     registration = learned
                     top = nominal_top + registration
                     rise = height - top
@@ -488,7 +501,7 @@ class GapCheckSession:
         # and the registered depth state on the same moment's colour frame and aligned
         # depth. A closed/open class the fused state confidently contradicts is not a
         # proof of anything: "uncertain", which no expectation matches.
-        cross = self._models_verdict(state, models, at_pose, asked, camera_to_world) \
+        cross = self._models_verdict(state, models, at_pose, asked, camera_to_world, teach) \
             if (bool(self._p("gap_cross_check")) and models is not None) else {}
         if cross.get("contradiction"):
             self.log.warn(f"gap_check: {state} contradicted by the models ({cross['fused_state']} from "
@@ -499,7 +512,7 @@ class GapCheckSession:
         # becomes (part of) the closed reference for this camera pose.
         if part == "lid":
             self._note_lid_decision(at_pose, state)
-        elif band_state == "seat_closed" and band_conf >= 0.5 and state == "seat_closed":
+        elif teach and band_state == "seat_closed" and band_conf >= 0.5 and state == "seat_closed":
             self._fill_seat_reference(at_pose, depth, intrinsics, camera_to_world, seat_hands, top, record_extra)
         median_range = float(np.median(d)) if d.size else float("nan")
         if state == "refused":
