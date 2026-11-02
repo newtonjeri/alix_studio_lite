@@ -959,6 +959,12 @@ def frames_said(answers: list) -> str:
     return ", ".join(a.fixture_state if a.success else "refused" for a in answers)
 
 
+#: retries after a check that fails (the owner, 2 Nov: "by default number of retries after failure is three ... never
+#: abort on the first failure; this applies to all mechanism tasks"): a lifted check's re-lifts (its config's count when
+#: higher), a task's end check its task again from its start; each by the camera (place_correct); after them, a person
+RETRIES = 3
+
+
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
 class Runner:
@@ -987,6 +993,9 @@ class Runner:
         self.checks: list = []                       # every question asked, and its answer
         self.seat_after_lid = None                   # Open the lid's end check on the seat: up | down | unknown
         self._ask_start: set = set()                 # queued plans that ask their start checks even in a sequence
+        self.again: dict = {}                        # task -> its runs again after its end check failed (RETRIES)
+        self._again_for: dict = {}                   # task -> the run again queued: {n, end: the check that failed}
+        self._last_answer = None                     # the camera's last answer (a run again's start check)
 
     def run(self, name: str) -> dict:
         self.queue, self.k = [name], 0
@@ -1029,7 +1038,9 @@ class Runner:
         state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(name), lid_end=name == "lid_open", seat=None,
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
                                                         for s in plan.sides()) if first is not None),   # after the approach
-                     place=place)
+                     place=place, again=self._again_for.pop(name, None))
+        if place is not None:
+            place.again = state["again"] is not None     # a run again: a part between closed and open stops it
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
                  f"{plan.seconds():.1f} s of motion)")
         rests = final_rests(entries, self.leave)
@@ -1060,6 +1071,9 @@ class Runner:
                     continue
                 if verdict[0] == "prerequisite":
                     return "prerequisite"
+                if verdict[0] == "again":                # its end check failed: the task again, queued next
+                    state["again_next"] = True
+                    break
                 if verdict[0] == "skip":
                     state["skipped"] = True
                     break
@@ -1112,16 +1126,18 @@ class Runner:
                 nxt = next((x for x in entries[i + used:] if x.kind == "arm" and x.side == joined.side), None)
                 getattr(self.ex, "released", lambda *_: None)(joined, nxt.stage if nxt is not None else None)
             i += used
-        for a in self.final_actions(plan):
+        for a in self.final_actions(plan) if not state.get("again_next") else []:
             self.ex.hold(float(a.get("seconds") or 0.0), a.get("stage") or "hold_pose")
         if state["skipped"] and self.k + 1 >= len(self.queue):
             ends = {s: t for s, t in plan.targets("end").items() if s not in self.leave}
             if ends:
                 self.ex.approach(plan, ends, "end")
-        self.done.append(dict(plan=name, title=plan.title, outcome="skipped" if state["skipped"] else "done",
-                              relifts=state["relifts"]))
+        outcome = "again" if state.get("again_next") else "skipped" if state["skipped"] else "done"
+        self.done.append(dict(plan=name, title=plan.title, outcome=outcome, relifts=state["relifts"]))
         if place is not None:
-            place.end("skipped" if state["skipped"] else "done", state["relifts"])
+            place.end(outcome, state["relifts"])
+        if outcome == "again":
+            return "again"
         if state["seat"] is not None and not state["skipped"]:
             self._after_lid(state["seat"])
         return "done"
@@ -1239,6 +1255,7 @@ class Runner:
                     return a
                 closing = state.get("closing") is not None and a.get("expect") == state.get("closing")
                 answer = self.ex.ask(dict(a, closing_outcome=True) if closing else a, str(a.get("expect") or ""))
+                self._last_answer = answer
                 if not answer.success:
                     self._cannot_judge(label, a.get("expect"), answer)
                 passed = lc.evaluate_fixture_check(a, answer)
@@ -1267,6 +1284,15 @@ class Runner:
         policy = str(failed.get("on_fail") or "abort")
         label = failed.get("stage") or "check_fixture_state"
         expect = failed.get("expect")
+        if policy == "skip" and state.get("again"):    # a run again: its start state, or its end state after all
+            end = state["again"]["end"]
+            if self._last_answer is not None and lc.evaluate_fixture_check(end, self._last_answer):
+                self.say(f"{label}: NOT {expect}, the camera says {getattr(self._last_answer, 'fixture_state', '?')}: "
+                         f"{end.get('expect')} after all, this plan's outcome holds; it ends here as done")
+                return ("skip",)
+            return ("abort", f"{label}: NOT {expect}, nor {end.get('expect')}: the camera says "
+                             f"{getattr(self._last_answer, 'fixture_state', '?')}, between where {plan.title} starts and where "
+                             "it ends, and no plan runs from there.")
         if policy == "skip":
             self.say(f"{label}: NOT {expect} — this plan's outcome already holds; it ends here as done (on_fail skip)")
             return ("skip",)
@@ -1286,6 +1312,8 @@ class Runner:
             return ("prerequisite",)
         if policy == "retry_lift":
             budget = int(failed.get("max_retries", 0) or 0)
+            if state.get("place") is not None:
+                budget = max(budget, RETRIES)            # every run's (the owner, 2 Nov)
             if state["relifts"] >= budget:
                 return ("abort", f"{label}: still NOT {expect} after {budget} re-lift(s).")
             lifter = "left" if failed.get("arm", "right") == "right" else "right"
@@ -1323,7 +1351,27 @@ class Runner:
                 self.say(f"{label}: NO — re-lift {n}/{budget}: the {lifter} arm goes back along the lift it made, then "
                          "lifts again (the recorded block); the check runs again", "warn")
             return ("retry", i, block)
+        if state.get("place") is not None:              # every run's: never stopped at the first failure (2 Nov)
+            return self._task_again(plan, failed, label, expect)
         return ("abort", f"{label}: NOT {expect} (on_fail {policy}).")
+
+    def _task_again(self, plan, failed: dict, label: str, expect) -> tuple:
+        """A check that fails with no retry of its own (the tasks' end checks: on_fail abort in their configs) runs the
+        task again from its start, up to RETRIES times (the owner, 2 Nov: "you should never abort on the first failure;
+        this applies to all mechanism tasks"): queued next, the arms to its start by the approach (as every task starts),
+        its start checks asked (in a sequence too) and its first look deciding the camera's correction as every run's.
+        Its start check reading the part where the plan starts runs it; where it ends, the plan's outcome holds after
+        all; anywhere else (between the two) a person looks, as no plan runs from there."""
+        n = self.again.get(plan.name, 0)
+        if n >= RETRIES:
+            return ("abort", f"{label}: still NOT {expect} after running {plan.title} again {n} time(s).")
+        self.again[plan.name] = n + 1
+        self.queue.insert(self.k + 1, plan.name)
+        self._ask_start.add(plan.name)
+        self._again_for[plan.name] = dict(n=n + 1, end=dict(failed))
+        self.say(f"{label}: NOT {expect} — {plan.title} runs again from its start ({n + 1}/{RETRIES}), where the camera reads "
+                 "the commode then; its start check says first where the part is", "warn")
+        return ("again",)
 
     def _camera_relift(self, entries: list, k: int, label: str, expect, budget: int, lifter: str, state: dict) -> tuple:
         """Re-lift n of a lifted check that failed, by the camera (the owner, 2 Nov: the retries' offsets are the camera's,

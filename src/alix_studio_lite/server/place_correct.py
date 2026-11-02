@@ -34,17 +34,30 @@ commode stands now against where the plan worked. Against the move the run has (
 
 THE RETRIES, by the camera too (the owner, 2 Nov: "all the retries should be decided by the camera ... the hard-coded
 retries we have in the configuration files should be populated by the values from the camera"; "we can do away with
-the rungs"). A check that fails with on_fail retry_lift (Open the lid's lifted check, 3 retries; Open the seat's, 1):
-the commode's place is read again on that check's own frames (the camera arm where the first look was: TaskPlace.retry)
-and decided by the same rule against the move the run has: within the tolerance the same lift again; beyond, the lift of
-the plan made again from the camera's value; no frame, no reading or no reference: the same lift again. The config's
-retry_offsets and ALIX's pre-planned rungs are not used. The arm goes back along the lift it made while that plan is
-made (mechanism.Runner._camera_relift).
+the rungs"; "by default number of retries after failure is three; you should never abort on the first failure; this
+applies to all mechanism tasks"): mechanism.RETRIES, 3, for every task.
+- A lifted check that fails (Open the lid's, Open the seat's): the commode's place read again on that check's own
+  frames (the camera arm where the first look was: TaskPlace.retry) and decided by the same rule against the move the
+  run has: within the tolerance the same lift again; beyond, the lift of the plan made again from the camera's value;
+  no frame, no reading: the same lift again. The arm goes back along the lift it made while that plan is made
+  (mechanism.Runner._camera_relift). The config's retry_offsets and ALIX's pre-planned rungs are not used.
+- An end check that fails (every task's; its config says abort): the task again from its start (Runner._task_again),
+  its start check asked, its own first look deciding the camera's value as any run's: the part where the task starts
+  runs it, where it ends its outcome holds; a part between closed and open (the depth's parts reading) or anywhere else
+  stops it for a person before any working move (its plan starts from a part at rest).
+After 3, a person looks.
 
-THE REFERENCE, taught by itself (the owner, 31 Oct, agreed): the first look of the last run of the task that passed with
-nothing moved (no move from either source, no re-lift) becomes the reference of its look; a run moved by either never
-changes it. Kept per robot (its camera's mount) in the logs folder (REFERENCE_FILE), each with the digest of the plan it
-was taught on: a re-planned task runs on the UGV's alone until a run of the new plan teaches it again.
+THE REFERENCE of a look is the offline plan's commode as this camera reads it (the owner, 2 Nov: "we already have an
+offline plan which will be the reference by default ... the camera readings can be transformed to the reference
+frame"). The reading is in alix_ref_frame, but through the URDF's camera mount, never calibrated: on the lab's runs of
+24-31 Oct, the plans working, the commode read y +33 to +35 mm and +6 to +7 deg off its scene place from inspection
+pose 1, y +17 to +21 mm and +2.7 to +3.8 deg from pose 4 (x -23 mm with the lid shut): the camera's error, not the
+commode's. So each look's reference is what the camera read there with the commode where the offline plans work: the
+median of those runs' looks (tools/placement_replay.py --seed), one a pose, pole and lid/seat state, kept per robot
+(its camera's mount) in the logs folder (REFERENCE_FILE); a look with none yet takes the first look of a run that passes
+with nothing moved and no re-lift, and keeps it. Every plan is made for the same commode place (the scene's, the UGV at
+250 mm): a re-planned task keeps its references. A hand-eye calibration of the mount would make the scene place itself
+the reference (ALIX: Resource/reports/2026-10-13_hand_eye_calibration).
 
 GENERATED AHEAD, while the robot runs (the owner, 1 Nov: "generate the first task, as it executes be generating the
 other tasks"; "proceed to second task planning as the first executes, and continue generation in parallel with
@@ -165,9 +178,9 @@ class References:
 
         return start
 
-    def has_task(self, task: str, digest: str) -> bool:
-        """A reference look taught on this plan of ``task`` (its digest): its look can run the camera's move."""
-        return any(r.get("task") == task and r.get("plan") == digest for r in self._load().values())
+    def has_task(self, task: str) -> bool:
+        """A reference look of ``task``'s first look: its look can bring the camera's value."""
+        return any(r.get("task") == task for r in self._load().values())
 
     def teach(self, key: str, ref: dict) -> None:
         if self.path is None:
@@ -390,7 +403,7 @@ class Correction:
         LANES[0] by its first look, when a reference look of it can bring the camera's move there."""
         if plan0.name in self.order[self.at + 1:]:
             self.at = self.order.index(plan0.name, self.at + 1)
-        if self.submit is not None and self.collide and self.refs.has_task(plan0.name, _digest(plan0)):
+        if self.submit is not None and self.collide and self.refs.has_task(plan0.name):
             with self._lock:
                 self._others.append(self.submit(LANES[0], prepare, plan0.name, str(plan0.path), _digest(plan0), self.scene,
                                                 self.fid, self.cubicle_mm))
@@ -473,6 +486,7 @@ class TaskPlace:
         self._thread = None
         self._got = None
         self._retry, self._retry_got, self._retry_n = None, None, 0     # a re-lift's look (retry)
+        self.again = False                       # a task run again after its end check failed (mechanism.Runner)
         self.plan = plan0
         corr.started(plan0)
         if corr.ugv is not None:
@@ -542,10 +556,6 @@ class TaskPlace:
             key = look_key(self.corr.fid, got["pose"], got["pole_mm"], got["state"])
             got["key"] = key
             ref = self.corr.refs.get(key)
-            if ref is not None and ref.get("plan") != _digest(self.plan0):
-                self.say(f"{self.plan0.title}: the reference look of {key} was taught on another version of the plan "
-                         f"({ref.get('at')}): not used until a run of this one teaches it again", "warn")
-                ref = None
         d = decide(baseline, got, ref, self.hands, running)
         plan = None
         if d.refuse is None and d.source == "depth":
@@ -600,6 +610,13 @@ class TaskPlace:
         self.row.update(look=self._look_row(self.look), depth=None if d.depth is None else d.depth.words(), source=d.source,
                         words=d.words, move=None if d.move is None else d.move.words())
         self.say(f"PLACE {self.plan0.title}: {d.words}", d.level)
+        held = str((self.look or {}).get("note") or "")
+        if self.again and "between closed and open" in held:   # its plan starts from a part at rest: a person
+            self.row["verdict"] = "refused"
+            raise UserError(f"{self.plan0.title} STOPPED before its working moves: run again after its end check failed, "
+                            f"the camera reads {held.split(': a part', 1)[0]}, a part between closed and open; no plan runs "
+                            "from there.", "A person puts the part where the task starts (or where it ends), then runs it "
+                            "again.", code="escalate")
         if d.refuse is not None:
             self.row["verdict"] = "refused"
             raise UserError(f"{self.plan0.title} STOPPED before its working moves: {d.refuse}.",
@@ -635,13 +652,14 @@ class TaskPlace:
         return d, None
 
     def end(self, outcome: str, relifts: int) -> None:
-        """Teach the reference: this run passed (``outcome`` done, no re-lift) with nothing moved, and its first look read
-        the commode's place."""
+        """Teach the reference of a look that has none: this run passed (``outcome`` done, no re-lift) with nothing
+        moved, and its first look read the commode's place. A reference is kept (the offline plan's place as the camera
+        reads it): a passing run never moves it."""
         look = getattr(self, "look", None)
         self.row.update(outcome=outcome, relifts=relifts)
         if outcome != "done" or relifts or self.applied is not None or not look or not look.get("ok") or not look.get("key"):
             return
-        if self.decision is not None and self.decision.source == "depth":
+        if (self.decision is not None and self.decision.source == "depth") or self.corr.refs.get(look["key"]) is not None:
             return
         self.corr.refs.teach(look["key"], dict(task=self.plan0.name, plan=_digest(self.plan0),
                                                reading={k: look["reading"][k] for k in ("dx_m", "dy_m", "dz_m", "dyaw_deg",

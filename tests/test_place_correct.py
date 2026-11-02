@@ -1,5 +1,6 @@
 """A lid or seat task placed by its two sources (the owner, 31 Oct): the UGV's reported placement first, compensated by
 the wrist camera's reading at the task's first look against the reference look (server/place_correct.py)."""
+import json
 import sys
 from pathlib import Path
 
@@ -215,15 +216,21 @@ def test_a_sequence_takes_its_first_look_without_its_check(tmp_path):
     assert out["places"][0]["source"] == "depth"
 
 
-def test_a_reference_of_another_plan_is_not_used(tmp_path):
-    """Re-planned (its file's digest another), a task runs on the UGV's alone until a run of the new plan teaches it."""
+def test_a_reference_belongs_to_its_look_and_is_kept(tmp_path):
+    """A reference look is the offline plans' commode as this camera reads it (the owner, 2 Nov): one taught on an
+    earlier version of the plan is used (every plan is made for the same commode place), and a run that passes with
+    nothing moved never moves it."""
     refs = place_correct.References(tmp_path / "refs.json")
-    key = reference("lid_close", refs)
+    key = reference("seat_open", refs)
     refs.teach(key, dict(refs.get(key), plan="another"))
-    plan = mechanism.Plan("lid_close")
-    ex = LookExec([c["expect"] for c in plan.checks()], look("lid_close", 0.0, 0.009))
-    out, said = run("lid_close", ex, place_correct.Correction(refs=refs, collide=False))
-    assert out["places"][0]["source"] == "none" and any("another version of the plan" in t for t in said)
+    plan = mechanism.Plan("seat_open")
+    out, said = run("seat_open", LookExec([c["expect"] for c in plan.checks()], look("seat_open", 0.0, 0.008)),
+                    place_correct.Correction(refs=refs, collide=False))
+    assert out["places"][0]["source"] == "depth"
+    out, said = run("seat_open", LookExec([c["expect"] for c in plan.checks()], look("seat_open", 0.002)),
+                    place_correct.Correction(refs=refs, collide=False))
+    assert out["places"][0]["source"] == "none" and out["plans"][0]["outcome"] == "done" and "taught" not in out["places"][0]
+    assert refs.get(key)["reading"]["dx_m"] == REF["dx_m"]
 
 
 def test_the_real_look_reads_the_place_the_pose_and_the_pole():
@@ -361,6 +368,98 @@ def test_re_lifts_stop_for_a_person_after_the_configs_count_or_beyond_the_bounds
         run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
     assert err.value.code == "place" and "before re-lift 1" in str(err.value) and "beyond 30 mm" in str(err.value)
     assert len(lifts_of(ex)) == 1 and [c[1] for c in ex.calls if c[0] == "move"][-1] == "back along move_to_pre_start"
+
+
+def test_every_task_fails_three_times_before_a_person_is_called(tmp_path):
+    """The owner, 2 Nov: "by default number of retries after failure is three; you should never abort on the first
+    failure; this applies to all mechanism tasks". Open the seat's lift (its config: 1 re-lift) is lifted again up to 3
+    times; Close the seat's end check (its config: abort) runs the task again from its start, its start check asked
+    (here in a sequence too), up to 3 times, then a person."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    ex = LookExec(["lid_open", "seat_closed"] + ["seat_closed"] * 3 + ["seat_lifted", "seat_open"], look("seat_open", 0.0))
+    out, said = run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert out["plans"][0]["relifts"] == 3 and out["plans"][0]["outcome"] == "done"
+    # Close the seat in a sequence: its end check fails once, it runs again (its start check asked: the seat still open)
+    ex = LookExec(["seat_open", "seat_open", "seat_closed"], look("seat_close", 0.0))
+    out, said = run("seat_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("seat_close", "again"), ("seat_close", "done")]
+    asked = [c[1] for c in ex.calls if c[0] == "ask"]
+    assert asked == ["verify_seat_closed", "verify_seat_open", "verify_seat_closed"]
+    assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("seat_close", "start"), ("seat_close", "start")]
+    assert any("runs again from its start (1/3)" in t for t in said)
+    # the seat never closes: three runs again, then a person
+    ex = LookExec(["seat_open"] + ["seat_open", "seat_open"] * 3, look("seat_close", 0.0))
+    with pytest.raises(UserError, match="still NOT seat_closed after running Close the seat again 3 time") as err:
+        run("seat_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    assert err.value.code == "escalate"
+
+
+def test_a_task_run_again_reads_where_the_part_is_first(tmp_path):
+    """Run again after its end check failed, a task's start check decides: the part where the plan ends after all, the
+    outcome holds (done, nothing moved); neither, a person. The camera's lifted part counts as open to the start check,
+    so the depth's parts reading decides it too: a part between closed and open stops the run again before any working
+    move (its plan starts from a part at rest)."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    ex = LookExec(["lid_open", "lid_lifted", "lid_closed"], look("lid_close", 0.0))
+    out, said = run("lid_close", ex, place_correct.Correction(refs=refs, collide=False))
+    assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("lid_close", "again"), ("lid_close", "skipped")]
+    assert any("lid_closed after all" in t for t in said)
+    ex = LookExec(["lid_open", "lid_lifted", "seat_lifted"], look("lid_close", 0.0))
+    with pytest.raises(UserError, match="between where Close the lid starts and where it ends") as err:
+        run("lid_close", ex, place_correct.Correction(refs=refs, collide=False))
+    assert err.value.code == "escalate"
+    held = dict(look("lid_close", ok=False), note="the lid at 45 deg, the seat at 0: a part between closed and open "
+                                                   "moves with what holds it, no place")
+    ex = LookExec(["lid_open", "lid_lifted", "lid_lifted"], [look("lid_close", 0.0), held])
+    with pytest.raises(UserError, match="the lid at 45 deg, the seat at 0, a part between closed and open") as err:
+        run("lid_close", ex, place_correct.Correction(refs=refs, collide=False))
+    assert err.value.code == "escalate" and len(lifts_of(ex)) == 1          # the run again moved nothing of its work
+
+
+def test_the_task_run_again_takes_the_cameras_value_at_its_own_look(tmp_path):
+    """Close the seat's end check fails; run again, its first look reads the commode 8 mm to the right of where the
+    offline plan works: the run again is the plan made from the camera's value."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    key = reference("seat_close", refs)
+    plan = mechanism.Plan("seat_close")
+    ex = LookExec(["seat_open", "seat_open", "seat_open", "seat_closed"], [look("seat_close", 0.001), look("seat_close", 0.0, -0.008)])
+    out, said = run("seat_close", ex, place_correct.Correction(refs=refs, collide=False))
+    assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("seat_close", "again"), ("seat_close", "done")]
+    assert [r["source"] for r in out["places"]] == ["none", "depth"]
+    moved = plan_shift.shift(plan, place_correct.depth_move(look("seat_close", 0.0, -0.008)["reading"], refs.get(key), POSE0))
+    pull0, pull1 = (next(e for e in p.entries if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+                    for p in (plan, moved))
+    pulls = lifts_of(ex)
+    assert len(pulls) == 2 and carries(pulls[:1], pull0.rows) and carries(pulls[1:], pull1.rows)
+
+
+def test_the_references_are_seeded_from_the_labs_looks_of_the_offline_plans(tmp_path):
+    """tools/placement_replay.py --seed: each task's first look's reference, the median of the lab's looks of that pose,
+    pole and state (the commode where the offline plans work); those of other looks are left out."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+    import placement_replay
+
+    def row(pose, state, dy, day="2026-10-30"):
+        return dict(ok=True, pose=pose, state=state, pole_mm=149.1, day=day, dx_m=-0.007, dy_m=dy, dz_m=0.0, dyaw_deg=6.0,
+                    lid_deg=110.0, seat_deg=0.0)
+
+    res = [row("inspection_pose_1", "lid open, seat open", dy) for dy in (0.033, 0.035, 0.036)]
+    res += [row("inspection_pose_1", "lid shut", 0.030), dict(row("inspection_pose_4", "lid shut", 0.017), ok=False)]
+    placement_replay.seed(res, tmp_path / "refs.json")
+    refs = place_correct.References(tmp_path / "refs.json")
+    got = refs.get(place_correct.look_key("commode_c", "inspection_pose_1", 150.0, "lid open, seat open"))
+    assert got["task"] == "seat_close" and got["reading"]["dy_m"] == 0.035 and got["frames"] == 3
+    assert len(json.loads((tmp_path / "refs.json").read_text())["looks"]) == 1
+    assert refs.has_task("seat_close") and not refs.has_task("lid_open")
+
+
+def test_the_labs_references_are_there_from_the_first_run():
+    """Resources/Logs/place_reference.json: the four tasks' first looks (pole 150 mm), as the lab's looks of 24-31 Oct
+    read the commode where the offline plans work."""
+    refs = place_correct.References(Path(__file__).resolve().parents[1] / "Resources" / "Logs" / place_correct.REFERENCE_FILE)
+    for task, (pose, state) in LOOKS.items():
+        got = refs.get(place_correct.look_key("commode_c", pose, 150.0, state))
+        assert got is not None and got["task"] == task and got["frames"] >= 100, task
 
 
 class Lanes:

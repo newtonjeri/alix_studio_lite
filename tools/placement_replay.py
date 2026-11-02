@@ -235,6 +235,30 @@ def _why(res: list[dict]) -> dict:
     return out
 
 
+def seed(res: list[dict], path: Path) -> None:
+    """Each task's first look's reference (place_correct.References, ``path``): the median of the lab's looks of that
+    pose, pole and lid/seat state, taken with the commode where the offline plans work (those runs passed): what this
+    camera, its mount uncalibrated, reads there (the owner, 2 Nov: the offline plan is the reference)."""
+    from alix_studio_lite.server import place_correct
+
+    refs, groups = place_correct.References(path), defaultdict(list)
+    for r in res:
+        if r.get("ok") and (r.get("pose"), r.get("state")) in STARTS and r.get("pole_mm") is not None:
+            groups[(r["pose"], int(round(float(r["pole_mm"]) / place_correct.POLE_STEP_MM) * place_correct.POLE_STEP_MM),
+                    r["state"])].append(r)
+    for (pose, pole, state), rows in sorted(groups.items()):
+        reading = {a: float(np.median([x[a] for x in rows])) for a in AXES}
+        for a in ("lid_deg", "seat_deg"):
+            got = [x[a] for x in rows if x.get(a) is not None]
+            reading[a] = float(np.median(got)) if got else None
+        days = sorted({x["day"] for x in rows})
+        key = place_correct.look_key("commode_c", pose, pole, state)
+        refs.teach(key, dict(task=STARTS[(pose, state)], plan=None, reading=reading, ugv=None, record=None, frames=len(rows),
+                             days=days, at=f"the lab's looks of {days[0]} to {days[-1]}, the median of {len(rows)}"))
+        print(f"  {key}: x {reading['dx_m'] * 1000:+.1f}, y {reading['dy_m'] * 1000:+.1f}, z {reading['dz_m'] * 1000:+.1f} mm, "
+              f"{reading['dyaw_deg']:+.2f} deg ({len(rows)} frames, {', '.join(days)})")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--day", action="append", help="a day's folder name (YYYY-MM-DD); default every day")
@@ -242,6 +266,8 @@ def main() -> int:
     ap.add_argument("--from-json", type=Path, default=None)
     ap.add_argument("--reference", default=None, help="a day's folder name: its looks as where the plans work (the shadow)")
     ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--seed", type=Path, default=None,
+                    help="write each task's first look's reference there (Resources/Logs/place_reference.json)")
     args = ap.parse_args()
     if args.from_json:
         res = [r for r in json.loads(args.from_json.read_text()) if not args.day or r["day"] in args.day]
@@ -254,6 +280,8 @@ def main() -> int:
         args.json.write_text(json.dumps(res))
     if args.reference:
         shadow(res, args.reference)
+    if args.seed:
+        seed(res, args.seed)
     return 0
 
 
