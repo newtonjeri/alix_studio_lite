@@ -762,11 +762,13 @@ def leg_start_state(plan, entries: list, i: int, side: str) -> tuple:
     return q, hand, pole
 
 
-def plan_legs(plan, entries: list, unsent=(), bridged=()) -> list:
-    """Every stretch of the plan the two arms run at once (two_arm_leg), with the entry index each starts at: [(i, Leg)]."""
+def plan_legs(plan, entries: list, unsent=(), bridged=(), cut: int | None = None) -> list:
+    """Every stretch of the plan the two arms run at once (two_arm_leg), with the entry index each starts at: [(i, Leg)].
+    ``cut``: no stretch from before it reaches past it (a sequence's first look before anything a correction changes:
+    Runner, place_correct)."""
     out, i = [], 0
     while i < len(entries):
-        leg = two_arm_leg(entries, i, unsent, bridged, plan.name)
+        leg = two_arm_leg(entries[:cut] if cut is not None and i < cut else entries, i, unsent, bridged, plan.name)
         if leg is None:
             i += 1
             continue
@@ -1039,14 +1041,16 @@ class Runner:
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
                                                         for s in plan.sides()) if first is not None),   # after the approach
                      place=place, again=self._again_for.pop(name, None))
-        if place is not None:
-            place.again = state["again"] is not None     # a run again: a part between closed and open stops it
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
                  f"{plan.seconds():.1f} s of motion)")
         rests = final_rests(entries, self.leave)
         unsent = trailing_releases(entries, self.hand_set) | rests
+        # a sequence's first look (no check to take it at) comes before anything a correction changes: no two-arm
+        # stretch from before it reaches past that while the look is not taken (2 Nov: Close the lid's first stretch took
+        # its look with the camera arm still at rest, the left's start in the same stretch)
+        cut = place.stretch_from if place is not None and dropped_start else None
         if self.together and hasattr(self.ex, "prepare_legs"):
-            self.ex.prepare_legs(plan, entries, unsent, state["bridge"])
+            self.ex.prepare_legs(plan, entries, unsent, state["bridge"], **({"cut": cut} if cut is not None else {}))
         self.ex.approach(plan, plan.targets("start"), "start", entries=entries)
         if place is not None and dropped_start and hasattr(self.ex, "look_frame"):
             # a sequence's first look, its check not asked: a frame all the same (the owner, 31 Oct), taken as the camera
@@ -1086,9 +1090,10 @@ class Runner:
                 i += 1
                 continue
             mover = getattr(self.ex, "move_together", None) if self.together else None
-            leg = two_arm_leg(entries, i, unsent, state["bridge"], plan.name) if mover is not None else None
+            ents = entries[:cut] if cut is not None and i < cut and not place.started else entries
+            leg = two_arm_leg(ents, i, unsent, state["bridge"], plan.name) if mover is not None else None
             if place is not None and not place.waited:  # the place decided before anything a move of the commode changes
-                span = i + (leg.used if leg is not None else joined_moves(entries, i, state["bridge"])[1])
+                span = i + (leg.used if leg is not None else joined_moves(ents, i, state["bridge"])[1])
                 if span > (place.changes_from if place.started else place.stretch_from):
                     if not place.started:               # no look yet (no camera; the camera arm not at its look)
                         place.start_look(self.ex, take=True)
@@ -1120,7 +1125,8 @@ class Runner:
                 mover(leg)
                 i += leg.used
                 continue
-            joined, used = joined_moves(entries, i, state["bridge"])
+            joined, used = joined_moves(entries[:cut] if cut is not None and i < cut and not place.started else entries, i,
+                                        state["bridge"])
             self.ex.move(joined, bridge=id(e) in state["bridge"])
             if joined.kind == "hand" and joined.stage.startswith("hand_release"):      # it let go, or the run stops here
                 nxt = next((x for x in entries[i + used:] if x.kind == "arm" and x.side == joined.side), None)
@@ -1360,8 +1366,9 @@ class Runner:
         task again from its start, up to RETRIES times (the owner, 2 Nov: "you should never abort on the first failure;
         this applies to all mechanism tasks"): queued next, the arms to its start by the approach (as every task starts),
         its start checks asked (in a sequence too) and its first look deciding the camera's correction as every run's.
-        Its start check reading the part where the plan starts runs it; where it ends, the plan's outcome holds after
-        all; anywhere else (between the two) a person looks, as no plan runs from there."""
+        The camera's classes decide by ALIX's check tables (lift_check): its start check proving the part where the plan
+        starts runs it; proving the opposite, where it ends, the plan's outcome holds after all; uncertain or between
+        proves nothing, and an undecided check stops for a person as every check does (the owner, 23 Oct)."""
         n = self.again.get(plan.name, 0)
         if n >= RETRIES:
             return ("abort", f"{label}: still NOT {expect} after running {plan.title} again {n} time(s).")
@@ -1727,10 +1734,10 @@ class RealExec(_Exec):
         except Exception as exc:                                                    # noqa: BLE001
             return dict(ok=False, why=f"the paths could not be checked ({type(exc).__name__}: {exc})")
 
-    def prepare_legs(self, plan, entries: list, unsent=(), bridged=()) -> None:
+    def prepare_legs(self, plan, entries: list, unsent=(), bridged=(), cut: int | None = None) -> None:
         """The two arms' clearance over each leg of the plan (leg_clearance), worked out in a thread of its own while the
-        arms approach the plan's start; move_together waits for it (LEG_WAIT_S)."""
-        legs = plan_legs(plan, entries, unsent, bridged)
+        arms approach the plan's start; move_together waits for it (LEG_WAIT_S). ``cut``: plan_legs'."""
+        legs = plan_legs(plan, entries, unsent, bridged, cut)
         if not legs:
             return
         self.say(f"{plan.title}: {len(legs)} stretch(es) the two arms can run at once: " + "; ".join(leg.label() for _, leg in legs)

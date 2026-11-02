@@ -42,9 +42,10 @@ applies to all mechanism tasks"): mechanism.RETRIES, 3, for every task.
   no frame, no reading: the same lift again. The arm goes back along the lift it made while that plan is made
   (mechanism.Runner._camera_relift). The config's retry_offsets and ALIX's pre-planned rungs are not used.
 - An end check that fails (every task's; its config says abort): the task again from its start (Runner._task_again),
-  its start check asked, its own first look deciding the camera's value as any run's: the part where the task starts
-  runs it, where it ends its outcome holds; a part between closed and open (the depth's parts reading) or anywhere else
-  stops it for a person before any working move (its plan starts from a part at rest).
+  its start check asked, its own first look deciding the camera's value as any run's. The camera's classes decide
+  (lid / seat closed, lifted, open; uncertain; between), by ALIX's check tables (lift_check: a lifted part proves
+  "open"): where the task starts, it runs; where it ends, its outcome holds; uncertain or between proves nothing, and an
+  undecided check stops for a person as every check does (the owner, 23 Oct).
 After 3, a person looks.
 
 THE REFERENCE of a look is the offline plan's commode as this camera reads it (the owner, 2 Nov: "we already have an
@@ -486,7 +487,6 @@ class TaskPlace:
         self._thread = None
         self._got = None
         self._retry, self._retry_got, self._retry_n = None, None, 0     # a re-lift's look (retry)
-        self.again = False                       # a task run again after its end check failed (mechanism.Runner)
         self.plan = plan0
         corr.started(plan0)
         if corr.ugv is not None:
@@ -610,13 +610,6 @@ class TaskPlace:
         self.row.update(look=self._look_row(self.look), depth=None if d.depth is None else d.depth.words(), source=d.source,
                         words=d.words, move=None if d.move is None else d.move.words())
         self.say(f"PLACE {self.plan0.title}: {d.words}", d.level)
-        held = str((self.look or {}).get("note") or "")
-        if self.again and "between closed and open" in held:   # its plan starts from a part at rest: a person
-            self.row["verdict"] = "refused"
-            raise UserError(f"{self.plan0.title} STOPPED before its working moves: run again after its end check failed, "
-                            f"the camera reads {held.split(': a part', 1)[0]}, a part between closed and open; no plan runs "
-                            "from there.", "A person puts the part where the task starts (or where it ends), then runs it "
-                            "again.", code="escalate")
         if d.refuse is not None:
             self.row["verdict"] = "refused"
             raise UserError(f"{self.plan0.title} STOPPED before its working moves: {d.refuse}.",

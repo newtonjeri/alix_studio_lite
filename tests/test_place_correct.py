@@ -395,25 +395,22 @@ def test_every_task_fails_three_times_before_a_person_is_called(tmp_path):
 
 
 def test_a_task_run_again_reads_where_the_part_is_first(tmp_path):
-    """Run again after its end check failed, a task's start check decides: the part where the plan ends after all, the
-    outcome holds (done, nothing moved); neither, a person. The camera's lifted part counts as open to the start check,
-    so the depth's parts reading decides it too: a part between closed and open stops the run again before any working
-    move (its plan starts from a part at rest)."""
+    """Run again after its end check failed, a task's start check decides by the camera's classes: proving the
+    opposite of where the task starts (where it ends) its outcome holds after all, nothing moved; a class that proves
+    neither stops it for a person; one the camera cannot judge stops it too, as every check (23 Oct)."""
     refs = place_correct.References(tmp_path / "refs.json")
     ex = LookExec(["lid_open", "lid_lifted", "lid_closed"], look("lid_close", 0.0))
     out, said = run("lid_close", ex, place_correct.Correction(refs=refs, collide=False))
     assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("lid_close", "again"), ("lid_close", "skipped")]
-    assert any("lid_closed after all" in t for t in said)
+    assert any("lid_closed after all" in t for t in said) and len(lifts_of(ex)) == 1
     ex = LookExec(["lid_open", "lid_lifted", "seat_lifted"], look("lid_close", 0.0))
     with pytest.raises(UserError, match="between where Close the lid starts and where it ends") as err:
         run("lid_close", ex, place_correct.Correction(refs=refs, collide=False))
     assert err.value.code == "escalate"
-    held = dict(look("lid_close", ok=False), note="the lid at 45 deg, the seat at 0: a part between closed and open "
-                                                   "moves with what holds it, no place")
-    ex = LookExec(["lid_open", "lid_lifted", "lid_lifted"], [look("lid_close", 0.0), held])
-    with pytest.raises(UserError, match="the lid at 45 deg, the seat at 0, a part between closed and open") as err:
+    ex = LookExec(["lid_open", "lid_lifted", None], look("lid_close", 0.0))
+    with pytest.raises(UserError) as err:
         run("lid_close", ex, place_correct.Correction(refs=refs, collide=False))
-    assert err.value.code == "escalate" and len(lifts_of(ex)) == 1          # the run again moved nothing of its work
+    assert err.value.code == "escalate" and len(lifts_of(ex)) == 1
 
 
 def test_the_task_run_again_takes_the_cameras_value_at_its_own_look(tmp_path):
@@ -460,6 +457,30 @@ def test_the_labs_references_are_there_from_the_first_run():
     for task, (pose, state) in LOOKS.items():
         got = refs.get(place_correct.look_key("commode_c", pose, 150.0, state))
         assert got is not None and got["task"] == task and got["frames"] >= 100, task
+
+
+class LegExec(LookExec):
+    """LookExec running the plan's two-arm stretches (Runner's move_together) one move after the other."""
+
+    def move_together(self, leg):
+        for e, bridge, _nxt in leg.order:
+            self.move(e, bridge=bridge)
+
+
+def test_a_closings_look_in_a_sequence_comes_before_its_working_moves(tmp_path):
+    """2 Nov (Isaac, the lid and seat tasks of S2's sequence): Close the lid's first two-arm stretch runs the camera arm
+    to its look and the left arm to its start; in a sequence (no check to take the look at) the look was taken before
+    that stretch, the camera arm still at rest, and no correction could be read. No stretch now reaches past the first
+    move a correction changes until the look is taken: the camera arm at its inspection pose, nothing of the work yet."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    reference("lid_close", refs)
+    ex = LegExec(["lid_closed"], look("lid_close", -0.010))
+    out, said = run("lid_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    assert ex.looks and ex.looks[0][0] == "take"
+    before = ex.calls[:ex.looks[0][2]]
+    assert any(c[0] == "move" and c[2] == "right" and "move_to_inspect" in c[1] for c in before)
+    assert not any(c[0] == "move" and c[2] == "left" and c[3] == "arm" for c in before)
+    assert out["places"][0]["source"] == "depth" and out["plans"][0]["outcome"] == "done"
 
 
 class Lanes:
