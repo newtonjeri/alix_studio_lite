@@ -198,12 +198,12 @@ def shadow(res: list[dict], reference: str) -> None:
         d = place_correct.decide(None, look, ref, lambda a, b, plan=plan: plan_shift.hands_apart_mm(plan, a, b))
         move = d.depth
         if d.refuse:
-            what = "STOPPED: the camera and the UGV's placement disagree"
+            what = "STOPPED: beyond the bounds, a person's to see"
         elif d.source != "depth":
-            what = "as planned" if (pose, state) not in place_correct.WEAK_LOOKS else "as planned (a look that only checks)"
+            what = "as planned"
         else:
             try:
-                moved = plan_shift.shift(plan, move)
+                moved = plan_shift.shift(plan, d.move)
                 what = f"moved, followed (hands within {max((x.get('hand_off_mm') or 0.0) for x in moved.shift_report):.1f} mm)"
             except UserError as exc:                   # as a run: the plan as it would run without the camera, said
                 what = "as planned, the plan cannot follow it: " + str(exc).split(": ", 2)[-1][:90]

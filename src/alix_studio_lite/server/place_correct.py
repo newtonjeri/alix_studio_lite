@@ -1,29 +1,45 @@
 """Where a lid or seat task's plan works today, from its two sources (the owner, 31 Oct: "there are 2 sources of the
 offset, the UGV reported value and the camera depth image positioning; the UGV value is the first and is compensated by
-the depth image values, a secondary check for the mechanism tasks").
+the depth image values, a secondary check for the mechanism tasks"; 2 Nov: "if we read a value within the tolerance,
+it means there's no movement needed, we reuse the plan; if the read value from the camera is beyond the tolerance, we
+need to apply the value, the correction, and generate a new plan from the offset").
+
+AN OFFSET MOVES THE PRE-START AND THE START, AND THE PATH WITH THEM (the owner, 2 Nov: "all the points and thus the path
+is defined relative to the start pose, so offsetting the start pose applies to the path"): each arm's working stretch,
+its pre-start, start, carry and retracts, moved whole (plan_shift.shift: IK every 20 ms on the plan's own timing, its
+gates and its collision check); everything else is the plan's (the inspection poses, rest, the hands, the checks).
 
 THE UGV, FIRST. The plans were made with the UGV at mechanism.STANDOFF_MM from the commode and no move (ALIX's place).
 The placement the UGV reports for the run (placement.py: its standoff, its moves front, rear, left and right; no turn)
 moves the commode the other way against the robot (placement.scene). That move is applied before anything of the plan
-runs: each arm's working stretch moved with the commode (plan_shift.shift, its gates and its collision check).
+runs. Until the UGV is integrated it reports none: every task of the lab's project is at 250 mm, no move, and the plans
+run as they were made.
 
-THE DEPTH, SECOND. At the task's first look (the camera arm at the plan's inspection pose, before its first check; in a
+THE CAMERA, SECOND. At the task's first look (the camera arm at the plan's inspection pose, before its first check; in a
 sequence, where that check is not asked, a frame is taken there all the same: the owner, 31 Oct, agreed) the commode's
 place is read on the look's frame (GapCheck.place) and compared with the REFERENCE look: the same arm pose and pole,
-the lid and the seat in the same state. Its absolute place is off by the camera's mount (CAD, never calibrated:
-inspection poses 4 and 1 read the same commode 11 and 15 mm and 3.2 deg apart), so only that change counts. The change
-is where the commode stands now against where the plan worked:
-- it agrees with the UGV's change since the reference (within UGV_TOL_MM and the look's own scatter): the depth's is
-  run, the UGV's compensated by it (re-shifted only when the two put the hands DEAD_MM apart or more; a plan that cannot
-  follow it, refused by plan_shift's gates, runs the UGV's as it would without the camera, said: Close the lid's plan of
-  29 Oct, its pull at the wrist's singularity, follows a height only);
-- it does not: the run stops for a person before any of the working moves (the UGV's report, the camera or the commode
-  itself is not where the other says);
-- a look the camera reads poorly (WEAK_LOOKS) only checks the UGV's against its own wider scatter: the UGV's runs;
+the lid and the seat in the same state. Its absolute place is off by the camera's mount (the URDF's, never calibrated:
+inspection poses 4 and 1 read the same commode 11 and 15 mm and 3.2 deg apart), so only that change counts: where the
+commode stands now against where the plan worked. Against the move the run has (the UGV's):
+- within the owner's tolerance (plan_shift.DEAD_MM where the hands work: 1 deg about the commode's middle moves them 4.3
+  to 4.8 mm): no correction, the plan is reused;
+- beyond it: the camera's value is applied and the plan made again from it; a plan that cannot follow it (plan_shift's
+  gates: IK, branch, limits, the wrist's singularity) runs as it would without the camera, said (Close the lid's plan of
+  29 Oct, its pull at the wrist's singularity, follows a height only); beyond plan_shift's bounds (30 mm, 3 deg, 15 mm
+  in height: the owner, 31 Oct, "a person's to see") the run stops before any working move;
+- a look that reads an axis poorly (WEAK_LOOKS: Open the lid's, the lid's front edge behind the left glove) leaves that
+  axis at the UGV's;
 - no reference for the look yet, no reading (a hand in the view, a part not at rest, the pose not a named one) or no
   camera (Hardware sim, the stand-in, the test harness): the UGV's alone, said.
-A move that puts the hands' working path less than plan_shift.DEAD_MM from where the plan works runs the plan as it is
-(the owner's +/-5 mm, measured where the hands work: 1 deg about the commode's middle moves them 4.3 to 4.8 mm).
+
+THE RETRIES, by the camera too (the owner, 2 Nov: "all the retries should be decided by the camera ... the hard-coded
+retries we have in the configuration files should be populated by the values from the camera"; "we can do away with
+the rungs"). A check that fails with on_fail retry_lift (Open the lid's lifted check, 3 retries; Open the seat's, 1):
+the commode's place is read again on that check's own frames (the camera arm where the first look was: TaskPlace.retry)
+and decided by the same rule against the move the run has: within the tolerance the same lift again; beyond, the lift of
+the plan made again from the camera's value; no frame, no reading or no reference: the same lift again. The config's
+retry_offsets and ALIX's pre-planned rungs are not used. The arm goes back along the lift it made while that plan is
+made (mechanism.Runner._camera_relift).
 
 THE REFERENCE, taught by itself (the owner, 31 Oct, agreed): the first look of the last run of the task that passed with
 nothing moved (no move from either source, no re-lift) becomes the reference of its look; a run moved by either never
@@ -62,10 +78,8 @@ import numpy as np
 from . import plan_shift
 from .jobs import UserError
 
-UGV_TOL_MM = 10.0          #: the owner, 16 Oct: "+-10mm in all measurements" (the standoff to 5): the UGV's moves measure to it
-GOOD_SCATTER_MM = 2.0      #: a good look's place: 0.4 mm within a check, a day's change agreeing across states to 1-2 mm
-WEAK_LOOKS = {             #: (pose, state) -> (scatter mm, why): the depth checks the UGV's there, it does not compensate it
-    ("inspection_pose_4", "lid shut"): (8.0, "the lid's front edge is behind the left glove: from this look the commode's "
+WEAK_LOOKS = {             #: (pose, state) -> (the axis it reads poorly, why): the camera's value left at the UGV's there
+    ("inspection_pose_4", "lid shut"): ("x", "the lid's front edge is behind the left glove: from this look the commode's "
                                              "place scatters 5 to 8 mm along x (the lab's checks, 26-31 Oct)"),
 }
 POLE_STEP_MM = 5.0         #: a look's pole, to this (the reference's pole and the look's: the same height)
@@ -193,7 +207,7 @@ class Decision:
     source: str
     words: str
     level: str = "info"
-    depth: plan_shift.Move | None = None
+    depth: plan_shift.Move | None = None         # what the camera read (``move``: what runs from it)
     refuse: str | None = None
 
 
@@ -201,43 +215,41 @@ def _mm(m: plan_shift.Move | None) -> str:
     return "none" if m is None else m.words()
 
 
-def decide(ugv: plan_shift.Move | None, look: dict | None, ref: dict | None, hands=None) -> Decision:
-    """The UGV's move compensated by the depth's (see the module). ``look``: the first look's reading (RealExec.look_place:
-    ok, reading, pose, pole_mm, state, pose0), None without a camera; ``ref``: its reference look (References), None when
-    none is taught; ``hands(a, b)``: how far two moves put the hands apart (mm; plan_shift.hands_apart_mm on the plan)."""
+def decide(ugv: plan_shift.Move | None, look: dict | None, ref: dict | None, hands=None,
+           running: str = "the UGV's placement") -> Decision:
+    """The UGV's move (``ugv``: the move the run has; None: none reported, the plans' own) and the camera's (see the
+    module). ``look``: a look's reading (RealExec.read_look: ok, reading, pose, pole_mm, state, pose0), None without a
+    camera; ``ref``: its reference look (References), None when none is taught; ``hands(a, b)``: how far two moves put the
+    hands apart (mm; plan_shift.hands_apart_mm on the plan); ``running``: what ``ugv`` is, in the words."""
     hands = hands or (lambda a, b: 0.0)
+    keep = "ugv" if ugv is not None else "none"
     if look is None:
-        return Decision(ugv, "ugv" if ugv is not None else "none",
-                        f"no depth reading here (no camera): the UGV's placement alone, the commode {_mm(ugv)}")
+        return Decision(ugv, keep, f"no depth reading here (no camera): {running} alone, the commode {_mm(ugv)}")
     if not look.get("ok"):
-        return Decision(ugv, "ugv" if ugv is not None else "none",
-                        f"the camera could not read the commode's place ({look.get('note') or 'no reading'}): the UGV's "
-                        f"placement alone, the commode {_mm(ugv)}", "warn")
+        return Decision(ugv, keep, f"the camera could not read the commode's place ({look.get('note') or 'no reading'}): "
+                                   f"{running} alone, the commode {_mm(ugv)}", "warn")
     if ref is None:
-        return Decision(ugv, "ugv" if ugv is not None else "none",
-                        f"no reference look yet for {look['pose']} at pole {look['pole_mm']:.0f} mm, {look['state']} (taught by "
-                        f"the next run of this task that passes with nothing moved): the UGV's placement alone, the commode "
-                        f"{_mm(ugv)}")
-    dm = depth_move(look["reading"], ref, look["pose0"])
-    u = ugv or plan_shift.Move()
-    u0 = ref.get("ugv") or {}
-    ugv_change = plan_shift.Move(u.dx_m - float(u0.get("dx_m") or 0.0), u.dy_m - float(u0.get("dy_m") or 0.0))
-    apart = math.hypot(dm.dx_m - ugv_change.dx_m, dm.dy_m - ugv_change.dy_m) * 1000.0
-    scatter, why = WEAK_LOOKS.get((look["pose"], look["state"]), (GOOD_SCATTER_MM, None))
-    tol = UGV_TOL_MM + scatter
-    said = (f"the camera reads the commode {dm.words()} from where the reference look ({ref.get('at')}) saw it; the UGV's "
-            f"placement says {ugv_change.words()} since then: {apart:.1f} mm apart")
-    if apart > tol:
-        return Decision(None, "none", said, "error", dm,
-                        refuse=f"the UGV's placement and the camera disagree on where the commode stands: {said} (they agree "
-                               f"to {tol:.0f} mm: the UGV's {UGV_TOL_MM:.0f}, this look's {scatter:.0f})")
-    if why is not None:
-        return Decision(ugv, "ugv" if ugv is not None else "none",
-                        f"{said}, within this look's {tol:.0f} mm; {why}: the UGV's placement runs", "info", dm)
-    if hands(dm, ugv) < plan_shift.DEAD_MM:
-        return Decision(ugv, "ugv" if ugv is not None else "none",
-                        f"{said}: the hands within {plan_shift.DEAD_MM:.0f} mm of the UGV's move, which runs", "info", dm)
-    return Decision(dm, "depth", f"{said}: the camera's runs (the UGV's compensated)", "warn", dm)
+        return Decision(ugv, keep, f"no reference look yet for {look['pose']} at pole {look['pole_mm']:.0f} mm, "
+                                   f"{look['state']} (taught by the next run of this task that passes with nothing moved): "
+                                   f"{running} alone, the commode {_mm(ugv)}")
+    read = dm = depth_move(look["reading"], ref, look["pose0"])
+    said = f"the camera reads the commode {dm.words()} from where the reference look ({ref.get('at')}) saw it"
+    weak = WEAK_LOOKS.get((look["pose"], look["state"]))
+    if weak is not None:                         # that axis left at the UGV's
+        u = ugv or plan_shift.Move()
+        dm = dataclasses.replace(dm, **({"dx_m": u.dx_m} if weak[0] == "x" else {"dy_m": u.dy_m}))
+        said += f"; {weak[1]}: its {weak[0]} is left at {running}'s ({dm.words()})"
+    apart = hands(dm, ugv)
+    if apart < plan_shift.DEAD_MM:
+        return Decision(ugv, keep, f"{said}: the hands within {apart:.1f} mm of where {running} puts them, inside the "
+                                   f"{plan_shift.DEAD_MM:.0f} mm: no correction, the plan is reused", "info", read)
+    try:
+        plan_shift.bounds(dm)
+    except UserError as exc:
+        return Decision(None, "none", said, "error", read, refuse=f"{said}: {str(exc).split(': ', 1)[-1]}")
+    return Decision(dm, "depth", f"{said}: the hands {apart:.1f} mm from where {running} puts them, beyond the "
+                                 f"{plan_shift.DEAD_MM:.0f} mm: the camera's value is applied, the plan made again from it",
+                    "warn", read)
 
 
 def in_workers(lane: str, fn, *args):
@@ -460,6 +472,7 @@ class TaskPlace:
         self.row = dict(task=plan0.name, ugv=None if corr.ugv is None else corr.ugv.words())
         self._thread = None
         self._got = None
+        self._retry, self._retry_got, self._retry_n = None, None, 0     # a re-lift's look (retry)
         self.plan = plan0
         corr.started(plan0)
         if corr.ugv is not None:
@@ -491,58 +504,83 @@ class TaskPlace:
         if shot is None:
             self._got = ("done", decide(self.corr.ugv, dict(ok=False, note="no frame at the look"), None, self.hands), None, None)
             return
-        start_for = self.corr.refs.start_for(self.corr.fid, self.corr.ugv)   # the search from where this robot's looks read it
+        self._thread = self._in_thread(lambda: self._decided(read, shot, self.corr.ugv, "the UGV's placement"), "_got")
 
+    def retry(self, ex, n: int) -> None:
+        """Re-lift ``n`` after a check that failed (mechanism.Runner._camera_relift): the commode's place read again on
+        that check's own frames (the camera arm where the first look was) and decided against the move the run has (the
+        module's rule): within the tolerance the plan running again, beyond it the plan made again from the camera's
+        value, in a thread of its own while the arm goes back along its lift (``wait_retry`` collects it before the lift
+        again). No camera, frame, reading or reference: the plan running again."""
+        self._retry, self._retry_got, self._retry_n = None, None, n
+        frame_of, read = getattr(ex, "look_frame", None), getattr(ex, "read_look", None)
+        shot = frame_of(take=False, task=self.plan0.name) if frame_of is not None and read is not None else None
+        if shot is None:
+            self._retry_got = ("done", decide(self.applied, None if frame_of is None else dict(ok=False, note="no frame of the "
+                                              "check"), None, self.hands, "the plan running"), None, None)
+            return
+        self._retry = self._in_thread(lambda: self._decided(read, shot, self.applied, "the plan running"), "_retry_got")
+
+    def _in_thread(self, fn, slot: str) -> threading.Thread:
         def work():
             try:
-                got = read(shot, start_for)
+                setattr(self, slot, fn())
+            except BaseException as exc:                                            # noqa: BLE001 - raised in the wait
+                setattr(self, slot, ("failed", exc))
+
+        t = threading.Thread(target=work, name="lite-place-look", daemon=True)
+        t.start()
+        return t
+
+    def _decided(self, read, shot, baseline, running: str) -> tuple:
+        """The commode's place read on ``shot`` (``read``: RealExec.read_look) and decided against ``baseline``, the move
+        the run has (``running``, its words): ("done", the decision, the plan the camera's value runs or None, the
+        reading)."""
+        got = read(shot, self.corr.refs.start_for(self.corr.fid, self.corr.ugv))   # searched where this robot's looks read it
+        ref = None
+        if got and got.get("ok"):
+            key = look_key(self.corr.fid, got["pose"], got["pole_mm"], got["state"])
+            got["key"] = key
+            ref = self.corr.refs.get(key)
+            if ref is not None and ref.get("plan") != _digest(self.plan0):
+                self.say(f"{self.plan0.title}: the reference look of {key} was taught on another version of the plan "
+                         f"({ref.get('at')}): not used until a run of this one teaches it again", "warn")
                 ref = None
-                if got and got.get("ok"):
-                    key = look_key(self.corr.fid, got["pose"], got["pole_mm"], got["state"])
-                    got["key"] = key
-                    ref = self.corr.refs.get(key)
-                    if ref is not None and ref.get("plan") != _digest(self.plan0):
-                        self.say(f"{self.plan0.title}: the reference look of {key} was taught on another version of the plan "
-                                 f"({ref.get('at')}): not used until a run of this one teaches it again", "warn")
-                        ref = None
-                d = decide(self.corr.ugv, got, ref, self.hands)
-                plan = None
-                if d.refuse is None and d.source == "depth":
-                    seen = d.move
-                    try:
-                        plan, d = self._camera_plan(d)
-                    finally:                            # the run's next tasks made for it too (the owner, 1 Nov)
-                        self.corr.after(self.plan0, seen)
-                self._got = ("done", d, plan, got)
-            except BaseException as exc:                                            # noqa: BLE001 - raised in wait
-                self._got = ("failed", exc)
+        d = decide(baseline, got, ref, self.hands, running)
+        plan = None
+        if d.refuse is None and d.source == "depth":
+            seen = d.move
+            try:
+                plan, d = self._camera_plan(d, baseline, running)
+            finally:                                    # the run's next tasks made for it too (the owner, 1 Nov)
+                self.corr.after(self.plan0, seen)
+        return ("done", d, plan, got)
 
-        self._thread = threading.Thread(target=work, name="lite-place-look", daemon=True)
-        self._thread.start()
-
-    def _camera_plan(self, d: Decision) -> tuple:
-        """(the plan the camera's move runs, the decision): one made ahead for a move within DEAD_MM of it at the hands
+    def _camera_plan(self, d: Decision, baseline, running: str) -> tuple:
+        """(the plan the camera's value runs, the decision): one made ahead for a move within DEAD_MM of it at the hands
         (an earlier task's look read the commode there: Correction.after), else made now (Correction.take); a plan that
-        cannot follow it, or that could not be made, runs the UGV's as it would without the camera, said."""
+        cannot follow it, or that could not be made, runs ``baseline`` as it would without the camera, said."""
         def without(why: str) -> tuple:
-            return None, Decision(self.corr.ugv, "ugv" if self.corr.ugv is not None else "none",
-                                  f"{d.words}; but {why}: the UGV's placement runs, as it would without the camera", "warn",
-                                  d.depth)
+            return None, Decision(baseline, "ugv" if baseline is not None else "none",
+                                  f"{d.words}; but {why}: {running} runs, as it would without the camera", "warn", d.depth)
 
         try:
             hit = self.corr.near(self.plan0, d.move, self.points)
             if hit is not None:
                 parts, m, apart = hit
                 plan = self.corr._moved(self.plan0, m, parts, self.say, f", made ahead for an earlier task's look (the hands "
-                                        f"{apart:.1f} mm from the camera's move)")
+                                        f"{apart:.1f} mm from the camera's value)")
                 return plan, dataclasses.replace(d, move=m)
             return self.corr.take(self.plan0, d.move, self.say), d
-        except UserError as exc:                        # the plan cannot follow the camera's: the UGV's runs, as before
+        except UserError as exc:                        # the plan cannot follow the camera's: the one running runs, as before
             if exc.code != "shift":
                 raise
             return without(f"the plan cannot follow it ({str(exc).split(': ', 1)[-1]})")
         except Exception as exc:                        # noqa: BLE001 - its process lost: as without the camera
             return without(f"its plan could not be made ({type(exc).__name__}: {exc})")
+
+    def _look_row(self, look) -> dict | None:
+        return None if not look else {k: look.get(k) for k in ("ok", "pose", "pole_mm", "state", "key", "note", "record")}
 
     def wait(self, check_stop) -> tuple:
         """(the decision, the plan to run from here or None to keep the one running); raises a refusal."""
@@ -559,16 +597,38 @@ class TaskPlace:
         _, d, plan = got[:3]
         self.look = got[3] if len(got) > 3 else None
         self.decision = d
-        self.row.update(look=None if not self.look else {k: self.look.get(k) for k in ("ok", "pose", "pole_mm", "state", "key",
-                                                                                          "note", "record")},
-                        depth=None if d.depth is None else d.depth.words(), source=d.source, words=d.words,
-                        move=None if d.move is None else d.move.words())
+        self.row.update(look=self._look_row(self.look), depth=None if d.depth is None else d.depth.words(), source=d.source,
+                        words=d.words, move=None if d.move is None else d.move.words())
         self.say(f"PLACE {self.plan0.title}: {d.words}", d.level)
         if d.refuse is not None:
             self.row["verdict"] = "refused"
             raise UserError(f"{self.plan0.title} STOPPED before its working moves: {d.refuse}.",
                             "A person looks at where the UGV and the commode stand, then the UGV's placement is entered "
                             "again (or the commode put back).", code="place")
+        if d.source == "depth" and plan is not None:
+            self.applied = d.move
+            return d, plan
+        return d, None
+
+    def wait_retry(self, check_stop) -> tuple:
+        """(the decision, the plan to lift again from, or None for the plan running) of ``retry``; raises a refusal."""
+        while self._retry is not None and self._retry.is_alive():
+            check_stop()
+            self._retry.join(0.05)
+        got, self._retry, self._retry_got = self._retry_got, None, None
+        if got is None:
+            return None, None
+        if got[0] == "failed":
+            raise got[1]
+        _, d, plan = got[:3]
+        self.row.setdefault("retries", []).append(dict(          # source: depth (made again) or kept (the plan running)
+            relift=self._retry_n, look=self._look_row(got[3] if len(got) > 3 else None),
+            source="depth" if d.source == "depth" and plan is not None else "kept", words=d.words,
+            depth=None if d.depth is None else d.depth.words(), move=None if d.move is None else d.move.words()))
+        self.say(f"PLACE {self.plan0.title}, re-lift {self._retry_n}: {d.words}", d.level)
+        if d.refuse is not None:
+            raise UserError(f"{self.plan0.title} STOPPED before re-lift {self._retry_n}: {d.refuse}.",
+                            "A person looks at where the robot and the commode stand.", code="place")
         if d.source == "depth" and plan is not None:
             self.applied = d.move
             return d, plan

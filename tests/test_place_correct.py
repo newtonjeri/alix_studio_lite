@@ -51,10 +51,11 @@ def test_a_turn_counts_by_the_millimetres_it_moves_the_hands():
     assert plan_shift.hands_apart_mm(plan, plan_shift.Move(0.01), plan_shift.Move(0.01)) == pytest.approx(0.0, abs=1e-9)
 
 
-def test_the_depth_decides_against_the_ugv(tmp_path):
-    """No camera, no reading, no reference: the UGV's alone. The two agreeing to the dead band: the UGV's runs; apart by
-    more (within the UGV's 10 mm and the look's 2): the camera's; further: stopped. A look the camera reads poorly
-    (Open the lid's: the lid's front behind the glove) only checks the UGV's, to its wider scatter."""
+def test_the_camera_decides_against_the_ugvs_move(tmp_path):
+    """No camera, no reading, no reference: the UGV's alone. The camera's value within the tolerance of the UGV's (5 mm
+    where the hands work): the plan is reused; beyond it the camera's value is applied, however far from the UGV's (the
+    owner, 2 Nov: no stop for a disagreement), up to plan_shift's bounds (30 mm: a person's to see). Open the lid's look
+    (the lid's front behind the glove: x scatters 5 to 8 mm) leaves its x at the UGV's."""
     refs = place_correct.References(tmp_path / "refs.json")
     plan = mechanism.Plan("seat_close")
     hands = lambda a, b: plan_shift.hands_apart_mm(plan, a, b)          # noqa: E731
@@ -64,35 +65,42 @@ def test_the_depth_decides_against_the_ugv(tmp_path):
     assert "no reference look yet" in place_correct.decide(ugv, look("seat_close", 0.012), None, hands).words
     ref = refs.get(reference("seat_close", refs))
     d = place_correct.decide(ugv, look("seat_close", 0.014, 0.001), ref, hands)
-    assert d.source == "ugv" and d.move == ugv
+    assert d.source == "ugv" and d.move == ugv and "the plan is reused" in d.words
     d = place_correct.decide(ugv, look("seat_close", 0.012, 0.008), ref, hands)
     assert d.source == "depth" and abs(d.move.dy_m - 0.008) < 1e-3 and abs(d.move.dx_m - 0.012) < 1e-3
-    d = place_correct.decide(ugv, look("seat_close", 0.012, 0.015), ref, hands)
-    assert d.refuse and "disagree" in d.refuse and d.move is None
+    d = place_correct.decide(ugv, look("seat_close", 0.012, 0.015), ref, hands)         # 15 mm from the UGV's: applied
+    assert d.source == "depth" and d.refuse is None and abs(d.move.dy_m - 0.015) < 1e-3
+    d = place_correct.decide(ugv, look("seat_close", 0.0, 0.032), ref, hands)
+    assert d.refuse and "beyond 30 mm" in d.refuse and d.move is None
+    lid = mechanism.Plan("lid_open")
+    lid_hands = lambda a, b: plan_shift.hands_apart_mm(lid, a, b)       # noqa: E731
     ref = refs.get(reference("lid_open", refs))
-    d = place_correct.decide(ugv, look("lid_open", 0.012, 0.010), ref, hands)
-    assert d.source == "ugv" and d.move == ugv and "the lid's front edge" in d.words
-    assert place_correct.decide(ugv, look("lid_open", 0.012, 0.019), ref, hands).refuse
+    d = place_correct.decide(ugv, look("lid_open", 0.020, 0.010), ref, lid_hands)
+    assert d.source == "depth" and abs(d.move.dx_m - 0.012) < 1e-9 and abs(d.move.dy_m - 0.010) < 1e-3
+    assert abs(d.depth.dx_m - 0.020) < 1e-3 and "its x is left at" in d.words          # what the camera read, kept
+    assert place_correct.decide(ugv, look("lid_open", 0.030, 0.001), ref, lid_hands).source == "ugv"   # only x off
 
 
-def test_the_ugvs_change_since_the_reference_is_what_the_camera_must_agree_with(tmp_path):
-    """A reference taught with the UGV 3 mm off its place (within the dead band, nothing moved): today's placement is
-    compared with the camera by its change since."""
+def test_the_cameras_value_is_against_where_the_plan_worked(tmp_path):
+    """The camera's value is where the commode stands against the reference look (where the plan worked, whatever the
+    UGV reported then), compared with the UGV's move today: the UGV reporting 15 mm, the camera 12 mm: within the 5 mm,
+    the UGV's runs."""
     refs = place_correct.References(tmp_path / "refs.json")
     ref = refs.get(reference("lid_close", refs, ugv=dict(dx_m=0.003, dy_m=0.0)))
     plan = mechanism.Plan("lid_close")
     d = place_correct.decide(plan_shift.Move(0.015), look("lid_close", 0.012), ref,
                              lambda a, b: plan_shift.hands_apart_mm(plan, a, b))
-    assert "0.0 mm apart" in d.words
+    assert d.source == "ugv" and d.move == plan_shift.Move(0.015) and "the plan is reused" in d.words
 
 
 class LookExec(FakeExec):
     """FakeExec with a camera that reads the commode's place at the first look (RealExec.look_frame / read_look) and
-    the hook a sequence's look waits on."""
+    the hook a sequence's look waits on; ``reading``: one for every look, or a list read in turn (the last again)."""
 
     def __init__(self, answers, reading):
         super().__init__(answers)
-        self.reading, self.look_after, self.looks = reading, None, []
+        self.readings = list(reading) if isinstance(reading, list) else [reading]
+        self.look_after, self.looks = None, []
 
     def move(self, e, bridge=False):
         super().move(e, bridge)
@@ -108,7 +116,7 @@ class LookExec(FakeExec):
         return ("frame", [0.0] * 7, None)
 
     def read_look(self, shot, start_for=None):
-        return dict(self.reading)
+        return dict(self.readings.pop(0) if len(self.readings) > 1 else self.readings[0])
 
 
 def sent_rows(ex, side, stage):
@@ -149,10 +157,11 @@ def test_the_ugvs_move_runs_from_the_start_and_the_camera_agreeing_keeps_it(tmp_
     assert any("moved with the commode" in t for t in said)
 
 
-def test_the_camera_compensates_the_ugv_and_stops_on_a_disagreement(tmp_path):
-    """No placement from the UGV (the plans' own assumed): the camera reads the commode 8 mm to the left at Open the
-    seat's first look: the plan's working moves from there on are the plan moved 8 mm, and nothing before them is. 15 mm
-    off: the run stops before any working move, said."""
+def test_the_camera_corrects_and_stops_beyond_the_bounds(tmp_path):
+    """No placement from the UGV (the plans' own): the camera reads the commode 8 mm to the left at Open the seat's
+    first look: the plan's working moves from there on are the plan moved 8 mm, and nothing before them is; 15 mm to the
+    right: the same (no stop for a disagreement since 2 Nov); 35 mm, beyond plan_shift's bounds: the run stops before any
+    working move, said."""
     refs = place_correct.References(tmp_path / "refs.json")
     key = reference("seat_open", refs)
     plan = mechanism.Plan("seat_open")
@@ -164,10 +173,13 @@ def test_the_camera_compensates_the_ugv_and_stops_on_a_disagreement(tmp_path):
     assert carries(sent_rows(ex, "left", "execute_path"), lift.rows)
     assert sent_rows(ex, "right", "move_to_inspect")[0] == plan.entries[0].rows       # the look's own move, the plan's
     assert out["places"][0]["source"] == "depth"
-    ex = LookExec(answers, look("seat_open", 0.0, 0.015))
+    ex = LookExec(answers, look("seat_open", 0.0, -0.015))
+    out, said = run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert out["places"][0]["source"] == "depth" and out["plans"][0]["outcome"] == "done"
+    ex = LookExec(answers, look("seat_open", 0.0, 0.035))
     with pytest.raises(UserError) as err:
         run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
-    assert err.value.code == "place" and "before its working moves" in str(err.value)
+    assert err.value.code == "place" and "before its working moves" in str(err.value) and "beyond 30 mm" in str(err.value)
     assert not sent_rows(ex, "left", "move_to_pre_start")
 
 
@@ -252,6 +264,103 @@ def test_a_plan_that_cannot_follow_the_camera_runs_as_without_it(tmp_path):
     assert carries(sent_rows(ex, "left", "execute_path"), pull.rows)
     row = out["places"][0]
     assert row["source"] == "none" and "cannot follow" in row["words"] and out["plans"][0]["outcome"] == "done"
+
+
+def lifts_of(ex, side="left"):
+    return sent_rows(ex, side, "execute_path")
+
+
+def test_a_missed_lift_is_lifted_again_where_the_camera_reads_the_commode(tmp_path):
+    """Open the seat (the owner, 2 Nov: "all the retries should be decided by the camera"): its first look within the
+    tolerance (the plan as it was made), its lift missed; the commode's place read again on the failed check's frames,
+    9 mm to the right of where the plan worked: the left arm goes back along the lift it made, then lifts from the plan
+    made from the camera's value; the check passes, and the rest of the plan is the moved plan's."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    key = reference("seat_open", refs)
+    plan = mechanism.Plan("seat_open")
+    ex = LookExec(["lid_open", "seat_closed", "seat_closed", "seat_lifted", "seat_open"],
+                  [look("seat_open", 0.001), look("seat_open", 0.0, -0.009)])
+    out, said = run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert out["plans"][0]["outcome"] == "done" and out["plans"][0]["relifts"] == 1
+    row = out["places"][0]
+    assert row["source"] == "none" and [r["source"] for r in row["retries"]] == ["depth"]
+    moved = plan_shift.shift(plan, place_correct.depth_move(look("seat_open", 0.0, -0.009)["reading"], refs.get(key), POSE0))
+    lift0, lift1 = (next(e for e in p.entries if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+                    for p in (plan, moved))
+    lifts = lifts_of(ex)
+    assert len(lifts) == 2 and carries(lifts[:1], lift0.rows) and carries(lifts[1:], lift1.rows)
+    assert not carries(lifts[1:], lift0.rows)
+    back = [c for c in ex.calls if c[0] == "move" and c[5] == "re-lift restore, reversed"]
+    assert [c[1] for c in back] == ["back along execute_path", "back along move_to_start", "back along move_to_pre_start"]
+    push = next(e for e in moved.entries if e.kind == "arm" and e.side == "right" and e.stage == "execute_path")
+    assert carries(sent_rows(ex, "right", "execute_path"), push.rows)               # the rest: the moved plan's
+    assert any("the config's retry offsets are not used" in t for t in said)
+    assert "taught" not in row                                                      # a re-lift never teaches
+
+
+def test_in_a_sequence_the_re_lift_takes_the_cameras_value_too(tmp_path):
+    """The same in a sequence (the checks before the lift not asked: the run's entries are the plan's without them)."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    key = reference("seat_open", refs)
+    plan = mechanism.Plan("seat_open")
+    ex = LookExec(["seat_closed", "seat_lifted", "seat_open"], [look("seat_open", 0.001), look("seat_open", 0.0, -0.009)])
+    out, said = run("seat_open", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    assert out["plans"][0]["relifts"] == 1 and out["places"][0]["retries"][0]["source"] == "depth"
+    moved = plan_shift.shift(plan, place_correct.depth_move(look("seat_open", 0.0, -0.009)["reading"], refs.get(key), POSE0))
+    lift1 = next(e for e in moved.entries if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+    assert carries(lifts_of(ex)[1:], lift1.rows)
+
+
+def test_open_the_lids_retries_take_the_cameras_value_not_the_ladder(tmp_path):
+    """Open the lid's lift missed twice: re-lift 1 where the camera reads the commode (10 mm to the right, and 20 mm along
+    x, left at the plan's: the lid shut from pose 4 reads x poorly), re-lift 2 that lift again (the commode read there
+    again: nothing new to correct); no pre-planned rung, no retry offset of the config's."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    key = reference("lid_open", refs)
+    plan = mechanism.Plan("lid_open")
+    reading = look("lid_open", 0.020, -0.010)
+    ex = LookExec(["lid_closed", "lid_closed", "lid_closed", "lid_lifted", "lid_open"], [look("lid_open", 0.001), reading])
+    out, said = run("lid_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert out["plans"][0]["outcome"] == "done" and out["plans"][0]["relifts"] == 2
+    d = place_correct.decide(None, reading, refs.get(key), lambda a, b: plan_shift.hands_apart_mm(plan, a, b))
+    assert d.source == "depth" and d.move.dx_m == 0.0 and abs(d.move.dy_m + 0.010) < 1e-3
+    lift = next(e for e in plan_shift.shift(plan, d.move).entries
+                if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+    lifts = lifts_of(ex)
+    assert len(lifts) == 3 and carries(lifts[1:2], lift.rows) and carries(lifts[2:], lift.rows)
+    notes = [c[5] for c in ex.calls if c[0] == "move" and c[5]]
+    assert not any("pre-planned" in n for n in notes) and "re-lift 1, moved by the camera" in notes and "re-lift 2" in notes
+    assert [r["source"] for r in out["places"][0]["retries"]] == ["depth", "kept"]
+
+
+def test_without_a_reference_a_missed_lift_is_lifted_again_as_it_was(tmp_path):
+    """Until a run of the task has passed with nothing moved (no reference look: each task's first runs at the lab), the
+    camera has no value to give: a missed lift is lifted again as it was made, no rung."""
+    plan = mechanism.Plan("lid_open")
+    ex = LookExec(["lid_closed", "lid_closed", "lid_lifted", "lid_open"], look("lid_open", 0.0, -0.010))
+    out, said = run("lid_open", ex, place_correct.Correction(refs=place_correct.References(tmp_path / "refs.json"),
+                                                             collide=False))
+    assert out["plans"][0]["relifts"] == 1 and out["plans"][0]["outcome"] == "done"
+    lift = next(e for e in plan.entries if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+    assert len(lifts_of(ex)) == 2 and all(carries([x], lift.rows) for x in lifts_of(ex))
+    retry = out["places"][0]["retries"][0]
+    assert retry["source"] == "kept" and "no reference look yet" in retry["words"]
+
+
+def test_re_lifts_stop_for_a_person_after_the_configs_count_or_beyond_the_bounds(tmp_path):
+    """Open the lid misses four times: after its config's 3 re-lifts the run stops for a person. A retry whose reading
+    is beyond plan_shift's bounds stops before that re-lift, the arm back along its lift."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    ex = LookExec(["lid_closed"] * 5, look("lid_open", 0.0))
+    with pytest.raises(UserError, match="still NOT lid_lifted after 3 re-lift") as err:
+        run("lid_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert err.value.code == "escalate" and len(lifts_of(ex)) == 4
+    reference("seat_open", refs)
+    ex = LookExec(["lid_open", "seat_closed", "seat_closed"], [look("seat_open", 0.001), look("seat_open", 0.0, -0.035)])
+    with pytest.raises(UserError) as err:
+        run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert err.value.code == "place" and "before re-lift 1" in str(err.value) and "beyond 30 mm" in str(err.value)
+    assert len(lifts_of(ex)) == 1 and [c[1] for c in ex.calls if c[0] == "move"][-1] == "back along move_to_pre_start"
 
 
 class Lanes:

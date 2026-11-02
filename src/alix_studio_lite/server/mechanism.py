@@ -46,6 +46,8 @@ look itself (FINAL_CHECKS, 21 Oct: a lid opening whose right side did not open t
 """
 from __future__ import annotations
 
+import copy
+import dataclasses
 import hashlib
 import importlib.util
 import json
@@ -1026,7 +1028,8 @@ class Runner:
                 self.say(f"{a.get('stage')}: not asked, the sequence's own order says {a.get('expect')} (the owner, 27 Oct)")
         state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(name), lid_end=name == "lid_open", seat=None,
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
-                                                        for s in plan.sides()) if first is not None))   # after the approach
+                                                        for s in plan.sides()) if first is not None),   # after the approach
+                     place=place)
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
                  f"{plan.seconds():.1f} s of motion)")
         rests = final_rests(entries, self.leave)
@@ -1084,6 +1087,18 @@ class Runner:
                         plan, entries, unsent, rests = self._moved_from(plan, moved, entries, i, dropped_start, state)
                         e = entries[i]
                         leg = two_arm_leg(entries, i, unsent, state["bridge"], plan.name) if mover is not None else None
+            if state.get("relift_wait") is not None:     # a re-lift's lift waits for the camera's (_camera_relift)
+                at, plan_at, n, used = state["relift_wait"]
+                if i + (leg.used if leg is not None else joined_moves(entries, i, state["bridge"])[1]) > at:
+                    state["relift_wait"] = None
+                    _decided, moved = place.wait_retry(self.ex.check_stop)
+                    if moved is not None:               # the lift again from the plan made from the camera's value
+                        moved = copy.copy(moved)
+                        moved.entries = [dataclasses.replace(x, note=f"re-lift {n}, moved by the camera")
+                                         if plan_at <= j < plan_at + used else x for j, x in enumerate(moved.entries)]
+                        plan, entries, unsent, rests = self._moved_from(plan, moved, entries, at, dropped_start, state, plan_at)
+                        e = entries[i]
+                        leg = two_arm_leg(entries, i, unsent, state["bridge"], plan.name) if mover is not None else None
             if leg is not None:                          # the two arms at once where the plan allows it (the user, 27 Oct night)
                 for x in leg.skipped:
                     self.say(f"{x.label()}: not sent, the {x.side.upper()} arm goes to its next task's start from here (28 Oct)" if id(x) in rests
@@ -1111,16 +1126,19 @@ class Runner:
             self._after_lid(state["seat"])
         return "done"
 
-    def _moved_from(self, plan, moved, entries: list, i: int, dropped_start: bool, state: dict) -> tuple:
+    def _moved_from(self, plan, moved, entries: list, i: int, dropped_start: bool, state: dict,
+                    plan_at: int | None = None) -> tuple:
         """``entries`` from ``i`` on taken from ``moved`` (the same plan moved by the camera's place: its entries are the
-        plan's, one for one), what is worked out from them again: the unsent ones, the bridged moves, the two arms'
-        legs. -> (moved, the entries, unsent, rests)."""
+        plan's, one for one) from its entry ``plan_at`` (``i``: the run's entries are the plan's up to there; a re-lift
+        put the way back along the lift before them), what is worked out from them again: the unsent ones, the bridged
+        moves, the two arms' legs. -> (moved, the entries, unsent, rests)."""
         new = list(moved.entries)
         if dropped_start:
             new, _ = without_start_checks(new)
+        at = i if plan_at is None else plan_at
         old = entries
-        entries = old[:i] + new[i:]
-        for a, b in zip(old[i:], new[i:]):
+        entries = old[:i] + new[at:]
+        for a, b in zip(old[i:], new[at:]):
             if id(a) in state["bridge"]:
                 state["bridge"].add(id(b))
         rests = final_rests(entries, self.leave)
@@ -1271,7 +1289,9 @@ class Runner:
             if state["relifts"] >= budget:
                 return ("abort", f"{label}: still NOT {expect} after {budget} re-lift(s).")
             lifter = "left" if failed.get("arm", "right") == "right" else "right"
-            i = k
+            if state.get("place") is not None:          # every run's (mechanism.run, S2): the camera's (the owner, 2 Nov)
+                return self._camera_relift(entries, k, label, expect, budget, lifter, state)
+            i = k                                       # a Runner without a place correction (a tool's): ALIX's ladder
             while i > 0 and entries[i - 1].side == lifter:
                 i -= 1
             if i == k:
@@ -1304,6 +1324,35 @@ class Runner:
                          "lifts again (the recorded block); the check runs again", "warn")
             return ("retry", i, block)
         return ("abort", f"{label}: NOT {expect} (on_fail {policy}).")
+
+    def _camera_relift(self, entries: list, k: int, label: str, expect, budget: int, lifter: str, state: dict) -> tuple:
+        """Re-lift n of a lifted check that failed, by the camera (the owner, 2 Nov: the retries' offsets are the camera's,
+        not the config's retry_offsets; the pre-planned rungs are not used): the lifting arm goes back along the lift it
+        made (to the start of its block: rest, its pole and its hand), then lifts again: the plan running (the camera
+        reads the commode within the tolerance of it, or gives no reading), or the plan made again from the camera's value
+        (place_correct.TaskPlace.retry: its place read again on this check's own frames, the plan made while the arm goes
+        back; the lift waits for it). -> ("retry", where the block starts, the block)."""
+        if state.get("lift_at") is not None:
+            p, plan_at = state["lift_at"]               # the lift before this one: a re-lift's
+        else:
+            p = k
+            while p > 0 and entries[p - 1].side == lifter:
+                p -= 1
+            plan_at = p                                 # the run's entries are the plan's, one for one, until a re-lift
+        if p == k:
+            return ("abort", f"{label}: no {lifter}-arm lift block comes before the check.")
+        state["relifts"] += 1
+        n = state["relifts"]
+        back = reverse_block(entries[p:k])
+        again = [Entry(-1, e.index, e.stage, e.kind, e.side, e.joints, e.t, e.q, [], rows=e.rows, group=e.group,
+                       note=f"re-lift {n}") for e in entries[p:k]]
+        state["place"].retry(self.ex, n)
+        state["lift_at"] = (p + len(back), plan_at)
+        state["relift_wait"] = (p + len(back), plan_at, n, len(again))
+        self.say(f"{label}: NO — re-lift {n}/{budget}: the {lifter} arm goes back along the lift it made, then lifts again "
+                 "where the camera reads the commode now (its place read again on this check's frames; the config's retry "
+                 "offsets are not used); the check runs again", "warn")
+        return ("retry", p, back + again)
 
 
 # ── how each kind of run executes a plan's entries

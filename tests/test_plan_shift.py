@@ -204,4 +204,4 @@ def test_the_shadow_says_what_the_run_would_do(capsys):
     out = capsys.readouterr().out
     assert "2026-10-27 pose_1 lid open, seat open  (Close the seat): 1 check(s)" in out and "1 as planned" in out
     assert "2026-10-28" in out and "moved, followed" in out
-    assert "2026-10-29" in out and "STOPPED: the camera and the UGV's placement disagree" in out     # 14 mm: beyond 12
+    assert "2026-10-29" in out and "STOPPED" not in out           # 14 mm: applied (no stop for a disagreement, 2 Nov)
