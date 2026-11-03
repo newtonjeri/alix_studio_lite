@@ -1,0 +1,143 @@
+{
+ "class": "uncertain",
+ "expect": "seat_open",
+ "message": "seat surface median z 0.428 m in base_link (closed top 0.428 = nominal 0.440 registered -12 mm by the seat, rise 0 mm vs 50 mm bar); 46 % of the ROI valid, median range 0.610 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 38 % of the ROI, 10/90 % heights 0.420/0.444, 2 % masked around 17 hand frames; seat: its own fit says seat_lifted (seat_lifted 8062 vs seat_closed 4840, margin +0.40; best: lid 105 deg, seat 105 deg (both) over 22460 pixels at 1/3, the fixture +5 mm from its registration) but the band reading says seat_closed at 1.00 -> uncertain; vs its closed frame: no answer (no closed reference at this placement)",
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "camera_to_world": [
+  [
+   0.845074,
+   0.067927,
+   0.530316,
+   0.51317
+  ],
+  [
+   0.042771,
+   -0.997306,
+   0.059587,
+   -0.074633
+  ],
+  [
+   0.532935,
+   -0.027673,
+   -0.845703,
+   0.969355
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "hands": {
+  "ILH_plam": [
+   0.5451,
+   0.2286,
+   0.8016
+  ],
+  "ILH_left_index_1": [
+   0.602,
+   0.2408,
+   0.6831
+  ],
+  "ILH_left_index_tip": [
+   0.619,
+   0.2283,
+   0.6086
+  ],
+  "ILH_left_middle_1": [
+   0.5834,
+   0.2387,
+   0.6783
+  ],
+  "ILH_left_middle_tip": [
+   0.5986,
+   0.2252,
+   0.6001
+  ],
+  "ILH_left_ring_1": [
+   0.5647,
+   0.2367,
+   0.6743
+  ],
+  "ILH_left_ring_tip": [
+   0.5752,
+   0.2241,
+   0.5987
+  ],
+  "ILH_left_little_1": [
+   0.5458,
+   0.2345,
+   0.6714
+  ],
+  "ILH_left_little_tip": [
+   0.5513,
+   0.2234,
+   0.6027
+  ],
+  "ILH_left_thumb_1": [
+   0.5795,
+   0.2179,
+   0.7486
+  ],
+  "ILH_left_thumb_tip": [
+   0.6742,
+   0.2067,
+   0.7013
+  ],
+  "IRH_plam": [
+   0.567,
+   -0.1449,
+   0.9225
+  ],
+  "IRH_right_index_tip": [
+   0.6161,
+   -0.2084,
+   0.8006
+  ],
+  "IRH_right_middle_tip": [
+   0.6267,
+   -0.2086,
+   0.8198
+  ],
+  "IRH_right_ring_tip": [
+   0.6431,
+   -0.2049,
+   0.8285
+  ],
+  "IRH_right_little_tip": [
+   0.6651,
+   -0.199,
+   0.8302
+  ],
+  "IRH_right_thumb_tip": [
+   0.6113,
+   -0.1622,
+   0.7772
+  ]
+ },
+ "source": "native depth (D435, pyrealsense2)",
+ "stamp": "20261103_205134_194",
+ "placed": {
+  "dx_m": 0.01223091190084002,
+  "dy_m": 0.025903141721578964,
+  "dz_m": 0.007474209564449505,
+  "dyaw_deg": 3.3434839899089255
+ },
+ "q_deg": [
+  5.026,
+  -96.965,
+  -2.005,
+  86.97,
+  0.006,
+  67.951,
+  -96.942
+ ]
+}

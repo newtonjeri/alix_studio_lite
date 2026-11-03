@@ -33,11 +33,12 @@ def frame_of(stem: str):
                            cam_to_base=np.array(rec["camera_to_world"], dtype=float))
 
 
-def same_answer(a, rec, stem):
+def same_answer(a, rec, stem, own_top=True):
     assert a.success, (stem, a.message)
     assert a.fixture_state == rec["class"], (stem, a.message, rec["message"])
     assert abs(a.record["height_m"] - rec["height_m"]) < 0.003, (stem, a.record["height_m"], rec["height_m"])
-    assert abs(a.record["closed_top_m"] - rec["closed_top_m"]) < 0.003, (stem, a.record["closed_top_m"], rec["closed_top_m"])
+    if own_top:
+        assert abs(a.record["closed_top_m"] - rec["closed_top_m"]) < 0.003, (stem, a.record["closed_top_m"], rec["closed_top_m"])
     assert a.record["passes_expectation"] == rec["passes_expectation"], stem
 
 
@@ -51,13 +52,16 @@ def test_the_robots_lid_open_run_of_12_october_replays_to_its_own_answers(tmp_pa
             # since 24 Oct (the owner) the seat under a lifted lid is not judged: the robot's seat_lifted is now "cannot judge"
             assert not a.success and a.message.startswith("cannot judge") and "under the lifted lid" in a.message, a.message
             continue
-        same_answer(a, rec, stem)
+        same_answer(a, rec, stem, own_top=stem != RUN_12_OCT[-1])
         if stem == RUN_12_OCT[0]:
             # the closed lid teaches the placement: +12.2 mm on the robot
             assert abs(gc.registration_for("") * 1000 - rec["registration_m"] * 1000) < 2.0
             assert any("gap registration" in s for s in said)
-    # the seat learned its own placement at the last question, as on the robot (+3.8 mm)
-    assert abs(gc.registration_view()["seat_mm"] - 3.8) < 1.5
+    # the last question, "seat open?" with the seat down, took the ring's height as the seat's placement on the robot
+    # (+3.8 mm, its closed top the ring's); since 3 Nov only a question expecting the seat closed does (an open seat's
+    # place shows the bowl's rim, 12 mm lower: tests/test_open_seat_teaches_nothing.py): it reads the seat closed as
+    # the robot did, against the lid's placement, and learns nothing
+    assert gc.registration_view()["seat_mm"] is None
 
 
 #: inspection_pose_4, the depth viewpoint: where lid_open's move_to_inspect leaves the right arm (ALIX's group states)

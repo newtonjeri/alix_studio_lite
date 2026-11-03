@@ -1062,8 +1062,8 @@
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "origin": "alix",
-      "sha256": "e607096c0d1e567b399501696896eb20fdd80ffd5a774e658886cf084928e774",
-      "bytes": 68616
+      "sha256": "2ddb381ffd88eb2c6d9e8f993cd44c321a9945217b01c326623b851209ed3bc4",
+      "bytes": 69162
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/geometry.py",

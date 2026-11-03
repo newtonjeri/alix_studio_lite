@@ -375,9 +375,14 @@ class GapCheckSession:
                 zb = z_world[band]
                 height = float(np.median(zb))
                 q10, q90 = np.percentile(zb, [10, 90])
-                # The seat's own placement, from the ring itself (see gap_seat_register_min_band).
+                # The seat's own placement, from the ring itself (see gap_seat_register_min_band). Only a question that
+                # expects the seat CLOSED takes it (2026-11-03): with the seat open or lifted the band at the closed
+                # ring's height sees the bowl's rim, 12 mm below it; Open the seat's end check (seat_open, 20:51) took
+                # the rim as the closed ring (-11.8 mm), its next frames then read the open seat at its closed height
+                # (uncertain), and the next runs' lifted checks, the fixture fit held 12 mm low, refused every frame.
                 seat_offset = height - nominal_top
-                if band_frac >= float(self._p("gap_seat_register_min_band")) \
+                if asked == "seat_closed" \
+                        and band_frac >= float(self._p("gap_seat_register_min_band")) \
                         and abs(seat_offset) <= float(self._p("gap_register_m")) \
                         and abs(seat_offset - lid_registration) <= float(self._p("gap_seat_register_tol_m")) \
                         and abs(seat_offset - registration) > self.REGISTRATION_RESET_M:
