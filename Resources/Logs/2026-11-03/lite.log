@@ -4388,3 +4388,6 @@
 21:41:57.387 [activity] operator:3f8eaf PUT /api/projects/alix_mvbvk1fk_zti6s
 21:41:57.750 [activity] operator:3f8eaf page: NAVIGATION · Scrolled view
 21:41:59.642 [activity] operator:3f8eaf PUT /api/projects/alix_mvbvk1fk_zti6s
+21:42:26.828 [activity] operator:3f8eaf page: SYSTEM · Session active
+21:42:37.245 [LEFT] restore global speed {"pct": 50} ret=0
+21:42:37.264 [RIGHT] restore global speed {"pct": 50} ret=0
