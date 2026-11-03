@@ -1647,3 +1647,6 @@
 20:16:13.392 [activity] - job run done: S2 Real Machine: both arms
 20:16:35.567 [activity] operator:3270ba page: SYSTEM · Session active
 20:17:05.567 [activity] operator:3270ba page: SYSTEM · Session active
+20:17:35.567 [activity] operator:3270ba page: SYSTEM · Session active
+20:17:55.248 [LEFT] restore global speed {"pct": 50} ret=0
+20:17:55.270 [RIGHT] restore global speed {"pct": 50} ret=0

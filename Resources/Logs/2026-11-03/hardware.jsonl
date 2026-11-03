@@ -1345,3 +1345,5 @@
 {"t": 1793708173.2134156, "side": "right", "verb": "workflow", "args": {"steps": 1, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 4.284, "text": null}
 {"t": 1793708173.3732553, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1793708173.391792, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793708275.2489674, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793708275.270971, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
