@@ -92,10 +92,13 @@ import numpy as np
 from . import plan_shift
 from .jobs import UserError
 
-WEAK_LOOKS = {             #: (pose, state) -> (the axis it reads poorly, why): the camera's value left at the UGV's there
-    ("inspection_pose_4", "lid shut"): ("x", "the lid's front edge is behind the left glove: from this look the commode's "
-                                             "place scatters 5 to 8 mm along x (the lab's checks, 26-31 Oct)"),
+WEAK_LOOKS = {             #: (pose, state) -> (the axes it reads poorly, why): the camera's value left at the UGV's there
+    ("inspection_pose_4", "lid shut"): (("x", "yaw"), "the lid's front edge is behind the left glove: from this look the "
+                                        "commode's place scatters 5 to 8 mm along x and its turn 1.2 deg (interquartile; "
+                                        "the lid open from the same pose 0.4: the lab's checks, 24-31 Oct; 3 Nov it read "
+                                        "+3.5 and +4.9 deg where the seat's look read -0.3 and -0.1)"),
 }
+AXES = {"x": "dx_m", "y": "dy_m", "yaw": "dyaw_deg"}
 POLE_STEP_MM = 5.0         #: a look's pole, to this (the reference's pole and the look's: the same height)
 REFERENCE_FILE = "place_reference.json"
 LANES = ("plans_now", "plans_ahead")   #: Lite's processes (workers.pool) for the task running's moved plans, the next tasks'
@@ -249,10 +252,10 @@ def decide(ugv: plan_shift.Move | None, look: dict | None, ref: dict | None, han
     read = dm = depth_move(look["reading"], ref, look["pose0"])
     said = f"the camera reads the commode {dm.words()} from where the reference look ({ref.get('at')}) saw it"
     weak = WEAK_LOOKS.get((look["pose"], look["state"]))
-    if weak is not None:                         # that axis left at the UGV's
+    if weak is not None:                         # those axes left at the UGV's
         u = ugv or plan_shift.Move()
-        dm = dataclasses.replace(dm, **({"dx_m": u.dx_m} if weak[0] == "x" else {"dy_m": u.dy_m}))
-        said += f"; {weak[1]}: its {weak[0]} is left at {running}'s ({dm.words()})"
+        dm = dataclasses.replace(dm, **{AXES[a]: getattr(u, AXES[a]) for a in weak[0]})
+        said += f"; {weak[1]}: its {' and '.join(weak[0])} left at {running}'s ({dm.words()})"
     apart = hands(dm, ugv)
     if apart < plan_shift.DEAD_MM:
         return Decision(ugv, keep, f"{said}: the hands within {apart:.1f} mm of where {running} puts them, inside the "
@@ -619,6 +622,15 @@ class TaskPlace:
             self.applied = d.move
             return d, plan
         return d, None
+
+    def checks_at(self) -> dict | None:
+        """Where the task's checks judge the commode (the lab, 3 Nov): where its first look read it (GapCheck.place's
+        absolute reading, the camera's mount in it as in the checks' frames), when that look read it and reads well;
+        None: at its scene place (no reading, a weak look: Open the lid's lid shut, whose x and turn scatter)."""
+        look = getattr(self, "look", None)
+        if not look or not look.get("ok") or (look.get("pose"), look.get("state")) in WEAK_LOOKS:
+            return None
+        return look.get("reading")
 
     def wait_retry(self, check_stop) -> tuple:
         """(the decision, the plan to lift again from, or None for the plan running) of ``retry``; raises a refusal."""

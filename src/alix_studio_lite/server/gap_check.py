@@ -181,6 +181,8 @@ class GapCheck:
         self._log = log or (lambda _text: None)
         self._lock = threading.Lock()          # one check at a time: they share the session
         self._core, self._core_error, self._fixture_in_world = core, None, None
+        self._scene_pose = None                # the fixture at its scene place (load_fixture's), whatever the checks use
+        self._placed = None                    # a place reading the checks judge at (at_place), None: the scene place
         self._models_kept = None                # (check_id, the colour models' result): asked once a check
         self._locator = None
         self._manifest = Path(manifest) if manifest else MANIFEST
@@ -220,6 +222,8 @@ class GapCheck:
             return
         vocabulary = load_vocabulary(model=self.p.get("fixture_model", "commode_c"), fixture_type=self.p.get("fixture_type", "commode"))
         locator, self._fixture_in_world = self._load_locator()
+        self._scene_pose = None if self._fixture_in_world is None else np.array(self._fixture_in_world, dtype=float)
+        self._fixture_in_world = self._judged_pose()
         self._locator = locator
         self._core = PerceptionCore(
             backend=backend, vocabulary=vocabulary,
@@ -241,7 +245,7 @@ class GapCheck:
                     regions_dir=None if loc is None else str(loc.models_dir),
                     calibration=None if loc is None else getattr(loc, "calibration", None),
                     pose_in_world=None if pose is None else np.asarray(pose, dtype=float).round(6).tolist(),
-                    ugv_standoff_m=self.p.get("ugv_standoff_m"))
+                    placed=self._placed, ugv_standoff_m=self.p.get("ugv_standoff_m"))
 
     def _training_row(self, frame, at_pose: str) -> dict:
         """What a record needs beyond the node's to be a training row (the owner, 23 Oct: every check feeds the models):
@@ -319,10 +323,47 @@ class GapCheck:
         place is off by the camera's mount (31 Oct: inspection pose 4
         and pose 1 read the same commode 11 and 15 mm and 3.2 deg apart): a place compares only with one read from the
         same arm pose with the lid and the seat in the same ``state``."""
+        depth = np.asarray(frame.depth)
+        depth = depth.astype(np.float64) * (0.001 if depth.dtype == np.uint16 else 1.0)     # the D435's z16 millimetres
+        intrinsics = frame.intrinsics                     # (2 Nov: read as metres, its place was never found at the lab)
+        if intrinsics is not None and depth.ndim == 2 and (intrinsics.width, intrinsics.height) != (depth.shape[1], depth.shape[0]):
+            intrinsics = intrinsics.scaled_to(depth.shape[1], depth.shape[0])
         with self._lock:
             if self._locator is None:
                 self._locator, self._fixture_in_world = self._load_locator()
-            return self.session.read_place(frame.depth, frame.intrinsics, frame.cam_to_base, frame.hands or {}, start, reach_m)
+                self._scene_pose = None if self._fixture_in_world is None else np.array(self._fixture_in_world, dtype=float)
+            judged, self._fixture_in_world = self._fixture_in_world, self._scene_pose     # read against the scene place
+            try:
+                return self.session.read_place(depth, intrinsics, frame.cam_to_base, frame.hands or {}, start, reach_m)
+            finally:
+                self._fixture_in_world = judged
+
+    def scene_pose(self):
+        """The fixture at its scene place in base_link (4 x 4), the pose a place reading is against."""
+        with self._lock:
+            if self._locator is None:
+                self._locator, self._fixture_in_world = self._load_locator()
+                self._scene_pose = None if self._fixture_in_world is None else np.array(self._fixture_in_world, dtype=float)
+            return None if self._scene_pose is None else np.array(self._scene_pose)
+
+    def at_place(self, reading: dict | None) -> None:
+        """The checks from here judged with the fixture where ``reading`` (place's: dx, dy, dz m, dyaw deg against the
+        scene place) found the commode, or (None) at its scene place again. The reading is the camera's own (its mount's
+        error in it, as in the checks' frames): the fixture fits the frames where they show it (the lab, 3 Nov: Open the
+        seat's lifted check, the commode 10 mm from where the plans worked and the mount's 25 mm on top, read seat_lifted
+        and seat_closed alike at its scene place, margins +0.13 to +0.23, 8 of 10 frames refused; at the place its first
+        look read, all 10 seat_lifted at margins +0.37 to +0.41)."""
+        self.scene_pose()
+        with self._lock:
+            self._placed = None if reading is None else {k: float(reading[k]) for k in ("dx_m", "dy_m", "dz_m", "dyaw_deg")}
+            self._fixture_in_world = self._judged_pose()
+
+    def _judged_pose(self):
+        if self._scene_pose is None or self._placed is None:
+            return None if self._scene_pose is None else np.array(self._scene_pose)
+        from alix_perception_core import fixture_place as fp
+
+        return fp.Placement(ok=True, **self._placed).pose(np.array(self._scene_pose))
 
     def _load_locator(self):
         """ALIX's own placement (alix_perception_core.gap_check.load_fixture): the scene, the venue's yaw (until 24 Oct

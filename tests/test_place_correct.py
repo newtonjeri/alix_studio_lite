@@ -78,8 +78,10 @@ def test_the_camera_decides_against_the_ugvs_move(tmp_path):
     ref = refs.get(reference("lid_open", refs))
     d = place_correct.decide(ugv, look("lid_open", 0.020, 0.010), ref, lid_hands)
     assert d.source == "depth" and abs(d.move.dx_m - 0.012) < 1e-9 and abs(d.move.dy_m - 0.010) < 1e-3
-    assert abs(d.depth.dx_m - 0.020) < 1e-3 and "its x is left at" in d.words          # what the camera read, kept
+    assert abs(d.depth.dx_m - 0.020) < 1e-3 and "its x and yaw left at" in d.words      # what the camera read, kept
     assert place_correct.decide(ugv, look("lid_open", 0.030, 0.001), ref, lid_hands).source == "ugv"   # only x off
+    d = place_correct.decide(ugv, look("lid_open", 0.012, 0.001, 4.5), ref, lid_hands)   # 3 Nov: +4.5 deg, a bad turn
+    assert d.source == "ugv" and d.refuse is None and abs(d.depth.dyaw_deg - 4.5) < 0.1
 
 
 def test_the_cameras_value_is_against_where_the_plan_worked(tmp_path):
@@ -481,6 +483,84 @@ def test_a_closings_look_in_a_sequence_comes_before_its_working_moves(tmp_path):
     assert any(c[0] == "move" and c[2] == "right" and "move_to_inspect" in c[1] for c in before)
     assert not any(c[0] == "move" and c[2] == "left" and c[3] == "arm" for c in before)
     assert out["places"][0]["source"] == "depth" and out["plans"][0]["outcome"] == "done"
+
+
+SEAT_3_NOV = Path(__file__).parent / "data" / "gap_checks" / "seat_at_place" / "20261103_192737_724_gap_check_seat_lifted_refused"
+PLACE_3_NOV = dict(dx_m=0.0118, dy_m=0.0244, dz_m=0.0076, dyaw_deg=3.53)   #: Open the seat's first look that day, absolute
+
+
+def frame_3_nov():
+    from alix_studio_lite.server.gap_check import DepthFrame, Intrinsics
+
+    rec = json.loads(SEAT_3_NOV.with_suffix(".json").read_text())
+    k = rec["intrinsics"]
+    return rec, DepthFrame(depth=np.load(str(SEAT_3_NOV) + "_depth_mm.npz")["depth_mm"],
+                           intrinsics=Intrinsics(k["fx"], k["fy"], k["cx"], k["cy"], k["width"], k["height"]),
+                           cam_to_base=np.asarray(rec["camera_to_world"]), hands={n: tuple(v) for n, v in rec["hands"].items()})
+
+
+def test_the_place_is_read_on_the_cameras_millimetres():
+    """The D435 gives z16 millimetres: read as metres the commode was found nowhere (the lab, 3 Nov, both runs' looks: "only
+    0 depth pixels where the lid's or the seat's angle shows"). Converted as the checks convert, the place reads as from
+    metres; the checks judging at a read place (at_place) do not move it."""
+    import test_fixture_place as tf
+    from alix_studio_lite.server.gap_check import GapCheck, load_params
+
+    gc = GapCheck(params={**load_params(), "gap_cross_check": False}, records=None)
+    frame = tf.frame(tf.SEAT_DOWN[1])
+    metres = gc.place(frame)
+    mm_frame = type(frame)(**{**frame.__dict__, "depth": np.clip(np.round(np.nan_to_num(np.asarray(frame.depth)) * 1000.0),
+                                                                 0, 65535).astype(np.uint16)})
+    gc.at_place(PLACE_3_NOV)
+    mm = gc.place(mm_frame)
+    assert metres["ok"] and mm["ok"], (metres["note"], mm["note"])
+    assert all(abs(mm[a] - metres[a]) < 1.5e-3 for a in ("dx_m", "dy_m", "dz_m")) and abs(mm["dyaw_deg"] - metres["dyaw_deg"]) < 0.2
+
+
+def test_the_seats_lifted_check_judges_where_the_first_look_read_the_commode():
+    """The lab, 3 Nov, twice: Open the seat stopped at its lifted check, no decision in 5 frames (the hand over 77 % of
+    the seat's window, its fit "seat_lifted and seat_closed explain the frame alike", margins +0.13 to +0.23 with the
+    fixture at its scene place: the commode 10 mm from where the plans worked and the camera's mount on top). With the
+    fixture where the task's first look read it, the same frame reads seat_lifted (all 10 of that day: margins +0.37 to
+    +0.41)."""
+    from alix_studio_lite.server.gap_check import GapCheck, load_params
+
+    gc = GapCheck(params=load_params(), records=None)
+    rec, frame = frame_3_nov()
+    q = rec["context"]["arms"]["right"]["q_deg"]
+    assert not gc.ask("seat_lifted", frame, q_deg=q).success                         # as at the lab
+    gc.at_place(PLACE_3_NOV)
+    a = gc.ask("seat_lifted", frame, q_deg=q)
+    assert a.success and a.fixture_state == "seat_lifted" and a.state_confidence > 0.9, a.message
+    assert gc.fixture_record()["placed"]["dy_m"] == PLACE_3_NOV["dy_m"]
+    gc.at_place(None)
+    assert not gc.ask("seat_lifted", frame, q_deg=q).success
+
+
+class AtExec(LookExec):
+    """LookExec recording where the checks are told to judge the commode (RealExec.fixture_at)."""
+
+    def fixture_at(self, reading):
+        self.calls.append(("at", None if reading is None else dict(reading)))
+
+
+def test_a_tasks_checks_judge_the_commode_where_its_first_look_read_it(tmp_path):
+    """After its first look reads the commode's place, a task's checks judge the commode there (the lifted check
+    included), and the next run starts at its scene place again; Open the lid's look (x and turn poorly read) leaves
+    its checks at the scene place."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    reference("seat_open", refs)
+    plan = mechanism.Plan("seat_open")
+    reading = look("seat_open", 0.002)
+    ex = AtExec([c["expect"] for c in plan.checks()], reading)
+    run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
+    ats = [(k, c[1]) for k, c in enumerate(ex.calls) if c[0] == "at"]
+    lifted = next(k for k, c in enumerate(ex.calls) if c[0] == "ask" and c[1] == "verify_seat_lifted")
+    assert ats[0][1]["dx_m"] == reading["reading"]["dx_m"] and ats[0][0] < lifted and ats[-1][1] is None
+    plan = mechanism.Plan("lid_open")
+    ex = AtExec([c["expect"] for c in plan.checks()], look("lid_open", 0.002))
+    run("lid_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert [c[1] for c in ex.calls if c[0] == "at"] == [None]
 
 
 class Lanes:

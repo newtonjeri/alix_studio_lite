@@ -1009,6 +1009,8 @@ class Runner:
                     continue                         # it was put at k: it runs now, this plan again after it
                 self.k += 1
         finally:
+            if self.place is not None and hasattr(self.ex, "fixture_at"):
+                self.ex.fixture_at(None)                 # the next run's checks at the scene place until its own look
             getattr(self.ex, "finish", lambda: None)()
         return dict(plans=self.done, checks=self.checks, seat_after_lid=self.seat_after_lid,
                     places=list(self.place.log) if self.place is not None else [])
@@ -1098,6 +1100,10 @@ class Runner:
                     if not place.started:               # no look yet (no camera; the camera arm not at its look)
                         place.start_look(self.ex, take=True)
                     _decided, moved = place.wait(self.ex.check_stop)
+                    at = place.checks_at()                # the task's checks with the commode where the look read it
+                    if at is not None and hasattr(self.ex, "fixture_at"):
+                        self.ex.fixture_at(at)
+                        self.say(f"{plan.title}: its checks judge the commode where its first look read it (3 Nov)")
                     if moved is not None:               # the camera's move, not the UGV's: the rest of the plan from it
                         late = [s for s, at in place.raise_at.items() if at < i] if moved.move.dz_m else []
                         if late:
@@ -1989,7 +1995,9 @@ class RealExec(_Exec):
             rec = write_check_record(root, "place_look", task, dict(
                 {"class": "look"}, intrinsics=dict(fx=k.fx, fy=k.fy, cx=k.cx, cy=k.cy, width=k.width, height=k.height),
                 camera_to_world=np.asarray(frame.cam_to_base).tolist(), hands=frame.hands, context=frame.context),
-                depth=frame.depth, image=frame.colour, aligned=frame.aligned)
+                depth=np.asarray(frame.depth) * (0.001 if np.asarray(frame.depth).dtype == np.uint16 else 1.0),   # metres,
+                image=frame.colour, aligned=frame.aligned)                                                    # as a check's
+
         return frame, q, None if rec is None else str(rec)
 
     def read_look(self, shot, start_for=None) -> dict:
@@ -2012,8 +2020,13 @@ class RealExec(_Exec):
         note = r.get("note") or ("" if pose is not None else "the camera arm is at no named pose") or \
             ("" if pole is not None else "no pole reading")
         return dict(ok=bool(r.get("ok")) and pose is not None and pole is not None, reading=r, state=r.get("state"), pose=pose,
-                    pole_mm=None if pole is None else float(pole), pose0=self.kit.gap._fixture_in_world, note=note,
+                    pole_mm=None if pole is None else float(pole), pose0=self.kit.gap.scene_pose(), note=note,
                     record=record)
+
+    def fixture_at(self, reading: dict | None) -> None:
+        """The task's checks from here judged with the commode where its first look read it (place_correct), or (None)
+        at its scene place again (GapCheck.at_place)."""
+        self.kit.gap.at_place(reading)
 
     def gate(self, task: str) -> None:
         """A closing queued as a follow-up (Runner._after_lid) passes the contact gate as a closing run on its own:
