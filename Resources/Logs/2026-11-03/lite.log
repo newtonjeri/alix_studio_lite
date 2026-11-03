@@ -5095,3 +5095,5 @@
 22:38:09.434 [activity] operator:556be6 page: SYSTEM · Session active
 22:38:39.435 [activity] operator:556be6 page: SYSTEM · Session active
 22:39:09.435 [activity] operator:556be6 page: SYSTEM · Session active
+22:39:37.228 [LEFT] restore global speed {"pct": 50} ret=0
+22:39:37.252 [RIGHT] restore global speed {"pct": 50} ret=0
