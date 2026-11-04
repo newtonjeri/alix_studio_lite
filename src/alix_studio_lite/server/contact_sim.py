@@ -98,7 +98,12 @@ ACCEPTED = {
                    dict(sha256="e49507b14b7699982f9090772abfebb75974ca5ef967022a94fda6c42221b075", made="2026-10-30 13:47:45",
                         by="the owner, 30 Oct",
                         why="accepted as it came from ALIX, not checked here (the owner: sync it and take it as passing), "
-                            "for the lab's runs")],
+                            "for the lab's runs"),
+                   dict(sha256="3101e381720c7b2f91dc6149f163900b87eed604102aac31068a0cf610afc5e1", made="2026-11-04 14:10:44",
+                        by="the user, 4 Nov",
+                        why="the left's start 5 mm further, 5 mm across and 10 mm lower after the seat rose again in 8 of 12 "
+                            "pushes on 4 Nov: the model reads up to 90.9 N on the seat (left index) for 3.3 s; accepted for "
+                            "the lab's runs")],
 }
 
 
