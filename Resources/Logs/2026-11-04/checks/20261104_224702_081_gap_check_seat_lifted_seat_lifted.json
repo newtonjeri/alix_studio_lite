@@ -1,0 +1,523 @@
+{
+  "class": "seat_lifted",
+  "success": true,
+  "confidence": 0.9208857672422203,
+  "passes_expectation": true,
+  "part": "seat",
+  "height_m": 0.5396156812700234,
+  "closed_top_m": 0.44,
+  "nominal_top_m": 0.44,
+  "registration_m": 0.0,
+  "registration_source": "none (the lift by distance learns nothing)",
+  "registration_pose": "",
+  "rise_m": 0.09961568127002335,
+  "roi_valid": 0.7049293723605651,
+  "median_range_m": 0.8150000000000001,
+  "message": "seat by distance: 92 % of the seat's points stand 50 mm or more above its closed top 0.440 m in base_link (median +100 mm), the bowl 89 % of the points -> seat_lifted; 17 hand frames masked 0.10 m, 27 % of the window; native depth (D435, pyrealsense2), camera_depth_optical_frame",
+  "models": {},
+  "parts": {
+    "family": "seat",
+    "lid_deg": 110.0,
+    "seat_deg": 30.0,
+    "zone_px": 10128,
+    "hand_px": 7439,
+    "height_offset_m": 0.0,
+    "seat_hidden": false,
+    "cached": false,
+    "reason": "best: lid 110 deg, seat 30 deg (seat) over 10128 pixels at 1/3, the fixture +0 mm from its registration",
+    "time_ms": 332.763,
+    "lid": {
+      "state": "lid_open",
+      "confidence": 1.0,
+      "deg": 110.0,
+      "margin": 1.0447,
+      "reason": "not closed: lid_away 7598 vs lid_closed -340, margin +1.04; lid_open: lid_open 7598 vs lid_lifted 450, margin +0.94; best: lid 110 deg, seat 30 deg (seat) over 10128 pixels at 1/3, the fixture +0 mm from its registration",
+      "classes": {
+        "lid_away": [
+          7598,
+          "seat 30"
+        ],
+        "lid_closed": [
+          -340,
+          "lid 5"
+        ],
+        "lid_open": [
+          7598,
+          "seat 30"
+        ],
+        "lid_lifted": [
+          450,
+          "lid 20"
+        ]
+      }
+    },
+    "seat": {
+      "state": "seat_lifted",
+      "confidence": 0.6943,
+      "deg": 30.0,
+      "margin": 0.2777,
+      "reason": "not down: seat_lifted 7598 vs seat_closed 5488, margin +0.28; seat_lifted: seat_lifted 7598 vs seat_open 5546, margin +0.27; best: lid 110 deg, seat 30 deg (seat) over 10128 pixels at 1/3, the fixture +0 mm from its registration",
+      "classes": {
+        "seat_lifted": [
+          7598,
+          "seat 30"
+        ],
+        "seat_closed": [
+          5488,
+          "seat 5"
+        ],
+        "seat_open": [
+          5546,
+          "seat 110"
+        ]
+      }
+    },
+    "part": "seat",
+    "closed_within_deg": 0.0,
+    "answer": "seat_lifted",
+    "confidence": 0.694,
+    "note": "the seat lifted at 30 deg (margin +0.28); lid 110 deg, seat 30 deg, the commode +0 mm from its scene place",
+    "decides": false
+  },
+  "hands": {
+    "ILH_plam": [
+      0.6226,
+      0.0049,
+      0.7287
+    ],
+    "ILH_left_index_1": [
+      0.6204,
+      -0.0217,
+      0.5995
+    ],
+    "ILH_left_index_tip": [
+      0.5498,
+      -0.036,
+      0.5843
+    ],
+    "ILH_left_middle_1": [
+      0.6155,
+      -0.003,
+      0.5997
+    ],
+    "ILH_left_middle_tip": [
+      0.5415,
+      -0.0175,
+      0.5855
+    ],
+    "ILH_left_ring_1": [
+      0.6107,
+      0.0156,
+      0.6008
+    ],
+    "ILH_left_ring_tip": [
+      0.5397,
+      0.0031,
+      0.5858
+    ],
+    "ILH_left_little_1": [
+      0.606,
+      0.0341,
+      0.6028
+    ],
+    "ILH_left_little_tip": [
+      0.5422,
+      0.0248,
+      0.586
+    ],
+    "ILH_left_thumb_1": [
+      0.6068,
+      -0.018,
+      0.6711
+    ],
+    "ILH_left_thumb_tip": [
+      0.596,
+      -0.0628,
+      0.5853
+    ],
+    "IRH_plam": [
+      0.5225,
+      -0.1617,
+      0.797
+    ],
+    "IRH_right_index_tip": [
+      0.4944,
+      -0.1455,
+      0.6504
+    ],
+    "IRH_right_middle_tip": [
+      0.4994,
+      -0.1649,
+      0.6581
+    ],
+    "IRH_right_ring_tip": [
+      0.5116,
+      -0.1798,
+      0.6568
+    ],
+    "IRH_right_little_tip": [
+      0.5308,
+      -0.1926,
+      0.6454
+    ],
+    "IRH_right_thumb_tip": [
+      0.529,
+      -0.1083,
+      0.6532
+    ]
+  },
+  "intrinsics": {
+    "fx": 432.6650695800781,
+    "fy": 432.6650695800781,
+    "cx": 420.2126159667969,
+    "cy": 237.48733520507812,
+    "width": 848,
+    "height": 480
+  },
+  "lift_reading": {
+    "roi": [
+      0.4,
+      1.0,
+      0.05,
+      0.95
+    ],
+    "closed_top_m": 0.44,
+    "points": 10251,
+    "points_frac": 0.0466,
+    "glove_frac": 0.274,
+    "risen_frac": 0.921,
+    "at_closed_frac": 0.01,
+    "bowl_frac": 0.892,
+    "hand_frames": 17,
+    "median_rise_m": 0.0996,
+    "decides": true
+  },
+  "source": "native depth (D435, pyrealsense2)",
+  "frame": "camera_depth_optical_frame",
+  "world_frame": "base_link",
+  "camera_to_world": [
+    [
+      0.481783,
+      -0.813862,
+      0.324828,
+      0.554324
+    ],
+    [
+      -0.876237,
+      -0.443336,
+      0.188843,
+      -0.12521
+    ],
+    [
+      -0.009684,
+      -0.375608,
+      -0.926728,
+      0.88464
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "params": {
+    "gap_lid_top_z": 0.45,
+    "gap_seat_top_z": 0.44,
+    "gap_lift_m": 0.05,
+    "gap_roi": [
+      0.4,
+      0.6,
+      0.4,
+      0.6
+    ],
+    "gap_seat_roi": [
+      0.58,
+      0.78,
+      0.3,
+      0.7
+    ],
+    "gap_seat_band_z": [
+      0.38,
+      0.47
+    ],
+    "gap_seat_min_band": 0.03,
+    "gap_seat_absent_m": 0.012,
+    "gap_hand_mask_m": 0.14,
+    "gap_lid_closed_tol_m": 0.02,
+    "gap_lid_open_m": 0.05,
+    "gap_lid_wide_roi": [
+      0.3,
+      0.75,
+      0.3,
+      0.7
+    ],
+    "gap_lid_deep_m": 0.1,
+    "gap_lid_hole_min": 0.08,
+    "gap_lid_top_rows": 0.35,
+    "gap_lid_standing_range_m": 0.35,
+    "gap_lid_standing_min": 0.1,
+    "gap_seat_rise_enabled": true,
+    "gap_seat_rise_region_m": [
+      0.03,
+      0.15
+    ],
+    "gap_seat_rise_hand_m": 0.1,
+    "gap_seat_rise_min_px": 1500,
+    "gap_seat_rise_closed_m": 0.004,
+    "gap_seat_rise_closed_frac": 0.85,
+    "gap_seat_rise_moved_m": 0.008,
+    "gap_seat_rise_moved_frac": 0.6,
+    "gap_seat_lift_min_deg": 10.0,
+    "gap_seat_rise_hinge_tol_m": 0.04,
+    "gap_seat_rise_down_frac": 0.6,
+    "gap_seat_rise_hinge": [
+      0.89,
+      0.0,
+      0.44
+    ],
+    "gap_seat_ref_box": [
+      0.48,
+      0.9,
+      -0.18,
+      0.18
+    ],
+    "gap_seat_ref_frames": 5,
+    "gap_seat_ref_ring_m": 0.015,
+    "gap_seat_ref_margin_m": 0.015,
+    "gap_seat_ref_max_age_s": 900.0,
+    "gap_seat_ref_lid_z": 0.55,
+    "gap_seat_ref_lid_m": 0.01,
+    "gap_seat_ref_lid_frac": 0.8,
+    "gap_seat_ref_lid_min_px": 1500,
+    "gap_seat_ref_replace_m": 0.006,
+    "gap_seat_fit_enabled": true,
+    "gap_seat_fit_stride": 3,
+    "gap_seat_fit_step_deg": 5.0,
+    "gap_seat_fit_tol_m": 0.015,
+    "gap_seat_fit_min_px": 1000,
+    "gap_seat_fit_margin": 0.2,
+    "gap_lid_fit_enabled": true,
+    "gap_lid_fit_min_deg": 10.0,
+    "gap_lid_fit_open_min_deg": 80.0,
+    "gap_fit_height_search_m": 0.01,
+    "gap_fit_height_step_m": 0.005,
+    "gap_decider": "windows",
+    "gap_parts_shadow": true,
+    "gap_parts_height_search_m": 0.005,
+    "gap_parts_height_step_m": 0.0025,
+    "gap_parts_seat_open_min_deg": 80.0,
+    "gap_lift_by_distance": true,
+    "gap_lift_roi": [
+      0.3,
+      0.7,
+      0.3,
+      0.7
+    ],
+    "gap_seat_lift_roi": [
+      0.4,
+      1.0,
+      0.05,
+      0.95
+    ],
+    "gap_lift_hand_mask_m": 0.1,
+    "gap_lift_risen_frac": 0.5,
+    "gap_lift_closed_tol_m": 0.02,
+    "gap_lift_bowl_m": 0.04,
+    "gap_seat_lift_bowl_min": 0.78
+  },
+  "decision_wall_s": 1793803622.081,
+  "depth_header_stamp_s": 1793803621.661303,
+  "depth_age_s": 0.016,
+  "color_age_s": null,
+  "depth_frame_id": "camera_depth_optical_frame",
+  "colour_intrinsics": {
+    "fx": 904.5462646484375,
+    "fy": 904.3150634765625,
+    "cx": 656.8598022460938,
+    "cy": 382.82379150390625,
+    "width": 1280,
+    "height": 720
+  },
+  "colour_to_world": [
+    [
+      0.481783,
+      -0.813862,
+      0.324828,
+      0.547098
+    ],
+    [
+      -0.876237,
+      -0.443336,
+      0.188843,
+      -0.112067
+    ],
+    [
+      -0.009684,
+      -0.375608,
+      -0.926728,
+      0.884785
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "ref_to_world": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      -0.01
+    ],
+    [
+      0.0,
+      1.0,
+      0.0,
+      -0.124
+    ],
+    [
+      0.0,
+      0.0,
+      1.0,
+      0.526
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "named_pose": null,
+  "registration": {
+    "lid_m": 0.0,
+    "seat_m": null
+  },
+  "fixture": {
+    "model": "commode_c",
+    "fixture_type": "commode",
+    "scene_yaml": "/home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/scene.yaml",
+    "scene_sha256": "9142df18ce56b59bbcc662fd3e902eb14520ef8b0b283c6b1541d624a5cf3a07",
+    "regions_dir": "/home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models",
+    "calibration": {
+      "seat": {
+        "seat_ring": 0.0086
+      },
+      "lid": {
+        "toplid": 0.0092
+      }
+    },
+    "pose_in_world": [
+      [
+        -0.998586,
+        0.053157,
+        0.0,
+        0.98335
+      ],
+      [
+        -0.053157,
+        -0.998586,
+        0.0,
+        0.019907
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.408646
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "placed": {
+      "dx_m": -0.02126780844067836,
+      "dy_m": 0.005554528126874483,
+      "dz_m": -0.011354009338735307,
+      "dyaw_deg": 3.047098291946001
+    },
+    "ugv_standoff_m": -1.0
+  },
+  "context": {
+    "arms": {
+      "left": {
+        "q_deg": [
+          14.841,
+          -49.825,
+          -26.987,
+          64.301,
+          2.701,
+          78.035,
+          144.302
+        ],
+        "pole_mm": 150.0,
+        "hand": [
+          519,
+          512,
+          511,
+          511,
+          504,
+          938
+        ]
+      },
+      "right": {
+        "q_deg": [
+          32.0,
+          -95.998,
+          9.999,
+          112.002,
+          -24.995,
+          60.001,
+          -13.998
+        ],
+        "pole_mm": 149.0,
+        "hand": [
+          436,
+          351,
+          347,
+          393,
+          230,
+          929
+        ]
+      }
+    },
+    "check": {
+      "check_id": "20261104_224701_680_verify_seat_lifted",
+      "stage": "verify_seat_lifted",
+      "expect": "seat_lifted",
+      "frame": 1,
+      "closing": false
+    },
+    "camera": {
+      "name": "Intel RealSense D435",
+      "serial": "425122070189"
+    }
+  },
+  "provenance": {
+    "lite_commit": "35bfaebb33fd36eef300ef8968f9614858026eb8",
+    "alix_vendored": {
+      "commit": "2aa0e26bcf1d1ffce74ca5e828827486e28d5487",
+      "branch": "feature/alix_studio",
+      "dirty": true
+    },
+    "models": {
+      "commode_status_synthetic_real_v10.pt": "c9997b9d50fcf9be3b2550588f14445cfd22193fb08cd27fd8e5a68cfb605830"
+    }
+  },
+  "split": "",
+  "stamp": "20261104_224702_081",
+  "mode": "gap_check",
+  "expect": "seat_lifted",
+  "files": {
+    "depth_npy": "20261104_224702_081_gap_check_seat_lifted_seat_lifted_depth.npy",
+    "depth_png": "20261104_224702_081_gap_check_seat_lifted_seat_lifted_depth.png",
+    "color_png": "20261104_224702_081_gap_check_seat_lifted_seat_lifted_color.png",
+    "aligned_depth_npz": "20261104_224702_081_gap_check_seat_lifted_seat_lifted_aligned_depth.npz"
+  }
+}
