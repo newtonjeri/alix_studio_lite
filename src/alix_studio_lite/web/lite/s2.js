@@ -40,7 +40,8 @@ const S = {
   sel: { left: null, right: null }, mode: 'sim', scope: 'sequence', pick: null, edited: false,
   sim: null, job: null, live: { left: 'IDLE', right: 'IDLE' }, status: 'PAGE 02 READY // Build LEFT and RIGHT sequences', runtime: 0,
   rows: { left: null, right: null }, mechanisms: {},
-  recordFeed: false,                // Real Machine Mode: record the controllers' feed (off by default since 26 Oct: ~0.6 s a runner call; run_lite --feed off: never)
+  recordFeed: true,                 // Real Machine Mode: record the controllers' feed, on by default again since 5 Nov (the user: S2 with it on;
+                                    // 0 of 21 runs with it on ended early, 8 of 62 without); unticked, a run goes without it; run_lite --feed off: never
 };
 const view = { frames: new Map(), shown: { left: null, right: null }, phase: null, three: null, clean: false, furthest: 0, token: 0 };
 let panel = null, built = false, player = null, saving = { left: null, right: null }, tools = null;
@@ -239,9 +240,9 @@ function build() {
       // the owner, 23 Oct: the controllers' feed recorded during a real run, every 20 ms, on by default (run_lite --feed off:
       // never, and the box is not shown); unticked, this page's runs go without it
       el('label', { id: 'liteS2RecordWrap', class: 'lite-stage-option lite-s2-record', hidden: true },
-        el('input', { id: 'liteS2Record', type: 'checkbox', checked: false, onchange: (e) => { S.recordFeed = e.target.checked; } }),
+        el('input', { id: 'liteS2Record', type: 'checkbox', checked: S.recordFeed, onchange: (e) => { S.recordFeed = e.target.checked; } }),
         el('span', { text: "Record the controllers' feed every 20 ms" }),
-        el('small', { text: '(a diagnostic: the Programs play about 3 % slower meanwhile)' }))),
+        el('small', { text: '(on by default: no Program has ended early with it on; they play about 4.5 % slower meanwhile)' }))),
     el('div', { class: 'card lite-s2-control' },
       el('div', { class: 'lite-s2-kicker', text: 'DUAL SEQUENCE CONTROL' }),
       el('div', { class: 'lite-row' },
