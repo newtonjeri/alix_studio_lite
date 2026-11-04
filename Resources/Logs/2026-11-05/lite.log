@@ -859,3 +859,156 @@
 01:02:35.243 [RIGHT] camera · camera closed
 01:02:45.603 [activity] operator:297d41 page: SYSTEM · Session active
 01:03:15.603 [activity] operator:297d41 page: SYSTEM · Session active
+01:03:45.603 [activity] operator:297d41 page: SYSTEM · Session active
+01:03:57.908 [LEFT] restore global speed {"pct": 50} ret=0
+01:03:57.926 [RIGHT] restore global speed {"pct": 50} ret=0
+01:04:04.874 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+01:04:04.919 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+01:04:04.919 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+01:04:06.461 [activity] - page: NAVIGATION · Open screen
+01:04:06.461 [activity] - page: SYSTEM · ASL frontend initialized
+01:04:06.875 [RIGHT] camera · perception warmed up in 3.7 s: its core built, the colour model loaded
+01:04:14.009 [activity] - POST /api/auth/login
+01:04:14.016 [activity] operator:b156d2 page: UI · Button action
+01:04:14.832 [activity] operator:b156d2 page: AUTH · Operator login
+01:04:14.833 [activity] operator:b156d2 page: NAVIGATION · Open screen
+01:04:29.694 [activity] operator:b156d2 page: PROJECT · Button action
+01:04:29.706 [activity] operator:b156d2 page: NAVIGATION · Task loaded
+01:04:29.712 [activity] operator:b156d2 page: SETUP · Arm selected
+01:04:29.740 [activity] operator:b156d2 page: NAVIGATION · Teaching stage changed
+01:04:29.768 [activity] operator:b156d2 page: SETUP · Arm selected
+01:04:29.777 [activity] operator:b156d2 page: NAVIGATION · Open screen
+01:04:33.768 [activity] operator:b156d2 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+01:04:33.919 [activity] operator:b156d2 page: SYSTEM · 3D device
+01:04:41.131 [activity] operator:b156d2 page: UI · Button action
+01:04:41.344 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:04:44.820 [activity] operator:b156d2 page: SYSTEM · Session active
+01:04:47.360 [activity] operator:b156d2 page: NAVIGATION · Button action
+01:04:47.573 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:05:03.753 [activity] operator:b156d2 page: NAVIGATION · Scrolled view
+01:05:14.819 [activity] operator:b156d2 page: SYSTEM · Session active
+01:05:34.922 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:05:44.819 [activity] operator:b156d2 page: SYSTEM · Session active
+01:05:47.609 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:05:47.735 [activity] operator:b156d2 page: UI · Setting changed
+01:05:47.737 [activity] operator:b156d2 page: UI · Input updated
+01:05:52.300 [activity] operator:b156d2 page: NAVIGATION · Scrolled view
+01:05:57.337 [activity] operator:b156d2 page: UI · Button action
+01:05:57.550 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:06:00.357 [activity] operator:b156d2 page: NAVIGATION · Scrolled view
+01:06:06.591 [activity] operator:b156d2 page: UI · Button action
+01:06:06.802 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:06:10.533 [activity] operator:b156d2 page: NAVIGATION · Scrolled view
+01:06:14.820 [activity] operator:b156d2 page: SYSTEM · Session active
+01:06:17.149 [activity] operator:b156d2 page: PROJECT · Button action
+01:06:17.150 [activity] operator:b156d2 page: NAVIGATION · Open screen
+01:06:17.361 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:06:20.232 [activity] operator:b156d2 page: NAVIGATION · Scrolled view
+01:06:20.232 [activity] operator:b156d2 page: UI · Button action
+01:06:20.810 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:06:26.926 [activity] operator:b156d2 page: NAVIGATION · Button action
+01:06:27.138 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:06:31.209 [activity] operator:b156d2 page: UI · Button action
+01:06:31.421 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:06:40.426 [activity] operator:b156d2 page: UI · Button action
+01:06:40.637 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:06:44.820 [activity] operator:b156d2 page: SYSTEM · Session active
+01:07:14.820 [activity] operator:b156d2 page: SYSTEM · Session active
+01:07:44.819 [activity] operator:b156d2 page: SYSTEM · Session active
+01:08:14.821 [activity] operator:b156d2 page: SYSTEM · Session active
+01:08:44.820 [activity] operator:b156d2 page: SYSTEM · Session active
+01:09:01.991 [activity] operator:b156d2 page: UI · Button action
+01:09:02.201 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:09:04.747 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:09:06.745 [LEFT] read global speed ret=0 · not reported
+01:09:06.745 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+01:09:06.752 [LEFT] read drag sensitivity ret=0 · 100 %
+01:09:06.752 [activity] operator:b156d2 POST /api/robots/left/connect
+01:09:06.986 [activity] operator:b156d2 page: UI · Button action
+01:09:07.232 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:09:07.276 [LEFT] program list · 32 programs
+01:09:07.299 [LEFT] global points · 18 point(s)
+01:09:07.384 [RIGHT] read global speed ret=0 · not reported
+01:09:07.384 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+01:09:07.406 [RIGHT] read drag sensitivity ret=0 · 100 %
+01:09:07.406 [activity] operator:b156d2 POST /api/robots/right/connect
+01:09:07.627 [RIGHT] program list · 25 programs
+01:09:07.714 [RIGHT] global points · 14 point(s)
+01:09:12.145 [activity] operator:b156d2 page: UI · Button action
+01:09:12.356 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:09:13.624 [RIGHT] controller data · 25 programs; IO default 0; tracks not available
+01:09:13.658 [RIGHT] global points · 14 point(s)
+01:09:13.841 [RIGHT] program list · 25 programs
+01:09:13.909 [activity] operator:b156d2 page: UI · Button action
+01:09:14.110 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:09:14.819 [activity] operator:b156d2 page: SYSTEM · Session active
+01:09:34.909 [RIGHT] controller data · 25 programs; IO default 0; tracks not available
+01:09:34.930 [RIGHT] global points · 14 point(s)
+01:09:35.070 [RIGHT] program list · 25 programs
+01:09:35.928 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:09:39.170 [activity] operator:b156d2 page: UI · Button action
+01:09:39.397 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:09:41.819 [LEFT] controller data · 32 programs; IO default 0; tracks not available
+01:09:41.855 [LEFT] global points · 18 point(s)
+01:09:42.039 [LEFT] program list · 32 programs
+01:09:42.564 [activity] operator:b156d2 PUT /api/projects/alix_mvbvk1fk_zti6s
+01:09:44.820 [activity] operator:b156d2 page: SYSTEM · Session active
+01:09:55.760 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+01:09:55.897 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+01:09:58.650 [RIGHT] ALERT ERROR · RIGHT: its controller has not answered rm_set_arm_stop for 4 s (a reading). Lite gives that connection up and connects the arm again. What each thread was doing: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-05/threads-010958.txt. (Press the red E-stop button if the arm is moving.)
+01:09:58.651 [LEFT] ALERT ERROR · LEFT: its controller has not answered rm_set_arm_stop for 3 s (a reading). Lite gives that connection up and connects the arm again. What each thread was doing: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-05/threads-010958.txt. (Press the red E-stop button if the arm is moving.)
+01:09:58.655 [LEFT] ALERT ERROR · LEFT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)
+01:09:58.655 [RIGHT] ALERT ERROR · RIGHT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)
+01:10:52.371 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+01:10:52.417 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+01:10:52.418 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+01:10:53.999 [activity] - page: NAVIGATION · Open screen
+01:10:53.999 [activity] - page: SYSTEM · ASL frontend initialized
+01:10:54.417 [RIGHT] camera · perception warmed up in 3.7 s: its core built, the colour model loaded
+01:10:56.194 [activity] - POST /api/auth/login
+01:10:57.003 [activity] operator:edaf5e page: AUTH · Operator login
+01:10:57.003 [activity] operator:edaf5e page: NAVIGATION · Open screen
+01:10:57.003 [activity] operator:edaf5e page: AUTH · Setting changed
+01:10:59.800 [activity] operator:edaf5e page: PROJECT · Button action
+01:10:59.803 [activity] operator:edaf5e page: NAVIGATION · Task loaded
+01:10:59.807 [activity] operator:edaf5e page: SETUP · Arm selected
+01:10:59.810 [activity] operator:edaf5e page: NAVIGATION · Teaching stage changed
+01:10:59.852 [activity] operator:edaf5e page: SETUP · Arm selected
+01:10:59.867 [activity] operator:edaf5e page: NAVIGATION · Open screen
+01:11:04.480 [activity] operator:edaf5e page: UI · Button action
+01:11:04.692 [activity] operator:edaf5e PUT /api/projects/alix_mvbvk1fk_zti6s
+01:11:15.738 [activity] operator:edaf5e PUT /api/projects/alix_mvbvk1fk_zti6s
+01:11:18.842 [LEFT] read global speed ret=0 · not reported
+01:11:18.842 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+01:11:18.849 [LEFT] read drag sensitivity ret=0 · 100 %
+01:11:18.849 [activity] operator:edaf5e POST /api/robots/left/connect
+01:11:19.073 [activity] operator:edaf5e page: UI · Button action
+01:11:19.283 [activity] operator:edaf5e PUT /api/projects/alix_mvbvk1fk_zti6s
+01:11:19.407 [RIGHT] read global speed ret=0 · not reported
+01:11:19.407 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+01:11:19.414 [RIGHT] read drag sensitivity ret=0 · 100 %
+01:11:19.414 [activity] operator:edaf5e POST /api/robots/right/connect
+01:11:19.584 [RIGHT] program list · 25 programs
+01:11:19.601 [LEFT] program list · 32 programs
+01:11:19.636 [LEFT] global points · 18 point(s)
+01:11:19.642 [RIGHT] global points · 14 point(s)
+01:11:26.291 [activity] operator:edaf5e PUT /api/projects/alix_mvbvk1fk_zti6s
+01:11:27.080 [activity] operator:edaf5e page: SYSTEM · Session active
+01:11:33.607 [LEFT] controller data · 32 programs; IO default 0; tracks not available
+01:11:33.647 [LEFT] global points · 18 point(s)
+01:11:33.843 [LEFT] program list · 32 programs
+01:11:33.958 [activity] operator:edaf5e page: NAVIGATION · Button action
+01:11:34.174 [activity] operator:edaf5e PUT /api/projects/alix_mvbvk1fk_zti6s
+01:11:37.109 [LEFT] controller data · 32 programs; IO default 0; tracks not available
+01:11:37.132 [LEFT] global points · 18 point(s)
+01:11:37.314 [LEFT] program list · 32 programs
+01:11:37.929 [activity] operator:edaf5e PUT /api/projects/alix_mvbvk1fk_zti6s
+01:11:39.640 [RIGHT] controller data · 25 programs; IO default 0; tracks not available
+01:11:39.661 [RIGHT] global points · 14 point(s)
+01:11:39.802 [RIGHT] program list · 25 programs
+01:11:40.268 [activity] operator:edaf5e page: UI · Button action
+01:11:40.496 [activity] operator:edaf5e PUT /api/projects/alix_mvbvk1fk_zti6s
+01:11:41.979 [RIGHT] controller data · 25 programs; IO default 0; tracks not available
+01:11:42.052 [RIGHT] global points · 14 point(s)
+01:11:42.547 [RIGHT] program list · 25 programs
+01:11:42.677 [activity] operator:edaf5e PUT /api/projects/alix_mvbvk1fk_zti6s

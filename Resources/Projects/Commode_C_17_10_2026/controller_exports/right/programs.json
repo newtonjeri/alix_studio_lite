@@ -1,0 +1,516 @@
+{
+ "arm": "right",
+ "kept": "2026-11-05 01:11:42",
+ "programs": [
+  {
+   "slot": 1,
+   "name": "R_P1_R01_PART1+R01_PART2+R02",
+   "file": "01_R_P1_R01_PART1+R01_PART2+R02.txt",
+   "sha256": "f61d2a2dd1dd27b5df55815f3d820066aa905d79bf788dfef78628c0f71b9206",
+   "lines": 5906,
+   "seconds": 29.525,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261029_182113_R_P1_R01_PART1+R01_PART2+R02+R03_pole200_cleaningpose_29.5s_v1.1.txt"
+  },
+  {
+   "slot": 2,
+   "name": "R_P2_R04_pole200_grip_7.6s_v",
+   "file": "02_R_P2_R04_pole200_grip_7.6s_v.txt",
+   "sha256": "e3d8ae01aad3686a14c1948c595eaa26e01f27db9236c3f1c82a014e5e3c7376",
+   "lines": 1512,
+   "seconds": 7.555,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 200 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261029_182812_R_P2_R04_pole200_grip_7.6s_v1.1.txt"
+  },
+  {
+   "slot": 3,
+   "name": "R_P2_R05_pole200_cleaningpos",
+   "file": "03_R_P2_R05_pole200_cleaningpos.txt",
+   "sha256": "c239078719384802ef56d6eb5b8cbefaa74dfa62c8a9f5c44aab01fa5efc176d",
+   "lines": 1135,
+   "seconds": 5.67,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261029_183226_R_P2_R05_pole200_cleaningpose_5.7s_v1.1.txt"
+  },
+  {
+   "slot": 4,
+   "name": "4_1_R_P2_R06_pole50_cleaning",
+   "file": "04_4_1_R_P2_R06_pole50_cleaning.txt",
+   "sha256": "5604fde73b5bce6fafd90a496aa2b535c8eaff29548a0a38356e1134d9e64731",
+   "lines": 1529,
+   "seconds": 7.64,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 50 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261030_115850_4_1_R_P2_R06_pole50_cleaningpose_7.6s_v1.1b_softstart.txt"
+  },
+  {
+   "slot": 5,
+   "name": "5_R_P3_R07+R08_PART1+R08_PAR",
+   "file": "05_5_R_P3_R07+R08_PART1+R08_PAR.txt",
+   "sha256": "f2c25e5f7411e481cf0a7578b8e20bbb5f6ac6f7f5c50b84154c4e0e4fbe1d56",
+   "lines": 3928,
+   "seconds": 19.635,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 50 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261029_185605_5_R_P3_R07+R08_PART1+R08_PART2_pole50_grip_19.6s_v1.1.txt"
+  },
+  {
+   "slot": 6,
+   "name": "6_R_P3_T04+wait20.1s+T05+T06",
+   "file": "06_6_R_P3_T04+wait20.1s+T05+T06.txt",
+   "sha256": "5dc1641fb71157a1b2da298a5d21dfd2716a450e09d71d0249b9d77808ed566d",
+   "lines": 11709,
+   "seconds": 58.54,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     1000,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 200 mm, hand open",
+    "hand_text": "open"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261029_185741_6_R_P3_T04+wait20.1s+T05+T06+T07+T08_pole200_allopen_58.5s_v1.1.txt"
+  },
+  {
+   "slot": 20,
+   "name": "R-T04_v001",
+   "file": "20_R-T04_v001.txt",
+   "sha256": "95f2b234e0feee9021e0d6db80dad613e7c574cc59b69cd6ddc45774281f8c05",
+   "lines": 5012,
+   "seconds": 25.055,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     1000,
+     1000
+    ],
+    "source": "the hand set in Prepare after teaching",
+    "text": "pole 200 mm, hand open",
+    "hand_text": "open"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-T04/raw/20261022_110630_R-T04.txt"
+  },
+  {
+   "slot": 23,
+   "name": "R_T07_GC",
+   "file": "23_R_T07_GC.txt",
+   "sha256": "f3b918a6ba5023c042d67cd9e7f5e1fed05a72a1627865d24a8a5200fefdc839",
+   "lines": 2596,
+   "seconds": 12.975,
+   "stage": null,
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-T07/raw/20261022_151037_R-T07.txt"
+  },
+  {
+   "slot": 50,
+   "name": "R-R01_PART1_v004",
+   "file": "50_R-R01_PART1_v004.txt",
+   "sha256": "d79344ad2092c98df667143ae58a3c68ddba2f1d88c9461c9b24e8f91035e0b1",
+   "lines": 1672,
+   "seconds": 8.355,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R01_PART1/versions/v004.txt"
+  },
+  {
+   "slot": 51,
+   "name": "R-R01_PART2_v002",
+   "file": "51_R-R01_PART2_v002.txt",
+   "sha256": "71ed00e4d449f43fc43dfd0399b9abf25628c7dad36a18bec76b780613665261",
+   "lines": 1697,
+   "seconds": 8.48,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R01_PART2/versions/v002.txt"
+  },
+  {
+   "slot": 52,
+   "name": "R-R02_v004",
+   "file": "52_R-R02_v004.txt",
+   "sha256": "ad2a038fe66f8b178eb93e05696520d934710e03c912324ba920bf4d73d0e196",
+   "lines": 1601,
+   "seconds": 8.0,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R02/versions/v004.txt"
+  },
+  {
+   "slot": 53,
+   "name": "R-R03_v005",
+   "file": "53_R-R03_v005.txt",
+   "sha256": "a60fa7fdc4e696088634e68cb86d9a4972b7b0393870a58e5d6a467558b4684f",
+   "lines": 1612,
+   "seconds": 8.055,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R03/versions/v005.txt"
+  },
+  {
+   "slot": 54,
+   "name": "R-R04_v005",
+   "file": "54_R-R04_v005.txt",
+   "sha256": "d3dfc23767769ac146e013dc5b9014fd548ffcacc132c2a5cd6f8b602cd01618",
+   "lines": 1473,
+   "seconds": 7.36,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 200 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R04/versions/v005.txt"
+  },
+  {
+   "slot": 55,
+   "name": "R-R05_v001",
+   "file": "55_R-R05_v001.txt",
+   "sha256": "a14b956a3e57fa5b1bb1e398b58e49ac895731c1348e375e4435ee0ee58e442d",
+   "lines": 1498,
+   "seconds": 7.485,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R05/versions/v001.txt"
+  },
+  {
+   "slot": 56,
+   "name": "R-R06_v001",
+   "file": "56_R-R06_v001.txt",
+   "sha256": "1824e6b1f38a0e9843605fd76a24dce9f6859cdcbe0fb9384f6aab096d9df290",
+   "lines": 1482,
+   "seconds": 7.405,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 50 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R06/versions/v001.txt"
+  },
+  {
+   "slot": 57,
+   "name": "R-R07_v001",
+   "file": "57_R-R07_v001.txt",
+   "sha256": "cfee300aa70ba93910f8a58ec774dbbdc3073fed4a5e898ba8b4235cf20f40b1",
+   "lines": 1460,
+   "seconds": 7.295,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 50 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R07/versions/v001.txt"
+  },
+  {
+   "slot": 58,
+   "name": "R-R08_PART1_v001",
+   "file": "58_R-R08_PART1_v001.txt",
+   "sha256": "727b76327fe71d7366bb0722193465c5dda16e67eb131ccb92c61d193ae51757",
+   "lines": 2554,
+   "seconds": 12.765,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 50 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R08_PART1/versions/v001.txt"
+  },
+  {
+   "slot": 59,
+   "name": "R-R08_PART2_v001",
+   "file": "59_R-R08_PART2_v001.txt",
+   "sha256": "614fd82d133d6c5a4f1d6ecd25dade3d3ee56fafe825679c706665158fb77638",
+   "lines": 2401,
+   "seconds": 12.0,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 50 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R08_PART2/versions/v001.txt"
+  },
+  {
+   "slot": 80,
+   "name": "R_merge_1_2",
+   "file": "80_R_merge_1_2.txt",
+   "sha256": "85f380cb6cbea2b78a9977a69fadbe64ff3cc155b1383cb7e8542886adedb5dc",
+   "lines": 6582,
+   "seconds": 32.905,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/merged/right/20261022_154552_R_merge_1_2.txt"
+  },
+  {
+   "slot": 81,
+   "name": "R_merge_5",
+   "file": "81_R_merge_5.txt",
+   "sha256": "b60950cc0d0e3c53eec975822e58852f732fc6885ab2184530a691149b50e21d",
+   "lines": 6493,
+   "seconds": 32.46,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 50 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/merged/right/20261021_205554_R_merge_5.txt"
+  },
+  {
+   "slot": 82,
+   "name": "R_merge_7",
+   "file": "82_R_merge_7.txt",
+   "sha256": "0fee2282383d853eb89485a380ff0966af60d32ebefdbe540836ae812428e0d3",
+   "lines": 9417,
+   "seconds": 47.08,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     1000,
+     1000
+    ],
+    "source": "stated when it was loaded into S1 (not taught in Lite)",
+    "text": "pole 200 mm, hand open",
+    "hand_text": "open"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/merged/right/20261021_210641_R_merge_7.txt"
+  },
+  {
+   "slot": 100,
+   "name": "4_1_R_P2_R06_pole50_cleaning",
+   "file": "100_4_1_R_P2_R06_pole50_cleaning.txt",
+   "sha256": "5604fde73b5bce6fafd90a496aa2b535c8eaff29548a0a38356e1134d9e64731",
+   "lines": 1529,
+   "seconds": 7.64,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 50 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261030_115745_4_1_R_P2_R06_pole50_cleaningpose_7.6s_v1.1b_softstart.txt"
+  }
+ ],
+ "not_kept": [
+  {
+   "slot": 21,
+   "name": "R_T05_CDH",
+   "why": "Lite sent it, but the file it sent is no longer on this computer"
+  },
+  {
+   "slot": 22,
+   "name": "R_T06_RBGR",
+   "why": "Lite sent it, but the file it sent is no longer on this computer"
+  },
+  {
+   "slot": 24,
+   "name": "R_T08_PRFL",
+   "why": "Lite sent it, but the file it sent is no longer on this computer"
+  }
+ ]
+}
