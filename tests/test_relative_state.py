@@ -57,7 +57,7 @@ def _check(gc, asked, frame, models=None, closing_deg=0.0):
 
 def test_the_parts_decide_with_the_commode_found_and_the_colour_for_open_and_closed():
     p = load_params()
-    assert p["gap_decider"] == "parts" and p["gap_parts_find_place"] is True and p["gap_parts_colour"] is True
+    assert p["gap_decider"] == "parts" and p["gap_parts_place_search"] == "uncertain" and p["gap_parts_colour"] is True
     assert p["gap_parts_place_reach_m"] == 0.06 and p["gap_parts_place_height_m"] == 0.015
 
 
@@ -65,12 +65,20 @@ def test_the_parts_decide_with_the_commode_found_and_the_colour_for_open_and_clo
                                                (LID_MISSED, "lid_lifted", "lid_closed"),
                                                (SEAT_LIFTED, "seat_lifted", "seat_lifted")])  # the lab: uncertain
 def test_a_lift_is_read_from_the_parts_where_the_commode_stands(stem, asked, want):
+    """As configured (5 Nov): a lift by its distance (no search); a missed lift, not lifted by distance, read by the
+    parts at the plans' commode place. With the commode searched for every frame (4 Nov) the same answers."""
     pytest.importorskip("cv2")                                # the fit renders the commode with OpenCV
     _, f = _frame(stem)
     d = _check(_gc(), asked, f, models=_colour("closed"))     # a lift question never asks the colour model
     assert d.success and d.state == want, d.message
-    assert "where this frame reads it" in d.message and "colour" not in d.record
-    assert d.record["parts"]["place"] and d.record["parts"]["decides"]
+    assert "colour" not in d.record
+    if want.endswith("lifted"):
+        assert "by distance" in d.message and d.record["lift_reading"]["decides"]
+    else:
+        assert d.record["parts"]["decides"] and not d.record["parts"].get("first")      # definitive at the plans' place
+    a = _check(_gc(gap_parts_place_search="always"), asked, f, models=_colour("closed"))
+    assert a.success and a.state == want and "where this frame reads it" in a.message
+    assert a.record["parts"]["place"] and a.record["parts"]["decides"]
 
 
 def test_a_seat_under_the_lifted_lid_is_not_judged():
@@ -108,7 +116,8 @@ def test_the_lifted_lid_reads_lifted_with_the_commode_moved(shift):
     pytest.importorskip("cv2")
     _, base = _frame(LID_LIFTED)
     _, f = _frame(LID_LIFTED, shift)
-    d0, d = _check(_gc(), "lid_lifted", base), _check(_gc(), "lid_lifted", f)
+    assert _check(_gc(), "lid_lifted", f).state == "lid_lifted"                        # by distance, as configured
+    d0, d = (_check(_gc(gap_parts_place_search="always"), "lid_lifted", x) for x in (base, f))
     assert d.success and d.state == "lid_lifted", d.message
     p0, p = d0.record["parts"]["place"], d.record["parts"]["place"]
     assert abs((p["dx_m"] - p0["dx_m"]) - shift[0]) < 0.012 and abs((p["dy_m"] - p0["dy_m"]) - shift[1]) < 0.012   # found there
@@ -129,7 +138,7 @@ def test_a_place_kept_against_another_fixture_pose_is_never_a_start():
     pytest.importorskip("cv2")
     from alix_studio_lite.server.gap_check import GapCheck as LiteGapCheck
 
-    gc = LiteGapCheck(params=load_params(), records=None)
+    gc = LiteGapCheck(params={**load_params(), "gap_parts_place_search": "always"}, records=None)   # the search each frame
     gc.scene_pose()
     _, lid = _frame(LID_OPEN_5NOV)
     assert _check(gc, "lid_open", lid, models=_colour("lid_open")).state == "lid_open"   # kept: at the scene place
@@ -193,3 +202,24 @@ def test_the_render_is_the_same_image_as_before_5_nov():
             assert np.array_equal(a[0], b[0]) and np.array_equal(a[1], b[1])
             assert np.array_equal(before(pts, M, 600.0, 600.0, 424.0, 240.0, 848, 480, stride),
                                   region3d.render_hypothesis(pts, M, 600.0, 600.0, 424.0, 240.0, 848, 480, stride))
+
+
+def test_the_commode_is_searched_for_only_when_the_answer_is_not_definitive():
+    """The user, 5 Nov: the search "in an instance we cannot be able to judge or where the check is not able to give us
+    a definitive state". Open the seat's lifted check of 5 Nov 00:57 (the seat held at 30 deg): not lifted by distance,
+    not definitive at the plans' place, lifted once the commode is searched for. A standing seat (24 Oct) read where the
+    plans put the commode: definitive at once; the commode 42 mm off: searched for, the seat open, the colour agreeing."""
+    pytest.importorskip("cv2")
+    _, held = _frame(LAB_5NOV / "checks/20261105_005742_392_gap_check_seat_lifted_seat_lifted")
+    d = _check(_gc(), "seat_lifted", held)
+    assert d.success and d.state == "seat_lifted" and d.record["parts"]["searched"], d.message
+    assert d.record["parts"]["first"]["place"] == "the plans'" and "the commode searched for" in d.message
+    stem = LOGS / "2026-10-24/checks/20261024_224223_714_gap_check_seat_open_seat_lifted"
+    _, here = _frame(stem)
+    d = _check(_gc(), "seat_open", here, models=_colour("lid_seat_open"))
+    assert d.state == "seat_lifted" and not d.record["parts"]["searched"], d.message
+    _, far = _frame(stem, (0.03, -0.03, 0.0))
+    d = _check(_gc(), "seat_open", far, models=_colour("lid_seat_open"))
+    assert d.state == "seat_lifted" and d.record["parts"]["searched"] and "the colour agrees" in d.message, d.message
+    never = _check(_gc(gap_parts_place_search="never"), "seat_open", far, models=_colour("lid_seat_open"))
+    assert not never.record["parts"]["searched"] and never.state != "seat_lifted"

@@ -873,8 +873,8 @@
       "dest": "vendor/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "origin": "alix",
-      "sha256": "fef6a29526b60e26414af6c4a33a2d9a8817c7d33709f0ee27dad86a71aa2e21",
-      "bytes": 15409
+      "sha256": "d85a0e9789e40d9adaaae13a0652e03d29349527b6807d03c92b73bc9809ad46",
+      "bytes": 15609
     },
     {
       "dest": "vendor/alix/Resource/tracks/taught/EXECUTION_MODEL.json",
@@ -1167,8 +1167,8 @@
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "origin": "alix",
-      "sha256": "fc4b161a4b373782aa64662adda0ae6e1e10d9a4c899dccadd979b7681405f9c",
-      "bytes": 87609
+      "sha256": "fa0994ef183dac3e4a95da6abcdba7de96361941805643b984821b48832056b7",
+      "bytes": 90992
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/geometry.py",
@@ -4970,8 +4970,8 @@
       "dest": "vendor/alix/ros/perception/alix_perception/config/perception.yaml",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/perception/alix_perception/config/perception.yaml",
       "origin": "alix",
-      "sha256": "b38d4e37135502e82d18294132478f85ec69cb7ac5244c9520b270e3df1ff5bd",
-      "bytes": 26146
+      "sha256": "d81b10ae426128b8d9f4f2daef45fa443716fe95b078157a881e831b2f870fe0",
+      "bytes": 26741
     },
     {
       "dest": "vendor/alix/tools/ament_index_shim.py",
