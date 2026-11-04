@@ -1,0 +1,23 @@
+{
+  "check_id": "20261105_025420_684_verify_lid_lifted",
+  "stage": "verify_lid_lifted",
+  "expect": "lid_lifted",
+  "decided": true,
+  "state": "lid_closed",
+  "confidence": 1.0,
+  "message": "2 frames (lid_closed, lid_closed; 0 yes, 2 no, 0 no vote): parts (depth): the lid closed at 0 deg (margin +0.85); lid 0 deg, seat 0 deg, the commode where this frame reads it (-19 / -2 / -5 mm, +3.4 deg from its scene place)",
+  "frames": [
+    {
+      "record": "20261105_025423_344_gap_check_lid_lifted_lid_closed.json",
+      "success": true,
+      "state": "lid_closed",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261105_025424_183_gap_check_lid_lifted_lid_closed.json",
+      "success": true,
+      "state": "lid_closed",
+      "confidence": 1.0
+    }
+  ]
+}
