@@ -32,11 +32,13 @@ def test_the_three_poses_give_fifteen_views_clear_of_the_lab_room(lab_plan):
     assert len(views) == 15
     assert {b: sum(v["base"] == b for v in views) for b in hc.BASES} == {b: 5 for b in hc.BASES}
     assert planned["diversity"]["enough"]                          # RealMan: over 30 deg about each END axis
-    for v in views:                                                 # each one: the board whole in view, the arm off the lid
+    assert planned["slack_m"] == pytest.approx(0.02)                # the 300 x 210 mm board: within 20 mm of the lid's middle
+    for v in views:                                                 # each one: the board whole in view (any turn), off the lid
         L = hc.links_at(v["q_deg"], hc.POLE_MM, state["left"])
-        assert hc.view_of(L[hc.COLOUR_FRAME])["ok"], v
+        assert hc.view_of(L[hc.COLOUR_FRAME], planned["board"], planned["slack_m"])["ok"], v
         assert hc.above_lid(L)[0], v
-    legs = hc.check_paths(views, state["right"]["q_deg"], planned["ends_at"], state, room)
+    assert any(w["name"] == "calibration board" for w in planned["scene"]["walls"])      # the board is in the scene
+    legs = hc.check_paths(views, state["right"]["q_deg"], planned["ends_at"], state, dict(room, scene=planned["scene"]))
     assert all(g["ok"] for g in legs), [g for g in legs if not g["ok"]]
 
 
@@ -84,14 +86,14 @@ def test_alix_solves_a_session_lite_writes(lab_plan, tmp_path):
     board = he.Board(hc.BOARD_COLS, hc.BOARD_ROWS, hc.BOARD_SQUARE_M)
     nominal = hc.nominal_frames()
     T_true = nominal["T_end_cam"] @ he.make_T(he.from_rotvec(np.radians([-1.0, 0.8, 1.5])), [0.004, -0.003, 0.002])
-    # the board face-up on the lid (its z down, away from the camera: ALIX's tests' convention), centred where the
-    # plan expects it, its long side along base x
-    R = he.from_rotvec([np.pi, 0.0, 0.0])
+    # the board face-up on the lid (its z down, away from the camera: ALIX's tests' convention), turned 35 deg and laid
+    # 15 mm off the lid's middle (the user's photo, 4 Nov: its placement is not exact): every planned view still sees it
+    R = he.matrix_from_rpy(0.0, 0.0, np.radians(35.0)) @ he.from_rotvec([np.pi, 0.0, 0.0])
     half = np.array([(board.cols - 1) / 2 * board.square_m, (board.rows - 1) / 2 * board.square_m, 0.0])
-    T_base_board = he.make_T(R, np.asarray(hc.BOARD_CENTRE_M) - R @ half)
+    T_base_board = he.make_T(R, np.asarray(hc.BOARD_CENTRE_M) + np.array([0.012, -0.009, 0.0]) - R @ half)
     K = hc.nominal_K()
     tex, A = _texture(board)
-    s = hc.Session(tmp_path / "hand_eye_test", planned, hc.BOARD_SQUARE_M * 1000)
+    s = hc.Session(tmp_path / "hand_eye_test", planned)
     s.header = dict(created="test", board=dict(cols=board.cols, rows=board.rows, square_m=board.square_m),
                     end_frame=hc.END_FRAME, camera_frame=hc.COLOUR_FRAME, base_frame="base_link",
                     camera_info=dict(width=hc.IMAGE_W, height=hc.IMAGE_H, K=K.ravel().tolist(), D=[0.0] * 5), nominal=nominal)
@@ -139,47 +141,154 @@ def _req(lite, method, path, body=None, token=None):
 def test_the_api_plans_and_refuses_what_it_cannot_do(lite):
     tok = _req(lite, "POST", "/api/auth/login", {"pin": "1234"})["token"]
     got = _req(lite, "GET", "/api/calibration", token=tok)
-    assert got["session"] is None and got["pole_mm"] == 250.0 and got["board"]["squares"] == "10 x 7"
-    assert "No calibration session" in _req(lite, "POST", "/api/calibration/next", {}, tok)["error"]
+    assert got["session"] is None and got["pole_mm"] == 250.0 and got["speed_pct"] == 40 and got["board"]["squares"] == [10, 7]
+    assert "No calibration session" in _req(lite, "POST", "/api/calibration/run", {}, tok)["error"]
     assert "Open the project" in _req(lite, "POST", "/api/calibration/plan", {"square_mm": 30.0}, tok)["error"]
-    assert "not the 30 mm board" in _req(lite, "POST", "/api/calibration/plan", {"pid": "x", "square_mm": 12}, tok)["error"]
+    assert "not a calibration board" in _req(lite, "POST", "/api/calibration/plan", {"pid": "x", "square_mm": 5}, tok)["error"]
+    assert "one count must be even" in _req(lite, "POST", "/api/calibration/plan", {"pid": "x", "squares": [10, 8]}, tok)["error"]
     page = {"id": "alix_cal1", "name": "Cal", "createdAt": "2026-11-04T10:00:00.000Z", "updatedAt": "2026-11-04T10:00:00.000Z",
             "archived": False, "state": {"currentTask": 0, "currentView": "setup"}}
     _req(lite, "PUT", "/api/projects/alix_cal1", page, tok)
-    planned = _req(lite, "POST", "/api/calibration/plan", {"pid": "alix_cal1", "square_mm": 30.02}, tok)
-    assert planned["session"]["views"] == 15 and planned["session"]["square_mm"] == 30.02
-    r = _req(lite, "POST", "/api/calibration/next", {}, tok)      # Visual sim: Lite does not use the robot
+    planned = _req(lite, "POST", "/api/calibration/plan", {"pid": "alix_cal1", "squares": [12, 9], "square_mm": 20.01}, tok)
+    assert planned["session"]["views"] == 15 and planned["session"]["board"] == dict(squares=[12, 9], square_mm=20.01, tolerance_mm=40)
+    tl = _req(lite, "POST", "/api/calibration/preview", {}, tok)  # the tour in 3D, nothing sent
+    assert tl["frames"] and "15 views at 40 %" in tl["what"]
+    r = _req(lite, "POST", "/api/calibration/run", {}, tok)       # Visual sim: Lite does not use the robot
     assert r["code"] == "mode"
     assert "Only 0 view" in _req(lite, "POST", "/api/calibration/solve", {}, tok)["error"]
+
+
+# ── the run: one job, every view, back to rest, the solve ─────────────────
+
+class _Job:
+    def __init__(self):
+        self.logs = []
+
+    def progress(self, *a, **k):
+        pass
+
+    def log(self, text, level="info"):
+        self.logs.append(text)
+
+    def check(self):
+        pass
+
+    def sleep(self, s):
+        pass
+
+
+class _Arm:
+    """The right arm's controller: the MoveJs at the speed asked, the joints where the last one went."""
+    def __init__(self, link):
+        self.link, self.moves, self.modes = link, [], []
+
+    def set_run_mode(self, mode):
+        self.modes.append(mode)
+        return {}
+
+    def restore_run_mode(self, originals):
+        pass
+
+    def move_to(self, target, speed, restore_pct):
+        self.moves.append((list(target), speed))
+        self.link.q = [v / 1000.0 for v in target]
+        return dict(gap_deg=0.0)
+
+    def pole_to(self, mm):
+        self.link.pole = mm
+
+
+class _Link:
+    def __init__(self, q, pole=150.0):
+        self.q, self.pole = list(q), pole
+
+    def read_fresh(self):
+        return dict(joints_deg=list(self.q), pole_mm=self.pole, hand=[1000] * 6)
+
+
+def _robot(state):
+    links = {"right": _Link(state["right"]["q_deg"], 150.0), "left": _Link(LEFT_REST)}
+    arm = _Arm(links["right"])
+    robot = SimpleNamespace(links=links, _same_mode=lambda *a: None, _real=lambda side: arm, found_speed=lambda side: 50,
+                            _measured=lambda side: (links[side].pole, [1000] * 6),
+                            _start=lambda kind, title, work, side, mode: SimpleNamespace(result=work(_Job()), title=title))
+    return robot, arm
+
+
+def test_one_run_takes_every_view_at_40_percent_and_solves(lab_plan, monkeypatch, tmp_path):
+    import contextlib
+
+    import cv2
+    from alix_perception_core import hand_eye as he
+
+    from alix_studio_lite.server import workers
+    from alix_studio_lite.server.gap_check import Intrinsics
+
+    planned, room, state = lab_plan
+    monkeypatch.setattr(workers, "pool", lambda *a, **k: SimpleNamespace(submit=lambda fn, *a: SimpleNamespace(result=lambda timeout=None: fn(*a))))
+    robot, arm = _robot(state)
+    board = he.Board(hc.BOARD_COLS, hc.BOARD_ROWS, hc.BOARD_SQUARE_M)
+    T_true = hc.nominal_frames()["T_end_cam"] @ he.make_T(he.from_rotvec(np.radians([0.6, -1.1, 0.4])), [-0.003, 0.002, 0.004])
+    R = he.from_rotvec([np.pi, 0.0, 0.0])
+    half = np.array([(board.cols - 1) / 2 * board.square_m, (board.rows - 1) / 2 * board.square_m, 0.0])
+    T_base_board = he.make_T(R, np.asarray(hc.BOARD_CENTRE_M) - R @ half)
+    K = hc.nominal_K()
+    tex, A = _texture(board)
+
+    class Cam:                                  # renders the board from wherever the fake arm stands
+        _cintr = Intrinsics(K[0, 0], K[1, 1], K[0, 2], K[1, 2], hc.IMAGE_W, hc.IMAGE_H)
+        colour_distortion, device = None, dict(name="rendered")
+
+        def available(self):
+            return dict(ok=True)
+
+        def using(self):
+            return contextlib.nullcontext()
+
+        def open(self):
+            pass
+
+        def shot(self):
+            L = hc.links_at(robot.links["right"].q, robot.links["right"].pole, None)
+            T_cam_board = np.linalg.inv(L[hc.END_FRAME] @ T_true) @ T_base_board
+            img = cv2.warpPerspective(tex, K @ T_cam_board[:3, [0, 1, 3]] @ A, (hc.IMAGE_W, hc.IMAGE_H), borderValue=170)
+            return SimpleNamespace(colour=cv2.cvtColor(img, cv2.COLOR_GRAY2BGR))
+
+    monkeypatch.setattr(hc, "camera_of", lambda robot: Cam())
+    s = hc.Session(tmp_path / "run", planned, room)
+    job = hc.run_session(robot, s, "real")
+    out = job.result
+    assert out["taken"] == 15 and not out["missed"] and out["result"]["accepted"], out
+    assert job.title.endswith("at 40 %")
+    assert [sp for _, sp in arm.moves] == [40] * 16                          # 15 views and the way back, all at 40 %
+    assert arm.moves[-1][0] == [round(v * 1000) for v in planned["ends_at"]] and set(arm.modes) == {"REAL"}
+    assert robot.links["right"].pole == hc.POLE_MM                          # the pole to 250 mm before the first move
+    T = np.asarray(s.result["runs"]["factory"]["refined"]["T_end_cam"], float)
+    assert np.linalg.norm(T[:3, 3] - T_true[:3, 3]) * 1000 < 1.0
+
+
+def test_hardware_sim_runs_the_same_moves_in_sim_mode_and_keeps_nothing(lab_plan, monkeypatch, tmp_path):
+    from alix_studio_lite.server import workers
+
+    planned, room, state = lab_plan
+    monkeypatch.setattr(workers, "pool", lambda *a, **k: SimpleNamespace(submit=lambda fn, *a: SimpleNamespace(result=lambda timeout=None: fn(*a))))
+    robot, arm = _robot(state)
+    s = hc.Session(tmp_path / "dry", planned, room)
+    out = hc.run_session(robot, s, "hwsim").result
+    assert out["reached"] == 15 and set(arm.modes) == {"SIM"} and len(arm.moves) == 16
+    assert robot.links["right"].pole == 150.0                               # the pole is not moved in Hardware sim
+    assert s.next_index == 0 and not s.rows                                 # the real run still has every view to take
 
 
 def test_each_move_is_checked_again_from_where_the_arms_stand(lab_plan, monkeypatch, tmp_path):
     """leg_clear: the move about to be sent, from the right arm's joints read now (the left's too), refused when it
     is not clear (here the arm swung up into the room's side wall); nothing is sent then."""
-    from concurrent.futures import Future
-
     from alix_studio_lite.server import jobs, workers
 
     planned, room, state = lab_plan
-
-    class Pool:
-        def submit(self, fn, *a):
-            f = Future()
-            f.set_result(fn(*a))
-            return f
-
-    monkeypatch.setattr(workers, "pool", lambda *a, **k: Pool())
-    poses = hc.named_poses()
-
-    class Link:
-        def __init__(self, q):
-            self.q = q
-
-        def read_fresh(self):
-            return dict(joints_deg=self.q, pole_mm=hc.POLE_MM, hand=[1000] * 6)
-
-    robot = SimpleNamespace(links={"right": Link(poses["rest_pose"]), "left": Link(LEFT_REST)})
-    s = hc.Session(tmp_path / "s", planned, 30.0, room)
+    monkeypatch.setattr(workers, "pool", lambda *a, **k: SimpleNamespace(submit=lambda fn, *a: SimpleNamespace(result=lambda timeout=None: fn(*a))))
+    robot, _ = _robot(state)
+    s = hc.Session(tmp_path / "s", planned, room)
     hc.leg_clear(robot, s, planned["views"][0]["q_deg"], "view 1")          # the first planned move: clear
     with pytest.raises(jobs.UserError, match="Not moved"):
         hc.leg_clear(robot, s, [0.0, 10.0, 0.0, 10.0, 0.0, 10.0, 0.0], "a pose up against the side wall")

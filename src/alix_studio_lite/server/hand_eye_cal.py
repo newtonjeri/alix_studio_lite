@@ -12,25 +12,30 @@ robot sees. ALIX's capture tool reads ROS topics and TF; Lite reads the D435 its
 from its controller through the same URDF (robot_fk), and writes ALIX's session format (``samples.yaml`` + ``images/``),
 so ALIX's own offline solve (``tools/perception/compute_hand_eye.py``, vendored) solves it, here or in ALIX.
 
-THE VIEWS (``plan``; the user's choice, 4 Nov: Lite plans them, the technician confirms each move): around each of the
+THE VIEWS (``plan``; the user's choice, 4 Nov: Lite plans them; the moves are verified offline, not confirmed one by one:
+"you can do that offline, because we know how movej works ... you also have the scene ... the walls"): around each of the
 three named poses (ALIX's group states rest_pose, inspection_pose_1 and inspection_pose_4; the right pole at
 ``POLE_MM``), turns of the wrist (J5, J6, J7) with a little of J1 and J4, each kept only when
-- the whole board (10 x 7 squares of 30 mm, see BOARD_COLS), with ``BOARD_SLACK_M`` of slack for where it was laid,
-  projects inside the colour image (1280 x 720 at the D435's factory focal length, ``MARGIN_PX`` in), between
-  ``RANGE_M``, tilted ``TILT_DEG`` to the image (RealMan: never square-on);
+- the whole board (``board_spec``; 10 x 7 squares of 30 mm unless told otherwise), turned ANY way on the lid and up to
+  the plan's slack (``SLACKS_M``) from the lid's middle, projects inside the colour image (1280 x 720 at the D435's
+  factory focal length, ``MARGIN_PX`` in), between ``RANGE_M``, tilted ``TILT_DEG`` to the image (RealMan: never
+  square-on);
 - every right-arm frame stays ``ABOVE_LID_M`` above the lid's top over the commode;
 - the arm's straight joint path to it from the view before is clear of the room's walls, the commode with its lid
-  closed and the left arm where it stands (``collision_check.check_states``, S2's own check; the hand touching the
+  closed, the board lying on it (``with_board``) and the left arm where it stands (``collision_check.check_states``, S2's own check; the hand touching the
   commode refuses it here, it is not cleaning; the bin's events are left out: the dustbin is not on the lab robot);
 then ``VIEWS_PER_POSE`` a pose that turn the END frame as differently as possible (RealMan: more than 30 deg about
 each of its axes across the set), 15 views in all, rest's first, then pose 1's, then pose 4's; the plan ends at rest.
 From rest the camera looks straight down 330 mm right of the commode: its views turn toward the board.
 
-A VIEW (``run_view``, a job, Real only, each confirmed): the MoveJ at ``CAL_SPEED_PCT``; the arm still (two readings
-``STILL_WINDOW_S`` apart within ``STILL_DEG``, ALIX's capture tool's rule); two colour frames 0.3 s apart, the board
-found in both and moved under ``STILL_PX`` (ALIX's); the joints and pole read then, the END frame's pose by FK; the
-image (PNG) and its row saved at once. SOLVE (``solve``): ALIX's compute_hand_eye.run: the five methods, the
-refinement, leave-one-out, ALIX's acceptance (board spread <= 3 mm RMS, reprojection <= 1.5 px, the rotations enough).
+THE RUN (``run_session``, one job; Real asks once, as every real run does): every view in turn: the move checked again
+from where the arms stand (``leg_clear``: a MoveJ is straight in the joints, so the path checked is the path run), the
+MoveJ at ``CAL_SPEED_PCT``, the arm still (two readings ``STILL_WINDOW_S`` apart within ``STILL_DEG``, ALIX's capture
+tool's rule), two colour frames 0.3 s apart with the board found in both and moved under ``STILL_PX`` (ALIX's), the
+joints and pole read then, the END frame's pose by FK, the image (PNG) and its row saved at once; back to rest; the
+solve. Offline before it: Visual sim shows the tour in 3D (``tour_md``), Hardware sim runs the same MoveJs in the
+controllers' SIM mode. SOLVE (``solve``): ALIX's compute_hand_eye.run: the five methods, the refinement,
+leave-one-out, ALIX's acceptance (board spread <= 3 mm RMS, reprojection <= 1.5 px, the rotations enough).
 
 NOTHING IS APPLIED: the result says the correction (mm and deg in the END frame, and as the URDF mount's <origin>);
 applying it is the user's decision (ALIX's report), and the place references (place_correct, taken with the camera
@@ -50,14 +55,16 @@ import numpy as np
 from .. import vendor_paths
 from .jobs import UserError
 
-BOARD_COLS, BOARD_ROWS, BOARD_SQUARE_M = 9, 6, 0.030       # inner corners: 10 x 7 squares of 30 mm (300 x 210 mm)
+BOARD_COLS, BOARD_ROWS, BOARD_SQUARE_M = 9, 6, 0.030       # the default board's inner corners: 10 x 7 squares of 30 mm
 # The user, 4 Nov: ALIX's A3 board (12 x 9 squares of 30 mm, 360 x 270 mm) is never seen whole from these three poses
 # (at the inspection poses' 150 mm pole the camera is 0.5 m above the lid; at 300 mm only 11 views fit, 29 deg about
 # the END frame's Y): 10 x 7 squares of 30 mm on A3 (Resources/Calibration/board_10x7_30mm.svg, ALIX's
-# make_chessboard.py), the right pole at 250 mm: 15 views, 47 / 40 / 177 deg about X / Y / Z.
+# make_chessboard.py), the right pole at 250 mm. Any other board is given by its squares and its measured square
+# (``board_spec``; the lab's rigid plate, say); its rotation on the lid is free (the user's photo, 4 Nov: "it is just
+# for illustration, not the exact placement position on top of the lid").
 BOARD_CENTRE_M = (0.70, 0.0, 0.452)    # on the closed lid: 4 Nov's frames put its top at 0.449 m, x 0.49-1.00, y +-0.17
-BOARD_LONG_ALONG = "x"                 # its long side from the robot outward (12 x 30 = 360 mm: the lid is 340 mm wide)
-BOARD_SLACK_M = 0.04                   # where it was laid: the plan keeps 40 mm more than the board in view
+SLACKS_M = (0.04, 0.02, 0.0)           # how far from the lid's middle it may lie: the largest a full plan allows
+BOARD_BORDER_M, BOARD_THICK_M = 0.015, 0.010    # the plate or backing round the squares, its thickness: the obstacle
 BASES = ("rest_pose", "inspection_pose_1", "inspection_pose_4")
 POLE_MM = 250.0                        # the user, 4 Nov (the inspection poses' own 150 mm puts the camera too near)
 IMAGE_W, IMAGE_H, FOCAL_PX = 1280, 720, 904.5   # the D435's colour stream as Lite opens it (3 Nov: fx 904.5)
@@ -67,7 +74,9 @@ TILT_DEG = (15.0, 55.0)                # RealMan: tilted to the image, never squ
 ABOVE_LID_M = 0.08
 LID_FOOTPRINT = ((0.45, 1.10), (-0.25, 0.25))   # base_link x, y over which the arm keeps ABOVE_LID_M over the lid
 VIEWS_PER_POSE = 5
-CAL_SPEED_PCT = 20
+CAL_SPEED_PCT = 40                     # the user, 4 Nov: "Let us set the speed at 40%"
+VIEW_HOLD_S = 1.0                      # the 3D preview's stop at each view (the stillness wait and two frames 0.3 s apart)
+BOARD_RETRIES = 1                      # a view whose board is not found is taken once more, 1 s later, then left out
 PATH_STEP_DEG = 2.0                    # a path's samples: its largest joint change in steps of at most this
 OFFSETS_DEG = dict(j1=(-15.0, 0.0, 15.0), j4=(-10.0, 0.0, 10.0), j5=(-40.0, -20.0, 0.0, 20.0, 40.0),
                    j6=(-30.0, -15.0, 0.0, 15.0, 30.0), j7=(-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0))
@@ -82,33 +91,47 @@ CHECK_FRAMES = ("R_Link4", "R_Link5", "R_Link6", "R_Link7", "R_CameraHolderLink"
 
 # ── the board and the camera ──────────────────────────────────────────────
 
-def board():
+def board_spec(squares_x: int = BOARD_COLS + 1, squares_y: int = BOARD_ROWS + 1, square_mm: float = BOARD_SQUARE_M * 1000) -> dict:
+    """A chessboard by its squares along and across and its MEASURED square: {squares, cols, rows (inner corners),
+    square_m, size_m, radius_m (the squares' half diagonal: what any rotation of it sweeps)}. RealMan's boards are
+    even x odd squares (ALIX's canonical_order tells the board's ends apart by its two outer corners' colours)."""
+    sx, sy, sq = int(squares_x), int(squares_y), float(square_mm) / 1000.0
+    if sx < 4 or sy < 4 or (sx + sy) % 2 == 0:
+        raise UserError(f"A board of {sx} x {sy} squares cannot be used: one count must be even and the other odd "
+                        "(so its two outer corners differ in colour), at least 4 each.", "Count the squares again.")
+    if not 0.010 <= sq <= 0.060:
+        raise UserError(f"A square of {square_mm:g} mm is not a calibration board's.", "Measure ten squares with calipers and divide by ten.")
+    return dict(squares=[sx, sy], cols=sx - 1, rows=sy - 1, square_m=sq, size_m=[sx * sq, sy * sq],
+                radius_m=math.hypot(sx * sq, sy * sq) / 2.0)
+
+
+def he_board(board: dict):
     vendor_paths.activate()
     from alix_perception_core import hand_eye as he
 
-    return he.Board(BOARD_COLS, BOARD_ROWS, BOARD_SQUARE_M)
+    return he.Board(int(board["cols"]), int(board["rows"]), float(board["square_m"]))
 
 
-def board_size_m() -> tuple:
-    """(long, short) of the printed squares: 12 x 9 squares of 30 mm."""
-    return (BOARD_COLS + 1) * BOARD_SQUARE_M, (BOARD_ROWS + 1) * BOARD_SQUARE_M
-
-
-def board_in_base() -> np.ndarray:
-    """The board as the plan expects it (4 x 4, base_link): flat on the closed lid, its normal up."""
-    T = np.eye(4)
-    T[:3, 3] = BOARD_CENTRE_M
-    return T
-
-
-def board_outline(slack: float = BOARD_SLACK_M) -> np.ndarray:
-    """The board's four corners with ``slack`` (4 x 3, base_link)."""
-    long_m, short_m = board_size_m()
-    a, b = long_m / 2 + slack, short_m / 2 + slack
-    if BOARD_LONG_ALONG != "x":
-        a, b = b, a
+def board_outline(board: dict, slack: float) -> np.ndarray:
+    """What the camera must see whole, whatever the board's turn on the lid and up to ``slack`` from the lid's middle:
+    a circle round the middle of the board's half diagonal + ``slack`` (16 points, base_link)."""
+    r = float(board["radius_m"]) + float(slack)
     cx, cy, cz = BOARD_CENTRE_M
-    return np.array([[cx - a, cy - b, cz], [cx + a, cy - b, cz], [cx + a, cy + b, cz], [cx - a, cy + b, cz]])
+    a = np.linspace(0.0, 2.0 * np.pi, 16, endpoint=False)
+    return np.stack([cx + r * np.cos(a), cy + r * np.sin(a), np.full(16, cz)], axis=1)
+
+
+def with_board(scene: dict, board: dict, slack: float) -> dict:
+    """The collision scene with the board on the closed lid as one more box (the user, 4 Nov: "we know that the
+    checkerboard will be placed on the lid"): a square as wide as the board turned any way with its border, ``slack``
+    more each side, BOARD_THICK_M high; every link of the arm, the hand too, touching it is a collision. Only with the
+    measured room's walls (collision_check takes the room's boxes from there); without them the lid alone stands for it."""
+    if not scene.get("walls"):
+        return dict(scene)
+    side = 2.0 * (float(board["radius_m"]) + BOARD_BORDER_M + float(slack))
+    cx, cy, cz = BOARD_CENTRE_M
+    box = dict(name="calibration board", center=[cx, cy, cz + BOARD_THICK_M / 2], size=[side, side, BOARD_THICK_M])
+    return dict(scene, walls=[w for w in scene["walls"] if w.get("name") != "calibration board"] + [box])
 
 
 def nominal_K() -> np.ndarray:
@@ -161,12 +184,12 @@ def nominal_frames() -> dict:
 
 # ── one candidate view ───────────────────────────────────────────────────
 
-def view_of(T_base_cam: np.ndarray, K: np.ndarray | None = None, size=(IMAGE_W, IMAGE_H)) -> dict:
-    """Whether the board (with its slack) is seen whole from the colour camera at ``T_base_cam``: {ok, why, margin_px,
-    range_m, tilt_deg}."""
+def view_of(T_base_cam: np.ndarray, board: dict, slack: float, K: np.ndarray | None = None, size=(IMAGE_W, IMAGE_H)) -> dict:
+    """Whether the board (turned any way, ``slack`` off the lid's middle) is seen whole from the colour camera at
+    ``T_base_cam``: {ok, why, margin_px, range_m, tilt_deg}."""
     K = nominal_K() if K is None else K
     inv = np.linalg.inv(T_base_cam)
-    P = (inv[:3, :3] @ board_outline().T).T + inv[:3, 3]
+    P = (inv[:3, :3] @ board_outline(board, slack).T).T + inv[:3, 3]
     if np.any(P[:, 2] <= 0.05):
         return dict(ok=False, why="the board is behind the camera")
     uv = (K @ (P / P[:, 2:3]).T).T[:, :2]
@@ -201,7 +224,7 @@ def above_lid(L: dict) -> tuple:
     return (low >= ABOVE_LID_M, low)
 
 
-def candidates(base: str, q0, left: dict | None = None) -> list[dict]:
+def candidates(base: str, q0, board: dict, slack: float, left: dict | None = None) -> list[dict]:
     """Every offset of OFFSETS_DEG around ``q0`` within the joint limits whose view and lid clearance pass."""
     import itertools
 
@@ -215,7 +238,7 @@ def candidates(base: str, q0, left: dict | None = None) -> list[dict]:
         if abs(q[5]) < 10.0:                    # the wrist at its singularity (J6 near 0): no view taken there
             continue
         L = links_at(q, POLE_MM, left)
-        v = view_of(L[COLOUR_FRAME])
+        v = view_of(L[COLOUR_FRAME], board, slack)
         if not v["ok"]:
             continue
         ok, low = above_lid(L)
@@ -298,7 +321,9 @@ def check_paths(views: list[dict], q_start, ends_at, robot_state: dict, room: di
             continue
         i0 = int(round(e["first_t"] / 0.02))
         leg = leg_of[min(i0, n - 1)]
-        bad.setdefault(leg, f"{', '.join(what)} at {e['first_t']:.2f} s of the tour")
+        hits = sorted({str(p.get("object")) for p in e.get("pairs") or [] if p.get("what") != "bin"})
+        on = ", ".join(("the board on the lid" if "board" in h else h) for h in hits) or ", ".join(what)
+        bad.setdefault(leg, f"the arm would touch {on}")
     touched = (out.get("contact") or {}).get("right") or {}
     if touched.get("samples"):
         i0 = int(round(float(touched.get("first_t") or 0.0) / 0.02))
@@ -306,17 +331,29 @@ def check_paths(views: list[dict], q_start, ends_at, robot_state: dict, room: di
     return [dict(leg=i, ok=i not in bad, why=bad.get(i, "")) for i in range(len(stops) - 1)]
 
 
-def plan(robot_state: dict, room: dict, per_pose: int = VIEWS_PER_POSE) -> dict:
-    """The session's views (module docstring): {views, poses, diversity, checked, refused, ends_at, board, ...}. Runs
-    in the worker process (FCL). ``robot_state``: {side: {q_deg, pole_mm, hand}} as read now; ``room``: {home, scene,
-    fid, cubicle_mm}."""
+def plan(robot_state: dict, room: dict, board: dict | None = None, per_pose: int = VIEWS_PER_POSE) -> dict:
+    """The session's views (module docstring): {views, poses, diversity, refused, ends_at, board, slack_m, scene, ...}.
+    Runs in the worker process (FCL). ``robot_state``: {side: {q_deg, pole_mm, hand}} as read now; ``room``: {home,
+    scene, fid, cubicle_mm} (the board is put in its scene here); ``board``: board_spec's. The largest of SLACKS_M a
+    full plan allows (every pose its views, RealMan's 30 deg about each axis) is the board's tolerance on the lid."""
     vendor_paths.activate()
     from alix_perception_core import hand_eye as he
 
     t0 = time.monotonic()
+    board = board or board_spec()
     poses = named_poses()
     left = robot_state.get("left") or None
-    per_base = {b: candidates(b, poses[b], left) for b in BASES}
+    for slack in SLACKS_M:
+        per_base = {b: candidates(b, poses[b], board, slack, left) for b in BASES}
+        views = choose(per_base, per_pose)
+        if len(views) == per_pose * len(BASES) and he.diversity([v["T_base_end"] for v in views])["enough"]:
+            break
+    else:
+        raise UserError(f"No full set of views sees a {board['squares'][0]} x {board['squares'][1]} board of "
+                        f"{board['square_m'] * 1000:g} mm squares from rest, inspection pose 1 and inspection pose 4 "
+                        f"({sum(len(c) for c in per_base.values())} views fit, {per_pose * len(BASES)} with enough wrist turn needed).",
+                        "Use a smaller board (fewer or smaller squares).")
+    room = dict(room, scene=with_board(room["scene"], board, slack))
     right = robot_state.get("right") or {}
     q_start = right.get("q_deg") or poses["rest_pose"]
     refused: set = set()
@@ -346,8 +383,7 @@ def plan(robot_state: dict, room: dict, per_pose: int = VIEWS_PER_POSE) -> dict:
                        for i, v in enumerate(views)],
                 poses=poses, candidates={b: len(c) for b, c in per_base.items()}, diversity=div,
                 refused=notes, ends_at=poses["rest_pose"], pole_mm=POLE_MM, speed_pct=CAL_SPEED_PCT,
-                board=dict(cols=BOARD_COLS, rows=BOARD_ROWS, square_m=BOARD_SQUARE_M, centre_m=list(BOARD_CENTRE_M),
-                           long_along=BOARD_LONG_ALONG, slack_m=BOARD_SLACK_M),
+                board=dict(board, centre_m=list(BOARD_CENTRE_M)), slack_m=slack, scene=room["scene"],
                 seconds=round(time.monotonic() - t0, 2))
 
 
@@ -357,12 +393,16 @@ class Session:
     """One calibration session: its folder (``samples.yaml``, ``images/``, ``plan.json``, ``hand_eye_result.yaml``), its
     plan, the views taken. One a robot at a time (``SESSIONS``)."""
 
-    def __init__(self, folder: Path, planned: dict, square_mm: float, room: dict | None = None):
+    def __init__(self, folder: Path, planned: dict, room: dict | None = None):
         self.folder = Path(folder)
         self.plan = planned
-        self.room = room                 # {home, scene, fid, cubicle_mm}: each move is checked again from where it starts
-        self.square_m = float(square_mm) / 1000.0
+        self.board = dict(planned["board"])  # board_spec's, the square as measured
+        # {home, scene (with the board on the lid), fid, cubicle_mm}: each move is checked again from where it starts
+        self.room = None if room is None else dict(room, scene=planned.get("scene") or room["scene"])
+        self.square_m = float(self.board["square_m"])
         self.rows: list[dict] = []
+        self.attempted: list[int] = []   # the planned views moved to (taken or left out), in order
+        self.missed: list[int] = []      # the planned views whose board was not found (left out of the solve)
         self.header: dict | None = None
         self.notes: list[str] = []
         self.result: dict | None = None
@@ -372,7 +412,9 @@ class Session:
 
     @property
     def next_index(self) -> int:
-        return len(self.rows)
+        """The first planned view not moved to yet (a run goes on from here after a STOP)."""
+        done = set(self.attempted)
+        return next((v["index"] for v in self.plan["views"] if v["index"] not in done), len(self.plan["views"]))
 
     def view(self) -> dict:
         from_div = None
@@ -382,12 +424,15 @@ class Session:
 
             from_div = he.diversity([np.asarray(r["T_base_end"], float) for r in self.rows])
         return dict(folder=str(self.folder), views=len(self.plan["views"]), taken=len(self.rows), next=self.next_index,
+                    missed=list(self.missed), speed_pct=CAL_SPEED_PCT,
                     planned=[{k: v[k] for k in ("index", "base", "offsets_deg", "range_m", "tilt_deg", "margin_px")}
                              for v in self.plan["views"]],
                     rows=[{k: r[k] for k in ("index", "view", "board_pose_rms_px", "board_tilt_deg", "board_range_m", "still_px")}
                           for r in self.rows],
                     diversity=from_div, planned_diversity=self.plan.get("diversity"), notes=self.notes[-6:],
-                    result=summary(self.result) if self.result else None, square_mm=round(self.square_m * 1000, 3))
+                    result=summary(self.result) if self.result else None, square_mm=round(self.square_m * 1000, 3),
+                    board=dict(squares=self.board["squares"], square_mm=round(self.square_m * 1000, 3),
+                               tolerance_mm=round(float(self.plan.get("slack_m") or 0.0) * 1000)))
 
     def write(self) -> None:
         vendor_paths.activate()
@@ -404,7 +449,7 @@ class Session:
         dist = (camera.colour_distortion or {}).get("coeffs") or [0.0] * 5
         nom = nominal_frames()
         self.header = dict(created=datetime.now().isoformat(timespec="seconds"), tool="ALIX Studio Lite hand_eye_cal",
-                           board=dict(cols=BOARD_COLS, rows=BOARD_ROWS, square_m=self.square_m),
+                           board=dict(cols=int(self.board["cols"]), rows=int(self.board["rows"]), square_m=self.square_m),
                            end_frame=END_FRAME, camera_frame=COLOUR_FRAME, base_frame="base_link",
                            camera_info=dict(width=int(c.width), height=int(c.height),
                                             K=[c.fx, 0.0, c.cx, 0.0, c.fy, c.cy, 0.0, 0.0, 1.0], D=list(dist),
@@ -466,7 +511,7 @@ def wait_still(robot, side: str = "right", job=None) -> dict:
                     "Check the arm, then take this view again.")
 
 
-def capture(camera, square_m: float, out: Path, index: int) -> tuple:
+def capture(camera, board: dict, out: Path, index: int) -> tuple:
     """Two colour frames 0.3 s apart, the board found in both and still (ALIX's capture tool): (the second image,
     its corners, the board's pose in the camera, PnP rms px, the shift px)."""
     import cv2
@@ -474,7 +519,7 @@ def capture(camera, square_m: float, out: Path, index: int) -> tuple:
     vendor_paths.activate()
     from alix_perception_core import hand_eye as he
 
-    b = he.Board(BOARD_COLS, BOARD_ROWS, float(square_m))
+    b = he.Board(int(board["cols"]), int(board["rows"]), float(board["square_m"]))
     s1 = camera.shot()
     time.sleep(0.3)
     s2 = camera.shot()
@@ -508,7 +553,7 @@ def record(session: Session, k: int, v: dict, image, corners, shift: float, q_de
     info = session.header["camera_info"]
     K = np.asarray(info["K"], float).reshape(3, 3)
     D = np.asarray(info["D"], float)
-    T_cam_board, rms = he.board_pose(corners, K, D, he.Board(BOARD_COLS, BOARD_ROWS, session.square_m))
+    T_cam_board, rms = he.board_pose(corners, K, D, he_board(session.board))
     (session.folder / "images").mkdir(parents=True, exist_ok=True)
     with session.lock:
         rel = f"images/{len(session.rows):02d}.png"
@@ -545,76 +590,146 @@ def leg_clear(robot, session: Session, target_deg, what: str) -> None:
                         "Check where the arms stand (the left at its rest), then plan the views again.")
 
 
-def run_view(robot, session: Session, mode: str, index: int | None = None):
-    """The next planned view (or ``index``): a job on the right arm (module docstring). Real only."""
+def camera_of(robot):
     from . import mechanism
 
-    if mode != "real":
-        raise UserError("The camera calibration takes its views on the real robot only.",
-                        "Switch to Real Machine Mode; Visual sim shows the plan.")
+    return mechanism.kit(robot).camera
+
+
+def movej(robot, real, target_deg, sim: bool) -> None:
+    """One MoveJ of the right arm at CAL_SPEED_PCT (ALIX's park move, checked against the pose within 2 deg): the
+    controller's REAL mode, or its SIM mode in Hardware sim (it runs the move, the arm does not)."""
+    originals = real.set_run_mode("SIM" if sim else "REAL")
+    try:
+        real.move_to([round(float(a) * 1000) for a in target_deg], speed=CAL_SPEED_PCT, restore_pct=robot.found_speed("right"))
+    finally:
+        real.restore_run_mode(originals)
+
+
+def run_session(robot, session: Session, mode: str):
+    """The whole tour as one job on the right arm (the user, 4 Nov: "No need of us to confirm every movement, you can do
+    that offline, because we know how movej works"): from the first view not moved to yet, every planned view (the
+    move checked again from where the arms stand, the MoveJ at CAL_SPEED_PCT, the capture), back to rest, then the
+    solve. STOP ends it between moves or in one; a later run goes on from the view after the last one moved to.
+    Hardware sim: the same moves in the controllers' SIM mode, no pole move and no capture (the camera sees the real
+    arm, which stands still). A board not found is tried once more, then the view is left out and the run goes on."""
+    from contextlib import nullcontext
+
+    if mode not in ("real", "hwsim"):
+        raise UserError("Visual sim does not use the robot: Show the tour in 3D, or switch to Hardware sim or Real.",
+                        code="mode")
     if robot.links.get("right") is None:
         raise UserError("The right arm is not connected.", "Connect it in Prepare, then try again.")
-    cam = mechanism.kit(robot).camera
-    if not cam.available().get("ok"):
+    sim = mode != "real"
+    cam = None if sim else camera_of(robot)
+    if cam is not None and not cam.available().get("ok"):
         raise UserError("The wrist camera (D435) is not connected.", "Plug it in, then try again.", code="camera")
-    k = session.next_index if index is None else int(index)
     views = session.plan["views"]
-    if not 0 <= k < len(views):
-        raise UserError("Every planned view is taken.", "Solve the calibration.")
-    v = views[k]
-    target = [round(float(a) * 1000) for a in v["q_deg"]]
+    todo = list(views) if sim else [v for v in views if v["index"] >= session.next_index]     # a dry run: all, nothing kept
+    n = len(views)
 
     def work(job):
         robot._same_mode(mode, "the arm did not move")
         real = robot._real("right")
-        with cam.using():
-            if session.header is None:
-                cam.open()
-                session.header_from(cam)
-            pole_now, _ = robot._measured("right")
-            if pole_now is None or abs(float(pole_now) - POLE_MM) > 5.0:
-                job.progress(f"Right pole to {POLE_MM:.0f} mm")
-                real.pole_to(POLE_MM)
-            job.progress(f"Checking the move to view {k + 1} from where the arms stand")
-            leg_clear(robot, session, v["q_deg"], f"view {k + 1}")
-            originals = real.set_run_mode("REAL")
-            try:
-                job.progress(f"View {k + 1} of {len(views)}: {v['base']} turned {v['offsets_deg']} ({CAL_SPEED_PCT} % speed)")
-                real.move_to(target, speed=CAL_SPEED_PCT, restore_pct=robot.found_speed("right"))
-            finally:
-                real.restore_run_mode(originals)
-            fb = wait_still(robot, "right", job)
-            (session.folder / "images").mkdir(parents=True, exist_ok=True)
-            image, corners, shift = capture(cam, session.square_m, session.folder, k)
-            after = robot.links["right"].read_fresh()
-            q, pole = after.get("joints_deg") or fb.get("joints_deg"), after.get("pole_mm") or fb.get("pole_mm")
-            row = record(session, k, v, image, corners, shift, q, pole)
-            note = (f"view {k + 1}: board found, PnP {row['board_pose_rms_px']:.2f} px, tilted {row['board_tilt_deg']:.0f} deg, "
-                    f"{row['board_range_m']:.2f} m away")
-            session.notes.append(note)
-            job.log(note)
-            return dict(view=k, taken=len(session.rows), row={kk: row[kk] for kk in ("board_pose_rms_px", "board_tilt_deg",
-                                                                                    "board_range_m", "still_px")})
+        with (cam.using() if cam is not None else nullcontext()):
+            if cam is not None:
+                if session.header is None:
+                    cam.open()
+                    session.header_from(cam)
+                pole_now, _ = robot._measured("right")
+                if pole_now is None or abs(float(pole_now) - POLE_MM) > 5.0:
+                    job.progress(f"Right pole to {POLE_MM:.0f} mm", 0, n)
+                    real.pole_to(POLE_MM)
+            else:
+                job.log(f"Hardware sim: the moves run in the controller's SIM mode; the pole is not moved (the run puts it "
+                        f"at {POLE_MM:.0f} mm) and nothing is captured.")
+            reached = []
+            for v in todo:
+                k = v["index"]
+                job.check()
+                job.progress(f"View {k + 1} of {n}: {v['base'].replace('_', ' ')}, the wrist turned", k, n)
+                leg_clear(robot, session, v["q_deg"], f"view {k + 1}")
+                movej(robot, real, v["q_deg"], sim)
+                if sim:
+                    reached.append(k)
+                    continue
+                for attempt in range(BOARD_RETRIES + 1):
+                    fb = wait_still(robot, "right", job)
+                    try:
+                        image, corners, shift = capture(cam, session.board, session.folder, k)
+                        break
+                    except UserError as exc:
+                        if attempt == BOARD_RETRIES:
+                            session.missed.append(k)
+                            note = f"view {k + 1}: left out ({exc})"
+                            session.notes.append(note)
+                            job.log(note, "warn")
+                            image = None
+                        else:
+                            job.sleep(1.0)
+                session.attempted.append(k)
+                if image is None:
+                    continue
+                after = robot.links["right"].read_fresh()
+                q, pole = after.get("joints_deg") or fb.get("joints_deg"), after.get("pole_mm") or fb.get("pole_mm")
+                row = record(session, k, v, image, corners, shift, q, pole)
+                note = (f"view {k + 1}: board found, PnP {row['board_pose_rms_px']:.2f} px, tilted {row['board_tilt_deg']:.0f} deg, "
+                        f"{row['board_range_m']:.2f} m away")
+                session.notes.append(note)
+                job.log(note)
+            job.check()
+            job.progress("Back to rest", n, n)
+            leg_clear(robot, session, session.plan["ends_at"], "rest")
+            movej(robot, real, session.plan["ends_at"], sim)
+        if sim:
+            return dict(mode="hwsim", reached=len(reached), views=n,
+                        said=f"Hardware sim: the controller ran all {len(reached)} MoveJs and the way back to rest; nothing moved.")
+        out = dict(mode="real", taken=len(session.rows), missed=list(session.missed), views=n)
+        if len(session.rows) >= 3:
+            out["result"] = solve(session)
+        return out
 
-    return robot._start("move", f"RIGHT calibration view {k + 1} of {len(views)}", work, "right", mode)
+    return robot._start("move", f"RIGHT camera calibration: {len(todo)} view(s) at {CAL_SPEED_PCT} %", work, "right", mode)
 
 
 def back_to_rest(robot, session: Session, mode: str):
-    """The tour's end: the right arm back at rest (the plan's ``ends_at``), at the calibration's speed."""
-    target = [round(float(a) * 1000) for a in session.plan["ends_at"]]
+    """The right arm back at rest (the plan's ``ends_at``) after a STOP, the move checked from where the arms stand."""
+    if robot.links.get("right") is None:
+        raise UserError("The right arm is not connected.", "Connect it in Prepare, then try again.")
 
     def work(job):
         robot._same_mode(mode, "the arm did not move")
-        real = robot._real("right")
         leg_clear(robot, session, session.plan["ends_at"], "rest")
-        originals = real.set_run_mode("REAL" if mode == "real" else "SIM")
-        try:
-            real.move_to(target, speed=CAL_SPEED_PCT, restore_pct=robot.found_speed("right"))
-        finally:
-            real.restore_run_mode(originals)
+        movej(robot, robot._real("right"), session.plan["ends_at"], mode != "real")
         return dict(at="rest")
 
-    return robot._start("move", "RIGHT back to rest (calibration)", work, "right", mode)
+    return robot._start("move", "RIGHT back to rest (camera calibration)", work, "right", mode)
+
+
+def leg_lines(qa, qb, rating_deg_s) -> np.ndarray:
+    """A MoveJ from ``qa`` to ``qb`` as 5 ms lines (millideg) for the 3D: straight in the joints, eased, its slowest
+    joint at CAL_SPEED_PCT of its rating at the peak (the controller's MoveJ synchronises the joints)."""
+    qa, qb = np.asarray(qa, float), np.asarray(qb, float)
+    rate = np.asarray(rating_deg_s, float) * CAL_SPEED_PCT / 100.0
+    t = max(0.2, float(np.max(np.abs(qb - qa) / rate)) * math.pi / 2)        # an eased move peaks at pi/2 of its mean
+    k = max(2, int(round(t / 0.005)))
+    f = 0.5 - 0.5 * np.cos(np.pi * np.arange(k) / (k - 1))
+    return np.round((qa + (qb - qa) * f[:, None]) * 1000.0).astype(np.int64)
+
+
+def tour_md(session: Session, rating_deg_s) -> np.ndarray:
+    """The tour from its first view to rest as 5 ms lines (the 3D's ``execution_timeline`` adds the move to the first
+    view from where the arm stands): each view held VIEW_HOLD_S, each move between at CAL_SPEED_PCT."""
+    views = session.plan["views"]
+    stops = [v["q_deg"] for v in views] + [session.plan["ends_at"]]
+    hold = int(round(VIEW_HOLD_S / 0.005))
+    parts = []
+    for i, q in enumerate(stops):
+        if i:
+            parts.append(leg_lines(stops[i - 1], q, rating_deg_s)[1:])
+        if i < len(views):
+            parts.append(np.repeat(np.round(np.asarray([q], float) * 1000.0).astype(np.int64), hold, axis=0))
+    return np.concatenate(parts, axis=0)
 
 
 def solve(session: Session) -> dict:
