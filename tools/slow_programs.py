@@ -62,7 +62,7 @@ def main() -> int:
     ends = sp.early_ends(args.logs, since=since)
     opts = {k: v for k, v in dict(factor=args.factor, before_s=args.before, after_s=args.after, ramp_s=args.ramp).items()
             if v is not None}
-    p = sp.plan(sim, ends, data_dir=args.data, **opts)
+    p = sp.plan(sim, ends, data_dir=args.data, project_dir=folder, **opts)
     print(f"{folder.name}: the S2 simulation of {sim.get('made')}; {len(ends)} early end(s) in the logs, "
           f"{len(p['placed'])} placed in this simulation's Programs.")
     for e in p["placed"]:

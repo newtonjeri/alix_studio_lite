@@ -137,9 +137,21 @@ class Act:
         return (t - self.traj_t0) / self.line_s
 
 
-def program_acts(sim: dict, data_dir: Path | None = None) -> list[Act]:
+def _kept(project_dir: Path | None, side: str, sha: str | None) -> Path | None:
+    """The file of those bytes among the controller's programs kept in the project (program_mirror's
+    controller_exports/<side>/), or None."""
+    if project_dir is None or not sha:
+        return None
+    for f in sorted((Path(project_dir) / "controller_exports" / side).glob("*.txt")):
+        if track.sha256_file(f) == sha:
+            return f
+    return None
+
+
+def program_acts(sim: dict, data_dir: Path | None = None, project_dir: Path | None = None) -> list[Act]:
     """The simulation's Programs, both arms, with their trajectory's place in S2's time and the bytes the simulation
-    ran (identity.used)."""
+    ran (identity.used). A file not where the simulation read it is looked for in Lite's data folder, then among the
+    controller's programs kept in the project (``project_dir``: program_mirror), by its bytes."""
     used = ((sim.get("identity") or {}).get("used") or {})
     acts = []
     for side in ("left", "right"):
@@ -150,10 +162,12 @@ def program_acts(sim: dict, data_dir: Path | None = None) -> list[Act]:
             if (f is None or not f.exists()) and data_dir is not None and a.get("file_name"):
                 alt = Path(data_dir) / "advanced" / side / a["file_name"]
                 f = alt if alt.exists() else f
+            sha = ((used.get(side) or {}).get("programs") or {}).get(str(a["program"]))
+            if f is None or not f.exists():
+                f = _kept(project_dir, side, sha) or f
             acts.append(Act(side=side, slot=int(a["program"]), file=f, file_name=a.get("file_name") or (f.name if f else ""),
                             lines=int(a["lines"]), line_s=float(a.get("line_s") or 0.005), traj_t0=float(a["traj_t0"]),
-                            text=str(a.get("text") or ""), pole=a.get("pole0"), hand=a.get("hand0"),
-                            sha256=((used.get(side) or {}).get("programs") or {}).get(str(a["program"]))))
+                            text=str(a.get("text") or ""), pole=a.get("pole0"), hand=a.get("hand0"), sha256=sha))
     return acts
 
 
@@ -184,10 +198,10 @@ def _new_name(file_name: str, seconds: float) -> str:
     return stem + ext
 
 
-def plan(sim: dict, ends: list[dict], *, data_dir: Path | None = None, factor: float = FACTOR, before_s: float = BEFORE_S,
-         after_s: float = AFTER_S, ramp_s: float = RAMP_S) -> dict:
+def plan(sim: dict, ends: list[dict], *, data_dir: Path | None = None, project_dir: Path | None = None,
+         factor: float = FACTOR, before_s: float = BEFORE_S, after_s: float = AFTER_S, ramp_s: float = RAMP_S) -> dict:
     """Which windows of S2's time to slow and what each Program gains. Reads the files; changes nothing."""
-    acts = program_acts(sim, data_dir)
+    acts = program_acts(sim, data_dir, project_dir)
     notes, placed = [], []
     md_of: dict[int, np.ndarray] = {}
 

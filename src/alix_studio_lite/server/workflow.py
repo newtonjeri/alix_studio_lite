@@ -1908,6 +1908,9 @@ def simulate(app, units, mode: str, pick: dict | None):
         job.progress("Reading what the controllers hold", 0, 3)
         sides = list(run["steps"])
         programs = {s: programs_known(app, units, s) for s in ARMS}
+        from . import program_mirror                    # the controllers' programs kept in the project (the user, 4 Nov)
+        for s in ARMS:
+            program_mirror.keep_quietly(app, units, s, programs[s])
         points = {s: points_known(app, s) for s in ARMS}
         findings, md_of = [], _md_reader(units.root)
         named = {s: files_by_name(app, units, s) for s in ARMS}

@@ -1805,6 +1805,16 @@ def get_robot_data(app, q, body, m):
         except UserError:
             files = None
     out = app.robot.controller_data(side, files)
+    if pid:                                         # the controller's programs kept in the project (the user, 4 Nov)
+        from . import program_mirror
+
+        try:
+            kept = program_mirror.keep_quietly(app, units_of(app, pid), side)
+        except UserError:
+            kept = None
+        if kept is not None:
+            out["kept"] = dict(folder=f"{program_mirror.FOLDER}/{side}", programs=len(kept["programs"]),
+                               not_kept=[f"{x['slot']} {x['name']}" for x in kept["not_kept"]])
     if out.get("linked"):                           # every list Lite offers follows this read (content.py)
         from . import content
 

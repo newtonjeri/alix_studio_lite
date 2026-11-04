@@ -159,6 +159,8 @@ function paintStatus() {
   s.textContent = d.linked
     ? `${ARM} controller${d.ip ? ` (${d.ip})` : ''} · read at ${d.read} · ${d.programs.length} programs, ${(d.points || []).length} global points`
       + `${d.default_program ? ` · its IO starts program ${d.default_program}` : ''}.`
+      + (d.kept ? ` Kept in the project (${d.kept.folder}): ${d.kept.programs} program file(s)`
+        + `${d.kept.not_kept.length ? `; not kept, their points not on this computer: ${d.kept.not_kept.join(', ')}` : ''}.` : '')
     : d.note;
 }
 
