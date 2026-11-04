@@ -4865,8 +4865,8 @@
       "dest": "vendor/alix/ros/orchestration/alix_tasks/scripts/lift_check.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/orchestration/alix_tasks/scripts/lift_check.py",
       "origin": "alix",
-      "sha256": "05ebe3bc83694ee97f56a28ef8401664f66b1cc4754622f1304ffd89af2e0563",
-      "bytes": 14062
+      "sha256": "a282b43c9c6a8af39e58034c2e37ff8e83c2f5b0fec796ec5d4b1e08d7379fb7",
+      "bytes": 14390
     },
     {
       "dest": "vendor/alix/ros/perception/alix_perception/config/perception.yaml",

@@ -319,6 +319,21 @@ class Plan:
         self.final_actions = list(self.data.get("final_actions") or [])
         self.made = self.data.get("timestamp_human")
 
+    def task_rung(self, k: int) -> "Plan":
+        """rungs/<plan>.rung<k>.json as a WHOLE plan (on_fail retry_close; the user, 5 Nov): the task re-planned in ALIX
+        with its lifting arm's start pose moved by retry_offsets[k-1], run again from its start."""
+        path = self.path.parent / "rungs" / f"{self.rungs_stem}.rung{k}.json"
+        if not path.is_file():
+            raise UserError(f"{self.title}'s retry {k} ({path.name}) is not in Lite.",
+                            f"Generate {self.title}'s plan in ALIX (its retry_offsets make the retries' plans), then "
+                            "sync it into Lite.")
+        p = Plan(self.name, path)
+        if (p.data.get("task_flags") or {}).get("replan_block"):
+            raise UserError(f"{path.name} is one arm's block, not the whole of {self.title}: its retry_close runs the task "
+                            "again from its start.", "Generate the plan again in ALIX with on_fail retry_close.")
+        p.title = f"{self.title}, retry {k}"
+        return p
+
     def sides(self) -> list:
         """The arms it uses, the one that moves first first (ALIX's approach: primary arm first)."""
         out = []
@@ -431,6 +446,13 @@ class Plan:
         re-lifts of 10 Oct start 3.2 degrees from where its lift ends)."""
         for idx, e in enumerate(self.entries):
             for a in e.pre_actions:
+                if a.get("type") == "check_fixture_state" and a.get("on_fail") == "retry_close":
+                    for k in range(1, int(a.get("max_retries") or 0) + 1):   # each retry: the whole task's rung k
+                        try:
+                            self.task_rung(k)
+                        except UserError as exc:
+                            return f"{exc} A failed {a.get('stage')} then stops the run for a person."
+                    continue
                 if a.get("type") != "check_fixture_state" or a.get("on_fail") != "retry_lift":
                     continue
                 lifter = "left" if a.get("arm", "right") == "right" else "right"
@@ -970,6 +992,14 @@ def frames_said(answers: list) -> str:
 #: higher), a task's end check its task again from its start; each by the camera (place_correct); after them, a person
 RETRIES = 3
 
+RUNG_SEP = "#rung"           #: a queued run of a task's whole-task rung (on_fail retry_close): "seat_close#rung1"
+
+
+def split_rung(entry: str) -> tuple:
+    """"seat_close#rung2" -> ("seat_close", 2); a task's own name -> (name, None)."""
+    task, sep, k = str(entry).partition(RUNG_SEP)
+    return (task, int(k)) if sep and k.isdigit() else (str(entry), None)
+
 
 # ── the order and the policies (arm_trajectory_sender.py: _send_next, run_plan_actions, _check_client,
 #    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
@@ -1021,8 +1051,9 @@ class Runner:
                     places=list(self.place.log) if self.place is not None else [])
 
     def _plan(self, name: str) -> str:
-        plan = Plan(name)
-        move = self.move(name) if callable(self.move) else self.move
+        task, rung = split_rung(name)               # "seat_close#rung1": the task's retry 1, run from its start
+        plan = Plan(task) if rung is None else Plan(task).task_rung(rung)
+        move = self.move(task) if callable(self.move) else self.move
         place = None
         if self.place is not None:
             from .place_correct import TaskPlace
@@ -1044,7 +1075,7 @@ class Runner:
             entries, dropped = without_start_checks(entries)
             for a in dropped:
                 self.say(f"{a.get('stage')}: not asked, the sequence's own order says {a.get('expect')} (the owner, 27 Oct)")
-        state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(name), lid_end=name == "lid_open", seat=None,
+        state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(task), lid_end=task == "lid_open", seat=None,
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
                                                         for s in plan.sides()) if first is not None),   # after the approach
                      place=place, again=self._again_for.pop(name, None))
@@ -1150,7 +1181,8 @@ class Runner:
             if ends:
                 self.ex.approach(plan, ends, "end")
         outcome = "again" if state.get("again_next") else "skipped" if state["skipped"] else "done"
-        self.done.append(dict(plan=name, title=plan.title, outcome=outcome, relifts=state["relifts"]))
+        self.done.append(dict(plan=task, title=plan.title, outcome=outcome, relifts=state["relifts"],
+                              **({"retry": rung} if rung is not None else {})))
         if place is not None:
             place.end(outcome, state["relifts"])
         if outcome == "again":
@@ -1377,27 +1409,48 @@ class Runner:
                 self.say(f"{label}: NO — re-lift {n}/{budget}: the {lifter} arm goes back along the lift it made, then "
                          "lifts again (the recorded block); the check runs again", "warn")
             return ("retry", i, block)
+        if policy == "retry_close":                     # the task again from its start, its next rung (5 Nov)
+            return self._task_again(plan, failed, label, expect, rungs=True)
         if state.get("place") is not None:              # every run's: never stopped at the first failure (2 Nov)
             return self._task_again(plan, failed, label, expect)
         return ("abort", f"{label}: NOT {expect} (on_fail {policy}).")
 
-    def _task_again(self, plan, failed: dict, label: str, expect) -> tuple:
+    def _task_again(self, plan, failed: dict, label: str, expect, rungs: bool = False) -> tuple:
         """A check that fails with no retry of its own (the tasks' end checks: on_fail abort in their configs) runs the
         task again from its start, up to RETRIES times (the owner, 2 Nov: "you should never abort on the first failure;
         this applies to all mechanism tasks"): queued next, the arms to its start by the approach (as every task starts),
         its start checks asked (in a sequence too) and its first look deciding the camera's correction as every run's.
         The camera's classes decide by ALIX's check tables (lift_check): its start check proving the part where the plan
         starts runs it; proving the opposite, where it ends, the plan's outcome holds after all; uncertain or between
-        proves nothing, and an undecided check stops for a person as every check does (the owner, 23 Oct)."""
+        proves nothing, and an undecided check stops for a person as every check does (the owner, 23 Oct).
+
+        ``rungs`` (on_fail retry_close; the user, 5 Nov: Close the seat's left pull again with the config's offsets):
+        retry k runs the task's rung k instead, the whole task re-planned in ALIX with its lifting arm's start pose moved
+        by retry_offsets[k-1], up to the config's max_retries; a rung not in Lite stops for a person before anything
+        moves."""
         n = self.again.get(plan.name, 0)
-        if n >= RETRIES:
-            return ("abort", f"{label}: still NOT {expect} after running {plan.title} again {n} time(s).")
+        budget = int(failed.get("max_retries", 0) or 0) if rungs else RETRIES
+        if n >= budget:
+            return ("abort", f"{label}: still NOT {expect} after running {TASKS.get(plan.name, {}).get('title', plan.title)} "
+                             f"again {n} time(s)" + (" (its retry_offsets)." if rungs else "."))
+        entry, how = plan.name, ""
+        if rungs:
+            try:
+                Plan(plan.name).task_rung(n + 1)        # read and checked before it is queued
+            except UserError as exc:
+                return ("abort", f"{label}: NOT {expect}, and {exc}")
+            offset = lift_check().retry_offset(failed, n + 1)
+            entry = f"{plan.name}{RUNG_SEP}{n + 1}"
+            how = (f" with the {'left' if failed.get('arm', 'right') == 'right' else 'right'} start pose moved "
+                   f"{lift_check().describe_offset(offset) if offset is not None else 'by its rung'} (its rung {n + 1}, "
+                   "the task configuration's retry_offsets)")
         self.again[plan.name] = n + 1
-        self.queue.insert(self.k + 1, plan.name)
-        self._ask_start.add(plan.name)
-        self._again_for[plan.name] = dict(n=n + 1, end=dict(failed))
-        self.say(f"{label}: NOT {expect} — {plan.title} runs again from its start ({n + 1}/{RETRIES}), where the camera reads "
-                 "the commode then; its start check says first where the part is", "warn")
+        self.queue.insert(self.k + 1, entry)
+        self._ask_start.add(entry)
+        self._again_for[entry] = dict(n=n + 1, end=dict(failed))
+        title = TASKS.get(plan.name, {}).get("title", plan.title)
+        self.say(f"{label}: NOT {expect} — {title} runs again from its start{how} ({n + 1}/{budget}), where the camera "
+                 "reads the commode then; its start check says first where the part is", "warn")
         return ("again",)
 
     def _camera_relift(self, entries: list, k: int, label: str, expect, budget: int, lifter: str, state: dict) -> tuple:

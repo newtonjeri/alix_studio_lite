@@ -747,3 +747,65 @@ def test_a_plan_made_in_a_process_of_its_own_is_the_one_made_here():
         assert err.value.code == "shift" and "beyond" in str(err.value)
     finally:
         workers.shutdown()
+
+
+@pytest.fixture
+def seat_close_rungs(tmp_path, monkeypatch):
+    """Lite's plans with Close the seat's end check on retry_close (2 retries, the config's offsets) and its two
+    whole-task rungs beside it (here copies of the plan), as ALIX's generation of 5 Nov makes them."""
+    import shutil
+
+    src = mechanism.PLANS
+    plans = tmp_path / "plans"
+    shutil.copytree(src, plans)
+    (plans / "rungs").mkdir(exist_ok=True)
+
+    def retry_close(path, stamp):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for s in data["sub_trajectories"]:
+            for a in s.get("pre_actions") or []:
+                if a.get("stage") == "verify_seat_closed":
+                    a.update(on_fail="retry_close", max_retries=2, retry_offsets=[[0.005, 0.005, 0.0], [0.005, 0.01, -0.015]])
+        data["timestamp_human"] = stamp
+        return data
+
+    main = plans / "seat_close_toppra.json"
+    for k in (1, 2):
+        (plans / "rungs" / f"seat_close_toppra.rung{k}.json").write_text(
+            json.dumps(retry_close(main, f"2026-11-05 22:3{k}:00")), encoding="utf-8")
+        for side in main.parent.glob("seat_close_toppra.g*"):
+            shutil.copy(side, plans / "rungs" / side.name)
+    main.write_text(json.dumps(retry_close(main, "2026-11-05 22:30:00")), encoding="utf-8")
+    monkeypatch.setattr(mechanism, "PLANS", plans)
+    return plans
+
+
+def test_close_the_seat_runs_again_from_its_start_as_its_rung(tmp_path, seat_close_rungs):
+    """The user, 5 Nov: Close the seat's end check on_fail retry_close, the left's pull again with the config's offsets:
+    the seat not closed, Close the seat runs again from its start as its rung 1 (the whole task re-planned in ALIX with
+    the left start pose moved 5 / 5 mm), its start check asked; closed then, done."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    ex = LookExec(["seat_open", "seat_open", "seat_closed"], look("seat_close", 0.0))
+    out, said = run("seat_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    assert [(p["plan"], p["outcome"], p.get("retry")) for p in out["plans"]] == [("seat_close", "again", None),
+                                                                                 ("seat_close", "done", 1)]
+    assert out["plans"][1]["title"] == "Close the seat, retry 1"
+    assert [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_seat_closed", "verify_seat_open", "verify_seat_closed"]
+    assert any("runs again from its start with the left start pose moved" in t and "(its rung 1" in t and "(1/2)" in t
+               for t in said), said
+    assert any("seat_close_toppra.rung1.json" in t for t in said)
+
+
+def test_close_the_seat_stops_for_a_person_after_its_rungs(tmp_path, seat_close_rungs):
+    """The seat never closes: rung 1, rung 2 (the config's max_retries 2), then a person; a rung not in Lite stops the
+    run before anything of it moves."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    ex = LookExec(["seat_open"] + ["seat_open", "seat_open"] * 2, look("seat_close", 0.0))
+    with pytest.raises(UserError, match="still NOT seat_closed after running Close the seat again 2 time") as err:
+        run("seat_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    assert err.value.code == "escalate"
+    (seat_close_rungs / "rungs" / "seat_close_toppra.rung1.json").unlink()
+    ex = LookExec(["seat_open"], look("seat_close", 0.0))
+    with pytest.raises(UserError, match="retry 1 .* is not in Lite") as err:
+        run("seat_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    assert [c[1] for c in ex.calls if c[0] == "approach"].count("seat_close") == 1        # nothing of the retry moved

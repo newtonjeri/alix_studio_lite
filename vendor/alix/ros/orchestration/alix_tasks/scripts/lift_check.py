@@ -92,7 +92,10 @@ LIFT_EXPECTATIONS = ('lid_lifted', 'seat_lifted', 'seat_open', 'seat_closed')
 #:                    the state this check asked for), then this plan restarts,
 #:                    up to max_retries times (default once)
 #:   skip             the plan's own outcome already holds; it ends here as done
-ON_FAIL_POLICIES = ('abort', 'retry_lift', 'run_prerequisite', 'skip')
+#:   retry_close      (2026-11-05, a closing's end check) the whole task runs again from its start, retry k
+#:                    the task re-planned with the lifting arm's start pose moved by retry_offsets[k-1]
+#:                    (whole-task rungs); ALIX's senders do not run it and stop for a person (abort)
+ON_FAIL_POLICIES = ('abort', 'retry_lift', 'retry_close', 'run_prerequisite', 'skip')
 LIFT_PROOF_CHECKS = ('fixture_gap',)
 
 
