@@ -33,20 +33,24 @@ def get_calibration(app, q, body, m):
     s = hc.SESSIONS.get(id(app.robot))
     return dict(session=s.view() if s else None,
                 board=dict(squares=[hc.BOARD_COLS + 1, hc.BOARD_ROWS + 1], square_mm=hc.BOARD_SQUARE_M * 1000,
+                           plate_mm=hc.BOARD_PLATE_MM, name="GP200 12*9-15",
                            print="Resources/Calibration/board_10x7_30mm.svg"),
                 pole_mm=hc.POLE_MM, speed_pct=hc.CAL_SPEED_PCT, poses=list(hc.BASES), mode=app.ui["mode"])
 
 
 @route("POST", r"/api/calibration/plan")
 def post_calibration_plan(app, q, body, m):
-    """``{pid, squares: [along, across], square_mm}``: the board as laid on the lid (any turn), its square measured."""
+    """``{pid, squares: [along, across], square_mm, plate_mm}``: the board as laid on the lid (any turn), its square
+    measured, its plate's longer side (null: a print on a backing)."""
     from . import placement, workers
     from .routes_robot import _payload
 
     session(app)
     sq = body.get("squares") or [hc.BOARD_COLS + 1, hc.BOARD_ROWS + 1]
     try:
-        board = hc.board_spec(int(sq[0]), int(sq[1]), float(body.get("square_mm") or hc.BOARD_SQUARE_M * 1000))
+        plate = body.get("plate_mm", hc.BOARD_PLATE_MM)
+        board = hc.board_spec(int(sq[0]), int(sq[1]), float(body.get("square_mm") or hc.BOARD_SQUARE_M * 1000),
+                              None if plate in (None, "", 0) else float(plate))
     except (TypeError, ValueError, IndexError):
         raise UserError("The board's squares (along, across) and its measured square (mm) must be numbers.") from None
     pid = body.get("pid")

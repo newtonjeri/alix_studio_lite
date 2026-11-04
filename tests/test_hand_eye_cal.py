@@ -32,7 +32,8 @@ def test_the_three_poses_give_fifteen_views_clear_of_the_lab_room(lab_plan):
     assert len(views) == 15
     assert {b: sum(v["base"] == b for v in views) for b in hc.BASES} == {b: 5 for b in hc.BASES}
     assert planned["diversity"]["enough"]                          # RealMan: over 30 deg about each END axis
-    assert planned["slack_m"] == pytest.approx(0.02)                # the 300 x 210 mm board: within 20 mm of the lid's middle
+    assert planned["board"]["squares"] == [12, 9] and planned["board"]["square_m"] == 0.015      # the lab's GP200 12*9-15
+    assert planned["slack_m"] == pytest.approx(0.08)                # it may lie 80 mm from the lid's middle, turned any way
     for v in views:                                                 # each one: the board whole in view (any turn), off the lid
         L = hc.links_at(v["q_deg"], hc.POLE_MM, state["left"])
         assert hc.view_of(L[hc.COLOUR_FRAME], planned["board"], planned["slack_m"])["ok"], v
@@ -78,7 +79,7 @@ def _texture(board, sq=40):
 
 
 def test_alix_solves_a_session_lite_writes(lab_plan, tmp_path):
-    import cv2
+    cv2 = pytest.importorskip("cv2")                               # the capture and the solve read the board with OpenCV
 
     from alix_perception_core import hand_eye as he
 
@@ -141,16 +142,21 @@ def _req(lite, method, path, body=None, token=None):
 def test_the_api_plans_and_refuses_what_it_cannot_do(lite):
     tok = _req(lite, "POST", "/api/auth/login", {"pin": "1234"})["token"]
     got = _req(lite, "GET", "/api/calibration", token=tok)
-    assert got["session"] is None and got["pole_mm"] == 250.0 and got["speed_pct"] == 40 and got["board"]["squares"] == [10, 7]
+    assert got["session"] is None and got["pole_mm"] == 250.0 and got["speed_pct"] == 40
+    assert (got["board"]["squares"], got["board"]["square_mm"], got["board"]["plate_mm"]) == ([12, 9], 15.0, 200.0)
     assert "No calibration session" in _req(lite, "POST", "/api/calibration/run", {}, tok)["error"]
-    assert "Open the project" in _req(lite, "POST", "/api/calibration/plan", {"square_mm": 30.0}, tok)["error"]
+    assert "Open the project" in _req(lite, "POST", "/api/calibration/plan", {"square_mm": 15.02}, tok)["error"]
     assert "not a calibration board" in _req(lite, "POST", "/api/calibration/plan", {"pid": "x", "square_mm": 5}, tok)["error"]
     assert "one count must be even" in _req(lite, "POST", "/api/calibration/plan", {"pid": "x", "squares": [10, 8]}, tok)["error"]
+    assert "cannot hold" in _req(lite, "POST", "/api/calibration/plan", {"pid": "x", "squares": [12, 9], "square_mm": 20.0}, tok)["error"]
     page = {"id": "alix_cal1", "name": "Cal", "createdAt": "2026-11-04T10:00:00.000Z", "updatedAt": "2026-11-04T10:00:00.000Z",
             "archived": False, "state": {"currentTask": 0, "currentView": "setup"}}
     _req(lite, "PUT", "/api/projects/alix_cal1", page, tok)
-    planned = _req(lite, "POST", "/api/calibration/plan", {"pid": "alix_cal1", "squares": [12, 9], "square_mm": 20.01}, tok)
-    assert planned["session"]["views"] == 15 and planned["session"]["board"] == dict(squares=[12, 9], square_mm=20.01, tolerance_mm=40)
+    planned = _req(lite, "POST", "/api/calibration/plan",                  # the A3 print instead: no plate, a backing
+                   {"pid": "alix_cal1", "squares": [10, 7], "square_mm": 30.02, "plate_mm": None}, tok)
+    b = planned["session"]["board"]
+    assert planned["session"]["views"] == 15 and (b["squares"], b["square_mm"], b["tolerance_mm"], b["plate_mm"]) == ([10, 7], 30.02, 20, None)
+    assert b["centre_m"] == list(hc.BOARD_CENTRE_M) and b["radius_m"] == pytest.approx(0.1832, abs=0.001)  # what the 3D draws
     tl = _req(lite, "POST", "/api/calibration/preview", {}, tok)  # the tour in 3D, nothing sent
     assert tl["frames"] and "15 views at 40 %" in tl["what"]
     r = _req(lite, "POST", "/api/calibration/run", {}, tok)       # Visual sim: Lite does not use the robot
@@ -218,7 +224,7 @@ def _robot(state):
 def test_one_run_takes_every_view_at_40_percent_and_solves(lab_plan, monkeypatch, tmp_path):
     import contextlib
 
-    import cv2
+    cv2 = pytest.importorskip("cv2")
     from alix_perception_core import hand_eye as he
 
     from alix_studio_lite.server import workers
@@ -292,3 +298,42 @@ def test_each_move_is_checked_again_from_where_the_arms_stand(lab_plan, monkeypa
     hc.leg_clear(robot, s, planned["views"][0]["q_deg"], "view 1")          # the first planned move: clear
     with pytest.raises(jobs.UserError, match="Not moved"):
         hc.leg_clear(robot, s, [0.0, 10.0, 0.0, 10.0, 0.0, 10.0, 0.0], "a pose up against the side wall")
+
+
+def test_planning_and_the_3d_tour_need_no_opencv_and_real_says_so_before_moving(tmp_path):
+    """Lite's own .venv may have no OpenCV (the user's, 4 Nov: "No module named 'cv2'" on Plan the views): planning, the
+    3D tour and Hardware sim run without it; Real refuses before anything moves, saying how to install it."""
+    import subprocess
+    import sys
+    import textwrap
+
+    code = textwrap.dedent(f"""
+        import sys, importlib.abc
+        class NoCv2(importlib.abc.MetaPathFinder):
+            def find_spec(self, name, path, target=None):
+                if name == "cv2" or name.startswith("cv2."):
+                    raise ModuleNotFoundError("No module named 'cv2'")
+        sys.meta_path.insert(0, NoCv2())
+        sys.path.insert(0, {str(ROOT / "src")!r})
+        from types import SimpleNamespace
+        from alix_studio_lite import vendor_paths; vendor_paths.activate()
+        from alix_studio_lite.server import contact_sim, hand_eye_cal as hc, placement, jobs
+        from alix_studio_lite.motion.limits import load_limits
+        lab = SimpleNamespace(root={LAB.root!r}, fixture="commode_c")
+        room = dict(home=contact_sim.default_home(), scene=placement.scene("commode_c", placement.load(lab)["room"], None),
+                    fid="commode_c", cubicle_mm=1400)
+        planned = hc.plan({{}}, room)
+        s = hc.Session({str(tmp_path / "nocv")!r}, planned, room)
+        md = hc.tour_md(s, load_limits("right").rating_deg_s)
+        robot = SimpleNamespace(links={{"right": object()}})
+        try:
+            hc.run_session(robot, s, "real")
+            print("NOT REFUSED")
+        except jobs.UserError as e:
+            print("refused", e.code)
+        print(len(planned["views"]), md.shape[0] > 1000, "cv2" in sys.modules)
+    """)
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=600)
+    assert out.returncode == 0, out.stderr[-2000:]
+    lines = out.stdout.strip().splitlines()
+    assert lines[-2] == "refused setup" and lines[-1] == "15 True False", out.stdout

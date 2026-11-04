@@ -9,11 +9,11 @@ Open it from the Operator Journey: **Camera Calibration**, just below Data Manag
 
 ## What you need
 
-- **The board.** Two options:
-  - Print `Resources/Calibration/board_10x7_30mm.svg` (10 × 7 squares of 30 mm) on A3 at 100 % ("actual size",
-    never "fit to page"). Check the 100 mm scale bar with a ruler, then glue the print flat to a rigid sheet.
-  - Or use the lab's rigid calibration plate, and enter its squares along and across on the page. One count must be
-    even and the other odd.
+- **The board.** By default, the lab's rigid **GP200** plate. Its footnote "GP200 12*9-15" means 12 × 9 squares
+  of 15 mm on a 200 × 200 mm plate, and those are the page's defaults. Another board works too: enter its squares
+  along and across (one count even, the other odd), its measured square, and its plate's longer side. Leave the plate
+  blank for a print such as `Resources/Calibration/board_10x7_30mm.svg` (10 × 7 squares of 30 mm on A3, printed at
+  100 % and glued flat to a rigid sheet).
 
   Either way, measure ten squares in a row with calipers and divide by ten: that is the measured square size.
   ALIX's own A3 board (12 × 9 squares of 30 mm) is too big here: from these poses the camera is 0.5–0.7 m from the
@@ -21,11 +21,13 @@ Open it from the Operator Journey: **Camera Calibration**, just below Data Manag
 - **The cell.**
   - The commode's lid closed and its seat down.
   - The board flat on the lid, near its middle. It may be turned any way; the plan says how far from the middle it
-    may lie (20 mm for the 300 × 210 mm board, 40 mm for a 240 × 180 mm plate). Do not move it during the session.
+    may lie (80 mm for the GP200, 20 mm for the 10 × 7 print). Do not move it during the session.
   - The left arm at its rest.
   - Nobody inside the cell.
-- **Lite.** The project open (its room's walls are what each move is checked against), the right arm connected, and
-  the wrist camera plugged in.
+- **Lite.** The project open (its room's walls are what each move is checked against). Planning and Visual sim need
+  no arm and no camera. Hardware sim needs the right arm connected. Real Machine Mode needs the right arm, the wrist
+  camera, and OpenCV in Lite's Python: `python3 tools/setup_lite.py` installs it with its optional packages, and
+  without it the run is refused before anything moves.
 
 ## The session
 
@@ -38,7 +40,9 @@ Open it from the Operator Journey: **Camera Calibration**, just below Data Manag
    - the MoveJ from the view before is clear of the room's walls, the commode, the board lying on the lid and the
      left arm. A MoveJ moves straight in the joints, so the path checked is the path the controller runs.
 2. **Check it offline.**
-   - **Show the tour in 3D** plays every move. Nothing is sent to the robot.
+   - **Show the tour in 3D** plays every move in the project's room, with the commode and the board on its lid. The
+     blue ring shows how far from the middle the board may lie. Nothing is sent to the robot. In Visual sim, **Run the
+     calibration** shows the same.
    - In **Hardware sim**, **Run the calibration** sends the same MoveJs to the controllers in their SIM mode: the
      controllers run every move, the arm does not move, and nothing is captured.
 3. In **Real Machine Mode**, press **Run the calibration**. Lite asks once, then does it all in one go:

@@ -7,7 +7,8 @@
 
 import { get, post, say } from './api.js';
 import { ctx, el, jobLine, robotCall, tell, watchJob } from './ctx.js';
-import { borrow, Player } from './seq3d.js';
+import { home3d, Player } from './seq3d.js';
+import { css } from './three_scene.js';
 import { frame } from './vp.js';
 
 const $ = (id) => document.getElementById(id);
@@ -16,18 +17,48 @@ const MODE_WORDS = { visual: 'Visual sim', hwsim: 'Hardware sim', real: 'Real Ma
 let box = null;
 let busy = false;
 
-// the tour in the window's own 3D, nothing sent (as Advanced Robot Controls' simulation shows a move)
+// The board as the plan expects it in 3D: its squares flat on the closed lid (base_link, z up), long side outward,
+// and a ring as far from the lid's middle as the plan lets it lie (any turn inside it is seen whole).
+function boardObject(b) {
+  const THREE = window.THREE;
+  const [sx, sy] = b.squares;
+  const sq = b.square_mm / 1000;
+  const px = 16;
+  const canvas = Object.assign(document.createElement('canvas'), { width: sx * px, height: sy * px });
+  const g = canvas.getContext('2d');
+  g.fillStyle = css('--vp-board-light'); g.fillRect(0, 0, canvas.width, canvas.height); g.fillStyle = css('--vp-board-dark');
+  for (let r = 0; r < sy; r++) for (let c = 0; c < sx; c++) if ((r + c) % 2 === 0) g.fillRect(c * px, r * px, px, px);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.magFilter = THREE.NearestFilter;
+  const [cx, cy, cz] = b.centre_m;
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(sx * sq, sy * sq), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
+  plate.position.set(cx, cy, cz + 0.003);
+  const r = b.radius_m + b.tolerance_mm / 1000;
+  const ring = new THREE.Mesh(new THREE.RingGeometry(r - 0.003, r + 0.003, 72),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(css('--vp-board-ring')), side: THREE.DoubleSide }));
+  ring.position.set(cx, cy, cz + 0.004);
+  const group = new THREE.Group();
+  group.add(plate, ring);
+  return group;
+}
+
+// the tour in the window's own 3D, in the project's room with the commode's lid closed; nothing sent
 const view3d = {
-  player: null, three: null, total: 0, done: null,
-  async play(timeline, says) {
+  player: null, three: null, total: 0, done: null, board: null,
+  async stage(session) {                         // the robot at home, the commode, the board on its lid
     const host = $('liteCalHost');
     if (!this.player) {
       this.player = new Player({ onTime: (t) => this.show(t), onEnd: () => { const f = this.done; this.done = null; if (f) f(); } });
-      frame(host).title('The calibration tour', 'nothing is sent');
     }
-    this.three = await borrow(host);
-    this.three.robot.home();
-    this.three.robot.clearTrack('left');
+    this.three = await home3d(host);
+    if (this.board) this.three.viewer.remove(this.board);
+    this.board = null;
+    if (session) { this.board = boardObject(session.board); await this.three.viewer.add(this.board); }
+    frame(host).title('The calibration tour', session ? 'the robot at home; the board on the lid' : 'plan the views to see them');
+  },
+  async play(timeline, says, session) {
+    const host = $('liteCalHost');
+    await this.stage(session);
     this.total = this.three.robot.loadTimeline('right', timeline).total_s;
     $('liteCalTime').max = String(Math.round(this.total * 1000));
     frame(host).title(`The calibration tour · ${says}`, 'nothing is sent');
@@ -65,9 +96,10 @@ function build() {
         el('div', { class: 'lite-cal-left' },
           el('ol', { class: 'lite-cal-steps', id: 'liteCalSteps' }),
           el('div', { class: 'lite-cal-row' },
-            num('liteCalSqX', 'Squares along', 10, { min: '4', max: '20', step: '1' }),
-            num('liteCalSqY', 'Squares across', 7, { min: '4', max: '20', step: '1' }),
-            num('liteCalSquare', 'Measured square (mm)', '30.00', { min: '10', max: '60', step: '0.01' })),
+            num('liteCalSqX', 'Squares along', 12, { min: '4', max: '20', step: '1' }),
+            num('liteCalSqY', 'Squares across', 9, { min: '4', max: '20', step: '1' }),
+            num('liteCalSquare', 'Measured square (mm)', '15.00', { min: '10', max: '60', step: '0.01' }),
+            num('liteCalPlate', 'Plate (mm, blank: a print)', 200, { min: '100', max: '600', step: '1' })),
           el('div', { class: 'lite-cal-row' },
             el('button', { class: 'btn', id: 'liteCalPlan', type: 'button', text: 'Plan the views', onclick: () => act(plan) }),
             el('button', { class: 'btn', id: 'liteCalShow', type: 'button', text: 'Show the tour in 3D', onclick: () => act(show) }),
@@ -104,24 +136,32 @@ async function act(fn) {
 async function plan() {
   if (!ctx.pid) { window.toast('Open the project first: its room is what the moves are checked against.', 'warn'); return; }
   says('Planning the views: every MoveJ checked against the room’s walls, the commode, the board on the lid and the left arm ...');
+  const plate = $('liteCalPlate').value.trim();
   const r = await post('/api/calibration/plan', {
-    pid: ctx.pid, squares: [Number($('liteCalSqX').value), Number($('liteCalSqY').value)], square_mm: Number($('liteCalSquare').value) });
+    pid: ctx.pid, squares: [Number($('liteCalSqX').value), Number($('liteCalSqY').value)], square_mm: Number($('liteCalSquare').value),
+    plate_mm: plate === '' ? null : Number(plate) });
   says(`${r.session.views} views planned in ${r.plan.seconds} s; the board may lie up to ${r.plan.tolerance_mm} mm from the lid’s middle, `
     + 'turned any way. Nothing moved.');
+  await view3d.stage(r.session);
 }
 
-async function show() {
-  if (!(await get('/api/calibration')).session) { window.toast('Plan the views first.', 'warn'); return; }
-  says('The tour in 3D: nothing is sent to the robot.');
+async function show(note = '') {
+  const s = (await get('/api/calibration')).session;
+  if (!s) { window.toast('Plan the views first.', 'warn'); return; }
+  says(`${note}The tour in 3D: nothing is sent to the robot.`);
   const tl = await post('/api/calibration/preview', {});
-  await view3d.play(tl, tl.what);
-  says(`Shown: ${tl.what}. Nothing was sent.`);
+  await view3d.play(tl, tl.what, s);
+  says(`${note}Shown: ${tl.what}. Nothing was sent.`);
 }
 
 async function run() {
   const d = await get('/api/calibration');
   const s = d.session;
   if (!s) { window.toast('Plan the views first.', 'warn'); return; }
+  if (d.mode === 'visual') {                     // Visual sim: the run is the motion in 3D; no arm or camera is needed
+    await show('Visual sim: ');
+    return;
+  }
   const left = d.mode === 'hwsim' ? s.views : s.views - s.next;
   if (left <= 0) { window.toast('Every planned view is taken: press Solve again to re-solve.', 'warn'); return; }
   const j = await robotCall('/api/calibration/run', {},
@@ -153,11 +193,13 @@ function paintSteps(d) {
   const s = d.session;
   const tol = s ? `${s.board.tolerance_mm} mm` : 'the planned distance';
   $('liteCalSteps').replaceChildren(...[
-    `The board: ${d.board.squares[0]} x ${d.board.squares[1]} squares of ${d.board.square_mm} mm (${d.board.print}, printed at 100 % on A3 `
-      + 'and glued flat), or the lab’s rigid plate: enter its squares and measure ten squares with calipers.',
+    `The board: the lab’s ${d.board.name} plate (${d.board.squares[0]} x ${d.board.squares[1]} squares of ${d.board.square_mm} mm on a `
+      + `${d.board.plate_mm} mm plate, as its footnote says), or another: enter its squares, measure ten squares with calipers and `
+      + `divide by ten, and give its plate (blank for a print, such as ${d.board.print}: 10 x 7 squares of 30 mm on A3).`,
     `Lay it flat on the closed lid, near its middle (within ${tol}), turned any way; the seat down, the left arm at its rest.`,
     'Plan the views. Nothing moves.',
-    'Check them offline: Show the tour in 3D; in Hardware sim, Run the calibration runs the same MoveJs in the controllers’ SIM mode.',
+    'Check them offline: Show the tour in 3D (in Visual sim, Run the calibration shows it too; no arm or camera needed); '
+      + 'in Hardware sim, Run the calibration sends the same MoveJs to the controllers in their SIM mode.',
     `In Real Machine Mode, Run the calibration: the right pole to ${d.pole_mm} mm, the ${s ? s.views : 15} views at ${d.speed_pct} %, `
       + 'back to rest, then the solve. STOP stops it; a new run goes on from the next view.',
   ].map((t) => el('li', { text: t })));
@@ -176,6 +218,7 @@ function paint(d) {
   $('liteCalSqX').value = String(s.board.squares[0]);
   $('liteCalSqY').value = String(s.board.squares[1]);
   $('liteCalSquare').value = Number(s.board.square_mm).toFixed(2);
+  $('liteCalPlate').value = s.board.plate_mm == null ? '' : String(s.board.plate_mm);
   const taken = new Map(s.rows.map((r) => [r.view, r]));
   tab.append(el('tr', {}, ...['View', 'Pose', 'Wrist turn (deg)', 'Planned: range, tilt', 'Taken: PnP, tilt, range'].map((t) => el('th', { text: t }))));
   for (const v of s.planned) {
@@ -211,11 +254,12 @@ async function refresh() {
   try { paint(await get('/api/calibration')); } catch (err) { says(say(err)); }
 }
 
-export function openCalibration() {
+export async function openCalibration() {
   if (!box) build();
   box.classList.add('show');
   document.body.style.overflow = 'hidden';
-  refresh();
+  await refresh();
+  try { await view3d.stage((await get('/api/calibration')).session); } catch (err) { says(say(err)); }
 }
 
 // The Operator Journey's entry, below Data Management (the user, 4 Nov).

@@ -55,16 +55,19 @@ import numpy as np
 from .. import vendor_paths
 from .jobs import UserError
 
-BOARD_COLS, BOARD_ROWS, BOARD_SQUARE_M = 9, 6, 0.030       # the default board's inner corners: 10 x 7 squares of 30 mm
+BOARD_COLS, BOARD_ROWS, BOARD_SQUARE_M = 11, 8, 0.015      # the lab's board: inner corners of 12 x 9 squares of 15 mm
+BOARD_PLATE_MM = 200.0                 # ... on a 200 x 200 mm plate: its footnote "GP200 12*9-15" (the user, 4 Nov)
 # The user, 4 Nov: ALIX's A3 board (12 x 9 squares of 30 mm, 360 x 270 mm) is never seen whole from these three poses
 # (at the inspection poses' 150 mm pole the camera is 0.5 m above the lid; at 300 mm only 11 views fit, 29 deg about
-# the END frame's Y): 10 x 7 squares of 30 mm on A3 (Resources/Calibration/board_10x7_30mm.svg, ALIX's
-# make_chessboard.py), the right pole at 250 mm. Any other board is given by its squares and its measured square
-# (``board_spec``; the lab's rigid plate, say); its rotation on the lid is free (the user's photo, 4 Nov: "it is just
-# for illustration, not the exact placement position on top of the lid").
+# the END frame's Y); the right pole at 250 mm. The lab's GP200 plate (180 x 135 mm of squares) gives 15 views, 50 / 43
+# / 178 deg about X / Y / Z, 0.54-0.69 m (a square 20-25 px), and may lie 80 mm from the lid's middle. Any other board
+# is given by its squares, its measured square and its plate (``board_spec``; the A3 print of 10 x 7 squares of 30 mm,
+# Resources/Calibration/board_10x7_30mm.svg, say); its rotation on the lid is free (the user's photo, 4 Nov: "it is
+# just for illustration, not the exact placement position on top of the lid").
 BOARD_CENTRE_M = (0.70, 0.0, 0.452)    # on the closed lid: 4 Nov's frames put its top at 0.449 m, x 0.49-1.00, y +-0.17
-SLACKS_M = (0.04, 0.02, 0.0)           # how far from the lid's middle it may lie: the largest a full plan allows
-BOARD_BORDER_M, BOARD_THICK_M = 0.015, 0.010    # the plate or backing round the squares, its thickness: the obstacle
+SLACKS_M = (0.08, 0.06, 0.04, 0.02, 0.0)   # how far from the lid's middle it may lie: the largest a full plan allows
+BOARD_BORDER_M, BOARD_THICK_M = 0.015, 0.010    # a print's backing round its squares (when no plate size is given), the
+                                                 # thickness: the obstacle
 BASES = ("rest_pose", "inspection_pose_1", "inspection_pose_4")
 POLE_MM = 250.0                        # the user, 4 Nov (the inspection poses' own 150 mm puts the camera too near)
 IMAGE_W, IMAGE_H, FOCAL_PX = 1280, 720, 904.5   # the D435's colour stream as Lite opens it (3 Nov: fx 904.5)
@@ -91,18 +94,30 @@ CHECK_FRAMES = ("R_Link4", "R_Link5", "R_Link6", "R_Link7", "R_CameraHolderLink"
 
 # ── the board and the camera ──────────────────────────────────────────────
 
-def board_spec(squares_x: int = BOARD_COLS + 1, squares_y: int = BOARD_ROWS + 1, square_mm: float = BOARD_SQUARE_M * 1000) -> dict:
-    """A chessboard by its squares along and across and its MEASURED square: {squares, cols, rows (inner corners),
-    square_m, size_m, radius_m (the squares' half diagonal: what any rotation of it sweeps)}. RealMan's boards are
-    even x odd squares (ALIX's canonical_order tells the board's ends apart by its two outer corners' colours)."""
+def board_spec(squares_x: int = BOARD_COLS + 1, squares_y: int = BOARD_ROWS + 1, square_mm: float = BOARD_SQUARE_M * 1000,
+               plate_mm: float | None = BOARD_PLATE_MM) -> dict:
+    """A chessboard by its squares along and across, its MEASURED square and its plate (the longer side, mm; None: a
+    print on a backing BOARD_BORDER_M wider than its squares): {squares, cols, rows (inner corners), square_m, size_m,
+    radius_m (the squares' half diagonal: what any rotation of them sweeps), plate_m (the obstacle's half diagonal)}.
+    RealMan's boards are even x odd squares (ALIX's canonical_order tells the board's ends apart by its two outer
+    corners' colours)."""
     sx, sy, sq = int(squares_x), int(squares_y), float(square_mm) / 1000.0
     if sx < 4 or sy < 4 or (sx + sy) % 2 == 0:
         raise UserError(f"A board of {sx} x {sy} squares cannot be used: one count must be even and the other odd "
                         "(so its two outer corners differ in colour), at least 4 each.", "Count the squares again.")
     if not 0.010 <= sq <= 0.060:
         raise UserError(f"A square of {square_mm:g} mm is not a calibration board's.", "Measure ten squares with calipers and divide by ten.")
-    return dict(squares=[sx, sy], cols=sx - 1, rows=sy - 1, square_m=sq, size_m=[sx * sq, sy * sq],
-                radius_m=math.hypot(sx * sq, sy * sq) / 2.0)
+    radius = math.hypot(sx * sq, sy * sq) / 2.0
+    if plate_mm is not None:
+        plate = float(plate_mm) / 1000.0
+        if plate < max(sx, sy) * sq or plate > 0.6:
+            raise UserError(f"A plate of {plate_mm:g} mm cannot hold {sx} x {sy} squares of {square_mm:g} mm.",
+                            "Measure the plate's longer side.")
+        plate_half = plate / math.sqrt(2.0)                  # a square plate's half diagonal (a longer one: its side's)
+    else:
+        plate, plate_half = None, radius + BOARD_BORDER_M
+    return dict(squares=[sx, sy], cols=sx - 1, rows=sy - 1, square_m=sq, size_m=[sx * sq, sy * sq], radius_m=radius,
+                plate_m=plate, plate_half_m=max(plate_half, radius))
 
 
 def he_board(board: dict):
@@ -128,7 +143,7 @@ def with_board(scene: dict, board: dict, slack: float) -> dict:
     measured room's walls (collision_check takes the room's boxes from there); without them the lid alone stands for it."""
     if not scene.get("walls"):
         return dict(scene)
-    side = 2.0 * (float(board["radius_m"]) + BOARD_BORDER_M + float(slack))
+    side = 2.0 * (float(board.get("plate_half_m") or board["radius_m"] + BOARD_BORDER_M) + float(slack))
     cx, cy, cz = BOARD_CENTRE_M
     box = dict(name="calibration board", center=[cx, cy, cz + BOARD_THICK_M / 2], size=[side, side, BOARD_THICK_M])
     return dict(scene, walls=[w for w in scene["walls"] if w.get("name") != "calibration board"] + [box])
@@ -136,6 +151,37 @@ def with_board(scene: dict, board: dict, slack: float) -> dict:
 
 def nominal_K() -> np.ndarray:
     return np.array([[FOCAL_PX, 0.0, IMAGE_W / 2], [0.0, FOCAL_PX, IMAGE_H / 2], [0.0, 0.0, 1.0]])
+
+
+MIN_AXIS_ROTATION_DEG, MIN_SAMPLES = 30.0, 15      # RealMan's (alix_perception_core.hand_eye's): > 30 deg about each axis
+
+
+def diversity(T_base_end) -> dict:
+    """ALIX's hand_eye.diversity without OpenCV (planning and the 3D need none): how much the END frame turned
+    between samples, per END-frame axis (RealMan: > 30 deg about each of X, Y, Z), and the largest single turn."""
+    from scipy.spatial.transform import Rotation
+
+    Rs = [np.asarray(T, float)[:3, :3] for T in T_base_end]
+    per_axis, largest = np.zeros(3), 0.0
+    for i in range(len(Rs)):
+        for j in range(i + 1, len(Rs)):
+            v = np.degrees(Rotation.from_matrix(Rs[i].T @ Rs[j]).as_rotvec())
+            per_axis = np.maximum(per_axis, np.abs(v))
+            largest = max(largest, float(np.linalg.norm(v)))
+    ok = bool(len(Rs) >= MIN_SAMPLES and np.all(per_axis >= MIN_AXIS_ROTATION_DEG))
+    return dict(samples=len(Rs), max_rotation_about_end_xyz_deg=[round(float(a), 1) for a in per_axis],
+                largest_relative_rotation_deg=round(largest, 1), enough=ok)
+
+
+def need_opencv(what: str) -> None:
+    """The capture and the solve read the board with OpenCV (ALIX's hand_eye and compute_hand_eye import cv2): refused
+    before anything moves when Lite's Python has none. Planning, the 3D tour and Hardware sim need none."""
+    try:
+        import cv2  # noqa: F401
+    except ImportError:
+        raise UserError(f"{what} needs OpenCV in Lite's Python (it finds the board in the images and solves), and it is "
+                        "not installed.", "Run python3 tools/setup_lite.py (its optional packages bring it), then start Lite "
+                        "again. Planning, the 3D tour and Hardware sim work without it.", code="setup") from None
 
 
 # ── the robot's frames ───────────────────────────────────────────────────
@@ -337,8 +383,6 @@ def plan(robot_state: dict, room: dict, board: dict | None = None, per_pose: int
     scene, fid, cubicle_mm} (the board is put in its scene here); ``board``: board_spec's. The largest of SLACKS_M a
     full plan allows (every pose its views, RealMan's 30 deg about each axis) is the board's tolerance on the lid."""
     vendor_paths.activate()
-    from alix_perception_core import hand_eye as he
-
     t0 = time.monotonic()
     board = board or board_spec()
     poses = named_poses()
@@ -346,7 +390,7 @@ def plan(robot_state: dict, room: dict, board: dict | None = None, per_pose: int
     for slack in SLACKS_M:
         per_base = {b: candidates(b, poses[b], board, slack, left) for b in BASES}
         views = choose(per_base, per_pose)
-        if len(views) == per_pose * len(BASES) and he.diversity([v["T_base_end"] for v in views])["enough"]:
+        if len(views) == per_pose * len(BASES) and diversity([v["T_base_end"] for v in views])["enough"]:
             break
     else:
         raise UserError(f"No full set of views sees a {board['squares'][0]} x {board['squares'][1]} board of "
@@ -378,7 +422,7 @@ def plan(robot_state: dict, room: dict, board: dict | None = None, per_pose: int
     if any(not g["ok"] for g in legs):
         raise UserError("No collision-free tour of the calibration views was found: " + "; ".join(notes[-3:]) + ".",
                         "Check the room's walls in Prepare and that the left arm stands at its rest, then plan again.")
-    div = he.diversity([v["T_base_end"] for v in views])
+    div = diversity([v["T_base_end"] for v in views])
     return dict(views=[{k: v[k] for k in v if k != "T_base_end"} | dict(index=i, T_base_end=v["T_base_end"].tolist())
                        for i, v in enumerate(views)],
                 poses=poses, candidates={b: len(c) for b, c in per_base.items()}, diversity=div,
@@ -419,10 +463,7 @@ class Session:
     def view(self) -> dict:
         from_div = None
         if len(self.rows) >= 2:
-            vendor_paths.activate()
-            from alix_perception_core import hand_eye as he
-
-            from_div = he.diversity([np.asarray(r["T_base_end"], float) for r in self.rows])
+            from_div = diversity([np.asarray(r["T_base_end"], float) for r in self.rows])
         return dict(folder=str(self.folder), views=len(self.plan["views"]), taken=len(self.rows), next=self.next_index,
                     missed=list(self.missed), speed_pct=CAL_SPEED_PCT,
                     planned=[{k: v[k] for k in ("index", "base", "offsets_deg", "range_m", "tilt_deg", "margin_px")}
@@ -432,7 +473,9 @@ class Session:
                     diversity=from_div, planned_diversity=self.plan.get("diversity"), notes=self.notes[-6:],
                     result=summary(self.result) if self.result else None, square_mm=round(self.square_m * 1000, 3),
                     board=dict(squares=self.board["squares"], square_mm=round(self.square_m * 1000, 3),
-                               tolerance_mm=round(float(self.plan.get("slack_m") or 0.0) * 1000)))
+                               plate_mm=None if self.board.get("plate_m") is None else round(self.board["plate_m"] * 1000),
+                               tolerance_mm=round(float(self.plan.get("slack_m") or 0.0) * 1000),
+                               centre_m=list(BOARD_CENTRE_M), radius_m=round(float(self.board["radius_m"]), 4)))
 
     def write(self) -> None:
         vendor_paths.activate()
@@ -621,6 +664,8 @@ def run_session(robot, session: Session, mode: str):
     if robot.links.get("right") is None:
         raise UserError("The right arm is not connected.", "Connect it in Prepare, then try again.")
     sim = mode != "real"
+    if not sim:
+        need_opencv("The camera calibration on the robot")
     cam = None if sim else camera_of(robot)
     if cam is not None and not cam.available().get("ok"):
         raise UserError("The wrist camera (D435) is not connected.", "Plug it in, then try again.", code="camera")
@@ -736,6 +781,7 @@ def solve(session: Session) -> dict:
     """ALIX's offline solve of the session (compute_hand_eye.run): writes hand_eye_result.yaml beside the samples."""
     if len(session.rows) < 3:
         raise UserError(f"Only {len(session.rows)} view(s) taken; RealMan's method asks for 15 to 20.", "Take more views.")
+    need_opencv("Solving the calibration")
     che = _compute()
     try:
         res = che.run(session.folder, quiet=True)

@@ -23,6 +23,7 @@
   --vp-porcelain:#E9EDF2; --vp-seat:#D8DDE3; --vp-sky:#FFFFFF; --vp-ground:#334455;
   --vp-path-left:#60A5FA; --vp-path-right:#FB923C;
   --vp-collision:#FF4D4D;                     /* a link in collision (ALIX Studio's DAC_HIT_COLOR) */
+  --vp-board-dark:#111111; --vp-board-light:#FFFFFF; --vp-board-ring:#2563EB;   /* the calibration board on the lid */
   --vp-cube-face:#1B2430; --vp-cube-edge:#2F81F7; --vp-cube-text:#E6EDF3; --vp-cube-ground:#222A33;   /* the view cube, as ALIX Studio's */
 }
 html[data-theme="dark"] { --lite-viewport-bg:#0D1117; }
