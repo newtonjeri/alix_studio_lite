@@ -474,8 +474,13 @@ stage_sequence:
   - stage: verify_seat_closed
     check: fixture_gap
     expect: seat_closed
-    arm: right
-    on_fail: abort              # the seat did not come down: a person must look
+    arm: right                        # the camera arm (the D435 on the right wrist); the left is the one retried
+    on_fail: retry_close              # the seat did not come down: Close the seat again from its start, the left
+    max_retries: 2                    # start pose moved by the next retry_offsets entry (whole-task rungs, 5 Nov)
+    retry_offsets:
+      - {x: 0.005, y: 0.005}
+      - {x: 0.005, y: 0.01, z: -0.015}
+
 
   - stage: move_to_rest
     speed_class: freespace

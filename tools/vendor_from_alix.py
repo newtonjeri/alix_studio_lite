@@ -142,6 +142,9 @@ ALIX_FILES = [
       for s in [".json"] + [f".g{k}{e}" for k in range(groups) for e in (".json", ".proj", ".txt")]],
     *[f"Resource/plans/commode_c/hardware/rungs/lid_open_toppra.rung{k}{e}"
       for k in (1, 2, 3) for e in (".json", ".g0.json", ".g0.proj", ".g0.txt")],
+    # Close the seat's retries (on_fail retry_close, 5 Nov): the whole task re-planned per retry_offsets entry
+    *[f"Resource/plans/commode_c/hardware/rungs/seat_close_toppra.rung{k}{s}"
+      for k in (1, 2) for s in [".json"] + [f".g{g}{e}" for g in range(2) for e in (".json", ".proj", ".txt")]],
     "ros/orchestration/alix_tasks/scripts/lift_check.py",
     "ros/orchestration/alix_tasks/config/mechanism_tasks/task_parameters_defaults.yaml",
     *[f"ros/orchestration/alix_tasks/config/mechanism_tasks/commode_c/{p}.yaml"

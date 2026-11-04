@@ -103,7 +103,11 @@ ACCEPTED = {
                         by="the user, 4 Nov",
                         why="the left's start 5 mm further, 5 mm across and 10 mm lower after the seat rose again in 8 of 12 "
                             "pushes on 4 Nov: the model reads up to 90.9 N on the seat (left index) for 3.3 s; accepted for "
-                            "the lab's runs")],
+                            "the lab's runs"),
+                   dict(sha256="57e8ec466e3c0faed58b915b00e4eb91c3bd78e4e6e55b26562e606193d452d9", made="2026-11-04 22:29:38",
+                        by="the user, 5 Nov",
+                        why="accepted as it came from ALIX, not checked here (the user: no gate checks, just sync them): "
+                            "the end check on retry_close with its two whole-task retries, for the lab's runs")],
 }
 
 

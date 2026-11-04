@@ -1,6 +1,6 @@
 {
   "task_name": "seat_close",
-  "timestamp_human": "2026-11-04 21:39:00",
+  "timestamp_human": "2026-11-04 22:29:38",
   "cleaning_path_mode": "toppra",
   "path_source": "spline",
   "time_parameterization_mode": "toppra",
@@ -7772,7 +7772,7 @@
       "stage_name": "move_to_rest",
       "hold_before_s": 0.000000,
       "pre_actions": [
-        {"type": "check_fixture_state", "stage": "verify_seat_closed", "check": "fixture_gap", "expect": "seat_closed", "arm": "right", "on_fail": "abort", "max_retries": 0, "also_observe": "", "if_observed": "", "prerequisite": "", "retry_offsets": []}
+        {"type": "check_fixture_state", "stage": "verify_seat_closed", "check": "fixture_gap", "expect": "seat_closed", "arm": "right", "on_fail": "retry_close", "max_retries": 2, "also_observe": "", "if_observed": "", "prerequisite": "", "retry_offsets": [[0.005, 0.005, 0], [0.005, 0.01, -0.015]]}
       ],
       "trajectory_mode": 0,
       "radio": 0.000000,
