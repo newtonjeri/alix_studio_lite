@@ -295,6 +295,22 @@ def _frames_exec(frames):
     return ex, slept
 
 
+def test_the_pause_between_frames_counts_from_the_frame_before():
+    """The lab, 5 Nov: judging a frame took 1.1 s, and the 0.15 s pause came on top. The pause counts from when the
+    frame before was taken: a frame judged slower than it is followed by the next at once."""
+    import time as _time
+
+    ex, slept = _frames_exec([])
+    answers = iter([REFUSED, _seen("seat_lifted"), _seen("seat_lifted")])
+
+    def slow(expect, check=None):
+        _time.sleep(0.2)
+        return next(answers)
+    ex._frame = slow
+    a = ex.ask(SEAT_LIFTED, "seat_lifted")
+    assert a.success and a.message.startswith("3 frames") and slept == []
+
+
 def _seen(state, conf=0.9):
     return Answer(success=True, fixture_state=state, state_confidence=conf, message=f"{state} seen")
 
@@ -336,14 +352,14 @@ def test_each_check_is_decided_on_two_frames_that_agree_or_more_one_at_a_time():
     """The owner, 23 Oct: three frames, two more when they do not settle it; 26 Oct: two frames that agree decide (the
     depth noise is independent frame to frame), a third and more one at a time up to five, ruled by ALIX's own
     lift_check.decide: yes / no / nothing per frame; from two frames on, 2 yes and no no pass, 2 no and no yes fail;
-    at five, also 3 yes with at most 1 no. 0.15 s between frames."""
+    at five, also 3 yes with at most 1 no. 0.15 s between frames (what is left of it once the frame before is judged)."""
     ex, slept = _frames_exec([_seen("seat_lifted", 0.8), _seen("seat_lifted", 1.0), REFUSED])
     a = ex.ask(SEAT_LIFTED, "seat_lifted")
     assert a.success and a.fixture_state == "seat_lifted" and a.state_confidence == pytest.approx(0.8)   # the first yes
-    assert a.message.startswith("2 frames (seat_lifted, seat_lifted; 2 yes, 0 no, 0 no vote)") and slept == [0.15]
+    assert a.message.startswith("2 frames (seat_lifted, seat_lifted; 2 yes, 0 no, 0 no vote)") and slept == pytest.approx([0.15], abs=0.01)
     ex, slept = _frames_exec([_seen("seat_lifted"), REFUSED, _seen("seat_lifted")])             # a refused frame: one more
     a = ex.ask(SEAT_LIFTED, "seat_lifted")
-    assert a.success and a.message.startswith("3 frames") and slept == [0.15, 0.15]
+    assert a.success and a.message.startswith("3 frames") and slept == pytest.approx([0.15, 0.15], abs=0.01)
     ex, slept = _frames_exec([_seen("seat_lifted"), _seen("seat_closed"), REFUSED, _seen("seat_lifted"), _seen("seat_lifted")])
     a = ex.ask(SEAT_LIFTED, "seat_lifted")
     assert a.success and a.fixture_state == "seat_lifted" and a.message.startswith("5 frames") and len(slept) == 4
@@ -409,10 +425,10 @@ def test_two_checks_at_one_pose_judge_the_same_frames():
 
     ex._shot = shot
     a = ex.ask({"stage": "verify_lid_open", "check": "fixture_gap", "expect": "lid_open"}, "lid_open")
-    assert a.success and shots == [1, 2] and slept == [0.15]
+    assert a.success and shots == [1, 2] and slept == pytest.approx([0.15], abs=0.01)
     b = ex.ask({"stage": "verify_seat_closed", "check": "fixture_gap", "expect": "seat_closed"}, "seat_closed")
     assert b.success and b.fixture_state == "seat_closed" and shots == [1, 2]                  # no new frame
-    assert judged[2:] == [("seat_closed", 1, True), ("seat_closed", 2, True)] and slept == [0.15]
+    assert judged[2:] == [("seat_closed", 1, True), ("seat_closed", 2, True)] and slept == pytest.approx([0.15], abs=0.01)
     ex.hold(0.0, "settle")                                                                      # anything that moves forgets them
     ex.ask({"stage": "verify_seat_lifted", "check": "fixture_gap", "expect": "seat_lifted"}, "seat_lifted")
     assert shots == [1, 2, 1, 2]

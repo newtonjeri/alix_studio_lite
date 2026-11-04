@@ -1002,7 +1002,8 @@ class Runner:
     def run(self, name: str) -> dict:
         self.queue, self.k = [name], 0
         getattr(self.ex, "begin", lambda _name: None)(name)
-        try:
+        getattr(self.ex, "new_places", lambda: None)()   # the parts reading's places found afresh (the commode may
+        try:                                             # have moved since the last run)
             while self.k < len(self.queue):
                 outcome = self._plan(self.queue[self.k])
                 if outcome == "prerequisite":
@@ -1937,6 +1938,7 @@ class RealExec(_Exec):
         self._taken = []
         answers, verdict = [], lc.UNDECIDED
         check_id = f"{time.strftime('%Y%m%d_%H%M%S')}_{int(time.time() * 1000) % 1000:03d}_{action.get('stage') or 'check'}"
+        shot_at = None                              # when the last new frame was taken: the spacing counts from it
         for k in range(most):
             check = dict(check_id=check_id, stage=action.get("stage"), expect=expect, frame=k + 1,
                          closing=bool(action.get("closing_outcome")))
@@ -1944,9 +1946,12 @@ class RealExec(_Exec):
                 frame, q = reuse[k]
                 got = self._judge(expect, frame, q, dict(check, reused=True))
             else:
-                if k > len(reuse):                  # a pause between the camera's frames (none before the first new one)
-                    self.check_stop()
-                    self.job.sleep(spacing)
+                if k > len(reuse):                  # a pause between the camera's frames (none before the first new one),
+                    self.check_stop()               # what is left of it once the frame before was judged (5 Nov: judging
+                    left = spacing - (time.monotonic() - shot_at) if shot_at is not None else spacing   # took 1.1 s)
+                    if left > 0:
+                        self.job.sleep(left)
+                shot_at = time.monotonic()
                 got = self._frame(expect, check)
             answers.append(got)
             if len(answers) >= first:               # decided as soon as the frames allow (26 Oct: two that agree), one more at a time
@@ -2022,6 +2027,12 @@ class RealExec(_Exec):
         return dict(ok=bool(r.get("ok")) and pose is not None and pole is not None, reading=r, state=r.get("state"), pose=pose,
                     pole_mm=None if pole is None else float(pole), pose0=self.kit.gap.scene_pose(), note=note,
                     record=record)
+
+    def new_places(self) -> None:
+        """A run begins: no place the parts reading kept from an earlier run is a start (GapCheck.new_places)."""
+        gap = getattr(self.kit, "gap", None)
+        if gap is not None and hasattr(gap, "new_places"):
+            gap.new_places()
 
     def fixture_at(self, reading: dict | None) -> None:
         """The task's checks from here judged with the commode where its first look read it (place_correct), or (None)

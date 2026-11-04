@@ -149,6 +149,17 @@ class GapCheckSession:
     #: contradicted makes the next frame ask them again, and so does a new pose or a check's later frames.
     MODELS_REUSE_S = 2.5
 
+    #: The parts reading's place kept for the next frames from the same camera pose (_parts_where_it_stands): a frame
+    #: within this of a kept camera pose (metres, degrees), judged against the same fixture pose, starts from the place
+    #: that pose found. A place is relative to the fixture pose it was read against, so a kept place is never a start
+    #: against another (the lab, 5 Nov 00:57: Open the seat's checks were judged at its first look's place, -24 / +2 /
+    #: -5 mm, +2.8 deg; its open check's second frame took Open the lid's place, read at the scene place, -18 / -9 / -2
+    #: mm, +3.0 deg, and so started 42 mm off: its 10 mm search found the commode 16 mm low with the seat flat, the bowl's
+    #: rim taken for the seat, and four frames read the standing seat closed). The camera poses of one named pose differ
+    #: by a millimetre from frame to frame (the 1 mm key before split one check's frames over two keys).
+    PARTS_SAME_CAMERA_M = 0.005
+    PARTS_SAME_CAMERA_DEG = 1.0
+
     def __init__(self, param: Callable[[str], Any], locator: Callable[[], Any] = lambda: None,
                  fixture_in_world: Callable[[], Optional[np.ndarray]] = lambda: None, world_frame: str = "base_link",
                  log=None, now: Callable[[], float] = time.time):
@@ -164,6 +175,10 @@ class GapCheckSession:
         self._seat_geo = None                   # seat_rise.SeatGeometry, built once
         self._hinged = None                     # seat_state.HingedFixture, built once (False: none)
         self._models_last = None                # (key, time, result): the colour models' last answer (MODELS_REUSE_S)
+        self._parts_places: list = []           # [(camera 4x4, fixture pose 4x4, place)]: the parts reading's places kept
+        #: the first frame's search reach (m) about a fixture pose already found (the caller's: Lite's checks judged
+        #: where the task's first look read the commode); None: gap_parts_place_reach_m
+        self.parts_first_reach_m: Optional[float] = None
 
     def record_params(self) -> dict:
         return {k: self._p(k) for k in self.RECORD_PARAMS}
@@ -980,9 +995,10 @@ class GapCheckSession:
                                lid_min: float) -> tuple:
         """The parts' angles where the commode stands in this frame (fixture_place.read_state; the user, 2026-11-04:
         the parts against each other and against the commode, whatever the viewpoint, the distance or the placement):
-        its place searched about the scene's within gap_parts_place_reach_m, the frames of one camera pose starting
-        where the first found it (a check's frames: the grid only). Nothing is learned beyond that camera pose's place.
-        -> (seat_state.FixtureFit, [dx, dy, dz m, dyaw deg])."""
+        its place searched about the scene's within gap_parts_place_reach_m (or parts_first_reach_m), the frames of one
+        camera pose against one fixture pose starting where the first found it (a check's frames: the grid only;
+        PARTS_SAME_CAMERA_M). Nothing is learned beyond that camera pose's place. -> (seat_state.FixtureFit, [dx, dy,
+        dz m, dyaw deg])."""
         from alix_perception_core import fixture_place as fp
         from alix_perception_core import seat_state as sst
         closed, open_from = float(self._p("gap_lid_fit_min_deg")), float(self._p("gap_lid_fit_open_min_deg"))
@@ -997,17 +1013,38 @@ class GapCheckSession:
                                 grid_m=float(self._p("gap_parts_place_grid_m")), height_m=float(self._p("gap_parts_place_height_m")),
                                 height_step_m=float(self._p("gap_parts_place_height_step_m")))
         cam = np.asarray(camera_to_world, dtype=float)
-        key = (tuple(np.round(cam[:3, 3] * 1000.0).astype(int).tolist()), tuple(np.round(cam[:3, :3] * 1000.0).astype(int).ravel().tolist()))
-        cache = self.__dict__.setdefault("_parts_places", {})
-        known = cache.get(key)
-        whole, x = fp.read_state(depth, intrinsics, cam, self.fixture_in_world(), fixture, list(hands.values()), pp, params,
-                                 closed, open_from, start=known or (0.0, 0.0, 0.0, 0.0),
-                                 first_reach_m=params.grid_m if known else None)
+        pose0 = np.asarray(self.fixture_in_world(), dtype=float)
+        known = self._parts_place_for(cam, pose0)
+        reach = params.grid_m if known is not None else self.parts_first_reach_m
+        whole, x = fp.read_state(depth, intrinsics, cam, pose0, fixture, list(hands.values()), pp, params,
+                                 closed, open_from, start=known if known is not None else (0.0, 0.0, 0.0, 0.0),
+                                 first_reach_m=reach)
         if whole.lid_deg is not None:
-            cache[key] = [float(v) for v in x]
-            while len(cache) > 32:
-                cache.pop(next(iter(cache)))
+            self._parts_places = [e for e in self._parts_places if not self._same_place(e, cam, pose0)]
+            self._parts_places.append((cam.copy(), pose0.copy(), [float(v) for v in x]))
+            del self._parts_places[:-32]
         return whole, x
+
+    def _same_place(self, entry, cam, pose0) -> bool:
+        """``entry`` (camera, fixture pose, place) kept from this camera pose (PARTS_SAME_CAMERA_M / _DEG) against
+        this very fixture pose."""
+        import math
+
+        c, p, _x = entry
+        if not np.allclose(p, pose0, atol=1e-9) or float(np.linalg.norm(c[:3, 3] - cam[:3, 3])) > self.PARTS_SAME_CAMERA_M:
+            return False
+        cos = (float(np.trace(c[:3, :3].T @ cam[:3, :3])) - 1.0) / 2.0
+        return math.degrees(math.acos(min(1.0, max(-1.0, cos)))) <= self.PARTS_SAME_CAMERA_DEG
+
+    def _parts_place_for(self, cam, pose0) -> Optional[list]:
+        """The place kept from the nearest such camera pose against this fixture pose, or None."""
+        near = [(float(np.linalg.norm(c[:3, 3] - cam[:3, 3])), x) for c, p, x in self._parts_places
+                if self._same_place((c, p, x), cam, pose0)]
+        return list(min(near, key=lambda e: e[0])[1]) if near else None
+
+    def forget_parts_places(self) -> None:
+        """No kept place from here: the next frame of every camera pose searches afresh (a new placement)."""
+        self._parts_places = []
 
     def read_place(self, depth, intrinsics, camera_to_world, hands: dict, start=(0.0, 0.0, 0.0, 0.0),
                    reach_m: float | None = None) -> dict:

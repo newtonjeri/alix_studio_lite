@@ -392,16 +392,20 @@ def render_hypothesis(points_body: np.ndarray, body_from_cam: np.ndarray, fx: fl
     With `raised` (a flag per cell) also -> a mask of the pixels whose nearest
     cell is on a raised part."""
     import cv2
+    # The same arithmetic per cell as before 5 Nov, with one mask and no copy of the cells behind the camera: the very
+    # same image, 1.7x faster (3.8 -> 2.3 ms for commode_c's 119,000 cells at 1/2; the parts reading renders ~260 a frame)
     cam_from_body = np.linalg.inv(body_from_cam)
-    cam = points_body @ cam_from_body[:3, :3].T + cam_from_body[:3, 3]
-    front = cam[:, 2] > 0.05
-    cam = cam[front]
-    flags = raised[front] if raised is not None else None
-    u = ((fx * cam[:, 0] / cam[:, 2] + cx) / stride).astype(int)
-    v = ((fy * cam[:, 1] / cam[:, 2] + cy) / stride).astype(int)
+    cam = points_body @ cam_from_body[:3, :3].T
+    cam += cam_from_body[:3, 3]
+    zc = cam[:, 2]
+    front = zc > 0.05
+    zd = np.where(front, zc, 1.0)                # the cells behind the camera divided by 1, then dropped by `front`
+    u = ((fx * cam[:, 0] / zd + cx) / stride).astype(int)
+    v = ((fy * cam[:, 1] / zd + cy) / stride).astype(int)
     w, h = width // stride, height // stride
-    ok = (u >= 0) & (u < w) & (v >= 0) & (v < h)
-    u, v, z = u[ok], v[ok], cam[ok, 2].astype(np.float32)
+    ok = front & (u >= 0) & (u < w) & (v >= 0) & (v < h)
+    flags = raised if raised is not None else None
+    u, v, z = u[ok], v[ok], zc[ok].astype(np.float32)
     img = np.full(h * w, _EMPTY, np.float32)
     pix = v * w + u
     np.minimum.at(img, pix, z)                   # the nearest cell per pixel (2026-10-24: was a far-first argsort, 3x slower)

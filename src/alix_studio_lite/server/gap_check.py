@@ -47,6 +47,7 @@ from .. import vendor_paths
 PARAMS_FILE = vendor_paths.ALIX / "ros" / "perception" / "alix_perception" / "config" / "perception.yaml"
 WORLD_FRAME = "base_link"
 DEPTH_FRAME = "camera_depth_optical_frame"
+PLACED_REACH_M = 0.02     #: the parts reading's first search about a place a task's first look read (at_place)
 
 
 
@@ -352,11 +353,25 @@ class GapCheck:
         error in it, as in the checks' frames): the fixture fits the frames where they show it (the lab, 3 Nov: Open the
         seat's lifted check, the commode 10 mm from where the plans worked and the mount's 25 mm on top, read seat_lifted
         and seat_closed alike at its scene place, margins +0.13 to +0.23, 8 of 10 frames refused; at the place its first
-        look read, all 10 seat_lifted at margins +0.37 to +0.41)."""
+        look read, all 10 seat_lifted at margins +0.37 to +0.41).
+
+        The parts reading starts afresh at each such place (a place kept before was read against another, 5 Nov:
+        GapCheckSession.PARTS_SAME_CAMERA_M), its first frame searching PLACED_REACH_M about the look's place: the look
+        found the commode there (5 Nov: the checks' frames read it within 10 mm of the look's place; the whole reach,
+        0.06 m, took 3.5 to 4.5 s a frame on the lab's computer)."""
         self.scene_pose()
         with self._lock:
             self._placed = None if reading is None else {k: float(reading[k]) for k in ("dx_m", "dy_m", "dz_m", "dyaw_deg")}
             self._fixture_in_world = self._judged_pose()
+            self.session.forget_parts_places()
+            self.session.parts_first_reach_m = None if self._placed is None else PLACED_REACH_M
+
+    def new_places(self) -> None:
+        """A run begins (mechanism.Runner.run): the parts reading's kept places are dropped, so its first frame at
+        each camera pose searches the whole reach (a commode moved between runs is never searched about its last
+        place). Nothing is loaded."""
+        with self._lock:
+            self.session.forget_parts_places()
 
     def _judged_pose(self):
         if self._scene_pose is None or self._placed is None:
@@ -487,11 +502,12 @@ class GapCheck:
 
     def forget(self) -> None:
         """A new placement (the UGV moved): the registration, the seat's closed reference and the last lid decision
-        are learned again from the next checks."""
+        are learned again from the next checks, and the parts reading's places found afresh."""
         with self._lock:
             self.session._registration.clear()
             self.session._seat_refs.clear()
             self.session._last_lid.clear()
+            self.session.forget_parts_places()
 
     # ── the named poses (perception_node.py `_load_named_poses` and `_depth_state_pose_name`): ALIX's MoveIt group
     #    states (inspection_pose_1, inspection_pose_4, rest_pose ...), read by alix_perception_core's named_poses from

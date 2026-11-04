@@ -112,3 +112,84 @@ def test_the_lifted_lid_reads_lifted_with_the_commode_moved(shift):
     assert d.success and d.state == "lid_lifted", d.message
     p0, p = d0.record["parts"]["place"], d.record["parts"]["place"]
     assert abs((p["dx_m"] - p0["dx_m"]) - shift[0]) < 0.012 and abs((p["dy_m"] - p0["dy_m"]) - shift[1]) < 0.012   # found there
+
+
+LAB_5NOV = LOGS / "2026-11-05"
+LID_OPEN_5NOV = LAB_5NOV / "checks/20261105_005651_234_gap_check_lid_open_lid_open"        # Open the lid's end check, frame 2
+SEAT_OPEN_LOOK = LAB_5NOV / "place/20261105_005735_109_place_look_seat_open_look"          # Open the seat's first look
+SEAT_OPEN_F1 = LAB_5NOV / "checks/20261105_005754_226_gap_check_seat_open_seat_lifted"     # its open check: read open
+SEAT_OPEN_F2 = LAB_5NOV / "checks/20261105_005755_931_gap_check_seat_open_uncertain"       # the lab: read closed, 16 mm low
+
+
+def test_a_place_kept_against_another_fixture_pose_is_never_a_start():
+    """The lab, 5 Nov 00:57: Open the seat's checks judged at its first look's place; its open check's second frame took
+    the place Open the lid's check had kept for that camera pose (read at the scene place) and so started 42 mm off: the
+    seat standing at 105 deg read flat, the commode 16 mm low, four frames, the run stopped. A kept place is a start only
+    against the fixture pose it was read against, and only from a camera pose within 5 mm and 1 deg."""
+    pytest.importorskip("cv2")
+    from alix_studio_lite.server.gap_check import GapCheck as LiteGapCheck
+
+    gc = LiteGapCheck(params=load_params(), records=None)
+    gc.scene_pose()
+    _, lid = _frame(LID_OPEN_5NOV)
+    assert _check(gc, "lid_open", lid, models=_colour("lid_open")).state == "lid_open"   # kept: at the scene place
+    _, look = _frame(SEAT_OPEN_LOOK)
+    reading = gc.place(look)
+    assert reading["ok"]
+    gc.at_place(reading)                                      # the task's checks where its first look read the commode
+    assert gc.session.parts_first_reach_m == pytest.approx(0.02)
+    places = []
+    for stem in (SEAT_OPEN_F1, SEAT_OPEN_F2):
+        _, f = _frame(stem)
+        d = _check(gc, "seat_open", f, models=_colour("lid_seat_open"))
+        assert d.success and d.state == "seat_lifted" and "the seat open at" in d.message, d.message
+        places.append(d.record["parts"]["place"])
+    assert abs(places[1]["dz_m"] - places[0]["dz_m"]) < 0.005    # the second frame started where the first found it
+    gc.new_places()                                           # a new run: nothing kept
+    assert gc.session._parts_places == []
+
+
+def test_the_render_is_the_same_image_as_before_5_nov():
+    """region3d.render_hypothesis (5 Nov: one mask, no copy, 1.7x faster) gives the very image the arithmetic before it
+    gave, the raised parts' mask too, cells behind the camera dropped."""
+    pytest.importorskip("cv2")
+    import cv2
+
+    from alix_perception_core import region3d
+
+    def before(points_body, body_from_cam, fx, fy, cx, cy, width, height, stride, raised=None):
+        cfb = np.linalg.inv(body_from_cam)
+        cam = points_body @ cfb[:3, :3].T + cfb[:3, 3]
+        front = cam[:, 2] > 0.05
+        cam = cam[front]
+        flags = raised[front] if raised is not None else None
+        u = ((fx * cam[:, 0] / cam[:, 2] + cx) / stride).astype(int)
+        v = ((fy * cam[:, 1] / cam[:, 2] + cy) / stride).astype(int)
+        w, h = width // stride, height // stride
+        ok = (u >= 0) & (u < w) & (v >= 0) & (v < h)
+        u, v, z = u[ok], v[ok], cam[ok, 2].astype(np.float32)
+        img = np.full(h * w, region3d._EMPTY, np.float32)
+        pix = v * w + u
+        np.minimum.at(img, pix, z)
+        img = cv2.erode(img.reshape(h, w), np.ones((5, 5), np.uint8))
+        img[img >= region3d._EMPTY * 0.5] = 0.0
+        if flags is None:
+            return img
+        rz = np.full(h * w, region3d._EMPTY, np.float32)
+        fr = flags[ok]
+        np.minimum.at(rz, pix[fr], z[fr])
+        rz = cv2.erode(rz.reshape(h, w), np.ones((5, 5), np.uint8))
+        return img, (img > 0) & (rz < region3d._EMPTY * 0.5) & (rz <= img + 0.002)
+
+    rng = np.random.default_rng(5)
+    pts = rng.uniform([-0.3, -0.3, -0.4], [0.3, 0.3, 0.9], size=(20000, 3))       # some behind the camera
+    raised = rng.random(len(pts)) < 0.3
+    for k in range(6):
+        M = np.eye(4)
+        M[:3, 3] = rng.uniform(-0.05, 0.05, 3)
+        for stride in (2, 3, 6):
+            a = before(pts, M, 600.0, 600.0, 424.0, 240.0, 848, 480, stride, raised)
+            b = region3d.render_hypothesis(pts, M, 600.0, 600.0, 424.0, 240.0, 848, 480, stride, raised)
+            assert np.array_equal(a[0], b[0]) and np.array_equal(a[1], b[1])
+            assert np.array_equal(before(pts, M, 600.0, 600.0, 424.0, 240.0, 848, 480, stride),
+                                  region3d.render_hypothesis(pts, M, 600.0, 600.0, 424.0, 240.0, 848, 480, stride))
