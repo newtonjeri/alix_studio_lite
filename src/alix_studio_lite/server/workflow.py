@@ -11,6 +11,9 @@ Wait is a task of its own: its arm idles for its seconds. Each arm's part of a s
 waits for its arrival, after a Program, Lite clears the arm's 4105 warning when it holds one (``clear_before_moves``:
 the lab, 21 and 22 Oct). Saved and loaded as Lite's JSON (``LITE_FORMAT``); V53's own (``FORMAT``) loads too.
 
+Programs marked to start together (the user, 5 Nov; flow.py) are started at the same moment: each arm's runner holds on
+its last line before it starts the Program until the other's is on its own (``run_real``'s start gate, TOGETHER_LOAD).
+
 What Lite moves itself (the owner, 24 Oct): each Program's own pole and hand, set before it, the pole and the hand
 together (``own_stages``: in place of the Pole and Hand rows right before it); after a lid or seat task, or a run of
 them, each arm to its next task's start, its pole and hand and then its arm (``next_after_tasks``: in place of 22 Oct's
@@ -110,6 +113,28 @@ STOP_STEP_MARGIN = 0.10
 #: The two arms are kept this far apart at every timing their ranges allow (the owner, 22 Oct: 50 mm; the gloves, the
 #: pad, the brush and a held tool are not in the model).
 CLEARANCE_MM = 50.0
+#: Programs that start together (flow.py; the user, 5 Nov): each arm finishes what is before its Program and its runner
+#: holds on the line it prints just before it starts the Program (``WORKFLOW PROGRAM k/n: slot``, its checks done);
+#: when both are there both are let go at once, the one whose controller reads its file sooner TOGETHER_LOAD later by
+#: the difference, so that both begin to play together. A controller reads a program's file before its arm moves
+#: (runner v14's "start ack"): 0.21-0.38 ms a line by program in the lab's 337 starts of 29 Oct - 5 Nov, and the same
+#: file 0.7-1.6 x its usual from one start to the next on either arm (left Program 1, 5,906 lines: 0.92-2.30 s), so two
+#: Programs started at the same moment still begin some 0.3 s apart as a rule, up to ~1 s: what Lite cannot hold.
+TOGETHER_HOLD_S = 30.0         # the most an arm waits for the other at a start together, then both are stopped
+TOGETHER_LOAD = ROBOT_TIMES["load_s_per_line"][1]
+
+
+def together_lead_s(lines: int, transit_s: float = 0.0) -> float:
+    """From a Program's start to its first line playing, as a rule: its file read (TOGETHER_LOAD a line) and the
+    controller's own move to its first point (``transit_s``, none when the arm stands there)."""
+    return 0.05 + max(0, int(lines or 0)) * TOGETHER_LOAD + max(0.0, float(transit_s or 0.0))
+
+
+def together_delays(leads: dict) -> dict:
+    """Each arm's start after the two meet at a start together: the one whose Program begins to play sooner started
+    later by the difference (``leads``: together_lead_s of each)."""
+    top = max(leads.values()) if leads else 0.0
+    return {s: round(top - v, 3) for s, v in leads.items()}
 
 
 def clear_before_moves(plan: list[dict]) -> list[dict]:
@@ -426,9 +451,9 @@ def _rows_words(step: dict) -> str:
 
 def plan_shape(plan: list[dict]) -> list[dict]:
     """The plan as a simulation's identity keeps it: each stage's kind and each arm's steps in it by row (a clear with its
-    row, a Wait-for with the row it waits for, a Program's own pole and hand with what they set, a lid or seat task's
-    ``then``). The same steps planned otherwise (Lite's planner changed, as on 21, 22 and 24 Oct) are not the run
-    simulated."""
+    row, a Wait-for with the row it waits for, a Program's own pole and hand with what they set, a Program that starts
+    together with its partner's row, a lid or seat task's ``then``). The same steps planned otherwise (Lite's planner
+    changed, as on 21, 22 and 24 Oct) are not the run simulated."""
     out = []
     for st in plan:
         row = {"kind": st["kind"]}
@@ -440,6 +465,7 @@ def plan_shape(plan: list[dict]) -> list[dict]:
                              else ["own", x["type"], x.get("_row"), x.get("mm"), x.get("values")] if x.get("_own")
                              else ["pole_hand", *x["_rows"]] if x["type"] == "pole_hand"
                              else ["wait_for", x.get("_row"), (x.get("_target") or {}).get("row")] if x["type"] == "wait_for"
+                             else ["together", x.get("_row"), (x.get("_together") or {}).get("row")] if x.get("_together")
                              else x.get("_row") for x in steps]
         out.append(row)
     return out
@@ -502,6 +528,8 @@ def check_steps(steps, side: str) -> list[dict]:
                 step = dict(rt.normalize_workflow_step(raw))
             except (TypeError, ValueError, KeyError) as exc:
                 raise UserError(f"{side.upper()} row {i}: {exc}.", "Correct or remove that row.", code="step") from None
+        if step["type"] == "program" and raw.get("together"):   # starts at the same moment as the other arm's (flow.py)
+            step["together"] = True
         if raw.get("note"):
             step["note"] = str(raw["note"])[:200]
         if raw.get("uid"):
@@ -1142,6 +1170,21 @@ class _ArmSim:
     def _found(self, pid: int, step: dict, info: dict) -> dict | None:
         return found_by_name(self.named, pid, step, info)
 
+    def lead_s(self, step) -> float:
+        """A Program's together_lead_s from where the arm is now (a start together, run_real's start gate): its file's
+        lines, and the controller's move to its first point when the arm is not there."""
+        pid = int(step["id"])
+        info = self.programs.get(pid) or {}
+        path = info.get("file") if not info.get("gone") else None
+        if not path and not info.get("gone"):
+            found = self._found(pid, step, info)
+            path = found["path"] if found else None
+        md = self.md_of(path) if path else None
+        if md is None or not len(md):
+            return together_lead_s(int(info.get("lines") or 0))
+        transit, _ = self._transit((md[0] / 1000.0).tolist(), float(step["transit_speed"]))
+        return together_lead_s(int(md.shape[0]), transit[1] if self.known else 0.0)
+
     def _transit(self, q_first, transit_pct: float):
         """The controller's own move to a Program's first point at its Start % (``transit_s``; the global speed does not
         change it): (least, as a rule, most) and the joint gap, or no move when the arm is within TRANSIT_MIN_DEG of it."""
@@ -1459,6 +1502,26 @@ def _segments(steps: list) -> list[tuple[str, object]]:
     return out
 
 
+def _gated(segs: list) -> list[tuple[str, object]]:
+    """_segments with each runner call's stretch cut before a Program that starts together (flow.py): from it on, a
+    ("gated", [...]) stretch of the same call (its runner holds there for the other arm's, run_real)."""
+    out = []
+    for what, x in segs:
+        if what != "steps":
+            out.append((what, x))
+            continue
+        cur, kind = [], "steps"
+        for y in x:
+            if y.get("_together") and y["type"] == "program":
+                if cur:
+                    out.append((kind, cur))
+                cur, kind = [], "gated"
+            cur.append(y)
+        if cur:
+            out.append((kind, cur))
+    return out
+
+
 def _row_words(steps: list, row) -> str:
     st = next((x for x in steps if x.get("_row") == row and x["type"] != "clear"), None)
     return f"row {row}" + (f" ({_step_words(st)})" if st else "")
@@ -1468,13 +1531,16 @@ def _sim_part(st: dict, sims: dict, T, stage: int, words) -> dict:
     """A stage's parts on one clock from ``T`` (one time, or each arm's own: after a lid or seat task each arm starts
     its part as its own move to its next start ends, 27 Oct): each arm through its rows in its runner calls (each
     starting in ROBOT_TIMES call_start_s); at a Wait-for the arm holds until the other arm has finished the row it names
-    (``words`` says that row). Each arm's end time."""
+    (``words`` says that row); at a Program that starts together the arm holds until the other arm is at its own, then
+    both start (the one that begins to play sooner later by the difference, together_delays). Each arm's end time."""
     parts = {s: st[s]["steps"] for s in ARMS if st.get(s)}
-    segs = {s: _segments(parts[s]) for s in parts}
+    segs = {s: _gated(_segments(parts[s])) for s in parts}
     pos = {s: 0 for s in parts}
     at = T if isinstance(T, dict) else {s: float(T) for s in parts}
     clock = {s: at.get(s, max(at.values())) + _at(ROBOT_TIMES["call_start_s"], sims[s].lam) for s in parts}
     done: dict = {s: {} for s in parts}                 # each arm's rows finished in this stage: row -> when
+    gate: dict = {s: {} for s in parts}                 # each arm at its starts together: pair -> (when, its Program's step)
+    goes: dict = {}                                     # each pair's starts: pair -> {side: when}
 
     def mark(s):
         def one(step, t1):
@@ -1504,6 +1570,24 @@ def _sim_part(st: dict, sims: dict, T, stage: int, words) -> dict:
                                  waits_for=dict(side=other, row=tg.get("row")))
                     done[s][x.get("_row")] = release
                     clock[s] = release + _at(ROBOT_TIMES["call_start_s"], sims[s].lam)   # the next runner call
+                elif what == "gated":                   # a Program that starts together, in the same runner call
+                    tg = x[0]["_together"]
+                    other = tg["side"]
+                    gate[s].setdefault(tg["pair"], (clock[s], x[0]))
+                    if other in parts and tg["pair"] not in gate[other]:
+                        break                                   # the other arm is not at its own yet
+                    if other in parts:                      # both there: their starts, worked out once for the pair
+                        if tg["pair"] not in goes:
+                            mine, theirs = gate[s][tg["pair"]], gate[other][tg["pair"]]
+                            leads = {s: sims[s].lead_s(mine[1]), other: sims[other].lead_s(theirs[1])}
+                            both = max(mine[0], theirs[0])
+                            goes[tg["pair"]] = {k: both + d for k, d in together_delays(leads).items()}
+                        go = goes[tg["pair"]][s]
+                    else:
+                        go = clock[s]                           # the other arm does not run here: nothing to meet
+                    sims[s].hold(stage, x[0], clock[s], go, f"Start Program {x[0]['id']} together with the {str(other).upper()} "
+                                 f"arm's Program {tg['id']} (its row {tg['row']})", together=dict(tg))
+                    clock[s] = sims[s].run(x, go, stage, done=mark(s))
                 else:
                     clock[s] = sims[s].run(x, clock[s], stage, done=mark(s))
                 pos[s] += 1
@@ -2301,6 +2385,10 @@ def _changed(sim: dict | None, ident: dict) -> str:
 
 _PROGRAM_RE = __import__("re").compile(r"WORKFLOW PROGRAM \d+/\d+: slot (\d+)")
 _COMPLETE_RE = __import__("re").compile(r"WORKFLOW PROGRAM COMPLETE \d+/\d+: ([0-9.]+) s")
+#: runner v14's last line before it starts a Program (rm_set_program_id_run; its checks and the overall speed done), and
+#: the line once the controller plays it: the step's number (from 1) and the start ack
+_START_RE = __import__("re").compile(r"WORKFLOW PROGRAM (\d+)/\d+: slot \d+")
+_RUNNING_RE = __import__("re").compile(r"WORKFLOW PROGRAM RUNNING (\d+)/\d+: slot \d+ // start ack ([0-9.]+)")
 
 
 def split_waits(steps: list) -> list:
@@ -2377,7 +2465,7 @@ def _watch(job, side: str, steps: list, say_stop, warn) -> tuple:
     or any other step more than STOP_STEP_MARGIN past the most it takes, is stopped at that moment (``say_stop`` with
     why: it stops both arms); a step other than a Program that ends more than STOP_STEP_MARGIN sooner than the least it
     takes is stopped as it ends. (A Program ending before STOP_PROGRAM_UNDER of its lines' time is the early-end check.)
-    Returns (on_line, close)."""
+    Returns (on_line, close); ``on_line.held(seconds)`` takes a hold before the step's start out of its time."""
     import threading
 
     cur, lock, dead = {}, threading.Lock(), threading.Event()
@@ -2449,9 +2537,18 @@ def _watch(job, side: str, steps: list, say_stop, warn) -> tuple:
             elif not lo - 0.05 <= dur <= hi + 0.05:
                 warn(f"{words}, outside its range on the robot ({lo:.2f}-{hi:.2f} s).")
 
+    def held(seconds: float) -> None:
+        """The step running was held that long before it started (a Program's start together, run_real): not its time."""
+        with lock:
+            if cur:
+                cur["t0"] += seconds
+                if cur.get("deadline"):
+                    cur["deadline"] += seconds
+
     def close():
         dead.set()
 
+    on_line.held = held
     return on_line, close
 
 
@@ -2619,12 +2716,100 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
 
         def stop_part(side, why) -> None:
             stopped_why.setdefault(side, why)
+            with cond:                              # an arm held at a start together lets go at once
+                cond.notify_all()
             fn = stops.get(side)
             if fn is not None:
                 fn()
 
+        gates: dict = {}                            # the starts together of the stage running: pair -> both arms there
+
+        def gate(side, step, label) -> float:
+            """A Program that starts together (flow.py), in its runner's own thread on the line it prints just before it
+            starts the Program (its checks done): held until the other arm's runner is on its own, then both let go at
+            once, the one that begins to play sooner later by the difference (together_delays). A STOP meanwhile, or
+            the other arm's part ending, lets go at once (the STOP is raised as the line is done); the other arm not
+            there in TOGETHER_HOLD_S stops both. The seconds held."""
+            tg = step["_together"]
+            other, k, t0 = tg["side"], tg["pair"], time.monotonic()
+            say(**{side: f"{label} // READY: STARTS WITH THE {other.upper()} ARM"})
+            late, stopped = None, False
+            with cond:
+                g = gates.setdefault(k, {"at": {}, "step": {}, "sent": {}, "run": {}, "ack": {}})
+                g["at"][side], g["step"][side] = t0, step
+                cond.notify_all()
+                while other not in g["at"]:
+                    if job.cancelled or stopped_why.get(side):
+                        stopped = True
+                        break
+                    if ended[other]:
+                        late = (f"the {other.upper()} arm's part ended before its Program {tg['id']} (row {tg['row']}), which this "
+                                f"arm's Program {step['id']} starts together with")
+                        break
+                    if time.monotonic() - t0 > TOGETHER_HOLD_S:
+                        late = (f"the {other.upper()} arm did not reach its Program {tg['id']} (row {tg['row']}) within "
+                                f"{TOGETHER_HOLD_S:.0f} s, and this arm's Program {step['id']} starts together with it")
+                        break
+                    cond.wait(0.05)
+                if late is None and not stopped and "go" not in g:
+                    def lead(s):
+                        t, x = g["step"][s].get("_t") or {}, g["step"][s]
+                        n = t.get("lines") or lines_of.get(s, {}).get(int(x["id"])) or 0
+                        return together_lead_s(n, (t.get("transit") or (0, 0, 0))[1])
+                    g["go"], g["delay"] = time.monotonic(), together_delays({s: lead(s) for s in (side, other)})
+            if late is not None:
+                stop_part(side, late)
+                stop_part(other, f"stopped because {late}")
+            if late is None and not stopped:
+                go = g["go"] + g["delay"].get(side, 0.0)
+                while not (stopped_why.get(side) or job.cancelled):
+                    rest = go - time.monotonic()
+                    if rest <= 0:
+                        break
+                    time.sleep(min(rest, 0.02))
+            if stopped_why.get(side) or job.cancelled:      # never let go into its Program: this runner's own stop, raised
+                fn = stops.get(side)                       # as the line is done (a stop that came before its call began
+                if fn is not None:                         # found no hook to call)
+                    fn()
+                return time.monotonic() - t0
+            g["sent"][side] = time.monotonic()
+            say(**{side: f"{label} // {_step_words(step)} // RUNNING"})
+            return time.monotonic() - t0
+
+        def gate_running(side, step, ack) -> None:
+            """A start together's Program is playing on this arm (its runner's RUNNING line): once both are, how far apart
+            they were started and began to play, said in the job and the hardware log (the lab's measure of it)."""
+            g = gates.get(step["_together"]["pair"])
+            if g is None or side not in g["sent"]:
+                return
+            with cond:
+                g["run"][side], g["ack"][side] = time.monotonic(), ack
+                if len(g["run"]) < 2 or g.get("said"):
+                    return
+                g["said"] = True
+            sides = sorted(g["run"])
+            first = min(sides, key=lambda s: g["run"][s])
+            played = abs(g["run"]["left"] - g["run"]["right"])
+            sent = g["sent"]["right"] - g["sent"]["left"]
+            delay = g.get("delay") or {}
+            later = max(delay, key=delay.get) if delay else None
+            words = " and ".join(f"{s.upper()} row {g['step'][s].get('_row')} (Program {g['step'][s]['id']})" for s in sides)
+            text = (f"Started together: {words} began to play {played:.2f} s apart ({first.upper()} first); started "
+                    + (f"{abs(sent):.2f} s apart ({later.upper()} {delay[later]:.2f} s later for its shorter file read)"
+                       if later and delay[later] >= 0.01 else f"at the same moment (within {abs(sent):.3f} s)")
+                    + f"; their controllers read their files in LEFT {g['ack'].get('left', 0):.2f} s, RIGHT {g['ack'].get('right', 0):.2f} s.")
+            job.log(text, "info" if played <= 0.5 else "warn")
+            hw = getattr(robot, "log", None)
+            if hw is not None:
+                hw.hardware(None, "start together", args=dict(rows={s: g["step"][s].get("_row") for s in sides},
+                            programs={s: int(g["step"][s]["id"]) for s in sides}, delay=g.get("delay"), played_apart_s=round(played, 3),
+                            sent_apart_s=round(sent, 3), ack=g["ack"], held_s={s: round(g["sent"][s] - g["at"][s], 3) for s in sides}),
+                            text=text)
+
         def call(side, steps, label) -> dict:
-            """One runner call: a stretch of an arm's rows (no Wait-for among them)."""
+            """One runner call: a stretch of an arm's rows (no Wait-for among them); none for an arm stopped already."""
+            if stopped_why.get(side) or job.cancelled:
+                return dict(ok=False, rc=1, why=stopped_why.get(side) or "stopped")
             current = {"slot": None}
             last_of_row = {k: (k + 1 >= len(steps) or steps[k + 1].get("_row") != st.get("_row")) for k, st in enumerate(steps)}
 
@@ -2641,6 +2826,15 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             def on_line(line):                      # in the runner's own thread, as it prints
                 text = line.strip()
                 watch_line(text)
+                ms, mr = _START_RE.match(text), _RUNNING_RE.match(text)
+                if ms or mr:                         # a Program that starts together: its runner held here (gate)
+                    k = int((ms or mr).group(1))
+                    x = steps[k - 1] if 1 <= k <= len(steps) else None
+                    if x is not None and x["type"] == "program" and x.get("_together"):
+                        if ms:
+                            watch_line.held(gate(side, x, label))
+                        else:
+                            gate_running(side, x, float(mr.group(2)))
                 if text.startswith("WORKFLOW STEP START"):
                     try:
                         k = int(text.split()[3].split("/")[0])
@@ -2805,6 +2999,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             say(status, **{s: f"{label} // RUNNING" for s in mine})
             barrier, results = threading.Barrier(len(mine)), {}
             with cond:
+                gates.clear()                       # this stage's starts together (gate)
                 for s in ARMS:
                     progress[s].clear()
                     ended[s] = s not in mine

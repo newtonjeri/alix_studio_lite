@@ -960,3 +960,61 @@ def test_a_task_whose_end_state_the_sequence_already_made_is_not_run():
     sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, {"/f.txt": md}.get, []) for s in ("left", "right")}
     workflow.schedule(run, sims, 15)
     assert any("move_to_rest" in a["text"] for a in sims["right"].acts if a["stage"] == 1 and a["kind"] == "stream")   # no next start: rest drawn
+
+
+def test_programs_that_start_together_begin_to_play_at_the_same_moment():
+    """The user, 5 Nov: "tasks that are required to start together, forced to start together, no latency". A Program
+    marked ``together`` pairs with the other arm's marked Program between the same meeting points: the arm there first
+    holds for the other, then both start, the one whose controller reads its file sooner later by the difference, so
+    both begin to play at the same moment as a rule. Unpaired marks are refused before anything moves."""
+    from alix_studio_lite.server import flow, workflow
+
+    md = {"/a.txt": np.zeros((1001, 7)), "/b.txt": np.zeros((3001, 7))}
+    progs = {"left": {80: dict(file="/a.txt", sent=True, lines=1001)}, "right": {81: dict(file="/b.txt", sent=True, lines=3001)}}
+    left = workflow.check_steps([{"type": "wait", "seconds": 1.5}, dict(prog(80), together=True)], "left")
+    right = workflow.check_steps([dict(prog(81), together=True)], "right")
+    assert left[1]["together"] is True and right[0]["together"] is True                   # kept with the row
+    run = workflow.plan_for(workflow._numbered({"left": left, "right": right}), "both")
+    assert run["counts"]["together"] == 1
+    start = dict(pole_mm=200.0, hand=[1000] * 6, q_deg=[0.0] * 7)
+    sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs[s], None, md.get, []) for s in ("left", "right")}
+    workflow.schedule(run, sims, 15)
+    L, R = sims["left"].acts, sims["right"].acts
+    pl, pr = (next(a for a in acts if a["kind"] == "program") for acts in (L, R))
+    hold = next(a for a in R if a.get("together"))
+    assert hold["t1"] - hold["t0"] > 1.5 and "together with the LEFT arm's Program 80 (its row 2)" in hold["text"]
+    assert pl["traj_t0"] == pytest.approx(pr["traj_t0"], abs=1e-3)                       # both play from the same moment
+    assert pl["t0"] - pr["t0"] == pytest.approx(2000 * workflow.TOGETHER_LOAD, abs=1e-3)   # the shorter file started later
+    assert workflow.together_delays({"left": 0.3, "right": 0.75}) == {"left": 0.45, "right": 0.0}
+
+    with pytest.raises(flow.PlanError, match="LEFT row 2 starts together with the RIGHT arm, but the RIGHT arm has no Program"):
+        flow.build(*workflow._numbered({"left": left, "right": workflow.check_steps([prog(81)], "right")}).values())
+    apart = workflow.check_steps([prog(81), {"type": "meet"}, dict(prog(82), together=True)], "right")
+    with pytest.raises(flow.PlanError, match="between the same Meets and lid or seat tasks"):
+        flow.build(*workflow._numbered({"left": workflow.check_steps([dict(prog(80), together=True), {"type": "meet"}], "left"),
+                                        "right": apart}).values())
+    alone = workflow.plan_for(workflow._numbered({"left": left, "right": right}), "left")
+    assert "its 1 Program(s) marked to start together start on their own" in " ".join(alone["said"])
+    shape = workflow.plan_shape(run["plan"])
+    assert ["together", 2, 1] in shape[0]["left"] and ["together", 1, 2] in shape[0]["right"]    # a changed mark: simulated again
+
+
+def test_a_hold_before_a_start_together_is_not_its_programs_time():
+    """runner v14 says a Program's step START before its last line (where an arm holds for the other at a start
+    together): the watch takes the hold out of the Program's time, so a long hold never reads as a Program run past
+    STOP_PROGRAM_OVER."""
+    from alix_studio_lite.server import workflow
+
+    step = {"type": "program", "id": 1, "_row": 5, "_t": dict(kind="program", drawn=True, play_s=0.2, lines=41,
+                                                              transit=(0, 0, 0), times=(0.2, 0.4, 0.8))}
+    stopped, said = [], []
+    on_line, close = workflow._watch(None, "left", [step], stopped.append, said.append)
+    try:
+        on_line("WORKFLOW STEP START 1/1: PROGRAM")
+        time.sleep(0.9)                                       # held for the other arm (its limit: ~1.2 s from START)
+        on_line.held(0.9)
+        time.sleep(0.6)                                       # 1.5 s from START: past the limit, unless the hold is taken out
+        on_line("WORKFLOW STEP COMPLETE 1/1: PROGRAM")
+    finally:
+        close()
+    assert not stopped and not said

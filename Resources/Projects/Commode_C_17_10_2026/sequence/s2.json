@@ -35,7 +35,8 @@
    "name": "1_L_P1_R01+R02+R03+R04_pole50_.t",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "61635ef2"
+   "uid": "61635ef2",
+   "together": true
   },
   {
    "type": "mechanism",
@@ -48,7 +49,8 @@
    "name": "2_L_P2_R05_PART1+R05_PART2_pol.t",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "409a2a00"
+   "uid": "409a2a00",
+   "together": true
   },
   {
    "type": "program",
@@ -69,7 +71,8 @@
    "name": "4_L_P3_R07_PART1+R07_PART2_pol.t",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "a6b8a2bf"
+   "uid": "a6b8a2bf",
+   "together": true
   },
   {
    "type": "program",
@@ -145,7 +148,8 @@
    "name": "1_R_P1_R01_PART1+R01_PART2+R02.t",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "bea3ac62"
+   "uid": "bea3ac62",
+   "together": true
   },
   {
    "type": "mechanism",
@@ -158,7 +162,8 @@
    "name": "2_R_P2_R04_pole200_grip_7.6s_v.t",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "17ec484c"
+   "uid": "17ec484c",
+   "together": true
   },
   {
    "type": "program",
@@ -187,7 +192,8 @@
    "name": "5_5_R_P3_R07+R08_PART1+R08_PAR.t",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "4b08d9c6"
+   "uid": "4b08d9c6",
+   "together": true
   },
   {
    "type": "program",

@@ -85,11 +85,22 @@ function partnerOf(side, i) {
   return S.steps[OTHER[side]].findIndex(x => x.type === 'meet' && ++seen === n);
 }
 
-// Why a Meet or Wait-for row cannot run as it is (marked in its table), or ''.
+// A Program that starts together with the other arm's (flow.py): its partner, the other arm's marked Program of the same
+// number (they pair up in order, between the same meeting points); -1: none.
+function togetherOf(side, i) {
+  const n = S.steps[side].slice(0, i + 1).filter(x => x.type === 'program' && x.together).length;
+  let seen = 0;
+  return S.steps[OTHER[side]].findIndex(x => x.type === 'program' && x.together && ++seen === n);
+}
+
+// Why a Meet, Wait-for or start-together row cannot run as it is (marked in its table), or ''.
 function gateProblem(side, i) {
   const st = S.steps[side][i], other = ARM(OTHER[side]);
   if (st.type === 'wait_for' && targetOf(side, st) < 0) return `The ${other} row it waited for is no longer there: choose the row again (remove this one, add WAIT FOR).`;
   if (st.type === 'meet' && partnerOf(side, i) < 0) return `No Meet of the same number on the ${other} arm: add one there, or remove this one.`;
+  if (st.type === 'program' && st.together && togetherOf(side, i) < 0) {
+    return `No ${other} Program marked to start with it: mark one there (START TOGETHER), or unmark this one.`;
+  }
   return '';
 }
 
@@ -99,8 +110,11 @@ function row(step) {
     const known = (S.sources[step._side]?.programs || []).find(p => p.id === step.id);
     const name = step.name || (known && known.name) || '';
     const t = known && known.seconds != null ? ` (${fmtT(known.seconds)})` : '';     // its execution time, after its name
+    const j = step.together ? togetherOf(step._side, step._i) : -1;
+    const with_ = !step.together ? '' : j >= 0 ? ` // Starts with ${ARM(OTHER[step._side])} row ${j + 1}`
+      : ` // Starts together: no ${ARM(OTHER[step._side])} Program marked`;
     return [k.toUpperCase(), `Program ${step.id}${name ? ` // ${name}` : ''}${t}`,
-      `Start ${step.transit_speed ?? step.start_speed ?? 30}% // Stored timing`];
+      `Start ${step.transit_speed ?? step.start_speed ?? 30}% // Stored timing${with_}`];
   }
   if (k === 'meet') {
     const side = step._side, n = S.steps[side].slice(0, step._i + 1).filter(x => x.type === 'meet').length, j = partnerOf(side, step._i);
@@ -177,12 +191,14 @@ function armPanel(side) {
         btn('+ MEET (BOTH ARMS)', () => addMeet(), 'btn green'),
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_target`, text: `Wait for the ${ARM(OTHER[side])} arm's row` }),
           el('select', { id: `liteS2_${side}_target` })),
-        btn('+ WAIT FOR', () => addWaitFor(side), 'btn')),
+        btn('+ WAIT FOR', () => addWaitFor(side), 'btn'),
+        btn('START TOGETHER (BOTH ARMS)', () => toggleTogether(), 'btn light')),
       el('div', { class: 'mini-note', text: 'MEET: both arms meet there; the first to arrive waits for the other, then both go on. It goes on both '
         + 'arms, after the row chosen in each table (at the end of a table with none chosen); the Meets pair up in order, each arm\'s first '
         + `with the other's first. WAIT FOR: this arm waits there until the ${ARM(OTHER[side])} arm has finished the row chosen above, `
-        + `while the ${ARM(OTHER[side])} arm goes on; it goes after the row chosen in this table. Anywhere else each arm goes on with its `
-        + 'own rows.' })),
+        + `while the ${ARM(OTHER[side])} arm goes on; it goes after the row chosen in this table. START TOGETHER: the Program row chosen `
+        + 'in each table starts at the same moment as the other (each arm first finishes what is before it); pressed again, both are '
+        + 'unmarked. Anywhere else each arm goes on with its own rows.' })),
     el('div', { id: `liteS2Add_${side}_lid`, class: 'lite-s2-add', hidden: true },
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_task`, text: 'Lid or seat task (pre-recorded)' }),
@@ -500,6 +516,29 @@ function addWaitFor(side) {
   window.toast(`${ARM(side)} row ${row}: waits until the ${ARM(other)} arm has finished its row ${j + 1} (${brief(S.steps[other][j])}).`, 'good');
 }
 
+// START TOGETHER: the Program row chosen in each table marked to start at the same moment as the other's (flow.py), or,
+// both marked, unmarked.
+function toggleTogether() {
+  const at = Object.fromEntries(ARMS.map(s => [s, S.sel[s]]));
+  const bad = ARMS.filter(s => at[s] == null || (S.steps[s][at[s]] || {}).type !== 'program');
+  if (bad.length) { window.toast(`Choose a Program row in ${bad.map(ARM).join(' and ')} first: the two that start together.`, 'warn'); return; }
+  const marked = ARMS.map(s => !!S.steps[s][at[s]].together);
+  if (marked[0] !== marked[1]) {
+    const s = ARMS[marked.indexOf(true)];
+    window.toast(`${ARM(s)} row ${at[s] + 1} already starts together with another row: choose its partner to unmark both.`, 'warn');
+    return;
+  }
+  for (const s of ARMS) {
+    if (marked[0]) delete S.steps[s][at[s]].together;
+    else S.steps[s][at[s]].together = true;
+    saveSteps(s);
+  }
+  paintAll();
+  window.toast(marked[0] ? `LEFT row ${at.left + 1} and RIGHT row ${at.right + 1} no longer start together.`
+    : `LEFT row ${at.left + 1} and RIGHT row ${at.right + 1} start together: both arms finish what is before them, then both Programs start at once.`,
+  'good');
+}
+
 // Each arm's WAIT FOR picker: the other arm's rows (not its Meet and Wait-for rows), the choice kept while its row is.
 function paintTargets() {
   for (const side of ARMS) {
@@ -622,7 +661,9 @@ function duplicate(side) {
   if (i == null) return;
   if (S.steps[side][i].type === 'mechanism') { window.toast('A lid or seat task is added to both arms from the LID / SEAT tab.', 'warn'); return; }
   if (S.steps[side][i].type === 'meet') { window.toast('A Meet is added to both arms from the MEET / WAIT FOR tab.', 'warn'); return; }
-  S.steps[side].splice(i + 1, 0, { ...JSON.parse(JSON.stringify(S.steps[side][i])), uid: newUid() });    // a copy: a row of its own
+  const copy = { ...JSON.parse(JSON.stringify(S.steps[side][i])), uid: newUid() };     // a copy: a row of its own
+  delete copy.together;                                        // its start together stays with the row it pairs (START TOGETHER)
+  S.steps[side].splice(i + 1, 0, copy);
   S.sel[side] = i + 1;
   paintAll();
   saveSteps(side);

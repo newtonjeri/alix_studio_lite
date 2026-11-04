@@ -6,15 +6,20 @@ arm waits only where the sequence says so:
 - a **Wait-for** row: the arm stops there until the other arm has finished the row it names (``target``: that row's
   ``uid``, which follows the row when rows move; or, from a V53 file, ``program``: the other arm's first row of that
   Program); the other arm goes on;
-- a lid or seat task: it uses both arms, so both finish what is before it (a meeting point too).
+- a lid or seat task: it uses both arms, so both finish what is before it (a meeting point too);
+- a Program marked to **start together** (``together``; the user, 5 Nov: "tasks that are required to start together,
+  forced to start together, no latency"): it pairs with the other arm's marked Program between the same two meeting
+  points (each arm's first with the other's first, and so on); both arms finish what is before their Programs, then
+  both Programs are started at the same moment (workflow.run_real's start gate).
 
 V53's Dual Rule (TOGETHER / RUN FIRST / WAIT OTHER) and its SAFE TIMELINE planner are gone (the owner, 22 Oct: "do away
 with it"), and with them their refusals: one Program ID per arm, the same ID for a handoff, a Program on each arm, the
 steps after an arm's last Program waiting for the other arm. A V53 file is loaded with its RUN FIRST / WAIT OTHER pairs
 as Meets and a Wait-for, which run them as V53 did (``from_v53``).
 
-Refused before anything moves: a Meet without its partner, a Wait-for naming a row that is not there, and two arms each
-waiting for the other (it would never end)."""
+Refused before anything moves: a Meet without its partner, a Wait-for naming a row that is not there, a Program that
+starts together with no partner between the same meeting points, and two arms each waiting for the other (it would
+never end)."""
 from __future__ import annotations
 
 import secrets
@@ -126,20 +131,27 @@ def _resolve(steps: dict) -> dict:
     return out
 
 
+def together_marks(steps: list) -> list[int]:
+    """The indexes of an arm's Programs marked to start together with the other arm's (``together``)."""
+    return [i for i, st in enumerate(steps) if st["type"] == "program" and st.get("together")]
+
+
 def _walk(steps: dict, waits: dict, sync: dict) -> None:
-    """Both arms walked with no time at all: each goes on while it can; at a meeting point it waits for the other arm
-    to reach its own (then both go on), at a Wait-for for the other arm to have finished the row it names. If neither
-    can go on before both are at their end, the sequence would never end: refused, saying where each arm waits."""
+    """Both arms walked with no time at all: each goes on while it can; at a meeting point (a Program that starts
+    together too) it waits for the other arm to reach its own (then both go on), at a Wait-for for the other arm to
+    have finished the row it names. If neither can go on before both are at their end, the sequence would never end:
+    refused, saying where each arm waits."""
     pos = {s: 0 for s in ARMS}
     n = {s: len(steps[s]) for s in ARMS}
-    at = {s: [i for i, _ in sync[s]] for s in ARMS}
+    at = {s: sorted([i for i, _ in sync[s]] + together_marks(steps[s])) for s in ARMS}
+    gate = {s: set(at[s]) for s in ARMS}
     while pos["left"] < n["left"] or pos["right"] < n["right"]:
         moved = False
         for side in ARMS:
             other = OTHER[side]
             while pos[side] < n[side]:
                 st = steps[side][pos[side]]
-                if st["type"] in ("meet", "mechanism"):
+                if pos[side] in gate[side]:
                     j = at[other][at[side].index(pos[side])]           # the other arm's meeting point of the same number
                     if pos[other] != j:
                         break
@@ -159,8 +171,42 @@ def _walk(steps: dict, waits: dict, sync: dict) -> None:
                 if st["type"] == "wait_for":
                     other, j = waits[(side, pos[side])]
                     return f"{side.upper()} row {row} waits for {other.upper()} row {_row(steps[other], j)}"
+                if st["type"] == "program":
+                    return f"{side.upper()} row {row} waits to start Program {st['id']} together with the {OTHER[side].upper()} arm"
                 return f"{side.upper()} row {row} waits at {_words('meet' if st['type'] == 'meet' else st['task'])}"
             raise PlanError("The arms would wait for each other for ever: " + "; ".join(where(s) for s in ARMS) + ".")
+
+
+def _together_pairs(steps: dict, sync: dict) -> list[tuple[int, int]]:
+    """The Programs that start together, paired (LEFT index, RIGHT index): each arm's k-th marked Program with the
+    other's k-th, both between the same two meeting points; a mark without its partner there is refused."""
+    marks = {s: together_marks(steps[s]) for s in ARMS}
+
+    def part_of(side, i):                           # the meeting points before it: which part of the plan it is in
+        return sum(1 for j, _ in sync[side] if j < i)
+
+    def rows(side, idx):
+        return ", ".join(str(_row(steps[side], i)) for i in idx)
+
+    per = {s: {} for s in ARMS}
+    for s in ARMS:
+        for i in marks[s]:
+            per[s].setdefault(part_of(s, i), []).append(i)
+    for p in sorted(set(per["left"]) | set(per["right"])):
+        mine = {s: per[s].get(p, []) for s in ARMS}
+        if len(mine["left"]) != len(mine["right"]):
+            one = "left" if len(mine["left"]) > len(mine["right"]) else "right"
+            other = OTHER[one]
+            raise PlanError(f"{one.upper()} row {rows(one, mine[one])} start{'s' if len(mine[one]) == 1 else ''} together with the "
+                            f"{other.upper()} arm, but the {other.upper()} arm has "
+                            + (f"only row {rows(other, mine[other])} marked" if mine[other] else "no Program marked to start with it")
+                            + " between the same Meets and lid or seat tasks: mark its partner there, or unmark it.")
+    pairs = list(zip(marks["left"], marks["right"]))
+    for li, ri in pairs:
+        if part_of("left", li) != part_of("right", ri):            # never here after the counts per part
+            raise PlanError(f"LEFT row {_row(steps['left'], li)} and RIGHT row {_row(steps['right'], ri)} start together, but a "
+                            "Meet or a lid or seat task lies between them.")
+    return pairs
 
 
 def build(left: list, right: list) -> list[dict]:
@@ -168,7 +214,8 @@ def build(left: list, right: list) -> list[dict]:
     together, each goes through its own rows, the stage ends when both have), and each lid or seat task as a stage of
     its own (``mechanism``); the Meet rows are the boundaries between stages. A Wait-for stays among its arm's rows,
     with ``_target``: the other arm, the row it waits for, and ``done`` when that row is finished before the stage
-    starts (a row of an earlier stage, or a meeting point)."""
+    starts (a row of an earlier stage, or a meeting point). A Program that starts together stays among its arm's rows,
+    with ``_together``: its pair's number, the other arm, its partner's row and Program."""
     from . import mechanism
 
     steps = {"left": [dict(x) for x in left], "right": [dict(x) for x in right]}
@@ -182,6 +229,7 @@ def build(left: list, right: list) -> list[dict]:
         raise PlanError("The Meets and the lid or seat tasks must come in the same order on both arms (at each, both arms "
                         f"meet): LEFT has {words['left']}; RIGHT has {words['right']}.")
     waits = _resolve(steps)
+    pairs = _together_pairs(steps, sync)
     _walk(steps, waits, sync)
     bounds = {s: [-1] + [i for i, _ in sync[s]] + [len(steps[s])] for s in ARMS}
     stage_of = {s: {} for s in ARMS}
@@ -207,6 +255,10 @@ def build(left: list, right: list) -> list[dict]:
         here, there = stage_of[side][i], stage_of[other].get(j)
         steps[side][i]["_target"] = {"side": other, "row": _row(steps[other], j), "index": j,
                                      "done": there is None or there < here}
+    for k, (li, ri) in enumerate(pairs):              # each Program that starts together, with its partner
+        for side, i, j in (("left", li, ri), ("right", ri, li)):
+            other = OTHER[side]
+            steps[side][i]["_together"] = {"pair": k, "side": other, "row": _row(steps[other], j), "id": int(steps[other][j]["id"])}
     for st in parts:
         for s in ARMS:
             st[f"{s}_program_ids"] = [int(x["id"]) for x in ((st[s] or {}).get("steps") or []) if x["type"] == "program"]
@@ -218,15 +270,18 @@ def single(side: str, steps: list) -> tuple[list, list]:
     wait for; those rows are passed over, said."""
     dropped = sum(1 for st in steps if st["type"] in GATES)
     keep = [st for st in steps if st["type"] not in GATES]
+    marked = len(together_marks(steps))
     return keep, ([f"{side.upper()} alone: its {dropped} Meet / Wait-for row(s) are passed over (the other arm does not run)."]
-                  if dropped else [])
+                  if dropped else []) + ([f"{side.upper()} alone: its {marked} Program(s) marked to start together start on "
+                                          "their own (the other arm does not run)."] if marked else [])
 
 
 def counts(plan: list[dict]) -> dict:
-    """What the run's confirmation says: the parts both arms run, the Meets that end them, the Wait-for rows, the lid
-    and seat tasks."""
+    """What the run's confirmation says: the parts both arms run, the Meets that end them, the Wait-for rows, the pairs
+    of Programs that start together, the lid and seat tasks."""
     parts = [st for st in plan if st["kind"] == "parallel"]
     waits = sum(1 for st in parts for s in ARMS for x in ((st.get(s) or {}).get("steps") or []) if x["type"] == "wait_for")
-    return dict(parts=len(parts), meets=sum(1 for st in parts if st.get("meet_kind") == "meet"), waits_for=waits,
+    together = sum(1 for st in parts for x in ((st.get("left") or {}).get("steps") or []) if x.get("_together"))
+    return dict(parts=len(parts), meets=sum(1 for st in parts if st.get("meet_kind") == "meet"), waits_for=waits, together=together,
                 mechanisms=sum(1 for st in plan if st["kind"] == "mechanism"),
                 single=sum(1 for st in plan if st["kind"] == "single"), stages=len(plan))

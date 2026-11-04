@@ -337,3 +337,52 @@ def test_a_run_records_the_controllers_feed_when_asked(server):
                                                                 "record_feed": False}))
     assert j["state"] == "done", j
     assert set((day / "canfd").glob("*_s2_*")) == before and "Recording the controllers' feed" not in events(j)   # unticked
+
+
+def _marked(*mid, tail=()):
+    out = steps(*mid, tail=tail)
+    next(x for x in out if x["type"] == "program")["together"] = True
+    return out
+
+
+def test_programs_that_start_together_are_started_at_the_same_moment_on_the_robot(server):
+    """The user, 5 Nov: the marked Programs start together, "no latency". The left arm has 1.5 s more to do first: the
+    right's runner holds on its last line before it starts its Program (its checks done) until the left's is on its
+    own, then both are let go at once; the job and the hardware log say how far apart they began to play."""
+    call(server, "PUT", f"{P}/workflow/left", {"steps": _marked({"type": "wait", "seconds": 1.5})})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": _marked()})
+    sim = simulated(server)
+    hold = next(a for a in sim["acts"]["right"] if a.get("together"))
+    assert hold["t1"] - hold["t0"] > 1.4
+    t0 = time.time()
+    j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]}))
+    assert j["state"] == "done", j
+    said = events(j)
+    assert "Started together: LEFT row 4 (Program 71) and RIGHT row 3 (Program 71) began to play" in said
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    row = next(r for r in hw if r["verb"] == "start together" and r["t"] >= t0)
+    assert row["args"]["held_s"]["right"] > 1.2 and row["args"]["held_s"]["left"] < 0.3      # the right held for the left
+    assert abs(row["args"]["sent_apart_s"]) < 0.05 and row["args"]["played_apart_s"] < 0.3
+    run = {s: next(r["t"] for r in hw if r["t"] >= t0 and r["side"] == s and r["verb"] == "runner v14"
+                   and r["text"].startswith("WORKFLOW PROGRAM RUNNING")) for s in ("left", "right")}
+    assert abs(run["left"] - run["right"]) < 0.3
+    assert not [e for e in j["events"] if "(Program 71) ran past" in e["text"]]          # the hold is not the Program's time
+
+
+def test_a_stop_while_one_arm_is_held_for_the_other_starts_neither_program(server):
+    """STOP pressed while the right arm's runner holds for the left's (the left still in its 6 s Wait): neither Program
+    starts, both runners end on the stop."""
+    call(server, "PUT", f"{P}/workflow/left", {"steps": _marked({"type": "wait", "seconds": 6})})
+    call(server, "PUT", f"{P}/workflow/right", {"steps": _marked()})
+    sim = simulated(server)
+    t0 = time.time()
+    job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
+    wait(server, job, until=lambda j: "STARTS WITH THE LEFT ARM" in str((j.get("extra") or {}).get("live", {}).get("right")))
+    t1 = time.time()
+    call(server, "POST", "/api/robots/stop-both", {}, tok=False)
+    j = wait(server, job, limit=15)
+    assert j["state"] == "cancelled" and time.time() - t1 < 5, j                  # let go at once, not after the 6 s Wait
+    hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+    assert not [r for r in hw if r["t"] >= t0 and r["verb"] == "runner v14" and r["text"].startswith("WORKFLOW PROGRAM RUNNING")]
+    for side in ("left", "right"):
+        assert call(server, "POST", f"/api/robots/{side}/recover", {})["estop"] == "CLEAR"
