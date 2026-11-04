@@ -1012,3 +1012,10 @@
 01:11:42.052 [RIGHT] global points · 14 point(s)
 01:11:42.547 [RIGHT] program list · 25 programs
 01:11:42.677 [activity] operator:edaf5e PUT /api/projects/alix_mvbvk1fk_zti6s
+01:11:57.030 [activity] operator:edaf5e page: SYSTEM · Session active
+01:12:11.359 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+01:12:11.424 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+01:12:14.825 [RIGHT] ALERT ERROR · RIGHT: its controller has not answered rm_set_arm_stop for 4 s (a reading). Lite gives that connection up and connects the arm again. What each thread was doing: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-05/threads-011214.txt. (Press the red E-stop button if the arm is moving.)
+01:12:14.827 [LEFT] ALERT ERROR · LEFT: its controller has not answered rm_set_arm_stop for 4 s (a reading). Lite gives that connection up and connects the arm again. What each thread was doing: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-05/threads-011214.txt. (Press the red E-stop button if the arm is moving.)
+01:12:14.830 [RIGHT] ALERT ERROR · RIGHT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)
+01:12:14.831 [LEFT] ALERT ERROR · LEFT: STOP not confirmed (no answer from its connection's process). (Press the red E-stop button on the robot if it is still moving.)
