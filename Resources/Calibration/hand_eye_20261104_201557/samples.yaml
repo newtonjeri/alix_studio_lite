@@ -1,0 +1,700 @@
+created: '2026-11-04T20:16:06'
+tool: ALIX Studio Lite hand_eye_cal
+board:
+  cols: 11
+  rows: 8
+  square_m: 0.015
+end_frame: R_CameraHolderLink
+camera_frame: camera_color_optical_frame
+base_frame: base_link
+camera_info:
+  width: 1280
+  height: 720
+  K:
+  - 904.546265
+  - 0.0
+  - 656.859802
+  - 0.0
+  - 904.315063
+  - 382.823792
+  - 0.0
+  - 0.0
+  - 1.0
+  D:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  distortion_model: inverse_brown_conrady
+camera:
+  name: Intel RealSense D435
+  serial: '425122070189'
+nominal:
+  T_end_cam:
+  - - -1.0
+    - 0.0
+    - 0.0
+    - 0.0325
+  - - -0.0
+    - -1.0
+    - 0.0
+    - 0.075
+  - - 0.0
+    - 0.0
+    - 1.0
+    - 0.0216
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  T_end_mount:
+  - - 0.0
+    - 1.0
+    - -0.0
+    - 0.0
+  - - -0.0
+    - 0.0
+    - 1.0
+    - 0.0625
+  - - 1.0
+    - 0.0
+    - 0.0
+    - 0.011
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  T_end_depth:
+  - - -1.0
+    - 0.0
+    - 0.0
+    - 0.0175
+  - - -0.0
+    - -1.0
+    - 0.0
+    - 0.075
+  - - 0.0
+    - 0.0
+    - 1.0
+    - 0.0216
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+samples:
+- index: 0
+  view: 0
+  base: rest_pose
+  offsets_deg:
+    j1: 15.0
+    j4: 0.0
+    j5: 20.0
+    j6: 0.0
+    j7: 0.0
+  image: images/00.png
+  captured: '2026-11-04T20:16:12'
+  T_base_end:
+  - - 0.911187
+    - -0.191063
+    - 0.365013
+    - 0.543807
+  - - -0.344757
+    - -0.838673
+    - 0.421628
+    - -0.215376
+  - - 0.225569
+    - -0.510022
+    - -0.830058
+    - 0.972058
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.261799
+    R_joint2: -1.430995
+    R_joint3: -0.453768
+    R_joint4: 1.710283
+    R_joint5: 0.453768
+    R_joint6: 1.082069
+    R_joint7: 1.204312
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.31
+  board_tilt_deg: 33.1
+  board_range_m: 0.615
+  still_px: 0.135
+- index: 1
+  view: 1
+  base: rest_pose
+  offsets_deg:
+    j1: -15.0
+    j4: -10.0
+    j5: 40.0
+    j6: 30.0
+    j7: 60.0
+  image: images/01.png
+  captured: '2026-11-04T20:16:17'
+  T_base_end:
+  - - 0.462311
+    - -0.862507
+    - 0.205793
+    - 0.532455
+  - - -0.831195
+    - -0.340696
+    - 0.439365
+    - -0.102081
+  - - -0.308842
+    - -0.374178
+    - -0.874419
+    - 1.049144
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: -0.261799
+    R_joint2: -1.430978
+    R_joint3: -0.453768
+    R_joint4: 1.535715
+    R_joint5: 0.802764
+    R_joint6: 1.605703
+    R_joint7: 2.251545
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.352
+  board_tilt_deg: 29.2
+  board_range_m: 0.632
+  still_px: 0.141
+- index: 2
+  view: 2
+  base: rest_pose
+  offsets_deg:
+    j1: -15.0
+    j4: 10.0
+    j5: 40.0
+    j6: 0.0
+    j7: 90.0
+  image: images/02.png
+  captured: '2026-11-04T20:16:22'
+  T_base_end:
+  - - -0.30581
+    - -0.862638
+    - 0.402909
+    - 0.53584
+  - - -0.87529
+    - 0.42124
+    - 0.237537
+    - -0.13897
+  - - -0.37463
+    - -0.280021
+    - -0.883878
+    - 0.979049
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: -0.261799
+    R_joint2: -1.430978
+    R_joint3: -0.453716
+    R_joint4: 1.884816
+    R_joint5: 0.802799
+    R_joint6: 1.082139
+    R_joint7: 2.775108
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.088
+  board_tilt_deg: 26.9
+  board_range_m: 0.585
+  still_px: 0.132
+- index: 3
+  view: 3
+  base: rest_pose
+  offsets_deg:
+    j1: 15.0
+    j4: -10.0
+    j5: 20.0
+    j6: 15.0
+    j7: -60.0
+  image: images/03.png
+  captured: '2026-11-04T20:16:28'
+  T_base_end:
+  - - 0.565225
+    - 0.771588
+    - 0.291845
+    - 0.54228
+  - - 0.597559
+    - -0.626853
+    - 0.499979
+    - -0.216549
+  - - 0.568721
+    - -0.108206
+    - -0.815382
+    - 1.008222
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.261782
+    R_joint2: -1.430908
+    R_joint3: -0.453768
+    R_joint4: 1.535802
+    R_joint5: 0.453786
+    R_joint6: 1.343886
+    R_joint7: 0.157062
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.371
+  board_tilt_deg: 34.4
+  board_range_m: 0.633
+  still_px: 0.323
+- index: 4
+  view: 4
+  base: rest_pose
+  offsets_deg:
+    j1: 15.0
+    j4: -10.0
+    j5: 0.0
+    j6: 15.0
+    j7: -90.0
+  image: images/04.png
+  captured: '2026-11-04T20:16:33'
+  T_base_end:
+  - - 0.096234
+    - 0.985381
+    - 0.140584
+    - 0.525028
+  - - 0.963554
+    - -0.127643
+    - 0.235096
+    - -0.246747
+  - - 0.249604
+    - 0.112836
+    - -0.961751
+    - 0.991553
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.261799
+    R_joint2: -1.430961
+    R_joint3: -0.453733
+    R_joint4: 1.535768
+    R_joint5: 0.104737
+    R_joint6: 1.343956
+    R_joint7: -0.366519
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.27
+  board_tilt_deg: 14.6
+  board_range_m: 0.623
+  still_px: 0.074
+- index: 5
+  view: 5
+  base: inspection_pose_1
+  offsets_deg:
+    j1: 0.0
+    j4: 10.0
+    j5: 0.0
+    j6: 0.0
+    j7: 0.0
+  image: images/05.png
+  captured: '2026-11-04T20:16:38'
+  T_base_end:
+  - - -0.923876
+    - -0.078536
+    - 0.374547
+    - 0.506865
+  - - -0.055516
+    - 0.995867
+    - 0.071879
+    - -0.145223
+  - - -0.378645
+    - 0.045614
+    - -0.924417
+    - 1.045603
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.087336
+    R_joint2: -1.693004
+    R_joint3: -0.034941
+    R_joint4: 1.692934
+    R_joint5: 1.7e-05
+    R_joint6: 1.186789
+    R_joint7: -1.693004
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.082
+  board_tilt_deg: 22.7
+  board_range_m: 0.636
+  still_px: 0.099
+- index: 6
+  view: 6
+  base: inspection_pose_1
+  offsets_deg:
+    j1: -15.0
+    j4: 0.0
+    j5: 20.0
+    j6: 0.0
+    j7: -30.0
+  image: images/06.png
+  captured: '2026-11-04T20:16:43'
+  T_base_end:
+  - - -0.660177
+    - -0.531177
+    - 0.531052
+    - 0.521511
+  - - -0.537326
+    - 0.828014
+    - 0.160233
+    - -0.062495
+  - - -0.524831
+    - -0.179566
+    - -0.832051
+    - 1.091071
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: -0.174498
+    R_joint2: -1.693004
+    R_joint3: -0.034907
+    R_joint4: 1.518349
+    R_joint5: 0.349048
+    R_joint6: 1.186806
+    R_joint7: -2.216621
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.473
+  board_tilt_deg: 32.9
+  board_range_m: 0.645
+  still_px: 0.474
+- index: 7
+  view: 7
+  base: inspection_pose_1
+  offsets_deg:
+    j1: 0.0
+    j4: -10.0
+    j5: 0.0
+    j6: 15.0
+    j7: -90.0
+  image: images/07.png
+  captured: '2026-11-04T20:16:48'
+  T_base_end:
+  - - 0.074172
+    - -0.887963
+    - 0.453894
+    - 0.503262
+  - - -0.996597
+    - -0.049584
+    - 0.065854
+    - -0.152034
+  - - -0.03597
+    - -0.457233
+    - -0.888619
+    - 1.121245
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.087336
+    R_joint2: -1.692934
+    R_joint3: -0.034907
+    R_joint4: 1.343816
+    R_joint5: 3.5e-05
+    R_joint6: 1.448553
+    R_joint7: -3.263801
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.318
+  board_tilt_deg: 28.1
+  board_range_m: 0.722
+  still_px: 0.406
+- index: 8
+  view: 8
+  base: inspection_pose_1
+  offsets_deg:
+    j1: -15.0
+    j4: 10.0
+    j5: 0.0
+    j6: 0.0
+    j7: 60.0
+  image: images/08.png
+  captured: '2026-11-04T20:16:54'
+  T_base_end:
+  - - -0.529964
+    - 0.760871
+    - 0.374451
+    - 0.506867
+  - - 0.767494
+    - 0.618153
+    - -0.169824
+    - -0.106421
+  - - -0.360682
+    - 0.197388
+    - -0.911563
+    - 1.046068
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: -0.174463
+    R_joint2: -1.692952
+    R_joint3: -0.034907
+    R_joint4: 1.692934
+    R_joint5: 1.7e-05
+    R_joint6: 1.186841
+    R_joint7: -0.645754
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.45
+  board_tilt_deg: 25.9
+  board_range_m: 0.607
+  still_px: 0.088
+- index: 9
+  view: 9
+  base: inspection_pose_1
+  offsets_deg:
+    j1: 15.0
+    j4: 10.0
+    j5: 0.0
+    j6: 15.0
+    j7: 60.0
+  image: images/09.png
+  captured: '2026-11-04T20:16:59'
+  T_base_end:
+  - - -0.569309
+    - 0.813028
+    - 0.121956
+    - 0.478083
+  - - 0.793661
+    - 0.504822
+    - 0.339496
+    - -0.179039
+  - - 0.214454
+    - 0.29007
+    - -0.932668
+    - 1.028444
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.349101
+    R_joint2: -1.692952
+    R_joint3: -0.034889
+    R_joint4: 1.692934
+    R_joint5: 0.0
+    R_joint6: 1.448553
+    R_joint7: -0.645772
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.332
+  board_tilt_deg: 22.0
+  board_range_m: 0.642
+  still_px: 0.44
+- index: 10
+  view: 10
+  base: inspection_pose_4
+  offsets_deg:
+    j1: 0.0
+    j4: -10.0
+    j5: 0.0
+    j6: 15.0
+    j7: 0.0
+  image: images/10.png
+  captured: '2026-11-04T20:17:04'
+  T_base_end:
+  - - -0.423453
+    - 0.874844
+    - 0.235235
+    - 0.491313
+  - - 0.905433
+    - 0.400216
+    - 0.141482
+    - -0.200739
+  - - 0.02963
+    - 0.2729
+    - -0.961586
+    - 1.004781
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.558523
+    R_joint2: -1.675481
+    R_joint3: 0.174481
+    R_joint4: 1.780271
+    R_joint5: -0.436245
+    R_joint6: 1.308979
+    R_joint7: -0.244224
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.157
+  board_tilt_deg: 16.5
+  board_range_m: 0.621
+  still_px: 0.225
+- index: 11
+  view: 11
+  base: inspection_pose_4
+  offsets_deg:
+    j1: 15.0
+    j4: 0.0
+    j5: -20.0
+    j6: 0.0
+    j7: -30.0
+  image: images/11.png
+  captured: '2026-11-04T20:17:10'
+  T_base_end:
+  - - -0.818951
+    - 0.397355
+    - 0.41404
+    - 0.504869
+  - - 0.488611
+    - 0.861204
+    - 0.13995
+    - -0.228619
+  - - -0.300963
+    - 0.316917
+    - -0.899436
+    - 0.95463
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.820305
+    R_joint2: -1.675481
+    R_joint3: 0.174533
+    R_joint4: 1.954804
+    R_joint5: -0.785363
+    R_joint6: 1.047145
+    R_joint7: -0.767962
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.347
+  board_tilt_deg: 27.5
+  board_range_m: 0.583
+  still_px: 0.171
+- index: 12
+  view: 12
+  base: inspection_pose_4
+  offsets_deg:
+    j1: 0.0
+    j4: -10.0
+    j5: 0.0
+    j6: 15.0
+    j7: -90.0
+  image: images/12.png
+  captured: '2026-11-04T20:17:15'
+  T_base_end:
+  - - -0.874809
+    - -0.423498
+    - 0.235286
+    - 0.491315
+  - - -0.400275
+    - 0.905415
+    - 0.141434
+    - -0.20074
+  - - -0.272928
+    - 0.029548
+    - -0.961581
+    - 1.004791
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.558488
+    R_joint2: -1.675499
+    R_joint3: 0.174481
+    R_joint4: 1.780253
+    R_joint5: -0.436262
+    R_joint6: 1.308962
+    R_joint7: -1.81509
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.241
+  board_tilt_deg: 15.3
+  board_range_m: 0.641
+  still_px: 0.274
+- index: 13
+  view: 13
+  base: inspection_pose_4
+  offsets_deg:
+    j1: -15.0
+    j4: -10.0
+    j5: 20.0
+    j6: 15.0
+    j7: 60.0
+  image: images/13.png
+  captured: '2026-11-04T20:17:20'
+  T_base_end:
+  - - 0.571199
+    - 0.8029
+    - 0.170541
+    - 0.483926
+  - - 0.773091
+    - -0.596061
+    - 0.21689
+    - -0.133109
+  - - 0.275794
+    - 0.007957
+    - -0.961184
+    - 1.021517
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.296741
+    R_joint2: -1.675534
+    R_joint3: 0.174463
+    R_joint4: 1.780253
+    R_joint5: -0.087214
+    R_joint6: 1.308997
+    R_joint7: 0.802886
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.101
+  board_tilt_deg: 15.7
+  board_range_m: 0.626
+  still_px: 0.129
+- index: 14
+  view: 14
+  base: inspection_pose_4
+  offsets_deg:
+    j1: -15.0
+    j4: -10.0
+    j5: 20.0
+    j6: 15.0
+    j7: 90.0
+  image: images/14.png
+  captured: '2026-11-04T20:17:25'
+  T_base_end:
+  - - 0.89613
+    - 0.409737
+    - 0.170487
+    - 0.483919
+  - - 0.371504
+    - -0.902748
+    - 0.216866
+    - -0.133101
+  - - 0.242765
+    - -0.131004
+    - -0.961199
+    - 1.021506
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.296706
+    R_joint2: -1.675534
+    R_joint3: 0.174463
+    R_joint4: 1.780306
+    R_joint5: -0.087197
+    R_joint6: 1.308997
+    R_joint7: 1.326485
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.231
+  board_tilt_deg: 15.1
+  board_range_m: 0.636
+  still_px: 0.313

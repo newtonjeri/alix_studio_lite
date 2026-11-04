@@ -9504,3 +9504,170 @@
 {"t": 1793783248.1135473, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "camera closed"}
 {"t": 1793783374.7775342, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1793783374.8199873, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793784674.4601097, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)"}
+{"t": 1793784674.503225, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link"}
+{"t": 1793784674.503549, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link"}
+{"t": 1793784677.820685, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "perception warmed up in 4.9 s: its core built, the colour model loaded"}
+{"t": 1793784689.3491478, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1793784689.4785602, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1793784690.0672414, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1793784690.1974428, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1793784690.4393816, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "25 programs"}
+{"t": 1793784690.551144, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "14 point(s)"}
+{"t": 1793784690.591999, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "32 programs"}
+{"t": 1793784690.7276838, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1793784694.3014884, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793784694.3294034, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793784706.56811, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "25 programs"}
+{"t": 1793784706.6077414, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "32 programs"}
+{"t": 1793784706.6164844, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "14 point(s)"}
+{"t": 1793784706.6462579, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1793784707.2576427, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "25 programs"}
+{"t": 1793784707.2772343, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "14 point(s)"}
+{"t": 1793784707.385826, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "32 programs"}
+{"t": 1793784707.4243796, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1793784742.3057053, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "32 programs"}
+{"t": 1793784742.5982182, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "25 programs"}
+{"t": 1793784742.6204038, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1793784742.7368665, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "14 point(s)"}
+{"t": 1793784743.9714022, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "32 programs"}
+{"t": 1793784744.3716981, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "25 programs"}
+{"t": 1793784744.4397862, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1793784744.4658227, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "14 point(s)"}
+{"t": 1793784744.852876, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "32 programs"}
+{"t": 1793784744.9098315, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1793784746.44577, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "32 programs"}
+{"t": 1793784746.5761871, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "25 programs"}
+{"t": 1793784746.6519132, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1793784746.6713405, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "14 point(s)"}
+{"t": 1793784747.0037026, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "32 programs"}
+{"t": 1793784747.1170447, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1793784747.5832574, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793784749.58354, "side": "left", "verb": "pole and hand", "args": {"mm": 200.0, "hand": [0, 0, 0, 0, 150, 1000]}, "ret": null, "ok": true, "elapsed_s": 1.992, "text": "pole 150.0 -> 198.0 mm in 1.825 s, the hand moving meanwhile; hand [489, 452, 461, 519, 497, 980]"}
+{"t": 1793784749.5841725, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1793784749.5843916, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1793784749.698981, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. PROGRAM: Program 5 5_5_L_P3_R08+R09_PART1+R09_PAR.t // start/transit 30% // stored trajectory timing"}
+{"t": 1793784749.715966, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1793784749.7164402, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/1: PROGRAM"}
+{"t": 1793784749.7510374, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 1/1: slot 5 (5_5_L_P3_R08+R09_PART1+R09_PAR.t) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1793784751.5053596, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 1/1: slot 5 // start ack 1.735 s"}
+{"t": 1793784801.0926828, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 1/1: 49.606 s"}
+{"t": 1793784801.0932372, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 1/1: 0.115 s"}
+{"t": 1793784801.0937326, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/1: PROGRAM"}
+{"t": 1793784801.0941088, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 1/1 step(s), 51.4 s"}
+{"t": 1793784801.1165965, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1793784801.1170948, "side": "left", "verb": "workflow", "args": {"steps": 1, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 51.533, "text": null}
+{"t": 1793784801.144044, "side": "left", "verb": "clear warning", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "clean"}
+{"t": 1793784801.1447394, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 3 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1793784801.1449523, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1793784801.2639756, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. GLOBAL: L_HME_POS // MOVEJ // speed 100% // wait 0s"}
+{"t": 1793784801.2644029, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. HAND: 1000,1000,1000,1000,1000,1000"}
+{"t": 1793784801.2647083, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  03. PROGRAM: Program 7 7_7_L_P3_T04+T05_pole200_allop.t // start/transit 30% // stored trajectory timing"}
+{"t": 1793784801.2856576, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1793784801.286084, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/3: GLOBAL"}
+{"t": 1793784801.3198361, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 100%"}
+{"t": 1793784803.3180642, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ"}
+{"t": 1793784803.3185124, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/3: GLOBAL"}
+{"t": 1793784803.3188882, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/3: HAND"}
+{"t": 1793784803.3237252, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=1000 thumb_rotate=1000"}
+{"t": 1793784804.167727, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 1000, 1000], final=[1000, 1000, 1000, 997, 992, 984]"}
+{"t": 1793784804.3844101, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "AUX HAND CLOSED"}
+{"t": 1793784804.3848724, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/3: HAND"}
+{"t": 1793784804.3852556, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 3/3: PROGRAM"}
+{"t": 1793784804.4274952, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 3/3: slot 7 (7_7_L_P3_T04+T05_pole200_allop.t) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1793784805.313507, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 3/3: slot 7 // start ack 0.869 s"}
+{"t": 1793784817.3528395, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 3/3: 12.056 s"}
+{"t": 1793784817.3533328, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 3/3: 0.117 s"}
+{"t": 1793784817.3536062, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 3/3: PROGRAM"}
+{"t": 1793784817.353833, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 3/3 step(s), 16.1 s"}
+{"t": 1793784817.380861, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1793784817.38125, "side": "left", "verb": "workflow", "args": {"steps": 3, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 16.237, "text": null}
+{"t": 1793784817.4152374, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793791866.0972776, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793791866.1224165, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794462.6927629, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)"}
+{"t": 1793794462.7349832, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link"}
+{"t": 1793794462.73531, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link"}
+{"t": 1793794466.611132, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "perception warmed up in 5.4 s: its core built, the colour model loaded"}
+{"t": 1793794508.4661615, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1793794508.4732141, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1793794509.041018, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1793794509.0487432, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1793794509.1746018, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "25 programs"}
+{"t": 1793794509.1992774, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "14 point(s)"}
+{"t": 1793794509.2519083, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "32 programs"}
+{"t": 1793794509.2976902, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1793794510.9984183, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794511.0671613, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794566.2487617, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "camera open: Intel RealSense D435 425122070189, depth 848x480 (fx 432.7, scale 1 mm), colour 1280x720 (fx 904.5); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)"}
+{"t": 1793794566.2663953, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: 150 mm -> 250 mm at 100 % (rm_set_lift_height non-blocking + getter wait, expect 2.53 s, timeout 7.6 s)"}
+{"t": 1793794568.27887, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "pole: at 248 mm after 2.00 s (verified_by=getter, moved 98 mm through 30 distinct readings)"}
+{"t": 1793794568.2793753, "side": "right", "verb": "pole move", "args": {"mm": 250.0, "speed_pct": 100}, "ret": 0, "ok": true, "elapsed_s": 2.004, "text": "final 0.248 m, verified by getter"}
+{"t": 1793794568.7124727, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794568.726593, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794569.9868743, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794569.9911623, "side": "right", "verb": "move to pose", "args": {"deg": [15.0, -81.99, -26.0, 97.99, 26.0, 62.0, 69.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.14199964904785034 deg"}
+{"t": 1793794573.2826312, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794573.2899675, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794574.5923376, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794574.6009815, "side": "right", "verb": "move to pose", "args": {"deg": [-15.0, -81.99, -26.0, 87.99, 46.0, 92.0, 129.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.22499902343750477 deg"}
+{"t": 1793794578.3540602, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794578.3812904, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794579.3276622, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794579.3340483, "side": "right", "verb": "move to pose", "args": {"deg": [-15.0, -81.99, -26.0, 107.99, 46.0, 62.0, 159.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.2869987487792969 deg"}
+{"t": 1793794583.1570046, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794583.1642668, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794585.465413, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794585.472079, "side": "right", "verb": "move to pose", "args": {"deg": [15.0, -81.99, -26.0, 87.99, 26.0, 77.0, 9.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.08700029754638727 deg"}
+{"t": 1793794589.3950775, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794589.411018, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794590.3362162, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794590.3616693, "side": "right", "verb": "move to pose", "args": {"deg": [15.0, -81.99, -26.0, 87.99, 6.0, 77.0, -21.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.2230009307861316 deg"}
+{"t": 1793794593.9995651, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794594.0064805, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794595.4995832, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794595.5004334, "side": "right", "verb": "move to pose", "args": {"deg": [5.0, -97.0, -2.0, 97.0, 0.0, 68.0, -97.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.18499865722655784 deg"}
+{"t": 1793794599.268563, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794599.2756286, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794600.2077956, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794600.214136, "side": "right", "verb": "move to pose", "args": {"deg": [-10.0, -97.0, -2.0, 87.0, 20.0, 68.0, -127.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.2699977416992141 deg"}
+{"t": 1793794604.0399022, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794604.0478933, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794605.3568769, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794605.3737402, "side": "right", "verb": "move to pose", "args": {"deg": [5.0, -97.0, -2.0, 77.0, 0.0, 83.0, -187.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.24400439453125955 deg"}
+{"t": 1793794609.2425516, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794609.249626, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794611.5537224, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794611.5719514, "side": "right", "verb": "move to pose", "args": {"deg": [-10.0, -97.0, -2.0, 97.0, 0.0, 68.0, -37.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.0979984741210913 deg"}
+{"t": 1793794615.4093432, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794615.4190578, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794616.347575, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794616.348139, "side": "right", "verb": "move to pose", "args": {"deg": [20.0, -97.0, -2.0, 97.0, 0.0, 83.0, -37.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.2240001220703114 deg"}
+{"t": 1793794620.0840638, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794620.087089, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794620.9454243, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794620.9513352, "side": "right", "verb": "move to pose", "args": {"deg": [32.0, -96.0, 10.0, 102.0, -25.0, 75.0, -14.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.26400074768066517 deg"}
+{"t": 1793794625.4213555, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794625.430979, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794626.358064, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794626.3644192, "side": "right", "verb": "move to pose", "args": {"deg": [47.0, -96.0, 10.0, 112.0, -45.0, 60.0, -44.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.21800067138671864 deg"}
+{"t": 1793794630.6198757, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794630.6315455, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794631.938194, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794631.958836, "side": "right", "verb": "move to pose", "args": {"deg": [32.0, -96.0, 10.0, 102.0, -25.0, 75.0, -104.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.24400164794921864 deg"}
+{"t": 1793794635.761649, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794635.7689927, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794638.0774186, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794638.0913372, "side": "right", "verb": "move to pose", "args": {"deg": [17.0, -96.0, 10.0, 102.0, -5.0, 75.0, 46.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.03199958801269531 deg"}
+{"t": 1793794641.2656095, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794641.2706218, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794642.2008483, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794642.2072408, "side": "right", "verb": "move to pose", "args": {"deg": [17.0, -96.0, 10.0, 102.0, -5.0, 75.0, 76.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.2360017089843751 deg"}
+{"t": 1793794645.83646, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794645.8459535, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "rest: movej to the plan's caller at speed 40 of a 100 % global ratio"}
+{"t": 1793794646.8645976, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "global speed restored to 50 (ret=0)"}
+{"t": 1793794646.871024, "side": "right", "verb": "move to pose", "args": {"deg": [0.0, -81.99, -26.0, 97.99, 6.0, 62.0, 69.0], "speed": 40, "restore_speed": 50}, "ret": null, "ok": true, "elapsed_s": null, "text": "gap 0.33599908447265747 deg"}
+{"t": 1793794647.6817994, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "camera closed"}
+{"t": 1793794652.1654098, "side": "right", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "RIGHT camera calibration: 15 view(s) at 40 %: AttributeError: module 'cv2' has no attribute 'calibrateHandEye' (Details are in the server log.)"}
+{"t": 1793794694.3608575, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793794694.3825047, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
