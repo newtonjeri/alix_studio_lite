@@ -48,3 +48,39 @@ def test_the_slow_down_tool_finds_a_file_kept_in_the_project(tmp_path):
     assert a.file == kept
     (b,) = sp.program_acts(sim)                                                # without the project: not on this computer
     assert not b.file.exists()
+
+
+def test_data_management_saves_and_downloads_the_kept_programs(tmp_path):
+    import io
+    import threading
+    import urllib.request
+    import zipfile
+
+    from alix_studio_lite.server.app import LiteApp, make_server
+    from alix_studio_lite.server.project import open_project
+
+    data = tmp_path / "data"
+    app = LiteApp(open_project(data, "commode_c"), data, projects_dir=tmp_path / "Projects")
+    srv = make_server(app, 0)
+    threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def call(method, path, body=None, token=None, raw=False):
+        r = urllib.request.Request(base + path, data=None if body is None else json.dumps(body).encode(), method=method,
+                                   headers={"Content-Type": "application/json", **({"X-Lite-Token": token} if token else {})})
+        with urllib.request.urlopen(r, timeout=30) as resp:
+            out = resp.read()
+            return out if raw else json.loads(out)
+
+    try:
+        tok = call("POST", "/api/auth/login", {"pin": "1234"})["token"]
+        assert "Open a project first" in call("POST", "/api/robots/right/stored/keep", {}, tok)["error"]
+        page = {"id": "alix_keep1", "name": "Keep", "createdAt": "2026-11-04T10:00:00.000Z", "updatedAt": "2026-11-04T10:00:00.000Z",
+                "archived": False, "state": {"currentTask": 0, "currentView": "setup"}}
+        call("PUT", "/api/projects/alix_keep1", page, tok)
+        m = call("POST", "/api/robots/right/stored/keep", {"pid": "alix_keep1"}, tok)
+        assert m["arm"] == "right" and m["folder"].endswith("controller_exports/right") and "programs" in m
+        z = zipfile.ZipFile(io.BytesIO(call("GET", "/api/robots/right/stored/kept.zip?pid=alix_keep1", token=tok, raw=True)))
+        assert "right/programs.json" in z.namelist()
+    finally:
+        srv.shutdown()

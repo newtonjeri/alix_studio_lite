@@ -42,7 +42,7 @@ from pathlib import Path
 
 from . import fixtures, merges, placement, staging, workers
 from .api_v2 import session
-from .app import MODE_TEXT, MODES, route
+from .app import MODE_TEXT, MODES, RawResponse, route
 from .jobs import Cancelled, UserError
 from .lite_units import TIME_MODES, LiteUnits, open_units, task_list
 from .project import _atomic_write
@@ -1828,6 +1828,54 @@ def get_robot_data(app, q, body, m):
         "script": "RealMan's API has no call that lists the script programs: the arm's own web page (Data Management) shows them.",
         "models": "RealMan's API has no call that lists the model warehouse: the arm's own web page (Data Management) shows it."}
     return out
+
+
+def _kept_for(app, side: str, pid) -> tuple:
+    """The open project's units and the arm's controller programs kept in it now (program_mirror.keep)."""
+    from . import program_mirror
+
+    if not str(pid or "").strip():
+        raise UserError("Open a project first: the programs are kept in its folder.", "Open or create a project, then try again.")
+    units = units_of(app, str(pid))
+    man = program_mirror.keep(app, units, side)
+    folder = Path(units.root) / program_mirror.FOLDER / side
+    return units, man, folder
+
+
+@route("POST", r"/api/robots/(left|right)/stored/keep")
+def post_keep_programs(app, q, body, m):
+    """Data Management's "Save the programs to the project" (the user, 4 Nov: the controllers' programs backed up in the
+    repository): ``{pid}``; every program the arm's controller holds that Lite has the bytes of, copied into the
+    project's controller_exports/<arm>/ (program_mirror). -> the manifest, with the folder (and its place in the
+    repository, when it is in one)."""
+    session(app)
+    side = _arm(m)
+    _units, man, folder = _kept_for(app, side, body.get("pid"))
+    from .. import vendor_paths
+
+    try:
+        man["repo_folder"] = str(folder.resolve().relative_to(Path(vendor_paths.LITE_ROOT).resolve()))
+    except ValueError:
+        man["repo_folder"] = None
+    man["folder"] = str(folder)
+    return man
+
+
+@route("GET", r"/api/robots/(left|right)/stored/kept\.zip")
+def get_kept_programs_zip(app, q, body, m):
+    """The same programs as a .zip to save on this computer (``pid``): kept again first, then the folder's files."""
+    import io
+    import zipfile
+
+    session(app)
+    side = _arm(m)
+    _units, man, folder = _kept_for(app, side, (q.get("pid") or [""])[0])
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for f in sorted(folder.glob("*")):
+            if f.is_file() and (f.suffix == ".txt" or f.name == "programs.json"):
+                z.write(f, f"{side}/{f.name}")
+    return RawResponse(buf.getvalue(), "application/zip", f"{side}_controller_programs.zip")
 
 
 @route("POST", r"/api/robots/(left|right)/stored/delete")

@@ -13,7 +13,7 @@
 // a global point or a track is deleted from the controller after the question every delete asks
 // (POST /api/robots/<arm>/stored/delete), and the list read again.
 
-import { get, say } from './api.js';
+import { get, post, say } from './api.js';
 import { ctx, deleteButton, deleteStored, el, fmtT } from './ctx.js';
 
 const $ = (id) => document.getElementById(id);
@@ -271,7 +271,13 @@ function build() {
           ARMS.map(s => el('button', { id: `liteDmArm_${s}`, type: 'button', class: `btn lite-dm-arm ${s}`, text: `${s.toUpperCase()} ARM`,
             onclick: () => { side = s; page = 1; paint(); if (!data[s]) read(s); } }))),
         el('button', { class: 'btn outline', type: 'button', text: 'Refresh', onclick: () => read() }),
+        el('button', { id: 'liteDmKeep', class: 'btn outline', type: 'button', text: 'Save programs to the project',
+          title: 'Copy every program this arm holds that Lite sent into the project (controller_exports/<arm>/), to push with the logs',
+          onclick: () => keepPrograms() }),
+        el('button', { id: 'liteDmZip', class: 'btn light', type: 'button', text: 'Download (.zip)',
+          title: 'The same program files as a .zip on this computer', onclick: () => downloadPrograms() }),
         el('div', { id: 'liteDmStatus', class: 'lite-status lite-grow' })),
+      el('div', { id: 'liteDmKept', class: 'mini-note' }),
       el('div', { class: 'lite-dm-tabsrow' },
         el('div', { class: 'lite-tabs lite-dm-tabs', role: 'tablist', 'aria-label': 'Stored data' },
           TABS.map(([id, name]) => el('button', { id: `liteDmTab_${id}`, class: 'lite-tab', type: 'button', role: 'tab', text: name,
@@ -285,6 +291,46 @@ function build() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && box.classList.contains('show') && !document.querySelector('.lite-confirm, .lite-picker-panel')) close();
   });
+}
+
+// The controllers' programs backed up in the project (the user, 4 Nov: "get the files from the data management so that
+// they can be pushed in the repo"). RealMan's API gives no program's points back, so each program is kept from the
+// bytes Lite sent it (POST /api/robots/<arm>/stored/keep); one Lite did not send is listed by its name only.
+function paintKept(m) {
+  const box = $('liteDmKept');
+  if (!box) return;
+  if (!m) { box.textContent = ''; return; }
+  const where = m.repo_folder || m.folder;
+  const files = (m.programs || []).map(r => `${r.slot} ${r.name}`).join(', ');
+  const not = (m.not_kept || []).map(r => `${r.slot} ${r.name} (${r.why})`).join('; ');
+  box.textContent = `${side.toUpperCase()}: ${(m.programs || []).length} program file(s) saved in ${where}`
+    + `${files ? `: ${files}` : ''}.${not ? ` Not saved: ${not}.` : ''} Push the repository to back them up.`;
+}
+
+async function keepPrograms() {
+  if (!ctx.pid) { window.toast('Open a project first: the programs are kept in its folder.', 'warn'); return; }
+  const s = side;
+  try {
+    const m = await post(`/api/robots/${s}/stored/keep`, { pid: ctx.pid });
+    if (s === side) paintKept(m);
+    window.toast(`${s.toUpperCase()}: ${(m.programs || []).length} program file(s) saved in the project.`, 'good');
+  } catch (err) {
+    window.toast(`Could not save the programs: ${say(err)}`, 'error');
+  }
+}
+
+async function downloadPrograms() {
+  if (!ctx.pid) { window.toast('Open a project first: the programs are kept in its folder.', 'warn'); return; }
+  const s = side;
+  try {
+    const blob = await get(`/api/robots/${s}/stored/kept.zip?pid=${encodeURIComponent(ctx.pid)}`, { raw: true });
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), { href: url, download: `${s}_controller_programs.zip` });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    window.toast(`Could not download the programs: ${say(err)}`, 'error');
+  }
 }
 
 export function openDataManagement() {
