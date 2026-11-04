@@ -12,6 +12,8 @@ import pytest
 
 from alix_studio_lite.server.gap_check import DepthFrame, GapCheck, Intrinsics, load_params
 
+pytestmark = pytest.mark.usefixtures("windows_rules")   # the rules before 4 Nov: gap_decider "windows"
+
 CHECKS = Path(__file__).resolve().parents[1] / "Resources" / "Logs"
 LID_LIFTED = CHECKS / "2026-11-04/checks/20261104_202716_965_gap_check_lid_lifted_uncertain"   # held high; the run stopped
 LID_MISSED = CHECKS / "2026-10-21/checks/20261021_214655_523_gap_check_lid_lifted_lid_closed"  # a missed lift: lid flat

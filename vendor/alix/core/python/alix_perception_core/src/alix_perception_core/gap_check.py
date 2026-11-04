@@ -128,7 +128,8 @@ class GapCheckSession:
                         "gap_seat_fit_min_px", "gap_seat_fit_margin", "gap_lid_fit_enabled", "gap_lid_fit_min_deg",
                         "gap_lid_fit_open_min_deg", "gap_fit_height_search_m", "gap_fit_height_step_m",
                         "gap_decider", "gap_parts_shadow", "gap_parts_height_search_m", "gap_parts_height_step_m",
-                        "gap_parts_seat_open_min_deg", "gap_lift_by_distance", "gap_lift_roi", "gap_seat_lift_roi",
+                        "gap_parts_seat_open_min_deg", "gap_parts_find_place", "gap_parts_colour", "gap_parts_place_reach_m",
+                        "gap_parts_place_grid_m", "gap_parts_place_height_m", "gap_parts_place_height_step_m", "gap_lift_by_distance", "gap_lift_roi", "gap_seat_lift_roi",
                         "gap_lift_hand_mask_m", "gap_lift_risen_frac", "gap_lift_closed_tol_m", "gap_lift_bowl_m",
                         "gap_seat_lift_bowl_min")
     _SEAT_RISE_PARAMS = SEAT_RISE_PARAMS
@@ -304,11 +305,12 @@ class GapCheckSession:
             if decider == "parts":
                 record_extra["intrinsics"] = {"fx": float(intrinsics.fx), "fy": float(intrinsics.fy), "cx": float(intrinsics.cx),
                                               "cy": float(intrinsics.cy), "width": int(w), "height": int(h)}
-                if not parts["state"]:
-                    return refuse(f"parts (depth only): cannot judge: {parts['note']}")
-                state, conf = parts["state"], float(parts["confidence"])
+                state, conf, message = parts["state"], float(parts["confidence"]), f"parts (depth): {parts['note']}"
+                if asked in self.OPEN_CLOSED and bool(self._p("gap_parts_colour")):
+                    state, conf, message = self._with_colour(asked, part, state, conf, message, parts, models, record_extra)
+                if not state:
+                    return refuse(f"cannot judge: {message}")
                 lifted = state == asked or (asked == "seat_open" and state == "seat_lifted")
-                message = f"parts (depth only): {parts['note']}"
                 self.log.info(f"gap_check: {message} -> {state}")
                 return GapDecision(part=part, expect=asked, success=True, state=state, confidence=conf,
                                    recommendation="pass" if lifted else "re-clean", message=message,
@@ -598,6 +600,66 @@ class GapCheckSession:
                                         "registration_pose": at_pose, "rise_m": rise, "roi_valid": coverage,
                                         "median_range_m": median_range, "message": message, "models": cross}))
 
+    #: the questions the colour image supplements (the user, 2026-11-04); a lifted part has no colour class
+    OPEN_CLOSED = ("lid_closed", "lid_open", "seat_closed", "seat_open")
+
+    def _colour_says(self, asked: str, models) -> Optional[tuple]:
+        """The colour model's own state (not the fused one: its depth half is an absolute height) as this question's
+        class: (class, confidence, the model's state), or None when no colour model or frame answers."""
+        if models is None:
+            return None
+        try:
+            result = models()
+        except Exception as exc:                                      # noqa: BLE001 — the depth answers alone
+            self.log.warn(f"gap_check: the colour model could not be asked ({exc})")
+            return None
+        if result is None:
+            return None
+        diag = getattr(result, "diagnostics", {}) or {}
+        if "colour_state" in diag:
+            raw, conf = diag.get("colour_state") or "", float(diag.get("colour_confidence") or 0.0)
+        elif getattr(result, "state_source", "") == "colour":
+            raw, conf = result.fixture_state or "", float(result.state_confidence or 0.0)
+        else:
+            return None
+        if raw not in ("closed", "lid_open", "lid_seat_open"):
+            return None
+        if asked.startswith("lid"):
+            cls = "lid_closed" if raw == "closed" else "lid_open"
+        else:
+            cls = "seat_lifted" if raw == "lid_seat_open" else "seat_closed"
+        return cls, conf, raw
+
+    def _with_colour(self, asked, part, state, conf, message, parts, models, record_extra) -> tuple:
+        """THE COLOUR IMAGE BESIDE THE DEPTH FOR OPEN AND CLOSED (the user, 2026-11-04: "for seat and lid opened and
+        closed we can supplement them with the coloured image instead of overfitting again ... a place holder for now,
+        before we come up with a depth only method"). The parts reading (where the commode stands) and the colour
+        model's state: the same side of closed -> decided; the depth cannot judge (or reads a part between for an "open?"
+        question) -> the colour decides; opposite sides -> uncertain, a stop. The colour under confidence_threshold, or
+        none: the depth alone. A seat under a lifted lid stays unjudged. On 1,498 lab photos the model agreed with
+        every open or closed state the depth decided and answered every one it could not; it reads the image, not where
+        the commode stands, so it holds when the commode or the camera moves. -> (state, confidence, message)."""
+        said = self._colour_says(asked, models)
+        if said is None:
+            record_extra["colour"] = {"used": False, "why": "no colour model or frame"}
+            return state, conf, message + "; no colour model or frame: the depth alone"
+        cls, c_conf, raw = said
+        threshold = float(self._p("confidence_threshold"))
+        record_extra["colour"] = {"state": raw, "confidence": round(c_conf, 3), "class": cls}
+        if c_conf < threshold:
+            record_extra["colour"]["used"] = False
+            return state, conf, message + f"; the colour model {raw} at {c_conf:.2f}, under {threshold:.2f}: the depth alone"
+        if part == "seat" and ((parts.get("record") or {}).get("seat_hidden")):
+            record_extra["colour"]["used"] = False
+            return state, conf, message + "; the colour model not used: the seat is under the lifted lid"
+        record_extra["colour"]["used"] = True
+        if state in ("", "uncertain", "lid_between"):
+            return cls, c_conf, message + f"; the colour decides: {raw} at {c_conf:.2f}"
+        closed = (lambda st: st == "lid_closed") if part == "lid" else (lambda st: st == "seat_closed")
+        if closed(state) == closed(cls):
+            return state, max(float(conf), c_conf), message + f"; the colour agrees: {raw} at {c_conf:.2f}"
+        return "uncertain", 0.0, message + f"; the colour says {raw} at {c_conf:.2f}: they disagree -> uncertain"
+
     def _lift_by_distance(self, asked, part, depth, intrinsics, camera_to_world, hands, hand_frames, at_pose, source,
                           frame, keep, record_extra) -> Optional[GapDecision]:
         """THE LIFT QUESTIONS BY DISTANCE (the user, 2026-11-04): "for the lid and seat lifted state, this is very
@@ -880,16 +942,28 @@ class GapCheckSession:
         if fixture is None:
             return {"state": "", "confidence": 0.0, "note": "no fixture model", "record": {"error": "no fixture model"}}
         base_seat, base_lid = float(self._p("gap_seat_lift_min_deg")), float(self._p("gap_lid_fit_min_deg"))
-        whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, 0.0, hands,
-                                  seat_min_deg=self._lifted_from(base_seat, allow), lid_min_deg=self._lifted_from(base_lid, allow),
-                                  height_search_m=float(self._p("gap_parts_height_search_m")),
-                                  height_step_m=float(self._p("gap_parts_height_step_m")),
-                                  seat_open_min_deg=float(self._p("gap_parts_seat_open_min_deg")))
+        place = None
+        if bool(self._p("gap_parts_find_place")) and self.fixture_in_world() is not None:
+            whole, place = self._parts_where_it_stands(depth, intrinsics, camera_to_world, fixture, hands,
+                                                       self._lifted_from(base_seat, allow), self._lifted_from(base_lid, allow))
+        else:
+            whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, 0.0, hands,
+                                      seat_min_deg=self._lifted_from(base_seat, allow), lid_min_deg=self._lifted_from(base_lid, allow),
+                                      height_search_m=float(self._p("gap_parts_height_search_m")),
+                                      height_step_m=float(self._p("gap_parts_height_step_m")),
+                                      seat_open_min_deg=float(self._p("gap_parts_seat_open_min_deg")))
         ans = whole.seat if part == "seat" else whole.lid
         record = whole.as_dict()
         record.update(part=part, closed_within_deg=float(allow))
-        where = (f"lid {whole.lid_deg:.0f} deg, seat {whole.seat_deg:.0f} deg, the commode {whole.height_offset_m * 1000:+.0f} mm "
-                 f"from its scene place" if whole.lid_deg is not None else whole.reason)
+        if place is not None:
+            record["place"] = {"dx_m": round(place[0], 4), "dy_m": round(place[1], 4), "dz_m": round(place[2], 4),
+                               "dyaw_deg": round(place[3], 2)}
+            where = (f"lid {whole.lid_deg:.0f} deg, seat {whole.seat_deg:.0f} deg, the commode where this frame reads it "
+                     f"({place[0] * 1000:+.0f} / {place[1] * 1000:+.0f} / {place[2] * 1000:+.0f} mm, {place[3]:+.1f} deg from "
+                     f"its scene place)" if whole.lid_deg is not None else whole.reason)
+        else:
+            where = (f"lid {whole.lid_deg:.0f} deg, seat {whole.seat_deg:.0f} deg, the commode {whole.height_offset_m * 1000:+.0f} mm "
+                     f"from its scene place" if whole.lid_deg is not None else whole.reason)
         if not ans.state:
             return {"state": "", "confidence": 0.0, "record": record,
                     "note": f"the {part} cannot be judged ({ans.reason or whole.reason})"}
@@ -901,6 +975,39 @@ class GapCheckSession:
         if state == "seat_open":
             state = "seat_lifted"                     # the gap check's word for a seat away from its place (LIFTED_STATES)
         return {"state": state, "confidence": conf, "note": note, "record": record}
+
+    def _parts_where_it_stands(self, depth, intrinsics, camera_to_world, fixture, hands: dict, seat_min: float,
+                               lid_min: float) -> tuple:
+        """The parts' angles where the commode stands in this frame (fixture_place.read_state; the user, 2026-11-04:
+        the parts against each other and against the commode, whatever the viewpoint, the distance or the placement):
+        its place searched about the scene's within gap_parts_place_reach_m, the frames of one camera pose starting
+        where the first found it (a check's frames: the grid only). Nothing is learned beyond that camera pose's place.
+        -> (seat_state.FixtureFit, [dx, dy, dz m, dyaw deg])."""
+        from alix_perception_core import fixture_place as fp
+        from alix_perception_core import seat_state as sst
+        closed, open_from = float(self._p("gap_lid_fit_min_deg")), float(self._p("gap_lid_fit_open_min_deg"))
+        pp = sst.SeatFitParams(stride=int(self._p("gap_seat_fit_stride")), step_deg=float(self._p("gap_seat_fit_step_deg")),
+                               tol_m=float(self._p("gap_seat_fit_tol_m")), min_zone_px=int(self._p("gap_seat_fit_min_px")),
+                               min_margin=float(self._p("gap_seat_fit_margin")), min_deg=float(seat_min),
+                               hand_mask_m=float(self._p("gap_hand_mask_m")), lid_min_deg=float(lid_min),
+                               lid_open_min_deg=open_from, height_search_m=float(self._p("gap_parts_height_search_m")),
+                               height_step_m=float(self._p("gap_parts_height_step_m")),
+                               seat_open_min_deg=float(self._p("gap_parts_seat_open_min_deg")))
+        params = fp.PlaceParams(hand_mask_m=float(self._p("gap_hand_mask_m")), reach_m=float(self._p("gap_parts_place_reach_m")),
+                                grid_m=float(self._p("gap_parts_place_grid_m")), height_m=float(self._p("gap_parts_place_height_m")),
+                                height_step_m=float(self._p("gap_parts_place_height_step_m")))
+        cam = np.asarray(camera_to_world, dtype=float)
+        key = (tuple(np.round(cam[:3, 3] * 1000.0).astype(int).tolist()), tuple(np.round(cam[:3, :3] * 1000.0).astype(int).ravel().tolist()))
+        cache = self.__dict__.setdefault("_parts_places", {})
+        known = cache.get(key)
+        whole, x = fp.read_state(depth, intrinsics, cam, self.fixture_in_world(), fixture, list(hands.values()), pp, params,
+                                 closed, open_from, start=known or (0.0, 0.0, 0.0, 0.0),
+                                 first_reach_m=params.grid_m if known else None)
+        if whole.lid_deg is not None:
+            cache[key] = [float(v) for v in x]
+            while len(cache) > 32:
+                cache.pop(next(iter(cache)))
+        return whole, x
 
     def read_place(self, depth, intrinsics, camera_to_world, hands: dict, start=(0.0, 0.0, 0.0, 0.0),
                    reach_m: float | None = None) -> dict:

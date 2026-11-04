@@ -54,17 +54,21 @@ def vote(asked: str, answer) -> str:
 def test_each_lab_frame_reads_as_its_photo_shows(stem, asked, closing, want):
     a = session(gap_decider="parts").ask(asked, frame(stem), closing=closing)
     assert vote(asked, a) == want, a.message
-    assert a.record["parts"]["decides"] and a.message.startswith("parts (depth only)")
+    assert a.record["parts"]["decides"] and "parts (depth)" in a.message
+    assert "where this frame reads it" in a.message or not a.success   # since 4 Nov the commode found in the frame
 
 
-def test_the_parts_reading_learns_nothing_and_asks_no_colour_model():
+def test_the_parts_reading_learns_nothing_and_asks_the_colour_model_for_open_and_closed_only():
+    """Since 4 Nov (the user) the colour image supplements the open and closed questions; a lifted part has no colour
+    class, so the lift questions never ask it. Nothing is learned either way."""
     gc = session(gap_decider="parts", gap_cross_check=True)
     asked = []
     for stem, question, closing, _ in CASES:
         f = frame(stem)
-        gc.session.check(question, f.depth, f.intrinsics, f.cam_to_base, f.hands, models=lambda: asked.append(1),
+        gc.session.check(question, f.depth, f.intrinsics, f.cam_to_base, f.hands, models=lambda q=question: asked.append(q),
                          closed_within_deg=25.0 if closing else 0.0)
-    assert not gc.session._registration and not gc.session._seat_refs and not asked
+    assert not gc.session._registration and not gc.session._seat_refs
+    assert asked and set(asked) <= {"lid_closed", "lid_open", "seat_closed", "seat_open"}
 
 
 def test_a_part_lifted_but_not_open_answers_no_open_question():
@@ -84,8 +88,9 @@ def test_the_closing_allowance_reaches_its_angle():
     assert session(gap_decider="parts").ask("lid_closed", frame(stem)).fixture_state == "lid_lifted"   # the plain 10 deg rule
 
 
-def test_the_windows_decide_by_default_with_the_parts_reading_beside():
-    gc = session()
+def test_the_parts_decide_by_default_and_the_windows_remain_a_choice():
+    assert load_params()["gap_decider"] == "parts"                  # 4 Nov (the user)
+    gc = session(gap_decider="windows")
     a = gc.ask("lid_lifted", frame("20261031_112831_141_gap_check_lid_lifted_uncertain"))
     parts = a.record["parts"]
     assert not parts["decides"] and parts["answer"] == "lid_lifted" and parts["lid_deg"] == 35.0

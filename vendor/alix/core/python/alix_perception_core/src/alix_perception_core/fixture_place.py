@@ -284,6 +284,63 @@ def read(depth, intrinsics, camera_to_world, fixture_pose, fixture, hands=(), pa
     return _placement(sc.model(*angles), x, f, px, edge, params, t0), whole
 
 
+def read_state(depth, intrinsics, camera_to_world, fixture_pose, fixture, hands=(), parts_params=None,
+               params: PlaceParams = DEFAULT_PLACE, closed_below: float = 10.0, open_from: float = 80.0,
+               start=(0.0, 0.0, 0.0, 0.0), rounds: int = 4, first_reach_m: Optional[float] = None,
+               limit_m: Optional[float] = None, limit_z_m: Optional[float] = None) -> tuple:
+    """THE PARTS' STATE WHERE THE COMMODE STANDS IN THIS FRAME (the user, 2026-11-04: the state "regardless of the
+    viewpoint, and the distance, provided we are able to tell the distance between the lid and the seat, and the lid
+    and the commode, and the seat and the commode"). As ``read``, the commode's place and its parts' angles together,
+    for every state: a part between closed and open (held lifted) is fitted at the angle it reads, so the place it
+    brings serves to read the parts, never as a place of its own. The parts are read again where the commode was found:
+    their angles about its hinge are the parts against the commode itself, so the answer does not hang on the scene's
+    place, the UGV's placement, the pole height or the camera's mount, only on enough of the commode in view.
+    ``first_reach_m``: the first search's reach (``params.reach_m`` when None; a place found for this camera pose
+    already needs only the grid). ``limit_m`` / ``limit_z_m``: how far from ``start`` the rounds may carry the place
+    (twice the reach, three times the height search, when None); past it, no reading. -> (the parts reading where it stands (seat_state.FixtureFit), [dx, dy, dz m, dyaw
+    deg] against ``fixture_pose``)."""
+    from . import seat_state as sst
+
+    pp = parts_params or sst.SeatFitParams(height_search_m=0.005, height_step_m=0.0025, seat_open_min_deg=open_from)
+    pose0 = np.asarray(fixture_pose, dtype=float)
+    sc = _Scorer(depth, intrinsics, camera_to_world, pose0, fixture, hands, params)
+
+    def fitted(a, part):
+        if a < closed_below:
+            return 0.0
+        if a >= open_from:
+            return float(params.open_rest_deg if params.open_rest_deg is not None else fixture.open_deg(part))
+        return float(a)
+
+    def parts_at(x):
+        return sst.fit_fixture_state(depth, intrinsics, camera_to_world, moved(pose0, *x, params.centre_body), fixture,
+                                     0.0, list(hands), pp)
+
+    x, angles, edge = [float(v) for v in start], None, True
+    reach = params.reach_m if first_reach_m is None else float(first_reach_m)
+    for r in range(int(rounds)):
+        whole = parts_at(x)
+        if whole.lid_deg is None:
+            return whole, x
+        use = (fitted(whole.lid_deg, "lid"), fitted(whole.seat_deg, "seat"))
+        if use == angles and not edge:
+            return whole, x
+        angles = use
+        x, _f, _px, edge = _search(sc.model(*angles), x, params, reach if (r == 0 or edge) else params.grid_m)
+        x, reach = [float(v) for v in x], params.reach_m
+        lim = 2.0 * params.reach_m if limit_m is None else float(limit_m)
+        lim_z = 3.0 * params.height_m if limit_z_m is None else float(limit_z_m)
+        if max(abs(x[0] - start[0]), abs(x[1] - start[1])) > lim + 1e-9 or abs(x[2] - start[2]) > lim_z + 1e-9:
+            # each round searches about the last place: never past the reach of the scene's (26 Oct 17:09 drifted to
+            # +90 / +34 / -61 mm, 12 deg, and read a closed lid lifted)
+            out = sst.FixtureFit()
+            out.reason = (f"the commode not found within {lim * 1000:.0f} mm and {lim_z * 1000:.0f} mm "
+                          f"of its scene place (the search went to {x[0] * 1000:+.0f} / {x[1] * 1000:+.0f} / {x[2] * 1000:+.0f} mm)")
+            out.lid.reason = out.seat.reason = out.reason
+            return out, x
+    return parts_at(x), x
+
+
 def _visible_cells(fixture, lid_deg, seat_deg, pose, cam, fx, fy, cx, cy, w, h, margin_px: int = 60) -> np.ndarray:
     """The model's cells (the body, the lid and the seat at their angles, in the body frame) that face the camera and
     fall in its image (with a margin for the search), at the place given: a render projects only these."""

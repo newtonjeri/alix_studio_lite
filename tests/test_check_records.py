@@ -2,12 +2,15 @@
 frame's record"): beside ALIX's own fields, the colour camera, the named pose and its registration, the fixture as
 placed, the run's context (both arms, which check and frame, the camera), what made it, and the depth aligned to the
 colour frame."""
+import pytest
 import json
 from pathlib import Path
 
 import numpy as np
 
 from alix_studio_lite.server.gap_check import DepthFrame, GapCheck, Intrinsics, write_check_record
+
+pytestmark = pytest.mark.usefixtures("windows_rules")   # the rules before 4 Nov: gap_decider "windows"
 
 DATA = Path(__file__).parent / "data" / "gap_checks"
 STEM = "20261012_093917_987_gap_check_lid_closed_lid_closed"           # the robot's closed lid, 12 Oct

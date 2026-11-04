@@ -5,12 +5,15 @@ height (uncertain: the run stopped), and as nothing teaches the seat after Open 
 the next runs' lifted checks (21:06, 21:13), the fixture fit held 12 mm low, refused every frame. Replayed through one
 session (the frames from the lab's records, depth in mm; each judged with the fixture where its run placed it), the end
 check passes on every frame, nothing is learned, and the next lifted check reads lifted. tests/data/gap_checks/open_seat."""
+import pytest
 import json
 from pathlib import Path
 
 import numpy as np
 
 from alix_studio_lite.server.gap_check import DepthFrame, GapCheck, Intrinsics, load_params
+
+pytestmark = pytest.mark.usefixtures("windows_rules")   # the rules before 4 Nov: gap_decider "windows"
 
 DATA = Path(__file__).parent / "data" / "gap_checks" / "open_seat"
 END = ["20261103_205133_383_gap_check_seat_open_seat_lifted",            # Open the seat's end check, 20:51:33

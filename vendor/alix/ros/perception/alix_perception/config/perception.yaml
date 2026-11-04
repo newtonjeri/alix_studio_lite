@@ -290,9 +290,23 @@ perception_node:
     # (or the closing allowance), open from the open angle, lifted between; a part lifted but not open answers no "open?"
     # question. "windows": the windows, the fit and the colour models decide as before, the parts reading rides along in
     # every record (gap_parts_shadow); "parts": the parts reading decides alone (no window, no colour model, nothing learned).
-    gap_decider: "windows"
+    # 4 Nov (the user): the parts reading decides, the commode found in each frame (gap_parts_find_place), the colour
+    # image beside it for open and closed (gap_parts_colour, "a place holder for now, before we come up with a depth only
+    # method"); "windows" keeps the rules before (centre ROI, fit, lift by distance).
+    gap_decider: "parts"
     gap_parts_shadow: true
     gap_parts_height_search_m: 0.005     # the commode's height searched each frame about its scene place, in steps of
     gap_parts_height_step_m: 0.0025      # this (wider lets a seat-down hypothesis sink onto the bare rim, 2 cm lower:
                                         # +/-10 mm left 91 frames of a standing seat undecided, margin 0.09-0.13)
     gap_parts_seat_open_min_deg: 80.0    # the seat open (standing) from this angle, as the lid (gap_lid_fit_open_min_deg)
+    # THE PARTS WHERE THE COMMODE STANDS (the user, 2026-11-04: the state from the parts against each other and the commode,
+    # "regardless of the viewpoint, and the distance"): the parts reading first finds the commode in the frame itself
+    # (fixture_place.read_state: its place searched within gap_parts_place_reach_m of the scene's, the parts' angles fitted
+    # where it stands, again until neither moves), so the answer does not hang on the scene place, the UGV's placement,
+    # the pole height or the camera's mount. A check's later frames start where its first found it.
+    gap_parts_find_place: true
+    gap_parts_colour: true                # open and closed: the colour model's state beside the depth (agree / decide / disagree)
+    gap_parts_place_reach_m: 0.06         # x and y about the scene place, each round about the last (at most twice it in
+    gap_parts_place_grid_m: 0.01          # all, three times the height: past it, no reading); 100 mm and +/-40 mm found
+    gap_parts_place_height_m: 0.015       # false places (4 Nov: a lifted lid read open 90 mm off), 60 / 15 held all 1,527
+    gap_parts_place_height_step_m: 0.0025 # lab frames of 21 Oct-4 Nov

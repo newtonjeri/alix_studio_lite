@@ -6,6 +6,7 @@ Open the lid lift check, its fit held 10 mm short of that, read the lifted lid c
 Open the seat's lift check found no seat in its band (11:36, five frames refused). The same frames through one session,
 the closings asked as the runner asks them (``closing``): the closings pass as they did, nothing is learned, and both
 lift checks read lifted. tests/data/gap_checks/closing holds the frames from the lab's records (depth in mm)."""
+import pytest
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -13,6 +14,8 @@ from types import SimpleNamespace
 import numpy as np
 
 from alix_studio_lite.server.gap_check import DepthFrame, GapCheck, Intrinsics, load_params
+
+pytestmark = pytest.mark.usefixtures("windows_rules")   # the rules before 4 Nov: gap_decider "windows"
 
 DATA = Path(__file__).parent / "data" / "gap_checks" / "closing"
 SEAT_CLOSED = "20261031_111355_303_gap_check_seat_closed_seat_closed"        # Close the seat's end (11:13)

@@ -43,3 +43,19 @@ def _quick_pins():
 
     auth.ITERATIONS = 2_000
     yield
+
+
+@pytest.fixture
+def windows_rules(request, monkeypatch):
+    """The gap check's rules before 4 Nov (gap_decider "windows": the centre ROI, the fixture fit, the lift by distance),
+    for the tests written for them; since 4 Nov the parts reading decides (tests/test_relative_state.py)."""
+    from alix_studio_lite.server import gap_check as g
+
+    real = g.load_params
+
+    def windows(*a, **k):
+        return {**real(*a, **k), "gap_decider": "windows"}
+
+    monkeypatch.setattr(g, "load_params", windows)
+    if getattr(request.module, "load_params", None) is real:
+        monkeypatch.setattr(request.module, "load_params", windows)

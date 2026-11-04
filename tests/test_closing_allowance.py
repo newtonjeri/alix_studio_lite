@@ -17,6 +17,8 @@ from alix_studio_lite.server.gap_check import DepthFrame, GapCheck, Intrinsics, 
 
 from test_mechanism import FakeExec
 
+pytestmark = pytest.mark.usefixtures("windows_rules")   # the rules before 4 Nov: gap_decider "windows"
+
 DATA = Path(__file__).parent / "data" / "gap_checks" / "closing"
 SETTLING_SEAT = "20261030_153635_137_gap_check_seat_closed_uncertain"     # the seat 15 deg from closed, coming down
 OPEN_SEAT = "20261030_153742_229_gap_check_seat_closed_seat_lifted"       # the seat standing open against the lid

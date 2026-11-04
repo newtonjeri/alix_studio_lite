@@ -6,12 +6,15 @@ decided. Lite's port must decide the same from the same depth. The records carry
 D435's nominal ones are used, as ALIX's own replay tools do, and no hand positions, so nothing is masked:
 heights within 3 mm, classes and verdicts the same.
 """
+import pytest
 import json
 from pathlib import Path
 
 import numpy as np
 
 from alix_studio_lite.server.gap_check import DepthFrame, GapCheck, Intrinsics, load_params
+
+pytestmark = pytest.mark.usefixtures("windows_rules")   # the rules before 4 Nov: gap_decider "windows"
 
 DATA = Path(__file__).parent / "data" / "gap_checks"
 

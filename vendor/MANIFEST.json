@@ -775,8 +775,8 @@
       "dest": "vendor/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "origin": "alix",
-      "sha256": "1d768a05b4b926afe15c543c725694f7c514849bc80f725a54b5edbf6cb8459d",
-      "bytes": 23857
+      "sha256": "1b8edf52582c60fc572ecbd8d1b8a880f99e3a41171960c49f8c83231b0ca4ac",
+      "bytes": 15407
     },
     {
       "dest": "vendor/alix/Resource/tracks/taught/EXECUTION_MODEL.json",
@@ -1062,15 +1062,15 @@
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/fixture_place.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/fixture_place.py",
       "origin": "alix",
-      "sha256": "9a0d630f9884e31c9c1241dbe7f2a34ff9f4b538870374a430bbba2d657cd663",
-      "bytes": 19418
+      "sha256": "f3251d590928abcce5807917aacb00d6000864497f77b44353b73846c69d4857",
+      "bytes": 23236
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "origin": "alix",
-      "sha256": "2ffac1587eb780f04b517bf84b0fb1f62ddc5b0869eeecfc2f0bdb80bc647276",
-      "bytes": 76817
+      "sha256": "8997d782ab2ea1dcbfa7e1da559367af796520a974c2a78f769f4cbe191a20af",
+      "bytes": 84944
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/geometry.py",
@@ -4872,8 +4872,8 @@
       "dest": "vendor/alix/ros/perception/alix_perception/config/perception.yaml",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/perception/alix_perception/config/perception.yaml",
       "origin": "alix",
-      "sha256": "ff33a86c7c975648df6eaa1f15e7165e64404ecf8a96956c376a22913ce99c4f",
-      "bytes": 24636
+      "sha256": "b38d4e37135502e82d18294132478f85ec69cb7ac5244c9520b270e3df1ff5bd",
+      "bytes": 26146
     },
     {
       "dest": "vendor/alix/tools/ament_index_shim.py",

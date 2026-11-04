@@ -13,6 +13,8 @@ from alix_studio_lite.server.jobs import UserError
 sys.path.insert(0, str(Path(__file__).parent))
 from test_mechanism import FakeExec  # noqa: E402
 
+pytestmark = pytest.mark.usefixtures("windows_rules")   # the rules before 4 Nov: gap_decider "windows"
+
 POSE0 = np.array([[-1.0, 0.0, 0.0, 1.005], [0.0, -1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.42], [0.0, 0.0, 0.0, 1.0]])
 LOOKS = {"seat_close": ("inspection_pose_1", "lid open, seat open"), "lid_close": ("inspection_pose_1", "lid open, seat down"),
          "seat_open": ("inspection_pose_4", "lid open, seat down"), "lid_open": ("inspection_pose_4", "lid shut")}
@@ -452,13 +454,14 @@ def test_the_references_are_seeded_from_the_labs_looks_of_the_offline_plans(tmp_
     assert refs.has_task("seat_close") and not refs.has_task("lid_open")
 
 
-def test_the_labs_references_are_there_from_the_first_run():
-    """Resources/Logs/place_reference.json: the four tasks' first looks (pole 150 mm), as the lab's looks of 24-31 Oct
-    read the commode where the offline plans work."""
+def test_the_labs_references_read():
+    """Resources/Logs/place_reference.json: the lab's reference looks. Those of 24-31 Oct were cleared on 4 Nov night
+    (the camera's mount was refixed at ~15:32 and every look since read the commode 12 to 39 mm off them); the next run
+    of each task that passes with nothing moved teaches its own. Whatever is there names its task and its look."""
     refs = place_correct.References(Path(__file__).resolve().parents[1] / "Resources" / "Logs" / place_correct.REFERENCE_FILE)
-    for task, (pose, state) in LOOKS.items():
-        got = refs.get(place_correct.look_key("commode_c", pose, 150.0, state))
-        assert got is not None and got["task"] == task and got["frames"] >= 100, task
+    tasks = set(LOOKS)
+    for key, got in refs._load().items():
+        assert got["task"] in tasks and key.startswith("commode_c|") and "reading" in got, key
 
 
 class LegExec(LookExec):

@@ -14,6 +14,8 @@ import pytest
 
 from alix_studio_lite.server.gap_check import DepthFrame, GapCheck, Intrinsics
 
+pytestmark = pytest.mark.usefixtures("windows_rules")   # the rules before 4 Nov: gap_decider "windows"
+
 DATA = Path(__file__).parent / "data"
 FRAMES = Path.home() / "alix_ws/src/alix/Resource/Data/d435_frames_2026-10-08"
 MODELS = importlib.util.find_spec("ultralytics") is not None and importlib.util.find_spec("cv2") is not None
