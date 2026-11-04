@@ -525,7 +525,7 @@ def test_the_seats_lifted_check_judges_where_the_first_look_read_the_commode():
     +0.41)."""
     from alix_studio_lite.server.gap_check import GapCheck, load_params
 
-    gc = GapCheck(params=load_params(), records=None)
+    gc = GapCheck(params={**load_params(), "gap_lift_by_distance": False}, records=None)   # the rules of 3 Nov
     rec, frame = frame_3_nov()
     q = rec["context"]["arms"]["right"]["q_deg"]
     assert not gc.ask("seat_lifted", frame, q_deg=q).success                         # as at the lab
@@ -535,6 +535,11 @@ def test_the_seats_lifted_check_judges_where_the_first_look_read_the_commode():
     assert gc.fixture_record()["placed"]["dy_m"] == PLACE_3_NOV["dy_m"]
     gc.at_place(None)
     assert not gc.ask("seat_lifted", frame, q_deg=q).success
+    # since 4 Nov (the user) the lift question is a distance against the scene's closed top: lifted wherever the
+    # commode was read, no fit and no place needed
+    now = GapCheck(params=load_params(), records=None)
+    a = now.ask("seat_lifted", frame, q_deg=q)
+    assert a.success and a.fixture_state == "seat_lifted" and "by distance" in a.message, a.message
 
 
 class AtExec(LookExec):

@@ -172,7 +172,8 @@ async function run() {
   says(done.state !== 'done' ? (done.error || 'The calibration stopped.')
     : r.mode === 'hwsim' ? r.said
       : `${r.taken} of ${r.views} views taken${(r.missed || []).length ? `, ${r.missed.length} left out (board not found)` : ''}; `
-        + (r.result ? (r.result.accepted ? 'solved: ACCEPTED.' : 'solved: NOT ACCEPTED (see the result).') : 'too few views to solve.'));
+        + (r.result ? (r.result.accepted ? 'solved: ACCEPTED.' : 'solved: NOT ACCEPTED (see the result).')
+          : r.solve_error ? `not solved (${r.solve_error}); the views are kept: press Solve again.` : 'too few views to solve.'));
 }
 
 async function rest() {

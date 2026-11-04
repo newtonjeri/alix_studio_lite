@@ -128,7 +128,9 @@ class GapCheckSession:
                         "gap_seat_fit_min_px", "gap_seat_fit_margin", "gap_lid_fit_enabled", "gap_lid_fit_min_deg",
                         "gap_lid_fit_open_min_deg", "gap_fit_height_search_m", "gap_fit_height_step_m",
                         "gap_decider", "gap_parts_shadow", "gap_parts_height_search_m", "gap_parts_height_step_m",
-                        "gap_parts_seat_open_min_deg")
+                        "gap_parts_seat_open_min_deg", "gap_lift_by_distance", "gap_lift_roi", "gap_seat_lift_roi",
+                        "gap_lift_hand_mask_m", "gap_lift_risen_frac", "gap_lift_closed_tol_m", "gap_lift_bowl_m",
+                        "gap_seat_lift_bowl_min")
     _SEAT_RISE_PARAMS = SEAT_RISE_PARAMS
 
     #: every parameter a check record carries
@@ -313,6 +315,12 @@ class GapCheckSession:
                                    record=keep({"class": state, "success": True, "confidence": conf, "passes_expectation": bool(lifted),
                                                 "part": part, "message": message}))
             self.log.info(f"gap_check: parts (shadow): {parts['note']} -> {parts['state'] or 'cannot judge'}")
+
+        if asked in ("lid_lifted", "seat_lifted") and bool(self._p("gap_lift_by_distance")) and camera_to_world is not None:
+            lifted = self._lift_by_distance(asked, part, depth, intrinsics, camera_to_world, hands, hand_frames, at_pose,
+                                            source, frame, keep, record_extra)
+            if lifted is not None:
+                return lifted
 
         nominal_top = float(self._p("gap_seat_top_z" if part == "seat" else "gap_lid_top_z"))
         lid_registration = self._registration_for(at_pose)
@@ -589,6 +597,95 @@ class GapCheckSession:
                                         "registration_m": registration, "registration_source": registration_source,
                                         "registration_pose": at_pose, "rise_m": rise, "roi_valid": coverage,
                                         "median_range_m": median_range, "message": message, "models": cross}))
+
+    def _lift_by_distance(self, asked, part, depth, intrinsics, camera_to_world, hands, hand_frames, at_pose, source,
+                          frame, keep, record_extra) -> Optional[GapDecision]:
+        """THE LIFT QUESTIONS BY DISTANCE (the user, 2026-11-04): "for the lid and seat lifted state, this is very
+        obvious. It's distance measurement ... the returned distance expressed in the alix frame". The check's first
+        rule (P20, 2026-10-05), for lid_lifted and seat_lifted only: the part's height in base_link against its closed
+        top in the scene (gap_lid_top_z / gap_seat_top_z), lifted at gap_lift_m above it. No fixture fit and no height
+        search, nothing learned from earlier checks, no colour model; the other questions keep their rules.
+
+        Over gap_lift_roi (the lid) or gap_seat_lift_roi (the seat), the points with depth farther than
+        gap_lift_hand_mask_m from every hand frame (the gloves), and above the bowl (higher than gap_lift_bowl_m under
+        the closed top): LIFTED when gap_lift_risen_frac of them stand gap_lift_m or more above the closed top, the
+        seat only with the bowl in view (at least gap_seat_lift_bowl_min of the points: a lid over the seat hides it,
+        and the window would measure the lid; 24 Oct 15:53: +216 mm). Anything else returns None and the part's own
+        rules answer as before (the user, 4 Nov: closed and open "was already working"; a seat standing open, the bare
+        rim where the ring was, measures like a closed one, and those rules tell them apart).
+
+        From 4 Nov 16:02 the fixture fit, held at the -10 mm end of its height search after the camera's mount was
+        refixed, called six lifted lids closed and stopped every run. Replayed on the lab's frames of 21 Oct-4 Nov from
+        the lift checks' pose: every lifted lid lifted, the missed lifts of 21-24 Oct closed, every seat held up by the
+        glove lifted (the seat's band read 0 % on many: the ring had risen out of it)."""
+        h, w = depth.shape
+        r0, r1, c0, c1 = [float(v) for v in self._p("gap_seat_lift_roi" if part == "seat" else "gap_lift_roi")]
+        rows = slice(int(r0 * h), max(int(r0 * h) + 1, int(r1 * h)))
+        cols = slice(int(c0 * w), max(int(c0 * w) + 1, int(c1 * w)))
+        z = depth[rows, cols]
+        vs, us = np.mgrid[rows, cols]
+        valid = np.isfinite(z) & (z > 0.05) & (z < 3.0)
+        d = z[valid]
+        u = us[valid].astype(np.float64)
+        v = vs[valid].astype(np.float64)
+        world = np.asarray(camera_to_world, dtype=np.float64) @ np.stack(
+            [(u - intrinsics.cx) * d / intrinsics.fx, (v - intrinsics.cy) * d / intrinsics.fy, d, np.ones_like(d)])
+        radius = float(self._p("gap_lift_hand_mask_m"))
+        past = np.ones(d.shape, dtype=bool)
+        placed = {f: np.asarray(hands[f], dtype=np.float64)[:3] for f in hand_frames if f in hands}
+        for c in placed.values():
+            past &= np.linalg.norm(world[:3] - c[:, None], axis=0) > radius
+        record_extra["hands"] = {k: [round(float(x), 4) for x in c] for k, c in placed.items()}
+        record_extra["intrinsics"] = {"fx": float(intrinsics.fx), "fy": float(intrinsics.fy), "cx": float(intrinsics.cx),
+                                      "cy": float(intrinsics.cy), "width": int(w), "height": int(h)}
+        top = float(self._p("gap_seat_top_z" if part == "seat" else "gap_lid_top_z"))
+        lift, tol, bowl_m = float(self._p("gap_lift_m")), float(self._p("gap_lift_closed_tol_m")), float(self._p("gap_lift_bowl_m"))
+        rise = world[2][past] - top
+        on_part = rise[rise > -bowl_m]
+        n = int(z.size) or 1
+        bowl = float(np.mean(rise <= -bowl_m)) if rise.size else 0.0
+        risen = float(np.mean(on_part >= lift)) if on_part.size else 0.0
+        at_closed = float(np.mean(np.abs(on_part) <= tol)) if on_part.size else 0.0
+        median_rise = float(np.median(on_part)) if on_part.size else None
+        reading = {"roi": [r0, r1, c0, c1], "closed_top_m": top, "points": int(on_part.size), "points_frac": round(on_part.size / n, 4),
+                   "glove_frac": round(float((~past).sum()) / n, 3), "risen_frac": round(risen, 3),
+                   "at_closed_frac": round(at_closed, 3), "bowl_frac": round(bowl, 3), "hand_frames": len(placed),
+                   "median_rise_m": None if median_rise is None else round(median_rise, 4)}
+        record_extra["lift_reading"] = reading
+        where = (f"{len(placed)} hand frames masked {radius:.2f} m, {reading['glove_frac'] * 100:.0f} % of the window; "
+                 f"{source}, {frame}")
+        reading["decides"] = False
+        if part == "seat" and bowl < float(self._p("gap_seat_lift_bowl_min")):
+            self.log.info(f"gap_check: seat by distance: the bowl fills {bowl * 100:.0f} % of the points, the lid is over "
+                          "the seat: the seat's own rules answer")
+            return None
+        if on_part.size < max(10, 0.005 * n):
+            self.log.info(f"gap_check: {part} by distance: only {on_part.size} point(s) in view past the gloves: the "
+                          f"{part}'s own rules answer")
+            return None
+        said = (f"{risen * 100:.0f} % of the {part}'s points stand {lift * 1000:.0f} mm or more above its closed top "
+                f"{top:.3f} m in {self.world_frame} (median {median_rise * 1000:+.0f} mm), the bowl {bowl * 100:.0f} % of "
+                "the points")
+        if risen < float(self._p("gap_lift_risen_frac")) or median_rise > float(self._p("gap_lid_lifted_max_m")):
+            self.log.info(f"gap_check: {part} by distance: not risen ({said}): the {part}'s own rules answer")
+            return None
+        reading["decides"] = True
+        state, conf = f"{part}_lifted", risen
+        if part == "lid":
+            self._note_lid_decision(at_pose, state)
+        lifted = state == asked
+        median_range = float(np.median(d[past])) if past.any() else float("nan")
+        message = f"{part} by distance: {said} -> {state}; {where}"
+        self.log.info(f"gap_check: {message}")
+        return GapDecision(part=part, expect=asked, success=True, state=state, confidence=conf,
+                           recommendation="pass" if lifted else "re-clean", message=message,
+                           record=keep({"class": state, "success": True, "confidence": conf, "passes_expectation": bool(lifted),
+                                        "part": part, "height_m": None if median_rise is None else top + median_rise,
+                                        "closed_top_m": top, "nominal_top_m": top, "registration_m": 0.0,
+                                        "registration_source": "none (the lift by distance learns nothing)",
+                                        "registration_pose": at_pose, "rise_m": median_rise,
+                                        "roi_valid": float(valid.mean()) if valid.size else 0.0,
+                                        "median_range_m": median_range, "message": message, "models": {}}))
 
     def _seat_rise_params(self, allow: float = 0.0):
         """``allow``: the closing allowance (check's `closed_within_deg`): the hinge fit calls the seat lifted from it."""

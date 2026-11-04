@@ -51,15 +51,20 @@ def test_the_closings_end_checks_leave_the_next_lift_checks_as_they_were():
 def test_as_it_was_the_closed_lid_taught_the_height_and_the_lift_checks_could_not_judge():
     """The same end frames asked as a plain question, which teaches as every check did until now (and every check but
     a closing's still does): the lid 5 to 10 deg up teaches 22 to 31 mm before its own fit is consulted; with the +32 mm
-    the models' closed decision made of it (11:16:29, not replayed here), the lift checks fail as at the lab."""
-    gc = session()
-    key = gc.session._registration_key("")
-    for stem in LID_CLOSED:
-        gc.ask("lid_closed", frame(stem))
-    assert 0.020 <= gc.session._registration[key] <= 0.032
-    gc.session._registration[key] = 0.032
-    assert gc.ask("lid_lifted", frame(LID_LIFT)).fixture_state == "uncertain"
-    assert not gc.ask("seat_lifted", frame(SEAT_LIFT)).success
+    the models' closed decision made of it (11:16:29, not replayed here), the lift checks fail as at the lab, with the
+    rules of then (gap_lift_by_distance off). Since 4 Nov the lift questions are a distance against the scene's closed
+    top, nothing learned and no fit: the same lifted lid and seat read lifted even after that wrong registration."""
+    for by_distance, lid in ((False, "uncertain"), (True, "lid_lifted")):
+        gc = session(gap_lift_by_distance=by_distance)
+        key = gc.session._registration_key("")
+        for stem in LID_CLOSED:
+            gc.ask("lid_closed", frame(stem))
+        assert 0.020 <= gc.session._registration[key] <= 0.032
+        gc.session._registration[key] = 0.032
+        assert gc.ask("lid_lifted", frame(LID_LIFT)).fixture_state == lid
+        seat = gc.ask("seat_lifted", frame(SEAT_LIFT))
+        # since 4 Nov the seat's lift is a distance too: lifted, whatever was learned
+        assert (seat.success and seat.fixture_state == "seat_lifted") if by_distance else not seat.success, seat.message
 
 
 def test_the_models_closed_decision_teaches_nothing_in_a_closing():

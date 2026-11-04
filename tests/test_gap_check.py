@@ -36,8 +36,11 @@ def frame_of(stem: str):
 def same_answer(a, rec, stem, own_top=True):
     assert a.success, (stem, a.message)
     assert a.fixture_state == rec["class"], (stem, a.message, rec["message"])
-    assert abs(a.record["height_m"] - rec["height_m"]) < 0.003, (stem, a.record["height_m"], rec["height_m"])
-    if own_top:
+    if "by distance" in a.message:   # since 4 Nov a lifted part is measured over its own window, the gloves left out
+        assert abs(a.record["height_m"] - rec["height_m"]) < 0.03, (stem, a.record["height_m"], rec["height_m"])
+    else:
+        assert abs(a.record["height_m"] - rec["height_m"]) < 0.003, (stem, a.record["height_m"], rec["height_m"])
+    if own_top and "by distance" not in a.message:   # the distance takes the scene's closed top, nothing learned
         assert abs(a.record["closed_top_m"] - rec["closed_top_m"]) < 0.003, (stem, a.record["closed_top_m"], rec["closed_top_m"])
     assert a.record["passes_expectation"] == rec["passes_expectation"], stem
 
