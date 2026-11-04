@@ -1,0 +1,23 @@
+{
+  "check_id": "20261105_024327_698_verify_lid_lifted",
+  "stage": "verify_lid_lifted",
+  "expect": "lid_lifted",
+  "decided": true,
+  "state": "lid_lifted",
+  "confidence": 1.0,
+  "message": "2 frames (lid_lifted, lid_lifted; 2 yes, 0 no, 0 no vote): parts (depth): the lid lifted at 30 deg (margin +0.73); lid 30 deg, seat 0 deg, the commode where this frame reads it (-7 / -6 / +1 mm, +6.6 deg from its scene place)",
+  "frames": [
+    {
+      "record": "20261105_024330_194_gap_check_lid_lifted_lid_lifted.json",
+      "success": true,
+      "state": "lid_lifted",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261105_024331_035_gap_check_lid_lifted_lid_lifted.json",
+      "success": true,
+      "state": "lid_lifted",
+      "confidence": 1.0
+    }
+  ]
+}

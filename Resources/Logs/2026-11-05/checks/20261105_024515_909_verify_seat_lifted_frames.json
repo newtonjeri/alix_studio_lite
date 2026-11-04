@@ -1,0 +1,23 @@
+{
+  "check_id": "20261105_024515_909_verify_seat_lifted",
+  "stage": "verify_seat_lifted",
+  "expect": "seat_lifted",
+  "decided": true,
+  "state": "seat_lifted",
+  "confidence": 0.736,
+  "message": "2 frames (seat_lifted, seat_lifted; 2 yes, 0 no, 0 no vote): parts (depth): the seat lifted at 30 deg (margin +0.29); lid 110 deg, seat 30 deg, the commode where this frame reads it (+0 / +6 / +7 mm, -0.4 deg from its scene place)",
+  "frames": [
+    {
+      "record": "20261105_024517_123_gap_check_seat_lifted_seat_lifted.json",
+      "success": true,
+      "state": "seat_lifted",
+      "confidence": 0.736
+    },
+    {
+      "record": "20261105_024517_957_gap_check_seat_lifted_seat_lifted.json",
+      "success": true,
+      "state": "seat_lifted",
+      "confidence": 0.751
+    }
+  ]
+}

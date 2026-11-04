@@ -1,0 +1,910 @@
+created: '2026-11-05T02:46:58'
+tool: ALIX Studio Lite hand_eye_cal
+board:
+  cols: 11
+  rows: 8
+  square_m: 0.015
+end_frame: R_CameraHolderLink
+camera_frame: camera_color_optical_frame
+base_frame: base_link
+camera_info:
+  width: 1280
+  height: 720
+  K:
+  - 904.546265
+  - 0.0
+  - 656.859802
+  - 0.0
+  - 904.315063
+  - 382.823792
+  - 0.0
+  - 0.0
+  - 1.0
+  D:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  distortion_model: inverse_brown_conrady
+camera:
+  name: Intel RealSense D435
+  serial: '425122070189'
+nominal:
+  T_end_cam:
+  - - -1.0
+    - 0.0
+    - 0.0
+    - 0.0325
+  - - -0.0
+    - -1.0
+    - 0.0
+    - 0.075
+  - - 0.0
+    - 0.0
+    - 1.0
+    - 0.0216
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  T_end_mount:
+  - - 0.0
+    - 1.0
+    - -0.0
+    - 0.0
+  - - -0.0
+    - 0.0
+    - 1.0
+    - 0.0625
+  - - 1.0
+    - 0.0
+    - 0.0
+    - 0.011
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  T_end_depth:
+  - - -1.0
+    - 0.0
+    - 0.0
+    - 0.0175
+  - - -0.0
+    - -1.0
+    - 0.0
+    - 0.075
+  - - 0.0
+    - 0.0
+    - 1.0
+    - 0.0216
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+samples:
+- index: 0
+  view: 0
+  base: rest_pose
+  offsets_deg:
+    j1: 15.0
+    j4: 0.0
+    j5: 20.0
+    j6: 0.0
+    j7: 0.0
+  image: images/00.png
+  captured: '2026-11-05T02:47:04'
+  T_base_end:
+  - - 0.911223
+    - -0.191047
+    - 0.364929
+    - 0.543809
+  - - -0.3447
+    - -0.838688
+    - 0.421645
+    - -0.215365
+  - - 0.225507
+    - -0.510003
+    - -0.830086
+    - 0.972036
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.261782
+    R_joint2: -1.430926
+    R_joint3: -0.453768
+    R_joint4: 1.710318
+    R_joint5: 0.453786
+    R_joint6: 1.082069
+    R_joint7: 1.20426
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.234
+  board_tilt_deg: 31.7
+  board_range_m: 0.608
+  still_px: 0.285
+  depth: images/00_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/00_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 2.1
+    spread_mm: 1.6
+    corners: 88
+- index: 1
+  view: 1
+  base: rest_pose
+  offsets_deg:
+    j1: -15.0
+    j4: -10.0
+    j5: 40.0
+    j6: 30.0
+    j7: 60.0
+  image: images/01.png
+  captured: '2026-11-05T02:47:09'
+  T_base_end:
+  - - 0.462302
+    - -0.862516
+    - 0.205772
+    - 0.53245
+  - - -0.831192
+    - -0.34069
+    - 0.439376
+    - -0.102086
+  - - -0.308864
+    - -0.374161
+    - -0.874418
+    - 1.049134
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: -0.261799
+    R_joint2: -1.430978
+    R_joint3: -0.453786
+    R_joint4: 1.535768
+    R_joint5: 0.802764
+    R_joint6: 1.605703
+    R_joint7: 2.25151
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.3
+  board_tilt_deg: 28.6
+  board_range_m: 0.625
+  still_px: 0.084
+  depth: images/01_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/01_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 12.8
+    spread_mm: 2.3
+    corners: 88
+- index: 2
+  view: 2
+  base: rest_pose
+  offsets_deg:
+    j1: -15.0
+    j4: 10.0
+    j5: 40.0
+    j6: 0.0
+    j7: 90.0
+  image: images/02.png
+  captured: '2026-11-05T02:47:14'
+  T_base_end:
+  - - -0.305854
+    - -0.862601
+    - 0.402955
+    - 0.535845
+  - - -0.875284
+    - 0.421286
+    - 0.237479
+    - -0.138987
+  - - -0.374609
+    - -0.280066
+    - -0.883873
+    - 0.979053
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: -0.261799
+    R_joint2: -1.430961
+    R_joint3: -0.453768
+    R_joint4: 1.884799
+    R_joint5: 0.802799
+    R_joint6: 1.082104
+    R_joint7: 2.775108
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.099
+  board_tilt_deg: 25.6
+  board_range_m: 0.581
+  still_px: 0.172
+  depth: images/02_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/02_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 1.5
+    spread_mm: 1.5
+    corners: 88
+- index: 3
+  view: 3
+  base: rest_pose
+  offsets_deg:
+    j1: 15.0
+    j4: -10.0
+    j5: 20.0
+    j6: 15.0
+    j7: -60.0
+  image: images/03.png
+  captured: '2026-11-05T02:47:20'
+  T_base_end:
+  - - 0.565157
+    - 0.771642
+    - 0.291833
+    - 0.542272
+  - - 0.597568
+    - -0.626783
+    - 0.500056
+    - -0.216542
+  - - 0.56878
+    - -0.10822
+    - -0.815339
+    - 1.008242
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.261817
+    R_joint2: -1.430961
+    R_joint3: -0.453716
+    R_joint4: 1.535768
+    R_joint5: 0.453786
+    R_joint6: 1.343973
+    R_joint7: 0.157062
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.363
+  board_tilt_deg: 33.2
+  board_range_m: 0.625
+  still_px: 0.256
+  depth: images/03_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/03_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 7.5
+    spread_mm: 2.1
+    corners: 88
+- index: 4
+  view: 4
+  base: rest_pose
+  offsets_deg:
+    j1: 15.0
+    j4: -10.0
+    j5: 0.0
+    j6: 15.0
+    j7: -90.0
+  image: images/04.png
+  captured: '2026-11-05T02:47:25'
+  T_base_end:
+  - - 0.096254
+    - 0.985373
+    - 0.140622
+    - 0.525032
+  - - 0.963551
+    - -0.127673
+    - 0.235095
+    - -0.246747
+  - - 0.24961
+    - 0.112868
+    - -0.961746
+    - 0.991553
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.261799
+    R_joint2: -1.430961
+    R_joint3: -0.453733
+    R_joint4: 1.535768
+    R_joint5: 0.104755
+    R_joint6: 1.343921
+    R_joint7: -0.366502
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.243
+  board_tilt_deg: 13.5
+  board_range_m: 0.615
+  still_px: 0.071
+  depth: images/04_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/04_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 3.5
+    spread_mm: 2.5
+    corners: 88
+- index: 5
+  view: 5
+  base: inspection_pose_1
+  offsets_deg:
+    j1: 0.0
+    j4: 10.0
+    j5: 0.0
+    j6: 0.0
+    j7: 0.0
+  image: images/05.png
+  captured: '2026-11-05T02:47:30'
+  T_base_end:
+  - - -0.923871
+    - -0.078588
+    - 0.374547
+    - 0.506865
+  - - -0.055586
+    - 0.995866
+    - 0.071844
+    - -0.145207
+  - - -0.378645
+    - 0.045555
+    - -0.92442
+    - 1.045604
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.087301
+    R_joint2: -1.693004
+    R_joint3: -0.034889
+    R_joint4: 1.692934
+    R_joint5: 0.0
+    R_joint6: 1.186789
+    R_joint7: -1.693004
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.071
+  board_tilt_deg: 21.5
+  board_range_m: 0.632
+  still_px: 0.081
+  depth: images/05_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/05_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 3.4
+    spread_mm: 1.7
+    corners: 88
+- index: 6
+  view: 6
+  base: inspection_pose_1
+  offsets_deg:
+    j1: -15.0
+    j4: 0.0
+    j5: 20.0
+    j6: 0.0
+    j7: -30.0
+  image: images/06.png
+  captured: '2026-11-05T02:47:35'
+  T_base_end:
+  - - -0.660156
+    - -0.53121
+    - 0.531046
+    - 0.521506
+  - - -0.537328
+    - 0.828001
+    - 0.160291
+    - -0.062479
+  - - -0.524855
+    - -0.179528
+    - -0.832044
+    - 1.091069
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: -0.174481
+    R_joint2: -1.693022
+    R_joint3: -0.034837
+    R_joint4: 1.518367
+    R_joint5: 0.349066
+    R_joint6: 1.186789
+    R_joint7: -2.216586
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.467
+  board_tilt_deg: 32.2
+  board_range_m: 0.642
+  still_px: 0.382
+  depth: images/06_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/06_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 9.6
+    spread_mm: 3.2
+    corners: 88
+- index: 7
+  view: 7
+  base: inspection_pose_1
+  offsets_deg:
+    j1: 0.0
+    j4: -10.0
+    j5: 0.0
+    j6: 15.0
+    j7: -90.0
+  image: images/07.png
+  captured: '2026-11-05T02:47:40'
+  T_base_end:
+  - - 0.074133
+    - -0.887983
+    - 0.453862
+    - 0.503253
+  - - -0.996602
+    - -0.04958
+    - 0.065782
+    - -0.152033
+  - - -0.035911
+    - -0.457196
+    - -0.888641
+    - 1.121246
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.087284
+    R_joint2: -1.692952
+    R_joint3: -0.034941
+    R_joint4: 1.343816
+    R_joint5: 1.7e-05
+    R_joint6: 1.448606
+    R_joint7: -3.263801
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.31
+  board_tilt_deg: 26.7
+  board_range_m: 0.719
+  still_px: 0.477
+  depth: images/07_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/07_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 9.2
+    spread_mm: 2.2
+    corners: 88
+- index: 8
+  view: 8
+  base: inspection_pose_1
+  offsets_deg:
+    j1: -15.0
+    j4: 10.0
+    j5: 0.0
+    j6: 0.0
+    j7: 60.0
+  image: images/08.png
+  captured: '2026-11-05T02:47:47'
+  T_base_end:
+  - - -0.529958
+    - 0.760835
+    - 0.374532
+    - 0.506863
+  - - 0.767481
+    - 0.618175
+    - -0.169803
+    - -0.106417
+  - - -0.360718
+    - 0.197458
+    - -0.911533
+    - 1.046077
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: -0.174463
+    R_joint2: -1.693004
+    R_joint3: -0.034907
+    R_joint4: 1.692952
+    R_joint5: 3.5e-05
+    R_joint6: 1.186789
+    R_joint7: -0.645772
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.496
+  board_tilt_deg: 25.3
+  board_range_m: 0.602
+  still_px: 0.083
+  depth: images/08_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/08_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 14.7
+    spread_mm: 1.6
+    corners: 88
+- index: 9
+  view: 9
+  base: inspection_pose_1
+  offsets_deg:
+    j1: 15.0
+    j4: 10.0
+    j5: 0.0
+    j6: 15.0
+    j7: 60.0
+  image: images/09.png
+  captured: '2026-11-05T02:47:51'
+  T_base_end:
+  - - -0.569237
+    - 0.813076
+    - 0.121973
+    - 0.478075
+  - - 0.793715
+    - 0.504758
+    - 0.339464
+    - -0.179057
+  - - 0.214443
+    - 0.290047
+    - -0.932677
+    - 1.028444
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.349066
+    R_joint2: -1.692987
+    R_joint3: -0.034994
+    R_joint4: 1.692934
+    R_joint5: 0.0
+    R_joint6: 1.448571
+    R_joint7: -0.645789
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.338
+  board_tilt_deg: 21.6
+  board_range_m: 0.635
+  still_px: 0.067
+  depth: images/09_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/09_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 12.8
+    spread_mm: 2.1
+    corners: 88
+- index: 10
+  view: 10
+  base: inspection_pose_4
+  offsets_deg:
+    j1: 0.0
+    j4: -10.0
+    j5: 0.0
+    j6: 15.0
+    j7: 0.0
+  image: images/10.png
+  captured: '2026-11-05T02:47:56'
+  T_base_end:
+  - - -0.423451
+    - 0.874872
+    - 0.235135
+    - 0.491314
+  - - 0.905434
+    - 0.400223
+    - 0.141462
+    - -0.200739
+  - - 0.029654
+    - 0.272801
+    - -0.961613
+    - 1.004768
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.558523
+    R_joint2: -1.675429
+    R_joint3: 0.174463
+    R_joint4: 1.780271
+    R_joint5: -0.436262
+    R_joint6: 1.309032
+    R_joint7: -0.244206
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.102
+  board_tilt_deg: 15.1
+  board_range_m: 0.615
+  still_px: 0.075
+  depth: images/10_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/10_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 4.3
+    spread_mm: 1.6
+    corners: 88
+- index: 11
+  view: 11
+  base: inspection_pose_4
+  offsets_deg:
+    j1: 15.0
+    j4: 0.0
+    j5: -20.0
+    j6: 0.0
+    j7: -30.0
+  image: images/11.png
+  captured: '2026-11-05T02:48:01'
+  T_base_end:
+  - - -0.818937
+    - 0.397451
+    - 0.413975
+    - 0.50486
+  - - 0.488676
+    - 0.861174
+    - 0.139912
+    - -0.228636
+  - - -0.300896
+    - 0.316879
+    - -0.899472
+    - 0.954624
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.82034
+    R_joint2: -1.675499
+    R_joint3: 0.174515
+    R_joint4: 1.954786
+    R_joint5: -0.785398
+    R_joint6: 1.04725
+    R_joint7: -0.76791
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.248
+  board_tilt_deg: 26.1
+  board_range_m: 0.578
+  still_px: 0.124
+  depth: images/11_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/11_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 6.5
+    spread_mm: 1.5
+    corners: 88
+- index: 12
+  view: 12
+  base: inspection_pose_4
+  offsets_deg:
+    j1: 0.0
+    j4: -10.0
+    j5: 0.0
+    j6: 15.0
+    j7: -90.0
+  image: images/12.png
+  captured: '2026-11-05T02:48:06'
+  T_base_end:
+  - - -0.8748
+    - -0.423481
+    - 0.23535
+    - 0.491323
+  - - -0.400248
+    - 0.905423
+    - 0.141458
+    - -0.200745
+  - - -0.272996
+    - 0.029549
+    - -0.961561
+    - 1.004798
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.558505
+    R_joint2: -1.675499
+    R_joint3: 0.174481
+    R_joint4: 1.780218
+    R_joint5: -0.436262
+    R_joint6: 1.308927
+    R_joint7: -1.81509
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.228
+  board_tilt_deg: 13.8
+  board_range_m: 0.636
+  still_px: 0.095
+  depth: images/12_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/12_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 6.0
+    spread_mm: 2.2
+    corners: 88
+- index: 13
+  view: 13
+  base: inspection_pose_4
+  offsets_deg:
+    j1: -15.0
+    j4: -10.0
+    j5: 20.0
+    j6: 15.0
+    j7: 60.0
+  image: images/13.png
+  captured: '2026-11-05T02:48:11'
+  T_base_end:
+  - - 0.571218
+    - 0.802911
+    - 0.170422
+    - 0.483928
+  - - 0.773108
+    - -0.596047
+    - 0.21687
+    - -0.133101
+  - - 0.275707
+    - 0.007874
+    - -0.96121
+    - 1.021492
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.296723
+    R_joint2: -1.675464
+    R_joint3: 0.174463
+    R_joint4: 1.780306
+    R_joint5: -0.087214
+    R_joint6: 1.308997
+    R_joint7: 0.802904
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.089
+  board_tilt_deg: 14.5
+  board_range_m: 0.619
+  still_px: 0.113
+  depth: images/13_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/13_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 4.2
+    spread_mm: 1.6
+    corners: 88
+- index: 14
+  view: 14
+  base: inspection_pose_4
+  offsets_deg:
+    j1: -15.0
+    j4: -10.0
+    j5: 20.0
+    j6: 15.0
+    j7: 90.0
+  image: images/14.png
+  captured: '2026-11-05T02:48:16'
+  T_base_end:
+  - - 0.896129
+    - 0.409749
+    - 0.170466
+    - 0.483928
+  - - 0.37153
+    - -0.902748
+    - 0.216824
+    - -0.133104
+  - - 0.242731
+    - -0.130969
+    - -0.961212
+    - 1.021496
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+  joints:
+    R_joint1: 0.296723
+    R_joint2: -1.675481
+    R_joint3: 0.174481
+    R_joint4: 1.780306
+    R_joint5: -0.087266
+    R_joint6: 1.308979
+    R_joint7: 1.326503
+    R_sliding_plate_joint: 0.25
+  board_pose_rms_px: 0.211
+  board_tilt_deg: 13.9
+  board_range_m: 0.63
+  still_px: 0.141
+  depth: images/14_depth.npy
+  depth_intrinsics:
+    fx: 432.66507
+    fy: 432.66507
+    cx: 420.212616
+    cy: 237.487335
+    width: 848
+    height: 480
+    unit: mm
+  aligned_depth: images/14_aligned_depth.npz
+  depth_minus_board_mm:
+    median_mm: 3.3
+    spread_mm: 1.5
+    corners: 88
