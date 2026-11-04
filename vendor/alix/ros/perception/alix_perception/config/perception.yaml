@@ -254,6 +254,24 @@ perception_node:
     gap_lid_fit_enabled: true
     gap_lid_fit_min_deg: 10.0            # the lid lifted from 10 deg (the seat's rule; the 50 mm bar is ~6.5 deg at its front)
     gap_lid_fit_open_min_deg: 80.0       # open (standing) from 80 deg; between: lifted
+    # THE LIFT QUESTIONS BY DISTANCE (the user, 2026-11-04: "for the lid and seat lifted state ... it's distance
+    # measurement ... the returned distance expressed in the alix frame"). lid_lifted and seat_lifted only, the other
+    # questions keep their rules: the part's height in base_link against its closed top in the scene (gap_lid_top_z,
+    # gap_seat_top_z), lifted at gap_lift_m above it (the check's first rule, P20). No fixture fit, no height search,
+    # nothing learned, no colour model. The gloves left out within gap_lift_hand_mask_m of each hand frame, the bowl
+    # below gap_lift_bowl_m under the closed top left out of the part's points; LIFTED when gap_lift_risen_frac of
+    # them have risen (the seat with the bowl in view). Anything else: the part's own rules answer as before (closed,
+    # open: "already working"; a seat standing open measures like a closed one by height, and they tell them apart).
+    # From 4 Nov 16:02 the fixture fit, held at the -10 mm end of its height search after the camera's mount was
+    # refixed, called six lifted lids closed and stopped every run.
+    gap_lift_by_distance: true
+    gap_lift_roi: [0.30, 0.70, 0.30, 0.70]       # the lid: twice the centre ROI about its centre
+    gap_seat_lift_roi: [0.40, 1.00, 0.05, 0.95]  # the seat: the frame's lower part, where the ring rises toward the camera
+    gap_lift_hand_mask_m: 0.10           # 0.14 (gap_hand_mask_m) took the ring the glove holds: 21 of 215 lifted seats read down
+    gap_lift_risen_frac: 0.5
+    gap_lift_closed_tol_m: 0.02
+    gap_lift_bowl_m: 0.04
+    gap_seat_lift_bowl_min: 0.78         # the seat judged only with the bowl in view (0.84-0.92; the lid over the seat 0.65-0.71)
     gap_fit_height_search_m: 0.010       # each hypothesis at its own best height within this of the registration
     gap_fit_height_step_m: 0.005         # (the simulator's commode sat 9 mm below the calibrated model: a closed lid read open)
                                         # (a lid at -30 hides the seat under it: "did it come along?" stays inside here)
