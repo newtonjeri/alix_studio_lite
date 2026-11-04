@@ -475,11 +475,11 @@ stage_sequence:
   - stage: update_fixture_scene
     lid_angle_deg: -110.0
 
-  - stage: move_to_pre_start
-    speed_class: approach
-    arm: left
-    pose_name: pre_start_pose
-    planning_group: rm75_arm_left
+  # - stage: move_to_pre_start
+  #   speed_class: approach
+  #   arm: left
+  #   pose_name: pre_start_pose
+  #   planning_group: rm75_arm_left
 
       # Hand has left the lid -> restore normal hand<->lid collision checking.
   - stage: forbid_collision

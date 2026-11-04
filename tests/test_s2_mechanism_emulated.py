@@ -38,7 +38,7 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     assert "move_to_inspect" in first_look["text"] and first_look["t0"] < lifted["t0"]   # run: taken from rest, five frames refused)
     looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:lid_open:")]   # the task's own plan, its first check dropped (29 Oct)
     joined = sorted((a for a in sim["acts"]["left"] + right if ":joined:" in str(a.get("file"))), key=lambda a: a["t0"])
-    assert [a["file"].split(":")[-1] for a in joined] == ["3", "2", "2"]              # the run's streams (27 Oct): the left's
+    assert [a["file"].split(":")[-1] for a in joined] == ["3", "2"]                   # the run's streams (27 Oct): the left's
     assert "move_to_pre_start + move_to_start + execute_path as one stream" in joined[0]["text"]   # approach and lift, the right's
     assert any("stops at its junctions taken out" in a["text"] for a in joined)
     last_check = [a for a in right if a["kind"] == "check"][-1]

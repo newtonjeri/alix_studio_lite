@@ -155,7 +155,8 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
     spans = lambda label: [r["args"]["t_mono"] for r in hw if r["verb"] == "canfd stream" and r["args"]["label"] == label]   # noqa: E731
     looks, lift = spans("RIGHT arm move_to_inspect"), spans("LEFT arm move_to_pre_start + move_to_start + execute_path")[0]
     assert looks[0][1] <= lift[0], (looks, lift)                                        # the first look, then the lift
-    retreat = spans("LEFT arm move_to_pre_start + move_to_rest")[0]
+    retreat = next(r["args"]["t_mono"] for r in hw if r["verb"] == "canfd stream"                     # its own plan's: 4 Nov the
+                   and r["args"]["label"] in ("LEFT arm move_to_pre_start + move_to_rest", "LEFT arm move_to_rest"))   # left's straight to rest
     assert retreat[0] < looks[-1][1] and looks[-1][0] < retreat[1], (retreat, looks)                   # the last look, in the retreat's
     assert "both arms at once: LEFT move_to_half_pole_length + hand_grasp || RIGHT move_to_inspect" in said
     feeds = [r for r in hw if r["verb"] == "s2 feed" and r.get("text") == "recording"]

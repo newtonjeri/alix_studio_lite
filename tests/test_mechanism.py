@@ -163,11 +163,11 @@ def test_lid_open_as_on_the_robot_on_12_october(fitted):
     assert [(p["plan"], p["outcome"], p["relifts"]) for p in out["plans"]] == [("lid_open", "done", 3)]
     notes = [m[5] for m in moves(ex) if m[5]]
     assert notes[:5] == ["re-lift 1, pre-planned"] * 5 and "re-lift 3, pre-planned" in notes   # a rung: pole, hand, three moves (26 Oct)
-    # the left's next move (since 24 Oct 21:39 its way out, after the right's push) starts where the ORIGINAL lift ended,
-    # 149.5 degrees from rung 3's end: bridged
+    # the left's next move (since 24 Oct 21:39 its way out, after the right's push; since the owner's plan of 4 Nov 14:08
+    # straight to rest) starts where the ORIGINAL lift ended, not where rung 3 ended: bridged
     left = [m for m in moves(ex) if m[2] == "left" and m[3] == "arm"]
     after = left[max(i for i, m in enumerate(left) if m[5].startswith("re-lift")) + 1]
-    assert after[1].startswith("move_to_pre_start") and after[4] and not after[5], after
+    assert after[1] == "move_to_rest" and after[4] and not after[5], after
     first = {m[2]: m for m in moves(ex) if m[3] == "arm"}
     assert [m for m in moves(ex) if m[3] == "arm" and m[4]][0][1] == "move_to_inspect"   # the first move after the approach
     # the end check is the plan's own (26 Oct): the right hand grasps, the arm goes to inspection pose 1, the camera is
@@ -680,7 +680,7 @@ def test_a_plan_knows_the_streams_a_run_makes_of_its_moves_and_the_3d_view_reads
         st = plan.streamed(start_checks=False)
         assert st == dict(seconds=round(sum(j.seconds for j, _ in streams), 2), blended_s=round(sum(j.blended_s for j, _ in streams), 2),
                           streams=len(streams), moves=len(moves))
-        assert 0.4 < st["blended_s"] < 2.0 and st["seconds"] < plan.seconds() - st["blended_s"] + 0.01   # the stops out, the stills not sent
+        assert 0.2 < st["blended_s"] < 2.0 and st["seconds"] < plan.seconds() - st["blended_s"] + 0.01   # the stops out, the stills not sent
         assert plan.view()["streamed"] == plan.streamed()
         for j, n in streams:
             if n > 1:
@@ -753,7 +753,7 @@ def test_a_plans_final_rest_is_not_streamed_when_the_arms_next_start_follows():
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])
     mechanism.Runner(ex, leave={"left", "right"}, hand_set={"left", "right"}).run("lid_open")
     arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]
-    assert arm[-1] == ("move_to_inspect", "right") and ("move_to_pre_start + move_to_rest", "left") in arm
+    assert arm[-1] == ("move_to_inspect", "right") and ("move_to_rest", "left") in arm       # 4 Nov: the left straight to rest
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])                    # the left's next start only: the right rests
     mechanism.Runner(ex, leave={"left"}).run("lid_open")
     assert [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"][-1] == ("move_to_rest", "right")

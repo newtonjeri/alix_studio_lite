@@ -31,7 +31,8 @@ def test_the_plans_stretches_the_two_arms_run_at_once(monkeypatch):
     the lift joins the stretch: the right's move ends LEG_MARGIN_S before its lines begin."""
     plan, entries, unsent, bridged = _entries("lid_open")
     legs = m.plan_legs(plan, entries, unsent, bridged)
-    assert [(i, leg.used, leg.phase) for i, leg in legs] == [(0, 5, "lid_closed"), (14, 4, "lid_open")]
+    # the owner's plan of 4 Nov 14:08: the left's retreat straight to rest (its move back to the pre-start is gone)
+    assert [(i, leg.used, leg.phase) for i, leg in legs] == [(0, 5, "lid_closed"), (14, 3, "lid_open")]
     first, second = legs[0][1], legs[1][1]
     assert first.label() == ("LEFT move_to_half_pole_length + hand_grasp || "
                              "RIGHT move_to_inspect + move_to_inspect_pole_length + hand_grasp")
@@ -166,7 +167,7 @@ def test_a_clear_stretch_runs_on_two_threads_and_the_plans_order_otherwise(monke
     assert any("not checked within" in t for _, t in said)
     # a failing move: raised after the other arm's move has ended
     log.clear()
-    arms = {"left": _Arm("left", log, fail="LEFT arm move_to_pre_start + move_to_rest"), "right": _Arm("right", log)}
+    arms = {"left": _Arm("left", log, fail="LEFT arm move_to_rest"), "right": _Arm("right", log)}
     ex, said = _exec(arms, {leg.key: dict(ok=True, why="clear")})
     with pytest.raises(m.UserError, match="refused at its first line"):
         ex.move_together(leg)
