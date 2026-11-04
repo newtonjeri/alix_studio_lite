@@ -32,7 +32,9 @@ commode stands now against where the plan worked. Against the move the run has (
 - no reference for the look yet, no reading (a hand in the view, a part not at rest, the pose not a named one) or no
   camera (Hardware sim, the stand-in, the test harness): the UGV's alone, said.
 
-THE RETRIES, by the camera too (the owner, 2 Nov: "all the retries should be decided by the camera ... the hard-coded
+THE RETRIES, by the configuration's ladder again since 5 Nov (mechanism.CAMERA_RELIFTS off; the user: "for now ... just
+reuse the rungs in the task configuration"; 02:40 the camera's re-lift made its first move 87 degrees from where the arm
+stood). What follows is the camera's re-lift as built on 2 Nov, kept for when it is turned on again (the owner, 2 Nov: "all the retries should be decided by the camera ... the hard-coded
 retries we have in the configuration files should be populated by the values from the camera"; "we can do away with
 the rungs"; "by default number of retries after failure is three; you should never abort on the first failure; this
 applies to all mechanism tasks"): mechanism.RETRIES, 3, for every task.

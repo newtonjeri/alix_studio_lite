@@ -775,8 +775,8 @@
       "dest": "vendor/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "origin": "alix",
-      "sha256": "1b8edf52582c60fc572ecbd8d1b8a880f99e3a41171960c49f8c83231b0ca4ac",
-      "bytes": 15407
+      "sha256": "fef6a29526b60e26414af6c4a33a2d9a8817c7d33709f0ee27dad86a71aa2e21",
+      "bytes": 15409
     },
     {
       "dest": "vendor/alix/Resource/tracks/taught/EXECUTION_MODEL.json",
@@ -1069,8 +1069,8 @@
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "origin": "alix",
-      "sha256": "8997d782ab2ea1dcbfa7e1da559367af796520a974c2a78f769f4cbe191a20af",
-      "bytes": 84944
+      "sha256": "fc4b161a4b373782aa64662adda0ae6e1e10d9a4c899dccadd979b7681405f9c",
+      "bytes": 87609
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/geometry.py",
@@ -1111,8 +1111,8 @@
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/region3d.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/region3d.py",
       "origin": "alix",
-      "sha256": "becaa0c963b982dc001d363937872629ff406d34f687f6224fa58908ea085ab0",
-      "bytes": 28226
+      "sha256": "4797815753309491d26aa9c2255943d7b8c0912d4ae8794b28a1bb122dac2bf4",
+      "bytes": 28568
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/region_map.py",

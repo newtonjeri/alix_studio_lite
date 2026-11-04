@@ -22,7 +22,8 @@ What is checked besides (on either tree, ALIX's or Lite's vendored copy):
   prepends that leg; its corners rounded by a few mm) and ends at its last point. A config edited and its re-planning failed
   (the planner then leaves the old plan in place: 28 Oct, twice) shows here;
 - a sequence plan (``<task>_seq``) is its task's plan less the checks its flag drops, the same moves;
-- (the pre-planned re-lifts are not checked since 2 Nov: a run's re-lifts are the camera's, place_correct);
+- the pre-planned re-lifts chain from where the lift ends (mechanism.Plan.rungs_note; a run's re-lifts are the rungs again
+  since 5 Nov, mechanism.CAMERA_RELIFTS);
 - Lite's registry: every task has its plan (and its config), every catalogue row names a task, the commode's states are
   known before and after each, the vendor tool lists every file (else a full re-vendor drops it).
 
@@ -566,9 +567,11 @@ def plan_checks(root: Path, where: str) -> list:
                 rows += seq_against_task(plan, json.loads(tp.read_text(encoding="utf-8")), yaml.safe_load(c.read_text()),
                                          f"{where} {p.name}")
         try:
-            mechanism.Plan(name, p)
+            note = mechanism.Plan(name, p).rungs_note()
         except Exception as exc:                                                    # noqa: BLE001
-            rows.append(("error", f"{where} {p.name}", f"its plan does not load ({type(exc).__name__}: {exc})"))
+            note = f"its plan does not load ({type(exc).__name__}: {exc})"
+        if note:
+            rows.append(("error", f"{where} {p.name}", note))
     return rows
 
 

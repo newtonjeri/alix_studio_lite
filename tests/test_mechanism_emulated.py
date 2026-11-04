@@ -1,7 +1,7 @@
 """The lid in Real on ALIX's emulated arms: ALIX's lid_open plan streamed over each arm's CanFD pass-through at 5 ms
-(alix_dispatch's lane: the 5 ms capture, its watch), the pole and the hand, a re-lift decided by the camera (here none
-reads the commode: the lift again as it was made, back along it first; the owner, 2 Nov: no pre-planned rungs), and STOP
-in the middle of a stream. The camera's answers are scripted (LITE_CHECK_SCRIPT, a test
+(alix_dispatch's lane: the 5 ms capture, its watch), the pole and the hand, a re-lift from the pre-planned rung of the
+task configuration's ladder and the bridged move after it (the user, 5 Nov: the camera's re-lifts off), and STOP in the
+middle of a stream. The camera's answers are scripted (LITE_CHECK_SCRIPT, a test
 harness only): what the gap check decides is tests/test_gap_check.py's. S2's runs of a lid task: test_s2_mechanism_emulated.py
 (its own Lite, so the two files run side by side under pytest -n)."""
 import json
@@ -15,7 +15,7 @@ from mech_emulated import call, hardware, refused, start, wait
 
 @pytest.fixture(scope="module")
 def server(tmp_path_factory):
-    # lid_open: closed (it runs); the lift missed (re-lift 1: the camera's); lifted (the seat under it not asked, 26 Oct);
+    # lid_open: closed (it runs); the lift missed (re-lift 1 from rung 1); lifted (the seat under it not asked, 26 Oct);
     # its final check sees the lid open. Then the STOP test's lid_open: closed, then STOP before its next question.
     ctx, proc = start(tmp_path_factory, "lite-mech", ["lid_closed", "lid_closed", "lid_lifted", "lid_open", "lid_closed"])
     yield ctx
@@ -29,7 +29,7 @@ def test_the_catalogue_lists_the_openings_and_the_closings(server):
     assert cat["standoff_mm"] == 250 and cat["rows"]["L-T01"] == "lid_open" and cat["rows"]["L-T05"] == ["seat_close", "lid_close"]
 
 
-def test_real_lid_open_streams_each_move_and_re_lifts_by_the_camera(server):
+def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     said = refused(server, "POST", "/api/mechanism/lid_open/run", {})
     assert said.get("code") == "confirm"                         # Real asks first, as every motion does
     job = call(server, "POST", "/api/mechanism/lid_open/run", {"confirmed": True})
@@ -42,18 +42,16 @@ def test_real_lid_open_streams_each_move_and_re_lifts_by_the_camera(server):
     assert res["checks"][-1]["check"] == "verify_seat_with_lid" and res["seat_after_lid"] == "down"
     said = " | ".join(e["text"] for e in done["events"])
     assert "Open the seat's way in" not in said and "at where Open the lid ended" not in said   # no look of Lite's own (26 Oct)
-    assert "the config's retry offsets are not used" in said and "re-lift 1" in said
-    assert [r["source"] for r in res["places"][0]["retries"]] == ["kept"]          # no camera here: the lift again as made
+    assert "the task configuration's retry_offsets" in said and "re-lift 1" in said
+    assert not res["places"][0].get("retries")                                     # the camera asked nothing again
     streams = [r for r in hardware(server) if r.get("verb") == "canfd stream"]
     assert streams and all(r["ok"] for r in streams), [r.get("text") for r in streams if not r["ok"]]
     labels = [r["args"]["label"] for r in streams]
-    assert not any("pre-planned" in x for x in labels)                           # no rung (the owner, 2 Nov)
-    # back along the lift it made, then the lift again: it starts where the way back ended, and the left's next move
-    # starts where the lift again ended (nothing to bridge)
+    assert any("re-lift 1, pre-planned" in x for x in labels) and not any("back along" in x for x in labels)
+    # the left's next move after the re-lift starts where the ORIGINAL lift ended (rung 1 ends 8.4 degrees from it): bridged
     left = [r for r in streams if r["args"]["label"].startswith("LEFT")]
-    k = max(i for i, r in enumerate(left) if "re-lift 1" in r["args"]["label"])
-    assert any("back along" in r["args"]["label"] for r in left[:k])
-    assert "execute_path" in left[k]["args"]["label"] and "bridged" not in left[k + 1]["text"], left[k + 1]["args"]["label"]
+    after = left[max(i for i, r in enumerate(left) if "re-lift 1" in r["args"]["label"]) + 1]
+    assert "bridged" in after["text"], after["args"]["label"]
     assert all(r["args"]["period_ms"] == 5.0 and r["args"]["rate_gate"] == "per_joint" for r in streams)
     # its end from the feed (26 Oct), waited for when something needs the arm still (27 Oct night: a check, a hold, the same
     # arm's next stream or pole move, the plan's end), as its own row; a stream whose end nothing needed says so

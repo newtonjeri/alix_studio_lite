@@ -1266,6 +1266,9 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     plan = mechanism.cached(mechanism.sequence_plan(st["task"]))     # the sequence's own plan: no look before the lift (27 Oct)
     title, rows = plan.title, st.get("rows") or {}
     mark = {s: {"_row": rows.get(s)} for s in ARMS}
+    stale = plan.rungs_note()
+    if stale:                                        # a missed lift would stop the run at its first re-lift (the rungs again, 5 Nov)
+        sims["left"]._say("warn", mark["left"], stale)
     camera = "right"                                 # the D435 rides the right wrist
     clock = [T]
 

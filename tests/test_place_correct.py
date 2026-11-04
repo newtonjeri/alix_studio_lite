@@ -277,10 +277,82 @@ def test_a_plan_that_cannot_follow_the_camera_runs_as_without_it(tmp_path):
     assert row["source"] == "none" and "cannot follow" in row["words"] and out["plans"][0]["outcome"] == "done"
 
 
+@pytest.fixture
+def camera_relifts(monkeypatch):
+    """The camera's re-lifts (the owner, 2 Nov), off since 5 Nov (mechanism.CAMERA_RELIFTS): their code kept, tested on."""
+    monkeypatch.setattr(mechanism, "CAMERA_RELIFTS", True)
+
+
+def test_a_missed_lift_re_lifts_by_the_task_configurations_rungs(tmp_path):
+    """The user, 5 Nov: "for now ... just reuse the rungs in the task configuration" (02:40, the camera's re-lift made its
+    first move 87 degrees from where the arm stood after going back: refused). Open the lid, its first look within the
+    tolerance, its lift missed twice: re-lifts 1 and 2 are the pre-planned rungs of its config's retry_offsets, each
+    from where the lift before it ended; the camera reads nothing again, nothing goes back along the lift."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    reference("lid_open", refs)
+    plan = mechanism.Plan("lid_open")
+    ex = LookExec(["lid_closed", "lid_closed", "lid_closed", "lid_lifted", "lid_open"], look("lid_open", 0.001))
+    out, said = run("lid_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert out["plans"][0]["outcome"] == "done" and out["plans"][0]["relifts"] == 2
+    notes = [c[5] for c in ex.calls if c[0] == "move" and c[5]]
+    assert "re-lift 1, pre-planned" in notes and "re-lift 2, pre-planned" in notes
+    assert not any("moved by the camera" in n or n == "re-lift restore, reversed" for n in notes)
+    rung = [next(e for e in plan.rung_block(k, "left") if e.stage == "execute_path") for k in (1, 2)]
+    lifts = lifts_of(ex)
+    assert len(lifts) == 3 and carries(lifts[1:2], rung[0].rows) and carries(lifts[2:], rung[1].rows)
+    assert any("the task configuration's retry_offsets" in t for t in said)
+    assert not out["places"][0].get("retries")                                    # the camera asked nothing again
+
+
+def test_a_lift_the_camera_moved_re_lifts_by_the_rung_bridged_from_where_it_ended(tmp_path):
+    """The camera moved the plan (the commode 10 mm off along y, beyond the 5 mm): its rungs are moved with it (plan_shift),
+    so re-lift 1 is the rung moved the same way, starting where the moved lift ended (a gap up to 3 degrees bridged as a
+    crept start is); the rest of the plan stays the moved one."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    key = reference("lid_open", refs)
+    plan = mechanism.Plan("lid_open")
+    reading = look("lid_open", 0.0, -0.010)
+    ex = LookExec(["lid_closed", "lid_closed", "lid_lifted", "lid_open"], reading)
+    out, said = run("lid_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert out["plans"][0]["outcome"] == "done" and out["plans"][0]["relifts"] == 1
+    d = place_correct.decide(None, reading, refs.get(key), lambda a, b: plan_shift.hands_apart_mm(plan, a, b))
+    moved = plan_shift.shift(plan, d.move)
+    lift = next(e for e in moved.entries if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+    rung = next(e for e in moved.rung_block(1, "left") if e.stage == "execute_path")
+    lifts = lifts_of(ex)
+    assert len(lifts) == 2 and carries(lifts[:1], lift.rows) and carries(lifts[1:], rung.rows)
+    assert not carries(lifts[1:], next(e for e in plan.rung_block(1, "left") if e.stage == "execute_path").rows)
+    push = next(e for e in moved.entries if e.kind == "arm" and e.side == "right" and e.stage == "execute_path")
+    assert carries(sent_rows(ex, "right", "execute_path"), push.rows)               # the rest: the moved plan's
+    gap = mechanism._gap_deg(next(e for e in moved.rung_block(1, "left") if e.kind == "arm").first(),
+                             next(e for e in reversed(moved.entries[:moved.entries.index(lift) + 1])
+                                  if e.kind == "arm" and e.side == "left").last())
+    assert gap <= mechanism.BRIDGE_MAX_DEG
+    assert (gap > mechanism.start_tol_deg()) == any("bridged at 40 %" in t for t in said)
+
+
+def test_a_task_with_no_retry_offsets_lifts_again_the_same(tmp_path):
+    """Open the seat (its config: retry_lift, no retry_offsets): a missed lift goes back along the lift it made and lifts
+    again the same, the camera's second reading (9 mm off) not used."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    reference("seat_open", refs)
+    plan = mechanism.Plan("seat_open")
+    ex = LookExec(["lid_open", "seat_closed", "seat_closed", "seat_lifted", "seat_open"],
+                  [look("seat_open", 0.001), look("seat_open", 0.0, -0.009)])
+    out, said = run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert out["plans"][0]["outcome"] == "done" and out["plans"][0]["relifts"] == 1
+    lift = next(e for e in plan.entries if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+    assert len(lifts_of(ex)) == 2 and all(carries([x], lift.rows) for x in lifts_of(ex))
+    back = [c[1] for c in ex.calls if c[0] == "move" and c[5] == "re-lift restore, reversed"]
+    assert back == ["back along execute_path", "back along move_to_start", "back along move_to_pre_start"]
+    assert not any("moved by the camera" in (c[5] or "") for c in ex.calls if c[0] == "move")
+
+
 def lifts_of(ex, side="left"):
     return sent_rows(ex, side, "execute_path")
 
 
+@pytest.mark.usefixtures("camera_relifts")
 def test_a_missed_lift_is_lifted_again_where_the_camera_reads_the_commode(tmp_path):
     """Open the seat (the owner, 2 Nov: "all the retries should be decided by the camera"): its first look within the
     tolerance (the plan as it was made), its lift missed; the commode's place read again on the failed check's frames,
@@ -309,6 +381,7 @@ def test_a_missed_lift_is_lifted_again_where_the_camera_reads_the_commode(tmp_pa
     assert "taught" not in row                                                      # a re-lift never teaches
 
 
+@pytest.mark.usefixtures("camera_relifts")
 def test_in_a_sequence_the_re_lift_takes_the_cameras_value_too(tmp_path):
     """The same in a sequence (the checks before the lift not asked: the run's entries are the plan's without them)."""
     refs = place_correct.References(tmp_path / "refs.json")
@@ -322,6 +395,7 @@ def test_in_a_sequence_the_re_lift_takes_the_cameras_value_too(tmp_path):
     assert carries(lifts_of(ex)[1:], lift1.rows)
 
 
+@pytest.mark.usefixtures("camera_relifts")
 def test_open_the_lids_retries_take_the_cameras_value_not_the_ladder(tmp_path):
     """Open the lid's lift missed twice: re-lift 1 where the camera reads the commode (10 mm to the right, and 20 mm along
     x, left at the plan's: the lid shut from pose 4 reads x poorly), re-lift 2 that lift again (the commode read there
@@ -344,6 +418,7 @@ def test_open_the_lids_retries_take_the_cameras_value_not_the_ladder(tmp_path):
     assert [r["source"] for r in out["places"][0]["retries"]] == ["depth", "kept"]
 
 
+@pytest.mark.usefixtures("camera_relifts")
 def test_without_a_reference_a_missed_lift_is_lifted_again_as_it_was(tmp_path):
     """Until a run of the task has passed with nothing moved (no reference look: each task's first runs at the lab), the
     camera has no value to give: a missed lift is lifted again as it was made, no rung."""
@@ -358,6 +433,7 @@ def test_without_a_reference_a_missed_lift_is_lifted_again_as_it_was(tmp_path):
     assert retry["source"] == "kept" and "no reference look yet" in retry["words"]
 
 
+@pytest.mark.usefixtures("camera_relifts")
 def test_re_lifts_stop_for_a_person_after_the_configs_count_or_beyond_the_bounds(tmp_path):
     """Open the lid misses four times: after its config's 3 re-lifts the run stops for a person. A retry whose reading
     is beyond plan_shift's bounds stops before that re-lift, the arm back along its lift."""

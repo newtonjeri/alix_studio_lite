@@ -240,6 +240,10 @@ def start_tol_deg() -> float:
 BRIDGE_MAX_DEG = 3.0      #: a move whose first line the arm has crept from by up to this is bridged first (26 Oct: the left wrist,
                           #: at its 9 A plateau holding the seat up for the 9 s the right arm needs, crept 0.5-1.1 degrees once warm;
                           #: 1.0 was refused at the retract's first line, 17:14); farther, something else is wrong: refused as before
+CAMERA_RELIFTS = False    #: re-lifts made by the camera (Runner._camera_relift; the owner, 2 Nov). Off (the user, 5 Nov: "for
+                          #: now ... just reuse the rungs in the task configuration"): 02:40 Open the lid's camera re-lift made
+                          #: its move_to_pre_start 87 degrees from where the arm stood after going back, refused, 0 lines sent.
+                          #: A re-lift is the configuration's ladder: retry_offsets and the pre-planned rungs, else the same lift
 BRIDGE_SPEED_PCT = 40     #: the bridge's MoveJ speed (the owner, 26 Oct: "40 % for that task, because it is a short movement";
                           #: the re-lifts' long bridge keeps the speed slider's)
 
@@ -1330,9 +1334,9 @@ class Runner:
             if state["relifts"] >= budget:
                 return ("abort", f"{label}: still NOT {expect} after {budget} re-lift(s).")
             lifter = "left" if failed.get("arm", "right") == "right" else "right"
-            if state.get("place") is not None:          # every run's (mechanism.run, S2): the camera's (the owner, 2 Nov)
+            if CAMERA_RELIFTS and state.get("place") is not None:   # the camera's re-lifts (2 Nov), off since 5 Nov
                 return self._camera_relift(entries, k, label, expect, budget, lifter, state)
-            i = k                                       # a Runner without a place correction (a tool's): ALIX's ladder
+            i = k                                       # the task configuration's ladder: its retry_offsets, the rungs
             while i > 0 and entries[i - 1].side == lifter:
                 i -= 1
             if i == k:
@@ -1346,17 +1350,26 @@ class Runner:
                     return ("abort", f"{label}: re-lift {n} ({lc.describe_offset(offset)}) has no pre-planned rung in Lite, "
                                      "and Lite cannot re-plan it live (ALIX does that with ROS).")
                 # it starts where the lift before it ended (the rungs chain): one planned for another version of the plan
-                # starts elsewhere, and its stream would be refused at its first line; said here, before anything moves
+                # starts elsewhere, and its stream would be refused at its first line; said here, before anything moves.
+                # A lift the camera moved (place_correct: beyond the 5 mm) ends a little off the plan's: its rung's first
+                # line is bridged as a crept start is, up to BRIDGE_MAX_DEG at 40 %
                 ended = next((x for x in reversed(entries[i:k]) if x.kind == "arm" and x.side == lifter), None)
                 first = next((x for x in block if x.kind == "arm"), None)
                 gap = _gap_deg(first.first(), ended.last()) if ended is not None and first is not None else 0.0
-                if gap > start_tol_deg():
+                if gap > (BRIDGE_MAX_DEG if state.get("place") is not None else start_tol_deg()):
+                    if state.get("place") is not None and getattr(plan, "move", None) is not None:
+                        return ("abort", f"{label}: NOT {expect}, and re-lift {n}'s rung, moved with the commode as the plan was "
+                                         f"(plan_shift), starts {gap:.1f} degrees from where the moved lift ended, more than "
+                                         f"the {BRIDGE_MAX_DEG:g} Lite bridges: a person must look before anything moves.")
                     return ("abort", f"{label}: NOT {expect}, and re-lift {n}'s pre-planned rung starts {gap:.1f} degrees from where "
                                      f"the lift before it ended: it was planned for another version of {plan.title} (the re-lifts "
                                      f"{plan.rung_made(n) or 'of another date'}, the plan {plan.made}). Plan the re-lifts again in "
                                      "ALIX with this plan, then vendor them into Lite.")
-                self.say(f"{label}: NO — re-lift {n}/{budget}: {lc.describe_offset(offset)} on the {lifter} start pose, "
-                         f"the pre-planned rung ({len(block)} entries) replaces the lift; the check runs again", "warn")
+                self.say(f"{label}: NO — re-lift {n}/{budget}: {lc.describe_offset(offset)} on the {lifter} start pose "
+                         f"(the task configuration's retry_offsets), the pre-planned rung ({len(block)} entries) replaces the "
+                         "lift; the check runs again"
+                         + (f" (its first line {gap:.1f} degrees from where the arm is: bridged at {BRIDGE_SPEED_PCT} %)"
+                            if gap > start_tol_deg() else ""), "warn")
             else:
                 block = reverse_block(entries[i:k]) + [Entry(-1, e.index, e.stage, e.kind, e.side, e.joints, e.t, e.q, [],
                                                               rows=e.rows, group=e.group, note=f"re-lift {n}")
