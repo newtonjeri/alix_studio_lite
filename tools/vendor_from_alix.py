@@ -157,6 +157,11 @@ ALIX_FILES = [
     # the status model the robot's bringup uses (models_synthetic_real_v10.yaml; the stain model is for cleaning
     # inspections, not the lid and seat), and the fixture's corrected region meshes its locator and depth state read
     "core/python/alix_perception_core/models/commode_status_synthetic_real_v10.pt",
+    # the wrist camera's eye-in-hand calibration (RealMan's method, ALIX 2026-10-13): the offline solve of a session's
+    # samples.yaml (ROS-free) and the board to print; Lite captures the session itself (server/hand_eye_cal.py, 4 Nov)
+    "tools/perception/compute_hand_eye.py",
+    "tools/perception/make_chessboard.py",
+    "Resource/reports/2026-10-13_hand_eye_calibration/board_12x9_30mm.svg",
     *[f"ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models/corrected/{f}"
       for f in ("regions.yaml", "body_regions.obj", "lid_regions.obj", "seat_regions.obj", "CORRECTIONS.json")],
 ]

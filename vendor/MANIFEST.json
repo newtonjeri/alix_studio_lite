@@ -765,6 +765,13 @@
       "bytes": 510992
     },
     {
+      "dest": "vendor/alix/Resource/reports/2026-10-13_hand_eye_calibration/board_12x9_30mm.svg",
+      "source": "/home/newtonjeri/alix_ws/src/alix/Resource/reports/2026-10-13_hand_eye_calibration/board_12x9_30mm.svg",
+      "origin": "alix",
+      "sha256": "3f61e1ab2483b57026d04de95644049027c2f7b05f88afbf0e7903b994278d18",
+      "bytes": 5204
+    },
+    {
       "dest": "vendor/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "origin": "alix",
@@ -4902,6 +4909,20 @@
       "origin": "alix",
       "sha256": "03165cab6db7a610a722b0581ce803e5530f2e7e30c5b9f015098fa15fac9d7e",
       "bytes": 8553
+    },
+    {
+      "dest": "vendor/alix/tools/perception/compute_hand_eye.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/tools/perception/compute_hand_eye.py",
+      "origin": "alix",
+      "sha256": "06d41c4bec383dc1089cda0907c56ff2efb501f6371f3b43d6cfbf18f4c05f90",
+      "bytes": 11443
+    },
+    {
+      "dest": "vendor/alix/tools/perception/make_chessboard.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/tools/perception/make_chessboard.py",
+      "origin": "alix",
+      "sha256": "8d9b30fdf639b0f1ef17b2dc84f2a5240f7cd6014e7e4beab1fc708d27aeec2a",
+      "bytes": 3355
     },
     {
       "dest": "vendor/alix/tools/plan_min_time.py",

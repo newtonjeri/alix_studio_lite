@@ -824,6 +824,15 @@ html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); c
 #robotControlModal .lite-rc-sim { margin: 12px 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
 #robotControlModal .lite-rc-sim-host { height: 340px; }
 #robotControlModal .lite-rc-sim input[type="range"] { width: 100%; margin-top: 8px; }
+#robotControlModal .lite-cal-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin: 8px 0; }
+#robotControlModal .lite-cal-row .field { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+#robotControlModal .lite-cal-row input { width: 110px; }
+#robotControlModal .lite-cal-views { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+#robotControlModal .lite-cal-views th, #robotControlModal .lite-cal-views td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+#robotControlModal .lite-cal-views tr.next td { font-weight: 600; }
+#robotControlModal .lite-cal-result { margin-top: 10px; display: grid; gap: 4px; }
+#robotControlModal .lite-cal-result .good { color: var(--green); font-weight: 600; }
+#robotControlModal .lite-cal-result .warn { color: var(--orange); font-weight: 600; }
 
 /* ── Responsive: no horizontal scrollbar at any width (the owner, 17 Oct: "the GUI should adapt to any screen
    size, especially the width. There should be no horizontal scrollbars at any width ... standardize this

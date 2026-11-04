@@ -7,6 +7,7 @@
 
 import { installActivity } from './activity.js';
 import { installAdvanced, installAdvancedRuns } from './advanced.js';
+import { installCalibration } from './calibration.js';
 import { installPerf } from './perf.js';
 import { installAlerts } from './alerts.js';
 import { installAuth } from './auth.js';
@@ -69,6 +70,7 @@ installTune();            // tuning with the optimiser, limits, target time (D24
 installRealTest();
 installAdvanced();
 installAdvancedRuns();
+installCalibration();     // the wrist camera's calibration: views planned, each move confirmed (4 Nov)
 installPerf();
 installViewer();          // taught .txt files: upload, check, replay in 3D
 installDataManagement();  // what each arm's controller stores, as RealMan's web page lists it (the owner, 16 Oct)

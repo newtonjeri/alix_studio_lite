@@ -100,6 +100,7 @@ class D435:
         self._error: str | None = None
         self._users = 0                                  # a task, a camera check: open while any of them uses it
         self.device = None                              # name and serial, for the page and the logs
+        self.colour_distortion = None                   # {model, coeffs} of the colour stream, once opened
         self._status = dict(level="none", text="not looked at yet")
         self._status_ready = threading.Event()
         self._status_thread = None
@@ -207,6 +208,11 @@ class D435:
             self._intr = Intrinsics(float(i.fx), float(i.fy), float(i.ppx), float(i.ppy), int(i.width), int(i.height))
             c = profile.get_stream(rs.stream.color).as_video_stream_profile().get_intrinsics()
             self._cintr = Intrinsics(float(c.fx), float(c.fy), float(c.ppx), float(c.ppy), int(c.width), int(c.height))
+            # the colour stream's distortion as the device reports it (the ROS driver's CameraInfo D): the camera
+            # calibration's board pose uses it (hand_eye_cal, 4 Nov); the checks never did
+            coeffs = getattr(c, "coeffs", None)
+            self.colour_distortion = (dict(model=str(getattr(c, "model", "")).split(".")[-1], coeffs=[float(v) for v in coeffs])
+                                      if coeffs is not None else None)
             self.device = dict(name=dev.get_info(rs.camera_info.name), serial=dev.get_info(rs.camera_info.serial_number))
             if s["auto_exposure"]:
                 self._auto_exposure(rs, dev)
