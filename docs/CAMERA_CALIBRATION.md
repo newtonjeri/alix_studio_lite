@@ -62,8 +62,15 @@ Open it from the Operator Journey: **Camera Calibration**, just below Data Manag
 
 The session is kept in `Resources/Calibration/hand_eye_<date>_<time>/`:
 - `samples.yaml` and `images/`: the session in ALIX's own format;
+- `images/NN_depth.npy` and `images/NN_aligned_depth.npz`: each view's depth, as Lite's check records keep it. The
+  first is the native 848 × 480 depth in mm (its intrinsics are in the view's row). The second is the depth aligned
+  to the colour image (`depth_mm`). The solve uses the colour image only: the board's corners. The aligned depth
+  gives each view's `depth_minus_board_mm`, the depth at the board's corners minus their distance from the colour
+  image. That checks the depth against the colour camera with no arm in the chain;
 - `plan.json`: the planned views;
 - `hand_eye_result.yaml`: the result.
+
+The solve runs in a Python process of its own, so it imports OpenCV afresh, whatever the running Lite has loaded.
 
 Commit the folder with the logs. ALIX can re-solve the same session at any time:
 `python3 tools/perception/compute_hand_eye.py --data <folder> [--exclude N ...]`.

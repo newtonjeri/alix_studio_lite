@@ -555,8 +555,8 @@ def wait_still(robot, side: str = "right", job=None) -> dict:
 
 
 def capture(camera, board: dict, out: Path, index: int) -> tuple:
-    """Two colour frames 0.3 s apart, the board found in both and still (ALIX's capture tool): (the second image,
-    its corners, the board's pose in the camera, PnP rms px, the shift px)."""
+    """Two colour frames 0.3 s apart, the board found in both and still (ALIX's capture tool): (the second image, its
+    corners, the shift px, the second shot: its depth is kept with the view)."""
     import cv2
 
     vendor_paths.activate()
@@ -577,13 +577,36 @@ def capture(camera, board: dict, out: Path, index: int) -> tuple:
     shift = float(np.max(np.linalg.norm(c1.reshape(-1, 2) - c2.reshape(-1, 2), axis=1)))
     if shift > STILL_PX:
         raise UserError(f"The board moved {shift:.2f} px between two frames 0.3 s apart (vibration?).", "Take this view again.")
-    return s2.colour, c2, shift
+    return s2.colour, c2, shift, s2
 
 
-def record(session: Session, k: int, v: dict, image, corners, shift: float, q_deg, pole_mm) -> dict:
+def depth_at_board(aligned, corners, T_cam_board, board) -> dict | None:
+    """The depth aligned to the colour image at the board's corners against the corners' distance from the board's
+    pose (PnP on the colour image): the median and spread of depth - PnP, mm. A check of the depth against the colour
+    camera from the same view, independent of the arm. None without an aligned depth or with too few readings."""
+    if aligned is None:
+        return None
+    a = np.asarray(aligned)
+    px = np.round(np.asarray(corners, float).reshape(-1, 2)).astype(int)
+    inside = (px[:, 0] >= 0) & (px[:, 0] < a.shape[1]) & (px[:, 1] >= 0) & (px[:, 1] < a.shape[0])
+    obj = np.c_[board.object_points(), np.ones(len(px))]
+    z = (np.asarray(T_cam_board, float) @ obj.T)[2] * 1000.0
+    d = np.where(inside, a[np.clip(px[:, 1], 0, a.shape[0] - 1), np.clip(px[:, 0], 0, a.shape[1] - 1)], 0).astype(float)
+    ok = inside & (d > 0)
+    if ok.sum() < 10:
+        return None
+    diff = d[ok] - z[ok]
+    return dict(median_mm=round(float(np.median(diff)), 1), spread_mm=round(float(np.percentile(np.abs(diff - np.median(diff)), 90)), 1),
+                corners=int(ok.sum()))
+
+
+def record(session: Session, k: int, v: dict, image, corners, shift: float, q_deg, pole_mm, shot=None) -> dict:
     """A view's row as ALIX's capture tool writes it (the END frame's pose from the joints read at the capture, by the
     URDF's FK; the board's pose in the camera for its tilt and range), its image saved, the session's samples.yaml
-    written at once."""
+    written at once. The shot's depth is kept beside the image (the user, 4 Nov: "why did we not capture the depth
+    image frames as well?"): the native depth (``NN_depth.npy``, z16 mm, its intrinsics in the row) and the depth
+    aligned to the colour image (``NN_aligned_depth.npz``, ``depth_mm``), as Lite's check records keep them. ALIX's
+    solve reads the colour image only; the aligned depth gives each view's depth-against-board check."""
     import cv2
 
     from . import robot_fk
@@ -599,7 +622,8 @@ def record(session: Session, k: int, v: dict, image, corners, shift: float, q_de
     T_cam_board, rms = he.board_pose(corners, K, D, he_board(session.board))
     (session.folder / "images").mkdir(parents=True, exist_ok=True)
     with session.lock:
-        rel = f"images/{len(session.rows):02d}.png"
+        stem = f"images/{len(session.rows):02d}"
+        rel = f"{stem}.png"
         cv2.imwrite(str(session.folder / rel), image)
         row = dict(index=len(session.rows), view=int(k), base=v["base"], offsets_deg=v["offsets_deg"], image=rel,
                    captured=datetime.now().isoformat(timespec="seconds"), T_base_end=T_base_end,
@@ -607,6 +631,18 @@ def record(session: Session, k: int, v: dict, image, corners, shift: float, q_de
                            "R_sliding_plate_joint": float(pole_mm) / 1000.0},
                    board_pose_rms_px=round(float(rms), 3), board_tilt_deg=round(float(he.board_tilt_deg(T_cam_board)), 1),
                    board_range_m=round(float(np.linalg.norm(T_cam_board[:3, 3])), 3), still_px=round(float(shift), 3))
+        if shot is not None and getattr(shot, "depth", None) is not None:
+            np.save(session.folder / f"{stem}_depth.npy", np.asarray(shot.depth))
+            di = shot.intrinsics
+            row["depth"] = f"{stem}_depth.npy"
+            row["depth_intrinsics"] = dict(fx=di.fx, fy=di.fy, cx=di.cx, cy=di.cy, width=di.width, height=di.height,
+                                           unit="mm" if np.asarray(shot.depth).dtype == np.uint16 else "m")
+        if shot is not None and getattr(shot, "aligned", None) is not None:
+            np.savez_compressed(session.folder / f"{stem}_aligned_depth.npz", depth_mm=np.asarray(shot.aligned))
+            row["aligned_depth"] = f"{stem}_aligned_depth.npz"
+            check = depth_at_board(shot.aligned, corners, T_cam_board, he_board(session.board))
+            if check is not None:
+                row["depth_minus_board_mm"] = check
         session.rows.append(row)
         session.write()
     return row
@@ -701,7 +737,7 @@ def run_session(robot, session: Session, mode: str):
                 for attempt in range(BOARD_RETRIES + 1):
                     fb = wait_still(robot, "right", job)
                     try:
-                        image, corners, shift = capture(cam, session.board, session.folder, k)
+                        image, corners, shift, shot = capture(cam, session.board, session.folder, k)
                         break
                     except UserError as exc:
                         if attempt == BOARD_RETRIES:
@@ -717,7 +753,7 @@ def run_session(robot, session: Session, mode: str):
                     continue
                 after = robot.links["right"].read_fresh()
                 q, pole = after.get("joints_deg") or fb.get("joints_deg"), after.get("pole_mm") or fb.get("pole_mm")
-                row = record(session, k, v, image, corners, shift, q, pole)
+                row = record(session, k, v, image, corners, shift, q, pole, shot)
                 note = (f"view {k + 1}: board found, PnP {row['board_pose_rms_px']:.2f} px, tilted {row['board_tilt_deg']:.0f} deg, "
                         f"{row['board_range_m']:.2f} m away")
                 session.notes.append(note)
@@ -731,7 +767,11 @@ def run_session(robot, session: Session, mode: str):
                         said=f"Hardware sim: the controller ran all {len(reached)} MoveJs and the way back to rest; nothing moved.")
         out = dict(mode="real", taken=len(session.rows), missed=list(session.missed), views=n)
         if len(session.rows) >= 3:
-            out["result"] = solve(session)
+            try:
+                out["result"] = solve(session)
+            except UserError as exc:          # the views stay taken: Solve again re-solves them
+                out["solve_error"] = str(exc)
+                job.log(f"not solved: {exc}", "warn")
         return out
 
     return robot._start("move", f"RIGHT camera calibration: {len(todo)} view(s) at {CAL_SPEED_PCT} %", work, "right", mode)
@@ -777,16 +817,62 @@ def tour_md(session: Session, rating_deg_s) -> np.ndarray:
     return np.concatenate(parts, axis=0)
 
 
+SOLVE_TIMEOUT_S = 600
+
+# ALIX's solve in a Python of its own: the lab's Lite of 4 Nov evening had found the board in every image, then
+# its solve met an OpenCV without calibrateHandEye. The running Lite had imported OpenCV and torch on several threads
+# at once (that start's plan check met torch half imported). A fresh process imports them alone.
+_SOLVE = r"""
+import importlib.util, json, sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+from alix_studio_lite import vendor_paths
+vendor_paths.activate()
+try:
+    import cv2
+except ImportError:
+    print("@@SETUP@@OpenCV is not installed in this Python"); sys.exit(0)
+if not hasattr(cv2, "calibrateHandEye"):
+    print(f"@@SETUP@@this Python's OpenCV ({getattr(cv2, '__version__', '?')}, {getattr(cv2, '__file__', '?')}) has no "
+          "calibrateHandEye"); sys.exit(0)
+spec = importlib.util.spec_from_file_location("alix_compute_hand_eye", vendor_paths.ALIX / "tools/perception/compute_hand_eye.py")
+che = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = che
+spec.loader.exec_module(che)
+try:
+    res = che.run(Path(sys.argv[2]), quiet=True)
+except SystemExit as exc:
+    print(f"@@FAILED@@{exc}"); sys.exit(0)
+print("@@RESULT@@" + json.dumps(che.plain(res)))
+"""
+
+
 def solve(session: Session) -> dict:
-    """ALIX's offline solve of the session (compute_hand_eye.run): writes hand_eye_result.yaml beside the samples."""
+    """ALIX's offline solve of the session (compute_hand_eye.run), in a Python process of its own (``_SOLVE``): writes
+    hand_eye_result.yaml beside the samples."""
+    import subprocess
+    import sys
+
     if len(session.rows) < 3:
         raise UserError(f"Only {len(session.rows)} view(s) taken; RealMan's method asks for 15 to 20.", "Take more views.")
-    need_opencv("Solving the calibration")
-    che = _compute()
+    src = Path(__file__).resolve().parents[2]
     try:
-        res = che.run(session.folder, quiet=True)
-    except SystemExit as exc:
-        raise UserError(f"The calibration could not be solved: {exc}.") from None
+        done = subprocess.run([sys.executable, "-c", _SOLVE, str(src), str(session.folder)], capture_output=True,
+                              text=True, timeout=SOLVE_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        raise UserError(f"The calibration was not solved within {SOLVE_TIMEOUT_S} s.", "Press Solve again.") from None
+    said = {k: line[len(k):] for line in done.stdout.splitlines() for k in ("@@RESULT@@", "@@SETUP@@", "@@FAILED@@")
+            if line.startswith(k)}
+    if "@@SETUP@@" in said:
+        raise UserError(f"Solving the calibration needs OpenCV's calibrateHandEye: {said['@@SETUP@@']}.",
+                        "Run python3 tools/setup_lite.py (its optional packages bring OpenCV), then press Solve again; "
+                        "the views taken are kept.", code="setup")
+    if "@@FAILED@@" in said:
+        raise UserError(f"The calibration could not be solved: {said['@@FAILED@@']}.")
+    if "@@RESULT@@" not in said:
+        tail = (done.stderr or done.stdout or "").strip().splitlines()[-1:] or ["no output"]
+        raise UserError(f"The calibration's solve stopped: {tail[0][:300]}.", "Press Solve again; the views taken are kept.")
+    res = json.loads(said["@@RESULT@@"])
     session.result = res
     return summary(res)
 

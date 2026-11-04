@@ -78,7 +78,7 @@ def _texture(board, sq=40):
     return tex, np.array([[m, 0, -2 * sq * m], [0, m, -2 * sq * m], [0, 0, 1.0]])
 
 
-def test_alix_solves_a_session_lite_writes(lab_plan, tmp_path):
+def test_alix_solves_a_session_lite_writes(lab_plan, tmp_path, monkeypatch):
     cv2 = pytest.importorskip("cv2")                               # the capture and the solve read the board with OpenCV
 
     from alix_perception_core import hand_eye as he
@@ -107,6 +107,8 @@ def test_alix_solves_a_session_lite_writes(lab_plan, tmp_path):
         assert corners is not None, f"view {k} ({v['base']}): the rendered board was not found"
         hc.record(s, k, v, img, corners, 0.0, v["q_deg"], hc.POLE_MM)
     assert (s.folder / "samples.yaml").exists() and len(list((s.folder / "images").glob("*.png"))) == 15
+    # the lab, 4 Nov evening: Lite's own OpenCV had no calibrateHandEye; the solve runs in a Python of its own
+    monkeypatch.setattr(he, "cv2", SimpleNamespace(CALIB_HAND_EYE_TSAI=cv2.CALIB_HAND_EYE_TSAI))
     out = hc.solve(s)
     assert out["accepted"], out
     T = np.asarray(s.result["runs"]["factory"]["refined"]["T_end_cam"], float)
@@ -258,13 +260,23 @@ def test_one_run_takes_every_view_at_40_percent_and_solves(lab_plan, monkeypatch
             L = hc.links_at(robot.links["right"].q, robot.links["right"].pole, None)
             T_cam_board = np.linalg.inv(L[hc.END_FRAME] @ T_true) @ T_base_board
             img = cv2.warpPerspective(tex, K @ T_cam_board[:3, [0, 1, 3]] @ A, (hc.IMAGE_W, hc.IMAGE_H), borderValue=170)
-            return SimpleNamespace(colour=cv2.cvtColor(img, cv2.COLOR_GRAY2BGR))
+            n, t = T_cam_board[:3, 2], T_cam_board[:3, 3]       # the board's plane: its depth along each pixel's ray
+            v, u = np.mgrid[0:hc.IMAGE_H, 0:hc.IMAGE_W]
+            rays = np.stack([(u - K[0, 2]) / K[0, 0], (v - K[1, 2]) / K[1, 1], np.ones(u.shape)], axis=-1)
+            aligned = np.round(1000.0 * (n @ t) / (rays @ n)).astype(np.uint16)
+            return SimpleNamespace(colour=cv2.cvtColor(img, cv2.COLOR_GRAY2BGR), aligned=aligned,
+                                   depth=np.zeros((480, 848), np.uint16), intrinsics=Intrinsics(432.7, 432.7, 424.0, 240.0, 848, 480))
 
     monkeypatch.setattr(hc, "camera_of", lambda robot: Cam())
     s = hc.Session(tmp_path / "run", planned, room)
     job = hc.run_session(robot, s, "real")
     out = job.result
     assert out["taken"] == 15 and not out["missed"] and out["result"]["accepted"], out
+    for r in s.rows:                           # each view's depth kept beside its image (the user, 4 Nov)
+        assert (s.folder / r["depth"]).exists() and (s.folder / r["aligned_depth"]).exists()
+        assert r["depth_intrinsics"]["width"] == 848 and r["depth_intrinsics"]["unit"] == "mm"
+        assert abs(r["depth_minus_board_mm"]["median_mm"]) <= 1.0     # the rendered depth is the board's own plane
+    assert np.load(s.folder / s.rows[0]["aligned_depth"])["depth_mm"].shape == (hc.IMAGE_H, hc.IMAGE_W)
     assert job.title.endswith("at 40 %")
     assert [sp for _, sp in arm.moves] == [40] * 16                          # 15 views and the way back, all at 40 %
     assert arm.moves[-1][0] == [round(v * 1000) for v in planned["ends_at"]] and set(arm.modes) == {"REAL"}

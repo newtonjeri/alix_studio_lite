@@ -294,6 +294,29 @@ def _set_pin(data: Path, role: str) -> int:
     return 0
 
 
+def _import_heavy() -> None:
+    """The wrist camera's packages imported once, here, before any of Lite's threads start (the arms' links, the status
+    log, the perception warm-up). On 4 Nov the lab's start imported torch on the warm-up thread while the start's plan
+    check ran the arms' kinematics. SciPy's rotations read ``torch.Tensor`` as soon as torch is among the loaded
+    modules, and they met it half imported: "partially initialized module 'torch' has no attribute 'Tensor'". The
+    same evening the camera calibration's solve met an OpenCV without ``calibrateHandEye``. Each package that is not
+    installed is skipped; the perception says so at its first use."""
+    import importlib
+    import time
+
+    t0 = time.monotonic()
+    got = []
+    for name in ("numpy", "scipy.spatial.transform", "cv2", "torch", "ultralytics"):
+        try:
+            mod = importlib.import_module(name)
+        except Exception:                                                           # noqa: BLE001 - optional packages
+            continue
+        if name in ("cv2", "torch"):
+            got.append(f"{'OpenCV' if name == 'cv2' else 'torch'} {getattr(mod, '__version__', '?')}")
+    if got:
+        print(f"Perception:  {', '.join(got)} imported ({time.monotonic() - t0:.1f} s)", flush=True)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="alix_studio_lite.server", description="Run ALIX Studio Lite.")
     ap.add_argument("-p", "--port", type=int, default=DEFAULT_PORT, help=f"default {DEFAULT_PORT}")
@@ -351,6 +374,8 @@ def main(argv=None) -> int:
 
         alix_emulator.install()
     project = open_project(a.data, fixture)
+    if a.robot == "realman":
+        _import_heavy()
     try:
         from .. import vendor_paths as _vp
 
