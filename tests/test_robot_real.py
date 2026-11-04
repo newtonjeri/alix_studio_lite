@@ -808,3 +808,24 @@ def test_a_runner_call_forgets_the_hand_and_the_pole_only_when_its_steps_moved_t
     lines["v"], lines["rc"] = ["WORKFLOW STEP START 1/1: PROGRAM", "** WORKFLOW FAILED: step 1/1 (program) returned 1"], 1
     assert not arm.run_workflow([{"type": "program", "id": 71}], 15, 50)["ok"]
     assert arm._hand_last is None and arm._hand_port is None and arm._pole_last is None         # not completed: everything forgotten
+
+
+def test_a_third_generation_controller_is_never_asked_its_tracks():
+    """RealMan's SDK keeps its global lock after a 4th-generation-only call answers -4 on a 3rd-generation controller;
+    every write-lock call in that process (the STOP's end among them) then hangs: the lab, 5 Nov, Ctrl+C after Data
+    Management (robot_real._fourth_gen)."""
+    from types import SimpleNamespace
+
+    from alix_studio_lite.server import robot_real
+
+    def asked(*_a):
+        raise AssertionError("the tracks list was asked of a 3rd-generation controller")
+
+    third = SimpleNamespace(robot=SimpleNamespace(robot_controller_version=3, rm_get_trajectory_file_list=asked))
+    t = robot_real.RealArm._tracks(third)
+    assert not t["available"] and "4th-generation" in t["why"]
+    unknown = SimpleNamespace(robot=SimpleNamespace(rm_get_trajectory_file_list=asked))          # an SDK that does not say
+    assert not robot_real.RealArm._tracks(unknown)["available"]
+    fourth = SimpleNamespace(robot=SimpleNamespace(robot_controller_version=4, rm_get_trajectory_file_list=lambda *_a: (
+        0, {"tra_list": [dict(name="t1", point_num=5, create_time="x")], "total_size": 1})))
+    assert robot_real.RealArm._tracks(fourth) == dict(available=True, list=[dict(name="t1", points=5, created="x")])

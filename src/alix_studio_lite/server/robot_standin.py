@@ -218,6 +218,7 @@ class StandInRobot:
         # a link whose call into the SDK never comes back (the lab, 19 Oct): given up and made again (_recover)
         self._recovering: set = set()                   # sides being connected again
         self._stop_wanted: set = set()                  # STOP pressed while a side's connection was stuck: sent through the new one
+        self.closing = False                            # Lite is quitting (server._stop_arms): a stuck link is given up, never made again
         if link:
             threading.Thread(target=self._watch_links, name="lite-link-watch", daemon=True).start()
 
@@ -779,7 +780,8 @@ class StandInRobot:
             if link.stop_in_progress():                 # the call that never came back is a STOP's own (STOP_STUCK_S): the STOP
                 self._stop_wanted.add(side)             # is sent again through the new connection
             self._give_up(side, link, stuck)
-            self._reconnect(side)
+            if not self.closing:                        # quitting: a new connection would open as the server goes (5 Nov)
+                self._reconnect(side)
         finally:
             self._recovering.discard(side)
 

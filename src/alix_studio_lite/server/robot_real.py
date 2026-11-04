@@ -128,6 +128,21 @@ def _runner():
         return _RUNNER
 
 
+def _fourth_gen(robot) -> bool:
+    """A controller the SDK reports 4th generation (its wrapper's ``robot_controller_version``, read at the connect).
+
+    RealMan's C API (the vendored libapi_c.so 1.1.6) answers each call it marks "4th-generation controllers only" with
+    -4 on a 3rd-generation controller, the lab's two, WITHOUT releasing the library's global read lock
+    (rm_get_trajectory_file_list: the ``je`` at 0x4eacf skips ``rm_rdlock_unlock`` at 0x4ead5; all 32 such calls do the
+    same). From then on every call in that process that takes the library's write lock waits forever: rm_set_arm_stop
+    once the controller has answered it (rm_set_move_block_state), rm_set_arm_slow_stop, rm_set_program_id_run, a
+    non-blocking MoveJ, rm_get_current_work_frame and _tool_frame, rm_get_realtime_push, rm_create_robot_arm and
+    rm_delete_robot_arm. The lab, 20 Oct - 5 Nov: each of the 32 such hangs came after Data Management's "controller
+    data" read (its tracks list) on that arm, in that arm's process; on 30 Oct and 5 Nov Ctrl+C after it lost the exit
+    STOP. So such a call is made only when this says 4th generation."""
+    return getattr(robot, "robot_controller_version", None) == 4
+
+
 class _ThreadLines(io.TextIOBase):
     """sys.stdout, with the lines one thread prints sent to its sink (the hardware log of the arm
     whose command prints them); every other thread's output goes to the terminal as before."""
@@ -1156,7 +1171,11 @@ class RealArm:
 
     def _tracks(self) -> dict:
         """The drag-teaching tracks the controller keeps, a page of 10 at a time (a long page overflowed the
-        SDK's buffer on the program list: alix_dispatch.track)."""
+        SDK's buffer on the program list: alix_dispatch.track). Never asked of a 3rd-generation controller: the SDK
+        keeps its lock after answering -4 there, and the arm's STOP never returns after that (_fourth_gen)."""
+        if not _fourth_gen(self.robot):
+            return dict(available=False, list=[], ret=-4, why="RealMan's API reads the tracks list on 4th-generation "
+                        "controllers only; this one is 3rd generation. The arm's own web page lists them.")
         out = []
         for page in range(1, 101):
             try:
@@ -1598,7 +1617,12 @@ class RealArm:
 
     def delete_track(self, name: str) -> dict:
         """A drag-teaching track deleted (``rm_delete_trajectory_file``: 4th-generation controllers only), then the
-        tracks list read again: gone."""
+        tracks list read again: gone. Never asked of a 3rd-generation controller (_fourth_gen)."""
+        if not _fourth_gen(self.robot):
+            self._hw("delete track", args=dict(name=name), ret=-4, ok=False,
+                     text="not asked: a 3rd-generation controller (the SDK keeps its lock after -4 there)")
+            raise UserError("RealMan's API deletes tracks on 4th-generation controllers only; this one is 3rd generation.",
+                            "Delete it on the arm's own web page.")
         t0, listed = time.monotonic(), None
         with self.link.busy(f"deleting track {name}"):
             rc = self._sdk("rm_delete_trajectory_file")(name)

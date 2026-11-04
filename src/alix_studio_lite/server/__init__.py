@@ -497,6 +497,7 @@ def _stop_arms(app) -> None:
     """Lite's exit, first: STOP to every arm, through its connection's process (robot_process: the workers leave
     Ctrl+C to the server). An arm whose controller did not confirm it is said in the terminal too: the page that
     shows that alert is closing."""
+    app.robot.closing = True                    # a link given up from here is not connected again (robot_standin._recover)
     out = app.robot.stop("all")
     for r in (out.get("controllers") or {}).values():
         if not r.get("ok"):
