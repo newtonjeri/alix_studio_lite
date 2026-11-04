@@ -11983,3 +11983,191 @@
 20:18:03.167 [activity] operator:fcb804 page: SYSTEM · Session active
 20:18:14.360 [LEFT] restore global speed {"pct": 50} ret=0
 20:18:14.382 [RIGHT] restore global speed {"pct": 50} ret=0
+20:25:48.823 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+20:25:48.882 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+20:25:48.883 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+20:25:51.141 [activity] - page: NAVIGATION · Open screen
+20:25:51.142 [activity] - page: SYSTEM · ASL frontend initialized
+20:25:52.397 [RIGHT] camera · perception warmed up in 4.9 s: its core built, the colour model loaded
+20:26:05.274 [activity] - POST /api/auth/login
+20:26:06.244 [activity] operator:d7853f page: AUTH · Operator login
+20:26:06.244 [activity] operator:d7853f page: NAVIGATION · Open screen
+20:26:06.245 [activity] operator:d7853f page: AUTH · Setting changed
+20:26:07.664 [activity] operator:d7853f page: PROJECT · Button action
+20:26:07.691 [activity] operator:d7853f page: NAVIGATION · Task loaded
+20:26:07.715 [activity] operator:d7853f page: SETUP · Arm selected
+20:26:07.725 [activity] operator:d7853f page: NAVIGATION · Teaching stage changed
+20:26:07.731 [activity] operator:d7853f page: SETUP · Arm selected
+20:26:07.735 [activity] operator:d7853f page: NAVIGATION · Open screen
+20:26:11.583 [activity] operator:d7853f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+20:26:11.600 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:11.737 [activity] operator:d7853f page: SYSTEM · 3D device
+20:26:11.738 [activity] operator:d7853f page: UI · Button action
+20:26:11.856 [LEFT] read global speed ret=0 · not reported
+20:26:11.856 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+20:26:11.861 [LEFT] read drag sensitivity ret=0 · 100 %
+20:26:11.861 [activity] operator:d7853f POST /api/robots/left/connect
+20:26:12.336 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:12.424 [RIGHT] read global speed ret=0 · not reported
+20:26:12.424 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+20:26:12.431 [RIGHT] read drag sensitivity ret=0 · 100 %
+20:26:12.431 [activity] operator:d7853f POST /api/robots/right/connect
+20:26:12.533 [RIGHT] program list · 25 programs
+20:26:12.566 [RIGHT] global points · 14 point(s)
+20:26:12.688 [activity] operator:d7853f page: NAVIGATION · Scrolled view
+20:26:12.725 [LEFT] program list · 32 programs
+20:26:12.766 [LEFT] global points · 18 point(s)
+20:26:16.944 [activity] operator:d7853f POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+20:26:17.698 [LEFT] run mode REAL
+20:26:17.743 [activity] operator:d7853f page: ROBOT · Button action
+20:26:17.743 [activity] operator:d7853f page: ROBOT · Button action
+20:26:17.773 [RIGHT] run mode REAL
+20:26:17.774 [activity] operator:d7853f POST /api/robots/mode
+20:26:17.954 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:18.674 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:23.799 [activity] operator:d7853f page: UI · Button action
+20:26:24.026 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:36.085 [activity] operator:d7853f page: SYSTEM · Session active
+20:26:37.751 [activity] operator:d7853f page: UI · Button action
+20:26:37.961 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:42.698 [activity] operator:d7853f page: NAVIGATION · Scrolled view
+20:26:45.711 [activity] operator:d7853f page: UI · Button action
+20:26:45.931 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:46.040 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+20:26:46.567 [activity] operator:d7853f page: UI · Button action
+20:26:46.567 [activity] operator:d7853f page: NAVIGATION · Scrolled view
+20:26:46.568 [activity] operator:d7853f page: UI · Button action
+20:26:47.278 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+20:26:47.372 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:47.807 [activity] operator:d7853f page: UI · Button action
+20:26:48.045 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:49.115 [activity] operator:d7853f page: SEQUENCE · Button action
+20:26:49.115 [activity] operator:d7853f page: UI · Button action
+20:26:49.755 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:51.163 [activity] operator:d7853f page: NAVIGATION · Scrolled view
+20:26:51.163 [activity] operator:d7853f page: UI · Button action
+20:26:51.193 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+20:26:51.194 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+20:26:51.247 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:51.944 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:53.716 [LEFT] program list · 32 programs
+20:26:53.843 [RIGHT] program list · 25 programs
+20:26:53.865 [LEFT] global points · 18 point(s)
+20:26:53.899 [RIGHT] global points · 14 point(s)
+20:26:54.092 [activity] operator:d7853f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT programs Lite sent, the RIGHT global points (as read from the controller), ALIX's plan of Close the lid and Open the lid and Open the seat (revised since).
+20:26:54.287 [activity] operator:d7853f page: UI · Button action
+20:26:54.499 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:55.342 [LEFT] program list · 32 programs
+20:26:55.628 [RIGHT] program list · 25 programs
+20:26:55.699 [LEFT] global points · 18 point(s)
+20:26:55.725 [RIGHT] global points · 14 point(s)
+20:26:55.744 [activity] operator:d7853f page: ROBOT · Button action
+20:26:55.955 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:56.053 [LEFT] program list · 32 programs
+20:26:56.151 [RIGHT] program list · 25 programs
+20:26:56.262 [activity] operator:d7853f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+20:26:57.290 [LEFT] program list · 32 programs
+20:26:57.458 [RIGHT] program list · 25 programs
+20:26:57.481 [LEFT] global points · 18 point(s)
+20:26:57.502 [RIGHT] global points · 14 point(s)
+20:26:57.746 [LEFT] program list · 32 programs
+20:26:57.821 [RIGHT] program list · 25 programs
+20:26:57.932 [activity] operator:d7853f page: ROBOT · Button action
+20:26:58.227 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:26:58.249 [activity] operator:d7853f POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+20:26:58.363 [LEFT] run mode REAL
+20:26:58.382 [RIGHT] run mode REAL
+20:26:58.409 [LEFT] clear warning · clean
+20:26:58.430 [RIGHT] clear warning · clean
+20:26:58.615 [-] mechanism · verify_lid_closed: not asked, the sequence's own order says lid_closed (the owner, 27 Oct)
+20:26:58.616 [-] mechanism · PLAN 1/1: Open the lid (lid_open_toppra.json, 19 entries, 12.9 s of motion)
+20:26:58.617 [-] mechanism · Open the lid: 2 stretch(es) the two arms can run at once: LEFT move_to_half_pole_length + hand_grasp || RIGHT move_to_inspect + move_to_inspect_pole_length + hand_grasp; LEFT move_to_rest || RIGHT hand_grasp + move_to_inspect (their clearance is checked first)
+20:26:59.321 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-04/canfd/20261104_202658_RIGHT_lid_open.frames.jsonl (target 192.168.1.239:8090, cycle 5 ms, all sections on)
+20:26:59.331 [RIGHT] canfd feed {"label": "RIGHT_lid_open", "capture": "20261104_202658_RIGHT_lid_open.frames.jsonl"} · on, kept for the run's moves
+20:26:59.346 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-04/canfd/20261104_202658_LEFT_lid_open.frames.jsonl (target 192.168.1.239:8089, cycle 5 ms, all sections on)
+20:26:59.347 [LEFT] canfd feed {"label": "LEFT_lid_open", "capture": "20261104_202658_LEFT_lid_open.frames.jsonl"} · on, kept for the run's moves
+20:27:00.549 [LEFT] pole and hand {"mm": 150.1, "hand": [516, 516, 516, 516, 133, 944]} (1.925 s) · pole 200.0 -> 151.0 mm in 1.748 s, the hand moving meanwhile; hand [513, 512, 511, 514, 535, 932]
+20:27:00.670 [RIGHT] camera · camera open: Intel RealSense D435 425122070189, depth 848x480 (fx 432.7, scale 1 mm), colour 1280x720 (fx 904.5); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+20:27:01.062 [RIGHT] pole and hand {"mm": 150.1, "hand": [1000, 1000, 1000, 1000, 1000, 1000]} (2.432 s) · pole 250.0 -> 151.0 mm in 2.264 s, the hand moving meanwhile; hand [1000, 996, 998, 998, 992, 981]
+20:27:05.230 [-] mechanism · MoveJs to Open the lid's start one after the other: the paths would meet: wall (1 event(s))
+20:27:05.276 [RIGHT] move to pose {"deg": [-0.0, -81.99, -26.0, 97.99, 6.0, 62.0, 69.0], "speed": 60, "restore_speed": 50} · already there: 0.00 deg away (within 0.5), nothing sent
+20:27:05.278 [-] mechanism · RIGHT: at Open the lid's start
+20:27:05.350 [LEFT] alix · rest: movej to the plan's caller at speed 60 of a 100 % global ratio
+20:27:06.089 [activity] operator:d7853f page: SYSTEM · Session active
+20:27:06.556 [LEFT] alix · global speed restored to 50 (ret=0)
+20:27:06.563 [LEFT] move to pose {"deg": [-0.0, -81.99, 26.01, 97.99, -6.0, 61.99, 111.0], "speed": 60, "restore_speed": 50} · gap 0.23300001907348644 deg
+20:27:06.583 [-] mechanism · LEFT: at Open the lid's start
+20:27:06.587 [-] mechanism · both arms at once: LEFT move_to_half_pole_length + hand_grasp || RIGHT move_to_inspect + move_to_inspect_pole_length + hand_grasp (never within 50 mm over 2.0 s, one arm up to 0.6 s late or 0.3 s early)
+20:27:06.592 [LEFT] alix · pole: at 151 mm as Lite last confirmed it, the 150 mm asked (within 5 mm): nothing sent, nothing read
+20:27:06.594 [LEFT] pole move {"mm": 150.087, "speed_pct": 100} (0.000 s) · final 0.151 m, verified by no_op; nothing sent, nothing read: where Lite left it
+20:27:06.615 [LEFT] hand open (0.000 s) · end port in modbus mode at SPEED_SET 1000 already: nothing sent
+20:27:06.619 [LEFT] hand move {"counts": [516, 516, 516, 516, 133, 944], "speed_set": null} (0.000 s) · already commanded to these counts and settled at [513, 512, 511, 514, 535, 932]: nothing sent, nothing read
+20:27:06.641 [RIGHT] alix · CANFD: 169 lines at 5.0000 ms/line, per_joint rate gate, peak 180.0 deg/s on J7 = 0.800 of its 225; start gap must be <= 0.720 deg
+20:27:06.652 [RIGHT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+20:27:07.639 [RIGHT] alix · global speed restored to 50 (ret=0)
+20:27:07.645 [RIGHT] alix · transit 0.00 s (movej + dwell) + replay 0.84 s
+20:27:07.645 [RIGHT] alix · stream 0.84 s at the host's 5.000 ms period — the player's advisory band [0.9239999999999999, 0.9408] s does not apply to a host-timed stream; worst send lateness 0.15 ms
+20:27:07.646 [RIGHT] canfd stream {"label": "RIGHT arm move_to_inspect", "lines": 169, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": 60, "capture": "20261104_202658_RIGHT_lid_open.frames.jsonl", "ratio_held": false, "t_mono": [19541.127, 19542.14], "settle": null} ret=host_timed (1.042 s) · 169/169 lines, its end waited for later
+20:27:07.646 [-] mechanism · RIGHT arm move_to_inspect: 169/169 lines in 0.84 s
+20:27:07.657 [RIGHT] canfd settle {"label": "RIGHT arm move_to_inspect", "settle": {"waited_s": 0.01, "at_rest": true, "gap_deg": 0.221, "peak_deg_s": 0.81, "by": "feed"}} (0.010 s) · end 10 ms
+20:27:07.657 [-] mechanism · RIGHT arm move_to_inspect: end 10 ms
+20:27:07.846 [RIGHT] alix · pole: at 151 mm as Lite last confirmed it, the 150 mm asked (within 5 mm): nothing sent, nothing read
+20:27:07.846 [RIGHT] pole move {"mm": 150.066, "speed_pct": 100} (0.000 s) · final 0.151 m, verified by no_op; nothing sent, nothing read: where Lite left it
+20:27:07.847 [RIGHT] hand open (0.000 s) · end port in modbus mode at SPEED_SET 1000 already: nothing sent
+20:27:07.848 [RIGHT] alix · hand: ANGLE_SET [33, 33, 33, 33, 133, 944] (from [1000, 996, 998, 998, 992, 981]; law 0.48 s)
+20:27:08.612 [RIGHT] alix · hand: settled at [403, 331, 327, 382, 231, 929] after 0.69 s (per-channel travel [627, 665, 671, 641, 761, 53])
+20:27:08.613 [RIGHT] alix · ** hand: settled without arriving — worst channel 1 is 370 counts short (target 33, readback 403)
+20:27:08.613 [RIGHT] hand move {"counts": [33, 33, 33, 33, 133, 944], "speed_set": [1000, 1000, 1000, 1000, 1000, 1000]} ret=0 (0.689 s) · read back [403, 331, 327, 382, 231, 929] (settled short of the target: stopped on force)
+20:27:11.583 [-] mechanism · Open the lid: each arm's working stretch moved with the commode (x +0.0, y -11.9, z -12.4 mm, turned +0.00 deg), made now in 0.9 s: the hands within 0.7 mm of the plan's, moved
+20:27:11.583 [-] mechanism · PLACE Open the lid: the camera reads the commode x -4.0, y -11.9, z -12.4 mm, turned -1.07 deg from where the reference look (the lab's looks of 2026-10-24 to 2026-10-26, the median of 116) saw it; the lid's front edge is behind the left glove: from this look the commode's place scatters 5 to 8 mm along x and its turn 1.2 deg (interquartile; the lid open from the same pose 0.4: the lab's checks, 24-31 Oct; 3 Nov it read +3.5 and +4.9 deg where the seat's look read -0.3 and -0.1): its x and yaw left at the UGV's placement's (x +0.0, y -11.9, z -12.4 mm, turned +0.00 deg): the hands 17.2 mm from where the UGV's placement puts them, beyond the 5 mm: the camera's value is applied, the plan made again from it
+20:27:11.583 [-] mechanism · Open the lid: the height the camera reads (-12.4 mm) is not run: the left pole had moved already
+20:27:11.585 [-] mechanism · Open the lid: 2 stretch(es) the two arms can run at once: LEFT move_to_half_pole_length + hand_grasp || RIGHT move_to_inspect + move_to_inspect_pole_length + hand_grasp; LEFT move_to_rest || RIGHT hand_grasp + move_to_inspect (their clearance is checked first)
+20:27:11.615 [LEFT] alix · CANFD: 589 lines at 5.0000 ms/line, per_joint rate gate, peak 123.8 deg/s on J6 = 0.550 of its 225; start gap must be <= 0.720 deg
+20:27:11.615 [LEFT] alix · ** CANFD RATE GATE = per_joint: the vendor's documented flat 180 deg/s is NOT being enforced. 0 joint(s) peak above it. The documented consequence is NON-RESPONSE (no error code, no clamp), so watch commanded-vs-actual and error 4103, not a return value.
+20:27:14.656 [LEFT] alix · transit 0.00 s (movej + dwell) + replay 2.94 s
+20:27:14.656 [LEFT] alix · stream 2.94 s at the host's 5.000 ms period — the player's advisory band [3.234, 3.2928] s does not apply to a host-timed stream; worst send lateness 0.11 ms
+20:27:14.657 [LEFT] canfd stream {"label": "LEFT arm move_to_pre_start + move_to_start + execute_path", "lines": 589, "period_ms": 5.0, "rate_gate": "per_joint", "bridge_speed": 60, "capture": "20261104_202658_LEFT_lid_open.frames.jsonl", "ratio_held": true, "t_mono": [19546.095, 19549.164], "settle": null} ret=host_timed (3.068 s) · 589/589 lines, its end waited for later
+20:27:14.657 [-] mechanism · LEFT arm move_to_pre_start + move_to_start + execute_path: 589/589 lines in 2.94 s (0.24 s of stops at its junctions taken out)
+20:27:15.450 [LEFT] canfd settle {"label": "LEFT arm move_to_pre_start + move_to_start + execute_path", "settle": {"waited_s": 0.782, "at_rest": true, "gap_deg": 0.476, "peak_deg_s": 7.97, "by": "feed"}} (0.782 s) · end 782 ms
+20:27:15.451 [-] mechanism · LEFT arm move_to_pre_start + move_to_start + execute_path: end 782 ms
+20:27:15.451 [-] mechanism · settle_before_check 0.5 s: the arm's own settle took 0.78 s of it, nothing more to wait
+20:27:15.859 [RIGHT] camera · gap_check: parts (shadow): the lid cannot be judged (lid_closed and lid_away explain the frame alike: lid_closed -656 vs lid_away -739, margin +0.11; best: lid 0 deg, seat 0 deg (lid) over 12639 pixels at 1/3, the fixture -5 mm from its registration) -> cannot judge
+20:27:15.984 [RIGHT] camera · gap_check: lid the fixture fit says lid_closed (lid_closed 54 vs lid_away -462, margin +1.12; best: lid 0 deg, seat 0 deg (lid) over 12639 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain
+20:27:15.985 [RIGHT] camera · gap_check: lid surface median z 0.636 m in base_link (closed top 0.450, rise 186 mm vs 50 mm bar); 96 % of the ROI valid, median range 0.269 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_closed (lid_closed 54 vs lid_away -462, margin +1.12; best: lid 0 deg, seat 0 deg (lid) over 12639 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain -> uncertain
+20:27:16.161 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-04/checks/20261104_202715_993_gap_check_lid_lifted_uncertain.json
+20:27:16.221 [RIGHT] camera · gap_check: parts (shadow): the lid cannot be judged (lid_closed and lid_away explain the frame alike: lid_closed -776 vs lid_away -788, margin +0.02; best: lid 0 deg, seat 0 deg (lid) over 12624 pixels at 1/3, the fixture -5 mm from its registration) -> cannot judge
+20:27:16.320 [RIGHT] camera · gap_check: lid the fixture fit says lid_closed (lid_closed -163 vs lid_away -573, margin +0.72; best: lid 0 deg, seat 0 deg (lid) over 12624 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain
+20:27:16.320 [RIGHT] camera · gap_check: lid surface median z 0.637 m in base_link (closed top 0.450, rise 187 mm vs 50 mm bar); 96 % of the ROI valid, median range 0.267 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_closed (lid_closed -163 vs lid_away -573, margin +0.72; best: lid 0 deg, seat 0 deg (lid) over 12624 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain -> uncertain
+20:27:16.487 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-04/checks/20261104_202716_320_gap_check_lid_lifted_uncertain.json
+20:27:16.530 [RIGHT] camera · gap_check: parts (shadow): the lid cannot be judged (lid_closed and lid_away explain the frame alike: lid_closed -764 vs lid_away -812, margin +0.06; best: lid 0 deg, seat 0 deg (lid) over 12641 pixels at 1/3, the fixture -5 mm from its registration) -> cannot judge
+20:27:16.658 [RIGHT] camera · gap_check: lid the fixture fit says lid_closed (lid_closed -90 vs lid_away -587, margin +0.85; best: lid 0 deg, seat 0 deg (lid) over 12641 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain
+20:27:16.658 [RIGHT] camera · gap_check: lid surface median z 0.637 m in base_link (closed top 0.450, rise 187 mm vs 50 mm bar); 96 % of the ROI valid, median range 0.268 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_closed (lid_closed -90 vs lid_away -587, margin +0.85; best: lid 0 deg, seat 0 deg (lid) over 12641 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain -> uncertain
+20:27:16.821 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-04/checks/20261104_202716_659_gap_check_lid_lifted_uncertain.json
+20:27:16.865 [RIGHT] camera · gap_check: parts (shadow): the lid cannot be judged (lid_away and lid_closed explain the frame alike: lid_away -718 vs lid_closed -746, margin +0.04; best: lid 30 deg, seat 0 deg (lid) over 12639 pixels at 1/3, the fixture -5 mm from its registration) -> cannot judge
+20:27:16.964 [RIGHT] camera · gap_check: lid the fixture fit says lid_closed (lid_closed -90 vs lid_away -471, margin +0.81; best: lid 0 deg, seat 0 deg (lid) over 12639 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain
+20:27:16.965 [RIGHT] camera · gap_check: lid surface median z 0.637 m in base_link (closed top 0.450, rise 187 mm vs 50 mm bar); 97 % of the ROI valid, median range 0.268 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_closed (lid_closed -90 vs lid_away -471, margin +0.81; best: lid 0 deg, seat 0 deg (lid) over 12639 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain -> uncertain
+20:27:17.121 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-04/checks/20261104_202716_965_gap_check_lid_lifted_uncertain.json
+20:27:17.165 [RIGHT] camera · gap_check: parts (shadow): the lid cannot be judged (lid_away and lid_closed explain the frame alike: lid_away -660 vs lid_closed -694, margin +0.05; best: lid 30 deg, seat 0 deg (lid) over 12648 pixels at 1/3, the fixture -5 mm from its registration) -> cannot judge
+20:27:17.260 [RIGHT] camera · gap_check: lid the fixture fit says lid_closed (lid_closed -140 vs lid_away -526, margin +0.73; best: lid 0 deg, seat 0 deg (lid) over 12648 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain
+20:27:17.261 [RIGHT] camera · gap_check: lid surface median z 0.637 m in base_link (closed top 0.450, rise 187 mm vs 50 mm bar); 97 % of the ROI valid, median range 0.268 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_closed (lid_closed -140 vs lid_away -526, margin +0.73; best: lid 0 deg, seat 0 deg (lid) over 12648 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain -> uncertain
+20:27:17.263 [-] mechanism · CHECK verify_lid_lifted: expect lid_lifted, the camera cannot judge it (no decision in 5 frames (uncertain, uncertain, uncertain, uncertain, uncertain; 0 yes, 0 no, 5 no vote); the last: lid surface median z 0.637 m in base_link (closed top 0.450, rise 187 mm vs 50 mm bar); 97 % of the ROI valid, median range 0.268 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_closed (lid_closed -140 vs lid_away -526, margin +0.73; best: lid 0 deg, seat 0 deg (lid) over 12648 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain) -> STOP
+20:27:17.421 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-04/checks/20261104_202717_261_gap_check_lid_lifted_uncertain.json
+20:27:17.784 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+20:27:17.785 [RIGHT] alix · recorded 3594 frames
+20:27:17.785 [RIGHT] canfd feed {"capture": "20261104_202658_RIGHT_lid_open.frames.jsonl"} · off, 3594 frames kept
+20:27:18.252 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+20:27:18.253 [LEFT] alix · recorded 3599 frames
+20:27:18.253 [LEFT] canfd feed {"capture": "20261104_202658_LEFT_lid_open.frames.jsonl"} · off, 3599 frames kept
+20:27:18.316 [LEFT] restore global speed {"pct": 50} ret=0
+20:27:18.333 [RIGHT] restore global speed {"pct": 50} ret=0
+20:27:18.335 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: verify_lid_lifted: the camera cannot judge whether it is lid lifted (no decision in 5 frames (uncertain, uncertain, uncertain, uncertain, uncertain; 0 yes, 0 no, 5 no vote); the last: lid surface median z 0.637 m in base_link (closed top 0.450, rise 187 mm vs 50 mm bar); 97 % of the ROI valid, median range 0.268 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_closed (lid_closed -140 vs lid_away -526, margin +0.73; best: lid 0 deg, seat 0 deg (lid) over 12648 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain).
+20:27:18.336 [BOTH] ALERT ERROR · S2 Real Machine: both arms: verify_lid_lifted: the camera cannot judge whether it is lid lifted (no decision in 5 frames (uncertain, uncertain, uncertain, uncertain, uncertain; 0 yes, 0 no, 5 no vote); the last: lid surface median z 0.637 m in base_link (closed top 0.450, rise 187 mm vs 50 mm bar); 97 % of the ROI valid, median range 0.268 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 1 % of the wide ROI, standing-lid pixels 0 % of the top rows (hands masked around 17 frames); lid: the fixture fit says lid_closed (lid_closed -140 vs lid_away -526, margin +0.73; best: lid 0 deg, seat 0 deg (lid) over 12648 pixels at 1/3, the fixture -10 mm from its registration) but the ROI reading says lid_lifted at 1.00 -> uncertain). (A person must look at the commode: nothing else was moved after this.)
+20:27:19.092 [RIGHT] camera · camera closed
+20:27:36.086 [activity] operator:d7853f page: SYSTEM · Session active
+20:28:06.144 [activity] operator:d7853f page: SYSTEM · Session active
+20:28:36.085 [activity] operator:d7853f page: SYSTEM · Session active
+20:28:55.749 [activity] operator:d7853f PUT /api/projects/alix_mvbvk1fk_zti6s
+20:29:06.086 [activity] operator:d7853f page: SYSTEM · Session active
+20:29:15.861 [activity] operator:d7853f page: NAVIGATION · Scrolled view
+20:29:36.086 [activity] operator:d7853f page: SYSTEM · Session active
+20:30:06.085 [activity] operator:d7853f page: SYSTEM · Session active
