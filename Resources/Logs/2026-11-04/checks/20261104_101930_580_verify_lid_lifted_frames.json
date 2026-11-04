@@ -1,0 +1,23 @@
+{
+  "check_id": "20261104_101930_580_verify_lid_lifted",
+  "stage": "verify_lid_lifted",
+  "expect": "lid_lifted",
+  "decided": true,
+  "state": "lid_lifted",
+  "confidence": 1.0,
+  "message": "2 frames (lid_lifted, lid_lifted; 2 yes, 0 no, 0 no vote): lid surface median z 0.670 m in base_link (closed top 0.450, rise 220 mm vs 50 mm bar); 95 % of the ROI valid, median range 0.232 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; opening visible 0 % of the wide ROI, standing-lid pixels 7 % of the top rows (hands masked around 17 frames); lid: lid_lifted at 1.00 from the fixture fit (not closed: lid_away 1503 vs lid_closed 303, margin +0.80; lid_lifted: lid_lifted 1503 vs lid_open -2354, margin +1.64; best: lid 40 deg, seat 0 deg (lid) over 11075 pixels at 1/3, the fixture -10 mm from its registration)",
+  "frames": [
+    {
+      "record": "20261104_101930_997_gap_check_lid_lifted_lid_lifted.json",
+      "success": true,
+      "state": "lid_lifted",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261104_101931_319_gap_check_lid_lifted_lid_lifted.json",
+      "success": true,
+      "state": "lid_lifted",
+      "confidence": 1.0
+    }
+  ]
+}

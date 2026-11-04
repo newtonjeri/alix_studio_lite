@@ -1,0 +1,23 @@
+{
+  "check_id": "20261104_161509_515_verify_seat_lifted",
+  "stage": "verify_seat_lifted",
+  "expect": "seat_lifted",
+  "decided": true,
+  "state": "seat_lifted",
+  "confidence": 0.689,
+  "message": "2 frames (seat_lifted, seat_lifted; 2 yes, 0 no, 0 no vote): seat: the band reading cannot judge (84 % of the seat's place covered by the hand; only 0 % of the seat ROI lies in the 0.38-0.47 m seat band) (closed top 0.440); 87 % of the ROI valid, median range 0.253 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; 84 % of the seat ROI masked around 17 hand frames; seat: seat_lifted at 0.69 from its own fit (seat_lifted 7470 vs seat_closed 5412, margin +0.28; best: lid 110 deg, seat 30 deg (seat) over 9724 pixels at 1/3, the fixture +0 mm from its registration); vs its closed frame: no answer (a hinge fit says lifted (hinge fit 31.2 deg about a hinge +25 mm from the model's (11260 pixels; needs >= 10 deg within 40 mm)) but the open lid is not seen (124 points, 1500 needed), so a lid lowered onto the hinge cannot be ruled out: 12853 ring pixels near the hinge: 1 % unchanged, 97 % moved >= 8 mm (9 % down), hand 8 %)",
+  "frames": [
+    {
+      "record": "20261104_161510_021_gap_check_seat_lifted_seat_lifted.json",
+      "success": true,
+      "state": "seat_lifted",
+      "confidence": 0.689
+    },
+    {
+      "record": "20261104_161510_432_gap_check_seat_lifted_seat_lifted.json",
+      "success": true,
+      "state": "seat_lifted",
+      "confidence": 0.686
+    }
+  ]
+}

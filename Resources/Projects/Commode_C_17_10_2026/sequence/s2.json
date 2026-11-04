@@ -80,12 +80,12 @@
    "uid": "78af0004"
   },
   {
-   "type": "program",
-   "id": 6,
-   "name": "6_6_L_P3_R11_PART1+R11_PART2_p.t",
+   "type": "global",
+   "name": "L_HME_POS",
+   "move": "movej",
    "speed": 100,
-   "transit_speed": 30,
-   "uid": "87c100a0"
+   "wait_s": 0.0,
+   "uid": "e8cc6ef4"
   },
   {
    "type": "program",
@@ -211,5 +211,5 @@
    "uid": "97f2b51c"
   }
  ],
- "updated": "2026-10-31 10:56:59"
+ "updated": "2026-11-04 16:21:20"
 }

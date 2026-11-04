@@ -1,0 +1,23 @@
+{
+  "check_id": "20261104_093800_631_verify_seat_with_lid",
+  "stage": "verify_seat_with_lid",
+  "expect": "seat_closed",
+  "decided": true,
+  "state": "seat_closed",
+  "confidence": 1.0,
+  "message": "2 frames (seat_closed, seat_closed; 2 yes, 0 no, 0 no vote): seat surface median z 0.443 m in base_link (closed top 0.440, rise 3 mm vs 50 mm bar); 53 % of the ROI valid, median range 0.603 m; native depth (D435, pyrealsense2), camera_depth_optical_frame; seat band 44 % of the ROI, 10/90 % heights 0.432/0.453, 3 % masked around 17 hand frames; seat: seat_closed at 1.00 from its own fit (seat_closed 7647 vs seat_lifted 3649, margin +0.52; best: lid 110 deg, seat 0 deg (seat) over 23847 pixels at 1/3, the fixture +0 mm from its registration); vs its closed frame: no answer (no closed reference at this placement); models: lid_open from depth+colour at 0.98",
+  "frames": [
+    {
+      "record": "20261104_093800_918_gap_check_seat_closed_seat_closed.json",
+      "success": true,
+      "state": "seat_closed",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261104_093801_054_gap_check_seat_closed_seat_closed.json",
+      "success": true,
+      "state": "seat_closed",
+      "confidence": 1.0
+    }
+  ]
+}
