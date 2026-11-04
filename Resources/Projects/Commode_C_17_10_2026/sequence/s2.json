@@ -2,16 +2,16 @@
  "left": [
   {
    "type": "mechanism",
-   "task": "lid_open",
-   "uid": "8aea2c36"
+   "task": "lid_close",
+   "uid": "43600e56"
   }
  ],
  "right": [
   {
    "type": "mechanism",
-   "task": "lid_open",
-   "uid": "cd877702"
+   "task": "lid_close",
+   "uid": "3ced728a"
   }
  ],
- "updated": "2026-11-04 22:56:11"
+ "updated": "2026-11-05 01:02:03"
 }

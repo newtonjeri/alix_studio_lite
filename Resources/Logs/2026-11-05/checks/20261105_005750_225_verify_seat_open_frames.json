@@ -1,0 +1,41 @@
+{
+  "check_id": "20261105_005750_225_verify_seat_open",
+  "stage": "verify_seat_open",
+  "expect": "seat_open",
+  "decided": false,
+  "state": "cannot_judge",
+  "confidence": 0.0,
+  "message": "no decision in 5 frames (seat_lifted, uncertain, uncertain, uncertain, uncertain; 1 yes, 0 no, 4 no vote); the last: parts (depth): the seat closed at 0 deg (margin +0.23); lid 110 deg, seat 0 deg, the commode where this frame reads it (-5 / -8 / -16 mm, -0.1 deg from its scene place); the colour says lid_seat_open at 0.94: they disagree -> uncertain",
+  "frames": [
+    {
+      "record": "20261105_005754_226_gap_check_seat_open_seat_lifted.json",
+      "success": true,
+      "state": "seat_lifted",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261105_005755_931_gap_check_seat_open_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261105_005757_592_gap_check_seat_open_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261105_005759_005_gap_check_seat_open_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261105_005800_393_gap_check_seat_open_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    }
+  ]
+}

@@ -1,3 +1,34 @@
 {
- "looks": {}
+ "looks": {
+  "commode_c|inspection_pose_4|150|lid shut": {
+   "task": "lid_open",
+   "plan": "1b5c3f2cac5f974695e0c1e0d5a1912a155ca36c7264f497689b7dd3f5b009ae",
+   "reading": {
+    "dx_m": -0.027251534307186295,
+    "dy_m": 0.002378693676793642,
+    "dz_m": -0.002233797660957262,
+    "dyaw_deg": 1.1273849539557805,
+    "lid_deg": 0.0,
+    "seat_deg": 0.0
+   },
+   "ugv": null,
+   "at": "2026-11-05 00:56:54",
+   "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-05/place/20261105_005625_551_place_look_lid_open_look.json"
+  },
+  "commode_c|inspection_pose_1|150|lid open, seat open": {
+   "task": "seat_close",
+   "plan": "3101e381720c7b2f91dc6149f163900b87eed604102aac31068a0cf610afc5e1",
+   "reading": {
+    "dx_m": -0.015855290648958763,
+    "dy_m": -0.005930859361823505,
+    "dz_m": 0.0033406575978306876,
+    "dyaw_deg": 3.10993454297191,
+    "lid_deg": 110.0,
+    "seat_deg": 110.0
+   },
+   "ugv": null,
+   "at": "2026-11-05 00:59:41",
+   "record": "/home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-05/place/20261105_005921_732_place_look_seat_close_look.json"
+  }
+ }
 }
