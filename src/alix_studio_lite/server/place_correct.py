@@ -103,6 +103,12 @@ WEAK_LOOKS = {             #: (pose, state) -> (the axes it reads poorly, why): 
 AXES = {"x": "dx_m", "y": "dy_m", "yaw": "dyaw_deg"}
 POLE_STEP_MM = 5.0         #: a look's pole, to this (the reference's pole and the look's: the same height)
 REFERENCE_FILE = "place_reference.json"
+CAMERA_PLACE = False       #: the camera's place check (a task's first look against its reference look: the plan reused,
+#: moved, or the run stopped beyond plan_shift's bounds). Off (the user, 5 Nov: "Please remove these camera position checks,
+#: they are causing the program to stop ... yet they are not that accurate"; Open the seat STOPPED before its working moves:
+#: the commode read 23.4 mm, -3.13 deg, -7.4 mm off, beyond 30 mm, 3 deg and 15 mm): each task runs with the UGV's placement
+#: alone (none reported: the plan as made), its checks judged at the scene place (the parts reading finds the commode in
+#: each frame), no reference taught. The code is kept for when it is turned on again
 LANES = ("plans_now", "plans_ahead")   #: Lite's processes (workers.pool) for the task running's moved plans, the next tasks'
 
 
@@ -514,6 +520,11 @@ class TaskPlace:
         thread of its own while the moves before the working stretch run (``wait`` collects it before the first of them
         a move could change)."""
         frame_of, read = getattr(ex, "look_frame", None), getattr(ex, "read_look", None)
+        if not CAMERA_PLACE:                             # the camera's place check off (the user, 5 Nov): no frame
+            d = decide(self.corr.ugv, None, None, self.hands)
+            self._got = ("done", dataclasses.replace(d, words=d.words.replace(
+                "no depth reading here (no camera)", "the camera's place check is off")), None)
+            return
         if frame_of is None or read is None:
             self._got = ("done", decide(self.corr.ugv, None, None, self.hands), None)
             return

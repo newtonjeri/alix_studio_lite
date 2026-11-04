@@ -1086,7 +1086,9 @@ class Runner:
         # a sequence's first look (no check to take it at) comes before anything a correction changes: no two-arm
         # stretch from before it reaches past that while the look is not taken (2 Nov: Close the lid's first stretch took
         # its look with the camera arm still at rest, the left's start in the same stretch)
-        cut = place.stretch_from if place is not None and dropped_start else None
+        from . import place_correct as _pc                # the camera's place check off (5 Nov): no look to wait for
+
+        cut = place.stretch_from if place is not None and dropped_start and _pc.CAMERA_PLACE else None
         if self.together and hasattr(self.ex, "prepare_legs"):
             self.ex.prepare_legs(plan, entries, unsent, state["bridge"], **({"cut": cut} if cut is not None else {}))
         self.ex.approach(plan, plan.targets("start"), "start", entries=entries)

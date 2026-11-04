@@ -21,6 +21,18 @@ LOOKS = {"seat_close": ("inspection_pose_1", "lid open, seat open"), "lid_close"
 REF = dict(dx_m=0.012, dy_m=-0.015, dz_m=0.002, dyaw_deg=-3.1, lid_deg=110.0, seat_deg=110.0)    # the camera's mount in it
 
 
+@pytest.fixture(autouse=True)
+def camera_place_on(monkeypatch):
+    """The camera's place check (place_correct.CAMERA_PLACE), off since 5 Nov: its code kept and tested on here; the
+    tests of it off ask for ``camera_place_off``."""
+    monkeypatch.setattr(place_correct, "CAMERA_PLACE", True)
+
+
+@pytest.fixture
+def camera_place_off(monkeypatch):
+    monkeypatch.setattr(place_correct, "CAMERA_PLACE", False)
+
+
 def look(task: str, dx=0.0, dy=0.0, dyaw=0.0, ok=True) -> dict:
     """A first look's reading the commode moved (dx, dy m, dyaw deg) from the reference's."""
     pose, state = LOOKS[task]
@@ -453,24 +465,25 @@ def test_re_lifts_stop_for_a_person_after_the_configs_count_or_beyond_the_bounds
 def test_every_task_fails_three_times_before_a_person_is_called(tmp_path):
     """The owner, 2 Nov: "by default number of retries after failure is three; you should never abort on the first
     failure; this applies to all mechanism tasks". Open the seat's lift (its config: 1 re-lift) is lifted again up to 3
-    times; Close the seat's end check (its config: abort) runs the task again from its start, its start check asked
+    times; Close the lid's end check (its config: abort) runs the task again from its start, its start check asked
     (here in a sequence too), up to 3 times, then a person."""
     refs = place_correct.References(tmp_path / "refs.json")
     ex = LookExec(["lid_open", "seat_closed"] + ["seat_closed"] * 3 + ["seat_lifted", "seat_open"], look("seat_open", 0.0))
     out, said = run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
     assert out["plans"][0]["relifts"] == 3 and out["plans"][0]["outcome"] == "done"
-    # Close the seat in a sequence: its end check fails once, it runs again (its start check asked: the seat still open)
-    ex = LookExec(["seat_open", "seat_open", "seat_closed"], look("seat_close", 0.0))
-    out, said = run("seat_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
-    assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("seat_close", "again"), ("seat_close", "done")]
+    # Close the lid in a sequence (its end check: abort; Close the seat's is retry_close since 5 Nov): its end check fails
+    # once, it runs again (its start check asked: the lid still open)
+    ex = LookExec(["lid_open", "lid_open", "lid_closed"], look("lid_close", 0.0))
+    out, said = run("lid_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("lid_close", "again"), ("lid_close", "done")]
     asked = [c[1] for c in ex.calls if c[0] == "ask"]
-    assert asked == ["verify_seat_closed", "verify_seat_open", "verify_seat_closed"]
-    assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("seat_close", "start"), ("seat_close", "start")]
+    assert asked == ["verify_lid_closed", "verify_lid_open", "verify_lid_closed"]
+    assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("lid_close", "start"), ("lid_close", "start")]
     assert any("runs again from its start (1/3)" in t for t in said)
-    # the seat never closes: three runs again, then a person
-    ex = LookExec(["seat_open"] + ["seat_open", "seat_open"] * 3, look("seat_close", 0.0))
-    with pytest.raises(UserError, match="still NOT seat_closed after running Close the seat again 3 time") as err:
-        run("seat_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    # the lid never closes: three runs again, then a person
+    ex = LookExec(["lid_open"] + ["lid_open", "lid_open"] * 3, look("lid_close", 0.0))
+    with pytest.raises(UserError, match="still NOT lid_closed after running Close the lid again 3 time") as err:
+        run("lid_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
     assert err.value.code == "escalate"
 
 
@@ -494,16 +507,16 @@ def test_a_task_run_again_reads_where_the_part_is_first(tmp_path):
 
 
 def test_the_task_run_again_takes_the_cameras_value_at_its_own_look(tmp_path):
-    """Close the seat's end check fails; run again, its first look reads the commode 8 mm to the right of where the
+    """Close the lid's end check fails; run again, its first look reads the commode 8 mm to the right of where the
     offline plan works: the run again is the plan made from the camera's value."""
     refs = place_correct.References(tmp_path / "refs.json")
-    key = reference("seat_close", refs)
-    plan = mechanism.Plan("seat_close")
-    ex = LookExec(["seat_open", "seat_open", "seat_open", "seat_closed"], [look("seat_close", 0.001), look("seat_close", 0.0, -0.008)])
-    out, said = run("seat_close", ex, place_correct.Correction(refs=refs, collide=False))
-    assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("seat_close", "again"), ("seat_close", "done")]
-    assert [r["source"] for r in out["places"]] == ["none", "depth"]
-    moved = plan_shift.shift(plan, place_correct.depth_move(look("seat_close", 0.0, -0.008)["reading"], refs.get(key), POSE0))
+    key = reference("lid_close", refs)
+    plan = mechanism.Plan("lid_close")
+    ex = LookExec(["lid_open", "lid_open", "lid_open", "lid_closed"], [look("lid_close", 0.001), look("lid_close", 0.0, -0.008)])
+    out, said = run("lid_close", ex, place_correct.Correction(refs=refs, collide=False))
+    assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("lid_close", "again"), ("lid_close", "done")]
+    assert [r["source"] for r in out["places"]] == ["none", "depth"], [r["words"] for r in out["places"]]
+    moved = plan_shift.shift(plan, place_correct.depth_move(look("lid_close", 0.0, -0.008)["reading"], refs.get(key), POSE0))
     pull0, pull1 = (next(e for e in p.entries if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
                     for p in (plan, moved))
     pulls = lifts_of(ex)
@@ -809,3 +822,35 @@ def test_close_the_seat_stops_for_a_person_after_its_rungs(tmp_path, seat_close_
     with pytest.raises(UserError, match="retry 1 .* is not in Lite") as err:
         run("seat_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
     assert [c[1] for c in ex.calls if c[0] == "approach"].count("seat_close") == 1        # nothing of the retry moved
+
+
+def test_with_the_cameras_place_check_off_a_far_reading_neither_stops_nor_moves_the_plan(tmp_path, camera_place_off):
+    """The user, 5 Nov: "Please remove these camera position checks, they are causing the program to stop ... yet they
+    are not that accurate" (Open the seat STOPPED before its working moves: the commode read 23.4 mm, -3.13 deg and
+    -7.4 mm off). Off: the look reads nothing (no frame), the plan runs as made with the UGV's placement alone (none
+    here), its checks judged at the scene place, no reference taught."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    reference("seat_open", refs)
+    plan = mechanism.Plan("seat_open")
+    ex = LookExec(["lid_open", "seat_closed", "seat_lifted", "seat_open"], look("seat_open", -0.010, 0.0212, -3.13))
+    out, said = run("seat_open", ex, place_correct.Correction(refs=refs, collide=False))
+    assert out["plans"][0]["outcome"] == "done"
+    lift = next(e for e in plan.entries if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+    assert carries(lifts_of(ex), lift.rows)                                          # the plan as made
+    assert ex.looks == []                                                            # no frame taken for the place
+    assert any("the camera's place check is off" in t for t in said)
+    assert not any("STOPPED" in t or "judge the commode where its first look" in t for t in said)
+    assert out["places"][0]["source"] == "none" and "taught" not in out["places"][0]
+
+
+def test_with_the_cameras_place_check_off_a_sequence_runs_its_tasks_as_made(tmp_path, camera_place_off):
+    """In a sequence (the first check not asked) the same: no look, the closing's moves as made."""
+    refs = place_correct.References(tmp_path / "refs.json")
+    reference("seat_close", refs)
+    plan = mechanism.Plan("seat_close")
+    ex = LookExec(["seat_closed"], look("seat_close", 0.020, 0.0, 2.0))
+    out, said = run("seat_close", ex, place_correct.Correction(refs=refs, collide=False), start_checks=False)
+    assert out["plans"][0]["outcome"] == "done"
+    pull = next(e for e in plan.entries if e.kind == "arm" and e.side == "left" and e.stage == "execute_path")
+    assert carries(sent_rows(ex, "left", "execute_path"), pull.rows)
+    assert ex.looks == []
