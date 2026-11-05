@@ -10,6 +10,11 @@
     --shift X Y Z  the commode off ALIX's place (mm), instead of the lab's of 29 Oct (contact_sim.LAB_SHIFT_MM)
     --json PATH    the whole result (the trace for a chart)
 
+    python3 tools/contact_check.py --store                    # THE OFFLINE STEP (the user, 5 Nov): every closing plan with no
+    python3 tools/contact_check.py --store seat_close         # stored check for its file as it is now, checked and stored in
+                                                              # Resources/ContactChecks (commit it with the plan); a run reads
+                                                              # it and never computes it (contact_sim.gate / require)
+
 Exit 0 when nothing is refused (under 40 N for 0.2 s), 1 when Lite would refuse it in Real.
 """
 from __future__ import annotations
@@ -34,7 +39,9 @@ def one(task: str, cfg, back_mm, shift) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("task", choices=sorted(contact_sim.TASK_PART))
+    ap.add_argument("task", nargs="*",
+                    help="lid_close or seat_close (with --store: any number, none = every closing whose plan has no check)")
+    ap.add_argument("--store", action="store_true", help="make and keep the run's check of each plan (the offline step)")
     ap.add_argument("--config", type=Path, default=None, help="an edited config of the task (previewed by IK)")
     ap.add_argument("--back-mm", type=float, default=None, help="the gap from the commode's back to the wall (mm)")
     ap.add_argument("--band", type=float, default=0.0, help="also check with the commode this many mm off its place")
@@ -42,6 +49,22 @@ def main() -> int:
                     help="the commode off ALIX's place (mm; default the lab's of 29 Oct, contact_sim.LAB_SHIFT_MM)")
     ap.add_argument("--json", type=Path, default=None)
     args = ap.parse_args()
+    bad = [t for t in args.task if t not in contact_sim.TASK_PART]
+    if bad:
+        ap.error(f"not a checked closing: {', '.join(bad)} (one of {', '.join(sorted(contact_sim.TASK_PART))})")
+    if args.store:
+        todo = args.task or contact_sim.missing()
+        if not todo:
+            print(f"Every closing plan has its stored check ({contact_sim.store_dir()}).")
+            return 0
+        for t in todo:
+            out = contact_sim.make(t)
+            sha = contact_sim._gate_key(t)[1]
+            print(f"{t}: {out['level'].upper()}, peak {out['peak_n']:.1f} N -> {contact_sim.stored_path(t, sha)}")
+        return 0
+    if len(args.task) != 1:
+        ap.error("one task to check (or --store)")
+    args.task = args.task[0]
     base = tuple(args.shift) if args.shift else contact_sim.LAB_SHIFT_MM
     shifts = [base]
     if args.band:

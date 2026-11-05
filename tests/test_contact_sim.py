@@ -118,35 +118,34 @@ def test_the_owner_accepts_one_plan_file_over_a_refusal(lab, monkeypatch):
 
 
 
-def test_a_closings_contact_check_is_made_once_a_plan_and_ahead(tmp_path, monkeypatch):
-    """The user, 5 Nov: the first follow-up Close the seat of each Lite session waited 28 s at the lab, the arms still,
-    for its contact check. It is started ahead (prepare: a run with Open the lid), in a process of its own, waited for
-    once by the gate, and kept on disk by the plan file's sha256: a new session reads it, nothing computed again."""
-    import time
-    from concurrent.futures import ThreadPoolExecutor
-
-    from alix_studio_lite.server import workers
+def test_a_closings_contact_check_is_made_offline_and_a_run_only_reads_it(tmp_path, monkeypatch):
+    """The user, 5 Nov: "contact check is something that should be done offline ... the plan is the same". A closing
+    plan's check is made once (tools/contact_check.py --store; Lite's start when a plan came) and stored by the plan
+    file's sha256; the gate reads it and never computes it; a run that may need a closing whose plan has none is
+    refused before anything moves, saying how to make it. The repository holds the current plans' checks."""
+    from alix_studio_lite.server.jobs import UserError
 
     calls = []
 
     def check(task, **_k):
         calls.append(task)
-        time.sleep(0.3)
         return dict(level="warn", peak_n=12.5, task=task, stages=[])
 
-    pool = ThreadPoolExecutor(1)
     monkeypatch.setattr(contact_sim, "check_plan", check)
-    monkeypatch.setattr(workers, "pool", lambda name=None: pool)
     monkeypatch.setattr(contact_sim, "_GATE", {})
-    monkeypatch.setattr(contact_sim, "_PENDING", {})
-    monkeypatch.setenv("LITE_CONTACT_CACHE", str(tmp_path))
+    monkeypatch.setenv("LITE_CONTACT_STORE", str(tmp_path))
     monkeypatch.delenv("LITE_CONTACT_CHECK", raising=False)
-    assert contact_sim.prepare(["seat_close", "lid_open"]) == ["seat_close"]     # started, not waited for; openings not checked
-    assert contact_sim.gate("seat_close")["peak_n"] == 12.5 and calls == ["seat_close"]   # the one in flight, not a second
-    assert len(list(tmp_path.glob("seat_close_*.json"))) == 1
-    contact_sim._GATE.clear()                                                     # a new Lite session: from disk
+    assert contact_sim.missing() == ["lid_close", "seat_close"]
+    with pytest.raises(UserError, match="Close the seat's contact check has not been made") as e:
+        contact_sim.gate("seat_close")                                      # never computed in a run
+    assert e.value.code == "contact" and "tools/contact_check.py --store seat_close" in e.value.hint and calls == []
+    with pytest.raises(UserError, match="Nothing moved"):
+        contact_sim.require(["seat_close"], "This run")
+    assert contact_sim.make("seat_close")["peak_n"] == 12.5 and calls == ["seat_close"]   # the offline step
+    contact_sim._GATE.clear()                                                # another Lite: read from the store
     assert contact_sim.gate("seat_close")["peak_n"] == 12.5 and calls == ["seat_close"]
-    assert contact_sim.prepare(["seat_close"]) == []                              # nothing to start: kept
-    monkeypatch.setenv("LITE_CONTACT_CHECK", "0")
-    assert contact_sim.prepare(["lid_close"]) == [] and calls == ["seat_close"]
-    pool.shutdown()
+    assert contact_sim.missing() == ["lid_close"] and contact_sim.missing(["seat_close", "lid_open"]) == []
+    contact_sim.require(["seat_close"])
+    monkeypatch.delenv("LITE_CONTACT_STORE")                                  # the repository's own: every plan checked
+    contact_sim._GATE.clear()
+    assert contact_sim.missing() == []

@@ -2455,7 +2455,7 @@ def run(robot, name: str, mode: str | None = None, ugv_placement: dict | None = 
             from . import contact_sim
 
             if name == "lid_open":                   # its seat may come up with the lid and be closed next: that closing's
-                contact_sim.prepare(["seat_close"])  # check made meanwhile (the user, 5 Nov: 28 s the arms still, else)
+                contact_sim.require(["seat_close"], plan.title)   # check made offline (the user, 5 Nov), or not run
             ok = contact_sim.gate(name, job)         # the hands' contact forces (the owner, 29 Oct): refused from 40 N
             if ok and ok.get("accepted") and say:
                 say(f"{plan.title}: contact check over the limit ({ok['peak_n']:g} N)," + contact_sim.accepted_words(ok)[len(" Over the limit,"):])

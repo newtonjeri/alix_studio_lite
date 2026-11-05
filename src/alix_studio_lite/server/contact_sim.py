@@ -629,9 +629,20 @@ def accepted_words(out: dict) -> str:
     return (f" Over the limit, but run: this plan ({a['made']}) was accepted by {a['by']} ({a['why']}).") if a else ""
 
 
-_GATE: dict = {}                 # (task, the plan file's sha256) -> its check (simulate's result)
-_PENDING: dict = {}              # the same key -> the check running in its own process
-_GATE_LOCK = __import__("threading").Lock()
+#: A closing plan's check is made OFFLINE, once a plan file (the user, 5 Nov: "contact check is something that should be
+#: done offline ... the plan is the same"): when the plan arrives (tools/contact_check.py --store; Lite's start after
+#: alix_sync brings a changed plan, in the background) and kept in the repository beside the project data, by the plan
+#: file's sha256, so the lab gets it with the plan. A run never computes it: it reads it, and is refused before anything
+#: moves when the plan it may need has none (require). ``LITE_CONTACT_STORE``: another folder (the tests).
+_GATE: dict = {}                 # (task, the plan file's sha256) -> its stored check, as read
+
+
+def store_dir() -> Path:
+    import os
+
+    from .. import vendor_paths
+
+    return Path(os.environ.get("LITE_CONTACT_STORE") or Path(vendor_paths.LITE_ROOT) / "Resources" / "ContactChecks")
 
 
 def _gate_key(task: str) -> tuple:
@@ -643,101 +654,84 @@ def _gate_key(task: str) -> tuple:
     return task, hashlib.sha256(plan.path.read_bytes()).hexdigest()
 
 
-def _cache_file(task: str, sha: str) -> Path:
-    """Where a plan file's check is kept on this computer: it depends on the plan's bytes alone (ALIX's room, the plan's
-    own clock), so it is made once a plan version, not once a Lite session (``LITE_CONTACT_CACHE``: another folder)."""
-    import os
-
-    root = os.environ.get("LITE_CONTACT_CACHE") or str(Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
-                                                        / "alix-studio-lite" / "contact")
-    return Path(root) / f"{task}_{sha[:20]}.json"
+def stored_path(task: str, sha: str) -> Path:
+    return store_dir() / f"{task}_{sha[:20]}.json"
 
 
-def _kept(key: tuple, out: dict) -> None:
-    """A finished check, in memory and on disk (never fails: a copy)."""
-    with _GATE_LOCK:
-        _GATE[key] = out
-        _PENDING.pop(key, None)
+def stored(task: str) -> dict | None:
+    """The check made for ``task``'s plan file as it is now (check_plan's result), or None when none was made for it."""
+    key = _gate_key(task)
+    if key in _GATE:
+        return _GATE[key]
     try:
-        f = _cache_file(*key)
-        f.parent.mkdir(parents=True, exist_ok=True)
-        tmp = f.with_name(f.name + ".tmp")
-        tmp.write_text(json.dumps(dict(task=key[0], sha256=key[1], result=out), default=float), encoding="utf-8")
-        tmp.replace(f)
-    except (OSError, TypeError, ValueError):
-        pass
+        d = json.loads(stored_path(*key).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if d.get("sha256") != key[1] or not isinstance(d.get("result"), dict):
+        return None
+    _GATE[key] = d["result"]
+    return _GATE[key]
 
 
-def _check(task: str, wait: bool = True, job=None) -> dict | None:
-    """``task``'s plan check (check_plan), once a plan file (the user, 5 Nov: the first follow-up Close the seat of each
-    Lite session waited 28 s for it at the lab, the arms still): as kept in memory, else on disk, else computed in a
-    process of its own (``contact``: never in the queue of the run's other checks), started once and waited for here
-    (``wait``) or left to finish meanwhile (prepare)."""
-    from . import workers
+def make(task: str) -> dict:
+    """``task``'s plan checked now (check_plan, ~25 s) and stored for its plan file: the offline step. Its result."""
+    from . import mechanism
 
     key = _gate_key(task)
-    with _GATE_LOCK:
-        if key in _GATE:
-            return _GATE[key]
-        fut = _PENDING.get(key)
-        if fut is None:
-            try:
-                kept = json.loads(_cache_file(*key).read_text(encoding="utf-8"))
-            except (OSError, ValueError):
-                kept = None
-            if kept and kept.get("sha256") == key[1] and isinstance(kept.get("result"), dict):
-                _GATE[key] = kept["result"]
-                return _GATE[key]
-            fut = _PENDING[key] = workers.pool("contact").submit(check_plan, task)
-
-            def done(f, key=key):
-                if f.exception() is None:
-                    _kept(key, f.result())
-                else:
-                    with _GATE_LOCK:
-                        _PENDING.pop(key, None)
-            fut.add_done_callback(done)
-    if not wait:
-        return None
-    if job is not None and not fut.done():
-        from . import mechanism
-
-        job.progress(f"{mechanism.TASKS.get(task, {}).get('title', task)}: checking the hands' contact forces (this plan's "
-                     "first run on this computer)")
-    while not fut.done():
-        if job is not None:
-            job.sleep(0.2)
-        else:
-            time.sleep(0.2)
-    out = fut.result()
-    _kept(key, out)
+    out = check_plan(task)
+    f = stored_path(*key)
+    f.parent.mkdir(parents=True, exist_ok=True)
+    tmp = f.with_name(f.name + ".tmp")
+    tmp.write_text(json.dumps(dict(task=task, sha256=key[1], plan=mechanism.cached(task).path.name,
+                                   made=time.strftime("%Y-%m-%d %H:%M:%S"), result=out), default=float, indent=1), encoding="utf-8")
+    tmp.replace(f)
+    _GATE[key] = out
     return out
 
 
-def prepare(tasks) -> list:
-    """The closings' checks started now, each in its own process, not waited for (a run that may need one: any with Open
-    the lid, whose seat may come up with it and be closed next): ready, or nearly, when the gate asks. The tasks started."""
+def missing(tasks=None) -> list:
+    """The closings (``tasks``, every checked one by default) whose plan file as it is now has no stored check."""
     import os
 
     if os.environ.get("LITE_CONTACT_CHECK") == "0":
         return []
-    out = []
-    for t in tasks:
-        if task_part(t) is None:
-            continue
-        try:
-            if _check(t, wait=False) is None:
-                out.append(t)
-        except Exception:                                                           # noqa: BLE001 - the gate tries again
-            continue
-    return out
+    return [t for t in (tasks if tasks is not None else sorted(TASK_PART)) if task_part(t) is not None and stored(t) is None]
+
+
+def require(tasks, what: str = "This run") -> None:
+    """Before anything moves: refused when a closing the run may need (``tasks``) has no stored check for its plan."""
+    from . import mechanism
+    from .jobs import UserError
+
+    gone = missing(list(tasks))
+    if gone:
+        titles = " and ".join(mechanism.TASKS.get(t, {}).get("title", t) for t in gone)
+        raise UserError(f"Not run: {titles}'s contact check has not been made for its plan as it is now ({what} may need it). "
+                        "It is made offline, once a plan. Nothing moved.",
+                        f"Make it: python3 tools/contact_check.py --store {' '.join(gone)} (about 25 s each), or start Lite "
+                        "again and wait for its start to make it, then run this again.", code="contact")
+
+
+def make_missing_in_background(say=print) -> list:
+    """At Lite's start (a plan may have come with alix_sync): the closings with no stored check for their plan as it is
+    now, each made in a process of its own (never in a run). The tasks started."""
+    from . import workers
+
+    todo = missing()
+    for t in todo:
+        say(f"Contact check: {t}'s plan has none yet: made now in the background (about 25 s)")
+        fut = workers.pool("contact").submit(make, t)
+        fut.add_done_callback(lambda f, t=t: say(f"Contact check: {t} made" if f.exception() is None
+                                                  else f"Contact check: {t} NOT made ({f.exception()})"))
+    return todo
 
 
 def gate(task: str, job=None) -> dict | None:
-    """A lid or seat closing run on its own in Real (mechanism.run), or queued as a follow-up: its plan on its own clock,
-    ALIX's room (the wall not known here; S2 uses the project's), checked once per plan file (_check: kept on disk, in
-    a process of its own, started ahead by prepare). Raises UserError (code ``contact``) from STOP_N; the result
-    otherwise (None for a task not checked, or with LITE_CONTACT_CHECK=0)."""
+    """A lid or seat closing run on its own in Real (mechanism.run), or added to a run (Close the seat after a seat that
+    came up with the lid, Close the lid before an INSPECT's task): its plan's stored check (made offline, ALIX's room:
+    the wall not known here; S2 checks the sequence's own closings with the project's in its simulation), read, never
+    computed. Raises UserError (code ``contact``) from STOP_N, or when its plan has no stored check; the result otherwise
+    (None for a task not checked, or with LITE_CONTACT_CHECK=0)."""
     import os
 
     from . import mechanism
@@ -746,7 +740,8 @@ def gate(task: str, job=None) -> dict | None:
     if task_part(task) is None or os.environ.get("LITE_CONTACT_CHECK") == "0":
         return None
     plan = mechanism.cached(task)
-    out = accept(_check(task, job=job), task, plan.path)
+    require([task], plan.title)
+    out = accept(stored(task), task, plan.path)
     if out["level"] == "stop":
         at = lambda t, s, st=out["stages"]: stage_at(st, t, s)          # noqa: E731
         raise UserError("Not run: " + words(out, plan.title, at), "Edit the path in ALIX so the hands press less (tools/"

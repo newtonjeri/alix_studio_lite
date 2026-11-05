@@ -427,6 +427,9 @@ def main(argv=None) -> int:
                 print(f"Lid and seat: {what}: {path}", flush=True)
             if pushed:
                 print(f"Lid and seat: {len(pushed)} file(s) copied into ALIX: commit them there", flush=True)
+            from . import contact_sim         # a closing plan that came (or has none yet): its contact check made now,
+                                              # offline, in the background (the user, 5 Nov), never in a run
+            contact_sim.make_missing_in_background(lambda text: print(text, flush=True))
             rep = alix_sync.status(deep=True)
             if not rep.in_sync:
                 for line in rep.lines(brief=True)[1:-1]:      # an older ALIX checkout (the lab's): one line

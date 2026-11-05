@@ -2742,6 +2742,10 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     if missing:
         raise UserError("Not on the controllers: " + "; ".join(missing) + ". Nothing moved.",
                         "Upload the programs or save the points, simulate again, then run it.", code="missing")
+    from . import contact_sim                       # the closings this run may add (Close the seat after a seat that came up
+    contact_sim.require((["seat_close"] if any(st["kind"] == "mechanism" and st["task"] == "lid_open" for st in run["plan"])
+                         else []) + (["lid_close"] if any(st["kind"] == "inspect" for st in run["plan"]) else []), "This run")
+    # with Open the lid, Close the lid before an INSPECT's task): their contact checks made offline (the user, 5 Nov)
     if any(st["kind"] == "inspect" or (st["kind"] == "mechanism" and not st.get("held")) for st in run["plan"]):     # its checks need the wrist camera (the owner, 23 Oct)
         from . import mechanism
 
@@ -3396,10 +3400,6 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 job.log(f"The lid and seat tasks moved with the UGV's placement (the commode {corr.ugv.words()} from where "
                         f"their plans were made): {queued} plan(s) being made from now on, in the run's order, the next "
                         "while one runs.")
-        from . import contact_sim                   # the closings a run may add (Close the seat after Open the lid, Close the
-        contact_sim.prepare((["seat_close"] if any(st["kind"] == "mechanism" and st["task"] == "lid_open" for st in run["plan"])
-                             else []) + (["lid_close"] if any(st["kind"] == "inspect" for st in run["plan"]) else []))
-        # lid before an INSPECT's task): their contact checks made meanwhile, in their own process (the user, 5 Nov)
         try:
             for s in sides:
                 originals[s] = reals[s].set_run_mode("REAL")
