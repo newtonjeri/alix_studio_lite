@@ -1018,3 +1018,44 @@ def test_a_hold_before_a_start_together_is_not_its_programs_time():
     finally:
         close()
     assert not stopped and not said
+
+
+def test_the_start_look_decides_how_the_run_begins():
+    """The user, 5 Nov: a look at the commode before the sequence; a seat that is up means the lid is up, a closed lid
+    means the seat is down, so a lid found open is closed by Close the lid alone (it brings the seat down with it)."""
+    from alix_studio_lite.server import mechanism as m
+
+    assert m.start_look("lid_open", True)[0] == "run"
+    what, why = m.start_look("lid_open", False)
+    assert what == "close_lid" and "Close the lid first (it brings the seat down with it)" in why
+    assert not m.start_look_needs_seat("lid_open", False) and not m.start_look_needs_seat("lid_close", False)
+    assert m.start_look("lid_close", False)[0] == "run"                          # open, the seat up or down: it closes both
+    assert m.start_look("lid_close", True, moves_before=False)[0] == "hold"      # found closed, nothing before it: left so
+    assert m.start_look("lid_close", True, moves_before=True)[0] == "stop"       # its rows before it were taught lid open
+    assert m.start_look_needs_seat("seat_open", False) and not m.start_look_needs_seat("seat_open", True)
+    assert m.start_look("seat_open", False, seat_closed=True)[0] == "run"
+    assert m.start_look("seat_open", True)[0] == "stop"                          # it needs the lid open
+    assert m.start_look("seat_close", False, seat_closed=False)[0] == "run"
+    assert m.start_look("seat_close", False, seat_closed=True, moves_before=False)[0] == "hold"
+    assert m.start_look("lid_open", None) == ("stop", "the camera could not judge whether the lid is closed")
+    assert m.start_look("seat_open", False, seat_closed=None)[0] == "stop"
+
+
+def test_the_first_task_of_a_run_checks_its_start_unless_the_start_look_did():
+    """The lab, 5 Nov 18:24: a sequence of Close the lid alone ran with its "is the lid open?" not asked (the sequence's
+    order said so, 27 Oct, with nothing before it to say it), so the left arm's approach went with the right arm's look.
+    The run's first lid or seat task now asks its start checks (its plan's order: the right arm's look, the camera, then
+    the left arm) unless the run's start look (Programs before it) saw the commode; the tasks after it keep the order."""
+    from alix_studio_lite.server import workflow
+
+    lc, lo = {"type": "mechanism", "task": "lid_close"}, {"type": "mechanism", "task": "lid_open"}
+    alone = workflow.plan_for(numbered([lc], [lc]), "both")
+    assert alone["look"] is None and workflow.asks_start(alone, 0)
+    two = workflow.plan_for(numbered([lo, lc], [lo, lc]), "both")
+    assert two["look"] is None and workflow.asks_start(two, 0) and not workflow.asks_start(two, 1)
+    cleaned = workflow.plan_for(numbered([prog(1), lo], [prog(2), lo]), "both")
+    look = cleaned["look"]
+    assert look and look["task"] == "lid_open" and look["expect"] == "lid_closed" and look["pose"] == "inspection_pose_1"
+    assert len(look["deg"]) == 7 and not workflow.asks_start(cleaned, 1)
+    dual = workflow.plan_for(numbered([prog(1), lo], [prog(2), lo]), "both", {"scope": "dual", "stage": 1})
+    assert not dual.get("look") and workflow.asks_start(dual, 0)                # a lid or seat task run on its own

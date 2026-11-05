@@ -61,7 +61,8 @@ def test_the_second_tasks_plan_is_made_while_the_first_runs(server):
     tasks = [{"type": "mechanism", "task": "lid_open"}, {"type": "mechanism", "task": "seat_open"}]
     for side in ("left", "right"):
         call(server, "PUT", f"{P}/workflow/{side}", {"steps": [prog(71), *tasks, prog(72)]})
-    server["script"].write_text(json.dumps(["lid_lifted", "lid_open", "seat_lifted", "seat_open"]))   # a sequence's checks
+    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open", "seat_lifted", "seat_open"]))   # the start
+    # look (Program 71 before the first task, 5 Nov), then the sequence's checks
     j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "unsimulated_ok": True}))
     said = " | ".join(e["text"] for e in j.get("events") or [])
     assert j["state"] == "done", (j.get("error"), said[-1500:])

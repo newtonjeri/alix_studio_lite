@@ -32,9 +32,11 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     assert {"stream", "pole", "hand", "global", "check"} <= kinds
     assert sim["phases"][-1][1] == "lid_open"
     right = sim["acts"]["right"]                 # drawn as it runs: the plan's own end check (lid open) from inspection pose 1
-    assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_lifted", "lid_open"]   # no seat under the lid; no start check in a sequence (27 Oct)
+    # the run's first task, nothing before it: its own start check (the user, 5 Nov: the right arm looks before the left
+    # moves); no seat under the lid
+    assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_closed", "lid_lifted", "lid_open"]
     first_look = next(a for a in right if a["kind"] == "stream")                   # the look move stays: the lifted check is taken from
-    lifted = next(a for a in right if a["kind"] == "check")                        # inspection pose 4 (the owner, 27 Oct, after the 12:56
+    lifted = next(a for a in right if a["kind"] == "check" and a["expect"] == "lid_lifted")   # inspection pose 4 (the owner, 27 Oct, after the 12:56
     assert "move_to_inspect" in first_look["text"] and first_look["t0"] < lifted["t0"]   # run: taken from rest, five frames refused)
     looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:lid_open:")]   # the task's own plan, its first check dropped (29 Oct)
     joined = sorted((a for a in sim["acts"]["left"] + right if ":joined:" in str(a.get("file"))), key=lambda a: a["t0"])
@@ -46,12 +48,13 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     assert not any("seat_close" in str(a.get("file")) or "seat_open" in str(a.get("file")) for a in right)
     assert any("left out of this collision check" in f["text"] for f in sim["findings"])
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["lid_lifted", "lid_open"]))          # a sequence: no "lid closed" asked (27 Oct)
+    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))   # its start checked: first in the run
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     done = wait(server, job)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])
     said = " | ".join(e["text"] for e in done["events"])
-    assert "Open the lid: Open the lid done." in said and "CHECK verify_lid_lifted" in said   # the task's plan, no start check
+    assert "Open the lid: Open the lid done." in said and "CHECK verify_lid_lifted" in said
+    assert "CHECK verify_lid_closed" in said and "not asked" not in said                    # the run's first task: asked
 
 
 def test_s2_refuses_a_lid_or_seat_task_with_no_camera_before_anything_moves(server):
@@ -97,7 +100,7 @@ def test_s2_after_a_lid_task_with_a_wait_next_each_arm_stays_where_its_plan_ende
     nxt = {side: min(a["t0"] for a in sim["acts"][side] if a["stage"] == 2) for side in ("left", "right")}
     assert nxt["left"] == pytest.approx(nxt["right"], abs=1e-6)          # both arms start the next stage together
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["lid_lifted", "lid_open"]))          # a sequence: no "lid closed" asked (27 Oct)
+    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))   # the run's first task: its start asked
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     done = wait(server, job)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-6:])

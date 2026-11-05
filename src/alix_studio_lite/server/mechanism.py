@@ -2437,6 +2437,59 @@ INSPECTION_POSES = {
 }
 
 
+#: The run's start look (the user, 5 Nov): before both arms' sequence starts, the right arm's MoveJ to the pose Close the
+#: lid and Close the seat take their checks from, and the camera's "is the lid closed?"; inside the sequence each task's
+#: start state is then the sequence's own doing (the owner, 27 Oct), the run having seen where it began.
+LOOK_POSE = "inspection_pose_1"
+
+
+def look_pose_deg(gap=None) -> list | None:
+    """LOOK_POSE's joints (degrees), or None when ALIX's named poses cannot be read."""
+    p = next((x for x in poses(gap) if x["name"] == LOOK_POSE), None)
+    return list(p["joints_deg"]) if p else None
+
+
+def start_look_needs_seat(first: str, lid_closed) -> bool:
+    """Whether the start look asks the seat too: only with the lid open and a first task that the seat's state decides
+    (Open the seat, Close the seat). A closed lid holds the seat down; an open lid, the seat up or down, is closed by
+    Close the lid alone (the user, 5 Nov: closing the lid brings the seat down with it)."""
+    return lid_closed is False and first in ("seat_open", "seat_close")
+
+
+def start_look(first: str, lid_closed, seat_closed=None, moves_before: bool = True) -> tuple[str, str]:
+    """What the run's start look decides, before anything of the sequence moves (the user, 5 Nov): -> (what, why) with
+    ``what`` one of
+    - "run": the commode is as the sequence's first lid or seat task starts (PHASE_BEFORE);
+    - "close_lid": the sequence starts with the lid and the seat down and the lid is open (the seat up or down): Close
+      the lid runs first, which brings the seat down with it;
+    - "hold": the first task's own end state is there already and nothing moves before it: it is not run;
+    - "stop": the camera could not judge, or the commode is in a state the sequence cannot start from: nothing moves.
+    ``lid_closed`` / ``seat_closed``: the camera's answers (None: it could not judge); the seat only where
+    start_look_needs_seat. ``moves_before``: Programs or Global Points before the first task (taught in its start
+    state)."""
+    title = TASKS.get(first, {}).get("title", first)
+    if lid_closed is None:
+        return "stop", "the camera could not judge whether the lid is closed"
+    if start_look_needs_seat(first, lid_closed) and seat_closed is None:
+        return "stop", "the lid is open and the camera could not judge whether the seat is down"
+    found = "lid_closed" if lid_closed else ("seat_open" if seat_closed is False else "lid_open")
+    said = "the lid and the seat are down" if lid_closed else ("the lid and the seat are open" if seat_closed is False
+                                                                 else "the lid is open" + (", the seat down" if seat_closed else ""))
+    expect, after = PHASE_BEFORE.get(first), PHASE_AFTER.get(first)
+    if expect == "lid_closed":
+        if lid_closed:
+            return "run", f"{said}, as the sequence starts"
+        return "close_lid", f"{said}, and the sequence starts with the lid and the seat down: Close the lid first (it brings the seat down with it)"
+    if first == "lid_close" and not lid_closed:
+        return "run", f"{said}: {title} closes it"
+    if found == expect:
+        return "run", f"{said}, as {title} starts"
+    if found == after and not moves_before:
+        return "hold", f"{said} already: {title} is not run"
+    return "stop", (f"{said}, but the sequence starts with {PHASE_WORDS.get(expect, expect)} ({title}"
+                    + (" and the rows before it were taught so" if moves_before else "") + ")")
+
+
 def poses(gap=None) -> list:
     """The inspection poses as the page lists them: name, title, what they are for, the joints (degrees)."""
     from .gap_check import GapCheck

@@ -30,7 +30,9 @@ def test_s2_closes_the_seat_then_the_lid_after_opening_the_seat(server):
     assert [s["title"] for s in sim["stages"][:3]] == ["Open the seat", "Close the seat", "Close the lid"]     # none held: each changes the state
     assert sim["phases"][-1][1] == "lid_closed"
     right = sim["acts"]["right"]
-    assert [a["expect"] for a in right if a["kind"] == "check"] == ["seat_lifted", "seat_open", "seat_closed", "lid_closed"]   # no check before a pull
+    # the run's first task, nothing before it, asks its start (5 Nov); the closings after it no check before a pull
+    assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_open", "seat_closed", "seat_lifted", "seat_open",
+                                                                    "seat_closed", "lid_closed"]
     files = {str(a.get("file", "")).split(":")[1] for a in sim["acts"]["left"] + right if str(a.get("file", "")).startswith("mechanism:")}
     assert files == {"seat_open", "seat_close", "lid_close"}               # each task's own plan, its first checks dropped (29 Oct)
     for task in ("seat_close", "lid_close"):
@@ -38,7 +40,7 @@ def test_s2_closes_the_seat_then_the_lid_after_opening_the_seat(server):
         last = [j.stage for j, _ in __import__("alix_studio_lite.server.mechanism", fromlist=["Plan"]).Plan(task).streams(False) if j.side == "right"][-1]
         assert "move_to_inspect" in mine[0]["text"] and mine[-1]["text"].endswith(last)   # the look move first, the plan's last (a Wait next)
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["seat_lifted", "seat_open", "seat_closed", "lid_closed"]))
+    server["script"].write_text(json.dumps(["lid_open", "seat_closed", "seat_lifted", "seat_open", "seat_closed", "lid_closed"]))
     n0 = len(hardware(server))
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     done = wait(server, job, limit=400)
@@ -49,7 +51,7 @@ def test_s2_closes_the_seat_then_the_lid_after_opening_the_seat(server):
                   "CHECK verify_seat_closed", "CHECK verify_lid_closed"):
         assert words in said, words
     assert "verify_seat_open" not in said.replace("CHECK verify_seat_open: expect seat_open", "") or "not asked" in said
-    assert "CHECK verify_lid_open" not in said                                              # the sequence's own order says it
+    assert said.count("CHECK verify_lid_open") == 1                 # Open the seat's start; Close the lid's: the order says it
     labels = [r["args"]["label"] for r in hardware(server)[n0:] if r.get("verb") == "canfd stream"]
     from alix_studio_lite.server import mechanism
     for task in ("seat_close", "lid_close"):                     # each closing's streams as its plan has them: the left's pull
@@ -76,13 +78,13 @@ def test_s2_does_not_run_a_closing_whose_end_state_the_sequence_already_made(ser
     assert sim["stages"][1]["t1"] == sim["stages"][1]["t0"] and sim["phases"][-1][1] == "lid_open"
     assert not any(str(a.get("file", "")).startswith("mechanism:seat_close") for side in ("left", "right") for a in sim["acts"][side])
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
-    server["script"].write_text(json.dumps(["lid_lifted", "lid_open"]))
+    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))   # Open the lid's start: the run's first
     n0 = len(hardware(server))
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
     done = wait(server, job, limit=400)
     assert done["state"] == "done", (done.get("error"), [e["text"] for e in done.get("events", [])][-8:])
     said = " | ".join(e["text"] for e in done["events"])
     assert "Close the seat: not run, the sequence's own order says the lid is open and the seat down already." in said
-    assert "Close the seat done" not in said and "verify_seat" not in said
+    assert "Close the seat done" not in said and "verify_seat" not in said and "Open the lid: Open the lid done" in said
     labels = [r["args"]["label"] for r in hardware(server)[n0:] if r.get("verb") == "canfd stream"]
     assert labels and not any("execute_path + move_to_rest" in lb for lb in labels)         # no pull of the closing
