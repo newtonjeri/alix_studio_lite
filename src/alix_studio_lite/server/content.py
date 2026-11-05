@@ -78,12 +78,31 @@ def read_now(app, side: str) -> None:
     store(side, programs, robot.global_points(side) or [])
 
 
-def content(app, side: str, refresh: bool = False, files: dict | None = None) -> dict:
+def content(app, side: str, refresh: bool = False, files: dict | None = None, units=None) -> dict:
     """{side, live, standin, read, programs, points, note}: the controller's content as last read, read again
     when ``refresh``, or when older than FRESH_S, if the arm is linked and idle (a command that holds the
-    controller is never interrupted: the list stays as last read, and ``note`` says so)."""
+    controller is never interrupted: the list stays as last read, and ``note`` says so). The stand-in with a project
+    (``units``) whose real controller's programs were kept (program_mirror): those, and its global points, as the
+    simulation's controller holds them (the user, 5 Nov); what Lite sent to the stand-in only in the slots they leave."""
     robot = app.robot
     a = robot.arm(side)
+    ex = None
+    if robot._real(side) is None and units is not None:
+        from . import program_mirror
+
+        ex = program_mirror.exported(units, side)
+    if ex and (ex.get("programs") or ex.get("points")):     # the real controller's, as last kept in the project
+        from ..motion import track
+
+        programs = [dict(id=int(i), name=r.get("name"), bytes=None, sent=True, sha256=r.get("sha256"), lines=r.get("lines"),
+                         seconds=track.duration_s(r.get("lines"))) for i, r in sorted(ex["programs"].items())]
+        programs += [dict(id=int(i), name=r.get("stored_name") or r.get("name"), bytes=r.get("bytes"), sent=True, sha256=r.get("sha256"),
+                          lines=r.get("lines")) for i, r in sorted(a.programs.items()) if int(i) not in ex["programs"]]
+        points = [dict(name=k, joints=list(q)) for k, q in sorted((ex.get("points") or {}).items())]
+        return dict(side=side, live=False, standin=True, read=ex.get("kept"), programs=_named(sorted(programs, key=lambda x: x["id"]), files, a.programs),
+                    points=points, kept=True,
+                    note=f"The simulation's controller: the programs{' and global points' if points else ''} the real {side.upper()} "
+                         f"controller held when Data Management last kept them ({ex.get('kept')}).")
     if robot._real(side) is None:                   # the stand-in: what Lite sent to it
         programs = [dict(id=int(i), name=r.get("stored_name") or r.get("name"), bytes=r.get("bytes"), sent=True, sha256=r.get("sha256"),
                          lines=r.get("lines"))

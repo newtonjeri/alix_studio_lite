@@ -512,5 +512,17 @@
    "name": "R_T08_PRFL",
    "why": "Lite sent it, but the file it sent is no longer on this computer"
   }
- ]
+ ],
+ "points": {
+  "R_HME_POS": [
+   -4.12,
+   -99.67,
+   -0.26,
+   91.47,
+   5.14,
+   93.61,
+   0.04
+  ]
+ },
+ "points_source": "the lab's S2 simulation of 2026-11-03 19:17:45: read from the RIGHT controller (the points its sequence uses); the next keep from the controller lists them all"
 }

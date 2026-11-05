@@ -35,6 +35,8 @@ const OTHER = { left: 'right', right: 'left' };
 const SCOPES = [['sequence', 'Sequences'], ['task', 'Single task'], ['dual', 'Dual-arm task']];
 const GRIP = [0, 0, 0, 0, 150, 1000], OPEN = [1000, 1000, 1000, 1000, 1000, 1000];
 const CLEANING = [1000, 1000, 1000, 1000, 0, 1000];          // the Cleaning Pose (the owner, 15 Oct; Prepare's preset)
+// An INSPECT row's pose (the user, 5 Nov): the next lid or seat task's inspection pose unless one is named.
+const INSPECT_POSES = { '': "the next task's pose", inspection_pose_1: 'inspection pose 1', inspection_pose_4: 'inspection pose 4' };
 const S = {
   steps: { left: [], right: [] }, sources: { left: { programs: [], points: [] }, right: { programs: [], points: [] } },
   sel: { left: null, right: null }, mode: 'sim', scope: 'sequence', pick: null, edited: false,
@@ -66,6 +68,7 @@ function brief(st) {
   if (k === 'mechanism') return (S.mechanisms[st.task] || {}).title || st.task;
   if (k === 'meet') return 'Meet';
   if (k === 'wait_for') return 'Wait for';
+  if (k === 'inspect') return `INSPECT (${INSPECT_POSES[st.pose || '']})`;
   return `${String(st.move).toUpperCase()} ${st.name}`;
 }
 
@@ -129,6 +132,10 @@ function row(step) {
   if (k === 'pole') return ['POLE', `${Number(step.mm)} mm`, ''];
   if (k === 'hand') return ['HAND', step.values.join(','), 'L,R,M,I,TB,TR'];
   if (k === 'wait') return ['WAIT', `${Number(step.seconds)} s`, step.note || ''];
+  if (k === 'inspect') {                                     // the camera's look at the commode, on both arms (the user, 5 Nov)
+    return ['INSPECT', `Right arm to ${INSPECT_POSES[step.pose || '']} // the camera reads the lid and the seat`,
+      'MoveJ 50 % // both arms // decides the next lid or seat task'];
+  }
   if (k === 'mechanism') {                                   // a lid or seat task of ALIX's (mechanism.py), on both arms
     const t = S.mechanisms[step.task] || {};
     return ['LID / SEAT', `${t.short || step.task} // ${t.title || ''}${t.seconds != null ? ` (${fmtT(t.seconds)})` : ''}`,
@@ -204,6 +211,15 @@ function armPanel(side) {
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_task`, text: 'Lid or seat task (pre-recorded)' }),
           el('select', { id: `liteS2_${side}_task`, onchange: () => paintTask(side) })),
         btn('+ ADD TO BOTH ARMS', () => addMechanism(side), 'btn green')),
+      el('div', { class: 'lite-row' },
+        el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_inspectPose`, text: 'INSPECT: the right arm looks at the commode from' }),
+          el('select', { id: `liteS2_${side}_inspectPose` },
+            ...Object.entries(INSPECT_POSES).map(([value, text]) => el('option', { value, text })))),
+        btn('+ INSPECT (BOTH ARMS)', () => addInspect(side), 'btn green')),
+      el('div', { class: 'mini-note', text: 'INSPECT: the right arm goes to the inspection pose (the controller\'s MoveJ at 50 %), the left arm '
+        + 'stays still, and the wrist camera reads the lid and the seat. What it finds decides the next lid or seat task: it runs, it is '
+        + 'not run when its result is there already, or Close the lid runs first when the lid is open and the task needs it down. '
+        + 'Put one before the first task, or wherever the state should be seen.' }),
       el('div', { id: `liteS2TaskNote_${side}`, class: 'mini-note' }),
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_pose`, text: "ALIX's inspection pose (the right arm carries the camera)" }),
@@ -643,9 +659,21 @@ function addMechanism(side) {
   window.toast(`${t.title}: added at the end of both arms' lists (UP / DOWN place it in each).`, 'good');
 }
 
-// A lid or seat task is on both arms: the k-th of one arm's is the k-th of the other's.
-const nthTask = (side, i) => S.steps[side].slice(0, i + 1).filter(x => x.type === 'mechanism').length - 1;
-const taskAt = (side, k) => S.steps[side].reduce((at, x, i) => (x.type === 'mechanism' && k-- === 0 ? i : at), -1);
+function addInspect(side) {
+  const pose = $(`liteS2_${side}_inspectPose`)?.value || '';
+  for (const s of ARMS) {
+    S.steps[s].push({ type: 'inspect', pose, uid: newUid() });
+    S.sel[s] = S.steps[s].length - 1;
+    paintArm(s);
+    saveSteps(s);
+  }
+  window.toast(`INSPECT (${INSPECT_POSES[pose]}): added at the end of both arms' lists (UP / DOWN place it in each).`, 'good');
+}
+
+// A lid or seat task, or an INSPECT, is on both arms: the k-th of one arm's is the k-th of the other's.
+const BOTH = (x) => x.type === 'mechanism' || x.type === 'inspect';
+const nthTask = (side, i) => S.steps[side].slice(0, i + 1).filter(BOTH).length - 1;
+const taskAt = (side, k) => S.steps[side].reduce((at, x, i) => (BOTH(x) && k-- === 0 ? i : at), -1);
 
 function moveSel(side, d) {
   const i = S.sel[side], list = S.steps[side];
@@ -659,7 +687,7 @@ function moveSel(side, d) {
 function duplicate(side) {
   const i = S.sel[side];
   if (i == null) return;
-  if (S.steps[side][i].type === 'mechanism') { window.toast('A lid or seat task is added to both arms from the LID / SEAT tab.', 'warn'); return; }
+  if (BOTH(S.steps[side][i])) { window.toast('A lid or seat task or an INSPECT is added to both arms from the LID / SEAT tab.', 'warn'); return; }
   if (S.steps[side][i].type === 'meet') { window.toast('A Meet is added to both arms from the MEET / WAIT FOR tab.', 'warn'); return; }
   const copy = { ...JSON.parse(JSON.stringify(S.steps[side][i])), uid: newUid() };     // a copy: a row of its own
   delete copy.together;                                        // its start together stays with the row it pairs (START TOGETHER)
@@ -672,14 +700,15 @@ function duplicate(side) {
 function remove(side) {
   const i = S.sel[side];
   if (i == null) return;
-  if (S.steps[side][i].type === 'mechanism') {                // and its pair on the other arm
+  if (BOTH(S.steps[side][i])) {                              // and its pair on the other arm
     const other = side === 'left' ? 'right' : 'left', j = taskAt(other, nthTask(side, i));
-    if (j >= 0 && S.steps[other][j].task === S.steps[side][i].task) {
+    if (j >= 0 && S.steps[other][j].type === S.steps[side][i].type && S.steps[other][j].task === S.steps[side][i].task) {
       S.steps[other].splice(j, 1);
       S.sel[other] = S.steps[other].length ? Math.min(j, S.steps[other].length - 1) : null;
       paintArm(other);
       saveSteps(other);
-      window.toast(`${(S.mechanisms[S.steps[side][i].task] || {}).title || 'The task'}: removed from both arms.`, 'good');
+      window.toast(`${S.steps[side][i].type === 'inspect' ? 'INSPECT' : (S.mechanisms[S.steps[side][i].task] || {}).title || 'The task'}: `
+        + 'removed from both arms.', 'good');
     }
   }
   if (S.steps[side][i].type === 'meet') {                     // and its partner: the Meets pair up in order

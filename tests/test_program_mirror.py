@@ -50,12 +50,18 @@ def test_the_slow_down_tool_finds_a_file_kept_in_the_project(tmp_path):
     assert not b.file.exists()
 
 
-def test_data_management_saves_and_downloads_the_kept_programs(tmp_path):
+def test_the_simulations_arm_never_overwrites_the_kept_programs_and_holds_them(tmp_path):
+    """The user, 5 Nov: a save in Visual sim mirrored the stand-in, which holds none of the lab's programs, and deleted
+    31 of the left arm's kept files. Only a real controller's programs are kept now: on the stand-in Data Management's
+    save is refused, its reads and S2's simulation write nothing, and the download gives the kept copy. The other way
+    round, the simulation's arm holds what the real controller held when it was last kept: its programs (S2's sources,
+    Data Management, the simulation's programs) and its global points."""
     import io
     import threading
     import urllib.request
     import zipfile
 
+    from alix_studio_lite.server import content, workflow
     from alix_studio_lite.server.app import LiteApp, make_server
     from alix_studio_lite.server.project import open_project
 
@@ -78,9 +84,30 @@ def test_data_management_saves_and_downloads_the_kept_programs(tmp_path):
         page = {"id": "alix_keep1", "name": "Keep", "createdAt": "2026-11-04T10:00:00.000Z", "updatedAt": "2026-11-04T10:00:00.000Z",
                 "archived": False, "state": {"currentTask": 0, "currentView": "setup"}}
         call("PUT", "/api/projects/alix_keep1", page, tok)
-        m = call("POST", "/api/robots/right/stored/keep", {"pid": "alix_keep1"}, tok)
-        assert m["arm"] == "right" and m["folder"].endswith("controller_exports/right") and "programs" in m
+        from alix_studio_lite.server.api_units import open_units
+        units = open_units(app.store, "alix_keep1")                     # the project's folder (no request's session here)
+        folder = units.root / "controller_exports/right"                  # the lab's kept copy, as Data Management left it
+        lab = track.write_md(folder / "02_2_R_P2_R04_pole200_grip_7.6s_v.txt", _md(60, 3))
+        man = dict(arm="right", kept="2026-11-05 01:11:37", not_kept=[], points={"R_HME_POS": [-4.12, -99.67, -0.26, 91.47, 5.14, 93.61, 0.04]},
+                   programs=[dict(slot=2, name="2_R_P2_R04_pole200_grip_7.6s_v.t", file=lab.name, sha256=track.sha256_file(lab), lines=60,
+                                  seconds=0.295, stage={"pole_mm": 200.0, "hand": [0, 0, 0, 0, 150, 1000]})])
+        (folder / "programs.json").write_text(json.dumps(man))
+        refused = call("POST", "/api/robots/right/stored/keep", {"pid": "alix_keep1"}, tok)
+        assert refused["code"] == "sim" and "Nothing was changed" in refused["error"]
+        call("GET", "/api/robots/right/data?pid=alix_keep1", token=tok)                     # a read: writes nothing either
+        assert pm.keep_quietly(app, units, "right") is None
+        assert lab.is_file() and json.loads((folder / "programs.json").read_text())["programs"][0]["slot"] == 2
         z = zipfile.ZipFile(io.BytesIO(call("GET", "/api/robots/right/stored/kept.zip?pid=alix_keep1", token=tok, raw=True)))
-        assert "right/programs.json" in z.namelist()
+        assert {"right/programs.json", f"right/{lab.name}"} <= set(z.namelist())
+        # the simulation's controller is the real one's, as kept
+        src = call("GET", "/api/projects/alix_keep1/workflow/right/sources", token=tok)
+        assert [p["id"] for p in src["programs"]] == [2] and src["points"] == ["R_HME_POS"] and "last kept" in src["note"]
+        known = workflow.programs_known(app, units, "right")
+        assert known[2]["sent"] and known[2]["sha256"] == track.sha256_file(lab) and known[2]["file"] == str(lab)
+        assert known[2]["stage"]["pole_mm"] == 200.0
+        assert workflow.points_known(app, "right", units)["points"]["R_HME_POS"][0] == -4.12
+        dm = call("GET", "/api/robots/right/data?pid=alix_keep1", token=tok)
+        assert [p["num"] for p in dm["programs"]] == [2] and dm["points"][0]["name"] == "R_HME_POS" and dm["kept_copy"]
+        assert content.content(app, "right", units=units)["standin"]
     finally:
         srv.shutdown()

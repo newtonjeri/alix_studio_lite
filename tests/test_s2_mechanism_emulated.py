@@ -35,9 +35,9 @@ def test_s2_runs_a_lid_open_put_in_its_sequence(server):
     # the run's first task, nothing before it: its own start check (the user, 5 Nov: the right arm looks before the left
     # moves); no seat under the lid
     assert [a["expect"] for a in right if a["kind"] == "check"] == ["lid_closed", "lid_lifted", "lid_open"]
-    first_look = next(a for a in right if a["kind"] == "stream")                   # the look move stays: the lifted check is taken from
-    lifted = next(a for a in right if a["kind"] == "check" and a["expect"] == "lid_lifted")   # inspection pose 4 (the owner, 27 Oct, after the 12:56
-    assert "move_to_inspect" in first_look["text"] and first_look["t0"] < lifted["t0"]   # run: taken from rest, five frames refused)
+    first_look = next(a for a in right if a["kind"] == "global" and "(50 %" in a["text"])   # the look move stays (the lifted check is
+    lifted = next(a for a in right if a["kind"] == "check" and a["expect"] == "lid_lifted")   # taken from inspection pose 4: the owner,
+    assert first_look["t0"] < lifted["t0"]                     # 27 Oct, after 12:56), the controller's MoveJ at 50 % since 5 Nov
     looks = [a for a in right if a["kind"] == "stream" and str(a.get("file", "")).startswith("mechanism:lid_open:")]   # the task's own plan, its first check dropped (29 Oct)
     joined = sorted((a for a in sim["acts"]["left"] + right if ":joined:" in str(a.get("file"))), key=lambda a: a["t0"])
     assert [a["file"].split(":")[-1] for a in joined] == ["3", "2"]                   # the run's streams (27 Oct): the left's

@@ -878,8 +878,8 @@ def test_the_simulation_plays_a_plans_two_arm_stretches_at_once():
 
     from alix_studio_lite.server import mechanism, workflow
 
-    lid = {"type": "mechanism", "task": "lid_open"}
-    run = workflow.plan_for(numbered([prog(80), lid, prog(81)], [prog(80), lid, prog(54)]), "both")
+    lid, ins = {"type": "mechanism", "task": "lid_open"}, {"type": "inspect"}     # an INSPECT first: no start check (5 Nov)
+    run = workflow.plan_for(numbered([ins, prog(80), lid, prog(81)], [ins, prog(80), lid, prog(54)]), "both")
     md = np.zeros((1001, 7))
     progs = {i: dict(file="/f.txt", sent=True, lines=1001) for i in (80, 81, 54)}
     start = dict(pole_mm=150.0, hand=[0, 0, 0, 0, 150, 1000], q_deg=[0.0] * 7)
@@ -887,15 +887,15 @@ def test_the_simulation_plays_a_plans_two_arm_stretches_at_once():
     workflow.schedule(run, sims, 15)
     L, R = sims["left"].acts, sims["right"].acts
     plan = mechanism.Plan(mechanism.sequence_plan("lid_open"))
-    look = next(a for a in R if a["kind"] == "stream" and a["stage"] == 1 and "move_to_inspect" in a["text"])
-    lift = next(a for a in L if a["kind"] == "stream" and a["stage"] == 1 and "execute_path" in a["text"])
-    grasp0 = next(a for a in R if a["kind"] == "hand" and a["stage"] == 1)
-    assert grasp0["t0"] == pytest.approx(look["t1"], abs=1e-6)                   # the right's grasp after its look (29 Oct)
+    look = next(a for a in R if a["kind"] == "global" and a["stage"] == 2 and "(50 %" in a["text"])   # the look: a MoveJ (5 Nov)
+    lift = next(a for a in L if a["kind"] == "stream" and a["stage"] == 2 and "execute_path" in a["text"])
+    grasp0 = next(a for a in R if a["kind"] == "hand" and a["stage"] == 2)
+    assert grasp0["t0"] >= look["t1"] - 1e-6                                    # the right's grasp after its look (29 Oct)
     assert lift["t0"] == pytest.approx(grasp0["t1"], abs=1e-6)                   # the lift once its fingers are closed
-    retreat = next(a for a in L if a["kind"] == "stream" and a["stage"] == 1 and "move_to_rest" in a["text"])
-    grasp = next(a for a in R if a["kind"] == "hand" and a["stage"] == 1 and a["t0"] >= retreat["t0"] - 1e-6)
+    retreat = next(a for a in L if a["kind"] == "stream" and a["stage"] == 2 and "move_to_rest" in a["text"])
+    grasp = next(a for a in R if a["kind"] == "hand" and a["stage"] == 2 and a["t0"] >= retreat["t0"] - 1e-6)
     assert grasp["t0"] == pytest.approx(retreat["t0"], abs=1e-6)                # the second: the right's grasp with the left's retreat
-    looks = [a for a in R if a["kind"] == "stream" and a["stage"] == 1 and "move_to_inspect" in a["text"]]
+    looks = [a for a in R if a["kind"] == "stream" and a["stage"] == 2 and "move_to_inspect" in a["text"]]
     assert looks[-1]["t0"] == pytest.approx(grasp["t1"], abs=1e-6)                 # the right's look right after its grasp
     check_open = next(a for a in R if a["kind"] == "check" and a["expect"] == "lid_open")
     assert check_open["t0"] == pytest.approx(max(retreat["t1"], looks[-1]["t1"]), abs=1e-6)   # the stretch ends with the later arm
@@ -903,7 +903,7 @@ def test_the_simulation_plays_a_plans_two_arm_stretches_at_once():
     assert len(notes) == 1 and "LEFT move_to_rest || RIGHT hand_grasp + move_to_inspect" in notes[0]["text"]
     # the plan's time as the simulation gives it is shorter by the moves run alongside
     serial = sum(e.seconds for e in plan.entries if e.kind == "arm")
-    played = [a for a in L + R if a["kind"] == "stream" and a["stage"] == 1 and a["t1"] > a["t0"]]
+    played = [a for a in L + R if a["kind"] == "stream" and a["stage"] == 2 and a["t1"] > a["t0"]]
     assert max(a["t1"] for a in played) - min(a["t0"] for a in played) < serial + 20   # (the hands and checks between: a loose bound)
 
 
@@ -1041,21 +1041,50 @@ def test_the_start_look_decides_how_the_run_begins():
     assert m.start_look("seat_open", False, seat_closed=None)[0] == "stop"
 
 
-def test_the_first_task_of_a_run_checks_its_start_unless_the_start_look_did():
-    """The lab, 5 Nov 18:24: a sequence of Close the lid alone ran with its "is the lid open?" not asked (the sequence's
-    order said so, 27 Oct, with nothing before it to say it), so the left arm's approach went with the right arm's look.
-    The run's first lid or seat task now asks its start checks (its plan's order: the right arm's look, the camera, then
-    the left arm) unless the run's start look (Programs before it) saw the commode; the tasks after it keep the order."""
-    from alix_studio_lite.server import workflow
+def test_an_inspect_row_and_the_first_task_of_a_run_checking_its_start():
+    """The user, 5 Nov. The lab's 18:24 run of Close the lid alone had its "is the lid open?" not asked (the sequence's
+    order, 27 Oct, with nothing before it to say it): the run's first lid or seat task now asks its start checks unless
+    an INSPECT before it saw the commode (its plan's order: the right arm's look, the camera, then the left arm); the
+    tasks after it keep the order. An INSPECT row (both arms) is a stage of its own: the right arm's MoveJ to the next
+    task's inspection pose (or the one it names), its decision worked out for that task."""
+    from alix_studio_lite.server import flow, mechanism, workflow
 
-    lc, lo = {"type": "mechanism", "task": "lid_close"}, {"type": "mechanism", "task": "lid_open"}
+    lc, lo, ins = {"type": "mechanism", "task": "lid_close"}, {"type": "mechanism", "task": "lid_open"}, {"type": "inspect"}
     alone = workflow.plan_for(numbered([lc], [lc]), "both")
-    assert alone["look"] is None and workflow.asks_start(alone, 0)
+    assert workflow.asks_start(alone, 0)
     two = workflow.plan_for(numbered([lo, lc], [lo, lc]), "both")
-    assert two["look"] is None and workflow.asks_start(two, 0) and not workflow.asks_start(two, 1)
-    cleaned = workflow.plan_for(numbered([prog(1), lo], [prog(2), lo]), "both")
-    look = cleaned["look"]
-    assert look and look["task"] == "lid_open" and look["expect"] == "lid_closed" and look["pose"] == "inspection_pose_1"
-    assert len(look["deg"]) == 7 and not workflow.asks_start(cleaned, 1)
-    dual = workflow.plan_for(numbered([prog(1), lo], [prog(2), lo]), "both", {"scope": "dual", "stage": 1})
-    assert not dual.get("look") and workflow.asks_start(dual, 0)                # a lid or seat task run on its own
+    assert workflow.asks_start(two, 0) and not workflow.asks_start(two, 1)
+    cleaned = workflow.plan_for(numbered([ins, prog(1), lo, ins, lc], [ins, prog(2), lo, ins, lc]), "both")
+    kinds = [st["kind"] for st in cleaned["plan"]]
+    assert kinds == ["inspect", "parallel", "mechanism", "inspect", "mechanism"] and cleaned["counts"]["inspects"] == 2
+    first, second = cleaned["plan"][0], cleaned["plan"][3]
+    assert first["task"] == "lid_open" and first["pose"] == "inspection_pose_4" and first["moves_before"] and first["expect"] == "lid_closed"
+    assert second["task"] == "lid_close" and second["pose"] == "inspection_pose_1" and not second["moves_before"]
+    assert len(first["deg"]) == 7 and not workflow.asks_start(cleaned, 2) and not workflow.asks_start(cleaned, 4)
+    named = workflow.plan_for(numbered([{"type": "inspect", "pose": "inspection_pose_1"}, lo], [ins, lo]), "both")
+    assert named["plan"][0]["pose"] == "inspection_pose_1"                                # the row's own pose
+    with pytest.raises(workflow.UserError, match="INSPECT looks from one of ALIX's inspection poses"):
+        workflow.check_steps([{"type": "inspect", "pose": "pose_9"}], "left")
+    with pytest.raises(flow.PlanError, match="INSPECTs"):                                  # on both arms, in the same order
+        flow.build(*numbered([ins, lo], [lo]).values())
+    with pytest.raises(workflow.UserError, match="an INSPECT, which uses both arms"):
+        workflow.plan_for(numbered([ins, prog(1)], [prog(2)]), "left")
+    dual = workflow.plan_for(numbered([ins, prog(1), lo], [ins, prog(2), lo]), "both", {"scope": "dual", "stage": 2})
+    assert workflow.asks_start(dual, 0)                                                  # a lid or seat task run on its own
+    # the simulation: the INSPECT's MoveJ at 50 %, the left still; a task with Programs before it and no INSPECT is said
+    md = {"/f.txt": np.zeros((1001, 7))}
+    progs = {i: dict(file="/f.txt", sent=True, lines=1001) for i in (1, 2)}
+    start = dict(pole_mm=150.0, hand=[0, 0, 0, 0, 150, 1000], q_deg=[0.0] * 7)
+    sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, md.get, []) for s in ("left", "right")}
+    workflow.schedule(cleaned, sims, 15)
+    R = sims["right"].acts
+    move = next(a for a in R if a["stage"] == 0 and a["kind"] == "global")
+    assert "MoveJ to Inspection pose 4 (50 %)" in move["text"] and move["q1"] == pytest.approx(first["deg"], abs=1e-3)
+    assert move["t1"] - move["t0"] == pytest.approx(workflow.movej_s([0.0] * 7, first["deg"], mechanism.INSPECT_PCT,
+                                                                      [180] * 2 + [225] * 5), rel=0.2)
+    assert any(a["kind"] == "check" and a["stage"] == 0 for a in R)
+    assert "Still while the RIGHT arm inspects the commode" in sims["left"].acts[0]["text"]
+    blind = workflow.plan_for(numbered([prog(1), lo], [prog(2), lo]), "both")
+    sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, md.get, []) for s in ("left", "right")}
+    workflow.schedule(blind, sims, 15)
+    assert any("with the commode not seen: put an INSPECT before them" in f["text"] for f in sims["right"].findings)

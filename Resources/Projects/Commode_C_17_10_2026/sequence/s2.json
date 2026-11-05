@@ -1,9 +1,10 @@
 {
  "left": [
   {
-   "type": "mechanism",
-   "task": "lid_close",
-   "uid": "2209fb68"
+   "type": "inspect",
+   "pose": "inspection_pose_1",
+   "note": "Start: the commode's state before anything moves (lid and seat down expected; lid open -> Close the lid first)",
+   "uid": "110f9060"
   },
   {
    "type": "global",
@@ -40,7 +41,14 @@
    "name": "1_L_P1_R01+R02+R03+R04_pole50_.t",
    "speed": 100,
    "transit_speed": 30,
+   "together": true,
    "uid": "61635ef2"
+  },
+  {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_open: its own inspection pose; the reading decides it",
+   "uid": "62e2ab8d"
   },
   {
    "type": "mechanism",
@@ -53,6 +61,7 @@
    "name": "2_L_P2_R05_PART1+R05_PART2_pol.t",
    "speed": 100,
    "transit_speed": 30,
+   "together": true,
    "uid": "409a2a00"
   },
   {
@@ -62,6 +71,12 @@
    "speed": 100,
    "transit_speed": 30,
    "uid": "d4a82847"
+  },
+  {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before seat_open: its own inspection pose; the reading decides it",
+   "uid": "34ade25a"
   },
   {
    "type": "mechanism",
@@ -74,6 +89,7 @@
    "name": "4_L_P3_R07_PART1+R07_PART2_pol.t",
    "speed": 100,
    "transit_speed": 30,
+   "together": true,
    "uid": "a6b8a2bf"
   },
   {
@@ -101,6 +117,12 @@
    "uid": "1785bccd"
   },
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_close: its own inspection pose; the reading decides it",
+   "uid": "d358df65"
+  },
+  {
    "type": "mechanism",
    "task": "lid_close",
    "uid": "36b67714"
@@ -116,9 +138,10 @@
  ],
  "right": [
   {
-   "type": "mechanism",
-   "task": "lid_close",
-   "uid": "317a9a22"
+   "type": "inspect",
+   "pose": "inspection_pose_1",
+   "note": "Start: the commode's state before anything moves (lid and seat down expected; lid open -> Close the lid first)",
+   "uid": "e7e70dfd"
   },
   {
    "type": "global",
@@ -155,7 +178,14 @@
    "name": "1_R_P1_R01_PART1+R01_PART2+R02.t",
    "speed": 100,
    "transit_speed": 30,
+   "together": true,
    "uid": "bea3ac62"
+  },
+  {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_open: its own inspection pose; the reading decides it",
+   "uid": "b59fa4f9"
   },
   {
    "type": "mechanism",
@@ -168,6 +198,7 @@
    "name": "2_R_P2_R04_pole200_grip_7.6s_v.t",
    "speed": 100,
    "transit_speed": 30,
+   "together": true,
    "uid": "17ec484c"
   },
   {
@@ -187,6 +218,12 @@
    "uid": "bf71407d"
   },
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before seat_open: its own inspection pose; the reading decides it",
+   "uid": "d7b0428a"
+  },
+  {
    "type": "mechanism",
    "task": "seat_open",
    "uid": "d630c1d9"
@@ -197,6 +234,7 @@
    "name": "5_5_R_P3_R07+R08_PART1+R08_PAR.t",
    "speed": 100,
    "transit_speed": 30,
+   "together": true,
    "uid": "4b08d9c6"
   },
   {
@@ -206,6 +244,12 @@
    "speed": 100,
    "transit_speed": 30,
    "uid": "bb468b71"
+  },
+  {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_close: its own inspection pose; the reading decides it",
+   "uid": "f708aa24"
   },
   {
    "type": "mechanism",
@@ -221,5 +265,5 @@
    "uid": "97f2b51c"
   }
  ],
- "updated": "2026-11-05 21:20:59"
+ "updated": "2026-11-05 16:34:32"
 }

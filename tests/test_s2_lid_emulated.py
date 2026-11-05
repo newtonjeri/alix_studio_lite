@@ -32,8 +32,8 @@ def server(tmp_path_factory):
     data = tmp_path_factory.mktemp("lite-s2-lid")
     script = data / "answers.json"
     # Open the lid: closed, lifted (the seat under it not asked, 26 Oct), its end check: the lid open
-    script.write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))   # the start look (Program 71 first), then the
-    # sequence's checks: Open the lid's start is the look's (5 Nov)
+    script.write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))   # Open the lid: its own start (no INSPECT before
+    # it, 5 Nov), lifted (the seat under it not asked, 26 Oct), its end check: the lid open
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
                              "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"),
                              "--projects", str(data / "projects")],
@@ -133,19 +133,18 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
     said = " | ".join(e["text"] for e in j.get("events") or [])
     assert j["state"] == "done", (j.get("error"), said[-1500:])
     assert "Open the lid done" in said and "Close the seat" not in said   # its sequence plan (27 Oct); no closing follows (26 Oct)
-    assert "Look at the commode (Inspection pose 1): the lid and the seat are down, as the sequence starts." in said
-    assert "verify_lid_closed: not asked" in said                  # Open the lid's start: the start look saw it (5 Nov)
+    assert "CHECK verify_lid_closed" in said                       # no INSPECT before it: Open the lid asks its own start (5 Nov)
     assert "RIGHT hand hand_release: not sent, the RIGHT hand is set for its next task's start right after" in said   # 26 Oct
     for side in ("LEFT", "RIGHT"):
         assert f"{side}: at the start of Program 72 (its own pole and hand, its first point)." in said
     hw = hardware(server, t0)
     pairs = [(r["side"], r["args"]["mm"], r["args"]["hand"]) for r in hw if r["verb"] == "pole and hand"]
     # 71's own; Open the lid's start (its pole and the hand its first move needs, one step since 26 Oct); 72's own after it
-    from alix_studio_lite.server import mechanism                     # in a sequence (no start check): the left's pole and half
-    lid = mechanism.Plan("lid_open")                                  # grasp; the right's grasp after its look (29 Oct)
-    first = lid.first_move_targets(mechanism.without_start_checks(list(lid.entries))[0])
+    from alix_studio_lite.server import mechanism                     # no INSPECT before it: its start check asked (5 Nov), so
+    lid = mechanism.Plan("lid_open")                                  # nothing is set early: the plan's own start state, its
+    first = lid.first_move_targets(mechanism.without_inspect(list(lid.entries))[0])   # poles and hands after the check (29 Oct)
     start = {s: (first[s]["pole_mm"], first[s]["hand"]) for s in ("left", "right")}
-    assert start["left"][1] == [516, 516, 516, 516, 133, 944] and start["right"][1] == [1000] * 6
+    assert start["left"][1] == [1000] * 6 and start["right"][1] == [1000] * 6
     for side in ("left", "right"):
         assert [(mm, hand) for s, mm, hand in pairs if s == side] == [(150.0, GRIP), start[side], (200.0, CLEAN)]
     for side in ("left", "right"):                                    # its last MoveJ: to 72's first point
@@ -157,11 +156,14 @@ def test_a_lid_task_then_each_arm_to_its_next_programs_start_with_its_own_pole_a
     # the left's approach and lift once the right's fingers are closed (29 Oct); the left's retreat with the right's grasp and look
     spans = lambda label: [r["args"]["t_mono"] for r in hw if r["verb"] == "canfd stream" and r["args"]["label"] == label]   # noqa: E731
     looks, lift = spans("RIGHT arm move_to_inspect"), spans("LEFT arm move_to_pre_start + move_to_start + execute_path")[0]
-    assert looks[0][1] <= lift[0], (looks, lift)                                        # the first look, then the lift
+    first = next(r for r in hw if r["verb"] == "move to pose" and r["side"] == "right" and r["args"]["speed"] == 50)
+    assert first["t"] < next(r["t"] for r in hw if r["verb"] == "canfd stream" and r["args"]["label"].startswith("LEFT arm move_to_pre_start"))
+    # the first look (the controller's MoveJ at 50 %, 5 Nov), then the lift
     retreat = next(r["args"]["t_mono"] for r in hw if r["verb"] == "canfd stream"                     # its own plan's: 4 Nov the
                    and r["args"]["label"] in ("LEFT arm move_to_pre_start + move_to_rest", "LEFT arm move_to_rest"))   # left's straight to rest
     assert retreat[0] < looks[-1][1] and looks[-1][0] < retreat[1], (retreat, looks)                   # the last look, in the retreat's
-    assert "both arms at once: LEFT move_to_half_pole_length + hand_grasp || RIGHT move_to_inspect" in said
+    together = [t for t in said.split(" | ") if t.startswith("both arms at once:")]      # the plan's own moves alongside each other
+    assert together and said.index(together[0]) > said.index("CHECK verify_lid_closed")    # only after its start check (5 Nov)
     feeds = [r for r in hw if r["verb"] == "s2 feed" and r.get("text") == "recording"]
     assert len(feeds) == 4                                            # one an arm a stage (2 stages), not one a runner call
 
@@ -175,45 +177,51 @@ def _simulated(server, steps):
     return sim["result"]
 
 
-def test_a_lid_found_open_at_the_start_is_closed_before_the_sequence(server):
-    """The user, 5 Nov: the sequence starts with the lid and the seat down (Program 71 cleans before Open the lid). The
-    start look finds the lid open: Close the lid runs first (it brings the seat down with it), its own start check asked,
-    then both arms go back where the run began, then the sequence as simulated."""
+def test_an_inspect_that_finds_the_lid_open_closes_it_before_the_sequence(server):
+    """The user, 5 Nov: an INSPECT row before the cleaning (Program 71 runs with the lid and the seat down, before Open the
+    lid): the right arm's MoveJ to Open the lid's inspection pose at 50 %, the left arm still, the camera's look. The
+    lid found open: Close the lid runs first (it brings the seat down with it), its start the INSPECT's word, then the
+    arms where the run goes on as simulated, then the sequence; Open the lid asks no start check (the INSPECT saw it)."""
     prog = lambda pid: {"type": "program", "id": pid, "transit_speed": 30}               # noqa: E731
-    res = _simulated(server, [prog(71), {"type": "mechanism", "task": "lid_open"}, prog(72)])
-    right = res["acts"]["right"]
-    assert right[0]["kind"] == "wait" and right[1]["kind"] == "global" and "Inspection pose 1" in right[1]["text"]   # its look first
-    assert right[2]["kind"] == "check" and right[2]["expect"] == "lid_closed" and right[3]["kind"] == "global"
-    assert "Still while the RIGHT arm looks at the commode" in res["acts"]["left"][0]["text"]
-    assert any("The run starts with a look at the commode" in f["text"] for f in res["findings"])
-    # the look: open; Close the lid: its start (open), its end (closed); then Open the lid's lift and its end check
-    (server["data"] / "answers.json").write_text(json.dumps(["lid_open", "lid_open", "lid_closed", "lid_lifted", "lid_open"]))
+    res = _simulated(server, [{"type": "inspect"}, prog(71), {"type": "mechanism", "task": "lid_open"}, prog(72)])
+    right = [a for a in res["acts"]["right"] if a["stage"] == 0]
+    move = next(a for a in right if a["kind"] == "global")
+    assert "MoveJ to Inspection pose 4 (50 %)" in move["text"]                          # Open the lid's own pose
+    assert right[-1]["kind"] == "check" and right[-1]["t0"] >= move["t1"] - 1e-6
+    assert "Still while the RIGHT arm inspects the commode" in res["acts"]["left"][0]["text"]
+    assert any("INSPECT (RIGHT row 1): the RIGHT arm to Inspection pose 4 by the controller's MoveJ at 50 %" in f["text"]
+               for f in res["findings"])
+    # the INSPECT: open; Close the lid: its end check (its start the INSPECT's); then Open the lid's lift and its end check
+    (server["data"] / "answers.json").write_text(json.dumps(["lid_open", "lid_closed", "lid_lifted", "lid_open"]))
     t0 = time.time()
     j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": res["hash"]}))
     said = " | ".join(e["text"] for e in j.get("events") or [])
     assert j["state"] == "done", (j.get("error"), said[-2000:])
-    assert ("Look at the commode (Inspection pose 1): the lid is open, and the sequence starts with the lid and the seat down: "
-            "Close the lid first (it brings the seat down with it).") in said
-    assert "Close the lid before the sequence: Close the lid done." in said and "CHECK verify_lid_open" in said
-    assert "LEFT: at the start of the sequence" in said and "RIGHT: at the start of the sequence" in said
-    assert "Open the lid: Open the lid done." in said
+    assert ("INSPECT (Inspection pose 4, RIGHT row 1): the lid is open, and Open the lid starts with the lid and the seat "
+            "down: Close the lid first (it brings the seat down with it).") in said
+    assert "Close the lid after the INSPECT: Close the lid done." in said
+    assert said.count("CHECK verify_lid_open") == 1                     # Open the lid's end check only: Close the lid's start not asked
+    assert "LEFT: at the start of the run after the INSPECT" in said and "Open the lid: Open the lid done." in said
+    assert "CHECK verify_lid_closed: expect lid_closed" in said and said.count("CHECK verify_lid_closed") == 1   # Close the lid's end
     hw = hardware(server, t0)
-    look = next(r for r in hw if r["verb"] == "start look")
-    assert look["args"]["decided"] == "close_lid" and look["args"]["lid_closed"] is False
+    ins = next(r for r in hw if r["verb"] == "inspect")
+    assert ins["args"]["decided"] == "close_lid" and ins["args"]["lid_closed"] is False and ins["args"]["pose"] == "inspection_pose_4"
+    first = next(r for r in hw if r["verb"] == "move to pose")
+    assert first["side"] == "right" and first["args"]["speed"] == 50                     # the INSPECT's MoveJ: 50 %
     pulls = [r["t"] for r in hw if r["verb"] == "canfd stream" and r["args"]["label"].startswith("LEFT arm execute_path")]
     first_prog = next(r["t"] for r in hw if r["verb"] == "runner v14" and str(r.get("text") or "").startswith("WORKFLOW PROGRAM 1/1: slot 71"))
     assert pulls and pulls[0] < first_prog                                # Close the lid's pull before Program 71
 
 
-def test_a_start_look_that_cannot_judge_stops_before_the_sequence(server):
-    """The camera cannot judge the lid at the start look: the RIGHT arm goes back where it stood and the run stops,
-    nothing of the sequence moved."""
+def test_an_inspect_that_cannot_judge_stops_before_anything_else_moves(server):
+    """The camera cannot judge the lid at the INSPECT: the run stops there, the RIGHT arm at the inspection pose, nothing
+    else of the sequence moved."""
     prog = lambda pid: {"type": "program", "id": pid, "transit_speed": 30}               # noqa: E731
-    res = _simulated(server, [prog(71), {"type": "mechanism", "task": "lid_open"}, prog(72)])
+    res = _simulated(server, [{"type": "inspect"}, prog(71), {"type": "mechanism", "task": "lid_open"}, prog(72)])
     (server["data"] / "answers.json").write_text(json.dumps(["cannot_judge"]))
     t0 = time.time()
     j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": res["hash"]}))
     assert j["state"] == "failed" and "Not run: the camera could not judge whether the lid is closed. Nothing else moved." in j["error"], j
     hw = hardware(server, t0)
-    assert [r["side"] for r in hw if r["verb"] == "move to pose"] == ["right", "right"]          # there and back
+    assert [r["side"] for r in hw if r["verb"] == "move to pose"] == ["right"]                   # the INSPECT's MoveJ only
     assert not [r for r in hw if r["verb"] in ("runner v14", "canfd stream", "pole and hand")]
