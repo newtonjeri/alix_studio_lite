@@ -79,7 +79,10 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     # ALIX's emulator reports a 100 % global ratio, so each stream sets 50 and puts 100 back (the robot's controllers
     # report none: 50 %, held across the run's moves; tests/test_robot_real.py)
     assert not any(r["args"]["ratio_held"] for r in streams)
-    assert labels.count("RIGHT arm move_to_inspect") == 2 and labels[-1] == "RIGHT arm move_to_rest"   # the plan's two looks; its own end check rides rest
+    # the plan's first look is the controller's MoveJ at 50 % (the user, 5 Nov), its second a stream; its own end check rides rest
+    assert labels.count("RIGHT arm move_to_inspect") == 1 and labels[-1] == "RIGHT arm move_to_rest"
+    look = next(r for r in rows_hw if r.get("verb") == "move to pose" and r["side"] == "right")
+    assert look["args"]["speed"] == 50 and look["t"] < streams[0]["t"]
     hands = [r for r in hardware(server) if r.get("verb") == "hand move" and isinstance(r["args"]["speed_set"], list)]
     assert hands and all(len(r["args"]["speed_set"]) == 6 for r in hands)   # the plan's hand moves: ALIX's executive's speeds
     # the readings go on through the run, on each link's own connection (26 Oct): the status log is not blind while the
@@ -95,11 +98,9 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
 
 
 def test_stop_in_the_middle_of_a_stream_stops_sending(server):
-    server["script"].write_text(json.dumps(["lid_closed"]))                # its first answer: the lid closed, the lift follows
     before = len(hardware(server))
+    server["script"].write_text(json.dumps(["lid_closed", "lid_lifted", "lid_open"]))   # the first stream is the left's lift (5 Nov)
     job = call(server, "POST", "/api/mechanism/lid_open/run", {"confirmed": True})
-    running = wait(server, job, until=lambda j: "move_to_inspect" in (j.get("stage") or "") and "move_to_inspect_pole" not in (j.get("stage") or ""))
-    assert running["state"] == "running", running
     deadline = time.monotonic() + 30                             # ALIX's "CANFD: N lines ..." comes as the sending starts
     while not any(str(r.get("text") or "").startswith("CANFD:") for r in hardware(server)[before:]):
         assert time.monotonic() < deadline, "the stream never started"

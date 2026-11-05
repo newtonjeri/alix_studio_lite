@@ -17,6 +17,12 @@ def server(tmp_path_factory):
     proc.wait(10)
 
 
+def mechanism_title(task):
+    from alix_studio_lite.server import mechanism
+
+    return mechanism.TASKS[task]["title"]
+
+
 def test_s2_closes_the_seat_then_the_lid_after_opening_the_seat(server):
     seat = {"type": "mechanism", "task": "seat_open"}
     sc = {"type": "mechanism", "task": "seat_close"}
@@ -38,7 +44,9 @@ def test_s2_closes_the_seat_then_the_lid_after_opening_the_seat(server):
     for task in ("seat_close", "lid_close"):
         mine = [a for a in right if str(a.get("file", "")).startswith(f"mechanism:{task}:") and a["kind"] == "stream"]
         last = [j.stage for j, _ in __import__("alix_studio_lite.server.mechanism", fromlist=["Plan"]).Plan(task).streams(False) if j.side == "right"][-1]
-        assert "move_to_inspect" in mine[0]["text"] and mine[-1]["text"].endswith(last)   # the look move first, the plan's last (a Wait next)
+        look = [a for a in right if a["kind"] == "global" and str(a.get("text", "")).startswith(mechanism_title(task)) and "(50 %" in a["text"]]
+        assert look and look[0]["t1"] <= mine[0]["t0"] + 1e-6 and mine[-1]["text"].endswith(last)   # the look (a MoveJ at 50 %, 5 Nov)
+        # first, the plan's last (a Wait next)
     assert call(server, "POST", f"{P}/workflow/played", {"hash": sim["hash"]})["completed"]
     server["script"].write_text(json.dumps(["lid_open", "seat_closed", "seat_lifted", "seat_open", "seat_closed", "lid_closed"]))
     n0 = len(hardware(server))

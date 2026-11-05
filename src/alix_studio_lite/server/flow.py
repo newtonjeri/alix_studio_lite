@@ -7,6 +7,8 @@ arm waits only where the sequence says so:
   ``uid``, which follows the row when rows move; or, from a V53 file, ``program``: the other arm's first row of that
   Program); the other arm goes on;
 - a lid or seat task: it uses both arms, so both finish what is before it (a meeting point too);
+- an INSPECT (the user, 5 Nov): the right arm's MoveJ to an inspection pose and the wrist camera's look at the commode,
+  the left arm still: a meeting point too, a stage of its own (workflow.run_real's inspect);
 - a Program marked to **start together** (``together``; the user, 5 Nov: "tasks that are required to start together,
   forced to start together, no latency"): it pairs with the other arm's marked Program between the same two meeting
   points (each arm's first with the other's first, and so on); both arms finish what is before their Programs, then
@@ -88,13 +90,16 @@ def from_v53(steps: list) -> tuple[list, list]:
 # ── the plan
 
 def _sync(steps: list) -> list[tuple[int, str]]:
-    """The arm's meeting points in order: (index, "meet" or the lid or seat task)."""
-    return [(i, "meet" if st["type"] == "meet" else st["task"]) for i, st in enumerate(steps) if st["type"] in ("meet", "mechanism")]
+    """The arm's meeting points in order: (index, "meet", "inspect" or the lid or seat task)."""
+    return [(i, st["type"] if st["type"] in ("meet", "inspect") else st["task"]) for i, st in enumerate(steps)
+            if st["type"] in ("meet", "mechanism", "inspect")]
 
 
 def _words(kind: str) -> str:
     if kind == "meet":
         return "a Meet"
+    if kind == "inspect":
+        return "an INSPECT"
     from . import mechanism
 
     return mechanism.TASKS.get(kind, {}).get("title", kind)
@@ -173,7 +178,7 @@ def _walk(steps: dict, waits: dict, sync: dict) -> None:
                     return f"{side.upper()} row {row} waits for {other.upper()} row {_row(steps[other], j)}"
                 if st["type"] == "program":
                     return f"{side.upper()} row {row} waits to start Program {st['id']} together with the {OTHER[side].upper()} arm"
-                return f"{side.upper()} row {row} waits at {_words('meet' if st['type'] == 'meet' else st['task'])}"
+                return f"{side.upper()} row {row} waits at {_words(st['type'] if st['type'] in ('meet', 'inspect') else st['task'])}"
             raise PlanError("The arms would wait for each other for ever: " + "; ".join(where(s) for s in ARMS) + ".")
 
 
@@ -226,8 +231,8 @@ def build(left: list, right: list) -> list[dict]:
             raise PlanError(f"Each Meet needs its partner on the other arm: the LEFT list has {nmeet['left']} Meet row(s), "
                             f"the RIGHT list {nmeet['right']}.")
         words = {s: ", ".join(_words(k) for _, k in sync[s]) or "none" for s in ARMS}
-        raise PlanError("The Meets and the lid or seat tasks must come in the same order on both arms (at each, both arms "
-                        f"meet): LEFT has {words['left']}; RIGHT has {words['right']}.")
+        raise PlanError("The Meets, the INSPECTs and the lid or seat tasks must come in the same order on both arms (at each, "
+                        f"both arms meet): LEFT has {words['left']}; RIGHT has {words['right']}.")
     waits = _resolve(steps)
     pairs = _together_pairs(steps, sync)
     _walk(steps, waits, sync)
@@ -247,7 +252,12 @@ def build(left: list, right: list) -> list[dict]:
                 st["meet_kind"] = sync["left"][k][1]
             parts.append(st)
             plan.append(st)
-        if k < len(sync["left"]) and sync["left"][k][1] != "meet":
+        if k < len(sync["left"]) and sync["left"][k][1] == "inspect":     # the camera's look, both arms meeting there
+            li, ri = sync["left"][k][0], sync["right"][k][0]
+            pose = steps["right"][ri].get("pose") or steps["left"][li].get("pose") or ""
+            plan.append({"kind": "inspect", "program_id": "INSPECT", "title": "INSPECT the commode", "pose": pose,
+                         "rows": {"left": _row(steps["left"], li), "right": _row(steps["right"], ri)}})
+        elif k < len(sync["left"]) and sync["left"][k][1] != "meet":
             task, li, ri = sync["left"][k][1], sync["left"][k][0], sync["right"][k][0]
             plan.append({"kind": "mechanism", "task": task, "program_id": mechanism.TASKS[task]["short"],
                          "title": mechanism.TASKS[task]["title"], "rows": {"left": _row(steps["left"], li), "right": _row(steps["right"], ri)}})
@@ -283,5 +293,5 @@ def counts(plan: list[dict]) -> dict:
     waits = sum(1 for st in parts for s in ARMS for x in ((st.get(s) or {}).get("steps") or []) if x["type"] == "wait_for")
     together = sum(1 for st in parts for x in ((st.get("left") or {}).get("steps") or []) if x.get("_together"))
     return dict(parts=len(parts), meets=sum(1 for st in parts if st.get("meet_kind") == "meet"), waits_for=waits, together=together,
-                mechanisms=sum(1 for st in plan if st["kind"] == "mechanism"),
+                mechanisms=sum(1 for st in plan if st["kind"] == "mechanism"), inspects=sum(1 for st in plan if st["kind"] == "inspect"),
                 single=sum(1 for st in plan if st["kind"] == "single"), stages=len(plan))

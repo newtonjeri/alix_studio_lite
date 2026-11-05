@@ -345,20 +345,7 @@ class Plan:
     def targets(self, at: str = "start") -> dict:
         """{side: {"arm_deg", "pole_mm", "hand"}}: each device's first commanded waypoint (approach.plan_start_targets)
         or its last (approach.plan_end_targets)."""
-        out: dict = {}
-        seq = self.entries if at == "start" else list(reversed(self.entries))
-        for e in seq:
-            b = out.setdefault(e.side, {})
-            key = {"arm": "arm_deg", "pole": "pole_mm", "hand": "hand"}[e.kind]
-            if key in b:
-                continue
-            if e.kind == "arm":
-                b[key] = [float(np.degrees(v)) for v in (e.first() if at == "start" else e.last())]
-            elif e.kind == "pole":
-                b[key] = round((e.first() if at == "start" else e.last())[0] * 1000.0, 1)
-            else:
-                b[key] = e.hand_counts("first" if at == "start" else "last")
-        return out
+        return targets_of(self.entries, at)
 
     def first_move_targets(self, entries=None) -> dict:
         """``targets("start")`` with each arm's pole and hand as they must be when that arm FIRST moves: the last pole
@@ -370,8 +357,8 @@ class Plan:
         29 Oct); ``entries`` the run's own, a sequence's without the start checks it does not ask (without_start_checks),
         else the plan's."""
         entries = list(self.entries if entries is None else entries)
+        out = {side: dict(tg) for side, tg in targets_of(entries, "start").items()}     # a trimmed run's own start (without_inspect)
         entries = entries[:first_check_at(entries)]
-        out = {side: dict(tg) for side, tg in self.targets("start").items()}
         for side in out:
             hand_seen = False
             for e in entries:
@@ -391,8 +378,10 @@ class Plan:
     def streams(self, start_checks: bool = True) -> list:
         """The arm moves as a run streams them: [(the joined entry, how many entries it takes)] (joined_moves over the
         entries as a task run on its own plays them, or, ``start_checks`` False, as a sequence does: its start checks
-        dropped first, so the moves either side of a dropped check join too)."""
-        entries = list(self.entries) if start_checks else without_start_checks(list(self.entries))[0]
+        dropped first, so the moves either side of a dropped check join too). The plan's own inspect move is not
+        streamed (without_inspect: the controller's MoveJ, 5 Nov)."""
+        entries = without_inspect(list(self.entries))[0]
+        entries = entries if start_checks else without_start_checks(entries)[0]
         out, i = [], 0
         while i < len(entries):
             if entries[i].kind != "arm":
@@ -927,6 +916,61 @@ LOOK_REACH_M = 0.02       #: a first look's place searched this far about where 
 FRESH_READING_S = 0.5     #: an arm's latest reading, on its link's own connection, serves a frame when it is this fresh (else one read now)
 
 
+def targets_of(entries: list, at: str = "start") -> dict:
+    """{side: {"arm_deg", "pole_mm", "hand"}}: each device's first commanded waypoint in ``entries`` (at "start") or its
+    last (at "end"): Plan.targets of the plan's own entries, or of a run's (without_inspect: the camera arm's start is
+    then its inspection pose)."""
+    out: dict = {}
+    for e in (entries if at == "start" else list(reversed(entries))):
+        b = out.setdefault(e.side, {})
+        key = {"arm": "arm_deg", "pole": "pole_mm", "hand": "hand"}[e.kind]
+        if key in b:
+            continue
+        if e.kind == "arm":
+            b[key] = [float(np.degrees(v)) for v in (e.first() if at == "start" else e.last())]
+        elif e.kind == "pole":
+            b[key] = round((e.first() if at == "start" else e.last())[0] * 1000.0, 1)
+        else:
+            b[key] = e.hand_counts("first" if at == "start" else "last")
+    return out
+
+
+#: The inspect stage (the user, 5 Nov): each lid or seat plan begins with the camera arm's move to its inspection pose
+#: (ALIX's MoveIt stream from rest) and its start checks there. That move is not streamed: the arm goes there by the
+#: controller's MoveJ at INSPECT_PCT % (the global speed at 100 % for it), as an INSPECT row of the sequence does, and the
+#: plan goes on from the pose (its next moves start there; a small gap is bridged, Runner's ``bridge``).
+INSPECT_PCT = 50
+
+
+def without_inspect(entries: list) -> tuple:
+    """(``entries`` without the plan's own inspect move, that move or None): the camera arm's ``move_to_inspect`` at the
+    plan's head, before its first check and before any other arm move. The plan's start for that arm is then its
+    inspection pose (targets_of)."""
+    k = first_check_at(entries)
+    for i, e in enumerate(entries[:k]):
+        if e.kind == "arm":
+            if e.side == "right" and str(e.stage).startswith("move_to_inspect") and e.rows is not None:
+                return [x for j, x in enumerate(entries) if j != i], e
+            break
+    return list(entries), None
+
+
+_INSPECT_POSES: dict = {}
+
+
+def inspect_pose_of(task: str) -> tuple:
+    """(ALIX's named pose, its joints in degrees) the task's plan looks from: where its own inspect move ends (the
+    closings: inspection pose 1; the openings: inspection pose 4); (LOOK_POSE, its joints) when the plan has none."""
+    if task not in _INSPECT_POSES:
+        from .gap_check import GapCheck
+
+        _p, e = without_inspect(list(cached(sequence_plan(task)).entries)) if task in TASKS else ([], None)
+        q = (np.asarray(e.rows[-1], dtype=float) / 1000.0).tolist() if e is not None else None
+        name = GapCheck().named_pose(q) if q is not None else ""
+        _INSPECT_POSES[task] = (name or LOOK_POSE, [round(v, 3) for v in q] if q is not None else look_pose_deg())
+    return _INSPECT_POSES[task]
+
+
 def without_start_checks(entries: list) -> tuple:
     """(``entries`` with the camera checks before the plan's first lift taken out, those checks): in a sequence the
     task's start state is the sequence's own doing (the owner, 27 Oct: the lid is closed because the top of the lid was
@@ -1067,7 +1111,9 @@ class Runner:
             plan = plan_shift.shift(plan, move)     # UserError (code "shift") before anything of the plan is sent
             self.say(f"{plan.title}: each arm's working stretch moved with the commode ({move.words()}): the hands within "
                      f"{max((r.get('hand_off_mm') or 0.0) for r in plan.shift_report):.1f} mm of the plan's, moved", "warn")
-        entries = list(plan.entries)
+        from . import place_correct as _pc                # the camera's place check (off since 5 Nov) keeps the plan's own look
+        entries, inspect = ((list(plan.entries), None) if place is not None and _pc.CAMERA_PLACE
+                            else without_inspect(list(plan.entries)))     # its look move: the controller's MoveJ (5 Nov)
         ask_start = name in self._ask_start
         self._ask_start.discard(name)
         dropped_start = not self.start_checks and not ask_start
@@ -1086,12 +1132,14 @@ class Runner:
         # a sequence's first look (no check to take it at) comes before anything a correction changes: no two-arm
         # stretch from before it reaches past that while the look is not taken (2 Nov: Close the lid's first stretch took
         # its look with the camera arm still at rest, the left's start in the same stretch)
-        from . import place_correct as _pc                # the camera's place check off (5 Nov): no look to wait for
-
         cut = place.stretch_from if place is not None and dropped_start and _pc.CAMERA_PLACE else None
         if self.together and hasattr(self.ex, "prepare_legs"):
             self.ex.prepare_legs(plan, entries, unsent, state["bridge"], **({"cut": cut} if cut is not None else {}))
-        self.ex.approach(plan, plan.targets("start"), "start", entries=entries)
+        if inspect is not None:
+            self.say(f"{plan.title}: the RIGHT arm to its inspection pose by the controller's MoveJ at {INSPECT_PCT} % "
+                     "(the plan's own move_to_inspect not streamed: the user, 5 Nov)")
+        self.ex.approach(plan, targets_of(entries, "start"), "start", entries=entries,
+                         **({"speeds": {inspect.side: INSPECT_PCT}} if inspect is not None else {}))
         if place is not None and dropped_start and hasattr(self.ex, "look_frame"):
             # a sequence's first look, its check not asked: a frame all the same (the owner, 31 Oct), taken as the camera
             # arm reaches its inspection pose (the other arm's moves of the same leg go on meanwhile)
@@ -1528,7 +1576,7 @@ class StandInExec(_Exec):
         super().__init__(job, log)
         self.scale, self.words = scale, words
 
-    def approach(self, plan, targets, at, words=None, entries=None):
+    def approach(self, plan, targets, at, words=None, entries=None, speeds=None):
         self.say(f"{words or f'{plan.title}: to its {at}'} ({', '.join(f'{s.upper()} arm' for s in targets)}), on {self.words}")
 
     def move(self, e, bridge=False):
@@ -1549,7 +1597,7 @@ class DryExec(_Exec):
         super().__init__(job, log)
         self.robot = robot
 
-    def approach(self, plan, targets, at, words=None, entries=None):
+    def approach(self, plan, targets, at, words=None, entries=None, speeds=None):
         from alix_dispatch import track
 
         where = words or f"{plan.title}'s {at}"
@@ -1667,14 +1715,16 @@ class RealExec(_Exec):
             if not self._arm(side).keep_hand():
                 self.say(f"{side.upper()}: its hand could not be opened for the run: each hand move opens it", "warn")
 
-    def approach(self, plan, targets, at, words=None, entries=None):
+    def approach(self, plan, targets, at, words=None, entries=None, speeds=None):
         """Each arm to ``targets``: both arms' poles and hands at once (the owner, 24 Oct: one after the other took 2 s
         more a run), each arm's pole and hand together in Lite's own step (the hand moving while the pole travels, as
         a Program's own are set; the owner, 26 Oct) — at a plan's start to the state the arm needs when it first moves
         (``Plan.first_move_targets`` of the run's ``entries``: those before its first check), so the plan's own pole and
-        hand entries before that move are already met — then each arm's MoveJ at the speed slider's speed, one arm after
-        the other, not sent when the arm is already there."""
+        hand entries before that move are already met — then each arm's MoveJ at the speed slider's speed (``speeds``: an
+        arm's own, the camera arm's INSPECT_PCT to its inspection pose), one arm after the other, not sent when the arm is
+        already there."""
         pct = int(self.robot.speed_pct)
+        speeds = {side: int(v) for side, v in (speeds or {}).items()}
         where = words or f"{plan.title}'s {at}"
         self._frames = None
         self._settle_all()                                    # nothing is staged or moved while an arm still settles
@@ -1730,7 +1780,8 @@ class RealExec(_Exec):
                 raise failed[side]
 
         def movej(side):
-            self._arm(side).move_to([round(v * 1000) for v in moves[side]], speed=pct, restore_pct=self.robot.found_speed(side))
+            self._arm(side).move_to([round(v * 1000) for v in moves[side]], speed=speeds.get(side, pct),
+                                    restore_pct=self.robot.found_speed(side))
 
         together = False
         if len(moves) == 2 and room is not None:
@@ -2478,16 +2529,16 @@ def start_look(first: str, lid_closed, seat_closed=None, moves_before: bool = Tr
     expect, after = PHASE_BEFORE.get(first), PHASE_AFTER.get(first)
     if expect == "lid_closed":
         if lid_closed:
-            return "run", f"{said}, as the sequence starts"
-        return "close_lid", f"{said}, and the sequence starts with the lid and the seat down: Close the lid first (it brings the seat down with it)"
+            return "run", f"{said}, as {title} starts"
+        return "close_lid", f"{said}, and {title} starts with the lid and the seat down: Close the lid first (it brings the seat down with it)"
     if first == "lid_close" and not lid_closed:
         return "run", f"{said}: {title} closes it"
     if found == expect:
         return "run", f"{said}, as {title} starts"
     if found == after and not moves_before:
         return "hold", f"{said} already: {title} is not run"
-    return "stop", (f"{said}, but the sequence starts with {PHASE_WORDS.get(expect, expect)} ({title}"
-                    + (" and the rows before it were taught so" if moves_before else "") + ")")
+    return "stop", (f"{said}, but {title} starts with {PHASE_WORDS.get(expect, expect)}"
+                    + (" (and the rows before it were taught so)" if moves_before else ""))
 
 
 def poses(gap=None) -> list:

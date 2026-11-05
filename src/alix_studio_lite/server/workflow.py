@@ -145,6 +145,10 @@ def clear_before_moves(plan: list[dict]) -> list[dict]:
     moved = {s: True for s in ARMS}                # each arm: a Program or a lid or seat task since its last clear
     out = []
     for st in plan:
+        if st["kind"] == "inspect":                # the RIGHT arm's MoveJ to its pose waits for its arrival
+            out.append(dict(st, clear=["right"] if moved["right"] else []))
+            moved["right"] = False
+            continue
         if st["kind"] == "mechanism":
             if st.get("held"):                     # not run: nothing of its own moves (held_tasks)
                 out.append(st)
@@ -459,6 +463,8 @@ def plan_shape(plan: list[dict]) -> list[dict]:
         row = {"kind": st["kind"]}
         if st["kind"] == "mechanism":
             row.update(task=st["task"], clear=st.get("clear") or [], then=st.get("then"), held=st.get("held"))
+        elif st["kind"] == "inspect":
+            row.update(pose=st.get("pose"), deg=st.get("deg"), task=st.get("task"))
         else:
             for side, steps in _items(st):
                 row[side] = [["clear", x.get("_row")] if x["type"] == "clear"
@@ -508,6 +514,14 @@ def check_steps(steps, side: str) -> list[dict]:
             step = {"type": "mechanism", "task": task}
         elif kind == "meet":                        # both arms meet here (flow.py)
             step = {"type": "meet"}
+        elif kind == "inspect":                     # the camera's look at the commode, both arms (flow.py, the user 5 Nov)
+            from . import mechanism
+
+            pose = str(raw.get("pose") or "")
+            if pose and pose not in mechanism.INSPECTION_POSES:
+                raise UserError(f"{side.upper()} row {i}: INSPECT looks from one of ALIX's inspection poses "
+                                f"({', '.join(mechanism.INSPECTION_POSES)}), or from the next task's (none named).", code="step")
+            step = {"type": "inspect", "pose": pose}
         elif kind == "wait_for":                    # this arm waits for a row of the other's (flow.py)
             tg = raw.get("target") if isinstance(raw.get("target"), dict) else {}
             if tg.get("uid"):
@@ -720,9 +734,9 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None, own: dict | None 
         raise UserError("Run both arms, or the left or the right arm.")
     picked = {side: list(steps[side]) for side in ARMS if mode in ("both", side)}
     said = []
-    if mode != "both" and any(st["type"] == "mechanism" for st in picked[mode]):
-        raise UserError(f"The {mode.upper()} sequence has a lid or seat task, which uses both arms.",
-                        "Run both arms (RUN BOTH), or remove the task from the list.", code="plan")
+    if mode != "both" and any(st["type"] in ("mechanism", "inspect") for st in picked[mode]):
+        raise UserError(f"The {mode.upper()} sequence has a lid or seat task or an INSPECT, which uses both arms.",
+                        "Run both arms (RUN BOTH), or remove that row from the list.", code="plan")
     if mode == "both":
         if not picked["left"] or not picked["right"]:
             raise UserError("Build or load BOTH LEFT and RIGHT sequences first.")
@@ -738,46 +752,45 @@ def plan_for(steps: dict, mode: str, pick: dict | None = None, own: dict | None 
             raise UserError(f"The {mode.upper()} sequence has only Meet and Wait-for rows: nothing to run on its own.")
         plan = [{"kind": "single", "program_id": None, mode: {"side": mode, "steps": mine}}]
     if mode == "both":
-        plan = next_after_tasks(held_tasks(plan))
+        plan = inspect_stages(next_after_tasks(held_tasks(plan)))
     plan = _finish(plan, own)
     return dict(mode=mode, pick=dict(scope="sequence"), first_row={side: 1 for side in picked}, steps=picked, plan=plan,
-                counts=flow.counts(plan), said=said, look=start_look_of(plan) if mode == "both" else None)
+                counts=flow.counts(plan), said=said)
 
 
 def asks_start(run: dict, i: int) -> bool:
-    """Whether the lid or seat task of stage ``i`` asks its start checks (the user, 5 Nov): the run's first one when the
-    run has no start look (nothing moves before it, or a task run on its own: its plan's order, the right arm's look and
-    the camera before the left arm moves); after the start look, or after an earlier task of the run, the sequence's own
-    order says its start state (the owner, 27 Oct)."""
-    first = next((k for k, st in enumerate(run["plan"]) if st["kind"] == "mechanism"), None)
-    return i == first and not run.get("look")
+    """Whether the lid or seat task of stage ``i`` asks its start checks (the user, 5 Nov): only when nothing before it in
+    the run has seen the commode, no INSPECT and no lid or seat task (a sequence that starts with it, a task run on its
+    own): taken at its inspection pose before the other arm moves; after one, the sequence's own order says its start
+    state (the owner, 27 Oct)."""
+    return not any(st["kind"] in ("mechanism", "inspect") for st in run["plan"][:i])
 
 
-def start_look_of(plan: list[dict]) -> dict | None:
-    """A whole sequence's start look (the user, 5 Nov), when Programs or Global Points come before its first lid or seat
-    task (they were taught in that task's start state): before both arms' rows, the right arm to ALIX's inspection pose 1
-    (mechanism.LOOK_POSE) and the camera's state of the commode, which decides how the run begins
-    (mechanism.start_look): {task: the first lid or seat task, stage: its stage, expect: the state it starts from, pose,
-    deg: the pose's joints, moves_before}. None without a lid or seat task, with nothing moving before the first one
-    (that task asks its own start checks: the right arm looks before the left moves, its plan's order), or when ALIX's
-    named poses cannot be read (the same)."""
+def inspect_stages(plan: list[dict]) -> list[dict]:
+    """``plan`` with each INSPECT stage's (flow.build) look worked out (the user, 5 Nov): ``task`` the lid or seat task
+    that follows it (None: none follows), ``pose`` its row's or that task's inspection pose (mechanism.inspect_pose_of;
+    inspection pose 1 when no task follows), ``deg`` the pose's joints, ``moves_before`` Programs or Global Points
+    between it and that task (they run in the state it finds), ``expect`` the state that task starts from."""
     from . import mechanism
 
-    i = next((k for k, st in enumerate(plan) if st["kind"] == "mechanism"), None)
-    if i is None:
-        return None
-    try:
-        deg = mechanism.look_pose_deg()
-    except Exception:                                            # noqa: BLE001 - no look: the tasks ask their own
-        deg = None
-    if not deg:
-        return None
-    moves = any(x["type"] in ("program", "global") for st in plan[:i] for _, steps in _items(st) for x in steps)
-    if not moves:
-        return None
-    task = plan[i]["task"]
-    return dict(task=task, stage=i, expect=mechanism.PHASE_BEFORE.get(task), pose=mechanism.LOOK_POSE,
-                deg=[round(float(v), 3) for v in deg], moves_before=bool(moves))
+    for i, st in enumerate(plan):
+        if st["kind"] != "inspect":
+            continue
+        j = next((k for k in range(i + 1, len(plan)) if plan[k]["kind"] == "mechanism"), None)
+        task = plan[j]["task"] if j is not None else None
+        if st.get("pose") in mechanism.INSPECTION_POSES:
+            pose = st["pose"]
+            deg = next((p["joints_deg"] for p in mechanism.poses() if p["name"] == pose), None)
+        else:
+            pose, deg = mechanism.inspect_pose_of(task) if task else (mechanism.LOOK_POSE, mechanism.look_pose_deg())
+        if not deg:
+            raise UserError("INSPECT: ALIX's inspection poses could not be read (its MoveIt group states).",
+                            "Check that ALIX's perception core is linked (the LID / SEAT tab lists the poses).", code="plan")
+        moves = any(x["type"] in ("program", "global") for p in plan[i + 1:j if j is not None else len(plan)]
+                    for _, steps in _items(p) for x in steps)
+        st.update(task=task, next_stage=j, pose=pose, deg=[round(float(v), 3) for v in deg], moves_before=bool(moves),
+                  expect=mechanism.PHASE_BEFORE.get(task) if task else None)
+    return plan
 
 
 def digest(obj) -> str:
@@ -972,11 +985,9 @@ def identity_of(run: dict, programs: dict, points: dict, overall: int) -> dict:
         from . import mechanism
 
         used["mechanisms"] = {t: mechanism.digest(mechanism.sequence_plan(t)) for t in sorted(set(tasks))}
-    look = run.get("look")
     return dict(mode=run["mode"], pick=run["pick"], steps={s: [{k: v for k, v in st.items() if k != "_row"} for st in steps]
                                                                for s, steps in run["steps"].items()},
-                plan=plan_shape(run["plan"]), used=used, overall=int(overall),
-                look={k: look[k] for k in ("task", "pose", "deg")} if look else None)
+                plan=plan_shape(run["plan"]), used=used, overall=int(overall))
 
 
 # ── Simulation Mode: each arm's actions on one clock, through the plan
@@ -1362,7 +1373,7 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         a.update(pole1=sim.pole, hand1=list(sim.hand), q1=list(sim.q))
         clock[0] += dur
 
-    def approach(targets, where, owner=None, entries=None):
+    def approach(targets, where, owner=None, entries=None, speeds=None):
         if owner is not None and where.endswith("start"):  # the state each arm needs when it first moves (Plan.first_move_targets),
             first = owner.first_move_targets(entries)       # as RealExec.approach sets it: the plan's own pole and hand entries
             targets = {side: dict(tg, **{k: v for k, v in first.get(side, {}).items() if k in tg}) for side, tg in targets.items()}
@@ -1388,8 +1399,9 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                     mv = ROBOT_TIMES["global_there_s"][1]       # already there: one reading, no MoveJ (26 Oct)
                     sim, a = act(side, "wait", mv, f"{title}: already at {where}, no MoveJ")
                 else:
-                    mv = movej_s(sim.q, tg["arm_deg"], float(overall), sim.rating)
-                    sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({overall} %, both arms at once)", move_s=round(mv, 4), drawn=True)
+                    pct = int((speeds or {}).get(side, overall))    # the camera arm to its inspection pose: INSPECT_PCT (5 Nov)
+                    mv = movej_s(sim.q, tg["arm_deg"], float(pct), sim.rating)
+                    sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({pct} %, both arms at once)", move_s=round(mv, 4), drawn=True)
                 sim.q, sim.known = [float(v) for v in tg["arm_deg"]], True
                 done(sim, a, mv)
                 ends.append(clock[0])
@@ -1430,10 +1442,11 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
     def play(owner, holds=None) -> tuple:
         """``owner`` from its start: its entries and their checks, these answered by ``holds`` when given (ended at the
         first that does not hold and skips). True when it skipped."""
-        entries = list(owner.entries)
+        entries, inspect = mechanism.without_inspect(list(owner.entries))   # its look move: the controller's MoveJ (5 Nov)
         if not start_checks and owner is plan:         # a sequence: the checks before the first lift are not asked (27 Oct)
             entries, _dropped = mechanism.without_start_checks(entries)
-        approach(owner.targets("start"), "its start" if owner is plan else f"{owner.title}'s start", owner, entries)
+        approach(mechanism.targets_of(entries, "start"), "its start" if owner is plan else f"{owner.title}'s start", owner, entries,
+                 speeds={inspect.side: mechanism.INSPECT_PCT} if inspect is not None else None)
         unsent = mechanism.trailing_releases(entries, hand_set if owner is plan else ()) | mechanism.final_rests(entries, leave if owner is plan else ())
         legs_run = []
         i = 0
@@ -1506,32 +1519,36 @@ def _sim_then(st: dict, sims: dict, T: float, stage: int, overall: int) -> dict:
 
 
 CHECK_S = 0.5                    # a camera question, in the simulation (a frame, the check)
-LOOK_CHECK_S = 1.0               # the start look's question: its frames (mechanism.frames_rule), as a rule
+LOOK_CHECK_S = 1.0               # an INSPECT's question: its frames (mechanism.frames_rule), as a rule
 
 
-def _sim_look(look: dict, sims: dict, overall: int) -> float:
-    """The run's start look (start_look_of) from 0 on the first stage's clock: the RIGHT arm's errors read, its MoveJ to
-    the look's pose at the speed slider's speed (the global speed at 100 % for it), the camera's question, its MoveJ
-    back to where it stood; the LEFT arm still meanwhile. What the camera then finds is not known here: said (a lid
-    found open has Close the lid run first, ALIX's plan with its own checks, not in this simulation). Its end time."""
+def _sim_inspect(st: dict, sims: dict, T: float, stage: int) -> float:
+    """An INSPECT (inspect_stages) from ``T``: the RIGHT arm's errors read when a Program moved it since (its ``clear``),
+    its MoveJ to the stage's inspection pose at mechanism.INSPECT_PCT % (the global speed at 100 % for it), the camera's
+    question; the LEFT arm still meanwhile. The RIGHT arm stays at the pose (the next lid or seat task goes on from there).
+    What the camera finds is not known here: said (a lid found open has Close the lid run first, ALIX's plan with its own
+    checks, not in this simulation). Its end time."""
     from . import mechanism
 
-    r, back = sims["right"], list(sims["right"].q)
-    pose = mechanism.INSPECTION_POSES.get(look["pose"], {}).get("title", look["pose"])
-    t = r.run([{"type": "clear", "_row": None, "_alone": True},
-               {"type": "move_to", "deg": list(look["deg"]), "speed": int(overall), "_row": None, "_look": pose}], 0.0, 0)
-    a = r.hold(0, {"_row": None}, t, t + LOOK_CHECK_S, f"Look at the commode from {pose}: the lid and the seat "
-               f"(the sequence starts with {mechanism.PHASE_WORDS.get(look['expect'], look['expect'])})")
+    r = sims["right"]
+    pose = mechanism.INSPECTION_POSES.get(st["pose"], {}).get("title", st["pose"])
+    row = (st.get("rows") or {}).get("right")
+    steps = ([{"type": "clear", "_row": row, "_alone": True}] if "right" in (st.get("clear") or []) else []) + [
+        {"type": "move_to", "deg": list(st["deg"]), "speed": mechanism.INSPECT_PCT, "_row": row, "_look": pose}]
+    t = r.run(steps, T, stage)
+    a = r.hold(stage, {"_row": row}, t, t + LOOK_CHECK_S, f"INSPECT from {pose}: the lid and the seat"
+               + (f" (the next task, {mechanism.TASKS[st['task']]['title']}, starts with "
+                  f"{mechanism.PHASE_WORDS.get(st['expect'], st['expect'])})" if st.get("task") else ""))
     a.update(kind="check", expect="lid_closed")
-    end = r.run([{"type": "move_to", "deg": back, "speed": int(overall), "_row": None, "_look": "where it stood"}], a["t1"], 0)
-    sims["left"].hold(0, {"_row": None}, 0.0, end, "Still while the RIGHT arm looks at the commode")
+    end = a["t1"]
+    sims["left"].hold(stage, {"_row": (st.get("rows") or {}).get("left")}, T, end, "Still while the RIGHT arm inspects the commode")
     if r.lam is None:
-        first = mechanism.TASKS.get(look["task"], {}).get("title", look["task"])
-        r._say("note", {"_row": None}, f"The run starts with a look at the commode: the RIGHT arm to {pose} and back "
-               f"({end:.1f} s), the camera checking the lid (and the seat where {first} needs it). "
-               + ("A lid found open has Close the lid run first (it brings the seat down with it; ALIX's plan with its own "
-                  "checks, not in this simulation); " if look["expect"] == "lid_closed" else "")
-               + "a state the sequence cannot start from stops the run before anything else moves.")
+        task = mechanism.TASKS.get(st.get("task") or "", {}).get("title")
+        r._say("note", {"_row": row}, f"INSPECT (RIGHT row {row}): the RIGHT arm to {pose} by the controller's MoveJ at "
+               f"{mechanism.INSPECT_PCT} %, the camera's look at the lid and the seat; " + (
+                   (f"what it finds decides {task}: " + ("a lid found open has Close the lid run first (it brings the seat "
+                    "down; ALIX's plan with its own checks, not in this simulation), " if st.get("expect") == "lid_closed" else "")
+                    + "a state it cannot start from stops the run.") if task else "no lid or seat task follows: the state is said."))
     return end
 
 
@@ -1672,14 +1689,22 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
              for s in ARMS}
     words = lambda side, row: _row_words(every.get(side) or [], row)                  # noqa: E731
     plan = run["plan"]
-    look = run.get("look")
-    if look and all(s in sims for s in ARMS):       # the start look (5 Nov): on the first stage's clock, before its rows
-        T = _sim_look(look, sims, overall)
     starts = None                                   # after a lid or seat task: each arm's own start of the next stage (27 Oct)
     for i, st in enumerate(plan):
         kind = st["kind"]
-        row = dict(index=i, kind=kind, label=str(st.get("program_id") or ""), t0=round(0.0 if i == 0 and kind != "mechanism" else T, 4))
+        row = dict(index=i, kind=kind, label=str(st.get("program_id") or ""), t0=round(T, 4))
+        if kind == "inspect":                       # the camera's look (the user, 5 Nov): the RIGHT arm only, the LEFT still
+            T = _sim_inspect(st, sims, T, i)
+            starts = None
+            row.update(t1=round(T, 4), title=st.get("title"), pose=st.get("pose"), task=st.get("task"))
+            out.append(row)
+            continue
         if kind == "mechanism":                     # the arms' errors read first (clear_before_moves), then its own moves
+            if (asks_start(run, i) and sims["right"].lam is None and not st.get("held")
+                    and any(x["type"] in ("program", "global") for p in plan[:i] for _, xs in _items(p) for x in xs)):
+                sims["right"]._say("warn", {"_row": (st.get("rows") or {}).get("right")}, (
+                    f"{st['title']}: Programs or Global Points run before it with the commode not seen: put an INSPECT before "
+                    f"them (the LID / SEAT tab) so the camera checks the lid first; {st['title']} checks its own start when it comes."))
             ready = T
             for s in st.get("clear") or []:
                 ready = max(ready, sims[s].run([{"type": "clear", "_row": (st.get("rows") or {}).get(s), "_alone": True}], T, i))
@@ -2433,8 +2458,6 @@ def _changed(sim: dict | None, ident: dict) -> str:
         what.append("its steps")
     elif not other_run and old.get("plan") != ident.get("plan"):  # the same steps, planned otherwise: Lite was updated
         what.append("how its steps are planned into stages (Lite plans them otherwise since)")
-    if not other_run and old.get("look") != ident.get("look"):    # the start look (5 Nov): new, or ALIX's pose revised
-        what.append("the run's start look at the commode (the RIGHT arm to inspection pose 1)")
     for side, u in ident["used"].items() if not other_run else ():   # another run uses other programs and points
         if side not in ARMS:                        # "mechanisms": the lid and seat plans, below
             continue
@@ -2481,7 +2504,7 @@ def _step_words(step: dict) -> str:
     if step.get("_own") and k in ("pole", "hand", "pole_hand"):        # a Program's own, set before it (own_stages)
         return f"Program {step['_own']}'s own " + _step_words({x: v for x, v in step.items() if x != "_own"}).replace(
             "Pole", "pole", 1).replace("Hand", "hand", 1)
-    if step.get("_look") and k == "move_to":                            # the run's start look (start_look_of)
+    if step.get("_look") and k == "move_to":                            # an INSPECT's move (inspect_stages)
         return f"MoveJ to {step['_look']} ({step['speed']} %)"
     if step.get("_then") and k in ("pole_hand", "move_to"):            # a next task's start (next_after_tasks)
         t = step["_then"]
@@ -2701,7 +2724,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     if missing:
         raise UserError("Not on the controllers: " + "; ".join(missing) + ". Nothing moved.",
                         "Upload the programs or save the points, simulate again, then run it.", code="missing")
-    if any(st["kind"] == "mechanism" and not st.get("held") for st in run["plan"]):     # its checks need the wrist camera (the owner, 23 Oct)
+    if any(st["kind"] == "inspect" or (st["kind"] == "mechanism" and not st.get("held")) for st in run["plan"]):     # its checks need the wrist camera (the owner, 23 Oct)
         from . import mechanism
 
         mechanism.camera_required(robot)
@@ -3243,81 +3266,93 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 return mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st), start_checks=start_checks,
                                    next_task=next_task, place=corr).run(mech.sequence_plan(st["task"]))
 
-        def look(lk) -> None:
-            """The run's start look (start_look_of; the user, 5 Nov), before both arms' rows: the RIGHT arm's MoveJ to ALIX's
-            inspection pose 1 at the speed slider's speed, the camera's "is the lid closed?" (and the seat, where the first
-            task needs it: mechanism.start_look_needs_seat), then what mechanism.start_look decides: the run as planned;
-            Close the lid first (a lid found open where the sequence starts with it down: it brings the seat down with it),
-            then both arms back where the run began; the first task not run (its end state there already); or a stop
-            before anything else moves. The RIGHT arm back where it stood otherwise. Said in the job and the hardware log."""
+        def inspect(st, i) -> None:
+            """An INSPECT (inspect_stages; the user, 5 Nov): the RIGHT arm's errors read when a Program moved it since, its
+            MoveJ to the stage's inspection pose by the controller at mechanism.INSPECT_PCT % (the global speed at 100 % for
+            it), the camera's "is the lid closed?" (and the seat, where the next task needs it:
+            mechanism.start_look_needs_seat); the LEFT arm still. Then what mechanism.start_look decides for the lid or seat
+            task that follows: it runs (its start the order's word from here); Close the lid first (a lid found open where
+            it starts with the lid and the seat down: it brings the seat down with it), then the LEFT arm back where it
+            stood and the RIGHT arm back at the pose, so the run goes on as simulated; that task not run (its end state
+            there already, nothing moving before it); or a stop, the RIGHT arm at the pose. No task after it: the state is
+            said. Said in the job and the hardware log ("inspect")."""
             from . import mechanism as mech
 
-            pose = mech.INSPECTION_POSES.get(lk["pose"], {}).get("title", lk["pose"])
+            pose = mech.INSPECTION_POSES.get(st["pose"], {}).get("title", st["pose"])
             hw = getattr(robot, "log", None)
-            mech.camera_required(robot, "The look at the commode")
-            start = {}
-            for x in ARMS:                          # where each arm stands as the run begins
+            mech.camera_required(robot, "INSPECT")
+            before = {}
+            for x in ARMS:                          # where each arm stands as it begins
                 link = robot.links.get(x)
                 fb = (link.read_fresh() if link is not None else {}) or {}
                 pole, hand = robot._measured(x)
-                start[x] = dict(q=[float(v) for v in (fb.get("joints_deg") or [])[:7]], pole=pole, hand=hand)
-            say(f"LOOK // the RIGHT arm to {pose}: the commode's state before the sequence", right=f"LOOK // TO {pose.upper()}",
-                left="LOOK // STILL")
-            got = clear("right", None)
-            if not got["ok"]:
-                raise UserError(f"The look at the commode STOPPED // RIGHT: {got['why']}",
-                                "Check the arm and its controller's errors before anything else runs.")
-            reals["right"].move_to([round(float(v) * 1000) for v in lk["deg"]], speed=int(robot.speed_pct),
+                before[x] = dict(q=[float(v) for v in (fb.get("joints_deg") or [])[:7]], pole=pole, hand=hand)
+            say(f"INSPECT // the RIGHT arm to {pose} at {mech.INSPECT_PCT} %: the commode's state", right=f"INSPECT // TO {pose.upper()}",
+                left="INSPECT // STILL")
+            for x in st.get("clear") or []:
+                got = clear(x, (st.get("rows") or {}).get(x))
+                if not got["ok"]:
+                    raise UserError(f"INSPECT STOPPED // {x.upper()}: {got['why']}",
+                                    "Check the arm and its controller's errors before anything else runs.")
+            reals["right"].move_to([round(float(v) * 1000) for v in st["deg"]], speed=mech.INSPECT_PCT,
                                    restore_pct=robot.found_speed("right"))
             kit = mech.kit(robot)
             arms_real = {x: reals.get(x) or robot._real(x) for x in ARMS}
             ex = mech.RealExec(job, robot, arms_real, kit,
                                (lambda text: hw.hardware(None, "mechanism", text=text)) if hw is not None else None,
-                               live=lambda side, text: say(None, **{side: f"LOOK // {text}"}))
+                               live=lambda side, text: say(None, **{side: f"INSPECT // {text}"}))
 
             def ask(expect):
-                action = dict(type="check_fixture_state", stage="look_at_start", check="fixture_gap", expect=expect, arm="right",
+                action = dict(type="check_fixture_state", stage="inspect", check="fixture_gap", expect=expect, arm="right",
                               on_fail="abort", max_retries=0, also_observe="", if_observed="", prerequisite="", retry_offsets=[])
                 a = ex.ask(action, expect)
                 return (None if a.fixture_state == mech.CANNOT_JUDGE else a.fixture_state == expect), a
 
+            task = st.get("task")
             with kit.camera.using():
                 lid_closed, a_lid = ask("lid_closed")
-                seat_closed, a_seat = ask("seat_closed") if mech.start_look_needs_seat(lk["task"], lid_closed) else (None, None)
-            what, why = mech.start_look(lk["task"], lid_closed, seat_closed, lk["moves_before"])
-            text = f"Look at the commode ({pose}): {why}."
+                seat_closed, a_seat = ((ask("seat_closed") if task is None or mech.start_look_needs_seat(task, lid_closed)
+                                        else (None, None)) if lid_closed is False else (None, None))
+            if task is None:                        # nothing follows to decide: the state, said
+                what = "run" if lid_closed is not None else "stop"
+                why = ("the camera could not judge whether the lid is closed" if lid_closed is None else
+                       "the lid and the seat are down" if lid_closed else "the lid and the seat are open" if seat_closed is False
+                       else "the lid is open" + (", the seat down" if seat_closed else ""))
+            else:
+                what, why = mech.start_look(task, lid_closed, seat_closed, st.get("moves_before", True))
+            text = f"INSPECT ({pose}, RIGHT row {(st.get('rows') or {}).get('right')}): {why}."
             job.log(text, "info" if what in ("run", "hold") else "warn")
             if hw is not None:
-                hw.hardware(None, "start look", args=dict(task=lk["task"], lid_closed=lid_closed, seat_closed=seat_closed, decided=what,
-                                                          lid=a_lid.message, seat=a_seat.message if a_seat is not None else None),
+                hw.hardware(None, "inspect", args=dict(pose=st["pose"], task=task, lid_closed=lid_closed, seat_closed=seat_closed,
+                                                       decided=what, lid=a_lid.message, seat=a_seat.message if a_seat is not None else None),
                             ok=what != "stop", text=text)
-            if what == "close_lid":                 # Close the lid first, its own checks asked, then both arms where they began
-                title = mech.TASKS["lid_close"]["title"]
-                st_c = dict(kind="mechanism", task="lid_close", title=title, program_id="LOOK", rows={}, clear=list(ARMS))
-                try:
-                    out = lid_seat(st_c, "LOOK", arms_real, start_checks=True)
-                finally:
-                    for real in arms_real.values():
-                        if real is not None:
-                            real.drop_feed()
-                job.log(f"{title} before the sequence: " + "; ".join(f"{p['title']} {p['outcome']}" for p in out["plans"]) + ".")
-                back = dict(title=f"{title} (before the sequence)", rows={}, then={
-                    x: dict(kind="start", name="the sequence", pole_mm=start[x]["pole"], hand=start[x]["hand"],
-                            arm_deg=start[x]["q"] or None) for x in ARMS})
-                to_next(back, "LOOK")
-                return
-            if start["right"]["q"]:                 # the RIGHT arm back where it stood (the sequence's own rows from there)
-                reals["right"].move_to([round(v * 1000) for v in start["right"]["q"]], speed=int(robot.speed_pct),
-                                       restore_pct=robot.found_speed("right"))
             if what == "stop":
                 raise UserError(f"Not run: {why}. Nothing else moved.",
                                 "Check the camera's view of the commode (the day's checks folder keeps its frames), then run it again."
-                                if lid_closed is None or (seat_closed is None and mech.start_look_needs_seat(lk["task"], lid_closed))
-                                else "Set the commode as the sequence starts, or start the sequence from another task, then run it again.",
-                                code="look")
+                                if lid_closed is None or (seat_closed is None and lid_closed is False and task is not None
+                                                          and mech.start_look_needs_seat(task, lid_closed))
+                                else "Set the commode as the next task starts, or start the sequence from another row, then run it again.",
+                                code="inspect")
             if what == "hold":                      # its end state there already: not run (held_tasks' way)
-                first = run["plan"][lk["stage"]]
-                first["held"], first["held_why"] = mech.PHASE_AFTER[lk["task"]], "the camera found it so at the run's start"
+                nxt = run["plan"][st["next_stage"]]
+                nxt["held"], nxt["held_why"] = mech.PHASE_AFTER[task], "the INSPECT before it found it so"
+            if what != "close_lid":
+                return
+            title = mech.TASKS["lid_close"]["title"]        # Close the lid first, its start the INSPECT's word
+            st_c = dict(kind="mechanism", task="lid_close", title=title, program_id="INSPECT", rows={}, clear=list(ARMS))
+            try:
+                out = lid_seat(st_c, "INSPECT", arms_real, start_checks=False)
+            finally:
+                for real in arms_real.values():
+                    if real is not None:
+                        real.drop_feed()
+            job.log(f"{title} after the INSPECT: " + "; ".join(f"{p['title']} {p['outcome']}" for p in out["plans"]) + ".")
+            back = dict(title=f"{title} (after the INSPECT)", rows={}, then={    # as simulated from here: the LEFT arm where it
+                "left": dict(kind="start", name="the run after the INSPECT", pole_mm=before["left"]["pole"], hand=before["left"]["hand"],
+                             arm_deg=before["left"]["q"] or None),            # stood, the RIGHT arm at the INSPECT's pose
+                "right": dict(kind="start", name="the run after the INSPECT", pole_mm=before["right"]["pole"], hand=before["right"]["hand"],
+                              arm_deg=list(st["deg"]))})
+            to_next(back, "INSPECT")
 
         t0 = time.monotonic()
         pending: dict = {}                          # after a lid or seat task: each arm's move to its next start, made as its part of the next stage begins
@@ -3343,8 +3378,6 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
         try:
             for s in sides:
                 originals[s] = reals[s].set_run_mode("REAL")
-            if run.get("look"):                     # the commode's state before both arms' rows (the user, 5 Nov)
-                look(run["look"])
             for i, st in enumerate(run["plan"]):
                 job.check()
                 job.set(stage=i)
@@ -3387,6 +3420,11 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                             if real is not None and x not in pending:   # (an arm moving later turns its off in that move)
                                 real.drop_feed()
                     say(f"LID / SEAT // {st['title']} // DONE", **{x: f"{pid} // COMPLETE" for x in ARMS})
+                elif kind == "inspect":                   # the camera's look at the commode (the user, 5 Nov)
+                    for x, fn in list(pending.items()):  # an arm's move to its next start after a task, before the look
+                        fn()
+                    pending = {}
+                    inspect(st, i)
                 elif kind == "parallel":
                     arms_here = [s for s in ARMS if st.get(s)]
                     before, pending = pending, {}

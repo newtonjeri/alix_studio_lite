@@ -37,10 +37,13 @@ def test_real_seat_open_streams_every_move_and_ends_with_its_own_look(server):
     streams = [r for r in hw if r.get("verb") == "canfd stream"]
     assert streams and all(r["ok"] for r in streams), [r.get("text") for r in streams if not r["ok"]]
     labels = [r["args"]["label"] for r in streams]
-    assert labels[0] == "RIGHT arm move_to_inspect" and labels[-1] == "RIGHT arm move_to_rest"
+    look = next(r for r in hw if r.get("verb") == "move to pose" and r["side"] == "right")   # its look: the controller's MoveJ
+    assert look["args"]["speed"] == 50 and look["t"] < streams[0]["t"] and labels[-1] == "RIGHT arm move_to_rest"   # at 50 % (5 Nov)
     assert "LEFT arm move_to_pre_start + move_to_start + execute_path" in labels
     assert "LEFT arm move_to_retract + move_to_retract_2 + move_to_rest" in labels         # 26 Oct trims: one stream, no fist between
-    assert sum(len(r["args"]["label"].split(" + ")) for r in streams) == sum(1 for e in plan.entries if e.kind == "arm")   # every move named
+    from alix_studio_lite.server import mechanism
+    assert sum(len(r["args"]["label"].split(" + ")) for r in streams) == sum(1 for e in mechanism.without_inspect(list(plan.entries))[0]
+                                                                             if e.kind == "arm")   # every move named but the look (a MoveJ)
     settles = [r for r in hw if r.get("verb") == "canfd settle"]                           # the ends waited for: on the feed's frames
     assert settles and all(r["args"]["settle"]["by"] == "feed" and r["args"]["settle"]["at_rest"] for r in settles)
     when = lambda verb, label: next(r["t"] for r in hw if r.get("verb") == verb and r["args"]["label"] == label)   # noqa: E731

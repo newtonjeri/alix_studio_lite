@@ -97,8 +97,8 @@ class FakeExec:
     def __init__(self, answers):
         self.answers, self.calls = list(answers), []
 
-    def approach(self, plan, targets, at, words=None, entries=None):
-        self.calls.append(("approach", plan.name, at, tuple(targets)))
+    def approach(self, plan, targets, at, words=None, entries=None, speeds=None):
+        self.calls.append(("approach", plan.name, at, tuple(targets), dict(speeds or {}), dict(targets)))
 
     def move(self, e, bridge=False):
         self.calls.append(("move", e.stage, e.side, e.kind, bridge, e.note))
@@ -169,7 +169,10 @@ def test_lid_open_as_on_the_robot_on_12_october(fitted):
     after = left[max(i for i, m in enumerate(left) if m[5].startswith("re-lift")) + 1]
     assert after[1] == "move_to_rest" and after[4] and not after[5], after
     first = {m[2]: m for m in moves(ex) if m[3] == "arm"}
-    assert [m for m in moves(ex) if m[3] == "arm" and m[4]][0][1] == "move_to_inspect"   # the first move after the approach
+    # the plan's own look move is the controller's MoveJ at the approach (the user, 5 Nov): 50 %, to inspection pose 4
+    start = next(c for c in ex.calls if c[0] == "approach" and c[2] == "start")
+    assert start[4] == {"right": mechanism.INSPECT_PCT} and "move_to_inspect" not in [m[1] for m in moves(ex)][:1]
+    assert start[5]["right"]["arm_deg"] == pytest.approx(mechanism.inspect_pose_of("lid_open")[1], abs=0.01)
     # the end check is the plan's own (26 Oct): the right hand grasps, the arm goes to inspection pose 1, the camera is
     # asked once before the arm rests; Lite adds no look of its own and no move after the plan
     assert [c[1:3] for c in ex.calls if c[0] == "approach"] == [("lid_open", "start")]
@@ -185,7 +188,7 @@ def test_a_lid_already_open_skips_lid_open_and_parks_where_it_would_end():
     out = mechanism.Runner(ex).run("lid_open")
     assert out["plans"] == [dict(plan="lid_open", title="Open the lid", outcome="skipped", relifts=0)]
     assert [c[2] for c in ex.calls if c[0] == "approach"] == ["start", "end"]
-    assert [m[1] for m in moves(ex)] == ["move_to_inspect"]      # the look only (the owner, 29 Oct: poles and hands after the check)
+    assert [m[1] for m in moves(ex)] == []      # the look only, the approach's MoveJ (5 Nov; the owner, 29 Oct: poles and hands after the check)
 
 
 def test_seat_open_with_the_lid_closed_runs_lid_open_first_then_itself_again():
@@ -208,7 +211,7 @@ def test_an_arms_back_to_back_moves_go_as_one_stream_and_the_plan_ends_with_its_
     out = mechanism.Runner(ex).run("seat_open")
     assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("seat_open", "done")]
     arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]
-    assert arm == [("move_to_inspect", "right"), ("move_to_pre_start + move_to_start + execute_path", "left"),
+    assert arm == [("move_to_pre_start + move_to_start + execute_path", "left"),          # the look: the approach's MoveJ (5 Nov)
                    ("move_to_pre_start + move_to_start", "right"),                         # 26 Oct trims: no rest before pre-start
                    ("move_to_retract + move_to_retract_2 + move_to_rest", "left"),         # ... and no fist between the retracts
                    ("execute_path", "right"),
@@ -635,7 +638,8 @@ def test_in_a_sequence_the_checks_before_the_first_lift_are_not_asked():
     out = mechanism.Runner(ex, start_checks=False).run("lid_open")
     assert [(p["plan"], p["outcome"]) for p in out["plans"]] == [("lid_open", "done")]
     assert [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_lid_lifted", "verify_lid_open"]
-    assert [m[1] for m in moves(ex) if m[3] == "arm"][0] == "move_to_inspect"      # the right's first look's move stays
+    start = next(c for c in ex.calls if c[0] == "approach" and c[2] == "start")       # the right's first look's move stays: the
+    assert start[4] == {"right": mechanism.INSPECT_PCT}                                   # controller's MoveJ at 50 % (5 Nov)
     ex = FakeExec(["seat_lifted", "seat_open"])
     out = mechanism.Runner(ex, start_checks=False).run("seat_open")
     assert out["plans"][0]["outcome"] == "done" and [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_seat_lifted", "verify_seat_open"]
@@ -691,7 +695,7 @@ def test_a_plan_knows_the_streams_a_run_makes_of_its_moves_and_the_3d_view_reads
     for name in ("lid_open", "seat_open"):
         plan = mechanism.Plan(name)
         streams = plan.streams(start_checks=False)
-        moves = [e for e in plan.entries if e.kind == "arm"]
+        moves = [e for e in mechanism.without_inspect(list(plan.entries))[0] if e.kind == "arm"]   # its look: a MoveJ (5 Nov)
         assert sum(n for _, n in streams) == len(moves) and len(streams) < len(moves)     # every move in exactly one stream
         st = plan.streamed(start_checks=False)
         assert st == dict(seconds=round(sum(j.seconds for j, _ in streams), 2), blended_s=round(sum(j.blended_s for j, _ in streams), 2),
@@ -734,7 +738,8 @@ def test_the_closings_run_as_the_openings_do_and_a_sequence_asks_no_check_before
                                                                                         ("hand_tenth_grasp", "right")]   # tenth grasp
         assert [(m[1], m[2]) for m in moves(ex) if m[3] == "pole"] == [("move_to_half_length", "left"), ("move_to_half_length", "right")]
         asked = next(i for i, c in enumerate(ex.calls) if c[0] == "ask")    # the look, its check, then the poles and the hands
-        assert [c[1] for c in ex.calls[:asked] if c[0] == "move"] == ["move_to_inspect"]    # (the owner, 29 Oct)
+        assert [c[1] for c in ex.calls[:asked] if c[0] == "move"] == []    # (the owner, 29 Oct; the look: the approach's MoveJ, 5 Nov)
+        assert next(c for c in ex.calls if c[0] == "approach" and c[2] == "start")[4] == {"right": mechanism.INSPECT_PCT}
         half = {e.side: round(e.last()[0] * 1000.0, 1) for e in mechanism.Plan(task).entries if e.kind == "pole"}
         assert set(half) == {"left", "right"} and all(140 < v < 160 for v in half.values())                 # half length, both
         start = {s: t["pole_mm"] for s, t in mechanism.Plan(task).first_move_targets().items()}         # both poles set
@@ -744,13 +749,16 @@ def test_the_closings_run_as_the_openings_do_and_a_sequence_asks_no_check_before
         ex = FakeExec([down])                                                  # the part already down: the plan's outcome holds
         out = mechanism.Runner(ex).run(task)
         assert out["plans"][0]["outcome"] == "skipped"
-        assert [(m[1], m[2], m[3]) for m in moves(ex)] == [("move_to_inspect", "right", "arm")]   # the look, the check, nothing else
+        assert [(m[1], m[2], m[3]) for m in moves(ex)] == []   # the look (the approach's MoveJ, 5 Nov), the check, nothing else
         assert [c[2] for c in ex.calls if c[0] == "approach"] == ["start", "end"]
         assert mechanism.sequence_plan(task) == task                      # no _seq plan (28 Oct): the task's own, its first
         ex = FakeExec([down])                                             # check dropped by the run
         out = mechanism.Runner(ex, start_checks=False).run(task)
         assert out["plans"][0]["outcome"] == "done" and [c[1] for c in ex.calls if c[0] == "ask"] == [f"verify_{down}"]
-        assert [m[1] for m in moves(ex) if m[3] == "arm"][0] == "move_to_inspect"      # the look move stays
+        start = next(c for c in ex.calls if c[0] == "approach" and c[2] == "start")    # the look move stays: the controller's
+        assert start[4] == {"right": mechanism.INSPECT_PCT}                             # MoveJ at 50 % to inspection pose 1 (5 Nov)
+        assert start[5]["right"]["arm_deg"] == pytest.approx(mechanism.inspect_pose_of(task)[1], abs=0.01)
+        assert mechanism.inspect_pose_of(task)[0] == "inspection_pose_1"
         assert mechanism.Plan(task).rungs_note() is None
         assert mechanism.PHASE_BEFORE[task] == up.replace("_closed", "_open") and mechanism.PHASE_AFTER[task] in ("lid_open", "lid_closed")
     assert mechanism.PHASE_AFTER["seat_close"] == "lid_open" and mechanism.PHASE_AFTER["lid_close"] == "lid_closed"
