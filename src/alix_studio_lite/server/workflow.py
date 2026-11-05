@@ -1540,15 +1540,25 @@ CHECK_S = 0.5                    # a camera question, in the simulation (a frame
 LOOK_CHECK_S = 1.0               # an INSPECT's question: its frames (mechanism.frames_rule), as a rule
 
 
+def returns(st: dict) -> bool:
+    """Whether an INSPECT's RIGHT arm goes back to where it stood after the look (the user, 5 Nov: "after the inspection
+    of course the arm should go back to the start pose"): yes unless its lid or seat task follows straight on (that task
+    goes on from the inspection pose, its plan's own look), as when Programs or Global Points come between, or none
+    follows."""
+    return bool(st.get("moves_before")) or not st.get("task")
+
+
 def _sim_inspect(st: dict, sims: dict, T: float, stage: int) -> float:
     """An INSPECT (inspect_stages) from ``T``: the RIGHT arm's errors read when a Program moved it since (its ``clear``),
     its MoveJ to the stage's inspection pose at mechanism.INSPECT_PCT % (the global speed at 100 % for it), the camera's
-    question; the LEFT arm still meanwhile. The RIGHT arm stays at the pose (the next lid or seat task goes on from there).
+    question, and (``returns``) its MoveJ back to where it stood; the LEFT arm still meanwhile. When its task follows
+    straight on, the RIGHT arm stays at the pose (that task goes on from there).
     What the camera finds is not known here: said (a lid found open has Close the lid run first, ALIX's plan with its own
     checks, not in this simulation). Its end time."""
     from . import mechanism
 
     r = sims["right"]
+    back = list(r.q)                                  # where it stands: it goes back there unless its task follows straight on
     pose = mechanism.INSPECTION_POSES.get(st["pose"], {}).get("title", st["pose"])
     row = (st.get("rows") or {}).get("right")
     steps = ([{"type": "clear", "_row": row, "_alone": True}] if "right" in (st.get("clear") or []) else []) + [
@@ -1559,6 +1569,8 @@ def _sim_inspect(st: dict, sims: dict, T: float, stage: int) -> float:
                   f"{mechanism.PHASE_WORDS.get(st['expect'], st['expect'])})" if st.get("task") else ""))
     a.update(kind="check", expect="lid_closed")
     end = a["t1"]
+    if returns(st):                                   # back to its start pose (the user, 5 Nov), the LEFT still meanwhile
+        end = r.run([{"type": "move_to", "deg": back, "speed": mechanism.INSPECT_PCT, "_row": row, "_look": "where it stood"}], end, stage)
     sims["left"].hold(stage, {"_row": (st.get("rows") or {}).get("left")}, T, end, "Still while the RIGHT arm inspects the commode")
     if r.lam is None:
         task = mechanism.TASKS.get(st.get("task") or "", {}).get("title")
@@ -3296,8 +3308,9 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             task that follows: it runs (its start the order's word from here); Close the lid first (a lid found open where
             it starts with the lid and the seat down: it brings the seat down with it), then the LEFT arm back where it
             stood and the RIGHT arm back at the pose, so the run goes on as simulated; that task not run (its end state
-            there already, nothing moving before it); or a stop, the RIGHT arm at the pose. No task after it: the state is
-            said. Said in the job and the hardware log ("inspect")."""
+            there already, nothing moving before it); or a stop. The RIGHT arm then goes back to where it stood (returns: unless
+            its task follows straight on, which goes on from the pose). No task after it: the state is said. Said in the job
+            and the hardware log ("inspect")."""
             from . import mechanism as mech
 
             pose = mech.INSPECTION_POSES.get(st["pose"], {}).get("title", st["pose"])
@@ -3348,6 +3361,9 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 hw.hardware(None, "inspect", args=dict(pose=st["pose"], task=task, lid_closed=lid_closed, seat_closed=seat_closed,
                                                        decided=what, lid=a_lid.message, seat=a_seat.message if a_seat is not None else None),
                             ok=what != "stop", text=text)
+            if returns(st) and what != "close_lid" and before["right"]["q"]:   # back to its start pose (the user, 5 Nov), the
+                reals["right"].move_to([round(v * 1000) for v in before["right"]["q"]], speed=mech.INSPECT_PCT,   # LEFT still
+                                       restore_pct=robot.found_speed("right"))
             if what == "stop":
                 raise UserError(f"Not run: {why}. Nothing else moved.",
                                 "Check the camera's view of the commode (the day's checks folder keeps its frames), then run it again."
@@ -3376,7 +3392,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 "left": dict(kind="start", name="the run after the INSPECT", pole_mm=before["left"]["pole"], hand=before["left"]["hand"],
                              arm_deg=before["left"]["q"] or None),            # stood, the RIGHT arm at the INSPECT's pose
                 "right": dict(kind="start", name="the run after the INSPECT", pole_mm=before["right"]["pole"], hand=before["right"]["hand"],
-                              arm_deg=list(st["deg"]))})
+                              arm_deg=(before["right"]["q"] or None) if returns(st) else list(st["deg"]))})
             to_next(back, "INSPECT")
 
         t0 = time.monotonic()

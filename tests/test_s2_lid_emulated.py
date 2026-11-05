@@ -187,7 +187,11 @@ def test_an_inspect_that_finds_the_lid_open_closes_it_before_the_sequence(server
     right = [a for a in res["acts"]["right"] if a["stage"] == 0]
     move = next(a for a in right if a["kind"] == "global")
     assert "MoveJ to Inspection pose 4 (50 %)" in move["text"]                          # Open the lid's own pose
-    assert right[-1]["kind"] == "check" and right[-1]["t0"] >= move["t1"] - 1e-6
+    check = next(a for a in right if a["kind"] == "check")
+    assert check["t0"] >= move["t1"] - 1e-6 and right[-1]["kind"] == "global" and "where it stood" in right[-1]["text"]
+    assert right[-1]["q1"] == pytest.approx(right[0]["q0"], abs=1e-3)       # back to its start pose (Program 71 comes between)
+    left = [a for a in res["acts"]["left"] if a["stage"] == 0]
+    assert len(left) == 1 and left[0]["t1"] == pytest.approx(right[-1]["t1"], abs=1e-3)   # the LEFT still all the while
     assert "Still while the RIGHT arm inspects the commode" in res["acts"]["left"][0]["text"]
     assert any("INSPECT (RIGHT row 1): the RIGHT arm to Inspection pose 4 by the controller's MoveJ at 50 %" in f["text"]
                for f in res["findings"])
@@ -214,8 +218,8 @@ def test_an_inspect_that_finds_the_lid_open_closes_it_before_the_sequence(server
 
 
 def test_an_inspect_that_cannot_judge_stops_before_anything_else_moves(server):
-    """The camera cannot judge the lid at the INSPECT: the run stops there, the RIGHT arm at the inspection pose, nothing
-    else of the sequence moved."""
+    """The camera cannot judge the lid at the INSPECT: the RIGHT arm goes back to where it stood and the run stops there,
+    nothing else of the sequence moved."""
     prog = lambda pid: {"type": "program", "id": pid, "transit_speed": 30}               # noqa: E731
     res = _simulated(server, [{"type": "inspect"}, prog(71), {"type": "mechanism", "task": "lid_open"}, prog(72)])
     (server["data"] / "answers.json").write_text(json.dumps(["cannot_judge"]))
@@ -223,5 +227,6 @@ def test_an_inspect_that_cannot_judge_stops_before_anything_else_moves(server):
     j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": res["hash"]}))
     assert j["state"] == "failed" and "Not run: the camera could not judge whether the lid is closed. Nothing else moved." in j["error"], j
     hw = hardware(server, t0)
-    assert [r["side"] for r in hw if r["verb"] == "move to pose"] == ["right"]                   # the INSPECT's MoveJ only
+    moves = [r for r in hw if r["verb"] == "move to pose"]
+    assert [r["side"] for r in moves] == ["right", "right"] and all(r["args"]["speed"] == 50 for r in moves)   # there and back
     assert not [r for r in hw if r["verb"] in ("runner v14", "canfd stream", "pole and hand")]

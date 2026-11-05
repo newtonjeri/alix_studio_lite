@@ -1061,6 +1061,7 @@ def test_an_inspect_row_and_the_first_task_of_a_run_checking_its_start():
     assert first["task"] == "lid_open" and first["pose"] == "inspection_pose_4" and first["moves_before"] and first["expect"] == "lid_closed"
     assert second["task"] == "lid_close" and second["pose"] == "inspection_pose_1" and not second["moves_before"]
     assert len(first["deg"]) == 7 and not workflow.asks_start(cleaned, 2) and not workflow.asks_start(cleaned, 4)
+    assert workflow.returns(first) and not workflow.returns(second)          # back to its start pose unless its task follows
     named = workflow.plan_for(numbered([{"type": "inspect", "pose": "inspection_pose_1"}, lo], [ins, lo]), "both")
     assert named["plan"][0]["pose"] == "inspection_pose_1"                                # the row's own pose
     with pytest.raises(workflow.UserError, match="INSPECT looks from one of ALIX's inspection poses"):
