@@ -1,7 +1,8 @@
 """Open the lid reads the seat on its end check's frames (mechanism.SEAT_WITH_LID; the owner, 30 Oct): a seat that came
-up with the lid is closed again by Close the seat right after, its own check that the seat is up asked even in a
-sequence; when the next lid or seat task is Open the seat, both are skipped; a seat the camera cannot judge leaves the
-next task to its own start check. S2 links its stages the same way (workflow.link_after_lid)."""
+up with the lid is closed again by Close the seat right after, without asking again that the seat is up (the user, 5
+Nov: those frames were taken from the pose Close the seat looks from, a second before; asking again took ~5 s); when
+the next lid or seat task is Open the seat, both are skipped; a seat the camera cannot judge leaves the next task to its
+own start check. S2 links its stages the same way (workflow.link_after_lid)."""
 from alix_studio_lite.server import mechanism, workflow
 
 from test_mechanism import FakeExec
@@ -18,11 +19,10 @@ def asked(ex):
 
 
 def test_a_seat_that_came_up_with_the_lid_is_closed_right_after():
-    ex = FakeExec(OPENED + [{"also": "seat_lifted"}, "seat_open", "seat_closed"])
+    ex = FakeExec(OPENED + [{"also": "seat_lifted"}, "seat_closed"])
     out = mechanism.Runner(ex).run("lid_open")
     assert ran(out) == [("lid_open", "done"), ("seat_close", "done")] and out["seat_after_lid"] == "up"
-    assert asked(ex)[3:] == [("verify_seat_with_lid", "seat_lifted"), ("verify_seat_open", "seat_open"),
-                             ("verify_seat_closed", "seat_closed")]
+    assert asked(ex)[3:] == [("verify_seat_with_lid", "seat_lifted"), ("verify_seat_closed", "seat_closed")]   # not asked again
     assert [c["verdict"] for c in out["checks"] if c["check"] == "verify_seat_with_lid"] == ["up"]
 
 
@@ -32,13 +32,13 @@ def test_a_seat_left_down_needs_nothing_more():
     assert ran(out) == [("lid_open", "done")] and out["seat_after_lid"] == "down"
 
 
-def test_in_a_sequence_the_follow_up_still_asks_that_the_seat_is_up():
-    """S2 runs its tasks without their start checks (the sequence's order made the state): not the follow-up's, whose
-    state the order did not make."""
-    ex = FakeExec(["lid_lifted", "lid_open", {"also": "seat_lifted"}, "seat_open", "seat_closed"])
+def test_in_a_sequence_the_follow_up_goes_on_the_seat_seen_up():
+    """S2 runs its tasks without their start checks (the sequence's order made the state); the follow-up's start is the
+    seat Open the lid's end frames just saw up: not asked again either."""
+    ex = FakeExec(["lid_lifted", "lid_open", {"also": "seat_lifted"}, "seat_closed"])
     out = mechanism.Runner(ex, start_checks=False).run("lid_open")
     assert ran(out) == [("lid_open", "done"), ("seat_close", "done")]
-    assert ("verify_seat_open", "seat_open") in asked(ex)
+    assert not [a for a in asked(ex) if a[0] == "verify_seat_open"]
 
 
 def test_an_unknown_seat_runs_close_the_seat_which_skips_itself_when_the_seat_is_down():

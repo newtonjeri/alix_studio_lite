@@ -1073,6 +1073,7 @@ class Runner:
         self.checks: list = []                       # every question asked, and its answer
         self.seat_after_lid = None                   # Open the lid's end check on the seat: up | down | unknown
         self._ask_start: set = set()                 # queued plans that ask their start checks even in a sequence
+        self._seen_start: dict = {}                  # queued plans whose start state the camera just saw: name -> why
         self.again: dict = {}                        # task -> its runs again after its end check failed (RETRIES)
         self._again_for: dict = {}                   # task -> the run again queued: {n, end: the check that failed}
         self._last_answer = None                     # the camera's last answer (a run again's start check)
@@ -1116,11 +1117,13 @@ class Runner:
                             else without_inspect(list(plan.entries)))     # its look move: the controller's MoveJ (5 Nov)
         ask_start = name in self._ask_start
         self._ask_start.discard(name)
-        dropped_start = not self.start_checks and not ask_start
+        seen = self._seen_start.pop(name, None)      # its start state just seen by the camera (a follow-up's: _after_lid)
+        dropped_start = (not self.start_checks and not ask_start) or seen is not None
         if dropped_start:
             entries, dropped = without_start_checks(entries)
             for a in dropped:
-                self.say(f"{a.get('stage')}: not asked, the sequence's own order says {a.get('expect')} (the owner, 27 Oct)")
+                self.say(f"{a.get('stage')}: not asked, " + (seen if seen is not None else
+                         f"the sequence's own order says {a.get('expect')} (the owner, 27 Oct)"))
         state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(task), lid_end=task == "lid_open", seat=None,
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
                                                         for s in plan.sides()) if first is not None),   # after the approach
@@ -1314,10 +1317,15 @@ class Runner:
         if gate is not None:
             gate("seat_close")
         self.queue.insert(self.k + 1, "seat_close")
-        self._ask_start.add("seat_close")
-        self.say("FOLLOW-UP: Close the seat runs next, with its own check that the seat is up "
-                 + ("(the seat came up with the lid)" if seat == "up" else "(the seat's state is not known: it skips itself "
-                                                                        "when the seat is down)"), "warn")
+        if seat == "up":                             # a seat Open the lid's end frames just saw up (from the pose Close the
+            self._seen_start["seat_close"] = ("Open the lid's end frames saw the seat up, a moment ago, from the pose Close the "
+                                              "seat looks from (the user, 5 Nov)")   # seat looks from) is not asked again (~5 s)
+        else:
+            self._ask_start.add("seat_close")
+        self.say("FOLLOW-UP: Close the seat runs next, " + ("the seat seen up on Open the lid's end frames (it came up with "
+                                                              "the lid): not asked again" if seat == "up" else
+                                                              "with its own check that the seat is up (the seat's state is not "
+                                                              "known: it skips itself when the seat is down)"), "warn")
 
     def _cannot_judge(self, label, expect, answer, lead="", final=False):
         """A check its frames left undecided (FRAMES): a person must look; no plan policy runs, no re-lift (the owner,
@@ -2446,6 +2454,8 @@ def run(robot, name: str, mode: str | None = None, ugv_placement: dict | None = 
         if mode == "real" and all(linked.values()):
             from . import contact_sim
 
+            if name == "lid_open":                   # its seat may come up with the lid and be closed next: that closing's
+                contact_sim.prepare(["seat_close"])  # check made meanwhile (the user, 5 Nov: 28 s the arms still, else)
             ok = contact_sim.gate(name, job)         # the hands' contact forces (the owner, 29 Oct): refused from 40 N
             if ok and ok.get("accepted") and say:
                 say(f"{plan.title}: contact check over the limit ({ok['peak_n']:g} N)," + contact_sim.accepted_words(ok)[len(" Over the limit,"):])

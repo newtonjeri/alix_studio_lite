@@ -629,34 +629,124 @@ def accepted_words(out: dict) -> str:
     return (f" Over the limit, but run: this plan ({a['made']}) was accepted by {a['by']} ({a['why']}).") if a else ""
 
 
-_GATE: dict = {}
+_GATE: dict = {}                 # (task, the plan file's sha256) -> its check (simulate's result)
+_PENDING: dict = {}              # the same key -> the check running in its own process
+_GATE_LOCK = __import__("threading").Lock()
+
+
+def _gate_key(task: str) -> tuple:
+    import hashlib
+
+    from . import mechanism
+
+    plan = mechanism.cached(task)
+    return task, hashlib.sha256(plan.path.read_bytes()).hexdigest()
+
+
+def _cache_file(task: str, sha: str) -> Path:
+    """Where a plan file's check is kept on this computer: it depends on the plan's bytes alone (ALIX's room, the plan's
+    own clock), so it is made once a plan version, not once a Lite session (``LITE_CONTACT_CACHE``: another folder)."""
+    import os
+
+    root = os.environ.get("LITE_CONTACT_CACHE") or str(Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
+                                                        / "alix-studio-lite" / "contact")
+    return Path(root) / f"{task}_{sha[:20]}.json"
+
+
+def _kept(key: tuple, out: dict) -> None:
+    """A finished check, in memory and on disk (never fails: a copy)."""
+    with _GATE_LOCK:
+        _GATE[key] = out
+        _PENDING.pop(key, None)
+    try:
+        f = _cache_file(*key)
+        f.parent.mkdir(parents=True, exist_ok=True)
+        tmp = f.with_name(f.name + ".tmp")
+        tmp.write_text(json.dumps(dict(task=key[0], sha256=key[1], result=out), default=float), encoding="utf-8")
+        tmp.replace(f)
+    except (OSError, TypeError, ValueError):
+        pass
+
+
+def _check(task: str, wait: bool = True, job=None) -> dict | None:
+    """``task``'s plan check (check_plan), once a plan file (the user, 5 Nov: the first follow-up Close the seat of each
+    Lite session waited 28 s for it at the lab, the arms still): as kept in memory, else on disk, else computed in a
+    process of its own (``contact``: never in the queue of the run's other checks), started once and waited for here
+    (``wait``) or left to finish meanwhile (prepare)."""
+    from . import workers
+
+    key = _gate_key(task)
+    with _GATE_LOCK:
+        if key in _GATE:
+            return _GATE[key]
+        fut = _PENDING.get(key)
+        if fut is None:
+            try:
+                kept = json.loads(_cache_file(*key).read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                kept = None
+            if kept and kept.get("sha256") == key[1] and isinstance(kept.get("result"), dict):
+                _GATE[key] = kept["result"]
+                return _GATE[key]
+            fut = _PENDING[key] = workers.pool("contact").submit(check_plan, task)
+
+            def done(f, key=key):
+                if f.exception() is None:
+                    _kept(key, f.result())
+                else:
+                    with _GATE_LOCK:
+                        _PENDING.pop(key, None)
+            fut.add_done_callback(done)
+    if not wait:
+        return None
+    if job is not None and not fut.done():
+        from . import mechanism
+
+        job.progress(f"{mechanism.TASKS.get(task, {}).get('title', task)}: checking the hands' contact forces (this plan's "
+                     "first run on this computer)")
+    while not fut.done():
+        if job is not None:
+            job.sleep(0.2)
+        else:
+            time.sleep(0.2)
+    out = fut.result()
+    _kept(key, out)
+    return out
+
+
+def prepare(tasks) -> list:
+    """The closings' checks started now, each in its own process, not waited for (a run that may need one: any with Open
+    the lid, whose seat may come up with it and be closed next): ready, or nearly, when the gate asks. The tasks started."""
+    import os
+
+    if os.environ.get("LITE_CONTACT_CHECK") == "0":
+        return []
+    out = []
+    for t in tasks:
+        if task_part(t) is None:
+            continue
+        try:
+            if _check(t, wait=False) is None:
+                out.append(t)
+        except Exception:                                                           # noqa: BLE001 - the gate tries again
+            continue
+    return out
 
 
 def gate(task: str, job=None) -> dict | None:
-    """A lid or seat closing run on its own in Real (mechanism.run): its plan on its own clock, ALIX's room (the wall
-    not known here; S2 uses the project's), checked in the worker process once per plan file. Raises UserError
-    (code ``contact``) from STOP_N; the result otherwise (None for a task not checked, or with LITE_CONTACT_CHECK=0)."""
-    import hashlib
+    """A lid or seat closing run on its own in Real (mechanism.run), or queued as a follow-up: its plan on its own clock,
+    ALIX's room (the wall not known here; S2 uses the project's), checked once per plan file (_check: kept on disk, in
+    a process of its own, started ahead by prepare). Raises UserError (code ``contact``) from STOP_N; the result
+    otherwise (None for a task not checked, or with LITE_CONTACT_CHECK=0)."""
     import os
 
-    from . import mechanism, workers
+    from . import mechanism
     from .jobs import UserError
 
     if task_part(task) is None or os.environ.get("LITE_CONTACT_CHECK") == "0":
         return None
     plan = mechanism.cached(task)
-    key = (task, hashlib.sha256(plan.path.read_bytes()).hexdigest())
-    if key not in _GATE:
-        if job is not None:
-            job.progress(f"{plan.title}: checking the hands' contact forces (the plan's first run here)")
-        fut = workers.pool().submit(check_plan, task)
-        while not fut.done():
-            if job is not None:
-                job.sleep(0.2)
-            else:
-                time.sleep(0.2)
-        _GATE[key] = fut.result()
-    out = accept(_GATE[key], task, plan.path)
+    out = accept(_check(task, job=job), task, plan.path)
     if out["level"] == "stop":
         at = lambda t, s, st=out["stages"]: stage_at(st, t, s)          # noqa: E731
         raise UserError("Not run: " + words(out, plan.title, at), "Edit the path in ALIX so the hands press less (tools/"

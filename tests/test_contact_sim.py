@@ -116,3 +116,37 @@ def test_the_owner_accepts_one_plan_file_over_a_refusal(lab, monkeypatch):
     with pytest.raises(UserError):
         contact_sim.gate("seat_close")
 
+
+
+def test_a_closings_contact_check_is_made_once_a_plan_and_ahead(tmp_path, monkeypatch):
+    """The user, 5 Nov: the first follow-up Close the seat of each Lite session waited 28 s at the lab, the arms still,
+    for its contact check. It is started ahead (prepare: a run with Open the lid), in a process of its own, waited for
+    once by the gate, and kept on disk by the plan file's sha256: a new session reads it, nothing computed again."""
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    from alix_studio_lite.server import workers
+
+    calls = []
+
+    def check(task, **_k):
+        calls.append(task)
+        time.sleep(0.3)
+        return dict(level="warn", peak_n=12.5, task=task, stages=[])
+
+    pool = ThreadPoolExecutor(1)
+    monkeypatch.setattr(contact_sim, "check_plan", check)
+    monkeypatch.setattr(workers, "pool", lambda name=None: pool)
+    monkeypatch.setattr(contact_sim, "_GATE", {})
+    monkeypatch.setattr(contact_sim, "_PENDING", {})
+    monkeypatch.setenv("LITE_CONTACT_CACHE", str(tmp_path))
+    monkeypatch.delenv("LITE_CONTACT_CHECK", raising=False)
+    assert contact_sim.prepare(["seat_close", "lid_open"]) == ["seat_close"]     # started, not waited for; openings not checked
+    assert contact_sim.gate("seat_close")["peak_n"] == 12.5 and calls == ["seat_close"]   # the one in flight, not a second
+    assert len(list(tmp_path.glob("seat_close_*.json"))) == 1
+    contact_sim._GATE.clear()                                                     # a new Lite session: from disk
+    assert contact_sim.gate("seat_close")["peak_n"] == 12.5 and calls == ["seat_close"]
+    assert contact_sim.prepare(["seat_close"]) == []                              # nothing to start: kept
+    monkeypatch.setenv("LITE_CONTACT_CHECK", "0")
+    assert contact_sim.prepare(["lid_close"]) == [] and calls == ["seat_close"]
+    pool.shutdown()
