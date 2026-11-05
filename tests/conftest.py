@@ -16,6 +16,8 @@ os.environ.setdefault("RM_EMU_TIME_SCALE", "10")
 # The servers the tests start do not link Lite's lid and seat files with ALIX's at their start (alix_sync.link): they
 # would copy a change the owner is making in ALIX into this repository in the middle of the suite.
 os.environ["LITE_START_LINK"] = "0"
+# The closings' contact checks a run keeps (contact_sim._cache_file) go to a folder of the suite's, never this computer's.
+os.environ.setdefault("LITE_CONTACT_CACHE", __import__("tempfile").mkdtemp(prefix="lite-contact-"))
 
 from alix_studio_lite import vendor_paths  # noqa: E402
 

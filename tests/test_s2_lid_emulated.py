@@ -38,7 +38,7 @@ def server(tmp_path_factory):
                              "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"),
                              "--projects", str(data / "projects")],
                             cwd=str(vendor_paths.LITE_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                            env=dict(os.environ, LITE_CHECK_SCRIPT=str(script)))
+                            env=dict(os.environ, LITE_CHECK_SCRIPT=str(script), LITE_CONTACT_CHECK="0"))   # as mech_emulated
     ctx = {"base": f"http://127.0.0.1:{port}", "data": data}
     for _ in range(150):
         try:

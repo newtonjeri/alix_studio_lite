@@ -3356,7 +3356,10 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 nxt["held"], nxt["held_why"] = mech.PHASE_AFTER[task], "the INSPECT before it found it so"
             if what != "close_lid":
                 return
-            title = mech.TASKS["lid_close"]["title"]        # Close the lid first, its start the INSPECT's word
+            title = mech.TASKS["lid_close"]["title"]        # Close the lid first, its start the INSPECT's word, its contact
+            from . import contact_sim                       # forces checked as any closing not in the run's simulation
+
+            contact_sim.gate("lid_close", job)
             st_c = dict(kind="mechanism", task="lid_close", title=title, program_id="INSPECT", rows={}, clear=list(ARMS))
             try:
                 out = lid_seat(st_c, "INSPECT", arms_real, start_checks=False)
@@ -3393,6 +3396,10 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 job.log(f"The lid and seat tasks moved with the UGV's placement (the commode {corr.ugv.words()} from where "
                         f"their plans were made): {queued} plan(s) being made from now on, in the run's order, the next "
                         "while one runs.")
+        from . import contact_sim                   # the closings a run may add (Close the seat after Open the lid, Close the
+        contact_sim.prepare((["seat_close"] if any(st["kind"] == "mechanism" and st["task"] == "lid_open" for st in run["plan"])
+                             else []) + (["lid_close"] if any(st["kind"] == "inspect" for st in run["plan"]) else []))
+        # lid before an INSPECT's task): their contact checks made meanwhile, in their own process (the user, 5 Nov)
         try:
             for s in sides:
                 originals[s] = reals[s].set_run_mode("REAL")
