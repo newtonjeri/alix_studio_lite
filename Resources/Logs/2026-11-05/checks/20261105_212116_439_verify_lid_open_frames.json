@@ -1,0 +1,23 @@
+{
+  "check_id": "20261105_212116_439_verify_lid_open",
+  "stage": "verify_lid_open",
+  "expect": "lid_open",
+  "decided": true,
+  "state": "lid_open",
+  "confidence": 1.0,
+  "message": "2 frames (lid_open, lid_open; 2 yes, 0 no, 0 no vote): parts (depth): the lid open at 110 deg (margin +1.74); lid 110 deg, seat 105 deg, the commode -5 mm from its scene place; the colour agrees: lid_seat_open at 0.96",
+  "frames": [
+    {
+      "record": "20261105_212116_867_gap_check_lid_open_lid_open.json",
+      "success": true,
+      "state": "lid_open",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261105_212117_202_gap_check_lid_open_lid_open.json",
+      "success": true,
+      "state": "lid_open",
+      "confidence": 1.0
+    }
+  ]
+}
