@@ -1,0 +1,23 @@
+{
+  "check_id": "20261105_171632_027_verify_lid_closed",
+  "stage": "verify_lid_closed",
+  "expect": "lid_closed",
+  "decided": true,
+  "state": "lid_closed",
+  "confidence": 1.0,
+  "message": "2 frames (lid_closed, lid_closed; 2 yes, 0 no, 0 no vote): parts (depth): the lid closed at 10 deg (margin +1.15); lid 10 deg, seat 0 deg, the commode +5 mm from its scene place; the colour agrees: closed at 0.94",
+  "frames": [
+    {
+      "record": "20261105_171632_375_gap_check_lid_closed_lid_closed.json",
+      "success": true,
+      "state": "lid_closed",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261105_171632_663_gap_check_lid_closed_lid_closed.json",
+      "success": true,
+      "state": "lid_closed",
+      "confidence": 1.0
+    }
+  ]
+}

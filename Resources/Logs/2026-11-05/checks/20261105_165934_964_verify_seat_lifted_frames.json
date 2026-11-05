@@ -1,0 +1,23 @@
+{
+  "check_id": "20261105_165934_964_verify_seat_lifted",
+  "stage": "verify_seat_lifted",
+  "expect": "seat_lifted",
+  "decided": true,
+  "state": "seat_lifted",
+  "confidence": 0.784,
+  "message": "2 frames (seat_lifted, seat_lifted; 2 yes, 0 no, 0 no vote): seat by distance: 78 % of the seat's points stand 50 mm or more above its closed top 0.440 m in base_link (median +98 mm), the bowl 91 % of the points -> seat_lifted; 17 hand frames masked 0.10 m, 25 % of the window; native depth (D435, pyrealsense2), camera_depth_optical_frame",
+  "frames": [
+    {
+      "record": "20261105_165935_030_gap_check_seat_lifted_seat_lifted.json",
+      "success": true,
+      "state": "seat_lifted",
+      "confidence": 0.784
+    },
+    {
+      "record": "20261105_165935_171_gap_check_seat_lifted_seat_lifted.json",
+      "success": true,
+      "state": "seat_lifted",
+      "confidence": 0.788
+    }
+  ]
+}

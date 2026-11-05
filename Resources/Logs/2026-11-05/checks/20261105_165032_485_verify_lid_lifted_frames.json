@@ -1,0 +1,23 @@
+{
+  "check_id": "20261105_165032_485_verify_lid_lifted",
+  "stage": "verify_lid_lifted",
+  "expect": "lid_lifted",
+  "decided": true,
+  "state": "lid_lifted",
+  "confidence": 0.947,
+  "message": "2 frames (lid_lifted, lid_lifted; 2 yes, 0 no, 0 no vote): lid by distance: 95 % of the lid's points stand 50 mm or more above its closed top 0.450 m in base_link (median +165 mm), the bowl 9 % of the points -> lid_lifted; 17 hand frames masked 0.10 m, 27 % of the window; native depth (D435, pyrealsense2), camera_depth_optical_frame",
+  "frames": [
+    {
+      "record": "20261105_165032_525_gap_check_lid_lifted_lid_lifted.json",
+      "success": true,
+      "state": "lid_lifted",
+      "confidence": 0.947
+    },
+    {
+      "record": "20261105_165032_659_gap_check_lid_lifted_lid_lifted.json",
+      "success": true,
+      "state": "lid_lifted",
+      "confidence": 0.948
+    }
+  ]
+}
