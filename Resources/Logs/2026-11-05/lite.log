@@ -13757,3 +13757,7 @@
 23:10:30.173 [activity] operator:b9b4ab PUT /api/projects/alix_mvbvk1fk_zti6s
 23:10:36.831 [activity] operator:b9b4ab page: NAVIGATION · Scrolled view
 23:10:47.740 [activity] operator:b9b4ab page: SYSTEM · Session active
+23:11:17.741 [activity] operator:b9b4ab page: SYSTEM · Session active
+23:11:47.741 [activity] operator:b9b4ab page: SYSTEM · Session active
+23:12:00.808 [LEFT] restore global speed {"pct": 50} ret=0
+23:12:00.831 [RIGHT] restore global speed {"pct": 50} ret=0

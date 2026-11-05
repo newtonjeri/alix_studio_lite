@@ -11626,3 +11626,5 @@
 {"t": 1793891374.2645905, "side": "right", "verb": "s2 feed", "args": {"file": "20261105_230928_RIGHT_s2_05_PART_5.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "237 frames"}
 {"t": 1793891374.3097074, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1793891374.3310318, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793891520.80815, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1793891520.8318987, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
