@@ -726,5 +726,17 @@
    "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/left/L-T06/versions/v001.txt"
   }
  ],
- "not_kept": []
+ "not_kept": [],
+ "points": {
+  "L_HME_POS": [
+   0.77,
+   -98.64,
+   -1.86,
+   92.32,
+   3.57,
+   94.45,
+   167.03
+  ]
+ },
+ "points_source": "the lab's S2 simulation of 2026-11-03 19:17:45: read from the LEFT controller (the points its sequence uses); the next keep from the controller lists them all"
 }

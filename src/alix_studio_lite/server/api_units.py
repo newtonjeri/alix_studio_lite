@@ -1758,7 +1758,16 @@ def get_points(app, q, body, m):
 
     session(app)
     side = _arm(m)
+    pid = str((q.get("pid") or [""])[0])
     if app.robot._real(side) is None:
+        try:
+            c = content.content(app, side, units=units_of(app, pid)) if pid else {}
+        except UserError:
+            c = {}
+        if c.get("points"):                         # the simulation's: the real controller's, as last kept (5 Nov)
+            want = str((q.get("search") or [""])[0]).strip().casefold()
+            return {"arm": side, "total": len(c["points"]), "read": c["read"], "note": c["note"],
+                    "points": [p for p in c["points"] if want in p["name"].casefold()]}
         return {"arm": side, "points": [], "note": "The stand-in robot has no controller, so no global points."}
     if not app.robot.arm(side).connected:
         return {"arm": side, "points": [], "note": f"Connect the {side.upper()} arm to read its global points."}
@@ -1777,16 +1786,17 @@ def get_content(app, q, body, m):
 
     session(app)
     side = _arm(m)
-    files = None
+    files, units = None, None
     pid = str((q.get("pid") or [""])[0])
     if pid:
         from . import workflow
 
         try:
-            files = workflow._project_files(units_of(app, pid), side, every=True)
+            units = units_of(app, pid)
+            files = workflow._project_files(units, side, every=True)
         except UserError:
             files = None
-    return content.content(app, side, refresh=str((q.get("refresh") or [""])[0]) in ("1", "true"), files=files)
+    return content.content(app, side, refresh=str((q.get("refresh") or [""])[0]) in ("1", "true"), files=files, units=units)
 
 
 @route("GET", r"/api/robots/(left|right)/data")
@@ -1805,11 +1815,35 @@ def get_robot_data(app, q, body, m):
         except UserError:
             files = None
     out = app.robot.controller_data(side, files)
-    if pid:                                         # the controller's programs kept in the project (the user, 4 Nov)
+    if pid and app.robot._real(side) is None:       # the simulation's arm: the real controller's, as last kept (the user, 5 Nov)
         from . import program_mirror
 
         try:
-            kept = program_mirror.keep_quietly(app, units_of(app, pid), side)
+            ex = program_mirror.exported(units_of(app, pid), side)
+        except UserError:
+            ex = None
+        if ex and (ex.get("programs") or ex.get("points")):
+            from ..motion import track
+
+            mine = app.robot.arm(side).programs
+            out["programs"] = sorted([dict(num=int(i), name=r.get("name"), bytes=None, speed=None,
+                                           lite=dict(sent=None, file=r.get("file"), lines=r.get("lines"), seconds=track.duration_s(r.get("lines")),
+                                                     project_file=r.get("file"), region=None))
+                                      for i, r in ex["programs"].items()]
+                                     + [p for p in out.get("programs") or [] if int(p["num"]) not in ex["programs"] and int(p["num"]) in mine],
+                                     key=lambda p: int(p["num"]))
+            out["points"] = [dict(name=k, joints=list(q)) for k, q in sorted((ex.get("points") or {}).items())] or None
+            out["read"], out["kept_copy"] = ex.get("kept"), True
+            out["note"] = (f"The simulation's controller: the programs{' and global points' if ex.get('points') else ''} the real "
+                           f"{side.upper()} controller held when they were last kept in the project ({ex.get('kept')}). Connect the "
+                           "real controller (Real robot mode, --robot realman) to read it and keep them again.")
+    if pid:                                         # the controller's programs kept in the project (the user, 4 Nov): a
+        from . import program_mirror                # real controller's only (5 Nov: the stand-in's emptied the folder)
+
+        try:
+            kept = program_mirror.keep_quietly(app, units_of(app, pid), side, points={p["name"]: p["joints"] for p in out.get("points") or []
+                                                                                       if p.get("name") and p.get("joints")}
+                                               if out.get("linked") else None)
         except UserError:
             kept = None
         if kept is not None:
@@ -1830,15 +1864,22 @@ def get_robot_data(app, q, body, m):
     return out
 
 
-def _kept_for(app, side: str, pid) -> tuple:
-    """The open project's units and the arm's controller programs kept in it now (program_mirror.keep)."""
+def _kept_for(app, side: str, pid, save: bool = True) -> tuple:
+    """The open project's units and the arm's controller programs kept in it now (program_mirror.keep: a real
+    controller's only); ``save`` False (the download): kept again when the arm is a real controller, else as kept."""
     from . import program_mirror
 
     if not str(pid or "").strip():
         raise UserError("Open a project first: the programs are kept in its folder.", "Open or create a project, then try again.")
     units = units_of(app, str(pid))
-    man = program_mirror.keep(app, units, side)
     folder = Path(units.root) / program_mirror.FOLDER / side
+    if not save:                                    # the download: kept again from a real controller; else as kept
+        man = program_mirror.keep_quietly(app, units, side) or dict(program_mirror.exported(units, side) or {}, arm=side)
+        return units, man, folder
+    from . import content
+
+    pts = (content._CACHE.get(side) or {}).get("points") or []          # as Data Management last read them
+    man = program_mirror.keep(app, units, side, points={p["name"]: p["joints"] for p in pts if p.get("name") and p.get("joints")} or None)
     return units, man, folder
 
 
@@ -1869,7 +1910,7 @@ def get_kept_programs_zip(app, q, body, m):
 
     session(app)
     side = _arm(m)
-    _units, man, folder = _kept_for(app, side, (q.get("pid") or [""])[0])
+    _units, man, folder = _kept_for(app, side, (q.get("pid") or [""])[0], save=False)
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for f in sorted(folder.glob("*")):

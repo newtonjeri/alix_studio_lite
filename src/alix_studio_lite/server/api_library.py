@@ -196,6 +196,16 @@ def _ready(app, fid: str, side: str, pid=None) -> dict:
     return _program_meta(app, side, int(hit.group(2)), pid)
 
 
+def _units(app, pid):
+    """The open project's units (``pid``), or None."""
+    if not pid:
+        return None
+    try:
+        return units_of(app, str(pid))
+    except UserError:
+        return None
+
+
 def _files(app, side: str, pid) -> dict | None:
     """The open project's files of an arm by their bytes (workflow._project_files), or None."""
     if not pid:
@@ -265,7 +275,7 @@ def _program_meta(app, side: str, n: int, pid=None) -> dict:
     if not 1 <= int(n) <= 100:
         raise UserError("Program numbers are 1 to 100.")
     files = _files(app, side, pid)
-    c = content.content(app, side, files=files)
+    c = content.content(app, side, files=files, units=_units(app, pid))
     p = next((x for x in c["programs"] if int(x["id"]) == int(n)), None)
     if p is None:
         raise UserError(f"The {side.upper()} controller holds no program {n}" + (f": {c['note']}" if c.get("note") else "."),
@@ -289,7 +299,7 @@ def get_controller_programs(app, q, body, m):
     out = {}
     for side in ("left", "right"):
         files = _files(app, side, pid)
-        c = content.content(app, side, refresh=refresh, files=files)
+        c = content.content(app, side, refresh=refresh, files=files, units=_units(app, pid))
         out[side] = dict(connected=bool(app.robot.arm(side).connected), live=c["live"], standin=c["standin"], read=c["read"],
                          note=c["note"], programs=[_program_row(app, side, p, files)[0] for p in c["programs"]])
     return {"arms": out, "backend": app.robot.backend}

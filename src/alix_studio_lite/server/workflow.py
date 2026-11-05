@@ -856,7 +856,18 @@ def programs_known(app, units, side: str) -> dict:
 
     files = _project_files(units, side, every=True)
     out = {}
+    if app.robot._real(side) is None:                     # the simulation's arm: the real controller's programs as last kept
+        from . import program_mirror                      # (the user, 5 Nov: the simulation synchronized with the hardware)
+
+        for pid, r in sorted(((program_mirror.exported(units, side) or {}).get("programs") or {}).items()):
+            f = file_for(files, r.get("sha256"), r.get("name"))
+            out[int(pid)] = dict(id=int(pid), name=r.get("name"), lines=r.get("lines"), seconds=track.duration_s(r.get("lines")),
+                                 sha256=r.get("sha256"), stage=r.get("stage"), first_row=None, sent=True,
+                                 file=f.get("path") or r["path"], file_name=f.get("name") or Path(r["path"]).name,
+                                 phase=f.get("phase"), placement=f.get("placement"), region=f.get("region"), kept=True)
     for pid, r in app.robot.arm(side).programs.items():
+        if int(pid) in out:                               # the real controller's, kept: what the simulation's slot holds
+            continue
         f = file_for(files, r.get("sha256"), r.get("name"))
         if not f.get("path") and r.get("path") and r.get("sha256"):      # the file it sent, where Lite kept it
             try:
@@ -943,8 +954,15 @@ def files_by_name(app, units, side: str) -> dict:
     return out
 
 
-def points_known(app, side: str) -> dict | None:
-    """The global points of a linked arm's controller, read now when the arm is idle, else as last read."""
+def points_known(app, side: str, units=None) -> dict | None:
+    """The global points of a linked arm's controller, read now when the arm is idle, else as last read; the
+    simulation's arm (the stand-in, ``units`` given): the real controller's as last kept in the project (program_mirror)."""
+    if app.robot._real(side) is None and units is not None:
+        from . import program_mirror
+
+        ex = program_mirror.exported(units, side) or {}
+        if ex.get("points"):
+            return dict(read=ex.get("kept"), points={k: [float(v) for v in q] for k, q in ex["points"].items()}, kept=True)
     if app.robot._real(side) is not None and app.robot.arm(side).connected and not app.jobs.running(arm=side):
         try:
             pts = app.robot.global_points(side) or []
@@ -2089,10 +2107,10 @@ def simulate(app, units, mode: str, pick: dict | None):
         job.progress("Reading what the controllers hold", 0, 3)
         sides = list(run["steps"])
         programs = {s: programs_known(app, units, s) for s in ARMS}
-        from . import program_mirror                    # the controllers' programs kept in the project (the user, 4 Nov)
-        for s in ARMS:
-            program_mirror.keep_quietly(app, units, s, programs[s])
-        points = {s: points_known(app, s) for s in ARMS}
+        points = {s: points_known(app, s, units) for s in ARMS}
+        from . import program_mirror                    # the controllers' programs kept in the project (the user, 4 Nov):
+        for s in ARMS:                                  # a real controller's only (5 Nov)
+            program_mirror.keep_quietly(app, units, s, programs[s], (points[s] or {}).get("points"))
         findings, md_of = [], _md_reader(units.root)
         named = {s: files_by_name(app, units, s) for s in ARMS}
         run = plan_for(steps, mode, pick, own=own_for(app, units, programs, run["steps"]))   # each Program's own pole and hand
@@ -2697,7 +2715,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                             "push), then connect the arm again.", code="push")
     overall = int(robot.speed_pct)
     programs = {s: programs_known(app, units, s) for s in ARMS}
-    points = {s: points_known(app, s) for s in ARMS}
+    points = {s: points_known(app, s, units) for s in ARMS}
     run = plan_for(steps, mode, pick, own=own_for(app, units, programs, run["steps"]))   # each Program's own pole and hand
     ident = identity_of(run, programs, points, overall)
     sim = load_sim(units)
