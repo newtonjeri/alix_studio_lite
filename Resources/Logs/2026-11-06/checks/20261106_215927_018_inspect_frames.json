@@ -1,0 +1,41 @@
+{
+  "check_id": "20261106_215927_018_inspect",
+  "stage": "inspect",
+  "expect": "lid_closed",
+  "decided": false,
+  "state": "cannot_judge",
+  "confidence": 0.0,
+  "message": "no decision in 5 frames (uncertain, uncertain, uncertain, uncertain, uncertain; 0 yes, 0 no, 5 no vote); the last: parts (depth): the lid lifted at 55 deg (margin +1.01); lid 55 deg, seat 55 deg, the commode where this frame reads it (+28 / +9 / +7 mm, -9.2 deg from its scene place); the colour says closed at 0.86: they disagree -> uncertain (the commode searched for: at the plans' place uncertain)",
+  "frames": [
+    {
+      "record": "20261106_215930_642_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261106_215932_853_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261106_215935_019_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261106_215936_693_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    },
+    {
+      "record": "20261106_215938_615_gap_check_lid_closed_uncertain.json",
+      "success": true,
+      "state": "uncertain",
+      "confidence": 0.0
+    }
+  ]
+}

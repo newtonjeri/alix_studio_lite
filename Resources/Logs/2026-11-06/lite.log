@@ -4523,3 +4523,180 @@
 21:52:59.051 [activity] operator:382bee page: SYSTEM · 3D device
 21:53:02.074 [activity] operator:382bee page: NAVIGATION · Scrolled view
 21:53:17.581 [activity] operator:382bee page: SYSTEM · Session active
+21:56:40.511 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+21:56:40.555 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+21:56:40.556 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+21:56:42.597 [activity] - page: NAVIGATION · Open screen
+21:56:42.602 [activity] - page: SYSTEM · ASL frontend initialized
+21:56:43.432 [RIGHT] camera · perception warmed up in 5.2 s: its core built, the colour model loaded
+21:56:46.725 [activity] - POST /api/auth/login
+21:56:47.537 [activity] operator:6c8bc4 page: AUTH · Operator login
+21:56:47.537 [activity] operator:6c8bc4 page: NAVIGATION · Open screen
+21:56:47.537 [activity] operator:6c8bc4 page: AUTH · Setting changed
+21:56:49.313 [activity] operator:6c8bc4 page: PROJECT · Button action
+21:56:50.254 [activity] operator:6c8bc4 page: NAVIGATION · Task loaded
+21:56:50.256 [activity] operator:6c8bc4 page: SETUP · Arm selected
+21:56:50.269 [activity] operator:6c8bc4 page: NAVIGATION · Teaching stage changed
+21:56:50.270 [activity] operator:6c8bc4 page: SETUP · Arm selected
+21:56:50.272 [activity] operator:6c8bc4 page: NAVIGATION · Open screen
+21:56:54.549 [activity] operator:6c8bc4 page: SYSTEM · 3D device
+21:56:54.554 [activity] operator:6c8bc4 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+21:56:58.262 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:56:59.196 [LEFT] read global speed ret=0 · not reported
+21:56:59.197 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+21:56:59.202 [LEFT] read drag sensitivity ret=0 · 100 %
+21:56:59.401 [activity] operator:6c8bc4 page: UI · Button action
+21:56:59.421 [LEFT] device check · controller: answers at 192.168.1.10:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 200 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 1000, 1000, 997, 986, 976; feed: recorded on UDP port 8089 of this computer (192.168.1.20)
+21:56:59.421 [activity] operator:6c8bc4 POST /api/robots/left/connect
+21:56:59.614 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:56:59.829 [LEFT] program list · 7 programs
+21:56:59.860 [LEFT] global points · 2 point(s)
+21:57:00.041 [RIGHT] read global speed ret=0 · not reported
+21:57:00.041 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+21:57:00.052 [RIGHT] read drag sensitivity ret=0 · 100 %
+21:57:00.248 [RIGHT] device check · controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 200 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 996, 998, 1000, 991, 972; feed: recorded on UDP port 8090 of this computer (192.168.1.20)
+21:57:00.249 [activity] operator:6c8bc4 POST /api/robots/right/connect
+21:57:00.309 [RIGHT] program list · 8 programs
+21:57:00.321 [RIGHT] global points · 2 point(s)
+21:57:02.006 [activity] operator:6c8bc4 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+21:57:02.814 [activity] operator:6c8bc4 page: ROBOT · Button action
+21:57:03.021 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:57:03.341 [LEFT] run mode REAL
+21:57:03.356 [RIGHT] run mode REAL
+21:57:03.357 [activity] operator:6c8bc4 POST /api/robots/mode
+21:57:04.113 [activity] operator:6c8bc4 page: ROBOT · Button action
+21:57:04.492 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:57:06.763 [activity] operator:6c8bc4 page: UI · Button action
+21:57:06.980 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:57:09.203 [activity] operator:6c8bc4 page: UI · Button action
+21:57:09.420 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:57:10.372 [activity] operator:6c8bc4 page: NAVIGATION · Scrolled view
+21:57:14.414 [activity] operator:6c8bc4 page: NAVIGATION · Scrolled view
+21:57:17.248 [activity] operator:6c8bc4 page: UI · Button action
+21:57:17.248 [activity] operator:6c8bc4 page: NAVIGATION · Scrolled view
+21:57:17.248 [activity] operator:6c8bc4 page: SYSTEM · Session active
+21:57:17.731 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:57:37.066 [activity] operator:6c8bc4 page: UI · Button action
+21:57:37.595 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:57:45.075 [activity] operator:6c8bc4 page: NAVIGATION · Scrolled view
+21:57:47.538 [activity] operator:6c8bc4 page: SYSTEM · Session active
+21:58:08.416 [LEFT] program list · 7 programs
+21:58:08.805 [RIGHT] program list · 8 programs
+21:58:08.817 [LEFT] global points · 2 point(s)
+21:58:08.834 [RIGHT] global points · 2 point(s)
+21:58:08.977 [activity] operator:6c8bc4 page: UI · Button action
+21:58:09.093 [activity] operator:6c8bc4 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT global points (as read from the controller), ALIX's plan of Open the lid (revised since).
+21:58:09.193 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:58:13.599 [LEFT] program list · 7 programs
+21:58:14.012 [RIGHT] program list · 8 programs
+21:58:14.024 [LEFT] global points · 2 point(s)
+21:58:14.037 [RIGHT] global points · 2 point(s)
+21:58:14.258 [LEFT] program list · 7 programs
+21:58:14.263 [activity] operator:6c8bc4 page: ROBOT · Button action
+21:58:14.267 [LEFT] global points · 2 point(s)
+21:58:14.309 [RIGHT] program list · 8 programs
+21:58:14.339 [RIGHT] global points · 2 point(s)
+21:58:14.453 [activity] operator:6c8bc4 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+21:58:14.491 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:58:15.568 [LEFT] program list · 7 programs
+21:58:16.005 [RIGHT] program list · 8 programs
+21:58:16.019 [LEFT] global points · 2 point(s)
+21:58:16.035 [RIGHT] global points · 2 point(s)
+21:58:16.216 [activity] operator:6c8bc4 page: ROBOT · Button action
+21:58:16.303 [LEFT] program list · 7 programs
+21:58:16.322 [LEFT] global points · 2 point(s)
+21:58:16.359 [RIGHT] program list · 8 programs
+21:58:16.374 [RIGHT] global points · 2 point(s)
+21:58:16.503 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:58:16.936 [activity] operator:6c8bc4 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+21:58:16.983 [LEFT] run mode REAL
+21:58:17.123 [RIGHT] run mode REAL
+21:58:17.425 [RIGHT] clear warning · clean
+21:58:17.437 [RIGHT] alix · rest: movej to the plan's caller at speed 50 of a 100 % global ratio
+21:58:17.538 [activity] operator:6c8bc4 page: SYSTEM · Session active
+21:58:18.330 [RIGHT] alix · global speed restored to 50 (ret=0)
+21:58:18.339 [RIGHT] move to pose {"deg": [32.0, -96.0, 10.0, 112.0, -25.0, 60.0, -14.0], "speed": 50, "restore_speed": 50} · gap 0.3300018310546875 deg
+21:58:20.640 [RIGHT] camera · camera open: Intel RealSense D435 346522072748, depth 848x480 (fx 430.7, scale 1 mm), colour 1280x720 (fx 907.2); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+21:58:26.573 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.01); lid 55 deg, seat 55 deg, the commode where this frame reads it (+26 / +5 / +8 mm, -8.8 deg from its scene place); the colour says closed at 0.85: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:58:26.832 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215826_599_gap_check_lid_closed_uncertain.json
+21:58:28.944 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.01); lid 55 deg, seat 55 deg, the commode where this frame reads it (+26 / +8 / +8 mm, -8.8 deg from its scene place); the colour says closed at 0.85: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:58:29.164 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215828_945_gap_check_lid_closed_uncertain.json
+21:58:30.880 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.01); lid 55 deg, seat 55 deg, the commode where this frame reads it (+27 / +7 / +8 mm, -8.9 deg from its scene place); the colour says closed at 0.85: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:58:31.099 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215830_899_gap_check_lid_closed_uncertain.json
+21:58:32.741 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.01); lid 55 deg, seat 55 deg, the commode where this frame reads it (+27 / +6 / +8 mm, -9.0 deg from its scene place); the colour says closed at 0.85: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:58:32.934 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215832_742_gap_check_lid_closed_uncertain.json
+21:58:34.447 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.00); lid 55 deg, seat 55 deg, the commode where this frame reads it (+27 / +6 / +8 mm, -8.9 deg from its scene place); the colour says closed at 0.85: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:58:34.470 [-] inspect {"pose": "inspection_pose_4", "task": "lid_open", "lid_closed": null, "seat_closed": null, "decided": "stop", "lid": "<401 characters>", "seat": null} · INSPECT (Inspection pose 4, RIGHT row 1): the camera could not judge whether the lid is closed.
+21:58:34.482 [RIGHT] alix · rest: movej to the plan's caller at speed 50 of a 100 % global ratio
+21:58:34.600 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215834_448_gap_check_lid_closed_uncertain.json
+21:58:35.040 [RIGHT] camera · camera closed
+21:58:35.361 [RIGHT] alix · global speed restored to 50 (ret=0)
+21:58:35.367 [RIGHT] move to pose {"deg": [9.29, -97.61, 17.87, 91.47, -6.88, 93.86, 16.46], "speed": 50, "restore_speed": 50} · gap 0.35999780273436954 deg
+21:58:35.426 [LEFT] restore global speed {"pct": 50} ret=0
+21:58:35.443 [RIGHT] restore global speed {"pct": 50} ret=0
+21:58:35.443 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: Not run: the camera could not judge whether the lid is closed. Nothing else moved.
+21:58:35.444 [BOTH] ALERT ERROR · S2 Real Machine: both arms: Not run: the camera could not judge whether the lid is closed. Nothing else moved. (Check the camera's view of the commode (the day's checks folder keeps its frames), then run it again.)
+21:58:47.538 [activity] operator:6c8bc4 page: SYSTEM · Session active
+21:59:16.956 [LEFT] program list · 7 programs
+21:59:17.075 [RIGHT] program list · 8 programs
+21:59:17.098 [LEFT] global points · 2 point(s)
+21:59:17.112 [RIGHT] global points · 2 point(s)
+21:59:17.528 [activity] operator:6c8bc4 page: UI · Button action
+21:59:17.533 [activity] operator:6c8bc4 page: SYSTEM · Session active
+21:59:17.539 [activity] operator:6c8bc4 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT global points (as read from the controller), ALIX's plan of Open the lid (revised since).
+21:59:17.746 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:59:18.838 [LEFT] program list · 7 programs
+21:59:19.029 [RIGHT] program list · 8 programs
+21:59:19.041 [LEFT] global points · 2 point(s)
+21:59:19.057 [RIGHT] global points · 2 point(s)
+21:59:19.309 [LEFT] program list · 7 programs
+21:59:19.325 [LEFT] global points · 2 point(s)
+21:59:19.357 [RIGHT] program list · 8 programs
+21:59:19.372 [RIGHT] global points · 2 point(s)
+21:59:19.485 [activity] operator:6c8bc4 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+21:59:19.502 [activity] operator:6c8bc4 page: ROBOT · Button action
+21:59:19.712 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:59:24.250 [LEFT] program list · 7 programs
+21:59:24.380 [RIGHT] program list · 8 programs
+21:59:24.638 [LEFT] global points · 2 point(s)
+21:59:24.726 [RIGHT] global points · 2 point(s)
+21:59:25.094 [activity] operator:6c8bc4 page: ROBOT · Button action
+21:59:25.136 [activity] operator:6c8bc4 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:59:25.181 [LEFT] program list · 7 programs
+21:59:25.192 [LEFT] global points · 2 point(s)
+21:59:25.217 [RIGHT] program list · 8 programs
+21:59:25.228 [RIGHT] global points · 2 point(s)
+21:59:25.781 [activity] operator:6c8bc4 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+21:59:25.845 [LEFT] run mode REAL
+21:59:25.881 [RIGHT] run mode REAL
+21:59:26.112 [RIGHT] clear warning · clean
+21:59:26.121 [RIGHT] alix · rest: movej to the plan's caller at speed 50 of a 100 % global ratio
+21:59:27.010 [RIGHT] alix · global speed restored to 50 (ret=0)
+21:59:27.017 [RIGHT] move to pose {"deg": [32.0, -96.0, 10.0, 112.0, -25.0, 60.0, -14.0], "speed": 50, "restore_speed": 50} · gap 0.345001220703125 deg
+21:59:27.274 [RIGHT] camera · camera open: Intel RealSense D435 346522072748, depth 848x480 (fx 430.7, scale 1 mm), colour 1280x720 (fx 907.2); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+21:59:30.642 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.01); lid 55 deg, seat 55 deg, the commode where this frame reads it (+28 / +9 / +8 mm, -9.0 deg from its scene place); the colour says closed at 0.86: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:59:30.842 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215930_642_gap_check_lid_closed_uncertain.json
+21:59:32.852 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.00); lid 55 deg, seat 55 deg, the commode where this frame reads it (+28 / +12 / +8 mm, -9.1 deg from its scene place); the colour says closed at 0.86: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:59:33.043 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215932_853_gap_check_lid_closed_uncertain.json
+21:59:35.019 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.01); lid 55 deg, seat 55 deg, the commode where this frame reads it (+28 / +9 / +7 mm, -9.1 deg from its scene place); the colour says closed at 0.86: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:59:35.212 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215935_019_gap_check_lid_closed_uncertain.json
+21:59:36.692 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.01); lid 55 deg, seat 55 deg, the commode where this frame reads it (+28 / +9 / +8 mm, -9.1 deg from its scene place); the colour says closed at 0.86: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:59:36.914 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215936_693_gap_check_lid_closed_uncertain.json
+21:59:38.596 [RIGHT] camera · gap_check: parts (depth): the lid lifted at 55 deg (margin +1.01); lid 55 deg, seat 55 deg, the commode where this frame reads it (+28 / +9 / +7 mm, -9.2 deg from its scene place); the colour says closed at 0.86: they disagree -> uncertain (the commode searched for: at the plans' place uncertain) -> uncertain
+21:59:38.618 [-] inspect {"pose": "inspection_pose_4", "task": "lid_open", "lid_closed": null, "seat_closed": null, "decided": "stop", "lid": "<401 characters>", "seat": null} · INSPECT (Inspection pose 4, RIGHT row 1): the camera could not judge whether the lid is closed.
+21:59:38.651 [RIGHT] alix · rest: movej to the plan's caller at speed 50 of a 100 % global ratio
+21:59:38.699 [RIGHT] camera · camera closed
+21:59:38.764 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_215938_615_gap_check_lid_closed_uncertain.json
+21:59:39.529 [RIGHT] alix · global speed restored to 50 (ret=0)
+21:59:39.536 [RIGHT] move to pose {"deg": [9.29, -97.61, 17.87, 91.47, -6.88, 93.86, 16.46], "speed": 50, "restore_speed": 50} · gap 0.35500164794922284 deg
+21:59:39.592 [LEFT] restore global speed {"pct": 50} ret=0
+21:59:39.607 [RIGHT] restore global speed {"pct": 50} ret=0
+21:59:39.608 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: Not run: the camera could not judge whether the lid is closed. Nothing else moved.
+21:59:39.608 [BOTH] ALERT ERROR · S2 Real Machine: both arms: Not run: the camera could not judge whether the lid is closed. Nothing else moved. (Check the camera's view of the commode (the day's checks folder keeps its frames), then run it again.)
+21:59:47.538 [activity] operator:6c8bc4 page: SYSTEM · Session active
+22:00:17.538 [activity] operator:6c8bc4 page: SYSTEM · Session active
+22:00:47.538 [activity] operator:6c8bc4 page: SYSTEM · Session active
+22:01:17.538 [activity] operator:6c8bc4 page: SYSTEM · Session active
+22:01:47.539 [activity] operator:6c8bc4 page: SYSTEM · Session active
+22:02:04.000 [LEFT] restore global speed {"pct": 50} ret=0
+22:02:04.015 [RIGHT] restore global speed {"pct": 50} ret=0
