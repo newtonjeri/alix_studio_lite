@@ -1,0 +1,548 @@
+16:57:36.278 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+16:57:36.341 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+16:57:36.342 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+16:57:38.270 [activity] - page: NAVIGATION · Open screen
+16:57:38.271 [activity] - page: SYSTEM · ASL frontend initialized
+16:57:39.160 [activity] - POST /api/auth/login
+16:57:39.901 [RIGHT] camera · perception warmed up in 5.8 s: its core built, the colour model loaded
+16:57:39.972 [activity] operator:41a297 page: AUTH · Operator login
+16:57:39.972 [activity] operator:41a297 page: NAVIGATION · Open screen
+16:57:39.972 [activity] operator:41a297 page: AUTH · Setting changed
+16:57:42.006 [activity] operator:41a297 page: PROJECT · Button action
+16:57:43.037 [activity] operator:41a297 page: NAVIGATION · Task loaded
+16:57:43.068 [activity] operator:41a297 page: SETUP · Arm selected
+16:57:43.069 [activity] operator:41a297 page: NAVIGATION · Teaching stage changed
+16:57:43.088 [activity] operator:41a297 page: SETUP · Arm selected
+16:57:43.090 [activity] operator:41a297 page: NAVIGATION · Open screen
+16:57:43.388 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:45.419 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:46.835 [activity] operator:41a297 page: UI · Button action
+16:57:46.836 [activity] operator:41a297 page: SYSTEM · 3D device
+16:57:47.047 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:47.386 [activity] operator:41a297 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+16:57:48.443 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:57:48.453 [LEFT] read global speed ret=0 · not reported
+16:57:48.453 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:57:48.462 [LEFT] read drag sensitivity ret=0 · 100 %
+16:57:48.462 [activity] operator:41a297 POST /api/robots/left/connect
+16:57:49.676 [LEFT] program list · 7 programs
+16:57:49.710 [LEFT] global points · 1 point(s)
+16:57:50.112 [activity] operator:41a297 page: UI · Button action
+16:57:50.323 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:50.658 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:57:50.688 [RIGHT] read global speed ret=0 · not reported
+16:57:50.688 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:57:50.701 [RIGHT] read drag sensitivity ret=0 · 100 %
+16:57:50.701 [activity] operator:41a297 POST /api/robots/right/connect
+16:57:50.792 [RIGHT] program list · 8 programs
+16:57:50.822 [RIGHT] global points · 1 point(s)
+16:57:51.444 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:57:51.783 [LEFT] read global speed ret=0 · not reported
+16:57:51.783 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:57:51.790 [LEFT] read drag sensitivity ret=0 · 100 %
+16:57:51.790 [activity] operator:41a297 POST /api/robots/left/connect
+16:57:52.468 [RIGHT] read global speed ret=0 · not reported
+16:57:52.469 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:57:52.476 [RIGHT] read drag sensitivity ret=0 · 100 %
+16:57:52.476 [activity] operator:41a297 POST /api/robots/right/connect
+16:57:52.848 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+16:57:53.273 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:57:53.648 [activity] operator:41a297 page: ROBOT · Button action
+16:57:53.860 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:54.141 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: The LEFT arm's E-stop is e-stop unknown. Robot motion is blocked on both arms until it is released and recovered.
+16:57:54.932 [activity] operator:41a297 page: ROBOT · Button action
+16:57:55.144 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:57:55.274 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:57:57.275 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:57:59.276 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:57:59.298 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:02.031 [activity] operator:41a297 page: UI · Button action
+16:58:02.226 [LEFT] restore global speed {"pct": 50} ret=0
+16:58:02.243 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:02.376 [activity] operator:41a297 POST /api/robots/left/disconnect
+16:58:04.913 [activity] operator:41a297 page: UI · Button action
+16:58:05.136 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:05.838 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:05.847 [LEFT] read global speed ret=0 · not reported
+16:58:05.847 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:58:05.854 [LEFT] read drag sensitivity ret=0 · 100 %
+16:58:05.854 [activity] operator:41a297 POST /api/robots/left/connect
+16:58:07.198 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+16:58:07.839 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:07.998 [activity] operator:41a297 page: ROBOT · Button action
+16:58:08.211 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:08.719 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: The LEFT arm's E-stop is e-stop unknown. Robot motion is blocked on both arms until it is released and recovered.
+16:58:09.510 [activity] operator:41a297 page: ROBOT · Button action
+16:58:09.510 [activity] operator:41a297 page: SYSTEM · Session active
+16:58:09.725 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:09.839 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:11.815 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+16:58:11.840 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:12.614 [activity] operator:41a297 page: ROBOT · Button action
+16:58:12.827 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:13.132 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: The LEFT arm's E-stop is e-stop unknown. Robot motion is blocked on both arms until it is released and recovered.
+16:58:13.923 [activity] operator:41a297 page: ROBOT · Button action
+16:58:14.136 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:14.342 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:16.343 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:16.836 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: The LEFT arm's E-stop is e-stop unknown. Robot motion is blocked on both arms until it is released and recovered.
+16:58:17.636 [activity] operator:41a297 page: ROBOT · Button action
+16:58:17.923 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:18.844 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:19.922 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: The LEFT arm's E-stop is e-stop unknown. Robot motion is blocked on both arms until it is released and recovered.
+16:58:20.300 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+16:58:20.722 [activity] operator:41a297 page: ROBOT · Button action
+16:58:20.722 [activity] operator:41a297 page: ROBOT · Button action
+16:58:20.845 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:21.846 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:21.930 [activity] operator:41a297 POST /api/robots/mode -> REFUSED: The LEFT arm's E-stop is e-stop unknown. Robot motion is blocked on both arms until it is released and recovered.
+16:58:22.719 [activity] operator:41a297 page: ROBOT · Button action
+16:58:22.846 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:22.932 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:58:25.347 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:27.348 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:29.349 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:31.350 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:33.851 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:35.852 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:37.853 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:39.974 [activity] operator:41a297 page: SYSTEM · Session active
+16:58:40.354 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:42.355 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:44.356 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:46.357 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:48.858 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:50.859 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:52.860 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:54.206 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:58:54.694 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:58:55.361 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:56.829 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:58:57.362 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:58:58.971 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:58:59.863 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:01.086 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:59:02.146 [activity] operator:41a297 page: UI · Button action
+16:59:02.361 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:59:02.594 [LEFT] restore global speed {"pct": 50} ret=0
+16:59:02.652 [activity] operator:41a297 POST /api/robots/left/disconnect
+16:59:04.144 [RIGHT] restore global speed {"pct": 50} ret=0
+16:59:04.213 [activity] operator:41a297 POST /api/robots/right/disconnect
+16:59:04.933 [activity] operator:41a297 page: UI · Button action
+16:59:05.146 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:59:09.974 [activity] operator:41a297 page: SYSTEM · Session active
+16:59:15.886 [activity] operator:41a297 page: UI · Button action
+16:59:16.099 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:59:16.975 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:16.976 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:59:16.980 [LEFT] read global speed ret=0 · not reported
+16:59:16.981 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:59:16.985 [LEFT] read drag sensitivity ret=0 · 100 %
+16:59:16.986 [activity] operator:41a297 POST /api/robots/left/connect
+16:59:17.481 [activity] operator:41a297 page: UI · Button action
+16:59:17.482 [activity] operator:41a297 page: UI · Button action
+16:59:17.482 [activity] operator:41a297 page: UI · Button action
+16:59:17.654 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:59:17.665 [RIGHT] read global speed ret=0 · not reported
+16:59:17.665 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:59:17.684 [RIGHT] read drag sensitivity ret=0 · 100 %
+16:59:17.684 [activity] operator:41a297 POST /api/robots/right/connect
+16:59:17.764 [RIGHT] program list · 8 programs
+16:59:17.798 [RIGHT] global points · 1 point(s)
+16:59:18.103 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:59:18.177 [LEFT] program list · 7 programs
+16:59:19.063 [LEFT] global points · 1 point(s)
+16:59:19.743 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:19.946 [LEFT] read global speed ret=0 · not reported
+16:59:19.947 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:59:19.953 [LEFT] read global speed ret=0 · not reported
+16:59:19.953 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:59:19.962 [LEFT] read drag sensitivity ret=0 · 100 %
+16:59:19.963 [activity] operator:41a297 POST /api/robots/left/connect
+16:59:19.971 [LEFT] read drag sensitivity ret=0 · 100 %
+16:59:19.972 [activity] operator:41a297 POST /api/robots/left/connect
+16:59:20.967 [RIGHT] read global speed ret=0 · not reported
+16:59:20.967 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:59:20.974 [RIGHT] read drag sensitivity ret=0 · 100 %
+16:59:20.975 [activity] operator:41a297 POST /api/robots/right/connect
+16:59:21.101 [RIGHT] read global speed ret=0 · not reported
+16:59:21.101 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:59:21.110 [RIGHT] read drag sensitivity ret=0 · 100 %
+16:59:21.110 [activity] operator:41a297 POST /api/robots/right/connect
+16:59:21.860 [LEFT] read global speed ret=0 · not reported
+16:59:21.860 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:59:21.869 [LEFT] read drag sensitivity ret=0 · 100 %
+16:59:21.869 [activity] operator:41a297 POST /api/robots/left/connect
+16:59:22.607 [RIGHT] read global speed ret=0 · not reported
+16:59:22.607 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+16:59:22.614 [RIGHT] read drag sensitivity ret=0 · 100 %
+16:59:22.614 [activity] operator:41a297 POST /api/robots/right/connect
+16:59:23.758 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:23.801 [activity] operator:41a297 POST /api/robots/left/recover -> REFUSED: The LEFT arm's E-stop input reads unknown.
+16:59:24.601 [activity] operator:41a297 page: UI · Button action
+16:59:24.816 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:59:25.313 [activity] operator:41a297 POST /api/robots/right/recover
+16:59:25.759 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:26.113 [activity] operator:41a297 page: UI · Button action
+16:59:26.330 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+16:59:28.261 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:30.262 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:32.262 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:34.764 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:36.764 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:38.765 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:39.973 [activity] operator:41a297 page: SYSTEM · Session active
+16:59:40.766 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:42.767 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:45.268 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:47.269 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:49.270 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:49.884 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:59:50.965 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:59:51.771 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:53.263 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+16:59:53.772 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:56.273 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+16:59:58.275 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:00.776 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:02.777 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:04.778 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:07.279 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:08.345 [activity] operator:41a297 POST /api/robots/right/recover
+17:00:09.145 [activity] operator:41a297 page: UI · Button action
+17:00:09.280 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:09.359 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:09.974 [activity] operator:41a297 page: SYSTEM · Session active
+17:00:11.281 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:13.281 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:15.783 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:16.437 [LEFT] restore global speed {"pct": 50} ret=0
+17:00:16.496 [activity] operator:41a297 POST /api/robots/left/disconnect
+17:00:16.771 [activity] operator:41a297 page: UI · Button action
+17:00:16.985 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:17.771 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:19.794 [activity] operator:41a297 page: UI · Button action
+17:00:20.007 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:20.685 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:20.692 [LEFT] read global speed ret=0 · not reported
+17:00:20.692 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+17:00:20.699 [LEFT] read drag sensitivity ret=0 · 100 %
+17:00:20.699 [activity] operator:41a297 POST /api/robots/left/connect
+17:00:20.749 [LEFT] program list · 7 programs
+17:00:20.768 [LEFT] global points · 1 point(s)
+17:00:21.963 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:22.686 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:24.687 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:25.006 [activity] operator:41a297 POST /api/robots/left/recover -> REFUSED: The LEFT arm's E-stop input reads unknown.
+17:00:25.806 [activity] operator:41a297 page: UI · Button action
+17:00:26.021 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:26.213 [LEFT] restore global speed {"pct": 50} ret=0
+17:00:26.277 [activity] operator:41a297 POST /api/robots/left/disconnect
+17:00:27.002 [activity] operator:41a297 page: UI · Button action
+17:00:27.216 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:29.318 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:29.974 [activity] operator:41a297 page: UI · Input updated
+17:00:29.974 [activity] operator:41a297 page: UI · Input updated
+17:00:30.347 [activity] operator:41a297 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.1099:8080.
+17:00:30.831 [activity] operator:41a297 page: UI · Setting changed
+17:00:30.832 [activity] operator:41a297 page: UI · Button action
+17:00:31.223 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:33.772 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:34.559 [activity] operator:41a297 page: UI · Input updated
+17:00:34.560 [activity] operator:41a297 page: UI · Setting changed
+17:00:34.932 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:35.884 [activity] operator:41a297 page: UI · Button action
+17:00:36.097 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:36.853 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:36.858 [LEFT] read global speed ret=0 · not reported
+17:00:36.858 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+17:00:36.865 [LEFT] read drag sensitivity ret=0 · 100 %
+17:00:36.865 [activity] operator:41a297 POST /api/robots/left/connect
+17:00:38.854 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:39.079 [activity] operator:41a297 POST /api/robots/left/recover -> REFUSED: The LEFT arm's E-stop input reads unknown.
+17:00:39.879 [activity] operator:41a297 page: UI · Button action
+17:00:39.879 [activity] operator:41a297 page: SYSTEM · Session active
+17:00:40.095 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:00:40.898 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:42.856 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:45.357 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:47.358 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:49.359 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:51.860 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:53.861 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:55.862 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:00:58.363 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:00.364 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:02.365 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:04.366 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:06.867 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:08.871 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:09.974 [activity] operator:41a297 page: SYSTEM · Session active
+17:01:11.369 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:13.370 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:15.871 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:17.872 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:19.873 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:22.374 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:24.415 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:26.376 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:28.877 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:30.878 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:32.879 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:35.380 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:37.381 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:39.956 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:39.974 [activity] operator:41a297 page: SYSTEM · Session active
+17:01:41.884 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:43.885 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:46.386 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:48.387 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:50.387 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:52.889 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:55.396 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:57.390 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:01:59.391 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:01.392 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:03.893 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:05.894 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:07.931 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:09.974 [activity] operator:41a297 page: SYSTEM · Session active
+17:02:10.396 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:12.397 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:14.398 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:16.899 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:18.900 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:20.901 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:23.473 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:25.403 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:27.904 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:29.905 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:31.906 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:34.407 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:36.408 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:38.912 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:39.974 [activity] operator:41a297 page: SYSTEM · Session active
+17:02:40.910 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:42.911 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:44.912 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:46.913 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:47.605 [activity] operator:41a297 page: UI · Button action
+17:02:47.820 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:49.168 [activity] operator:41a297 page: NAVIGATION · Scrolled view
+17:02:49.414 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:51.445 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:51.735 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:02:53.416 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:55.918 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:57.919 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:02:59.920 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:02.421 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:04.422 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:06.423 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:08.924 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:09.974 [activity] operator:41a297 page: SYSTEM · Session active
+17:03:10.925 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:12.926 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:15.427 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:16.788 [LEFT] restore global speed {"pct": 50} ret=0
+17:03:16.860 [activity] operator:41a297 POST /api/robots/left/disconnect
+17:03:17.323 [activity] operator:41a297 page: UI · Button action
+17:03:17.545 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:25.638 [activity] operator:41a297 page: UI · Button action
+17:03:25.804 [activity] operator:41a297 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:03:26.554 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:26.561 [LEFT] read global speed ret=0 · not reported
+17:03:26.562 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+17:03:26.568 [LEFT] read drag sensitivity ret=0 · 100 %
+17:03:26.569 [activity] operator:41a297 POST /api/robots/left/connect
+17:03:26.628 [LEFT] program list · 7 programs
+17:03:26.643 [LEFT] global points · 1 point(s)
+17:03:28.555 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:30.556 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:33.057 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:35.058 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:37.059 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:39.560 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:39.974 [activity] operator:41a297 page: SYSTEM · Session active
+17:03:41.561 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:43.562 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:46.063 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:46.290 [activity] operator:41a297 page: SYSTEM · Application hidden
+17:03:48.064 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:50.065 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:52.566 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:54.567 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:57.068 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:03:59.069 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:01.070 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:03.571 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:08.073 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:10.574 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:12.575 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:14.576 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:16.577 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:19.078 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:21.079 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:23.080 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:25.582 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:27.583 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:29.584 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:32.085 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:34.086 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:36.587 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:38.588 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:40.589 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:43.090 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:45.091 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:47.092 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:49.093 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:51.594 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:52.263 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:04:53.595 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:55.596 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:04:58.097 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:00.098 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:02.099 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:04.100 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:06.601 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:08.602 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:11.103 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:13.104 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:15.105 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:17.606 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:19.607 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:19.878 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:20.837 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:21.203 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:22.108 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:23.312 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:24.109 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:25.466 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:26.110 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:27.562 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:28.111 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:29.708 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:30.612 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:31.839 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:32.613 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:34.015 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:34.614 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:36.216 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:36.615 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:38.264 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:38.853 [activity] operator:41a297 page: SYSTEM · Application visible
+17:05:39.116 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:40.351 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:41.117 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:42.519 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:43.118 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:44.609 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:45.119 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:46.782 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:47.620 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:48.941 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:49.621 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:51.132 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:51.622 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:53.464 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:54.123 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:05:55.741 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+17:05:55.931 [RIGHT] ALERT ERROR · RIGHT: STOP not confirmed: the pole: 1. (Press the red E-stop button on the robot if it is still moving.)
+17:05:55.931 [LEFT] ALERT ERROR · LEFT: STOP not confirmed: the pole: 1. (Press the red E-stop button on the robot if it is still moving.)
+17:05:56.009 [RIGHT] restore global speed {"pct": 50} ret=0
+17:05:57.192 [LEFT] restore global speed {"pct": 50} ret=0
+17:06:08.243 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+17:06:08.291 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+17:06:08.291 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+17:06:10.234 [activity] - page: NAVIGATION · Open screen
+17:06:10.235 [activity] - page: SYSTEM · ASL frontend initialized
+17:06:10.979 [RIGHT] camera · perception warmed up in 4.9 s: its core built, the colour model loaded
+17:06:16.510 [activity] - POST /api/auth/login
+17:06:16.516 [activity] operator:783886 page: AUTH · Setting changed
+17:06:16.527 [activity] operator:783886 page: UI · Button action
+17:06:17.319 [activity] operator:783886 page: AUTH · Operator login
+17:06:17.319 [activity] operator:783886 page: NAVIGATION · Open screen
+17:06:20.483 [activity] operator:783886 page: PROJECT · Button action
+17:06:21.436 [activity] operator:783886 page: NAVIGATION · Task loaded
+17:06:21.440 [activity] operator:783886 page: SETUP · Arm selected
+17:06:21.445 [activity] operator:783886 page: NAVIGATION · Teaching stage changed
+17:06:21.447 [activity] operator:783886 page: SETUP · Arm selected
+17:06:21.450 [activity] operator:783886 page: NAVIGATION · Open screen
+17:06:25.486 [activity] operator:783886 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+17:06:25.611 [activity] operator:783886 page: SYSTEM · 3D device
+17:06:27.299 [activity] operator:783886 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:30.602 [activity] operator:783886 POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+17:06:31.402 [activity] operator:783886 page: ROBOT · Button action
+17:06:31.402 [activity] operator:783886 page: ROBOT · Robot & mode opened
+17:06:31.613 [activity] operator:783886 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:34.850 [activity] operator:783886 page: UI · Button action
+17:06:35.062 [activity] operator:783886 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:35.761 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:35.767 [LEFT] read global speed ret=0 · not reported
+17:06:35.767 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+17:06:35.776 [LEFT] read drag sensitivity ret=0 · 100 %
+17:06:35.776 [activity] operator:783886 POST /api/robots/left/connect
+17:06:36.380 [RIGHT] read global speed ret=0 · not reported
+17:06:36.381 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+17:06:36.387 [RIGHT] read drag sensitivity ret=0 · 100 %
+17:06:36.388 [activity] operator:783886 POST /api/robots/right/connect
+17:06:36.429 [RIGHT] program list · 8 programs
+17:06:36.445 [RIGHT] global points · 1 point(s)
+17:06:36.872 [LEFT] program list · 7 programs
+17:06:36.883 [LEFT] global points · 1 point(s)
+17:06:38.262 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:40.263 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:42.264 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:44.265 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:46.266 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:47.320 [activity] operator:783886 page: SYSTEM · Session active
+17:06:48.767 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:49.224 [activity] operator:783886 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:06:49.303 [activity] operator:783886 page: SYSTEM · Browser closing
+17:06:49.304 [activity] operator:783886 page: SYSTEM · Application hidden
+17:06:50.768 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:50.889 [activity] - page: NAVIGATION · Open screen
+17:06:50.889 [activity] - page: SYSTEM · ASL frontend initialized
+17:06:53.269 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:55.270 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:57.271 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:06:57.843 [activity] - POST /api/auth/login
+17:06:57.851 [activity] operator:029146 page: UI · Button action
+17:06:58.652 [activity] operator:029146 page: AUTH · Operator login
+17:06:58.652 [activity] operator:029146 page: NAVIGATION · Open screen
+17:06:59.772 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:01.773 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:02.607 [activity] operator:029146 page: PROJECT · Button action
+17:07:03.575 [activity] operator:029146 page: NAVIGATION · Task loaded
+17:07:03.575 [activity] operator:029146 page: SETUP · Arm selected
+17:07:03.575 [activity] operator:029146 page: NAVIGATION · Teaching stage changed
+17:07:03.575 [activity] operator:029146 page: SETUP · Arm selected
+17:07:03.576 [activity] operator:029146 page: NAVIGATION · Open screen
+17:07:03.576 [activity] operator:029146 page: SYSTEM · 3D device
+17:07:03.774 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:04.162 [activity] operator:029146 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+17:07:06.275 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:08.276 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:10.277 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:12.128 [activity] operator:029146 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:07:12.278 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:14.779 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:16.780 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:18.781 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:20.782 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:23.283 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:25.284 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:27.284 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:28.654 [activity] operator:029146 page: SYSTEM · Session active
+17:07:29.285 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:31.787 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:33.787 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:36.289 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:38.290 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:40.291 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:42.793 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:44.794 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:46.796 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:48.799 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+17:07:49.942 [LEFT] restore global speed {"pct": 50} ret=0
+17:07:49.952 [RIGHT] restore global speed {"pct": 50} ret=0
