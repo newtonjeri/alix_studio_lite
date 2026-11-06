@@ -95,13 +95,21 @@ def held_text(holders: list[dict]) -> str:
     return ", ".join(dict.fromkeys(said))
 
 
-def left_on(handle, log=None) -> dict | None:
-    """At an arm's connection, in its own process: the controller's realtime push if it is ON toward this computer.
+def left_on(handle, log=None, follow_host: bool = False, port: int | None = None) -> dict | None:
+    """At an arm's connection, in its own process: the controller's realtime push if it is ON toward this computer, or,
+    with ``follow_host`` (connection.py's default since 6 Nov), toward any other address.
 
-    None when it is off, toward another computer, or not read. Otherwise {port, ip, holders, cleared, said}: ``holders``
-    the programs outside Lite that hold the port (a live consumer: the push is left on); ``cleared`` True when nothing
-    outside Lite held it and the push was turned off (verified on the controller): this process's SDK has bound the port
-    already, so the arm must be connected again in a fresh process; ``said`` what ALIX's code said doing it."""
+    None when it is off, toward another computer without ``follow_host``, or not read. Otherwise {port, ip, host,
+    elsewhere, holders, cleared, said}: ``holders`` the programs outside Lite that hold the port (a live consumer here: the
+    push is left on); ``cleared`` True when it was turned off (verified on the controller): this process's SDK has bound
+    the port already, so the arm must be connected again in a fresh process; ``said`` what ALIX's code said doing it.
+
+    ``follow_host`` (the user, 6 Nov: "by default the feed uses the IP address of the host computer, so when the address
+    changes it changes with it"): a push toward another address is taken for this computer's own, left from an address it
+    had before; it is pointed at this computer's address now (``host``: its address on the route to the controller) and
+    this arm's feed ``port``, and turned off until a run records (ALIX's capture then turns it on toward the same address
+    and puts it back off), through ALIX's verified push write. The lab, 6 Nov: the new controllers pushed to
+    192.168.120.11:8089 and 192.168.1.12:8090 while the lab's PC was 192.168.1.20, and S2 recorded no feed."""
     if os.name != "posix" or not Path("/proc/net/udp").exists():
         return None
     robot, host = handle.robot, getattr(handle, "host_ip", None)
@@ -109,19 +117,35 @@ def left_on(handle, log=None) -> dict | None:
         ret, cfg = robot.rm_get_realtime_push()
     except Exception:                                                               # noqa: BLE001 - not read: nothing to do
         return None
-    if ret != 0 or not isinstance(cfg, dict) or not cfg.get("enable") or not host or str(cfg.get("ip")) != str(host):
+    if ret != 0 or not isinstance(cfg, dict) or not cfg.get("enable") or not host:
         return None
-    port = int(cfg.get("port") or 0)
-    out = dict(port=port, ip=str(cfg.get("ip")), holders=port_holders(port, mine=lite_pids()), cleared=False, said=[])
+    elsewhere = str(cfg.get("ip")) != str(host)
+    if elsewhere and not follow_host:                # another computer's (a live driver there, ALIX's capture assumes): left
+        return None
+    found = int(cfg.get("port") or 0)
+    out = dict(port=found, ip=str(cfg.get("ip")), host=str(host), elsewhere=elsewhere, cleared=False, said=[],
+               holders=[] if elsewhere else port_holders(found, mine=lite_pids()))
     if out["holders"]:
         return out
     from alix_dispatch import track
 
     said = out["said"]
-    rec = track.UdpRecorder(os.devnull, host, port=port, log=lambda m: (said.append(str(m)), log and log(str(m))))
+    to = int(port or found) if elsewhere else found
+    rec = track.UdpRecorder(os.devnull, host, port=to, log=lambda m: (said.append(str(m)), log and log(str(m))))
     rec._prev = dict(cfg)
-    try:                                         # ALIX's own clear of its leftover: verified on the controller, retried
-        rec._clear_stale_self(robot, f"{cfg.get('ip')}:{port}")
+    if elsewhere:                                    # ALIX's verified write: this computer's address and port, off
+        from Robotic_Arm.rm_robot_interface import rm_realtime_push_config_t, rm_udp_custom_config_t
+
+        off = rm_realtime_push_config_t(cycle=int(cfg.get("cycle") or 1), enable=False, port=to,
+                                        force_coordinate=int(cfg.get("force_coordinate", -1)), ip=str(host),
+                                        custom_config=rm_udp_custom_config_t())
+        ok, ret = rec._apply_push(robot, off, dict(enable=False), "point the feed push at this computer")
+        out["cleared"], out["port_now"] = bool(ok), to
+        if not ok:
+            said.append(f"rm_set_realtime_push returned {ret} and the push still reads on")
+        return out
+    try:                                             # ALIX's own clear of its leftover: verified on the controller, retried
+        rec._clear_stale_self(robot, f"{cfg.get('ip')}:{found}")
         out["cleared"] = bool(rec.cleared_stale and rec.cleared_stale.get("ok"))
     except RuntimeError as exc:
         said.append(str(exc))

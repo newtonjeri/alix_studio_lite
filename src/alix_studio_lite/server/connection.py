@@ -22,10 +22,16 @@ from .jobs import UserError
 ARMS = ("left", "right")
 # today's values (runner v14, ALIX's connect.DEFAULT_IPS, decided 13-14 Oct for the E-stop): used until saved
 DEFAULTS = {
-    "left": {"ip": "192.168.1.10", "port": 8080, "feed_port": 8089, "estop_io": 3, "estop_level": 0},
-    "right": {"ip": "192.168.1.103", "port": 8080, "feed_port": 8090, "estop_io": 3, "estop_level": 0},
+    "left": {"ip": "192.168.1.10", "port": 8080, "feed_port": 8089, "estop_io": 3, "estop_level": 0, "feed_follow_host": True},
+    "right": {"ip": "192.168.1.103", "port": 8080, "feed_port": 8090, "estop_io": 3, "estop_level": 0, "feed_follow_host": True},
 }
-FIELDS = ("ip", "port", "feed_port", "estop_io", "estop_level")
+FIELDS = ("ip", "port", "feed_port", "estop_io", "estop_level", "feed_follow_host")
+# feed_follow_host (the user, 6 Nov: "by default the feed uses the IP address of the host computer, so when the address
+# changes it changes with it"): a controller's push found on toward any other address as the arm connects is taken
+# for this computer's own, left from an address it had before (the lab's PC was 192.168.1.239 until 5 Nov, 192.168.1.20
+# on 6 Nov, when the new controllers pushed to 192.168.1.12 and 192.168.120.11): pointed at this computer's address
+# now and turned off until a run records (udp_push.left_on). Off: another computer's push is left alone, as ALIX's
+# capture leaves it (a live driver there), and the Connection page can turn it off.
 ESTOP_IOS = (1, 2, 3, 4)                    # the controller's digital IO (rm_get_io_state: 1 to 4)
 FILE = "connection.json"
 
@@ -77,7 +83,14 @@ def clean(side: str, values: dict) -> dict:
     out["feed_port"] = _int(out["feed_port"], f"The {S} feed's UDP port", 1024, 65535)
     out["estop_io"] = _int(out["estop_io"], f"The {S} E-stop input", 1, 4)
     out["estop_level"] = _int(out["estop_level"], f"The {S} E-stop's pressed level", 0, 1)
+    out["feed_follow_host"] = _bool(out["feed_follow_host"])
     return out
+
+
+def _bool(value) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
 
 
 class ConnectionSettings:

@@ -1425,7 +1425,10 @@ class RealArm:
                 rec = CycleRecorder(cap, h.host_ip, port=self.feed_port, log=self._alix_log(), cycle=S2_FEED_CYCLE)
             rec.start(self.robot)
         except Exception as exc:                                                    # noqa: BLE001
-            self._hw("s2 feed", ok=False, text=f"not recorded: {exc}")
+            follow = getattr(self.link, "feed_follow_host", False)          # connection.py: the default since 6 Nov
+            self._hw("s2 feed", ok=False, text=f"not recorded: {exc}" + (
+                (" Connect the arm again: its feed then follows this computer's address." if follow else
+                 " Turn the feed push off on the Connection page if nothing there uses it.") if "ANOTHER host" in str(exc) else ""))
             say(f"!! {self.SIDE}: its feed is not recorded for this part ({exc})")
             return None
         self._hw("s2 feed", args=dict(cycle_ms=S2_FEED_CYCLE * 5, file=cap.name), ok=True, text="recording")

@@ -1651,13 +1651,15 @@ def get_connection(app, q, body, m):
 
 @route("POST", r"/api/robots/connection")
 def post_connection(app, q, body, m):
-    """One arm's details saved (anyone may: the user, 6 Nov): ``{arm, ip, port, feed_port, estop_io, estop_level}``.
+    """One arm's details saved (anyone may: the user, 6 Nov): ``{arm, ip, port, feed_port, estop_io, estop_level,
+    feed_follow_host}``.
     They apply at its next Connect."""
     session(app)
     side = str(body.get("arm") or "")
     if side not in ARMS:
         raise UserError("Say which arm: left or right.", code="connection")
-    out = app.robot.set_connection(side, {k: body.get(k) for k in ("ip", "port", "feed_port", "estop_io", "estop_level") if k in body})
+    out = app.robot.set_connection(side, {k: body.get(k) for k in ("ip", "port", "feed_port", "estop_io", "estop_level",
+                                                                   "feed_follow_host") if k in body})
     app.log.activity(f"connection details saved: {side.upper()} " + ", ".join(f"{k} {v}" for k, v in out["saved"].items()),
                      detail=out)
     return out
@@ -1668,6 +1670,21 @@ def post_check_devices(app, q, body, m):
     """Test connection: each device of a linked arm asked on its own (robot_link.ArmLink.check_devices)."""
     session(app)
     return app.robot.check_devices(_arm(m))
+
+
+@route("POST", r"/api/robots/(left|right)/feed-push-off")
+def post_feed_push_off(app, q, body, m):
+    """Turn the feed push off (the Connection page, the user, 6 Nov): ``{confirmed}``. The controller's realtime push off,
+    read back, and the arm connected again (robot_standin.feed_push_off)."""
+    session(app)
+    side = _arm(m)
+    if not body.get("confirmed"):
+        raise UserError(f"Turning the {side.upper()} controller's feed push off needs your confirmation.", code="confirm")
+    out = app.robot.feed_push_off(side)
+    was = out.get("was") or {}
+    app.log.activity(f"{side.upper()} feed push turned off (was toward {was.get('ip')}:{was.get('port')})" if out.get("cleared")
+                     else f"{side.upper()} feed push: already off", detail={k: v for k, v in out.items() if k != "check"})
+    return out
 
 
 @route("POST", r"/api/robots/(left|right)/drag-mode")

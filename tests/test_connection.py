@@ -38,7 +38,9 @@ def test_the_details_are_checked_kept_and_each_arm_has_its_own(tmp_path):
         c.update("right", {"feed_port": 8089})
     c.update("left", {"ip": " 192.168.1.20 ", "feed_port": "9001", "estop_io": 2, "estop_level": 1})
     again = ConnectionSettings(tmp_path)                                                    # kept for the next start
-    assert again.arm("left") == dict(ip="192.168.1.20", port=8080, feed_port=9001, estop_io=2, estop_level=1)
+    assert again.arm("left") == dict(ip="192.168.1.20", port=8080, feed_port=9001, estop_io=2, estop_level=1, feed_follow_host=True)
+    c.update("right", {"feed_follow_host": "false"})                                     # the feed follows this computer: default on
+    assert ConnectionSettings(tmp_path).arm("right")["feed_follow_host"] is False
     assert again.view()["hand"] == dict(port=1, port_name="the end's RS485", device=1, baud=115200)   # shown, fixed by the runner
     (tmp_path / "connection.json").write_text(json.dumps({"left": {"ip": "nonsense"}}))
     assert ConnectionSettings(tmp_path).arm("left") == DEFAULTS["left"]                      # a bad file: that arm's defaults
@@ -289,10 +291,83 @@ def test_saved_details_apply_at_the_next_connect(tmp_path):
 
     r = StandInRobot(tmp_path, Jobs())
     out = r.set_connection("left", {"ip": "192.168.1.20", "estop_io": 2})
-    assert out == dict(arm="left", saved=dict(ip="192.168.1.20", port=8080, feed_port=8089, estop_io=2, estop_level=0), pending=False)
+    assert out == dict(arm="left", saved=dict(ip="192.168.1.20", port=8080, feed_port=8089, estop_io=2, estop_level=0,
+                                              feed_follow_host=True), pending=False)
     assert r.arms["left"].ip == "192.168.1.20" and r.arms["left"].view()["estop_io"] == "IO2"
     assert StandInRobot(tmp_path, Jobs()).arms["left"].ip == "192.168.1.20"                 # kept for the next start
     r.arms["left"].connected = True
     r.links["left"] = FakeLink({})
     r._opened_with["left"] = dict(r.conn.arm("left"))
     assert r.set_connection("left", {"feed_port": 9100})["pending"] is True                 # linked: at its next Connect
+
+
+# ── the feed push, turned off (the user, 6 Nov: the new controllers' pushes on toward other computers)
+
+def test_turn_the_feed_push_off_keeps_its_target_reads_it_back_and_refuses_when_it_stays_on(monkeypatch):
+    from alix_studio_lite.server.jobs import UserError
+
+    robot = Robot()
+    robot.push = {"cycle": 1, "enable": True, "port": 8089, "ip": "192.168.120.11", "force_coordinate": -1}
+    written = []
+
+    def set_push(cfg):
+        written.append(dict(enable=cfg.enable, ip=cfg.ip.decode() if isinstance(cfg.ip, bytes) else cfg.ip, port=cfg.port,
+                            cycle=cfg.cycle))
+        robot.push = dict(robot.push, enable=bool(cfg.enable))
+        return 0
+
+    robot.rm_get_realtime_push = lambda: (0, dict(robot.push))
+    robot.rm_set_realtime_push = set_push
+    link = _link(monkeypatch, robot)
+    out = link.feed_push_off()
+    assert out["cleared"] and out["was"]["ip"] == "192.168.120.11" and out["now"]["enable"] is False
+    assert written == [dict(enable=False, ip="192.168.120.11", port=8089, cycle=1)]          # only enable changed
+    assert link.feed_push_off() == dict(cleared=False, was=out["now"], now=out["now"], said=["the push was already off"])
+    robot.push["enable"] = True
+    robot.rm_set_realtime_push = lambda cfg: -2                                              # never lands
+    with pytest.raises(UserError, match="did not turn off"):
+        link.feed_push_off()
+
+
+def test_the_arm_connects_again_after_its_feed_push_is_turned_off(tmp_path):
+    from alix_studio_lite.server.jobs import Jobs
+    from alix_studio_lite.server.robot_standin import StandInRobot
+
+    said = []
+    log = SimpleNamespace(alert=lambda *a, **k: None, hardware=lambda side, verb, **k: said.append((side, verb, k.get("text"))))
+    r = StandInRobot(tmp_path, Jobs(), log=log)
+    r.arms["left"].connected = True
+    link = FakeLink({})
+    link.feed_push_off = lambda: dict(cleared=True, was={"ip": "192.168.120.11", "port": 8089, "cycle": 1},
+                                      now={"enable": False}, said=[])
+    r.links["left"] = link
+    connected = []
+    r.connect = lambda side, ip=None: connected.append(side)
+    out = r.feed_push_off("left")
+    assert out["reconnected"] and connected == ["left"]
+    assert ("left", "feed push off", "was on toward 192.168.120.11:8089 every 5 ms; now off (read back)") in said
+
+
+def test_a_push_toward_another_address_is_pointed_at_this_computer_when_the_feed_follows_it():
+    """The user, 6 Nov: "by default the feed uses the IP address of the host computer, so when the address changes it
+    changes with it". The lab's new controllers pushed to 192.168.120.11:8089 and 192.168.1.12:8090 while its PC was
+    192.168.1.20: as the arm connects, such a push is pointed at this computer's address and the arm's feed port, and off
+    until a run records; without the setting it is another computer's, left alone."""
+    from alix_studio_lite.server.udp_push import left_on
+
+    push = {"cycle": 1, "enable": True, "port": 8089, "ip": "192.168.120.11", "force_coordinate": -1}
+    written = []
+
+    def set_push(cfg):
+        ip = cfg.ip.decode() if isinstance(cfg.ip, bytes) else cfg.ip
+        written.append(dict(enable=cfg.enable, ip=ip, port=cfg.port))
+        push.update(enable=bool(cfg.enable), ip=ip, port=int(cfg.port))
+        return 0
+
+    robot = SimpleNamespace(rm_get_realtime_push=lambda: (0, dict(push)), rm_set_realtime_push=set_push)
+    handle = SimpleNamespace(robot=robot, host_ip="192.168.1.20")
+    assert left_on(handle) is None and not written                                      # not following: left alone
+    out = left_on(handle, follow_host=True, port=9089)
+    assert out["cleared"] and out["elsewhere"] and out["ip"] == "192.168.120.11" and out["host"] == "192.168.1.20"
+    assert written == [dict(enable=False, ip="192.168.1.20", port=9089)]               # this computer, its feed port, off
+    assert left_on(handle, follow_host=True, port=9089) is None                          # off now: nothing more to do

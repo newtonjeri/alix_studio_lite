@@ -851,6 +851,8 @@ html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); c
 .lite-conn-fields .field { margin: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
 .lite-conn-fields input, .lite-conn-fields select { width: 100%; min-width: 0; }
 .lite-conn-note { margin: 0; font-size: 13px; color: var(--ink); }
+.lite-conn-follow { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink); }
+.lite-conn-follow input { margin-top: 2px; }
 .lite-conn-note.warn { color: var(--orange); font-weight: 600; }
 .lite-conn-tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
 .lite-conn-devices { width: 100%; border-collapse: collapse; font-size: 13px; }

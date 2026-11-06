@@ -168,7 +168,7 @@ def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log
 
         try:
             with link.busy("reading the realtime push"):
-                left = left_on(link.handle)
+                left = left_on(link.handle, follow_host=link.feed_follow_host, port=link.feed_port)
         except Exception as exc:                                            # noqa: BLE001 - never keeps the arm from connecting
             left = dict(error=f"{type(exc).__name__}: {exc}")
     if left and left.get("cleared"):             # turned off, but this process's SDK has bound its port: a fresh process
@@ -247,7 +247,7 @@ def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log
         if want_hook:
             kwargs["stop_hook"] = lambda fn: state.__setitem__("hook", fn)
         try:
-            target = link if method in ("read_fresh", "estop_now", "check_devices") else arm
+            target = link if method in ("read_fresh", "estop_now", "check_devices", "feed_push_off") else arm
             out = getattr(target, method)(*args, **kwargs)
             push(cmd, ("result", out))
         except BaseException as exc:                                        # noqa: BLE001
@@ -333,8 +333,10 @@ class LinkProcess:
         if msg[0] != "opened":
             self.abandon()
             _raise(msg[1] if msg[0] != "reopen" else dict(
-                type="UserError", text=f"The {self.side.upper()} controller's 5 ms feed was on toward this computer again after Lite "
-                "turned it off, so the arm is not connected.", hint="Turn it off on the pendant (realtime push), then connect the arm again."))
+                type="UserError", text=f"The {self.side.upper()} controller's 5 ms feed was on again (toward {msg[1].get('ip')}:"
+                f"{msg[1].get('port')}) after Lite turned it off, so the arm is not connected: something keeps turning it on.",
+                hint="Stop what turns it on (ALIX's driver on that computer), turn it off on the pendant (realtime push), then connect "
+                     "the arm again."))
         self.emulated = bool(msg[1]["emulated"])
         self._take_view(msg[1]["view"], None, None)
         threading.Thread(target=self._feed_loop, name=f"lite-feed-{self.side}", daemon=True).start()
@@ -354,6 +356,11 @@ class LinkProcess:
         S, port = self.side.upper(), info.get("port")
         if info.get("error"):
             self.log.hardware(self.side, "realtime push", ok=False, text=f"not checked: {info['error']}")
+        elif reopened and info.get("elsewhere"):        # the Connection page's "Feed follows this computer" (6 Nov)
+            self.log.hardware(self.side, "realtime push", ok=True,
+                              text=f"left on toward {info.get('ip')}:{port}, not this computer ({info.get('host')}): pointed at "
+                                   f"{info.get('host')}:{info.get('port_now', port)} and off until a run records (the feed follows "
+                                   "this computer's address), and the arm connected again in a fresh process")
         elif reopened:
             self.log.hardware(self.side, "realtime push", ok=True,
                               text=f"left on toward this computer (port {port}), so this arm's connection had bound the port its "
@@ -363,7 +370,9 @@ class LinkProcess:
                            f"holds ({held_text(info['holders'])}), so the lid and seat tasks cannot stream on this arm while it runs.",
                            hint="Stop it (ALIX's driver or one of its tools), then connect the arm again.", side=self.side, source="push")
         else:
-            self.log.alert("warn", f"{S}: the controller's 5 ms feed was left on toward this computer (port {port}) and could not be "
+            where = (f"toward {info.get('ip')}:{port} (not this computer, {info.get('host')})" if info.get("elsewhere")
+                     else f"toward this computer (port {port})")
+            self.log.alert("warn", f"{S}: the controller's 5 ms feed was left on {where} and could not be "
                            "turned off, so the lid and seat tasks cannot stream on this arm. " + " ".join(info.get("said") or []),
                            hint="Turn it off on the pendant (realtime push), then connect the arm again.", side=self.side, source="push")
 
@@ -556,6 +565,10 @@ class LinkProcess:
 
     def devices(self) -> dict:
         return dict(self.view().get("devices") or {})
+
+    def feed_push_off(self) -> dict:
+        """The controller's feed push turned off, in the worker (robot_link.ArmLink.feed_push_off)."""
+        return self.call("feed_push_off", label="turning the controller's feed push off")
 
     def estop_now(self) -> str:
         """IO3 read by the worker's control thread: between a command's steps when called from its line callback (the

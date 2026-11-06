@@ -274,7 +274,8 @@ class StandInRobot:
 
         c = self.conn.arm(side)
         self._opened_with[side] = dict(c, ip=ip)     # what the link uses: a change saved later applies at the next Connect
-        opts = dict(estop_io=c["estop_io"], estop_active=c["estop_level"], feed_port=c["feed_port"])
+        opts = dict(estop_io=c["estop_io"], estop_active=c["estop_level"], feed_port=c["feed_port"],
+                    feed_follow_host=c["feed_follow_host"])
         if LINK_PROCESS:
             return LinkProcess(side, ip, c["port"], kind=self.link_kind or "realman", on_read=lambda: self._sync(side), log=self.log,
                                opts=opts)
@@ -959,11 +960,40 @@ class StandInRobot:
         self._refuse_if_busy(side, "check its devices")
         report = link.check_devices()
         self.device_report[side] = report
-        if self.log is not None:
+        if self.log is not None:                        # each row with its hint: who holds a port is named in the log too
             self.log.hardware(side, "device check", ok=report.get("ok"),
-                              text="; ".join(f"{r['device']}: {r['text']}" for r in report.get("rows") or []))
+                              text="; ".join(f"{r['device']}: {r['text']}" + (f" ({r['hint']})" if r.get("hint") else "")
+                                             for r in report.get("rows") or []))
         self._sync(side)
         return report
+
+    def feed_push_off(self, side: str) -> dict:
+        """The Connection page's Turn the feed push off (the user, 6 Nov): the controller's realtime push turned off
+        (robot_link.ArmLink.feed_push_off, read back), then the arm connected again in a fresh process, whose SDK binds
+        no port (udp_push: the SDK keeps a port it bound while the push was on for as long as its process lives, and
+        S2's recording would be refused in it); the new connection checks the devices again. {cleared, was, now, said,
+        reconnected, check}."""
+        link = self.links.get(side)
+        if link is None or not self.arm(side).connected:
+            raise UserError(f"The {side.upper()} arm is not connected to its controller.",
+                            "Connect it first: the push is the controller's setting.", code="connect")
+        self._refuse_if_busy(side, "turn its feed push off")
+        out = link.feed_push_off()
+        was = out.get("was") or {}
+        if self.log is not None:
+            self.log.hardware(side, "feed push off", ok=True,
+                              text=(f"was on toward {was.get('ip')}:{was.get('port')} every {int(was.get('cycle') or 0) * 5} ms; "
+                                    "now off (read back)") if out.get("cleared") else "it was already off")
+        out["reconnected"] = False
+        if out.get("cleared"):
+            try:
+                self.connect(side)
+                out["reconnected"] = True
+            except UserError as exc:
+                self._alert("warn", side, f"{side.upper()}: the feed push is off, but the arm was not connected again: {exc}",
+                            "Disconnect it and Connect again before an S2 run, so its recording can take the port.", "feed")
+        out["check"] = self.device_report.get(side)
+        return out
 
     def _check_quietly(self, side: str) -> None:
         """The check at Connect: what it finds is alerted (the link's devices) and kept for the page; a check that cannot

@@ -7,7 +7,7 @@
 // are shown, not edited: runner v14's hand.py fixes them.
 
 import { get, post, say } from './api.js';
-import { el, tell } from './ctx.js';
+import { confirmDialog, el, tell } from './ctx.js';
 
 const $ = (id) => document.getElementById(id);
 const ARMS = ['left', 'right'];
@@ -33,7 +33,8 @@ function select(side, key, label, value, options) {
 
 function values(side) {
   const v = (k) => $(`liteConn-${side}-${k}`)?.value.trim();
-  return { arm: side, ip: v('ip'), port: v('port'), feed_port: v('feed_port'), estop_io: v('estop_io'), estop_level: v('estop_level') };
+  return { arm: side, ip: v('ip'), port: v('port'), feed_port: v('feed_port'), estop_io: v('estop_io'), estop_level: v('estop_level'),
+    feed_follow_host: !!$(`liteConn-${side}-feed_follow_host`)?.checked };
 }
 
 function deviceRows(check, live) {
@@ -75,8 +76,11 @@ function card(side) {
   const a = page.arms[side], link = page.linked[side], d = page.defaults[side];
   const check = link.check, S = side.toUpperCase();
   const opened = link.opened_with;
-  const differs = opened && ['ip', 'port', 'feed_port', 'estop_io', 'estop_level'].some((k) => String(opened[k]) !== String(a[k]));
+  const differs = opened && ['ip', 'port', 'feed_port', 'estop_io', 'estop_level', 'feed_follow_host'].some((k) => String(opened[k]) !== String(a[k]));
+  const host = check?.read?.host_ip;
   const wired = check?.read?.wired?.ip;
+  const push = check?.read?.push;
+  const pushOn = !!(link.link && push && push.enable);
   return el('section', { class: `lite-conn-card ${side}` },
     el('div', { class: 'lite-conn-head' },
       el('span', { class: `badge ${side === 'left' ? 'blue' : 'orange'}`, text: `${S} RM75` }),
@@ -88,10 +92,19 @@ function card(side) {
       field(side, 'feed_port', 'Feed UDP port (this computer)', a.feed_port, { inputmode: 'numeric', placeholder: d.feed_port }),
       select(side, 'estop_io', 'E-stop input', a.estop_io, { 1: 'IO1', 2: 'IO2', 3: 'IO3', 4: 'IO4' }),
       select(side, 'estop_level', 'Level when pressed', a.estop_level, LEVELS)),
+    // the feed goes to this computer's address, whatever it is now (the user, 6 Nov): a push found on toward another
+    // address as the arm connects is pointed here and off until a run records
+    el('label', { class: 'checkrow lite-conn-follow' },
+      el('input', { type: 'checkbox', id: `liteConn-${side}-feed_follow_host`, checked: a.feed_follow_host !== false }),
+      el('span', { text: 'Feed follows this computer: as the arm connects, a feed push left on toward another address is pointed at '
+        + `this computer${host ? ` (now ${host})` : ''} and off until a run records.` })),
     el('p', { class: 'mini-note', text: `Hand: ${page.hand.port_name}, Modbus ID ${page.hand.device}, ${page.hand.baud} baud `
       + '(fixed by runner v14 and the hand itself; set the hand to them).' }),
     differs ? el('p', { class: 'lite-conn-note warn', text: 'Saved details differ from the ones this connection uses: they apply at its next Connect.' }) : null,
     wired && wired !== a.ip ? el('p', { class: 'lite-conn-note', text: `The controller reports its wired address as ${wired}.` }) : null,
+    pushOn ? el('p', { class: 'lite-conn-note warn', text: `The controller's feed push is on toward ${push.ip}:${push.port} (every ${(push.cycle || 0) * 5} ms)`
+      + ': S2 cannot record this arm\'s feed while it is, and a push left on slows the controller\'s program playback.'
+      + (a.feed_follow_host !== false ? ' Its next Connect points it at this computer.' : '') }) : null,
     el('div', { class: 'cta-row' },
       el('button', { class: 'btn', type: 'button', text: 'Save', onclick: () => act(() => save(side)) }),
       el('button', { class: 'btn light', type: 'button', text: 'Defaults', title: `${d.ip}:${d.port}, feed ${d.feed_port}, IO${d.estop_io}`,
@@ -101,7 +114,8 @@ function card(side) {
       link.link
         ? el('button', { class: 'btn primary', type: 'button', text: 'Test connection', onclick: () => act(() => test(side)) })
         : el('button', { class: 'btn primary', type: 'button', text: 'Save and connect', onclick: () => act(() => connect(side)) }),
-      link.link && differs ? el('button', { class: 'btn', type: 'button', text: 'Connect again', onclick: () => act(() => reconnect(side)) }) : null),
+      link.link && differs ? el('button', { class: 'btn', type: 'button', text: 'Connect again', onclick: () => act(() => reconnect(side)) }) : null,
+      pushOn ? el('button', { class: 'btn orange', type: 'button', text: 'Turn the feed push off', onclick: () => act(() => pushOff(side, push)) }) : null),
     said[side] ? el('div', { class: 'lite-status', text: said[side] }) : null,
     check || Object.values(link.devices || {}).some((x) => x?.ok === false)
       ? el('div', { class: 'lite-conn-tablebox' },
@@ -114,7 +128,11 @@ function card(side) {
 }
 
 function fill(side, v) {
-  for (const [k, x] of Object.entries(v)) { const i = $(`liteConn-${side}-${k}`); if (i) i.value = x; }
+  for (const [k, x] of Object.entries(v)) {
+    const i = $(`liteConn-${side}-${k}`);
+    if (i && i.type === 'checkbox') i.checked = !!x;
+    else if (i) i.value = x;
+  }
 }
 
 async function save(side) {
@@ -138,6 +156,22 @@ async function connect(side) {
   const st = (await get('/api/robots/status')).arms[side];
   const bad = (st.check?.rows || []).filter((x) => !x.ok).map((x) => DEVICES[x.device] || x.device);
   said[side] = !st.check ? 'Connected.' : st.check.ok ? 'Connected; every device answers.' : `Connected. Not answering: ${bad.join(', ')}.`;
+}
+
+// The controller's realtime push off (the user, 6 Nov: the new controllers came with it on toward other computers, so S2
+// recorded no feed). Asked first: a computer that uses it (ALIX's driver there) loses its feed. The arm connects again.
+async function pushOff(side, push) {
+  const S = side.toUpperCase();
+  const yes = await confirmDialog({ title: `Turn the ${S} controller's feed push off?`, ok: 'Turn it off', danger: false,
+    body: `It is on toward ${push.ip}:${push.port}, which is not this computer.`,
+    list: [`Nothing on ${push.ip} uses it (ALIX's driver or another Lite there would lose its feed).`,
+      `The ${S} arm connects again afterwards; nothing moves.`] });
+  if (!yes) return;
+  said[side] = 'Turning the feed push off…';
+  render();
+  const r = await post(`/api/robots/${side}/feed-push-off`, { confirmed: true });
+  said[side] = !r.cleared ? 'The feed push was already off.'
+    : `The feed push is off (it was on toward ${r.was.ip}:${r.was.port})` + (r.reconnected ? '; the arm connected again.' : '; Disconnect and Connect the arm before an S2 run.');
 }
 
 async function reconnect(side) {

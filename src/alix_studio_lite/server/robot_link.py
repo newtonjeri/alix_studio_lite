@@ -216,11 +216,12 @@ class ArmLink:
 
     def __init__(self, side: str, ip: str, port: int = 8080, *, period_s: float = 0.2,
                  estop_active: int = ESTOP_PRESSED_LEVEL, estop_io: int = ESTOP_IO, feed_port: int | None = None,
-                 on_read=None):
+                 feed_follow_host: bool = True, on_read=None):
         self.side, self.ip, self.port = side, ip, int(port)
         self.period_s, self.estop_active = period_s, int(estop_active)
         self.estop_io = int(estop_io)               # the E-stop's input (the Connection page; IO3 on the lab's controllers)
         self.feed_port = int(feed_port) if feed_port else None   # the UDP port this arm's feed is recorded on (robot_real)
+        self.feed_follow_host = bool(feed_follow_host)  # a push toward another address is pointed here as it connects (udp_push)
         self.on_read = on_read
         self.handle = None
         self.reader = None                          # a second connection to the same controller, for the readings only (26 Oct)
@@ -792,8 +793,15 @@ class ArmLink:
         text = f"recorded on UDP port {port} of this computer" + (f" ({host})" if host else "") if port else "no feed port set"
         level, hint = "ok", None
         p = read.get("push") or {}
+        read["host_ip"] = host
+        read["follow_host"] = self.feed_follow_host
         if p.get("enable") and host and str(p.get("ip")) != str(host):
-            level, hint = "warn", "Another computer receives this controller's feed now; a run's recording turns it toward this one."
+            level = "warn"
+            hint = ("Another computer receives this controller's feed: S2 cannot record it (ALIX's capture never takes "
+                    "another computer's feed), and a push left on slows the controller's program playback. "
+                    + ("The arm's next Connect points it at this computer (its feed follows this computer's address), or "
+                       "Turn the feed push off." if self.feed_follow_host else
+                       "Turn the feed push off on the Connection page if nothing there uses it."))
             text += f"; the controller's feed is on toward {p.get('ip')}:{p.get('port')}"
         try:
             from .udp_push import held_text, lite_pids, port_holders
@@ -815,6 +823,52 @@ class ArmLink:
         gated = [r for r in rows if r["device"] in ("controller", "estop", "pole", "hand")]
         return dict(side=self.side, ip=self.ip, port=self.port, at=time.time(), emulated=self.emulated,
                     ok=all(r["ok"] for r in gated), rows=rows, read=read)
+
+    def feed_push_off(self) -> dict:
+        """The controller's realtime push turned off (the Connection page's Turn the feed push off; the user, 6 Nov: the new
+        controllers came with their push on toward other computers, LEFT 192.168.120.11:8089 and RIGHT 192.168.1.12:8090,
+        so ALIX's capture refused to take it and S2 recorded no feed). Written through ALIX's own verified push write
+        (``track.UdpRecorder._apply_push``: read back, a lost reply tried again), with only ``enable`` changed: the target it
+        had is kept on the controller, for the record. {cleared, was, now, said}; refused when it cannot be read or does
+        not read back off. This process's SDK keeps the port it bound while the push was on (udp_push), so the arm is
+        connected again afterwards (robot_standin.feed_push_off)."""
+        import os as _os
+
+        from alix_dispatch import track
+
+        S = self.side.upper()
+        with self.busy("turning the controller's feed push off", expect_s=20.0):
+            robot = self.handle.robot
+            try:
+                ret, cfg = robot.rm_get_realtime_push()
+            except Exception as exc:                                     # noqa: BLE001
+                ret, cfg = -1, f"{type(exc).__name__}: {exc}"
+            if ret != 0 or not isinstance(cfg, dict):
+                raise UserError(f"The {S} controller's push settings could not be read ({return_text(ret, 'rm_get_realtime_push')}).",
+                                "Nothing was changed. Test connection, then try again.", code="feed")
+            keep = lambda d: {k: v for k, v in d.items() if isinstance(v, (int, float, str, bool))}   # noqa: E731
+            was = keep(cfg)
+            if not cfg.get("enable"):
+                return dict(cleared=False, was=was, now=was, said=["the push was already off"])
+            said: list = []
+            from Robotic_Arm.rm_robot_interface import rm_realtime_push_config_t, rm_udp_custom_config_t
+
+            off = rm_realtime_push_config_t(cycle=int(cfg.get("cycle") or 1), enable=False, port=int(cfg.get("port") or 8089),
+                                            force_coordinate=int(cfg.get("force_coordinate", -1)),
+                                            ip=str(cfg.get("ip") or "0.0.0.0"), custom_config=rm_udp_custom_config_t())
+            rec = track.UdpRecorder(_os.devnull, getattr(self.handle, "host_ip", None) or "0.0.0.0", port=int(cfg.get("port") or 8089),
+                                    log=lambda m: said.append(str(m)))
+            ok, ret = rec._apply_push(robot, off, dict(enable=False), "turn the feed push off")
+            try:
+                r2, now = robot.rm_get_realtime_push()
+            except Exception:                                            # noqa: BLE001
+                r2, now = -1, {}
+            now = keep(now) if r2 == 0 and isinstance(now, dict) else {}
+            if not ok or now.get("enable") is not False:
+                raise UserError(f"The {S} controller's feed push did not turn off (rm_set_realtime_push returned {ret}; it reads "
+                                f"{'on' if now.get('enable') else 'unread' if not now else 'off'}).",
+                                "Turn it off in the vendor's app, then Test connection.", code="feed")
+            return dict(cleared=True, was=was, now=now, said=said)
 
     def devices(self) -> dict:
         """The hand and the pole as judged: {name: {ok (None: not judged yet), since (epoch s), why}}."""

@@ -235,6 +235,44 @@ def test_a_push_left_on_toward_this_computer_is_turned_off_and_the_arm_connected
         link.close()
 
 
+def test_a_push_toward_another_address_follows_this_computer_and_the_arm_connects_again(tmp_path, monkeypatch):
+    """The default since 6 Nov (connection.py feed_follow_host): the lab's new controllers pushed to addresses this computer
+    no longer had (192.168.120.11, 192.168.1.12), the SDK bound the port as the arm connected, and S2 recorded no feed.
+    Now that push is pointed at this computer's address and the arm's feed port, off, and the arm connected again in a
+    fresh process; the capture can bind the port. Without the setting it is left alone."""
+    import json
+    import socket
+
+    from alix_studio_lite.server.udp_push import port_holders
+
+    found, feed = _udp_port(), _udp_port()
+    push = tmp_path / "push.json"
+    push.write_text(json.dumps(dict(enable=True, ip="192.168.120.11", port=found, cycle=1)))
+    monkeypatch.setenv("LITE_WORKER_SETUP", str(Path(__file__).with_name("fake_controller_setup.py")))
+    monkeypatch.setenv("LITE_FAKE_PUSH_FILE", str(push))
+    log = Logbook(tmp_path / "logs")
+    t0 = time.time()
+    link = LinkProcess("left", "192.168.1.10", kind="realman", log=log, opts={"feed_port": feed}).open()
+    try:
+        now = json.loads(push.read_text())
+        assert (now["enable"], now["ip"], now["port"]) == (False, "127.0.0.1", feed)      # this computer (the fake's), off
+        said = [r for r in log.records("hardware", t0 - 1, time.time() + 1) if r["verb"] == "realtime push"]
+        assert said and "not this computer" in said[-1]["text"] and "connected again in a fresh process" in said[-1]["text"]
+        assert port_holders(found) == []                  # the first process, whose SDK had bound it, is gone
+        cap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        cap.bind(("", feed))
+        cap.close()
+        assert link.push_on is None and not log.alerts_view()
+    finally:
+        link.close()
+    push.write_text(json.dumps(dict(enable=True, ip="192.168.120.11", port=found, cycle=1)))
+    kept = LinkProcess("left", "192.168.1.10", kind="realman", log=log, opts={"feed_follow_host": False}).open()
+    try:
+        assert json.loads(push.read_text())["enable"] is True and json.loads(push.read_text())["ip"] == "192.168.120.11"
+    finally:
+        kept.close()
+
+
 def test_a_push_another_program_here_takes_is_left_alone_and_said(tmp_path, monkeypatch):
     """A push toward this computer whose port another program holds (ALIX's driver running) is a live consumer: never
     turned off; the arm connects, and an alert names the program."""

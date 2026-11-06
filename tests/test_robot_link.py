@@ -452,3 +452,11 @@ def test_the_connection_page_keeps_each_arms_details(server):
     refused = call(server, "POST", "/api/robots/right/connect", {"ip": "10.0.0.300"})
     assert "'10.0.0.300' is not an IPv4 address" in refused["error"]
     call(server, "POST", "/api/robots/connection", {"arm": "right", "feed_port": 8090})
+
+
+def test_turning_the_feed_push_off_asks_first_and_says_when_it_was_off(server):
+    call(server, "POST", "/api/robots/left/connect", {})
+    asked = call(server, "POST", "/api/robots/left/feed-push-off", {})
+    assert asked["code"] == "confirm"
+    out = call(server, "POST", "/api/robots/left/feed-push-off", {"confirmed": True})
+    assert out["cleared"] is False and out["reconnected"] is False and out["said"] == ["the push was already off"]
