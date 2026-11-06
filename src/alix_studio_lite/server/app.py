@@ -468,7 +468,7 @@ def post_mode(app, q, body, m):
                 raise UserError("Connect at least one arm first.", "Use Connect in the bar at the top.")
             why = app.robot.motion_block()
             if why and mode == "real":
-                raise UserError(why, "Release the E-stop and press Recover.")
+                raise UserError(why, app.robot.motion_block_hint())
             if mode == "real" and not body.get("confirmed"):
                 raise UserError("Switching to the real robot needs your confirmation.", code="confirm")
         app.set_mode(mode)
@@ -517,8 +517,8 @@ def post_app_settings(app, q, body, m):
         app.ui["cubicle_mm"] = int(body["cubicle_mm"])
     if body.get("theme") in ("light", "dark"):
         app.ui["theme"] = body["theme"]
-    if "ip" in body and body.get("arm") in ARMS:
-        app.robot.arm(body["arm"]).ip = str(body["ip"]).strip()
+    if "ip" in body and body.get("arm") in ARMS:                 # saved with the arm's connection details (connection.py)
+        app.robot.set_connection(body["arm"], {"ip": str(body["ip"]).strip()})
     app.save_ui()
     return app.state()
 

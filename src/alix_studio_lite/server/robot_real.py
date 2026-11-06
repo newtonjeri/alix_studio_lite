@@ -521,6 +521,11 @@ class RealArm:
 
     # ── plumbing
     @property
+    def feed_port(self) -> int:
+        """The UDP port this arm's feed is recorded on: the Connection page's (connection.py), else UDP_PORT's."""
+        return int(getattr(self.link, "feed_port", None) or UDP_PORT[self.side])
+
+    @property
     def handle(self):
         if self.link.handle is None:
             raise UserError(f"The {self.SIDE} controller is not connected.", "Connect it in Robot & mode.")
@@ -1414,10 +1419,10 @@ class RealArm:
         h = self.handle
         try:
             if self.link.emulated:
-                rec = _EmulatedCapture(cap, h.host_ip, port=UDP_PORT[self.side], log=self._alix_log(),
+                rec = _EmulatedCapture(cap, h.host_ip, port=self.feed_port, log=self._alix_log(),
                                        period_s=S2_FEED_CYCLE * 0.005)
             else:
-                rec = CycleRecorder(cap, h.host_ip, port=UDP_PORT[self.side], log=self._alix_log(), cycle=S2_FEED_CYCLE)
+                rec = CycleRecorder(cap, h.host_ip, port=self.feed_port, log=self._alix_log(), cycle=S2_FEED_CYCLE)
             rec.start(self.robot)
         except Exception as exc:                                                    # noqa: BLE001
             self._hw("s2 feed", ok=False, text=f"not recorded: {exc}")
@@ -1657,14 +1662,14 @@ class RealArm:
             alog(" ".join(str(p) for p in parts))
 
         capture = _EmulatedCapture if self.link.emulated else track.UdpRecorder
-        rec = capture(cap, self.handle.host_ip, port=UDP_PORT[self.side], log=log)
+        rec = capture(cap, self.handle.host_ip, port=self.feed_port, log=log)
         try:
             rec.start(self.robot)
         except Exception as exc:                                                # noqa: BLE001
             self._hw("canfd capture", ok=False, text=f"refused: {exc}")
             from .udp_push import capture_refused_hint       # who holds the port: this connection, or another program
 
-            hint = capture_refused_hint(UDP_PORT[self.side]) if "already bound" in str(exc) else None
+            hint = capture_refused_hint(self.feed_port) if "already bound" in str(exc) else None
             raise UserError(f"The {self.SIDE} controller's 5 ms feed to this computer could not be set up ({exc}), so "
                             "nothing was streamed.", hint or "Check that nothing else (ALIX's driver) takes the controller's push.") from None
         return rec, cap
@@ -1824,7 +1829,7 @@ class RealArm:
                     rec.attach_monitor(watch)
                     first_frame()
                 if watch.n_frames == 0:
-                    raise UserError(f"No 5 ms frame came from the {self.SIDE} controller to {h.host_ip}:{UDP_PORT[self.side]}, so "
+                    raise UserError(f"No 5 ms frame came from the {self.SIDE} controller to {h.host_ip}:{self.feed_port}, so "
                                     "nothing was streamed (the stream's stop check would be blind).",
                                     "Check that this computer is on the robot's network, then try again.")
                 if watch.stop_codes:

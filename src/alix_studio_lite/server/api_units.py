@@ -1600,7 +1600,7 @@ def post_mode(app, q, body, m):
                 raise UserError("Connect at least one arm first.", code="connect")
             why = app.robot.motion_block()
             if why and mode == "real":
-                raise UserError(why, "Release the E-stop and press Recover.")
+                raise UserError(why, app.robot.motion_block_hint())
             if mode == "real" and not body.get("confirmed"):
                 raise UserError("Switching to the real robot needs your confirmation.", code="confirm")
         app.robot.switching = MODE_TEXT[mode].split(":")[0]
@@ -1631,6 +1631,43 @@ def post_connect(app, q, body, m):
     if not any(a["connected"] for a in app.robot.view().values()):
         app.set_mode("visual")
     return out
+
+
+@route("GET", r"/api/robots/connection")
+def get_connection(app, q, body, m):
+    """The Connection page (connection.py): each arm's saved details, today's defaults, the hand's fixed Modbus settings,
+    whether each arm is linked and with which details, and its last device check."""
+    session(app)
+    out = app.robot.conn.view()
+    view = app.robot.view()
+    out["linked"] = {s: dict(connected=bool(view[s]["connected"]), link=bool(view[s].get("link")),
+                             opened_with=app.robot._opened_with.get(s) if view[s].get("link") else None,
+                             devices=view[s].get("devices") or {}, check=view[s].get("check"),
+                             estop=view[s].get("estop"))
+                     for s in ARMS}
+    out["backend"] = app.robot.backend
+    return out
+
+
+@route("POST", r"/api/robots/connection")
+def post_connection(app, q, body, m):
+    """One arm's details saved (anyone may: the user, 6 Nov): ``{arm, ip, port, feed_port, estop_io, estop_level}``.
+    They apply at its next Connect."""
+    session(app)
+    side = str(body.get("arm") or "")
+    if side not in ARMS:
+        raise UserError("Say which arm: left or right.", code="connection")
+    out = app.robot.set_connection(side, {k: body.get(k) for k in ("ip", "port", "feed_port", "estop_io", "estop_level") if k in body})
+    app.log.activity(f"connection details saved: {side.upper()} " + ", ".join(f"{k} {v}" for k, v in out["saved"].items()),
+                     detail=out)
+    return out
+
+
+@route("POST", r"/api/robots/(left|right)/check")
+def post_check_devices(app, q, body, m):
+    """Test connection: each device of a linked arm asked on its own (robot_link.ArmLink.check_devices)."""
+    session(app)
+    return app.robot.check_devices(_arm(m))
 
 
 @route("POST", r"/api/robots/(left|right)/drag-mode")

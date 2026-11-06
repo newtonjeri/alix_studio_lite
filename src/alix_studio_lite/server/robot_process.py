@@ -106,7 +106,8 @@ class _LogForwarder:
         return lambda text: self._send(("log", "hwline", dict(side=side, prefix=prefix, text=str(text))))
 
 
-def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log_root: str | None, cmd, ctl, feed) -> None:
+def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log_root: str | None, cmd, ctl, feed,
+                opts: dict | None = None) -> None:
     """The arm worker: the link opened, then commands one after the other (``cmd``), STOP and the like on their
     own thread (``ctl``), the link's view pushed on ``feed``."""
     # Ctrl+C is the server's (the module's docstring): ignored here first, then let through, so one that came while
@@ -155,7 +156,7 @@ def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log
             state["dumped"] = True
             dump_threads(log_root, prefix=f"threads-{side}-")
 
-    link = ArmLink(side, ip, port, on_read=report)
+    link = ArmLink(side, ip, port, on_read=report, **(opts or {}))     # the Connection page's E-stop input and feed port
     try:
         link.open()
     except BaseException as exc:                                            # noqa: BLE001
@@ -246,7 +247,7 @@ def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log
         if want_hook:
             kwargs["stop_hook"] = lambda fn: state.__setitem__("hook", fn)
         try:
-            target = link if method in ("read_fresh", "estop_now") else arm
+            target = link if method in ("read_fresh", "estop_now", "check_devices") else arm
             out = getattr(target, method)(*args, **kwargs)
             push(cmd, ("result", out))
         except BaseException as exc:                                        # noqa: BLE001
@@ -260,8 +261,10 @@ def worker_main(side: str, ip: str, port: int, kind: str, setup: str | None, log
 class LinkProcess:
     """An arm's connection in its worker process: what ``robot_link.ArmLink`` is to the server."""
 
-    def __init__(self, side: str, ip: str, port: int = 8080, *, kind: str = "realman", on_read=None, log=None):
+    def __init__(self, side: str, ip: str, port: int = 8080, *, kind: str = "realman", on_read=None, log=None,
+                 opts: dict | None = None):
         self.side, self.ip, self.port, self.kind = side, ip, int(port), kind
+        self.opts = dict(opts or {})                     # ArmLink's own settings in the worker (estop_io, estop_active, feed_port)
         self.on_read, self.log = on_read, log
         self.emulated = False
         self.abandoned = False
@@ -289,7 +292,8 @@ class LinkProcess:
         setup = os.environ.get("LITE_WORKER_SETUP") or None
         root = str(self.log.root) if self.log is not None else None
         self._proc = ctx.Process(target=worker_main, name=f"lite-arm-{self.side}",
-                                 args=(self.side, self.ip, self.port, self.kind, setup, root, cmd_b, ctl_b, feed_b), daemon=True)
+                                 args=(self.side, self.ip, self.port, self.kind, setup, root, cmd_b, ctl_b, feed_b, self.opts),
+                                 daemon=True)
         # The worker starts with Ctrl+C held (it inherits this thread's signal mask) until worker_main ignores it; this
         # thread's mask is put back at once. multiprocessing's resource tracker, which the first spawn starts, ends its
         # own start by letting SIGINT through in the calling thread (its guard for the same race, bpo-33613): it is
@@ -545,6 +549,13 @@ class LinkProcess:
     # -- the link's own calls
     def read_fresh(self) -> dict:
         return self.call("read_fresh", label="reading the controller")
+
+    def check_devices(self) -> dict:
+        """Each device asked on its own, in the worker (robot_link.ArmLink.check_devices)."""
+        return self.call("check_devices", label="checking the arm's devices")
+
+    def devices(self) -> dict:
+        return dict(self.view().get("devices") or {})
 
     def estop_now(self) -> str:
         """IO3 read by the worker's control thread: between a command's steps when called from its line callback (the

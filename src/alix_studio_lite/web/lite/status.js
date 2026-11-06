@@ -28,7 +28,8 @@ export const feedMs = () => (last && last.feed_ms ? last.feed_ms : null);
 // Each linked controller's own run mode as it reads (the owner, 17 Oct: Hardware sim puts the controllers in their
 // SIM mode, Real in their REAL mode); one that differs from the mode chosen (changed on its pendant) is named.
 function pillText(st) {
-  if (st.motion_block) return { state: 'estop', head: 'E-STOP', text: st.motion_block };
+  // a hand or a pole that does not answer blocks motion too, but is no E-stop (the user, 6 Nov: name what failed)
+  if (st.motion_block) return { state: 'estop', head: st.motion_block_kind === 'device' ? 'BLOCKED' : 'E-STOP', text: st.motion_block };
   const arms = Object.values(st.arms || {}).filter((a) => a.connected && a.link);
   const linked = arms.map((a) => a.side.toUpperCase());
   const run = (a) => (a.link && a.link.feedback && a.link.feedback.run_mode) || null;

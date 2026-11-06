@@ -52,6 +52,17 @@ HELD_S = 60.0                      # a command that has not ended in this long (
 HAND_LULL_S = 0.5                  # the hand (Modbus on the shared end port) is read on the readings' connection only this long after
                                    # the last command ended: a run's commands come closer than that, and none waits for a hand read
 HAND_REOPEN_S = 2.0                # a hand read that fails has the end port put back in Modbus mode, at most this often
+# Each device judged on its own (the user, 6 Nov: "check the connection status of the hand and pole independently and
+# report what was not connected"; any device that does not answer blocks every motion). The lab, 6 Nov: the new LEFT
+# hand never answered its Modbus; each failed read held the readings' connection about a second, so every reading came
+# 1.2 to 3 s late, the E-stop read UNKNOWN, and Real and Recover were refused naming the E-stop, never the hand.
+HAND_SILENT_N = 2                  # reads in a row that fail right after the end port was put back in Modbus mode: no hand
+HAND_RETRY_S = 5.0                 # a hand that does not answer is read again this often, not in every reading
+HAND_READ_MAX_S = 4.0              # a hand read under way (after the rest of the reading was published) keeps it fresh this long
+HAND_SLOW_S = 0.3                  # a hand read that took longer is followed at once by the rest of the reading again
+POLE_SILENT_N = 3                  # failed pole reads in a row ...
+POLE_SILENT_S = 1.5                # ... over at least this long: the pole does not answer (lab 24 Oct - 6 Nov: one at most)
+DEVICE_WORDS = {"hand": "hand", "pole": "lift pole"}
 # A call into the SDK that does not come back (the lab, 19 Oct: three times a call made right after "run mode REAL"
 # never returned; nothing on that controller answered, STOP included, until Lite was killed). The SDK answers a
 # request within its reply timeout (1.5 s, connect.ACK_TIMEOUT_MS), so a call that has not returned in CALL_STUCK_S
@@ -204,10 +215,12 @@ class ArmLink:
     reading, so an E-stop press reaches the robot's jobs without waiting for a page to poll."""
 
     def __init__(self, side: str, ip: str, port: int = 8080, *, period_s: float = 0.2,
-                 estop_active: int = ESTOP_PRESSED_LEVEL,
+                 estop_active: int = ESTOP_PRESSED_LEVEL, estop_io: int = ESTOP_IO, feed_port: int | None = None,
                  on_read=None):
         self.side, self.ip, self.port = side, ip, int(port)
-        self.period_s, self.estop_active = period_s, estop_active
+        self.period_s, self.estop_active = period_s, int(estop_active)
+        self.estop_io = int(estop_io)               # the E-stop's input (the Connection page; IO3 on the lab's controllers)
+        self.feed_port = int(feed_port) if feed_port else None   # the UDP port this arm's feed is recorded on (robot_real)
         self.on_read = on_read
         self.handle = None
         self.reader = None                          # a second connection to the same controller, for the readings only (26 Oct)
@@ -215,6 +228,10 @@ class ArmLink:
         self.feedback: dict = {}
         self._hand = None
         self._modbus_reopened = 0.0                 # when the end port was last put back in Modbus mode for a reading
+        # the hand and the pole, each judged on its own: ok None (not judged yet), True (answers), False (does not)
+        self._devices = {name: dict(ok=None, since=None, why=None, fails=0, fail_since=None, tried=0.0) for name in DEVICE_WORDS}
+        self._hand_reading: float | None = None     # a hand read under way since (monotonic)
+        self._arm_answers = True                    # the reading's arm state answered (a hand read is judged only then)
         self._stopping = threading.Event()          # a STOP is being sent: no new reading starts
         self._busy: list = []                       # commands running (robot_real.py): no reading meanwhile
         self._busy_since, self._busy_expect = 0.0, HELD_S   # when the command took the link, and how long it may take
@@ -577,10 +594,232 @@ class ArmLink:
             self._modbus_reopened = now
             try:
                 robot.rm_set_modbus_mode(peripherals.HAND_MODBUS_PORT, peripherals.HAND_MODBUS_BAUD, 2)
+                counts = self._hand.read()
+            except Exception:                                            # noqa: BLE001
+                counts = None
+            self._hand_answer(counts, after_reopen=True)
+            return counts
+        self._hand_answer(counts, after_reopen=False)
+        return counts
+
+    # ── each device judged on its own (HAND_SILENT_N, POLE_SILENT_N)
+    def _judge(self, name: str, ok: bool, why: str | None = None) -> None:
+        with self._lock:
+            d = self._devices[name]
+            if d["ok"] is not ok:
+                d["since"] = time.time()
+            d["ok"], d["why"] = ok, (None if ok else (why or d["why"] or self._silent_why(name)))
+
+    def _silent_why(self, name: str) -> str:
+        if name == "hand":
+            from .connection import hand_modbus
+
+            m = hand_modbus()
+            return f"no reply on {m['port_name']} (Modbus ID {m['device']}, {m['baud']} baud)"
+        return "no reply to its height read (rm_get_lift_state)"
+
+    def _hand_answer(self, counts, after_reopen: bool) -> None:
+        """A hand read's outcome. Answers: the hand answers. A read that fails just after the end port was put back in
+        Modbus mode counts toward HAND_SILENT_N (one that fails without it may be a port a Hand step closed meanwhile)."""
+        d = self._devices["hand"]
+        d["tried"] = time.monotonic()
+        if counts is not None:
+            d["fails"] = 0
+            self._judge("hand", True)
+        elif after_reopen and self._arm_answers:
+            d["fails"] += 1
+            if d["fails"] >= HAND_SILENT_N:
+                self._judge("hand", False)
+
+    def _pole_answer(self, answered: bool) -> None:
+        d, now = self._devices["pole"], time.monotonic()
+        if answered:
+            d["fails"], d["fail_since"] = 0, None
+            self._judge("pole", True)
+            return
+        d["fails"] += 1
+        d["fail_since"] = d["fail_since"] or now
+        if d["fails"] >= POLE_SILENT_N and now - d["fail_since"] >= POLE_SILENT_S:
+            self._judge("pole", False)
+
+    def _hand_due(self) -> bool:
+        """The hand is read in every reading, unless it does not answer: then every HAND_RETRY_S (each failed read holds
+        the readings' connection about a second)."""
+        d = self._devices["hand"]
+        return d["ok"] is not False or time.monotonic() - d["tried"] >= HAND_RETRY_S
+
+    def check_devices(self) -> dict:
+        """Each device asked on its own, on the commands' connection (the Connection page's Test connection, and every
+        Connect): the controller, the E-stop input, the pole and the hand, and where the feed goes; with what the controller
+        says of its own settings, as the vendor's app shows them (Configuration, Communication; read, never written). The
+        hand's and the pole's answers judge them at once: one that does not answer blocks motion from now on.
+
+        {ok (the controller, the E-stop input, the pole and the hand all answer), rows: [{device, ok, level (ok | warn |
+        fail), text, hint}], read: {...the controller's own settings}}."""
+        with self.busy("checking the arm's devices", expect_s=20.0):
+            return self._check(self.handle.robot)
+
+    def _check(self, robot) -> dict:
+        from alix_dispatch import peripherals, runmode
+
+        from .connection import hand_modbus
+
+        rows, read = [], {}
+
+        def row(device, ok, text, hint=None, level=None):
+            rows.append(dict(device=device, ok=bool(ok), level=level or ("ok" if ok else "fail"), text=text, hint=hint))
+
+        def ask(name, *args):
+            fn = getattr(robot, name, None)
+            if fn is None:
+                return None
+            try:
+                return fn(*args)
             except Exception:                                            # noqa: BLE001
                 return None
-            counts = self._hand.read()
-        return counts
+
+        # the controller
+        got = ask("rm_get_current_arm_state")
+        arm_ok = bool(got) and got[0] == 0 and bool(got[1])
+        info = ask("rm_get_robot_info")
+        if info and info[0] == 0 and isinstance(info[1], dict):
+            read["info"] = {k: (v if isinstance(v, (int, float, str)) else str(v)) for k, v in info[1].items()}
+        try:
+            r, m = runmode.read_run_mode(robot)
+            run_mode = {0: "SIM", 1: "REAL"}.get(m) if r == 0 else None
+        except Exception:                                                # noqa: BLE001
+            run_mode = None
+        model = read.get("info", {})
+        about = ", ".join(x for x in (
+            f"model {model['arm_model']}" if model.get("arm_model") not in (None, "") else "",
+            f"{model['arm_dof']} joints" if model.get("arm_dof") else "",
+            f"controller generation {model['robot_controller_version']}" if model.get("robot_controller_version") else "",
+            f"run mode {run_mode}" if run_mode else "") if x)
+        if arm_ok:
+            row("controller", True, f"answers at {self.ip}:{self.port}" + (f" ({about})" if about else ""))
+        else:
+            row("controller", False, f"does not answer at {self.ip}:{self.port}"
+                + (f" ({return_text(got[0], 'rm_get_current_arm_state')})" if got else ""),
+                "Check its power and network cable, and its address against the vendor's app (Configuration, Communication).")
+        fourth = getattr(robot, "robot_controller_version", None) == 4
+        # the E-stop input
+        io = self.estop_io
+        if hasattr(robot, "rm_get_io_state"):
+            state, st = estop_state(lambda: robot.rm_get_io_state(io), self.estop_active)
+            read["estop"] = dict(st, io=io)
+            if state in ("CLEAR", "ENGAGED"):
+                row("estop", True, f"IO{io} in the E-stop mode (5), level {st.get('level')}: "
+                    + ("released" if state == "CLEAR" else "PRESSED (motion stays blocked until it is released and recovered)"),
+                    level="ok" if state == "CLEAR" else "warn")
+            elif state == "NOT_CONFIGURED":
+                row("estop", False, f"IO{io} is in mode {st.get('mode')}, not the E-stop mode (5): its button would not stop the arm",
+                    f"Set IO{io} to the E-stop input mode in the vendor's app (or the pendant), or enter the input the E-stop "
+                    "is wired to on the Connection page.")
+            else:
+                row("estop", False, f"IO{io} does not answer" + (f" ({return_text(st.get('ret'))})" if st.get("ret") is not None else ""),
+                    "Check the controller's IO; the E-stop must be readable before anything moves.")
+        elif self.emulated:
+            row("estop", True, "ALIX's emulator has no IO: read as released")
+        else:
+            row("estop", False, "this SDK cannot read the controller's IO", "Lite needs RealMan's SDK with rm_get_io_state.")
+        # the lift pole
+        pole = peripherals.Pole(robot, log=lambda *_: None).state()
+        if pole is not None:
+            read["pole"] = {k: v for k, v in pole.items() if isinstance(v, (int, float, str))}
+            mm = float(pole["pos"]) / peripherals.LIFT_UNITS_PER_METRE * 1000.0
+            row("pole", True, f"answers: {mm:.0f} mm")
+            self._devices["pole"].update(fails=0, fail_since=None)
+            self._judge("pole", True)
+        else:
+            why = "no reply to its height read (rm_get_lift_state)"
+            row("pole", False, why, "Check the pole's cable and power at the controller; the vendor's app reads it on "
+                "Extension, Lift Control.")
+            self._devices["pole"].update(fails=POLE_SILENT_N, fail_since=time.monotonic() - POLE_SILENT_S)
+            self._judge("pole", False, why)
+        # the hand: read, and when it does not answer, the end port put in Modbus mode and read again, twice
+        m = hand_modbus()
+        hand = peripherals.HandModbus(robot, self.side, log=lambda *_: None)
+        counts = hand.read()
+        tries = 0
+        while counts is None and tries < 2:
+            tries += 1
+            ask("rm_set_modbus_mode", m["port"], m["baud"], 2)
+            counts = hand.read()
+        volts = ask("rm_get_tool_voltage")
+        if volts and volts[0] == 0:
+            read["tool_v"] = {0: 0, 1: 5, 2: 12, 3: 24}.get(int(volts[1]), volts[1])
+        if fourth:                                  # each generation's own call (robot_real._fourth_gen: the other one hangs the SDK)
+            got485 = ask("rm_get_tool_rs485_mode_v4")
+            r485 = got485[1] if got485 and got485[0] == 0 and isinstance(got485[1], dict) else None
+        else:
+            got485 = ask("rm_get_tool_rs485_mode")
+            r485 = got485 if isinstance(got485, dict) and got485.get("return_code") == 0 else None
+        if r485:
+            read["tool_rs485"] = {k: v for k, v in r485.items() if k != "return_code" and isinstance(v, (int, float, str))}
+        where = f"{m['port_name']} (Modbus ID {m['device']}, {m['baud']} baud)"
+        if counts is not None:
+            row("hand", True, f"answers on {where}: " + ", ".join(str(int(c)) for c in counts))
+            self._devices["hand"].update(fails=0, tried=time.monotonic())
+            self._judge("hand", True)
+            self.hand_seen(counts)
+        else:
+            v, baud = read.get("tool_v"), (r485 or {}).get("baudrate")
+            mode485 = (r485 or {}).get("mode")
+            if v == 0:
+                why = f"no reply on {where}: the end's power is off (0 V), so the hand has none"
+                hint = "Turn the end's power on (24 V) in the vendor's app (Extension, End Control), then Test connection."
+            elif mode485 is not None and int(mode485) != 1:
+                why = f"no reply on {where}: the end's RS485 did not take the Modbus mode (it reads mode {mode485})"
+                hint = "Check the end's RS485 mode in the vendor's app (Extension, End Control): Modbus RTU."
+            elif baud and int(baud) != m["baud"]:
+                why = f"no reply on {where}: the end's RS485 runs at {baud} baud"
+                hint = f"The hand and runner v14 talk at {m['baud']} baud: set the end's RS485 to it in the vendor's app."
+            else:                                   # only what the controller said of its end
+                known = ([f"the end's power is {v} V"] if v is not None else []) \
+                    + ([f"its RS485 is in Modbus mode at {baud} baud"] if baud else [])
+                why = f"no reply on {where}" + (f", though {' and '.join(known)}" if known else "")
+                hint = (f"Check the hand's cable at the end of the arm, and that the hand's own Modbus ID is {m['device']} and its "
+                        f"baud rate {m['baud']} (the hand's settings, not the controller's).")
+            row("hand", False, why, hint)
+            self._devices["hand"].update(fails=HAND_SILENT_N, tried=time.monotonic())
+            self._judge("hand", False, why)
+        # where the feed goes (not a device: a run records it, nothing moves by it)
+        host = getattr(self.handle, "host_ip", None)
+        push = ask("rm_get_realtime_push")
+        if push and push[0] == 0 and isinstance(push[1], dict):
+            read["push"] = {k: v for k, v in push[1].items() if isinstance(v, (int, float, str, bool))}
+        port = self.feed_port
+        text = f"recorded on UDP port {port} of this computer" + (f" ({host})" if host else "") if port else "no feed port set"
+        level, hint = "ok", None
+        p = read.get("push") or {}
+        if p.get("enable") and host and str(p.get("ip")) != str(host):
+            level, hint = "warn", "Another computer receives this controller's feed now; a run's recording turns it toward this one."
+            text += f"; the controller's feed is on toward {p.get('ip')}:{p.get('port')}"
+        try:
+            from .udp_push import held_text, lite_pids, port_holders
+
+            held = port_holders(int(port), mine=lite_pids()) if port else []
+        except Exception:                                                # noqa: BLE001
+            held = []
+        if held:
+            level, hint = "warn", f"Another program on this computer holds UDP port {port}: {held_text(held)}."
+            text += "; the port is held by another program"
+        row("feed", True, text, hint, level=level)
+        # the controller's own network settings, as the vendor's app shows them
+        wired = ask("rm_get_wired_net")
+        if isinstance(wired, dict) and wired.get("return_code") == 0:
+            read["wired"] = {k: wired.get(k) for k in ("ip", "mask", "mac")}
+        wifi = ask("rm_get_wifi_net")
+        if wifi and wifi[0] == 0 and isinstance(wifi[1], dict):
+            read["wifi"] = {k: v for k, v in wifi[1].items() if k != "password" and isinstance(v, (int, float, str))}
+        gated = [r for r in rows if r["device"] in ("controller", "estop", "pole", "hand")]
+        return dict(side=self.side, ip=self.ip, port=self.port, at=time.time(), emulated=self.emulated,
+                    ok=all(r["ok"] for r in gated), rows=rows, read=read)
+
+    def devices(self) -> dict:
+        """The hand and the pole as judged: {name: {ok (None: not judged yet), since (epoch s), why}}."""
+        with self._lock:
+            return {n: dict(ok=d["ok"], since=d["since"], why=d["why"]) for n, d in self._devices.items()}
 
     def estop_now(self) -> str:
         """IO3 read once, by the caller that holds the connection (a command's own thread, between two of
@@ -589,7 +828,7 @@ class ArmLink:
         if robot is None:
             return "UNKNOWN"
         if hasattr(robot, "rm_get_io_state"):
-            return estop_state(lambda: robot.rm_get_io_state(ESTOP_IO), self.estop_active)[0]
+            return estop_state(lambda: robot.rm_get_io_state(self.estop_io), self.estop_active)[0]
         return "CLEAR" if self.emulated else "UNKNOWN"          # ALIX's emulator models no IO
 
     def read_once(self) -> dict:
@@ -601,6 +840,8 @@ class ArmLink:
         panel shows it at once, as the loop reads the hand only in a lull between commands (HAND_LULL_S)."""
         if counts is None:
             return
+        self._devices["hand"]["fails"] = 0
+        self._judge("hand", True)
         with self._lock:
             self.feedback = dict(self.feedback, hand=[int(v) for v in counts])
 
@@ -618,10 +859,47 @@ class ArmLink:
                 self._read_all()
 
     def _read_all(self, robot=None, hand: bool = True) -> dict:
-        from alix_dispatch import peripherals, runmode
-
+        """One reading: the arm, the controller, the pole and the E-stop input, published; then the hand, in its turn
+        (_hand_due, and on the readings' connection in a lull only). A hand read that was slow (one that does not answer
+        takes about a second) is followed at once by the rest read again: the E-stop's reading never waits on the hand
+        (6 Nov), and while the hand read is under way the reading before it counts as fresh (view)."""
         if robot is None:
             robot = (self.reader or self.handle).robot
+        fb = self._read_rest(robot)
+        if not hand or not self._hand_due():
+            return fb
+        self._arm_answers = fb["ok"]                # a controller that does not answer is not its hand's silence
+        read, counts = False, None
+        self._hand_reading = t_hand = time.monotonic()
+        try:
+            if self.reader is not None:             # the end port is the commands' too: not under one, nor between two that
+                with self._hand_lock:               # come close (HAND_LULL_S); busy() waits for a read under way here
+                    if not self._busy and time.monotonic() - self._ended >= HAND_LULL_S:
+                        read, counts = True, self._read_hand(robot)
+            else:
+                read, counts = True, self._read_hand(robot)
+            if not read:
+                return fb
+            if time.monotonic() - t_hand > HAND_SLOW_S and not self._stop.is_set():
+                return self._read_rest(robot, hand=counts)          # what the slow read held back, read again now
+            with self._lock:
+                changed = fb.get("hand") != counts
+                fb["hand"] = counts
+                if self.feedback is not fb and self.feedback.get("t") == fb["t"]:
+                    self.feedback = dict(self.feedback, hand=counts)
+        finally:
+            self._hand_reading = None
+        if changed and self.on_read is not None:    # told at once only when it moved (the next reading tells the rest)
+            self.on_read()
+        return fb
+
+    _UNREAD = object()
+
+    def _read_rest(self, robot, hand=_UNREAD) -> dict:
+        """The reading but the hand, published (``hand``: as just read; else the last read stands, None for a hand that
+        does not answer)."""
+        from alix_dispatch import peripherals, runmode
+
         fb: dict = {"t": time.time()}
         t0 = time.monotonic()
         try:
@@ -644,18 +922,18 @@ class ArmLink:
         fb["run_mode"] = {0: "SIM", 1: "REAL"}.get(mode) if r == 0 else None
         height = peripherals.Pole(robot, log=lambda *_: None).height_m()
         fb["pole_mm"] = None if height is None else round(height * 1000.0, 1)
-        if hand and self.reader is not None:       # the end port is the commands' too: not under one, nor between two that
-            with self._hand_lock:                   # come close (HAND_LULL_S); busy() waits for a read under way here
-                hand = not self._busy and time.monotonic() - self._ended >= HAND_LULL_S
-                fb["hand"] = self._read_hand(robot) if hand else self.feedback.get("hand")
-        else:
-            fb["hand"] = self._read_hand(robot) if hand else self.feedback.get("hand")   # a command runs: the last read
+        if ok:                                      # a controller that does not answer is not its pole's silence
+            self._pole_answer(height is not None)
         if hasattr(robot, "rm_get_io_state"):
-            fb["estop"], fb["io3"] = estop_state(lambda: robot.rm_get_io_state(ESTOP_IO), self.estop_active)
+            fb["estop"], fb["io3"] = estop_state(lambda: robot.rm_get_io_state(self.estop_io), self.estop_active)
         elif self.emulated:                                              # ALIX's emulator models no IO
             fb["estop"], fb["io3"] = "CLEAR", {"emulated": True}
         else:
             fb["estop"], fb["io3"] = "UNKNOWN", {}
+        fb["io3"] = dict(fb["io3"], io=self.estop_io)
+        if hand is self._UNREAD:                    # until the hand is read, the last read stands (a command runs, or not the lull)
+            hand = None if self._devices["hand"]["ok"] is False else self.feedback.get("hand")
+        fb["hand"] = hand
         fb["busy"], fb["ok"] = None, ok
         with self._lock:
             self.feedback = fb
@@ -675,7 +953,8 @@ class ArmLink:
         # the connection nothing is read, and the reading it is followed by takes a moment to land (on the lab's
         # arms, 16 Oct, every long run, upload or saved take raised "No fresh reading" in that moment).
         since = None if age is None else min(age, now - freed)
-        fb["stale"] = (since is None or since > STALE_S) and not fb["busy"]
+        # a hand read under way follows the published reading (_read_all): its time is not the controller's silence
+        fb["stale"] = (since is None or since > STALE_S) and not fb["busy"] and not self._reading_hand()
         if fb["stale"]:
             fb["estop"] = "UNKNOWN"                                      # no fresh reading: fail closed
         fb["age_s"] = None if age is None else round(age, 2)
@@ -683,7 +962,12 @@ class ArmLink:
         call = self.in_flight()
         fb["call"] = None if call is None or call[1] < CALL_SLOW_S else dict(name=call[0], age_s=round(call[1], 1))
         return dict(ip=self.ip, port=self.port, emulated=self.emulated, abandoned=self.abandoned, reader=self.reader is not None,
-                    stopping=self._stop_lock.locked(), feedback=fb, quality=self.quality())
+                    stopping=self._stop_lock.locked(), feedback=fb, quality=self.quality(), devices=self.devices(),
+                    estop_io=self.estop_io, feed_port=self.feed_port)
+
+    def _reading_hand(self) -> bool:
+        t = self._hand_reading
+        return t is not None and time.monotonic() - t < HAND_READ_MAX_S
 
     def quality(self) -> dict:
         """The connection as the arm's indicator shows it (the owner, 17 Oct: "green a good connection,
@@ -713,7 +997,7 @@ class ArmLink:
             return dict(level="none", text="no answer from the controller" + (f" for {gone:.0f} s" if gone else ""))
         failed = sum(1 for _, ok, _ in recent if not ok)
         slow = max(dt for _, _, dt in recent)
-        late = now - (t or 0)
+        late = 0.0 if self._reading_hand() else now - (t or 0)        # the hand's own status says a slow hand
         if failed or slow > SLOW_S or late > LATE_S:
             why = ([f"{failed} of the last {len(recent)} readings unanswered"] if failed else []) \
                 + ([f"a reading took {slow:.1f} s"] if slow > SLOW_S else []) + ([f"no reading for {late:.1f} s"] if late > LATE_S else [])

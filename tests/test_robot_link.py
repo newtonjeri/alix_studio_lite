@@ -424,3 +424,31 @@ def test_a_stops_own_call_is_stuck_after_three_seconds():
     k._stopping.clear()
     k._calls[tid] = ("rm_get_current_arm_state", time.monotonic() - 3.5, "reader", False)    # a reading's call: the 20 s bound
     assert k.stuck() is None
+
+
+def test_test_connection_asks_each_device_of_an_emulated_arm(server):
+    """The Connection page's Test connection (the user, 6 Nov): each device asked on its own, through the arm's process;
+    Connect checks them too, so every linked arm has a report and each device judged."""
+    arm = call(server, "POST", "/api/robots/left/connect", {})
+    assert arm["connected"]
+    st = call(server, "GET", "/api/robots/status")["arms"]["left"]
+    assert st["check"]["ok"] and st["devices"]["hand"]["ok"] is True and st["devices"]["pole"]["ok"] is True
+    r = call(server, "POST", "/api/robots/left/check", {})
+    rows = {x["device"]: x for x in r["rows"]}
+    assert r["ok"] and set(rows) == {"controller", "estop", "pole", "hand", "feed"}
+    assert rows["estop"]["text"].startswith("ALIX's emulator has no IO") and rows["pole"]["text"] == "answers: 100 mm"
+    assert rows["hand"]["text"].startswith("answers on the end's RS485 (Modbus ID 1, 115200 baud)")
+    assert "UDP port 8089" in rows["feed"]["text"]
+
+
+def test_the_connection_page_keeps_each_arms_details(server):
+    page = call(server, "GET", "/api/robots/connection")
+    assert page["arms"]["right"]["port"] == 8080 and page["hand"]["baud"] == 115200 and page["linked"]["left"]["link"]
+    bad = call(server, "POST", "/api/robots/connection", {"arm": "right", "ip": "192.168.1.1099"})
+    assert "is not an IPv4 address" in bad["error"]
+    out = call(server, "POST", "/api/robots/connection", {"arm": "right", "feed_port": 8091})
+    assert out["saved"]["feed_port"] == 8091
+    assert call(server, "GET", "/api/robots/connection")["arms"]["right"]["feed_port"] == 8091
+    refused = call(server, "POST", "/api/robots/right/connect", {"ip": "10.0.0.300"})
+    assert "'10.0.0.300' is not an IPv4 address" in refused["error"]
+    call(server, "POST", "/api/robots/connection", {"arm": "right", "feed_port": 8090})

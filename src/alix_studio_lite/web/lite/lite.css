@@ -842,6 +842,29 @@ html[data-theme="dark"] .lite-s2-mode.active { background: var(--lite-d-blue); c
 .lite-cal-result .good { color: var(--green); font-weight: 600; }
 .lite-cal-result .warn { color: var(--orange); font-weight: 600; }
 @media (max-width: 900px) { .lite-cal-grid { grid-template-columns: 1fr; } }
+/* Connection (connection.js): each arm's details, its devices asked one by one, and what the controller reports */
+.lite-conn-card-outer { width: min(1300px, 96vw); max-height: 92vh; overflow: auto; }
+.lite-conn-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; overflow: auto; min-height: 0; }
+.lite-conn-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.lite-conn-head { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); }
+.lite-conn-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lite-conn-fields .field { margin: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.lite-conn-fields input, .lite-conn-fields select { width: 100%; min-width: 0; }
+.lite-conn-note { margin: 0; font-size: 13px; color: var(--ink); }
+.lite-conn-note.warn { color: var(--orange); font-weight: 600; }
+.lite-conn-tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+.lite-conn-devices { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lite-conn-devices th, .lite-conn-devices td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.lite-conn-devices th { background: var(--card); color: var(--muted); font-weight: 600; }
+.lite-conn-state { font-weight: 600; white-space: nowrap; }
+.lite-conn-state.ok { color: var(--green); }
+.lite-conn-state.warn { color: var(--orange); }
+.lite-conn-state.fail { color: var(--red); }
+.lite-conn-read { display: grid; gap: 3px; font-size: 13px; color: var(--ink); }
+.lite-conn-foot { grid-column: 1 / -1; }
+.lite-arm-devices { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 13px; color: var(--ink); }
+.lite-arm-devices .fail { color: var(--red); font-weight: 600; }
+@media (max-width: 900px) { .lite-conn-grid { grid-template-columns: 1fr; } }
 
 /* ── Responsive: no horizontal scrollbar at any width (the owner, 17 Oct: "the GUI should adapt to any screen
    size, especially the width. There should be no horizontal scrollbars at any width ... standardize this
