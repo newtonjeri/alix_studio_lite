@@ -3421,3 +3421,206 @@
 20:56:48.021 [activity] operator:42cbf6 page: SYSTEM · Session active
 20:57:17.638 [LEFT] restore global speed {"pct": 50} ret=0
 20:57:17.660 [RIGHT] restore global speed {"pct": 50} ret=0
+21:20:33.358 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+21:20:33.399 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+21:20:33.400 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+21:20:35.030 [activity] - page: NAVIGATION · Open screen
+21:20:35.030 [activity] - page: SYSTEM · ASL frontend initialized
+21:20:35.579 [RIGHT] camera · perception warmed up in 4.0 s: its core built, the colour model loaded
+21:20:44.618 [activity] - POST /api/auth/login
+21:20:45.428 [activity] operator:2f017e page: AUTH · Operator login
+21:20:45.428 [activity] operator:2f017e page: NAVIGATION · Open screen
+21:20:45.428 [activity] operator:2f017e page: AUTH · Setting changed
+21:20:47.050 [activity] operator:2f017e page: PROJECT · Button action
+21:20:47.060 [activity] operator:2f017e page: NAVIGATION · Task loaded
+21:20:47.224 [activity] operator:2f017e page: SETUP · Arm selected
+21:20:47.228 [activity] operator:2f017e page: NAVIGATION · Teaching stage changed
+21:20:47.235 [activity] operator:2f017e page: SETUP · Arm selected
+21:20:47.247 [activity] operator:2f017e page: NAVIGATION · Open screen
+21:20:51.517 [activity] operator:2f017e page: SYSTEM · 3D device
+21:20:51.522 [activity] operator:2f017e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+21:20:51.522 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:20:54.313 [activity] operator:2f017e page: UI · Button action
+21:20:54.827 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:20:54.906 [LEFT] read global speed ret=0 · not reported
+21:20:54.906 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+21:20:54.919 [LEFT] read drag sensitivity ret=0 · 100 %
+21:20:55.537 [LEFT] device check · controller: answers at 192.168.1.10:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 49 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 999, 997, 1000, 995, 481, 975; feed: recorded on UDP port 8089 of this computer (192.168.1.20)
+21:20:55.537 [activity] operator:2f017e POST /api/robots/left/connect
+21:20:55.623 [LEFT] program list · 7 programs
+21:20:55.668 [LEFT] global points · 2 point(s)
+21:20:56.314 [activity] operator:2f017e page: UI · Button action
+21:20:56.524 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:20:57.338 [RIGHT] read global speed ret=0 · not reported
+21:20:57.338 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+21:20:57.347 [RIGHT] read drag sensitivity ret=0 · 100 %
+21:20:58.131 [RIGHT] device check · controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 200 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 1000, 1000, 1000, 146, 967; feed: recorded on UDP port 8090 of this computer (192.168.1.20)
+21:20:58.132 [activity] operator:2f017e POST /api/robots/right/connect
+21:20:58.150 [RIGHT] read global speed ret=0 · not reported
+21:20:58.151 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+21:20:58.172 [RIGHT] read drag sensitivity ret=0 · 100 %
+21:20:58.363 [RIGHT] program list · 8 programs
+21:20:58.487 [LEFT] restore global speed {"pct": 50} ret=0
+21:20:58.569 [activity] operator:2f017e POST /api/robots/left/disconnect
+21:20:58.953 [RIGHT] device check · controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 200 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 1000, 1000, 1000, 146, 967; feed: recorded on UDP port 8090 of this computer (192.168.1.20)
+21:20:58.953 [activity] operator:2f017e POST /api/robots/right/connect
+21:20:58.998 [RIGHT] global points · 2 point(s)
+21:20:59.049 [RIGHT] restore global speed {"pct": 50} ret=0
+21:20:59.082 [activity] operator:2f017e POST /api/robots/right/disconnect
+21:20:59.268 [activity] operator:2f017e page: UI · Button action
+21:20:59.479 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:21:10.057 [LEFT] read global speed ret=0 · not reported
+21:21:10.057 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+21:21:10.064 [LEFT] read drag sensitivity ret=0 · 100 %
+21:21:10.306 [activity] operator:2f017e page: UI · Button action
+21:21:10.382 [LEFT] device check · controller: answers at 192.168.1.10:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 49 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 999, 997, 1000, 995, 480, 975; feed: recorded on UDP port 8089 of this computer (192.168.1.20)
+21:21:10.382 [activity] operator:2f017e POST /api/robots/left/connect
+21:21:10.519 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:21:11.046 [RIGHT] read global speed ret=0 · not reported
+21:21:11.046 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+21:21:11.053 [RIGHT] read drag sensitivity ret=0 · 100 %
+21:21:11.415 [RIGHT] device check · controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 200 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 1000, 1000, 1000, 146, 967; feed: recorded on UDP port 8090 of this computer (192.168.1.20)
+21:21:11.416 [activity] operator:2f017e POST /api/robots/right/connect
+21:21:12.467 [activity] operator:2f017e POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+21:21:13.267 [activity] operator:2f017e page: ROBOT · Button action
+21:21:13.477 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:21:13.844 [LEFT] run mode REAL
+21:21:13.864 [RIGHT] run mode REAL
+21:21:13.864 [activity] operator:2f017e POST /api/robots/mode
+21:21:14.682 [activity] operator:2f017e page: ROBOT · Button action
+21:21:14.823 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:21:15.429 [activity] operator:2f017e page: SYSTEM · Session active
+21:21:17.552 [activity] operator:2f017e page: UI · Button action
+21:21:17.997 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:21:21.654 [activity] operator:2f017e page: UI · Button action
+21:21:21.864 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:21:22.676 [activity] operator:2f017e page: NAVIGATION · Scrolled view
+21:21:45.429 [activity] operator:2f017e page: SYSTEM · Session active
+21:22:15.430 [activity] operator:2f017e page: SYSTEM · Session active
+21:22:45.430 [activity] operator:2f017e page: SYSTEM · Session active
+21:23:15.430 [activity] operator:2f017e page: SYSTEM · Session active
+21:23:40.797 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:23:40.948 [LEFT] program list · 7 programs
+21:23:41.234 [RIGHT] program list · 8 programs
+21:23:41.257 [LEFT] global points · 2 point(s)
+21:23:41.272 [RIGHT] global points · 2 point(s)
+21:23:41.469 [activity] operator:2f017e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT global points (as read from the controller), ALIX's plan of Close the lid and Open the lid and Open the seat (revised since).
+21:23:41.633 [activity] operator:2f017e page: UI · Button action
+21:23:41.844 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:23:42.866 [LEFT] program list · 7 programs
+21:23:42.978 [RIGHT] program list · 8 programs
+21:23:42.992 [LEFT] global points · 2 point(s)
+21:23:43.003 [RIGHT] global points · 2 point(s)
+21:23:43.169 [LEFT] program list · 7 programs
+21:23:43.180 [LEFT] global points · 2 point(s)
+21:23:43.204 [RIGHT] program list · 8 programs
+21:23:43.220 [RIGHT] global points · 2 point(s)
+21:23:43.221 [activity] operator:2f017e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+21:23:43.611 [activity] operator:2f017e page: ROBOT · Button action
+21:23:43.769 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:23:44.442 [LEFT] program list · 7 programs
+21:23:44.689 [RIGHT] program list · 8 programs
+21:23:44.705 [LEFT] global points · 2 point(s)
+21:23:44.718 [RIGHT] global points · 2 point(s)
+21:23:44.938 [LEFT] program list · 7 programs
+21:23:44.970 [LEFT] global points · 2 point(s)
+21:23:44.990 [RIGHT] program list · 8 programs
+21:23:45.005 [RIGHT] global points · 2 point(s)
+21:23:45.140 [activity] operator:2f017e page: ROBOT · Button action
+21:23:45.140 [activity] operator:2f017e page: SYSTEM · Session active
+21:23:45.294 [activity] operator:2f017e POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+21:23:45.313 [LEFT] run mode REAL
+21:23:45.334 [RIGHT] run mode REAL
+21:23:45.352 [activity] operator:2f017e PUT /api/projects/alix_mvbvk1fk_zti6s
+21:23:45.609 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/canfd/20261106_212345_LEFT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+21:23:45.610 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261106_212345_LEFT_s2_01_PART_1.frames.jsonl"} · recording
+21:23:45.633 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/canfd/20261106_212345_RIGHT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+21:23:45.634 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261106_212345_RIGHT_s2_01_PART_1.frames.jsonl"} · recording
+21:23:45.668 [LEFT] clear warning · clean
+21:23:45.669 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+21:23:45.670 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+21:23:45.675 [RIGHT] clear warning · clean
+21:23:45.676 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+21:23:45.676 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+21:23:45.682 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s
+21:23:45.689 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s
+21:23:45.704 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+21:23:45.704 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+21:23:45.708 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+21:23:45.709 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+21:23:45.735 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%
+21:23:45.742 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%
+21:23:46.953 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+21:23:46.954 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+21:23:46.954 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.2 s
+21:23:46.975 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+21:23:46.975 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.300 s)
+21:23:47.366 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+21:23:47.367 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+21:23:47.367 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.7 s
+21:23:47.384 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+21:23:47.384 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.715 s)
+21:23:47.941 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (0.955 s) · pole 200.0 -> 200.0 mm in 0.458 s, the hand moving meanwhile; hand [1000, 1000, 1000, 1000, 146, 979]
+21:23:48.288 [RIGHT] alix · push config restored to 192.168.1.20:8090 enable=False (ret=0)
+21:23:48.288 [RIGHT] alix · recorded 123 frames
+21:23:48.288 [RIGHT] s2 feed {"file": "20261106_212345_RIGHT_s2_01_PART_1.frames.jsonl"} · 123 frames
+21:23:48.368 [LEFT] pole and hand {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (0.976 s) · pole 49.0 -> 49.0 mm in 0.467 s, the hand moving meanwhile; hand [999, 997, 1000, 995, 481, 984]
+21:23:48.721 [LEFT] alix · push config restored to 192.168.1.20:8089 enable=False (ret=0)
+21:23:48.722 [LEFT] alix · recorded 145 frames
+21:23:48.722 [LEFT] s2 feed {"file": "20261106_212345_LEFT_s2_01_PART_1.frames.jsonl"} · 145 frames
+21:23:48.999 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/canfd/20261106_212348_LEFT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+21:23:48.999 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261106_212348_LEFT_s2_02_PART_2.frames.jsonl"} · recording
+21:23:49.003 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/canfd/20261106_212348_RIGHT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+21:23:49.003 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261106_212348_RIGHT_s2_02_PART_2.frames.jsonl"} · recording
+21:23:49.004 [LEFT] runner v14 · WORKFLOW START: 9 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+21:23:49.004 [RIGHT] runner v14 · WORKFLOW START: 9 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+21:23:49.004 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+21:23:49.004 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+21:23:49.040 [LEFT] runner v14 ·   01. PROGRAM: Program 1 1_1_L_P1_R01+R02+R03+R04_pole50_ // start/transit 30% // stored trajectory timing
+21:23:49.040 [LEFT] runner v14 ·   02. POLE: 200 mm
+21:23:49.040 [LEFT] runner v14 ·   03. PROGRAM: Program 2 2_2_L_P2_R05_PART1+R05_PART2_pol // start/transit 30% // stored trajectory timing
+21:23:49.041 [LEFT] runner v14 ·   04. HAND: 0,0,0,0,150,1000
+21:23:49.041 [LEFT] runner v14 ·   05. PROGRAM: Program 3 3_3_L_P2_R06_pole200_grip_7.2s_v // start/transit 30% // stored trajectory timing
+21:23:49.041 [LEFT] runner v14 ·   06. HAND: 1000,1000,1000,1000,0,1000
+21:23:49.041 [LEFT] runner v14 ·   07. PROGRAM: Program 4 4_4_L_P3_R07_PART1+R07_PART2_pol // start/transit 30% // stored trajectory timing
+21:23:49.041 [LEFT] runner v14 ·   08. HAND: 0,0,0,0,150,1000
+21:23:49.042 [LEFT] runner v14 ·   09. PROGRAM: Program 5 5_5_L_P3_R08+R09_PART1+R09_PART2 // start/transit 30% // stored trajectory timing
+21:23:49.046 [RIGHT] runner v14 ·   01. PROGRAM: Program 1 1_1_R_P1_R01_PART1+R01_PART2+R02 // start/transit 30% // stored trajectory timing
+21:23:49.046 [RIGHT] runner v14 ·   02. HAND: 0,0,0,0,150,1000
+21:23:49.047 [RIGHT] runner v14 ·   03. PROGRAM: Program 2 2_2_R_P2_R04_pole200_grip_7.6s_v // start/transit 30% // stored trajectory timing
+21:23:49.047 [RIGHT] runner v14 ·   04. HAND: 1000,1000,1000,1000,0,1000
+21:23:49.047 [RIGHT] runner v14 ·   05. PROGRAM: Program 3 3_3_R_P2_R05_pole200_cleaningpos // start/transit 30% // stored trajectory timing
+21:23:49.047 [RIGHT] runner v14 ·   06. POLE: 50 mm
+21:23:49.048 [RIGHT] runner v14 ·   07. PROGRAM: Program 4 4_4_1_R_P2_R06_pole50_cleaningpo // start/transit 30% // stored trajectory timing
+21:23:49.048 [RIGHT] runner v14 ·   08. HAND: 0,0,0,0,150,1000
+21:23:49.048 [RIGHT] runner v14 ·   09. PROGRAM: Program 5 5_5_R_P3_R07+R08_PART1+R08_PART2 // start/transit 30% // stored trajectory timing
+21:23:49.062 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+21:23:49.063 [LEFT] runner v14 · WORKFLOW STEP START 1/9: PROGRAM
+21:23:49.069 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+21:23:49.069 [RIGHT] runner v14 · WORKFLOW STEP START 1/9: PROGRAM
+21:23:49.101 [LEFT] runner v14 · WORKFLOW PROGRAM 1/9: slot 1 (1_1_L_P1_R01+R02+R03+R04_pole50_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+21:23:49.109 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/9: slot 1 (1_1_R_P1_R01_PART1+R01_PART2+R02) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+21:23:51.069 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 1/9: slot 1 // start ack 1.955 s
+21:23:52.103 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 1/9: slot 1 // start ack 1.598 s
+21:23:52.103 [-] start together {"rows": {"left": 5, "right": 5}, "programs": {"left": 1, "right": 1}, "delay": {"right": 0.0, "left": 1.379}, "played_apart_s": 1.035, "sent_apart_s": -1.379, "ack": {"right": 1.955, "left": 1.598}, "held_s": {"left": 1.387, "right": 0.0}} · Started together: LEFT row 5 (Program 1) and RIGHT row 5 (Program 1) began to play 1.03 s apart (RIGHT first); started 1.38 s apart (LEFT 1.38 s later for its shorter file read); their controllers read their files in LEFT 1.60 s, RIGHT 1.96 s.
+21:24:09.741 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/9: 18.677 s
+21:24:10.087 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/9: 17.827 s
+21:24:10.087 [RIGHT] runner v14 · ** WORKFLOW STOP REQUESTED
+21:24:10.088 [LEFT] runner v14 · ** WORKFLOW STOP REQUESTED
+21:24:10.092 [RIGHT] runner v14 ·   arm slow-stop ret=0
+21:24:10.099 [LEFT] runner v14 ·   arm slow-stop ret=0
+21:24:10.115 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+21:24:10.116 [RIGHT] workflow {"steps": 9, "overall_speed": 60, "restore_speed": 50} ret=1 (21.112 s) · WORKFLOW STOP REQUESTED
+21:24:10.118 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+21:24:10.118 [LEFT] workflow {"steps": 9, "overall_speed": 60, "restore_speed": 50} ret=1 (21.115 s) · WORKFLOW STOP REQUESTED
+21:24:10.509 [RIGHT] alix · push config restored to 192.168.1.20:8090 enable=False (ret=0)
+21:24:10.509 [RIGHT] alix · recorded 1062 frames
+21:24:10.509 [RIGHT] s2 feed {"file": "20261106_212348_RIGHT_s2_02_PART_2.frames.jsonl"} · 1062 frames
+21:24:10.527 [LEFT] alix · push config restored to 192.168.1.20:8089 enable=False (ret=0)
+21:24:10.527 [LEFT] alix · recorded 1062 frames
+21:24:10.527 [LEFT] s2 feed {"file": "20261106_212348_LEFT_s2_02_PART_2.frames.jsonl"} · 1062 frames
+21:24:10.574 [LEFT] restore global speed {"pct": 50} ret=0
+21:24:10.591 [RIGHT] restore global speed {"pct": 50} ret=0
+21:24:10.592 [activity] - job run cancelled: S2 Real Machine: both arms
+21:24:10.656 [LEFT] restore global speed {"pct": 50} ret=0
+21:24:10.671 [RIGHT] restore global speed {"pct": 50} ret=0
