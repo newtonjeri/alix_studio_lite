@@ -42,6 +42,7 @@ from pathlib import Path
 
 from ..motion import track
 from . import staging
+from .connection import ConnectionSettings, check_ip
 from .jobs import Jobs, UserError
 
 ARMS = ("left", "right")
@@ -68,12 +69,21 @@ ESTOP_STOP = ("INTERRUPTED — E-STOP: it did not finish.",
               "Release the E-stop and follow Recover. Nothing restarts by itself.")
 MODE_NAME = {"visual": "Visual sim", "hwsim": "Hardware sim", "real": "Real robot"}
 ESTOP_TEXT = {
-    "NOT_CONFIGURED": "IO3 not in E-stop mode: motion blocked",
+    "NOT_CONFIGURED": "E-stop input not in E-stop mode: motion blocked",
     "CLEAR": "E-stop released",
     "ENGAGED": "E-STOP PRESSED",
     "RECOVERING": "Recovering",
     "UNKNOWN": "E-stop unknown",
     "NOT_CONNECTED": "Not connected",
+}
+# A device that does not answer blocks every motion (the user, 6 Nov: "it means no execution should be done because it will
+# affect the motion quality"); robot_link judges each on its own, the Connection page's Test connection says why
+DEVICE_NAMES = {"hand": "hand", "pole": "lift pole"}
+DEVICE_HINTS = {
+    "hand": "Open Connection and press Test connection: it says whether the end's power, its RS485 or the hand itself is "
+            "the cause. Lite reads the hand again every few seconds and lets motion go once it answers.",
+    "pole": "Check the pole's cable and power at the controller (the vendor's app: Extension, Lift Control), then Test "
+            "connection on the Connection page.",
 }
 
 
@@ -81,6 +91,7 @@ class StandInArm:
     def __init__(self, side: str, store: Path):
         self.side = side
         self.ip = DEFAULT_IP[side]
+        self.estop_io = 3                       # the E-stop's input (the Connection page)
         self.connected = False
         self.estop = "NOT_CONNECTED"
         self.controller_mode = "SIM"
@@ -111,7 +122,7 @@ class StandInArm:
         by_stop = self.estop == "RECOVERING" and self.stop_latched
         return dict(side=self.side, ip=self.ip, connected=self.connected, estop=self.estop, stopped=by_stop,
                     estop_text="Stopped by STOP: press Recover" if by_stop else ESTOP_TEXT[self.estop],
-                    estop_io="IO3", controller_mode=self.controller_mode,
+                    estop_io=f"IO{self.estop_io}", controller_mode=self.controller_mode,
                     pole_mm=round(self.pole_mm), hand=list(self.hand), teaching=self.teaching,
                     teach_s=round(time.time() - self.teach_started, 1) if self.teaching else None,
                     recovery=self.recovery, recovery_note=self.recovery_note)
@@ -208,6 +219,12 @@ class StandInRobot:
         self._send_lock = threading.Lock()              # an upload's check and its start together (a double click sends once)
         self.arms = {s: StandInArm(s, Path(data_dir) / "standin" / f"{s}_programs.json") for s in ARMS}
         self.faults = {s: set() for s in ARMS}         # engineer test: {"pole", "hand"} fail to arrive
+        # each arm's connection details (the Connection page, connection.py): its address and the rest, used at every Connect
+        self.conn = ConnectionSettings(Path(data_dir) if data_dir else None)
+        for s in ARMS:
+            self.arms[s].ip, self.arms[s].estop_io = self.conn.arm(s)["ip"], self.conn.arm(s)["estop_io"]
+        self.device_report: dict = {}                   # side -> the last check of its devices (check_devices)
+        self._opened_with: dict = {}                    # side -> the connection details its link was opened with
         # the speed slider (the owner, 15 Oct): every MoveJ / MoveL Lite sends, both arms; and each arm's
         # controller speed found when it was connected, put back after every move and when Lite lets go
         self.speed_pct = staging.DEFAULT_MOVE_PCT        # 15 % until the operator moves the slider (the owner, 17 Oct)
@@ -255,9 +272,13 @@ class StandInRobot:
         from .robot_link import ArmLink
         from .robot_process import LinkProcess
 
+        c = self.conn.arm(side)
+        self._opened_with[side] = dict(c, ip=ip)     # what the link uses: a change saved later applies at the next Connect
+        opts = dict(estop_io=c["estop_io"], estop_active=c["estop_level"], feed_port=c["feed_port"])
         if LINK_PROCESS:
-            return LinkProcess(side, ip, kind=self.link_kind or "realman", on_read=lambda: self._sync(side), log=self.log)
-        return ArmLink(side, ip, on_read=lambda: self._sync(side))
+            return LinkProcess(side, ip, c["port"], kind=self.link_kind or "realman", on_read=lambda: self._sync(side), log=self.log,
+                               opts=opts)
+        return ArmLink(side, ip, c["port"], on_read=lambda: self._sync(side), **opts)
 
     def _measured(self, side: str) -> tuple:
         """The pole (mm) and the hand as they are now: read from a linked controller, else the stand-in's."""
@@ -357,8 +378,9 @@ class StandInRobot:
                 if self.link_kind and a.connected:
                     a.estop = "UNKNOWN"
                 return
-            fb = link.view()["feedback"]
-            self._report(side, fb)
+            v = link.view()
+            fb = v["feedback"]
+            self._report(side, fb, v.get("devices") or {})
             live = fb.get("estop", "UNKNOWN")
             if link.emulated and self.test_estop.get(side):
                 live = "ENGAGED"
@@ -383,9 +405,9 @@ class StandInRobot:
         if now:
             self._alert(level, side, text, hint, what)
 
-    def _report(self, side: str, fb: dict) -> None:
+    def _report(self, side: str, fb: dict, devices: dict | None = None) -> None:
         """What a linked controller's feedback says that the operator must see: its error codes, a
-        link that stopped reading, IO3 not in E-stop mode."""
+        link that stopped reading, the E-stop input not in E-stop mode, a hand or a pole that does not answer."""
         from .robot_link import STALE_S, error_text
 
         errs = tuple(fb.get("errors") or ())
@@ -397,9 +419,16 @@ class StandInRobot:
         self._once(side, "link", "stale" if stale else None, "warn",
                    "No fresh reading from the controller: robot motion is blocked.",
                    "Check the controller's power and cable; Lite reconnects by itself when it answers.")
+        io = f"IO{self.arms[side].estop_io}"
         self._once(side, "io3", fb.get("estop") if fb.get("estop") == "NOT_CONFIGURED" else None, "error",
-                   "IO3 is not in the controller's E-stop mode (5): its E-stop button would not stop the arm.",
-                   "An engineer sets IO3 to mode 5 at the pendant. Motion stays blocked until then.")
+                   f"{io} is not in the controller's E-stop mode (5): its E-stop button would not stop the arm.",
+                   f"Set {io} to mode 5 at the pendant, or enter the E-stop's input on the Connection page. Motion stays blocked until then.")
+        for name in DEVICE_HINTS:                       # each device on its own (the user, 6 Nov)
+            d = (devices or {}).get(name) or {}
+            why = (d.get("why") or "no reply") if d.get("ok") is False else None
+            self._once(side, name, why, "error",
+                       f"The {side.upper()} {DEVICE_NAMES[name]} does not answer: {why}. Robot motion is blocked on both arms until it answers.",
+                       DEVICE_HINTS[name])
 
     # ── state
     def view(self) -> dict:
@@ -410,6 +439,9 @@ class StandInRobot:
             if s in self.links:
                 out[s]["link"] = self.links[s].view()
                 out[s]["quality"] = out[s]["link"]["quality"]
+                out[s]["devices"] = out[s]["link"].get("devices") or {}
+            if self.device_report.get(s):
+                out[s]["check"] = self.device_report[s]
             elif s in self._recovering:                 # given up: a call never came back; connected again within CONNECT_WAIT_S
                 out[s]["quality"] = dict(level="none", text="connecting again: a call to its controller never came back")
             else:                                       # the arm indicator (the owner, 17 Oct): no controller linked
@@ -424,16 +456,61 @@ class StandInRobot:
 
     def motion_block(self) -> str | None:
         """Why motion is refused right now, in plain words (None = allowed)."""
+        why = self._block()
+        return why[0] if why else None
+
+    def motion_block_hint(self) -> str:
+        """What to do about motion_block's reason."""
+        why = self._block()
+        return why[1] if why else ""
+
+    def motion_block_kind(self) -> str | None:
+        """What blocks motion: "estop" (STOP held, the E-stop pressed, recovering, not in its mode or unreadable), "device"
+        (a hand or a pole that does not answer), None."""
+        why = self._block()
+        return (why[2] if len(why) > 2 else "estop") if why else None
+
+    def _block(self) -> tuple | None:
+        """(why, what to do) motion is refused: STOP held, the E-stop pressed, recovering or not in its mode; then a hand
+        or a pole that does not answer (the user, 6 Nov: no execution then); then an E-stop that cannot be read (named
+        last: a slow device was its cause on 6 Nov, and the device is what needs looking at)."""
         for s in self.links:
             self._sync(s)
+        estop_hint = "Release the E-stop button, then press Recover."
         for s, a in self.arms.items():
             if a.connected and a.estop == "RECOVERING" and a.stop_latched:
                 return (f"The {s.upper()} arm was stopped by STOP. Robot motion is blocked on both arms "
-                        "until you press Recover.")
+                        "until you press Recover.", "Press Recover once the cell is safe.")
+            if a.connected and a.estop in ("ENGAGED", "RECOVERING", "NOT_CONFIGURED"):
+                return (f"The {s.upper()} arm's E-stop is {ESTOP_TEXT[a.estop].lower()}. "
+                        "Robot motion is blocked on both arms until it is released and recovered.", estop_hint)
+        silent = self.silent_devices()
+        if silent:
+            side, name, why = silent[0]
+            return (f"The {side.upper()} {DEVICE_NAMES[name]} does not answer: {why}. Robot motion is blocked on both arms "
+                    "until it answers.", DEVICE_HINTS[name], "device")
+        for s, a in self.arms.items():
             if a.connected and a.estop != "CLEAR":
                 return (f"The {s.upper()} arm's E-stop is {ESTOP_TEXT[a.estop].lower()}. "
-                        "Robot motion is blocked on both arms until it is released and recovered.")
+                        "Robot motion is blocked on both arms until it is released and recovered.", estop_hint)
         return None
+
+    def silent_devices(self) -> list:
+        """[(side, "hand" | "pole", why)] for each linked arm's device that does not answer (robot_link judges them)."""
+        out = []
+        for s in ARMS:
+            link = self.links.get(s)
+            if link is None or not self.arms[s].connected:
+                continue
+            try:
+                devs = link.view().get("devices") or {}
+            except Exception:                                                   # noqa: BLE001
+                continue
+            for name in DEVICE_NAMES:
+                d = devs.get(name) or {}
+                if d.get("ok") is False:
+                    out.append((s, name, d.get("why") or "no reply"))
+        return out
 
     def busy(self) -> str | None:
         """What is moving (or being taught) right now, on either arm; None when nothing is."""
@@ -453,9 +530,9 @@ class StandInRobot:
         for s in sides:
             if not self.arm(s).connected:
                 raise UserError(f"The {s.upper()} arm is not connected.", "Connect it from the bar at the top.")
-        why = self.motion_block()
+        why = self._block()
         if why:
-            raise UserError(why, "Release the E-stop button, then press Recover.")
+            raise UserError(why[0], why[1])
         if self.switching:
             raise UserError(f"The controllers are switching to {self.switching}.", "Try again in a moment.", code="busy")
         teaching = [a.side for a in self.arms.values() if a.teaching]
@@ -821,8 +898,10 @@ class StandInRobot:
                     "moving.", None, "stuck")
 
     def connect(self, side: str, ip: str | None = None) -> dict:
+        """The arm's controller linked (at ``ip``, else its saved address), then each of its devices checked on its own
+        (check_devices). An address that answers is saved for the next start (connection.py)."""
         a = self.arm(side)
-        target = (ip or a.ip).strip()
+        target = check_ip((ip or a.ip).strip(), f"The {side.upper()} controller's address")
         if self.link_kind:
             if side in self.links:                       # its old link is closed below: not under a running job
                 stuck = self._stuck(self.links[side])
@@ -842,11 +921,18 @@ class StandInRobot:
                     old = self.links.get(side)
                     self.links[side] = new
                     a.ip, a.connected = target, True
+                    a.estop_io = self._opened_with.get(side, {}).get("estop_io", a.estop_io)
                 if old is not None:
                     old.close()
+                if target != self.conn.arm(side)["ip"]:
+                    try:
+                        self.conn.update(side, {"ip": target})
+                    except UserError as exc:
+                        self._alert("warn", side, f"{side.upper()} connected at {target}, but the address was not saved: {exc}")
                 self._sync(side)
                 self._read_speed(side)
                 self._read_sensitivity(side)
+                self._check_quietly(side)
                 if self.mode in ("hwsim", "real"):      # connected in Hardware sim or Real: its controller follows
                     try:
                         self.set_controller_modes(self.mode, [side])
@@ -861,6 +947,44 @@ class StandInRobot:
             a.ip, a.connected = target, True
             a.estop = "ENGAGED" if a.button_pressed else "RECOVERING" if a.estop_latched else "CLEAR"
         return a.view()
+
+    def check_devices(self, side: str) -> dict:
+        """Each device of a linked arm asked on its own (the Connection page's Test connection; robot_link.ArmLink.
+        check_devices): the controller, the E-stop input, the pole, the hand, and its feed's port. Never while a command
+        holds the controller."""
+        link = self.links.get(side)
+        if link is None or not self.arm(side).connected:
+            raise UserError(f"The {side.upper()} arm is not connected to its controller.",
+                            "Connect it first: the check asks the controller about each device.", code="connect")
+        self._refuse_if_busy(side, "check its devices")
+        report = link.check_devices()
+        self.device_report[side] = report
+        if self.log is not None:
+            self.log.hardware(side, "device check", ok=report.get("ok"),
+                              text="; ".join(f"{r['device']}: {r['text']}" for r in report.get("rows") or []))
+        self._sync(side)
+        return report
+
+    def _check_quietly(self, side: str) -> None:
+        """The check at Connect: what it finds is alerted (the link's devices) and kept for the page; a check that cannot
+        be made never keeps the arm from connecting."""
+        try:
+            self.check_devices(side)
+        except Exception as exc:                                                # noqa: BLE001
+            self._alert("warn", side, f"{side.upper()} connected, but its devices were not checked: {exc}",
+                        "Press Test connection on the Connection page.", "devices")
+
+    def set_connection(self, side: str, changes: dict) -> dict:
+        """One arm's connection details saved (connection.py). They apply at its next Connect: a linked arm keeps its
+        connection (``pending`` says so)."""
+        new = self.conn.update(side, changes)
+        a = self.arm(side)
+        with self.lock:
+            linked = a.connected and side in self.links
+            pending = bool(linked and self._opened_with.get(side) != new)
+            if not linked:
+                a.ip, a.estop_io = new["ip"], new["estop_io"]
+        return dict(arm=side, saved=new, pending=pending)
 
     def set_controller_modes(self, mode: str, sides=None) -> dict:
         """Hardware sim puts each linked controller in its SIM mode and Real in its REAL mode, read back (the
@@ -912,6 +1036,11 @@ class StandInRobot:
             self.jobs.cancel_arm(side)
             link = self.links.pop(side, None)
             a.connected, a.estop, a.teaching = False, "NOT_CONNECTED", False   # the latch is kept
+            self.device_report.pop(side, None)
+            for name in DEVICE_NAMES:                   # judged again at the next Connect, and said again if still silent
+                self._seen.pop((side, name), None)
+            saved = self.conn.arm(side)                 # details saved while it was linked apply from now
+            a.ip, a.estop_io = saved["ip"], saved["estop_io"]
         if link is not None:
             link.close()
         return a.view()
@@ -954,8 +1083,11 @@ class StandInRobot:
         self._sync(side)
         with self.lock:
             if a.estop in ("UNKNOWN", "NOT_CONFIGURED"):
-                raise UserError(f"The {side.upper()} arm's E-stop input reads {a.estop.replace('_', ' ').lower()}.",
-                                "Lite needs IO3 readable and in the controller's E-stop mode (5) before motion.")
+                silent = [f"its {DEVICE_NAMES[n]} does not answer ({why})" for s, n, why in self.silent_devices() if s == side]
+                raise UserError(f"The {side.upper()} arm's E-stop input reads {a.estop.replace('_', ' ').lower()}"
+                                + (f"; {'; '.join(silent)}" if silent else "") + ".",
+                                f"Lite needs IO{a.estop_io} readable and in the controller's E-stop mode (5) before motion. "
+                                "Open Connection and press Test connection: it checks each device on its own.")
             if a.estop == "ENGAGED" or a.button_pressed:
                 raise UserError("The E-stop button is still pressed.", "Make the cell safe, then release the button.")
             a.estop_latched = a.stop_latched = False
@@ -1235,9 +1367,9 @@ class StandInRobot:
                 job.sleep(min(0.1, left))
             with self.lock:
                 self._same_mode(mode, "drag teaching did not start")
-                why = self.motion_block()
+                why = self._block()
                 if why:
-                    raise UserError(why, "Release the E-stop button, then press Recover.")
+                    raise UserError(why[0], why[1])
                 self._teach_ready(side, setup)
                 a.teaching, a.teach_started = True, time.time()
                 a.teach_stage = setup

@@ -14,7 +14,8 @@ const MODES = [
   ['real', 'Real robot', 'The arms, the pole and the hand move. Keep the area clear and the E-stop buttons within reach.'],
 ];
 const ESTOP = { CLEAR: 'Clear', ENGAGED: 'E-STOP PRESSED', RECOVERING: 'Released: press Recover', UNKNOWN: 'Unknown: motion blocked',
-  NOT_CONFIGURED: 'IO3 not in E-stop mode: motion blocked', NOT_CONNECTED: 'Not connected' };
+  NOT_CONFIGURED: 'E-stop input not in E-stop mode: motion blocked', NOT_CONNECTED: 'Not connected' };
+const DEVICE_NAMES = { pole: 'Pole', hand: 'Hand' };
 
 let box = null, timer = null;
 const errSaid = { left: '', right: '' };          // each controller's errors as last read or cleared here
@@ -36,13 +37,29 @@ async function errors(side, clear) {
 function liveRows(link) {
   const f = link.feedback || {};
   const deg = (q) => (q ? q.map((v) => `${Number(v).toFixed(1)}°`).join(' ') : 'not read');
+  const n = `IO${(f.io3 && f.io3.io) || link.estop_io || 3}`;
   const io = f.io3 && f.io3.emulated ? 'emulated (no IO)'
-    : f.io3 && f.io3.mode != null ? `IO3 mode ${f.io3.mode}, level ${f.io3.level} (${f.io3.pressed ? 'pressed' : 'released'})` : 'IO3 not read';
+    : f.io3 && f.io3.mode != null ? `${n} mode ${f.io3.mode}, level ${f.io3.level} (${f.io3.pressed ? 'pressed' : 'released'})` : `${n} not read`;
+  const silent = (name) => (link.devices?.[name]?.ok === false ? 'NOT ANSWERING' : null);
   return el('div', { class: 'lite-arm-live' },
     el('small', { text: `${link.emulated ? 'Emulated controller' : 'Controller'} ${link.ip}:${link.port} · `
       + (f.busy ? `now: ${f.busy} (only the E-stop is read meanwhile)` : `updated ${f.age_s ?? '?'} s ago`) }),
     el('small', { text: `Arm ${deg(f.joints_deg)} · errors ${f.errors ? (f.errors.length ? f.errors.join(', ') : 'none') : 'not read'} · run mode ${f.run_mode || 'not read'}` }),
-    el('small', { text: `Pole ${f.pole_mm != null ? `${f.pole_mm} mm` : 'not read'} · hand ${f.hand ? f.hand.join(', ') : 'not read'} · E-stop ${io}` }));
+    el('small', { text: `Pole ${silent('pole') || (f.pole_mm != null ? `${f.pole_mm} mm` : 'not read')} · hand `
+      + `${silent('hand') || (f.hand ? f.hand.join(', ') : 'not read')} · E-stop ${io}` }));
+}
+
+// Each device of a linked arm on its own (the user, 6 Nov): which one does not answer, and why; the Connection page
+// asks them all again (Test connection).
+function deviceLine(side, a) {
+  const devs = a.devices || {};
+  const bad = Object.entries(devs).filter(([, d]) => d && d.ok === false);
+  if (!a.link) return null;
+  return el('div', { class: 'lite-arm-devices' },
+    bad.length
+      ? bad.map(([name, d]) => el('div', { class: 'fail', text: `${side.toUpperCase()} ${(DEVICE_NAMES[name] || name).toLowerCase()} does not answer: ${d.why || 'no reply'}. Motion is blocked until it answers.` }))
+      : el('span', { text: `Pole ${devs.pole?.ok ? 'answers' : 'not judged yet'} · Hand ${devs.hand?.ok ? 'answers' : 'not judged yet'}` }),
+    el('button', { class: 'btn light', type: 'button', text: 'Connection…', onclick: () => document.dispatchEvent(new Event('lite:open-connection')) }));
 }
 
 async function render() {
@@ -63,7 +80,7 @@ async function render() {
     return el('div', { class: `lite-arm-row ${side}` },
       el('div', {}, el('span', { class: `badge ${side === 'left' ? 'blue' : 'orange'}`, text: `${side.toUpperCase()} RM75` }), ip),
       el('div', { class: 'lite-arm-state' }, el('span', { class: `lite-dot ${a.connected ? 'on' : ''}` }), a.connected ? 'Connected' : 'Not connected'),
-      el('div', { class: `lite-estop ${a.estop}`, title: 'E-stop input IO3' },
+      el('div', { class: `lite-estop ${a.estop}`, title: `E-stop input ${a.estop_io || 'IO3'}` },
         a.stopped ? 'Stopped by STOP: press Recover' : `E-stop: ${ESTOP[a.estop] || a.estop}`),
       a.connected && !a.link ? el('small', { class: 'lite-arm-readback', text: `Pole ${a.pole_mm} mm · hand ${a.hand.join(', ')}`
         + (a.faults && a.faults.length ? ` · test fault: ${a.faults.join(' and ')} will not arrive` : '') }) : null,
@@ -76,7 +93,8 @@ async function render() {
         a.link ? el('button', { class: 'btn light', text: 'Read errors', onclick: () => errors(side, false) }) : null,
         a.link ? el('button', { class: 'btn light', text: 'Clear errors', onclick: () => errors(side, true) }) : null),
       a.link && errSaid[side] ? el('small', { class: 'lite-arm-errors', text: errSaid[side] }) : null,
-      a.link ? liveRows(a.link) : null);
+      deviceLine(side, a),
+      a.link ? liveRows({ ...a.link, devices: a.devices }) : null);
   }));
   // both arms at once (the owner, 14 Oct); each still uses the address in its own row
   const sides = ['left', 'right'];

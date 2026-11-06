@@ -190,6 +190,7 @@ def robots_status(app, q, body, m):
     return {"mode": app.ui["mode"], "mode_text": MODE_TEXT[app.ui["mode"]], "arms": app.robot.view(),
             "camera": mechanism.kit(app.robot).camera.status(),          # the wrist camera's circle in the top bar
             "backend": app.robot.backend, "label": app.robot.label, "motion_block": app.robot.motion_block(),
+            "motion_block_kind": app.robot.motion_block_kind(),          # the top bar: E-STOP, or a device named
             "jobs": [j.view() for j in app.jobs.running()], "speed": app.robot.speed_view(),
             "sensitivity": app.robot.sensitivity_view(), "feed_ms": getattr(app, "feed_ms", None),
             "alerts": app.log.alerts_view(), "instance": app.log.instance}
