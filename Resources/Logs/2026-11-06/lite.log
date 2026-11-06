@@ -546,3 +546,1131 @@
 17:07:48.799 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
 17:07:49.942 [LEFT] restore global speed {"pct": 50} ret=0
 17:07:49.952 [RIGHT] restore global speed {"pct": 50} ret=0
+17:51:23.812 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+17:51:23.866 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+17:51:23.867 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+17:51:26.438 [activity] - page: NAVIGATION · Open screen
+17:51:26.438 [activity] - page: SYSTEM · ASL frontend initialized
+17:51:26.667 [RIGHT] camera · perception warmed up in 5.5 s: its core built, the colour model loaded
+17:51:37.289 [activity] - POST /api/auth/login
+17:51:38.100 [activity] operator:7241c8 page: AUTH · Operator login
+17:51:38.100 [activity] operator:7241c8 page: NAVIGATION · Open screen
+17:51:38.100 [activity] operator:7241c8 page: AUTH · Setting changed
+17:51:39.642 [activity] operator:7241c8 page: PROJECT · Button action
+17:51:39.652 [activity] operator:7241c8 page: NAVIGATION · Task loaded
+17:51:39.658 [activity] operator:7241c8 page: SETUP · Arm selected
+17:51:39.661 [activity] operator:7241c8 page: NAVIGATION · Teaching stage changed
+17:51:39.669 [activity] operator:7241c8 page: SETUP · Arm selected
+17:51:39.679 [activity] operator:7241c8 page: NAVIGATION · Open screen
+17:51:43.656 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+17:51:43.856 [activity] operator:7241c8 page: SYSTEM · 3D device
+17:51:53.185 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:53.536 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:51:54.535 [activity] operator:7241c8 page: UI · Button action
+17:51:54.599 [LEFT] read global speed ret=0 · not reported
+17:51:54.600 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+17:51:54.608 [LEFT] read drag sensitivity ret=0 · 100 %
+17:51:54.609 [activity] operator:7241c8 POST /api/robots/left/connect
+17:51:55.019 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:55.038 [LEFT] program list · 7 programs
+17:51:55.055 [LEFT] global points · 1 point(s)
+17:51:55.493 [RIGHT] read global speed ret=0 · not reported
+17:51:55.493 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+17:51:55.498 [RIGHT] read drag sensitivity ret=0 · 100 %
+17:51:55.498 [activity] operator:7241c8 POST /api/robots/right/connect
+17:51:55.558 [RIGHT] program list · 8 programs
+17:51:55.587 [RIGHT] global points · 1 point(s)
+17:51:56.705 [activity] operator:7241c8 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+17:51:57.505 [activity] operator:7241c8 page: ROBOT · Button action
+17:51:57.716 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:51:57.988 [LEFT] run mode REAL
+17:51:58.023 [RIGHT] run mode REAL
+17:51:58.256 [activity] operator:7241c8 POST /api/robots/mode
+17:51:58.699 [activity] operator:7241c8 page: ROBOT · Button action
+17:51:58.911 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:00.482 [activity] operator:7241c8 page: UI · Button action
+17:52:00.692 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:05.936 [activity] operator:7241c8 page: UI · Button action
+17:52:06.149 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:08.254 [activity] operator:7241c8 page: SYSTEM · Session active
+17:52:09.472 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:52:11.041 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:14.934 [LEFT] program list · 7 programs
+17:52:14.946 [LEFT] global points · 1 point(s)
+17:52:14.986 [RIGHT] program list · 8 programs
+17:52:15.010 [activity] operator:7241c8 page: ROBOT · Button action
+17:52:15.011 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:52:15.011 [activity] operator:7241c8 page: UI · Button action
+17:52:15.019 [RIGHT] global points · 1 point(s)
+17:52:15.220 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:15.267 [LEFT] program list · 7 programs
+17:52:15.274 [RIGHT] program list · 8 programs
+17:52:15.289 [LEFT] global points · 1 point(s)
+17:52:15.326 [RIGHT] global points · 1 point(s)
+17:52:16.017 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:26.799 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:52:27.207 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:52:31.568 [activity] operator:7241c8 page: SYSTEM · Application hidden
+17:54:00.097 [activity] operator:7241c8 page: SYSTEM · Application visible
+17:54:03.351 [RIGHT] program list · 8 programs
+17:54:03.369 [RIGHT] global points · 2 point(s)
+17:54:03.391 [LEFT] program list · 7 programs
+17:54:03.410 [LEFT] global points · 2 point(s)
+17:54:04.095 [activity] operator:7241c8 page: UI · Button action
+17:54:04.095 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:54:04.174 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:54:04.466 [RIGHT] program list · 8 programs
+17:54:04.478 [LEFT] program list · 7 programs
+17:54:04.481 [RIGHT] global points · 2 point(s)
+17:54:04.496 [LEFT] global points · 2 point(s)
+17:54:04.913 [activity] operator:7241c8 page: ROBOT · Button action
+17:54:05.125 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:54:08.101 [activity] operator:7241c8 page: SYSTEM · Session active
+17:54:08.101 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:54:11.540 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:54:14.571 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:54:38.102 [activity] operator:7241c8 page: SYSTEM · Session active
+17:54:41.387 [activity] operator:7241c8 page: SYSTEM · Application hidden
+17:54:45.039 [activity] operator:7241c8 page: SYSTEM · Application visible
+17:54:48.743 [LEFT] program list · 7 programs
+17:54:48.862 [RIGHT] program list · 8 programs
+17:54:48.900 [LEFT] global points · 2 point(s)
+17:54:48.918 [RIGHT] global points · 2 point(s)
+17:54:49.117 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT global points (as read from the controller), ALIX's plan of Open the lid (revised since).
+17:54:49.318 [activity] operator:7241c8 page: UI · Button action
+17:54:49.318 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:54:49.526 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:54:50.882 [LEFT] program list · 7 programs
+17:54:51.065 [RIGHT] program list · 8 programs
+17:54:51.077 [LEFT] global points · 2 point(s)
+17:54:51.100 [RIGHT] global points · 2 point(s)
+17:54:51.446 [LEFT] program list · 7 programs
+17:54:51.483 [LEFT] global points · 2 point(s)
+17:54:51.533 [RIGHT] program list · 8 programs
+17:54:51.554 [RIGHT] global points · 2 point(s)
+17:54:51.664 [activity] operator:7241c8 page: ROBOT · Button action
+17:54:51.665 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+17:54:51.774 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:54:54.249 [LEFT] program list · 7 programs
+17:54:54.416 [RIGHT] program list · 8 programs
+17:54:54.436 [LEFT] global points · 2 point(s)
+17:54:54.489 [RIGHT] global points · 2 point(s)
+17:54:54.698 [LEFT] program list · 7 programs
+17:54:54.728 [LEFT] global points · 2 point(s)
+17:54:54.775 [RIGHT] program list · 8 programs
+17:54:54.805 [RIGHT] global points · 2 point(s)
+17:54:54.938 [activity] operator:7241c8 page: ROBOT · Button action
+17:54:55.221 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:54:55.238 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+17:54:55.302 [LEFT] run mode REAL
+17:54:55.321 [RIGHT] run mode REAL
+17:54:55.588 [RIGHT] clear warning · clean
+17:54:55.600 [RIGHT] alix · rest: movej to the plan's caller at speed 50 of a 100 % global ratio
+17:54:57.529 [RIGHT] alix · global speed restored to 50 (ret=0)
+17:54:57.535 [RIGHT] move to pose {"deg": [32.0, -96.0, 10.0, 112.0, -25.0, 60.0, -14.0], "speed": 50, "restore_speed": 50} · gap 0.220001220703125 deg
+17:54:59.878 [RIGHT] camera · camera open: Intel RealSense D435 346522072748, depth 848x480 (fx 430.7, scale 1 mm), colour 1280x720 (fx 907.2); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+17:55:05.242 [RIGHT] camera · gap_check: cannot judge: parts (depth): the lid cannot be judged (the commode not found within 120 mm and 45 mm of its scene place (the search went to +450 / +445 / -78 mm)); no colour model or frame: the depth alone (the commode searched for: at the plans' place cannot judge)
+17:55:05.434 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_175505_250_gap_check_lid_closed_refused.json
+17:55:06.947 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:55:08.102 [activity] operator:7241c8 page: SYSTEM · Session active
+17:55:09.971 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:55:10.079 [RIGHT] camera · gap_check: cannot judge: parts (depth): the lid cannot be judged (the commode not found within 120 mm and 45 mm of its scene place (the search went to +430 / +436 / -79 mm)); no colour model or frame: the depth alone (the commode searched for: at the plans' place cannot judge)
+17:55:10.251 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_175510_079_gap_check_lid_closed_refused.json
+17:55:12.755 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:12.976 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:55:15.747 [activity] operator:7241c8 POST /api/robots/stop-both
+17:55:15.781 [RIGHT] camera · gap_check: cannot judge: parts (depth): the lid cannot be judged (the commode not found within 120 mm and 45 mm of its scene place (the search went to +465 / +465 / -80 mm)); no colour model or frame: the depth alone (the commode searched for: at the plans' place cannot judge)
+17:55:15.819 [LEFT] restore global speed {"pct": 50} ret=0
+17:55:15.828 [RIGHT] restore global speed {"pct": 50} ret=0
+17:55:15.829 [activity] - job run cancelled: S2 Real Machine: both arms
+17:55:15.913 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_175515_781_gap_check_lid_closed_refused.json
+17:55:16.170 [activity] operator:7241c8 page: SAFETY · Button action
+17:55:16.170 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:55:16.280 [RIGHT] camera · camera closed
+17:55:16.384 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:20.037 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:55:20.285 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: The RIGHT sequence has a lid or seat task or an INSPECT, which uses both arms.
+17:55:21.086 [activity] operator:7241c8 page: SEQUENCE · Button action
+17:55:21.296 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:29.231 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:30.216 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:55:34.590 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:55:35.709 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:38.102 [activity] operator:7241c8 page: SYSTEM · Session active
+17:55:38.355 [activity] operator:7241c8 POST /api/robots/left/recover
+17:55:38.658 [LEFT] restore global speed {"pct": 50} ret=0
+17:55:38.718 [activity] operator:7241c8 POST /api/robots/left/disconnect
+17:55:39.155 [activity] operator:7241c8 page: UI · Button action
+17:55:39.156 [activity] operator:7241c8 page: UI · Button action
+17:55:39.659 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:40.601 [LEFT] read global speed ret=0 · not reported
+17:55:40.602 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+17:55:40.610 [LEFT] read drag sensitivity ret=0 · 100 %
+17:55:40.643 [LEFT] run mode REAL
+17:55:40.945 [activity] operator:7241c8 page: UI · Button action
+17:55:40.945 [activity] operator:7241c8 POST /api/robots/left/connect
+17:55:40.990 [LEFT] program list · 7 programs
+17:55:41.009 [LEFT] global points · 2 point(s)
+17:55:41.011 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:41.962 [activity] operator:7241c8 POST /api/robots/right/recover
+17:55:42.762 [activity] operator:7241c8 page: UI · Button action
+17:55:42.974 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:44.254 [activity] operator:7241c8 page: UI · Button action
+17:55:44.466 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:48.815 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: The RIGHT sequence has a lid or seat task or an INSPECT, which uses both arms.
+17:55:49.410 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:55:49.410 [activity] operator:7241c8 page: SEQUENCE · Button action
+17:55:49.827 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:55:56.715 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:08.040 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:08.040 [activity] operator:7241c8 page: SYSTEM · Session active
+17:56:11.046 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:12.536 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: The LEFT sequence has a lid or seat task or an INSPECT, which uses both arms.
+17:56:13.335 [activity] operator:7241c8 page: SEQUENCE · Button action
+17:56:13.336 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:13.551 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:17.863 [LEFT] program list · 7 programs
+17:56:17.964 [RIGHT] program list · 8 programs
+17:56:17.988 [LEFT] global points · 2 point(s)
+17:56:18.000 [RIGHT] global points · 2 point(s)
+17:56:18.147 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT global points (as read from the controller), ALIX's plan of Open the lid (revised since).
+17:56:18.406 [activity] operator:7241c8 page: UI · Button action
+17:56:18.406 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:18.616 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:19.656 [LEFT] program list · 7 programs
+17:56:19.759 [RIGHT] program list · 8 programs
+17:56:19.781 [LEFT] global points · 2 point(s)
+17:56:19.796 [RIGHT] global points · 2 point(s)
+17:56:19.981 [LEFT] program list · 7 programs
+17:56:20.006 [LEFT] global points · 2 point(s)
+17:56:20.067 [RIGHT] program list · 8 programs
+17:56:20.093 [RIGHT] global points · 2 point(s)
+17:56:20.412 [activity] operator:7241c8 page: ROBOT · Button action
+17:56:20.421 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+17:56:20.546 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:22.175 [LEFT] program list · 7 programs
+17:56:22.298 [RIGHT] program list · 8 programs
+17:56:22.307 [LEFT] global points · 2 point(s)
+17:56:22.338 [RIGHT] global points · 2 point(s)
+17:56:22.537 [LEFT] program list · 7 programs
+17:56:22.557 [LEFT] global points · 2 point(s)
+17:56:22.576 [RIGHT] program list · 8 programs
+17:56:22.588 [RIGHT] global points · 2 point(s)
+17:56:22.718 [activity] operator:7241c8 page: ROBOT · Button action
+17:56:22.958 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:23.056 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+17:56:23.078 [LEFT] run mode REAL
+17:56:23.101 [RIGHT] run mode REAL
+17:56:23.352 [RIGHT] clear warning · clean
+17:56:23.359 [RIGHT] move to pose {"deg": [32.0, -96.0, 10.0, 112.0, -25.0, 60.0, -14.0], "speed": 50, "restore_speed": 50} · already there: 0.00 deg away (within 0.5), nothing sent
+17:56:23.881 [RIGHT] camera · camera open: Intel RealSense D435 346522072748, depth 848x480 (fx 430.7, scale 1 mm), colour 1280x720 (fx 907.2); spatial filter, temporal filter, depth aligned to colour (ALIX's d435.yaml)
+17:56:28.929 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:29.227 [RIGHT] camera · gap_check: cannot judge: parts (depth): the lid cannot be judged (the commode not found within 120 mm and 45 mm of its scene place (the search went to +493 / +500 / -80 mm)); no colour model or frame: the depth alone (the commode searched for: at the plans' place cannot judge)
+17:56:29.382 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_175629_227_gap_check_lid_closed_refused.json
+17:56:31.951 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:34.537 [RIGHT] camera · gap_check: cannot judge: parts (depth): the lid cannot be judged (the commode not found within 120 mm and 45 mm of its scene place (the search went to +445 / +455 / -78 mm)); no colour model or frame: the depth alone (the commode searched for: at the plans' place cannot judge)
+17:56:34.720 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_175634_553_gap_check_lid_closed_refused.json
+17:56:34.958 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:36.395 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:37.769 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:56:37.770 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+17:56:38.102 [activity] operator:7241c8 page: SYSTEM · Session active
+17:56:38.102 [activity] operator:7241c8 page: UI · Button action
+17:56:38.522 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:39.236 [RIGHT] camera · gap_check: cannot judge: parts (depth): the lid cannot be judged (the commode not found within 120 mm and 45 mm of its scene place (the search went to +446 / +451 / -78 mm)); no colour model or frame: the depth alone (the commode searched for: at the plans' place cannot judge)
+17:56:39.389 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_175639_237_gap_check_lid_closed_refused.json
+17:56:39.561 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:40.802 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:41.324 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:44.399 [RIGHT] camera · gap_check: cannot judge: parts (depth): the lid cannot be judged (the commode not found within 120 mm and 45 mm of its scene place (the search went to +490 / +484 / -80 mm)); no colour model or frame: the depth alone (the commode searched for: at the plans' place cannot judge)
+17:56:44.428 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:44.543 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_175644_400_gap_check_lid_closed_refused.json
+17:56:48.274 [activity] operator:7241c8 POST /api/robots/stop-both
+17:56:48.724 [activity] operator:7241c8 page: SAFETY · Button action
+17:56:48.938 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:56:49.577 [RIGHT] camera · gap_check: cannot judge: parts (depth): the lid cannot be judged (the commode not found within 120 mm and 45 mm of its scene place (the search went to +465 / +461 / -80 mm)); no colour model or frame: the depth alone (the commode searched for: at the plans' place cannot judge)
+17:56:49.579 [-] inspect {"pose": "inspection_pose_4", "task": "lid_open", "lid_closed": null, "seat_closed": null, "decided": "stop", "lid": "no decision in 5 frames (refused, refused, refused, refused, refused; 0 yes, 0 no, 5 no vote); the last: cannot judge: parts (depth): the lid cannot be judged (the commode not found within 120 mm and 45 mm of its scene place (the search went to +465 / +461 / -80 mm)); no colour model or frame: the depth alone (the commode searched for: at the plans' place cannot judge)", "seat": null} · INSPECT (Inspection pose 4, RIGHT row 1): the camera could not judge whether the lid is closed.
+17:56:49.596 [RIGHT] move to pose {"deg": [32.0, -96.0, 10.0, 112.0, -25.0, 60.0, -13.99], "speed": 50, "restore_speed": 50} · already there: 0.00 deg away (within 0.5), nothing sent
+17:56:49.647 [LEFT] restore global speed {"pct": 50} ret=0
+17:56:49.654 [RIGHT] restore global speed {"pct": 50} ret=0
+17:56:49.655 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: Not run: the camera could not judge whether the lid is closed. Nothing else moved.
+17:56:49.655 [BOTH] ALERT ERROR · S2 Real Machine: both arms: Not run: the camera could not judge whether the lid is closed. Nothing else moved. (Check the camera's view of the commode (the day's checks folder keeps its frames), then run it again.)
+17:56:49.700 [RIGHT] camera · check record: /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-06/checks/20261106_175649_577_gap_check_lid_closed_refused.json
+17:56:49.885 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:50.309 [RIGHT] camera · camera closed
+17:56:52.898 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:57.357 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:56:59.045 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:00.201 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:57:01.162 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:57:01.162 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+17:57:01.702 [activity] operator:7241c8 page: UI · Button action
+17:57:01.914 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:02.520 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:57:02.524 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+17:57:03.059 [activity] operator:7241c8 page: UI · Button action
+17:57:03.271 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:06.126 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:06.733 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:57:06.736 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+17:57:07.287 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:57:07.287 [activity] operator:7241c8 page: UI · Button action
+17:57:07.483 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:08.101 [activity] operator:7241c8 page: SYSTEM · Session active
+17:57:08.507 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:57:08.507 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+17:57:09.047 [activity] operator:7241c8 page: UI · Button action
+17:57:09.259 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:13.188 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:57:14.152 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:14.542 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:57:14.542 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+17:57:15.082 [activity] operator:7241c8 page: UI · Button action
+17:57:15.293 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:16.007 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+17:57:16.009 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+17:57:16.547 [activity] operator:7241c8 page: UI · Button action
+17:57:16.759 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:18.096 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:57:21.924 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:57:24.940 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:57:29.539 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: The LEFT arm was stopped by STOP. Robot motion is blocked on both arms until you press Recover.
+17:57:30.455 [activity] operator:7241c8 page: UI · Button action
+17:57:30.456 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:57:30.551 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:33.768 [activity] operator:7241c8 POST /api/robots/left/recover
+17:57:33.774 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:34.524 [activity] operator:7241c8 page: UI · Button action
+17:57:34.737 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:34.824 [activity] operator:7241c8 POST /api/robots/right/recover
+17:57:35.624 [activity] operator:7241c8 page: UI · Button action
+17:57:35.835 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:37.541 [activity] operator:7241c8 page: UI · Button action
+17:57:37.541 [activity] operator:7241c8 page: SYSTEM · Session active
+17:57:37.756 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:38.730 [LEFT] program list · 7 programs
+17:57:38.818 [RIGHT] program list · 8 programs
+17:57:38.844 [LEFT] global points · 2 point(s)
+17:57:38.860 [RIGHT] global points · 2 point(s)
+17:57:39.011 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT global points (as read from the controller), ALIX's plan of Close the lid and Open the lid and Open the seat (revised since).
+17:57:39.264 [activity] operator:7241c8 page: UI · Button action
+17:57:39.476 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:40.879 [LEFT] program list · 7 programs
+17:57:41.047 [RIGHT] program list · 8 programs
+17:57:41.067 [LEFT] global points · 2 point(s)
+17:57:41.113 [RIGHT] global points · 2 point(s)
+17:57:41.370 [LEFT] program list · 7 programs
+17:57:41.399 [LEFT] global points · 2 point(s)
+17:57:41.504 [RIGHT] program list · 8 programs
+17:57:41.551 [activity] operator:7241c8 page: ROBOT · Button action
+17:57:41.561 [RIGHT] global points · 2 point(s)
+17:57:41.562 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+17:57:41.763 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:43.101 [LEFT] program list · 7 programs
+17:57:43.357 [RIGHT] program list · 8 programs
+17:57:43.381 [LEFT] global points · 2 point(s)
+17:57:43.630 [RIGHT] global points · 2 point(s)
+17:57:43.798 [activity] operator:7241c8 page: ROBOT · Button action
+17:57:43.901 [LEFT] program list · 7 programs
+17:57:43.940 [LEFT] global points · 2 point(s)
+17:57:43.992 [RIGHT] program list · 8 programs
+17:57:44.011 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:57:44.014 [RIGHT] global points · 2 point(s)
+17:57:44.381 [activity] operator:7241c8 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+17:57:44.398 [LEFT] run mode REAL
+17:57:44.426 [RIGHT] run mode REAL
+17:57:44.436 [LEFT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.120.11:8089 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+17:57:44.445 [RIGHT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.1.12:8090 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+17:57:44.475 [RIGHT] clear warning · clean
+17:57:44.476 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+17:57:44.476 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+17:57:44.477 [LEFT] clear warning · clean
+17:57:44.478 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+17:57:44.478 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+17:57:44.491 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s
+17:57:44.497 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s
+17:57:44.498 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+17:57:44.498 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+17:57:44.506 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+17:57:44.506 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+17:57:44.550 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%
+17:57:44.597 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%
+17:57:45.649 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+17:57:45.650 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+17:57:45.650 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.2 s
+17:57:45.656 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+17:57:45.657 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.181 s)
+17:57:46.252 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+17:57:46.252 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+17:57:46.252 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.7 s
+17:57:46.261 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+17:57:46.261 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.784 s)
+17:57:48.508 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:57:49.411 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (3.747 s) · pole 10.0 -> 199.0 mm in 3.337 s, the hand moving meanwhile; hand [1000, 995, 998, 998, 146, 983]
+17:57:49.840 [LEFT] pole and hand {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (3.558 s) · pole 200.0 -> 50.0 mm in 3.024 s, the hand moving meanwhile; hand [1000, 998, 1000, 997, 481, 984]
+17:57:49.847 [RIGHT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.1.12:8090 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+17:57:49.867 [LEFT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.120.11:8089 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+17:57:49.868 [RIGHT] runner v14 · WORKFLOW START: 9 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+17:57:49.868 [LEFT] runner v14 · WORKFLOW START: 9 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+17:57:49.869 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+17:57:49.869 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+17:57:49.901 [LEFT] runner v14 ·   01. PROGRAM: Program 1 1_1_L_P1_R01+R02+R03+R04_pole50_ // start/transit 30% // stored trajectory timing
+17:57:49.901 [LEFT] runner v14 ·   02. POLE: 200 mm
+17:57:49.901 [LEFT] runner v14 ·   03. PROGRAM: Program 2 2_2_L_P2_R05_PART1+R05_PART2_pol // start/transit 30% // stored trajectory timing
+17:57:49.901 [LEFT] runner v14 ·   04. HAND: 0,0,0,0,150,1000
+17:57:49.901 [LEFT] runner v14 ·   05. PROGRAM: Program 3 3_3_L_P2_R06_pole200_grip_7.2s_v // start/transit 30% // stored trajectory timing
+17:57:49.902 [LEFT] runner v14 ·   06. HAND: 1000,1000,1000,1000,0,1000
+17:57:49.902 [LEFT] runner v14 ·   07. PROGRAM: Program 4 4_4_L_P3_R07_PART1+R07_PART2_pol // start/transit 30% // stored trajectory timing
+17:57:49.902 [LEFT] runner v14 ·   08. HAND: 0,0,0,0,150,1000
+17:57:49.902 [LEFT] runner v14 ·   09. PROGRAM: Program 5 5_5_L_P3_R08+R09_PART1+R09_PART2 // start/transit 30% // stored trajectory timing
+17:57:49.909 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+17:57:49.909 [LEFT] runner v14 · WORKFLOW STEP START 1/9: PROGRAM
+17:57:49.921 [RIGHT] runner v14 ·   01. PROGRAM: Program 1 1_1_R_P1_R01_PART1+R01_PART2+R02 // start/transit 30% // stored trajectory timing
+17:57:49.921 [RIGHT] runner v14 ·   02. HAND: 0,0,0,0,150,1000
+17:57:49.922 [RIGHT] runner v14 ·   03. PROGRAM: Program 2 2_2_R_P2_R04_pole200_grip_7.6s_v // start/transit 30% // stored trajectory timing
+17:57:49.922 [RIGHT] runner v14 ·   04. HAND: 1000,1000,1000,1000,0,1000
+17:57:49.922 [RIGHT] runner v14 ·   05. PROGRAM: Program 3 3_3_R_P2_R05_pole200_cleaningpos // start/transit 30% // stored trajectory timing
+17:57:49.922 [RIGHT] runner v14 ·   06. POLE: 50 mm
+17:57:49.923 [RIGHT] runner v14 ·   07. PROGRAM: Program 4 4_4_1_R_P2_R06_pole50_cleaningpo // start/transit 30% // stored trajectory timing
+17:57:49.923 [RIGHT] runner v14 ·   08. HAND: 0,0,0,0,150,1000
+17:57:49.923 [RIGHT] runner v14 ·   09. PROGRAM: Program 5 5_5_R_P3_R07+R08_PART1+R08_PART2 // start/transit 30% // stored trajectory timing
+17:57:49.929 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+17:57:49.930 [RIGHT] runner v14 · WORKFLOW STEP START 1/9: PROGRAM
+17:57:49.935 [LEFT] runner v14 · WORKFLOW PROGRAM 1/9: slot 1 (1_1_L_P1_R01+R02+R03+R04_pole50_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+17:57:49.957 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/9: slot 1 (1_1_R_P1_R01_PART1+R01_PART2+R02) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+17:57:57.751 [LEFT] runner v14 · ** WORKFLOW PROGRAM 1 did not start within 5 s
+17:57:57.751 [LEFT] runner v14 · ** WORKFLOW PROGRAM NOT COMPLETE 1/9: slot 1
+17:57:57.751 [LEFT] runner v14 · ** WORKFLOW FAILED: step 1/9 (program) returned 1
+17:57:57.752 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=-1
+17:57:57.752 [LEFT] workflow {"steps": 9, "overall_speed": 60, "restore_speed": 50} ret=1 (7.884 s) · WORKFLOW FAILED: step 1/9 (program) returned 1
+17:57:57.802 [RIGHT] runner v14 · ** WORKFLOW STOP REQUESTED
+17:57:57.803 [RIGHT] runner v14 ·   arm slow-stop ret=-1
+17:57:57.803 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=-1
+17:57:57.804 [RIGHT] workflow {"steps": 9, "overall_speed": 60, "restore_speed": 50} ret=1 (7.936 s) · WORKFLOW STOP REQUESTED
+17:57:57.804 [LEFT] errors after the stop · unreadable
+17:57:57.805 [RIGHT] errors after the stop · unreadable
+17:57:57.805 [LEFT] ALERT WARN · The controller's run mode could not be set back (left: run mode NOT restored to REAL (ret=-1 mode=None)). (Check its mode on the pendant before the next run.)
+17:57:57.805 [RIGHT] ALERT WARN · The controller's run mode could not be set back (right: run mode NOT restored to REAL (ret=-1 mode=None)). (Check its mode on the pendant before the next run.)
+17:57:57.806 [LEFT] restore global speed {"pct": 50} ret=-1
+17:57:57.806 [RIGHT] restore global speed {"pct": 50} ret=-1
+17:57:57.806 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: PART 2 STOPPED // LEFT rc=1 // RIGHT rc=1: LEFT: WORKFLOW FAILED: step 1/9 (program) returned 1; RIGHT: stopped because the LEFT arm's part failed
+17:57:57.806 [BOTH] ALERT ERROR · S2 Real Machine: both arms: PART 2 STOPPED // LEFT rc=1 // RIGHT rc=1: LEFT: WORKFLOW FAILED: step 1/9 (program) returned 1; RIGHT: stopped because the LEFT arm's part failed (Check the arms and their controllers' errors before anything else runs.)
+17:57:58.947 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:07.124 [activity] operator:7241c8 page: UI · Button action
+17:58:07.337 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:08.101 [activity] operator:7241c8 page: SYSTEM · Session active
+17:58:10.919 [activity] operator:7241c8 page: UI · Button action
+17:58:11.131 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:17.522 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:58:20.536 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:58:21.536 [activity] operator:7241c8 page: SYSTEM · Application hidden
+17:58:48.909 [activity] operator:7241c8 page: SYSTEM · Application visible
+17:58:52.020 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:52.759 [activity] operator:7241c8 page: NAVIGATION · Scrolled view
+17:58:52.764 [LEFT] restore global speed {"pct": 50} ret=-1
+17:58:52.768 [activity] operator:7241c8 POST /api/robots/left/disconnect
+17:58:53.563 [activity] operator:7241c8 page: UI · Button action
+17:58:53.777 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:53.986 [RIGHT] restore global speed {"pct": 50} ret=-1
+17:58:53.990 [activity] operator:7241c8 POST /api/robots/right/disconnect
+17:58:54.786 [activity] operator:7241c8 page: UI · Button action
+17:58:54.997 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:55.839 [activity] operator:7241c8 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+17:58:56.535 [activity] operator:7241c8 page: UI · Button action
+17:58:56.747 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:58:56.757 [activity] operator:7241c8 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+17:58:57.445 [activity] operator:7241c8 page: UI · Button action
+17:58:57.658 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:59:03.427 [activity] operator:7241c8 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+17:59:03.538 [activity] operator:7241c8 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+17:59:04.123 [activity] operator:7241c8 page: UI · Button action
+17:59:04.337 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:59:04.577 [activity] operator:7241c8 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+17:59:04.687 [activity] operator:7241c8 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+17:59:05.264 [activity] operator:7241c8 page: UI · Button action
+17:59:05.477 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:59:07.570 [activity] operator:7241c8 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+17:59:07.690 [activity] operator:7241c8 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+17:59:08.102 [activity] operator:7241c8 page: SYSTEM · Session active
+17:59:08.102 [activity] operator:7241c8 page: UI · Button action
+17:59:08.462 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:59:10.086 [activity] operator:7241c8 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+17:59:10.199 [activity] operator:7241c8 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+17:59:10.780 [activity] operator:7241c8 page: UI · Button action
+17:59:10.994 [activity] operator:7241c8 PUT /api/projects/alix_mvbvk1fk_zti6s
+17:59:11.276 [activity] operator:7241c8 page: SYSTEM · Application hidden
+18:33:25.757 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+18:33:25.817 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+18:33:25.818 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+18:33:28.147 [activity] - page: NAVIGATION · Open screen
+18:33:28.149 [activity] - page: SYSTEM · ASL frontend initialized
+18:33:29.874 [RIGHT] camera · perception warmed up in 6.8 s: its core built, the colour model loaded
+18:33:30.943 [activity] - POST /api/auth/login
+18:33:31.763 [activity] operator:d27379 page: AUTH · Operator login
+18:33:31.764 [activity] operator:d27379 page: NAVIGATION · Open screen
+18:33:31.764 [activity] operator:d27379 page: AUTH · Setting changed
+18:33:33.699 [activity] operator:d27379 page: UI · Button action
+18:33:35.272 [activity] operator:d27379 page: NAVIGATION · Task loaded
+18:33:35.278 [activity] operator:d27379 page: SETUP · Arm selected
+18:33:35.283 [activity] operator:d27379 page: NAVIGATION · Teaching stage changed
+18:33:35.285 [activity] operator:d27379 page: SETUP · Arm selected
+18:33:35.288 [activity] operator:d27379 page: NAVIGATION · Open screen
+18:33:39.137 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:33:40.916 [activity] operator:d27379 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+18:33:40.933 [activity] operator:d27379 page: SYSTEM · 3D device
+18:33:44.631 [activity] operator:d27379 page: UI · Button action
+18:33:45.049 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:33:45.322 [LEFT] read global speed ret=0 · not reported
+18:33:45.322 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+18:33:45.331 [LEFT] read drag sensitivity ret=0 · 100 %
+18:33:45.332 [activity] operator:d27379 POST /api/robots/left/connect
+18:33:45.415 [LEFT] program list · 7 programs
+18:33:45.439 [LEFT] global points · 2 point(s)
+18:33:45.590 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:33:49.576 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:33:50.165 [activity] operator:d27379 page: UI · Button action
+18:33:50.380 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:33:59.467 [activity] operator:d27379 page: UI · Button action
+18:33:59.681 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:34:00.606 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+18:34:00.609 [RIGHT] read global speed ret=0 · not reported
+18:34:00.610 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+18:34:00.627 [RIGHT] read drag sensitivity ret=0 · 100 %
+18:34:00.628 [activity] operator:d27379 POST /api/robots/right/connect
+18:34:00.818 [RIGHT] ALERT ERROR · IO3 is not in the controller's E-stop mode (5): its E-stop button would not stop the arm. (An engineer sets IO3 to mode 5 at the pendant. Motion stays blocked until then.)
+18:34:00.818 [RIGHT] program list · 8 programs
+18:34:00.918 [RIGHT] global points · 2 point(s)
+18:34:01.538 [activity] operator:d27379 page: UI · Button action
+18:34:01.610 [activity] operator:d27379 page: SYSTEM · Session active
+18:34:01.615 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:34:01.676 [RIGHT] read global speed ret=0 · not reported
+18:34:01.677 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+18:34:01.682 [RIGHT] read drag sensitivity ret=0 · 100 %
+18:34:01.682 [activity] operator:d27379 POST /api/robots/right/connect
+18:34:04.848 [activity] operator:d27379 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+18:34:05.568 [activity] operator:d27379 page: ROBOT · Button action
+18:34:05.784 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:34:06.238 [LEFT] run mode REAL
+18:34:06.284 [RIGHT] run mode REAL
+18:34:06.285 [activity] operator:d27379 POST /api/robots/mode
+18:34:07.007 [activity] operator:d27379 page: ROBOT · Button action
+18:34:07.221 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:34:08.762 [activity] operator:d27379 page: UI · Button action
+18:34:08.976 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:34:10.091 [activity] operator:d27379 page: UI · Button action
+18:34:10.307 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:34:14.082 [activity] operator:d27379 page: NAVIGATION · Scrolled view
+18:34:16.148 [LEFT] program list · 7 programs
+18:34:16.596 [RIGHT] program list · 8 programs
+18:34:16.649 [LEFT] global points · 2 point(s)
+18:34:16.726 [RIGHT] global points · 2 point(s)
+18:34:16.774 [activity] operator:d27379 page: UI · Button action
+18:34:16.775 [activity] operator:d27379 page: NAVIGATION · Scrolled view
+18:34:17.000 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:34:17.110 [activity] operator:d27379 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT global points (as read from the controller), ALIX's plan of Close the lid and Open the lid and Open the seat (revised since).
+18:34:18.427 [LEFT] program list · 7 programs
+18:34:18.661 [RIGHT] program list · 8 programs
+18:34:18.698 [LEFT] global points · 2 point(s)
+18:34:18.765 [RIGHT] global points · 2 point(s)
+18:34:19.028 [activity] operator:d27379 page: ROBOT · Button action
+18:34:19.080 [LEFT] program list · 7 programs
+18:34:19.110 [LEFT] global points · 2 point(s)
+18:34:19.201 [RIGHT] program list · 8 programs
+18:34:19.244 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:34:19.258 [RIGHT] global points · 2 point(s)
+18:34:19.260 [activity] operator:d27379 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+18:34:21.069 [LEFT] program list · 7 programs
+18:34:21.745 [activity] operator:d27379 page: ROBOT · Button action
+18:34:21.861 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:34:21.900 [RIGHT] program list · 8 programs
+18:34:21.913 [LEFT] global points · 2 point(s)
+18:34:21.954 [RIGHT] global points · 2 point(s)
+18:34:22.311 [LEFT] program list · 7 programs
+18:34:22.332 [LEFT] global points · 2 point(s)
+18:34:22.390 [RIGHT] program list · 8 programs
+18:34:22.425 [RIGHT] global points · 2 point(s)
+18:34:22.852 [activity] operator:d27379 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+18:34:22.877 [LEFT] run mode REAL
+18:34:22.922 [RIGHT] run mode REAL
+18:34:22.935 [LEFT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.120.11:8089 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+18:34:22.985 [RIGHT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.1.12:8090 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+18:34:23.014 [LEFT] clear warning · clean
+18:34:23.015 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+18:34:23.016 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+18:34:23.034 [RIGHT] clear warning · clean
+18:34:23.035 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+18:34:23.036 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+18:34:23.039 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s
+18:34:23.048 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+18:34:23.049 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+18:34:23.072 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s
+18:34:23.086 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%
+18:34:23.096 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+18:34:23.097 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+18:34:23.254 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%
+18:34:25.134 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+18:34:25.135 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+18:34:25.135 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 2.1 s
+18:34:25.144 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+18:34:25.145 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (2.130 s)
+18:34:25.299 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+18:34:25.300 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+18:34:25.301 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 2.2 s
+18:34:25.310 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+18:34:25.310 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (2.275 s)
+18:34:28.032 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (2.710 s) · pole 290.0 -> 201.0 mm in 2.489 s, the hand moving meanwhile; hand [1000, 1000, 997, 997, 146, 989]
+18:34:29.301 [LEFT] pole and hand {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (4.148 s) · pole 290.0 -> 51.0 mm in 3.656 s, the hand moving meanwhile; hand [999, 997, 1000, 995, 481, 984]
+18:34:29.309 [RIGHT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.1.12:8090 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+18:34:29.312 [LEFT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.120.11:8089 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+18:34:29.313 [RIGHT] runner v14 · WORKFLOW START: 9 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+18:34:29.314 [LEFT] runner v14 · WORKFLOW START: 9 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+18:34:29.314 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+18:34:29.314 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+18:34:29.354 [LEFT] runner v14 ·   01. PROGRAM: Program 1 1_1_L_P1_R01+R02+R03+R04_pole50_ // start/transit 30% // stored trajectory timing
+18:34:29.354 [LEFT] runner v14 ·   02. POLE: 200 mm
+18:34:29.354 [LEFT] runner v14 ·   03. PROGRAM: Program 2 2_2_L_P2_R05_PART1+R05_PART2_pol // start/transit 30% // stored trajectory timing
+18:34:29.355 [LEFT] runner v14 ·   04. HAND: 0,0,0,0,150,1000
+18:34:29.355 [LEFT] runner v14 ·   05. PROGRAM: Program 3 3_3_L_P2_R06_pole200_grip_7.2s_v // start/transit 30% // stored trajectory timing
+18:34:29.355 [LEFT] runner v14 ·   06. HAND: 1000,1000,1000,1000,0,1000
+18:34:29.356 [LEFT] runner v14 ·   07. PROGRAM: Program 4 4_4_L_P3_R07_PART1+R07_PART2_pol // start/transit 30% // stored trajectory timing
+18:34:29.356 [LEFT] runner v14 ·   08. HAND: 0,0,0,0,150,1000
+18:34:29.357 [LEFT] runner v14 ·   09. PROGRAM: Program 5 5_5_L_P3_R08+R09_PART1+R09_PART2 // start/transit 30% // stored trajectory timing
+18:34:29.361 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+18:34:29.362 [LEFT] runner v14 · WORKFLOW STEP START 1/9: PROGRAM
+18:34:29.392 [LEFT] runner v14 · WORKFLOW PROGRAM 1/9: slot 1 (1_1_L_P1_R01+R02+R03+R04_pole50_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+18:34:29.435 [RIGHT] runner v14 ·   01. PROGRAM: Program 1 1_1_R_P1_R01_PART1+R01_PART2+R02 // start/transit 30% // stored trajectory timing
+18:34:29.436 [RIGHT] runner v14 ·   02. HAND: 0,0,0,0,150,1000
+18:34:29.436 [RIGHT] runner v14 ·   03. PROGRAM: Program 2 2_2_R_P2_R04_pole200_grip_7.6s_v // start/transit 30% // stored trajectory timing
+18:34:29.437 [RIGHT] runner v14 ·   04. HAND: 1000,1000,1000,1000,0,1000
+18:34:29.437 [RIGHT] runner v14 ·   05. PROGRAM: Program 3 3_3_R_P2_R05_pole200_cleaningpos // start/transit 30% // stored trajectory timing
+18:34:29.437 [RIGHT] runner v14 ·   06. POLE: 50 mm
+18:34:29.438 [RIGHT] runner v14 ·   07. PROGRAM: Program 4 4_4_1_R_P2_R06_pole50_cleaningpo // start/transit 30% // stored trajectory timing
+18:34:29.438 [RIGHT] runner v14 ·   08. HAND: 0,0,0,0,150,1000
+18:34:29.438 [RIGHT] runner v14 ·   09. PROGRAM: Program 5 5_5_R_P3_R07+R08_PART1+R08_PART2 // start/transit 30% // stored trajectory timing
+18:34:29.449 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+18:34:29.450 [RIGHT] runner v14 · WORKFLOW STEP START 1/9: PROGRAM
+18:34:29.507 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/9: slot 1 (1_1_R_P1_R01_PART1+R01_PART2+R02) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+18:34:31.764 [activity] operator:d27379 page: SYSTEM · Session active
+18:34:44.992 [RIGHT] runner v14 · ** WORKFLOW PROGRAM NOT STARTED 1/9: rm_set_program_id_run ret=-2
+18:34:44.992 [RIGHT] runner v14 · ** WORKFLOW FAILED: step 1/9 (program) returned 1
+18:34:46.373 [LEFT] runner v14 · ** WORKFLOW PROGRAM NOT STARTED 1/9: rm_set_program_id_run ret=-2
+18:34:46.374 [LEFT] runner v14 · ** WORKFLOW FAILED: step 1/9 (program) returned 1
+18:34:46.541 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=-2
+18:34:46.542 [RIGHT] workflow {"steps": 9, "overall_speed": 60, "restore_speed": 50} ret=1 (17.229 s) · WORKFLOW FAILED: step 1/9 (program) returned 1
+18:34:47.922 [LEFT] runner v14 · ** WORKFLOW STOP REQUESTED
+18:34:47.923 [LEFT] workflow {"steps": 9, "overall_speed": 60, "restore_speed": 50} ret=1 (18.609 s) · WORKFLOW STOP REQUESTED
+18:34:47.924 [LEFT] errors after the stop · unreadable
+18:34:47.925 [RIGHT] errors after the stop · unreadable
+18:34:47.925 [LEFT] ALERT WARN · The controller's run mode could not be set back (left: run mode NOT restored to REAL (ret=-1 mode=None)). (Check its mode on the pendant before the next run.)
+18:34:47.926 [RIGHT] ALERT WARN · The controller's run mode could not be set back (right: run mode NOT restored to REAL (ret=-1 mode=None)). (Check its mode on the pendant before the next run.)
+18:34:48.238 [LEFT] restore global speed {"pct": 50} ret=-1
+18:34:48.239 [RIGHT] restore global speed {"pct": 50} ret=-1
+18:34:48.239 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: PART 2 STOPPED // LEFT rc=1 // RIGHT rc=1: LEFT: stopped because the RIGHT arm's part failed; RIGHT: WORKFLOW FAILED: step 1/9 (program) returned 1
+18:34:48.239 [BOTH] ALERT ERROR · S2 Real Machine: both arms: PART 2 STOPPED // LEFT rc=1 // RIGHT rc=1: LEFT: stopped because the RIGHT arm's part failed; RIGHT: WORKFLOW FAILED: step 1/9 (program) returned 1 (Check the arms and their controllers' errors before anything else runs.)
+18:35:01.763 [activity] operator:d27379 page: SYSTEM · Session active
+18:35:31.764 [activity] operator:d27379 page: SYSTEM · Session active
+18:35:36.202 [activity] operator:d27379 page: UI · Button action
+18:35:36.421 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:35:37.500 [activity] operator:d27379 page: NAVIGATION · Scrolled view
+18:35:40.509 [activity] operator:d27379 page: NAVIGATION · Scrolled view
+18:35:44.533 [activity] operator:d27379 page: NAVIGATION · Scrolled view
+18:35:46.367 [activity] operator:d27379 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: The LEFT arm's E-stop is e-stop unknown. Robot motion is blocked on both arms until it is released and recovered.
+18:35:47.166 [activity] operator:d27379 page: UI · Button action
+18:35:47.389 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:35:48.430 [activity] operator:d27379 page: NAVIGATION · Scrolled view
+18:35:50.015 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:35:57.284 [LEFT] restore global speed {"pct": 50} ret=-1
+18:35:57.290 [activity] operator:d27379 POST /api/robots/left/disconnect
+18:35:57.294 [RIGHT] restore global speed {"pct": 50} ret=-1
+18:35:57.298 [activity] operator:d27379 POST /api/robots/right/disconnect
+18:35:57.784 [activity] operator:d27379 POST /api/robots/mode -> REFUSED: Connect at least one arm first.
+18:35:58.083 [activity] operator:d27379 page: UI · Button action
+18:35:58.084 [activity] operator:d27379 page: ROBOT · Button action
+18:35:58.084 [activity] operator:d27379 page: ROBOT · Robot & mode opened
+18:35:58.642 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:35:58.813 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:35:58.975 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:35:59.449 [activity] operator:d27379 page: UI · Button action
+18:35:59.669 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:01.764 [activity] operator:d27379 page: SYSTEM · Session active
+18:36:06.153 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:06.314 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:06.799 [activity] operator:d27379 page: UI · Button action
+18:36:07.019 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:08.750 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:08.912 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:09.385 [activity] operator:d27379 page: UI · Button action
+18:36:09.606 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:10.273 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:10.429 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:11.027 [activity] operator:d27379 page: UI · Button action
+18:36:11.029 [activity] operator:d27379 page: UI · Button action
+18:36:11.143 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:11.192 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:11.367 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:11.468 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:11.637 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:12.101 [activity] operator:d27379 page: UI · Button action
+18:36:12.330 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:21.113 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:21.116 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:21.288 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:21.303 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:21.539 [activity] operator:d27379 page: UI · Button action
+18:36:21.540 [activity] operator:d27379 page: UI · Button action
+18:36:21.985 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:25.765 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:25.958 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:25.958 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:26.145 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:26.379 [activity] operator:d27379 page: UI · Button action
+18:36:26.380 [activity] operator:d27379 page: UI · Button action
+18:36:26.775 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:31.764 [activity] operator:d27379 page: SYSTEM · Session active
+18:36:39.741 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:39.926 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:39.952 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:40.170 [activity] operator:d27379 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:36:40.389 [activity] operator:d27379 page: UI · Button action
+18:36:40.389 [activity] operator:d27379 page: UI · Button action
+18:36:40.841 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:41.001 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:41.001 [activity] operator:d27379 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:36:41.375 [activity] operator:d27379 page: UI · Button action
+18:36:41.375 [activity] operator:d27379 page: UI · Button action
+18:36:41.764 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:42.864 [activity] operator:d27379 page: UI · Button action
+18:36:43.080 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:48.535 [activity] operator:d27379 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:36:48.545 [activity] operator:d27379 page: SYSTEM · Browser closing
+18:36:48.546 [activity] operator:d27379 page: SYSTEM · Application hidden
+18:37:06.009 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+18:37:06.051 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+18:37:06.052 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+18:37:07.778 [activity] - page: NAVIGATION · Open screen
+18:37:07.778 [activity] - page: SYSTEM · ASL frontend initialized
+18:37:08.092 [RIGHT] camera · perception warmed up in 3.8 s: its core built, the colour model loaded
+18:37:21.723 [activity] - POST /api/auth/login
+18:37:22.532 [activity] operator:f10624 page: AUTH · Operator login
+18:37:22.532 [activity] operator:f10624 page: NAVIGATION · Open screen
+18:37:22.532 [activity] operator:f10624 page: AUTH · Setting changed
+18:37:24.673 [activity] operator:f10624 page: PROJECT · Button action
+18:37:24.678 [activity] operator:f10624 page: NAVIGATION · Task loaded
+18:37:24.684 [activity] operator:f10624 page: SETUP · Arm selected
+18:37:24.688 [activity] operator:f10624 page: NAVIGATION · Teaching stage changed
+18:37:24.700 [activity] operator:f10624 page: SETUP · Arm selected
+18:37:24.704 [activity] operator:f10624 page: NAVIGATION · Open screen
+18:37:29.016 [activity] operator:f10624 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+18:37:29.022 [activity] operator:f10624 page: SYSTEM · 3D device
+18:37:43.749 [activity] operator:f10624 page: NAVIGATION · Scrolled view
+18:37:46.760 [activity] operator:f10624 page: NAVIGATION · Scrolled view
+18:37:49.977 [activity] operator:f10624 page: NAVIGATION · Scrolled view
+18:37:52.533 [activity] operator:f10624 page: SYSTEM · Session active
+18:37:52.533 [activity] operator:f10624 page: NAVIGATION · Scrolled view
+18:37:52.820 [activity] operator:f10624 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:38:08.852 [activity] operator:f10624 page: NAVIGATION · Scrolled view
+18:38:19.073 [activity] operator:f10624 page: NAVIGATION · Scrolled view
+18:38:22.533 [activity] operator:f10624 page: SYSTEM · Session active
+18:38:22.533 [activity] operator:f10624 page: NAVIGATION · Scrolled view
+18:38:25.612 [activity] operator:f10624 page: NAVIGATION · Scrolled view
+18:38:27.980 [activity] operator:f10624 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:38:28.497 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:28.628 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:29.173 [activity] operator:f10624 page: UI · Button action
+18:38:29.385 [activity] operator:f10624 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:38:29.644 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:29.759 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:30.333 [activity] operator:f10624 page: UI · Button action
+18:38:30.334 [activity] operator:f10624 page: UI · Button action
+18:38:30.380 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:30.493 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:30.545 [activity] operator:f10624 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:38:30.833 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:30.942 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:31.328 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:31.639 [activity] operator:f10624 page: UI · Button action
+18:38:31.640 [activity] operator:f10624 page: UI · Button action
+18:38:31.640 [activity] operator:f10624 page: UI · Button action
+18:38:31.749 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:31.750 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:31.802 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:31.875 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:31.933 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:32.484 [activity] operator:f10624 page: UI · Button action
+18:38:32.484 [activity] operator:f10624 page: UI · Button action
+18:38:32.506 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:32.627 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:32.694 [activity] operator:f10624 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:38:33.038 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:33.149 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:33.566 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:33.683 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:33.732 [activity] operator:f10624 page: UI · Button action
+18:38:33.732 [activity] operator:f10624 page: UI · Button action
+18:38:34.455 [activity] operator:f10624 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:38:34.549 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:34.949 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:35.069 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:35.070 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:35.194 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:35.200 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:35.235 [activity] operator:f10624 page: UI · Button action
+18:38:35.235 [activity] operator:f10624 page: UI · Button action
+18:38:35.235 [activity] operator:f10624 page: UI · Button action
+18:38:35.235 [activity] operator:f10624 page: UI · Button action
+18:38:35.308 [activity] operator:f10624 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:38:35.428 [activity] operator:f10624 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:38:36.189 [activity] operator:f10624 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:38:52.534 [activity] operator:f10624 page: SYSTEM · Session active
+18:39:22.534 [activity] operator:f10624 page: SYSTEM · Session active
+18:39:23.832 [activity] operator:f10624 page: UI · Button action
+18:39:24.044 [activity] operator:f10624 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:42:27.168 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+18:42:27.211 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+18:42:27.211 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+18:42:28.920 [activity] - page: NAVIGATION · Open screen
+18:42:28.920 [activity] - page: SYSTEM · ASL frontend initialized
+18:42:29.225 [RIGHT] camera · perception warmed up in 3.8 s: its core built, the colour model loaded
+18:42:29.750 [activity] - POST /api/auth/login
+18:42:30.557 [activity] operator:52ac96 page: AUTH · Operator login
+18:42:30.558 [activity] operator:52ac96 page: NAVIGATION · Open screen
+18:42:30.558 [activity] operator:52ac96 page: AUTH · Setting changed
+18:42:32.015 [activity] operator:52ac96 page: PROJECT · Button action
+18:42:32.988 [activity] operator:52ac96 page: NAVIGATION · Task loaded
+18:42:32.990 [activity] operator:52ac96 page: SETUP · Arm selected
+18:42:32.991 [activity] operator:52ac96 page: NAVIGATION · Teaching stage changed
+18:42:32.993 [activity] operator:52ac96 page: SETUP · Arm selected
+18:42:32.997 [activity] operator:52ac96 page: NAVIGATION · Open screen
+18:42:35.744 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:42:36.264 [activity] operator:52ac96 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+18:42:36.513 [activity] operator:52ac96 page: SYSTEM · 3D device
+18:42:40.240 [activity] operator:52ac96 page: UI · Button action
+18:42:40.241 [activity] operator:52ac96 page: UI · Button action
+18:42:40.660 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:42:41.805 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+18:42:41.819 [LEFT] read global speed ret=0 · not reported
+18:42:41.819 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+18:42:41.830 [LEFT] read drag sensitivity ret=0 · 100 %
+18:42:41.830 [activity] operator:52ac96 POST /api/robots/left/connect
+18:42:41.898 [LEFT] read global speed ret=0 · not reported
+18:42:41.898 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+18:42:41.921 [LEFT] read drag sensitivity ret=0 · 100 %
+18:42:41.921 [activity] operator:52ac96 POST /api/robots/left/connect
+18:42:42.116 [activity] operator:52ac96 page: UI · Button action
+18:42:42.327 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:42:42.362 [LEFT] read global speed ret=0 · not reported
+18:42:42.362 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+18:42:42.375 [LEFT] read drag sensitivity ret=0 · 100 %
+18:42:42.375 [activity] operator:52ac96 POST /api/robots/left/connect
+18:42:43.172 [LEFT] program list · 7 programs
+18:42:43.218 [LEFT] global points · 2 point(s)
+18:42:44.715 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+18:42:44.732 [RIGHT] read global speed ret=0 · not reported
+18:42:44.733 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+18:42:44.764 [RIGHT] read drag sensitivity ret=0 · 100 %
+18:42:44.765 [activity] operator:52ac96 POST /api/robots/right/connect
+18:42:44.880 [RIGHT] program list · 8 programs
+18:42:44.934 [RIGHT] global points · 2 point(s)
+18:42:45.014 [RIGHT] read global speed ret=0 · not reported
+18:42:45.014 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+18:42:45.029 [RIGHT] read global speed ret=0 · not reported
+18:42:45.030 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+18:42:45.053 [RIGHT] read drag sensitivity ret=0 · 100 %
+18:42:45.054 [activity] operator:52ac96 POST /api/robots/right/connect
+18:42:45.074 [RIGHT] read drag sensitivity ret=0 · 100 %
+18:42:45.075 [activity] operator:52ac96 POST /api/robots/right/connect
+18:43:00.559 [activity] operator:52ac96 page: SYSTEM · Session active
+18:43:06.123 [activity] operator:52ac96 POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+18:43:06.923 [activity] operator:52ac96 page: ROBOT · Button action
+18:43:07.142 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:43:08.075 [LEFT] run mode REAL
+18:43:08.109 [RIGHT] run mode REAL
+18:43:08.110 [activity] operator:52ac96 POST /api/robots/mode
+18:43:08.841 [activity] operator:52ac96 page: ROBOT · Button action
+18:43:09.052 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:43:30.829 [activity] operator:52ac96 page: SYSTEM · Session active
+18:44:00.625 [activity] operator:52ac96 page: UI · Button action
+18:44:00.625 [activity] operator:52ac96 page: SYSTEM · Session active
+18:44:00.741 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:44:03.864 [activity] operator:52ac96 page: UI · Button action
+18:44:03.944 [activity] operator:52ac96 page: NAVIGATION · Scrolled view
+18:44:03.946 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:44:06.574 [activity] operator:52ac96 page: UI · Button action
+18:44:06.791 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:44:07.391 [activity] operator:52ac96 page: NAVIGATION · Scrolled view
+18:44:12.679 [LEFT] program list · 7 programs
+18:44:13.113 [RIGHT] program list · 8 programs
+18:44:13.155 [LEFT] global points · 2 point(s)
+18:44:13.181 [RIGHT] global points · 2 point(s)
+18:44:13.269 [activity] operator:52ac96 page: UI · Button action
+18:44:13.490 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:44:13.505 [activity] operator:52ac96 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the LEFT global points (as read from the controller), the RIGHT global points (as read from the controller), ALIX's plan of Close the lid and Open the lid and Open the seat (revised since).
+18:44:24.663 [LEFT] program list · 7 programs
+18:44:24.817 [RIGHT] program list · 8 programs
+18:44:24.836 [LEFT] global points · 2 point(s)
+18:44:24.856 [RIGHT] global points · 2 point(s)
+18:44:25.146 [LEFT] program list · 7 programs
+18:44:25.187 [LEFT] global points · 2 point(s)
+18:44:25.258 [RIGHT] program list · 8 programs
+18:44:25.299 [activity] operator:52ac96 page: ROBOT · Button action
+18:44:25.320 [RIGHT] global points · 2 point(s)
+18:44:25.322 [activity] operator:52ac96 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+18:44:25.520 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:44:28.445 [LEFT] program list · 7 programs
+18:44:28.659 [RIGHT] program list · 8 programs
+18:44:28.684 [LEFT] global points · 2 point(s)
+18:44:28.712 [RIGHT] global points · 2 point(s)
+18:44:29.071 [activity] operator:52ac96 page: ROBOT · Button action
+18:44:29.305 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:44:29.344 [LEFT] program list · 7 programs
+18:44:29.374 [LEFT] global points · 2 point(s)
+18:44:29.444 [RIGHT] program list · 8 programs
+18:44:29.474 [RIGHT] global points · 2 point(s)
+18:44:29.940 [activity] operator:52ac96 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+18:44:29.967 [LEFT] run mode REAL
+18:44:29.987 [RIGHT] run mode REAL
+18:44:30.014 [LEFT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.120.11:8089 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+18:44:30.015 [RIGHT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.1.12:8090 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+18:44:30.075 [RIGHT] clear warning · clean
+18:44:30.077 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+18:44:30.077 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+18:44:30.113 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s
+18:44:30.144 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+18:44:30.360 [LEFT] clear warning · clean
+18:44:30.435 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+18:44:30.436 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+18:44:30.436 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+18:44:30.448 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s
+18:44:30.455 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+18:44:30.456 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+18:44:30.506 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%
+18:44:30.524 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%
+18:44:30.560 [activity] operator:52ac96 page: SYSTEM · Session active
+18:44:30.639 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+18:44:30.640 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+18:44:30.641 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 0.2 s
+18:44:30.645 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+18:44:30.646 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (0.210 s)
+18:44:30.919 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+18:44:30.921 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+18:44:30.921 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 0.5 s
+18:44:30.932 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+18:44:30.933 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (0.856 s)
+18:44:31.688 [LEFT] pole and hand {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (1.034 s) · pole 49.0 -> 49.0 mm in 0.544 s, the hand moving meanwhile; hand [999, 996, 1000, 995, 480, 989]
+18:44:32.070 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (1.118 s) · pole 200.0 -> 200.0 mm in 0.608 s, the hand moving meanwhile; hand [1000, 1000, 997, 997, 147, 988]
+18:44:32.078 [LEFT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.120.11:8089 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+18:44:32.114 [RIGHT] s2 feed · not recorded: realtime push is ENABLED toward 192.168.1.12:8090 (ANOTHER host — likely a live driver there). Refusing to take it. If you are CERTAIN nothing consumes it, pass --steal-push / allow_steal=True.
+18:44:32.116 [RIGHT] runner v14 · WORKFLOW START: 9 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+18:44:32.116 [LEFT] runner v14 · WORKFLOW START: 9 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+18:44:32.116 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+18:44:32.117 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+18:44:32.161 [LEFT] runner v14 ·   01. PROGRAM: Program 1 1_1_L_P1_R01+R02+R03+R04_pole50_ // start/transit 30% // stored trajectory timing
+18:44:32.162 [LEFT] runner v14 ·   02. POLE: 200 mm
+18:44:32.162 [LEFT] runner v14 ·   03. PROGRAM: Program 2 2_2_L_P2_R05_PART1+R05_PART2_pol // start/transit 30% // stored trajectory timing
+18:44:32.163 [LEFT] runner v14 ·   04. HAND: 0,0,0,0,150,1000
+18:44:32.163 [LEFT] runner v14 ·   05. PROGRAM: Program 3 3_3_L_P2_R06_pole200_grip_7.2s_v // start/transit 30% // stored trajectory timing
+18:44:32.163 [LEFT] runner v14 ·   06. HAND: 1000,1000,1000,1000,0,1000
+18:44:32.163 [LEFT] runner v14 ·   07. PROGRAM: Program 4 4_4_L_P3_R07_PART1+R07_PART2_pol // start/transit 30% // stored trajectory timing
+18:44:32.164 [LEFT] runner v14 ·   08. HAND: 0,0,0,0,150,1000
+18:44:32.164 [LEFT] runner v14 ·   09. PROGRAM: Program 5 5_5_L_P3_R08+R09_PART1+R09_PART2 // start/transit 30% // stored trajectory timing
+18:44:32.172 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+18:44:32.172 [LEFT] runner v14 · WORKFLOW STEP START 1/9: PROGRAM
+18:44:32.198 [LEFT] runner v14 · WORKFLOW PROGRAM 1/9: slot 1 (1_1_L_P1_R01+R02+R03+R04_pole50_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+18:44:32.235 [RIGHT] runner v14 ·   01. PROGRAM: Program 1 1_1_R_P1_R01_PART1+R01_PART2+R02 // start/transit 30% // stored trajectory timing
+18:44:32.236 [RIGHT] runner v14 ·   02. HAND: 0,0,0,0,150,1000
+18:44:32.236 [RIGHT] runner v14 ·   03. PROGRAM: Program 2 2_2_R_P2_R04_pole200_grip_7.6s_v // start/transit 30% // stored trajectory timing
+18:44:32.236 [RIGHT] runner v14 ·   04. HAND: 1000,1000,1000,1000,0,1000
+18:44:32.237 [RIGHT] runner v14 ·   05. PROGRAM: Program 3 3_3_R_P2_R05_pole200_cleaningpos // start/transit 30% // stored trajectory timing
+18:44:32.237 [RIGHT] runner v14 ·   06. POLE: 50 mm
+18:44:32.237 [RIGHT] runner v14 ·   07. PROGRAM: Program 4 4_4_1_R_P2_R06_pole50_cleaningpo // start/transit 30% // stored trajectory timing
+18:44:32.237 [RIGHT] runner v14 ·   08. HAND: 0,0,0,0,150,1000
+18:44:32.238 [RIGHT] runner v14 ·   09. PROGRAM: Program 5 5_5_R_P3_R07+R08_PART1+R08_PART2 // start/transit 30% // stored trajectory timing
+18:44:32.253 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+18:44:32.254 [RIGHT] runner v14 · WORKFLOW STEP START 1/9: PROGRAM
+18:44:32.328 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/9: slot 1 (1_1_R_P1_R01_PART1+R01_PART2+R02) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+18:44:40.374 [activity] operator:52ac96 page: NAVIGATION · Scrolled view
+18:44:44.700 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:44:47.843 [RIGHT] runner v14 · ** WORKFLOW PROGRAM NOT STARTED 1/9: rm_set_program_id_run ret=-2
+18:44:47.843 [RIGHT] runner v14 · ** WORKFLOW FAILED: step 1/9 (program) returned 1
+18:44:47.947 [activity] operator:52ac96 page: UI · Button action
+18:44:48.165 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:44:49.256 [LEFT] runner v14 · ** WORKFLOW PROGRAM NOT STARTED 1/9: rm_set_program_id_run ret=-2
+18:44:49.257 [LEFT] runner v14 · ** WORKFLOW FAILED: step 1/9 (program) returned 1
+18:44:49.395 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=-2
+18:44:49.396 [RIGHT] workflow {"steps": 9, "overall_speed": 60, "restore_speed": 50} ret=1 (17.280 s) · WORKFLOW FAILED: step 1/9 (program) returned 1
+18:44:50.809 [LEFT] runner v14 · ** WORKFLOW STOP REQUESTED
+18:44:50.810 [LEFT] workflow {"steps": 9, "overall_speed": 60, "restore_speed": 50} ret=1 (18.694 s) · WORKFLOW STOP REQUESTED
+18:44:50.812 [LEFT] errors after the stop · unreadable
+18:44:50.813 [RIGHT] errors after the stop · unreadable
+18:44:50.814 [LEFT] ALERT WARN · The controller's run mode could not be set back (left: run mode NOT restored to REAL (ret=-1 mode=None)). (Check its mode on the pendant before the next run.)
+18:44:50.814 [RIGHT] ALERT WARN · The controller's run mode could not be set back (right: run mode NOT restored to REAL (ret=-1 mode=None)). (Check its mode on the pendant before the next run.)
+18:44:50.815 [LEFT] restore global speed {"pct": 50} ret=-1
+18:44:50.816 [RIGHT] restore global speed {"pct": 50} ret=-1
+18:44:50.816 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: PART 2 STOPPED // LEFT rc=1 // RIGHT rc=1: LEFT: stopped because the RIGHT arm's part failed; RIGHT: WORKFLOW FAILED: step 1/9 (program) returned 1
+18:44:50.817 [BOTH] ALERT ERROR · S2 Real Machine: both arms: PART 2 STOPPED // LEFT rc=1 // RIGHT rc=1: LEFT: stopped because the RIGHT arm's part failed; RIGHT: WORKFLOW FAILED: step 1/9 (program) returned 1 (Check the arms and their controllers' errors before anything else runs.)
+18:44:51.390 [activity] operator:52ac96 page: NAVIGATION · Scrolled view
+18:45:00.561 [activity] operator:52ac96 page: SYSTEM · Session active
+18:45:07.242 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:28.721 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:30.562 [activity] operator:52ac96 page: SYSTEM · Session active
+18:45:32.035 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:32.717 [activity] operator:52ac96 page: UI · Button action
+18:45:32.932 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:33.035 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:34.036 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:35.036 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:36.287 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:37.173 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:37.288 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:38.289 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:39.289 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:39.659 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:40.431 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:41.197 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:41.431 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:42.432 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:43.432 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:44.075 [activity] operator:52ac96 page: UI · Button action
+18:45:44.293 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:44.856 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:45.856 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:46.139 [activity] operator:52ac96 page: UI · Button action
+18:45:46.620 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:46.857 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:47.857 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:48.102 [activity] operator:52ac96 page: UI · Button action
+18:45:48.322 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:48.982 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:49.982 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:50.982 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:50.993 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:51.983 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:52.741 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:53.358 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:54.358 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:54.735 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:55.359 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:55.420 [activity] operator:52ac96 page: UI · Button action
+18:45:55.635 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:55.735 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:56.480 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:56.736 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:57.487 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:57.555 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:57.736 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:58.487 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:58.851 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:59.020 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:45:59.487 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:45:59.864 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:00.488 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:00.560 [activity] operator:52ac96 page: SYSTEM · Session active
+18:46:00.560 [activity] operator:52ac96 page: UI · Button action
+18:46:00.822 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:46:00.852 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:01.641 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:01.853 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:02.428 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:46:02.642 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:03.271 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:03.642 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:04.271 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:04.643 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:05.272 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:06.054 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:06.489 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:07.055 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:07.908 [activity] operator:52ac96 page: ROBOT · Button action
+18:46:08.055 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:08.123 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:46:09.056 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:09.932 [activity] operator:52ac96 page: ROBOT · Button action
+18:46:10.165 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:46:10.216 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:11.217 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:12.217 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:13.217 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:14.344 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:15.345 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:16.354 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:17.345 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:18.477 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:19.740 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:20.478 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:21.479 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:46:21.713 [activity] operator:52ac96 page: UI · Button action
+18:46:21.930 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:46:25.386 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:46:30.559 [activity] operator:52ac96 page: SYSTEM · Session active
+18:46:36.307 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:00.560 [activity] operator:52ac96 page: SYSTEM · Session active
+18:47:10.026 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:10.703 [activity] operator:52ac96 page: UI · Button action
+18:47:10.924 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:11.026 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:12.026 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:12.093 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:13.009 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:13.027 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:14.150 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:14.378 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:15.073 [activity] operator:52ac96 page: UI · Button action
+18:47:15.151 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:15.303 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:15.379 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:16.064 [activity] operator:52ac96 page: UI · Button action
+18:47:16.151 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:16.279 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:16.379 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:17.152 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:17.380 [RIGHT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:17.504 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:18.276 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:19.280 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:19.509 [activity] operator:52ac96 page: UI · Button action
+18:47:19.726 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:20.277 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:21.277 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:22.730 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:23.730 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:24.437 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:24.731 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:25.898 [LEFT] program list · the controller's program list could not be read (page 1, ret=-1)
+18:47:26.034 [activity] operator:52ac96 page: UI · Button action
+18:47:26.248 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:26.732 [LEFT] restore global speed {"pct": 50} ret=-1
+18:47:26.741 [activity] operator:52ac96 POST /api/robots/left/disconnect
+18:47:27.206 [RIGHT] clear errors · [INFO] right: clear_errors -> unreadable
+18:47:27.207 [RIGHT] clear errors · unreadable
+18:47:27.207 [activity] - RIGHT controller: errors cleared, still unreadable
+18:47:27.207 [activity] operator:52ac96 POST /api/robots/right/clear-errors
+18:47:28.004 [activity] operator:52ac96 page: UI · Button action
+18:47:28.221 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:28.366 [RIGHT] restore global speed {"pct": 50} ret=-1
+18:47:28.373 [activity] operator:52ac96 POST /api/robots/right/disconnect
+18:47:29.288 [activity] operator:52ac96 page: UI · Button action
+18:47:29.385 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:29.955 [activity] operator:52ac96 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:47:30.560 [activity] operator:52ac96 page: SYSTEM · Session active
+18:47:30.561 [activity] operator:52ac96 page: UI · Button action
+18:47:30.800 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:32.190 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:32.767 [activity] operator:52ac96 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:47:33.305 [activity] operator:52ac96 page: UI · Button action
+18:47:33.305 [activity] operator:52ac96 page: UI · Button action
+18:47:33.427 [activity] operator:52ac96 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:47:33.525 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:47:34.278 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:48:00.561 [activity] operator:52ac96 page: SYSTEM · Session active
+18:48:13.431 [activity] operator:52ac96 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:48:13.562 [activity] operator:52ac96 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:48:14.119 [activity] operator:52ac96 page: UI · Button action
+18:48:14.332 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:48:14.492 [activity] operator:52ac96 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:48:14.618 [activity] operator:52ac96 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:48:15.047 [activity] operator:52ac96 POST /api/robots/left/connect -> REFUSED: Lite cannot reach the LEFT arm's controller at 192.168.1.10:8080.
+18:48:15.163 [activity] operator:52ac96 POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+18:48:15.183 [activity] operator:52ac96 page: UI · Button action
+18:48:15.183 [activity] operator:52ac96 page: UI · Button action
+18:48:15.951 [activity] operator:52ac96 PUT /api/projects/alix_mvbvk1fk_zti6s
+18:48:20.869 [activity] operator:52ac96 page: SYSTEM · Application hidden
