@@ -66,12 +66,20 @@ def test_the_parts_decide_with_the_commode_found_and_the_colour_for_open_and_clo
                                                (SEAT_LIFTED, "seat_lifted", "seat_lifted")])  # the lab: uncertain
 def test_a_lift_is_read_from_the_parts_where_the_commode_stands(stem, asked, want):
     """As configured (5 Nov): a lift by its distance (no search); a missed lift, not lifted by distance, read by the
-    parts at the plans' commode place. With the commode searched for every frame (4 Nov) the same answers."""
+    parts at the plans' commode place. With the commode searched for every frame (4 Nov) the same answers. Since 6 Nov
+    a LID question is read from the depth's iso-distance contours first (the lid's plane against the floor's, the bowl
+    as a cavity): no distance, no fit, nothing searched, the same answers."""
     pytest.importorskip("cv2")                                # the fit renders the commode with OpenCV
     _, f = _frame(stem)
     d = _check(_gc(), asked, f, models=_colour("closed"))     # a lift question never asks the colour model
     assert d.success and d.state == want, d.message
     assert "colour" not in d.record
+    if asked.startswith("lid"):
+        assert d.record["parts"]["reading"] == "contours" and d.record["parts"]["decides"] and not d.record["parts"]["searched"]
+        assert d.message.startswith("contours (depth): ") and "lift_reading" not in d.record
+        a = _check(_gc(gap_parts_place_search="always"), asked, f, models=_colour("closed"))
+        assert a.success and a.state == want and a.record["parts"]["reading"] == "contours", a.message
+        return
     if want.endswith("lifted"):
         assert "by distance" in d.message and d.record["lift_reading"]["decides"]
     else:
@@ -113,14 +121,17 @@ def test_a_seat_left_standing_by_a_closing_reads_not_closed():
 
 @pytest.mark.parametrize("shift", [(0.03, -0.03, 0.0), (-0.03, 0.03, 0.015), (0.04, 0.0, -0.015)])
 def test_the_lifted_lid_reads_lifted_with_the_commode_moved(shift):
+    """The camera's pose moved (= the commode moved the other way): the lid reads lifted all the same. Since 6 Nov the
+    contours read the lid in the camera's own frame, so the pose does not enter at all: the same angle to the floor,
+    with or without the search."""
     pytest.importorskip("cv2")
     _, base = _frame(LID_LIFTED)
     _, f = _frame(LID_LIFTED, shift)
-    assert _check(_gc(), "lid_lifted", f).state == "lid_lifted"                        # by distance, as configured
-    d0, d = (_check(_gc(gap_parts_place_search="always"), "lid_lifted", x) for x in (base, f))
-    assert d.success and d.state == "lid_lifted", d.message
-    p0, p = d0.record["parts"]["place"], d.record["parts"]["place"]
-    assert abs((p["dx_m"] - p0["dx_m"]) - shift[0]) < 0.012 and abs((p["dy_m"] - p0["dy_m"]) - shift[1]) < 0.012   # found there
+    d0, d = (_check(_gc(), "lid_lifted", x) for x in (base, f))
+    assert d.success and d.state == "lid_lifted" == d0.state, d.message
+    assert d.record["parts"]["reading"] == "contours" and abs(d.record["parts"]["lid_floor_deg"] - d0.record["parts"]["lid_floor_deg"]) < 1e-6
+    a = _check(_gc(gap_parts_place_search="always"), "lid_lifted", f)
+    assert a.state == "lid_lifted" and a.record["parts"]["reading"] == "contours" and not a.record["parts"]["searched"]
 
 
 LAB_5NOV = LOGS / "2026-11-05"

@@ -131,7 +131,8 @@ class GapCheckSession:
                         "gap_parts_seat_open_min_deg", "gap_parts_place_search", "gap_parts_colour", "gap_parts_place_reach_m",
                         "gap_parts_place_grid_m", "gap_parts_place_height_m", "gap_parts_place_height_step_m", "gap_lift_by_distance", "gap_lift_roi", "gap_seat_lift_roi",
                         "gap_lift_hand_mask_m", "gap_lift_risen_frac", "gap_lift_closed_tol_m", "gap_lift_bowl_m",
-                        "gap_seat_lift_bowl_min")
+                        "gap_seat_lift_bowl_min", "gap_parts_height_search_wide_m", "gap_lid_contours", "gap_contour_band_m", "gap_contour_stride",
+                        "gap_contour_cavity_min_m", "gap_contour_cavity_min_frac")
     _SEAT_RISE_PARAMS = SEAT_RISE_PARAMS
 
     #: every parameter a check record carries
@@ -316,30 +317,77 @@ class GapCheckSession:
             # same answers as searching every frame on all 213 at the lab's placements, the search called on 16; a frame
             # 0.2-0.4 s on the robot's computer instead of 1-3 s (the search renders the commode ~260 times).
             search = self._place_search()
+            # THE LID FROM THE DEPTH'S ISO-DISTANCE CONTOURS (the user, 2026-11-06; depth_contours): the lid's plane against
+            # the floor's and the bowl as a cavity, in the camera's own frame, before any rule that hangs on the camera's
+            # pose (the lift by distance, the fit at the scene place): a new robot's camera pose was 20 mm and 3.4 deg
+            # off, and the fit read a closed lid lifted 55 deg on every frame. The fit remains for the seat, and for a
+            # lid frame the contours cannot judge (no floor, no lid plane in view).
+            contours = None
+            if decider == "parts" and part == "lid" and bool(self._p("gap_lid_contours")):
+                contours = self._lid_contours(asked, depth, intrinsics, camera_to_world, hands, allow)
+            decided_by_contours = bool(contours and contours["state"])
             if decider == "parts":
                 record_extra["intrinsics"] = {"fx": float(intrinsics.fx), "fy": float(intrinsics.fy), "cx": float(intrinsics.cx),
                                               "cy": float(intrinsics.cy), "width": int(w), "height": int(h)}
-                if search != "always" and asked in ("lid_lifted", "seat_lifted") and bool(self._p("gap_lift_by_distance")) \
-                        and camera_to_world is not None:
+                if not decided_by_contours and search != "always" and asked in ("lid_lifted", "seat_lifted") \
+                        and bool(self._p("gap_lift_by_distance")) and camera_to_world is not None:
                     lifted = self._lift_by_distance(asked, part, depth, intrinsics, camera_to_world, hands, hand_frames, at_pose,
                                                     source, frame, keep, record_extra)
                     if lifted is not None:
                         return lifted
-            parts = self._parts_or_none(asked, depth, intrinsics, camera_to_world, hands, allow, search == "always")
-            state, conf, message = parts["state"], float(parts["confidence"]), f"parts (depth): {parts['note']}"
+            if decided_by_contours:
+                parts = contours
+                state, conf, message = parts["state"], float(parts["confidence"]), f"contours (depth): {parts['note']}"
+            else:
+                parts = self._parts_or_none(asked, depth, intrinsics, camera_to_world, hands, allow, search == "always")
+                state, conf, message = parts["state"], float(parts["confidence"]), f"parts (depth): {parts['note']}"
+                if contours is not None:                    # the contours could not judge this frame: said, the fit decides
+                    message = f"contours (depth): {contours['note']}; the fit: {parts['note']}"
+                    parts = dict(parts, record=dict(parts["record"], contours=contours["record"]))
             if decider == "parts" and asked in self.OPEN_CLOSED and bool(self._p("gap_parts_colour")):
                 state, conf, message = self._with_colour(asked, part, state, conf, message, parts, models, record_extra)
+
+            def fit_message(parts_now):             # a lid frame the contours could not judge keeps their note
+                base = f"parts (depth): {parts_now['note']}"
+                return f"contours (depth): {contours['note']}; the fit: {parts_now['note']}" if contours is not None else base
+
+            # THE WIDE HEIGHT FALLBACK (6 Nov): the fit's first read searches the commode's height only +/- gap_parts_
+            # height_search_m about the scene place (5 mm: wider lets a standing seat tie with a closed seat on a commode
+            # sunk 2 cm). A read that is not definitive, or that the colour model contradicts, is read again with
+            # gap_parts_height_search_wide_m before anything else (the new robot of 6 Nov stood 25-30 mm below the
+            # model: the narrow read called its closed lid lifted 55 deg, the colour said closed, and the place
+            # search, +/-15 mm, found where a 55 deg lid fits).
+            wide = float(self._p("gap_parts_height_search_wide_m"))
+            narrow = float(self._p("gap_parts_height_search_m"))
+            if decider == "parts" and not decided_by_contours and state in self.NOT_DEFINITIVE and camera_to_world is not None \
+                    and wide > narrow:
+                was = state or "cannot judge"
+                again = self._parts_or_none(asked, depth, intrinsics, camera_to_world, hands, allow, search == "always", height_m=wide)
+                if contours is not None:
+                    again = dict(again, record=dict(again["record"], contours=contours["record"]))
+                parts = again
+                state, conf, message = parts["state"], float(parts["confidence"]), fit_message(parts)
+                if state not in self.NOT_DEFINITIVE and asked in self.OPEN_CLOSED and bool(self._p("gap_parts_colour")):
+                    state, conf, message = self._with_colour(asked, part, state, conf, message, parts, models, record_extra)
+                # a wide read that cannot judge by itself goes on to the search before the colour may decide it
+                message += f" (the height searched +/-{wide * 1000:.0f} mm: +/-{narrow * 1000:.0f} mm read {was})"
+                record_extra["parts_narrow"] = dict(answer=was, height_search_m=narrow)
             first = None
-            if decider == "parts" and search == "uncertain" and state in self.NOT_DEFINITIVE and camera_to_world is not None:
+            if decider == "parts" and search == "uncertain" and state in self.NOT_DEFINITIVE and camera_to_world is not None \
+                    and not decided_by_contours:            # the search is the fit's: a lid the contours read is not searched for
                 first = dict(answer=state or "cannot judge", note=parts["note"], place="the plans'")
-                parts = self._parts_or_none(asked, depth, intrinsics, camera_to_world, hands, allow, True)
-                state, conf, message = parts["state"], float(parts["confidence"]), f"parts (depth): {parts['note']}"
+                parts = self._parts_or_none(asked, depth, intrinsics, camera_to_world, hands, allow, True)   # the search's own
+                #                                              height play stays narrow: wide, a standing seat ties with a sunk closed one
+                if contours is not None:
+                    parts = dict(parts, record=dict(parts["record"], contours=contours["record"]))
+                state, conf, message = parts["state"], float(parts["confidence"]), fit_message(parts)
                 if asked in self.OPEN_CLOSED and bool(self._p("gap_parts_colour")):
                     state, conf, message = self._with_colour(asked, part, state, conf, message, parts, models, record_extra)
                 message += f" (the commode searched for: at the plans' place {first['answer']})"
             record_extra["parts"] = dict(parts["record"], answer=parts["state"] or "cannot judge",
                                          confidence=round(float(parts["confidence"]), 3), note=parts["note"], decides=decider == "parts",
-                                         searched=first is not None or search == "always", **({"first": first} if first else {}))
+                                         searched=(first is not None or search == "always") and not decided_by_contours,
+                                         **({"first": first} if first else {}))
             if decider == "parts":
                 if not state:
                     return refuse(f"cannot judge: {message}")
@@ -968,17 +1016,43 @@ class GapCheckSession:
         v = str(self._p("gap_parts_place_search") or "uncertain").strip().lower()
         return v if v in ("always", "uncertain", "never") else "uncertain"
 
-    def _parts_or_none(self, asked, depth, intrinsics, camera_to_world, hands, allow, search: bool) -> dict:
+    def _lid_contours(self, asked, depth, intrinsics, camera_to_world, hands: dict, allow: float) -> dict:
+        """The lid's state from the depth's iso-distance contours (depth_contours.read_lid): closed under
+        gap_lid_fit_min_deg (or a closing's allowance) to the floor, lifted from there, open when the bowl shows as a
+        cavity. A lid lifted but not open answers no "open?" question (lid_between, as the fit's rule). -> the parts
+        reading's shape: {"state" ("" = cannot judge), "confidence", "note", "record"}."""
+        from . import depth_contours as dcm
+
+        params = dcm.ContourParams(band_m=float(self._p("gap_contour_band_m")), stride=int(self._p("gap_contour_stride")),
+                                   cavity_min_m=float(self._p("gap_contour_cavity_min_m")),
+                                   cavity_min_frac=float(self._p("gap_contour_cavity_min_frac")))
+        thr = self._lifted_from(float(self._p("gap_lid_fit_min_deg")), allow)
+        try:
+            got = dcm.read_lid(depth, intrinsics, list(hands.values()), camera_to_world, thr, params)
+        except Exception as exc:                                       # noqa: BLE001 - the fit decides
+            return {"state": "", "confidence": 0.0, "note": f"failed ({exc})", "record": {"reading": "contours", "error": str(exc)}}
+        record = dict(got.as_dict(), reading="contours", closed_below_deg=float(thr))
+        record["lid_deg"] = record["lid_floor_deg"] if got.state in ("lid_closed", "lid_lifted") else None
+        if not got.state:
+            return {"state": "", "confidence": 0.0, "note": f"the lid cannot be judged ({got.reason})", "record": record}
+        state, conf, note = got.state, float(got.confidence), got.reason
+        if asked == "lid_open" and state == "lid_lifted":
+            state, conf = "lid_between", 0.0
+            note += "; lifted, not open: no answer to lid_open"
+        return {"state": state, "confidence": conf, "note": note, "record": record}
+
+    def _parts_or_none(self, asked, depth, intrinsics, camera_to_world, hands, allow, search: bool,
+                       height_m: Optional[float] = None) -> dict:
         """read_parts, or a reading that judges nothing (no camera pose, or the fit failed)."""
         if camera_to_world is None:
             return {"state": "", "confidence": 0.0, "note": "no camera pose", "record": {"error": "no camera pose"}}
         try:
-            return self.read_parts(asked, depth, intrinsics, camera_to_world, hands, allow, search=search)
+            return self.read_parts(asked, depth, intrinsics, camera_to_world, hands, allow, search=search, height_m=height_m)
         except Exception as exc:                                       # noqa: BLE001 — the windows answer alone
             return {"state": "", "confidence": 0.0, "note": f"failed ({exc})", "record": {"error": str(exc)}}
 
     def read_parts(self, asked: str, depth, intrinsics, camera_to_world, hands: dict, allow: float = 0.0,
-                   search: Optional[bool] = None) -> dict:
+                   search: Optional[bool] = None, height_m: Optional[float] = None) -> dict:
         """THE PARTS READING (the owner, 2026-10-31: depth only, each part measured against the commode in the same
         frame; perception.yaml gap_decider). The lid's and the seat's angle from the whole fixture in this frame, the
         fixture at its scene place with only gap_parts_height_search_m searched and NOTHING LEARNED (31 Oct: a learned
@@ -989,9 +1063,11 @@ class GapCheckSession:
         answer an "open?" question (no vote: from inspection pose 1, where the right hand hides the seat's front, a
         closed seat reads 15-20 deg and a closed lid 10-15 deg; lift_check counts lifted as open for the windows, which
         cannot tell an angle). ``search``: the commode searched for in the frame (_parts_where_it_stands), else read at
-        the plans' place (None: gap_parts_place_search "always"). -> {"state" ("" = cannot judge), "confidence", "note",
-        "record"}."""
+        the plans' place (None: gap_parts_place_search "always"). ``height_m``: the height searched about the scene
+        place (None: gap_parts_height_search_m; the wide fallback passes gap_parts_height_search_wide_m). -> {"state"
+        ("" = cannot judge), "confidence", "note", "record"}."""
         part = "seat" if "seat" in asked.lower() else "lid"
+        height_m = float(self._p("gap_parts_height_search_m")) if height_m is None else float(height_m)
         fixture = self._hinged_fixture()
         if fixture is None:
             return {"state": "", "confidence": 0.0, "note": "no fixture model", "record": {"error": "no fixture model"}}
@@ -1001,11 +1077,12 @@ class GapCheckSession:
             search = self._place_search() == "always"
         if search and self.fixture_in_world() is not None:
             whole, place = self._parts_where_it_stands(depth, intrinsics, camera_to_world, fixture, hands,
-                                                       self._lifted_from(base_seat, allow), self._lifted_from(base_lid, allow))
+                                                       self._lifted_from(base_seat, allow), self._lifted_from(base_lid, allow),
+                                                       height_m=height_m)
         else:
             whole = self._fixture_fit(depth, intrinsics, camera_to_world, fixture, 0.0, hands,
                                       seat_min_deg=self._lifted_from(base_seat, allow), lid_min_deg=self._lifted_from(base_lid, allow),
-                                      height_search_m=float(self._p("gap_parts_height_search_m")),
+                                      height_search_m=height_m,
                                       height_step_m=float(self._p("gap_parts_height_step_m")),
                                       seat_open_min_deg=float(self._p("gap_parts_seat_open_min_deg")))
         ans = whole.seat if part == "seat" else whole.lid
@@ -1033,7 +1110,7 @@ class GapCheckSession:
         return {"state": state, "confidence": conf, "note": note, "record": record}
 
     def _parts_where_it_stands(self, depth, intrinsics, camera_to_world, fixture, hands: dict, seat_min: float,
-                               lid_min: float) -> tuple:
+                               lid_min: float, height_m: Optional[float] = None) -> tuple:
         """The parts' angles where the commode stands in this frame (fixture_place.read_state; the user, 2026-11-04:
         the parts against each other and against the commode, whatever the viewpoint, the distance or the placement):
         its place searched about the scene's within gap_parts_place_reach_m (or parts_first_reach_m), the frames of one
@@ -1047,7 +1124,8 @@ class GapCheckSession:
                                tol_m=float(self._p("gap_seat_fit_tol_m")), min_zone_px=int(self._p("gap_seat_fit_min_px")),
                                min_margin=float(self._p("gap_seat_fit_margin")), min_deg=float(seat_min),
                                hand_mask_m=float(self._p("gap_hand_mask_m")), lid_min_deg=float(lid_min),
-                               lid_open_min_deg=open_from, height_search_m=float(self._p("gap_parts_height_search_m")),
+                               lid_open_min_deg=open_from,
+                               height_search_m=float(self._p("gap_parts_height_search_m")) if height_m is None else float(height_m),
                                height_step_m=float(self._p("gap_parts_height_step_m")),
                                seat_open_min_deg=float(self._p("gap_parts_seat_open_min_deg")))
         params = fp.PlaceParams(hand_mask_m=float(self._p("gap_hand_mask_m")), reach_m=float(self._p("gap_parts_place_reach_m")),

@@ -1,0 +1,114 @@
+{
+ "class": "uncertain",
+ "expect": "lid_closed",
+ "intrinsics": {
+  "fx": 430.6678771972656,
+  "fy": 430.6678771972656,
+  "cx": 419.6208801269531,
+  "cy": 239.64024353027344,
+  "width": 848,
+  "height": 480
+ },
+ "camera_to_world": [
+  [
+   0.478467,
+   -0.81648,
+   0.323156,
+   0.554562
+  ],
+  [
+   -0.87804,
+   -0.440363,
+   0.187421,
+   -0.125429
+  ],
+  [
+   -0.010719,
+   -0.373419,
+   -0.927601,
+   0.935992
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "context": {
+  "arms": {
+   "left": {
+    "q_deg": [
+     2.195,
+     -98.648,
+     -0.002,
+     92.305,
+     2.384,
+     94.39,
+     168.796
+    ],
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     997,
+     987,
+     976
+    ]
+   },
+   "right": {
+    "q_deg": [
+     31.876,
+     -95.982,
+     10.0,
+     111.844,
+     -24.9,
+     60.22,
+     -13.834
+    ],
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     996,
+     998,
+     1000,
+     991,
+     972
+    ]
+   }
+  },
+  "check": {
+   "check_id": "20261106_215818_341_inspect",
+   "stage": "inspect",
+   "expect": "lid_closed",
+   "frame": 1,
+   "closing": false
+  },
+  "camera": null
+ },
+ "colour": {
+  "state": "closed",
+  "confidence": 0.855,
+  "class": "lid_closed",
+  "used": true
+ },
+ "registration": {
+  "lid_m": 0.0,
+  "seat_m": null
+ },
+ "stamp": "20261106_215826_599",
+ "what": "lid closed, the new robot (camera pose 20 mm / 3.4 deg off; the fit read lifted 55 deg)",
+ "parts_at_the_lab": {
+  "answer": "lid_lifted",
+  "lid_deg": 55.0,
+  "seat_deg": 55.0,
+  "closed_within_deg": 0.0,
+  "place": {
+   "dx_m": 0.0263,
+   "dy_m": 0.005,
+   "dz_m": 0.0075,
+   "dyaw_deg": -8.75
+  }
+ }
+}

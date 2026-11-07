@@ -1,0 +1,112 @@
+{
+ "class": "lid_open",
+ "expect": "lid_closed",
+ "intrinsics": {
+  "fx": 432.6650695800781,
+  "fy": 432.6650695800781,
+  "cx": 420.2126159667969,
+  "cy": 237.48733520507812,
+  "width": 848,
+  "height": 480
+ },
+ "camera_to_world": [
+  [
+   0.479002,
+   -0.81724,
+   0.320432,
+   0.554304
+  ],
+  [
+   -0.877748,
+   -0.441433,
+   0.186267,
+   -0.125742
+  ],
+  [
+   -0.010775,
+   -0.370481,
+   -0.928778,
+   0.785365
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "context": {
+  "arms": {
+   "left": {
+    "q_deg": [
+     4.638,
+     -71.908,
+     39.817,
+     104.398,
+     -36.286,
+     51.396,
+     156.905
+    ],
+    "pole_mm": 200.0,
+    "hand": [
+     501,
+     477,
+     504,
+     529,
+     415,
+     988
+    ]
+   },
+   "right": {
+    "q_deg": [
+     31.819,
+     -95.984,
+     9.845,
+     111.864,
+     -24.86,
+     60.308,
+     -14.002
+    ],
+    "pole_mm": 50.0,
+    "hand": [
+     478,
+     400,
+     406,
+     468,
+     149,
+     987
+    ]
+   }
+  },
+  "check": {
+   "check_id": "20261105_230716_728_inspect",
+   "stage": "inspect",
+   "expect": "lid_closed",
+   "frame": 1,
+   "closing": false
+  },
+  "camera": {
+   "name": "Intel RealSense D435",
+   "serial": "425122070189"
+  }
+ },
+ "colour": {
+  "state": "lid_open",
+  "confidence": 0.847,
+  "class": "lid_open",
+  "used": true
+ },
+ "registration": {
+  "lid_m": 0.0,
+  "seat_m": null
+ },
+ "stamp": "20261105_230718_285",
+ "what": "lid open, seat down, inspection pose 4 at pole 50",
+ "parts_at_the_lab": {
+  "answer": "lid_open",
+  "lid_deg": 110.0,
+  "seat_deg": 110.0,
+  "closed_within_deg": 0.0,
+  "place": null
+ }
+}

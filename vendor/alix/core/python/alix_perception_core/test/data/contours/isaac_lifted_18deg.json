@@ -1,0 +1,59 @@
+{
+ "what": "Isaac Sim, the lid held at 18.9 deg from closed, inspection_pose_4 (read lid_lifted at 19.9 deg)",
+ "source": "isaac_sim",
+ "fixture_state": "lid_open",
+ "expect": "lid_open",
+ "intrinsics": {
+  "cx": 640.0,
+  "cy": 360.0,
+  "fx": 924.277379745929,
+  "fy": 924.277379745929,
+  "height": 720,
+  "width": 1280
+ },
+ "camera_to_world": [
+  [
+   0.48394,
+   0.783439,
+   -0.389906,
+   0.55756
+  ],
+  [
+   -0.846437,
+   0.532161,
+   0.018699,
+   -0.13741
+  ],
+  [
+   0.222142,
+   0.320982,
+   0.920665,
+   1.06504
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "randomised": {
+  "camera_pose": "inspection_pose_4",
+  "pole": "full_length",
+  "open_angle_deg": -18.884,
+  "lid_deg": -18.884,
+  "seat_deg": 0.0,
+  "joints": {
+   "R_joint1": 0.4892,
+   "R_joint2": -1.6816,
+   "R_joint3": 0.1254,
+   "R_joint4": 1.8763,
+   "R_joint5": -0.584,
+   "R_joint6": 1.0675,
+   "R_joint7": -0.3243,
+   "R_sliding_plate_joint": 0.3
+  }
+ },
+ "rendered_from": "isaac_lifted/depth/000026.npy",
+ "sdg_plan": "commode_c_lifted (6 Nov: open_angle_deg [-50, -12], states [lid_open])"
+}

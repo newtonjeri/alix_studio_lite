@@ -57,6 +57,8 @@ ALIX_TREES = [
     ("core/python/alix_perception_core/src/alix_perception_core", []),
     # the recorded frames ALIX's node and Lite must answer alike (tests/test_alix_equivalence.py, 24 Oct)
     ("core/python/alix_perception_core/test/data/seat_rise", []),
+    # the lab's frames of every lid state for the contour reading (depth_contours; tests/test_depth_contours.py, 6 Nov)
+    ("core/python/alix_perception_core/test/data/contours", []),
 ]
 ALIX_FILES = [
     # alix_taskgen: only the light modules Lite uses (no generator, no Studio server)

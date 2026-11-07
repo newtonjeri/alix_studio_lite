@@ -1,0 +1,112 @@
+{
+ "class": "refused",
+ "expect": "lid_closed",
+ "intrinsics": {
+  "fx": 430.6678771972656,
+  "fy": 430.6678771972656,
+  "cx": 419.6208801269531,
+  "cy": 239.64024353027344,
+  "width": 848,
+  "height": 480
+ },
+ "camera_to_world": [
+  [
+   0.480917,
+   -0.813383,
+   0.327303,
+   0.55457
+  ],
+  [
+   -0.876721,
+   -0.442356,
+   0.188895,
+   -0.125477
+  ],
+  [
+   -0.00886,
+   -0.377796,
+   -0.925846,
+   0.745889
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "context": {
+  "arms": {
+   "left": {
+    "q_deg": [
+     1.174,
+     -100.761,
+     0.541,
+     6.075,
+     8.636,
+     7.373,
+     158.26
+    ],
+    "pole_mm": 200.0,
+    "hand": [
+     902,
+     897,
+     897,
+     896,
+     481,
+     919
+    ]
+   },
+   "right": {
+    "q_deg": [
+     32.005,
+     -96.027,
+     9.948,
+     112.002,
+     -25.017,
+     59.86,
+     -14.01
+    ],
+    "pole_mm": 10.0,
+    "hand": [
+     902,
+     897,
+     900,
+     901,
+     146,
+     914
+    ]
+   }
+  },
+  "check": {
+   "check_id": "20261106_175457_537_inspect",
+   "stage": "inspect",
+   "expect": "lid_closed",
+   "frame": 1,
+   "closing": false
+  },
+  "camera": null
+ },
+ "colour": {
+  "used": false,
+  "why": "no colour model or frame"
+ },
+ "registration": {
+  "lid_m": 0.0,
+  "seat_m": null
+ },
+ "stamp": "20261106_175505_250",
+ "what": "floor only, no commode in view (pole 10)",
+ "parts_at_the_lab": {
+  "answer": "cannot judge",
+  "lid_deg": null,
+  "seat_deg": null,
+  "closed_within_deg": 0.0,
+  "place": {
+   "dx_m": 0.45,
+   "dy_m": 0.445,
+   "dz_m": -0.0775,
+   "dyaw_deg": 49.0
+  }
+ }
+}

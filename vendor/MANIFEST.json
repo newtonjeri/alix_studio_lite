@@ -873,8 +873,8 @@
       "dest": "vendor/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "source": "/home/newtonjeri/alix_ws/src/alix/Resource/reports/2026-10-24_fixture_state/golden_node_frames.json",
       "origin": "alix",
-      "sha256": "d85a0e9789e40d9adaaae13a0652e03d29349527b6807d03c92b73bc9809ad46",
-      "bytes": 15609
+      "sha256": "c55c355a33844be98e06a1e4f7ef7f3fe0479ab39557c5717187676aab5d6fd3",
+      "bytes": 15177
     },
     {
       "dest": "vendor/alix/Resource/tracks/taught/EXECUTION_MODEL.json",
@@ -1157,6 +1157,13 @@
       "bytes": 8462
     },
     {
+      "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/depth_contours.py",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/depth_contours.py",
+      "origin": "alix",
+      "sha256": "648306c64c58fe63046e000aea625adf3586243003117eeb3c428f97f944bb55",
+      "bytes": 24442
+    },
+    {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/fixture_place.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/fixture_place.py",
       "origin": "alix",
@@ -1167,8 +1174,8 @@
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/src/alix_perception_core/gap_check.py",
       "origin": "alix",
-      "sha256": "fa0994ef183dac3e4a95da6abcdba7de96361941805643b984821b48832056b7",
-      "bytes": 90992
+      "sha256": "b533ea6d648bf2fbb96dd4fec8bc59656d7a0c6d4c343745af551ae560a432d1",
+      "bytes": 97858
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/src/alix_perception_core/geometry.py",
@@ -1288,6 +1295,181 @@
       "origin": "alix",
       "sha256": "ae18a0b44b6dd6bb6fc1b3f080dfe49317569234964c52eaceae34326b218d5a",
       "bytes": 12804
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_005754_226_gap_check_seat_open_seat_lifted.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_005754_226_gap_check_seat_open_seat_lifted.json",
+      "origin": "alix",
+      "sha256": "0c4b6ad96a4adbbb6d4a2e70a12500622b68e52ad85e6d9da80850a202d5c2ab",
+      "bytes": 1684
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_005754_226_gap_check_seat_open_seat_lifted_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_005754_226_gap_check_seat_open_seat_lifted_depth.npz",
+      "origin": "alix",
+      "sha256": "4dd6a8f532b9adfe490b85f4493e5c9554b057352ac16962d6e9871d04e4cfb5",
+      "bytes": 139445
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_033823_273_gap_check_lid_lifted_lid_lifted.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_033823_273_gap_check_lid_lifted_lid_lifted.json",
+      "origin": "alix",
+      "sha256": "042b96275814b69973062d234d3394798a09bf78cdb2109b052b63eeb9c06e60",
+      "bytes": 1569
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_033823_273_gap_check_lid_lifted_lid_lifted_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_033823_273_gap_check_lid_lifted_lid_lifted_depth.npz",
+      "origin": "alix",
+      "sha256": "fdad083917675f6e595c1966e54f79dc77a7692e1c2e24fe57b573fcaeef161c",
+      "bytes": 123880
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_034936_683_gap_check_lid_open_lid_open.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_034936_683_gap_check_lid_open_lid_open.json",
+      "origin": "alix",
+      "sha256": "404ce915ab080f72b5e9c96ae387937ec8af7faa89617a38351e225f6b8f3a5f",
+      "bytes": 1640
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_034936_683_gap_check_lid_open_lid_open_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_034936_683_gap_check_lid_open_lid_open_depth.npz",
+      "origin": "alix",
+      "sha256": "547552ddd06764f08df1601fd0b550d1b843b4503e3d429208e2a51d5f1d6b0d",
+      "bytes": 133832
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_230104_379_gap_check_lid_closed_lid_closed.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_230104_379_gap_check_lid_closed_lid_closed.json",
+      "origin": "alix",
+      "sha256": "6b408062fb1982cc00fec79811299d1869cb916bbf9b0b30e4e201b76c6d6c85",
+      "bytes": 1625
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_230104_379_gap_check_lid_closed_lid_closed_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_230104_379_gap_check_lid_closed_lid_closed_depth.npz",
+      "origin": "alix",
+      "sha256": "04921983927588593226bcfbc72eabfd1506ffe76b4a8caedb65bcb12029f419",
+      "bytes": 127071
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_230601_739_gap_check_lid_closed_lid_closed.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_230601_739_gap_check_lid_closed_lid_closed.json",
+      "origin": "alix",
+      "sha256": "0789aba6f19689938d2fea2058f99a0431024ed2d02ff52f6d12af9f9db2ac4f",
+      "bytes": 1561
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_230601_739_gap_check_lid_closed_lid_closed_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_230601_739_gap_check_lid_closed_lid_closed_depth.npz",
+      "origin": "alix",
+      "sha256": "834729eca99fdb70f95eea9951cd7f42aadf4b482eb7b8bbdcfe1c2af47991b1",
+      "bytes": 132880
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_230718_285_gap_check_lid_closed_lid_open.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_230718_285_gap_check_lid_closed_lid_open.json",
+      "origin": "alix",
+      "sha256": "85edf961efdae885d096815beb224612921847f2e83589aa32b285bbe48785de",
+      "bytes": 1583
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261105_230718_285_gap_check_lid_closed_lid_open_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261105_230718_285_gap_check_lid_closed_lid_open_depth.npz",
+      "origin": "alix",
+      "sha256": "e79c8fc51c86b72bad8f4a39d77dec59282ed60ab373dbd7aa3e8117e68edadd",
+      "bytes": 123849
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261106_175505_250_gap_check_lid_closed_refused.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261106_175505_250_gap_check_lid_closed_refused.json",
+      "origin": "alix",
+      "sha256": "c26dbc48ecc245d86cf2adce6559b2d4823d4a1acc559ee3562c88c6d9f05b8b",
+      "bytes": 1548
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261106_175505_250_gap_check_lid_closed_refused_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261106_175505_250_gap_check_lid_closed_refused_depth.npz",
+      "origin": "alix",
+      "sha256": "8fb103688c60103549c53ebee3ce508fef85277dabba9b04f90712839084a2f1",
+      "bytes": 84935
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261106_215826_599_gap_check_lid_closed_uncertain.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261106_215826_599_gap_check_lid_closed_uncertain.json",
+      "origin": "alix",
+      "sha256": "e3a52e592e32cfba3269b442d06a6dd47f187938b80e19039b8900051a5f5de4",
+      "bytes": 1634
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/20261106_215826_599_gap_check_lid_closed_uncertain_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/20261106_215826_599_gap_check_lid_closed_uncertain_depth.npz",
+      "origin": "alix",
+      "sha256": "4d138fa055d5520b7694cc30330a8fa9b4d8f01f056e8a521d7e1eb40d5567b7",
+      "bytes": 116965
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/README.md",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/README.md",
+      "origin": "alix",
+      "sha256": "a0dfb214c778456accc42c35ac22818996a541fcad1b0350ee92d34ce42f9532",
+      "bytes": 1882
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/isaac_closed_pose4.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/isaac_closed_pose4.json",
+      "origin": "alix",
+      "sha256": "ad9ded5c92e7e6a20aff3e1928e0fdb96362a6032c593b62886ec452af2edb0d",
+      "bytes": 980
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/isaac_closed_pose4_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/isaac_closed_pose4_depth.npz",
+      "origin": "alix",
+      "sha256": "00bf797c030017baa0633af89178ebb3ef17b4570fa84962055dbb64eae8e5a3",
+      "bytes": 86259
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/isaac_lifted_18deg.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/isaac_lifted_18deg.json",
+      "origin": "alix",
+      "sha256": "9175b5e7640a0e2c628fe8de084171626dc356c80f937a1f8f85e00fc15ee793",
+      "bytes": 1073
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/isaac_lifted_18deg_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/isaac_lifted_18deg_depth.npz",
+      "origin": "alix",
+      "sha256": "91d12bafcddd661a82cd433fa1110c38ec48419fcc3a938e073f64033bb3960d",
+      "bytes": 57805
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/isaac_lifted_34deg.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/isaac_lifted_34deg.json",
+      "origin": "alix",
+      "sha256": "880327e79390376c19de61e736a614a278b24bb5757ee83437e6b3892b51182e",
+      "bytes": 1084
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/isaac_lifted_34deg_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/isaac_lifted_34deg_depth.npz",
+      "origin": "alix",
+      "sha256": "b433bd03f82ead1e839989aae9397526e055d7f373169297c9de6c494626da6e",
+      "bytes": 77586
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/isaac_open_pose4.json",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/isaac_open_pose4.json",
+      "origin": "alix",
+      "sha256": "2607ea0792ff418676c5edd0a1bbf42cb83783372dbb7bfeee1492ae10d441ac",
+      "bytes": 1003
+    },
+    {
+      "dest": "vendor/alix/core/python/alix_perception_core/test/data/contours/isaac_open_pose4_depth.npz",
+      "source": "/home/newtonjeri/alix_ws/src/alix/core/python/alix_perception_core/test/data/contours/isaac_open_pose4_depth.npz",
+      "origin": "alix",
+      "sha256": "23ff30ed53d386b9f360b16a3e3bcdc421150dd00d679a33fafc0b393417813f",
+      "bytes": 155601
     },
     {
       "dest": "vendor/alix/core/python/alix_perception_core/test/data/seat_rise/20261007_125422_547.json",
@@ -4970,8 +5152,8 @@
       "dest": "vendor/alix/ros/perception/alix_perception/config/perception.yaml",
       "source": "/home/newtonjeri/alix_ws/src/alix/ros/perception/alix_perception/config/perception.yaml",
       "origin": "alix",
-      "sha256": "d81b10ae426128b8d9f4f2daef45fa443716fe95b078157a881e831b2f870fe0",
-      "bytes": 26741
+      "sha256": "8e53a5f8971d0ade5328fe5c946c43cdc0ed53b65a54f0f37029b8cf60527470",
+      "bytes": 29484
     },
     {
       "dest": "vendor/alix/tools/ament_index_shim.py",

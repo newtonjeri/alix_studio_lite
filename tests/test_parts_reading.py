@@ -59,7 +59,8 @@ def test_each_lab_frame_reads_as_its_photo_shows(stem, asked, closing, want):
     if (a.record.get("lift_reading") or {}).get("decides"):
         assert "by distance" in a.message and "parts" not in a.record
     else:
-        assert a.record["parts"]["decides"] and "parts (depth)" in a.message
+        assert a.record["parts"]["decides"]
+        assert ("contours (depth)" if asked.startswith("lid") else "parts (depth)") in a.message   # a lid: the contours (6 Nov)
         assert ("where this frame reads it" in a.message) == bool(a.record["parts"].get("first")) or not a.success
 
 
@@ -68,8 +69,9 @@ def test_each_lab_frame_reads_as_its_photo_shows_with_the_commode_searched_every
     """gap_parts_place_search "always" (4 Nov): the commode found in every frame, the same answers."""
     a = session(gap_decider="parts", gap_parts_place_search="always").ask(asked, frame(stem), closing=closing)
     assert vote(asked, a) == want, a.message
-    assert a.record["parts"]["decides"] and "parts (depth)" in a.message
-    assert "where this frame reads it" in a.message or not a.success
+    assert a.record["parts"]["decides"]
+    assert ("contours (depth)" if asked.startswith("lid") else "parts (depth)") in a.message   # a lid: the contours (6 Nov),
+    assert asked.startswith("lid") or "where this frame reads it" in a.message or not a.success   # which search nothing
 
 
 def test_the_parts_reading_learns_nothing_and_asks_the_colour_model_for_open_and_closed_only():

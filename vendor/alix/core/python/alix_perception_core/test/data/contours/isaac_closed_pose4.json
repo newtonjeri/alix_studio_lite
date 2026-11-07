@@ -1,0 +1,59 @@
+{
+ "what": "Isaac Sim, the lid closed, inspection pose 4",
+ "source": "isaac_sim",
+ "fixture_state": "closed",
+ "expect": "lid_closed",
+ "intrinsics": {
+  "cx": 960.0,
+  "cy": 540.0,
+  "fx": 1386.4160696188935,
+  "fy": 1386.4160696188935,
+  "height": 1080,
+  "width": 1920
+ },
+ "camera_to_world": [
+  [
+   0.479818,
+   0.795589,
+   -0.369881,
+   0.55005
+  ],
+  [
+   -0.877346,
+   0.438058,
+   -0.195879,
+   -0.09526
+  ],
+  [
+   0.00619,
+   0.4185,
+   0.908196,
+   1.07375
+  ],
+  [
+   0.0,
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "randomised": {
+  "camera_pose": "inspection_pose_4",
+  "pole": "full_length",
+  "open_angle_deg": -101.855,
+  "lid_deg": 0.0,
+  "seat_deg": 0.0,
+  "joints": {
+   "R_joint1": 0.5583,
+   "R_joint2": -1.6653,
+   "R_joint3": 0.2702,
+   "R_joint4": 1.9506,
+   "R_joint5": -0.4585,
+   "R_joint6": 1.0317,
+   "R_joint7": -0.1484,
+   "R_sliding_plate_joint": 0.3
+  }
+ },
+ "rendered_from": "commode_c_soil_v6_inspect/depth/000004.npy",
+ "sdg_plan": "commode_c_soil"
+}

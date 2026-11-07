@@ -298,6 +298,13 @@ perception_node:
     gap_parts_height_search_m: 0.005     # the commode's height searched each frame about its scene place, in steps of
     gap_parts_height_step_m: 0.0025      # this (wider lets a seat-down hypothesis sink onto the bare rim, 2 cm lower:
                                         # +/-10 mm left 91 frames of a standing seat undecided, margin 0.09-0.13)
+    gap_parts_height_search_wide_m: 0.04 # THE WIDE FALLBACK (6 Nov): a first read that is not definitive (cannot judge,
+                                        # uncertain, between) or that the colour model contradicts is read again with
+                                        # this height window before the place search. The new robot of 6 Nov stood
+                                        # 25-30 mm below the model (its camera pose the old robot's): +/-5 mm called its
+                                        # closed lid lifted 55 deg, the colour said closed, and the place search
+                                        # (+/-15 mm) found where a 55 deg lid fits; +/-30 mm read all 10 frames closed.
+                                        # Equal to gap_parts_height_search_m: no fallback.
     gap_parts_seat_open_min_deg: 80.0    # the seat open (standing) from this angle, as the lid (gap_lid_fit_open_min_deg)
     # THE PARTS WHERE THE COMMODE STANDS (the user, 2026-11-04: the state from the parts against each other and the commode,
     # "regardless of the viewpoint, and the distance"): the parts reading first finds the commode in the frame itself
@@ -315,3 +322,22 @@ perception_node:
     gap_parts_place_grid_m: 0.01          # all, three times the height: past it, no reading); 100 mm and +/-40 mm found
     gap_parts_place_height_m: 0.015       # false places (4 Nov: a lifted lid read open 90 mm off), 60 / 15 held all 1,527
     gap_parts_place_height_step_m: 0.0025 # lab frames of 21 Oct-4 Nov
+    # THE LID FROM THE DEPTH'S ISO-DISTANCE CONTOURS (the user, 2026-11-06: "contours should be applied in the depth
+    # image ... lines joining points with the same distances ... a 1 centimeter tolerance"; depth_contours.read_lid).
+    # No robot model, no scene place, no camera pose: the lid's plane against the floor's plane, both read in the same
+    # frame (closed at an inspection 0.1-2.5 deg, resting on the seat after a closing push 6-17, held lifted 30-37,
+    # standing 68-71), and the bowl as a cavity (an enclosed region deeper than its rim by gap_contour_cavity_min_m over
+    # gap_contour_cavity_min_frac of the image, round, its bulk above the floor, no plane: 27-36 cm over 5-21 % in every
+    # open frame, none closed, at most 13 cm and 3 % under a lid held lifted). A closed verdict needs a solid lid plane
+    # (a ring with a bite out of it, the bowl cut by the frame's edge, is no lid: cannot judge); a lid-sized plane at
+    # 10-55 deg lying over the visible bowl is the lid held lifted. The hands' frames mask nothing (the glove is a hole
+    # already). Every lid question is read this way before the fit; the fit answers a lid frame the contours cannot
+    # judge (no floor, no lid plane, a wall where the lid should be) and every seat question. 6 Nov: the new robot's
+    # frames the fit read lifted 55 deg read closed at 2.3 deg; 74 closed, 65 open and 22 held-lifted lab frames of
+    # 4-6 Nov read as their photos show; Isaac Sim's 2,040 renders (poses 1-4, joint noise, a synthetic washroom) and
+    # 48 rendered with the lid held at 12-50 deg: see the report of 6 Nov.
+    gap_lid_contours: true
+    gap_contour_band_m: 0.01              # the tolerance: a plane's inliers, and the iso-distance bands
+    gap_contour_stride: 2                 # the plane fits read every 2nd pixel (the bands at full resolution); ~0.4 s a frame
+    gap_contour_cavity_min_m: 0.20
+    gap_contour_cavity_min_frac: 0.02
