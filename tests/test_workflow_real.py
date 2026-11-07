@@ -320,7 +320,7 @@ def test_a_run_records_the_controllers_feed_when_asked(server):
     j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"], "record_feed": True}))
     assert j["state"] == "done", j
     said = events(j)
-    assert "Recording the controllers' feed every 20 ms (a diagnostic)" in said and "same 105 % stop" in said
+    assert "Recording the controllers' feed every 20 ms (a diagnostic)" in said and "same 115 % stop" in said
     day = next((server["data"] / "logs").iterdir())
     for side in ("left", "right"):
         files = sorted((day / "canfd").glob(f"*_{side.upper()}_s2_*.frames.jsonl"))

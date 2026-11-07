@@ -28,7 +28,7 @@ async function errors(side, clear) {
   try {
     const e = clear ? await post(`/api/robots/${side}/clear-errors`, {}) : await get(`/api/robots/${side}/errors`);
     errSaid[side] = (clear ? (e.clean ? 'Errors cleared: ' : 'Cleared what can be cleared; still: ') : 'Errors: ')
-      + (e.clean ? 'none' : e.text) + '.';
+      + (e.clean ? 'none' : e.text) + '.' + (!e.clean && e.advice ? ` ${e.advice[0].toUpperCase()}${e.advice.slice(1)}.` : '');
   } catch (err) { errSaid[side] = ''; tell(err); }
   render();
 }
@@ -45,7 +45,8 @@ function liveRows(link) {
     el('small', { text: `${link.emulated ? 'Emulated controller' : 'Controller'} ${link.ip}:${link.port} · `
       + (f.busy ? `now: ${f.busy} (only the E-stop is read meanwhile)` : `updated ${f.age_s ?? '?'} s ago`) }),
     el('small', { text: `Arm ${deg(f.joints_deg)} · errors ${f.errors ? (f.errors.length ? f.errors.join(', ') : 'none') : 'not read'} · run mode ${f.run_mode || 'not read'}` }),
-    el('small', { text: `Pole ${silent('pole') || (f.pole_mm != null ? `${f.pole_mm} mm` : 'not read')} · hand `
+    el('small', { text: `Pole ${silent('pole') || (f.pole_mm != null ? `${f.pole_mm} mm` : 'not read')}`
+      + (f.pole_err ? ` (its driver reports ${f.pole_err.name}${f.pole_err.limit ? ', past its limit' : ''})` : '') + ' · hand '
       + `${silent('hand') || (f.hand ? f.hand.join(', ') : 'not read')} · E-stop ${io}` }));
 }
 

@@ -66,8 +66,9 @@ def _link(monkeypatch, robot, **kw):
 class Robot:
     """A controller: the arm, IO3 (mode 5, released), the pole, and a hand that answers or not (``hand``)."""
 
-    def __init__(self, hand=True, hand_s=0.0, pole=True, io_mode=5):
+    def __init__(self, hand=True, hand_s=0.0, pole=True, io_mode=5, pole_err=0, pole_mm=210):
         self.hand, self.hand_s, self.pole, self.io_mode = hand, hand_s, pole, io_mode
+        self.pole_err, self.pole_mm = pole_err, pole_mm
         self.hand_reads, self.sets, self.io_asked = 0, 0, []
         self.robot_controller_version = 3
 
@@ -79,7 +80,7 @@ class Robot:
         return 0, {"io_state": 1, "io_config": {"io_mode": self.io_mode}}
 
     def rm_get_lift_state(self):
-        return (0, {"pos": 210, "current": 0, "err_flag": 0, "mode": 0}) if self.pole else (-2, {})
+        return (0, {"pos": self.pole_mm, "current": 0, "err_flag": self.pole_err, "mode": 0}) if self.pole else (-2, {})
 
     def rm_set_modbus_mode(self, port, baud, timeout):
         self.sets += 1
@@ -224,6 +225,28 @@ def test_test_connection_names_each_device_and_why_the_hand_does_not_answer(monk
     rows = {x["device"]: x for x in link.check_devices()["rows"]}
     assert not rows["estop"]["ok"] and "IO3 is in mode 4" in rows["estop"]["text"]
     assert not rows["pole"]["ok"] and link.devices()["pole"]["ok"] is False
+
+
+def test_the_poles_driver_error_is_said_by_the_check_and_the_live_rows(monkeypatch):
+    """7 Nov: both poles at 314 mm after a controller hang, past the limit set on the lifts, "lift driver 512" on both
+    controllers. The pole answers, so it is not silent; its row warns with the vendor's name of the code and what clears
+    it (the vendor's app's lift panel: Lite's Clear errors clears the arm's errors, not the pole's), and the live
+    reading carries it (``pole_err``, in the status rows beside ``pole_mm``)."""
+    robot = Robot(pole_err=512, pole_mm=314)
+    link = _link(monkeypatch, robot)
+    r = link.check_devices()
+    pole = next(x for x in r["rows"] if x["device"] == "pole")
+    assert r["ok"] and pole["ok"] and pole["level"] == "warn" and link.devices()["pole"]["ok"] is True
+    assert pole["text"] == ("answers: 314 mm, but its driver reports 512 (Position Limit Error) (the pole stands past the limit "
+                            "set on its controller)")
+    assert pole["hint"] == ("Lower the pole below its limit and clear the pole's error on the vendor's app (Extension, Lift Control); "
+                            "Lite's Clear errors clears the arm's errors, not the pole's.")
+    fb = link._read_all(robot)
+    assert fb["pole_mm"] == 314.0 and fb["pole_err"]["code"] == 512 and fb["pole_err"]["limit"]
+    assert fb["pole_err"]["name"] == "512 (Position Limit Error)"
+    robot.pole_err, robot.pole_mm = 0, 200
+    assert link._read_all(robot)["pole_err"] is None
+    assert next(x for x in link.check_devices()["rows"] if x["device"] == "pole")["text"] == "answers: 200 mm"
 
 
 def test_a_4th_generation_controller_is_asked_its_own_rs485_call(monkeypatch):

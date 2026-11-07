@@ -255,7 +255,7 @@ S2_FEED_CYCLE = 4
 
 def CycleRecorder(out_path, host_ip, port=None, log=print, cycle: int = 1):
     """ALIX's UdpRecorder pushing every ``cycle`` x 5 ms instead of every 5 ms (the owner, 23 Oct: "We can use 10ms or
-    20ms"): with the push on at 5 ms, programs played some 13 % slower (21 Oct), past S2's 105 % stop. The config is
+    20ms"): with the push on at 5 ms, programs played some 13 % slower (21 Oct), past S2's stop of then (105 %; 115 % since 7 Nov). The config is
     ALIX's own, with its cycle set as it is written (``_apply_push``), and put back on stop exactly as ALIX's does.
     ``tools/push_pace.py`` measures what each cycle costs a program's pace."""
     from alix_dispatch import track
@@ -1002,16 +1002,36 @@ class RealArm:
         dac = _dac()
         with self.link.busy("reading the errors"):
             st = dac.error_state(self)
-        return self._errors_view(st)
+            mm = self._pole_mm_if(st)
+        return self._errors_view(st, mm)
 
-    def _errors_view(self, st: dict) -> dict:
+    def _pole_mm_if(self, st: dict):
+        """The pole's height when its driver reports an error (said with it: 7 Nov, 314 mm past the limit), else None."""
+        if not st.get("lift_err"):
+            return None
+        try:
+            from alix_dispatch import peripherals
+
+            height = peripherals.Pole(self.robot, log=lambda *_: None).height_m()
+        except Exception:                                                           # noqa: BLE001
+            return None
+        return None if height is None else height * 1000.0
+
+    def _errors_view(self, st: dict, pole_mm=None) -> dict:
+        """The errors as the UI says them; a pole's driver error in the pole's words (pole_errors: the vendor's table
+        and what clears it), its advice at the top for the toasts."""
         from error_codes import describe_joint_err, describe_system_err
 
+        from . import pole_errors
+
         dac = _dac()
+        lift = st.get("lift_err") or None
+        pole = pole_errors.words(lift, pole_mm) if lift else None
         return dict(readable=bool(st["readable"]), clean=bool(st["readable"] and dac.error_state_clean(st)),
-                    text=dac.describe_error_state(st), system=[describe_system_err(c) for c in st["sys"]],
+                    text=pole_errors.reword(dac.describe_error_state(st), lift, pole_mm),
+                    system=[describe_system_err(c) for c in st["sys"]],
                     joints=[dict(joint=j, text=describe_joint_err(f)) for j, f in st["joints"]],
-                    lift=st.get("lift_err") or None, disabled=list(st.get("disabled") or []))
+                    lift=lift, pole=pole, advice=pole["advice"] if pole else None, disabled=list(st.get("disabled") or []))
 
     def clear_errors(self) -> dict:
         """The controller web GUI's Clear Error, as the operator's tools do it (``dual_arm_common.clear_errors``):
@@ -1021,7 +1041,8 @@ class RealArm:
         with self.link.busy("clearing the errors"), _printed_to(lambda line: self._hw("clear errors", text=line.strip())):
             ok = dac.clear_errors(self)
             st = dac.error_state(self)
-        out = self._errors_view(st)
+            mm = self._pole_mm_if(st)
+        out = self._errors_view(st, mm)
         self._hw("clear errors", ok=bool(ok), text=out["text"])
         return dict(out, ok=bool(ok))
 
@@ -1031,21 +1052,26 @@ class RealArm:
         Program raises now and then and runner v14 lets stand) cleared as the controller web GUI's Clear Error does, then
         read back; the SDK's blocking move returns 1 at once while any code is latched (workflow.WARN_ONLY). Anything
         else latched is not cleared. Nothing moves. Returns {readable, cleared: [codes], other: what is latched that is
-        not a warning, or None}."""
+        not a warning, or None, advice: what clears it when it is the pole's driver's (pole_errors), else None}."""
+        from . import pole_errors
+
         dac = _dac()
         with self.link.busy("checking the errors before the move"), _printed_to(lambda line: self._hw("clear warning", text=line.strip())):
             st = dac.error_state(self)
             if not st["readable"] or dac.error_state_clean(st):      # said every time: the logs show the check ran
                 self._hw("clear warning", ok=bool(st["readable"]), text="clean" if st["readable"] else "the errors could not be read")
-                return dict(readable=bool(st["readable"]), cleared=[], other=None)
+                return dict(readable=bool(st["readable"]), cleared=[], other=None, advice=None)
             if set(st["sys"]) - set(warn_only) or st["joints"] or st.get("lift_err") or st.get("disabled"):
-                self._hw("clear warning", ok=False, text=f"not cleared, not a warning: {dac.describe_error_state(st)}")
-                return dict(readable=True, cleared=[], other=dac.describe_error_state(st))
+                lift = st.get("lift_err") or None
+                mm = self._pole_mm_if(st)
+                other = pole_errors.reword(dac.describe_error_state(st), lift, mm)
+                self._hw("clear warning", ok=False, text=f"not cleared, not a warning: {other}")
+                return dict(readable=True, cleared=[], other=other, advice=pole_errors.words(lift, mm)["advice"] if lift else None)
             ok = dac.clear_errors(self)
             back = dac.error_state(self)
         clean = bool(ok) and dac.error_state_clean(back)
         self._hw("clear warning", args=dict(codes=st["sys"]), ok=clean, text="cleared" if clean else dac.describe_error_state(back))
-        return dict(readable=True, cleared=list(st["sys"]) if clean else [], other=None if clean else dac.describe_error_state(back))
+        return dict(readable=True, cleared=list(st["sys"]) if clean else [], other=None if clean else dac.describe_error_state(back), advice=None)
 
     def read_sensitivity(self) -> int | None:
         """The drag sensitivity, 0-100 % (higher: the arm moves more easily by hand; the controller's own

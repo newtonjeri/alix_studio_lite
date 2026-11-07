@@ -104,12 +104,16 @@ TRANSIT_RATING_SHARE = 0.2077
 TRANSIT_ACCEL_S = 0.69
 TRANSIT_BAND = (0.90, 1.0, 1.15)
 TRANSIT_MIN_DEG = 0.5
-#: The owner, 22 Oct: on the robot, a step outside its range is said; a Program whose lines run past 105 % of their
-#: time, or that ends before 90 % of it (stopped on the controller: an E-stop gives no code), stops both arms; any other
-#: step more than 10 % outside its range stops both arms.
-STOP_PROGRAM_OVER = 1.05
-STOP_PROGRAM_UNDER = 0.90
-STOP_STEP_MARGIN = 0.10
+#: The owner, 22 Oct: on the robot, a step outside its range is said; a Program whose lines run far past their time, or
+#: that ends well before it (stopped on the controller: an E-stop gives no code), stops both arms; any other step far
+#: outside its range stops both arms. The margins (the user, 7 Nov): 115 % over, 85 % under, 15 % either way for the
+#: other steps. The 105 % / 10 % margins of 22 Oct had stopped six runs in 15 lab days, none for a collision in the
+#: making: three Programs within a second of their normal end (today's Program 53 ended 0.5 s later than its 12:58 run
+#: with the same motion), a 0.2 s MoveJ, a 1.3 s hand step, a short MoveJ 0.6 s against a least of 1.4 s. A step that
+#: never ends still stops the run (its deadline).
+STOP_PROGRAM_OVER = 1.15
+STOP_PROGRAM_UNDER = 0.85
+STOP_STEP_MARGIN = 0.15
 #: The two arms are kept this far apart at every timing their ranges allow (the owner, 22 Oct: 50 mm; the gloves, the
 #: pad, the brush and a held tool are not in the model).
 CLEARANCE_MM = 50.0
@@ -2722,8 +2726,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
 
             raise UserError(f"The {s.upper()} controller's realtime push is on (toward this computer's port {on.get('port')}"
                             + (f", which {held_text(on['holders'])} holds" if on.get("holders") else "") + "): with it on, its "
-                            f"programs run some 13 % slower than their lines, past the {STOP_PROGRAM_OVER:.0%} at which an S2 run "
-                            "stops. Nothing moved.", "Turn it off (stop the program that holds the port, or on the pendant: realtime "
+                            "programs run some 13 % slower than their lines, which the timings the simulation checked do not "
+                            "allow. Nothing moved.", "Turn it off (stop the program that holds the port, or on the pendant: realtime "
                             "push), then connect the arm again.", code="push")
     overall = int(robot.speed_pct)
     programs = {s: programs_known(app, units, s) for s in ARMS}
@@ -2823,7 +2827,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
             from .robot_real import S2_FEED_CYCLE
 
             job.log(f"Recording the controllers' feed every {S2_FEED_CYCLE * 5} ms (a diagnostic) to {feeds}: the Programs play "
-                    "some 3 % slower meanwhile (the 23 Oct pace test: 3.4 %), still held to the same 105 % stop."
+                    f"some 3 % slower meanwhile (the 23 Oct pace test: 3.4 %), still held to the same {STOP_PROGRAM_OVER * 100:.0f} % stop."
                     if feeds else "The controllers' feed is not recorded: Lite has no log folder.", "info" if feeds else "warn")
         reals = {s: robot._real(s) for s in sides}
         originals = {}
@@ -3020,7 +3024,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
                 return dict(ok=False, rc=1, why=str(exc))
             if got["other"]:
                 return dict(ok=False, rc=1, why=f"before row {row}, the {side.upper()} controller reports {got['other']}: not a "
-                            "warning, so Lite does not clear it (clear it on the pendant or in Robot & mode, then run again)")
+                            f"warning, so Lite does not clear it ({got.get('advice') or 'clear it on the pendant or in Robot & mode'}, "
+                            "then run again)")
             if got["cleared"]:
                 job.log(f"{side.upper()} row {row}: cleared {', '.join(got['cleared'])} (a joint over its speed limit, a warning "
                         "a Program left) before the move: the controller refuses a move's arrival while it is latched.")
