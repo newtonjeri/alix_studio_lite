@@ -2,7 +2,7 @@
  "id": "alix_mvbvk1fk_zti6s",
  "name": "Commode_C_17_10_2026",
  "createdAt": "2026-10-17T04:06:33.536Z",
- "updatedAt": "2026-11-06T13:59:25.119Z",
+ "updatedAt": "2026-11-07T08:53:38.635Z",
  "archived": false,
  "state": {
   "currentView": "sequence",
@@ -3388,14 +3388,14 @@
        "Thumb Bend": 1000,
        "Thumb Rotate": 1000
       },
-      "startPose": "gp:R_HME_POS",
+      "startPose": "gp:R_T06_STP",
       "ugvPositionMm": {
        "frontMm": null,
        "rearMm": null,
        "leftMm": null,
        "rightMm": null
       },
-      "savedAt": "2026-11-06T13:59:25.117Z"
+      "savedAt": "2026-11-07T08:53:38.634Z"
      }
     },
     "ugvPositionByArm": {
@@ -3421,15 +3421,15 @@
      "Thumb Bend": 1000,
      "Thumb Rotate": 1000
     },
-    "leftStartPose": "gp:L_HME_POS",
-    "rightStartPose": "gp:R_HME_POS",
+    "leftStartPose": "gp:L_R11_STP",
+    "rightStartPose": "gp:R_T06_STP",
     "trajectoryFileName": "R_TASK_11B_trajectory.txt",
     "leftProgramId": 63,
     "programId": 63,
     "leftApproved": true,
     "rightApproved": false,
     "completed": false,
-    "lastUpdated": "2026-11-06T13:59:25.117Z",
+    "lastUpdated": "2026-11-07T08:53:38.634Z",
     "tuning": {
      "processing": {
       "trim": true,
@@ -3441,9 +3441,9 @@
      "trimRegions": [],
      "activeTrajectoryName": "R_TASK_11B_trajectory.txt",
      "activeTrajectoryRows": 2317,
-     "tuningApplied": false,
+     "tuningApplied": true,
      "tuningSourceFileName": "R_TASK_11B_trajectory.txt",
-     "tunedOutputFileName": null
+     "tunedOutputFileName": "R_TASK_11B_trajectory_toppra_processed.txt"
     },
     "ugvStandoffMm": 250,
     "approvedSetup": {
@@ -4166,15 +4166,15 @@
    1000,
    1000
   ],
-  "leftPose": "gp:L_HME_POS",
-  "rightPose": "gp:R_HME_POS",
+  "leftPose": "gp:L_R11_STP",
+  "rightPose": "gp:R_T06_STP",
   "programId": "63",
   "fileName": "R_TASK_11B_trajectory.txt",
   "activeTrajectorySource": "recorded",
   "activeTrajectoryName": "R_TASK_11B_trajectory.txt",
   "activeTrajectoryRows": 2317,
-  "tuningApplied": false,
-  "tunedOutputFileName": "",
+  "tuningApplied": true,
+  "tunedOutputFileName": "R_TASK_11B_trajectory_toppra_processed.txt",
   "tuningSourceFileName": "R_TASK_11B_trajectory.txt",
   "manualScaleRegions": [],
   "manualTrimRegions": [],
@@ -4459,7 +4459,7 @@
   "sequenceVisualConfirmed": false,
   "fullSimulationApproved": false,
   "elapsed": 0,
-  "savedAt": "2026-11-06T13:59:25.119Z"
+  "savedAt": "2026-11-07T08:53:38.635Z"
  },
  "lastSaveReason": "Workflow updated",
  "lite": {

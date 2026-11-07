@@ -1,23 +1,17 @@
 {
  "left": [
   {
-   "type": "inspect",
-   "pose": "",
-   "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
-   "uid": "110f9060"
-  },
-  {
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
    "speed": 50,
    "wait_s": 0.0,
-   "uid": "e5b9e49f"
+   "uid": "f511e005"
   },
   {
    "type": "pole",
    "mm": 50.0,
-   "uid": "834affb4"
+   "uid": "884b630a"
   },
   {
    "type": "hand",
@@ -29,76 +23,64 @@
     0,
     1000
    ],
-   "uid": "0d6cb486"
+   "uid": "44ca1f49"
   },
   {
    "type": "meet",
-   "uid": "4ec1f560"
+   "uid": "9ca13764"
   },
   {
    "type": "program",
-   "id": 1,
-   "name": "1_L_P1_R01+R02+R03+R04_pole50_.t",
+   "id": 51,
+   "name": "51_51_L_P1_pole50_cleaningpose_3",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "61635ef2"
+   "uid": "3865dcfc"
   },
   {
-   "type": "inspect",
-   "pose": "",
-   "note": "Before lid_open: its own inspection pose; the reading decides it",
-   "uid": "62e2ab8d"
-  },
-  {
-   "type": "mechanism",
-   "task": "lid_open",
-   "uid": "97e8e2ee"
+   "type": "wait",
+   "seconds": 3.0,
+   "uid": "164aee1f"
   },
   {
    "type": "program",
-   "id": 2,
-   "name": "2_L_P2_R05_PART1+R05_PART2_pol.t",
+   "id": 52,
+   "name": "52_52_L_P2_pole200_cleaningpose_",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "409a2a00"
+   "uid": "605ccb92"
   },
   {
    "type": "program",
-   "id": 3,
-   "name": "3_L_P2_R06_pole200_grip_7.2s_v.t",
+   "id": 53,
+   "name": "53_53_L_P2_pole200_grip_8.3s_15p",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "d4a82847"
+   "uid": "c42323e7"
   },
   {
-   "type": "inspect",
-   "pose": "",
-   "note": "Before seat_open: its own inspection pose; the reading decides it",
-   "uid": "34ade25a"
-  },
-  {
-   "type": "mechanism",
-   "task": "seat_open",
-   "uid": "bcf6d8ba"
+   "type": "wait",
+   "seconds": 3.0,
+   "uid": "b99af4b8"
   },
   {
    "type": "program",
-   "id": 4,
-   "name": "4_L_P3_R07_PART1+R07_PART2_pol.t",
+   "id": 54,
+   "name": "54_54_L_P3_pole200_cleaningpose_",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "a6b8a2bf"
+   "uid": "50b66896"
   },
   {
    "type": "program",
-   "id": 5,
-   "name": "5_5_L_P3_R08+R09_PART1+R09_PAR.t",
+   "id": 55,
+   "name": "55_55_L_P3_pole200_grip_44.5s_15",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "78af0004"
+   "uid": "4312a241"
   },
   {
    "type": "global",
@@ -106,26 +88,15 @@
    "move": "movej",
    "speed": 100,
    "wait_s": 0.0,
-   "uid": "e8cc6ef4"
+   "uid": "6607c8e7"
   },
   {
    "type": "program",
-   "id": 7,
-   "name": "7_7_L_P3_T04+T05_pole200_allop.t",
+   "id": 57,
+   "name": "57_57_L_P3_pole200_allopen_11.5s",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "1785bccd"
-  },
-  {
-   "type": "inspect",
-   "pose": "",
-   "note": "Before lid_close: its own inspection pose; the reading decides it",
-   "uid": "d358df65"
-  },
-  {
-   "type": "mechanism",
-   "task": "lid_close",
-   "uid": "36b67714"
+   "uid": "d67e9103"
   },
   {
    "type": "global",
@@ -133,28 +104,22 @@
    "move": "movej",
    "speed": 50,
    "wait_s": 0.0,
-   "uid": "1c723cfb"
+   "uid": "c2f4e99f"
   }
  ],
  "right": [
-  {
-   "type": "inspect",
-   "pose": "",
-   "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
-   "uid": "e7e70dfd"
-  },
   {
    "type": "global",
    "name": "R_HME_POS",
    "move": "movej",
    "speed": 50,
    "wait_s": 0.0,
-   "uid": "9b826371"
+   "uid": "dee8d6f6"
   },
   {
    "type": "pole",
    "mm": 200.0,
-   "uid": "f97263e4"
+   "uid": "a6b31a9b"
   },
   {
    "type": "hand",
@@ -166,95 +131,72 @@
     0,
     1000
    ],
-   "uid": "b9be0560"
+   "uid": "b21813de"
   },
   {
    "type": "meet",
-   "uid": "e885fdca"
+   "uid": "78c466f6"
   },
   {
    "type": "program",
-   "id": 1,
-   "name": "1_R_P1_R01_PART1+R01_PART2+R02.t",
+   "id": 51,
+   "name": "51_51_R_P1_pole200_cleaningpose_",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "bea3ac62"
+   "uid": "5893cedf"
   },
   {
-   "type": "inspect",
-   "pose": "",
-   "note": "Before lid_open: its own inspection pose; the reading decides it",
-   "uid": "b59fa4f9"
-  },
-  {
-   "type": "mechanism",
-   "task": "lid_open",
-   "uid": "3090af6f"
+   "type": "wait",
+   "seconds": 3.0,
+   "uid": "29014100"
   },
   {
    "type": "program",
-   "id": 2,
-   "name": "2_R_P2_R04_pole200_grip_7.6s_v.t",
+   "id": 52,
+   "name": "52_52_R_P2_pole200_grip_8.7s_15p",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "17ec484c"
+   "uid": "75247aa1"
   },
   {
    "type": "program",
-   "id": 3,
-   "name": "3_R_P2_R05_pole200_cleaningpos.t",
+   "id": 53,
+   "name": "53_53_R_P2_pole200_cleaningpose_",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "07b377ea"
+   "uid": "81ea0085"
   },
   {
    "type": "program",
-   "id": 4,
-   "name": "4_4_1_R_P2_R06_pole50_cleaning.t",
+   "id": 54,
+   "name": "54_54_1_R_P2_pole50_cleaningpose",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "bf71407d"
+   "uid": "24986fc7"
   },
   {
-   "type": "inspect",
-   "pose": "",
-   "note": "Before seat_open: its own inspection pose; the reading decides it",
-   "uid": "d7b0428a"
-  },
-  {
-   "type": "mechanism",
-   "task": "seat_open",
-   "uid": "d630c1d9"
+   "type": "wait",
+   "seconds": 3.0,
+   "uid": "9b649bb6"
   },
   {
    "type": "program",
-   "id": 5,
-   "name": "5_5_R_P3_R07+R08_PART1+R08_PAR.t",
+   "id": 55,
+   "name": "55_55_R_P3_pole50_grip_22.5s_15p",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "4b08d9c6"
+   "uid": "6d925004"
   },
   {
    "type": "program",
-   "id": 6,
-   "name": "6_6_R_P3_T04+wait20.1s+T05+T06.t",
+   "id": 56,
+   "name": "56_56_R_P3_pole200_allopen_wait_",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "bb468b71"
-  },
-  {
-   "type": "inspect",
-   "pose": "",
-   "note": "Before lid_close: its own inspection pose; the reading decides it",
-   "uid": "f708aa24"
-  },
-  {
-   "type": "mechanism",
-   "task": "lid_close",
-   "uid": "32c276ad"
+   "uid": "0919d0d1"
   },
   {
    "type": "global",
@@ -262,8 +204,8 @@
    "move": "movej",
    "speed": 20,
    "wait_s": 0.0,
-   "uid": "97f2b51c"
+   "uid": "d3981526"
   }
  ],
- "updated": "2026-11-05 17:50:08"
+ "updated": "2026-11-07 12:40:25"
 }
