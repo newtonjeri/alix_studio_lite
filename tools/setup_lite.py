@@ -42,8 +42,10 @@ VENV = ROOT / ".venv"                                   # where tools/run_lite.p
 REQ = ROOT / "requirements.txt"
 OPT = ROOT / "requirements-optional.txt"
 MIN_PY, MAX_PY = (3, 12), (3, 14)                       # vendored ALIX code needs 3.12; the pins have no 3.15 build
-#: the toppra release Lite is tested with, as a git tag, for platforms without a wheel
-TOPPRA_GIT = "toppra @ git+https://github.com/hungpham2511/toppra@0.6.10"
+#: the toppra release Lite is tested with, as a git tag, for platforms without a wheel. Its Python project is the
+#: repository's python/ folder (the root has none: without the subdirectory pip refused it, "neither 'setup.py' nor
+#: 'pyproject.toml'", and the build this was written for never ran; found on an emulated ARM64 Ubuntu, 10 Nov 2026).
+TOPPRA_GIT = "toppra @ git+https://github.com/hungpham2511/toppra@0.6.10#subdirectory=python"
 
 
 def say(text: str) -> None:

@@ -1,0 +1,148 @@
+================================================================================
+ SYSTEM INFORMATION: THE ROBOT'S COMPUTER
+ NVIDIA Jetson AGX Orin Developer Kit, hostname "alix"
+================================================================================
+
+ Captured 10 November 2026 on the Jetson itself, as user "dev", with two commands:
+     lshw -short        the hardware (run WITHOUT sudo: see "Limits of this capture")
+     hostnamectl        the operating system and the firmware
+
+ The same facts as the two commands printed, arranged by topic. The lines marked
+ [read] are what the capture implies, not what it states; each says why.
+
+
+ 1. AT A GLANCE
+ --------------------------------------------------------------------------------
+   Computer            NVIDIA Jetson AGX Orin Developer Kit (vendor: NVIDIA)
+   Hostname            alix
+   Operating system    Ubuntu 24.04.4 LTS
+   Kernel              Linux 6.8.12-1021-tegra
+   Architecture        arm64 (aarch64)
+   Processor           12 cores
+   Memory              62 GiB
+   Storage             500 GB NVMe SSD (Samsung SSD 980) + the on-board eMMC (DG4064)
+   Network             1 Ethernet port (end0), Wi-Fi (wlP1p1s0), 2 USB network links (usb0, usb1)
+   Display             NVIDIA framebuffer /dev/fb0; HDMI/DisplayPort audio outputs
+   Firmware            39.2.0-gcid-45755727, dated Monday 1 June 2026
+
+
+ 2. OPERATING SYSTEM AND FIRMWARE                                   (hostnamectl)
+ --------------------------------------------------------------------------------
+   Static hostname     alix
+   Icon name           computer
+   Operating system    Ubuntu 24.04.4 LTS
+   Kernel              Linux 6.8.12-1021-tegra
+   Architecture        arm64
+   Hardware vendor     NVIDIA
+   Hardware model      NVIDIA Jetson AGX Orin Developer Kit
+   Firmware version    39.2.0-gcid-45755727
+   Firmware date       Mon 2026-06-01
+   Firmware age        5 months 1 week 3 days (at the capture)
+   Machine ID          f493611b1c784b978b0b1772005e70f1
+   Boot ID             e0731fe576a74ee7909eab98891c1cec   (changes at every boot)
+
+   [read] JetPack: not stated by either command. The firmware (39.2.0) and the
+          kernel (6.8.12-tegra) on Ubuntu 24.04 are the JetPack 7 generation.
+          The exact release is in one file:  cat /etc/nv_tegra_release
+
+
+ 3. PROCESSOR                                                              (lshw)
+ --------------------------------------------------------------------------------
+   Cores               12   (cpu 0 to cpu 11; lshw's paths /0/0 to /0/b)
+   L1 cache            64 KiB for each core
+   L2 caches           12   (l2-cache00-03, l2-cache10-13, l2-cache20-23)
+   L3 caches           3    (l3-cache0, l3-cache1, l3-cache2)
+   Also listed         cpu-map, idle-states
+
+   [read] Three clusters of four cores: the L2 caches are numbered in three
+          groups of four, and there is one L3 cache for each group.
+   [read] With 12 cores and 62 GiB of memory this is the AGX Orin 64GB module
+          (the 32GB module has 8 cores).
+
+
+ 4. MEMORY                                                                 (lshw)
+ --------------------------------------------------------------------------------
+   System memory       62 GiB
+
+
+ 5. STORAGE                                                                (lshw)
+ --------------------------------------------------------------------------------
+   Device              What it is                         Where
+   ------------------  ---------------------------------  ----------------------
+   /dev/nvme0          Samsung SSD 980 500GB (NVMe)       PCI bridge /0/101
+     /dev/nvme0n1        its disk (the NVMe namespace)
+     /dev/ng0n1          the same disk, generic NVMe node
+     hwmon3              its temperature sensor
+   /dev/mmcblk0        DG4064, the on-board eMMC          MMC host mmc0
+     /dev/mmcblk0rpmb    its protected (RPMB) area
+   (none)              nothing listed on it               MMC host mmc1
+
+   Not in this capture: which disk the system boots from, the partitions and the
+   free space. They are in:  lsblk  and  df -h /
+
+
+ 6. NETWORK                                                                (lshw)
+ --------------------------------------------------------------------------------
+   Interface   Type        Description
+   ----------  ----------  ------------------------------------------------------
+   end0        Ethernet    Ethernet interface (the board's wired port)
+   wlP1p1s0    Wi-Fi       Realtek RTL8822CE 802.11ac PCIe wireless adapter,
+                           on PCI bridge /0/100
+   usb0        Ethernet    Ethernet interface
+   usb1        Ethernet    Ethernet interface
+
+   [read] usb0 and usb1 are the Jetson's USB network links: they carry a network
+          to a computer plugged into the Jetson's USB device port. They are not
+          wired Ethernet ports.
+
+   Not in this capture: the addresses. They are in:  ip -4 addr
+
+
+ 7. DISPLAY, SOUND AND INPUT                                               (lshw)
+ --------------------------------------------------------------------------------
+   Device      Class        Description
+   ----------  -----------  -----------------------------------------------------
+   /dev/fb0    display      nvidia-drm framebuffer (nvidia-drmdrmfb)
+   card0       multimedia   HDA  (the HDMI/DisplayPort audio)
+   card1       multimedia   APE  (the Jetson's audio processing engine)
+   input0      input        gpio-keys (the board's buttons)
+   input1      input        NVIDIA Jetson AGX Orin HDA HDMI/DP, pcm
+   input2      input        NVIDIA Jetson AGX Orin HDA HDMI/DP, pcm
+   input3      input        NVIDIA Jetson AGX Orin HDA HDMI/DP, pcm
+   input4      input        NVIDIA Jetson AGX Orin HDA HDMI/DP, pcm
+   input5      input        NVIDIA Jetson AGX Orin APE Headset Jack
+
+
+ 8. BUSES AND BRIDGES                                                      (lshw)
+ --------------------------------------------------------------------------------
+   Path        Class    Description              What is behind it
+   ----------  -------  -----------------------  -------------------------------
+   /0          bus      Motherboard              the processor, memory and bridges
+   /0/100      bridge   NVIDIA Corporation       the Wi-Fi adapter (wlP1p1s0)
+   /0/101      bridge   NVIDIA Corporation       the NVMe SSD (/dev/nvme0)
+   /1          bus      MMC Host (mmc0)          the eMMC (DG4064)
+   /2          bus      MMC Host (mmc1)          nothing listed
+
+
+ 9. LIMITS OF THIS CAPTURE
+ --------------------------------------------------------------------------------
+   - lshw was run without sudo. It said so itself, at the start and at the end:
+     "you should run this program as super-user" and "output may be incomplete or
+     inaccurate". A complete listing:  sudo lshw -short
+   - lshw -short cuts long descriptions at its column width. Three were cut and
+     are written out in full above: "RTL8822CE 802.11ac PCIe Wireless Netwo"
+     (Network adapter), "... HDA HDMI/DP,pcm" and "... APE Headset Jac" (Jack).
+   - Not captured: the JetPack release, the disks' partitions and free space,
+     the network addresses, the power mode, the cameras on USB.
+
+   To capture everything again, on the Jetson:
+       sudo lshw -short
+       hostnamectl
+       cat /etc/nv_tegra_release
+       lsblk
+       df -h /
+       ip -4 addr
+       sudo nvpmodel -q
+   or, for what ALIX Studio Lite needs of this computer, in one command that
+   changes nothing:
+       python3 install_lite_jetson.py --check
