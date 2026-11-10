@@ -586,6 +586,21 @@ def robot_library():
 def arms():
     from alix_studio_lite.server import connection
     return {"ips": {s: connection.DEFAULTS[s]["ip"] for s in connection.ARMS}}
+def sender():
+    # ALIX's own 5 ms sender loop (alix_dispatch.track.stream_track: what Lite streams a lid or seat move with), on a
+    # stand-in arm that takes every line at once, for 5 s: how late this computer wakes for a line when it has nothing
+    # else to do. The streamer ends a stream at CANFD_LATE_ABORT_PERIODS periods late.
+    from alix_studio_lite import vendor_paths
+    vendor_paths.activate()
+    from alix_dispatch import track
+    class Arm:
+        def rm_movej_canfd(self, *a):
+            return 0
+    period = track.CANFD_DEFAULT_PERIOD_S
+    r = track.stream_track(Arm(), [[0] * 7] * 1000, period_s=period, hold_s=0.0, log=lambda *a: None)
+    return {"lines": r["lines_sent"], "period_ms": period * 1000.0, "mean_ms": r["late_ms_mean"], "worst_ms": r["late_ms_max"],
+            "late_lines": r["frames_late_over_period"], "ended": r["aborted"],
+            "limit_ms": track.CANFD_LATE_ABORT_PERIODS * period * 1000.0}
 def camera():
     from alix_studio_lite.server import camera_d435
     cam = camera_d435.D435()
@@ -627,6 +642,7 @@ for name in ("numpy", "scipy", "trimesh", "fcl", "toppra", "meshoptimizer", "cv2
     tell(name, tried(package(name)))
 tell("robot_library", tried(robot_library))
 tell("arms", tried(arms))
+tell("sender", tried(sender))
 tell("camera", tried(camera))
 tell("torch", tried(torch_device))                          # the first touch of the GPU's libraries: after the rest
 tell("colour_model", tried(colour_model))
@@ -636,7 +652,7 @@ tell("colour_model", tried(colour_model))
 #: The answers the probe gives, in its order; and how long it may take in all (the camera's reset and first frames,
 #: PyTorch's first start and the model's load are its long ones).
 PROBE_ITEMS = ("lite", "numpy", "scipy", "trimesh", "fcl", "toppra", "meshoptimizer", "cv2", "pyrealsense2", "ultralytics",
-               "robot_library", "arms", "camera", "torch", "colour_model")
+               "robot_library", "arms", "sender", "camera", "torch", "colour_model")
 PROBE_LIMIT_S = 300.0
 
 
@@ -774,6 +790,16 @@ def report(copy: Path, info: dict, got, rules: str | None, optional: bool) -> li
     lib = pk("robot_library")
     line(lib["ok"], "The robot's library (RealMan, ARM64): loads" if lib["ok"]
          else f"The robot's library does not load: {lib.get('why')}", "the robot's library does not load")
+    snd = pk("sender")
+    if snd["ok"]:
+        # half the streamer's limit is taken as little room: a line that late on an idle computer leaves a loaded one none
+        roomy = not snd.get("ended") and float(snd.get("worst_ms") or 0.0) < 0.5 * float(snd.get("limit_ms") or 10.0)
+        line(roomy, f"5 ms stream sender, this computer idle ({snd.get('lines')} lines to a stand-in arm): "
+             f"{snd.get('mean_ms'):.2f} ms late on average, {snd.get('worst_ms'):.1f} ms at worst; a stream ends itself at "
+             f"{snd.get('limit_ms'):.0f} ms" + ("" if roomy else ": little room, look for what else runs on this computer"),
+             "the 5 ms stream sender has little room on this computer")
+    else:
+        line(False, f"5 ms stream sender: could not be measured ({snd.get('why')})", "the 5 ms stream sender was not measured")
     if not optional:
         note("The optional packages were left out (--no-optional): no Time-optimal optimiser, no wrist camera, no colour models")
         return issues
@@ -907,6 +933,15 @@ def failed_tests(text: str) -> list:
     return found
 
 
+def suite_workers(cores=None) -> int:
+    """The suite's workers on this computer: one for every two cores, 8 at most (the suite's own number, pyproject.toml),
+    2 at least. A test of the emulated arms runs a Lite server and two arm processes beside its own worker, and its 5 ms
+    streams end themselves when fed late: on the Jetson's 12 cores 8 workers made one or two of them late in every full
+    run (10 Nov 2026); on a PC with 16 cores or more the number is the suite's own."""
+    cores = cores or os.cpu_count() or 16
+    return max(2, min(8, int(cores) // 2))
+
+
 def run_tests(copy: Path) -> dict:
     """The test suite as setup runs it (8 workers, a file each), after setup's own check of the environment. Tests
     that fail in the full run are run again alone, in one process: ALIX's streamer ends a 5 ms stream whose sender is
@@ -919,7 +954,7 @@ def run_tests(copy: Path) -> dict:
     if run([vpy, copy / "tools/setup_lite.py", "--check", "--no-tests"], cwd=copy, check=False) != 0:
         return dict(ok=False, failed=[], alone=[], still=["the environment's own check (above)"])
     t0 = time.time()
-    rc, text = tee([vpy, "-m", "pytest", "-q", "-p", "no:cacheprovider"], copy)
+    rc, text = tee([vpy, "-m", "pytest", "-q", "-n", str(suite_workers()), "-p", "no:cacheprovider"], copy)
     note(f"tests {'passed' if rc == 0 else 'did NOT all pass'} in {time.time() - t0:.0f} s")
     if rc == 0:
         return dict(ok=True, failed=[], alone=[], still=[])
@@ -928,7 +963,7 @@ def run_tests(copy: Path) -> dict:
         return dict(ok=False, failed=[], alone=[], still=["the test run itself (above)"])
     say(f"The {len(failed)} test{'' if len(failed) == 1 else 's'} that did not pass, run again alone")
     note("in one process, with the computer to themselves: a 5 ms stream ends itself when its sender is more than 10 ms "
-         "late, which the full run's 8 workers on every core can cause")
+         "late, which the full run's workers on every core can cause")
     rc, text = tee([vpy, "-m", "pytest", "-q", "-n", "0", "-p", "no:cacheprovider", *failed], copy)
     still = [] if rc == 0 else (failed_tests(text) or list(failed))
     alone = [name for name in failed if name not in still]

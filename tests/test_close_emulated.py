@@ -2,6 +2,8 @@
 seat_close (26 Oct) and lid_close (28 Oct) streamed over each arm's CanFD pass-through at 5 ms: the right arm's look from
 inspection pose 1 (the part up: scripted here, LITE_CHECK_SCRIPT, a test harness only), the left's hook and pull as one
 stream with its retreat, the right's release with its look, the end check (the part down) and the right's rest."""
+import json
+
 import pytest
 
 from mech_emulated import call, hardware, start, wait
@@ -21,6 +23,9 @@ def test_real_closing_streams_every_move_with_its_two_looks(server, task, up, do
     from alix_studio_lite.server import mechanism
 
     plan = mechanism.Plan(task)
+    # this task's own two answers: the Jetson, 10 Nov: Close the seat's stream was fed late under the full run's load,
+    # its second answer stayed in the script, and Close the lid read it as its own first look ("skipped")
+    server["script"].write_text(json.dumps([up, down]))
     t0 = len(hardware(server))
     job = call(server, "POST", f"/api/mechanism/{task}/run", {"confirmed": True})
     done = wait(server, job)

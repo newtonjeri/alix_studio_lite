@@ -282,6 +282,8 @@ def answers(**changes) -> dict:
            "pyrealsense2": ok("2.57.7.10387"), "ultralytics": ok("8.4.55"),
            "torch": {"ok": True, "version": "2.15.0", "cuda": False}, "colour_model": {"ok": True, "load_s": 4.2, "frame_ms": 85},
            "robot_library": {"ok": True, "folder": "libs/linux_arm"},
+           "sender": {"ok": True, "lines": 1000, "period_ms": 5.0, "mean_ms": 0.11, "worst_ms": 1.24, "late_lines": 0,
+                      "ended": None, "limit_ms": 10.0},
            "arms": {"ok": True, "ips": {"left": "192.168.1.10", "right": "192.168.1.103"}},
            "camera": {"ok": True, "found": False, "devices": [], "said": "no D435 is plugged into this computer"}}
     got.update(changes)
@@ -303,6 +305,14 @@ def test_the_report_says_each_thing_and_keeps_what_needs_looking_at(jet, tmp_pat
     jet.report(tmp_path, info, answers(torch={"ok": True, "version": "2.15.0+cpu", "cuda": False}), "already installed (x)", optional=True)
     assert "CUDA libraries" not in capsys.readouterr().out                           # the processor-only build: nothing to say
     assert "OpenCV 4.13.0: installed (the lid's depth contours, the camera calibration)" in said
+    # ALIX's own 5 ms sender, timed on this computer idle: the number behind a stream that "did not complete" (the
+    # Jetson, 10 Nov: "the host was 11.4 ms late" under the full test run). Half the streamer's limit is little room.
+    assert ("5 ms stream sender, this computer idle (1000 lines to a stand-in arm): 0.11 ms late on average, 1.2 ms at "
+            "worst; a stream ends itself at 10 ms") in said
+    late = answers(sender={"ok": True, "lines": 1000, "period_ms": 5.0, "mean_ms": 0.9, "worst_ms": 6.3, "late_lines": 2,
+                           "ended": None, "limit_ms": 10.0})
+    assert jet.report(tmp_path, info, late, "already installed (x)", optional=True) == ["the 5 ms stream sender has little room on this computer"]
+    assert "6.3 ms at worst; a stream ends itself at 10 ms: little room" in capsys.readouterr().out
     # OpenCV 5.0, which a fresh install brought until it was pinned, cannot solve the camera calibration (the Jetson's
     # first install, 10 Nov: "this Python's OpenCV (5.0.0) has no calibrateHandEye", 2 tests of the suite)
     five = answers(cv2={"ok": True, "version": "5.0.0", "hand_eye": False})
@@ -374,7 +384,7 @@ def test_an_answer_that_ends_the_check_leaves_the_ones_before_it(jet, tmp_path):
     assert jet.probe(fake_environment(tmp_path, "mute", "exit 1\n")) is None      # its Python does not even start
     assert jet.probe(tmp_path / "none") is None                                   # no environment yet
     # the answers the report reads are the ones the check asks, and it asks the GPU's libraries last
-    assert all(f'"{name}"' in jet.PROBE for name in ("lite", "robot_library", "arms", "camera", "torch", "colour_model"))
+    assert all(f'"{name}"' in jet.PROBE for name in ("lite", "robot_library", "arms", "sender", "camera", "torch", "colour_model"))
     assert jet.PROBE_ITEMS[-2:] == ("torch", "colour_model")
 
 
@@ -461,6 +471,13 @@ def test_a_test_that_fails_in_the_full_run_is_run_again_alone(jet, tmp_path, cap
     assert jet.run_tests(clean) == dict(ok=True, failed=[], alone=[], still=[])
     broken = fake_environment(tmp_path, "broken", "exit 1\n")
     assert not jet.run_tests(broken)["ok"]
+
+
+def test_the_suite_runs_on_a_worker_for_every_two_cores(jet):
+    """The suite's own 8 workers made one or two 5 ms streams late in every full run on the Jetson's 12 cores (each
+    emulated-arm test runs a Lite server and two arm processes beside its worker). There it runs on 6; a PC with 16
+    cores or more keeps the suite's own 8."""
+    assert [jet.suite_workers(n) for n in (12, 16, 24, 8, 4, 2)] == [6, 8, 8, 4, 2, 2]
 
 
 def test_an_environment_of_another_python_is_built_again(jet, tmp_path):
