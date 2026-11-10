@@ -1,6 +1,12 @@
 {
  "left": [
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
+   "uid": "110f9060"
+  },
+  {
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
@@ -39,9 +45,15 @@
    "uid": "3865dcfc"
   },
   {
-   "type": "wait",
-   "seconds": 3.0,
-   "uid": "164aee1f"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_open: its own inspection pose; the reading decides it",
+   "uid": "62e2ab8d"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_open",
+   "uid": "97e8e2ee"
   },
   {
    "type": "program",
@@ -61,9 +73,15 @@
    "uid": "c42323e7"
   },
   {
-   "type": "wait",
-   "seconds": 3.0,
-   "uid": "b99af4b8"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before seat_open: its own inspection pose; the reading decides it",
+   "uid": "34ade25a"
+  },
+  {
+   "type": "mechanism",
+   "task": "seat_open",
+   "uid": "bcf6d8ba"
   },
   {
    "type": "program",
@@ -99,6 +117,17 @@
    "uid": "d67e9103"
   },
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_close: its own inspection pose; the reading decides it",
+   "uid": "d358df65"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_close",
+   "uid": "36b67714"
+  },
+  {
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
@@ -108,6 +137,12 @@
   }
  ],
  "right": [
+  {
+   "type": "inspect",
+   "pose": "",
+   "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
+   "uid": "e7e70dfd"
+  },
   {
    "type": "global",
    "name": "R_HME_POS",
@@ -147,9 +182,15 @@
    "uid": "5893cedf"
   },
   {
-   "type": "wait",
-   "seconds": 3.0,
-   "uid": "29014100"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_open: its own inspection pose; the reading decides it",
+   "uid": "b59fa4f9"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_open",
+   "uid": "3090af6f"
   },
   {
    "type": "program",
@@ -177,9 +218,15 @@
    "uid": "24986fc7"
   },
   {
-   "type": "wait",
-   "seconds": 3.0,
-   "uid": "9b649bb6"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before seat_open: its own inspection pose; the reading decides it",
+   "uid": "d7b0428a"
+  },
+  {
+   "type": "mechanism",
+   "task": "seat_open",
+   "uid": "d630c1d9"
   },
   {
    "type": "program",
@@ -199,6 +246,17 @@
    "uid": "0919d0d1"
   },
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_close: its own inspection pose; the reading decides it",
+   "uid": "f708aa24"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_close",
+   "uid": "32c276ad"
+  },
+  {
    "type": "global",
    "name": "R_HME_POS",
    "move": "movej",
@@ -207,5 +265,5 @@
    "uid": "d3981526"
   }
  ],
- "updated": "2026-11-07 12:40:25"
+ "updated": "2026-11-10 16:07:28"
 }
