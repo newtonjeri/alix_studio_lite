@@ -30,7 +30,8 @@ WHAT IT DOES
     6. checks what only this computer can say: the robot's ARM64 library loads, the camera library and a camera that
        is plugged in, the colour model (it is loaded and asked: how long a frame takes, on the GPU or the processor),
        the power mode, the network toward the arms, a screen and a browser
-    7. runs the test suite, and prints how to start Lite here and from the operator PC
+    7. runs the test suite (a test that fails in the full run is run again alone: the full run loads every core, and
+       a 5 ms stream that is fed late ends itself), and prints how to start Lite here and from the operator PC
 
 WHAT IS DIFFERENT ON THE JETSON
     Python 3.12 exactly (install_lite.py takes 3.12 to 3.14): the camera package (pyrealsense2) has an ARM64 build for
@@ -38,7 +39,8 @@ WHAT IS DIFFERENT ON THE JETSON
     for ARM servers (3 GB to download, 6 GB installed), and whether they drive this Jetson's GPU depends on its
     JetPack; the report says which it is, the GPU or the processor, and what a frame takes (the model is small). On a
     Jetson where it is the processor, --cpu-torch builds the environment again with PyTorch's processor-only build
-    (the environment is then 1.5 GB instead of 7). Lite listens on the Jetson itself only (127.0.0.1): from the
+    (the environment is then 1.5 GB instead of 7). On the robot's Jetson (L4T R39.2, 10 Nov 2026) it is the GPU: the
+    model loads in 4.9 s and answers a frame in 15 ms. Lite listens on the Jetson itself only (127.0.0.1): from the
     operator PC it is opened through an SSH tunnel, the log-in the connection needs.
 
 THE REPOSITORY IS PRIVATE
@@ -59,6 +61,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 REPO = "newtonjeri/alix_studio_lite"
@@ -473,14 +476,29 @@ def install(copy: Path, py: str, a) -> None:
 
 # ── 5. the wrist camera's access rules
 
+#: What a rule that gives the wrist camera to this computer's users says: the camera on USB, by Intel's vendor id and
+#: the D435's product id (0b07; the D435i is 0b3a), as librealsense's own file has one line for each model.
+D435_RULE = re.compile(r'idVendor\}==?"8086".*idProduct\}==?"[^"]*\b(?:0b07|0b3a)\b', re.I)
+
+
 def camera_rules() -> list:
-    """The udev rules for RealSense cameras already on this computer (librealsense's, a ROS package's, these)."""
+    """The udev rules files on this computer that give the wrist camera (a D435 on USB) to its users: librealsense's
+    99-realsense-libusb.rules, its packages' 60-librealsense2-udev-rules.rules, any other with such a rule. Asked of
+    what a file says, not of its name: a Jetson has 60-librealsense2-mipi-udev-rules.rules, for cameras on MIPI, and
+    the first install there (10 Nov 2026) took it for these by its name."""
     found = []
     for d in RULES_DIRS:
         try:
-            found += [str(p) for p in Path(d).iterdir() if "realsense" in p.name.lower()]
+            files = sorted(Path(d).glob("*.rules"))
         except OSError:
-            pass
+            continue
+        for f in files:
+            try:
+                if any(D435_RULE.search(line) for line in f.read_text(errors="replace").splitlines()
+                       if not line.lstrip().startswith("#")):
+                    found.append(str(f))
+            except OSError:
+                pass
     return found
 
 
@@ -553,6 +571,8 @@ def package(name):
                     break
                 except metadata.PackageNotFoundError:
                     pass
+        if name == "cv2":                                  # OpenCV 5.0 has none: the camera calibration's solve refuses
+            return {"version": version, "hand_eye": hasattr(importlib.import_module(name), "calibrateHandEye")}
         return {"version": version}
     return ask
 def lite():
@@ -782,8 +802,13 @@ def report(copy: Path, info: dict, got, rules: str | None, optional: bool) -> li
              + ("" if absent or ubuntu_at_least(info, 24) else " Its ARM64 build needs Ubuntu 24.04's libraries (glibc 2.38)."),
              "the camera library is not installed" if absent else "the camera library does not load")
     cv, ul, torch = pk("cv2"), pk("ultralytics"), pk("torch")
-    line(cv["ok"], f"OpenCV {v('cv2')}: installed (the lid's depth contours)" if cv["ok"]
-         else f"OpenCV does not import ({cv.get('why')}): the lid is read by the fit alone", "OpenCV does not import")
+    if cv["ok"] and not cv.get("hand_eye", True):
+        line(False, f"OpenCV {v('cv2')} has no calibrateHandEye: the camera calibration cannot be solved with it. Run this "
+             "installer again: it installs the OpenCV Lite is tested with (requirements-optional.txt)",
+             "this OpenCV cannot solve the camera calibration")
+    else:
+        line(cv["ok"], f"OpenCV {v('cv2')}: installed (the lid's depth contours, the camera calibration)" if cv["ok"]
+             else f"OpenCV does not import ({cv.get('why')}): the lid is read by the fit alone", "OpenCV does not import")
     model = pk("colour_model")
     if ul["ok"] and torch["ok"] and model["ok"]:
         where = ("the GPU (CUDA)" if torch.get("cuda") else
@@ -852,9 +877,68 @@ def how_to_start(copy: Path, arm_ips: dict | None = None) -> None:
 
 # ── 7. the test suite
 
-def run_tests(copy: Path) -> bool:
+def tee(cmd: list, cwd) -> tuple:
+    """The command run with its output shown as it comes and kept: (exit code, the text)."""
+    print("   $ " + " ".join(str(c) for c in cmd), flush=True)
+    p = subprocess.Popen([str(c) for c in cmd], cwd=str(cwd), env=clean_env(), stdin=subprocess.DEVNULL,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    raw, kept = getattr(sys.stdout, "buffer", None), []
+    while True:
+        data = os.read(p.stdout.fileno(), 4096)
+        if not data:
+            break
+        kept.append(data)
+        if raw is not None:
+            raw.write(data)
+            raw.flush()
+        else:
+            sys.stdout.write(data.decode("utf-8", "replace"))
+            sys.stdout.flush()
+    return p.wait(), b"".join(kept).decode("utf-8", "replace")
+
+
+def failed_tests(text: str) -> list:
+    """The tests pytest's summary names as failed or in error (its FAILED / ERROR lines), in order, once each."""
+    found = []
+    for m in re.finditer(r"^(?:FAILED|ERROR) (\S.*?)(?: - .*)?$", text, re.M):
+        name = m.group(1).strip()
+        if "::" in name and name not in found:
+            found.append(name)
+    return found
+
+
+def run_tests(copy: Path) -> dict:
+    """The test suite as setup runs it (8 workers, a file each), after setup's own check of the environment. Tests
+    that fail in the full run are run again alone, in one process: ALIX's streamer ends a 5 ms stream whose sender is
+    more than two periods late (track.CANFD_LATE_ABORT_PERIODS: it stops feeding the arm sooner than feed it late),
+    which 8 workers on every core can cause on the Jetson, and which is then the test run's load, not Lite's (the
+    Jetson's first install, 10 Nov 2026: two emulated lid runs, "47 of 264" and "212 of 589 lines sent").
+    Returns {ok: nothing fails alone, failed: in the full run, alone: those that pass alone, still: those that do not}."""
     say("Check (the test suite)")
-    return run([venv_python(copy), copy / "tools/setup_lite.py", "--check"], cwd=copy, check=False) == 0
+    vpy = venv_python(copy)
+    if run([vpy, copy / "tools/setup_lite.py", "--check", "--no-tests"], cwd=copy, check=False) != 0:
+        return dict(ok=False, failed=[], alone=[], still=["the environment's own check (above)"])
+    t0 = time.time()
+    rc, text = tee([vpy, "-m", "pytest", "-q", "-p", "no:cacheprovider"], copy)
+    note(f"tests {'passed' if rc == 0 else 'did NOT all pass'} in {time.time() - t0:.0f} s")
+    if rc == 0:
+        return dict(ok=True, failed=[], alone=[], still=[])
+    failed = failed_tests(text)
+    if not failed:                                  # the run itself failed (nothing collected, interrupted)
+        return dict(ok=False, failed=[], alone=[], still=["the test run itself (above)"])
+    say(f"The {len(failed)} test{'' if len(failed) == 1 else 's'} that did not pass, run again alone")
+    note("in one process, with the computer to themselves: a 5 ms stream ends itself when its sender is more than 10 ms "
+         "late, which the full run's 8 workers on every core can cause")
+    rc, text = tee([vpy, "-m", "pytest", "-q", "-n", "0", "-p", "no:cacheprovider", *failed], copy)
+    still = [] if rc == 0 else (failed_tests(text) or list(failed))
+    alone = [name for name in failed if name not in still]
+    if alone:
+        note(f"{len(alone)} of them pass{'es' if len(alone) == 1 else ''} alone: the full run's load made "
+             f"{'it' if len(alone) == 1 else 'them'} late, not Lite"
+             + ("" if still else ". A Jetson that is not in the MAXN power mode is likelier to do this (sudo nvpmodel -q)"))
+    for name in still:
+        note(f"** fails alone too: {name}")
+    return dict(ok=not still, failed=failed, alone=alone, still=still)
 
 
 def main(argv=None) -> int:
@@ -912,18 +996,21 @@ def main(argv=None) -> int:
         note(rules)
     got = probe(copy)
     issues = report(copy, info, got, rules, optional=not a.no_optional)
-    tests_ok = True
+    tests = dict(ok=True, failed=[], alone=[], still=[])
     if not a.no_tests:
-        tests_ok = run_tests(copy)
-        if not tests_ok:
-            issues.append("the test suite did not pass")
+        tests = run_tests(copy)
+        if tests["still"]:
+            issues.append("the test suite did not pass (" + ", ".join(t.split("::")[-1] for t in tests["still"]) + ")")
+        elif tests["alone"]:
+            n = len(tests["alone"])
+            issues.append(f"{n} test{'' if n == 1 else 's'} passed only when run alone (timing under the full run's load)")
     how_to_start(copy, arm_ips_of(got))
     say("ALIX Studio Lite is installed on this Jetson"
         + ("" if not issues else ", with " + ("this" if len(issues) == 1 else "these") + " to look at: " + "; ".join(issues)))
     if a.start:
         say("Starting Lite (Ctrl+C to stop)")
         return subprocess.call([str(venv_python(copy)), str(copy / "tools/run_lite.py")], env=clean_env())
-    return 0 if tests_ok else 1
+    return 0 if tests["ok"] else 1
 
 
 if __name__ == "__main__":

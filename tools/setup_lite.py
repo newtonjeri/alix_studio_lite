@@ -118,6 +118,27 @@ def make_venv() -> Path:
     return vpy
 
 
+def install_toppra(vpy: Path, req: str) -> bool:
+    """The Time-optimal optimiser: PyPI's ready-made build where it has one (Linux x86-64 only), else built from its
+    git tag. PyPI is asked without its answer being shown: where it has no build, pip says so in two ERROR lines, which
+    read as a failed install when they are the expected way (the Jetson, 10 Nov 2026: the user took them for one). What
+    is said instead is which way it goes; pip's own words are shown only when it failed for another reason."""
+    print(f"   $ {vpy} -m pip install {req}      (PyPI's ready-made build, where it has one)", flush=True)
+    got = subprocess.run([str(vpy), "-m", "pip", "install", "--only-binary", ":all:", req], env=clean_env(), cwd=str(ROOT),
+                         capture_output=True, text=True, errors="replace")
+    if got.returncode == 0:
+        return True
+    said = (got.stderr or "") + (got.stdout or "")
+    if "No matching distribution" in said or "Could not find a version" in said:
+        print(f"   PyPI has no ready-made toppra for this computer ({platform.system()} {platform.machine()}: it has them "
+              "for Linux x86-64 only),\n   so it is built here from its source, which is the normal way on this computer "
+              "(a minute or two; it needs git,\n   a C compiler and Python's headers)", flush=True)
+    else:
+        print("   PyPI's toppra could not be installed:\n" + "\n".join("      " + ln for ln in said.strip().splitlines()[-6:])
+              + "\n   building it from its source instead", flush=True)
+    return run([vpy, "-m", "pip", "install", "cython", TOPPRA_GIT], check=False) == 0
+
+
 def install(vpy: Path, optional: bool) -> dict:
     say("Packages (requirements.txt)")
     run([vpy, "-m", "pip", "install", "--upgrade", "pip"], quiet=True)
@@ -127,10 +148,10 @@ def install(vpy: Path, optional: bool) -> dict:
         say("Optional packages (requirements-optional.txt)")
         for req in requirement_lines(OPT):
             name = req.split("==")[0].split(" ")[0]
-            ok = run([vpy, "-m", "pip", "install", req], check=False) == 0
-            if not ok and name == "toppra":
-                print("   no toppra wheel for this computer: building it from its git tag (needs git and a C compiler)")
-                ok = run([vpy, "-m", "pip", "install", "cython", TOPPRA_GIT], check=False) == 0
+            if name == "toppra":
+                ok = install_toppra(vpy, req)
+            else:
+                ok = run([vpy, "-m", "pip", "install", req], check=False) == 0
             results[name] = ok
             print(f"   {name}: {'installed' if ok else 'NOT installed (Lite works without it)'}")
     say("Lite itself (editable)")
@@ -147,7 +168,7 @@ def check(vpy: Path, tests: bool) -> bool:
              "bad = vendor_paths.assert_independent()\n"
              "print(f'   Lite {__version__}; numpy {numpy.__version__}, scipy {scipy.__version__}, trimesh {trimesh.__version__}')\n"
              "print('   vendored ALIX code imports from this folder only' if not bad else f'** outside: {bad}')\n"
-             "for m, what in (('toppra', 'Time-optimal optimiser'), ('meshoptimizer', 're-baking the robot overlay'), ('pyrealsense2', 'the wrist camera (lid and seat checks)'), ('ultralytics', 'the wrist camera colour models')):\n"
+             "for m, what in (('toppra', 'Time-optimal optimiser'), ('meshoptimizer', 're-baking the robot overlay'), ('pyrealsense2', 'the wrist camera (lid and seat checks)'), ('cv2', 'OpenCV (the lid depth contours, the camera calibration)'), ('ultralytics', 'the wrist camera colour models')):\n"
              "    print(f\"   {what}: {'available' if u.find_spec(m) else 'not installed'}\")\n"
              "sys.exit(1 if bad else 0)\n")
     ok = run([vpy, "-c", probe], check=False, label=f"{vpy.name} -c <import check>") == 0

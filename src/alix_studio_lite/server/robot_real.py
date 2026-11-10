@@ -496,6 +496,16 @@ def _end_words(settle: dict) -> str:
     return f", NOT at rest after {settle['waited_s']:.1f} s"
 
 
+def _cut_words(cut, aborted, stopped: bool = False):
+    """Why a stream ended early: the verdict's name with what ended the stream, when ALIX's streamer says it (the
+    host late at a line, a stop check, sends that failed). The name alone said too little: on the Jetson's first
+    install (10 Nov) two emulated lid runs ended with "failed: not_early; 47 of 264 lines sent" while the full test
+    run loaded every core, and nothing said the streamer had ended them itself, or over what."""
+    if cut and aborted and str(aborted) not in str(cut):
+        return f"{cut}: {aborted}"
+    return cut or aborted or ("STOP" if stopped else None)
+
+
 def _interrupt(tid: int, exc=KeyboardInterrupt) -> None:
     """``exc`` raised in thread ``tid`` at its next Python step (None: forget one not yet raised)."""
     import ctypes
@@ -1901,12 +1911,16 @@ class RealArm:
         if not cs and out.get("interrupted"):         # STOP inside run_verified: no result, the stop checks saw the lines
             sent = watch.last_line + 1
         bridged = out.get("gap_deg") if out.get("movej_ret") == 0 else None
-        why = out.get("cut_reason") or cs.get("aborted") or ("STOP" if stop.is_set() else None)
+        why = _cut_words(out.get("cut_reason"), cs.get("aborted"), stop.is_set())
         settle = out.get("settle") or {}
         end_words = _end_words(settle) if settle else (", its end waited for later" if ok and not settle else "")
         self._hw("canfd stream", args=dict(label=label, lines=n, period_ms=CANFD_PERIOD_S * 1000, rate_gate="per_joint",
                                            bridge_speed=bridge_speed, capture=cap.name, ratio_held=held,
-                                           t_mono=[round(t_mono0, 3), round(t_mono1, 3)], settle=settle or None),
+                                           t_mono=[round(t_mono0, 3), round(t_mono1, 3)], settle=settle or None,
+                                           # how late this computer sent its lines (mean, worst; lines over a period
+                                           # late): the streamer ends a stream at two periods (the Jetson, 10 Nov)
+                                           late_ms=[cs.get("late_ms_mean"), cs.get("late_ms_max")] if cs else None,
+                                           late_lines=cs.get("frames_late_over_period")),
                  ret=out.get("verdict"), ok=ok, elapsed_s=time.monotonic() - t0,
                  text=f"{sent}/{n} lines" + end_words + (f", bridged {bridged:.2f} deg" if bridged else "") + (f"; {why}" if why and not ok else ""))
         if stop.is_set():

@@ -181,9 +181,20 @@ def test_the_cameras_rules_are_taken_only_with_their_checksum(jet, monkeypatch):
 def test_the_cameras_rules_are_left_alone_where_they_are_and_said_where_they_cannot_go(jet, tmp_path, monkeypatch):
     there = tmp_path / "rules.d"
     there.mkdir()
-    (there / "60-librealsense2-udev-rules.rules").write_text("# a ROS package's\n")
+    usb = 'SUBSYSTEMS=="usb", ATTRS{idVendor}=="8086", ATTRS{idProduct}=="0b07", MODE:="0666", GROUP:="plugdev"\n'
+    # a Jetson's rules for cameras on MIPI are named after RealSense and give the USB camera nothing: the first install
+    # there (10 Nov) took them for the camera's rules by their name and installed none
+    (there / "60-librealsense2-mipi-udev-rules.rules").write_text(
+        '# D4XX MIPI\nSUBSYSTEM=="video4linux", ATTR{name}=="DS5 mux*", SYMLINK+="video-rs-depth-%n"\n'
+        '# SUBSYSTEMS=="usb", ATTRS{idVendor}=="8086", ATTRS{idProduct}=="0b07"   (a comment is not a rule)\n')
     monkeypatch.setattr(jet, "RULES_DIRS", (str(there), str(tmp_path / "none")))
-    assert jet.install_camera_rules(sudo=True).startswith("already installed (")
+    assert jet.camera_rules() == []
+    (there / "60-librealsense2-udev-rules.rules").write_text("# a package's\n" + usb)
+    assert jet.camera_rules() == [str(there / "60-librealsense2-udev-rules.rules")]
+    assert jet.install_camera_rules(sudo=True) == f"already installed ({there / '60-librealsense2-udev-rules.rules'})"
+    (there / "60-librealsense2-udev-rules.rules").write_text(
+        'KERNEL=="iio*", ATTRS{idVendor}=="8086", ATTRS{idProduct}=="0ad5|0afe|0b3a|0b3d", RUN+="/bin/true"\n')
+    assert jet.camera_rules() == [str(there / "60-librealsense2-udev-rules.rules")]          # a list of models with the D435i
     monkeypatch.setattr(jet, "RULES_DIRS", (str(tmp_path / "none"),))
     monkeypatch.setattr(jet.shutil, "which", lambda name: None)                     # no udev at all
     assert jet.install_camera_rules(sudo=True) == "not installed: this system has no udev"
@@ -212,6 +223,42 @@ def test_the_optimisers_source_build_names_its_python_folder():
     assert setup.TOPPRA_GIT == f"toppra @ git+https://github.com/hungpham2511/toppra@{pin.split('==')[1]}#subdirectory=python"
 
 
+def test_the_optimisers_expected_source_build_is_not_said_as_an_error(monkeypatch, capsys):
+    """The Jetson, 10 Nov: PyPI has no ARM64 toppra, pip said so in two ERROR lines and the install read as failed,
+    when building it from source is the normal way there. PyPI is asked without its answer being shown; what is said
+    is which way it goes. pip's own words are shown only when it failed for another reason (no network)."""
+    from types import SimpleNamespace
+
+    spec = importlib.util.spec_from_file_location("setup_lite", ROOT / "tools/setup_lite.py")
+    setup = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(setup)
+    vpy, built, asked = Path("/home/dev/alix_studio_lite/.venv/bin/python"), [], []
+    monkeypatch.setattr(setup, "run", lambda cmd, **kw: built.append([str(c) for c in cmd]) or 0)
+
+    def pypi(returncode, stderr=""):
+        def fake(cmd, **kw):
+            asked.append([str(c) for c in cmd])
+            return SimpleNamespace(returncode=returncode, stdout="", stderr=stderr)
+        monkeypatch.setattr(setup.subprocess, "run", fake)
+
+    pypi(0)                                                                        # Linux x86-64: PyPI's wheel
+    assert setup.install_toppra(vpy, "toppra==0.6.10") and not built
+    assert asked[0][-4:] == ["install", "--only-binary", ":all:", "toppra==0.6.10"]
+    none = ("ERROR: Could not find a version that satisfies the requirement toppra==0.6.10 (from versions: 0.2.2a0, 0.6.3)\n"
+            "ERROR: No matching distribution found for toppra==0.6.10\n")
+    capsys.readouterr()
+    pypi(1, none)                                                                  # the Jetson: none, so its source
+    assert setup.install_toppra(vpy, "toppra==0.6.10")
+    said = capsys.readouterr().out
+    assert "PyPI has no ready-made toppra for this computer" in said and "the normal way on this computer" in said
+    assert "ERROR" not in said and built == [[str(vpy), "-m", "pip", "install", "cython", setup.TOPPRA_GIT]]
+    built.clear()
+    pypi(1, "ERROR: Could not install packages due to an OSError: Network is unreachable\n")
+    setup.install_toppra(vpy, "toppra==0.6.10")
+    said = capsys.readouterr().out
+    assert "PyPI's toppra could not be installed" in said and "Network is unreachable" in said and len(built) == 1
+
+
 def test_the_network_toward_the_arms(jet):
     arms = {"left": "192.168.1.10", "right": "192.168.1.103"}
     assert jet.same_network("192.168.1.50", 24, "192.168.1.10") and not jet.same_network("10.0.0.7", 24, "192.168.1.10")
@@ -231,7 +278,8 @@ def answers(**changes) -> dict:
     ok = lambda v: {"ok": True, "version": v}                                    # noqa: E731
     got = {"python": "3.12.3", "machine": "aarch64", "lite": {"ok": True, "version": "0.1.0", "outside": []},
            "numpy": ok("2.4.6"), "scipy": ok("1.17.1"), "trimesh": ok("4.12.2"), "fcl": ok(""), "toppra": ok("0.6.10"),
-           "meshoptimizer": ok("0.2.30a0"), "cv2": ok("5.0.0"), "pyrealsense2": ok("2.57.7.10387"), "ultralytics": ok("8.4.55"),
+           "meshoptimizer": ok("0.2.30a0"), "cv2": {"ok": True, "version": "4.13.0", "hand_eye": True},
+           "pyrealsense2": ok("2.57.7.10387"), "ultralytics": ok("8.4.55"),
            "torch": {"ok": True, "version": "2.15.0", "cuda": False}, "colour_model": {"ok": True, "load_s": 4.2, "frame_ms": 85},
            "robot_library": {"ok": True, "folder": "libs/linux_arm"},
            "arms": {"ok": True, "ips": {"left": "192.168.1.10", "right": "192.168.1.103"}},
@@ -254,6 +302,12 @@ def test_the_report_says_each_thing_and_keeps_what_needs_looking_at(jet, tmp_pat
     assert "its CUDA libraries (most of the environment's 7 GB) are not used here" in said and "--cpu-torch" in said
     jet.report(tmp_path, info, answers(torch={"ok": True, "version": "2.15.0+cpu", "cuda": False}), "already installed (x)", optional=True)
     assert "CUDA libraries" not in capsys.readouterr().out                           # the processor-only build: nothing to say
+    assert "OpenCV 4.13.0: installed (the lid's depth contours, the camera calibration)" in said
+    # OpenCV 5.0, which a fresh install brought until it was pinned, cannot solve the camera calibration (the Jetson's
+    # first install, 10 Nov: "this Python's OpenCV (5.0.0) has no calibrateHandEye", 2 tests of the suite)
+    five = answers(cv2={"ok": True, "version": "5.0.0", "hand_eye": False})
+    assert jet.report(tmp_path, info, five, "already installed (x)", optional=True) == ["this OpenCV cannot solve the camera calibration"]
+    assert "** OpenCV 5.0.0 has no calibrateHandEye" in capsys.readouterr().out
     # PyTorch that can use the Jetson's GPU says so; a model that does not answer is kept (the depth answers alone)
     jet.report(tmp_path, info, answers(torch={"ok": True, "version": "2.15.0", "cuda": True}), "already installed (x)", optional=True)
     assert "answers a frame in 85 ms, on the GPU (CUDA)" in capsys.readouterr().out
@@ -357,6 +411,56 @@ def test_cpu_torch_puts_the_processor_only_build_in_before_setup(jet, tmp_path, 
     order.clear()
     jet.install(tmp_path / "new", "/usr/bin/python3.12", SimpleNamespace(cpu_torch=True, no_optional=True, branch=None, shortcut=False))
     assert order == ["install_lite"]
+
+
+def test_opencv_is_pinned_before_the_package_that_takes_any():
+    """ultralytics takes any OpenCV from 4.6, so a fresh install brought the newest (5.0, without calibrateHandEye).
+    The tested version is pinned, and before ultralytics in the file: setup installs the lines in order and pip keeps
+    an OpenCV that is already there."""
+    lines = [ln.split("==")[0] for ln in (ROOT / "requirements-optional.txt").read_text().splitlines()
+             if ln.strip() and not ln.startswith("#")]
+    assert "opencv-python" in lines and lines.index("opencv-python") < lines.index("ultralytics")
+    pin = next(ln for ln in (ROOT / "requirements-optional.txt").read_text().splitlines() if ln.startswith("opencv-python=="))
+    assert pin.split("==")[1].startswith("4.")
+    cv2 = pytest.importorskip("cv2")
+    assert hasattr(cv2, "calibrateHandEye"), f"this computer's OpenCV {cv2.__version__} cannot solve the camera calibration"
+
+
+SUMMARY = ("....F.F\\n=========================== short test summary info ============================\\n"
+           "SKIPPED [1] tests/test_alix_sync.py:38: ALIX is not here\\n"
+           "FAILED tests/test_s2_lid_emulated.py::test_a_lid_task - AssertionError: 47 of 264 lines sent\\n"
+           "FAILED tests/test_hand_eye_cal.py::test_solves[board-1] - UserError: no calibrateHandEye - twice\\n"
+           "2 failed, 650 passed, 1 skipped in 278.64s\\n")
+
+
+def test_a_test_that_fails_in_the_full_run_is_run_again_alone(jet, tmp_path, capsys):
+    """The Jetson's first install, 10 Nov: 4 of 660 failed, two of them emulated lid runs whose 5 ms stream was fed
+    late while 8 workers loaded every core (ALIX's streamer ends such a stream), two a real fault (OpenCV 5.0). The
+    failed ones are run again in one process: what passes alone is the full run's load, what does not is real."""
+    assert jet.failed_tests(SUMMARY.replace("\\n", "\n")) == ["tests/test_s2_lid_emulated.py::test_a_lid_task",
+                                                              "tests/test_hand_eye_cal.py::test_solves[board-1]"]
+    assert jet.failed_tests("654 passed, 6 skipped in 270s\n") == []
+    full = f"printf '{SUMMARY}'; exit 1;;"
+    # all of them pass alone: said, kept as something to look at, and not a failed install
+    copy = fake_environment(tmp_path, "late", f'case "$*" in *"-n 0"*) printf "..\\n2 passed in 31s\\n"; exit 0;; *"-m pytest"*) {full} *) exit 0;; esac\n')
+    got = jet.run_tests(copy)
+    assert got["ok"] and len(got["failed"]) == 2 and got["alone"] == got["failed"] and got["still"] == []
+    said = capsys.readouterr().out
+    assert "The 2 tests that did not pass, run again alone" in said and "2 of them pass alone" in said and "nvpmodel" in said
+    assert "-n 0 -p no:cacheprovider tests/test_s2_lid_emulated.py::test_a_lid_task tests/test_hand_eye_cal.py::test_solves[board-1]" in said
+    # one of them fails alone too: that one is real
+    again = ("printf 'F.\\nFAILED tests/test_hand_eye_cal.py::test_solves[board-1] - UserError: no calibrateHandEye\\n"
+             "1 failed, 1 passed in 12s\\n'; exit 1;;")
+    copy = fake_environment(tmp_path, "real", f'case "$*" in *"-n 0"*) {again} *"-m pytest"*) {full} *) exit 0;; esac\n')
+    got = jet.run_tests(copy)
+    assert not got["ok"] and got["still"] == ["tests/test_hand_eye_cal.py::test_solves[board-1]"]
+    assert got["alone"] == ["tests/test_s2_lid_emulated.py::test_a_lid_task"]
+    assert "** fails alone too: tests/test_hand_eye_cal.py::test_solves[board-1]" in capsys.readouterr().out
+    # a clean run asks nothing again; an environment whose own check fails is not tested at all
+    clean = fake_environment(tmp_path, "clean", 'case "$*" in *"-m pytest"*) printf "......\\n654 passed in 270s\\n"; exit 0;; *) exit 0;; esac\n')
+    assert jet.run_tests(clean) == dict(ok=True, failed=[], alone=[], still=[])
+    broken = fake_environment(tmp_path, "broken", "exit 1\n")
+    assert not jet.run_tests(broken)["ok"]
 
 
 def test_an_environment_of_another_python_is_built_again(jet, tmp_path):

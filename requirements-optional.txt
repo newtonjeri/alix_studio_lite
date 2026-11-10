@@ -20,6 +20,12 @@ rtree==1.4.1
 # 22.04 it installs and does not load). Without it the lid and seat tasks still simulate and run in Hardware sim;
 # Real refuses their checks (fail-closed), so nothing is lifted unseen.
 pyrealsense2==2.57.7.10387
+# OpenCV, which reads the pictures for the lid's depth contours, the camera calibration and the colour models: the
+# version Lite is tested with, installed before the colour models' package, which takes any OpenCV from 4.6. A fresh
+# install brought OpenCV 5.0 (on PyPI since July 2026), which has no calibrateHandEye: the camera calibration's solve
+# refused (the lab, 4 Nov; the Jetson's first install, 10 Nov: 2 tests of the suite). It has wheels for every platform,
+# Linux aarch64 too.
+opencv-python==4.13.0.92
 # The wrist camera's colour models (ALIX's alix_perception_core, vendored: the YOLO status model of the commode's
 # state, models_synthetic_real_v10.yaml), asked by the lid and seat checks as ALIX's perception node asks them:
 # the version ALIX runs. It brings PyTorch (on Linux x86-64 PyPI's build carries CUDA, a large download; on a

@@ -145,3 +145,16 @@ def test_a_hand_that_settles_on_the_tool_is_done():
     assert robot.in_stage("left", grip)
     a.hand = [1000] * 6                                                  # opened since: not in the setup
     assert not robot.in_stage("left", grip)
+
+
+def test_a_cut_stream_says_what_ended_it():
+    """The Jetson's first install, 10 Nov: two emulated lid runs ended "failed: not_early; 47 of 264 lines sent" while
+    the full test run loaded every core. The verdict's name is kept and what ALIX's streamer says ended the stream is
+    said with it; a STOP is a STOP; a stream that completed has nothing to say."""
+    from alix_studio_lite.server.robot_real import _cut_words
+
+    late = "the host was 12.4 ms late at line 47 (2.5 periods): the controller is no longer being fed at the rate the preflight validated"
+    assert _cut_words("failed: not_early", late) == "failed: not_early: " + late
+    assert _cut_words("failed: not_early", None) == "failed: not_early" and _cut_words(None, late) == late
+    assert _cut_words("stop check: 120 N", "stop check: 120 N") == "stop check: 120 N"      # said once
+    assert _cut_words(None, None, stopped=True) == "STOP" and _cut_words(None, None) is None
