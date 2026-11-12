@@ -15,7 +15,7 @@
  },
  "applied": {
   "hand": {
-   "pole_mm": 50.0,
+   "pole_mm": 200.0,
    "hand": [
     1000,
     1000,
@@ -24,7 +24,7 @@
     1000,
     1000
    ],
-   "at": "2026-10-29 15:32:18"
+   "at": "2026-11-12 15:04:47"
   },
   "pole": {
    "pole_mm": 200.0,
@@ -36,7 +36,7 @@
     1000,
     1000
    ],
-   "at": "2026-10-29 15:32:30"
+   "at": "2026-11-12 15:04:45"
   }
  },
  "active": "20261029_153303_R-T10.txt",
@@ -51,7 +51,7 @@
    }
   ],
   "smooth_window": 101,
-  "program_id": null,
+  "program_id": 100,
   "max_dev_mm": null,
   "trim": true,
   "smooth": true,
@@ -224,8 +224,33 @@
     "idle_min_run": 20
    },
    "at": 1793974833.1507542
+  },
+  {
+   "label": "Program ID 100",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": 5.0,
+    "segments": [
+     {
+      "start": 1,
+      "end": 2317,
+      "pct": 120.0
+     }
+    ],
+    "smooth_window": 101,
+    "program_id": 100,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": true,
+    "scale": true,
+    "time_mode": "target",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1794467121.8576562
   }
  ],
- "cursor": 7,
- "version": "v001"
+ "cursor": 8,
+ "version": "v002"
 }

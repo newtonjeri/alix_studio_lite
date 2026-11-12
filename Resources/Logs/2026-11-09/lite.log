@@ -1,0 +1,941 @@
+19:29:08.438 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+19:29:08.481 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+19:29:08.481 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+19:29:10.108 [activity] - page: NAVIGATION · Open screen
+19:29:10.108 [activity] - page: SYSTEM · ASL frontend initialized
+19:29:11.092 [RIGHT] camera · perception warmed up in 4.3 s: its core built, the colour model loaded
+19:29:21.956 [activity] - POST /api/auth/login
+19:29:21.967 [activity] operator:09d09b page: AUTH · Setting changed
+19:29:21.970 [activity] operator:09d09b page: UI · Button action
+19:29:22.770 [activity] operator:09d09b page: AUTH · Operator login
+19:29:22.770 [activity] operator:09d09b page: NAVIGATION · Open screen
+19:29:32.040 [activity] operator:09d09b page: PROJECT · Button action
+19:29:32.868 [activity] operator:09d09b page: NAVIGATION · Task loaded
+19:29:32.871 [activity] operator:09d09b page: SETUP · Arm selected
+19:29:32.872 [activity] operator:09d09b page: NAVIGATION · Teaching stage changed
+19:29:32.874 [activity] operator:09d09b page: SETUP · Arm selected
+19:29:32.875 [activity] operator:09d09b page: NAVIGATION · Open screen
+19:29:36.120 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames -> REFUSED: ALIX's plan of Open the lid is not the one this simulation was made with (it was revised since), so the simulation no longer plays.
+19:29:36.388 [activity] operator:09d09b page: SYSTEM · 3D device
+19:29:38.507 [activity] operator:09d09b page: UI · Button action
+19:29:38.698 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:29:40.466 [activity] operator:09d09b page: SEQUENCE · Button action
+19:29:40.466 [activity] operator:09d09b page: NAVIGATION · Open screen
+19:29:40.679 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:29:41.994 [activity] operator:09d09b page: SEQUENCE · Button action
+19:29:42.208 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:29:45.609 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:29:52.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:29:54.047 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:29:58.191 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:30:01.643 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:30:04.652 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:30:09.589 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:30:22.772 [activity] operator:09d09b page: SYSTEM · Session active
+19:30:52.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:31:22.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:31:52.772 [activity] operator:09d09b page: SYSTEM · Session active
+19:32:10.290 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:32:13.322 [activity] operator:09d09b page: UI · Button action
+19:32:13.534 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:32:13.803 [LEFT] ALERT ERROR · The controller reports 4116 (0x1014 Joint out of soft limit error). (Check the arm and its pendant; clear the error there before running.)
+19:32:13.919 [LEFT] read global speed ret=0 · not reported
+19:32:13.920 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+19:32:13.997 [LEFT] program list · 14 programs
+19:32:14.009 [LEFT] read drag sensitivity ret=0 · 100 %
+19:32:14.049 [LEFT] global points · 18 point(s)
+19:32:14.453 [LEFT] device check · controller: answers at 192.168.1.10:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 11 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 1000, 1000, 1000, 992, 990; feed: recorded on UDP port 8089 of this computer (192.168.1.20)
+19:32:14.454 [activity] operator:09d09b POST /api/robots/left/connect
+19:32:17.658 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:32:22.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:32:27.748 [activity] operator:09d09b page: UI · Button action
+19:32:27.960 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:32:30.139 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:32:50.261 [LEFT] ALERT ERROR · The controller reports 4118 (0x1016 Current loop drag enable failed; the joint is near the limit position). (Check the arm and its pendant; clear the error there before running.)
+19:32:52.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:32:56.570 [activity] operator:09d09b page: UI · Button action
+19:32:56.780 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:01.031 [activity] operator:09d09b page: UI · Button action
+19:33:01.242 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:01.946 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:05.018 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:07.825 [activity] operator:09d09b page: UI · Button action
+19:33:08.037 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:10.202 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:10.267 [activity] operator:09d09b page: UI · Button action
+19:33:10.478 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:11.314 [activity] operator:09d09b page: UI · Button action
+19:33:11.314 [activity] operator:09d09b page: UI · Button action
+19:33:11.314 [activity] operator:09d09b page: UI · Button action
+19:33:12.027 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:13.072 [LEFT] restore global speed {"pct": 50} ret=0
+19:33:13.136 [activity] operator:09d09b POST /api/robots/left/disconnect
+19:33:13.138 [activity] operator:09d09b POST /api/robots/right/disconnect
+19:33:13.210 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:13.836 [activity] operator:09d09b page: UI · Button action
+19:33:14.047 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:15.270 [LEFT] read global speed ret=0 · not reported
+19:33:15.270 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+19:33:15.277 [LEFT] read drag sensitivity ret=0 · 100 %
+19:33:15.507 [LEFT] device check · controller: answers at 192.168.1.10:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 11 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 1000, 1000, 1000, 992, 988; feed: recorded on UDP port 8089 of this computer (192.168.1.20)
+19:33:15.507 [activity] operator:09d09b POST /api/robots/left/connect
+19:33:15.512 [activity] operator:09d09b page: UI · Button action
+19:33:15.551 [LEFT] program list · 14 programs
+19:33:15.577 [LEFT] global points · 18 point(s)
+19:33:15.724 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:16.283 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:16.283 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:16.283 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:18.393 [activity] operator:09d09b page: UI · Button action
+19:33:18.605 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:19.354 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:19.403 [activity] operator:09d09b page: UI · Button action
+19:33:19.403 [activity] operator:09d09b page: UI · Button action
+19:33:19.403 [activity] operator:09d09b page: UI · Button action
+19:33:20.016 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:22.426 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:22.426 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:22.427 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:22.427 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: Lite cannot reach the RIGHT arm's controller at 192.168.1.103:8080.
+19:33:22.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:33:22.771 [activity] operator:09d09b page: UI · Button action
+19:33:22.771 [activity] operator:09d09b page: UI · Button action
+19:33:23.237 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:23.917 [activity] operator:09d09b page: UI · Button action
+19:33:23.918 [activity] operator:09d09b page: UI · Button action
+19:33:24.518 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:31.824 [RIGHT] read global speed ret=0 · not reported
+19:33:31.824 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+19:33:31.831 [RIGHT] read drag sensitivity ret=0 · 100 %
+19:33:32.079 [activity] operator:09d09b page: UI · Button action
+19:33:32.292 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:32.353 [RIGHT] device check · controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 20 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 1000, 1000, 1000, 992, 989; feed: recorded on UDP port 8090 of this computer (192.168.1.20)
+19:33:32.354 [activity] operator:09d09b POST /api/robots/right/connect
+19:33:32.423 [RIGHT] read global speed ret=0 · not reported
+19:33:32.423 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+19:33:32.430 [RIGHT] read drag sensitivity ret=0 · 100 %
+19:33:32.508 [RIGHT] read global speed ret=0 · not reported
+19:33:32.509 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+19:33:32.821 [RIGHT] device check · controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 20 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 1000, 1000, 1000, 992, 989; feed: recorded on UDP port 8090 of this computer (192.168.1.20)
+19:33:32.822 [activity] operator:09d09b POST /api/robots/right/connect
+19:33:32.825 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: The RIGHT controller's connection was given up (ended): the arm must be connected again.
+19:33:32.825 [activity] operator:09d09b POST /api/robots/right/connect -> REFUSED: The RIGHT controller's connection ended during read sensitivity: the arm must be connected again.
+19:33:32.829 [RIGHT] read global speed ret=0 · not reported
+19:33:32.829 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+19:33:32.834 [RIGHT] read drag sensitivity ret=0 · 100 %
+19:33:33.193 [RIGHT] device check · controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 20 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 1000, 1000, 1000, 1000, 992, 989; feed: recorded on UDP port 8090 of this computer (192.168.1.20)
+19:33:33.194 [activity] operator:09d09b POST /api/robots/right/connect
+19:33:37.524 [activity] operator:09d09b POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+19:33:38.324 [activity] operator:09d09b page: ROBOT · Button action
+19:33:38.536 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:41.300 [LEFT] run mode REAL
+19:33:41.321 [RIGHT] run mode REAL
+19:33:41.321 [activity] operator:09d09b POST /api/robots/mode
+19:33:42.070 [activity] operator:09d09b page: ROBOT · Button action
+19:33:42.283 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:51.748 [activity] operator:09d09b POST /api/robots/mode -> REFUSED: Switching to the real robot needs your confirmation.
+19:33:52.548 [activity] operator:09d09b page: ROBOT · Button action
+19:33:52.548 [activity] operator:09d09b page: SYSTEM · Session active
+19:33:52.759 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:54.257 [LEFT] run mode REAL
+19:33:54.277 [RIGHT] run mode REAL
+19:33:54.277 [activity] operator:09d09b POST /api/robots/mode
+19:33:55.001 [activity] operator:09d09b page: ROBOT · Button action
+19:33:55.212 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:33:58.112 [activity] operator:09d09b page: UI · Button action
+19:33:58.322 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:34:04.636 [activity] operator:09d09b page: UI · Button action
+19:34:04.848 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:34:10.524 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:34:11.863 [activity] operator:09d09b page: UI · Button action
+19:34:12.074 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:34:16.244 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:34:22.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:34:34.333 [LEFT] program list · 14 programs
+19:34:34.517 [RIGHT] program list · 14 programs
+19:34:34.549 [LEFT] global points · 18 point(s)
+19:34:34.603 [RIGHT] global points · 14 point(s)
+19:34:34.951 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the RIGHT programs Lite sent, ALIX's plan of Close the lid and Open the lid and Open the seat (revised since).
+19:34:35.013 [activity] operator:09d09b page: UI · Button action
+19:34:35.224 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:34:40.825 [LEFT] program list · 14 programs
+19:34:40.934 [RIGHT] program list · 14 programs
+19:34:40.958 [LEFT] global points · 18 point(s)
+19:34:40.978 [RIGHT] global points · 14 point(s)
+19:34:41.292 [LEFT] program list · 14 programs
+19:34:41.316 [LEFT] global points · 18 point(s)
+19:34:41.328 [activity] operator:09d09b page: ROBOT · Button action
+19:34:41.349 [RIGHT] program list · 14 programs
+19:34:41.371 [RIGHT] global points · 14 point(s)
+19:34:41.372 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+19:34:41.540 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:34:51.739 [LEFT] program list · 14 programs
+19:34:51.841 [RIGHT] program list · 14 programs
+19:34:51.884 [LEFT] global points · 18 point(s)
+19:34:51.917 [RIGHT] global points · 14 point(s)
+19:34:52.243 [LEFT] program list · 14 programs
+19:34:52.266 [LEFT] global points · 18 point(s)
+19:34:52.389 [RIGHT] program list · 14 programs
+19:34:52.408 [RIGHT] global points · 14 point(s)
+19:34:52.567 [activity] operator:09d09b page: ROBOT · Button action
+19:34:52.568 [activity] operator:09d09b page: SYSTEM · Session active
+19:34:52.637 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:34:53.072 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+19:34:53.089 [LEFT] run mode REAL
+19:34:53.108 [RIGHT] run mode REAL
+19:34:53.428 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193453_LEFT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+19:34:53.428 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261109_193453_LEFT_s2_01_PART_1.frames.jsonl"} · recording
+19:34:53.455 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193453_RIGHT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+19:34:53.455 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261109_193453_RIGHT_s2_01_PART_1.frames.jsonl"} · recording
+19:34:53.486 [RIGHT] clear warning · clean
+19:34:53.487 [LEFT] clear warning · clean
+19:34:53.487 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:34:53.487 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:34:53.488 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:34:53.488 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:34:53.501 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s
+19:34:53.505 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s
+19:34:53.525 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:34:53.525 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+19:34:53.528 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:34:53.529 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+19:34:53.562 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%
+19:34:53.621 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%
+19:34:55.239 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+19:34:55.240 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+19:34:55.240 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.7 s
+19:34:55.271 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:34:55.272 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.784 s)
+19:34:55.592 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+19:34:55.592 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+19:34:55.593 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 2.1 s
+19:34:55.619 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:34:55.620 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (2.133 s)
+19:34:57.084 [LEFT] pole and hand {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (1.803 s) · pole 11.0 -> 48.0 mm in 1.646 s, the hand moving meanwhile; hand [996, 997, 994, 1000, 569, 988]
+19:34:57.437 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+19:34:57.437 [LEFT] alix · recorded 202 frames
+19:34:57.438 [LEFT] s2 feed {"file": "20261109_193453_LEFT_s2_01_PART_1.frames.jsonl"} · 202 frames
+19:34:59.276 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (3.646 s) · pole 20.0 -> 198.0 mm in 3.248 s, the hand moving meanwhile; hand [998, 992, 998, 998, 229, 982]
+19:34:59.610 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+19:34:59.610 [RIGHT] alix · recorded 313 frames
+19:34:59.611 [RIGHT] s2 feed {"file": "20261109_193453_RIGHT_s2_01_PART_1.frames.jsonl"} · 313 frames
+19:34:59.896 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193459_LEFT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+19:34:59.897 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261109_193459_LEFT_s2_02_PART_2.frames.jsonl"} · recording
+19:34:59.926 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193459_RIGHT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+19:34:59.926 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261109_193459_RIGHT_s2_02_PART_2.frames.jsonl"} · recording
+19:34:59.927 [RIGHT] runner v14 · WORKFLOW START: 11 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:34:59.927 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:34:59.927 [LEFT] runner v14 · WORKFLOW START: 11 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:34:59.928 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:34:59.981 [RIGHT] runner v14 ·   01. PROGRAM: Program 51 51_51_R_P1_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:34:59.982 [RIGHT] runner v14 ·   02. WAIT: 3 s
+19:34:59.982 [RIGHT] runner v14 ·   03. HAND: 0,0,0,0,150,1000
+19:34:59.983 [RIGHT] runner v14 ·   04. PROGRAM: Program 52 52_52_R_P2_pole200_grip_8.7s_15p // start/transit 30% // stored trajectory timing
+19:34:59.983 [RIGHT] runner v14 ·   05. HAND: 1000,1000,1000,1000,0,1000
+19:34:59.983 [RIGHT] runner v14 ·   06. PROGRAM: Program 53 53_53_R_P2_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:34:59.983 [RIGHT] runner v14 ·   07. POLE: 50 mm
+19:34:59.984 [RIGHT] runner v14 ·   08. PROGRAM: Program 54 54_54_1_R_P2_pole50_cleaningpose // start/transit 30% // stored trajectory timing
+19:34:59.984 [RIGHT] runner v14 ·   09. WAIT: 3 s
+19:34:59.984 [RIGHT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+19:34:59.984 [RIGHT] runner v14 ·   11. PROGRAM: Program 55 55_55_R_P3_pole50_grip_22.5s_15p // start/transit 30% // stored trajectory timing
+19:34:59.998 [LEFT] runner v14 ·   01. PROGRAM: Program 51 51_51_L_P1_pole50_cleaningpose_3 // start/transit 30% // stored trajectory timing
+19:34:59.999 [LEFT] runner v14 ·   02. WAIT: 3 s
+19:34:59.999 [LEFT] runner v14 ·   03. POLE: 200 mm
+19:34:59.999 [LEFT] runner v14 ·   04. PROGRAM: Program 52 52_52_L_P2_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:35:00.000 [LEFT] runner v14 ·   05. HAND: 0,0,0,0,150,1000
+19:35:00.000 [LEFT] runner v14 ·   06. PROGRAM: Program 53 53_53_L_P2_pole200_grip_8.3s_15p // start/transit 30% // stored trajectory timing
+19:35:00.000 [LEFT] runner v14 ·   07. WAIT: 3 s
+19:35:00.001 [LEFT] runner v14 ·   08. HAND: 1000,1000,1000,1000,0,1000
+19:35:00.001 [LEFT] runner v14 ·   09. PROGRAM: Program 54 54_54_L_P3_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:35:00.001 [LEFT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+19:35:00.002 [LEFT] runner v14 ·   11. PROGRAM: Program 55 55_55_L_P3_pole200_grip_44.5s_15 // start/transit 30% // stored trajectory timing
+19:35:00.002 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:35:00.002 [RIGHT] runner v14 · WORKFLOW STEP START 1/11: PROGRAM
+19:35:00.027 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:35:00.028 [LEFT] runner v14 · WORKFLOW STEP START 1/11: PROGRAM
+19:35:00.043 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/11: slot 51 (51_51_R_P1_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:35:00.074 [LEFT] runner v14 · WORKFLOW PROGRAM 1/11: slot 51 (51_51_L_P1_pole50_cleaningpose_3) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:35:01.998 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 1/11: slot 51 // start ack 1.887 s
+19:35:02.405 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 1/11: slot 51 // start ack 2.286 s
+19:35:02.406 [-] start together {"rows": {"left": 5, "right": 5}, "programs": {"left": 51, "right": 51}, "delay": {"left": 0.0, "right": 0.0}, "played_apart_s": 0.408, "sent_apart_s": 0.0, "ack": {"left": 1.887, "right": 2.286}, "held_s": {"left": 0.0, "right": 0.032}} · Started together: LEFT row 5 (Program 51) and RIGHT row 5 (Program 51) began to play 0.41 s apart (LEFT first); started at the same moment (within 0.000 s); their controllers read their files in LEFT 1.89 s, RIGHT 2.29 s.
+19:35:19.548 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+19:35:19.550 [LEFT] runner v14 · ** WORKFLOW STOP REQUESTED
+19:35:19.555 [LEFT] runner v14 ·   arm slow-stop ret=0
+19:35:19.565 [RIGHT] runner v14 · ** WORKFLOW STOP REQUESTED
+19:35:19.577 [RIGHT] runner v14 ·   arm slow-stop ret=0
+19:35:19.577 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:35:19.577 [LEFT] workflow {"steps": 11, "overall_speed": 60, "restore_speed": 50} ret=1 (19.650 s) · WORKFLOW STOP REQUESTED
+19:35:19.596 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:35:19.596 [RIGHT] workflow {"steps": 11, "overall_speed": 60, "restore_speed": 50} ret=1 (19.670 s) · WORKFLOW STOP REQUESTED
+19:35:19.959 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+19:35:19.959 [RIGHT] alix · recorded 1002 frames
+19:35:19.959 [RIGHT] s2 feed {"file": "20261109_193459_RIGHT_s2_02_PART_2.frames.jsonl"} · 1002 frames
+19:35:19.965 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+19:35:19.969 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+19:35:19.969 [LEFT] alix · recorded 1000 frames
+19:35:19.969 [LEFT] s2 feed {"file": "20261109_193459_LEFT_s2_02_PART_2.frames.jsonl"} · 1000 frames
+19:35:20.017 [LEFT] restore global speed {"pct": 50} ret=0
+19:35:20.036 [RIGHT] restore global speed {"pct": 50} ret=0
+19:35:20.036 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: INTERRUPTED — E-STOP: it did not finish.
+19:35:20.036 [BOTH] ALERT ERROR · S2 Real Machine: both arms: INTERRUPTED — E-STOP: it did not finish. (Release the E-stop and follow Recover. Nothing restarts by itself.)
+19:35:22.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:35:52.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:36:05.721 [activity] operator:09d09b page: UI · Button action
+19:36:05.933 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:36:12.325 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:36:12.859 [activity] operator:09d09b POST /api/robots/left/recover
+19:36:13.659 [activity] operator:09d09b page: UI · Button action
+19:36:13.870 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:36:14.178 [activity] operator:09d09b POST /api/robots/right/recover
+19:36:14.979 [activity] operator:09d09b page: UI · Button action
+19:36:15.189 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:36:17.431 [activity] operator:09d09b page: UI · Button action
+19:36:17.644 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:36:18.208 [LEFT] program list · 14 programs
+19:36:18.315 [RIGHT] program list · 14 programs
+19:36:18.342 [LEFT] global points · 18 point(s)
+19:36:18.362 [RIGHT] global points · 14 point(s)
+19:36:18.645 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the RIGHT programs Lite sent, ALIX's plan of Close the lid and Open the lid and Open the seat (revised since).
+19:36:18.892 [activity] operator:09d09b page: UI · Button action
+19:36:19.104 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:36:22.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:36:25.614 [LEFT] program list · 14 programs
+19:36:25.766 [RIGHT] program list · 14 programs
+19:36:25.789 [LEFT] global points · 18 point(s)
+19:36:25.808 [RIGHT] global points · 14 point(s)
+19:36:26.080 [activity] operator:09d09b page: ROBOT · Button action
+19:36:26.134 [LEFT] program list · 14 programs
+19:36:26.157 [LEFT] global points · 18 point(s)
+19:36:26.201 [RIGHT] program list · 14 programs
+19:36:26.223 [RIGHT] global points · 14 point(s)
+19:36:26.224 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+19:36:26.278 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:36:39.925 [LEFT] program list · 14 programs
+19:36:40.055 [RIGHT] program list · 14 programs
+19:36:40.090 [LEFT] global points · 18 point(s)
+19:36:40.122 [RIGHT] global points · 14 point(s)
+19:36:40.451 [LEFT] program list · 14 programs
+19:36:40.475 [LEFT] global points · 18 point(s)
+19:36:40.550 [RIGHT] program list · 14 programs
+19:36:40.584 [RIGHT] global points · 14 point(s)
+19:36:40.612 [activity] operator:09d09b page: ROBOT · Button action
+19:36:40.835 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:36:41.347 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+19:36:41.370 [LEFT] run mode REAL
+19:36:41.394 [RIGHT] run mode REAL
+19:36:41.768 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193641_RIGHT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+19:36:41.768 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261109_193641_RIGHT_s2_01_PART_1.frames.jsonl"} · recording
+19:36:41.779 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193641_LEFT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+19:36:41.779 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261109_193641_LEFT_s2_01_PART_1.frames.jsonl"} · recording
+19:36:41.809 [RIGHT] clear warning · clean
+19:36:41.809 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:36:41.810 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:36:41.822 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s
+19:36:41.827 [LEFT] clear warning · clean
+19:36:41.828 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:36:41.828 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:36:41.844 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:36:41.844 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+19:36:41.852 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s
+19:36:41.886 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:36:41.886 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+19:36:41.898 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%
+19:36:41.945 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%
+19:36:43.688 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+19:36:43.689 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+19:36:43.689 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.8 s
+19:36:43.709 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:36:43.709 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.900 s)
+19:36:44.584 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (0.867 s) · pole 200.0 -> 200.0 mm in 0.373 s, the hand moving meanwhile; hand [992, 992, 998, 998, 229, 980]
+19:36:44.898 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+19:36:44.899 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+19:36:44.899 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 3.0 s
+19:36:44.921 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:36:44.922 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (3.093 s)
+19:36:44.995 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+19:36:44.996 [RIGHT] alix · recorded 161 frames
+19:36:44.996 [RIGHT] s2 feed {"file": "20261109_193641_RIGHT_s2_01_PART_1.frames.jsonl"} · 161 frames
+19:36:45.804 [LEFT] pole and hand {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (0.873 s) · pole 50.0 -> 50.0 mm in 0.367 s, the hand moving meanwhile; hand [997, 997, 995, 1000, 569, 988]
+19:36:46.145 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+19:36:46.145 [LEFT] alix · recorded 224 frames
+19:36:46.145 [LEFT] s2 feed {"file": "20261109_193641_LEFT_s2_01_PART_1.frames.jsonl"} · 224 frames
+19:36:46.463 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193646_LEFT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+19:36:46.463 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261109_193646_LEFT_s2_02_PART_2.frames.jsonl"} · recording
+19:36:46.552 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193646_RIGHT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+19:36:46.552 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261109_193646_RIGHT_s2_02_PART_2.frames.jsonl"} · recording
+19:36:46.553 [RIGHT] runner v14 · WORKFLOW START: 11 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:36:46.553 [LEFT] runner v14 · WORKFLOW START: 11 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:36:46.553 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:36:46.553 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:36:46.607 [LEFT] runner v14 ·   01. PROGRAM: Program 51 51_51_L_P1_pole50_cleaningpose_3 // start/transit 30% // stored trajectory timing
+19:36:46.608 [LEFT] runner v14 ·   02. WAIT: 3 s
+19:36:46.608 [LEFT] runner v14 ·   03. POLE: 200 mm
+19:36:46.608 [LEFT] runner v14 ·   04. PROGRAM: Program 52 52_52_L_P2_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:36:46.608 [LEFT] runner v14 ·   05. HAND: 0,0,0,0,150,1000
+19:36:46.609 [LEFT] runner v14 ·   06. PROGRAM: Program 53 53_53_L_P2_pole200_grip_8.3s_15p // start/transit 30% // stored trajectory timing
+19:36:46.609 [LEFT] runner v14 ·   07. WAIT: 3 s
+19:36:46.609 [LEFT] runner v14 ·   08. HAND: 1000,1000,1000,1000,0,1000
+19:36:46.609 [LEFT] runner v14 ·   09. PROGRAM: Program 54 54_54_L_P3_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:36:46.609 [LEFT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+19:36:46.610 [LEFT] runner v14 ·   11. PROGRAM: Program 55 55_55_L_P3_pole200_grip_44.5s_15 // start/transit 30% // stored trajectory timing
+19:36:46.626 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:36:46.627 [LEFT] runner v14 · WORKFLOW STEP START 1/11: PROGRAM
+19:36:46.639 [RIGHT] runner v14 ·   01. PROGRAM: Program 51 51_51_R_P1_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:36:46.639 [RIGHT] runner v14 ·   02. WAIT: 3 s
+19:36:46.639 [RIGHT] runner v14 ·   03. HAND: 0,0,0,0,150,1000
+19:36:46.640 [RIGHT] runner v14 ·   04. PROGRAM: Program 52 52_52_R_P2_pole200_grip_8.7s_15p // start/transit 30% // stored trajectory timing
+19:36:46.640 [RIGHT] runner v14 ·   05. HAND: 1000,1000,1000,1000,0,1000
+19:36:46.640 [RIGHT] runner v14 ·   06. PROGRAM: Program 53 53_53_R_P2_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:36:46.640 [RIGHT] runner v14 ·   07. POLE: 50 mm
+19:36:46.640 [RIGHT] runner v14 ·   08. PROGRAM: Program 54 54_54_1_R_P2_pole50_cleaningpose // start/transit 30% // stored trajectory timing
+19:36:46.640 [RIGHT] runner v14 ·   09. WAIT: 3 s
+19:36:46.641 [RIGHT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+19:36:46.641 [RIGHT] runner v14 ·   11. PROGRAM: Program 55 55_55_R_P3_pole50_grip_22.5s_15p // start/transit 30% // stored trajectory timing
+19:36:46.660 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:36:46.660 [RIGHT] runner v14 · WORKFLOW STEP START 1/11: PROGRAM
+19:36:46.669 [LEFT] runner v14 · WORKFLOW PROGRAM 1/11: slot 51 (51_51_L_P1_pole50_cleaningpose_3) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:36:46.715 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/11: slot 51 (51_51_R_P1_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:36:48.739 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 1/11: slot 51 // start ack 1.998 s
+19:36:48.974 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 1/11: slot 51 // start ack 2.252 s
+19:36:48.974 [-] start together {"rows": {"left": 5, "right": 5}, "programs": {"left": 51, "right": 51}, "delay": {"right": 0.0, "left": 0.0}, "played_apart_s": 0.235, "sent_apart_s": -0.0, "ack": {"left": 1.998, "right": 2.252}, "held_s": {"left": 0.046, "right": 0.0}} · Started together: LEFT row 5 (Program 51) and RIGHT row 5 (Program 51) began to play 0.24 s apart (LEFT first); started at the same moment (within 0.000 s); their controllers read their files in LEFT 2.00 s, RIGHT 2.25 s.
+19:36:52.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:36:53.381 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+19:36:53.391 [LEFT] runner v14 · ** WORKFLOW STOP REQUESTED
+19:36:53.400 [LEFT] runner v14 ·   arm slow-stop ret=0
+19:36:53.407 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+19:36:53.409 [RIGHT] runner v14 · ** WORKFLOW STOP REQUESTED
+19:36:53.420 [RIGHT] runner v14 ·   arm slow-stop ret=0
+19:36:53.420 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:36:53.421 [LEFT] workflow {"steps": 11, "overall_speed": 60, "restore_speed": 50} ret=1 (6.868 s) · WORKFLOW STOP REQUESTED
+19:36:53.441 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:36:53.442 [RIGHT] workflow {"steps": 11, "overall_speed": 60, "restore_speed": 50} ret=1 (6.889 s) · WORKFLOW STOP REQUESTED
+19:36:53.809 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+19:36:53.809 [LEFT] alix · recorded 366 frames
+19:36:53.809 [LEFT] s2 feed {"file": "20261109_193646_LEFT_s2_02_PART_2.frames.jsonl"} · 366 frames
+19:36:54.123 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+19:36:54.123 [RIGHT] alix · recorded 372 frames
+19:36:54.123 [RIGHT] s2 feed {"file": "20261109_193646_RIGHT_s2_02_PART_2.frames.jsonl"} · 372 frames
+19:36:54.193 [LEFT] restore global speed {"pct": 50} ret=0
+19:36:54.222 [RIGHT] restore global speed {"pct": 50} ret=0
+19:36:54.223 [activity] - job run failed: S2 Real Machine: both arms -> REFUSED: INTERRUPTED — E-STOP: it did not finish.
+19:36:54.223 [BOTH] ALERT ERROR · S2 Real Machine: both arms: INTERRUPTED — E-STOP: it did not finish. (Release the E-stop and follow Recover. Nothing restarts by itself.)
+19:37:22.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:37:52.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:37:52.892 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:37:53.366 [activity] operator:09d09b POST /api/robots/left/recover
+19:37:54.166 [activity] operator:09d09b page: UI · Button action
+19:37:54.377 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:37:54.671 [activity] operator:09d09b POST /api/robots/right/recover
+19:37:55.471 [activity] operator:09d09b page: UI · Button action
+19:37:55.739 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:37:56.904 [activity] operator:09d09b page: UI · Button action
+19:37:57.115 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:37:57.819 [LEFT] program list · 14 programs
+19:37:57.935 [RIGHT] program list · 14 programs
+19:37:57.970 [LEFT] global points · 18 point(s)
+19:37:58.040 [RIGHT] global points · 14 point(s)
+19:37:58.329 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the RIGHT programs Lite sent, ALIX's plan of Close the lid and Open the lid and Open the seat (revised since).
+19:37:58.500 [activity] operator:09d09b page: UI · Button action
+19:37:58.710 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:37:59.910 [LEFT] program list · 14 programs
+19:38:00.027 [RIGHT] program list · 14 programs
+19:38:00.047 [LEFT] global points · 18 point(s)
+19:38:00.099 [RIGHT] global points · 14 point(s)
+19:38:00.592 [LEFT] program list · 14 programs
+19:38:00.595 [activity] operator:09d09b page: ROBOT · Button action
+19:38:00.616 [LEFT] global points · 18 point(s)
+19:38:00.729 [RIGHT] program list · 14 programs
+19:38:00.808 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:38:00.838 [RIGHT] global points · 14 point(s)
+19:38:00.840 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+19:38:02.188 [LEFT] program list · 14 programs
+19:38:02.297 [RIGHT] program list · 14 programs
+19:38:02.330 [LEFT] global points · 18 point(s)
+19:38:02.352 [RIGHT] global points · 14 point(s)
+19:38:02.729 [LEFT] program list · 14 programs
+19:38:02.770 [LEFT] global points · 18 point(s)
+19:38:02.811 [RIGHT] program list · 14 programs
+19:38:02.826 [activity] operator:09d09b page: ROBOT · Button action
+19:38:02.844 [RIGHT] global points · 14 point(s)
+19:38:03.055 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:38:03.503 [activity] operator:09d09b POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+19:38:03.521 [LEFT] run mode REAL
+19:38:03.540 [RIGHT] run mode REAL
+19:38:03.900 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193803_RIGHT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+19:38:03.900 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261109_193803_RIGHT_s2_01_PART_1.frames.jsonl"} · recording
+19:38:03.963 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193803_LEFT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+19:38:03.964 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261109_193803_LEFT_s2_01_PART_1.frames.jsonl"} · recording
+19:38:03.990 [LEFT] clear warning · clean
+19:38:03.991 [RIGHT] clear warning · clean
+19:38:03.991 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:38:03.992 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:38:03.992 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:38:03.992 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:38:04.005 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s
+19:38:04.005 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s
+19:38:04.025 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:38:04.025 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+19:38:04.046 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:38:04.046 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+19:38:04.069 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%
+19:38:04.139 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%
+19:38:05.188 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+19:38:05.189 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+19:38:05.189 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.2 s
+19:38:05.208 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:38:05.209 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.218 s)
+19:38:06.161 [LEFT] pole and hand {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (0.943 s) · pole 50.0 -> 50.0 mm in 0.359 s, the hand moving meanwhile; hand [997, 1000, 995, 1000, 569, 989]
+19:38:06.591 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+19:38:06.591 [LEFT] alix · recorded 141 frames
+19:38:06.591 [LEFT] s2 feed {"file": "20261109_193803_LEFT_s2_01_PART_1.frames.jsonl"} · 141 frames
+19:38:06.609 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+19:38:06.610 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+19:38:06.610 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 2.6 s
+19:38:06.627 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:38:06.628 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (2.636 s)
+19:38:07.703 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (1.068 s) · pole 200.0 -> 200.0 mm in 0.481 s, the hand moving meanwhile; hand [998, 992, 1000, 998, 228, 980]
+19:38:08.163 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+19:38:08.165 [RIGHT] alix · recorded 212 frames
+19:38:08.165 [RIGHT] s2 feed {"file": "20261109_193803_RIGHT_s2_01_PART_1.frames.jsonl"} · 212 frames
+19:38:08.476 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193808_LEFT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+19:38:08.476 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261109_193808_LEFT_s2_02_PART_2.frames.jsonl"} · recording
+19:38:08.502 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-09/canfd/20261109_193808_RIGHT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+19:38:08.502 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261109_193808_RIGHT_s2_02_PART_2.frames.jsonl"} · recording
+19:38:08.503 [RIGHT] runner v14 · WORKFLOW START: 11 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:38:08.503 [LEFT] runner v14 · WORKFLOW START: 11 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:38:08.503 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:38:08.503 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:38:08.579 [RIGHT] runner v14 ·   01. PROGRAM: Program 51 51_51_R_P1_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:38:08.580 [RIGHT] runner v14 ·   02. WAIT: 3 s
+19:38:08.580 [RIGHT] runner v14 ·   03. HAND: 0,0,0,0,150,1000
+19:38:08.581 [RIGHT] runner v14 ·   04. PROGRAM: Program 52 52_52_R_P2_pole200_grip_8.7s_15p // start/transit 30% // stored trajectory timing
+19:38:08.581 [RIGHT] runner v14 ·   05. HAND: 1000,1000,1000,1000,0,1000
+19:38:08.581 [RIGHT] runner v14 ·   06. PROGRAM: Program 53 53_53_R_P2_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:38:08.582 [RIGHT] runner v14 ·   07. POLE: 50 mm
+19:38:08.582 [RIGHT] runner v14 ·   08. PROGRAM: Program 54 54_54_1_R_P2_pole50_cleaningpose // start/transit 30% // stored trajectory timing
+19:38:08.582 [RIGHT] runner v14 ·   09. WAIT: 3 s
+19:38:08.582 [RIGHT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+19:38:08.582 [RIGHT] runner v14 ·   11. PROGRAM: Program 55 55_55_R_P3_pole50_grip_22.5s_15p // start/transit 30% // stored trajectory timing
+19:38:08.597 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:38:08.598 [RIGHT] runner v14 · WORKFLOW STEP START 1/11: PROGRAM
+19:38:08.605 [LEFT] runner v14 ·   01. PROGRAM: Program 51 51_51_L_P1_pole50_cleaningpose_3 // start/transit 30% // stored trajectory timing
+19:38:08.605 [LEFT] runner v14 ·   02. WAIT: 3 s
+19:38:08.605 [LEFT] runner v14 ·   03. POLE: 200 mm
+19:38:08.606 [LEFT] runner v14 ·   04. PROGRAM: Program 52 52_52_L_P2_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:38:08.606 [LEFT] runner v14 ·   05. HAND: 0,0,0,0,150,1000
+19:38:08.606 [LEFT] runner v14 ·   06. PROGRAM: Program 53 53_53_L_P2_pole200_grip_8.3s_15p // start/transit 30% // stored trajectory timing
+19:38:08.606 [LEFT] runner v14 ·   07. WAIT: 3 s
+19:38:08.606 [LEFT] runner v14 ·   08. HAND: 1000,1000,1000,1000,0,1000
+19:38:08.607 [LEFT] runner v14 ·   09. PROGRAM: Program 54 54_54_L_P3_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+19:38:08.607 [LEFT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+19:38:08.607 [LEFT] runner v14 ·   11. PROGRAM: Program 55 55_55_L_P3_pole200_grip_44.5s_15 // start/transit 30% // stored trajectory timing
+19:38:08.624 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:38:08.625 [LEFT] runner v14 · WORKFLOW STEP START 1/11: PROGRAM
+19:38:08.637 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/11: slot 51 (51_51_R_P1_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:38:08.679 [LEFT] runner v14 · WORKFLOW PROGRAM 1/11: slot 51 (51_51_L_P1_pole50_cleaningpose_3) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:38:09.957 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 1/11: slot 51 // start ack 1.255 s
+19:38:11.272 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 1/11: slot 51 // start ack 2.523 s
+19:38:11.273 [-] start together {"rows": {"left": 5, "right": 5}, "programs": {"left": 51, "right": 51}, "delay": {"left": 0.0, "right": 0.0}, "played_apart_s": 1.316, "sent_apart_s": 0.0, "ack": {"right": 1.255, "left": 2.523}, "held_s": {"left": 0.0, "right": 0.043}} · Started together: LEFT row 5 (Program 51) and RIGHT row 5 (Program 51) began to play 1.32 s apart (RIGHT first); started at the same moment (within 0.000 s); their controllers read their files in LEFT 2.52 s, RIGHT 1.25 s.
+19:38:22.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:38:44.643 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/11: 34.708 s
+19:38:44.644 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 1/11: 0.123 s
+19:38:44.644 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/11: PROGRAM
+19:38:44.645 [RIGHT] runner v14 · WORKFLOW STEP START 2/11: WAIT
+19:38:44.652 [RIGHT] runner v14 · WORKFLOW WAIT: 3 s
+19:38:46.126 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/11: 34.922 s
+19:38:46.126 [LEFT] runner v14 · WORKFLOW FAST SWITCH 1/11: 0.123 s
+19:38:46.126 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/11: PROGRAM
+19:38:46.127 [LEFT] runner v14 · WORKFLOW STEP START 2/11: WAIT
+19:38:46.134 [LEFT] runner v14 · WORKFLOW WAIT: 3 s
+19:38:47.652 [RIGHT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+19:38:47.653 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 2/11: WAIT
+19:38:47.653 [RIGHT] runner v14 · WORKFLOW STEP START 3/11: HAND
+19:38:47.663 [RIGHT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+19:38:48.571 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[586, 453, 462, 532, 230, 983]
+19:38:48.729 [RIGHT] runner v14 · AUX HAND CLOSED
+19:38:48.730 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 3/11: HAND
+19:38:48.730 [RIGHT] runner v14 · WORKFLOW STEP START 4/11: PROGRAM
+19:38:48.771 [RIGHT] runner v14 · WORKFLOW PROGRAM 4/11: slot 52 (52_52_R_P2_pole200_grip_8.7s_15p) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:38:49.134 [LEFT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+19:38:49.135 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 2/11: WAIT
+19:38:49.135 [LEFT] runner v14 · WORKFLOW STEP START 3/11: POLE
+19:38:49.144 [LEFT] runner v14 · MANUAL POLE START: current 50.0 mm -> target 200 mm
+19:38:51.686 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:38:52.266 [LEFT] runner v14 · MANUAL POLE COMPLETE: target 200 mm, final=199.0 mm
+19:38:52.267 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 3/11: POLE
+19:38:52.267 [LEFT] runner v14 · WORKFLOW STEP START 4/11: PROGRAM
+19:38:52.297 [LEFT] runner v14 · WORKFLOW PROGRAM 4/11: slot 52 (52_52_L_P2_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:38:52.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:38:53.595 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 4/11: slot 52 // start ack 1.290 s
+19:38:53.632 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 4/11: slot 52 // start ack 0.982 s
+19:38:53.633 [-] start together {"rows": {"left": 7, "right": 7}, "programs": {"left": 52, "right": 52}, "delay": {"left": 0.0, "right": 0.335}, "played_apart_s": 0.037, "sent_apart_s": 0.335, "ack": {"left": 1.29, "right": 0.982}, "held_s": {"left": 0.0, "right": 3.861}} · Started together: LEFT row 7 (Program 52) and RIGHT row 7 (Program 52) began to play 0.04 s apart (LEFT first); started 0.34 s apart (RIGHT 0.34 s later for its shorter file read); their controllers read their files in LEFT 1.29 s, RIGHT 0.98 s.
+19:39:02.733 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 4/11: 9.118 s
+19:39:02.733 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 4/11: 0.130 s
+19:39:02.734 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 4/11: PROGRAM
+19:39:02.734 [RIGHT] runner v14 · WORKFLOW STEP START 5/11: HAND
+19:39:02.743 [RIGHT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+19:39:03.560 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[998, 995, 998, 998, 229, 984]
+19:39:03.729 [RIGHT] runner v14 · AUX HAND CLOSED
+19:39:03.729 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 5/11: HAND
+19:39:03.730 [RIGHT] runner v14 · WORKFLOW STEP START 6/11: PROGRAM
+19:39:03.773 [RIGHT] runner v14 · WORKFLOW PROGRAM 6/11: slot 53 (53_53_R_P2_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:39:04.176 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 6/11: slot 53 // start ack 0.383 s
+19:39:06.617 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:39:10.052 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 4/11: 16.464 s
+19:39:10.053 [LEFT] runner v14 · WORKFLOW FAST SWITCH 4/11: 0.129 s
+19:39:10.053 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 4/11: PROGRAM
+19:39:10.053 [LEFT] runner v14 · WORKFLOW STEP START 5/11: HAND
+19:39:10.058 [LEFT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+19:39:10.950 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[550, 517, 541, 545, 569, 986]
+19:39:10.962 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 6/11: 6.805 s
+19:39:10.962 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 6/11: 0.117 s
+19:39:10.963 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 6/11: PROGRAM
+19:39:10.963 [RIGHT] runner v14 · WORKFLOW STEP START 7/11: POLE
+19:39:10.974 [RIGHT] runner v14 · MANUAL POLE START: current 200.0 mm -> target 50 mm
+19:39:11.109 [LEFT] runner v14 · AUX HAND CLOSED
+19:39:11.109 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 5/11: HAND
+19:39:11.110 [LEFT] runner v14 · WORKFLOW STEP START 6/11: PROGRAM
+19:39:11.163 [LEFT] runner v14 · WORKFLOW PROGRAM 6/11: slot 53 (53_53_L_P2_pole200_grip_8.3s_15p) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:39:11.999 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 6/11: slot 53 // start ack 0.814 s
+19:39:14.089 [RIGHT] runner v14 · MANUAL POLE COMPLETE: target 50 mm, final=50.0 mm
+19:39:14.089 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 7/11: POLE
+19:39:14.089 [RIGHT] runner v14 · WORKFLOW STEP START 8/11: PROGRAM
+19:39:14.124 [RIGHT] runner v14 · WORKFLOW PROGRAM 8/11: slot 54 (54_54_1_R_P2_pole50_cleaningpose) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:39:14.129 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:39:14.638 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 8/11: slot 54 // start ack 0.455 s
+19:39:20.739 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 6/11: 8.761 s
+19:39:20.739 [LEFT] runner v14 · WORKFLOW FAST SWITCH 6/11: 0.124 s
+19:39:20.739 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 6/11: PROGRAM
+19:39:20.740 [LEFT] runner v14 · WORKFLOW STEP START 7/11: WAIT
+19:39:20.745 [LEFT] runner v14 · WORKFLOW WAIT: 3 s
+19:39:22.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:39:23.729 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 8/11: 9.150 s
+19:39:23.730 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 8/11: 0.128 s
+19:39:23.730 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 8/11: PROGRAM
+19:39:23.731 [RIGHT] runner v14 · WORKFLOW STEP START 9/11: WAIT
+19:39:23.735 [RIGHT] runner v14 · WORKFLOW WAIT: 3 s
+19:39:23.745 [LEFT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+19:39:23.745 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 7/11: WAIT
+19:39:23.746 [LEFT] runner v14 · WORKFLOW STEP START 8/11: HAND
+19:39:23.751 [LEFT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+19:39:24.570 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[1000, 997, 1000, 997, 569, 986]
+19:39:24.657 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:39:24.753 [LEFT] runner v14 · AUX HAND CLOSED
+19:39:24.753 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 8/11: HAND
+19:39:24.754 [LEFT] runner v14 · WORKFLOW STEP START 9/11: PROGRAM
+19:39:24.805 [LEFT] runner v14 · WORKFLOW PROGRAM 9/11: slot 54 (54_54_L_P3_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:39:26.736 [RIGHT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+19:39:26.736 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 9/11: WAIT
+19:39:26.736 [RIGHT] runner v14 · WORKFLOW STEP START 10/11: HAND
+19:39:26.741 [RIGHT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+19:39:27.625 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[575, 431, 438, 504, 229, 985]
+19:39:27.767 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:39:27.810 [RIGHT] runner v14 · AUX HAND CLOSED
+19:39:27.810 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 10/11: HAND
+19:39:27.811 [RIGHT] runner v14 · WORKFLOW STEP START 11/11: PROGRAM
+19:39:27.851 [RIGHT] runner v14 · WORKFLOW PROGRAM 11/11: slot 55 (55_55_R_P3_pole50_grip_22.5s_15p) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:39:28.732 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 11/11: slot 55 // start ack 0.863 s
+19:39:29.303 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 9/11: slot 54 // start ack 1.119 s
+19:39:29.303 [-] start together {"rows": {"left": 10, "right": 11}, "programs": {"left": 54, "right": 55}, "delay": {"right": 0.0, "left": 0.296}, "played_apart_s": 0.571, "sent_apart_s": -0.296, "ack": {"right": 0.863, "left": 1.119}, "held_s": {"left": 3.342, "right": 0.0}} · Started together: LEFT row 10 (Program 54) and RIGHT row 11 (Program 55) began to play 0.57 s apart (RIGHT first); started 0.30 s apart (LEFT 0.30 s later for its shorter file read); their controllers read their files in LEFT 1.12 s, RIGHT 0.86 s.
+19:39:46.040 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 9/11: 16.773 s
+19:39:46.040 [LEFT] runner v14 · WORKFLOW FAST SWITCH 9/11: 0.125 s
+19:39:46.040 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 9/11: PROGRAM
+19:39:46.041 [LEFT] runner v14 · WORKFLOW STEP START 10/11: HAND
+19:39:46.048 [LEFT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+19:39:46.928 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[516, 484, 503, 526, 569, 984]
+19:39:47.089 [LEFT] runner v14 · AUX HAND CLOSED
+19:39:47.089 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 10/11: HAND
+19:39:47.090 [LEFT] runner v14 · WORKFLOW STEP START 11/11: PROGRAM
+19:39:47.139 [LEFT] runner v14 · WORKFLOW PROGRAM 11/11: slot 55 (55_55_L_P3_pole200_grip_44.5s_15) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:39:50.032 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 11/11: slot 55 // start ack 2.884 s
+19:39:50.127 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:39:52.142 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 11/11: 23.428 s
+19:39:52.143 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 11/11: 0.186 s
+19:39:52.143 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 11/11: PROGRAM
+19:39:52.143 [RIGHT] runner v14 · WORKFLOW COMPLETE: 11/11 step(s), 103.5 s
+19:39:52.160 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:39:52.161 [RIGHT] workflow {"steps": 11, "overall_speed": 60, "restore_speed": 50} ret=0 (103.658 s)
+19:39:52.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:39:55.074 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 1000, 1000]} (2.902 s) · pole 50.0 -> 198.0 mm in 2.75 s, the hand moving meanwhile; hand [998, 996, 997, 998, 992, 984]
+19:39:55.075 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:39:55.076 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:39:55.149 [RIGHT] runner v14 ·   01. PROGRAM: Program 56 56_56_R_P3_pole200_allopen_wait_ // start/transit 30% // stored trajectory timing
+19:39:55.166 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:39:55.167 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: PROGRAM
+19:39:55.201 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/1: slot 56 (56_56_R_P3_pole200_allopen_wait_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:39:56.040 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:39:59.051 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 1/1: slot 56 // start ack 3.822 s
+19:40:22.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:40:35.702 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 11/11: 45.679 s
+19:40:35.702 [LEFT] runner v14 · WORKFLOW FAST SWITCH 11/11: 0.122 s
+19:40:35.702 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 11/11: PROGRAM
+19:40:35.703 [LEFT] runner v14 · WORKFLOW COMPLETE: 11/11 step(s), 147.1 s
+19:40:35.725 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:40:35.725 [LEFT] workflow {"steps": 11, "overall_speed": 60, "restore_speed": 50} ret=0 (147.222 s)
+19:40:35.760 [LEFT] clear warning · clean
+19:40:35.760 [LEFT] runner v14 · WORKFLOW START: 3 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:40:35.761 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:40:35.852 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 100% // wait 0s
+19:40:35.853 [LEFT] runner v14 ·   02. HAND: 1000,1000,1000,1000,1000,1000
+19:40:35.853 [LEFT] runner v14 ·   03. PROGRAM: Program 57 57_57_L_P3_pole200_allopen_11.5s // start/transit 30% // stored trajectory timing
+19:40:35.873 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:40:35.874 [LEFT] runner v14 · WORKFLOW STEP START 1/3: GLOBAL
+19:40:35.901 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 100%
+19:40:37.897 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+19:40:37.897 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/3: GLOBAL
+19:40:37.898 [LEFT] runner v14 · WORKFLOW STEP START 2/3: HAND
+19:40:37.905 [LEFT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=1000 thumb_rotate=1000
+19:40:39.010 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 1000, 1000], final=[1000, 997, 1000, 997, 992, 984]
+19:40:39.197 [LEFT] runner v14 · AUX HAND CLOSED
+19:40:39.197 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 2/3: HAND
+19:40:39.197 [LEFT] runner v14 · WORKFLOW STEP START 3/3: PROGRAM
+19:40:39.244 [LEFT] runner v14 · WORKFLOW PROGRAM 3/3: slot 57 (57_57_L_P3_pole200_allopen_11.5s) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+19:40:39.692 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 3/3: slot 57 // start ack 0.429 s
+19:40:39.845 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:40:52.868 [activity] operator:09d09b page: SYSTEM · Session active
+19:40:53.520 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 3/3: 13.847 s
+19:40:53.521 [LEFT] runner v14 · WORKFLOW FAST SWITCH 3/3: 0.135 s
+19:40:53.521 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 3/3: PROGRAM
+19:40:53.522 [LEFT] runner v14 · WORKFLOW COMPLETE: 3/3 step(s), 17.6 s
+19:40:53.545 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:40:53.546 [LEFT] workflow {"steps": 3, "overall_speed": 60, "restore_speed": 50} ret=0 (17.786 s)
+19:40:53.574 [LEFT] clear warning · clean
+19:40:53.575 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:40:53.575 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:40:53.586 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s
+19:40:53.605 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:40:53.606 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+19:40:53.652 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%
+19:40:54.839 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+19:40:54.839 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+19:40:54.840 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.2 s
+19:40:54.857 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:40:54.857 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.283 s)
+19:40:55.206 [LEFT] alix · push config restored to 192.168.1.239:8089 enable=False (ret=0)
+19:40:55.206 [LEFT] alix · recorded 8320 frames
+19:40:55.207 [LEFT] s2 feed {"file": "20261109_193808_LEFT_s2_02_PART_2.frames.jsonl"} · 8320 frames
+19:40:57.588 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:41:07.589 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/1: 68.565 s
+19:41:07.589 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 1/1: 0.122 s
+19:41:07.590 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: PROGRAM
+19:41:07.590 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 72.4 s
+19:41:07.622 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:41:07.623 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (72.547 s)
+19:41:07.672 [RIGHT] clear warning · clean
+19:41:07.673 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+19:41:07.673 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+19:41:07.697 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 20% // wait 0s
+19:41:07.718 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+19:41:07.719 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+19:41:07.763 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 20%
+19:41:09.321 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+19:41:09.321 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+19:41:09.321 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.6 s
+19:41:09.341 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+19:41:09.341 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.669 s)
+19:41:09.761 [RIGHT] alix · push config restored to 192.168.1.239:8090 enable=False (ret=0)
+19:41:09.761 [RIGHT] alix · recorded 9052 frames
+19:41:09.761 [RIGHT] s2 feed {"file": "20261109_193808_RIGHT_s2_02_PART_2.frames.jsonl"} · 9052 frames
+19:41:09.801 [LEFT] restore global speed {"pct": 50} ret=0
+19:41:09.822 [RIGHT] restore global speed {"pct": 50} ret=0
+19:41:09.822 [activity] - job run done: S2 Real Machine: both arms
+19:41:11.830 [activity] operator:09d09b page: NAVIGATION · Scrolled view
+19:41:22.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:41:52.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:42:22.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:42:52.518 [LEFT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+19:42:52.603 [RIGHT] ALERT WARN · E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)
+19:42:52.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:43:22.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:43:52.771 [activity] operator:09d09b page: SYSTEM · Session active
+19:44:22.770 [activity] operator:09d09b page: SYSTEM · Session active
+19:44:35.373 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:44:35.869 [activity] operator:09d09b POST /api/robots/left/recover
+19:44:36.669 [activity] operator:09d09b page: UI · Button action
+19:44:36.880 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:44:36.950 [activity] operator:09d09b POST /api/robots/right/recover
+19:44:37.750 [activity] operator:09d09b page: UI · Button action
+19:44:37.962 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:44:39.258 [activity] operator:09d09b page: UI · Button action
+19:44:39.470 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:44:41.988 [activity] operator:09d09b POST /api/auth/engineer/lock
+19:44:42.821 [activity] operator:09d09b page: UI · Button action
+19:44:43.001 [activity] operator:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:44:45.116 [activity] engineer:09d09b POST /api/auth/engineer
+19:44:45.521 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:44:49.509 [activity] engineer:09d09b page: ROBOT · Button action
+19:44:49.720 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:44:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:44:53.976 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:44:54.765 [activity] engineer:09d09b page: ROBOT · Input updated
+19:44:55.139 [activity] engineer:09d09b POST /api/robots/left/pole -> REFUSED: Moving the pole on the real robot needs your confirmation.
+19:44:55.760 [activity] engineer:09d09b page: ROBOT · Setting changed
+19:44:55.760 [activity] engineer:09d09b page: ROBOT · Button action
+19:44:56.151 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:45:00.534 [activity] engineer:09d09b POST /api/robots/left/pole
+19:45:00.551 [LEFT] alix · pole: 200 mm -> 10 mm at 100 % (rm_set_lift_height non-blocking + getter wait, expect 3.46 s, timeout 10.4 s)
+19:45:01.333 [activity] engineer:09d09b page: ROBOT · Button action
+19:45:01.547 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:45:03.454 [LEFT] alix · pole: at 11 mm after 2.89 s (verified_by=getter, moved 189 mm through 46 distinct readings)
+19:45:03.454 [LEFT] pole move {"mm": 10.0, "speed_pct": 100} ret=0 (2.894 s) · final 0.011 m, verified by getter
+19:45:03.455 [activity] - job pole done: Pole LEFT to 10 mm
+19:45:08.664 [LEFT] ALERT ERROR · The controller reports 4118 (0x1016 Current loop drag enable failed; the joint is near the limit position). (Check the arm and its pendant; clear the error there before running.)
+19:45:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:45:29.263 [activity] engineer:09d09b page: ROBOT · Button action
+19:45:29.478 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:45:32.941 [activity] engineer:09d09b page: UI · Button action
+19:45:33.153 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:45:35.258 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:45:35.791 [activity] engineer:09d09b POST /api/robots/right/pole -> REFUSED: Moving the pole on the real robot needs your confirmation.
+19:45:36.047 [activity] engineer:09d09b page: ROBOT · Input updated
+19:45:36.047 [activity] engineer:09d09b page: ROBOT · Setting changed
+19:45:36.047 [activity] engineer:09d09b page: ROBOT · Button action
+19:45:36.803 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:45:37.192 [activity] engineer:09d09b POST /api/robots/right/pole
+19:45:37.210 [RIGHT] alix · pole: 200 mm -> 10 mm at 100 % (rm_set_lift_height non-blocking + getter wait, expect 3.46 s, timeout 10.4 s)
+19:45:37.991 [activity] engineer:09d09b page: ROBOT · Button action
+19:45:38.203 [activity] engineer:09d09b PUT /api/projects/alix_mvbvk1fk_zti6s
+19:45:40.120 [RIGHT] alix · pole: at 11 mm after 2.90 s (verified_by=getter, moved 189 mm through 47 distinct readings)
+19:45:40.120 [RIGHT] pole move {"mm": 10.0, "speed_pct": 100} ret=0 (2.899 s) · final 0.011 m, verified by getter
+19:45:40.120 [activity] - job pole done: Pole RIGHT to 10 mm
+19:45:43.972 [LEFT] ALERT ERROR · The controller reports 4118 (0x1016 Current loop drag enable failed; the joint is near the limit position). (Check the arm and its pendant; clear the error there before running.)
+19:45:48.148 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:45:48.397 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:45:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:45:57.903 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:45:58.152 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:46:19.416 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:46:19.663 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:46:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:46:41.177 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:46:41.427 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:46:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:47:02.688 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:47:02.938 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:47:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:47:24.701 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:47:24.950 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:47:46.214 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:47:46.462 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:47:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:48:07.723 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:48:07.974 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:48:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:48:29.487 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:48:29.736 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:48:51.246 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:48:51.498 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:48:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:49:12.756 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:49:13.010 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:49:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:49:34.523 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:49:34.768 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:49:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:49:56.034 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:49:56.280 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:50:17.546 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:50:17.792 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:50:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:50:39.303 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:50:39.558 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:50:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:51:00.813 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:51:01.069 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:51:22.580 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:51:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:51:22.823 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:51:44.333 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:51:44.592 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:51:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:52:05.844 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:52:06.102 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:52:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:52:27.613 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:52:27.856 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:52:49.367 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:52:49.627 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:52:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:53:10.877 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:53:11.139 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:53:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:53:32.389 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:53:32.652 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:53:52.823 [activity] engineer:09d09b page: SYSTEM · Session active
+19:53:54.164 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:53:54.399 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:54:15.912 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:54:16.177 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:54:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:54:37.690 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:54:37.924 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:54:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:54:59.434 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:54:59.701 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:55:20.944 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:55:21.214 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:55:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:55:42.455 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:55:42.727 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:55:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:56:04.237 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:56:04.466 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:56:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:56:25.978 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:56:26.248 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:56:47.490 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:56:47.759 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:56:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:57:09.000 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:57:09.270 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:57:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:57:30.783 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:57:31.012 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:57:52.523 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:57:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:57:52.794 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:58:14.035 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:58:14.305 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:58:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+19:58:35.815 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:58:36.047 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:58:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:58:57.558 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:58:57.825 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:59:19.092 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:59:19.335 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:59:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+19:59:40.580 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:59:40.845 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+19:59:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:00:02.092 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:00:02.357 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:00:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:00:23.603 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:00:23.867 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:00:45.114 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:00:45.377 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:00:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:01:06.626 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:01:06.889 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:01:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+20:01:28.401 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:01:28.638 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:01:50.149 [LEFT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:01:50.413 [RIGHT] ALERT WARN · No fresh reading from the controller: robot motion is blocked. (Check the controller's power and cable; Lite reconnects by itself when it answers.)
+20:01:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:02:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:02:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:03:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:03:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+20:04:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+20:04:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+20:05:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:05:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:06:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+20:06:52.770 [activity] engineer:09d09b page: SYSTEM · Session active
+20:07:22.770 [activity] engineer:09d09b page: SYSTEM · Session active
+20:07:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:08:22.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:08:52.771 [activity] engineer:09d09b page: SYSTEM · Session active
+20:09:22.770 [activity] engineer:09d09b page: SYSTEM · Session active

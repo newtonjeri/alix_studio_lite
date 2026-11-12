@@ -1,6 +1,6 @@
 {
  "arm": "right",
- "kept": "2026-11-06 19:05:07",
+ "kept": "2026-11-13 00:12:42",
  "programs": [
   {
    "slot": 1,
@@ -139,38 +139,353 @@
     "hand_text": "open"
    },
    "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261029_185741_6_R_P3_T04+wait20.1s+T05+T06+T07+T08_pole200_allopen_58.5s_v1.1.txt"
+  },
+  {
+   "slot": 61,
+   "name": "61_R_P1_pole200_cleaningpose",
+   "file": "61_61_R_P1_pole200_cleaningpose.txt",
+   "sha256": "4fa3f76b33aebd165fab3e58ced38e29f4fa48adcded7955ff70278662f2ac97",
+   "lines": 9724,
+   "seconds": 48.615,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261112_233920_61_R_P1_pole200_cleaningpose_48.6s_20pct_slow3-10s_mid1.5x.txt"
+  },
+  {
+   "slot": 62,
+   "name": "62_R_P2_pole200_grip_13.0s_n",
+   "file": "62_62_R_P2_pole200_grip_13.0s_n.txt",
+   "sha256": "aa4b99fa0afcddd2621c1302cd82972f80cf94df1c01f356c763f86ad903840e",
+   "lines": 2600,
+   "seconds": 12.995,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 200 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261113_001059_62_R_P2_pole200_grip_13.0s_new_R04.txt"
+  },
+  {
+   "slot": 63,
+   "name": "63_R_P2_pole200_cleaningpose",
+   "file": "63_63_R_P2_pole200_cleaningpose.txt",
+   "sha256": "12b1890ea16be9bf1cc07c4352743029b5170572e71e57683502545debe2249e",
+   "lines": 1844,
+   "seconds": 9.215,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 200 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261112_223714_63_R_P2_pole200_cleaningpose_9.2s_30pct.txt"
+  },
+  {
+   "slot": 65,
+   "name": "65_R_P3_pole50_grip_39.8s_ne",
+   "file": "65_65_R_P3_pole50_grip_39.8s_ne.txt",
+   "sha256": "6fc22cb86fb6a225036ca01470848360a26ca2743383d13b0e7bae7fc3690ea4",
+   "lines": 7962,
+   "seconds": 39.805,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 50 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/right/20261112_232018_65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt"
+  },
+  {
+   "slot": 100,
+   "name": "R-R04_v006",
+   "file": "100_R-R04_v006.txt",
+   "sha256": "559fefdcd2de00548de213d4fcc735da9c05edcb1cf271322fac7df2f6fd77b0",
+   "lines": 2901,
+   "seconds": 14.5,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "set in Prepare",
+    "text": "pole 200 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/alix_studio_lite/Resources/Projects/Commode_C_17_10_2026/trajectories/right/R-R04/raw/20261112_235510_R-R04.txt"
   }
  ],
  "not_kept": [
   {
-   "slot": 99,
-   "name": "99_R_P2_R06_pole50_cleaningpose_",
+   "slot": 51,
+   "name": "51_51_R_P1_pole200_cleaningpose_",
    "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
-   "slot": 100,
-   "name": "100_4_R_P2_R06_pole50_cleaningpo",
+   "slot": 52,
+   "name": "52_52_R_P2_pole200_grip_8.7s_15p",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 53,
+   "name": "53_53_R_P2_pole200_cleaningpose_",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 54,
+   "name": "54_54_1_R_P2_pole50_cleaningpose",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 55,
+   "name": "55_55_R_P3_pole50_grip_22.5s_15p",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 56,
+   "name": "56_56_R_P3_pole200_allopen_wait_",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 64,
+   "name": "64_64_1_R_P2_pole50_cleaningpose",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 66,
+   "name": "66_66_R_P3_pole200_allopen_wait_",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 71,
+   "name": "71_71_R_P1_pl200_cp_40.5s_25p_sf",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 72,
+   "name": "72_72_R_P2_pl200_gp_13.5s_30p_sf",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 73,
+   "name": "73_73_R_P2_pl200_cp_7.8s_25p_sft",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 74,
+   "name": "74_74_1_R_P2_pl50_cp_11.4s_nw_R0",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 75,
+   "name": "75_75_R_P3_pl50_gp_30.9s_nw_R07_",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 76,
+   "name": "76_76_R_P3_pl200_op_wt_73.2s_25p",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 92,
+   "name": "92_62_R_P2_pole200_grip_12.3s_30",
    "why": "not sent by Lite: the controller gives no program's points back"
   }
  ],
  "points": {
-  "R_HME_POS": [
-   9.291,
-   -97.608,
-   17.873,
-   91.471,
-   -6.877,
-   93.857,
-   16.461
+  "R_T06_STP": [
+   12.288,
+   -115.32,
+   8.562,
+   106.237,
+   -8.014,
+   88.273,
+   31.341
   ],
-  "HOME_POSE": [
-   9.291,
-   -97.608,
-   17.873,
-   91.471,
-   -6.877,
-   93.857,
-   16.461
+  "R_T05_STP": [
+   13.222,
+   -35.201,
+   -24.18,
+   121.691,
+   -20.753,
+   10.045,
+   68.921
+  ],
+  "R_GLR_BPCK_STP": [
+   36.841,
+   -60.623,
+   -37.04,
+   116.006,
+   -32.912,
+   -52.674,
+   90.328
+  ],
+  "R_R05_STP": [
+   -25.684,
+   27.361,
+   -26.697,
+   16.944,
+   64.664,
+   55.062,
+   62.828
+  ],
+  "R_HME_POS": [
+   -4.125,
+   -99.668,
+   -0.259,
+   91.468,
+   5.136,
+   93.611,
+   0.037
+  ],
+  "R_R01_STP": [
+   -49.937,
+   56.243,
+   -94.595,
+   -52.734,
+   60.514,
+   -72.0,
+   21.86
+  ],
+  "R_R01_P2_STP": [
+   -6.163,
+   -39.938,
+   -17.302,
+   93.587,
+   60.78,
+   14.94,
+   44.636
+  ],
+  "R_R02_STP": [
+   -5.446,
+   -13.623,
+   -18.222,
+   52.956,
+   36.414,
+   36.013,
+   58.487
+  ],
+  "R_R03_STP": [
+   -0.093,
+   -86.113,
+   -24.131,
+   76.127,
+   15.748,
+   94.287,
+   55.198
+  ],
+  "R_R04_STP": [
+   -7.98,
+   -26.396,
+   -22.099,
+   106.725,
+   51.717,
+   27.037,
+   63.943
+  ],
+  "R_R06_STP": [
+   -10.92,
+   -98.25,
+   -17.347,
+   80.577,
+   12.057,
+   115.293,
+   -15.845
+  ],
+  "R_R07_STP": [
+   4.853,
+   -14.119,
+   -18.256,
+   107.151,
+   40.936,
+   -0.671,
+   76.167
+  ],
+  "R_R08_P1_STP": [
+   -23.077,
+   91.164,
+   -36.757,
+   -10.118,
+   -16.923,
+   -72.925,
+   32.138
+  ],
+  "R_R08_P2_STP": [
+   3.349,
+   -106.369,
+   -1.855,
+   94.981,
+   -1.593,
+   86.668,
+   10.291
+  ],
+  "ST_BTM_LFT_SRT": [
+   -10.923,
+   -98.249,
+   -17.35,
+   80.579,
+   12.06,
+   115.3,
+   -15.843
+  ],
+  "RGT_BASE_STR": [
+   -25.686,
+   28.076,
+   -26.445,
+   16.945,
+   64.747,
+   54.933,
+   62.83
+  ],
+  "LID_UNDER_SRT": [
+   -0.092,
+   -86.111,
+   -24.128,
+   76.127,
+   15.75,
+   94.29,
+   55.198
   ]
  }
 }

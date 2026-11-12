@@ -1,0 +1,720 @@
+00:00:03.621 [activity] operator:e46827 page: SYSTEM · Session active
+00:00:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:01:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:01:33.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:02:03.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:02:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:03:03.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:03:33.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:04:03.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:04:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:05:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:05:33.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:06:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:06:33.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:07:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:07:33.595 [activity] operator:e46827 page: SYSTEM · Session active
+00:08:03.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:08:33.597 [activity] operator:e46827 page: SYSTEM · Session active
+00:09:03.597 [activity] operator:e46827 page: SYSTEM · Session active
+00:09:33.600 [activity] operator:e46827 page: SYSTEM · Session active
+00:10:03.599 [activity] operator:e46827 page: SYSTEM · Session active
+00:10:29.893 [activity] operator:e46827 POST /api/auth/engineer/lock
+00:10:30.693 [activity] operator:e46827 page: UI · Button action
+00:10:31.770 [activity] engineer:e46827 POST /api/auth/engineer
+00:10:32.134 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:33.611 [activity] engineer:e46827 page: SYSTEM · Session active
+00:10:34.968 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:43.987 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:44.127 [activity] engineer:e46827 page: TRAJECTORY · Setting changed
+00:10:44.127 [activity] engineer:e46827 page: TRAJECTORY · Input updated
+00:10:46.310 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:47.967 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:48.045 [activity] engineer:e46827 page: NAVIGATION · Scrolled view
+00:10:49.146 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:49.936 [activity] engineer:e46827 page: TRAJECTORY · Input updated
+00:10:52.202 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:52.341 [activity] engineer:e46827 page: TRAJECTORY · Setting changed
+00:10:52.342 [activity] engineer:e46827 page: TRAJECTORY · Button action
+00:10:53.163 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:54.887 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:55.262 [activity] engineer:e46827 page: ROBOT · Input updated
+00:10:55.262 [activity] engineer:e46827 page: ROBOT · Input updated
+00:10:55.262 [activity] engineer:e46827 page: ROBOT · Input updated
+00:10:56.271 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:56.318 [activity] engineer:e46827 page: ROBOT · Setting changed
+00:10:57.254 [activity] engineer:e46827 page: ROBOT · Setting changed
+00:10:57.255 [activity] engineer:e46827 page: ROBOT · Input updated
+00:10:57.255 [activity] engineer:e46827 page: UI · Button action
+00:10:57.308 [RIGHT] program list · 27 programs
+00:10:57.308 [activity] engineer:e46827 POST /api/robots/right/programs/upload -> REFUSED: Program 62 on the RIGHT controller already holds “62_62_R_P2_pole200_grip_13.8s_3.”.
+00:10:58.127 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:10:59.372 [RIGHT] program list · 27 programs
+00:10:59.373 [activity] engineer:e46827 POST /api/robots/right/programs/upload
+00:10:59.556 [RIGHT] rm_upload · upload 62_R_P2_pole200_grip_13.0s_n.txt: 2600 points, 136.8 KB -> slot 62 on 192.168.1.103
+00:10:59.556 [RIGHT] rm_upload ·   slot 62 now: 62_62_R_P2_pole200_grip_13.8s_3. (151.4 KB) — it will be REPLACED
+00:11:00.013 [activity] engineer:e46827 page: UI · Button action
+00:11:00.222 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:02.741 [RIGHT] rm_upload ·   sent: ret=0 err_line=-1
+00:11:02.900 [RIGHT] rm_upload ·   VERIFIED: slot 62 holds '62_62_R_P2_pole200_grip_13.0s_n.', 140045 bytes (sent 140045)
+00:11:02.900 [RIGHT] upload {"program_id": 62, "file": "20261113_001059_62_R_P2_pole200_grip_13.0s_new_R04.txt", "bytes": 140045} ret=0 (3.526 s)
+00:11:03.021 [activity] - job upload done: Upload 62_R_P2_pole200_grip_13.0s_new_R04.txt to RIGHT program 62
+00:11:03.608 [activity] engineer:e46827 page: SYSTEM · Session active
+00:11:23.892 [RIGHT] program list · 27 programs
+00:11:24.015 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:24.621 [activity] engineer:e46827 page: UI · Button action
+00:11:24.831 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:29.293 [activity] engineer:e46827 page: NAVIGATION · Scrolled view
+00:11:30.685 [activity] operator:e46827 POST /api/auth/engineer/lock
+00:11:31.510 [activity] operator:e46827 page: UI · Button action
+00:11:31.696 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:32.402 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:11:33.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:11:36.693 [activity] operator:e46827 page: UI · Button action
+00:11:36.904 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:38.558 [LEFT] program list · 30 programs
+00:11:38.615 [LEFT] global points · 23 point(s)
+00:11:38.871 [RIGHT] program list · 27 programs
+00:11:38.912 [RIGHT] global points · 17 point(s)
+00:11:39.109 [activity] operator:e46827 page: TRAJECTORY · Button action
+00:11:39.320 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:40.765 [activity] operator:e46827 page: TRAJECTORY · Button action
+00:11:40.765 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:11:40.975 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:46.968 [activity] operator:e46827 POST /api/library
+00:11:47.604 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:47.743 [activity] operator:e46827 page: TRAJECTORY · Setting changed
+00:11:47.744 [activity] operator:e46827 page: UI · Input updated
+00:11:49.586 [activity] operator:e46827 page: UI · Setting changed
+00:11:49.586 [activity] operator:e46827 page: UI · Input updated
+00:11:49.814 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:51.609 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:52.031 [activity] operator:e46827 page: ROBOT · Input updated
+00:11:52.031 [activity] operator:e46827 page: ROBOT · Input updated
+00:11:52.031 [activity] operator:e46827 page: ROBOT · Input updated
+00:11:52.031 [activity] operator:e46827 page: ROBOT · Setting changed
+00:11:52.658 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:53.485 [activity] operator:e46827 POST /api/library/u_072a2a008cb3
+00:11:53.849 [activity] operator:e46827 page: ROBOT · Setting changed
+00:11:53.849 [activity] operator:e46827 page: UI · Button action
+00:11:53.849 [activity] operator:e46827 page: ROBOT · Input updated
+00:11:54.471 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:55.971 [activity] operator:e46827 page: UI · Button action
+00:11:56.193 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:11:59.541 [activity] operator:e46827 page: SEQUENCE · Button action
+00:11:59.542 [activity] operator:e46827 page: NAVIGATION · Open screen
+00:11:59.769 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:12:00.789 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:12:03.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:12:06.046 [RIGHT] program list · 27 programs
+00:12:06.074 [RIGHT] global points · 17 point(s)
+00:12:06.153 [LEFT] program list · 30 programs
+00:12:06.220 [LEFT] global points · 23 point(s)
+00:12:06.589 [activity] operator:e46827 page: ROBOT · Button action
+00:12:06.800 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:12:08.317 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:12:23.581 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:12:24.080 [LEFT] program list · 30 programs
+00:12:24.081 [RIGHT] program list · 27 programs
+00:12:24.130 [RIGHT] global points · 17 point(s)
+00:12:24.146 [LEFT] global points · 23 point(s)
+00:12:24.413 [activity] operator:e46827 page: ROBOT · Button action
+00:12:24.413 [activity] operator:e46827 page: UI · Button action
+00:12:24.517 [RIGHT] program list · 27 programs
+00:12:24.555 [LEFT] program list · 30 programs
+00:12:24.578 [RIGHT] global points · 17 point(s)
+00:12:24.633 [LEFT] global points · 23 point(s)
+00:12:25.200 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:12:28.595 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:12:29.978 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:12:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:12:35.350 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:12:37.143 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:12:39.688 [LEFT] controller data · 30 programs; IO default 0; tracks not available
+00:12:39.786 [LEFT] global points · 23 point(s)
+00:12:39.961 [LEFT] program list · 30 programs
+00:12:40.277 [activity] operator:e46827 page: UI · Button action
+00:12:40.427 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:12:41.714 [RIGHT] controller data · 27 programs; IO default 0; tracks not available
+00:12:41.747 [RIGHT] global points · 17 point(s)
+00:12:42.025 [RIGHT] program list · 27 programs
+00:12:42.369 [activity] operator:e46827 page: UI · Button action
+00:12:42.413 [RIGHT] controller data · 27 programs; IO default 0; tracks not available
+00:12:42.453 [RIGHT] global points · 17 point(s)
+00:12:42.756 [RIGHT] program list · 27 programs
+00:12:43.071 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:12:47.052 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:12:47.303 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:12:49.078 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:13:00.013 [activity] operator:e46827 page: UI · Button action
+00:13:00.224 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:13:03.687 [activity] operator:e46827 page: SYSTEM · Session active
+00:13:04.415 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:13:06.311 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:13:09.908 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:13:13.765 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:13:17.181 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:13:20.403 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:13:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:14:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:14:33.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:14:35.477 [activity] operator:e46827 POST /api/auth/engineer/lock
+00:14:35.738 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:14:35.739 [activity] operator:e46827 page: UI · Button action
+00:14:37.357 [activity] engineer:e46827 POST /api/auth/engineer
+00:14:37.763 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:14:42.415 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:14:42.786 [activity] engineer:e46827 page: NAVIGATION · Scrolled view
+00:14:45.879 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:14:46.018 [activity] engineer:e46827 page: TRAJECTORY · Setting changed
+00:14:46.018 [activity] engineer:e46827 page: TRAJECTORY · Input updated
+00:14:48.798 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:14:49.601 [activity] engineer:e46827 page: TRAJECTORY · Input updated
+00:14:49.601 [activity] engineer:e46827 page: TRAJECTORY · Setting changed
+00:14:50.517 [activity] engineer:e46827 page: TRAJECTORY · Button action
+00:14:50.727 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:14:51.945 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:14:52.463 [activity] engineer:e46827 page: ROBOT · Input updated
+00:14:52.463 [activity] engineer:e46827 page: ROBOT · Input updated
+00:14:54.458 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:14:54.598 [activity] engineer:e46827 page: ROBOT · Setting changed
+00:14:56.478 [activity] engineer:e46827 page: ROBOT · Setting changed
+00:14:56.478 [activity] engineer:e46827 page: ROBOT · Input updated
+00:14:56.478 [activity] engineer:e46827 page: UI · Button action
+00:14:56.691 [LEFT] program list · 30 programs
+00:14:56.691 [activity] engineer:e46827 POST /api/robots/left/programs/upload -> REFUSED: Program 61 on the LEFT controller already holds “61_61_L_P1_pole50_cleaningpose_.”.
+00:14:57.343 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:14:58.206 [LEFT] program list · 30 programs
+00:14:58.208 [activity] engineer:e46827 POST /api/robots/left/programs/upload
+00:14:58.339 [LEFT] rm_upload · upload 61_L_P1_pole50_cleaningpose_.txt: 11026 points, 621.1 KB -> slot 61 on 192.168.1.10
+00:14:58.339 [LEFT] rm_upload ·   slot 61 now: 61_61_L_P1_pole50_cleaningpose_. (547.8 KB) — it will be REPLACED
+00:14:58.744 [activity] engineer:e46827 page: UI · Button action
+00:14:58.956 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:03.608 [activity] engineer:e46827 page: SYSTEM · Session active
+00:15:11.950 [LEFT] rm_upload ·   sent: ret=0 err_line=-1
+00:15:12.177 [LEFT] rm_upload ·   VERIFIED: slot 61 holds '61_61_L_P1_pole50_cleaningpose_.', 636054 bytes (sent 636054)
+00:15:12.178 [LEFT] upload {"program_id": 61, "file": "20261113_001458_61_L_P1_pole50_cleaningpose_55.1s_20pct_steady30s.txt", "bytes": 636054} ret=0 (13.969 s)
+00:15:12.385 [activity] - job upload done: Upload 61_L_P1_pole50_cleaningpose_55.1s_20pct_steady30s.txt to LEFT program 61
+00:15:18.439 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:23.559 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:23.697 [activity] engineer:e46827 page: TRAJECTORY · Setting changed
+00:15:23.698 [activity] engineer:e46827 page: TRAJECTORY · Input updated
+00:15:25.646 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:29.317 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:29.456 [activity] engineer:e46827 page: TRAJECTORY · Setting changed
+00:15:29.456 [activity] engineer:e46827 page: TRAJECTORY · Input updated
+00:15:31.263 [LEFT] program list · 30 programs
+00:15:31.845 [activity] engineer:e46827 page: UI · Button action
+00:15:32.057 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:33.593 [activity] engineer:e46827 page: SYSTEM · Session active
+00:15:35.590 [activity] engineer:e46827 page: NAVIGATION · Scrolled view
+00:15:43.782 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:44.572 [activity] engineer:e46827 page: TRAJECTORY · Input updated
+00:15:44.572 [activity] engineer:e46827 page: TRAJECTORY · Setting changed
+00:15:44.573 [activity] engineer:e46827 page: TRAJECTORY · Button action
+00:15:45.519 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:47.306 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:47.757 [activity] engineer:e46827 page: ROBOT · Input updated
+00:15:47.757 [activity] engineer:e46827 page: ROBOT · Input updated
+00:15:47.757 [activity] engineer:e46827 page: ROBOT · Input updated
+00:15:48.449 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:48.589 [activity] engineer:e46827 page: ROBOT · Setting changed
+00:15:50.909 [RIGHT] program list · 27 programs
+00:15:50.910 [activity] engineer:e46827 POST /api/robots/right/programs/upload -> REFUSED: Program 61 on the RIGHT controller already holds “61_61_R_P1_pole200_cleaningpose.”.
+00:15:50.941 [activity] engineer:e46827 page: ROBOT · Setting changed
+00:15:50.942 [activity] engineer:e46827 page: UI · Button action
+00:15:50.942 [activity] engineer:e46827 page: ROBOT · Input updated
+00:15:51.719 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:15:54.829 [RIGHT] program list · 27 programs
+00:15:54.831 [activity] engineer:e46827 POST /api/robots/right/programs/upload
+00:15:55.047 [RIGHT] rm_upload · upload 61_R_P1_pole200_cleaningpose.txt: 11026 points, 619.7 KB -> slot 61 on 192.168.1.103
+00:15:55.047 [RIGHT] rm_upload ·   slot 61 now: 61_61_R_P1_pole200_cleaningpose. (546.0 KB) — it will be REPLACED
+00:15:55.416 [activity] engineer:e46827 page: UI · Button action
+00:15:55.626 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:03.593 [activity] engineer:e46827 page: SYSTEM · Session active
+00:16:08.703 [RIGHT] rm_upload ·   sent: ret=0 err_line=-1
+00:16:08.959 [RIGHT] rm_upload ·   VERIFIED: slot 61 holds '61_61_R_P1_pole200_cleaningpose.', 634610 bytes (sent 634610)
+00:16:08.959 [RIGHT] upload {"program_id": 61, "file": "20261113_001554_61_R_P1_pole200_cleaningpose_55.1s_20pct_steady30s.txt", "bytes": 634610} ret=0 (14.128 s)
+00:16:09.241 [activity] - job upload done: Upload 61_R_P1_pole200_cleaningpose_55.1s_20pct_steady30s.txt to RIGHT program 61
+00:16:10.924 [RIGHT] program list · 27 programs
+00:16:11.597 [activity] engineer:e46827 page: UI · Button action
+00:16:11.808 [activity] engineer:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:14.365 [activity] operator:e46827 POST /api/auth/engineer/lock
+00:16:15.165 [activity] operator:e46827 page: UI · Button action
+00:16:15.376 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:17.364 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:16:20.409 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:16:23.549 [activity] operator:e46827 POST /api/auth/engineer/lock
+00:16:24.349 [activity] operator:e46827 page: UI · Button action
+00:16:24.560 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:26.021 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:27.470 [activity] operator:e46827 page: AUTH · Setting changed
+00:16:27.470 [activity] operator:e46827 page: UI · Button action
+00:16:27.825 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:28.404 [activity] operator:e46827 page: UI · Button action
+00:16:28.615 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:29.059 [LEFT] program list · 30 programs
+00:16:29.202 [LEFT] global points · 23 point(s)
+00:16:29.477 [activity] operator:e46827 page: TRAJECTORY · Button action
+00:16:29.483 [RIGHT] program list · 27 programs
+00:16:29.519 [RIGHT] global points · 17 point(s)
+00:16:29.687 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:30.653 [activity] operator:e46827 page: TRAJECTORY · Button action
+00:16:30.864 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:32.557 [activity] operator:e46827 POST /api/library
+00:16:33.181 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:33.300 [activity] operator:e46827 page: TRAJECTORY · Setting changed
+00:16:33.301 [activity] operator:e46827 page: SYSTEM · Session active
+00:16:33.301 [activity] operator:e46827 page: UI · Input updated
+00:16:34.888 [activity] operator:e46827 page: UI · Setting changed
+00:16:34.888 [activity] operator:e46827 page: UI · Input updated
+00:16:36.417 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:36.859 [activity] operator:e46827 page: ROBOT · Input updated
+00:16:36.860 [activity] operator:e46827 page: ROBOT · Input updated
+00:16:36.860 [activity] operator:e46827 page: ROBOT · Input updated
+00:16:36.860 [activity] operator:e46827 page: ROBOT · Setting changed
+00:16:37.464 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:38.509 [activity] operator:e46827 POST /api/library/u_71a7fccb948d
+00:16:38.784 [activity] operator:e46827 page: ROBOT · Setting changed
+00:16:38.784 [activity] operator:e46827 page: UI · Button action
+00:16:38.784 [activity] operator:e46827 page: ROBOT · Input updated
+00:16:39.495 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:41.116 [activity] operator:e46827 page: TRAJECTORY · Button action
+00:16:41.327 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:45.769 [activity] operator:e46827 POST /api/library
+00:16:46.369 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:46.509 [activity] operator:e46827 page: TRAJECTORY · Setting changed
+00:16:46.509 [activity] operator:e46827 page: UI · Input updated
+00:16:48.249 [activity] operator:e46827 page: UI · Setting changed
+00:16:48.249 [activity] operator:e46827 page: UI · Input updated
+00:16:48.958 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:50.148 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:50.652 [activity] operator:e46827 page: ROBOT · Input updated
+00:16:50.652 [activity] operator:e46827 page: ROBOT · Input updated
+00:16:51.481 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:51.621 [activity] operator:e46827 page: ROBOT · Setting changed
+00:16:52.793 [activity] operator:e46827 page: ROBOT · Setting changed
+00:16:52.793 [activity] operator:e46827 page: ROBOT · Input updated
+00:16:53.021 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:16:58.894 [activity] operator:e46827 POST /api/library/u_bb1a1db38552
+00:16:59.669 [activity] operator:e46827 page: UI · Button action
+00:16:59.893 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:17:01.173 [RIGHT] program list · 27 programs
+00:17:01.195 [RIGHT] global points · 17 point(s)
+00:17:01.299 [LEFT] program list · 30 programs
+00:17:01.385 [LEFT] global points · 23 point(s)
+00:17:01.653 [activity] operator:e46827 page: UI · Button action
+00:17:01.863 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:17:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:17:05.801 [RIGHT] program list · 27 programs
+00:17:05.825 [RIGHT] global points · 17 point(s)
+00:17:05.832 [LEFT] program list · 30 programs
+00:17:05.881 [LEFT] global points · 23 point(s)
+00:17:06.349 [activity] operator:e46827 page: ROBOT · Button action
+00:17:06.591 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:17:08.472 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:17:13.286 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:17:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:18:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:18:05.358 [LEFT] program list · 30 programs
+00:18:05.505 [RIGHT] program list · 27 programs
+00:18:05.550 [LEFT] global points · 23 point(s)
+00:18:05.571 [RIGHT] global points · 17 point(s)
+00:18:05.694 [activity] operator:e46827 page: UI · Button action
+00:18:05.776 [activity] operator:e46827 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: This run has not been run in Simulation Mode as it is now: changed since it was simulated: its steps, the LEFT programs Lite sent, the RIGHT programs Lite sent, the speed (simulated at 26 %, now 60 %).
+00:18:05.904 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:18:07.023 [LEFT] program list · 30 programs
+00:18:07.172 [RIGHT] program list · 27 programs
+00:18:07.272 [LEFT] global points · 23 point(s)
+00:18:07.292 [RIGHT] global points · 17 point(s)
+00:18:07.577 [activity] operator:e46827 page: ROBOT · Button action
+00:18:07.728 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:18:07.735 [LEFT] program list · 30 programs
+00:18:07.785 [LEFT] global points · 23 point(s)
+00:18:07.908 [RIGHT] program list · 27 programs
+00:18:07.944 [RIGHT] global points · 17 point(s)
+00:18:07.945 [activity] operator:e46827 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run -> REFUSED: Real Machine Mode on the real robot needs your confirmation.
+00:18:09.179 [LEFT] program list · 30 programs
+00:18:09.462 [RIGHT] program list · 27 programs
+00:18:09.620 [LEFT] global points · 23 point(s)
+00:18:09.655 [RIGHT] global points · 17 point(s)
+00:18:09.759 [activity] operator:e46827 page: ROBOT · Button action
+00:18:09.967 [activity] operator:e46827 PUT /api/projects/alix_mvbvk1fk_zti6s
+00:18:10.032 [LEFT] program list · 30 programs
+00:18:10.112 [LEFT] global points · 23 point(s)
+00:18:10.212 [RIGHT] program list · 27 programs
+00:18:10.236 [RIGHT] global points · 17 point(s)
+00:18:10.761 [activity] operator:e46827 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/run
+00:18:10.778 [LEFT] run mode REAL
+00:18:10.798 [RIGHT] run mode REAL
+00:18:11.082 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-13/canfd/20261113_001810_LEFT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+00:18:11.083 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261113_001810_LEFT_s2_01_PART_1.frames.jsonl"} · recording
+00:18:11.114 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-13/canfd/20261113_001810_RIGHT_s2_01_PART_1.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+00:18:11.114 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261113_001810_RIGHT_s2_01_PART_1.frames.jsonl"} · recording
+00:18:11.142 [LEFT] clear warning · clean
+00:18:11.143 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+00:18:11.143 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+00:18:11.158 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s
+00:18:11.163 [RIGHT] clear warning · clean
+00:18:11.163 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+00:18:11.163 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+00:18:11.178 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s
+00:18:11.179 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+00:18:11.179 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+00:18:11.197 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+00:18:11.198 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+00:18:11.229 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%
+00:18:11.253 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%
+00:18:11.292 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+00:18:11.292 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+00:18:11.292 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 0.1 s
+00:18:11.403 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+00:18:11.403 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (0.261 s)
+00:18:12.372 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+00:18:12.372 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+00:18:12.373 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.2 s
+00:18:12.386 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+00:18:12.386 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.223 s)
+00:18:13.377 [RIGHT] pole and hand {"mm": 200.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (0.981 s) · pole 200.0 -> 200.0 mm in 0.397 s, the hand moving meanwhile; hand [1000, 996, 998, 1000, 27, 978]
+00:18:13.746 [RIGHT] alix · push config restored to 192.168.1.20:8090 enable=False (ret=0)
+00:18:13.746 [RIGHT] alix · recorded 122 frames
+00:18:13.746 [RIGHT] s2 feed {"file": "20261113_001810_RIGHT_s2_01_PART_1.frames.jsonl"} · 122 frames
+00:18:14.319 [LEFT] pole and hand {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]} (2.909 s) · pole 200.0 -> 51.0 mm in 2.757 s, the hand moving meanwhile; hand [1000, 1000, 1000, 997, 66, 989]
+00:18:14.662 [LEFT] alix · push config restored to 192.168.1.20:8089 enable=False (ret=0)
+00:18:14.663 [LEFT] alix · recorded 169 frames
+00:18:14.663 [LEFT] s2 feed {"file": "20261113_001810_LEFT_s2_01_PART_1.frames.jsonl"} · 169 frames
+00:18:14.936 [LEFT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-13/canfd/20261113_001814_LEFT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8089, cycle 20 ms, all sections on)
+00:18:14.936 [LEFT] s2 feed {"cycle_ms": 20, "file": "20261113_001814_LEFT_s2_02_PART_2.frames.jsonl"} · recording
+00:18:15.113 [RIGHT] alix · recording UDP push -> /home/alai-labs/alix_studio_lite/Resources/Logs/2026-11-13/canfd/20261113_001814_RIGHT_s2_02_PART_2.frames.jsonl (target 192.168.1.20:8090, cycle 20 ms, all sections on)
+00:18:15.114 [RIGHT] s2 feed {"cycle_ms": 20, "file": "20261113_001814_RIGHT_s2_02_PART_2.frames.jsonl"} · recording
+00:18:15.114 [RIGHT] runner v14 · WORKFLOW START: 11 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+00:18:15.115 [LEFT] runner v14 · WORKFLOW START: 11 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+00:18:15.115 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+00:18:15.115 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+00:18:15.223 [LEFT] runner v14 ·   01. PROGRAM: Program 61 61_61_L_P1_pole50_cleaningpose_. // start/transit 30% // stored trajectory timing
+00:18:15.224 [LEFT] runner v14 ·   02. WAIT: 3 s
+00:18:15.224 [LEFT] runner v14 ·   03. POLE: 200 mm
+00:18:15.224 [LEFT] runner v14 ·   04. PROGRAM: Program 62 62_62_L_P2_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+00:18:15.224 [LEFT] runner v14 ·   05. HAND: 0,0,0,0,150,1000
+00:18:15.224 [LEFT] runner v14 ·   06. PROGRAM: Program 63 63_63_L_P2_pole200_grip_10.5s_25 // start/transit 30% // stored trajectory timing
+00:18:15.225 [LEFT] runner v14 ·   07. WAIT: 3 s
+00:18:15.225 [LEFT] runner v14 ·   08. HAND: 1000,1000,1000,1000,0,1000
+00:18:15.225 [LEFT] runner v14 ·   09. PROGRAM: Program 64 64_64_L_P3_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing
+00:18:15.225 [LEFT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+00:18:15.225 [LEFT] runner v14 ·   11. PROGRAM: Program 65 65_65_L_P3_pole200_grip_45.3s_s. // start/transit 30% // stored trajectory timing
+00:18:15.249 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+00:18:15.249 [LEFT] runner v14 · WORKFLOW STEP START 1/11: PROGRAM
+00:18:15.282 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:18:15.292 [LEFT] runner v14 · WORKFLOW PROGRAM 1/11: slot 61 (61_61_L_P1_pole50_cleaningpose_.) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:18:15.377 [RIGHT] runner v14 ·   01. PROGRAM: Program 61 61_61_R_P1_pole200_cleaningpose. // start/transit 30% // stored trajectory timing
+00:18:15.378 [RIGHT] runner v14 ·   02. WAIT: 3 s
+00:18:15.378 [RIGHT] runner v14 ·   03. HAND: 0,0,0,0,150,1000
+00:18:15.379 [RIGHT] runner v14 ·   04. PROGRAM: Program 62 62_62_R_P2_pole200_grip_13.0s_n. // start/transit 30% // stored trajectory timing
+00:18:15.379 [RIGHT] runner v14 ·   05. HAND: 1000,1000,1000,1000,0,1000
+00:18:15.379 [RIGHT] runner v14 ·   06. PROGRAM: Program 63 63_63_R_P2_pole200_cleaningpose. // start/transit 30% // stored trajectory timing
+00:18:15.379 [RIGHT] runner v14 ·   07. POLE: 50 mm
+00:18:15.379 [RIGHT] runner v14 ·   08. PROGRAM: Program 64 64_64_1_R_P2_pole50_cleaningpose // start/transit 30% // stored trajectory timing
+00:18:15.380 [RIGHT] runner v14 ·   09. WAIT: 3 s
+00:18:15.380 [RIGHT] runner v14 ·   10. HAND: 0,0,0,0,150,1000
+00:18:15.380 [RIGHT] runner v14 ·   11. PROGRAM: Program 65 65_65_R_P3_pole50_grip_39.8s_ne. // start/transit 30% // stored trajectory timing
+00:18:15.409 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+00:18:15.410 [RIGHT] runner v14 · WORKFLOW STEP START 1/11: PROGRAM
+00:18:15.485 [RIGHT] runner v14 · WORKFLOW PROGRAM 1/11: slot 61 (61_61_R_P1_pole200_cleaningpose.) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:18:17.743 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 1/11: slot 61 // start ack 2.251 s
+00:18:18.004 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 1/11: slot 61 // start ack 2.500 s
+00:18:18.005 [-] start together {"rows": {"left": 5, "right": 5}, "programs": {"left": 61, "right": 61}, "delay": {"right": 0.0, "left": 0.0}, "played_apart_s": 0.261, "sent_apart_s": -0.0, "ack": {"right": 2.251, "left": 2.5}, "held_s": {"left": 0.194, "right": 0.0}} · Started together: LEFT row 5 (Program 61) and RIGHT row 5 (Program 61) began to play 0.26 s apart (RIGHT first); started at the same moment (within 0.000 s); their controllers read their files in LEFT 2.50 s, RIGHT 2.25 s.
+00:18:32.220 [activity] operator:e46827 page: SYSTEM · Page slow
+00:18:33.615 [activity] operator:e46827 page: SYSTEM · Session active
+00:19:03.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:19:14.067 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/11: 56.330 s
+00:19:14.068 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 1/11: 0.128 s
+00:19:14.068 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/11: PROGRAM
+00:19:14.068 [RIGHT] runner v14 · WORKFLOW STEP START 2/11: WAIT
+00:19:14.071 [RIGHT] runner v14 · WORKFLOW WAIT: 3 s
+00:19:14.611 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 1/11: 56.625 s
+00:19:14.611 [LEFT] runner v14 · WORKFLOW FAST SWITCH 1/11: 0.127 s
+00:19:14.611 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/11: PROGRAM
+00:19:14.612 [LEFT] runner v14 · WORKFLOW STEP START 2/11: WAIT
+00:19:14.620 [LEFT] runner v14 · WORKFLOW WAIT: 3 s
+00:19:17.071 [RIGHT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+00:19:17.072 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 2/11: WAIT
+00:19:17.072 [RIGHT] runner v14 · WORKFLOW STEP START 3/11: HAND
+00:19:17.079 [RIGHT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+00:19:17.621 [LEFT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+00:19:17.621 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 2/11: WAIT
+00:19:17.622 [LEFT] runner v14 · WORKFLOW STEP START 3/11: POLE
+00:19:17.643 [LEFT] runner v14 · MANUAL POLE START: current 50.0 mm -> target 200 mm
+00:19:18.087 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[221, 222, 228, 249, 138, 987]
+00:19:18.274 [RIGHT] runner v14 · AUX HAND CLOSED
+00:19:18.275 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 3/11: HAND
+00:19:18.275 [RIGHT] runner v14 · WORKFLOW STEP START 4/11: PROGRAM
+00:19:18.329 [RIGHT] runner v14 · WORKFLOW PROGRAM 4/11: slot 62 (62_62_R_P2_pole200_grip_13.0s_n.) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:19:20.752 [LEFT] runner v14 · MANUAL POLE COMPLETE: target 200 mm, final=199.0 mm
+00:19:20.752 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 3/11: POLE
+00:19:20.753 [LEFT] runner v14 · WORKFLOW STEP START 4/11: PROGRAM
+00:19:20.803 [LEFT] runner v14 · WORKFLOW PROGRAM 4/11: slot 62 (62_62_L_P2_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:19:21.157 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:19:21.836 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 4/11: slot 62 // start ack 1.014 s
+00:19:21.846 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 4/11: slot 62 // start ack 0.551 s
+00:19:21.846 [-] start together {"rows": {"left": 7, "right": 7}, "programs": {"left": 62, "right": 62}, "delay": {"left": 0.0, "right": 0.44}, "played_apart_s": 0.009, "sent_apart_s": 0.44, "ack": {"left": 1.014, "right": 0.551}, "held_s": {"left": 0.0, "right": 2.913}} · Started together: LEFT row 7 (Program 62) and RIGHT row 7 (Program 62) began to play 0.01 s apart (LEFT first); started 0.44 s apart (RIGHT 0.44 s later for its shorter file read); their controllers read their files in LEFT 1.01 s, RIGHT 0.55 s.
+00:19:32.255 [activity] operator:e46827 page: SYSTEM · Page slow
+00:19:33.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:19:35.319 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 4/11: 13.467 s
+00:19:35.320 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 4/11: 0.146 s
+00:19:35.320 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 4/11: PROGRAM
+00:19:35.320 [RIGHT] runner v14 · WORKFLOW STEP START 5/11: HAND
+00:19:35.325 [RIGHT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+00:19:36.204 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[1000, 996, 998, 998, 11, 986]
+00:19:36.369 [RIGHT] runner v14 · AUX HAND CLOSED
+00:19:36.370 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 5/11: HAND
+00:19:36.370 [RIGHT] runner v14 · WORKFLOW STEP START 6/11: PROGRAM
+00:19:36.420 [RIGHT] runner v14 · WORKFLOW PROGRAM 6/11: slot 63 (63_63_R_P2_pole200_cleaningpose.) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:19:36.897 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 6/11: slot 63 // start ack 0.460 s
+00:19:39.501 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:19:45.014 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 4/11: 23.196 s
+00:19:45.014 [LEFT] runner v14 · WORKFLOW FAST SWITCH 4/11: 0.126 s
+00:19:45.014 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 4/11: PROGRAM
+00:19:45.015 [LEFT] runner v14 · WORKFLOW STEP START 5/11: HAND
+00:19:45.021 [LEFT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+00:19:46.155 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[126, 125, 149, 138, 141, 989]
+00:19:46.351 [LEFT] runner v14 · AUX HAND CLOSED
+00:19:46.351 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 5/11: HAND
+00:19:46.351 [LEFT] runner v14 · WORKFLOW STEP START 6/11: PROGRAM
+00:19:46.402 [LEFT] runner v14 · WORKFLOW PROGRAM 6/11: slot 63 (63_63_L_P2_pole200_grip_10.5s_25) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:19:47.123 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 6/11: slot 63 // start ack 0.716 s
+00:19:48.811 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 6/11: 11.931 s
+00:19:48.812 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 6/11: 0.126 s
+00:19:48.812 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 6/11: PROGRAM
+00:19:48.813 [RIGHT] runner v14 · WORKFLOW STEP START 7/11: POLE
+00:19:48.832 [RIGHT] runner v14 · MANUAL POLE START: current 200.0 mm -> target 50 mm
+00:19:49.199 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:19:51.908 [RIGHT] runner v14 · MANUAL POLE COMPLETE: target 50 mm, final=50.0 mm
+00:19:51.908 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 7/11: POLE
+00:19:51.909 [RIGHT] runner v14 · WORKFLOW STEP START 8/11: PROGRAM
+00:19:51.953 [RIGHT] runner v14 · WORKFLOW PROGRAM 8/11: slot 64 (64_64_1_R_P2_pole50_cleaningpose) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:19:52.559 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 8/11: slot 64 // start ack 0.589 s
+00:19:52.842 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:19:57.963 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 6/11: 10.844 s
+00:19:57.963 [LEFT] runner v14 · WORKFLOW FAST SWITCH 6/11: 0.115 s
+00:19:57.964 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 6/11: PROGRAM
+00:19:57.964 [LEFT] runner v14 · WORKFLOW STEP START 7/11: WAIT
+00:19:57.971 [LEFT] runner v14 · WORKFLOW WAIT: 3 s
+00:20:00.971 [LEFT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+00:20:00.971 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 7/11: WAIT
+00:20:00.972 [LEFT] runner v14 · WORKFLOW STEP START 8/11: HAND
+00:20:00.981 [LEFT] runner v14 · MANUAL HAND RAW START: little=1000 ring=1000 middle=1000 index=1000 thumb_bend=0 thumb_rotate=1000
+00:20:01.862 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:20:01.895 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[1000, 1000, 1000, 1000, 0, 1000], final=[1000, 997, 1000, 997, 63, 989]
+00:20:02.051 [LEFT] runner v14 · AUX HAND CLOSED
+00:20:02.051 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 8/11: HAND
+00:20:02.051 [LEFT] runner v14 · WORKFLOW STEP START 9/11: PROGRAM
+00:20:02.098 [LEFT] runner v14 · WORKFLOW PROGRAM 9/11: slot 64 (64_64_L_P3_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:20:03.291 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 8/11: 10.652 s
+00:20:03.292 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 8/11: 0.124 s
+00:20:03.292 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 8/11: PROGRAM
+00:20:03.292 [RIGHT] runner v14 · WORKFLOW STEP START 9/11: WAIT
+00:20:03.299 [RIGHT] runner v14 · WORKFLOW WAIT: 3 s
+00:20:03.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:20:04.983 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:20:06.305 [RIGHT] runner v14 · WORKFLOW WAIT COMPLETE: 3 s
+00:20:06.400 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 9/11: WAIT
+00:20:06.401 [RIGHT] runner v14 · WORKFLOW STEP START 10/11: HAND
+00:20:06.416 [RIGHT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+00:20:07.461 [RIGHT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[216, 211, 214, 233, 138, 985]
+00:20:07.667 [RIGHT] runner v14 · AUX HAND CLOSED
+00:20:07.667 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 10/11: HAND
+00:20:07.667 [RIGHT] runner v14 · WORKFLOW STEP START 11/11: PROGRAM
+00:20:07.716 [RIGHT] runner v14 · WORKFLOW PROGRAM 11/11: slot 65 (65_65_R_P3_pole50_grip_39.8s_ne.) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:20:09.004 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 9/11: slot 64 // start ack 1.280 s
+00:20:10.583 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:20:11.344 [RIGHT] runner v14 · WORKFLOW PROGRAM RUNNING 11/11: slot 65 // start ack 2.863 s
+00:20:11.344 [-] start together {"rows": {"left": 10, "right": 11}, "programs": {"left": 64, "right": 65}, "delay": {"right": 0.754, "left": 0.0}, "played_apart_s": 2.34, "sent_apart_s": 0.754, "ack": {"left": 1.28, "right": 2.863}, "held_s": {"left": 5.618, "right": 0.754}} · Started together: LEFT row 10 (Program 64) and RIGHT row 11 (Program 65) began to play 2.34 s apart (LEFT first); started 0.75 s apart (RIGHT 0.75 s later for its shorter file read); their controllers read their files in LEFT 1.28 s, RIGHT 2.86 s.
+00:20:31.012 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 9/11: 22.016 s
+00:20:31.013 [LEFT] runner v14 · WORKFLOW FAST SWITCH 9/11: 0.119 s
+00:20:31.013 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 9/11: PROGRAM
+00:20:31.014 [LEFT] runner v14 · WORKFLOW STEP START 10/11: HAND
+00:20:31.021 [LEFT] runner v14 · MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000
+00:20:32.192 [LEFT] runner v14 · MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[128, 122, 141, 134, 141, 988]
+00:20:32.257 [activity] operator:e46827 page: SYSTEM · Page slow
+00:20:32.385 [LEFT] runner v14 · AUX HAND CLOSED
+00:20:32.386 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 10/11: HAND
+00:20:32.386 [LEFT] runner v14 · WORKFLOW STEP START 11/11: PROGRAM
+00:20:32.428 [LEFT] runner v14 · WORKFLOW PROGRAM 11/11: slot 65 (65_65_L_P3_pole200_grip_45.3s_s.) // START/TRANSIT 30% // stored trajectory timing // overall 60%
+00:20:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:20:34.806 [LEFT] runner v14 · WORKFLOW PROGRAM RUNNING 11/11: slot 65 // start ack 2.357 s
+00:20:35.144 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:20:53.934 [RIGHT] runner v14 · WORKFLOW PROGRAM COMPLETE 11/11: 42.601 s
+00:20:53.935 [RIGHT] runner v14 · WORKFLOW FAST SWITCH 11/11: 0.117 s
+00:20:53.935 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 11/11: PROGRAM
+00:20:53.935 [RIGHT] runner v14 · WORKFLOW COMPLETE: 11/11 step(s), 158.5 s
+00:20:53.954 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+00:20:53.955 [RIGHT] workflow {"steps": 11, "overall_speed": 60, "restore_speed": 50} ret=0 (158.840 s)
+00:20:53.980 [RIGHT] clear warning · clean
+00:20:53.981 [RIGHT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+00:20:53.981 [RIGHT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+00:20:53.994 [RIGHT] runner v14 ·   01. GLOBAL: R_HME_POS // MOVEJ // speed 20% // wait 0s
+00:20:54.015 [RIGHT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+00:20:54.016 [RIGHT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+00:20:54.061 [RIGHT] runner v14 · GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 20%
+00:20:55.060 [RIGHT] runner v14 · GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ
+00:20:55.060 [RIGHT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+00:20:55.061 [RIGHT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 1.0 s
+00:20:55.076 [RIGHT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+00:20:55.076 [RIGHT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (1.095 s)
+00:20:55.440 [RIGHT] alix · push config restored to 192.168.1.20:8090 enable=False (ret=0)
+00:20:55.441 [RIGHT] alix · recorded 8002 frames
+00:20:55.441 [RIGHT] s2 feed {"file": "20261113_001814_RIGHT_s2_02_PART_2.frames.jsonl"} · 8002 frames
+00:20:58.194 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:21:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:21:21.481 [LEFT] runner v14 · WORKFLOW PROGRAM COMPLETE 11/11: 46.696 s
+00:21:21.482 [LEFT] runner v14 · WORKFLOW FAST SWITCH 11/11: 0.115 s
+00:21:21.482 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 11/11: PROGRAM
+00:21:21.482 [LEFT] runner v14 · WORKFLOW COMPLETE: 11/11 step(s), 186.2 s
+00:21:21.499 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+00:21:21.499 [LEFT] workflow {"steps": 11, "overall_speed": 60, "restore_speed": 50} ret=0 (186.385 s)
+00:21:21.527 [LEFT] clear warning · clean
+00:21:21.527 [LEFT] runner v14 · WORKFLOW START: 1 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%
+00:21:21.528 [LEFT] runner v14 · WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing.
+00:21:21.544 [LEFT] runner v14 ·   01. GLOBAL: L_HME_POS // MOVEJ // speed 100% // wait 0s
+00:21:21.565 [LEFT] runner v14 · WORKFLOW OVERALL SPEED: 60% // ret=0
+00:21:21.566 [LEFT] runner v14 · WORKFLOW STEP START 1/1: GLOBAL
+00:21:21.618 [LEFT] runner v14 · GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 100%
+00:21:22.225 [LEFT] runner v14 · GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ
+00:21:22.226 [LEFT] runner v14 · WORKFLOW STEP COMPLETE 1/1: GLOBAL
+00:21:22.226 [LEFT] runner v14 · WORKFLOW COMPLETE: 1/1 step(s), 0.7 s
+00:21:22.243 [LEFT] runner v14 · WORKFLOW SPEED RESTORE: 50% // ret=0
+00:21:22.244 [LEFT] workflow {"steps": 1, "overall_speed": 60, "restore_speed": 50} ret=0 (0.716 s)
+00:21:22.580 [LEFT] alix · push config restored to 192.168.1.20:8089 enable=False (ret=0)
+00:21:22.581 [LEFT] alix · recorded 9348 frames
+00:21:22.581 [LEFT] s2 feed {"file": "20261113_001814_LEFT_s2_02_PART_2.frames.jsonl"} · 9348 frames
+00:21:22.670 [LEFT] restore global speed {"pct": 50} ret=0
+00:21:22.692 [RIGHT] restore global speed {"pct": 50} ret=0
+00:21:22.692 [activity] - job run done: S2 Real Machine: both arms
+00:21:25.476 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:21:32.221 [activity] operator:e46827 page: SYSTEM · Page slow
+00:21:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:22:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:22:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:23:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:23:32.221 [activity] operator:e46827 page: SYSTEM · Page slow
+00:23:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:24:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:24:32.221 [activity] operator:e46827 page: SYSTEM · Page slow
+00:24:33.675 [activity] operator:e46827 page: SYSTEM · Session active
+00:25:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:25:32.220 [activity] operator:e46827 page: SYSTEM · Page slow
+00:25:33.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:26:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:26:32.220 [activity] operator:e46827 page: SYSTEM · Page slow
+00:26:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:27:03.592 [activity] operator:e46827 page: SYSTEM · Session active
+00:27:13.953 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:27:17.079 [activity] operator:e46827 page: NAVIGATION · Scrolled view
+00:27:32.221 [activity] operator:e46827 page: SYSTEM · Page slow
+00:27:33.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:28:03.593 [activity] operator:e46827 page: SYSTEM · Session active
+00:28:19.670 [LEFT] restore global speed {"pct": 50} ret=0
+00:28:19.688 [RIGHT] restore global speed {"pct": 50} ret=0
+00:31:40.684 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+00:31:40.726 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+00:31:40.726 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+00:31:42.474 [activity] - page: NAVIGATION · Open screen
+00:31:42.475 [activity] - page: SYSTEM · ASL frontend initialized
+00:31:42.796 [RIGHT] camera · perception warmed up in 3.8 s: its core built, the colour model loaded
+00:31:48.010 [activity] - POST /api/auth/login
+00:31:48.818 [activity] operator:b557ad page: AUTH · Operator login
+00:31:48.818 [activity] operator:b557ad page: NAVIGATION · Open screen
+00:31:48.818 [activity] operator:b557ad page: AUTH · Setting changed
+00:31:52.417 [activity] operator:b557ad page: PROJECT · Button action
+00:31:52.422 [activity] operator:b557ad page: NAVIGATION · Task loaded
+00:31:52.424 [activity] operator:b557ad page: SETUP · Arm selected
+00:31:52.428 [activity] operator:b557ad page: NAVIGATION · Teaching stage changed
+00:31:52.432 [activity] operator:b557ad page: SETUP · Arm selected
+00:31:52.436 [activity] operator:b557ad page: NAVIGATION · Open screen
+00:31:56.770 [activity] operator:b557ad POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+00:31:56.867 [activity] operator:b557ad POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+00:31:56.868 [activity] operator:b557ad page: SYSTEM · 3D device
+00:31:59.113 [activity] operator:b557ad POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+00:31:59.517 [activity] operator:b557ad POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+00:31:59.586 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:31:59.611 [activity] operator:b557ad POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+00:32:00.973 [activity] operator:b557ad POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+00:32:02.610 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:32:06.502 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:08.331 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:32:08.331 [activity] operator:b557ad page: UI · Button action
+00:32:08.573 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:10.373 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:11.776 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+00:32:11.776 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+00:32:12.315 [activity] operator:b557ad page: UI · Button action
+00:32:12.525 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:15.251 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+00:32:15.814 [activity] operator:b557ad page: UI · Button action
+00:32:15.814 [activity] operator:b557ad page: UI · Button action
+00:32:15.814 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:32:15.814 [activity] operator:b557ad page: UI · Button action
+00:32:16.081 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+00:32:16.628 [activity] operator:b557ad page: UI · Button action
+00:32:16.874 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:17.866 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+00:32:18.302 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+00:32:18.432 [activity] operator:b557ad page: UI · Button action
+00:32:18.433 [activity] operator:b557ad page: SYSTEM · Session active
+00:32:18.433 [activity] operator:b557ad page: UI · Button action
+00:32:19.058 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:20.046 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:32:21.765 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:25.511 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:32:27.202 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/left
+00:32:27.748 [activity] operator:b557ad page: UI · Button action
+00:32:27.959 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:32.143 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:32:33.764 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:35.078 [activity] operator:b557ad page: UI · Button action
+00:32:35.079 [activity] operator:b557ad page: UI · Button action
+00:32:35.079 [activity] operator:b557ad page: UI · Button action
+00:32:35.079 [activity] operator:b557ad page: UI · Button action
+00:32:35.079 [activity] operator:b557ad page: UI · Button action
+00:32:35.313 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+00:32:36.071 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:37.274 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+00:32:37.820 [activity] operator:b557ad page: UI · Button action
+00:32:38.029 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:39.048 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:39.049 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s/workflow/right
+00:32:39.169 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:32:39.169 [activity] operator:b557ad page: UI · Button action
+00:32:39.781 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:32:43.843 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:32:48.819 [activity] operator:b557ad page: SYSTEM · Session active
+00:32:54.755 [activity] operator:b557ad page: UI · Setting changed
+00:32:54.756 [activity] operator:b557ad page: UI · Input updated
+00:32:54.979 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:33:01.402 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:33:06.805 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:33:10.118 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:33:16.014 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:33:16.135 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:33:18.819 [activity] operator:b557ad page: SYSTEM · Session active
+00:33:18.819 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:33:23.003 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:33:35.868 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:33:37.022 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:33:37.732 [activity] operator:b557ad PUT /api/projects/alix_mvbvk1fk_zti6s
+00:33:41.708 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:33:48.819 [activity] operator:b557ad page: SYSTEM · Session active
+00:34:18.819 [activity] operator:b557ad page: SYSTEM · Session active
+00:34:38.203 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:34:44.329 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:34:48.819 [activity] operator:b557ad page: SYSTEM · Session active
+00:34:48.819 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:35:18.820 [activity] operator:b557ad page: SYSTEM · Session active
+00:35:41.130 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:35:44.763 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:35:48.820 [activity] operator:b557ad page: SYSTEM · Session active
+00:35:55.435 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:35:58.459 [activity] operator:b557ad page: NAVIGATION · Scrolled view
+00:36:18.820 [activity] operator:b557ad page: SYSTEM · Session active
+00:36:48.819 [activity] operator:b557ad page: SYSTEM · Session active
+00:37:18.819 [activity] operator:b557ad page: SYSTEM · Session active

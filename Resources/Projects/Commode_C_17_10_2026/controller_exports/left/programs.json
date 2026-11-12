@@ -1,6 +1,6 @@
 {
  "arm": "left",
- "kept": "2026-11-07 16:43:26",
+ "kept": "2026-11-13 00:12:39",
  "programs": [
   {
    "slot": 1,
@@ -162,6 +162,52 @@
     "hand_text": "open"
    },
    "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261029_190846_7_L_P3_T04+T05_pole200_allopen_10.0s_v1.1.txt"
+  },
+  {
+   "slot": 61,
+   "name": "61_L_P1_pole50_cleaningpose_",
+   "file": "61_61_L_P1_pole50_cleaningpose_.txt",
+   "sha256": "5e60ab3004d29b025850539c4d6a0e81224a6f6cfd5ad089a9aad72cbd7683e8",
+   "lines": 9724,
+   "seconds": 48.615,
+   "stage": {
+    "pole_mm": 50.0,
+    "hand": [
+     1000,
+     1000,
+     1000,
+     1000,
+     0,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 50 mm, hand cleaning pose",
+    "hand_text": "cleaning pose"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261112_233647_61_L_P1_pole50_cleaningpose_48.6s_20pct_slow3-10s_mid1.5x.txt"
+  },
+  {
+   "slot": 65,
+   "name": "65_L_P3_pole200_grip_45.3s_s",
+   "file": "65_65_L_P3_pole200_grip_45.3s_s.txt",
+   "sha256": "eba997261c7e48f9f254deea96f8c8bc238fef5c03b094a47568269df7a65160",
+   "lines": 9064,
+   "seconds": 45.315,
+   "stage": {
+    "pole_mm": 200.0,
+    "hand": [
+     0,
+     0,
+     0,
+     0,
+     150,
+     1000
+    ],
+    "source": "as the operator stated it",
+    "text": "pole 200 mm, hand grip",
+    "hand_text": "grip"
+   },
+   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261112_222609_65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt"
   }
  ],
  "not_kept": [
@@ -198,6 +244,71 @@
   {
    "slot": 57,
    "name": "57_57_L_P3_pole200_allopen_11.5s",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 62,
+   "name": "62_62_L_P2_pole200_cleaningpose_",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 63,
+   "name": "63_63_L_P2_pole200_grip_10.5s_25",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 64,
+   "name": "64_64_L_P3_pole200_cleaningpose_",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 66,
+   "name": "66_66_L_P3_pole20_grip_15.6s_25p",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 67,
+   "name": "67_67_L_P3_pole200_allopen_12.5s",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 71,
+   "name": "71_71_L_P1_pl50_cp_40.5s_25p_sft",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 72,
+   "name": "72_72_L_P2_pl200_cp_24.8s_30p_sf",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 73,
+   "name": "73_73_L_P2_pl200_gp_11.5s_25p_nw",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 74,
+   "name": "74_74_L_P3_pl200_cp_19.3s_25p_sf",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 75,
+   "name": "75_75_L_P3_pl200_gp_49.8s_sm_ni_",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 76,
+   "name": "76_76_L_P3_pl20_gp_17.1s_25p_sft",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 77,
+   "name": "77_77_L_P3_pl200_op_13.7s_25p_sf",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 95,
+   "name": "95_65_L_P3_pole200_grip_45.3s_sm",
    "why": "not sent by Lite: the controller gives no program's points back"
   }
  ],
@@ -363,6 +474,51 @@
    10.461,
    97.398,
    166.977
+  ],
+  "ST_BTM_RGT_SRT": [
+   -9.572,
+   -55.967,
+   13.557,
+   123.901,
+   19.389,
+   -65.475,
+   166.955
+  ],
+  "LID_UN_SRT": [
+   -25.576,
+   -57.041,
+   27.732,
+   125.528,
+   34.141,
+   -63.921,
+   171.871
+  ],
+  "RIM_SRT_POS": [
+   -9.449,
+   -24.496,
+   -1.281,
+   95.428,
+   76.296,
+   -3.509,
+   199.141
+  ],
+  "BWL_IN_STRT": [
+   -8.194,
+   -2.125,
+   -10.814,
+   54.722,
+   20.94,
+   29.298,
+   255.376
+  ],
+  "BWL_IN_P2_STRT": [
+   -19.166,
+   31.51,
+   6.48,
+   73.336,
+   -2.48,
+   -86.73,
+   192.923
   ]
  }
 }

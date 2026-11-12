@@ -1,5 +1,5 @@
 {
- "active": "20261020_165703_L-R10_PART2.txt",
+ "active": "20261112_151808_L-R10_PART2.txt",
  "setup": {
   "pole_mm": 200.0,
   "hand": [
@@ -25,7 +25,7 @@
     150,
     1000
    ],
-   "at": "2026-10-20 16:44:33"
+   "at": "2026-11-12 15:14:34"
   },
   "hand": {
    "pole_mm": 200.0,
@@ -37,7 +37,7 @@
     150,
     1000
    ],
-   "at": "2026-10-20 16:44:35"
+   "at": "2026-11-12 15:14:36"
   }
  },
  "settings": {
@@ -45,11 +45,11 @@
   "target_s": null,
   "segments": [],
   "smooth_window": 101,
-  "program_id": 63,
+  "program_id": 100,
   "max_dev_mm": null,
-  "trim": true,
+  "trim": false,
   "smooth": false,
-  "scale": false,
+  "scale": true,
   "time_mode": "fastest",
   "idle_window": 11,
   "idle_threshold_md": 8.0,
@@ -130,8 +130,65 @@
     "idle_min_run": 20
    },
    "at": 1792486702.7985055
+  },
+  {
+   "label": "Scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 63,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": false,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1794467904.647467
+  },
+  {
+   "label": "Trim",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 63,
+    "max_dev_mm": null,
+    "trim": false,
+    "smooth": false,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1794467905.4473655
+  },
+  {
+   "label": "Program ID 100",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 100,
+    "max_dev_mm": null,
+    "trim": false,
+    "smooth": false,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1794467949.9292223
   }
  ],
- "cursor": 3,
- "version": "v001"
+ "cursor": 6,
+ "version": "v002"
 }

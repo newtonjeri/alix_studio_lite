@@ -1,5 +1,5 @@
 {
- "active": "20261020_164037_L-R10_PART1.txt",
+ "active": "20261112_151142_L-R10_PART1.txt",
  "setup": {
   "pole_mm": 200.0,
   "hand": [
@@ -18,14 +18,14 @@
   "pole": {
    "pole_mm": 200.0,
    "hand": [
-    1000,
-    1000,
-    1000,
-    1000,
-    null,
-    null
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
    ],
-   "at": "2026-10-20 16:37:52"
+   "at": "2026-11-12 15:09:20"
   },
   "hand": {
    "pole_mm": 200.0,
@@ -37,7 +37,7 @@
     150,
     1000
    ],
-   "at": "2026-10-20 16:37:56"
+   "at": "2026-11-12 15:09:22"
   }
  },
  "settings": {
@@ -45,11 +45,11 @@
   "target_s": null,
   "segments": [],
   "smooth_window": 101,
-  "program_id": 62,
+  "program_id": 100,
   "max_dev_mm": null,
-  "trim": true,
+  "trim": false,
   "smooth": false,
-  "scale": false,
+  "scale": true,
   "time_mode": "fastest",
   "idle_window": 11,
   "idle_threshold_md": 8.0,
@@ -168,8 +168,65 @@
     "idle_min_run": 20
    },
    "at": 1792485695.4363456
+  },
+  {
+   "label": "Program ID 100",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 100,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": false,
+    "scale": false,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1794467226.4407983
+  },
+  {
+   "label": "Scale",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 100,
+    "max_dev_mm": null,
+    "trim": true,
+    "smooth": false,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1794467515.9413831
+  },
+  {
+   "label": "Trim",
+   "settings": {
+    "optimiser": "manual",
+    "target_s": null,
+    "segments": [],
+    "smooth_window": 101,
+    "program_id": 100,
+    "max_dev_mm": null,
+    "trim": false,
+    "smooth": false,
+    "scale": true,
+    "time_mode": "fastest",
+    "idle_window": 11,
+    "idle_threshold_md": 8.0,
+    "idle_min_run": 20
+   },
+   "at": 1794467516.873487
   }
  ],
- "cursor": 5,
- "version": "v001"
+ "cursor": 8,
+ "version": "v002"
 }

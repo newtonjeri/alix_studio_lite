@@ -1,0 +1,58 @@
+{
+ "unit": "R-R07",
+ "arm": "right",
+ "taken": "2026-11-12 10:37",
+ "lines": 1901,
+ "sha256": "1afe8f5b6f66e24de1ba95a8353aeb4dcb50a632e150d830367c80ec39e833da",
+ "note": "trimmed to lines 1\u20131,901 of 2,727 (9.500 s)",
+ "source": "teach",
+ "original": "right_drag_20261112_103734.txt",
+ "pole_mm": 150,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   0,
+   0,
+   0,
+   0,
+   150,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand grip",
+  "hand_text": "grip"
+ },
+ "placement": {
+  "task": "TASK 8A",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-11-12 10:32:33"
+  }
+ },
+ "name": "R_TASK_8A_trajectory_3_2.txt",
+ "trimmed": {
+  "first": 1,
+  "last": 1901,
+  "of": 2727,
+  "at": "2026-11-12 10:39:14"
+ }
+}

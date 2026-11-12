@@ -210,6 +210,50 @@
     "note": "",
     "mode": "hwsim"
    }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "559fefdcd2de00548de213d4fcc735da9c05edcb1cf271322fac7df2f6fd77b0",
+   "ok": true,
+   "at": "2026-11-12 23:56:03",
+   "detail": {
+    "program_id": 100
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "559fefdcd2de00548de213d4fcc735da9c05edcb1cf271322fac7df2f6fd77b0",
+   "ok": true,
+   "at": "2026-11-12 23:56:26",
+   "detail": {
+    "program_id": 100,
+    "dry_run": true,
+    "seconds": 15.11,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "559fefdcd2de00548de213d4fcc735da9c05edcb1cf271322fac7df2f6fd77b0",
+   "ok": true,
+   "at": "2026-11-12 23:56:54",
+   "detail": {
+    "program_id": 100,
+    "dry_run": false,
+    "seconds": 15.15,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "559fefdcd2de00548de213d4fcc735da9c05edcb1cf271322fac7df2f6fd77b0",
+   "ok": true,
+   "at": "2026-11-12 23:57:08",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
   }
  ]
 }
