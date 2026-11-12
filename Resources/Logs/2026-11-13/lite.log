@@ -3215,3 +3215,8 @@
 02:06:30.886 [activity] operator:013264 page: SYSTEM · Session active
 02:07:00.885 [activity] operator:013264 page: SYSTEM · Session active
 02:07:30.885 [activity] operator:013264 page: SYSTEM · Session active
+02:08:00.885 [activity] operator:013264 page: SYSTEM · Session active
+02:08:30.887 [activity] operator:013264 page: SYSTEM · Session active
+02:09:00.887 [activity] operator:013264 page: SYSTEM · Session active
+02:09:09.727 [LEFT] restore global speed {"pct": 50} ret=0
+02:09:09.751 [RIGHT] restore global speed {"pct": 50} ret=0

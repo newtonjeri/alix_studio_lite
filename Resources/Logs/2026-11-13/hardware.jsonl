@@ -2184,3 +2184,5 @@
 {"t": 1794506472.374386, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1794506472.397645, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
 {"t": 1794506472.3981864, "side": "both", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "S2 Real Machine: both arms: LEFT arm execute_path + move_to_retract + move_to_retract_2 + move_to_rest: the stream did not complete (after the bridge movej the arm is 0.793 deg from the first line; one CANFD frame closes at most 0.720 deg; 0 of 838 lines sent). (The arm holds where it stopped: check it, then press STOP or run the task again.)"}
+{"t": 1794506949.727979, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794506949.7517402, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
