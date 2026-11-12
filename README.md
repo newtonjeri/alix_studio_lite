@@ -129,6 +129,7 @@ Other options:
 | `--ui legacy` | Opens Legacy Lite instead. |
 | `--robot realman` | Connects to the real arms: see below. |
 | `--feed off` | S2 records no controller feed during Real Machine runs. By default it records every 20 ms (`Resources/Logs/<day>/canfd/`), and the programs play some 3 % slower meanwhile. |
+| `--link 8780` | Opens the UGV's link on that port of this computer (`--link 0.0.0.0:8780`: on every network it is on): see *Automatic running* below. Not opened unless given. |
 
 ---
 
@@ -200,6 +201,54 @@ Every activity is logged, one folder per day in **`Resources/Logs/<date>/`** in 
 | `hardware.jsonl` | Every command to a controller, with its arguments, its return code, the time it took and what it means, and the lines ALIX's own functions log while they run. |
 | `status.jsonl` | Twice a second while an arm is connected: each arm's joints, error codes and run mode, its pole, its hand, its E-stop input, and the jobs running. |
 | `lite.log` | Activity and hardware, as plain text: `tail -f Resources/Logs/$(date +%F)/lite.log` follows Lite live. |
+
+---
+
+## Automatic running: the UGV link
+
+In production the UGV starts each cleaning itself. It talks to Lite through one action, **CleanFixture**, as JSON over
+HTTP with a ROS 2 action's steps (goal, accept or reject, feedback, result, cancel) and no ROS in Lite. The contract both
+sides agreed is the document "UGV-Arm Cleaning Link: Action Contract"; the code is `server/ugv_link.py` (the protocol)
+and `server/ugv_link_lite.py` (Lite behind it).
+
+```bash
+alix_studio_lite/tools/run_lite.sh --robot realman --link 0.0.0.0:8780
+```
+
+Lite prints the link's address and where its token is kept (`~/ALIX-Lite/ugv_link_token.txt`): the UGV sends it in the
+`X-Link-Token` header of every request. Only the link's four routes answer on that port; the page stays on this computer.
+
+1. **Lite starts in manual mode.** The UGV's goals are rejected (`MANUAL_MODE`) and it is told not to drive.
+2. **Park both arms where the sequence ends and the UGV drives with them** (run it once from the page: it ends there),
+   then open **S2** and press **RELEASE FOR THE UGV**. It asks what a run on the robot asks. The arms' pose at that
+   moment becomes the **travel pose**, and the sequence as it is then is what the UGV may start.
+3. **The UGV arrives and sends a goal** with how far its `base_link` stands from the target pose. Inside ±10 mm in X,
+   ±10 mm in Y and ±1° of yaw the sequence runs on both arms, as RUN BOTH runs it. Outside, nothing moves and the UGV is
+   asked to approach again, three attempts a visit.
+4. **The result** says how it ended and whether the UGV may drive (`safe_to_move`): only while both arms are within 3°
+   of the travel pose and nothing is running. After a run that stopped, the arms stay where they stopped and the UGV stays
+   too, until a person has put them back.
+
+The release ends when you press **END RELEASE**, when the mode leaves Real, when Lite stops, and when the sequence, a
+Program, a point or the speed is changed after it. It also ends whenever a person has to step in: **STOP** (yours, or the
+UGV's cancel), an **E-stop**, and a goal that ends with an arm away from the travel pose. Nothing starts again by itself
+then, even once the arms are back and recovered: release the sequence again when the cell is clear. Every goal and its
+end is in the activity log (`UGV link: ...`), and the last 50 goals are kept in `~/ALIX-Lite/ugv_link_goals.json`.
+
+**Fixture names** are the UGV's cubicle names ("Cubicle 1, Cubicle 2"), typed in the card's field before releasing;
+blank takes any. They are compared without case and without counting spaces.
+
+**The ledger.** Every goal's outcome, rejected or ended, is one row in the day's logs (`ugv_link.jsonl`, beside
+`lite.log`): the offset the UGV reported (`offset_x_m`, `offset_y_m`, `offset_yaw_deg`, and `offset_source`, how it was
+measured), the attempt, and what came of it (`outcome`, `reject_code` or `abort_code`, `safe_to_move`, `stages_done`,
+`duration_s`). It is there to see what the tolerance does in practice, the yaw limit above all.
+
+Two helpers, standard library only:
+
+| Helper | What it is for |
+|---|---|
+| `tools/ugv_link_client.py` | A stand-in for the UGV, for the lab: `status`, `clean --fixture "Cubicle 1" --x-mm 3 --y-mm -2 --yaw-deg 0.4`, `result`, `cancel`. Ctrl+C cancels the goal. |
+| `tools/ugv_link_standin.py` | A stand-in for the arm side, for the UGV side to develop against: it answers the same calls with the same code and moves nothing. It needs only this file and `server/ugv_link.py`. Every reject code and abort code can be asked of it (`--outcomes reject:ARM_NOT_READY,aborted:ESTOP,succeeded`), also while it runs (`POST /standin`); its own top lines say how. |
 
 ---
 

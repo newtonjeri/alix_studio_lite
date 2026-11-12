@@ -94,12 +94,28 @@ class LiteApp:
         self.ui["mode"] = "visual"              # Lite always starts in Visual sim (NFR-UX f)
         self.ui["role"] = "operator"
         self._toppra = None
+        # the UGV's link (ugv_link: the CleanFixture action; the user, 11 Nov): its goals and Lite behind them. Manual
+        # until an operator releases S2's sequence; its own listener only when Lite is started with --link
+        from . import ugv_link
+        from .ugv_link_lite import LiteBackend
+
+        self.ugv = LiteBackend(self)
+        self.robot.on_person_stop = self.ugv.person_stopped   # STOP or an E-stop press ends a release at that moment
+        self.ugv.link = ugv_link.Link(self.ugv, store=self.data_dir / "ugv_link_goals.json",
+                                      say=lambda text, ok=True, detail=None: self.log.activity(text, detail=detail, ok=ok),
+                                      record=lambda row: self.log.row("ugv_link", row))
         threading.Thread(target=self._status_loop, name="lite-status-log", daemon=True).start()
 
     def _status_loop(self) -> None:
         """The unit's status, twice a second while an arm is connected (logbook.status)."""
         while True:
             time.sleep(0.5)
+            try:
+                ugv = getattr(self, "ugv", None)
+                if ugv is not None:                          # a STOP or an E-stop ends a release for the UGV (ugv_link_lite)
+                    ugv.watch()
+            except Exception:                                   # noqa: BLE001 - never stops the status log
+                pass
             try:
                 arms = {}
                 for side, a in self.robot.arms.items():
@@ -155,6 +171,9 @@ class LiteApp:
                           ok=v["state"] != "failed", error=v["error"])
         if v["state"] == "failed" and job.kind in ROBOT_JOB_KINDS:
             self.log.alert("error", f"{job.title}: {v['error']}", hint=v["hint"], side=job.arm, source=job.kind)
+        ugv = getattr(self, "ugv", None)
+        if ugv is not None:                                  # a UGV goal's run: its goal ends with it (ugv_link_lite)
+            ugv.job_ended(job)
 
     def set_mode(self, mode: str) -> None:
         """Visual sim, Hardware sim or Real (D30). The robot backend follows it: in Hardware sim it
@@ -991,3 +1010,4 @@ def make_server(app: LiteApp, port: int) -> ThreadingHTTPServer:
 
 # Routes kept in their own modules register themselves on import (after ROUTES exists).
 from . import api_advanced, api_calibration, api_library, api_mechanism, api_units, api_v2, api_workflow, routes_robot  # noqa: E402,F401
+from . import ugv_link_lite  # noqa: E402,F401
