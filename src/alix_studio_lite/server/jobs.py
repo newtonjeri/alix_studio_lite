@@ -26,6 +26,7 @@ class Job:
         self.result: dict | None = None
         self.error: str | None = None
         self.hint: str | None = None
+        self.code: str | None = None                       # the refusal's code it ended with (UserError.code), for the UGV link
         self.events: list[dict] = []
         self.reason: tuple[str, str | None] | None = None   # why it was stopped, when not by STOP (an E-stop)
         self.alone = False                                 # runs on its arm alone: the other arm stays stopped
@@ -162,7 +163,7 @@ class Jobs:
                     self._jobs.pop(k, None)
 
         def run():
-            state, error, hint, result, note = "done", None, None, None, None
+            state, error, hint, result, note, code = "done", None, None, None, None, None
             try:
                 res = fn(job)
                 result = res if isinstance(res, dict) else {"value": res}
@@ -172,7 +173,7 @@ class Jobs:
                 else:
                     state, note = "cancelled", "Stopped."
             except UserError as exc:
-                state, error, hint = "failed", str(exc), exc.hint
+                state, error, hint, code = "failed", str(exc), exc.hint, exc.code
             except BaseException as exc:                            # noqa: BLE001 - even an exit ends the job
                 state, error, hint = "failed", f"{type(exc).__name__}: {exc}", "Details are in the server log."
                 traceback.print_exc()
@@ -181,7 +182,7 @@ class Jobs:
             if given_up:                                            # it had ended as failed while its call hung (give_up)
                 job.log(f"Its call came back after {time.time() - job.started:.0f} s; the job had already ended.", "warn")
                 return
-            job.result, job.state = result, state
+            job.result, job.code, job.state = result, code, state
             if error:
                 job.error, job.hint = error, hint
                 job.log(error, "error")

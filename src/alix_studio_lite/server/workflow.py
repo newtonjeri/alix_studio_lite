@@ -2689,7 +2689,7 @@ def feed_wanted(app, body: dict) -> bool:
     return bool(body.get("record_feed", False)) and bool(getattr(app, "feed_ms", None))   # off unless ticked (26 Oct)
 
 
-def run_real(app, units, mode: str, pick: dict | None, body: dict):
+def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only: bool = False, expect: str | None = None):
     """Real Machine Mode (RUN BOTH / RUN LEFT / RUN RIGHT, a single task, a dual-arm task): only in Real robot mode, on
     linked controllers; a run not completed in Simulation as it is now asks first (``unsimulated_ok``; the owner, 17 Oct:
     "a user can run on the hardware without having run in simulation first", with a confirmation that says so, before
@@ -2700,7 +2700,11 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
     between its Wait-for rows; at a Wait-for the arm holds until the other arm's runner has reported the row it names
     complete) and ends when both have (the Meet); a lid or seat task runs on both arms; every step is timed against its
     range (``_watch``); a failed part ends the run there and stops the other arm. STOP (any) interrupts the runner as
-    V53's STOP does and latches the arms as Lite's STOP always does."""
+    V53's STOP does and latches the arms as Lite's STOP always does.
+
+    The UGV link (ugv_link_lite, 11 Nov): ``check_only`` passes every gate of a run and starts nothing (a release for
+    automatic running: {hash, simulated, stages, seconds}); ``expect``: the run's identity as it was released, refused
+    (code "changed") when the sequence, its Programs, its points or the speed are no longer that."""
     import contextlib
     import threading
 
@@ -2741,6 +2745,9 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
 
     # the UGV's placement for the lid and seat tasks (place_correct): what the UGV reports with the run, else its Programs'
     ugv_place = body.get("ugv_placement") or place_correct.run_placement(programs, run["steps"])
+    if expect is not None and digest(ident) != expect:
+        raise UserError("The sequence is no longer as it was released for automatic running (its rows, its Programs, its "
+                        "points or the speed changed). Nothing moved.", "Release it again from S2.", code="changed")
     if not simulated and not body.get("unsimulated_ok"):
         why = _changed(sim, ident) if not same else "its simulation was not played to its end"
         raise UserError(f"This run has not been run in Simulation Mode as it is now: {why}.",
@@ -2813,6 +2820,9 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict):
         robot_log = getattr(robot, "log", None)
         if robot_log is not None:
             robot_log.activity(f"S2: the steps' ranges could not be worked out ({exc}); each step runs untimed")
+    if check_only:      # every gate of a run passed and its steps were timed (what a run does before it starts, so a goal's
+        return dict(hash=digest(ident), simulated=simulated, stages=len(run["plan"]), mode=mode,   # own start is quick);
+                    seconds=float(sim["total_s"]) if simulated and sim.get("total_s") else None)   # nothing started
 
     def work(job):
         live = {s: "READY" for s in ARMS}

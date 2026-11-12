@@ -304,6 +304,7 @@ class StandInRobot:
         newly = a.estop != "ENGAGED"
         a.estop, a.estop_latched, a.stop_latched = "ENGAGED", True, False
         if newly:
+            self._person_stopped(f"the {side.upper()} arm had its E-stop pressed")
             self._alert("warn", side, "E-stop pressed: robot motion is blocked on both arms.",
                         "Make the cell safe, release the button, then press Recover.", "estop")
             for arm in self.arms.values():
@@ -322,6 +323,18 @@ class StandInRobot:
                         raised = raised or exc
             if raised is not None:
                 raise raised
+
+    def _person_stopped(self, why: str) -> None:
+        """STOP or an E-stop press holds the arms: said to whoever asked to know (``on_person_stop``, the UGV link:
+        its release for automatic running ends, ugv_link_lite). It never fails a stop."""
+        hook = getattr(self, "on_person_stop", None)
+        if hook is not None:
+            try:
+                hook(why)
+            except Exception:                                   # noqa: BLE001
+                import traceback
+
+                traceback.print_exc()
 
     def estop_check(self, side: str, on_press=None) -> bool:
         """IO3 read once by a command that holds a linked arm, between two of its steps, in its own
@@ -1174,6 +1187,8 @@ class StandInRobot:
                     if a.estop == "CLEAR":
                         a.estop = "RECOVERING"
                     held.append(s)
+        if held:
+            self._person_stopped(f"the {held[0].upper()} arm was stopped by STOP")
         for t in threads:
             t.join(timeout=STOP_WAIT_S)
         sent = dict(got)

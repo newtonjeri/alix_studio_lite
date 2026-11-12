@@ -317,6 +317,33 @@ def _import_heavy() -> None:
         print(f"Perception:  {', '.join(got)} imported ({time.monotonic() - t0:.1f} s)", flush=True)
 
 
+def _link_address(text: str) -> tuple:
+    """``--link``'s (host, port): a port alone is this computer only."""
+    host, _, port = str(text).strip().rpartition(":")
+    if not port.isdigit() or not 1 <= int(port) <= 65535:
+        raise ValueError("give a port, or HOST:PORT (for example 8780, or 0.0.0.0:8780)")
+    if int(port) in (DEFAULT_PORT, 8765):
+        raise ValueError(f"{port} is a page's port (Lite's or ALIX Studio's): give the link another")
+    return host or "127.0.0.1", int(port)
+
+
+def _open_link(app, host: str, port: int) -> str:
+    """The UGV link's listener opened (ugv_link.serve); what to print. A port that cannot be opened is said, and Lite
+    runs on without the link: the page shows it too."""
+    from . import ugv_link
+
+    token_file = app.data_dir / "ugv_link_token.txt"
+    try:
+        ugv_link.serve(app.ugv.link, host, port, ugv_link.read_token(token_file))
+    except OSError as exc:
+        app.ugv.listening = dict(error=f"{host}:{port} could not be opened ({exc})")
+        return f"UGV link:  NOT open: {host}:{port} could not be opened ({exc}). Lite runs without it."
+    app.ugv.listening = dict(host=host, port=port)
+    app.log.activity(f"UGV link: listening on {host}:{port}")
+    return (f"UGV link:  http://{host}:{port}{ugv_link.PREFIX}  (its token, for the X-Link-Token header: {token_file}); "
+            "manual until S2's sequence is released")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="alix_studio_lite.server", description="Run ALIX Studio Lite.")
     ap.add_argument("-p", "--port", type=int, default=DEFAULT_PORT, help=f"default {DEFAULT_PORT}")
@@ -341,7 +368,18 @@ def main(argv=None) -> int:
     ap.add_argument("--feed", choices=("20", "off"), default="20",
                     help="S2's record of the controllers' feed during Real Machine runs: 20 (default: every 20 ms, the "
                          "programs play some 3 %% slower meanwhile) or off (never recorded)")
+    ap.add_argument("--link", metavar="[HOST:]PORT", default=None,
+                    help="open the UGV's link (the CleanFixture action as JSON over HTTP, its own token): a port alone "
+                         "listens on this computer only (127.0.0.1); HOST:PORT on that address of this computer "
+                         "(0.0.0.0: every network it is on). Not opened unless given")
     a = ap.parse_args(argv)
+    link_at = None
+    if a.link:
+        try:
+            link_at = _link_address(a.link)
+        except ValueError as exc:
+            print(f"--link {a.link}: {exc}", file=sys.stderr)
+            return 2
 
     if a.set_pin:
         return _set_pin(a.data, a.set_pin)
@@ -417,6 +455,8 @@ def main(argv=None) -> int:
         else:
             print(f"   copied from {app.store.home}: {p['name']}" + (f" (was “{p['renamed']}”)" if p["renamed"] else ""), flush=True)
     print(f"Logs:  {app.log.root}  (tail -f {app.log.root}/$(date +%F)/lite.log)", flush=True)
+    if link_at is not None:
+        print(_open_link(app, *link_at), flush=True)
     print(f"Python:  {sys.executable}", flush=True)
     try:                                  # the lid and seat files linked with ALIX's, where its checkout is on this computer
         from . import alix_sync          # (28 Oct; both ways at every start since 29 Oct: alix_sync.link)

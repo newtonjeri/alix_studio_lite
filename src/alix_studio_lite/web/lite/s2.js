@@ -284,6 +284,16 @@ function build() {
           el('small', { class: 'mini-note', text: ' (the speed slider at the top)' })),
         el('span', { id: 'liteS2StatusText', class: 'lite-s2-statustext lite-grow' }),
         el('b', { id: 'liteS2Runtime', class: 'lite-s2-runtime', text: '0.0 s' }))),
+    // automatic running (the user, 11 Nov): the sequence released for the UGV's link, which then starts it by itself
+    el('div', { id: 'liteS2Auto', class: 'card lite-s2-control' },
+      el('div', { class: 'lite-s2-kicker', text: 'AUTOMATIC RUNNING // UGV LINK' }),
+      el('div', { class: 'lite-row' },
+        el('div', { class: 'field' }, el('label', { for: 'liteS2AutoFixtures', text: 'Fixture names the UGV may send (blank: any)' }),
+          el('input', { id: 'liteS2AutoFixtures', type: 'text', placeholder: 'Cubicle 1, Cubicle 2', autocomplete: 'off' })),
+        btn('RELEASE FOR THE UGV', () => releaseAuto(), 'btn green', { id: 'liteS2AutoRelease' }),
+        btn('END RELEASE', () => endAuto(), 'btn outline', { id: 'liteS2AutoEnd', disabled: true })),
+      el('div', { id: 'liteS2AutoState', class: 'lite-status' }),
+      el('div', { id: 'liteS2AutoGoals', class: 'mini-note' })),
     el('div', { class: 'lite-s2-kicker', text: 'LIVE ARM STATUS' }),
     el('div', { class: 'lite-s2-live' }, ARMS.map(side => el('div', { id: `liteS2Live_${side}`, class: 'lite-s2-livearm', text: `${ARM(side)} // IDLE` }))),
     el('div', { class: 'lite-s2-arms' }, ARMS.map(armPanel)),
@@ -924,6 +934,93 @@ function gate() {
     : 'Not simulated as it is now: it can still run on the robot, after a confirmation that it was not simulated first.';
 }
 
+// ── automatic running: the UGV link (server/ugv_link.py, ugv_link_lite.py; the user, 11 Nov). Lite is manual until the
+// sequence is released here, with the confirmations a run on the robot takes; from then on the UGV's goals start it on
+// both arms. The arms' pose at the release is the travel pose: the UGV is told it may drive only while they are at it.
+
+const AUTO_CHECKS = [...REAL_CHECKS,
+  'Both arms are parked where this sequence ends and the UGV drives with them: their pose now becomes the travel pose.',
+  'From now on the UGV starts this sequence on both arms by itself, with no click here.'];
+let autoTimer = null;
+
+async function refreshAuto() {
+  if (!built) return;
+  try {
+    const v = await get('/api/link');
+    paintAuto(v);
+    if (v.active_goal_id && !S.job && ctx.pid) {             // a run the UGV started: followed here as one from this page
+      const d = await get(base());
+      if (d.running && !S.job) follow(d.running);
+    }
+  } catch (_) { /* the session ended or Lite is starting again: the page says so itself */ }
+}
+
+function paintAuto(v) {
+  const st = $('liteS2AutoState'), goals = $('liteS2AutoGoals');
+  if (!st || !v) return;
+  const lis = v.listening;
+  const where = !lis ? 'The UGV link is not open: start Lite with --link PORT for the UGV to reach it.'
+    : lis.error ? `The UGV link is not open: ${lis.error}.` : `Listening on ${lis.host}:${lis.port}.`;
+  const rel = v.release;
+  let text, cls = 'lite-status';
+  if (!rel) {
+    text = `MANUAL // the UGV's goals are rejected${v.ended_why ? ` (the release ended: ${v.ended_why})` : ''}. ${where}`;
+  } else {
+    cls += v.active_goal_id || v.safe_to_move ? ' ok' : ' warn';
+    text = `RELEASED ${rel.at} // ${rel.fixtures.length ? rel.fixtures.join(', ') : 'any fixture'} // ${rel.stages} stage(s)`
+      + `${rel.seconds ? `, ${fmt(rel.seconds)}` : ''}${rel.simulated ? '' : ', not simulated'}`
+      + (v.active_goal_id ? ` // goal ${v.active_goal_id} is running.` : ` // the UGV may drive: ${v.safe_to_move ? 'yes.' : `no. ${v.safe_to_move_detail}`}`)
+      + ` ${where}`;
+  }
+  st.className = cls;
+  st.textContent = text;
+  $('liteS2AutoEnd').disabled = !rel;
+  $('liteS2AutoRelease').textContent = rel ? 'RELEASE AGAIN' : 'RELEASE FOR THE UGV';
+  goals.replaceChildren(...(v.goals || []).map((g) => {
+    const r = g.result || {};
+    const when = g.received ? new Date(g.received * 1000).toLocaleTimeString() : '';
+    return el('div', { text: `${when} // ${g.fixture_id} // attempt ${g.attempt} // offset ${g.offset} // ${g.status}`
+      + (r.abort_code ? `, ${r.abort_code}` : '') + (g.result ? ` // may drive: ${r.safe_to_move ? 'yes' : 'no'}` : '')
+      + (r.detail ? ` // ${r.detail}` : '') });
+  }));
+}
+
+async function releaseAuto() {
+  if (!ctx.pid) { window.toast('Open a project first.', 'warn'); return; }
+  if (S.job) { window.toast('Wait for the running sequence to end first.', 'warn'); return; }
+  try { await saved(); } catch (err) { tell(err); return; }
+  if (!S.steps.left.length || !S.steps.right.length) { window.toast('Build or load BOTH LEFT and RIGHT sequences first.', 'warn'); return; }
+  const body = { fixtures: $('liteS2AutoFixtures').value, record_feed: S.recordFeed };
+  let out;
+  try {
+    try {
+      out = await post(`${base()}/release`, body);
+    } catch (err) {
+      if (err.code !== 'unsimulated') throw err;             // as a run from this page: it may go, once the operator says so
+      const go = await confirmDialog({ title: 'Release it without simulating it first?', ok: 'Yes, release it as it is',
+        body: `${err.message} It has not been played in Simulation Mode, so its collision check has not been made. `
+          + 'Do you want the UGV to start it on the real hardware without that?' });
+      if (!go) { window.toast('Not released. Simulation Mode plays it in 3D first.', 'warn'); return; }
+      body.unsimulated_ok = true;
+      out = await post(`${base()}/release`, body);
+    }
+  } catch (err) {
+    if (err.code !== 'warnings' && err.code !== 'confirm') { tell(err); return; }
+    const yes = await confirmDialog({ title: 'Release the sequence for the UGV', ok: 'Release', list: AUTO_CHECKS });
+    if (!yes) { window.toast('Not released: Lite stays in manual mode.', 'warn'); return; }
+    try { out = await post(`${base()}/release`, { ...body, confirmed: true, warnings_seen: S.sim && S.sim.hash }); } catch (e2) { tell(e2); return; }
+  }
+  paintAuto(out);
+  window.toast('Released: the UGV can now start this sequence.', 'good');
+}
+
+async function endAuto() {
+  try {
+    paintAuto(await post('/api/link/release/end', {}));
+    window.toast('Manual mode: the UGV cannot start anything.', 'warn');
+  } catch (err) { tell(err); }
+}
+
 // ── running: Simulation Mode or Real Machine Mode
 
 async function run(mode) {
@@ -1317,6 +1414,8 @@ document.addEventListener('lite:controller', (e) => { if (built && ctx.pid && (e
 export function openS2(host) {
   if (panel !== host) { panel = host; built = false; }
   build();
+  refreshAuto();
+  if (!autoTimer) autoTimer = setInterval(() => { if (built && panel && panel.offsetParent !== null) refreshAuto(); }, 2500);
   if (!ctx.pid) { S.status = 'PAGE 02 // open a project first'; paintAll(); return; }
   load().then(() => refreshSources(false)).then(async () => {
     if (S.sim) {                                            // the 3D back from wherever it was (S1, Tune, Review)

@@ -57,6 +57,11 @@ U = P + r"/units/([A-Za-z0-9_\-]+)"
 
 def units_of(app, pid: str) -> LiteUnits:
     session(app)
+    return units_for(app, pid)
+
+
+def units_for(app, pid: str) -> LiteUnits:
+    """A project's units without the page's session: for the UGV link, whose requests carry its own token (ugv_link)."""
     if not app.store.exists(pid):
         _UNITS.pop(pid, None)
         raise UserError("Project not found.", "Open it again from the Project Manager.")

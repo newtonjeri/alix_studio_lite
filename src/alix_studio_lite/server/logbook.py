@@ -11,6 +11,9 @@ owner's choice, 14 October; ``run_lite --logs DIR`` puts them elsewhere):
   joints, error codes and run mode, its pole, its hand, its E-stop input, and what Lite is doing;
 - ``lite.log``: activity and hardware as plain text lines, for reading in a terminal (``tail -f``).
 
+And one ledger: ``ugv_link.jsonl``, a row for every goal of the UGV link, rejected or ended, with the offset the UGV
+reported and what came of it (``row``; ugv_link.py).
+
 Hardware errors and failures are also kept as ALERTS (the newest 200), which the robot status
 carries to the page: it shows them at the bottom right until they are closed (alerts.js). Never
 raises: a log that cannot be written must not stop the robot or the page.
@@ -93,6 +96,16 @@ class Logbook:
         try:
             with self._lock:
                 with open(self._day() / "status.jsonl", "a", encoding="utf-8") as f:
+                    f.write(json.dumps(rec, default=str, ensure_ascii=False) + "\n")
+        except OSError:
+            pass
+
+    def row(self, stream: str, rec: dict) -> None:
+        """One record of a ledger of its own (``ugv_link``: a goal's outcome beside the offset it came with):
+        <stream>.jsonl only; what happened is said in the text log by whoever calls."""
+        try:
+            with self._lock:
+                with open(self._day() / f"{stream}.jsonl", "a", encoding="utf-8") as f:
                     f.write(json.dumps(rec, default=str, ensure_ascii=False) + "\n")
         except OSError:
             pass

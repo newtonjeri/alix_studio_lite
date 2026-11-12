@@ -17,8 +17,9 @@ PID = "alix_lid"
 P = f"/api/projects/{PID}"
 
 
-def start(tmp_path_factory, name: str, answers: list, contact: bool = False):
-    """Start Lite; returns (ctx, proc). ``answers`` are the camera script's first answers, in order."""
+def start(tmp_path_factory, name: str, answers: list, contact: bool = False, extra: tuple = ()):
+    """Start Lite; returns (ctx, proc). ``answers`` are the camera script's first answers, in order; ``extra``: more of
+    Lite's own start arguments (the UGV link's ``--link``)."""
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
@@ -29,7 +30,7 @@ def start(tmp_path_factory, name: str, answers: list, contact: bool = False):
                LITE_CONTACT_ACCEPTED="0")              # the owner's accepted plans left out: a refusal is a refusal here
     proc = subprocess.Popen([sys.executable, str(Path(__file__).with_name("emulated_lite.py")), "--robot", "emulated",
                              "--no-browser", "--port", str(port), "--data", str(data), "--logs", str(data / "logs"),
-                             "--projects", str(data / "projects")],
+                             "--projects", str(data / "projects"), *extra],
                             cwd=str(vendor_paths.LITE_ROOT), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
     ctx = {"base": f"http://127.0.0.1:{port}", "data": data, "script": script}
     for _ in range(150):
