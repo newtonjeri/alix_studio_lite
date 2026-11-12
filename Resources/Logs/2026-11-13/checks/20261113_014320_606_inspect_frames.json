@@ -1,0 +1,23 @@
+{
+  "check_id": "20261113_014320_606_inspect",
+  "stage": "inspect",
+  "expect": "lid_closed",
+  "decided": true,
+  "state": "lid_closed",
+  "confidence": 1.0,
+  "message": "2 frames (lid_closed, lid_closed; 2 yes, 0 no, 0 no vote): contours (depth): the lid closed at 1.8 deg to the floor (under 10), no cavity; the colour agrees: closed at 0.89",
+  "frames": [
+    {
+      "record": "20261113_014322_754_gap_check_lid_closed_lid_closed.json",
+      "success": true,
+      "state": "lid_closed",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261113_014323_789_gap_check_lid_closed_lid_closed.json",
+      "success": true,
+      "state": "lid_closed",
+      "confidence": 1.0
+    }
+  ]
+}

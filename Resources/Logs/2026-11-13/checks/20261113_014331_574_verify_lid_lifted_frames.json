@@ -1,0 +1,23 @@
+{
+  "check_id": "20261113_014331_574_verify_lid_lifted",
+  "stage": "verify_lid_lifted",
+  "expect": "lid_lifted",
+  "decided": true,
+  "state": "lid_lifted",
+  "confidence": 1.0,
+  "message": "2 frames (lid_lifted, lid_lifted; 2 yes, 0 no, 0 no vote): contours (depth): the lid lifted at 37.2 deg to the floor (from 10)",
+  "frames": [
+    {
+      "record": "20261113_014332_312_gap_check_lid_lifted_lid_lifted.json",
+      "success": true,
+      "state": "lid_lifted",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261113_014333_042_gap_check_lid_lifted_lid_lifted.json",
+      "success": true,
+      "state": "lid_lifted",
+      "confidence": 1.0
+    }
+  ]
+}

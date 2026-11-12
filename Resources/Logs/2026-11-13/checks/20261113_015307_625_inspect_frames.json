@@ -1,0 +1,23 @@
+{
+  "check_id": "20261113_015307_625_inspect",
+  "stage": "inspect",
+  "expect": "lid_closed",
+  "decided": true,
+  "state": "lid_open",
+  "confidence": 1.0,
+  "message": "2 frames (lid_open, lid_open; 0 yes, 2 no, 0 no vote): contours (depth): the bowl open: a cavity 27 cm deep over 10 % of the image, 2 standing face(s); the colour agrees: lid_seat_open at 0.95",
+  "frames": [
+    {
+      "record": "20261113_015309_794_gap_check_lid_closed_lid_open.json",
+      "success": true,
+      "state": "lid_open",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261113_015310_859_gap_check_lid_closed_lid_open.json",
+      "success": true,
+      "state": "lid_open",
+      "confidence": 1.0
+    }
+  ]
+}
