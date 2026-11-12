@@ -116,7 +116,7 @@ def test_the_hand_is_read_in_a_lull_and_a_command_waits_only_for_a_hand_read_und
     from alix_dispatch import peripherals, runmode
 
     monkeypatch.setattr(runmode, "read_run_mode", lambda robot: (0, 1))
-    monkeypatch.setattr(peripherals, "Pole", lambda robot, log=None: SimpleNamespace(height_m=lambda: 0.15))
+    monkeypatch.setattr(peripherals, "Pole", lambda robot, log=None: SimpleNamespace(height_m=lambda: 0.15, state=lambda: {"pos": 150, "err_flag": 0, "mode": 0}))
     link.feedback = {"t": time.time(), "hand": [1] * 6}
     with link.busy("moving the hand"):
         pass

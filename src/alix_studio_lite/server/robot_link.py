@@ -178,6 +178,19 @@ def watch_calls(robot, link: "ArmLink") -> bool:
 JOINT_WARN_C = 60.0       #: a joint at or above this is said (an alert) in the status snapshots (app.py)
 
 
+def _pole_error(state: dict | None, pole_mm) -> dict | None:
+    """The pole's driver error in its state read (``err_flag``), worded (pole_errors.words), or None when clean."""
+    try:
+        code = int((state or {}).get("err_flag") or 0)
+    except (TypeError, ValueError):
+        return None
+    if not code:
+        return None
+    from .pole_errors import words
+
+    return words(code, pole_mm)
+
+
 def _joint_floats(robot, name: str, scale: float, digits: int) -> list | None:
     """One of the SDK's per-joint reads (rm_get_current_joint_temperature, _current), scaled and rounded, or None when
     the controller does not answer it (ALIX's emulator has no such call)."""
@@ -728,7 +741,13 @@ class ArmLink:
         if pole is not None:
             read["pole"] = {k: v for k, v in pole.items() if isinstance(v, (int, float, str))}
             mm = float(pole["pos"]) / peripherals.LIFT_UNITS_PER_METRE * 1000.0
-            row("pole", True, f"answers: {mm:.0f} mm")
+            err = _pole_error(pole, mm)
+            if err:                                 # it answers, and its driver's error blocks every run until cleared
+                row("pole", True, f"answers: {mm:.0f} mm, but its driver reports {err['name']}"
+                    + (" (the pole stands past the limit set on its controller)" if err["limit"] else ""),
+                    err["advice"][0].upper() + err["advice"][1:] + ".", level="warn")
+            else:
+                row("pole", True, f"answers: {mm:.0f} mm")
             self._devices["pole"].update(fails=0, fail_since=None)
             self._judge("pole", True)
         else:
@@ -974,8 +993,11 @@ class ArmLink:
         fb["controller"] = _controller_state(robot) if ok else None
         r, mode = runmode.read_run_mode(robot)
         fb["run_mode"] = {0: "SIM", 1: "REAL"}.get(mode) if r == 0 else None
-        height = peripherals.Pole(robot, log=lambda *_: None).height_m()
+        pst = peripherals.Pole(robot, log=lambda *_: None).state()
+        height = None if pst is None else float(pst["pos"]) / peripherals.LIFT_UNITS_PER_METRE
         fb["pole_mm"] = None if height is None else round(height * 1000.0, 1)
+        # the pole's driver error, in the same reading (7 Nov: 512, the pole past its limit, said nowhere live)
+        fb["pole_err"] = _pole_error(pst, fb["pole_mm"])
         if ok:                                      # a controller that does not answer is not its pole's silence
             self._pole_answer(height is not None)
         if hasattr(robot, "rm_get_io_state"):

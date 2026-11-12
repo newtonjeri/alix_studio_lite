@@ -1,6 +1,12 @@
 {
  "left": [
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
+   "uid": "110f9060"
+  },
+  {
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
@@ -92,6 +98,12 @@
   }
  ],
  "right": [
+  {
+   "type": "inspect",
+   "pose": "",
+   "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
+   "uid": "e7e70dfd"
+  },
   {
    "type": "global",
    "name": "R_HME_POS",

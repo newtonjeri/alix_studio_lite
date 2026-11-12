@@ -2,8 +2,9 @@
 # Lite works without them.
 #
 # The Time-optimal optimiser (TOPP-RA). PyPI has wheels for Linux x86-64 only and no source
-# package; elsewhere (Jetson aarch64, Windows, macOS) setup builds it from its git tag, which
-# needs a C compiler. Without it Lite offers the Default optimiser only.
+# package; elsewhere (Jetson aarch64, Windows, macOS) setup builds it from its git tag (the
+# repository's python/ folder), which needs git, a C compiler and Python's headers. Without it
+# Lite offers the Default optimiser only.
 toppra==0.6.10
 # Re-baking the robot's 3D overlay with ALIX's own tool (tools/bake_robot_overlay.py). Only
 # needed when the robot model changes; the bake itself is kept in assets/robot/. PyPI has
@@ -13,9 +14,18 @@ meshoptimizer==0.2.30a0
 rtree==1.4.1
 # The right wrist's RealSense D435, read by Lite itself for the lid and seat tasks' camera checks
 # (server/camera_d435.py): the librealsense version ALIX's camera node was built on (realsense-ros 4.57.7).
-# PyPI has wheels for Linux x86-64 and Windows. Without it the lid and seat tasks still simulate and run in
-# Hardware sim; Real refuses their checks (fail-closed), so nothing is lifted unseen.
+# PyPI has wheels for Linux x86-64 and Windows (Python 3.10 to 3.14), and for Linux aarch64 with Python 3.12 only
+# (and 3.9, 3.10): which is why the Jetson's installer (install_lite_jetson.py) builds Lite's environment with
+# Python 3.12 exactly. The aarch64 wheel is named manylinux2014 and is not: it needs glibc 2.38 (Ubuntu 24.04; on
+# 22.04 it installs and does not load). Without it the lid and seat tasks still simulate and run in Hardware sim;
+# Real refuses their checks (fail-closed), so nothing is lifted unseen.
 pyrealsense2==2.57.7.10387
+# OpenCV, which reads the pictures for the lid's depth contours, the camera calibration and the colour models: the
+# version Lite is tested with, installed before the colour models' package, which takes any OpenCV from 4.6. A fresh
+# install brought OpenCV 5.0 (on PyPI since July 2026), which has no calibrateHandEye: the camera calibration's solve
+# refused (the lab, 4 Nov; the Jetson's first install, 10 Nov: 2 tests of the suite). It has wheels for every platform,
+# Linux aarch64 too.
+opencv-python==4.13.0.92
 # The wrist camera's colour models (ALIX's alix_perception_core, vendored: the YOLO status model of the commode's
 # state, models_synthetic_real_v10.yaml), asked by the lid and seat checks as ALIX's perception node asks them:
 # the version ALIX runs. It brings PyTorch (on Linux x86-64 PyPI's build carries CUDA, a large download; on a

@@ -78,7 +78,8 @@ async function normalMode() {
 async function clearErrors(side) {
   try {
     const out = await post(`/api/robots/${side}/clear-errors`, {});
-    window.toast(out.clean ? `${side.toUpperCase()} controller: errors cleared.` : `${side.toUpperCase()} controller: still ${out.text}.`, out.clean ? 'good' : 'warn');
+    window.toast(out.clean ? `${side.toUpperCase()} controller: errors cleared.`
+      : `${side.toUpperCase()} controller: still ${out.text}.` + (out.advice ? ` ${out.advice[0].toUpperCase()}${out.advice.slice(1)}.` : ''), out.clean ? 'good' : 'warn');
   } catch (err) { tell(err); }
   refresh();
 }

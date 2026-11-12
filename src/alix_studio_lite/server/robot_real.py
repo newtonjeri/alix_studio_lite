@@ -255,7 +255,7 @@ S2_FEED_CYCLE = 4
 
 def CycleRecorder(out_path, host_ip, port=None, log=print, cycle: int = 1):
     """ALIX's UdpRecorder pushing every ``cycle`` x 5 ms instead of every 5 ms (the owner, 23 Oct: "We can use 10ms or
-    20ms"): with the push on at 5 ms, programs played some 13 % slower (21 Oct), past S2's 105 % stop. The config is
+    20ms"): with the push on at 5 ms, programs played some 13 % slower (21 Oct), past S2's stop of then (105 %; 115 % since 7 Nov). The config is
     ALIX's own, with its cycle set as it is written (``_apply_push``), and put back on stop exactly as ALIX's does.
     ``tools/push_pace.py`` measures what each cycle costs a program's pace."""
     from alix_dispatch import track
@@ -494,6 +494,16 @@ def _end_words(settle: dict) -> str:
     if settle.get("at_rest"):
         return f", at rest by the polled wait after {settle['waited_s']:.2f} s"
     return f", NOT at rest after {settle['waited_s']:.1f} s"
+
+
+def _cut_words(cut, aborted, stopped: bool = False):
+    """Why a stream ended early: the verdict's name with what ended the stream, when ALIX's streamer says it (the
+    host late at a line, a stop check, sends that failed). The name alone said too little: on the Jetson's first
+    install (10 Nov) two emulated lid runs ended with "failed: not_early; 47 of 264 lines sent" while the full test
+    run loaded every core, and nothing said the streamer had ended them itself, or over what."""
+    if cut and aborted and str(aborted) not in str(cut):
+        return f"{cut}: {aborted}"
+    return cut or aborted or ("STOP" if stopped else None)
 
 
 def _interrupt(tid: int, exc=KeyboardInterrupt) -> None:
@@ -1002,16 +1012,36 @@ class RealArm:
         dac = _dac()
         with self.link.busy("reading the errors"):
             st = dac.error_state(self)
-        return self._errors_view(st)
+            mm = self._pole_mm_if(st)
+        return self._errors_view(st, mm)
 
-    def _errors_view(self, st: dict) -> dict:
+    def _pole_mm_if(self, st: dict):
+        """The pole's height when its driver reports an error (said with it: 7 Nov, 314 mm past the limit), else None."""
+        if not st.get("lift_err"):
+            return None
+        try:
+            from alix_dispatch import peripherals
+
+            height = peripherals.Pole(self.robot, log=lambda *_: None).height_m()
+        except Exception:                                                           # noqa: BLE001
+            return None
+        return None if height is None else height * 1000.0
+
+    def _errors_view(self, st: dict, pole_mm=None) -> dict:
+        """The errors as the UI says them; a pole's driver error in the pole's words (pole_errors: the vendor's table
+        and what clears it), its advice at the top for the toasts."""
         from error_codes import describe_joint_err, describe_system_err
 
+        from . import pole_errors
+
         dac = _dac()
+        lift = st.get("lift_err") or None
+        pole = pole_errors.words(lift, pole_mm) if lift else None
         return dict(readable=bool(st["readable"]), clean=bool(st["readable"] and dac.error_state_clean(st)),
-                    text=dac.describe_error_state(st), system=[describe_system_err(c) for c in st["sys"]],
+                    text=pole_errors.reword(dac.describe_error_state(st), lift, pole_mm),
+                    system=[describe_system_err(c) for c in st["sys"]],
                     joints=[dict(joint=j, text=describe_joint_err(f)) for j, f in st["joints"]],
-                    lift=st.get("lift_err") or None, disabled=list(st.get("disabled") or []))
+                    lift=lift, pole=pole, advice=pole["advice"] if pole else None, disabled=list(st.get("disabled") or []))
 
     def clear_errors(self) -> dict:
         """The controller web GUI's Clear Error, as the operator's tools do it (``dual_arm_common.clear_errors``):
@@ -1021,7 +1051,8 @@ class RealArm:
         with self.link.busy("clearing the errors"), _printed_to(lambda line: self._hw("clear errors", text=line.strip())):
             ok = dac.clear_errors(self)
             st = dac.error_state(self)
-        out = self._errors_view(st)
+            mm = self._pole_mm_if(st)
+        out = self._errors_view(st, mm)
         self._hw("clear errors", ok=bool(ok), text=out["text"])
         return dict(out, ok=bool(ok))
 
@@ -1031,21 +1062,26 @@ class RealArm:
         Program raises now and then and runner v14 lets stand) cleared as the controller web GUI's Clear Error does, then
         read back; the SDK's blocking move returns 1 at once while any code is latched (workflow.WARN_ONLY). Anything
         else latched is not cleared. Nothing moves. Returns {readable, cleared: [codes], other: what is latched that is
-        not a warning, or None}."""
+        not a warning, or None, advice: what clears it when it is the pole's driver's (pole_errors), else None}."""
+        from . import pole_errors
+
         dac = _dac()
         with self.link.busy("checking the errors before the move"), _printed_to(lambda line: self._hw("clear warning", text=line.strip())):
             st = dac.error_state(self)
             if not st["readable"] or dac.error_state_clean(st):      # said every time: the logs show the check ran
                 self._hw("clear warning", ok=bool(st["readable"]), text="clean" if st["readable"] else "the errors could not be read")
-                return dict(readable=bool(st["readable"]), cleared=[], other=None)
+                return dict(readable=bool(st["readable"]), cleared=[], other=None, advice=None)
             if set(st["sys"]) - set(warn_only) or st["joints"] or st.get("lift_err") or st.get("disabled"):
-                self._hw("clear warning", ok=False, text=f"not cleared, not a warning: {dac.describe_error_state(st)}")
-                return dict(readable=True, cleared=[], other=dac.describe_error_state(st))
+                lift = st.get("lift_err") or None
+                mm = self._pole_mm_if(st)
+                other = pole_errors.reword(dac.describe_error_state(st), lift, mm)
+                self._hw("clear warning", ok=False, text=f"not cleared, not a warning: {other}")
+                return dict(readable=True, cleared=[], other=other, advice=pole_errors.words(lift, mm)["advice"] if lift else None)
             ok = dac.clear_errors(self)
             back = dac.error_state(self)
         clean = bool(ok) and dac.error_state_clean(back)
         self._hw("clear warning", args=dict(codes=st["sys"]), ok=clean, text="cleared" if clean else dac.describe_error_state(back))
-        return dict(readable=True, cleared=list(st["sys"]) if clean else [], other=None if clean else dac.describe_error_state(back))
+        return dict(readable=True, cleared=list(st["sys"]) if clean else [], other=None if clean else dac.describe_error_state(back), advice=None)
 
     def read_sensitivity(self) -> int | None:
         """The drag sensitivity, 0-100 % (higher: the arm moves more easily by hand; the controller's own
@@ -1875,12 +1911,16 @@ class RealArm:
         if not cs and out.get("interrupted"):         # STOP inside run_verified: no result, the stop checks saw the lines
             sent = watch.last_line + 1
         bridged = out.get("gap_deg") if out.get("movej_ret") == 0 else None
-        why = out.get("cut_reason") or cs.get("aborted") or ("STOP" if stop.is_set() else None)
+        why = _cut_words(out.get("cut_reason"), cs.get("aborted"), stop.is_set())
         settle = out.get("settle") or {}
         end_words = _end_words(settle) if settle else (", its end waited for later" if ok and not settle else "")
         self._hw("canfd stream", args=dict(label=label, lines=n, period_ms=CANFD_PERIOD_S * 1000, rate_gate="per_joint",
                                            bridge_speed=bridge_speed, capture=cap.name, ratio_held=held,
-                                           t_mono=[round(t_mono0, 3), round(t_mono1, 3)], settle=settle or None),
+                                           t_mono=[round(t_mono0, 3), round(t_mono1, 3)], settle=settle or None,
+                                           # how late this computer sent its lines (mean, worst; lines over a period
+                                           # late): the streamer ends a stream at two periods (the Jetson, 10 Nov)
+                                           late_ms=[cs.get("late_ms_mean"), cs.get("late_ms_max")] if cs else None,
+                                           late_lines=cs.get("frames_late_over_period")),
                  ret=out.get("verdict"), ok=ok, elapsed_s=time.monotonic() - t0,
                  text=f"{sent}/{n} lines" + end_words + (f", bridged {bridged:.2f} deg" if bridged else "") + (f"; {why}" if why and not ok else ""))
         if stop.is_set():

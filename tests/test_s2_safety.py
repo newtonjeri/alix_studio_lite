@@ -151,8 +151,8 @@ def test_a_simulation_with_nothing_to_watch_is_never_played(tmp_path):
 
 
 def test_each_step_on_the_robot_is_timed_against_its_range(monkeypatch):
-    """The owner, 22 Oct: a step outside its range is said; one far outside it (any step but a Program more than 10 %
-    past the most it takes, or that much sooner than the least; a Program whose lines run past 105 % of their time)
+    """The owner, 22 Oct: a step outside its range is said; one far outside it (any step but a Program more than 15 %
+    past the most it takes, or that much sooner than the least; a Program whose lines run past 115 % of their time; the user, 7 Nov)
     stops both arms, as the timings the simulation checked no longer hold."""
     from alix_studio_lite.server import workflow
 
@@ -168,7 +168,7 @@ def test_each_step_on_the_robot_is_timed_against_its_range(monkeypatch):
     try:
         on_line("WORKFLOW STEP START 1/4: HAND")
         time.sleep(0.6)                                              # past 0.1 s x 1.1 (+ the lines' latency)
-        assert stopped and "LEFT row 3 (Hand 0,0,0,0,0,0) ran past the most it takes (0.1 s) by 10%" in stopped[0]
+        assert stopped and "LEFT row 3 (Hand 0,0,0,0,0,0) ran past the most it takes (0.1 s) by 15%" in stopped[0]
         on_line("WORKFLOW STEP START 2/4: POLE")
         on_line("WORKFLOW STEP COMPLETE 2/4: POLE")                   # at once: much sooner than its least
         assert len(stopped) == 2 and "less than the least it takes (1.00 s)" in stopped[1]
@@ -178,7 +178,7 @@ def test_each_step_on_the_robot_is_timed_against_its_range(monkeypatch):
         assert len(stopped) == 2 and said and "outside its range on the robot (0.20-0.22 s)" in said[0]
         on_line("WORKFLOW STEP START 4/4: PROGRAM")
         time.sleep(0.9)                                              # 0.2 s of lines x 1.05 + its allowances
-        assert len(stopped) == 3 and "ran past 105% of its lines' time" in stopped[2]
+        assert len(stopped) == 3 and "ran past 115% of its lines' time" in stopped[2]
     finally:
         close()
 
@@ -186,7 +186,7 @@ def test_each_step_on_the_robot_is_timed_against_its_range(monkeypatch):
 def test_a_real_run_is_refused_while_a_controllers_realtime_push_is_on(monkeypatch):
     """The programs' times on the robot were measured with the controllers' realtime push off (Lite turns it off as an
     arm connects): with it left on (another program holds its port, or it would not turn off) they run some 13 % slower,
-    past the 105 % at which an S2 run stops. Such a run is refused before anything moves, saying why."""
+    outside the timings the simulation checked. Such a run is refused before anything moves, saying why."""
     from alix_studio_lite.server import workflow
     from alix_studio_lite.server.robot_process import LinkProcess
 

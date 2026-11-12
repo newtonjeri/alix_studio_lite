@@ -51,6 +51,27 @@ def server(tmp_path_factory):
     proc.wait(10)
 
 
+@pytest.fixture(autouse=True)
+def arms_left_free(server):
+    """After each test the arms are free for the next: a run a failed test left going is stopped, and arms it left
+    latched are recovered. The Jetson, 10 Nov: one test failed while its 60 s Waits ran on, and the seven after it in
+    this file found "The BOTH arm is busy" and failed with it; a test's own failure is its own."""
+    yield
+    try:
+        st = call(server, "GET", "/api/robots/status")
+        if st.get("jobs"):
+            call(server, "POST", "/api/robots/stop-both", {}, tok=False)
+            for _ in range(100):
+                if not call(server, "GET", "/api/robots/status").get("jobs"):
+                    break
+                time.sleep(0.15)
+        for side, arm in call(server, "GET", "/api/robots/status")["arms"].items():
+            if arm.get("estop") == "RECOVERING":
+                call(server, "POST", f"/api/robots/{side}/recover", {})
+    except OSError:                                 # the server is gone: the next test says so itself
+        pass
+
+
 def call(ctx, method, path, body=None, tok=True):
     headers = {"Content-Type": "application/json"}
     if tok and ctx.get("tok"):
@@ -162,7 +183,9 @@ def test_a_wait_idles_its_own_arm_and_stop_interrupts_the_runner(server):
     held = [a for a in sim["acts"]["left"] if a["kind"] == "wait" and a["stage"] == 0]
     assert held and held[0]["t1"] - held[0]["t0"] == pytest.approx(0.5, abs=0.01)       # the left arm idles 0.5 s there
     job = call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"]})
-    j = wait(server, job, until=lambda j: "Wait 60 s" in j["extra"]["live"]["left"])
+    # asked of whatever the job says so far: its first poll can come before its live rows are there (the Jetson, 10 Nov:
+    # KeyError 'live' under the full run's load, and the 60 s Waits left running failed the seven tests after it)
+    j = wait(server, job, until=lambda j: "Wait 60 s" in str(((j.get("extra") or {}).get("live") or {}).get("left")))
     assert j["state"] == "running" and not j["extra"].get("question"), j                # no operator question
     m = next(x for x in call(server, "GET", f"{P}/merges")["left"])                 # nothing is sent to an arm that runs
     busy = call(server, "POST", f"{P}/merges/left/{m['file']}/upload", {"program_id": 72, "confirmed": True, "limits_seen": True})
@@ -320,7 +343,7 @@ def test_a_run_records_the_controllers_feed_when_asked(server):
     j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "both", "confirmed": True, "warnings_seen": sim["hash"], "record_feed": True}))
     assert j["state"] == "done", j
     said = events(j)
-    assert "Recording the controllers' feed every 20 ms (a diagnostic)" in said and "same 105 % stop" in said
+    assert "Recording the controllers' feed every 20 ms (a diagnostic)" in said and "same 115 % stop" in said
     day = next((server["data"] / "logs").iterdir())
     for side in ("left", "right"):
         files = sorted((day / "canfd").glob(f"*_{side.upper()}_s2_*.frames.jsonl"))

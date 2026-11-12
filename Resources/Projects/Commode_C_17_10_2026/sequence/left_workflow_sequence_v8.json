@@ -1,0 +1,141 @@
+{
+  "format": "alix_studio_lite_sequence_v1",
+  "side": "left",
+  "steps": [
+    {
+      "type": "inspect",
+      "pose": "",
+      "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
+      "uid": "110f9060"
+    },
+    {
+      "type": "global",
+      "name": "L_HME_POS",
+      "move": "movej",
+      "speed": 50,
+      "wait_s": 0.0,
+      "uid": "f511e005"
+    },
+    {
+      "type": "pole",
+      "mm": 50.0,
+      "uid": "884b630a"
+    },
+    {
+      "type": "hand",
+      "values": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+      ],
+      "uid": "44ca1f49"
+    },
+    {
+      "type": "meet",
+      "uid": "9ca13764"
+    },
+    {
+      "type": "program",
+      "id": 51,
+      "name": "51_51_L_P1_pole50_cleaningpose_3",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "3865dcfc"
+    },
+    {
+      "type": "inspect",
+      "pose": "",
+      "note": "Before lid_open: its own inspection pose; the reading decides it",
+      "uid": "62e2ab8d"
+    },
+    {
+      "type": "mechanism",
+      "task": "lid_open",
+      "uid": "97e8e2ee"
+    },
+    {
+      "type": "program",
+      "id": 52,
+      "name": "52_52_L_P2_pole200_cleaningpose_",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "605ccb92"
+    },
+    {
+      "type": "program",
+      "id": 53,
+      "name": "53_53_L_P2_pole200_grip_8.3s_15p",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "c42323e7"
+    },
+    {
+      "type": "inspect",
+      "pose": "",
+      "note": "Before seat_open: its own inspection pose; the reading decides it",
+      "uid": "34ade25a"
+    },
+    {
+      "type": "mechanism",
+      "task": "seat_open",
+      "uid": "bcf6d8ba"
+    },
+    {
+      "type": "program",
+      "id": 54,
+      "name": "54_54_L_P3_pole200_cleaningpose_",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "50b66896"
+    },
+    {
+      "type": "program",
+      "id": 55,
+      "name": "55_55_L_P3_pole200_grip_44.5s_15",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "4312a241"
+    },
+    {
+      "type": "global",
+      "name": "L_HME_POS",
+      "move": "movej",
+      "speed": 100,
+      "wait_s": 0.0,
+      "uid": "6607c8e7"
+    },
+    {
+      "type": "program",
+      "id": 57,
+      "name": "57_57_L_P3_pole200_allopen_11.5s",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "d67e9103"
+    },
+    {
+      "type": "inspect",
+      "pose": "",
+      "note": "Before lid_close: its own inspection pose; the reading decides it",
+      "uid": "d358df65"
+    },
+    {
+      "type": "mechanism",
+      "task": "lid_close",
+      "uid": "36b67714"
+    },
+    {
+      "type": "global",
+      "name": "L_HME_POS",
+      "move": "movej",
+      "speed": 50,
+      "wait_s": 0.0,
+      "uid": "c2f4e99f"
+    }
+  ]
+}

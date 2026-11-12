@@ -58,6 +58,50 @@ own. It clones the repository into `~/alix_studio_lite`, or into `--dir`, and in
 **To update later,** run the installer again: `python3 install_lite.py` inside the copy (Windows:
 `py install_lite.py`). It prints this command, with the full path, when it finishes.
 
+### On the robot's Jetson
+
+The robot's computer is a Jetson (AGX Orin, ARM64, Ubuntu 24.04). It has an installer of its own,
+[`install_lite_jetson.py`](install_lite_jetson.py), which prepares the Jetson first and then installs
+Lite as above. Run it with the Jetson's own `python3`:
+
+```bash
+git clone -b lite-ui https://github.com/newtonjeri/alix_studio_lite.git
+python3 alix_studio_lite/install_lite_jetson.py
+```
+
+Have only the file? Run it on its own; it clones the repository. Run it again at any time to update.
+
+**What it does that `install_lite.py` does not:**
+1. It says which computer this is (the Jetson's model, its JetPack, its Ubuntu), and refuses one that is not ARM64.
+2. It uses **Python 3.12 exactly**: the wrist camera's package has an ARM64 build for that version only. Ubuntu 24.04 (JetPack 7) has it. On JetPack 6 (Ubuntu 22.04) it is installed from the deadsnakes archive and Lite installs, but without the wrist camera: the camera package's ARM64 build needs Ubuntu 24.04's libraries, so the lid and seat tasks run in Simulation and Hardware sim only there. JetPack 5 (Ubuntu 20.04) has no Python 3.12, so one is given with `--python`.
+3. It installs the system packages the Jetson lacks, with `sudo`, showing each command first: git, Python's venv module and headers, a compiler (the Time-optimal optimiser has no ARM64 build, so it is built on the Jetson), and the libraries the camera and OpenCV load. With `--no-sudo` it prints the commands instead and stops.
+4. It checks the disk before cloning: a new copy takes about 13 GB, nearly all of it the lab's recorded runs in `Resources/Logs`, and its environment about 7 GB with 3 GB of downloads beside it (most of that is PyTorch's CUDA libraries: with `--cpu-torch`, below, the environment is 1.5 GB). On a small disk, use `--dir` to put it on a bigger one.
+5. It installs the wrist camera's access rules (the camera maker's own udev file, taken only if its checksum matches), so the camera opens without root.
+6. It reports what only the Jetson can say: the robot's ARM64 library loads; how late the Jetson sends a 5 ms stream's lines when idle (ALIX's own sender, timed for 5 s on a stand-in arm; a stream ends itself at 10 ms); the camera library is there, and a D435 that is plugged in streams as Lite opens it; the colour model loads and answers, how long a frame takes, and whether PyTorch runs it on the GPU or on the processor (PyPI's PyTorch for ARM64 carries CUDA libraries made for ARM servers; whether they drive a Jetson's GPU depends on its JetPack, and the model is small enough for the processor. On the robot's Jetson, L4T R39.2, they do: a frame takes 15 ms on the GPU); the power mode; whether the Jetson has an address on the arms' network.
+7. It runs the test suite, on a worker for every two cores (6 on the Jetson: the suite's own 8 made one or two streams late in every full run there), then prints how to start Lite. A test that fails in the full run is run again alone: the full run loads every core, and a 5 ms stream that is fed more than 10 ms late ends itself, so a failure that passes alone is the test run's load and one that fails alone too is real. The Jetson's first install (10 November) took 4 min 38 s for the suite.
+
+`python3 install_lite_jetson.py --check` changes nothing and reports the same. The options of
+`install_lite.py` work here too, and these:
+
+| Option | What it does |
+|---|---|
+| `--check` | Changes nothing: says what the Jetson has and what is missing. |
+| `--no-sudo` | Changes nothing system-wide: prints the commands to run instead, and stops. |
+| `--python PATH` | Builds Lite's environment with that Python 3.12. |
+| `--cpu-torch` | Takes PyTorch's processor-only build for the colour model (the environment is then 1.5 GB), instead of PyPI's, which carries CUDA libraries for ARM servers (3 GB to download, a 7 GB environment). For a Jetson where the report says the colour model is asked on the processor; an environment that holds PyPI's is built again. |
+
+**Opening Lite on the Jetson.** Lite listens only on the computer it runs on (127.0.0.1). On the
+Jetson's own screen, start it as on any computer. From the operator PC, start it on the Jetson
+without a browser and reach it through an SSH tunnel, which is also the log-in the connection needs:
+
+```bash
+alix_studio_lite/tools/run_lite.sh --robot realman --no-browser          # on the Jetson
+ssh -N -L 8766:127.0.0.1:8766 USER@THE-JETSONS-ADDRESS                    # on the operator PC
+```
+
+Then open **http://127.0.0.1:8766/** on the operator PC. The installer prints these two commands
+with the Jetson's own user and address.
+
 ---
 
 ## Start Lite
@@ -221,6 +265,7 @@ The tests cover:
 | `tests/` | The tests and their data (taught recordings, the legacy V6 package). |
 | `tools/` | Setup, the launcher and the maintenance tools below. |
 | `install_lite.py` | The clone-and-install script. |
+| `install_lite_jetson.py` | The same for the robot's Jetson: it prepares the Jetson, then runs `install_lite.py`. |
 
 The maintenance tools in `tools/`:
 
