@@ -772,7 +772,8 @@ def test_a_plans_final_rest_is_not_streamed_when_the_arms_next_start_follows():
     ex = FakeExec(["lid_open", "lid_closed"])
     mechanism.Runner(ex, leave={"right"}).run("lid_close")
     arm = [(m[1], m[2]) for m in moves(ex) if m[3] == "arm"]
-    assert arm[-1] == ("execute_path + move_to_inspect", "right") and ("execute_path + move_to_rest", "left") in arm
+    assert arm[-1] == ("execute_path + move_to_inspect", "right")
+    assert ("execute_path + move_to_retract + move_to_rest", "left") in arm    # 12 Nov: the lid's pull, its retract, then rest
     assert [c[1] for c in ex.calls if c[0] == "ask"] == ["verify_lid_open", "verify_lid_closed"]   # the end look asked all the same
     ex = FakeExec(["lid_closed", "lid_lifted", "lid_open"])
     mechanism.Runner(ex, leave={"left", "right"}, hand_set={"left", "right"}).run("lid_open")

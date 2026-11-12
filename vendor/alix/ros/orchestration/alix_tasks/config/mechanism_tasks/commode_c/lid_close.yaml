@@ -158,6 +158,10 @@ left:
     start_pose: [0.9664, 0.275, 0.0486, 0.50117, 0.65235, 0.3346, 0.45968]
 
     pre_start_pose: [0.9664, 0.285, 0.06, 0.50117, 0.65235, 0.3346, 0.45968]
+
+    retract_pose:
+      translation: [-0.1, 0.1, 0.1]
+      rotation: [20.0, 20.0, -5.0]
     
        # =============================================================================
   # CLEANING POINTS (Translation [x,y,z] + Rotation [r,p,y])
@@ -309,15 +313,15 @@ stage_sequence:
     lid_angle_deg: -30.0
     seat_angle_deg: -30.0
 
-  - stage: allow_collision
-    arm: left
-    contact_surface: lid
-
-  # - stage: move_to_retract
-  #   speed_class: approach
+  # - stage: allow_collision
   #   arm: left
-  #   pose_name: retract_pose
-  #   planning_group: rm75_arm_left
+  #   contact_surface: lid
+
+  - stage: move_to_retract
+    speed_class: approach
+    arm: left
+    pose_name: retract_pose
+    planning_group: rm75_arm_left
 
   - stage: move_to_rest
     speed_class: freespace

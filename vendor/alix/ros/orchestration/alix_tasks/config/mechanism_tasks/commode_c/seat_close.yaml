@@ -243,7 +243,13 @@ left:
   cartesian_poses:
     pre_start_pose: [0.95, 0.185532, 0.157808, -0.495778, 0.783354, -0.267879, 0.262301]
     # start_pose: [0.98, 0.22, 0.14, -0.495778, 0.783354, -0.267879, 0.262301]
-    start_pose: [0.97, 0.23, 0.125, -0.495778, 0.783354, -0.267879, 0.262301]
+    # start_pose: [0.97, 0.23, 0.125, -0.495778, 0.783354, -0.267879, 0.262301]   # until 2026-11-12
+    # 2026-11-12: x -10 mm (toward the robot). On the robot in use since 6 Nov the left hand met the standing
+    # seat at this pose about 36 N harder than on the previous robot (13 Nov 02:01: wrist 53-64 N over free, J6 at
+    # its 9 A limit and 0.79 deg short of the pose, so the pull was refused; 5 Nov, same plan: 17-27 N, J6 3-4 A).
+    # The points and the retracts are relative to this pose and move with it; pre_start_pose is unchanged.
+    # Re-planned 2026-11-12 22:49 (seat_close_toppra.json) and its two retry rungs 23:18.
+    start_pose: [0.96, 0.23, 0.125, -0.495778, 0.783354, -0.267879, 0.262301]
     
     retract_pose:
       translation: [-0.35, -0.02, -0.17]
