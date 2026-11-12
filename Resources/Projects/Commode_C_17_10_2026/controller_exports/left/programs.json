@@ -1,6 +1,6 @@
 {
  "arm": "left",
- "kept": "2026-11-13 00:12:39",
+ "kept": "2026-11-13 01:09:22",
  "programs": [
   {
    "slot": 1,
@@ -167,9 +167,9 @@
    "slot": 61,
    "name": "61_L_P1_pole50_cleaningpose_",
    "file": "61_61_L_P1_pole50_cleaningpose_.txt",
-   "sha256": "5e60ab3004d29b025850539c4d6a0e81224a6f6cfd5ad089a9aad72cbd7683e8",
-   "lines": 9724,
-   "seconds": 48.615,
+   "sha256": "7c895103b9d823d4c66b55ea2be03edc4694b576c66f7647325652a5c0bc9939",
+   "lines": 11026,
+   "seconds": 55.125,
    "stage": {
     "pole_mm": 50.0,
     "hand": [
@@ -184,7 +184,7 @@
     "text": "pole 50 mm, hand cleaning pose",
     "hand_text": "cleaning pose"
    },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261112_233647_61_L_P1_pole50_cleaningpose_48.6s_20pct_slow3-10s_mid1.5x.txt"
+   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261113_001458_61_L_P1_pole50_cleaningpose_55.1s_20pct_steady30s.txt"
   },
   {
    "slot": 65,
