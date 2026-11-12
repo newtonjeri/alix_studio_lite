@@ -45,6 +45,12 @@
    "uid": "37c2f2b4"
   },
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_open: its own inspection pose; the reading decides it",
+   "uid": "7d74f783"
+  },
+  {
    "type": "mechanism",
    "task": "lid_open",
    "uid": "f1bc8eba"
@@ -67,9 +73,15 @@
    "uid": "6f25c4b2"
   },
   {
-   "type": "wait",
-   "seconds": 3.0,
-   "uid": "ed5beddb"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before seat_open: its own inspection pose; the reading decides it",
+   "uid": "d6207b1c"
+  },
+  {
+   "type": "mechanism",
+   "task": "seat_open",
+   "uid": "48b5a790"
   },
   {
    "type": "program",
@@ -87,6 +99,17 @@
    "speed": 100,
    "transit_speed": 30,
    "uid": "0f35669d"
+  },
+  {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_close: its own inspection pose; the reading decides it",
+   "uid": "ec629a9c"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_close",
+   "uid": "8210b5d8"
   },
   {
    "type": "global",
@@ -143,6 +166,12 @@
    "uid": "a00a26cd"
   },
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_open: its own inspection pose; the reading decides it",
+   "uid": "22f39aea"
+  },
+  {
    "type": "mechanism",
    "task": "lid_open",
    "uid": "4c816825"
@@ -173,9 +202,15 @@
    "uid": "51b4a249"
   },
   {
-   "type": "wait",
-   "seconds": 3.0,
-   "uid": "7c57057f"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before seat_open: its own inspection pose; the reading decides it",
+   "uid": "2ea829e6"
+  },
+  {
+   "type": "mechanism",
+   "task": "seat_open",
+   "uid": "e7ae3e46"
   },
   {
    "type": "program",
@@ -187,6 +222,17 @@
    "uid": "b200cf61"
   },
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_close: its own inspection pose; the reading decides it",
+   "uid": "3e8ff6d7"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_close",
+   "uid": "44d9d3c5"
+  },
+  {
    "type": "global",
    "name": "R_HME_POS",
    "move": "movej",
@@ -195,5 +241,5 @@
    "uid": "97ae6ea1"
   }
  ],
- "updated": "2026-11-13 00:32:39"
+ "updated": "2026-11-12 20:09:41"
 }
