@@ -1,0 +1,52 @@
+{
+ "unit": "R-R06",
+ "arm": "right",
+ "taken": "2026-11-12 11:14",
+ "lines": 2272,
+ "sha256": "fb77adf76ed2186ded9e812ce5d9b0947e247d0ef1f516f5550132f62783aee9",
+ "note": "trimmed to lines 1\u20132,272 of 3,035 (11.355 s)",
+ "source": "trim",
+ "original": "R_TASK_6_trajectory_3_2_trimmed_11.txt",
+ "pole_mm": 50,
+ "hand_counts": [
+  0,
+  0,
+  0,
+  0,
+  150,
+  1000
+ ],
+ "taught_arm": "right",
+ "stage": {
+  "pole_mm": 50.0,
+  "hand": [
+   1000,
+   1000,
+   1000,
+   1000,
+   0,
+   1000
+  ],
+  "source": "set in Prepare",
+  "text": "pole 50 mm, hand cleaning pose",
+  "hand_text": "cleaning pose"
+ },
+ "placement": {
+  "task": "TASK 6",
+  "standoff_mm": 250.0,
+  "front_mm": null,
+  "rear_mm": null,
+  "left_mm": null,
+  "right_mm": null,
+  "room": {
+   "width_mm": 800.0,
+   "length_mm": 1600.0,
+   "left_mm": 220.0,
+   "right_mm": 220.0,
+   "front_mm": 1062.0,
+   "back_mm": 0.0,
+   "at": "2026-11-12 10:55:00"
+  }
+ },
+ "name": "R_TASK_6_trajectory_3_2_trimmed_11.txt"
+}

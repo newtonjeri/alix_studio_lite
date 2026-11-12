@@ -1,0 +1,48 @@
+{
+ "events": [
+  {
+   "kind": "uploaded",
+   "sha256": "e8629b075f27b8fdfdcd873b9f407d5ca5fd040193a36fadd0aabcdbf44bb49f",
+   "ok": true,
+   "at": "2026-11-12 15:05:25",
+   "detail": {
+    "program_id": 100
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "e8629b075f27b8fdfdcd873b9f407d5ca5fd040193a36fadd0aabcdbf44bb49f",
+   "ok": true,
+   "at": "2026-11-12 15:05:45",
+   "detail": {
+    "program_id": 100,
+    "dry_run": true,
+    "seconds": 17.11,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "e8629b075f27b8fdfdcd873b9f407d5ca5fd040193a36fadd0aabcdbf44bb49f",
+   "ok": true,
+   "at": "2026-11-12 15:06:06",
+   "detail": {
+    "program_id": 100,
+    "dry_run": false,
+    "seconds": 17.07,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "e8629b075f27b8fdfdcd873b9f407d5ca5fd040193a36fadd0aabcdbf44bb49f",
+   "ok": true,
+   "at": "2026-11-12 15:06:08",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
+  }
+ ]
+}

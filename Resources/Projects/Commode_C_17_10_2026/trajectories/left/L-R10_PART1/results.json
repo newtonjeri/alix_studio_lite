@@ -43,6 +43,94 @@
     "note": "",
     "mode": "real"
    }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "f36da482e0d9511e740547d4bf8f2cae751ebf100b0f3cf4409e0cf17fef137f",
+   "ok": true,
+   "at": "2026-11-12 15:07:13",
+   "detail": {
+    "program_id": 100
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "f36da482e0d9511e740547d4bf8f2cae751ebf100b0f3cf4409e0cf17fef137f",
+   "ok": true,
+   "at": "2026-11-12 15:08:29",
+   "detail": {
+    "program_id": 100,
+    "dry_run": true,
+    "seconds": 22.06,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "f36da482e0d9511e740547d4bf8f2cae751ebf100b0f3cf4409e0cf17fef137f",
+   "ok": true,
+   "at": "2026-11-12 15:09:00",
+   "detail": {
+    "program_id": 100,
+    "dry_run": false,
+    "seconds": 21.9,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "f36da482e0d9511e740547d4bf8f2cae751ebf100b0f3cf4409e0cf17fef137f",
+   "ok": false,
+   "at": "2026-11-12 15:09:17",
+   "detail": {
+    "verdict": "again",
+    "note": "",
+    "mode": "real"
+   }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "f4e23ba1315a2eb15e59d26d90829af2f6139824090c899b8fe18078c0b6c8cc",
+   "ok": true,
+   "at": "2026-11-12 15:12:24",
+   "detail": {
+    "program_id": 100
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "f4e23ba1315a2eb15e59d26d90829af2f6139824090c899b8fe18078c0b6c8cc",
+   "ok": true,
+   "at": "2026-11-12 15:13:07",
+   "detail": {
+    "program_id": 100,
+    "dry_run": true,
+    "seconds": 29.81,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "f4e23ba1315a2eb15e59d26d90829af2f6139824090c899b8fe18078c0b6c8cc",
+   "ok": true,
+   "at": "2026-11-12 15:13:42",
+   "detail": {
+    "program_id": 100,
+    "dry_run": false,
+    "seconds": 28.97,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "f4e23ba1315a2eb15e59d26d90829af2f6139824090c899b8fe18078c0b6c8cc",
+   "ok": true,
+   "at": "2026-11-12 15:13:57",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
   }
  ]
 }

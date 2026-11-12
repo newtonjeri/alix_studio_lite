@@ -73,6 +73,50 @@
     "state": "failed",
     "error": "The LEFT controller stopped answering (rm_set_program_id_run, 89 s): Lite connects it again."
    }
+  },
+  {
+   "kind": "uploaded",
+   "sha256": "a4e493e1eac3ced6ca625ccf21d4d7725ba266703c574a7f376b3451bdc3c1ac",
+   "ok": true,
+   "at": "2026-11-12 15:19:18",
+   "detail": {
+    "program_id": 100
+   }
+  },
+  {
+   "kind": "dryrun_ok",
+   "sha256": "a4e493e1eac3ced6ca625ccf21d4d7725ba266703c574a7f376b3451bdc3c1ac",
+   "ok": true,
+   "at": "2026-11-12 15:19:58",
+   "detail": {
+    "program_id": 100,
+    "dry_run": true,
+    "seconds": 27.58,
+    "reported": []
+   }
+  },
+  {
+   "kind": "real_ok",
+   "sha256": "a4e493e1eac3ced6ca625ccf21d4d7725ba266703c574a7f376b3451bdc3c1ac",
+   "ok": true,
+   "at": "2026-11-12 15:20:33",
+   "detail": {
+    "program_id": 100,
+    "dry_run": false,
+    "seconds": 27.72,
+    "reported": []
+   }
+  },
+  {
+   "kind": "verdict",
+   "sha256": "a4e493e1eac3ced6ca625ccf21d4d7725ba266703c574a7f376b3451bdc3c1ac",
+   "ok": true,
+   "at": "2026-11-12 15:20:36",
+   "detail": {
+    "verdict": "pass",
+    "note": "",
+    "mode": "real"
+   }
   }
  ]
 }

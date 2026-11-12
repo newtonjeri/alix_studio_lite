@@ -6,12 +6,12 @@
    "move": "movej",
    "speed": 50,
    "wait_s": 0.0,
-   "uid": "f511e005"
+   "uid": "3a433bd6"
   },
   {
    "type": "pole",
    "mm": 50.0,
-   "uid": "884b630a"
+   "uid": "9ec3f857"
   },
   {
    "type": "hand",
@@ -23,64 +23,64 @@
     0,
     1000
    ],
-   "uid": "44ca1f49"
+   "uid": "d6a148a9"
   },
   {
    "type": "meet",
-   "uid": "9ca13764"
+   "uid": "dd55f813"
   },
   {
    "type": "program",
-   "id": 51,
-   "name": "51_51_L_P1_pole50_cleaningpose_3",
+   "id": 61,
+   "name": "61_61_L_P1_pole50_cleaningpose_3",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "3865dcfc"
+   "uid": "37c2f2b4"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_open",
+   "uid": "f1bc8eba"
+  },
+  {
+   "type": "program",
+   "id": 62,
+   "name": "62_62_L_P2_pole200_cleaningpose_",
+   "speed": 100,
+   "transit_speed": 30,
+   "together": true,
+   "uid": "72e3b6b1"
+  },
+  {
+   "type": "program",
+   "id": 63,
+   "name": "63_63_L_P2_pole200_grip_10.5s_25",
+   "speed": 100,
+   "transit_speed": 30,
+   "uid": "6f25c4b2"
   },
   {
    "type": "wait",
    "seconds": 3.0,
-   "uid": "164aee1f"
+   "uid": "ed5beddb"
   },
   {
    "type": "program",
-   "id": 52,
-   "name": "52_52_L_P2_pole200_cleaningpose_",
+   "id": 64,
+   "name": "64_64_L_P3_pole200_cleaningpose_",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "605ccb92"
+   "uid": "9250f625"
   },
   {
    "type": "program",
-   "id": 53,
-   "name": "53_53_L_P2_pole200_grip_8.3s_15p",
+   "id": 65,
+   "name": "65_65_L_P3_pole200_grip_80.8s_sm",
    "speed": 100,
    "transit_speed": 30,
-   "uid": "c42323e7"
-  },
-  {
-   "type": "wait",
-   "seconds": 3.0,
-   "uid": "b99af4b8"
-  },
-  {
-   "type": "program",
-   "id": 54,
-   "name": "54_54_L_P3_pole200_cleaningpose_",
-   "speed": 100,
-   "transit_speed": 30,
-   "together": true,
-   "uid": "50b66896"
-  },
-  {
-   "type": "program",
-   "id": 55,
-   "name": "55_55_L_P3_pole200_grip_44.5s_15",
-   "speed": 100,
-   "transit_speed": 30,
-   "uid": "4312a241"
+   "uid": "0f35669d"
   },
   {
    "type": "global",
@@ -88,23 +88,7 @@
    "move": "movej",
    "speed": 100,
    "wait_s": 0.0,
-   "uid": "6607c8e7"
-  },
-  {
-   "type": "program",
-   "id": 57,
-   "name": "57_57_L_P3_pole200_allopen_11.5s",
-   "speed": 100,
-   "transit_speed": 30,
-   "uid": "d67e9103"
-  },
-  {
-   "type": "global",
-   "name": "L_HME_POS",
-   "move": "movej",
-   "speed": 50,
-   "wait_s": 0.0,
-   "uid": "c2f4e99f"
+   "uid": "63d33e31"
   }
  ],
  "right": [
@@ -114,12 +98,12 @@
    "move": "movej",
    "speed": 50,
    "wait_s": 0.0,
-   "uid": "dee8d6f6"
+   "uid": "3a9a8b3f"
   },
   {
    "type": "pole",
    "mm": 200.0,
-   "uid": "a6b31a9b"
+   "uid": "6087322a"
   },
   {
    "type": "hand",
@@ -131,72 +115,64 @@
     0,
     1000
    ],
-   "uid": "b21813de"
+   "uid": "c61ecafb"
   },
   {
    "type": "meet",
-   "uid": "78c466f6"
+   "uid": "b2dea94e"
   },
   {
    "type": "program",
-   "id": 51,
-   "name": "51_51_R_P1_pole200_cleaningpose_",
+   "id": 61,
+   "name": "61_61_R_P1_pole200_cleaningpose_",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "5893cedf"
+   "uid": "a00a26cd"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_open",
+   "uid": "4c816825"
+  },
+  {
+   "type": "program",
+   "id": 62,
+   "name": "62_62_R_P2_pole200_grip_9.5s_25p",
+   "speed": 100,
+   "transit_speed": 30,
+   "together": true,
+   "uid": "b9878a72"
+  },
+  {
+   "type": "program",
+   "id": 63,
+   "name": "63_63_R_P2_pole200_cleaningpose_",
+   "speed": 100,
+   "transit_speed": 30,
+   "uid": "da9885e6"
+  },
+  {
+   "type": "program",
+   "id": 64,
+   "name": "64_64_1_R_P2_pole50_cleaningpose",
+   "speed": 100,
+   "transit_speed": 30,
+   "uid": "51b4a249"
   },
   {
    "type": "wait",
    "seconds": 3.0,
-   "uid": "29014100"
+   "uid": "7c57057f"
   },
   {
    "type": "program",
-   "id": 52,
-   "name": "52_52_R_P2_pole200_grip_8.7s_15p",
+   "id": 65,
+   "name": "65_65_R_P3_pole50_grip_28.1s_new",
    "speed": 100,
    "transit_speed": 30,
    "together": true,
-   "uid": "75247aa1"
-  },
-  {
-   "type": "program",
-   "id": 53,
-   "name": "53_53_R_P2_pole200_cleaningpose_",
-   "speed": 100,
-   "transit_speed": 30,
-   "uid": "81ea0085"
-  },
-  {
-   "type": "program",
-   "id": 54,
-   "name": "54_54_1_R_P2_pole50_cleaningpose",
-   "speed": 100,
-   "transit_speed": 30,
-   "uid": "24986fc7"
-  },
-  {
-   "type": "wait",
-   "seconds": 3.0,
-   "uid": "9b649bb6"
-  },
-  {
-   "type": "program",
-   "id": 55,
-   "name": "55_55_R_P3_pole50_grip_22.5s_15p",
-   "speed": 100,
-   "transit_speed": 30,
-   "together": true,
-   "uid": "6d925004"
-  },
-  {
-   "type": "program",
-   "id": 56,
-   "name": "56_56_R_P3_pole200_allopen_wait_",
-   "speed": 100,
-   "transit_speed": 30,
-   "uid": "0919d0d1"
+   "uid": "b200cf61"
   },
   {
    "type": "global",
@@ -204,8 +180,8 @@
    "move": "movej",
    "speed": 20,
    "wait_s": 0.0,
-   "uid": "d3981526"
+   "uid": "97ae6ea1"
   }
  ],
- "updated": "2026-11-07 12:40:25"
+ "updated": "2026-11-13 00:32:39"
 }
