@@ -1,0 +1,23 @@
+{
+  "check_id": "20261115_090311_239_inspect",
+  "stage": "inspect",
+  "expect": "seat_closed",
+  "decided": true,
+  "state": "seat_closed",
+  "confidence": 1.0,
+  "message": "2 frames (seat_closed, seat_closed; 2 yes, 0 no, 0 no vote): parts (depth): the seat closed at 0 deg (margin +0.72); lid 100 deg, seat 0 deg, the commode +0 mm from its scene place; the colour agrees: lid_open at 0.85",
+  "frames": [
+    {
+      "record": "20261115_090314_973_gap_check_seat_closed_seat_closed.json",
+      "success": true,
+      "state": "seat_closed",
+      "confidence": 1.0
+    },
+    {
+      "record": "20261115_090316_798_gap_check_seat_closed_seat_closed.json",
+      "success": true,
+      "state": "seat_closed",
+      "confidence": 1.0
+    }
+  ]
+}

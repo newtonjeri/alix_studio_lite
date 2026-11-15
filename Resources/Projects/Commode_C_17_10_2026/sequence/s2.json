@@ -9,6 +9,12 @@
    "uid": "f81f333d"
   },
   {
+   "type": "inspect",
+   "pose": "",
+   "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
+   "uid": "110f9060"
+  },
+  {
    "type": "global",
    "name": "L_HME_POS",
    "move": "movej",
@@ -47,9 +53,15 @@
    "uid": "37c2f2b4"
   },
   {
-   "type": "wait",
-   "seconds": 5.0,
-   "uid": "133e8c83"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_open: its own inspection pose; the reading decides it",
+   "uid": "7d74f783"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_open",
+   "uid": "f1bc8eba"
   },
   {
    "type": "program",
@@ -69,16 +81,15 @@
    "uid": "6f25c4b2"
   },
   {
-   "type": "wait",
-   "seconds": 5.0,
-   "uid": "9fa94f85"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before seat_open: its own inspection pose; the reading decides it",
+   "uid": "d6207b1c"
   },
   {
-   "type": "wait_for",
-   "target": {
-    "uid": "3ebd1262"
-   },
-   "uid": "243d023e"
+   "type": "mechanism",
+   "task": "seat_open",
+   "uid": "48b5a790"
   },
   {
    "type": "program",
@@ -96,6 +107,17 @@
    "speed": 100,
    "transit_speed": 30,
    "uid": "0f35669d"
+  },
+  {
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_close: its own inspection pose; the reading decides it",
+   "uid": "ec629a9c"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_close",
+   "uid": "8210b5d8"
   },
   {
    "type": "global",
@@ -117,18 +139,6 @@
    "type": "pole",
    "mm": 10.0,
    "uid": "2f378f61"
-  },
-  {
-   "type": "hand",
-   "values": [
-    1000,
-    1000,
-    1000,
-    1000,
-    1000,
-    1000
-   ],
-   "uid": "e48c1ee3"
   }
  ],
  "right": [
@@ -139,6 +149,12 @@
    "speed": 30,
    "wait_s": 0.0,
    "uid": "1820d343"
+  },
+  {
+   "type": "inspect",
+   "pose": "",
+   "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
+   "uid": "e7e70dfd"
   },
   {
    "type": "global",
@@ -179,9 +195,15 @@
    "uid": "a00a26cd"
   },
   {
-   "type": "wait",
-   "seconds": 5.0,
-   "uid": "8f4b0069"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_open: its own inspection pose; the reading decides it",
+   "uid": "22f39aea"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_open",
+   "uid": "4c816825"
   },
   {
    "type": "program",
@@ -209,9 +231,15 @@
    "uid": "51b4a249"
   },
   {
-   "type": "wait",
-   "seconds": 5.0,
-   "uid": "3ebd1262"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before seat_open: its own inspection pose; the reading decides it",
+   "uid": "2ea829e6"
+  },
+  {
+   "type": "mechanism",
+   "task": "seat_open",
+   "uid": "e7ae3e46"
   },
   {
    "type": "program",
@@ -223,9 +251,15 @@
    "uid": "b200cf61"
   },
   {
-   "type": "pole",
-   "mm": 150.0,
-   "uid": "103f6fd1"
+   "type": "inspect",
+   "pose": "",
+   "note": "Before lid_close: its own inspection pose; the reading decides it",
+   "uid": "3e8ff6d7"
+  },
+  {
+   "type": "mechanism",
+   "task": "lid_close",
+   "uid": "44d9d3c5"
   },
   {
    "type": "global",
@@ -247,19 +281,7 @@
    "type": "pole",
    "mm": 10.0,
    "uid": "abeef212"
-  },
-  {
-   "type": "hand",
-   "values": [
-    1000,
-    1000,
-    1000,
-    1000,
-    1000,
-    1000
-   ],
-   "uid": "dd3809f3"
   }
  ],
- "updated": "2026-11-15 07:56:47"
+ "updated": "2026-11-15 08:15:43"
 }
