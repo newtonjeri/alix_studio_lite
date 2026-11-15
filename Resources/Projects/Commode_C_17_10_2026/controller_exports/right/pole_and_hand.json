@@ -1,0 +1,96 @@
+{
+ "arm": "right",
+ "updated": "2026-11-15 07:57:16",
+ "programs": [
+  {
+   "slot": 61,
+   "name": "61_61_R_P1_pole200_cleaningpose.",
+   "bytes": 616050,
+   "pole_mm": 210.0,
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "text": "pole 210 mm, hand cleaning pose",
+   "by": "file",
+   "file": "61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt",
+   "kept": "2026-11-15 07:57:16"
+  },
+  {
+   "slot": 62,
+   "name": "62_62_R_P2_pole200_grip_13.0s_n.",
+   "bytes": 140045,
+   "pole_mm": 200.0,
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "text": "pole 200 mm, hand grip",
+   "by": "file",
+   "file": "62_R_P2_pole200_grip_13.0s_new_R04.txt",
+   "kept": "2026-11-15 07:57:16"
+  },
+  {
+   "slot": 63,
+   "name": "63_63_R_P2_pole200_cleaningpose.",
+   "bytes": 104017,
+   "pole_mm": 200.0,
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "text": "pole 200 mm, hand cleaning pose",
+   "by": "file",
+   "file": "63_R_P2_pole200_cleaningpose_9.2s_30pct.txt",
+   "kept": "2026-11-15 07:57:16"
+  },
+  {
+   "slot": 64,
+   "name": "64_64_1_R_P2_pole50_cleaningpose",
+   "bytes": 118251,
+   "pole_mm": 50.0,
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "text": "pole 50 mm, hand cleaning pose",
+   "by": "file",
+   "file": "64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt",
+   "kept": "2026-11-15 07:57:16"
+  },
+  {
+   "slot": 65,
+   "name": "65_65_R_P3_pole50_grip_39.8s_ne.",
+   "bytes": 458059,
+   "pole_mm": 50.0,
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "text": "pole 50 mm, hand grip",
+   "by": "file",
+   "file": "65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt",
+   "kept": "2026-11-15 07:57:16"
+  }
+ ]
+}
