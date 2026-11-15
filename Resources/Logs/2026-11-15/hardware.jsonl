@@ -1,0 +1,580 @@
+{"t": 1794724962.9482925, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/dev/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)"}
+{"t": 1794724963.0652456, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "regions routed by the fixture meshes: 16 regions from /home/dev/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link"}
+{"t": 1794724963.0663054, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link"}
+{"t": 1794724967.1693673, "side": "right", "verb": "camera", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "perception warmed up in 6.7 s: its core built, the colour model loaded"}
+{"t": 1794725012.720501, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)"}
+{"t": 1794725012.7320292, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1794725012.7376754, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1794725013.0927498, "side": "left", "verb": "device check", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "controller: answers at 192.168.1.10:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 0: PRESSED (motion stays blocked until it is released and recovered); pole: answers: 200 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 393, 341, 351, 208, 152, 964; feed: recorded on UDP port 8089 of this computer (192.168.1.164)"}
+{"t": 1794725013.2888048, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725013.3931065, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725013.8854952, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)"}
+{"t": 1794725013.903504, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1794725013.9139543, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1794725014.1828594, "side": "right", "verb": "device check", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 0: PRESSED (motion stays blocked until it is released and recovered); pole: answers: 210 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 999, 997, 999, 998, 9, 966; feed: recorded on UDP port 8090 of this computer (192.168.1.164)"}
+{"t": 1794725014.2870398, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725014.3136525, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725037.258199, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794725037.2799582, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794725037.3132718, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794725040.399588, "side": "left", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1794725040.412044, "side": "left", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1794725040.7315085, "side": "left", "verb": "device check", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "controller: answers at 192.168.1.10:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 200 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 394, 341, 351, 208, 152, 964; feed: recorded on UDP port 8089 of this computer (192.168.1.164)"}
+{"t": 1794725041.4433901, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1794725041.4491162, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1794725041.7303631, "side": "right", "verb": "device check", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 210 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 999, 997, 999, 998, 8, 967; feed: recorded on UDP port 8090 of this computer (192.168.1.164)"}
+{"t": 1794725072.238278, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794725072.259008, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794725082.5933404, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725082.636536, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725082.8180401, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725082.9401639, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725099.1542237, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725099.1815412, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725099.2327867, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725099.2751625, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725140.8285074, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725140.904282, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725142.2448297, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725142.2913513, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725289.5505023, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725289.5847683, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725289.7191436, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725289.7847433, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725301.0206025, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725301.3506572, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725301.457364, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725301.5072014, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725304.793368, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725304.8159537, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725304.862934, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725304.904261, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725354.7249546, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725354.9431643, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725354.9942198, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725355.026207, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725361.045369, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725361.3915284, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725361.4926097, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725361.5164762, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725362.203316, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725362.314685, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725362.375409, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725362.419186, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725365.560077, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725365.9015884, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725365.938244, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725365.9833627, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725366.7352607, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725366.7849422, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725366.8852813, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725366.9123964, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725367.3814359, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794725367.409627, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794725367.763853, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recording UDP push -> /home/dev/alix_studio_lite/Resources/Logs/2026-11-15/canfd/20261115_064927_RIGHT_s2_01_PART_1.frames.jsonl (target 192.168.1.164:8090, cycle 20 ms, all sections on)"}
+{"t": 1794725367.7656248, "side": "right", "verb": "s2 feed", "args": {"cycle_ms": 20, "file": "20261115_064927_RIGHT_s2_01_PART_1.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "recording"}
+{"t": 1794725367.7840905, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recording UDP push -> /home/dev/alix_studio_lite/Resources/Logs/2026-11-15/canfd/20261115_064927_LEFT_s2_01_PART_1.frames.jsonl (target 192.168.1.164:8089, cycle 20 ms, all sections on)"}
+{"t": 1794725367.7848768, "side": "left", "verb": "s2 feed", "args": {"cycle_ms": 20, "file": "20261115_064927_LEFT_s2_01_PART_1.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "recording"}
+{"t": 1794725367.8171082, "side": "right", "verb": "clear warning", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "clean"}
+{"t": 1794725367.8195434, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 2 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794725367.820323, "side": "left", "verb": "clear warning", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "clean"}
+{"t": 1794725367.821255, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794725367.8229995, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 2 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794725367.8242385, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794725367.837392, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. GLOBAL: REST_POSE // MOVEJ // speed 30% // wait 0s"}
+{"t": 1794725367.8391523, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s"}
+{"t": 1794725367.8503997, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. GLOBAL: REST_POSE // MOVEJ // speed 30% // wait 0s"}
+{"t": 1794725367.8528852, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s"}
+{"t": 1794725367.8637924, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794725367.870142, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/2: GLOBAL"}
+{"t": 1794725367.8743799, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794725367.875047, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/2: GLOBAL"}
+{"t": 1794725367.9197938, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: REST_POSE // MOVEJ // speed 30%"}
+{"t": 1794725367.9295752, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: REST_POSE // MOVEJ // speed 30%"}
+{"t": 1794725372.8290453, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: REST_POSE // MOVEJ"}
+{"t": 1794725372.8299165, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/2: GLOBAL"}
+{"t": 1794725372.830484, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/2: GLOBAL"}
+{"t": 1794725372.8584123, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%"}
+{"t": 1794725373.855807, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: REST_POSE // MOVEJ"}
+{"t": 1794725373.8566086, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/2: GLOBAL"}
+{"t": 1794725373.8570786, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/2: GLOBAL"}
+{"t": 1794725373.9113805, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%"}
+{"t": 1794725376.5897126, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ"}
+{"t": 1794725376.5904372, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/2: GLOBAL"}
+{"t": 1794725376.5909178, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 2/2 step(s), 8.7 s"}
+{"t": 1794725376.6111228, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794725376.6126425, "side": "right", "verb": "workflow", "args": {"steps": 2, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 8.793, "text": null}
+{"t": 1794725377.7227836, "side": "right", "verb": "pole and hand", "args": {"mm": 210.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": 1.032, "text": "pole 210.0 -> 210.0 mm in 0.435 s, the hand moving meanwhile; hand [999, 997, 999, 998, 9, 978]"}
+{"t": 1794725377.7325852, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ"}
+{"t": 1794725377.733377, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/2: GLOBAL"}
+{"t": 1794725377.7338846, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 2/2 step(s), 9.9 s"}
+{"t": 1794725377.7577152, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794725377.760364, "side": "left", "verb": "workflow", "args": {"steps": 2, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 9.937, "text": null}
+{"t": 1794725378.0799408, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "push config restored to 192.168.1.20:8090 enable=False (ret=0)"}
+{"t": 1794725378.080474, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recorded 507 frames"}
+{"t": 1794725378.0807014, "side": "right", "verb": "s2 feed", "args": {"file": "20261115_064927_RIGHT_s2_01_PART_1.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "507 frames"}
+{"t": 1794725380.604906, "side": "left", "verb": "pole and hand", "args": {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": 2.835, "text": "pole 200.0 -> 51.0 mm in 2.788 s, the hand moving meanwhile; hand [1000, 1000, 1000, 997, 0, 986]"}
+{"t": 1794725381.043495, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "push config restored to 192.168.1.20:8089 enable=False (ret=0)"}
+{"t": 1794725381.0461297, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recorded 648 frames"}
+{"t": 1794725381.0467594, "side": "left", "verb": "s2 feed", "args": {"file": "20261115_064927_LEFT_s2_01_PART_1.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "648 frames"}
+{"t": 1794725381.3372774, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recording UDP push -> /home/dev/alix_studio_lite/Resources/Logs/2026-11-15/canfd/20261115_064941_LEFT_s2_02_PART_2.frames.jsonl (target 192.168.1.164:8089, cycle 20 ms, all sections on)"}
+{"t": 1794725381.3379881, "side": "left", "verb": "s2 feed", "args": {"cycle_ms": 20, "file": "20261115_064941_LEFT_s2_02_PART_2.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "recording"}
+{"t": 1794725381.353419, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recording UDP push -> /home/dev/alix_studio_lite/Resources/Logs/2026-11-15/canfd/20261115_064941_RIGHT_s2_02_PART_2.frames.jsonl (target 192.168.1.164:8090, cycle 20 ms, all sections on)"}
+{"t": 1794725381.3540318, "side": "right", "verb": "s2 feed", "args": {"cycle_ms": 20, "file": "20261115_064941_RIGHT_s2_02_PART_2.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "recording"}
+{"t": 1794725381.3559413, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 9 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794725381.356202, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 8 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794725381.3568726, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794725381.3570673, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794725381.626676, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. PROGRAM: Program 61 61_61_L_P1_pole50_cleaningpose_. // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.6293116, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. WAIT: 5 s"}
+{"t": 1794725381.6311939, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  03. POLE: 200 mm"}
+{"t": 1794725381.63301, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  04. PROGRAM: Program 62 62_62_L_P2_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.6340783, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  05. HAND: 0,0,0,0,150,1000"}
+{"t": 1794725381.6349978, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  06. PROGRAM: Program 63 63_63_L_P2_pole200_grip_10.5s_25 // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.6358232, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  07. WAIT: 5 s"}
+{"t": 1794725381.6364844, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. PROGRAM: Program 61 61_61_R_P1_pole200_cleaningpose. // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.6366234, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  08. PROGRAM: Program 64 64_64_L_P3_pole200_cleaningpose. // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.6387942, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  09. PROGRAM: Program 65 65_65_L_P3_pole200_grip_45.3s_s. // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.6391616, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. WAIT: 5 s"}
+{"t": 1794725381.6413326, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  03. PROGRAM: Program 62 62_62_R_P2_pole200_grip_13.0s_n. // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.6429462, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  04. PROGRAM: Program 63 63_63_R_P2_pole200_cleaningpose. // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.6436687, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  05. POLE: 50 mm"}
+{"t": 1794725381.6442018, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  06. PROGRAM: Program 64 64_64_1_R_P2_pole50_cleaningpose // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.6447327, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  07. WAIT: 5 s"}
+{"t": 1794725381.6466918, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  08. PROGRAM: Program 65 65_65_R_P3_pole50_grip_39.8s_ne. // start/transit 30% // stored trajectory timing"}
+{"t": 1794725381.657778, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794725381.6587996, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/9: PROGRAM"}
+{"t": 1794725381.6769917, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794725381.6779814, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/8: PROGRAM"}
+{"t": 1794725381.6987474, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 1/9: slot 61 (61_61_L_P1_pole50_cleaningpose_.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794725381.7667735, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 1/8: slot 61 (61_61_R_P1_pole200_cleaningpose.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794725384.505077, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 1/8: slot 61 // start ack 2.716 s"}
+{"t": 1794725384.8698223, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 1/9: slot 61 // start ack 3.059 s"}
+{"t": 1794725384.8705142, "side": null, "verb": "start together", "args": {"rows": {"left": 6, "right": 6}, "programs": {"left": 61, "right": 61}, "delay": {"right": 0.0, "left": 0.0}, "played_apart_s": 0.365, "sent_apart_s": -0.0, "ack": {"right": 2.716, "left": 3.059}, "held_s": {"left": 0.068, "right": 0.0}}, "ret": null, "ok": null, "elapsed_s": null, "text": "Started together: LEFT row 6 (Program 61) and RIGHT row 6 (Program 61) began to play 0.36 s apart (RIGHT first); started at the same moment (within 0.000 s); their controllers read their files in LEFT 3.06 s, RIGHT 2.72 s."}
+{"t": 1794725437.4665911, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 1/9: 52.426 s"}
+{"t": 1794725437.469162, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 1/9: 0.122 s"}
+{"t": 1794725437.4699023, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/9: PROGRAM"}
+{"t": 1794725437.470439, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/9: WAIT"}
+{"t": 1794725437.4757617, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT: 5 s"}
+{"t": 1794725439.136388, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 1/8: 54.653 s"}
+{"t": 1794725439.1371543, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 1/8: 0.133 s"}
+{"t": 1794725439.1376367, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/8: PROGRAM"}
+{"t": 1794725439.138186, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/8: WAIT"}
+{"t": 1794725439.15364, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT: 5 s"}
+{"t": 1794725442.4780815, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT COMPLETE: 5 s"}
+{"t": 1794725442.4813695, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/9: WAIT"}
+{"t": 1794725442.4821846, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 3/9: POLE"}
+{"t": 1794725442.4974496, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE START: current 50.0 mm -> target 200 mm"}
+{"t": 1794725444.154851, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT COMPLETE: 5 s"}
+{"t": 1794725444.1556559, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/8: WAIT"}
+{"t": 1794725444.1561453, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 3/8: PROGRAM"}
+{"t": 1794725444.2069569, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 3/8: slot 62 (62_62_R_P2_pole200_grip_13.0s_n.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794725445.586927, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE COMPLETE: target 200 mm, final=199.0 mm"}
+{"t": 1794725445.5876715, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 3/9: POLE"}
+{"t": 1794725445.5883179, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 4/9: PROGRAM"}
+{"t": 1794725445.6353846, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 4/9: slot 62 (62_62_L_P2_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794725446.9900641, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 4/9: slot 62 // start ack 1.342 s"}
+{"t": 1794725447.9817932, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 3/8: slot 62 // start ack 1.281 s"}
+{"t": 1794725447.983043, "side": null, "verb": "start together", "args": {"rows": {"left": 8, "right": 8}, "programs": {"left": 62, "right": 62}, "delay": {"left": 0.0, "right": 1.038}, "played_apart_s": 0.992, "sent_apart_s": 1.038, "ack": {"left": 1.342, "right": 1.281}, "held_s": {"left": 0.0, "right": 2.467}}, "ret": null, "ok": null, "elapsed_s": null, "text": "Started together: LEFT row 8 (Program 62) and RIGHT row 8 (Program 62) began to play 0.99 s apart (LEFT first); started 1.04 s apart (RIGHT 1.04 s later for its shorter file read); their controllers read their files in LEFT 1.34 s, RIGHT 1.28 s."}
+{"t": 1794725461.4234781, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 3/8: 13.468 s"}
+{"t": 1794725461.4242263, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 3/8: 0.121 s"}
+{"t": 1794725461.424631, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 3/8: PROGRAM"}
+{"t": 1794725461.4251533, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 4/8: PROGRAM"}
+{"t": 1794725461.4765472, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 4/8: slot 63 (63_63_R_P2_pole200_cleaningpose.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794725462.2491903, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 4/8: slot 63 // start ack 0.742 s"}
+{"t": 1794725470.1557956, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 4/9: 23.177 s"}
+{"t": 1794725470.1572003, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 4/9: 0.132 s"}
+{"t": 1794725470.1591587, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 4/9: PROGRAM"}
+{"t": 1794725470.1597855, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 5/9: HAND"}
+{"t": 1794725470.1771793, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000"}
+{"t": 1794725471.2025554, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[309, 277, 285, 134, 143, 986]"}
+{"t": 1794725471.4165742, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "AUX HAND CLOSED"}
+{"t": 1794725471.4173424, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 5/9: HAND"}
+{"t": 1794725471.4178693, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 6/9: PROGRAM"}
+{"t": 1794725471.4818819, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 6/9: slot 63 (63_63_L_P2_pole200_grip_10.5s_25) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794725472.348678, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 6/9: slot 63 // start ack 0.843 s"}
+{"t": 1794725474.1989698, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 4/8: 11.980 s"}
+{"t": 1794725474.1998932, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 4/8: 0.122 s"}
+{"t": 1794725474.2003815, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 4/8: PROGRAM"}
+{"t": 1794725474.2008708, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 5/8: POLE"}
+{"t": 1794725474.2132964, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE START: current 210.0 mm -> target 50 mm"}
+{"t": 1794725477.4180949, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE COMPLETE: target 50 mm, final=50.0 mm"}
+{"t": 1794725477.4189804, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 5/8: POLE"}
+{"t": 1794725477.4197125, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 6/8: PROGRAM"}
+{"t": 1794725477.4572926, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 6/8: slot 64 (64_64_1_R_P2_pole50_cleaningpose) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794725478.120221, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 6/8: slot 64 // start ack 0.651 s"}
+{"t": 1794725483.1965702, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 6/9: 10.871 s"}
+{"t": 1794725483.197357, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 6/9: 0.126 s"}
+{"t": 1794725483.1977763, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 6/9: PROGRAM"}
+{"t": 1794725483.1983306, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 7/9: WAIT"}
+{"t": 1794725483.2085402, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT: 5 s"}
+{"t": 1794725488.2130814, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT COMPLETE: 5 s"}
+{"t": 1794725488.2139893, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 7/9: WAIT"}
+{"t": 1794725488.2154877, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 8/9: PROGRAM"}
+{"t": 1794725488.2567043, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 8/9: slot 64 (64_64_L_P3_pole200_cleaningpose.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794725488.8841903, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 6/8: 10.775 s"}
+{"t": 1794725488.884982, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 6/8: 0.128 s"}
+{"t": 1794725488.8854065, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 6/8: PROGRAM"}
+{"t": 1794725488.8858294, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 7/8: WAIT"}
+{"t": 1794725488.8959615, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT: 5 s"}
+{"t": 1794725493.9477499, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT COMPLETE: 5 s"}
+{"t": 1794725493.9523695, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 7/8: WAIT"}
+{"t": 1794725493.9537704, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 8/8: PROGRAM"}
+{"t": 1794725494.0192182, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 8/8: slot 65 (65_65_R_P3_pole50_grip_39.8s_ne.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794725495.7487473, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 8/9: slot 64 // start ack 1.703 s"}
+{"t": 1794725496.148468, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 8/8: slot 65 // start ack 2.102 s"}
+{"t": 1794725496.1491485, "side": null, "verb": "start together", "args": {"rows": {"left": 11, "right": 12}, "programs": {"left": 64, "right": 65}, "delay": {"right": 0.0, "left": 0.0}, "played_apart_s": 0.4, "sent_apart_s": -0.0, "ack": {"left": 1.703, "right": 2.102}, "held_s": {"left": 5.762, "right": 0.0}}, "ret": null, "ok": null, "elapsed_s": null, "text": "Started together: LEFT row 11 (Program 64) and RIGHT row 12 (Program 65) began to play 0.40 s apart (LEFT first); started at the same moment (within 0.000 s); their controllers read their files in LEFT 1.70 s, RIGHT 2.10 s."}
+{"t": 1794725509.1661556, "side": "right", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)"}
+{"t": 1794725509.183018, "side": "left", "verb": "ALERT WARN", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "E-stop pressed: robot motion is blocked on both arms. (Make the cell safe, release the button, then press Recover.)"}
+{"t": 1794725509.191907, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** WORKFLOW STOP REQUESTED"}
+{"t": 1794725509.198496, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** WORKFLOW STOP REQUESTED"}
+{"t": 1794725509.199192, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  arm slow-stop ret=0"}
+{"t": 1794725509.2124014, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  arm slow-stop ret=0"}
+{"t": 1794725509.2189722, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794725509.2200503, "side": "left", "verb": "workflow", "args": {"steps": 9, "overall_speed": 60, "restore_speed": 50}, "ret": 1, "ok": false, "elapsed_s": 127.864, "text": "WORKFLOW STOP REQUESTED"}
+{"t": 1794725509.23682, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794725509.237704, "side": "right", "verb": "workflow", "args": {"steps": 8, "overall_speed": 60, "restore_speed": 50}, "ret": 1, "ok": false, "elapsed_s": 127.882, "text": "WORKFLOW STOP REQUESTED"}
+{"t": 1794725509.6515508, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "push config restored to 192.168.1.20:8089 enable=False (ret=0)"}
+{"t": 1794725509.652582, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recorded 6385 frames"}
+{"t": 1794725509.6529565, "side": "left", "verb": "s2 feed", "args": {"file": "20261115_064941_LEFT_s2_02_PART_2.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "6385 frames"}
+{"t": 1794725509.7220674, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "push config restored to 192.168.1.20:8090 enable=False (ret=0)"}
+{"t": 1794725509.722588, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recorded 6384 frames"}
+{"t": 1794725509.722826, "side": "right", "verb": "s2 feed", "args": {"file": "20261115_064941_RIGHT_s2_02_PART_2.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "6384 frames"}
+{"t": 1794725509.7818346, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794725509.8018568, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794725509.8029234, "side": "both", "verb": "ALERT ERROR", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "S2 Real Machine: both arms: INTERRUPTED — E-STOP: it did not finish. (Release the E-stop and follow Recover. Nothing restarts by itself.)"}
+{"t": 1794725585.1077394, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725585.166096, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725585.423222, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725585.4648857, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725709.2588058, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725709.2807295, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725709.2936373, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725709.350249, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725713.5211833, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs; IO default 0; tracks not available"}
+{"t": 1794725713.5779712, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725713.8385432, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725722.4131818, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs; IO default 0; tracks not available"}
+{"t": 1794725722.4503484, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725723.059659, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725723.8477347, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs; IO default 0; tracks not available"}
+{"t": 1794725723.907553, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725724.2468326, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725725.878298, "side": "right", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs; IO default 0; tracks not available"}
+{"t": 1794725725.906112, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725726.2898946, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725765.5378497, "side": "right", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs; IO default 0; tracks not available"}
+{"t": 1794725765.5623147, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725766.436804, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725766.9210715, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725766.9701202, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725771.8000908, "side": "right", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs; IO default 0; tracks not available"}
+{"t": 1794725771.827772, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725772.050028, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725787.6557794, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725814.372512, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725843.803373, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs; IO default 0; tracks not available"}
+{"t": 1794725843.8433566, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725844.1040962, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725844.8725452, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725844.9096274, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725856.5101118, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725856.537314, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725856.594603, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725856.6543307, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725866.864198, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725866.9300914, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725866.975807, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725867.0393107, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725870.4945598, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725870.5265617, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725870.5449636, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725870.5514839, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725877.0738423, "side": "left", "verb": "controller data", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs; IO default 0; tracks not available"}
+{"t": 1794725877.1103268, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725877.3627694, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725919.2527838, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725919.308257, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725919.5717955, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725919.5986023, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794725963.5345874, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794725963.5771124, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794725963.8024192, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794725963.8274052, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794726046.4707983, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794726049.584168, "side": "right", "verb": "read global speed", "args": null, "ret": 0, "ok": false, "elapsed_s": null, "text": "not reported"}
+{"t": 1794726049.5922456, "side": "right", "verb": "read drag sensitivity", "args": null, "ret": 0, "ok": true, "elapsed_s": null, "text": "100 %"}
+{"t": 1794726049.8443575, "side": "right", "verb": "device check", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 50 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 999, 997, 999, 998, 8, 982; feed: recorded on UDP port 8090 of this computer (192.168.1.164)"}
+{"t": 1794726049.8705473, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794726050.045248, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794726050.0887508, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794726130.3191128, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794726130.5190854, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794726130.5652773, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794726130.5945892, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794726153.5991223, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1794726153.6866357, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 1000 on all six channels"}
+{"t": 1794726153.7970436, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [1000, 1000, 1000, 1000, 1000, 1000] (from [999, 997, 999, 998, 7, 981]; law 0.49 s)"}
+{"t": 1794726154.7083364, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [999, 997, 998, 998, 992, 982] after 0.65 s (per-channel travel [0, 0, 1, 0, 985, 2])"}
+{"t": 1794726154.8069, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: settled without arriving — worst channel 6 is 18 counts short (target 1000, readback 982)"}
+{"t": 1794726154.8072193, "side": "right", "verb": "hand move", "args": {"counts": [1000, 1000, 1000, 1000, 1000, 1000], "speed_set": [1000, 1000, 1000, 1000, 1000, 1000]}, "ret": 0, "ok": true, "elapsed_s": 0.65, "text": "read back [999, 997, 998, 998, 992, 982] (settled short of the target: stopped on force)"}
+{"t": 1794726162.0580175, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: end-port modbus mode on (baud 115200, device 1)"}
+{"t": 1794726162.1326082, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: SPEED_SET 1000 on all six channels"}
+{"t": 1794726162.133158, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: ANGLE_SET [0, 0, 0, 0, 150, 1000] (from [999, 997, 998, 998, 992, 982]; law 0.49 s)"}
+{"t": 1794726162.9525838, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "hand: settled at [402, 342, 330, 355, 151, 982] after 0.75 s (per-channel travel [600, 655, 668, 643, 841, 2])"}
+{"t": 1794726162.9531276, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "** hand: settled without arriving — worst channel 1 is 402 counts short (target 0, readback 402)"}
+{"t": 1794726162.9538963, "side": "right", "verb": "hand move", "args": {"counts": [0, 0, 0, 0, 150, 1000], "speed_set": [1000, 1000, 1000, 1000, 1000, 1000]}, "ret": 0, "ok": true, "elapsed_s": 0.752, "text": "read back [402, 342, 330, 355, 151, 982] (settled short of the target: stopped on force)"}
+{"t": 1794726178.7242358, "side": "right", "verb": "hand move", "args": {"counts": [0, 0, 0, 0, 150, 1000], "speed_set": null}, "ret": null, "ok": true, "elapsed_s": 0.0, "text": "already commanded to these counts and settled at [402, 342, 330, 355, 151, 982]: nothing sent, nothing read"}
+{"t": 1794726189.4614873, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794726190.0303345, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794726190.1353915, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794726190.1744852, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794726194.1271842, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794726194.555034, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794726194.7985861, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794726194.9060197, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794726195.3683193, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794726195.4088228, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794726195.5301921, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794726195.572925, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794726199.6264062, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794726199.9932795, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794726200.076516, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794726200.1498568, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794726200.613854, "side": "left", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "30 programs"}
+{"t": 1794726200.655432, "side": "left", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "24 point(s)"}
+{"t": 1794726200.7878144, "side": "right", "verb": "program list", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "27 programs"}
+{"t": 1794726200.810864, "side": "right", "verb": "global points", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "18 point(s)"}
+{"t": 1794726201.6174088, "side": "left", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794726201.6420503, "side": "right", "verb": "run mode REAL", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794726202.0229065, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recording UDP push -> /home/dev/alix_studio_lite/Resources/Logs/2026-11-15/canfd/20261115_070321_RIGHT_s2_01_PART_1.frames.jsonl (target 192.168.1.164:8090, cycle 20 ms, all sections on)"}
+{"t": 1794726202.0235584, "side": "right", "verb": "s2 feed", "args": {"cycle_ms": 20, "file": "20261115_070321_RIGHT_s2_01_PART_1.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "recording"}
+{"t": 1794726202.0956483, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recording UDP push -> /home/dev/alix_studio_lite/Resources/Logs/2026-11-15/canfd/20261115_070321_LEFT_s2_01_PART_1.frames.jsonl (target 192.168.1.164:8089, cycle 20 ms, all sections on)"}
+{"t": 1794726202.0965095, "side": "left", "verb": "s2 feed", "args": {"cycle_ms": 20, "file": "20261115_070321_LEFT_s2_01_PART_1.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "recording"}
+{"t": 1794726202.1270533, "side": "left", "verb": "clear warning", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "clean"}
+{"t": 1794726202.1287599, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 2 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794726202.1294787, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794726202.129923, "side": "right", "verb": "clear warning", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "clean"}
+{"t": 1794726202.1320283, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 2 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794726202.1328566, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794726202.1428075, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. GLOBAL: REST_POSE // MOVEJ // speed 30% // wait 0s"}
+{"t": 1794726202.1435843, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. GLOBAL: L_HME_POS // MOVEJ // speed 50% // wait 0s"}
+{"t": 1794726202.1506143, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. GLOBAL: REST_POSE // MOVEJ // speed 30% // wait 0s"}
+{"t": 1794726202.1515038, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. GLOBAL: R_HME_POS // MOVEJ // speed 50% // wait 0s"}
+{"t": 1794726202.160754, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794726202.1615953, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/2: GLOBAL"}
+{"t": 1794726202.178966, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794726202.180147, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/2: GLOBAL"}
+{"t": 1794726202.2161481, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: REST_POSE // MOVEJ // speed 30%"}
+{"t": 1794726202.2166088, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: REST_POSE // MOVEJ // speed 30%"}
+{"t": 1794726208.7945945, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: REST_POSE // MOVEJ"}
+{"t": 1794726208.79541, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/2: GLOBAL"}
+{"t": 1794726208.795884, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/2: GLOBAL"}
+{"t": 1794726208.829354, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 50%"}
+{"t": 1794726208.9403987, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: REST_POSE // MOVEJ"}
+{"t": 1794726208.941164, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/2: GLOBAL"}
+{"t": 1794726208.9416027, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/2: GLOBAL"}
+{"t": 1794726208.9969907, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 50%"}
+{"t": 1794726212.5574512, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ"}
+{"t": 1794726212.5585055, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/2: GLOBAL"}
+{"t": 1794726212.5591187, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 2/2 step(s), 10.4 s"}
+{"t": 1794726212.5790226, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794726212.5820386, "side": "right", "verb": "workflow", "args": {"steps": 2, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 10.449, "text": null}
+{"t": 1794726212.8181922, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ"}
+{"t": 1794726212.821827, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/2: GLOBAL"}
+{"t": 1794726212.8228223, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 2/2 step(s), 10.7 s"}
+{"t": 1794726212.8456254, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794726212.8478277, "side": "left", "verb": "workflow", "args": {"steps": 2, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 10.718, "text": null}
+{"t": 1794726215.2945237, "side": "right", "verb": "pole and hand", "args": {"mm": 210.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": 2.701, "text": "pole 50.0 -> 208.0 mm in 2.637 s, the hand moving meanwhile; hand [1000, 996, 998, 998, 4, 985]"}
+{"t": 1794726215.6670375, "side": "left", "verb": "pole and hand", "args": {"mm": 50.0, "hand": [1000, 1000, 1000, 1000, 0, 1000]}, "ret": null, "ok": true, "elapsed_s": 2.808, "text": "pole 200.0 -> 51.0 mm in 2.746 s, the hand moving meanwhile; hand [1000, 1000, 1000, 997, 5, 986]"}
+{"t": 1794726215.6770766, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "push config restored to 192.168.1.20:8090 enable=False (ret=0)"}
+{"t": 1794726215.6776116, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recorded 671 frames"}
+{"t": 1794726215.6778505, "side": "right", "verb": "s2 feed", "args": {"file": "20261115_070321_RIGHT_s2_01_PART_1.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "671 frames"}
+{"t": 1794726216.0081463, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "push config restored to 192.168.1.20:8089 enable=False (ret=0)"}
+{"t": 1794726216.0087698, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recorded 688 frames"}
+{"t": 1794726216.0091915, "side": "left", "verb": "s2 feed", "args": {"file": "20261115_070321_LEFT_s2_01_PART_1.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "688 frames"}
+{"t": 1794726216.305133, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recording UDP push -> /home/dev/alix_studio_lite/Resources/Logs/2026-11-15/canfd/20261115_070336_RIGHT_s2_02_PART_2.frames.jsonl (target 192.168.1.164:8090, cycle 20 ms, all sections on)"}
+{"t": 1794726216.3056407, "side": "right", "verb": "s2 feed", "args": {"cycle_ms": 20, "file": "20261115_070336_RIGHT_s2_02_PART_2.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "recording"}
+{"t": 1794726216.321103, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recording UDP push -> /home/dev/alix_studio_lite/Resources/Logs/2026-11-15/canfd/20261115_070336_LEFT_s2_02_PART_2.frames.jsonl (target 192.168.1.164:8089, cycle 20 ms, all sections on)"}
+{"t": 1794726216.321602, "side": "left", "verb": "s2 feed", "args": {"cycle_ms": 20, "file": "20261115_070336_LEFT_s2_02_PART_2.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "recording"}
+{"t": 1794726216.3231423, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 7 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794726216.3235977, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 8 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794726216.3238966, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794726216.3248641, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794726216.4418366, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. PROGRAM: Program 61 61_61_L_P1_pole50_cleaningpose_. // start/transit 30% // stored trajectory timing"}
+{"t": 1794726216.4426415, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. WAIT: 5 s"}
+{"t": 1794726216.4431517, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  03. POLE: 200 mm"}
+{"t": 1794726216.443611, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  04. PROGRAM: Program 62 62_62_L_P2_pole200_cleaningpose_ // start/transit 30% // stored trajectory timing"}
+{"t": 1794726216.4440117, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  05. HAND: 0,0,0,0,150,1000"}
+{"t": 1794726216.4446843, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  06. PROGRAM: Program 63 63_63_L_P2_pole200_grip_10.5s_25 // start/transit 30% // stored trajectory timing"}
+{"t": 1794726216.4451823, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  07. WAIT: 5 s"}
+{"t": 1794726216.4670024, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794726216.4739053, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/7: PROGRAM"}
+{"t": 1794726216.5131438, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 1/7: slot 61 (61_61_L_P1_pole50_cleaningpose_.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726216.5198991, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. PROGRAM: Program 61 61_61_R_P1_pole200_cleaningpose. // start/transit 30% // stored trajectory timing"}
+{"t": 1794726216.5209727, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. WAIT: 5 s"}
+{"t": 1794726216.5216622, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  03. PROGRAM: Program 62 62_62_R_P2_pole200_grip_13.0s_n. // start/transit 30% // stored trajectory timing"}
+{"t": 1794726216.5221474, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  04. PROGRAM: Program 63 63_63_R_P2_pole200_cleaningpose. // start/transit 30% // stored trajectory timing"}
+{"t": 1794726216.522717, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  05. POLE: 50 mm"}
+{"t": 1794726216.5235415, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  06. PROGRAM: Program 64 64_64_1_R_P2_pole50_cleaningpose // start/transit 30% // stored trajectory timing"}
+{"t": 1794726216.5241106, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  07. WAIT: 5 s"}
+{"t": 1794726216.5247185, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  08. PROGRAM: Program 65 65_65_R_P3_pole50_grip_39.8s_ne. // start/transit 30% // stored trajectory timing"}
+{"t": 1794726216.546877, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794726216.5476434, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/8: PROGRAM"}
+{"t": 1794726216.587059, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 1/8: slot 61 (61_61_R_P1_pole200_cleaningpose.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726219.2105591, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 1/8: slot 61 // start ack 2.603 s"}
+{"t": 1794726219.2530174, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 1/7: slot 61 // start ack 2.646 s"}
+{"t": 1794726219.2539113, "side": null, "verb": "start together", "args": {"rows": {"left": 6, "right": 6}, "programs": {"left": 61, "right": 61}, "delay": {"right": 0.0, "left": 0.0}, "played_apart_s": 0.043, "sent_apart_s": -0.0, "ack": {"right": 2.603, "left": 2.646}, "held_s": {"left": 0.073, "right": 0.0}}, "ret": null, "ok": null, "elapsed_s": null, "text": "Started together: LEFT row 6 (Program 61) and RIGHT row 6 (Program 61) began to play 0.04 s apart (RIGHT first); started at the same moment (within 0.000 s); their controllers read their files in LEFT 2.65 s, RIGHT 2.60 s."}
+{"t": 1794726271.8295968, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 1/7: 52.595 s"}
+{"t": 1794726271.830536, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 1/7: 0.121 s"}
+{"t": 1794726271.8313024, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/7: PROGRAM"}
+{"t": 1794726271.8321187, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/7: WAIT"}
+{"t": 1794726271.8384275, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT: 5 s"}
+{"t": 1794726273.886848, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 1/8: 54.695 s"}
+{"t": 1794726273.887606, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 1/8: 0.122 s"}
+{"t": 1794726273.8882406, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/8: PROGRAM"}
+{"t": 1794726273.8887858, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/8: WAIT"}
+{"t": 1794726273.8992352, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT: 5 s"}
+{"t": 1794726276.8400393, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT COMPLETE: 5 s"}
+{"t": 1794726276.8407385, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/7: WAIT"}
+{"t": 1794726276.8411307, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 3/7: POLE"}
+{"t": 1794726276.8609705, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE START: current 50.0 mm -> target 200 mm"}
+{"t": 1794726278.900279, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT COMPLETE: 5 s"}
+{"t": 1794726278.901104, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/8: WAIT"}
+{"t": 1794726278.9015229, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 3/8: PROGRAM"}
+{"t": 1794726278.952168, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 3/8: slot 62 (62_62_R_P2_pole200_grip_13.0s_n.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726279.9581852, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE COMPLETE: target 200 mm, final=199.0 mm"}
+{"t": 1794726279.9638197, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 3/7: POLE"}
+{"t": 1794726279.9661038, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 4/7: PROGRAM"}
+{"t": 1794726280.0398211, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 4/7: slot 62 (62_62_L_P2_pole200_cleaningpose_) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726282.1003592, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 3/8: slot 62 // start ack 0.987 s"}
+{"t": 1794726282.1265209, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 4/7: slot 62 // start ack 2.079 s"}
+{"t": 1794726282.1271622, "side": null, "verb": "start together", "args": {"rows": {"left": 8, "right": 8}, "programs": {"left": 62, "right": 62}, "delay": {"left": 0.0, "right": 1.038}, "played_apart_s": 0.026, "sent_apart_s": 1.038, "ack": {"right": 0.987, "left": 2.079}, "held_s": {"left": 0.0, "right": 2.126}}, "ret": null, "ok": null, "elapsed_s": null, "text": "Started together: LEFT row 8 (Program 62) and RIGHT row 8 (Program 62) began to play 0.03 s apart (RIGHT first); started 1.04 s apart (RIGHT 1.04 s later for its shorter file read); their controllers read their files in LEFT 2.08 s, RIGHT 0.99 s."}
+{"t": 1794726295.4327295, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 3/8: 13.366 s"}
+{"t": 1794726295.4337935, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 3/8: 0.138 s"}
+{"t": 1794726295.4343545, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 3/8: PROGRAM"}
+{"t": 1794726295.4348845, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 4/8: PROGRAM"}
+{"t": 1794726295.4727976, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 4/8: slot 63 (63_63_R_P2_pole200_cleaningpose.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726296.589234, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 4/8: slot 63 // start ack 1.069 s"}
+{"t": 1794726305.2819486, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 4/7: 23.162 s"}
+{"t": 1794726305.2828145, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 4/7: 0.121 s"}
+{"t": 1794726305.283387, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 4/7: PROGRAM"}
+{"t": 1794726305.284021, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 5/7: HAND"}
+{"t": 1794726305.2900429, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL HAND RAW START: little=0 ring=0 middle=0 index=0 thumb_bend=150 thumb_rotate=1000"}
+{"t": 1794726306.3095608, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL HAND RAW COMPLETE: target=[0, 0, 0, 0, 150, 1000], final=[300, 265, 274, 117, 143, 986]"}
+{"t": 1794726306.532791, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "AUX HAND CLOSED"}
+{"t": 1794726306.5336423, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 5/7: HAND"}
+{"t": 1794726306.5341918, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 6/7: PROGRAM"}
+{"t": 1794726306.5976567, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 6/7: slot 63 (63_63_L_P2_pole200_grip_10.5s_25) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726307.4634407, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 6/7: slot 63 // start ack 0.734 s"}
+{"t": 1794726308.569363, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 4/8: 12.027 s"}
+{"t": 1794726308.570478, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 4/8: 0.116 s"}
+{"t": 1794726308.571246, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 4/8: PROGRAM"}
+{"t": 1794726308.5718956, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 5/8: POLE"}
+{"t": 1794726308.5964882, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE START: current 210.0 mm -> target 50 mm"}
+{"t": 1794726311.7820258, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE COMPLETE: target 50 mm, final=50.0 mm"}
+{"t": 1794726311.784131, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 5/8: POLE"}
+{"t": 1794726311.7848883, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 6/8: PROGRAM"}
+{"t": 1794726311.8224854, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 6/8: slot 64 (64_64_1_R_P2_pole50_cleaningpose) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726312.244822, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 6/8: slot 64 // start ack 0.401 s"}
+{"t": 1794726318.2523198, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 6/7: 10.920 s"}
+{"t": 1794726318.2535474, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 6/7: 0.133 s"}
+{"t": 1794726318.254266, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 6/7: PROGRAM"}
+{"t": 1794726318.254736, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 7/7: WAIT"}
+{"t": 1794726318.2655814, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT: 5 s"}
+{"t": 1794726322.8902059, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 6/8: 10.662 s"}
+{"t": 1794726322.8909636, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 6/8: 0.129 s"}
+{"t": 1794726322.8913844, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 6/8: PROGRAM"}
+{"t": 1794726322.8918464, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 7/8: WAIT"}
+{"t": 1794726322.9005225, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT: 5 s"}
+{"t": 1794726323.267999, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT COMPLETE: 5 s"}
+{"t": 1794726323.2689714, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 7/7: WAIT"}
+{"t": 1794726323.2704346, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 7/7 step(s), 106.8 s"}
+{"t": 1794726323.2883496, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794726323.289256, "side": "left", "verb": "workflow", "args": {"steps": 7, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 106.966, "text": null}
+{"t": 1794726327.9017234, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW WAIT COMPLETE: 5 s"}
+{"t": 1794726327.902496, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 7/8: WAIT"}
+{"t": 1794726327.9032009, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 8/8: PROGRAM"}
+{"t": 1794726327.909865, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 2 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794726327.9113588, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794726327.9440804, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 8/8: slot 65 (65_65_R_P3_pole50_grip_39.8s_ne.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726328.100379, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. PROGRAM: Program 64 64_64_L_P3_pole200_cleaningpose. // start/transit 30% // stored trajectory timing"}
+{"t": 1794726328.1011853, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. PROGRAM: Program 65 65_65_L_P3_pole200_grip_45.3s_s. // start/transit 30% // stored trajectory timing"}
+{"t": 1794726328.121282, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794726328.1223748, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/2: PROGRAM"}
+{"t": 1794726328.1712835, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 1/2: slot 64 (64_64_L_P3_pole200_cleaningpose.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726329.1216898, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 1/2: slot 64 // start ack 0.943 s"}
+{"t": 1794726330.67858, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 8/8: slot 65 // start ack 2.377 s"}
+{"t": 1794726330.7825549, "side": null, "verb": "start together", "args": {"rows": {"left": 12, "right": 12}, "programs": {"left": 64, "right": 65}, "delay": {"left": 0.0, "right": 0.0}, "played_apart_s": 1.66, "sent_apart_s": 0.0, "ack": {"left": 0.943, "right": 2.377}, "held_s": {"left": 0.0, "right": 0.227}}, "ret": null, "ok": null, "elapsed_s": null, "text": "Started together: LEFT row 12 (Program 64) and RIGHT row 12 (Program 65) began to play 1.66 s apart (LEFT first); started at the same moment (within 0.000 s); their controllers read their files in LEFT 0.94 s, RIGHT 2.38 s."}
+{"t": 1794726353.3807383, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 1/2: 24.265 s"}
+{"t": 1794726353.3815382, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 1/2: 0.128 s"}
+{"t": 1794726353.3827934, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/2: PROGRAM"}
+{"t": 1794726353.3836093, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/2: PROGRAM"}
+{"t": 1794726353.4573078, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM 2/2: slot 65 (65_65_L_P3_pole200_grip_45.3s_s.) // START/TRANSIT 30% // stored trajectory timing // overall 60%"}
+{"t": 1794726356.1373224, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM RUNNING 2/2: slot 65 // start ack 2.657 s"}
+{"t": 1794726373.0530834, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 8/8: 42.503 s"}
+{"t": 1794726373.0539277, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 8/8: 0.118 s"}
+{"t": 1794726373.0544562, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 8/8: PROGRAM"}
+{"t": 1794726373.0549216, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 8/8 step(s), 156.5 s"}
+{"t": 1794726373.079791, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794726373.0847163, "side": "right", "verb": "workflow", "args": {"steps": 8, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 156.761, "text": null}
+{"t": 1794726373.1252604, "side": "right", "verb": "clear warning", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "clean"}
+{"t": 1794726373.1266472, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 3 step(s) on 192.168.1.103; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794726373.127136, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794726373.1425426, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. GLOBAL: R_HME_POS // MOVEJ // speed 20% // wait 0s"}
+{"t": 1794726373.1431942, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. GLOBAL: REST_POSE // MOVEJ // speed 30% // wait 0s"}
+{"t": 1794726373.143554, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  03. POLE: 10 mm"}
+{"t": 1794726373.1699858, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794726373.171038, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/3: GLOBAL"}
+{"t": 1794726373.226121, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: R_HME_POS // MOVEJ // speed 20%"}
+{"t": 1794726374.171484, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: R_HME_POS // MOVEJ"}
+{"t": 1794726374.1723976, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/3: GLOBAL"}
+{"t": 1794726374.172908, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/3: GLOBAL"}
+{"t": 1794726374.2183487, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: REST_POSE // MOVEJ // speed 30%"}
+{"t": 1794726380.0384378, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: REST_POSE // MOVEJ"}
+{"t": 1794726380.0393736, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/3: GLOBAL"}
+{"t": 1794726380.0399766, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 3/3: POLE"}
+{"t": 1794726380.0543792, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE START: current 50.0 mm -> target 10 mm"}
+{"t": 1794726382.0150607, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE COMPLETE: target 10 mm, final=10.0 mm"}
+{"t": 1794726382.0161111, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 3/3: POLE"}
+{"t": 1794726382.0167887, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 3/3 step(s), 8.8 s"}
+{"t": 1794726382.037149, "side": "right", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794726382.037986, "side": "right", "verb": "workflow", "args": {"steps": 3, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 8.911, "text": null}
+{"t": 1794726382.414267, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "push config restored to 192.168.1.20:8090 enable=False (ret=0)"}
+{"t": 1794726382.4149117, "side": "right", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recorded 8271 frames"}
+{"t": 1794726382.4152281, "side": "right", "verb": "s2 feed", "args": {"file": "20261115_070336_RIGHT_s2_02_PART_2.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "8271 frames"}
+{"t": 1794726402.5898566, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW PROGRAM COMPLETE 2/2: 46.475 s"}
+{"t": 1794726402.5906312, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW FAST SWITCH 2/2: 0.123 s"}
+{"t": 1794726402.5911362, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/2: PROGRAM"}
+{"t": 1794726402.5916116, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 2/2 step(s), 74.5 s"}
+{"t": 1794726402.6215725, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794726402.6226125, "side": "left", "verb": "workflow", "args": {"steps": 2, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 74.719, "text": null}
+{"t": 1794726402.661611, "side": "left", "verb": "clear warning", "args": null, "ret": null, "ok": true, "elapsed_s": null, "text": "clean"}
+{"t": 1794726402.6634188, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START: 3 step(s) on 192.168.1.10; one persistent controller connection // FAST PROGRAM SWITCH // overall 60%"}
+{"t": 1794726402.667001, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW START MOTION: each stored Program uses its own start/transit speed to reach the first point; trajectory playback then follows the stored controller program timing."}
+{"t": 1794726402.6837652, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  01. GLOBAL: L_HME_POS // MOVEJ // speed 100% // wait 0s"}
+{"t": 1794726402.6844673, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  02. GLOBAL: REST_POSE // MOVEJ // speed 30% // wait 0s"}
+{"t": 1794726402.6848295, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "  03. POLE: 10 mm"}
+{"t": 1794726402.7023635, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW OVERALL SPEED: 60% // ret=0"}
+{"t": 1794726402.7036328, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 1/3: GLOBAL"}
+{"t": 1794726402.7500203, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: L_HME_POS // MOVEJ // speed 100%"}
+{"t": 1794726403.3531137, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: L_HME_POS // MOVEJ"}
+{"t": 1794726403.3541112, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 1/3: GLOBAL"}
+{"t": 1794726403.3548124, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 2/3: GLOBAL"}
+{"t": 1794726403.3830817, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE START: REST_POSE // MOVEJ // speed 30%"}
+{"t": 1794726409.3628728, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "GLOBAL MOVE COMPLETE: REST_POSE // MOVEJ"}
+{"t": 1794726409.3638284, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 2/3: GLOBAL"}
+{"t": 1794726409.3652315, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP START 3/3: POLE"}
+{"t": 1794726409.388104, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE START: current 200.0 mm -> target 10 mm"}
+{"t": 1794726412.93021, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "MANUAL POLE COMPLETE: target 10 mm, final=10.0 mm"}
+{"t": 1794726412.930925, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW STEP COMPLETE 3/3: POLE"}
+{"t": 1794726412.9313297, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW COMPLETE: 3/3 step(s), 10.2 s"}
+{"t": 1794726412.9555607, "side": "left", "verb": "runner v14", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "WORKFLOW SPEED RESTORE: 50% // ret=0"}
+{"t": 1794726412.956571, "side": "left", "verb": "workflow", "args": {"steps": 3, "overall_speed": 60, "restore_speed": 50}, "ret": 0, "ok": true, "elapsed_s": 10.293, "text": null}
+{"t": 1794726413.3530152, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "push config restored to 192.168.1.20:8089 enable=False (ret=0)"}
+{"t": 1794726413.3536382, "side": "left", "verb": "alix", "args": null, "ret": null, "ok": null, "elapsed_s": null, "text": "recorded 9815 frames"}
+{"t": 1794726413.353978, "side": "left", "verb": "s2 feed", "args": {"file": "20261115_070336_LEFT_s2_02_PART_2.frames.jsonl"}, "ret": null, "ok": true, "elapsed_s": null, "text": "9815 frames"}
+{"t": 1794726413.4090407, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794726413.4281967, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794726547.8144965, "side": "left", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}
+{"t": 1794726547.838974, "side": "right", "verb": "restore global speed", "args": {"pct": 50}, "ret": 0, "ok": true, "elapsed_s": null, "text": null}

@@ -1,216 +1,43 @@
 {
  "arm": "left",
- "kept": "2026-11-13 01:09:22",
- "programs": [
+ "kept": "2026-11-15 06:57:57",
+ "programs": [],
+ "not_kept": [
   {
    "slot": 1,
-   "name": "L_P1_R01+R02+R03+R04_pole50_",
-   "file": "01_L_P1_R01+R02+R03+R04_pole50_.txt",
-   "sha256": "92a51e13048a3397f6d1e5a1f81f97c0de71828180c7d3f449f60ca7cfe3a3e3",
-   "lines": 5906,
-   "seconds": 29.525,
-   "stage": {
-    "pole_mm": 50.0,
-    "hand": [
-     1000,
-     1000,
-     1000,
-     1000,
-     0,
-     1000
-    ],
-    "source": "as the operator stated it",
-    "text": "pole 50 mm, hand cleaning pose",
-    "hand_text": "cleaning pose"
-   },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261029_182319_L_P1_R01+R02+R03+R04_pole50_cleaningpose_29.5s_v1.1.txt"
+   "name": "1_L_P1_R01+R02+R03+R04_pole50_.t",
+   "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 2,
-   "name": "L_P2_R05_PART1+R05_PART2_pol",
-   "file": "02_L_P2_R05_PART1+R05_PART2_pol.txt",
-   "sha256": "dbb705c25e660607775b52a68ae7ceabd669bb07d748f84fc43b7f626ad11864",
-   "lines": 2778,
-   "seconds": 13.885,
-   "stage": {
-    "pole_mm": 200.0,
-    "hand": [
-     1000,
-     1000,
-     1000,
-     1000,
-     0,
-     1000
-    ],
-    "source": "as the operator stated it",
-    "text": "pole 200 mm, hand cleaning pose",
-    "hand_text": "cleaning pose"
-   },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261029_182552_L_P2_R05_PART1+R05_PART2_pole200_cleaningpose_13.9s_v1.1.txt"
+   "name": "2_L_P2_R05_PART1+R05_PART2_pol.t",
+   "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 3,
-   "name": "L_P2_R06_pole200_grip_7.2s_v",
-   "file": "03_L_P2_R06_pole200_grip_7.2s_v.txt",
-   "sha256": "07d9b67500b34510c44118de477f5e045120139722db5032cdc1fd33fdd40c7d",
-   "lines": 1442,
-   "seconds": 7.205,
-   "stage": {
-    "pole_mm": 200.0,
-    "hand": [
-     0,
-     0,
-     0,
-     0,
-     150,
-     1000
-    ],
-    "source": "as the operator stated it",
-    "text": "pole 200 mm, hand grip",
-    "hand_text": "grip"
-   },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261029_183008_L_P2_R06_pole200_grip_7.2s_v1.1.txt"
+   "name": "3_L_P2_R06_pole200_grip_7.2s_v.t",
+   "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 4,
-   "name": "L_P3_R07_PART1+R07_PART2_pol",
-   "file": "04_L_P3_R07_PART1+R07_PART2_pol.txt",
-   "sha256": "2e0188fac34ca5c4536a8837af1f75b0d7e40c9ea441e9c8c84191f50d2ff277",
-   "lines": 2811,
-   "seconds": 14.05,
-   "stage": {
-    "pole_mm": 200.0,
-    "hand": [
-     1000,
-     1000,
-     1000,
-     1000,
-     0,
-     1000
-    ],
-    "source": "as the operator stated it",
-    "text": "pole 200 mm, hand cleaning pose",
-    "hand_text": "cleaning pose"
-   },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261029_183347_L_P3_R07_PART1+R07_PART2_pole200_cleaningpose_14.1s_v1.1.txt"
+   "name": "4_L_P3_R07_PART1+R07_PART2_pol.t",
+   "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 5,
-   "name": "5_L_P3_R08+R09_PART1+R09_PAR",
-   "file": "05_5_L_P3_R08+R09_PART1+R09_PAR.txt",
-   "sha256": "33cb03c77a2c7484c9b7c8d43593408ca8b6172863493cb80de9afd30eec1f4d",
-   "lines": 7734,
-   "seconds": 38.665,
-   "stage": {
-    "pole_mm": 200.0,
-    "hand": [
-     0,
-     0,
-     0,
-     0,
-     150,
-     1000
-    ],
-    "source": "as the operator stated it",
-    "text": "pole 200 mm, hand grip",
-    "hand_text": "grip"
-   },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261029_184916_5_L_P3_R08+R09_PART1+R09_PART2+R10_PART1+R10_PART2_pole200_grip_38.7s_v1.1.txt"
+   "name": "5_5_L_P3_R08+R09_PART1+R09_PAR.t",
+   "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 6,
-   "name": "6_L_P3_R11_PART1+R11_PART2_p",
-   "file": "06_6_L_P3_R11_PART1+R11_PART2_p.txt",
-   "sha256": "e3e9e9afd54ac469e624b63fd051115d986687de02978876996f2c1d0cbfa569",
-   "lines": 2495,
-   "seconds": 12.47,
-   "stage": {
-    "pole_mm": 20.0,
-    "hand": [
-     0,
-     0,
-     0,
-     0,
-     150,
-     1000
-    ],
-    "source": "as the operator stated it",
-    "text": "pole 20 mm, hand grip",
-    "hand_text": "grip"
-   },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261029_190756_6_L_P3_R11_PART1+R11_PART2_pole20_grip_12.5s_v1.1.txt"
+   "name": "6_6_L_P3_R11_PART1+R11_PART2_p.t",
+   "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 7,
-   "name": "7_L_P3_T04+T05_pole200_allop",
-   "file": "07_7_L_P3_T04+T05_pole200_allop.txt",
-   "sha256": "3bd1ec33352c58b26d196abbee1c0cebbb49a277f7846f019625eb7650d8b878",
-   "lines": 1998,
-   "seconds": 9.985,
-   "stage": {
-    "pole_mm": 200.0,
-    "hand": [
-     1000,
-     1000,
-     1000,
-     1000,
-     1000,
-     1000
-    ],
-    "source": "as the operator stated it",
-    "text": "pole 200 mm, hand open",
-    "hand_text": "open"
-   },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261029_190846_7_L_P3_T04+T05_pole200_allopen_10.0s_v1.1.txt"
+   "name": "7_7_L_P3_T04+T05_pole200_allop.t",
+   "why": "not sent by Lite: the controller gives no program's points back"
   },
-  {
-   "slot": 61,
-   "name": "61_L_P1_pole50_cleaningpose_",
-   "file": "61_61_L_P1_pole50_cleaningpose_.txt",
-   "sha256": "7c895103b9d823d4c66b55ea2be03edc4694b576c66f7647325652a5c0bc9939",
-   "lines": 11026,
-   "seconds": 55.125,
-   "stage": {
-    "pole_mm": 50.0,
-    "hand": [
-     1000,
-     1000,
-     1000,
-     1000,
-     0,
-     1000
-    ],
-    "source": "as the operator stated it",
-    "text": "pole 50 mm, hand cleaning pose",
-    "hand_text": "cleaning pose"
-   },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261113_001458_61_L_P1_pole50_cleaningpose_55.1s_20pct_steady30s.txt"
-  },
-  {
-   "slot": 65,
-   "name": "65_L_P3_pole200_grip_45.3s_s",
-   "file": "65_65_L_P3_pole200_grip_45.3s_s.txt",
-   "sha256": "eba997261c7e48f9f254deea96f8c8bc238fef5c03b094a47568269df7a65160",
-   "lines": 9064,
-   "seconds": 45.315,
-   "stage": {
-    "pole_mm": 200.0,
-    "hand": [
-     0,
-     0,
-     0,
-     0,
-     150,
-     1000
-    ],
-    "source": "as the operator stated it",
-    "text": "pole 200 mm, hand grip",
-    "hand_text": "grip"
-   },
-   "source": "/home/alai-labs/ALIX-Lite/advanced/left/20261112_222609_65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt"
-  }
- ],
- "not_kept": [
   {
    "slot": 51,
    "name": "51_51_L_P1_pole50_cleaningpose_3",
@@ -247,6 +74,11 @@
    "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
+   "slot": 61,
+   "name": "61_61_L_P1_pole50_cleaningpose_.",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
    "slot": 62,
    "name": "62_62_L_P2_pole200_cleaningpose_",
    "why": "not sent by Lite: the controller gives no program's points back"
@@ -258,7 +90,12 @@
   },
   {
    "slot": 64,
-   "name": "64_64_L_P3_pole200_cleaningpose_",
+   "name": "64_64_L_P3_pole200_cleaningpose.",
+   "why": "not sent by Lite: the controller gives no program's points back"
+  },
+  {
+   "slot": 65,
+   "name": "65_65_L_P3_pole200_grip_45.3s_s.",
    "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
@@ -313,6 +150,15 @@
   }
  ],
  "points": {
+  "REST_POSE": [
+   0.751,
+   -119.266,
+   -0.924,
+   86.896,
+   -1.415,
+   -123.039,
+   179.979
+  ],
   "L_R11_STP": [
    -4.759,
    -91.638,
