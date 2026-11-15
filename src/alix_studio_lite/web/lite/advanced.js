@@ -94,7 +94,7 @@ export async function runSlot(side, program, stated = null, status = null) {
   const set = status || ((text, busy) => window.rcSetStatus(side, text, busy));
   let j;
   try {
-    j = await robotCall(`/api/robots/${side}/programs/run`, { program, ...(stated || {}) },
+    j = await robotCall(`/api/robots/${side}/programs/run`, { program, pid: ctx.pid || null, ...(stated || {}) },
       { what: `Program ${program} runs from its slot with its own pole and hand, staged first; the controller then moves `
         + 'the arm to its first point and plays it' });
   } catch (err) {

@@ -1646,12 +1646,13 @@ class StandInRobot:
         rec = next((p for p in self.programs(side) if int(p["id"]) == int(program_id)), None)
         return staging.stage_from((rec or {}).get("stage"))
 
-    def run_stored(self, side: str, program_id: int, title: str, mode: str | None = None, stage=None):
+    def run_stored(self, side: str, program_id: int, title: str, mode: str | None = None, stage=None, how: str | None = None):
         """A program the arm's controller holds, run from its slot (Advanced Robot Controls, the Trajectory Viewer; the
         owner, 17 Oct: "running a saved program ... a project in a certain slot"): its own pole and hand staged first
         (the owner, 21 Oct: "the project's own pole and hand values must be applied ... not replaced by the default"):
-        Lite's record of the program it sent, else the ones the operator states (``stage``), never others; without
-        either it does not run. Then the controller moves the arm to the program's first point and plays it. In
+        Lite's record of the program it sent, else the ones given (``stage``: linked to it otherwise, ``how`` saying
+        where from, or as the operator states them), never others; without either it does not run. Then the controller
+        moves the arm to the program's first point and plays it. In
         Hardware sim the controller runs it in its SIM mode (the arm stays still), in Real on the arm."""
         mode = mode or self.mode
         pid, a, S = int(program_id), self.arm(side), side.upper()
@@ -1664,7 +1665,7 @@ class StandInRobot:
                             "it, or the slot holds another program since.",
                             "State the pole and hand it was taught with, or send it again from its region.", code="stage")
         st = own or stage
-        how = "its own, as Lite sent it" if own is not None else "as stated"
+        how = "its own, as Lite sent it" if own is not None else (how or "as stated")
 
         def work(job):
             self._same_mode(mode, "the program did not start")

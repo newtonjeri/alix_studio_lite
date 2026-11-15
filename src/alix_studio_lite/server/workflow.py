@@ -313,7 +313,9 @@ def own_stages(plan: list[dict], own: dict | None) -> list[dict]:
     the arm at: a Pole and a Hand (pole_with_hand makes them one step: the hand moving while the pole travels, the
     Program straight after), or the one that differs. Followed through the whole plan: each arm's rows, and a lid or
     seat task's end (its ``then``; without one, not known). Where not known (the run's start), both are set. A Program
-    Lite knows no pole and hand of runs with its rows' (the operator's), as before."""
+    Lite knows no pole and hand of runs with its rows' (the operator's), as before. Since 15 Nov ``own`` also holds the
+    ones the project keeps for the programs on the controllers (program_links), so a computer that did not send a
+    Program, and has no file of it, sets them too."""
     if not own:
         return plan
     plan = copy.deepcopy(plan)
@@ -340,9 +342,12 @@ def own_stages(plan: list[dict], own: dict | None) -> list[dict]:
                 if x["type"] in ("pole", "hand"):
                     rows.append(x)
                     continue
-                stg = (((own.get(side) or {}).get(int(x["id"])) or {}).get("stage")) if x["type"] == "program" else None
+                o = ((own.get(side) or {}).get(int(x["id"])) or {}) if x["type"] == "program" else {}
+                stg = o.get("stage")
                 if stg:
                     mine.extend(_own_steps(x, stg, now[side], rows))
+                    if o.get("link"):                  # the project's, not this computer's own knowledge: said (_program)
+                        x["_own_stage"]["link"] = o["link"]
                     rows.clear()
                 else:
                     flush()
@@ -379,15 +384,44 @@ def _own_steps(x: dict, stg: dict, now: list, rows: list) -> list[dict]:
 
 
 def own_for(app, units, programs: dict, steps: dict) -> dict:
-    """own_of for a project's run, as Simulation and Real Machine Mode plan it (the same plan, the same identity)."""
-    return own_of(programs, {s: files_by_name(app, units, s) for s in ARMS}, _md_reader(units.root), steps)
+    """own_of for a project's run, as Simulation and Real Machine Mode plan it (the same plan, the same identity), with
+    the pole and hand the project keeps for the controllers' programs (program_links)."""
+    from . import program_links
+
+    return own_of(programs, {s: files_by_name(app, units, s) for s in ARMS}, _md_reader(units.root), steps,
+                  links={s: program_links.load(units, s) for s in ARMS})
 
 
-def own_of(programs: dict, named: dict, md_of, steps: dict) -> dict:
+def own_stage(info: dict | None, found: dict | None, link: dict | None) -> dict | None:
+    """A Program's own pole and hand and where they are from, in program_links' order: this computer's record of
+    sending it (``info``: the ones it was taught or sent with), the project's entry by another computer's record
+    (``link``), its file found by name on this computer (``found``: the ones stated for it, as at its upload in the
+    Trajectory Viewer), the project's entry by a file or stated by hand. {stage, how: record | file | link, file_name,
+    link}, or None when nothing is known of them."""
+    from . import program_links, staging
+
+    def linked():
+        st = staging.stage_from(dict(link, source=f"kept with the project: {program_links.where_from(link)}"))
+        return dict(stage=st, how="link", link=link) if st is not None else None
+
+    st = staging.stage_from((info or {}).get("stage"))
+    if st is not None:
+        return dict(stage=st, how="record")
+    if link is not None and link.get("by") == "record" and linked():
+        return linked()
+    st = staging.stage_from(found.get("stage")) if found else None
+    if st is not None:
+        return dict(stage=st, how="file", file_name=found.get("name"))
+    return linked() if link is not None else None
+
+
+def own_of(programs: dict, named: dict, md_of, steps: dict, links: dict | None = None) -> dict:
     """{side: {program id: {stage, first_deg}}}: each Program of the run's rows with its own pole and hand as Lite knows
-    them (what it recorded when it sent the program; for one it did not send, its file's, found by name) and its first
-    point (deg) when Lite knows its very bytes (its record's first line, or a file of those bytes)."""
-    from . import staging
+    them (own_stage: what it recorded when it sent the program; for one it did not send, its file's, found by name, or
+    the ones the project keeps for the program its controller holds, ``links``: {side: program_links.load's}) and its
+    first point (deg) when Lite knows its very bytes (its record's first line, or a file of those bytes). With them,
+    where they are from (``how``; ``file_name``, ``link``)."""
+    from . import program_links
 
     out = {}
     for side in ARMS:
@@ -398,7 +432,7 @@ def own_of(programs: dict, named: dict, md_of, steps: dict) -> dict:
             pid = int(x["id"])
             info = (programs.get(side) or {}).get(pid) or {}
             found = None if info.get("file") or info.get("gone") else found_by_name((named or {}).get(side) or {}, pid, x, info)
-            stg = staging.stage_from(info.get("stage")) or (staging.stage_from(found.get("stage")) if found else None)
+            got = own_stage(info, found, program_links.link_for((links or {}).get(side), pid, info))
             first = None
             if info.get("sent") and not info.get("gone") and info.get("first_row"):
                 first = [float(v) / 1000.0 for v in info["first_row"]]
@@ -408,7 +442,9 @@ def own_of(programs: dict, named: dict, md_of, steps: dict) -> dict:
                 md = md_of(path) if path else None
                 if md is not None and len(md):
                     first = [float(v) / 1000.0 for v in md[0]]
-            mine[pid] = dict(stage=stg.as_dict() if stg else None, first_deg=first)
+            mine[pid] = dict(stage=got["stage"].as_dict() if got else None, first_deg=first)
+            if got:
+                mine[pid].update({k: got[k] for k in ("how", "file_name", "link") if got.get(k) is not None})
         out[side] = mine
     return out
 
@@ -854,7 +890,9 @@ def programs_known(app, units, side: str) -> dict:
     lines, sha256, stage) with the project's file of those bytes, when it is still there, else the very file
     Lite sent (a file sent from Advanced is kept in Lite's data folder, not in the project), when it still holds
     those bytes. On a linked controller, the slots it holds now too: a program Lite did not send, or one that
-    replaced Lite's, is known by its name only (``sent`` False)."""
+    replaced Lite's, is known by its name only (``sent`` False); one Lite sent, with how its controller lists it
+    (``held``: its name there and its stored bytes), which is what its pole and hand are kept with in the project
+    (program_links)."""
     from ..motion import track
     from .content import file_for
 
@@ -899,6 +937,8 @@ def programs_known(app, units, side: str) -> dict:
             if not x.get("sha256"):                       # the controller's own, not what Lite sent
                 out[pid] = dict(id=pid, name=x.get("name"), size=x.get("bytes"), lines=None, seconds=None, sha256=None, stage=None,
                                 sent=False, file=None)
+            elif pid in out:                              # what Lite sent, as its controller lists it
+                out[pid] = dict(out[pid], held=dict(name=x.get("name"), bytes=x.get("bytes")))
         for pid in [p for p in out if p not in held]:
             out[pid] = dict(out[pid], gone=True)          # Lite sent it, the controller no longer holds it
     return out
@@ -942,7 +982,7 @@ def files_by_name(app, units, side: str) -> dict:
     def add(name, f):
         out.setdefault(str(name).lower(), []).append(f)
 
-    for sha, f in _project_files(units, side).items():
+    for sha, f in (_project_files(units, side) if units is not None else {}).items():     # no project open: the library's
         add(f["name"], dict(f, sha256=sha, source="the project"))
     lib = getattr(app, "library", None)
     if lib is not None:
@@ -1071,7 +1111,12 @@ def found_by_name(named: dict, pid: int, step: dict, info: dict) -> dict | None:
     """A Program Lite did not send (the control program, or V53, sent it), found by its file's name (the
     owner, 16 Oct: the sequence must play in the simulation): the name the sequence gives it (V53's JSON),
     else the controller's ("<slot>_<file>", cut to 31 characters by RealMan's API). With the controller's
-    stored size known, the file whose project file has that size; else the first found, said so."""
+    stored size known, the file whose project file has that size; else the first found, said so.
+
+    A cut name is matched by its start, without what the cut left of its ".txt": Lite names a program it sends by the
+    first 28 characters of its file's name and ".txt", so its name on the controller ends "." or ".t" ("62_62_R_P2_
+    pole200_grip_13.0s_n."), which no file's name starts with. On a computer that did not send it (the Jetson, 15 Nov:
+    the lab PC had), 7 of the sequence's 10 Programs were not found for that, their files uploaded there or not."""
     import re
 
     sha = info.get("sent") and info.get("sha256")
@@ -1082,13 +1127,17 @@ def found_by_name(named: dict, pid: int, step: dict, info: dict) -> dict | None:
                     return dict(f, how="the very bytes Lite sent to the controller", differs=False)
     names = [str(step["name"])] if step.get("name") else []
     held = str(info.get("name") or "")
+    cut = len(held) >= 31                        # cut to 31 characters: matched by its start
     if held:
         names.append(re.sub(rf"^{pid}_", "", held))
+        stem = re.sub(r"\.(?:t(?:xt?)?)?$", "", names[-1], flags=re.IGNORECASE) if cut else names[-1]
+        if stem and stem != names[-1]:
+            names.append(stem)                   # without what the cut left of ".txt"
     cands = []
-    for n in names:
+    for i, n in enumerate(names):
         low = n.lower()
         hit = named.get(low) or named.get(low + ".txt") or []
-        if not hit and held and len(held) >= 31 and n is names[-1]:     # cut to 31 characters: its start
+        if not hit and cut and i == len(names) - 1:
             hit = [f for k, fs in named.items() if k.startswith(low) for f in fs]
         cands += [f for f in hit if f not in cands]
     if not cands:
@@ -1288,6 +1337,15 @@ class _ArmSim:
             self._say("note", step, f"{S} row {step.get('_row')}, program {pid}: it runs with its own pole and hand "
                       f"({staging.describe(staging.make_stage(mine['pole_mm'], mine['hand']))}), which Lite sets before it "
                       f"in place of row{'s' if len(mine['differ']) > 1 else ''} {', '.join(str(r) for r in mine['differ'])}.")
+        if mine.get("link") and self.lam is None:    # the project's (program_links): this computer has no record or file of it
+            from . import program_links
+
+            ln = mine["link"]
+            self._say("note", step, f"{S} row {step.get('_row')}, program {pid}: its pole and hand "
+                      f"({staging.describe(staging.make_stage(mine['pole_mm'], mine['hand']))}) are the ones kept with the "
+                      f"project for {ln.get('name')} ({program_links.where_from(ln)}); this computer has no record or file "
+                      "of it" + ("." if ln.get("compared") else ", and its controller's list was not read to compare (Real "
+                                                               "Machine Mode reads it before anything moves)."))
         if st is not None:                           # its own set before it (own_stages); a Pole or Hand step after that
             said = stage_off(S, step.get("_row"), pid, st, self.pole, self.hand, self.set_pole, self.set_hand)
             if said:                                 # a stop: Real Machine Mode does not run it (the owner, 21 Oct)
@@ -2129,7 +2187,11 @@ def simulate(app, units, mode: str, pick: dict | None):
             program_mirror.keep_quietly(app, units, s, programs[s], (points[s] or {}).get("points"))
         findings, md_of = [], _md_reader(units.root)
         named = {s: files_by_name(app, units, s) for s in ARMS}
-        run = plan_for(steps, mode, pick, own=own_for(app, units, programs, run["steps"]))   # each Program's own pole and hand
+        own = own_for(app, units, programs, run["steps"])
+        run = plan_for(steps, mode, pick, own=own)        # each Program's own pole and hand
+        from . import program_links                     # what this computer knows of them, kept with the project (15 Nov)
+        for s in ARMS:
+            program_links.keep_quietly(app, units, s, programs[s], own.get(s))
         ident = identity_of(run, programs, points, overall)
         starts, start_how = {}, {}
         for s in ARMS:
@@ -2736,7 +2798,17 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
     overall = int(robot.speed_pct)
     programs = {s: programs_known(app, units, s) for s in ARMS}
     points = {s: points_known(app, s, units) for s in ARMS}
-    run = plan_for(steps, mode, pick, own=own_for(app, units, programs, run["steps"]))   # each Program's own pole and hand
+    own = own_for(app, units, programs, run["steps"])
+    unread = [f"{s.upper()} Program {pid}" for s in sides for pid, o in sorted((own.get(s) or {}).items())
+              if o.get("link") and not o["link"].get("compared")]
+    if unread:                                            # the project's pole and hand are of a named program: never set unchecked
+        raise UserError(f"The pole and hand of {', '.join(unread)} are the ones kept with the project, and the controller's "
+                        "program list was not read to check that its slot still holds that program. Nothing moved.",
+                        "Run it again; if it says this again, refresh the programs in Data Management first.", code="list")
+    run = plan_for(steps, mode, pick, own=own)            # each Program's own pole and hand
+    from . import program_links                         # what this computer knows of them, kept with the project (15 Nov)
+    for s in ARMS:
+        program_links.keep_quietly(app, units, s, programs[s], own.get(s))
     ident = identity_of(run, programs, points, overall)
     sim = load_sim(units)
     same = bool(sim and sim.get("hash") == digest(ident))

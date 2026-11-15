@@ -175,10 +175,30 @@ function programRow(side, p) {
       p.stage ? el('small', { class: 'lite-file-stage ok', text: `Its own: ${p.stage.text}` }) : null,
       p.why ? el('small', { class: 'lite-file-stage lite-warn', text: p.why }) : null),
     el('div', { class: 'lite-file-actions' },
+      p.can_state ? el('button', { class: 'btn', text: p.stage ? 'Change pole and hand' : 'Set pole and hand',
+        title: `Say the pole height and hand pose program ${p.id} was taught with: kept with the project, and set before it runs`,
+        'aria-label': `Set the pole and hand of program ${p.id} on the ${side} arm`, onclick: () => stateProgram(side, p) }) : null,
       p.viewable ? el('button', { class: 'btn green', text: 'View', 'aria-label': `View program ${p.id} on the ${side} arm`, onclick: () => view(f) }) : null,
       el('button', { class: 'btn', text: running[side] ? 'Running' : 'Run', disabled: running[side],
         title: `Run program ${p.id} from its slot on the ${side.toUpperCase()} arm: its own pole and hand first`,
         'aria-label': `Run program ${p.id} on the ${side} arm`, onclick: () => runProgram(side, p) })));
+}
+
+// A program nothing is known of (Lite did not send it from this computer, no file of its name is here; the user,
+// 15 Nov): the operator says the pole and hand it was taught with. Kept with the open project for the program as its
+// controller lists it, so S2 and Run set them before it, here and on every computer that runs the project.
+async function stateProgram(side, p) {
+  const S = side.toUpperCase();
+  const v = await stageDialog({ title: `${S} program ${p.id}: the pole and hand it runs with`, arm: side, setup: p.stage || null,
+    body: `Lite did not send ${p.name || `program ${p.id}`} from this computer and has no file of its name, so it does not know the `
+      + 'pole height and hand pose it was taught with. Say them here: they are kept with the project, and S2 and Run set '
+      + 'them before the program runs, on every computer that runs this project.' });
+  if (!v) return;
+  try {
+    progs = await post(`/api/library/programs/${side}/${p.id}`, { pid: ctx.pid || null, pole_mm: v.pole_mm, hand: v.hand });
+    renderPrograms();
+    status(`${S} program ${p.id}: ${progs.stated.text}, kept with the project.`, 'ok');
+  } catch (err) { tell(err); }
 }
 
 // From its slot (the owner, 21 Oct), as Advanced's Run Stored runs it: its own pole and hand staged first (a

@@ -61,20 +61,38 @@ def _stated_stage(body):
     return staging.make_stage(body.get("pole_mm"), body.get("hand"), "as the operator stated it")
 
 
+def _linked_stage(app, side: str, pid: int, project):
+    """The pole and hand of a program Lite has no record of sending, where they are known otherwise (the user, 15 Nov:
+    a program linked to its pole and hand): its file's, found by its name among your files, or the ones the project
+    (``project``: the open one's id) keeps for it (program_links). (stage, where they are from), or None."""
+    from . import api_library, content
+
+    units = api_library._units(app, project)
+    p = next((x for x in content.content(app, side, units=units)["programs"] if int(x["id"]) == int(pid)), None)
+    got = api_library.program_stage(app, side, p, units) if p is not None else None
+    if not got or got["how"] == "record":
+        return None
+    return got["stage"], api_library._stage_words(got)
+
+
 @route("POST", R + r"/programs/run")
 def post_run_stored(app, q, body, m):
     """Run Stored / Run Only (and the Trajectory Viewer's Run on the robot): ``{program}`` (a number or a name), staged
-    with the program's own pole and hand (robot_standin.run_stored); ``pole_mm``, ``hand``: the ones the operator
-    states for a program Lite did not send (refused with code "stage" without them)."""
+    with the program's own pole and hand (robot_standin.run_stored): Lite's record of sending it, else the ones linked
+    to it (``_linked_stage``; ``pid``: the open project); ``pole_mm``, ``hand``: the ones the operator states for a
+    program nothing is known of (refused with code "stage" without them)."""
     session(app)
     side = m.group(1)
     mode = require_robot_mode(app)
     pid = _program_of(app, side, body.get("program"))
     stated = _stated_stage(body)
-    if app.robot.stored_stage(side, pid) is None and stated is None:     # asked first, before any confirmation
+    linked = _linked_stage(app, side, pid, body.get("pid")) if app.robot.stored_stage(side, pid) is None else None
+    if app.robot.stored_stage(side, pid) is None and stated is None and linked is None:     # asked first, before any confirmation
         return app.robot.run_stored(side, pid, "", mode=mode)             # raises: "State the pole and hand ..."
     require_confirmed(app, body, f"Running program {pid}")
     title = f"{side.upper()} program {pid}" + (" in Hardware sim" if mode == "hwsim" else " on the real arm")
+    if linked is not None:                           # its own, never the stated ones in their place
+        return app.robot.run_stored(side, pid, title, mode=mode, stage=linked[0], how=linked[1]).view()
     return app.robot.run_stored(side, pid, title, mode=mode, stage=stated).view()
 
 

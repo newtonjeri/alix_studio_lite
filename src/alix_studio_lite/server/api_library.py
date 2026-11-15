@@ -9,6 +9,7 @@
     GET    /api/library/<id>/checks           every limit on the file as taught
     POST   /api/library/<id>/use              make it a region's recording {pid, key}
     GET    /api/library/programs              the programs on both arms' controllers, to search {pid?, refresh?}
+    POST   /api/library/programs/<arm>/<n>    state the pole and hand of one nothing is known of {pid, pole_mm, hand}
     GET    /api/library/programs/<arm>/<n>/timeline, /track, /checks    one of them, replayed as a file is {pid?}
 
 A file replays, and becomes a region's recording, only on the arm it was taught on and with its
@@ -18,6 +19,12 @@ it there: its own pole and hand are Lite's record of what it sent, and its file 
 (``_program_meta``); the Viewer runs it from its slot through Advanced's route
 (``POST /api/robots/<arm>/programs/run``), which stages that same pole and hand first. Nothing here
 moves the robot; every route needs the session.
+
+A program Lite did not send is listed with the pole and hand it runs with all the same, where they are known (the
+user, 15 Nov; ``program_stage``): its file's, found by its name among your files here, or the ones the project keeps
+for it (program_links: another computer's record or file, or stated here). One nothing is known of can have them
+stated on its row (``set_program_stage``): they are kept with the project, so S2 and Run set them before it on every
+computer that runs the project.
 """
 from __future__ import annotations
 
@@ -249,21 +256,84 @@ def _program_file(app, rec: dict, files: dict | None, *, verify: bool) -> dict |
     return None
 
 
-def _program_row(app, side: str, p: dict, files: dict | None, *, verify: bool = False) -> tuple[dict, dict | None]:
-    """One program as the Viewer lists it (``p``: content.content's), with Lite's record of what it sent there when the
-    slot still holds it: its own pole and hand (the ones a run from the slot stages first) and whether Lite has its file.
-    (row, its file)."""
+def _real_list(app, side: str) -> bool:
+    """Whether the arm's list is its real controller's, read with the arm connected: a program's pole and hand are kept
+    in the project for the program as that list names it (program_links)."""
+    from . import program_mirror
+
+    return program_mirror.real_controller(app, side) and bool(app.robot.arm(side).connected)
+
+
+def _slot_info(app, side: str, p: dict) -> dict:
+    """What Lite knows of a listed program's slot, as program_links and workflow.found_by_name take it."""
     rec = app.robot.arm(side).programs.get(int(p["id"])) or {}
     ours = bool(p.get("sha256")) and rec.get("sha256") == p.get("sha256")
-    st = staging.stage_from(rec.get("stage")) if ours else None
+    held = dict(name=p.get("name"), bytes=p.get("bytes")) if _real_list(app, side) and p.get("name") else None
+    return dict(id=int(p["id"]), name=p.get("name"), sent=ours, stage=rec.get("stage") if ours else None,
+                sha256=p.get("sha256") if ours else None, **({"held": held} if held else {}))
+
+
+def program_stage(app, side: str, p: dict, units=None, *, named: dict | None = None, links: dict | None = None) -> dict | None:
+    """The pole and hand a listed program runs with and where they are from (workflow.own_stage: Lite's record of
+    sending it; the project's entry by another computer's record; its file found by its name here; the project's entry
+    by a file or stated by hand), or None when nothing is known of them. ``units``: the open project (its files and
+    its entries); ``named``, ``links``: read once for a whole list."""
+    from . import program_links, workflow
+
+    info = _slot_info(app, side, p)
+    found = None
+    if staging.stage_from(info.get("stage")) is None:      # as S2 looks (workflow.own_of): one Lite sent, by its bytes; another,
+        named = workflow.files_by_name(app, units, side) if named is None else named       # by its name, not compared by size
+        found = workflow.found_by_name(named, int(p["id"]), {}, dict(name=p.get("name"), sent=info["sent"],   # here (a list of
+                                                                     sha256=info.get("sha256")))              # thirty programs)
+    if links is None:
+        links = program_links.load(units, side) if units is not None else {}
+    return workflow.own_stage(info, found, program_links.link_for(links, int(p["id"]), info))
+
+
+def _stage_words(got: dict) -> str:
+    """Where a program's pole and hand are from, for its row."""
+    from . import program_links
+
+    if got["how"] == "record":
+        return "as Lite sent it"
+    if got["how"] == "file":
+        return f"of its file found by its name ({got.get('file_name')})"
+    return f"kept with the project: {program_links.where_from(got['link'])}"
+
+
+def _program_row(app, side: str, p: dict, files: dict | None, *, verify: bool = False, units=None, named: dict | None = None,
+                 links: dict | None = None) -> tuple[dict, dict | None]:
+    """One program as the Viewer lists it (``p``: content.content's), with Lite's record of what it sent there when the
+    slot still holds it: its own pole and hand (the ones a run from the slot stages first) and whether Lite has its file.
+    One Lite did not send, or sent without them: the pole and hand it runs with where they are known otherwise
+    (``program_stage``; ``stage_by``, ``stage_from``), and whether they can be stated on its row (``can_state``: nothing
+    known of them, or stated before; a real controller's list and an open project). (row, its file)."""
+    rec = app.robot.arm(side).programs.get(int(p["id"])) or {}
+    ours = bool(p.get("sha256")) and rec.get("sha256") == p.get("sha256")
+    got = program_stage(app, side, p, units, named=named, links=links)
+    st = got["stage"] if got else None
+    own = bool(got and got["how"] == "record")       # Lite's record: the only one it shows a program with
     f = _program_file(app, rec, files, verify=verify) if ours else None
-    why = (None if ours and st and f else
-           "Lite did not send it here: its file, pole and hand are not known. Run asks for its pole and hand." if not ours else
-           "Lite sent it without its pole and hand: Run asks for them." if st is None else
-           "Its file is no longer on this computer: it can be run, not shown.")
+    stated = bool(got and got["how"] == "link" and got["link"].get("by") == "stated")
+    can = (not got or stated) and _real_list(app, side) and units is not None
+    runs = f"It runs with {staging.describe(st)} ({_stage_words(got)})." if got and not own else None
+    if ours and own and f:
+        why = None
+    elif ours and own:
+        why = "Its file is no longer on this computer: it can be run, not shown."
+    elif not ours:
+        why = (f"Lite did not send it here, so it is not shown. {runs}" if runs else
+               "Lite did not send it here: its file, pole and hand are not known. "
+               + ("Set its pole and hand on this row, or Run asks for them." if can else "Run asks for its pole and hand."))
+    else:
+        why = (f"Lite sent it without its pole and hand. {runs}" if runs else
+               "Lite sent it without its pole and hand: " + ("set them on this row, or Run asks for them." if can else "Run asks for them."))
     row = dict(id=int(p["id"]), name=p.get("name"), lines=p.get("lines") if ours else None, seconds=p.get("seconds") if ours else None,
                bytes=p.get("bytes"), sent=ours, stage=st.as_dict() if st else None, file_name=(f or {}).get("name"),
-               uploaded=rec.get("uploaded") if ours else None, viewable=bool(ours and st and f), why=why)
+               uploaded=rec.get("uploaded") if ours else None, viewable=bool(ours and own and f), why=why,
+               stage_by=(got["link"].get("by") if got["how"] == "link" else got["how"]) if got else None,
+               stage_from=_stage_words(got) if got else None, can_state=bool(can))
     return row, f
 
 
@@ -297,12 +367,53 @@ def get_controller_programs(app, q, body, m):
     pid = (q.get("pid") or [None])[0]
     refresh = str((q.get("refresh") or [""])[0]) in ("1", "true")
     out = {}
+    from . import program_links, workflow
+
+    units = _units(app, pid)
     for side in ("left", "right"):
         files = _files(app, side, pid)
-        c = content.content(app, side, refresh=refresh, files=files, units=_units(app, pid))
+        c = content.content(app, side, refresh=refresh, files=files, units=units)
+        named = workflow.files_by_name(app, units, side)
+        links = program_links.load(units, side) if units is not None else {}
         out[side] = dict(connected=bool(app.robot.arm(side).connected), live=c["live"], standin=c["standin"], read=c["read"],
-                         note=c["note"], programs=[_program_row(app, side, p, files)[0] for p in c["programs"]])
-    return {"arms": out, "backend": app.robot.backend}
+                         note=c["note"], programs=[_program_row(app, side, p, files, units=units, named=named, links=links)[0]
+                                                   for p in c["programs"]])
+    return {"arms": out, "backend": app.robot.backend, "project": units is not None}
+
+
+@route("POST", P)
+def set_program_stage(app, q, body, m):
+    """The operator states the pole and hand of a program on a controller that nothing is known of (the user, 15 Nov:
+    "the read programs from the controller can have if no matcher ... their pole/hand values set manually in the
+    trajectory view"): kept with the open project for the program as its controller lists it (program_links.state), so
+    S2 and Run set them before it, here and on every computer that runs the project. Refused for a program whose pole
+    and hand are known already (Lite's record, its file, the project's entry from one of them): a program runs with
+    its own."""
+    from . import content, program_links
+
+    session(app)
+    side, n = m.group(1), int(m.group(2))
+    S = side.upper()
+    units = _units(app, body.get("pid"))
+    if units is None:
+        raise UserError("Open a project first: a program's pole and hand are kept with the project, so that every computer "
+                        "that runs it has them.", code="project")
+    if not _real_list(app, side):
+        raise UserError(f"The {S} arm's controller is not read: a program's pole and hand are kept for the program as its "
+                        "controller lists it.", "Connect the arm (Lite started with --robot realman), then refresh the list.",
+                        code="connect")
+    c = content.content(app, side, refresh=True, files=_files(app, side, body.get("pid")), units=units)
+    p = next((x for x in c["programs"] if int(x["id"]) == n), None)
+    if p is None or not p.get("name"):
+        raise UserError(f"The {S} controller holds no program {n}" + (f": {c['note']}" if c.get("note") else "."), "Refresh the list.")
+    got = program_stage(app, side, p, units)
+    if got and not (got["how"] == "link" and got["link"].get("by") == "stated"):
+        raise UserError(f"Program {n} ({p['name']}) runs with its own pole and hand: {staging.describe(got['stage'])} "
+                        f"({_stage_words(got)}). They are not replaced by hand.",
+                        "To change the ones of a file, set them on the file's row.", code="own")
+    kept = program_links.state(units, side, n, dict(name=p["name"], bytes=p.get("bytes")), body.get("pole_mm"), body.get("hand"))
+    content.forget(side)                             # the list is read again: the row shows what was stated
+    return {"stated": kept} | get_controller_programs(app, {"pid": [str(body.get("pid"))]}, {}, None)
 
 
 @route("GET", P + "/timeline")
