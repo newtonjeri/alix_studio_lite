@@ -259,8 +259,17 @@ def build(left: list, right: list) -> list[dict]:
                          "rows": {"left": _row(steps["left"], li), "right": _row(steps["right"], ri)}})
         elif k < len(sync["left"]) and sync["left"][k][1] != "meet":
             task, li, ri = sync["left"][k][1], sync["left"][k][0], sync["right"][k][0]
-            plan.append({"kind": "mechanism", "task": task, "program_id": mechanism.TASKS[task]["short"],
-                         "title": mechanism.TASKS[task]["title"], "rows": {"left": _row(steps["left"], li), "right": _row(steps["right"], ri)}})
+            st = {"kind": "mechanism", "task": task, "program_id": mechanism.TASKS[task]["short"],
+                  "title": mechanism.TASKS[task]["title"], "rows": {"left": _row(steps["left"], li), "right": _row(steps["right"], ri)}}
+            keep = {s: steps[s][i].get("checks") for s, i in (("left", li), ("right", ri))}
+            if keep["left"] != keep["right"]:          # one task on both arms: one setting (the user, 16 Nov)
+                said = {s: "all" if keep[s] is None else ", ".join(keep[s]) or "none" for s in ARMS}
+                raise PlanError(f"{st['title']} (LEFT row {st['rows']['left']}, RIGHT row {st['rows']['right']}): the camera "
+                                f"checks it keeps differ between the arms (LEFT: {said['left']}; RIGHT: {said['right']}). It runs "
+                                "on both arms: give both rows the same.")
+            if keep["left"] is not None:
+                st["checks"] = list(keep["left"])
+            plan.append(st)
     for (side, i), (other, j) in waits.items():       # the plan's steps are these very dicts: marked in place
         here, there = stage_of[side][i], stage_of[other].get(j)
         steps[side][i]["_target"] = {"side": other, "row": _row(steps[other], j), "index": j,

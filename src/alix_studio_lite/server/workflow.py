@@ -530,6 +530,25 @@ def _v53_rules(steps) -> bool:
     return any(isinstance(x, dict) and str(x.get("dual_rule") or "TOGETHER").strip().upper() != "TOGETHER" for x in steps)
 
 
+def row_checks(value, task: str, where: str) -> list:
+    """A lid or seat row's ``checks`` (the user, 16 Nov): the camera checks of its task the run asks, by name, in the
+    plan's order; the others are not asked (mechanism.keep_only_checks). [] asks none; a row without it asks them all,
+    as before. Refused when a name is not one of the task's checks."""
+    from . import mechanism
+
+    have = mechanism.task_checks(task)
+    names = [c["stage"] for c in have]
+    hint = ("Its checks: " + "; ".join(f"{c['stage']} ({c['words']})" for c in have)
+            + '. Leave "checks" out to keep them all, or give [] to keep none.')
+    if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+        raise UserError(f"{where}: {mechanism.TASKS[task]['title']}'s \"checks\" must be a list of its camera checks' names.",
+                        hint, code="step")
+    bad = [v for v in value if v not in names]
+    if bad:
+        raise UserError(f"{where}: {mechanism.TASKS[task]['title']} has no camera check {bad[0]!r}.", hint, code="step")
+    return [n for n in names if n in value]
+
+
 def check_steps(steps, side: str) -> list[dict]:
     """An arm's rows, each as the runner will take it (its ``normalize_workflow_step``), with Lite's own rows (Meet,
     Wait-for, a lid or seat task), each row's ``uid`` and a Wait's note kept: refused with the row that is wrong. A Dual
@@ -552,6 +571,8 @@ def check_steps(steps, side: str) -> list[dict]:
                 raise UserError(f"{side.upper()} row {i}: {task or 'no task'} is not a lid or seat task.",
                                 f"One of: {', '.join(t['title'] for t in mechanism.TASKS.values())}.", code="step")
             step = {"type": "mechanism", "task": task}
+            if raw.get("checks") is not None:           # the camera checks it keeps (the user, 16 Nov); none given: all
+                step["checks"] = row_checks(raw["checks"], task, f"{side.upper()} row {i}")
         elif kind == "meet":                        # both arms meet here (flow.py)
             step = {"type": "meet"}
         elif kind == "inspect":                     # the camera's look at the commode, both arms (flow.py, the user 5 Nov)
@@ -804,6 +825,14 @@ def asks_start(run: dict, i: int) -> bool:
     own): taken at its inspection pose before the other arm moves; after one, the sequence's own order says its start
     state (the owner, 27 Oct)."""
     return not any(st["kind"] in ("mechanism", "inspect") for st in run["plan"][:i])
+
+
+def keeps_start(st: dict) -> bool:
+    """Whether a lid or seat stage's row keeps a start check (its ``checks``; none given: all kept)."""
+    from . import mechanism
+
+    keep = st.get("checks")
+    return keep is None or any(c["role"] == "start" and c["stage"] in keep for c in mechanism.task_checks(st["task"]))
 
 
 def inspect_stages(plan: list[dict]) -> list[dict]:
@@ -1426,13 +1455,15 @@ def hand_set(st: dict) -> set:
     return {s for s, t in (st.get("then") or {}).items() if t.get("hand") is not None}
 
 
-def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=(), hand_set=(), start_checks=False) -> float:
+def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=(), hand_set=(), start_checks=False,
+                   keep=None) -> float:
     """A lid or seat task in the simulation, as Lite runs it (mechanism.Runner) with its checks answered as expected (no
     camera here): each arm to the plan's start (its pole and hand, then the MoveJ at the speed slider's speed), then the
     plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
     hand as Lite moves them, a hold where the plan holds, a moment where the camera is asked. The commode is in the
     task's end state from its end; the plan's own end look (its last check, since 26 Oct) is among its entries.
-    The arms in ``leave`` (their next task's start follows, next_after_tasks) go to no plan's end."""
+    The arms in ``leave`` (their next task's start follows, next_after_tasks) go to no plan's end. ``keep``: the camera
+    checks the row keeps (its ``checks``; None: all), the others not asked, as Real runs it (mechanism.Runner)."""
     from . import mechanism, staging
 
     plan = mechanism.cached(mechanism.sequence_plan(st["task"]))     # the sequence's own plan: no look before the lift (27 Oct)
@@ -1523,8 +1554,14 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         """``owner`` from its start: its entries and their checks, these answered by ``holds`` when given (ended at the
         first that does not hold and skips). True when it skipped."""
         entries, inspect = mechanism.without_inspect(list(owner.entries))   # its look move: the controller's MoveJ (5 Nov)
-        if not start_checks and owner is plan:         # a sequence: the checks before the first lift are not asked (27 Oct)
+        no_start = keep is not None and not any(r == "start" and s in keep for s, r in mechanism.check_roles(entries).items())
+        if (not start_checks or no_start) and owner is plan:   # a sequence: the checks before the first lift are not asked (27 Oct)
             entries, _dropped = mechanism.without_start_checks(entries)
+        if keep is not None and owner is plan:         # the row keeps only these (the user, 16 Nov)
+            entries, gone = mechanism.keep_only_checks(entries, keep)
+            skipped = ([a.get("stage") for a in _dropped] if start_checks and no_start else []) + [a.get("stage") for a in gone]
+            if skipped:
+                sims[camera]._say("note", mark[camera], f"{title}: {', '.join(skipped)} not asked: {mechanism.kept_words(keep)}.")
         approach(mechanism.targets_of(entries, "start"), "its start" if owner is plan else f"{owner.title}'s start", owner, entries,
                  speeds={inspect.side: mechanism.INSPECT_PCT} if inspect is not None else None)
         unsent = mechanism.trailing_releases(entries, hand_set if owner is plan else ()) | mechanism.final_rests(entries, leave if owner is plan else ())
@@ -1792,7 +1829,7 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
             out.append(row)
             continue
         if kind == "mechanism":                     # the arms' errors read first (clear_before_moves), then its own moves
-            if (asks_start(run, i) and sims["right"].lam is None and not st.get("held")
+            if (asks_start(run, i) and keeps_start(st) and sims["right"].lam is None and not st.get("held")
                     and any(x["type"] in ("program", "global") for p in plan[:i] for _, xs in _items(p) for x in xs)):
                 sims["right"]._say("warn", {"_row": (st.get("rows") or {}).get("right")}, (
                     f"{st['title']}: Programs or Global Points run before it with the commode not seen: put an INSPECT before "
@@ -1801,8 +1838,10 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
             for s in st.get("clear") or []:
                 ready = max(ready, sims[s].run([{"type": "clear", "_row": (st.get("rows") or {}).get(s), "_alone": True}], T, i))
             T = _sim_mechanism(st, sims, ready, i, overall, leave=set(st.get("then") or {}), hand_set=hand_set(st),
-                               start_checks=asks_start(run, i))
+                               start_checks=asks_start(run, i), keep=st.get("checks"))
             row["t1_plan"] = round(T, 4)                # ALIX's plans end here; Lite's own moves to the next starts follow
+            if st.get("checks") is not None:            # the camera checks its row keeps (the user, 16 Nov)
+                row["checks"] = list(st["checks"])
             starts = None
             if st.get("then"):
                 ends = _sim_then(st, sims, T, i, overall)
@@ -2308,13 +2347,15 @@ def simulate(app, units, mode: str, pick: dict | None):
     return app.jobs.start("simulate", f"S2 simulation ({'both arms' if mode == 'both' else mode.upper() + ' arm'})", work)
 
 
-def _entry_ends(task: str, acts: dict) -> dict:
+def _entry_ends(task: str, acts: dict, keep=None) -> dict:
     """{plan entry: when it ends on the run's clock}: each stream of the task's plan in the simulation, a joined one by its
-    members' first lines (mechanism.joined_moves, as the simulation joined them)."""
+    members' first lines (mechanism.joined_moves, as the simulation joined them; ``keep``: the row's camera checks, a
+    move whose check is not asked joins the one before it)."""
     from . import mechanism
 
     plan = mechanism.cached(mechanism.sequence_plan(task))
     entries, _dropped = mechanism.without_start_checks(list(plan.entries))
+    entries, _gone = mechanism.keep_only_checks(entries, keep)
     pos = {e.i: k for k, e in enumerate(entries)}
     out = {}
     for side_acts in acts.values():
@@ -2359,7 +2400,7 @@ def _contact_checks(stages: list, acts: dict, times, arms: dict, base: dict, sce
         job.progress(f"Checking the contact forces of {title}", 3, 4)
         idx = np.nonzero((T >= t0 - 1e-9) & (T <= t1 + 1e-9))[0]
         sub = {s: {k: [arms[s][k][i] for i in idx] for k in ("pole", "hand", "q")} for s in arms}
-        ends = _entry_ends(row["task"], acts)
+        ends = _entry_ends(row["task"], acts, row.get("checks"))
         updates = [(ends[i], deg) for i, deg in contact_sim.fixture_updates(row["task"]) if i in ends]
         fut = workers.pool().submit(contact_sim.simulate, row["task"], T[idx].tolist(), sub, base, fid, scene.get("back_mm"),
                                     list(scene.get("offset_m") or [0.0, 0.0])[:2], cub, updates)
@@ -3385,7 +3426,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
             mech.joints_cool(robot, st["title"])
             with kit.camera.using():                         # closed in the background as the run ends (27 Oct)
                 return mech.Runner(ex, ex.say, leave=set(st.get("then") or {}), hand_set=hand_set(st), start_checks=start_checks,
-                                   next_task=next_task, place=corr).run(mech.sequence_plan(st["task"]))
+                                   next_task=next_task, place=corr, keep=st.get("checks")).run(mech.sequence_plan(st["task"]))
 
         def inspect(st, i) -> None:
             """An INSPECT (inspect_stages; the user, 5 Nov): the RIGHT arm's errors read when a Program moved it since, its

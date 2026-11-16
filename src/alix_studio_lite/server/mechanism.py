@@ -466,7 +466,7 @@ class Plan:
                     end=t.get("end"), file=self.path.name, made=self.made, seconds=self.seconds(), sides=self.sides(),
                     entries=[dict(stage=e.stage, kind=e.kind, side=e.side, seconds=round(e.seconds, 2),
                                   lines=len(e.rows) if e.rows else None, track=e.group is not None) for e in self.entries],
-                    checks=self.checks(), standoff_mm=STANDOFF_MM, rungs_note=self.rungs_note(), streamed=self.streamed(),
+                    checks=self.checks(), camera_checks=camera_checks(self), standoff_mm=STANDOFF_MM, rungs_note=self.rungs_note(), streamed=self.streamed(),
                     rungs=sorted(int(m.group(1)) for p in (self.path.parent / "rungs").glob(f"{self.rungs_stem}.rung*.json")
                                  if (m := re.fullmatch(re.escape(self.rungs_stem) + r"\.rung(\d+)\.json", p.name))))
 
@@ -989,6 +989,63 @@ def without_start_checks(entries: list) -> tuple:
     return out, dropped
 
 
+#: a plan's camera checks by where they come (a sequence row's ``checks``, the S2 page's LID / SEAT tab)
+CHECK_ROLE_WORDS = {"start": "start check", "lift": "mid-lift check", "end": "end check"}
+
+
+def check_roles(entries: list) -> dict:
+    """{check stage: "start" | "lift" | "end"} of a plan's camera checks: before its first lift (or pull), its last one,
+    the ones between (Open the lid's and Open the seat's lifted checks)."""
+    first_lift = next((i for i, e in enumerate(entries) if e.kind == "arm" and e.stage == "execute_path"), len(entries))
+    found = [(i, a.get("stage")) for i, e in enumerate(entries) for a in (e.pre_actions or [])
+             if a.get("type") == "check_fixture_state"]
+    return {stage: "start" if i < first_lift else "end" if n == len(found) - 1 else "lift" for n, (i, stage) in enumerate(found)}
+
+
+def camera_checks(plan) -> list:
+    """``plan``'s camera checks in order: [{stage, expect, role, words}] (``words``: what the S2 page shows)."""
+    roles = check_roles(plan.entries)
+    return [dict(stage=c["stage"], expect=c["expect"], role=roles.get(c["stage"]),
+                 words=f"{CHECK_ROLE_WORDS.get(roles.get(c['stage']), 'check')}: {str(c['expect']).replace('_', ' ')}")
+            for c in plan.checks()]
+
+
+def task_checks(task: str) -> list:
+    """The camera checks a lid or seat task asks in a sequence (its sequence plan's, camera_checks)."""
+    return camera_checks(cached(sequence_plan(task)))
+
+
+def keep_only_checks(entries: list, keep) -> tuple:
+    """(``entries`` with each camera check not named in ``keep`` taken out, and the settle the plan holds just before such
+    a check (it is for the camera's frame), those checks): a sequence row's ``checks`` (the user, 16 Nov: Open the lid's
+    mid-lift and end checks the run's only looks, the camera's time saved at every other). ``keep`` None: all stay."""
+    from dataclasses import replace
+
+    if keep is None:
+        return list(entries), []
+    keep = set(keep)
+    out, dropped = [], []
+    for e in entries:
+        acts, kept = list(e.pre_actions or []), []
+        for n, a in enumerate(acts):
+            if a.get("type") == "check_fixture_state" and a.get("stage") not in keep:
+                dropped.append(a)
+                continue
+            if a.get("type") == "hold_pose" and a.get("stage") == "settle_before_check":
+                nxt = next((b for b in acts[n + 1:] if b.get("type") == "check_fixture_state"), None)
+                if nxt is not None and nxt.get("stage") not in keep:
+                    continue                              # the camera's settle, its check not asked
+            kept.append(a)
+        out.append(e if len(kept) == len(acts) else replace(e, pre_actions=kept))
+    return out, dropped
+
+
+def kept_words(keep) -> str:
+    """A row's ``checks`` in a few words (the run's log, the simulation)."""
+    return ("the sequence row keeps " + (", ".join(sorted(keep)) if keep else "no camera check")
+            + " (the user, 16 Nov)")
+
+
 def first_check_at(entries: list) -> int:
     """The index of the first of ``entries`` a camera check is asked before (its check_fixture_state pre_action), else
     their count: nothing after it is set early (Plan.first_move_targets)."""
@@ -1049,8 +1106,13 @@ def split_rung(entry: str) -> tuple:
 #    _after_check_failure, _try_relift, _run_prerequisite; _observe_also and _queue_follow_up not ported since 26 Oct)
 class Runner:
     def __init__(self, ex, say=None, leave=(), hand_set=(), start_checks=True, together=True, next_task=None, move=None,
-                 place=None):
+                 place=None, keep=None):
         self.ex = ex
+        # the camera checks the sequence row keeps (its ``checks``; the user, 16 Nov), None: all the plan asks. For the
+        # row's own task only, as it first runs: a follow-up (Close the seat after Open the lid), a prerequisite, a
+        # retry's run again keep all theirs, so what a kept check decides runs as it always has
+        self.keep = None if keep is None else set(keep)
+        self._keep_task = None
         # the commode's move from where the plans work (plan_shift.Move, or name -> Move | None): each plan's working
         # stretch moved with it before anything of it is sent, refused by plan_shift's gates (a tool's or a test's; the
         # collision gate, plan_shift.collisions, is the caller's)
@@ -1080,6 +1142,7 @@ class Runner:
 
     def run(self, name: str) -> dict:
         self.queue, self.k = [name], 0
+        self._keep_task = split_rung(name)[0]
         getattr(self.ex, "begin", lambda _name: None)(name)
         getattr(self.ex, "new_places", lambda: None)()   # the parts reading's places found afresh (the commode may
         try:                                             # have moved since the last run)
@@ -1118,16 +1181,25 @@ class Runner:
         ask_start = name in self._ask_start
         self._ask_start.discard(name)
         seen = self._seen_start.pop(name, None)      # its start state just seen by the camera (a follow-up's: _after_lid)
-        dropped_start = (not self.start_checks and not ask_start) or seen is not None
+        again = self._again_for.pop(name, None)
+        keep = self.keep if (self.keep is not None and rung is None and again is None and task == self._keep_task
+                             and not self.done) else None
+        by_order = not self.start_checks and not ask_start
+        no_start = keep is not None and not any(r == "start" and s in keep for s, r in check_roles(entries).items())
+        dropped_start = by_order or seen is not None or no_start
         if dropped_start:
             entries, dropped = without_start_checks(entries)
             for a in dropped:
                 self.say(f"{a.get('stage')}: not asked, " + (seen if seen is not None else
-                         f"the sequence's own order says {a.get('expect')} (the owner, 27 Oct)"))
+                         f"the sequence's own order says {a.get('expect')} (the owner, 27 Oct)" if by_order else kept_words(keep)))
+        if keep is not None:
+            entries, gone = keep_only_checks(entries, keep)
+            for a in gone:
+                self.say(f"{a.get('stage')}: not asked, {kept_words(keep)}")
         state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(task), lid_end=task == "lid_open", seat=None,
                      bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
                                                         for s in plan.sides()) if first is not None),   # after the approach
-                     place=place, again=self._again_for.pop(name, None))
+                     place=place, again=again)
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
                  f"{plan.seconds():.1f} s of motion)")
         rests = final_rests(entries, self.leave)

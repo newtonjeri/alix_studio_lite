@@ -139,7 +139,7 @@ function row(step) {
   if (k === 'mechanism') {                                   // a lid or seat task of ALIX's (mechanism.py), on both arms
     const t = S.mechanisms[step.task] || {};
     return ['LID / SEAT', `${t.short || step.task} // ${t.title || ''}${t.seconds != null ? ` (${fmtT(t.seconds)})` : ''}`,
-      'Pre-recorded (ALIX) // both arms // camera checks'];
+      `Pre-recorded (ALIX) // both arms // ${checksWords(step)}`];
   }
   return ['GLOBAL', step.name, `${String(step.move).toUpperCase()} // Speed ${step.speed}% // Wait ${Number(step.wait_s)}s`];
 }
@@ -211,6 +211,10 @@ function armPanel(side) {
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_task`, text: 'Lid or seat task (pre-recorded)' }),
           el('select', { id: `liteS2_${side}_task`, onchange: () => paintTask(side) })),
         btn('+ ADD TO BOTH ARMS', () => addMechanism(side), 'btn green')),
+      el('div', { class: 'lite-row' },
+        el('div', { class: 'field lite-grow' }, el('label', { text: 'Camera checks this task asks (untick to skip one; what a kept check finds decides as always)' }),
+          el('div', { id: `liteS2Checks_${side}`, class: 'lite-s2-checks' })),
+        btn('APPLY TO THE CHOSEN ROW', () => applyChecks(side), 'btn light')),
       el('div', { class: 'lite-row' },
         el('div', { class: 'field lite-grow' }, el('label', { for: `liteS2_${side}_inspectPose`, text: 'INSPECT: the right arm looks at the commode from' }),
           el('select', { id: `liteS2_${side}_inspectPose` },
@@ -366,13 +370,69 @@ async function loadMechanisms() {
   } catch (err) { tell(err); }
 }
 
-function paintTask(side) {
+// A lid or seat row's camera checks (its "checks": the ones it keeps; none given: all the task's; the user, 16 Nov).
+function checksWords(step) {
+  if (!Array.isArray(step.checks)) return 'camera checks: all';
+  if (!step.checks.length) return 'no camera checks';
+  const all = (S.mechanisms[step.task] || {}).camera_checks || [];
+  const role = { start: 'start', lift: 'mid-lift', end: 'end' };
+  return `camera checks: ${step.checks.map(n => role[(all.find(c => c.stage === n) || {}).role] || n).join(', ')} only`;
+}
+
+// The ticked checks of the LID / SEAT tab: null when all are ticked (the row keeps them all, as before).
+function tickedChecks(side) {
+  const boxes = [...document.querySelectorAll(`#liteS2Checks_${side} input[type=checkbox]`)];
+  const on = boxes.filter(b => b.checked).map(b => b.value);
+  return on.length === boxes.length ? null : on;
+}
+
+function paintChecks(side, keep) {
+  const box = $(`liteS2Checks_${side}`);
+  const t = S.mechanisms[$(`liteS2_${side}_task`)?.value];
+  if (!box) return;
+  const all = (t && t.camera_checks) || [];
+  box.replaceChildren(...all.map(c => el('label', { class: 'lite-s2-check' },
+    el('input', { type: 'checkbox', value: c.stage, ...(keep == null || keep.includes(c.stage) ? { checked: '' } : {}) }),
+    el('span', { text: ` ${c.words} (${c.stage})` }))));
+}
+
+// The other arm's row of the same lid or seat task (they pair in order: the n-th of that task on each arm).
+function partnerRow(side, i) {
+  const task = S.steps[side][i].task;
+  const n = S.steps[side].slice(0, i + 1).filter(x => x.type === 'mechanism' && x.task === task).length;
+  let seen = 0;
+  return S.steps[OTHER[side]].findIndex(x => x.type === 'mechanism' && x.task === task && ++seen === n);
+}
+
+function applyChecks(side) {
+  const i = S.sel[side], step = i == null ? null : S.steps[side][i];
+  if (!step || step.type !== 'mechanism') { window.toast('Choose a LID / SEAT row in the list first.', 'warn'); return; }
+  if ($(`liteS2_${side}_task`)?.value !== step.task) {
+    $(`liteS2_${side}_task`).value = step.task;
+    paintTask(side, step.checks);
+    window.toast('The tick boxes now show the chosen row\'s task: tick its checks, then APPLY again.', 'warn');
+    return;
+  }
+  const keep = tickedChecks(side), j = partnerRow(side, i);
+  for (const [s, k] of [[side, i], [OTHER[side], j]]) {
+    if (k < 0) continue;
+    if (keep == null) delete S.steps[s][k].checks; else S.steps[s][k].checks = keep;
+    paintArm(s);
+    saveSteps(s);
+  }
+  const t = S.mechanisms[step.task] || {};
+  window.toast(`${t.title || step.task}: ${checksWords({ ...step, checks: keep ?? undefined })}`
+    + (j < 0 ? ` (the ${ARM(OTHER[side])} arm has no row of it yet)` : ', on both arms') + '.', 'good');
+}
+
+function paintTask(side, keep) {
   const t = S.mechanisms[$(`liteS2_${side}_task`)?.value];
   const note = $(`liteS2TaskNote_${side}`);
   if (!note || !t) return;
   note.textContent = `${t.does} From ${t.start} to ${t.end}; about ${Math.round(t.seconds)} s of motion. ALIX's plan, made with the UGV at `
     + `${t.standoff_mm} mm from the commode and no offset. It uses both arms: it is added to both lists, and both arms finish what is `
     + 'before it, then it runs. In Real the wrist camera checks the lid and the seat; in Simulation the checks are assumed.';
+  paintChecks(side, keep);
 }
 
 async function load() {
@@ -661,7 +721,8 @@ function addMechanism(side) {
   const task = $(`liteS2_${side}_task`)?.value, t = S.mechanisms[task];
   if (!t) { window.toast('Choose a lid or seat task.', 'warn'); return; }
   for (const s of ARMS) {
-    S.steps[s].push({ type: 'mechanism', task, uid: newUid() });
+    const keep = tickedChecks(side);
+    S.steps[s].push({ type: 'mechanism', task, uid: newUid(), ...(keep == null ? {} : { checks: keep }) });
     S.sel[s] = S.steps[s].length - 1;
     paintArm(s);
     saveSteps(s);
@@ -785,6 +846,11 @@ function paintArm(side) {
   const now = S.rows[side];
   const pick = (i, focus) => {
     S.sel[side] = i;
+    const st = list[i], sel = $(`liteS2_${side}_task`);
+    if (st && st.type === 'mechanism' && sel && S.mechanisms[st.task]) {   // its task and its checks in the LID / SEAT tab
+      sel.value = st.task;
+      paintTask(side, Array.isArray(st.checks) ? st.checks : null);
+    }
     paintArm(side);
     if (focus) body.querySelector(`tr[data-i="${i}"]`)?.focus();          // the row keeps the keyboard's focus
   };
