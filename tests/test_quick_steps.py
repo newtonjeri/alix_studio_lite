@@ -155,7 +155,8 @@ def test_a_plans_pole_and_hand_are_set_together_to_the_state_its_first_move_need
 
     fake = SimpleNamespace(robot=SimpleNamespace(speed_pct=50, _measured=lambda side: (150.0, [1000] * 6), found_speed=lambda side: 50),
                            job=SimpleNamespace(progress=lambda *a, **k: None, on_cancel=None), check_stop=lambda: None,
-                           say=lambda *a, **k: None, _arm=lambda side: Arm(side), _settle_all=lambda: None)
+                           say=lambda *a, **k: None, _arm=lambda side: Arm(side), _settle_all=lambda: None,
+                           _approach_verdict=lambda *a, **k: dict(ok=False, unchecked=True, why="not checked before the run"))
     for entries, left_hand in ((in_sequence, [516, 516, 516, 516, 133, 944]), (None, start["left"]["hand"])):
         calls.clear()
         mechanism.RealExec.approach(fake, plan, start, "start", entries=entries)
@@ -363,25 +364,48 @@ def test_a_hand_asked_for_the_counts_it_settled_short_of_is_not_sent_again(monke
     assert sent == [half, half, half]
 
 
-def test_the_approachs_two_movejs_go_at_once_when_their_paths_are_checked_clear(monkeypatch):
-    """26 Oct: the two MoveJs to a plan's start went one after the other, 1.6 to 3.2 s a task. With S2's world (home,
-    scene, fixture) each arm's straight joint-space path is sampled and every pair of the two samples checked
-    (collision_check.check_states, 49 states) while the poles and hands move; clear, both MoveJs go at once; not clear,
-    or no world (a task run on its own), one after the other as before, with the reason said."""
+def test_the_approachs_two_movejs_go_at_once_as_checked_before_the_run(monkeypatch):
+    """26 Oct: the two MoveJs to a plan's start went one after the other, 1.6 to 3.2 s a task; since then both at once
+    where their paths are clear. 16 Nov (the user): checked before the run, never in it. The S2 simulation checks each
+    arm's straight joint-space path from where it has the arms (mechanism.approach_clear: every pair of 7 samples, 49
+    states, the commode as before the task); the run reads the arms' joints while the poles and hands move and takes
+    that verdict when each arm stands within AHEAD_STAND_DEG of where the simulation had it. None kept (a task run on its
+    own, a sequence not simulated as it is now), an arm elsewhere, or paths that would meet: one after the other, the
+    reason said. The run makes no collision check."""
     import threading
     import time as _time
 
     from alix_studio_lite.server import collision_check
 
     plan = mechanism.Plan("lid_open")
+    target = plan.targets("start")
+    moves = {s: list(target[s]["arm_deg"]) for s in ("left", "right")}
+    here0 = {"left": [5.0, -80.0, 20.0, 90.0, 0.0, 60.0, 100.0], "right": [10.0, -80.0, -26.0, 98.0, 6.0, 62.0, 69.0]}
     asked, said, moved = [], [], []
 
     def check_states(times, arms, home, scene, fid, phases, cubicle_mm=1400, progress=None):
-        asked.append(dict(n=len(times), sides=sorted(arms), phase=phases[0], fid=fid, q0=arms["left"]["q"][0], q1=arms["left"]["q"][-1],
+        asked.append(dict(n=len(times), sides=sorted(arms), phase=phases[0], q0=arms["left"]["q"][0], q1=arms["left"]["q"][-1],
                           pole=arms["right"]["pole"][0], hand=arms["right"]["hand"][0]))
         return dict(ok=not scene.get("blocked"), seconds=0.1, first=dict(what=["the two arms"]), events=[1])
 
+    # before the run (the simulation): 49 states from where it has the arms, the commode before the task
     monkeypatch.setattr(collision_check, "check_states", check_states)
+    steps = {s: (150.0, [1000] * 6) for s in moves}
+    room = dict(home={}, scene={"blocked": False}, fid="commode_c", cubicle_mm=1400)
+    clear = mechanism.approach_clear(here0, moves, steps, mechanism.PHASE_BEFORE["lid_open"], room)
+    assert clear == dict(ok=True, why="their paths clear at 49 pairs of moments")
+    assert asked[0]["n"] == 49 and asked[0]["phase"] == "lid_closed" and asked[0]["sides"] == ["left", "right"]
+    assert asked[0]["q0"] == here0["left"] and asked[0]["q1"] == pytest.approx(moves["left"], abs=1e-9)
+    assert asked[0]["pole"] == 150.0 and asked[0]["hand"] == [1000] * 6
+    blocked = mechanism.approach_clear(here0, moves, steps, "lid_closed", dict(room, scene={"blocked": True}))
+    assert not blocked["ok"] and blocked["why"] == "their paths would meet: the two arms (1 event(s))"
+    assert mechanism.APPROACH_GRID == 7 and mechanism.PHASE_BEFORE["seat_open"] == "lid_open"
+
+    def no_check(*a, **k):
+        raise AssertionError("a collision check in the run")
+
+    monkeypatch.setattr(collision_check, "check_states", no_check)          # the run: none
+    monkeypatch.setattr(collision_check, "clearance_states", no_check)
 
     class Arm:
         def __init__(self, side):
@@ -400,32 +424,56 @@ def test_the_approachs_two_movejs_go_at_once_when_their_paths_are_checked_clear(
             moved.append((self.side, t0, _time.monotonic(), threading.current_thread().name))
             return dict(gap_deg=0.1)
 
-    def fake(scene):
-        here = {"left": [0.0, -82.0, 26.0, 98.0, -6.0, 62.0, 111.0], "right": [10.0, -80.0, -26.0, 98.0, 6.0, 62.0, 69.0]}
+    def fake(ahead, here=None, read_s=0.0):
+        here = here or here0
+
+        def reading(link):
+            _time.sleep(read_s)
+            return link.view()["feedback"]
+
         links = {s: SimpleNamespace(view=lambda s=s: dict(reader=True, view_age_s=0.0, feedback=dict(age_s=0.1, joints_deg=here[s])),
                                     read_fresh=lambda s=s: dict(joints_deg=here[s])) for s in ("left", "right")}
         return SimpleNamespace(robot=SimpleNamespace(speed_pct=40, _measured=lambda side: (150.0, [1000] * 6), found_speed=lambda side: 50, links=links),
                                job=SimpleNamespace(progress=lambda *a, **k: None, on_cancel=None), check_stop=lambda: None,
                                say=lambda text, level="info": said.append(text), _arm=lambda side: Arm(side), _frames=None,
-                               _settle_all=lambda: None,
-                               room=None if scene is None else dict(home={}, scene=scene, fid="commode_c", cubicle_mm=1400),
-                               _reading=lambda link: link.view()["feedback"],
-                               _paths_clear=lambda *a, **k: mechanism.RealExec._paths_clear(fake_self[0], *a, **k))
+                               _settle_all=lambda: None, ahead=ahead, _reading=reading,
+                               _approach_verdict=lambda *a, **k: mechanism.RealExec._approach_verdict(fake_self[0], *a, **k))
+
+    def kept(v, q0=here0, at="start"):
+        return [dict(stage=3, plan="lid_open", at=at, q0=q0, moves=moves, **v)]
+
     fake_self = [None]
-    for scene, together in ((None, False), ({"blocked": True}, False), ({"blocked": False}, True)):
-        moved.clear(); said.clear(); asked.clear()
-        ex = fake(scene); fake_self[0] = ex
+    nudged = {"left": [v + 0.3 for v in here0["left"]], "right": here0["right"]}       # within AHEAD_STAND_DEG: the same
+    off = {"left": [here0["left"][0] + 1.0] + here0["left"][1:], "right": here0["right"]}
+    for ahead, here, together, words in (
+            (kept(clear), None, True, "both at once: their paths clear at 49 pairs of moments (the simulation's check)"),
+            (kept(clear), nudged, True, "both at once: their paths clear"),
+            (kept(blocked), None, False, "one after the other: their paths would meet: the two arms (1 event(s))"),
+            ([], None, False, "one after the other: their paths were not checked before the run"),
+            (kept(clear, at="end"), None, False, "one after the other: their paths were not checked before the run"),
+            (kept(clear), off, False, "one after the other: the LEFT arm stands 1.00 deg from where the simulation checked their paths from")):
+        moved.clear(); said.clear()
+        ex = fake(ahead, here); fake_self[0] = ex
         mechanism.RealExec.approach(ex, plan, plan.targets("start"), "start")
         assert len(moved) == 2
         overlap = moved[0][1] < moved[1][2] and moved[1][1] < moved[0][2]
-        assert overlap == together, (scene, moved, said)
-        if scene is not None:
-            assert asked and asked[0]["n"] == 49 and asked[0]["phase"] == "lid_closed" and asked[0]["sides"] == ["left", "right"]
-            assert asked[0]["q1"] == plan.targets("start")["left"]["arm_deg"] and asked[0]["q0"] == [0.0, -82.0, 26.0, 98.0, -6.0, 62.0, 111.0]
-            assert asked[0]["pole"] == pytest.approx(150.0, abs=0.1) and asked[0]["hand"] == [1000] * 6   # its grasp after its look
-        if scene is not None and not together:
-            assert any("one after the other: the paths would meet: the two arms" in t for t in said)
-    assert mechanism.APPROACH_GRID == 7 and mechanism.PHASE_BEFORE["lid_open"] == "lid_closed" and mechanism.PHASE_BEFORE["seat_open"] == "lid_open"
+        assert overlap == together, (words, moved, said)
+        assert any(words in t for t in said), (words, said)
+    # an arm at its start already (the Jetson, 15 Nov: 0.27 and 0.00 deg): its MoveJ is not sent, nothing to win at
+    # once: one after the other (never two unverified moves at once), said plainly
+    moved.clear(); said.clear()
+    ex = fake(kept(clear), {"left": [v + 0.2 for v in moves["left"]], "right": here0["right"]}); fake_self[0] = ex
+    mechanism.RealExec.approach(ex, plan, plan.targets("start"), "start")
+    assert len(moved) == 2 and not (moved[0][1] < moved[1][2] and moved[1][1] < moved[0][2]), (moved, said)
+    assert any("the LEFT arm at its start already (within 0.5 deg)" in t for t in said), said
+    # the arms not read within APPROACH_WAIT_S of the poles and hands: one after the other, not waited for
+    monkeypatch.setattr(mechanism, "APPROACH_WAIT_S", 0.3)
+    moved.clear(); said.clear()
+    ex = fake(kept(clear), read_s=2.0); fake_self[0] = ex
+    t0 = _time.monotonic()
+    mechanism.RealExec.approach(ex, plan, plan.targets("start"), "start")
+    assert _time.monotonic() - t0 < 1.5 and not (moved[0][1] < moved[1][2] and moved[1][1] < moved[0][2]), moved
+    assert any("one after the other: the arms were not read within 0.3 s of the poles and hands" in t for t in said), said
 
 
 def test_the_pole_asked_for_the_height_lite_last_confirmed_is_neither_sent_nor_read(monkeypatch):

@@ -549,6 +549,92 @@ def row_checks(value, task: str, where: str) -> list:
     return [n for n in names if n in value]
 
 
+def stated_stage(raw: dict, where: str) -> dict:
+    """A Program row's own pole and hand as a sequence file states them: {"pole_mm": mm, "hand": six counts}, or {} when
+    it states none (the user, 16 Nov: "any uploaded program in the uploaded sequence JSON files should contain that
+    information ... We cannot have a file that does not define the pole and hand position of a task, because that will
+    result to collision"). A controller stores a program's points only, and its name is no definition (the lab's RIGHT
+    Program 61 is named pole200 and runs at 210 mm), so S2's SAVE writes them into each Program row (document_stated)
+    and a row keeps them through LOAD. Lite itself goes on taking a Program's pole and hand from its own record, its
+    file or the project's entry (own_stage); ALIX Studio Demo, which has none of those, runs by what the file states and
+    refuses a file that states none. A row that states one without the other, or values the pole or the hand cannot
+    take, is refused."""
+    from . import staging
+
+    pole, hand = raw.get("pole_mm"), raw.get("hand")
+    if pole is None and hand is None:
+        return {}
+    if pole is None or hand is None:
+        raise UserError(f"{where}: a Program's own pole and hand are stated together (pole_mm and hand).",
+                        "Save the sequence again from S2 (SAVE writes both), or remove the one that is there.", code="step")
+    try:
+        st = staging.make_stage(pole, hand)
+    except (UserError, TypeError, ValueError) as exc:
+        raise UserError(f"{where}: the Program's own pole and hand are not ones the robot can take ({exc}).",
+                        "pole_mm is the pole's height in mm; hand is six counts, 0 to 1000 (L, R, M, I, TB, TR).", code="step") from None
+    return {"pole_mm": float(st.pole_mm), "hand": [None if v is None else int(v) for v in st.hand]}
+
+
+def sequence_stage(rows: list, k: int):
+    """The pole and hand the sequence's own rows set for the Program row ``k``: its last Pole step and its last Hand step
+    since the previous Program, lid or seat task or INSPECT (each of those leaves the pole and the hand its own way),
+    when it has both and the hand states all six counts; else None. What S2 runs a Program with that Lite knows nothing
+    of (stage_off: "as the arm stands")."""
+    from . import staging
+
+    pole = hand = None
+    for x in reversed(rows[:k]):
+        if x["type"] in ("program", "mechanism", "inspect"):
+            break
+        if x["type"] == "pole" and pole is None:
+            pole = x.get("mm")
+        elif x["type"] == "hand" and hand is None:
+            hand = x.get("values")
+    if pole is None or not isinstance(hand, list) or len(hand) != 6 or any(v is None for v in hand):
+        return None
+    try:
+        return staging.make_stage(pole, hand)
+    except (UserError, TypeError, ValueError):
+        return None
+
+
+def document_stated(app, units, side: str, steps: list) -> dict:
+    """SAVE's document (document) with each Program row's own pole and hand stated in it (``pole_mm``, ``hand``:
+    stated_stage) as Lite knows them now (own_for: its record of sending the program, its file, the project's entry),
+    and the program named as its controller lists it now, where its list was read: the file then says, of the very
+    program in the slot, what it runs with. A Program Lite knows nothing of keeps what its row already states; one whose
+    row states none takes the sequence's own Pole and Hand steps right before it (sequence_stage: what S2 runs it with).
+    Always in that form (the user, 16 Nov: SAVE always writes the format ALIX Studio Demo requires): a Program with none
+    of these is refused, with its row, and nothing is saved."""
+    from . import program_links, staging
+
+    rows = copy.deepcopy(steps)
+    bare = []
+    if any(x["type"] == "program" for x in rows):
+        programs = {side: programs_known(app, units, side)}
+        own = (own_for(app, units, programs, {side: rows}).get(side)) or {}
+        for k, x in enumerate(rows):
+            if x["type"] != "program":
+                continue
+            pid = int(x["id"])
+            held = program_links.held_as(programs[side].get(pid))
+            if held is not None:
+                x["name"] = held["name"]
+            st = staging.stage_from((own.get(pid) or {}).get("stage"))
+            if st is None and (x.get("pole_mm") is None or x.get("hand") is None):
+                st = sequence_stage(rows, k)          # Lite knows nothing of it and its row states none
+            if st is not None:
+                x["pole_mm"], x["hand"] = float(st.pole_mm), [None if v is None else int(v) for v in st.hand]
+            elif x.get("pole_mm") is None or x.get("hand") is None:
+                bare.append(f"row {k + 1} (Program {pid})")
+    if bare:
+        raise UserError(f"The {side.upper()} sequence was not saved: no pole and hand known for {', '.join(bare)}. A saved "
+                        "sequence states every Program's own pole and hand.",
+                        "Set them in the Trajectory Viewer (Set pole and hand), or put a Pole step and a Hand step right before "
+                        "that Program, then save again.", code="step")
+    return document(side, rows)
+
+
 def check_steps(steps, side: str) -> list[dict]:
     """An arm's rows, each as the runner will take it (its ``normalize_workflow_step``), with Lite's own rows (Meet,
     Wait-for, a lid or seat task), each row's ``uid`` and a Wait's note kept: refused with the row that is wrong. A Dual
@@ -605,6 +691,8 @@ def check_steps(steps, side: str) -> list[dict]:
                 raise UserError(f"{side.upper()} row {i}: {exc}.", "Correct or remove that row.", code="step") from None
         if step["type"] == "program" and raw.get("together"):   # starts at the same moment as the other arm's (flow.py)
             step["together"] = True
+        if step["type"] == "program":                           # its own pole and hand, as its file states them (stated_stage)
+            step.update(stated_stage(raw, f"{side.upper()} row {i}"))
         if raw.get("note"):
             step["note"] = str(raw["note"])[:200]
         if raw.get("uid"):
@@ -1456,14 +1544,17 @@ def hand_set(st: dict) -> set:
 
 
 def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, leave=(), hand_set=(), start_checks=False,
-                   keep=None) -> float:
+                   keep=None, ahead=None) -> float:
     """A lid or seat task in the simulation, as Lite runs it (mechanism.Runner) with its checks answered as expected (no
     camera here): each arm to the plan's start (its pole and hand, then the MoveJ at the speed slider's speed), then the
     plan's entries one after the other on the run's clock: each arm move from the plan's own 5 ms lines, the pole and the
     hand as Lite moves them, a hold where the plan holds, a moment where the camera is asked. The commode is in the
     task's end state from its end; the plan's own end look (its last check, since 26 Oct) is among its entries.
     The arms in ``leave`` (their next task's start follows, next_after_tasks) go to no plan's end. ``keep``: the camera
-    checks the row keeps (its ``checks``; None: all), the others not asked, as Real runs it (mechanism.Runner)."""
+    checks the row keeps (its ``checks``; None: all), the others not asked, as Real runs it (mechanism.Runner).
+    ``ahead`` (_Ahead, the simulation's own): the two arms at once only where it checks them clear here, before the run
+    (the run reads these and checks nothing: the user, 16 Nov), else one after the other as Real then runs them; None
+    (a timing only): at once wherever the plan allows it."""
     from . import mechanism, staging
 
     plan = mechanism.cached(mechanism.sequence_plan(st["task"]))     # the sequence's own plan: no look before the lift (27 Oct)
@@ -1501,18 +1592,32 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                 done(sim, a, dur)
                 ends.append(clock[0])
         clock[0] = max(ends) if ends else clock[0]
-        t_start, ends = clock[0], []                       # both arms' MoveJs at once (26 Oct: their paths checked in Real)
+        there = {side: sims[side].known and max(abs(a - b) for a, b in zip(sims[side].q, tg["arm_deg"])) <= staging.MOVEJ_SKIP_DEG
+                 for side, tg in targets.items() if "arm_deg" in tg}
+        at_once = True                                     # both arms' MoveJs at once (26 Oct) where their paths are clear
+        if ahead is not None and owner is not None and len(there) == 2 and not any(there.values()):
+            if all(sims[s].known for s in there):         # checked here, before the run (the run reads it: 16 Nov)
+                v = ahead.approach(stage, owner.name, "start", {s: list(sims[s].q) for s in there},
+                                   {s: list(targets[s]["arm_deg"]) for s in there}, {s: (sims[s].pole, list(sims[s].hand)) for s in there},
+                                   mechanism.PHASE_BEFORE.get(owner.name, "lid_closed"))
+            else:
+                v = dict(ok=False, why="where the arms stand before it is not known here")
+            at_once = bool(v.get("ok"))
+            if not at_once:
+                sims[camera]._say("note", mark[camera], f"{title}: the MoveJs to {where} one after the other, as Real runs them: {v['why']}.")
+        t_start, ends = clock[0], []
         for side, tg in targets.items():
             if "arm_deg" in tg:
                 sim = sims[side]
-                clock[0] = t_start
-                if sim.known and max(abs(a - b) for a, b in zip(sim.q, tg["arm_deg"])) <= staging.MOVEJ_SKIP_DEG:
+                clock[0] = t_start if at_once else clock[0]
+                if there[side]:
                     mv = ROBOT_TIMES["global_there_s"][1]       # already there: one reading, no MoveJ (26 Oct)
                     sim, a = act(side, "wait", mv, f"{title}: already at {where}, no MoveJ")
                 else:
                     pct = int((speeds or {}).get(side, overall))    # the camera arm to its inspection pose: INSPECT_PCT (5 Nov)
                     mv = movej_s(sim.q, tg["arm_deg"], float(pct), sim.rating)
-                    sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({pct} %, both arms at once)", move_s=round(mv, 4), drawn=True)
+                    sim, a = act(side, "global", mv, f"{title}: MoveJ to {where} ({pct} %{', both arms at once' if at_once and len(there) == 2 else ''})",
+                                 move_s=round(mv, 4), drawn=True)
                 sim.q, sim.known = [float(v) for v in tg["arm_deg"]], True
                 done(sim, a, mv)
                 ends.append(clock[0])
@@ -1565,7 +1670,9 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
         approach(mechanism.targets_of(entries, "start"), "its start" if owner is plan else f"{owner.title}'s start", owner, entries,
                  speeds={inspect.side: mechanism.INSPECT_PCT} if inspect is not None else None)
         unsent = mechanism.trailing_releases(entries, hand_set if owner is plan else ()) | mechanism.final_rests(entries, leave if owner is plan else ())
-        legs_run = []
+        bridge = mechanism.approach_bridges(owner, entries)   # as the run has them (Runner's bridge): the same stretches
+        verdicts = (ahead.stretches(owner, entries, unsent, bridge) if ahead is not None and owner is plan else None)
+        legs_run, legs_apart = [], []
         i = 0
         while i < len(entries):                      # as mechanism.Runner walks them: an arm's moves in a row as ONE stream
             e = entries[i]
@@ -1582,7 +1689,13 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                         return True
             if id(e) in unsent:                      # its hand is set for its next task's start right after
                 continue
-            leg = mechanism.two_arm_leg(entries, i - 1, unsent, (), owner.name) if owner is plan else None
+            leg = mechanism.two_arm_leg(entries, i - 1, unsent, bridge, owner.name) if owner is plan else None
+            if leg is not None and verdicts is not None and not (verdicts.get(leg.key) or {}).get("ok"):
+                legs_apart.append((leg, (verdicts.get(leg.key) or {}).get("why") or mechanism.NOT_CHECKED))
+                for je, _bridge, _nxt in leg.order:  # not clear: one move after the other in the plan's order, as Real
+                    entry(owner, je, len(je.stage.split(" + ")) if je.kind == "arm" else 1)
+                i += leg.used - 1
+                continue
             if leg is not None:                      # the two arms at once where the plan allows it (27 Oct night), as Real runs it
                 t_leg, ends = clock[0], []           # when their clearance is checked clear (RealExec.prepare_legs)
                 for side in leg.sides:
@@ -1594,13 +1707,19 @@ def _sim_mechanism(st: dict, sims: dict, T: float, stage: int, overall: int, lea
                 legs_run.append(leg)
                 i += leg.used - 1
                 continue
-            joined, used = mechanism.joined_moves(entries, i - 1)
+            joined, used = mechanism.joined_moves(entries, i - 1, bridge)
             entry(owner, joined, used)
             i += used - 1
         if legs_run and owner is plan:
             sims[camera]._say("note", mark[camera], f"{title}: the two arms move at once in {len(legs_run)} stretch(es) where the commode "
                               "stands still (" + "; ".join(leg.label() for leg in legs_run) + "): the plan's own moves, their clearance "
-                              f"checked on the robot before the task (within {mechanism.LEG_CLEARANCE_MM:g} mm: one after the other, as the plan).")
+                              + (f"checked here, before the run (never within {mechanism.LEG_CLEARANCE_MM:g} mm, one arm up to "
+                                 f"{max(mechanism.LEG_SHIFTS_S):g} s late or {-min(mechanism.LEG_SHIFTS_S):g} s early); the run reads it."
+                                 if verdicts is not None else "checked before the run (within "
+                                 f"{mechanism.LEG_CLEARANCE_MM:g} mm: one after the other, as the plan)."))
+        for leg, why in legs_apart:
+            sims[camera]._say("note" if why == mechanism.NOT_CHECKED else "warn", mark[camera],
+                              f"{title}: {leg.label()}: one arm after the other, as Real runs it: {why}.")
         return False
 
     if st.get("held"):                           # not run: the sequence's own order made its end state already (held_tasks)
@@ -1808,11 +1927,11 @@ def _sim_part(st: dict, sims: dict, T, stage: int, words) -> dict:
     return clock
 
 
-def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], float]:
+def schedule(run: dict, sims: dict, overall: int = 100, ahead=None) -> tuple[list[dict], float]:
     """The plan on one clock: a stage between two meeting points starts both arms' parts at once (each through its
     own rows, holding at its Wait-for rows) and ends when both have, the first one holding at its Meet (an action, so
     every timing has the same actions); a single arm's run is one part; a lid or seat task takes both arms after both
-    have finished what came before it."""
+    have finished what came before it. ``ahead``: the two arms' checks of the lid and seat tasks (_Ahead)."""
     T, out = 0.0, []
     every = {s: [x for st in run["plan"] for side, part in _items(st) if side == s for x in part] + list((run.get("steps") or {}).get(s) or [])
              for s in ARMS}
@@ -1838,7 +1957,7 @@ def schedule(run: dict, sims: dict, overall: int = 100) -> tuple[list[dict], flo
             for s in st.get("clear") or []:
                 ready = max(ready, sims[s].run([{"type": "clear", "_row": (st.get("rows") or {}).get(s), "_alone": True}], T, i))
             T = _sim_mechanism(st, sims, ready, i, overall, leave=set(st.get("then") or {}), hand_set=hand_set(st),
-                               start_checks=asks_start(run, i), keep=st.get("checks"))
+                               start_checks=asks_start(run, i), keep=st.get("checks"), ahead=ahead)
             row["t1_plan"] = round(T, 4)                # ALIX's plans end here; Lite's own moves to the next starts follow
             if st.get("checks") is not None:            # the camera checks its row keeps (the user, 16 Nov)
                 row["checks"] = list(st["checks"])
@@ -2087,12 +2206,13 @@ def _band(acts: dict, stage: int) -> float:
                for s in ARMS for a in acts.get(s) or [] if a["stage"] == stage)
 
 
-def _drift(run, make_sims, overall, acts_nominal, base, job) -> dict:
+def _drift(run, make_sims, overall, acts_nominal, base, job, checks=None) -> dict:
     """The two arms against each other at every timing their ranges allow (the owner, 22 Oct): the run scheduled again
     with one arm at a point of its range and the other at the opposite point (from the left as fast as it runs and the
     right as slow, to the reverse), each stage's both-arm parts sampled every DRIFT_SAMPLE_S, and every moment checked
     for CLEARANCE_MM between the arms (collision_check.clearance_states). Each pair of rows that comes closer: the
-    least gap, the links, when, and how far one arm was ahead of the other then."""
+    least gap, the links, when, and how far one arm was ahead of the other then. ``checks``: the simulation's
+    two-arm checks of the lid and seat tasks (_Ahead), so they run as in the nominal timing."""
     import numpy as np
 
     from . import collision_check, workers
@@ -2110,7 +2230,7 @@ def _drift(run, make_sims, overall, acts_nominal, base, job) -> dict:
     cases, scenarios = [], []
     for lam in lams:
         sims = make_sims({"left": lam, "right": None if lam is None else 1.0 - lam})
-        stages, total = schedule(run, sims, overall)
+        stages, total = schedule(run, sims, overall, checks)
         acts = {s: sims[s].acts for s in ARMS}
         spans = [(r["t0"], r["t1"]) for r in stages if r["index"] in both]
         times = np.concatenate([np.arange(t0, t1, DRIFT_SAMPLE_S) for t0, t1 in spans] or [np.zeros(0)])
@@ -2190,11 +2310,70 @@ def _drift(run, make_sims, overall, acts_nominal, base, job) -> dict:
     ranges = {}
     for lam in ((0.0, 0.0), (1.0, 1.0)):                           # each stage as fast and as slow as both arms run
         sims = make_sims({"left": lam[0], "right": lam[1]})
-        for r in schedule(run, sims, overall)[0]:
+        for r in schedule(run, sims, overall, checks)[0]:
             ranges.setdefault(r["index"], []).append(r["t1"])
     return dict(timings=len(lams), band_s=round(band, 2), step_s=round(step_s, 2), clearance_mm=CLEARANCE_MM, events=events, findings=findings,
                 stage_t1={str(k): [round(min(v), 2), round(max(v), 2)] for k, v in ranges.items()},
                 samples=sum(r["samples"] for r in found), seconds=round(time.monotonic() - t_start, 1))
+
+
+class _Ahead:
+    """The two arms' checks a run's lid and seat tasks read, made here in the simulation and never in the run (the user,
+    16 Nov: the planner checked each move with the other arm still; what Lite adds, the two arms moving at once, is
+    checked before the run): each task's stretches as the run has them (mechanism.leg_clearance, kept by fingerprint in
+    Resources/TwoArmChecks: a plan's are checked once) and its MoveJs to its start at once, from where the simulation
+    has the arms (mechanism.approach_clear, kept with the simulation: ``approaches``). ``call(fn, *args)``: the worker
+    process (FCL is not safe across threads); ``room``: the MoveJs' world (_plans_room)."""
+
+    def __init__(self, call, room, progress=None):
+        self.call, self.room, self.progress = call, room, progress or (lambda text: None)
+        self.approaches, self.stretch_rows, self._seen = [], {}, {}
+
+    def stretches(self, plan, entries: list, unsent, bridged) -> dict:
+        from . import mechanism
+
+        out = {}
+        for i, leg in mechanism.plan_legs(plan, entries, unsent, bridged):
+            fp = mechanism.stretch_fingerprint(plan, entries, i, leg)
+            if mechanism.kept_stretch(fp) is None:
+                self.progress(f"Checking the two arms at once: {plan.title}, {leg.label()}")
+            v = mechanism.leg_clearance(plan, entries, i, leg, self.call)
+            out[leg.key] = v
+            self.stretch_rows[fp] = dict(plan=plan.name, title=plan.title, stretch=leg.label(), ok=bool(v.get("ok")), why=v.get("why"))
+        return out
+
+    def approach(self, stage: int, plan_name: str, at: str, q0: dict, moves: dict, steps: dict, phase: str) -> dict:
+        from . import mechanism
+
+        key = (stage, plan_name, at)
+        if key not in self._seen:
+            if self.room is None:
+                v = dict(ok=False, why="their paths could not be checked here (the room was not read)")
+            else:
+                self.progress(f"Checking the two arms' MoveJs at once: {mechanism.TASKS.get(plan_name, {}).get('title', plan_name)}'s {at}")
+                v = mechanism.approach_clear(q0, moves, steps, phase, self.room, self.call)
+            rec = dict(stage=stage, plan=plan_name, at=at, q0={s: [float(x) for x in q] for s, q in q0.items()},
+                       moves={s: [float(x) for x in q] for s, q in moves.items()}, ok=bool(v["ok"]), why=v["why"])
+            self._seen[key] = rec
+            self.approaches.append(rec)
+        return self._seen[key]
+
+    def record(self) -> dict:
+        return dict(approaches=list(self.approaches), stretches=list(self.stretch_rows.values()))
+
+
+def _plans_room(app, units) -> dict | None:
+    """The world the approach's two MoveJs are checked in: the room at the lid and seat plans' own placement (the UGV at
+    STANDOFF_MM, no offset), the robot's home, the fixture and the cubicle. None when it cannot be read."""
+    from . import mechanism, placement
+    from .routes_robot import _payload
+
+    plans_at = {"standoff_mm": float(mechanism.STANDOFF_MM), "front_mm": 0.0, "rear_mm": 0.0, "left_mm": 0.0, "right_mm": 0.0}
+    try:
+        return dict(home=dict(_payload(app)["home"]), scene=placement.scene(units.fixture, placement.load(units)["room"], plans_at),
+                    fid=units.fixture, cubicle_mm=int(app.ui.get("cubicle_mm", 1400)))
+    except Exception:                                                               # noqa: BLE001 - then not checked: one after the other
+        return None
 
 
 def simulate(app, units, mode: str, pick: dict | None):
@@ -2212,11 +2391,20 @@ def simulate(app, units, mode: str, pick: dict | None):
     overall = int(app.robot.speed_pct)
     home = dict(_payload(app)["home"])
     cub = int(app.ui.get("cubicle_mm", 1400))         # the cubicle chosen, when the room is not measured
+    room = _plans_room(app, units)                    # the lid and seat tasks' MoveJs at once: checked in the plans' own room
 
     def work(job):
         import numpy as np
 
         nonlocal run
+
+        def in_worker(fn, *args):                     # FCL in the worker process; STOP heard while it checks
+            fut = workers.pool().submit(fn, *args)
+            while not fut.done():
+                job.sleep(0.2)
+            return fut.result()
+
+        ahead = _Ahead(in_worker, room, lambda text: job.progress(text, 1, 4))
         job.progress("Reading what the controllers hold", 0, 3)
         sides = list(run["steps"])
         programs = {s: programs_known(app, units, s) for s in ARMS}
@@ -2244,7 +2432,7 @@ def simulate(app, units, mode: str, pick: dict | None):
         sims = make_sims({"left": None, "right": None})
         findings.extend(dict(level="note", side=None, row=None, text=t) for t in run.get("said") or [])
         job.progress("Timing the stages", 1, 4)
-        stages, total = schedule(run, sims, overall)
+        stages, total = schedule(run, sims, overall, ahead)
         acts = {s: sims[s].acts for s in ARMS}
         places = [a.get("placement") for s in sides for a in acts[s] if a["kind"] == "program" and a.get("drawn")]
         place = next((p for p in places if p), None)
@@ -2317,7 +2505,7 @@ def simulate(app, units, mode: str, pick: dict | None):
             e["at"] = [_where(acts[s], e["first_t"]) for s in (ARMS if "both" in e["sides"] else e["sides"]) if s in acts]
         contact = _contact_checks(stages, acts, times, arms, base, scene, units.fixture, cub, job)
         findings.extend(dict(level=c["level"], side=None, row=None, kind="contact", text=c["text"]) for c in contact)
-        drift = _drift(dict(run, start=starts, md_of=md_of), lambda lam: make_sims(lam, []), overall, acts, base, job) \
+        drift = _drift(dict(run, start=starts, md_of=md_of), lambda lam: make_sims(lam, []), overall, acts, base, job, ahead) \
             if run["mode"] == "both" else dict(timings=0, band_s=0.0, events=[], findings=[])
         findings.extend(drift.pop("findings"))
         for row in stages:                                # each stage's end as fast and as slow as both arms run it
@@ -2330,6 +2518,7 @@ def simulate(app, units, mode: str, pick: dict | None):
                    mode=run["mode"], pick=run["pick"], overall=overall, counts=run["counts"], stages=stages,
                    total_s=round(total, 3), acts=acts, start=starts, start_from=start_how,
                    findings=findings, collisions=check, contact=contact, drift=drift, scene=scene, phases=changes,
+                   ahead=ahead.record(),           # the two arms' checks the run reads (16 Nov): never made in the run
                    programs={s: {str(k): {kk: v.get(kk) for kk in ("name", "sent", "file_name", "region", "gone", "lines", "seconds")}
                                  for k, v in programs[s].items()} for s in ARMS},
                    points={s: (points[s] or {}).get("read") for s in ARMS})
@@ -3392,13 +3581,12 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
                 raise UserError(f"{st['title']}: the arms did not reach their next task's start: " + "; ".join(bad),
                                 "Check the arms, the poles and the hands, then run the sequence again.")
 
-        def lid_seat(st, pid, arms_real, start_checks: bool, next_task=None) -> dict:
+        def lid_seat(st, pid, arms_real, start_checks: bool, next_task=None, stage=None) -> dict:
             """One lid or seat task on both arms (ALIX's plan, the wrist camera's checks): its arms' errors read first
             (clear_before_moves), then mechanism.Runner; ``start_checks`` False in a sequence after its start look (the
-            state is the sequence's own doing, 27 Oct). The Runner's result."""
+            state is the sequence's own doing, 27 Oct). ``stage``: its index in the run, whose two-arm checks the
+            simulation made (the run checks none: 16 Nov). The Runner's result."""
             from . import mechanism as mech
-            from . import placement
-            from .routes_robot import _payload
 
             for x in st.get("clear") or []:         # its moves wait for their arrival (clear_before_moves)
                 got = clear(x, (st.get("rows") or {}).get(x))
@@ -3408,19 +3596,13 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
             say(f"LID / SEAT // {st['title']} // ALIX's plan, the wrist camera's checks", **{x: f"{pid} // RUNNING" for x in ARMS})
             kit = mech.kit(robot)
             hw = getattr(robot, "log", None)
-            # the collision check's world for the approach's two MoveJs at once: the plans' own placement (the UGV at
-            # STANDOFF_MM, no offset), whether or not this run was simulated (the evening of 26 Oct: five runs, none
-            # simulated first, so the MoveJs went one after the other)
-            plans_at = {"standoff_mm": float(mech.STANDOFF_MM), "front_mm": 0.0, "rear_mm": 0.0, "left_mm": 0.0, "right_mm": 0.0}
-            try:
-                room = dict(home=dict(_payload(app)["home"]), scene=placement.scene(units.fixture, placement.load(units)["room"], plans_at),
-                            fid=units.fixture, cubicle_mm=int(app.ui.get("cubicle_mm", 1400)))
-            except Exception as exc:                                        # noqa: BLE001 - then one after the other, said
-                room = None
-                say(None, **{x: f"{pid} // the MoveJs' collision check has no world ({type(exc).__name__}): one after the other" for x in ARMS})
+            # the two arms' MoveJs at once as the simulation of this run checked them (its stretches are kept by their
+            # fingerprint); none for a run not simulated as it is now: one after the other, as ALIX planned it
+            kept = [a for a in ((sim or {}).get("ahead") or {}).get("approaches") or [] if a.get("stage") == stage] \
+                if simulated and stage is not None else []
             ex = mech.RealExec(job, robot, arms_real, kit,
                                (lambda text: hw.hardware(None, "mechanism", text=text)) if hw is not None else None,
-                               live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}), room=room,
+                               live=lambda side, text, pid=pid: say(None, **{side: f"{pid} // {text}"}), ahead=kept,
                                feeds_after=bool(st.get("then")))   # the feeds off in the next starts' pole travel (27 Oct)
             mech.camera_required(robot, st["title"])             # checked before the run; unplugged since?
             mech.joints_cool(robot, st["title"])
@@ -3571,7 +3753,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
                     nxt_task = next_lid_seat_task(run["plan"], i)      # Open the lid's seat link (the owner, 30 Oct)
                     try:
                         out = lid_seat(st, pid, arms_real, start_checks=bool(st.get("ask_start")) or asks_start(run, i),
-                                       next_task=nxt_task["task"] if nxt_task and not nxt_task.get("held") else None)
+                                       next_task=nxt_task["task"] if nxt_task and not nxt_task.get("held") else None, stage=i)
                         did = "; ".join(f"{p['title']} {p['outcome']}" + (f" after {p['relifts']} re-lift(s)" if p["relifts"] else "")
                                         for p in out["plans"])
                         job.log(f"{st['title']}: {did}.")

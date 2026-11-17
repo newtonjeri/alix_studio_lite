@@ -16,6 +16,11 @@ os.environ.setdefault("RM_EMU_TIME_SCALE", "10")
 # The servers the tests start do not link Lite's lid and seat files with ALIX's at their start (alix_sync.link): they
 # would copy a change the owner is making in ALIX into this repository in the middle of the suite.
 os.environ["LITE_START_LINK"] = "0"
+# The two arms' stretch checks the tests make (mechanism.two_arm_store) go to a folder of this test process, shared
+# with the servers it starts, never the repository's Resources/TwoArmChecks.
+import tempfile  # noqa: E402
+
+os.environ["LITE_TWO_ARM_STORE"] = tempfile.mkdtemp(prefix="lite-two-arm-")
 
 from alix_studio_lite import vendor_paths  # noqa: E402
 

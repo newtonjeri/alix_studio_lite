@@ -149,6 +149,12 @@ def row_tasks(code: str) -> list:
     return [] if t is None else list(t) if isinstance(t, (tuple, list)) else [t]
 APPROACH_GRID = 7         #: each arm's MoveJ path sampled at this many points; every pair of the two arms' samples is checked
                           #: (49 states), as their timing against each other is not known
+APPROACH_WAIT_S = 1.5     #: after the poles and hands are set, the approach waits this long at most for the two arms' joints
+                          #: (read as the poles and hands move), then moves one arm after the other. The paths themselves are
+                          #: checked before the run, never in it (approach_clear; the user, 16 Nov): the Jetson, 15 Nov, had
+                          #: waited 19-20 s here for that check at each run's first task
+AHEAD_STAND_DEG = 0.5     #: an arm this close (each joint) to where the S2 simulation had it when it checked the MoveJs'
+                          #: paths takes that verdict (as close as Lite counts an arm at a pose: staging.MOVEJ_SKIP_DEG)
 
 SIDE_OF = {"R": "right", "L": "left"}
 
@@ -609,7 +615,6 @@ LEG_MARGIN_S = 0.3        #: the other arm's moves end this long before a carry'
 LEG_SHIFTS_S = (-0.3, 0.0, 0.3, 0.6)   #: the two arms' clearance checked with one arm this much early or late too (a hand move's real
                           #: time, the two streams' start apart)
 LEG_GRID_S = 0.02         #: the clearance check's step
-LEG_WAIT_S = 20.0         #: a leg waits this long for its check (started as the plan loads), then runs one arm after the other
 LEG_CLEARANCE_MM = 50.0   #: the two arms this far apart throughout (S2's own rule for the two arms, the owner, 22 Oct)
 
 
@@ -686,8 +691,8 @@ def two_arm_leg(entries: list, i: int, unsent=(), bridged=(), plan_name: str = "
       the seat's ring before the right pushes — are these orderings);
     - a trailing release not sent (trailing_releases) is passed over.
     The stretch is then one of the plan's own moves run alongside another: the two arms' clearance over it is what is
-    new, and RealExec checks it (LEG_CLEARANCE_MM, with the arms shifted against each other by LEG_SHIFTS_S) before
-    the two go together; not clear, the plan's order stands."""
+    new, and it is checked before the run (leg_clearance: LEG_CLEARANCE_MM, with the arms shifted against each other by
+    LEG_SHIFTS_S); not clear, or not checked, the plan's order stands."""
     phase = fixture_phase_at(entries, i, plan_name)
     if phase is None:
         return None
@@ -792,11 +797,21 @@ def plan_legs(plan, entries: list, unsent=(), bridged=(), cut: int | None = None
     return out
 
 
-_LEG_CLEAR: dict = {}            # (plan name, leg key) -> {ok, why}: the two arms' clearance over a leg, a pure function of the plan
+# ── the two arms' checks, made before a run and never in it (the user, 16 Nov: "we have already verified the collisions
+# ... remove that during the actual run"). ALIX's planner checked each of a plan's moves with the other arm standing
+# still; what Lite adds is the two arms moving at once: a stretch of the plan (two_arm_leg) and the approach's two MoveJs.
+# The S2 simulation checks a sequence's own (make_stretch_checks, approach_clear), Lite's start a task's run on its own
+# (make_missing_in_background); the run reads the verdict and checks nothing. None kept: one arm after the other, as
+# ALIX planned it.
+AHEAD_VERSION = 1         #: the checks' rules: a verdict kept under other rules is not read
+NOT_CHECKED = "not checked before the run (the S2 simulation checks a sequence's, Lite's start a task's on its own)"
+
+_LEG_CLEAR: dict = {}            # fingerprint -> {ok, why, closest_mm, seconds}: a stretch's clearance (stretch_fingerprint)
 _LEG_CLEAR_LOCK = threading.Lock()
 
 
-def _leg_home() -> dict:
+@lru_cache(maxsize=1)
+def _leg_home_once() -> dict:
     from alix_workspace.collision import RobotCollisionModel
 
     from . import robot_model
@@ -804,24 +819,96 @@ def _leg_home() -> dict:
     return robot_model._home(robot_model.fk_model(), RobotCollisionModel.from_file(str(vendor_paths.URDF), tag="visual").index)
 
 
-def leg_clearance(plan, entries: list, i: int, leg: Leg) -> dict:
+def _leg_home() -> dict:
+    return copy.deepcopy(_leg_home_once())
+
+
+@lru_cache(maxsize=1)
+def _urdf_digest() -> str:
+    try:
+        return hashlib.sha256(Path(vendor_paths.URDF).read_bytes()).hexdigest()[:16]
+    except OSError:
+        return "none"
+
+
+def two_arm_store() -> Path:
+    """Where the stretches' verdicts are kept, one file each by its fingerprint (as Resources/ContactChecks keeps the
+    closings' contact checks)."""
+    return Path(os.environ.get("LITE_TWO_ARM_STORE") or Path(vendor_paths.LITE_ROOT) / "Resources" / "TwoArmChecks")
+
+
+def stretch_fingerprint(plan, entries: list, i: int, leg: Leg) -> str:
+    """What a stretch's clearance (leg_clearance) depends on, hashed: each arm's joints, hand and pole as it begins
+    (leg_start_state), each move's 5 ms lines, hand counts, pole and time, the carry in it, the rules (LEG_*,
+    AHEAD_VERSION) and the robot's URDF. A re-planned plan, a moved one or a retry's moves make another stretch."""
+    h = hashlib.sha256()
+    starts = {}
+    for s in leg.sides:
+        q, hand, pole = leg_start_state(plan, entries, i, s)
+        starts[s] = [[round(float(v), 4) for v in q], [int(v) for v in hand], round(float(pole), 2)]
+    order = []
+    for e, _bridge, _nxt in leg.order:
+        order.append([e.side, e.kind, str(e.stage), round(leg.took(e), 4), carries_fixture(e), round(fixture_offset_s(e), 4),
+                      [None if c is None else int(c) for c in e.hand_counts()] if e.kind == "hand" else None,
+                      round(e.last()[0] * 1000.0, 2) if e.kind == "pole" else None, len(e.rows or [])])
+        if e.kind == "arm" and e.rows is not None:
+            h.update(np.rint(np.asarray(e.rows, dtype=float)).astype(np.int64).tobytes())
+    h.update(json.dumps(dict(v=AHEAD_VERSION, urdf=_urdf_digest(), mm=LEG_CLEARANCE_MM, shifts=list(LEG_SHIFTS_S),
+                             grid=LEG_GRID_S, margin=LEG_MARGIN_S, starts=starts, order=order), sort_keys=True).encode())
+    return h.hexdigest()[:32]
+
+
+def kept_stretch(fp: str) -> dict | None:
+    """A stretch's verdict as made before the run, by its fingerprint (this Lite's memory, then the store), or None."""
+    with _LEG_CLEAR_LOCK:
+        got = _LEG_CLEAR.get(fp)
+    if got is not None:
+        return got
+    try:
+        d = json.loads((two_arm_store() / f"stretch_{fp}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    v = d.get("verdict") if isinstance(d, dict) else None
+    if d.get("fingerprint") != fp or not isinstance(v, dict) or "ok" not in v:
+        return None
+    with _LEG_CLEAR_LOCK:
+        return _LEG_CLEAR.setdefault(fp, v)
+
+
+def _keep_stretch(fp: str, verdict: dict, plan, leg: Leg) -> dict:
+    with _LEG_CLEAR_LOCK:
+        verdict = _LEG_CLEAR.setdefault(fp, verdict)
+    try:                                         # kept for the next start and the other computers too (a note if it cannot be)
+        d = two_arm_store()
+        d.mkdir(parents=True, exist_ok=True)
+        tmp = d / f".stretch_{fp}.{os.getpid()}.{threading.get_ident()}.tmp"
+        tmp.write_text(json.dumps(dict(fingerprint=fp, made=time.strftime("%Y-%m-%d %H:%M:%S"), plan=plan.name,
+                                       plan_file=plan.path.name, stretch=leg.label(), verdict=verdict), indent=1), encoding="utf-8")
+        tmp.replace(d / f"stretch_{fp}.json")
+    except OSError:
+        pass
+    return verdict
+
+
+def leg_clearance(plan, entries: list, i: int, leg: Leg, call=None) -> dict:
     """The two arms against each other over the leg (collision_check.clearance_states, LEG_CLEARANCE_MM): their poses
     from the plan's own lines at LEG_GRID_S, the hands as they are before and as each hand move sets them, one arm
     shifted against the other by each of LEG_SHIFTS_S, over the window up to the carry's lines (leg_window_s). The
     commode and the walls are not checked again here: every move is the planner's own, checked by it; what is new is
-    the two arms at the same moment. {'ok', 'why', 'closest_mm'}; kept per plan and leg (_LEG_CLEAR)."""
+    the two arms at the same moment. {'ok', 'why', 'closest_mm', 'seconds'}. Made before a run (make_stretch_checks),
+    never in one, and kept by its fingerprint (kept_stretch). ``call(fn, *args)``: where the check runs (a worker
+    process: FCL is not safe across threads); None: here. One that cannot be checked is not kept."""
     from . import collision_check, staging
 
-    key = (plan.name, leg.key)
-    with _LEG_CLEAR_LOCK:
-        kept = _LEG_CLEAR.get(key)
+    fp = stretch_fingerprint(plan, entries, i, leg)
+    kept = kept_stretch(fp)
     if kept is not None:
         return kept
     t0 = time.monotonic()
     try:
         sides = leg.sides
         starts = {s: leg_start_state(plan, entries, i, s) for s in sides}
-        home = dict(_leg_home())
+        home = _leg_home()
         for s in sides:
             q, hand, pole = starts[s]
             home = staging.start_values(s, home, dict(pole_mm=pole, hand=hand, q_deg=q))
@@ -834,26 +921,125 @@ def leg_clearance(plan, entries: list, i: int, leg: Leg) -> dict:
                 arms = {s: leg_states(leg, s, starts[s][0], starts[s][1], starts[s][2], times, shift if s == later else 0.0, hands)
                         for s in sides}
                 scenarios.append(dict(times=times, arms=arms, shift=shift, hands=hands))
-        outs = collision_check.clearance_states([dict(times=sc["times"], arms=sc["arms"]) for sc in scenarios], home, LEG_CLEARANCE_MM)
-        closest, worst = None, None
-        for sc, out in zip(scenarios, outs):
-            for ev in out.get("events") or []:
-                mm = ev.get("exact_mm", ev.get("min_mm"))
-                if mm is not None and (closest is None or mm < closest):
-                    closest, worst = mm, dict(ev, shift=sc["shift"], hands=sc["hands"])
-        if worst is None:
-            result = dict(ok=True, closest_mm=None, seconds=round(time.monotonic() - t0, 2),
-                          why=f"never within {LEG_CLEARANCE_MM:g} mm over {window:.1f} s, one arm up to {max(LEG_SHIFTS_S):g} s late or "
-                              f"{-min(LEG_SHIFTS_S):g} s early")
-        else:
-            result = dict(ok=False, closest_mm=round(float(closest), 1), seconds=round(time.monotonic() - t0, 2),
-                          why=f"the arms would come {closest:.0f} mm apart ({', '.join(worst.get('links') or [])}) at {worst.get('first_t', 0):.2f} s"
-                              + (f" with the {later.upper()} arm {abs(worst['shift']):g} s {'late' if worst['shift'] > 0 else 'early'}" if worst.get("shift") else ""))
+        outs = (call or (lambda fn, *a: fn(*a)))(collision_check.clearance_states,
+                                                [dict(times=sc["times"], arms=sc["arms"]) for sc in scenarios], home, LEG_CLEARANCE_MM)
+    except Cancelled:
+        raise
     except Exception as exc:                                                    # noqa: BLE001 - not clear when it cannot tell
-        result = dict(ok=False, closest_mm=None, seconds=round(time.monotonic() - t0, 2), why=f"their clearance could not be checked ({type(exc).__name__}: {exc})")
-    with _LEG_CLEAR_LOCK:
-        _LEG_CLEAR[key] = result
-    return result
+        return dict(ok=False, closest_mm=None, seconds=round(time.monotonic() - t0, 2), why=f"their clearance could not be checked ({type(exc).__name__}: {exc})")
+    closest, worst = None, None
+    for sc, out in zip(scenarios, outs):
+        for ev in out.get("events") or []:
+            mm = ev.get("exact_mm", ev.get("min_mm"))
+            if mm is not None and (closest is None or mm < closest):
+                closest, worst = mm, dict(ev, shift=sc["shift"], hands=sc["hands"])
+    if worst is None:
+        result = dict(ok=True, closest_mm=None, seconds=round(time.monotonic() - t0, 2),
+                      why=f"never within {LEG_CLEARANCE_MM:g} mm over {window:.1f} s, one arm up to {max(LEG_SHIFTS_S):g} s late or "
+                          f"{-min(LEG_SHIFTS_S):g} s early")
+    else:
+        result = dict(ok=False, closest_mm=round(float(closest), 1), seconds=round(time.monotonic() - t0, 2),
+                      why=f"the arms would come {closest:.0f} mm apart ({', '.join(worst.get('links') or [])}) at {worst.get('first_t', 0):.2f} s"
+                          + (f" with the {later.upper()} arm {abs(worst['shift']):g} s {'late' if worst['shift'] > 0 else 'early'}" if worst.get("shift") else ""))
+    return _keep_stretch(fp, result, plan, leg)
+
+
+def approach_bridges(plan, entries: list) -> set:
+    """Each arm's first move after the approach: bridged from where the approach left it (Runner's ``bridge``)."""
+    return set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None) for s in plan.sides())
+               if first is not None)
+
+
+def make_stretch_checks(plan, entries: list, unsent=(), bridged=(), cut: int | None = None, call=None) -> dict:
+    """Before a run: each stretch of the plan as the run will have it (plan_legs with the run's own entries, unsent moves
+    and bridges) checked (leg_clearance) or read where kept. {leg key: verdict}."""
+    return {leg.key: leg_clearance(plan, entries, i, leg, call) for i, leg in plan_legs(plan, entries, unsent, bridged, cut)}
+
+
+def kept_stretch_checks(plan, entries: list, legs: list) -> dict:
+    """In the run: each stretch's verdict as made before it, read, never checked here. {leg key: verdict}; one with none
+    kept is not clear (NOT_CHECKED): one arm after the other, as ALIX planned it."""
+    out = {}
+    for i, leg in legs:
+        v = kept_stretch(stretch_fingerprint(plan, entries, i, leg))
+        out[leg.key] = v if v is not None else dict(ok=False, why=NOT_CHECKED, unchecked=True)
+    return out
+
+
+def task_run_entries(name: str) -> tuple:
+    """A task run on its own (mechanism.run: every check asked, nothing left at its end, no placement) as Runner has it:
+    (plan, entries, unsent, bridged)."""
+    plan = Plan(name)
+    entries, _inspect = without_inspect(list(plan.entries))
+    unsent = trailing_releases(entries, ()) | final_rests(entries, ())
+    return plan, entries, unsent, approach_bridges(plan, entries)
+
+
+def make_missing_in_background(say=print) -> list:
+    """At Lite's start (a plan may have come with alix_sync): the stretches of each lid and seat task run on its own with
+    no verdict kept for them, checked in the worker process in the background, never in a run (an S2 sequence's own are
+    the simulation's). The tasks started."""
+    from . import workers
+
+    todo = []
+    for task in TASKS:
+        try:
+            plan, entries, unsent, bridged = task_run_entries(task)
+            legs = plan_legs(plan, entries, unsent, bridged)
+        except Exception:                                                       # noqa: BLE001 - a plan not there: nothing to check
+            continue
+        if any(kept_stretch(stretch_fingerprint(plan, entries, i, leg)) is None for i, leg in legs):
+            todo.append((task, plan, entries, unsent, bridged))
+    if not todo:
+        return []
+
+    def work():
+        for task, plan, entries, unsent, bridged in todo:
+            t0 = time.monotonic()
+            try:
+                got = make_stretch_checks(plan, entries, unsent, bridged, call=lambda fn, *a: workers.pool().submit(fn, *a).result())
+                clear = sum(1 for v in got.values() if v.get("ok"))
+                say(f"Two-arm check: {plan.title}'s {len(got)} stretch(es) checked, {clear} clear ({time.monotonic() - t0:.1f} s)")
+            except Exception as exc:                                            # noqa: BLE001 - a note, never a stop
+                say(f"Two-arm check: {plan.title} NOT checked ({type(exc).__name__}: {exc}): its stretches run one arm after the other")
+
+    say("Two-arm check: " + ", ".join(t for t, *_ in todo) + " have stretches not checked yet: checked now in the background")
+    threading.Thread(target=work, name="lite-two-arm-checks", daemon=True).start()
+    return [t for t, *_ in todo]
+
+
+def approach_paths(q0: dict, moves: dict, steps: dict, n: int = APPROACH_GRID) -> tuple[list, dict]:
+    """The two arms' MoveJs from ``q0`` to ``moves`` at once: each arm's straight joint-space path sampled ``n`` times and
+    every pair of the two arms' samples, with the pole and the hand ``steps`` sets ({side: (pole mm, hand counts)}), as
+    (times, arms) for collision_check.check_states."""
+    grid = [(a, b) for a in range(n) for b in range(n)]
+    arms = {}
+    for k, side in enumerate(sorted(moves)):
+        mm, hand = steps[side]
+        path = [[a + (b - a) * (t / (n - 1)) for a, b in zip(q0[side], moves[side])] for t in range(n)]
+        arms[side] = dict(pole=[float(mm)] * len(grid), hand=[[int(v) for v in hand]] * len(grid), q=[path[g[k]] for g in grid],
+                          known=[True] * len(grid))
+    return [0.02 * k for k in range(len(grid))], arms
+
+
+def approach_clear(q0: dict, moves: dict, steps: dict, phase: str, room: dict, call=None) -> dict:
+    """Before a run (the S2 simulation, from where it has the arms): whether the two arms' MoveJs to ``moves`` can go at
+    once, every pair of their paths' samples (approach_paths) against each other, the walls, the commode in ``phase``
+    and the bin (``room``: home, scene, fid, cubicle_mm). {ok, why}; never raises but for STOP."""
+    from . import collision_check
+
+    times, arms = approach_paths(q0, moves, steps)
+    try:
+        out = (call or (lambda fn, *a: fn(*a)))(collision_check.check_states, times, arms, room["home"], room["scene"], room["fid"],
+                                                [phase] * len(times), int(room.get("cubicle_mm") or 1400))
+    except Cancelled:
+        raise
+    except Exception as exc:                                                    # noqa: BLE001 - not clear when it cannot tell
+        return dict(ok=False, why=f"their paths could not be checked ({type(exc).__name__}: {exc})")
+    if out.get("ok"):
+        return dict(ok=True, why=f"their paths clear at {len(times)} pairs of moments")
+    first = out.get("first") or {}
+    return dict(ok=False, why=f"their paths would meet: {', '.join(first.get('what') or [])} ({len(out.get('events') or [])} event(s))")
 
 
 def leg_window_s(leg: Leg) -> float:
@@ -1197,8 +1383,7 @@ class Runner:
             for a in gone:
                 self.say(f"{a.get('stage')}: not asked, {kept_words(keep)}")
         state = dict(relifts=0, skipped=False, closing=CLOSING_OUTCOME.get(task), lid_end=task == "lid_open", seat=None,
-                     bridge=set(id(first) for first in (next((e for e in entries if e.kind == "arm" and e.side == s), None)
-                                                        for s in plan.sides()) if first is not None),   # after the approach
+                     bridge=approach_bridges(plan, entries),   # after the approach
                      place=place, again=again)
         self.say(f"PLAN {self.k + 1}/{len(self.queue)}: {plan.title} ({plan.path.name}, {len(entries)} entries, "
                  f"{plan.seconds():.1f} s of motion)")
@@ -1715,7 +1900,7 @@ class DryExec(_Exec):
 class RealExec(_Exec):
     """Real: the arms move. Streams, the pole and the hand, the camera."""
 
-    def __init__(self, job, robot, arms: dict, kit, log=None, live=None, room=None, feeds_after=False):
+    def __init__(self, job, robot, arms: dict, kit, log=None, live=None, ahead=None, feeds_after=False):
         super().__init__(job, log)
         self.robot, self.arms, self.kit = robot, arms, kit
         self.live = live or (lambda side, text: None)   # S2's live line of each arm
@@ -1723,11 +1908,11 @@ class RealExec(_Exec):
         self._name, self._feeds, self._hands = "lid_seat", set(), set()   # and hand step's travel), not finish()
         self._settled_s = 0.0                           # the longest settle of the streams since the last one started (hold)
         self._unsettled: dict = {}                      # side -> (last line, label) of a stream whose end is not yet waited for
-        self._legs: dict = {}                           # leg key -> its clearance (leg_clearance), filled by prepare_legs' thread
+        self._legs: dict = {}                           # leg key -> its clearance as checked before the run (prepare_legs)
         self._frames, self._taken = None, []            # (when, [(frame, q)]) of the last check, for the next at the same pose
         self._last_check = None                         # the last check's first frame's record (place_correct's look)
         self.look_after = None                          # (side, stage, callback): called once that arm's move of that stage ends
-        self.room = room                                # home, scene, fid, cubicle_mm: the collision check's world (S2 gives it)
+        self.ahead = list(ahead or [])                  # the S2 simulation's checks of this stage's MoveJs at once (approach_clear)
 
     def _arm(self, side):
         a = self.arms.get(side)
@@ -1821,10 +2006,9 @@ class RealExec(_Exec):
             steps[side] = (mm, [None if v is None else int(v) for v in tg["hand"]] if "hand" in tg else [None] * 6)
         self.check_stop()
         moves = {side: list(tg["arm_deg"]) for side, tg in targets.items() if "arm_deg" in tg}
-        clear = {}                                            # both MoveJs at once when their paths are clear: checked meanwhile
-        room = getattr(self, "room", None)
-        if len(moves) == 2 and room is not None:
-            threading.Thread(target=lambda: clear.update(self._paths_clear(plan, at, moves, steps)), name="lite-approach-check",
+        clear = {}                                            # both MoveJs at once as checked before the run: the arms read meanwhile
+        if len(moves) == 2:
+            threading.Thread(target=lambda: clear.update(self._approach_verdict(plan, at, moves)), name="lite-approach-read",
                              daemon=True).start()
         if steps:
             self.job.progress(f"{' and '.join(s.upper() for s in sorted(steps))}: pole and hand to {where}")
@@ -1864,16 +2048,19 @@ class RealExec(_Exec):
                                     restore_pct=self.robot.found_speed(side))
 
         together = False
-        if len(moves) == 2 and room is not None:
-            t_end = time.monotonic() + 20.0
-            while not clear and time.monotonic() < t_end:  # the check ran while the poles and hands moved
+        if len(moves) == 2:
+            t_end = time.monotonic() + APPROACH_WAIT_S
+            while not clear and time.monotonic() < t_end:  # read while the poles and hands moved
                 time.sleep(0.02)
             together = bool(clear.get("ok"))
             if not together:
-                self.say(f"MoveJs to {where} one after the other: {clear.get('why') or 'the paths were not checked in time'}", "warn")
+                self.say(f"MoveJs to {where} one after the other: "
+                         f"{clear.get('why') or f'the arms were not read within {APPROACH_WAIT_S:g} s of the poles and hands'}",
+                         "info" if clear.get("alone") or clear.get("unchecked") or not clear else "warn")
         if together:                                          # the owner, 26 Oct: 1.6-3.2 s a task
             self.check_stop()
-            self.job.progress(f"LEFT and RIGHT: MoveJ to {where} at {pct} %, both at once (their paths checked clear)")
+            self.say(f"MoveJs to {where} both at once: {clear.get('why')}")
+            self.job.progress(f"LEFT and RIGHT: MoveJ to {where} at {pct} %, both at once (their paths checked before the run)")
             failed.clear()
 
             def one_move(side):
@@ -1901,13 +2088,14 @@ class RealExec(_Exec):
                 movej(side)
             self.say(f"{side.upper()}: at {where}")
 
-    def _paths_clear(self, plan, at: str, moves: dict, steps: dict) -> dict:
-        """Whether the two arms' MoveJs to ``moves`` can go at once: each arm's straight joint-space path from where it
-        stands, sampled APPROACH_GRID times, every pair of the two arms' samples checked against each other, the commode
-        in the task's state then (PHASE_BEFORE / PHASE_AFTER), the walls and the bin, with the poles and hands the step
-        sets (``collision_check.check_states``, S2's own check). {ok, why}; never raises (not clear when it cannot tell)."""
+    def _approach_verdict(self, plan, at: str, moves: dict) -> dict:
+        """Whether the two arms' MoveJs to ``moves`` go at once: as the S2 simulation checked their paths before the run
+        (``ahead``: the same plan, start or end and targets; approach_clear), each arm standing within AHEAD_STAND_DEG of
+        where the simulation had it. Nothing is checked here (the user, 16 Nov). An arm already within MOVEJ_SKIP_DEG of
+        its target sends no MoveJ: nothing to win at once (``alone``). None kept (a task run on its own, a sequence not
+        simulated as it is now): one after the other, as ALIX planned it (``unchecked``). {ok, why}; never raises."""
         try:
-            from . import collision_check
+            from . import staging
 
             q0 = {}
             for side in moves:
@@ -1916,62 +2104,51 @@ class RealExec(_Exec):
                 if not fb.get("joints_deg"):
                     return dict(ok=False, why=f"the {side.upper()} arm's joints were not read")
                 q0[side] = [float(v) for v in fb["joints_deg"]]
-            n = APPROACH_GRID
-            sides = sorted(moves)
-            grid = [(i, j) for i in range(n) for j in range(n)]
-            arms = {}
-            for k, side in enumerate(sides):
-                mm, hand = steps.get(side, (None, None))
-                if mm is None or hand is None or any(v is None for v in hand):
-                    pole, now = self.robot._measured(side)
-                    mm = pole if mm is None else mm
-                    hand = [h if h is not None else (int(now[i]) if now else 1000) for i, h in enumerate(hand or [None] * 6)]
-                path = [[a + (b - a) * (t / (n - 1)) for a, b in zip(q0[side], moves[side])] for t in range(n)]
-                arms[side] = dict(pole=[float(mm)] * len(grid), hand=[list(hand)] * len(grid), q=[path[g[k]] for g in grid],
-                                  known=[True] * len(grid))
-            phase = (PHASE_BEFORE if at == "start" else PHASE_AFTER).get(plan.name, "lid_closed")
-            times = [0.02 * k for k in range(len(grid))]
-            out = collision_check.check_states(times, arms, self.room["home"], self.room["scene"], self.room["fid"], [phase] * len(grid),
-                                               int(self.room.get("cubicle_mm") or 1400))
-            if out.get("ok"):
-                return dict(ok=True, why=f"{len(grid)} states clear in {out.get('seconds')} s")
-            first = out.get("first") or {}
-            return dict(ok=False, why=f"the paths would meet: {', '.join(first.get('what') or [])} ({len(out.get('events') or [])} event(s))")
+            still = [s for s in moves if max(abs(a - b) for a, b in zip(q0[s], moves[s])) < staging.MOVEJ_SKIP_DEG]
+            if still:                         # its MoveJ is not sent (move_to): nothing to win by moving them at once
+                return dict(ok=False, alone=True, why=f"the {' and '.join(s.upper() for s in sorted(still))} arm"
+                            f"{'s' if len(still) > 1 else ''} at {'their' if len(still) > 1 else 'its'} start already "
+                            f"(within {staging.MOVEJ_SKIP_DEG:g} deg), nothing to run at once")
+            kept = next((a for a in getattr(self, "ahead", None) or []
+                         if a.get("plan") == plan.name and a.get("at") == at and set(a.get("moves") or {}) == set(moves)
+                         and all(max(abs(float(x) - float(y)) for x, y in zip(a["moves"][s], moves[s])) < 0.01 for s in moves)), None)
+            if kept is None:
+                return dict(ok=False, unchecked=True, why="their paths were " + NOT_CHECKED)
+            off = {s: max(abs(float(x) - y) for x, y in zip(kept["q0"][s], q0[s])) for s in moves}
+            far = [s for s in sorted(off) if off[s] > AHEAD_STAND_DEG]
+            if far:
+                return dict(ok=False, unchecked=True, why=f"the {' and '.join(s.upper() for s in far)} arm stands "
+                            f"{max(off[s] for s in far):.2f} deg from where the simulation checked their paths from")
+            return dict(ok=bool(kept.get("ok")), why=f"{kept.get('why')} (the simulation's check)")
         except Exception as exc:                                                    # noqa: BLE001
-            return dict(ok=False, why=f"the paths could not be checked ({type(exc).__name__}: {exc})")
+            return dict(ok=False, why=f"the arms could not be read ({type(exc).__name__}: {exc})")
 
     def prepare_legs(self, plan, entries: list, unsent=(), bridged=(), cut: int | None = None) -> None:
-        """The two arms' clearance over each leg of the plan (leg_clearance), worked out in a thread of its own while the
-        arms approach the plan's start; move_together waits for it (LEG_WAIT_S). ``cut``: plan_legs'."""
+        """The two arms' clearance over each stretch of the plan as checked before the run (kept_stretch_checks: the S2
+        simulation, Lite's start), read, never checked here (the user, 16 Nov); move_together goes by it. ``cut``:
+        plan_legs'."""
         legs = plan_legs(plan, entries, unsent, bridged, cut)
         if not legs:
             return
+        verdicts = kept_stretch_checks(plan, entries, legs)
+        self._legs.update(verdicts)
+        clear = sum(1 for v in verdicts.values() if v.get("ok"))
         self.say(f"{plan.title}: {len(legs)} stretch(es) the two arms can run at once: " + "; ".join(leg.label() for _, leg in legs)
-                 + " (their clearance is checked first)")
-
-        def work():
-            for i, leg in legs:
-                self._legs[leg.key] = leg_clearance(plan, entries, i, leg)
-
-        threading.Thread(target=work, name="lite-legs-check", daemon=True).start()
+                 + f" ({clear} of {len(legs)} checked clear before the run)")
 
     def move_together(self, leg: "Leg") -> None:
-        """A leg of the plan on both arms at once (two_arm_leg), when their clearance over it is checked clear
-        (prepare_legs, LEG_CLEARANCE_MM): each arm's moves in order on a thread of its own, the two started together.
-        Not checked in time, or not clear: one move after the other in the plan's order, the reason said. A move that
-        fails stops the run once the other arm's move has ended (the arms stand at their lines)."""
+        """A leg of the plan on both arms at once (two_arm_leg), when their clearance over it was checked clear before
+        the run (prepare_legs, LEG_CLEARANCE_MM): each arm's moves in order on a thread of its own, the two started
+        together. Not checked before the run, or not clear: one move after the other in the plan's order, the reason
+        said; nothing is waited for. A move that fails stops the run once the other arm's move has ended."""
         from .jobs import Cancelled
 
-        t_end = time.monotonic() + LEG_WAIT_S
-        while leg.key not in self._legs and time.monotonic() < t_end:
-            self.check_stop()
-            time.sleep(0.05)
-        verdict = self._legs.get(leg.key) or dict(ok=False, why=f"their clearance was not checked within {LEG_WAIT_S:g} s")
+        verdict = self._legs.get(leg.key) or dict(ok=False, why=NOT_CHECKED, unchecked=True)
         if not verdict.get("ok"):
-            self.say(f"{leg.label()}: one arm after the other: {verdict.get('why')}", "warn")
+            self.say(f"{leg.label()}: one arm after the other: {verdict.get('why')}", "info" if verdict.get("unchecked") else "warn")
             return super().move_together(leg)
         self.job.progress(f"both arms at once: {leg.label()}")
-        self.say(f"both arms at once: {leg.label()} ({verdict.get('why')})")
+        self.say(f"both arms at once: {leg.label()} ({verdict.get('why')}, checked before the run)")
         failed, barrier = {}, threading.Barrier(len(leg.sides))
 
         def run(side):
@@ -2433,7 +2610,8 @@ def kit(robot) -> Kit:
 
 def warm_up(robot) -> str:
     """The wrist camera's perception made ready as Lite starts with the real arms (its core, the colour model loaded and
-    run once): on 24 Oct the first check after a start took 17.5 s, 12 s of it loading them. Never raises."""
+    run once): on 24 Oct the first check after a start took 17.5 s, 12 s of it loading them. (No collision model is
+    loaded for a run: the two arms' checks are made before it, 16 Nov.) Never raises."""
     try:
         return kit(robot).gap.warm()
     except Exception as exc:                                                        # noqa: BLE001

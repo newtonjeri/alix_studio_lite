@@ -476,6 +476,14 @@ def main(argv=None) -> int:
                     print(f"Lid and seat: {line.strip()}", flush=True)
     except Exception as exc:                                                        # noqa: BLE001 - a note, never a stop
         print(f"Lid and seat: not linked with ALIX's ({type(exc).__name__}: {exc})", flush=True)
+    if os.environ.get("LITE_START_LINK") != "0":   # each task's two-arm stretches as it runs on its own, checked now in the
+        try:                                         # background, never in a run (the user, 16 Nov); a sequence's: its
+            from . import mechanism                  # simulation. With or without ALIX here (the Jetson's install)
+
+            mechanism.make_missing_in_background(lambda text: print(text, flush=True))
+        except Exception as exc:                                                    # noqa: BLE001 - a note, never a stop
+            print(f"Two-arm check: not started ({type(exc).__name__}: {exc}): a task run on its own moves its arms one after "
+                  "the other", flush=True)
     if hasattr(signal, "SIGUSR1"):              # what each thread is doing, on demand, for a Lite that stops answering
         import faulthandler
 

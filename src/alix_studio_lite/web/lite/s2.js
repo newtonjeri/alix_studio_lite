@@ -818,6 +818,8 @@ async function saveFile(side) {
   try {
     const blob = await call('GET', `${base()}/${side}/download`, undefined, { raw: true });
     const saved = await saveBlobAs(blob, `${side}_workflow_sequence.json`, [{ description: 'JSON sequence', accept: { 'application/json': ['.json'] } }]);
+    // the file states each Program's own pole and hand (the user, 16 Nov); the server refuses a sequence with a Program
+    // it knows none for (workflow.document_stated), and that refusal is said by tell() below
     if (saved) window.toast(`${ARM(side)} sequence saved: ${saved.name}.`, 'good');
   } catch (err) { tell(err); }
 }

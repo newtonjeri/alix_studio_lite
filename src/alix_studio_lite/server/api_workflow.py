@@ -66,14 +66,15 @@ def post_workflow_load(app, q, body, m):
 
 @route("GET", W + r"/(left|right)/download")
 def get_workflow_download(app, q, body, m):
-    """V53's SAVE: the arm's steps as a realman_workflow_sequence_v1 document."""
+    """V53's SAVE: the arm's steps as a sequence document, each Program row with its own pole and hand stated in it
+    (workflow.document_stated; the user, 16 Nov: a sequence file defines the pole and hand of every Program it runs)."""
     from .app import RawResponse
 
     units, side = units_of(app, m.group(1)), m.group(2)
     steps = workflow.load(units)[side]
     if not steps:
         raise UserError(f"{side.upper()} sequence is empty.")
-    return RawResponse(json.dumps(workflow.document(side, steps), indent=2).encode(), "application/json",
+    return RawResponse(json.dumps(workflow.document_stated(app, units, side, steps), indent=2).encode(), "application/json",
                        f"{side}_workflow_sequence.json")
 
 

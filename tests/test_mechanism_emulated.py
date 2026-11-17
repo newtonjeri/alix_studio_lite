@@ -15,6 +15,11 @@ from mech_emulated import call, hardware, refused, start, wait
 
 @pytest.fixture(scope="module")
 def server(tmp_path_factory):
+    # the task's two-arm stretches as it runs on its own, checked before the run as Lite's start does it (the user, 16
+    # Nov: never in the run), into the store this test process shares with its server (conftest)
+    from alix_studio_lite.server import mechanism
+
+    assert all(v["ok"] for v in mechanism.make_stretch_checks(*mechanism.task_run_entries("lid_open")).values())
     # lid_open: closed (it runs); the lift missed (re-lift 1 from rung 1); lifted (the seat under it not asked, 26 Oct);
     # its final check sees the lid open. Then the STOP test's lid_open: closed, then STOP before its next question.
     ctx, proc = start(tmp_path_factory, "lite-mech", ["lid_closed", "lid_closed", "lid_lifted", "lid_open", "lid_closed"])

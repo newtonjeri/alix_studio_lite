@@ -811,6 +811,31 @@ def test_a_saved_sequence_is_the_file_and_loads_back(lite):
         assert resp.headers.get("X-Lite-Raw") is None and "empty" in json.loads(resp.read())["error"]
 
 
+def test_save_always_states_each_programs_pole_and_hand_or_saves_nothing(lite):
+    """The user, 16 Nov: SAVE always writes the form ALIX Studio Demo requires, every Program row with its own pole and
+    hand. A Program Lite knows nothing of, with the sequence's own Pole and Hand steps right before it, is saved with
+    them; with none, the page gets a refusal naming the row (not a file), and nothing is saved."""
+    prog = {"type": "program", "id": 77, "name": "77_77_L_unknown", "speed": 100, "transit_speed": 30}
+    hand = [1000, 1000, 1000, 1000, 0, 1000]
+
+    def download():
+        r = urllib.request.Request(lite["base"] + f"{P}/workflow/left/download", headers={"X-Lite-Token": lite["tok"]})
+        with urllib.request.urlopen(r, timeout=60) as resp:
+            return resp.headers.get("X-Lite-Raw"), json.loads(resp.read())
+
+    try:
+        call(lite, "PUT", f"{P}/workflow/left", {"steps": [{"type": "wait", "seconds": 1}, prog]})
+        raw, got = download()
+        assert raw is None and got["error"] == ("The LEFT sequence was not saved: no pole and hand known for row 2 (Program 77). "
+                                                "A saved sequence states every Program's own pole and hand."), got
+        assert "Set pole and hand" in got["hint"]
+        call(lite, "PUT", f"{P}/workflow/left", {"steps": [{"type": "pole", "mm": 120}, {"type": "hand", "values": hand}, prog]})
+        raw, doc = download()
+        assert raw == "1" and [(s.get("pole_mm"), s.get("hand")) for s in doc["steps"] if s["type"] == "program"] == [(120.0, hand)]
+    finally:
+        call(lite, "PUT", f"{P}/workflow/left", {"steps": []})
+
+
 def test_the_feed_is_recorded_only_when_ticked_and_run_lite_feed_off_turns_it_off():
     """The owner, 23 Oct: "for now we can put it on by default at 20ms, but we should have a way to disable it, either a
     flag similar to the --robot flag": run_lite --feed 20 (the default) | off. Since 26 Oct (the delay analysis: 0.6 s a

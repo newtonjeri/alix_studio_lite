@@ -1,0 +1,133 @@
+{
+  "format": "alix_studio_lite_sequence_v1",
+  "side": "right",
+  "steps": [
+    {
+      "type": "inspect",
+      "pose": "",
+      "note": "Start: the commode's state before anything moves, from Open the lid's own look (inspection pose 4); the right arm goes back to its start pose after it (lid and seat down expected; lid open -> Close th",
+      "uid": "e7e70dfd"
+    },
+    {
+      "type": "global",
+      "name": "R_HME_POS",
+      "move": "movej",
+      "speed": 50,
+      "wait_s": 0.0,
+      "uid": "9b826371"
+    },
+    {
+      "type": "pole",
+      "mm": 200.0,
+      "uid": "f97263e4"
+    },
+    {
+      "type": "hand",
+      "values": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+      ],
+      "uid": "b9be0560"
+    },
+    {
+      "type": "meet",
+      "uid": "e885fdca"
+    },
+    {
+      "type": "program",
+      "id": 1,
+      "name": "1_R_P1_R01_PART1+R01_PART2+R02.t",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "bea3ac62"
+    },
+    {
+      "type": "inspect",
+      "pose": "",
+      "note": "Before lid_open: its own inspection pose; the reading decides it",
+      "uid": "b59fa4f9"
+    },
+    {
+      "type": "mechanism",
+      "task": "lid_open",
+      "uid": "3090af6f"
+    },
+    {
+      "type": "program",
+      "id": 2,
+      "name": "2_R_P2_R04_pole200_grip_7.6s_v.t",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "17ec484c"
+    },
+    {
+      "type": "program",
+      "id": 3,
+      "name": "3_R_P2_R05_pole200_cleaningpos.t",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "07b377ea"
+    },
+    {
+      "type": "program",
+      "id": 4,
+      "name": "4_4_1_R_P2_R06_pole50_cleaning.t",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "bf71407d"
+    },
+    {
+      "type": "inspect",
+      "pose": "",
+      "note": "Before seat_open: its own inspection pose; the reading decides it",
+      "uid": "d7b0428a"
+    },
+    {
+      "type": "mechanism",
+      "task": "seat_open",
+      "uid": "d630c1d9"
+    },
+    {
+      "type": "program",
+      "id": 5,
+      "name": "5_5_R_P3_R07+R08_PART1+R08_PAR.t",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "4b08d9c6"
+    },
+    {
+      "type": "program",
+      "id": 6,
+      "name": "6_6_R_P3_T04+wait20.1s+T05+T06.t",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "bb468b71"
+    },
+    {
+      "type": "inspect",
+      "pose": "",
+      "note": "Before lid_close: its own inspection pose; the reading decides it",
+      "uid": "f708aa24"
+    },
+    {
+      "type": "mechanism",
+      "task": "lid_close",
+      "uid": "32c276ad"
+    },
+    {
+      "type": "global",
+      "name": "R_HME_POS",
+      "move": "movej",
+      "speed": 20,
+      "wait_s": 0.0,
+      "uid": "97f2b51c"
+    }
+  ]
+}

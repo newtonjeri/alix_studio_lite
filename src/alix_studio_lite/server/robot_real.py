@@ -49,6 +49,46 @@ RESTORE_PCT = 50          # the global speed put back when the controller did no
 CHECK_TRIES = 4           # the read-back after an upload: tries, 1 s apart, before it is called failed
 CANFD_PERIOD_S = 0.005    # the lid and the seat's streams: one line every 5 ms (Lite's clock, D26; ALIX's CanFD default)
 UDP_PORT = {"left": 8089, "right": 8090}    # each controller's 5 ms push to this computer, a port of its own
+#: A lid or seat stream's thread runs at this real-time priority (SCHED_FIFO, 1-99) while it streams, where this computer
+#: lets the user ask for it (``ulimit -r`` at least this; /etc/security/limits.d). The streamer ends a stream when the
+#: host is ever 10 ms late at a line; on the Jetson (15 Nov) its streams were up to 11.4 ms late and two of Close the
+#: lid's stopped, while the lab PC's were never over 3 ms. The same 5 ms loop on the lab's laptop under load: 4.8 ms
+#: late at worst as an ordinary thread, 0.32 ms at this priority (tools/host_timing_check.py). Not allowed: as before.
+STREAM_RT_PRIORITY = 50
+_RT_SAID: dict = {}               # what was said of the real-time priority in this process (said once)
+
+
+@contextmanager
+def realtime(log=None):
+    """The calling thread at STREAM_RT_PRIORITY for the ``with`` block, then as it was. Yields what is in force:
+    "realtime" (SCHED_FIFO at that priority) or "ordinary" with why. Where the system does not allow it (the user's
+    real-time limit is 0, or no such call: Windows) the thread runs as before and ``log`` hears it once a process. A
+    thread that sleeps between its lines, as the streamer's does, gives way at every sleep; Linux keeps 5 % of each
+    second for ordinary threads whatever runs at real-time priority."""
+    import os
+
+    old = None
+    try:
+        old = (os.sched_getscheduler(0), os.sched_getparam(0))
+        os.sched_setscheduler(0, os.SCHED_FIFO, os.sched_param(STREAM_RT_PRIORITY))
+        how = "realtime"
+    except (AttributeError, OSError) as exc:      # PermissionError: not allowed for this user; AttributeError: no such call
+        old = None
+        why = ("this user may not ask for it (its real-time limit, ulimit -r, is below "
+               f"{STREAM_RT_PRIORITY}; /etc/security/limits.d sets it)" if isinstance(exc, PermissionError)
+               else f"not available here ({type(exc).__name__})")
+        how = f"ordinary: {why}"
+    if log is not None and _RT_SAID.get("how") != how:
+        _RT_SAID["how"] = how
+        log(f"stream priority: {'real-time (SCHED_FIFO ' + str(STREAM_RT_PRIORITY) + ')' if how == 'realtime' else how}")
+    try:
+        yield how
+    finally:
+        if old is not None:
+            try:
+                os.sched_setscheduler(0, old[0], old[1])
+            except OSError:
+                pass
 
 
 def _words(code: str | None) -> str:
@@ -1850,6 +1890,7 @@ class RealArm:
         t0 = time.monotonic()
         out: dict = {}
         held = False
+        priority = None
         with self.link.busy(f"streaming {label}", expect_s=n * CANFD_PERIOD_S + 60):
             kept = self._feed is not None
             rec, cap = self._feed if kept else self._capture(label, records)
@@ -1881,13 +1922,14 @@ class RealArm:
                         if stop.is_set():
                             raise Cancelled()
                         state["inside"] = True
-                    out = track.run_verified(
-                        self.robot, save_id=0, band_s=track.expected_band_s(n), first_row_millideg=rows[0], points=n,
-                        speed=int(speed), restore_pct=int(restore_pct), start_tolerance_deg=2.0,
-                        require_at_start=bridge_speed is None, movej_speed=bridge_speed, log=log, settle_after=False,
-                        channel="canfd", track_rows_millideg=rows, canfd_watch=watch,
-                        canfd={"period_s": CANFD_PERIOD_S, "rate_gate": "per_joint", "follow": True,
-                               "trajectory_mode": 0, "radio": 0}, ratio_held=held)
+                    with realtime(lambda text: self._hw("canfd priority", text=text)) as priority:
+                        out = track.run_verified(
+                            self.robot, save_id=0, band_s=track.expected_band_s(n), first_row_millideg=rows[0], points=n,
+                            speed=int(speed), restore_pct=int(restore_pct), start_tolerance_deg=2.0,
+                            require_at_start=bridge_speed is None, movej_speed=bridge_speed, log=log, settle_after=False,
+                            channel="canfd", track_rows_millideg=rows, canfd_watch=watch,
+                            canfd={"period_s": CANFD_PERIOD_S, "rate_gate": "per_joint", "follow": True,
+                                   "trajectory_mode": 0, "radio": 0}, ratio_held=held)
                     if out.get("ok") and settle:      # its end: the arm at the last line and still, from the feed (26 Oct)
                         cs0 = out.get("canfd") or {}
                         out["settle"] = self._stream_end(rows[-1], cs0.get("t_last_line") or cs0.get("t_end"))
@@ -1920,7 +1962,8 @@ class RealArm:
                                            # how late this computer sent its lines (mean, worst; lines over a period
                                            # late): the streamer ends a stream at two periods (the Jetson, 10 Nov)
                                            late_ms=[cs.get("late_ms_mean"), cs.get("late_ms_max")] if cs else None,
-                                           late_lines=cs.get("frames_late_over_period")),
+                                           late_lines=cs.get("frames_late_over_period"),
+                                           priority=None if priority is None else priority.split(":")[0]),
                  ret=out.get("verdict"), ok=ok, elapsed_s=time.monotonic() - t0,
                  text=f"{sent}/{n} lines" + end_words + (f", bridged {bridged:.2f} deg" if bridged else "") + (f"; {why}" if why and not ok else ""))
         if stop.is_set():

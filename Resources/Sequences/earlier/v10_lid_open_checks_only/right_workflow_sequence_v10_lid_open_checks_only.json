@@ -1,0 +1,128 @@
+{
+  "format": "alix_studio_lite_sequence_v1",
+  "side": "right",
+  "steps": [
+    {
+      "type": "global",
+      "name": "REST_POSE",
+      "move": "movej",
+      "speed": 30,
+      "wait_s": 0.0,
+      "uid": "1820d343"
+    },
+    {
+      "type": "global",
+      "name": "R_HME_POS",
+      "move": "movej",
+      "speed": 50,
+      "wait_s": 0.0,
+      "uid": "3a9a8b3f"
+    },
+    {
+      "type": "pole",
+      "mm": 210.0,
+      "uid": "04d62339"
+    },
+    {
+      "type": "hand",
+      "values": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+      ],
+      "uid": "c61ecafb"
+    },
+    {
+      "type": "meet",
+      "uid": "b2dea94e"
+    },
+    {
+      "type": "program",
+      "id": 61,
+      "name": "61_61_R_P1_pole200_cleaningpose_",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "a00a26cd"
+    },
+    {
+      "type": "mechanism",
+      "task": "lid_open",
+      "uid": "4c816825",
+      "checks": [
+        "verify_lid_lifted",
+        "verify_lid_open"
+      ]
+    },
+    {
+      "type": "program",
+      "id": 62,
+      "name": "62_62_R_P2_pole200_grip_9.5s_25p",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "b9878a72"
+    },
+    {
+      "type": "program",
+      "id": 63,
+      "name": "63_63_R_P2_pole200_cleaningpose_",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "da9885e6"
+    },
+    {
+      "type": "program",
+      "id": 64,
+      "name": "64_64_1_R_P2_pole50_cleaningpose",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "51b4a249"
+    },
+    {
+      "type": "mechanism",
+      "task": "seat_open",
+      "uid": "e7ae3e46",
+      "checks": []
+    },
+    {
+      "type": "program",
+      "id": 65,
+      "name": "65_65_R_P3_pole50_grip_28.1s_new",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "b200cf61"
+    },
+    {
+      "type": "mechanism",
+      "task": "lid_close",
+      "uid": "44d9d3c5",
+      "checks": []
+    },
+    {
+      "type": "global",
+      "name": "R_HME_POS",
+      "move": "movej",
+      "speed": 20,
+      "wait_s": 0.0,
+      "uid": "97ae6ea1"
+    },
+    {
+      "type": "global",
+      "name": "REST_POSE",
+      "move": "movej",
+      "speed": 30,
+      "wait_s": 0.0,
+      "uid": "70e64579"
+    },
+    {
+      "type": "pole",
+      "mm": 10.0,
+      "uid": "abeef212"
+    }
+  ]
+}

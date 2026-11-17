@@ -1,6 +1,8 @@
 """The two arms at once inside a lid or seat plan (the user, 27 Oct night: "the left arm and right arm can move together
 for some canfd tasks, for example moving to the start poses"): where the plan allows it (mechanism.two_arm_leg), with
-the two arms' clearance over the stretch checked first (leg_clearance), run on two threads (RealExec.move_together)."""
+the two arms' clearance over the stretch checked before the run (leg_clearance: the S2 simulation, Lite's start; the user,
+16 Nov: never in the run), read in it and run on two threads (RealExec.move_together)."""
+import json
 import threading
 import time
 from types import SimpleNamespace
@@ -157,14 +159,13 @@ def test_a_clear_stretch_runs_on_two_threads_and_the_plans_order_otherwise(monke
     ex.move_together(leg)
     assert [(x[0], x[1]) for x in log if x[1] in ("stream", "hand")] == [("left", "stream"), ("right", "hand"), ("right", "stream")]
     assert any("one arm after the other: the arms would come 31 mm apart" in t for _, t in said)
-    # no verdict in time: the plan's order
-    monkeypatch.setattr(m, "LEG_WAIT_S", 0.2)
+    # no verdict made before the run: the plan's order at once, nothing waited for (the Jetson, 15 Nov: 1.7-11 s waits)
     log.clear()
     ex, said = _exec({s: _Arm(s, log) for s in ("left", "right")}, {})
     t0 = time.monotonic()
     ex.move_together(leg)
-    assert 0.15 < time.monotonic() - t0 < 1.5 and [x[0] for x in log if x[1] == "stream"] == ["left", "right"]
-    assert any("not checked within" in t for _, t in said)
+    assert time.monotonic() - t0 < 0.5 and [x[0] for x in log if x[1] == "stream"] == ["left", "right"]
+    assert ("info", "LEFT move_to_rest || RIGHT hand_grasp + move_to_inspect: one arm after the other: " + m.NOT_CHECKED) in said
     # a failing move: raised after the other arm's move has ended
     log.clear()
     arms = {"left": _Arm("left", log, fail="LEFT arm move_to_rest"), "right": _Arm("right", log)}
@@ -189,3 +190,116 @@ def test_the_release_gate_runs_inside_a_stretch():
     ex.move_together(leg)
     assert gated == [("left", "hand_release", "move_to_retract")]
     assert [x[1] for x in log if x[0] == "left"] == ["hand", "stream"]
+
+
+@pytest.fixture
+def store(tmp_path, monkeypatch):
+    """A store of the stretches' verdicts of the test's own, this Lite's memory of them emptied."""
+    monkeypatch.setenv("LITE_TWO_ARM_STORE", str(tmp_path / "two_arm"))
+    monkeypatch.setattr(m, "_LEG_CLEAR", {})
+    return tmp_path / "two_arm"
+
+
+def test_a_stretchs_fingerprint_is_what_its_clearance_depends_on(monkeypatch):
+    """The same stretch, the same fingerprint (a plan read again: the verdict kept for it is read); a line of a move,
+    where an arm begins, or a rule changed: another (a re-planned or moved plan, a retry's moves are checked again)."""
+    import dataclasses
+
+    plan, entries, unsent, bridged = _entries("lid_open")
+    (i, leg), _ = m.plan_legs(plan, entries, unsent, bridged)
+    fp = m.stretch_fingerprint(plan, entries, i, leg)
+    plan2, entries2, unsent2, bridged2 = _entries("lid_open")
+    (i2, leg2), _ = m.plan_legs(plan2, entries2, unsent2, bridged2)
+    assert m.stretch_fingerprint(plan2, entries2, i2, leg2) == fp and len(fp) == 32
+    arm = next(k for k, (e, _, _) in enumerate(leg.order) if e.kind == "arm")
+    e = leg.order[arm][0]
+    rows = [list(r) for r in e.rows]
+    rows[len(rows) // 2] = [v + 1 for v in rows[len(rows) // 2]]                  # one line, one millidegree a joint
+    moved = dataclasses.replace(leg, order=[(dataclasses.replace(e, rows=rows) if k == arm else x[0], x[1], x[2])
+                                            for k, x in enumerate(leg.order)])
+    assert m.stretch_fingerprint(plan, entries, i, moved) != fp
+    later = m.plan_legs(plan, entries, unsent, bridged)[1]                        # where the left begins it: its last move before
+    before = max(k for k, x in enumerate(entries[:later[0]]) if x.kind == "arm" and x.side == "left" and x.rows is not None)
+    shifted = list(entries)
+    shifted[before] = dataclasses.replace(entries[before], rows=[[v + 1000 for v in r] for r in entries[before].rows])
+    assert m.stretch_fingerprint(plan, shifted, later[0], later[1]) != m.stretch_fingerprint(plan, entries, later[0], later[1])
+    monkeypatch.setattr(m, "LEG_CLEARANCE_MM", 60.0)
+    assert m.stretch_fingerprint(plan, entries, i, leg) != fp
+
+
+def test_a_stretch_is_checked_before_the_run_and_only_read_in_it(store, monkeypatch):
+    """Before the run (make_stretch_checks: the S2 simulation, Lite's start) each stretch's verdict is made and kept by its
+    fingerprint, in this Lite's memory and in the store (one file each, read again after a restart). In the run
+    (prepare_legs) it is read and nothing is checked: no collision call, no thread, no wait; a stretch with none kept
+    runs one arm after the other, said plainly."""
+    from alix_studio_lite.server import collision_check
+
+    plan, entries, unsent, bridged = _entries("lid_open")
+    calls = []
+
+    def clear(fn, *args):                                     # the worker process's check: clear
+        calls.append(fn.__name__)
+        return [dict(events=[]) for _ in args[0]]
+
+    made = m.make_stretch_checks(plan, entries, unsent, bridged, call=clear)
+    assert calls == ["clearance_states", "clearance_states"] and all(v["ok"] for v in made.values()) and len(made) == 2
+    files = sorted(store.glob("stretch_*.json"))
+    assert len(files) == 2 and all(json.loads(f.read_text())["plan"] == "lid_open" for f in files)
+    assert m.make_stretch_checks(plan, entries, unsent, bridged, call=clear) == made and len(calls) == 2   # kept: not again
+
+    def no_check(*a, **k):
+        raise AssertionError("a collision check in the run")
+
+    monkeypatch.setattr(collision_check, "clearance_states", no_check)
+    monkeypatch.setattr(m, "_LEG_CLEAR", {})                  # a new start: read from the store
+    log = []
+    ex, said = _exec({s: _Arm(s, log) for s in ("left", "right")})
+    ex.prepare_legs(plan, entries, unsent, bridged)
+    assert set(ex._legs) == set(made) and all(v["ok"] for v in ex._legs.values())
+    assert any(t.endswith("(2 of 2 checked clear before the run)") for _, t in said), said
+    leg = m.plan_legs(plan, entries, unsent, bridged)[1][1]
+    ex.move_together(leg)
+    assert any(t.startswith("both arms at once: LEFT move_to_rest || RIGHT hand_grasp + move_to_inspect (never within 50 mm")
+               and t.endswith(", checked before the run)") for _, t in said), said
+    # the store emptied (another computer, a re-planned plan): none kept, one arm after the other, nothing checked
+    for f in files:
+        f.unlink()
+    monkeypatch.setattr(m, "_LEG_CLEAR", {})
+    ex, said = _exec({s: _Arm(s, log) for s in ("left", "right")})
+    ex.prepare_legs(plan, entries, unsent, bridged)
+    assert not any(v["ok"] for v in ex._legs.values()) and any(t.endswith("(0 of 2 checked clear before the run)") for _, t in said)
+
+
+def test_a_stretch_that_cannot_be_checked_is_not_kept(store):
+    """A check that fails (the worker gone) says so and is not kept: the next simulation or start checks it again."""
+    plan, entries, unsent, bridged = _entries("lid_open")
+
+    def broken(fn, *args):
+        raise RuntimeError("the worker process ended")
+
+    got = m.make_stretch_checks(plan, entries, unsent, bridged, call=broken)
+    assert all(not v["ok"] and "could not be checked (RuntimeError: the worker process ended)" in v["why"] for v in got.values())
+    assert not list(store.glob("stretch_*.json")) and not m._LEG_CLEAR
+
+
+def test_lites_start_checks_each_tasks_stretches_in_the_background_once(store, monkeypatch):
+    """At Lite's start: the tasks with stretches not checked yet (as each runs on its own: task_run_entries) are checked
+    in the background (the worker process), never in a run; checked, a start after finds nothing to do."""
+    from alix_studio_lite.server import workers
+
+    class Done:
+        def __init__(self, fn, args):
+            self.value = fn(*args)
+
+        def result(self):
+            return self.value
+
+    monkeypatch.setattr(workers, "pool", lambda name=None: SimpleNamespace(submit=lambda fn, *a: Done(fn, a)))
+    said = []
+    todo = m.make_missing_in_background(said.append)
+    assert set(todo) >= {"lid_open", "seat_open"}, (todo, said)
+    t0 = time.monotonic()
+    while sum(1 for t in said if t.startswith("Two-arm check: ") and "checked," in t) < len(todo) and time.monotonic() - t0 < 120:
+        time.sleep(0.2)
+    assert any(t.startswith("Two-arm check: Open the lid's 2 stretch(es) checked, 2 clear") for t in said), said
+    assert m.make_missing_in_background(said.append) == []

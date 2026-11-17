@@ -829,3 +829,34 @@ def test_a_third_generation_controller_is_never_asked_its_tracks():
     fourth = SimpleNamespace(robot=SimpleNamespace(robot_controller_version=4, rm_get_trajectory_file_list=lambda *_a: (
         0, {"tra_list": [dict(name="t1", point_num=5, create_time="x")], "total_size": 1})))
     assert robot_real.RealArm._tracks(fourth) == dict(available=True, list=[dict(name="t1", points=5, created="x")])
+
+
+def test_a_stream_asks_for_real_time_priority_and_runs_as_before_where_it_is_not_allowed(monkeypatch):
+    """The Jetson, 15 Nov: its streams were up to 11.4 ms late at a line and two of Close the lid's stopped at the
+    streamer's 10 ms rule; the lab PC's were never over 3 ms. A stream's thread asks for real-time priority while it
+    streams and is put back after; where the user may not have it (ulimit -r 0, no such call on Windows) it runs as before,
+    and that is said once a process, not at every stream."""
+    import os
+
+    from alix_studio_lite.server import robot_real as rr
+
+    calls, said = [], []
+    monkeypatch.setattr(rr, "_RT_SAID", {})
+    monkeypatch.setattr(os, "sched_getscheduler", lambda pid: os.SCHED_OTHER)
+    monkeypatch.setattr(os, "sched_getparam", lambda pid: os.sched_param(0))
+    monkeypatch.setattr(os, "sched_setscheduler", lambda pid, policy, param: calls.append((pid, policy, param.sched_priority)))
+    with rr.realtime(said.append) as how:
+        assert how == "realtime" and calls == [(0, os.SCHED_FIFO, rr.STREAM_RT_PRIORITY)]   # this thread only (pid 0)
+    assert calls[-1] == (0, os.SCHED_OTHER, 0) and said == ["stream priority: real-time (SCHED_FIFO 50)"]
+
+    def refused(pid, policy, param):
+        raise PermissionError(1, "Operation not permitted")
+
+    monkeypatch.setattr(os, "sched_setscheduler", refused)
+    for _ in range(3):
+        with rr.realtime(said.append) as how:
+            assert how.startswith("ordinary: this user may not ask for it (its real-time limit, ulimit -r, is below 50")
+    assert len(said) == 2 and said[1].startswith("stream priority: ordinary: this user may not ask for it")
+    monkeypatch.delattr(os, "sched_setscheduler")
+    with rr.realtime(said.append) as how:
+        assert how == "ordinary: not available here (AttributeError)"
