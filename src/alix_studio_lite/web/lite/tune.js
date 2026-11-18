@@ -47,10 +47,20 @@ const rec = () => unit && unit.recordings.find(r => r.file === unit.active);
 // The analysis on screen is the active recording's, as it is now (Save & Review's Trim can overwrite it).
 const analysisNow = () => !!(analysis && unit && analysis.key === unit.key && analysis.file === unit.active
   && analysis.sha === (rec() || {}).sha256);
-const isManual = () => !unit || settingsOf(unit).optimiser !== 'toppra';
+// The automatic optimisers: each works on the recording as taught, through one path preparation, and keeps every limit.
+const AUTO = {
+  toppra: 'Time-optimal (TOPP-RA)',
+  ruckig_s: 'Ruckig on s',
+  custom: 'Jerk and UGV load',
+};
+const isAuto = (name) => Object.prototype.hasOwnProperty.call(AUTO, name);
+const isManual = () => !unit || !isAuto(settingsOf(unit).optimiser);
+const autoName = (name) => AUTO[name] || AUTO.toppra;
+const chosenAuto = () => autoName(unit ? settingsOf(unit).optimiser : 'toppra');
 const fresh = () => !!(unit && unit.candidate && unit.fresh);
 const report = () => (fresh() && unit.candidate.recipe && unit.candidate.recipe.report) || null;
 const dur = (rows) => Math.max(0, Number(rows) - 1) * CYCLE_S;          // Lite's one clock: N rows last (N - 1) x 5 ms
+const shareWords = (x) => (Number(x) === 0.5 ? 'half' : `${Math.round(Number(x) * 100)} %`);   // of what the UGV's weight holds
 
 // The HTML's own wording of the steps (its PIPELINE_META); step 1 is the region's recording. Review
 // comes before Analyze (the owner, 16 Oct); both are manual tuning's only.
@@ -169,7 +179,12 @@ function addControls() {
         el('button', { class: 'btn light', id: 'liteRedo', text: '↷ Redo', onclick: () => history('redo') }))),
     el('div', { class: 'lite-mode', role: 'radiogroup', 'aria-label': 'Tuning' },
       mode('manual', 'Manual tuning', 'The trajectory algorithm below (the default). Its limits are shown, never enforced: the hardware decides.'),
-      mode('toppra', 'Time-optimal (TOPP-RA)', 'Automatic, on the recording as taught: none of the steps below, and every limit kept.')),
+      mode('toppra', AUTO.toppra, 'Automatic, on the recording as taught: none of the steps below, and every limit kept. '
+        + 'It meets a jerk limit by slowing the whole file.'),
+      mode('ruckig_s', AUTO.ruckig_s, 'Automatic, the same preparation: the speed along the path is jerk-limited by construction, '
+        + 'so a jerk limit slows the arm only where the jerk is.'),
+      mode('custom', AUTO.custom, 'Automatic, the same preparation: Lite’s own solve, the fastest timing with the jerk limit and the '
+        + 'UGV load limits held inside it.')),
     el('div', { id: 'liteManualSetup' },
       el('div', { class: 'lite-row' },
         numField('liteSampleMs', 'Sample interval (ms)', { value: '5', min: '0.001', step: '0.001', readonly: true,
@@ -200,9 +215,21 @@ function addControls() {
           el('select', { id: 'liteTopMode' }, el('option', { value: 'fastest', text: 'As fast as the limits allow' }),
             el('option', { value: 'target', text: 'Target time' }))),
         numField('liteTopTarget', 'Target time (s)', { min: '0.05', max: '600', step: '0.01' })),
-      el('div', { class: 'lite-hint', text: 'Time-optimal works on the recording as taught, through ALIX’s own chain (its 5 Hz smoothing, its '
-        + 'pause removal and 30 mm path smoothing, then TOPP-RA within 0.95 × the joint ratings and 600 °/s²). It never uses Trim, '
-        + 'Mean Smooth, Scale, the suggestions or the scale regions, and a file that fails a limit never goes to the robot.' }),
+      el('div', { class: 'lite-row' },
+        numField('liteJerkLimit', 'Jerk limit (rad/s³)', { min: '10', max: '1500', step: '10', placeholder: '1500',
+          title: 'Empty: the joint limits file’s 1500 rad/s³. Read on the file as the checks read it (20 Hz band-limited).' }),
+        numField('liteUgvForce', 'UGV force limit (N)', { min: '0.5', max: '500', step: '0.5', placeholder: 'no limit',
+          title: 'The most force the arm’s motion may put on the UGV, from the robot model’s link masses. Empty: no limit '
+            + '(the UGV’s weight gives none of its own: the force tips it only through its lever, which the moment counts).' }),
+        numField('liteUgvMoment', 'UGV moment limit (N m)', { min: '0.5', max: '500', step: '0.5', placeholder: 'UGV weight',
+          title: 'The most moment the arm’s motion may put on the UGV, about its base frame. Empty: half of what the UGV’s own '
+            + 'weight holds in the robot model.' })),
+      el('div', { class: 'lite-hint', text: 'The automatic optimisers work on the recording as taught, through ALIX’s own chain (its 5 Hz '
+        + 'smoothing, its pause removal and 30 mm path smoothing, its 6 Hz low-pass of the timed file), within the joint limits file: '
+        + '0.95 × the joint ratings, 600 °/s² and the jerk limit. They never use Trim, Mean Smooth, Scale, the suggestions or the '
+        + 'scale regions, and a file that fails a limit never goes to the robot. The UGV load is worked out from the robot '
+        + 'model’s link masses and held against the UGV’s own weight in that model; neither has been measured on the UGV.' }),
+      el('div', { class: 'lite-hint', id: 'liteUgvStand' }),
       el('div', { id: 'liteToppraNote', class: 'lite-status' })));
 
   // 3 Analyze: the HTML's automatic speed optimisation analysis
@@ -318,7 +345,7 @@ function renderPipe() {
     b.classList.toggle('locked', !ok);
     b.disabled = !ok;
     b.setAttribute('aria-selected', String(n === pipeStep));
-    b.title = !ok && manualOnly(n) && unit && unit.active ? 'Time-optimal (TOPP-RA) takes none of the manual steps' : '';
+    b.title = !ok && manualOnly(n) && unit && unit.active ? `${chosenAuto()} takes none of the manual steps` : '';
   });
   if ($('litePipeSummary')) $('litePipeSummary').textContent = `Step ${pipeStep} of 6 - ${STEPS[pipeStep].name}`;
   if ($('litePipeNote')) $('litePipeNote').textContent = ctx.tuneKey && pipeStep === 1 ? 'The merge from S1, as it was merged there.' : STEPS[pipeStep].note;
@@ -361,7 +388,7 @@ async function goStep(n, scroll = true) {
   }
   if (!unlocked(n)) {
     window.toast(n === 6 ? 'Generate first: Compare opens once the processed file is made from these settings.'
-      : manualOnly(n) && unit && unit.active ? 'Time-optimal (TOPP-RA) takes none of the manual steps: choose Manual tuning in Setup.'
+      : manualOnly(n) && unit && unit.active ? `${chosenAuto()} takes none of the manual steps: choose Manual tuning in Setup.`
         : 'This region has no recording yet: record it, or load a file in Save & Review.', 'warn');
     return;
   }
@@ -459,17 +486,32 @@ function writeControls(s) {
     for (const [id, k] of [['liteIdleWindow', 'idle_window'], ['liteIdleThreshold', 'idle_threshold_md'], ['liteIdleRun', 'idle_min_run'],
       ['liteSmoothWindow', 'smooth_window']]) if (!typing($(id))) $(id).value = s[k] ?? '';
     if (!editingRegion()) regions = (s.segments || []).map(r => ({ start: r.start, end: r.end, scalePct: r.pct }));
-    const tp = s.optimiser === 'toppra';
+    const tp = isAuto(s.optimiser);
     $('liteMode_manual').checked = !tp;
-    $('liteMode_toppra').checked = tp;
-    $('liteMode_toppra').disabled = !unit.toppra && !tp;
+    for (const name of Object.keys(AUTO)) {
+      const here = name === 'ruckig_s' ? unit.ruckig : unit.toppra;       // what this computer can run
+      $(`liteMode_${name}`).checked = s.optimiser === name;
+      $(`liteMode_${name}`).disabled = !here && s.optimiser !== name;
+    }
+    for (const [id, k] of [['liteJerkLimit', 'jerk_rad_s3'], ['liteUgvForce', 'ugv_force_n'], ['liteUgvMoment', 'ugv_moment_nm']]) {
+      if (!typing($(id))) $(id).value = s[k] ?? '';
+    }
+    const stand = unit.ugv_stand;                                         // the UGV's weight in the robot model
+    $('liteUgvMoment').placeholder = stand ? String(stand.limit_nm) : 'UGV weight';
+    $('liteUgvStand').textContent = stand
+      ? `UGV moment limit when empty: ${stand.limit_nm} N m, ${shareWords(stand.share)} of the ${stand.tip_moment_nm} N m the UGV's `
+        + `weight holds. The robot model sets the UGV at ${stand.mass_kg} kg (its body ${stand.body_kg} kg), ${stand.weight_n} N on `
+        + `its wheels; its centre of mass is ${stand.lever_mm} mm from the nearest wheel line, and beyond weight × that distance `
+        + 'the weight alone no longer holds those wheels down.'
+      : '';
     $('liteTopMode').value = s.time_mode === 'target' ? 'target' : 'fastest';
     if (!typing($('liteTopTarget'))) $('liteTopTarget').value = s.target_s ?? '';
     $('liteTopTarget').disabled = s.time_mode !== 'target';
     $('liteManualSetup').hidden = tp;
     $('liteToppraSetup').hidden = !tp;
-    setStatus($('liteToppraNote'), unit.toppra ? '' : 'Time-optimal is not available on this computer (toppra is not installed).',
-      unit.toppra ? '' : 'warn');
+    const lacks = !unit.toppra ? 'toppra' : s.optimiser === 'ruckig_s' && !unit.ruckig ? 'ruckig' : '';
+    setStatus($('liteToppraNote'), lacks ? `${autoName(s.optimiser)} is not available on this computer (${lacks} is not installed).` : '',
+      lacks ? 'warn' : '');
     const h = unit.settings_view;
     $('liteUndo').disabled = !h.can_undo;
     $('liteUndo').title = h.undo_label ? `Undo: ${h.undo_label}` : '';
@@ -491,9 +533,10 @@ function updateStageUI() {
 const typed = (id) => { const v = String($(id).value).trim(); return v === '' ? null : Number(v); };
 
 function readControls() {
-  const tp = $('liteMode_toppra').checked, target = Number($('liteTopTarget').value);
+  const target = Number($('liteTopTarget').value);
   return {
-    optimiser: tp ? 'toppra' : 'manual',
+    optimiser: Object.keys(AUTO).find(name => $(`liteMode_${name}`).checked) || 'manual',
+    jerk_rad_s3: typed('liteJerkLimit'), ugv_force_n: typed('liteUgvForce'), ugv_moment_nm: typed('liteUgvMoment'),
     trim: $('liteStageTrim').checked, smooth: $('liteStageSmooth').checked, scale: $('liteStageScale').checked,
     idle_window: typed('liteIdleWindow'), idle_threshold_md: typed('liteIdleThreshold'),       // read the HTML's way
     idle_min_run: typed('liteIdleRun'), smooth_window: typed('liteSmoothWindow'),               // when a file is made
@@ -969,7 +1012,7 @@ async function generate() {
     setStatus(status, 'Processing failed: Select at least one processing stage: Trim, Mean Smooth, or Scale.', 'err');
     return;
   }
-  setStatus(status, isManual() ? `Processing selected stages: ${stageLabel()}…` : 'Processing: Time-optimal (TOPP-RA)…');
+  setStatus(status, isManual() ? `Processing selected stages: ${stageLabel()}…` : `Processing: ${chosenAuto()}…`);
   const ok = await retune();
   renderGenerate();
   showResults();
@@ -994,7 +1037,7 @@ function renderGenerate(changed = null) {
     const why = changed || lastChange;
     box.replaceChildren();
     if (r) setStatus(status, staleText(why), 'warn');
-    else if (!isManual()) setStatus(status, 'Ready. Time-optimal (TOPP-RA): click Confirm & Generate.');
+    else if (!isManual()) setStatus(status, `Ready. ${chosenAuto()}: click Confirm & Generate.`);
     else setStatus(status, STAGE_LABELS.includes(why) ? `Ready. Selected stages: ${stageLabel()}. Click Confirm & Generate.`
       : `Ready. Selected stages: ${stageLabel()}. Configure any enabled stage, then click Confirm & Generate.`);
     return;
@@ -1010,11 +1053,11 @@ function renderGenerate(changed = null) {
     setStatus(status, r.message, rep.skippedRegions.length || !r.limits_ok ? 'warn' : 'ok');
   } else {                                                     // time-optimal
     const raw = rec(), orig = raw ? dur(raw.lines) : r.recorded_s;
-    box.replaceChildren(metric('Optimiser', 'Time-optimal (TOPP-RA)'), metric('Original rows', raw ? Number(raw.lines).toLocaleString() : '-'),
+    box.replaceChildren(metric('Optimiser', autoName(r.optimiser)), metric('Original rows', raw ? Number(raw.lines).toLocaleString() : '-'),
       metric('Final rows', r.lines.toLocaleString()), metric('Original time', formatSeconds(orig)), metric('Final time', formatSeconds(r.achieved_s)),
       metric('Fastest within the limits', formatSeconds(r.t_min_s)), metric('Time saved', `${(orig - r.achieved_s).toFixed(3)} s`),
       metric('Reduction', `${orig > 0 ? ((orig - r.achieved_s) / orig * 100).toFixed(1) : '0.0'}%`));
-    setStatus(status, `Generated with Time-optimal (TOPP-RA).\n${r.message}`, r.uploadable ? 'ok' : 'warn');
+    setStatus(status, `Generated with ${autoName(r.optimiser)}.\n${r.message}`, r.uploadable ? 'ok' : 'warn');
   }
 }
 
@@ -1033,7 +1076,8 @@ function outputName() {
   const rep = report();
   if (rep && rep.outputName) return rep.outputName;
   const base = ((rec() && rec().name) || 'trajectory').replace(/\.[^.]+$/, '');
-  return `${base}_toppra_processed.txt`;
+  const made = unit && isAuto(settingsOf(unit).optimiser) ? settingsOf(unit).optimiser : 'toppra';
+  return `${base}_${made}_processed.txt`;
 }
 const outputBase = () => outputName().replace(/_processed\.txt$/i, '');
 
@@ -1085,7 +1129,7 @@ async function download(kind) {
       const rep = report();
       const body = rep                                   // the HTML's report as made with the file, and Lite's limits
         ? { ...rep, limits: { enforced: false, ok: unit.candidate.result.limits_ok, text: unit.candidate.result.limits_text, checks: unit.candidate.checks } }
-        : { sourceFile: rec() && rec().name, optimiser: 'Time-optimal (TOPP-RA)', result: unit.candidate.result, checks: unit.candidate.checks,
+        : { sourceFile: rec() && rec().name, optimiser: autoName(unit.candidate.result && unit.candidate.result.optimiser), result: unit.candidate.result, checks: unit.candidate.checks,
           recipe: unit.candidate.recipe };
       saved = await saveBlobAs(new Blob([JSON.stringify(body, null, 2)], { type: 'application/json' }), `${outputBase()}_processing_report.json`,
         [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }]);
@@ -1165,7 +1209,7 @@ function showResults(job = null) {
     box.replaceChildren(top, gateChips(unit));
     return;
   }
-  const manualFile = r.optimiser !== 'toppra';
+  const manualFile = !isAuto(r.optimiser);
   const ok = manualFile ? r.limits_ok : r.uploadable;
   top.append(el('b', { class: ok ? 'lite-ok' : manualFile ? 'lite-warn' : 'lite-bad',
     text: ok ? ' Every limit passes ✓' : manualFile ? ' Some limits are broken: shown, not enforced (the hardware decides)' : ' Not ready for the robot' }));
@@ -1179,7 +1223,7 @@ function showResults(job = null) {
   }), checks.filter(c => !c.hard && c.passed === false).map(c => el('span', { class: 'lite-limit warn', title: c.detail || '' }, `! ${c.id} ${c.name}`)));
   const note = el('p', { class: 'mini-note', text: manualFile
     ? 'Manual tuning: Lite reports these limits and never holds the file to them. Sending a file that breaks one asks you once; the robot’s own protections still apply.'
-    : 'Time-optimal: a file that fails a limit is never kept or sent.' });
+    : 'Automatic: a file that fails a limit is never kept or sent.' });
   const parts = [top, gateChips(unit), chips, note];
   if (!manualFile) {
     const grid = el('div', { class: 'lite-results-grid' },
@@ -1519,15 +1563,16 @@ export function installTune() {
     const id = e.target.id;
     if (id === 'liteTopMode') $('liteTopTarget').disabled = e.target.value !== 'target';
     if (e.target.name === 'liteMode') {
-      $('liteManualSetup').hidden = e.target.value === 'toppra';
-      $('liteToppraSetup').hidden = e.target.value !== 'toppra';
-      queuePush(e.target.value === 'toppra' ? 'Time-optimal (TOPP-RA)' : 'Manual tuning');
+      $('liteManualSetup').hidden = isAuto(e.target.value);
+      $('liteToppraSetup').hidden = !isAuto(e.target.value);
+      queuePush(isAuto(e.target.value) ? autoName(e.target.value) : 'Manual tuning');
       return;
     }
     if (['liteStageTrim', 'liteStageSmooth', 'liteStageScale'].includes(id)) updateStageUI();
     const labels = { liteStageTrim: 'Trim', liteStageSmooth: 'Mean Smooth', liteStageScale: 'Scale', liteIdleWindow: 'Idle rolling window',
       liteIdleThreshold: 'Idle threshold', liteIdleRun: 'Minimum idle run', liteSmoothWindow: 'Mean smoothing window',
-      liteTopMode: 'Total time', liteTopTarget: 'Target time' };
+      liteTopMode: 'Total time', liteTopTarget: 'Target time', liteJerkLimit: 'Jerk limit', liteUgvForce: 'UGV force limit',
+      liteUgvMoment: 'UGV moment limit' };
     if (labels[id]) queuePush(labels[id]);
   });
 

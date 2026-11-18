@@ -210,6 +210,8 @@ class Entry:
     note: str = ""                   # "rung 2", "reverse of execute_path" ...
     blended_s: float = 0.0           # a joined stream: the stops at its junctions taken out, this much (27 Oct)
     members: list | None = None      # a joined stream: [(stage, first line)] of the moves it is made of
+    timed: str = ""                  # "ruckig_s": an arm move of a re-timed copy (mechanism_timing): it starts and ends at
+                                     # rest by its own timing, and the stop at its junctions stays
 
     @property
     def seconds(self) -> float:
@@ -263,6 +265,7 @@ def _entries(data: dict, folder: Path, what: str) -> list:
     from alix_dispatch import track
 
     groups = {}
+    timed = str((data.get("retimed") or {}).get("method") or "")
     for g in data.get("track_groups") or []:
         path = folder / g["track_path"]
         if not path.is_file():
@@ -297,6 +300,7 @@ def _entries(data: dict, folder: Path, what: str) -> list:
         e = Entry(len(out), int(st.get("index", pos)), str(st.get("stage_name") or f"entry {pos}"), kind[0], kind[1],
                   list(joints), t, q, list(st.get("pre_actions") or []), note=note)
         if e.kind == "arm":
+            e.timed = timed
             if pos in groups:
                 e.group, e.rows = groups[pos][0], groups[pos][1]
                 mine = emit_rows(t, q)
@@ -309,18 +313,38 @@ def _entries(data: dict, folder: Path, what: str) -> list:
 
 
 class Plan:
-    """One of ALIX's saved plans, read and checked (never changed)."""
+    """One of ALIX's saved plans, read and checked (never changed). A task's plan (``path`` None) is read from its
+    Ruckig on s copy when Lite holds one of ALIX's file as it is now (mechanism_timing: the arm moves' timing only, the
+    user, 18 Nov): ``path`` the file read, ``source`` ALIX's own, ``timing`` "ruckig_s" or "planned", ``timing_note``
+    why a copy that was wanted is not what is read (a run is then refused: mechanism_timing.require)."""
 
     def __init__(self, name: str, path: Path | None = None):
+        from . import mechanism_timing
+
         if path is None and name not in TASKS:
             raise UserError(f"There is no lid or seat task {name!r}.", f"One of: {', '.join(TASKS)}.")
         self.name = name
-        self.path = Path(path) if path is not None else PLANS / f"{name}_{MODE}.json"
-        if not self.path.is_file():
-            raise UserError(f"ALIX's plan {self.path.name} is not in Lite.", "Run tools/vendor_from_alix.py.")
-        self.data = json.loads(self.path.read_text(encoding="utf-8"))
+        self.timing_note = None
+        if path is None:
+            self.source = PLANS / f"{name}_{MODE}.json"
+            if not self.source.is_file():
+                raise UserError(f"ALIX's plan {self.source.name} is not in Lite.", "Run tools/vendor_from_alix.py.")
+            self.path, self.data, self.timing_note = mechanism_timing.read(name)
+        else:
+            self.path = self.source = Path(path)
+            if not self.path.is_file():
+                raise UserError(f"ALIX's plan {self.path.name} is not in Lite.", "Run tools/vendor_from_alix.py.")
+            self.data = json.loads(self.path.read_text(encoding="utf-8"))
+        self.retimed = self.data.get("retimed") or None
+        if self.retimed:
+            if path is not None:                     # a copy read by its own path (a retry's): of its plan as it is now
+                mechanism_timing.check_copy(self.path, self.data)
+            self.source = mechanism_timing.source_of(self.path, self.data)
+        self.timing = str(self.retimed.get("method")) if self.retimed else "planned"
         self.title = TASKS.get(name, {}).get("title", name)
         self.rungs_stem = f"{TASKS.get(name, {}).get('variant_of', name)}_{MODE}"   # a sequence plan's re-lifts: its task's own
+        if self.retimed:
+            self.rungs_stem += f".{self.timing}"     # a copy's retries: their own copies, beside it
         self.entries = _entries(self.data, self.path.parent, self.path.name)
         self.final_actions = list(self.data.get("final_actions") or [])
         self.made = self.data.get("timestamp_human")
@@ -332,7 +356,8 @@ class Plan:
         if not path.is_file():
             raise UserError(f"{self.title}'s retry {k} ({path.name}) is not in Lite.",
                             f"Generate {self.title}'s plan in ALIX (its retry_offsets make the retries' plans), then "
-                            "sync it into Lite.")
+                            "sync it into Lite." + (" A retry ALIX has is timed again by tools/retime_mechanism.py, or "
+                                                    "Lite's start." if self.retimed else ""))
         p = Plan(self.name, path)
         if (p.data.get("task_flags") or {}).get("replan_block"):
             raise UserError(f"{path.name} is one arm's block, not the whole of {self.title}: its retry_close runs the task "
@@ -419,6 +444,10 @@ class Plan:
         data = json.loads(path.read_text(encoding="utf-8"))
         if not (data.get("task_flags") or {}).get("replan_block"):
             raise UserError(f"{path.name} is not a block-only plan: nothing was moved.")
+        if data.get("retimed"):
+            from . import mechanism_timing
+
+            mechanism_timing.check_copy(path, data)
         block = _entries(data, path.parent, path.name)
         foreign = [e.stage for e in block if e.side != lifter]
         if foreign or not block:
@@ -469,7 +498,8 @@ class Plan:
     def view(self) -> dict:
         t = TASKS.get(self.name, {})
         return dict(name=self.name, title=self.title, short=t.get("short"), does=t.get("does"), start=t.get("start"),
-                    end=t.get("end"), file=self.path.name, made=self.made, seconds=self.seconds(), sides=self.sides(),
+                    end=t.get("end"), file=self.source.name, made=self.made, seconds=self.seconds(), sides=self.sides(),
+                    timing=self.timing, timing_file=self.path.name if self.retimed else None, timing_note=self.timing_note,
                     entries=[dict(stage=e.stage, kind=e.kind, side=e.side, seconds=round(e.seconds, 2),
                                   lines=len(e.rows) if e.rows else None, track=e.group is not None) for e in self.entries],
                     checks=self.checks(), camera_checks=camera_checks(self), standoff_mm=STANDOFF_MM, rungs_note=self.rungs_note(), streamed=self.streamed(),
@@ -498,7 +528,7 @@ def reverse_block(block: list, note: str = "re-lift restore, reversed") -> list:
         t = (T - e.t)[::-1]
         q = e.q[::-1]
         out.append(Entry(-1, e.index, f"back along {e.stage}", "arm", e.side, list(e.joints), t, q, [],
-                         rows=emit_rows(t, q), note=note))
+                         rows=emit_rows(t, q), note=note, timed=e.timed))
     return out
 
 
@@ -591,6 +621,8 @@ def joined_moves(entries: list, i: int, bridged=()) -> tuple:
     for k in range(len(cuts) - 1, -1, -1):      # the stop between two joined moves taken out (the owner, 27 Oct), a carry's never
         if group[k].stage in NO_BLEND_STAGES or group[k + 1].stage in NO_BLEND_STAGES or (group[k].note or group[k + 1].note):
             continue
+        if group[k].timed or group[k + 1].timed:    # a re-timed copy's moves end at rest within the limits; taking the stop
+            continue                                # out passes the path's corner at speed (6-11 x 600 deg/s^2 read, 18 Nov)
         before = len(rows)
         rows = blend_junction(rows, cuts[k])
         removed[k] = before - len(rows)
@@ -603,7 +635,7 @@ def joined_moves(entries: list, i: int, bridged=()) -> tuple:
     names = [x.stage for x in group] + [x.stage for x in still]
     return Entry(e.i, e.index, " + ".join(names), "arm", e.side, list(e.joints), t, q, list(e.pre_actions), rows=rows,
                  group=e.group, note=" + ".join(x.note for x in group + still if x.note and not x.note.startswith("one point")),
-                 blended_s=round(blended * CLOCK_S, 3), members=members), len(group) + len(still)
+                 blended_s=round(blended * CLOCK_S, 3), members=members, timed=e.timed), len(group) + len(still)
 
 
 #: A joint this close to the reversed lift's first line (millidegrees) is where the lift ended.
@@ -1346,6 +1378,9 @@ class Runner:
 
     def _plan(self, name: str) -> str:
         task, rung = split_rung(name)               # "seat_close#rung1": the task's retry 1, run from its start
+        from . import mechanism_timing
+
+        mechanism_timing.require([task], TASKS.get(task, {}).get("title", task))   # the Ruckig on s copy, or not played
         plan = Plan(task) if rung is None else Plan(task).task_rung(rung)
         move = self.move(task) if callable(self.move) else self.move
         place = None
@@ -2686,8 +2721,11 @@ def run(robot, name: str, mode: str | None = None, ugv_placement: dict | None = 
     follows the UGV's ``ugv_placement`` (placement.py's standoff and moves; None: the plans' own), and in Real the depth's
     reading at its first look (place_correct)."""
     plan = Plan(name)                            # read and checked before anything starts
+    from . import mechanism_timing
+
+    mechanism_timing.require([name] + (["seat_close"] if name == "lid_open" else []), plan.title)   # its copy, or not run
     mode = mode or robot.mode
-    title = f"{plan.title} (ALIX's {plan.path.name})"
+    title = f"{plan.title} (ALIX's {plan.source.name}{', timed with Ruckig on s' if plan.retimed else ''})"
     if mode == "real" and all(robot._real(s) for s in ("left", "right")):
         camera_required(robot)                   # refused at once, before the job starts
         joints_cool(robot)

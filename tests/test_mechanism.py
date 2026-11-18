@@ -120,6 +120,16 @@ class FakeExec:
         pass
 
 
+@pytest.fixture
+def planned_timing(monkeypatch):
+    """ALIX's own timing, whose junction stops Lite takes out (the owner, 27 Oct). Since 18 Nov a task runs its Ruckig
+    on s copy, whose moves keep their stops (tests/test_mechanism_timing.py): these tests are of the planned timing."""
+    monkeypatch.setenv("LITE_MECHANISM_TIMING", "planned")
+    mechanism.cached.cache_clear()
+    yield
+    mechanism.cached.cache_clear()
+
+
 def _plans_with_rung1_at(tmp_path, monkeypatch, off_deg: float) -> float:
     """ALIX's plans copied, lid_open's first re-lift made to start ``off_deg`` from where its lift ends (the rungs chain
     from there), and Lite reading them: the ladder's runs whatever re-lifts are vendored (21 Oct: the revised Open the lid
@@ -138,6 +148,9 @@ def _plans_with_rung1_at(tmp_path, monkeypatch, off_deg: float) -> float:
     arm["waypoints"][0]["positions"] = [end[0] + np.radians(off_deg)] + end[1:]
     rung.write_text(json.dumps(r))
     monkeypatch.setattr(mechanism, "PLANS", dst)
+    # an edited plan has no Ruckig on s copy (mechanism_timing, 18 Nov; tests/test_mechanism_timing.py): these tests
+    # are of the run's steps, on the plans as planned
+    monkeypatch.setenv("LITE_MECHANISM_TIMING", "planned")
     mechanism.cached.cache_clear()
     return end[0]
 
@@ -203,7 +216,7 @@ def test_seat_open_with_the_lid_closed_runs_lid_open_first_then_itself_again():
         ("seat_open", "start"), ("lid_open", "start"), ("seat_open", "start")]   # each plan's end look is its own
 
 
-def test_an_arms_back_to_back_moves_go_as_one_stream_and_the_plan_ends_with_its_own_look():
+def test_an_arms_back_to_back_moves_go_as_one_stream_and_the_plan_ends_with_its_own_look(planned_timing):
     """24 Oct: every stream has its own start, stop and settle (1.6 s each), and the final check went back by a MoveJ
     at the speed slider (3.2 s). An arm's moves straight after one another, none asking the camera or holding before
     it, are one stream (they meet on the same line in all four plans); the final check comes back along its way in."""
@@ -650,7 +663,7 @@ def test_in_a_sequence_the_checks_before_the_first_lift_are_not_asked():
     assert [a["stage"] for a in dropped] == ["verify_lid_open", "verify_seat_closed"] and len(entries) == len(mechanism.Plan("seat_open").entries)
 
 
-def test_the_stops_at_the_junctions_of_joined_moves_are_taken_out_on_the_same_path():
+def test_the_stops_at_the_junctions_of_joined_moves_are_taken_out_on_the_same_path(planned_timing):
     """The owner, 27 Oct: the planner stops at every stage boundary (retract_pose, then retract_pose_2); the stops between
     joined moves are taken out by re-timing the window around each junction on the very same path, passing through at
     the speed the arm arrives with and easing to the speed it leaves at. A carry (the lift, the push) keeps its start
@@ -685,7 +698,7 @@ def test_the_stops_at_the_junctions_of_joined_moves_are_taken_out_on_the_same_pa
     assert mechanism.blend_junction([[0] * 7] * 10, 5) == [[0] * 7] * 10                   # nothing moving: left alone
 
 
-def test_a_plan_knows_the_streams_a_run_makes_of_its_moves_and_the_3d_view_reads_them():
+def test_a_plan_knows_the_streams_a_run_makes_of_its_moves_and_the_3d_view_reads_them(planned_timing):
     """The owner, 27 Oct: "post-processing of the generated plans to make sure we remove the stops between stages". The
     run's streams (joined_moves, their junctions blended) are the plan's ``streams``; its ``streamed`` view says what the
     moves take streamed and how much of the planner's stops came out; the simulation plays the same streams and names

@@ -6,6 +6,17 @@
 # repository's python/ folder), which needs git, a C compiler and Python's headers. Without it
 # Lite offers the Default optimiser only.
 toppra==0.6.10
+# Ruckig on s needs the ruckig package (Ruckig Community) as well as toppra. Two things use it: the
+# automatic optimiser of that name (optimise/ruckig_opt.py), and making the lid and seat plans' Ruckig
+# on s copies (server/mechanism_timing.py, tools/retime_mechanism.py; Lite's start makes a copy for a
+# plan that has none). RUNNING the lid and seat tasks does not need it: the copies are files in
+# Resources/RetimedPlans. It is NOT pinned here, so setup does not install it. Lite's code is tested
+# with 0.9.2 and with 0.19.4 (18 Nov 2026: the feature's tests pass with both, and both make the same
+# lid and seat copies to the byte). For Python 3.12 PyPI has a ready-made Linux x86-64 wheel for 0.19.4
+# and none for Linux aarch64, so the Jetson would build it from source: that build has not been tried,
+# which is why it is not pinned. On a Linux x86-64 PC:  .venv/bin/python -m pip install ruckig==0.19.4
+# Ruckig Community computes a move with intermediate waypoints on its maker's server; Lite never gives
+# it any (one stretch of the path at a time), so nothing leaves the computer.
 # Re-baking the robot's 3D overlay with ALIX's own tool (tools/bake_robot_overlay.py). Only
 # needed when the robot model changes; the bake itself is kept in assets/robot/. PyPI has
 # source packages only, so it needs a C++ compiler.

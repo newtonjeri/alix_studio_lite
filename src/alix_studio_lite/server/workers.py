@@ -109,18 +109,53 @@ def _maxpool(u: np.ndarray, buckets: int = 1500) -> list[float]:
     return [round(float(u[a:b].max()), 4) for a, b in zip(edges[:-1], edges[1:])]
 
 
+#: the automatic optimisers, by the name a region's settings carry, with the name the page shows
+AUTOMATIC = {"toppra": "Time-optimal (TOPP-RA)", "ruckig_s": "Ruckig on s", "custom": "Jerk and UGV load"}
+JERK_DEFAULT_RAD_S3 = 1500.0          # ALIX's joint_limits.yaml max_jerk: the limit when a region sets none
+
+
+def ugv_moment_default() -> float:
+    """The UGV moment limit when a region sets none: half of what the UGV's own weight holds, by the URDF's
+    mass and wheel places (base_load.ugv_stand, UGV_MOMENT_SHARE; the user, 18 Nov)."""
+    from alix_studio_lite.motion import base_load
+
+    return base_load.weight_moment_limit_nm()
+
+
 def is_manual(settings: dict) -> bool:
-    """Manual tuning (the trajectory HTML's algorithm) unless Time-optimal is chosen. A region set
-    before 15 Oct says "default" (the earlier name): it tunes manually now."""
-    return (settings.get("optimiser") or "manual") != "toppra"
+    """Manual tuning (the trajectory HTML's algorithm) unless an automatic optimiser is chosen. A
+    region set before 15 Oct says "default" (the earlier name): it tunes manually now."""
+    return (settings.get("optimiser") or "manual") not in AUTOMATIC
+
+
+def optimiser_name(settings: dict) -> str:
+    return "manual tuning" if is_manual(settings) else AUTOMATIC[settings["optimiser"]]
 
 
 def request_kwargs(settings: dict) -> dict:
-    """The time-optimal request for a region's settings: the recording as taught, the target time
-    when one is set (else the fastest the limits allow). Nothing of the manual tuning goes in."""
+    """The automatic request for a region's settings: the recording as taught, the optimiser chosen,
+    the target time when one is set (else the fastest the limits allow), the jerk limit (the joint
+    limits file's when the region sets none), the UGV moment limit (half of what the UGV's own weight
+    holds when the region sets none) and the UGV force limit when the region sets one. Nothing of the
+    manual tuning goes in."""
     mode = settings.get("time_mode") or ("target" if settings.get("target_s") else "fastest")
-    return dict(optimiser="toppra", max_dev_mm=settings.get("max_dev_mm"),
-                target_s=settings.get("target_s") if mode == "target" else None)
+    return dict(optimiser=settings["optimiser"], max_dev_mm=settings.get("max_dev_mm"),
+                target_s=settings.get("target_s") if mode == "target" else None,
+                jerk_rad_s3=settings.get("jerk_rad_s3") or JERK_DEFAULT_RAD_S3,
+                ugv_force_n=settings.get("ugv_force_n"),
+                ugv_moment_nm=settings.get("ugv_moment_nm") or ugv_moment_default(),
+                pole_mm=settings.get("pole_mm"))
+
+
+def optimiser_missing(optimiser: str) -> str | None:
+    """What an automatic optimiser needs that this computer lacks, or None."""
+    from alix_studio_lite.optimise import ruckig_opt, toppra_available
+
+    if not toppra_available():
+        return "toppra"
+    if optimiser == "ruckig_s" and not ruckig_opt.available():
+        return "ruckig"
+    return None
 
 
 def progress_rows(md_raw: np.ndarray, md_out: np.ndarray, samples: int = 1200) -> list:
@@ -145,14 +180,14 @@ def progress_rows(md_raw: np.ndarray, md_out: np.ndarray, samples: int = 1200) -
 
 def optimise_unit(raw_path: str, out_path: str, side: str, settings: dict, source_name: str = "") -> dict:
     """Tune one recording with the region's settings and write the candidate file: manually (the
-    HTML's algorithm, limits reported) or time-optimally (TOPP-RA, limits kept)."""
+    HTML's algorithm, limits reported) or automatically (the optimiser the region chose, limits kept)."""
     from alix_studio_lite import vendor_paths
 
     vendor_paths.activate()
     from alix_studio_lite.motion import track
     from alix_studio_lite.motion.checks import util_series
     from alix_studio_lite.motion.limits import load_limits
-    from alix_studio_lite.optimise import manual, optimise, request_from_file, toppra_available, write_result
+    from alix_studio_lite.optimise import manual, optimise, request_from_file, write_result
 
     if is_manual(settings):
         md_raw = track.read_md(raw_path)
@@ -162,14 +197,15 @@ def optimise_unit(raw_path: str, out_path: str, side: str, settings: dict, sourc
             return dict(error=str(exc), hint="Check the processing stages and the scale regions.")
         progress = manual.progress_pairs(res)
     else:
-        if not toppra_available():
-            return dict(error="Time-optimal is not available on this computer.",
-                        hint="Tune it manually, or install toppra (see README).")
+        missing = optimiser_missing(settings["optimiser"])
+        if missing:
+            return dict(error=f"{AUTOMATIC[settings['optimiser']]} is not available on this computer.",
+                        hint=f"Tune it manually or choose another optimiser, or install {missing} (see README).")
         req = request_from_file(raw_path, side, **request_kwargs(settings))
         res = optimise(req)
         progress = progress_rows(req.md_raw, res.md)
     out, side_file = write_result(res, out_path)
-    util = util_series(res.md, load_limits(side))
+    util = util_series(res.md, load_limits(side))                # speed and acceleration, for the plot
     speed = np.max(np.vstack([util[f"speed_J{j}"] for j in range(1, 8)]), axis=0)
     acc = np.max(np.vstack([util[f"acceleration_J{j}"] for j in range(1, 8)]), axis=0)
     return dict(summary=res.summary(), checks=res.checks.to_dict(), recipe=res.recipe,

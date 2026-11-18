@@ -1,5 +1,8 @@
-"""TIME-OPTIMAL tuning (TOPP-RA), the alternative to manual tuning: one region on one arm
-(``optimise``), or a TOGETHER pair that must start and finish together (``optimise_together``).
+"""AUTOMATIC tuning, the alternative to manual tuning: one region on one arm (``optimise``), or a
+TOGETHER pair that must start and finish together (``optimise_together``). Three optimisers, chosen
+per request: Time-optimal (``toppra_opt``, ALIX's TOPP-RA chain), Ruckig on s (``ruckig_opt``) and
+Lite's own (``custom_opt``). They share the path preparation and are held to the same limits: the
+joint limits, the path accuracy, and where the request sets them the jerk limit and the UGV load.
 
 It works on the recording as taught, through ALIX's own chain (``toppra_opt``), and never goes
 through the manual tuning's Trim, Mean Smooth or Scale, its suggestions or its scale regions
@@ -20,15 +23,17 @@ from ..motion import timing, track
 from ..motion.checks import check_bytes, motion_ok
 from ..motion.limits import LimitSet, load_limits
 from . import binding as bnd
-from . import toppra_opt
+from . import custom_opt, ruckig_opt, toppra_opt
 from .target import Search, find_min_lines, settle
-from .types import OPTIMISERS, OptRequest, OptResult
+from .types import AUTOMATIC, OptRequest, OptResult
+
+PLANS = {"toppra": toppra_opt.ToppraPlan, "ruckig_s": ruckig_opt.RuckigPlan, "custom": custom_opt.CustomPlan}
 
 
 def make_plan(req: OptRequest, limits: LimitSet):
-    if req.optimiser == "toppra":
-        return toppra_opt.ToppraPlan(req.md_raw, limits, req.toppra)
-    raise ValueError(f"the time-optimal engine runs {OPTIMISERS[1]!r} only, got {req.optimiser!r} "
+    if req.optimiser in PLANS:
+        return PLANS[req.optimiser](req.md_raw, limits, req.toppra)
+    raise ValueError(f"the automatic engine runs {', '.join(AUTOMATIC)}, got {req.optimiser!r} "
                      "(manual tuning is optimise.manual)")
 
 
@@ -36,7 +41,7 @@ def _versions() -> dict:
     import scipy
 
     out = {"alix_studio_lite": __version__, "numpy": np.__version__, "scipy": scipy.__version__,
-           "toppra": toppra_opt.toppra_version()}
+           "toppra": toppra_opt.toppra_version(), "ruckig": ruckig_opt.ruckig_version()}
     try:
         man = json.loads((vendor_paths.VENDOR / "MANIFEST.json").read_text(encoding="utf-8"))
         out["vendored_alix_commit"] = (man.get("alix_git") or {}).get("commit")
@@ -52,13 +57,22 @@ class _Solved:
         t0 = time.perf_counter()
         self.req = req
         self.limits = limits
-        self.plan = make_plan(req, limits)
+        self.plan, self.search, self.n_min = self._fastest(req)
         t1 = time.perf_counter()
-        self.search = Search(self.plan.make, lambda md: motion_ok(md, limits))
-        self.n_min = find_min_lines(self.search, self.plan.n_start, self.plan.n_floor, self.plan.n_cap)
-        if self.n_min is not None:
-            self.n_min = settle(self.search, self.n_min)
-        self.timings = {"prepare_s": round(t1 - t0, 3), "search_s": round(time.perf_counter() - t1, 3)}
+        if req.toppra.arrival_hold and self.plan.info.get("arrival_holds"):
+            # the hold slows a file whose turns were fine without it: keep whichever is faster
+            from dataclasses import replace
+
+            plan, search, n_min = self._fastest(replace(req, toppra=replace(req.toppra, arrival_hold=0.0)))
+            if n_min is not None and (self.n_min is None or n_min < self.n_min):
+                self.plan, self.search, self.n_min = plan, search, n_min
+        self.timings = {"first_s": round(t1 - t0, 3), "without_hold_s": round(time.perf_counter() - t1, 3)}
+
+    def _fastest(self, req: OptRequest) -> tuple:
+        plan = make_plan(req, self.limits)
+        search = Search(plan.make, lambda md: motion_ok(md, self.limits))
+        n_min = find_min_lines(search, plan.n_start, plan.n_floor, plan.n_cap)
+        return plan, search, (None if n_min is None else settle(search, n_min))
 
     def target_n(self) -> int | None:
         if self.req.target_s is None:
@@ -115,6 +129,8 @@ def _finish(s: _Solved, n: int, n_target: int | None, *, n_min_shared: int | Non
                     rate_design=limits.rate_design, acc_deg_s2=limits.acc_deg_s2, acc_tol=limits.acc_tol,
                     acc_reading="20 Hz band-limited (ALIX F99c)", step_deg=limits.step_deg,
                     max_dev_mm=limits.max_dev_mm, ends_tol_deg=limits.ends_tol_deg,
+                    jerk_max_rad_s3=limits.jerk_max_rad_s3, jerk_reading="20 Hz band-limited",
+                    ugv_force_n=limits.ugv_force_n, ugv_moment_nm=limits.ugv_moment_nm, pole_m=limits.pole_m,
                     dt_gate_s=limits.dt_gate, execution_model=limits.model.get("fitted")),
         plan=s.plan.recipe(), lines=lines, lines_min=lines_min, recorded_lines=int(len(req.md_raw)),
         natural=req.natural, speedup_vs_recording=round(len(req.md_raw) / lines, 3),
@@ -131,7 +147,9 @@ def _limits_for(req: OptRequest, limits: LimitSet | None) -> LimitSet:
     lim = limits if limits is not None else load_limits(req.side)
     if lim.side != req.side:
         raise ValueError(f"limits are for the {lim.side} arm, the request is for the {req.side} arm")
-    return lim.with_max_dev(req.max_dev_mm)
+    return lim.with_max_dev(req.max_dev_mm).with_auto(
+        jerk_rad_s3=req.jerk_rad_s3, ugv_force_n=req.ugv_force_n, ugv_moment_nm=req.ugv_moment_nm,
+        pole_m=None if req.pole_mm is None else float(req.pole_mm) / 1000.0)
 
 
 def optimise(req: OptRequest, limits: LimitSet | None = None) -> OptResult:

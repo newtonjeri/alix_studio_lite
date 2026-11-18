@@ -15,7 +15,9 @@ import numpy as np
 from ..motion.timing import CYCLE_S
 from .types import Binding
 
-KIND_TEXT = {"speed": "speed", "acceleration": "acceleration", "joint_limit": "approach to its end stop"}
+KIND_TEXT = {"speed": "speed", "acceleration": "acceleration", "joint_limit": "approach to its end stop",
+             "jerk": "jerk"}
+WHOLE_ARM_TEXT = {"ugv_force": "the force on the UGV", "ugv_moment": "the moment on the UGV"}
 
 
 def _longest_run(mask: np.ndarray) -> tuple[int, int]:
@@ -39,15 +41,17 @@ def binding_report(util: dict, threshold: float = 0.98, top: int = 3) -> list[Bi
         mask = u >= threshold
         if not mask.any():
             continue
-        kind, _, j = key.rpartition("_J")
+        kind, sep, j = key.rpartition("_J")
+        if not sep:                                    # a limit of the whole arm, not of one joint
+            kind, j = key, None
         l0, l1 = _longest_run(mask)
-        found.append(Binding(kind=kind, joint=int(j), share=float(mask.mean()), line0=int(l0), line1=int(l1),
+        found.append(Binding(kind=kind, joint=None if j is None else int(j), share=float(mask.mean()), line0=int(l0), line1=int(l1),
                              t0_s=round(l0 * CYCLE_S, 3), t1_s=round(l1 * CYCLE_S, 3),
                              peak=float(u.max()), text=""))
     found.sort(key=lambda b: (-b.share, -b.peak))
     found = found[:top]
     for b in found:
-        what = f"joint {b.joint} {KIND_TEXT.get(b.kind, b.kind)}"
+        what = WHOLE_ARM_TEXT.get(b.kind) if b.joint is None else f"joint {b.joint} {KIND_TEXT.get(b.kind, b.kind)}"
         if b.share < 0.01:                      # a single peak, not a stretch
             b.text = f"{what} around {0.5 * (b.t0_s + b.t1_s):.1f} s"
         else:

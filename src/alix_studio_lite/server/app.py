@@ -198,6 +198,25 @@ class LiteApp:
                 self._toppra = False
         return self._toppra
 
+    def ruckig(self) -> bool:
+        """Whether Ruckig on s can run here (it needs the ruckig package, and toppra)."""
+        try:
+            import importlib.util
+
+            return self.toppra() and importlib.util.find_spec("ruckig") is not None
+        except Exception:                                                  # noqa: BLE001
+            return False
+
+    def ugv_stand(self) -> dict | None:
+        """The UGV's weight in the robot model, the moment it holds and the share of it that is the UGV moment
+        limit when a region sets none (base_load.ugv_stand). None when the model cannot be read."""
+        try:
+            from ..motion import base_load
+
+            return base_load.ugv_stand().view()
+        except Exception:                                                  # noqa: BLE001
+            return None
+
     def state(self) -> dict:
         return dict(version=__version__, data_dir=str(self.data_dir), mode=self.ui["mode"], mode_text=MODE_TEXT[self.ui["mode"]],
                     role="engineer" if _is_engineer(self) else "operator", cubicle_mm=self.ui["cubicle_mm"], theme=self.ui["theme"],
@@ -376,8 +395,21 @@ def post_settings(app, q, body, m):
         changes["target_s"] = round(t, 3)
     if changes.get("optimiser") == "default":           # the earlier name of manual tuning
         changes["optimiser"] = "manual"
-    if "optimiser" in changes and changes["optimiser"] not in ("manual", "toppra"):
-        raise UserError("Choose manual tuning or Time-optimal.")
+    if "optimiser" in changes and changes["optimiser"] not in ("manual", *workers.AUTOMATIC):
+        raise UserError("Choose manual tuning or one of the automatic optimisers: "
+                        + ", ".join(workers.AUTOMATIC.values()) + ".")
+    for name, low, high, said in (("jerk_rad_s3", 10.0, workers.JERK_DEFAULT_RAD_S3, "The jerk limit must be between 10 and "
+                                   f"{workers.JERK_DEFAULT_RAD_S3:g} rad/s^3 (the joint limits file's)."),
+                                  ("ugv_force_n", 0.5, 500.0, "The UGV force limit must be between 0.5 and 500 N."),
+                                  ("ugv_moment_nm", 0.5, 500.0, "The UGV moment limit must be between 0.5 and 500 N m.")):
+        if changes.get(name) in ("", None):
+            if name in changes:
+                changes[name] = None                        # cleared: the default (jerk) or no limit (UGV load)
+            continue
+        value = float(changes[name])
+        if not low <= value <= high:
+            raise UserError(said)
+        changes[name] = round(value, 3)
     if "program_id" in changes and changes["program_id"] is not None:
         if not 1 <= int(changes["program_id"]) <= 100:
             raise UserError("Program numbers are 1 to 100.")
@@ -400,7 +432,7 @@ def post_optimise(app, q, body, m):
     side = p.units[key]["arm"]
     out = p.candidate_path(key)
     out.parent.mkdir(parents=True, exist_ok=True)
-    name = "manual tuning" if workers.is_manual(settings) else "Time-optimal"
+    name = workers.optimiser_name(settings)
 
     def work(job):
         job.progress(f"Optimising with {name}", 1, 2)

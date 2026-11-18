@@ -314,7 +314,7 @@ def sources(units, side: str) -> list[dict]:
             out.append(_item(units, side, "ver", key, v["version"], display_name(u), v.get("name") or f"{display_name(u)} {v['version']}",
                              v.get("lines"), v.get("taught_arm"), v.get("stage"), behind.get("placement"), units.phase_of(key),
                              v.get("sha256"), v.get("saved")))
-            out[-1]["auto"] = v.get("optimiser") == "toppra"            # made by Tune's Time-optimal (TOPP-RA)
+            out[-1]["auto"] = v.get("optimiser") in ("toppra", "ruckig_s", "custom")   # made by an automatic optimiser
     for m in listing(units, side):
         out.append(_item(units, side, "merge", None, m["file"], "Merges", m["name"], m.get("lines"), m.get("taught_arm"),
                          m.get("stage"), m.get("placement"), m.get("phase"), m.get("sha256"), m.get("made")))

@@ -38,8 +38,10 @@ STATUSES = [
     ("real_ok", "Tested on robot"),
 ]
 
+#: jerk_rad_s3, ugv_force_n, ugv_moment_nm: the automatic optimisers' settings (None: the joint limits file's
+#: jerk limit, and no limit on the UGV load)
 DEFAULT_SETTINGS = dict(optimiser="manual", target_s=None, segments=[], smooth_window=101,
-                        program_id=None, max_dev_mm=None)
+                        program_id=None, max_dev_mm=None, jerk_rad_s3=None, ugv_force_n=None, ugv_moment_nm=None)
 
 
 
@@ -183,7 +185,7 @@ class Project:
                             seconds=res.get("achieved_s") if res.get("achieved_s") is not None else track.duration_s(res.get("lines")),
                             # whether every hard limit passes; only a time-optimal file is held to it
                             limits_ok=res.get("limits_ok", res.get("uploadable")),
-                            limits_text=res.get("limits_text") or "", enforced=res.get("optimiser") == "toppra",
+                            limits_text=res.get("limits_text") or "", enforced=res.get("optimiser") in ("toppra", "ruckig_s", "custom"),
                             saved=rec.get("written_utc")))
         return out
 

@@ -38,9 +38,11 @@ def test_the_plans_stretches_the_two_arms_run_at_once(monkeypatch):
     first, second = legs[0][1], legs[1][1]
     assert first.label() == ("LEFT move_to_half_pole_length + hand_grasp || "
                              "RIGHT move_to_inspect + move_to_inspect_pole_length + hand_grasp")
-    assert first.seconds("left") == 0.0 and first.seconds("right") == pytest.approx(1.73, abs=0.02)
+    # the times are the Ruckig on s copy's since 18 Nov (the look 0.92 s, was 0.84; the left's approach 1.25 + 0.52 s
+    # with its stops kept, was 1.2 s with them taken out): the same stretches
+    assert first.seconds("left") == 0.0 and first.seconds("right") == pytest.approx(1.80, abs=0.02)
     carry = m.joined_moves(entries, first.used, bridged)[0]
-    assert carry.side == "left" and m.carries_fixture(carry) and 1.0 < m.fixture_offset_s(carry) < 1.5
+    assert carry.side == "left" and m.carries_fixture(carry) and 1.5 < m.fixture_offset_s(carry) < 2.0
     assert first.seconds("right") + m.LEG_MARGIN_S > m.fixture_offset_s(carry)             # so the lift is not in it
     looked_first = [e for k, e in enumerate(entries) if not (k in (1, 2) and e.side == "right")]   # the right's pole and grasp
     with monkeypatch.context() as mp:                                   # out: its look alone before the lift, a margin it keeps
@@ -48,7 +50,7 @@ def test_the_plans_stretches_the_two_arms_run_at_once(monkeypatch):
         leg = m.two_arm_leg(looked_first, 0, unsent, bridged, plan.name)
     carry = next(e for e, _, _ in leg.order if m.carries_fixture(e))
     assert carry.side == "left" and carry.stage == "move_to_pre_start + move_to_start + execute_path"
-    assert leg.seconds("right") == pytest.approx(0.84, abs=0.02) and leg.seconds("right") + 0.2 <= m.fixture_offset_s(carry)
+    assert leg.seconds("right") == pytest.approx(0.92, abs=0.02) and leg.seconds("right") + 0.2 <= m.fixture_offset_s(carry)
     assert m.leg_window_s(leg) == pytest.approx(m.fixture_offset_s(carry) + m.LEG_MARGIN_S, abs=1e-6)
     assert [leg.took(e) for e, _, _ in leg.order if e.side == "left"][:2] == [0.0, 0.0]    # the left's pole and first hand: set already
     assert [(e.side, e.kind) for e, _, _ in second.order] == [("left", "arm"), ("right", "hand"), ("right", "arm")]

@@ -3067,6 +3067,12 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
     if missing:
         raise UserError("Not on the controllers: " + "; ".join(missing) + ". Nothing moved.",
                         "Upload the programs or save the points, simulate again, then run it.", code="missing")
+    from . import mechanism as _mech, mechanism_timing
+    # every lid or seat task it plays, and those it may add (Close the seat after Open the lid; an INSPECT's: any of
+    # them): each one's Ruckig on s copy of its plan as it is now, or nothing moves (the user, 18 Nov)
+    mine = [st["task"] for st in run["plan"] if st["kind"] == "mechanism" and st.get("task")]
+    mechanism_timing.require(mine + (["seat_close"] if "lid_open" in mine else [])
+                             + (list(_mech.TASKS) if any(st["kind"] == "inspect" for st in run["plan"]) else []), "This run")
     from . import contact_sim                       # the closings this run may add (Close the seat after a seat that came up
     contact_sim.require((["seat_close"] if any(st["kind"] == "mechanism" and st["task"] == "lid_open" for st in run["plan"])
                          else []) + (["lid_close"] if any(st["kind"] == "inspect" for st in run["plan"]) else []), "This run")

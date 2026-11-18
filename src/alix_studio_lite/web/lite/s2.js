@@ -429,8 +429,12 @@ function paintTask(side, keep) {
   const t = S.mechanisms[$(`liteS2_${side}_task`)?.value];
   const note = $(`liteS2TaskNote_${side}`);
   if (!note || !t) return;
+  // how its arm moves are timed (18 Nov): Lite's Ruckig on s copy of the plan, or why that copy is not what it has
+  const timed = t.timing === 'ruckig_s' ? ' Its arm moves are timed with Ruckig on s; the poles and hands are as planned.'
+    : t.timing_note ? ` Its arm moves have no Ruckig on s timing for this plan (${t.timing_note}): it is not run until that is made.`
+      : ' Its arm moves are on the plan’s own timing.';
   note.textContent = `${t.does} From ${t.start} to ${t.end}; about ${Math.round(t.seconds)} s of motion. ALIX's plan, made with the UGV at `
-    + `${t.standoff_mm} mm from the commode and no offset. It uses both arms: it is added to both lists, and both arms finish what is `
+    + `${t.standoff_mm} mm from the commode and no offset.${timed} It uses both arms: it is added to both lists, and both arms finish what is `
     + 'before it, then it runs. In Real the wrist camera checks the lid and the seat; in Simulation the checks are assumed.';
   paintChecks(side, keep);
 }

@@ -46,6 +46,7 @@ def test_real_lid_open_streams_each_move_and_re_lifts_from_rung_1(server):
     assert res["checks"][-2]["check"] == "verify_lid_open" and not res["checks"][-2].get("final")   # seat on the end frames (30 Oct)
     assert res["checks"][-1]["check"] == "verify_seat_with_lid" and res["seat_after_lid"] == "down"
     said = " | ".join(e["text"] for e in done["events"])
+    assert "lid_open_toppra.ruckig_s.json" in said               # the task ran its Ruckig on s copy (the user, 18 Nov)
     assert "Open the seat's way in" not in said and "at where Open the lid ended" not in said   # no look of Lite's own (26 Oct)
     assert "the task configuration's retry_offsets" in said and "re-lift 1" in said
     assert not res["places"][0].get("retries")                                     # the camera asked nothing again

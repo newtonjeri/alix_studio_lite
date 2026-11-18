@@ -16,6 +16,13 @@ Hard limits (a file that fails one cannot be uploaded):
   of the taught path, measured both ways against the raw recording;
 - L6 start and end: the first and last lines are within 0.05 deg of the recording's.
 
+Hard only when the limit set carries them (the automatic optimisation's two settings):
+
+- L7 jerk: the 20 Hz band-limited joint jerk stays within the jerk limit (ALIX's
+  joint_limits.yaml: 1500 rad/s^3);
+- L8 UGV load: the force and the moment the arm's motion puts on the UGV (``base_load``, from the
+  model's link masses) stay within the limits set.
+
 Checks (shown, never blocking):
 
 - C1 predicted path departure (ALIX's G5). ALIX's model reads 33-109 mm on the raw commode C
@@ -24,7 +31,7 @@ Checks (shown, never blocking):
 - C3 hand speed (the contact pad's top speed);
 - C4 raw line speed (lines whose unfiltered speed is over a rating; a warning risk).
 
-L2, L3, L4 and the speed part of L1 depend on how fast the file plays, and ``motion_ok`` is
+L2, L3, L4, L7, L8 and the speed part of L1 depend on how fast the file plays, and ``motion_ok`` is
 the quick test the time search uses. The joint-limit floor of L1, L5 and L6 do not change with
 speed: no timing can fix them.
 """
@@ -67,6 +74,24 @@ def acc_deg_s2(q: np.ndarray, dt: float) -> np.ndarray:
     return np.abs(np.diff(bandlimit(q, dt), n=2, axis=0)) / float(dt) ** 2
 
 
+def jerk_deg_s3(q: np.ndarray, dt: float) -> np.ndarray:
+    """(N-3, 7) band-limited joint jerk magnitudes: the 20 Hz zero-phase low-pass, then the third
+    difference at the 5 ms clock (one LSB of an integer file is 8000 deg/s^3 raw)."""
+    q = np.asarray(q, dtype=float)
+    if q.shape[0] < 4:
+        return np.zeros((0, q.shape[1] if q.ndim == 2 else 7))
+    return np.abs(np.diff(bandlimit(q, dt), n=3, axis=0)) / float(dt) ** 3
+
+
+def ugv_load(q: np.ndarray, limits: LimitSet) -> tuple[np.ndarray, np.ndarray]:
+    """(force (N,) in newtons, moment (N,) in newton metres) the arm's motion puts on the UGV at
+    every line, from the 20 Hz band-limited file (``base_load``)."""
+    from . import base_load
+
+    q = np.asarray(q, dtype=float)
+    return base_load.magnitudes(bandlimit(q, limits.dt_gate), limits.dt_gate, limits.side, limits.pole_m)
+
+
 def commanded_margin_deg(q: np.ndarray, limits: LimitSet) -> np.ndarray:
     lim = np.asarray(limits.pos_deg, dtype=float)
     return np.minimum(q - lim[:, 0], lim[:, 1] - q)
@@ -100,8 +125,9 @@ def joint_turns(q: np.ndarray, limits: LimitSet) -> list[dict]:
 
 
 def motion_ok(md: np.ndarray, limits: LimitSet) -> bool:
-    """True if L2, L3, L4 and the speed part of L1 pass: the test the time search runs at
-    every candidate length. Speed-independent failures are left to ``check_bytes``."""
+    """True if L2, L3, L4, the speed part of L1 and, where the limit set carries them, L7 and L8
+    pass: the test the time search runs at every candidate length. Speed-independent failures are
+    left to ``check_bytes``."""
     q = track.to_deg(md)
     dt = limits.dt_gate
     if np.abs(np.diff(q, axis=0)).max(initial=0.0) > limits.step_deg:
@@ -111,13 +137,22 @@ def motion_ok(md: np.ndarray, limits: LimitSet) -> bool:
         return False
     if (acc_deg_s2(q, dt) > limits.acc_bar_deg_s2).any():
         return False
+    if limits.jerk_max_rad_s3 is not None and (jerk_deg_s3(q, dt) > np.degrees(limits.jerk_max_rad_s3)).any():
+        return False
+    if limits.ugv_limited:
+        force, moment = ugv_load(q, limits)
+        if limits.ugv_force_n is not None and (force > limits.ugv_force_n).any():
+            return False
+        if limits.ugv_moment_nm is not None and (moment > limits.ugv_moment_nm).any():
+            return False
     return all(t["util"] <= 1.0 for t in joint_turns(q, limits) if not t["geometry"])
 
 
 def util_series(md: np.ndarray, limits: LimitSet) -> dict[str, np.ndarray]:
     """Per-line utilisation of every speed-dependent hard limit (1.0 = at the bar), for the
     binding-limit report and the plots. Keys: ``speed_J1``.., ``acceleration_J1``..,
-    ``joint_limit_J1``.."""
+    ``joint_limit_J1``.., and where the limit set carries them ``jerk_J1``.., ``ugv_force``,
+    ``ugv_moment``."""
     q = track.to_deg(md)
     n = q.shape[0]
     dt = limits.dt_gate
@@ -140,6 +175,18 @@ def util_series(md: np.ndarray, limits: LimitSet) -> dict[str, np.ndarray]:
             if t["joint"] == j + 1 and not t["geometry"]:
                 g[t["line"]] = max(g[t["line"]], min(t["util"], 1e3))
         out[f"joint_limit_J{j + 1}"] = g
+    if limits.jerk_max_rad_s3 is not None:
+        jk = jerk_deg_s3(q, dt) / np.degrees(limits.jerk_max_rad_s3)      # row i is centred between lines i+1, i+2
+        for j in range(7):
+            s = np.zeros(n)
+            s[1:1 + jk.shape[0]] = jk[:, j][: max(0, n - 1)]
+            out[f"jerk_J{j + 1}"] = s
+    if limits.ugv_limited:
+        force, moment = ugv_load(q, limits)
+        if limits.ugv_force_n is not None:
+            out["ugv_force"] = force / limits.ugv_force_n
+        if limits.ugv_moment_nm is not None:
+            out["ugv_moment"] = moment / limits.ugv_moment_nm
     return out
 
 
@@ -148,7 +195,7 @@ def util_series(md: np.ndarray, limits: LimitSet) -> dict[str, np.ndarray]:
 
 @dataclass
 class Check:
-    id: str                     # L1..L6, C1..C4
+    id: str                     # L1..L8, C1..C4
     name: str                   # plain-language label
     hard: bool
     passed: bool | None         # None: not measured
@@ -324,6 +371,35 @@ def check_bytes(md: np.ndarray, limits: LimitSet, *, raw_md: np.ndarray | None =
     else:
         rep.checks.append(Check("L5", "Path accuracy", True, None, detail="no recording given"))
         rep.checks.append(Check("L6", "Start and end poses", True, None, detail="no recording given"))
+
+    # L7 jerk and L8 UGV load: limits only where the limit set carries them
+    if limits.jerk_max_rad_s3 is not None:
+        jl = float(np.degrees(limits.jerk_max_rad_s3))
+        jk = jerk_deg_s3(q, dt)
+        if jk.size:
+            k = np.unravel_index(int(np.argmax(jk)), jk.shape)
+            j_peak = float(jk[k])
+            rep.checks.append(Check(
+                "L7", "Joint jerk", True, j_peak <= jl, _fmt(j_peak / jl, 3), 1.0, "x limit",
+                f"highest: joint {k[1] + 1} at {np.radians(j_peak):.0f} rad/s^3 (20 Hz band-limited) around line "
+                f"{k[0] + 3} (limit {limits.jerk_max_rad_s3:g} rad/s^3)",
+                joint=int(k[1]) + 1, line=int(k[0]) + 3, speed_fixes=True if j_peak > jl else None))
+        else:
+            rep.checks.append(Check("L7", "Joint jerk", True, True, 0.0, 1.0, "x limit", "file shorter than four lines"))
+    if limits.ugv_limited:
+        force, moment = ugv_load(q, limits)
+        fp, mp = float(force.max(initial=0.0)), float(moment.max(initial=0.0))
+        f_ok = limits.ugv_force_n is None or fp <= limits.ugv_force_n
+        m_ok = limits.ugv_moment_nm is None or mp <= limits.ugv_moment_nm
+        worst = max(fp / limits.ugv_force_n if limits.ugv_force_n else 0.0,
+                    mp / limits.ugv_moment_nm if limits.ugv_moment_nm else 0.0)
+        said = [f"{fp:.1f} N" + (f" (limit {limits.ugv_force_n:g} N)" if limits.ugv_force_n is not None else ""),
+                f"{mp:.1f} N m" + (f" (limit {limits.ugv_moment_nm:g} N m)" if limits.ugv_moment_nm is not None else "")]
+        rep.checks.append(Check(
+            "L8", "Load on the UGV", True, bool(f_ok and m_ok), _fmt(worst, 3), 1.0, "x limit",
+            f"the arm's motion puts up to {said[0]} and {said[1]} on the UGV (from the model's link masses, "
+            f"line {int(np.argmax(force)) + 1})", line=int(np.argmax(force)) + 1,
+            speed_fixes=True if not (f_ok and m_ok) else None))
 
     # C1 predicted departure (ALIX G5), estimate only
     if with_departure:

@@ -467,8 +467,13 @@ def main(argv=None) -> int:
                 print(f"Lid and seat: {what}: {path}", flush=True)
             if pushed:
                 print(f"Lid and seat: {len(pushed)} file(s) copied into ALIX: commit them there", flush=True)
-            from . import contact_sim         # a closing plan that came (or has none yet): its contact check made now,
-                                              # offline, in the background (the user, 5 Nov), never in a run
+            from . import contact_sim, mechanism_timing
+
+            # a plan that came (or has no copy yet): its arm moves timed with Ruckig on s now (the user, 18 Nov; a few
+            # seconds a plan), first: the contact check and the two-arm checks below are of the file a task runs
+            mechanism_timing.make_missing(lambda text: print(text, flush=True))
+            # a closing plan that came (or has none yet): its contact check made now, offline, in the background (the
+            # user, 5 Nov), never in a run
             contact_sim.make_missing_in_background(lambda text: print(text, flush=True))
             rep = alix_sync.status(deep=True)
             if not rep.in_sync:
@@ -478,8 +483,9 @@ def main(argv=None) -> int:
         print(f"Lid and seat: not linked with ALIX's ({type(exc).__name__}: {exc})", flush=True)
     if os.environ.get("LITE_START_LINK") != "0":   # each task's two-arm stretches as it runs on its own, checked now in the
         try:                                         # background, never in a run (the user, 16 Nov); a sequence's: its
-            from . import mechanism                  # simulation. With or without ALIX here (the Jetson's install)
+            from . import mechanism, mechanism_timing   # simulation. With or without ALIX here (the Jetson's install)
 
+            mechanism_timing.make_missing(lambda text: print(text, flush=True))   # nothing left to make when ALIX is here
             mechanism.make_missing_in_background(lambda text: print(text, flush=True))
         except Exception as exc:                                                    # noqa: BLE001 - a note, never a stop
             print(f"Two-arm check: not started ({type(exc).__name__}: {exc}): a task run on its own moves its arms one after "

@@ -7,17 +7,27 @@ import numpy as np
 
 from ..motion.checks import CheckReport
 
-OPTIMISERS = ("manual", "toppra")       # manual: optimise.manual (the HTML's algorithm); toppra: engine
+#: manual: optimise.manual (the HTML's algorithm). The other three are the automatic optimisers, run by the
+#: engine on the recording as taught, through one path preparation and held to the same limits:
+#: toppra (Time-optimal, ALIX's chain), ruckig_s (Ruckig on the path coordinate), custom (Lite's own:
+#: the fastest timing with the jerk and the UGV load as limits inside the solve).
+OPTIMISERS = ("manual", "toppra", "ruckig_s", "custom")
+AUTOMATIC = OPTIMISERS[1:]
 
 
 @dataclass(frozen=True)
 class ToppraOptions:
-    """ALIX's hardware-proven taught-path chain: 5 Hz zero-phase smoothing, pause removal,
-    30 mm arc-length smoothing, then TOPP-RA within 0.95 x the ratings and 600 deg/s^2."""
+    """The path preparation and the chain's own steps, the same for every automatic optimiser: ALIX's
+    taught-path chain (5 Hz zero-phase smoothing, pause removal, 30 mm arc-length smoothing, the timing
+    within 0.95 x the ratings and 600 deg/s^2, the 6 Hz low-pass of the timed file, the arrival hold)."""
     smooth_hz: float = 5.0                # 0 = off
     strip_pauses: bool = True
     smooth_mm: float = 30.0               # 0 = off
     pin_ends: bool = True                 # put the first and last pose back on the recording's
+    post_lp_hz: float = 6.0               # ALIX's zero-phase low-pass of the timed file (6 Hz there); 0 = off
+    arrival_hold: float = 0.8             # ALIX's arrival hold: a joint nearing a turn close to its end stop is
+                                          # held to this share of the speed L1 allows there (0.8 there); 0 = off.
+                                          # The engine keeps the faster of the file with it and the file without.
 
 
 @dataclass
@@ -28,6 +38,10 @@ class OptRequest:
     target_s: float | None = None         # seconds, (lines - 1) x 5 ms; None = as fast as the limits allow
     max_dev_mm: float | None = None       # the region's MAX DEV (tightens L5)
     toppra: ToppraOptions = field(default_factory=ToppraOptions)
+    jerk_rad_s3: float | None = None      # the jerk limit, rad/s^3 (None: jerk is reported, not a limit)
+    ugv_force_n: float | None = None      # the most force the arm's motion may put on the UGV (None: no limit)
+    ugv_moment_nm: float | None = None    # the most moment, about the UGV base frame's origin (None: no limit)
+    pole_mm: float | None = None          # the pole height the UGV load is worked out at (None: 150 mm)
     origin: str | None = None             # recording path, for the record
     origin_sha256: str | None = None
     natural: bool = False                 # no target: the plan's own start (TOPP-RA: its fastest)

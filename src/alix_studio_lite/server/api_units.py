@@ -273,6 +273,8 @@ def unit_view(app, units: LiteUnits, key: str) -> dict:
     u["hwsim_passed"] = units.passed(key, "dryrun_ok", ver.get("sha256")) if ver else None   # Real Test's step 4 opens on it
     u["results"] = units.results(key)["events"][-20:]
     u["toppra"] = app.toppra()
+    u["ruckig"] = app.ruckig()
+    u["ugv_stand"] = app.ugv_stand()                             # the UGV's weight figures the moment limit defaults to
     u["gates"] = gates(app, units, key, u)
     u["applied"] = units.applied(key)
     return u
@@ -747,6 +749,12 @@ def post_timeline(app, q, body, m):
                      task=body.get("task"), move_pct=_move_pct(body.get("move_pct")))
 
 
+#: setting: (least, most, what it is). The jerk limit cannot go over the joint limits file's.
+AUTO_SETTINGS = {"jerk_rad_s3": (10.0, workers.JERK_DEFAULT_RAD_S3, "The jerk limit (rad/s^3)"),
+                 "ugv_force_n": (0.5, 500.0, "The UGV force limit (N)"),
+                 "ugv_moment_nm": (0.5, 500.0, "The UGV moment limit (N m)")}
+
+
 def _check_settings(changes: dict) -> dict:
     """A region's tuning settings. The manual tuning's numbers are kept as typed, as the trajectory
     HTML's fields keep them, and read the HTML's way when a file is made (``manual.params``: a window
@@ -759,8 +767,9 @@ def _check_settings(changes: dict) -> dict:
         if k == "optimiser":
             if v == "default":                                   # the earlier name of manual tuning
                 v = "manual"
-            if v not in ("manual", "toppra"):
-                raise UserError("Choose manual tuning or Time-optimal (TOPP-RA).")
+            if v not in ("manual", *workers.AUTOMATIC):
+                raise UserError("Choose manual tuning or one of the automatic optimisers: "
+                                + ", ".join(workers.AUTOMATIC.values()) + ".")
         elif k == "time_mode":
             if v not in TIME_MODES:
                 raise UserError("Choose: as fast as the limits allow, or a target time.")
@@ -797,6 +806,12 @@ def _check_settings(changes: dict) -> dict:
             v = None if v is None else int(v)
         elif k == "max_dev_mm":
             v = None if v is None else float(v)
+        elif k in AUTO_SETTINGS:                                 # the automatic optimisers' two settings
+            low, high, what = AUTO_SETTINGS[k]
+            v = _typed(v)                                        # empty: the default (jerk) or no limit (UGV load)
+            if v is not None and not low <= float(v) <= high:
+                raise UserError(f"{what} must be between {low:g} and {high:g}.")
+            v = None if v is None else round(float(v), 3)
         else:
             continue
         out[k] = v

@@ -790,6 +790,7 @@ def seat_close_rungs(tmp_path, monkeypatch):
             shutil.copy(side, plans / "rungs" / side.name)
     main.write_text(json.dumps(retry_close(main, "2026-11-05 22:30:00")), encoding="utf-8")
     monkeypatch.setattr(mechanism, "PLANS", plans)
+    monkeypatch.setenv("LITE_MECHANISM_TIMING", "planned")     # edited plans have no Ruckig on s copy (18 Nov): as planned
     return plans
 
 

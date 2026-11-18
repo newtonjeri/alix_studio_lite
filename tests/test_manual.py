@@ -121,6 +121,11 @@ def test_time_optimal_takes_nothing_of_manual_tuning():
 
     s = dict(optimiser="toppra", trim=False, smooth_window=21, segments=[dict(start=1, end=9, pct=50)], time_mode="target",
              target_s=12.0, max_dev_mm=8.0)
-    assert not is_manual(s) and request_kwargs(s) == dict(optimiser="toppra", max_dev_mm=8.0, target_s=12.0)
+    # the automatic request: the optimiser, the path accuracy, the time, and since 18 Nov the automatic optimisers' own
+    # settings (the joint limits file's jerk limit and the moment the UGV's weight holds when the region sets none, no
+    # UGV force limit); nothing of manual tuning
+    assert not is_manual(s) and request_kwargs(s) == dict(
+        optimiser="toppra", max_dev_mm=8.0, target_s=12.0, jerk_rad_s3=1500.0, ugv_force_n=None, ugv_moment_nm=52.9,
+        pole_mm=None)
     assert request_kwargs(dict(s, time_mode="fastest"))["target_s"] is None
     assert is_manual({}) and is_manual(dict(optimiser="default"))           # a region set before 15 Oct tunes manually

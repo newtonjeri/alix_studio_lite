@@ -267,6 +267,8 @@ Two helpers, standard library only:
 | `The RealMan SDK does not load on this computer` | The robot link needs Linux. Run Lite on the Linux computer that runs the control program. |
 | E-stop chip reads *not configured* | IO3 is not in the controller's E-stop mode. An engineer sets it at the pendant; Lite never writes IO modes. |
 | Time-optimal optimiser missing | `toppra` has no ready-made package for this computer. Manual tuning (the default) still works. |
+| Ruckig on s cannot be chosen | The `ruckig` package is not installed. Setup does not install it yet (see `requirements-optional.txt`). Manual tuning and the other two automatic optimisers still work. |
+| `Not run: … has no Ruckig on s timing for its plan as it is now` | A lid or seat task runs a copy of ALIX's plan with its arm moves timed by Ruckig on s (`Resources/RetimedPlans/`). A plan that changed has no copy yet. Lite's start makes it when the `ruckig` package is installed; by hand: `PYTHONPATH=src python3 tools/retime_mechanism.py`, then `python3 tools/contact_check.py --store`. To run ALIX's own timing instead, start Lite with `LITE_MECHANISM_TIMING=planned`. |
 | A ROS workspace is sourced | Nothing to do: Lite clears `PYTHONPATH` and uses its own environment. |
 | *3-D view unavailable* | The browser gives the page no WebGL. `chrome://gpu` names the reason. *WebGL: Disabled* with an *llvmpipe* GPU means the computer's graphics run in software (the GPU driver is not in use: `nvidia-smi` tells), and Chrome then turns WebGL off for every page, ALIX Studio's too. Open Lite with `tools/run_lite.sh`: its own Chrome window ignores that block. In another Chrome: `chrome://flags/#ignore-gpu-blocklist` → Enabled. |
 
@@ -303,11 +305,12 @@ The tests cover:
 |---|---|
 | `src/alix_studio_lite/` | Lite's code. See the rows below. |
 | `src/alix_studio_lite/motion/` | Tracks, the 5 ms clock, limits and checks. |
-| `src/alix_studio_lite/optimise/` | The Default and Time-optimal optimisers. |
+| `src/alix_studio_lite/optimise/` | Manual tuning and the three automatic optimisers: Time-optimal (TOPP-RA), Ruckig on s, and Jerk and UGV load. |
 | `src/alix_studio_lite/server/` | The local web server: projects, log-in, the robot stand-in, the live robot link (`robot_link.py`), Lite's commands to the arms through ALIX's code (`robot_real.py`), and the logs (`logbook.py`). |
 | `src/alix_studio_lite/web/` | The Lite UI: the designer's page plus `lite/`, its bridge to the backend. |
 | `src/alix_studio_lite/web_legacy/` | Legacy Lite. |
 | `vendor/alix/` | The parts of ALIX that Lite reuses, in ALIX's own layout. `vendor/MANIFEST.json` lists every file with its sha256. |
+| `Resources/RetimedPlans/` | The lid and seat plans as Lite runs them: a copy of each of ALIX's plans and retry plans with its arm moves timed by Ruckig on s (`server/mechanism_timing.py`), the poles and hands as planned. Each copy records the sha256 of the plan it was made from and is used only while that plan is unchanged. Commit it with the plan. |
 | `vendor/control_app/` | The control program: runner v14, `hand.py`, `pole.py`. |
 | `assets/` | Cubicle walls, the regions deck and catalogue, the robot overlay, ALIX's brand mark. |
 | `docs/` | Requirements, plan, build status, the UI contract, analysis. |

@@ -16,6 +16,7 @@ from __future__ import annotations
 import math
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from .. import vendor_paths
 
@@ -39,6 +40,11 @@ class LimitSet:
     jerk_ref_rad_s3: float = 1500.0             # C2 reference (reported only)
     dt_gate: float = 0.005
     model: dict = field(default_factory=dict, compare=False, hash=False)
+    # The automatic optimisation's two settings. None = not a limit (manual tuning, and files made before).
+    jerk_max_rad_s3: float | None = None        # L7: 20 Hz band-limited joint jerk (joint_limits.yaml: 1500)
+    ugv_force_n: float | None = None            # L8: the force the arm's motion puts on the UGV
+    ugv_moment_nm: float | None = None          # L8: the moment, about the UGV base frame's origin
+    pole_m: float = 0.150                       # the pole height the UGV load is worked out at
 
     @property
     def acc_bar_deg_s2(self) -> float:
@@ -51,6 +57,27 @@ class LimitSet:
         from dataclasses import replace
 
         return replace(self, max_dev_mm=min(float(self.max_dev_mm), float(max_dev_mm)))
+
+
+    def with_auto(self, *, jerk_rad_s3=None, ugv_force_n=None, ugv_moment_nm=None, pole_m=None) -> "LimitSet":
+        """The same limits with the automatic optimisation's settings: the jerk limit and the most
+        load the arm's motion may put on the UGV. A setting left as None stays as it is."""
+        from dataclasses import replace
+
+        ch = {}
+        if jerk_rad_s3 is not None:
+            ch["jerk_max_rad_s3"] = float(jerk_rad_s3)
+        if ugv_force_n is not None:
+            ch["ugv_force_n"] = float(ugv_force_n)
+        if ugv_moment_nm is not None:
+            ch["ugv_moment_nm"] = float(ugv_moment_nm)
+        if pole_m is not None:
+            ch["pole_m"] = float(pole_m)
+        return replace(self, **ch) if ch else self
+
+    @property
+    def ugv_limited(self) -> bool:
+        return self.ugv_force_n is not None or self.ugv_moment_nm is not None
 
 
 def side_prefix(side: str) -> str:
@@ -79,6 +106,19 @@ def urdf_joint_limits(side: str, urdf_path=None) -> tuple[tuple, tuple]:
                     round(math.degrees(float(lim.get("upper"))), 6)))
         rate.append(round(math.degrees(float(lim.get("velocity"))), 6))
     return tuple(pos), tuple(rate)
+
+
+def yaml_joint_limits(side: str, path=None) -> dict:
+    """One arm's limits as ALIX's joint_limits.yaml states them (the planner's own file):
+    ``{"speed_deg_s": (7,), "acc_deg_s2": (7,), "jerk_rad_s3": (7,)}``."""
+    import yaml
+
+    pre = side_prefix(side)
+    data = yaml.safe_load(Path(path or vendor_paths.JOINT_LIMITS).read_text(encoding="utf-8"))["joint_limits"]
+    rows = [data[f"{pre}_joint{k}"] for k in range(1, 8)]
+    return dict(speed_deg_s=tuple(math.degrees(float(r["max_velocity"])) for r in rows),
+                acc_deg_s2=tuple(math.degrees(float(r["max_acceleration"])) for r in rows),
+                jerk_rad_s3=tuple(float(r["max_jerk"]) for r in rows))
 
 
 def load_limits(side: str, *, max_dev_mm=None, urdf_path=None, model_path=None) -> LimitSet:
