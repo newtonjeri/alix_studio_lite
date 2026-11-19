@@ -1,0 +1,179 @@
+{
+  "format": "alix_studio_lite_sequence_v1",
+  "side": "right",
+  "steps": [
+    {
+      "type": "global",
+      "name": "REST_POSE",
+      "move": "movej",
+      "speed": 30,
+      "wait_s": 0.0,
+      "uid": "1820d343"
+    },
+    {
+      "type": "global",
+      "name": "R_HME_POS",
+      "move": "movej",
+      "speed": 50,
+      "wait_s": 0.0,
+      "uid": "3a9a8b3f"
+    },
+    {
+      "type": "pole",
+      "mm": 210.0,
+      "uid": "04d62339"
+    },
+    {
+      "type": "hand",
+      "values": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+      ],
+      "uid": "c61ecafb"
+    },
+    {
+      "type": "meet",
+      "uid": "b2dea94e"
+    },
+    {
+      "type": "program",
+      "id": 61,
+      "name": "61_61_R_P1_pole210_cleaningpose.",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "a00a26cd",
+      "pole_mm": 210.0,
+      "hand": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+      ]
+    },
+    {
+      "type": "wait",
+      "seconds": 5.0,
+      "uid": "8f4b0069"
+    },
+    {
+      "type": "program",
+      "id": 62,
+      "name": "62_62_R_P2_pole200_grip_7.6s_au.",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "b9878a72",
+      "pole_mm": 200.0,
+      "hand": [
+        0,
+        0,
+        0,
+        0,
+        150,
+        1000
+      ]
+    },
+    {
+      "type": "program",
+      "id": 63,
+      "name": "63_63_R_P2_pole200_cleaningpose.",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "da9885e6",
+      "pole_mm": 200.0,
+      "hand": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+      ]
+    },
+    {
+      "type": "program",
+      "id": 64,
+      "name": "64_64_1_R_P2_pole50_cleaningpos.",
+      "speed": 100,
+      "transit_speed": 30,
+      "uid": "51b4a249",
+      "pole_mm": 50.0,
+      "hand": [
+        1000,
+        1000,
+        1000,
+        1000,
+        0,
+        1000
+      ]
+    },
+    {
+      "type": "wait",
+      "seconds": 5.0,
+      "uid": "3ebd1262"
+    },
+    {
+      "type": "program",
+      "id": 65,
+      "name": "65_65_R_P3_pole50_grip_26.7s_au.",
+      "speed": 100,
+      "transit_speed": 30,
+      "together": true,
+      "uid": "b200cf61",
+      "pole_mm": 50.0,
+      "hand": [
+        0,
+        0,
+        0,
+        0,
+        150,
+        1000
+      ]
+    },
+    {
+      "type": "pole",
+      "mm": 150.0,
+      "uid": "103f6fd1"
+    },
+    {
+      "type": "global",
+      "name": "R_HME_POS",
+      "move": "movej",
+      "speed": 20,
+      "wait_s": 0.0,
+      "uid": "97ae6ea1"
+    },
+    {
+      "type": "global",
+      "name": "REST_POSE",
+      "move": "movej",
+      "speed": 30,
+      "wait_s": 0.0,
+      "uid": "70e64579"
+    },
+    {
+      "type": "pole",
+      "mm": 10.0,
+      "uid": "abeef212"
+    },
+    {
+      "type": "hand",
+      "values": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "uid": "dd3809f3"
+    }
+  ]
+}

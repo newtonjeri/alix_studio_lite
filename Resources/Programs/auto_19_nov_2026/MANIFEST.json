@@ -1,0 +1,4486 @@
+{
+ "name": "auto_19_nov_2026",
+ "made": "2026-11-19 22:38:27",
+ "by": "harness/make_lab_sets.py of ALIX's report 2026-11-19_lite_auto_programs_61_65",
+ "asked": {
+  "jerk_rad_s3": 1500.0,
+  "ugv_force_n": null,
+  "ugv_moment_nm": 52.9,
+  "pole_mm": "each file's own"
+ },
+ "files": [
+  {
+   "side": "left",
+   "slot": 61,
+   "optimiser": "toppra",
+   "source": "hand_tuned",
+   "pole_mm": 50.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt",
+   "source_sha256": "9b1b2dfc132b41e19310016441f4fc79aa5f4a9ea0dafb0f9f74be5b667fac4c",
+   "source_seconds": 48.175,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 50.0
+   },
+   "file": "61_L_P1_pole50_cleaningpose_39.5s_auto_toppra.txt",
+   "sha256": "1f7a0cbd21acccfdc29f528b7056eb43627f825b17dcf6952f474c2eba2687a2",
+   "bytes": 455396,
+   "lines": 7908,
+   "seconds": 39.535,
+   "listed_name": "61_61_L_P1_pole50_cleaningpose_.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 4.1,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 14.8 deg (joint 6); after the predicted overshoot at turns, 4.1 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.915,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 2 at 160 deg/s (limit 175) at line 7738"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 611.5,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 1 at 611 deg/s^2 (20 Hz band-limited) around line 5454 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.866,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 4, 0.866 deg between lines 7557 and 7558"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 4.25,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 4.3 mm of the taught path (p95 1.6 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.263,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 3 at 394 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.263,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 13.9 N and 13.9 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 70)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 4.1,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.915,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 611.5,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.866,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.263,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.263,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 42.5
+  },
+  {
+   "side": "left",
+   "slot": 62,
+   "optimiser": "toppra",
+   "source": "base",
+   "pole_mm": 200.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "2_L_P2_R05_PART1+R05_PART2_pole200_cleaningpose_13.9s_v1.1.txt",
+   "source_sha256": "c2a1e1bb06f6cba79b77beb54ee2dea47ff1835b18f224effd50b5534798c752",
+   "source_seconds": 13.885,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "62_L_P2_pole200_cleaningpose_16.6s_auto_toppra.txt",
+   "sha256": "250c5bbea5d9f2f8084d9d775cbd95e7cdfae60d172072997669546d1073598c",
+   "bytes": 192162,
+   "lines": 3330,
+   "seconds": 16.645,
+   "listed_name": "62_62_L_P2_pole200_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 8.38,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 9.3 deg (joint 4); after the predicted overshoot at turns, 8.4 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.932,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 2 at 163 deg/s (limit 175) at line 2904"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 611.8,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 612 deg/s^2 (20 Hz band-limited) around line 1622 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.015,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 4, 1.015 deg between lines 3041 and 3042"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 5.85,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 5.8 mm of the taught path (p95 2.8 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.257,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 385 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.37,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 18.5 N and 19.6 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 724)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 8.38,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.932,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 611.8,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.015,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.257,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.37,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 9.2
+  },
+  {
+   "side": "left",
+   "slot": 63,
+   "optimiser": "toppra",
+   "source": "hand_tuned",
+   "pole_mm": 200.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt",
+   "source_sha256": "1375532c2b089aa8bca86e5b69164673d0c57f90bb137cfbac1dc732dec1ab86",
+   "source_seconds": 10.495,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "63_L_P2_pole200_grip_7.5s_auto_toppra.txt",
+   "sha256": "404845319b52406b0de7c8d66d470bc7a9196d174bb20a317b10ed63269a69ab",
+   "bytes": 86147,
+   "lines": 1502,
+   "seconds": 7.505,
+   "listed_name": "63_63_L_P2_pole200_grip_7.5s_au.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 9.46,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 9.5 deg (joint 4); after the predicted overshoot at turns, 17.6 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.92,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 2 at 161 deg/s (limit 175) at line 1327"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 612.0,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 7 at 612 deg/s^2 (20 Hz band-limited) around line 1488 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.996,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.996 deg between lines 1380 and 1381"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.88,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.9 mm of the taught path (p95 2.2 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.218,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 7 at 328 rad/s^3 (20 Hz band-limited) around line 1501 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.225,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 12.5 N and 11.9 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 1071)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 9.46,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.92,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 612.0,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.996,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.218,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.225,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 5.0
+  },
+  {
+   "side": "left",
+   "slot": 64,
+   "optimiser": "toppra",
+   "source": "base",
+   "pole_mm": 200.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "4_L_P3_R07_PART1+R07_PART2_pole200_cleaningpose_14.1s_v1.1.txt",
+   "source_sha256": "b632b2f0d9afa6dbc136b2dedd8ae338e139455a1d8f842b2b50cce86de33203",
+   "source_seconds": 14.05,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "64_L_P3_pole200_cleaningpose_17.6s_auto_toppra.txt",
+   "sha256": "2c74f2cf025242691193c4b539567be6d2ca534d51ad87e3de3e54b7c8b78c35",
+   "bytes": 205690,
+   "lines": 3520,
+   "seconds": 17.595,
+   "listed_name": "64_64_L_P3_pole200_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 1.33,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 4.1 deg (joint 4); after the predicted overshoot at turns, 1.3 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.924,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 202 deg/s (limit 218) at line 3230"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 611.7,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 612 deg/s^2 (20 Hz band-limited) around line 2525 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.009,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 1.009 deg between lines 3229 and 3230"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 4.7,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 4.7 mm of the taught path (p95 2.0 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.25,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 5 at 376 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.253,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 16.5 N and 13.4 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 2273)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 1.33,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.924,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 611.7,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.009,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.25,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.253,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 10.1
+  },
+  {
+   "side": "left",
+   "slot": 65,
+   "optimiser": "toppra",
+   "source": "hand_tuned",
+   "pole_mm": 200.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt",
+   "source_sha256": "d972969476de3780f7f8b61bcf67e3ab65c4086b2d952fcf1c5c852c1bde9e0c",
+   "source_seconds": 45.315,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "65_L_P3_pole200_grip_45.8s_auto_toppra.txt",
+   "sha256": "013d31c2339f69e261ec7b3bbc21fe3078105d640e753c40b10ff839b0e7653b",
+   "bytes": 520194,
+   "lines": 9157,
+   "seconds": 45.78,
+   "listed_name": "65_65_L_P3_pole200_grip_45.8s_a.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 11.05,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 11.0 deg (joint 4); after the predicted overshoot at turns, 13.6 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.877,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 5 at 191 deg/s (limit 218) at line 1969"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 611.9,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 612 deg/s^2 (20 Hz band-limited) around line 801 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.957,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 5, 0.957 deg between lines 1968 and 1969"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 5.43,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 5.4 mm of the taught path (p95 2.6 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.174,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 3 at 261 rad/s^3 (20 Hz band-limited) around line 9156 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.232,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 14.3 N and 12.3 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 7250)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 11.05,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.877,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 611.9,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.957,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.174,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.232,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 35.9
+  },
+  {
+   "side": "right",
+   "slot": 61,
+   "optimiser": "toppra",
+   "source": "hand_tuned",
+   "pole_mm": 210.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt",
+   "source_sha256": "78246abccd1a771e66750192ca9f82fd684f708580443c40fc60f9873408a452",
+   "source_seconds": 53.465,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 210.0
+   },
+   "file": "61_R_P1_pole210_cleaningpose_39.8s_auto_toppra.txt",
+   "sha256": "9aff3c08f1586f4448c8fd2915defa5a045b904d83670ad2b5d913becf646153",
+   "bytes": 457465,
+   "lines": 7956,
+   "seconds": 39.775,
+   "listed_name": "61_61_R_P1_pole210_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 3.16,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 11.8 deg (joint 6); after the predicted overshoot at turns, 3.2 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.902,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 4 at 197 deg/s (limit 218) at line 259"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 611.7,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 7 at 612 deg/s^2 (20 Hz band-limited) around line 4740 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.984,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 4, 0.984 deg between lines 258 and 259"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.23,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.2 mm of the taught path (p95 1.4 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.246,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 370 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.352,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 19.2 N and 18.6 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 7572)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 3.16,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.902,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 611.7,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.984,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.246,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.352,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 32.5
+  },
+  {
+   "side": "right",
+   "slot": 62,
+   "optimiser": "toppra",
+   "source": "hand_tuned",
+   "pole_mm": 200.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "62_R_P2_pole200_grip_13.0s_new_R04.txt",
+   "source_sha256": "4df0ee668240163e91b6c4838f6d2630c071f0616c84314f4d42175f82e693ed",
+   "source_seconds": 12.995,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "62_R_P2_pole200_grip_7.6s_auto_toppra.txt",
+   "sha256": "32e738638586c465a1e165fe18893ba68849a5d1c46309f53de469d58ec64c43",
+   "bytes": 82062,
+   "lines": 1527,
+   "seconds": 7.63,
+   "listed_name": "62_62_R_P2_pole200_grip_7.6s_au.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 2.85,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 16.4 deg (joint 4); after the predicted overshoot at turns, 2.9 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.913,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 199 deg/s (limit 218) at line 112"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 609.4,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 609 deg/s^2 (20 Hz band-limited) around line 308 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.997,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.997 deg between lines 110 and 111"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 2.92,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 2.9 mm of the taught path (p95 1.1 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.275,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 413 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.187,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 14.9 N and 9.9 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 413)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 2.85,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.913,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 609.4,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.997,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.275,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.187,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 3.9
+  },
+  {
+   "side": "right",
+   "slot": 63,
+   "optimiser": "toppra",
+   "source": "base",
+   "pole_mm": 200.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "3_R_P2_R05_pole200_cleaningpose_5.7s_v1.1.txt",
+   "source_sha256": "bf12e3d1b3b699c0129c2186ce8cbf2b84140ed56f8ca95c6237218ae4687e78",
+   "source_seconds": 5.67,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "63_R_P2_pole200_cleaningpose_6.9s_auto_toppra.txt",
+   "sha256": "661c0c8665ff6f9a51fd18c191cfc664e7691a372e53d3dd0ed742a477b74d49",
+   "bytes": 78091,
+   "lines": 1387,
+   "seconds": 6.93,
+   "listed_name": "63_63_R_P2_pole200_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 25.37,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 28.2 deg (joint 4); after the predicted overshoot at turns, 25.4 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.775,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 169 deg/s (limit 218) at line 1205"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 611.5,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 7 at 611 deg/s^2 (20 Hz band-limited) around line 722 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.846,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.846 deg between lines 1204 and 1205"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.18,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.2 mm of the taught path (p95 1.8 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.251,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 5 at 376 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.208,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 18.1 N and 11.0 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 878)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 25.37,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.775,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 611.5,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.846,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.251,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.208,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 1.8
+  },
+  {
+   "side": "right",
+   "slot": 64,
+   "optimiser": "toppra",
+   "source": "hand_tuned",
+   "pole_mm": 50.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt",
+   "source_sha256": "d59652217fb2efdb44ce314d86da9f012638c61d62bd5619ba16471c74835377",
+   "source_seconds": 10.355,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 50.0
+   },
+   "file": "64_1_R_P2_pole50_cleaningpose_7.2s_auto_toppra.txt",
+   "sha256": "055ff857afdfd9dfcbccb1824f99e98a866edffbfb339bfa7cf927a2c2aa498e",
+   "bytes": 82578,
+   "lines": 1448,
+   "seconds": 7.235,
+   "listed_name": "64_64_1_R_P2_pole50_cleaningpos.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 25.19,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 25.2 deg (joint 6); after the predicted overshoot at turns, 25.2 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.917,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 7 at 200 deg/s (limit 218) at line 1013"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 611.2,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 7 at 611 deg/s^2 (20 Hz band-limited) around line 1250 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.0,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 7, 1.000 deg between lines 1011 and 1012"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.43,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.4 mm of the taught path (p95 1.7 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.281,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 3 at 421 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.211,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 13.7 N and 11.2 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 1114)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 25.19,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.917,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 611.2,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.0,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.281,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.211,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 5.3
+  },
+  {
+   "side": "right",
+   "slot": 65,
+   "optimiser": "toppra",
+   "source": "hand_tuned",
+   "pole_mm": 50.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt",
+   "source_sha256": "d309a492a1ff52db1c90a0a9977da5364a0862492312d1d6056d1f894463c31a",
+   "source_seconds": 39.805,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 50.0
+   },
+   "file": "65_R_P3_pole50_grip_26.7s_auto_toppra.txt",
+   "sha256": "9f96c5a7f1fbc8a783592935b378f8ed6ae4f84e0ccf0bcf60c00e8d46948bba",
+   "bytes": 307606,
+   "lines": 5343,
+   "seconds": 26.71,
+   "listed_name": "65_65_R_P3_pole50_grip_26.7s_au.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 2.44,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 8.1 deg (joint 4); after the predicted overshoot at turns, 2.4 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.91,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 199 deg/s (limit 218) at line 4850"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 610.9,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 611 deg/s^2 (20 Hz band-limited) around line 2662 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.993,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.993 deg between lines 1386 and 1387"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.52,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.5 mm of the taught path (p95 1.5 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.253,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 379 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.33,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 20.3 N and 17.4 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 4279)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 2.44,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.91,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 610.9,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.993,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.253,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.33,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 32.2
+  },
+  {
+   "side": "left",
+   "slot": 61,
+   "optimiser": "ruckig_s",
+   "source": "hand_tuned",
+   "pole_mm": 50.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt",
+   "source_sha256": "9b1b2dfc132b41e19310016441f4fc79aa5f4a9ea0dafb0f9f74be5b667fac4c",
+   "source_seconds": 48.175,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 50.0
+   },
+   "file": "61_L_P1_pole50_cleaningpose_45.8s_auto_ruckig.txt",
+   "sha256": "027c2224d798fcd6558097f3660de0e82461fb1b91336cc3b8a64fcd58fe5c2e",
+   "bytes": 527548,
+   "lines": 9160,
+   "seconds": 45.795,
+   "listed_name": "61_61_L_P1_pole50_cleaningpose_.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 1.7,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 14.8 deg (joint 6); after the predicted overshoot at turns, 1.7 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.803,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 2 at 140 deg/s (limit 175) at line 8953"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 599.1,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 599 deg/s^2 (20 Hz band-limited) around line 6486 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.795,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 4, 0.795 deg between lines 8559 and 8560"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 4.17,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 4.2 mm of the taught path (p95 1.7 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.147,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 5 at 220 rad/s^3 (20 Hz band-limited) around line 3450 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.202,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 14.3 N and 10.7 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 5611)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 1.7,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.803,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 599.1,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.795,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.147,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.202,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 32.6
+  },
+  {
+   "side": "left",
+   "slot": 62,
+   "optimiser": "ruckig_s",
+   "source": "base",
+   "pole_mm": 200.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "2_L_P2_R05_PART1+R05_PART2_pole200_cleaningpose_13.9s_v1.1.txt",
+   "source_sha256": "c2a1e1bb06f6cba79b77beb54ee2dea47ff1835b18f224effd50b5534798c752",
+   "source_seconds": 13.885,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "62_L_P2_pole200_cleaningpose_20.2s_auto_ruckig.txt",
+   "sha256": "935a221b72eba27452aa8d3b8689d50998934381594692b74ef3e87589b0bf8e",
+   "bytes": 233715,
+   "lines": 4045,
+   "seconds": 20.22,
+   "listed_name": "62_62_L_P2_pole200_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 9.32,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 9.3 deg (joint 4); after the predicted overshoot at turns, 12.0 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.932,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 203 deg/s (limit 218) at line 103"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 611.3,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 611 deg/s^2 (20 Hz band-limited) around line 3278 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.018,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 1.018 deg between lines 102 and 103"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 6.26,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 6.3 mm of the taught path (p95 2.9 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.221,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 332 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.344,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 14.9 N and 18.2 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 810)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 9.32,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.932,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 611.3,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.018,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.221,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.344,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 15.4
+  },
+  {
+   "side": "left",
+   "slot": 63,
+   "optimiser": "ruckig_s",
+   "source": "hand_tuned",
+   "pole_mm": 200.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt",
+   "source_sha256": "1375532c2b089aa8bca86e5b69164673d0c57f90bb137cfbac1dc732dec1ab86",
+   "source_seconds": 10.495,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "63_L_P2_pole200_grip_8.5s_auto_ruckig.txt",
+   "sha256": "3d00df5b3507e5104783a26f2ff1a57841b642e1298509ca715c2c2d6281fd9e",
+   "bytes": 98155,
+   "lines": 1710,
+   "seconds": 8.545,
+   "listed_name": "63_63_L_P2_pole200_grip_8.5s_au.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 9.46,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 9.5 deg (joint 4); after the predicted overshoot at turns, 21.7 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.968,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 211 deg/s (limit 218) at line 1589"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 597.5,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 7 at 598 deg/s^2 (20 Hz band-limited) around line 1694 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.057,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 1.057 deg between lines 1589 and 1590"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 4.02,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 4.0 mm of the taught path (p95 2.2 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.19,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 7 at 285 rad/s^3 (20 Hz band-limited) around line 1709 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.176,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 12.8 N and 9.3 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 842)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 9.46,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.968,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 597.5,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.057,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.19,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.176,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 5.1
+  },
+  {
+   "side": "left",
+   "slot": 64,
+   "optimiser": "ruckig_s",
+   "source": "base",
+   "pole_mm": 200.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "4_L_P3_R07_PART1+R07_PART2_pole200_cleaningpose_14.1s_v1.1.txt",
+   "source_sha256": "b632b2f0d9afa6dbc136b2dedd8ae338e139455a1d8f842b2b50cce86de33203",
+   "source_seconds": 14.05,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "64_L_P3_pole200_cleaningpose_21.2s_auto_ruckig.txt",
+   "sha256": "feb2a0acf575b30d645d9e0352a0358b51922e154031e910954a819eb5e57927",
+   "bytes": 247238,
+   "lines": 4232,
+   "seconds": 21.155,
+   "listed_name": "64_64_L_P3_pole200_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 0.66,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 4.2 deg (joint 4); after the predicted overshoot at turns, 0.7 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.849,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 2 at 148 deg/s (limit 175) at line 634"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 595.8,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 596 deg/s^2 (20 Hz band-limited) around line 2368 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.799,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.799 deg between lines 103 and 104"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 4.57,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 4.6 mm of the taught path (p95 2.0 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.179,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 5 at 269 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.215,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 16.4 N and 11.4 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 2997)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 0.66,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.849,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 595.8,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.799,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.179,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.215,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 11.4
+  },
+  {
+   "side": "left",
+   "slot": 65,
+   "optimiser": "ruckig_s",
+   "source": "hand_tuned",
+   "pole_mm": 200.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt",
+   "source_sha256": "d972969476de3780f7f8b61bcf67e3ab65c4086b2d952fcf1c5c852c1bde9e0c",
+   "source_seconds": 45.315,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "65_L_P3_pole200_grip_51.1s_auto_ruckig.txt",
+   "sha256": "5bde4b6e5922d7722449e1c445bcb83a66165adafe62aefd231a110222077b67",
+   "bytes": 580689,
+   "lines": 10222,
+   "seconds": 51.105,
+   "listed_name": "65_65_L_P3_pole200_grip_51.1s_a.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 11.03,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 11.0 deg (joint 4); after the predicted overshoot at turns, 15.5 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.815,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 5 at 178 deg/s (limit 218) at line 7406"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 598.0,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 4 at 598 deg/s^2 (20 Hz band-limited) around line 1000 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.889,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 5, 0.889 deg between lines 7405 and 7406"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 6.01,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 6.0 mm of the taught path (p95 2.6 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.163,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 3 at 245 rad/s^3 (20 Hz band-limited) around line 7936 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.164,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 15.1 N and 8.7 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 8169)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 11.03,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.815,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 598.0,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.889,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.163,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.164,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 32.0
+  },
+  {
+   "side": "right",
+   "slot": 61,
+   "optimiser": "ruckig_s",
+   "source": "hand_tuned",
+   "pole_mm": 210.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt",
+   "source_sha256": "78246abccd1a771e66750192ca9f82fd684f708580443c40fc60f9873408a452",
+   "source_seconds": 53.465,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 210.0
+   },
+   "file": "61_R_P1_pole210_cleaningpose_46.0s_auto_ruckig.txt",
+   "sha256": "1596ff30adec89ed405c00248e7002cb7768778913e36b421743a7301c39acd0",
+   "bytes": 529646,
+   "lines": 9202,
+   "seconds": 46.005,
+   "listed_name": "61_61_R_P1_pole210_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 8.88,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 11.8 deg (joint 6); after the predicted overshoot at turns, 8.9 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.906,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 198 deg/s (limit 218) at line 106"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 600.0,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 600 deg/s^2 (20 Hz band-limited) around line 6001 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.989,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.989 deg between lines 103 and 104"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.21,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.2 mm of the taught path (p95 1.5 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.239,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 358 rad/s^3 (20 Hz band-limited) around line 9201 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.254,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 19.4 N and 13.4 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 8763)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 8.88,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.906,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 600.0,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.989,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.239,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.254,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 42.5
+  },
+  {
+   "side": "right",
+   "slot": 62,
+   "optimiser": "ruckig_s",
+   "source": "hand_tuned",
+   "pole_mm": 200.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "62_R_P2_pole200_grip_13.0s_new_R04.txt",
+   "source_sha256": "4df0ee668240163e91b6c4838f6d2630c071f0616c84314f4d42175f82e693ed",
+   "source_seconds": 12.995,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "62_R_P2_pole200_grip_8.4s_auto_ruckig.txt",
+   "sha256": "519e1292aeaabb9ee9660c28e82847db15b56d86f7ad61c018cc8a8449932acd",
+   "bytes": 90420,
+   "lines": 1683,
+   "seconds": 8.41,
+   "listed_name": "62_62_R_P2_pole200_grip_8.4s_au.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 6.33,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 16.4 deg (joint 4); after the predicted overshoot at turns, 6.3 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.85,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 185 deg/s (limit 218) at line 157"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 599.2,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 4 at 599 deg/s^2 (20 Hz band-limited) around line 288 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.927,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.927 deg between lines 155 and 156"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.56,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.6 mm of the taught path (p95 1.2 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.192,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 289 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.201,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 15.2 N and 10.6 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 426)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 6.33,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.85,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 599.2,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.927,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.192,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.201,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 6.8
+  },
+  {
+   "side": "right",
+   "slot": 63,
+   "optimiser": "ruckig_s",
+   "source": "base",
+   "pole_mm": 200.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "3_R_P2_R05_pole200_cleaningpose_5.7s_v1.1.txt",
+   "source_sha256": "bf12e3d1b3b699c0129c2186ce8cbf2b84140ed56f8ca95c6237218ae4687e78",
+   "source_seconds": 5.67,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "63_R_P2_pole200_cleaningpose_8.4s_auto_ruckig.txt",
+   "sha256": "4f03656997b0782a1a5532cfbb51dd4497754da4adabc2ffdc270a86767c8f65",
+   "bytes": 95323,
+   "lines": 1690,
+   "seconds": 8.445,
+   "listed_name": "63_63_R_P2_pole200_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 28.24,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 28.2 deg (joint 4); after the predicted overshoot at turns, 31.2 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.659,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 144 deg/s (limit 218) at line 1474"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 598.0,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 598 deg/s^2 (20 Hz band-limited) around line 1529 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.719,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.719 deg between lines 1472 and 1473"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.18,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.2 mm of the taught path (p95 1.8 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.134,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 7 at 201 rad/s^3 (20 Hz band-limited) around line 202 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.151,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 16.4 N and 8.0 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 539)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 28.24,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.659,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 598.0,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.719,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.134,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.151,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 3.2
+  },
+  {
+   "side": "right",
+   "slot": 64,
+   "optimiser": "ruckig_s",
+   "source": "hand_tuned",
+   "pole_mm": 50.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt",
+   "source_sha256": "d59652217fb2efdb44ce314d86da9f012638c61d62bd5619ba16471c74835377",
+   "source_seconds": 10.355,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 50.0
+   },
+   "file": "64_1_R_P2_pole50_cleaningpose_8.9s_auto_ruckig.txt",
+   "sha256": "07cf67494f657d8243afa0e7395b4ac54e21e00571d0c723920c8f210fdaf844",
+   "bytes": 101854,
+   "lines": 1788,
+   "seconds": 8.935,
+   "listed_name": "64_64_1_R_P2_pole50_cleaningpos.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 25.25,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 25.2 deg (joint 6); after the predicted overshoot at turns, 26.8 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.692,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 7 at 151 deg/s (limit 218) at line 1699"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 592.7,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 7 at 593 deg/s^2 (20 Hz band-limited) around line 1656 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.755,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 7, 0.755 deg between lines 1699 and 1700"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.58,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.6 mm of the taught path (p95 1.8 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.305,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 458 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.194,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 11.0 N and 10.2 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 1521)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 25.25,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.692,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 592.7,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.755,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.305,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.194,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 5.5
+  },
+  {
+   "side": "right",
+   "slot": 65,
+   "optimiser": "ruckig_s",
+   "source": "hand_tuned",
+   "pole_mm": 50.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt",
+   "source_sha256": "d309a492a1ff52db1c90a0a9977da5364a0862492312d1d6056d1f894463c31a",
+   "source_seconds": 39.805,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 50.0
+   },
+   "file": "65_R_P3_pole50_grip_30.6s_auto_ruckig.txt",
+   "sha256": "83de3a9162041b64e21a01eaeead727f008105663ee0b652d17f19c3b771b2be",
+   "bytes": 353026,
+   "lines": 6127,
+   "seconds": 30.63,
+   "listed_name": "65_65_R_P3_pole50_grip_30.6s_au.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 4.75,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 8.1 deg (joint 4); after the predicted overshoot at turns, 4.7 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.853,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 186 deg/s (limit 218) at line 123"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 600.3,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 600 deg/s^2 (20 Hz band-limited) around line 5273 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.931,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.931 deg between lines 123 and 124"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.74,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.7 mm of the taught path (p95 1.6 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.215,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 2 at 322 rad/s^3 (20 Hz band-limited) around line 6126 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.302,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 22.1 N and 16.0 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 3403)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 4.75,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.853,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 600.3,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.931,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.215,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.302,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 18.3
+  },
+  {
+   "side": "left",
+   "slot": 61,
+   "optimiser": "custom",
+   "source": "hand_tuned",
+   "pole_mm": 50.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt",
+   "source_sha256": "9b1b2dfc132b41e19310016441f4fc79aa5f4a9ea0dafb0f9f74be5b667fac4c",
+   "source_seconds": 48.175,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 50.0
+   },
+   "file": "61_L_P1_pole50_cleaningpose_40.0s_auto_custom.txt",
+   "sha256": "8d858e743d5402825c0db0c0d3ce6f899e194f703bcd9754b49f96bce9029091",
+   "bytes": 460548,
+   "lines": 8001,
+   "seconds": 40.0,
+   "listed_name": "61_61_L_P1_pole50_cleaningpose_.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 3.14,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 14.8 deg (joint 6); after the predicted overshoot at turns, 3.1 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.985,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 1 at 172 deg/s (limit 175) at line 145"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 605.4,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 605 deg/s^2 (20 Hz band-limited) around line 4940 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.906,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.906 deg between lines 129 and 130"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 6.96,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 7.0 mm of the taught path (p95 2.0 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.291,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 3 at 436 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.272,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 14.3 N and 14.4 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 65)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 3.14,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.985,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 605.4,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.906,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.291,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.272,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 49.1
+  },
+  {
+   "side": "left",
+   "slot": 62,
+   "optimiser": "custom",
+   "source": "base",
+   "pole_mm": 200.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "2_L_P2_R05_PART1+R05_PART2_pole200_cleaningpose_13.9s_v1.1.txt",
+   "source_sha256": "c2a1e1bb06f6cba79b77beb54ee2dea47ff1835b18f224effd50b5534798c752",
+   "source_seconds": 13.885,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "62_L_P2_pole200_cleaningpose_16.4s_auto_custom.txt",
+   "sha256": "7d48c4114c5cbab5a000923224103e15d366980f848f2f2c1591ea44007cd34f",
+   "bytes": 189566,
+   "lines": 3285,
+   "seconds": 16.42,
+   "listed_name": "62_62_L_P2_pole200_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 8.36,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 9.3 deg (joint 4); after the predicted overshoot at turns, 8.4 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.991,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 216 deg/s (limit 218) at line 3189"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 605.5,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 4 at 606 deg/s^2 (20 Hz band-limited) around line 355 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.082,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 1.082 deg between lines 3187 and 3188"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 6.86,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 6.9 mm of the taught path (p95 3.1 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.26,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 390 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.362,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 18.0 N and 19.1 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 703)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 8.36,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.991,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 605.5,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.082,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.26,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.362,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 17.5
+  },
+  {
+   "side": "left",
+   "slot": 63,
+   "optimiser": "custom",
+   "source": "hand_tuned",
+   "pole_mm": 200.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt",
+   "source_sha256": "1375532c2b089aa8bca86e5b69164673d0c57f90bb137cfbac1dc732dec1ab86",
+   "source_seconds": 10.495,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "63_L_P2_pole200_grip_7.3s_auto_custom.txt",
+   "sha256": "6f27218959a75730331f2276fdf87d005fc25a80e3635072ab59aa029cbffc9b",
+   "bytes": 84022,
+   "lines": 1465,
+   "seconds": 7.32,
+   "listed_name": "63_63_L_P2_pole200_grip_7.3s_au.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 9.46,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 9.5 deg (joint 4); after the predicted overshoot at turns, 17.2 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.987,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 215 deg/s (limit 218) at line 1335"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 602.8,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 603 deg/s^2 (20 Hz band-limited) around line 438 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.077,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 1.077 deg between lines 1331 and 1332"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 4.2,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 4.2 mm of the taught path (p95 2.4 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.186,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 7 at 279 rad/s^3 (20 Hz band-limited) around line 1464 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.225,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 13.4 N and 11.9 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 722)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 9.46,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.987,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 602.8,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.077,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.186,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.225,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 11.6
+  },
+  {
+   "side": "left",
+   "slot": 64,
+   "optimiser": "custom",
+   "source": "base",
+   "pole_mm": 200.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "4_L_P3_R07_PART1+R07_PART2_pole200_cleaningpose_14.1s_v1.1.txt",
+   "source_sha256": "b632b2f0d9afa6dbc136b2dedd8ae338e139455a1d8f842b2b50cce86de33203",
+   "source_seconds": 14.05,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "64_L_P3_pole200_cleaningpose_17.2s_auto_custom.txt",
+   "sha256": "671b4f5555c45cfe6edba91b171f06a0749da39bd2badf22e84b2bda07e700fb",
+   "bytes": 201144,
+   "lines": 3442,
+   "seconds": 17.205,
+   "listed_name": "64_64_L_P3_pole200_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 1.06,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 4.1 deg (joint 4); after the predicted overshoot at turns, 1.1 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.994,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 217 deg/s (limit 218) at line 3175"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 604.4,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 604 deg/s^2 (20 Hz band-limited) around line 1458 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.084,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 1.084 deg between lines 3175 and 3176"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 5.15,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 5.1 mm of the taught path (p95 2.3 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.247,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 5 at 371 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.287,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 17.1 N and 15.2 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 554)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 1.06,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.994,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 604.4,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.084,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.247,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.287,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 28.3
+  },
+  {
+   "side": "left",
+   "slot": 65,
+   "optimiser": "custom",
+   "source": "hand_tuned",
+   "pole_mm": 200.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt",
+   "source_sha256": "d972969476de3780f7f8b61bcf67e3ab65c4086b2d952fcf1c5c852c1bde9e0c",
+   "source_seconds": 45.315,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "65_L_P3_pole200_grip_48.5s_auto_custom.txt",
+   "sha256": "3c32eb9e64f42857d8ed64f5abaae2e063fbc46cf82c32cd05f582e8a6e44c87",
+   "bytes": 551096,
+   "lines": 9702,
+   "seconds": 48.505,
+   "listed_name": "65_65_L_P3_pole200_grip_48.5s_a.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 11.05,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 11.1 deg (joint 4); after the predicted overshoot at turns, 14.1 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.861,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 5 at 188 deg/s (limit 218) at line 2034"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 612.0,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 612 deg/s^2 (20 Hz band-limited) around line 782 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.939,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 5, 0.939 deg between lines 2033 and 2034"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 7.05,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 7.0 mm of the taught path (p95 2.9 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.192,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 3 at 288 rad/s^3 (20 Hz band-limited) around line 9701 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.214,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 15.3 N and 11.3 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 666)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 11.05,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.861,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 612.0,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.939,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.192,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.214,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 48.8
+  },
+  {
+   "side": "right",
+   "slot": 61,
+   "optimiser": "custom",
+   "source": "hand_tuned",
+   "pole_mm": 210.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt",
+   "source_sha256": "78246abccd1a771e66750192ca9f82fd684f708580443c40fc60f9873408a452",
+   "source_seconds": 53.465,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 210.0
+   },
+   "file": "61_R_P1_pole210_cleaningpose_39.5s_auto_custom.txt",
+   "sha256": "b63ce9a172b514b1a1d1bd7da7cb561c70a945fdc4d883c4f35257b761cb6e35",
+   "bytes": 454587,
+   "lines": 7907,
+   "seconds": 39.53,
+   "listed_name": "61_61_R_P1_pole210_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 3.78,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 11.8 deg (joint 6); after the predicted overshoot at turns, 3.8 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.993,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 4 at 217 deg/s (limit 218) at line 243"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 605.8,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 6 at 606 deg/s^2 (20 Hz band-limited) around line 505 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.084,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 4, 1.084 deg between lines 242 and 243"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 4.02,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 4.0 mm of the taught path (p95 1.7 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.26,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 391 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.384,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 22.0 N and 20.3 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 7160)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 3.78,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.993,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 605.8,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.084,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.26,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.384,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 48.5
+  },
+  {
+   "side": "right",
+   "slot": 62,
+   "optimiser": "custom",
+   "source": "hand_tuned",
+   "pole_mm": 200.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "62_R_P2_pole200_grip_13.0s_new_R04.txt",
+   "source_sha256": "4df0ee668240163e91b6c4838f6d2630c071f0616c84314f4d42175f82e693ed",
+   "source_seconds": 12.995,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "62_R_P2_pole200_grip_7.5s_auto_custom.txt",
+   "sha256": "4b7c7b75d91cbdc74236ac56268c9bcbb5442cb4d326f4ffa2fcdbc0dc698dbd",
+   "bytes": 80543,
+   "lines": 1499,
+   "seconds": 7.49,
+   "listed_name": "62_62_R_P2_pole200_grip_7.5s_au.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 8.14,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 16.4 deg (joint 4); after the predicted overshoot at turns, 8.1 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.991,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 216 deg/s (limit 218) at line 117"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 602.7,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 4 at 603 deg/s^2 (20 Hz band-limited) around line 773 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.081,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 1.081 deg between lines 114 and 115"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 4.87,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 4.9 mm of the taught path (p95 1.2 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.301,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 451 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.211,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 17.5 N and 11.2 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 402)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 8.14,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.991,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 602.7,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.081,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.301,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.211,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 12.3
+  },
+  {
+   "side": "right",
+   "slot": 63,
+   "optimiser": "custom",
+   "source": "base",
+   "pole_mm": 200.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "3_R_P2_R05_pole200_cleaningpose_5.7s_v1.1.txt",
+   "source_sha256": "bf12e3d1b3b699c0129c2186ce8cbf2b84140ed56f8ca95c6237218ae4687e78",
+   "source_seconds": 5.67,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 200.0
+   },
+   "file": "63_R_P2_pole200_cleaningpose_6.8s_auto_custom.txt",
+   "sha256": "92ee2b7ce2c80bd047a45e163624952d7bf13cdcb94d47e9e79ed2155f597375",
+   "bytes": 76579,
+   "lines": 1360,
+   "seconds": 6.795,
+   "listed_name": "63_63_R_P2_pole200_cleaningpose.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 25.29,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 28.2 deg (joint 4); after the predicted overshoot at turns, 25.3 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.781,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 170 deg/s (limit 218) at line 1182"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 603.3,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 5 at 603 deg/s^2 (20 Hz band-limited) around line 825 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 0.852,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 0.852 deg between lines 1181 and 1182"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.24,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.2 mm of the taught path (p95 1.8 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.257,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 5 at 385 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.211,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 18.0 N and 11.2 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 860)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 25.29,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.781,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 603.3,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 0.852,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.257,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.211,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 5.6
+  },
+  {
+   "side": "right",
+   "slot": 64,
+   "optimiser": "custom",
+   "source": "hand_tuned",
+   "pole_mm": 50.0,
+   "hand_name": "cleaningpose",
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    0,
+    1000
+   ],
+   "source_file": "64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt",
+   "source_sha256": "d59652217fb2efdb44ce314d86da9f012638c61d62bd5619ba16471c74835377",
+   "source_seconds": 10.355,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 50.0
+   },
+   "file": "64_1_R_P2_pole50_cleaningpose_7.1s_auto_custom.txt",
+   "sha256": "03124805edb7e31693ed8bb587aafdb35ebdac8a700dc76bba3e968e621a5849",
+   "bytes": 80865,
+   "lines": 1418,
+   "seconds": 7.085,
+   "listed_name": "64_64_1_R_P2_pole50_cleaningpos.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 24.79,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 25.2 deg (joint 6); after the predicted overshoot at turns, 24.8 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.961,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 7 at 210 deg/s (limit 218) at line 992"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 603.4,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 2 at 603 deg/s^2 (20 Hz band-limited) around line 1182 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.048,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 7, 1.048 deg between lines 991 and 992"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 3.61,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 3.6 mm of the taught path (p95 1.9 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.304,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 456 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.227,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 14.3 N and 12.0 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 1090)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 24.79,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.961,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 603.4,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.048,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.304,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.227,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 8.8
+  },
+  {
+   "side": "right",
+   "slot": 65,
+   "optimiser": "custom",
+   "source": "hand_tuned",
+   "pole_mm": 50.0,
+   "hand_name": "grip",
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "source_file": "65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt",
+   "source_sha256": "d309a492a1ff52db1c90a0a9977da5364a0862492312d1d6056d1f894463c31a",
+   "source_seconds": 39.805,
+   "asked": {
+    "jerk_rad_s3": 1500.0,
+    "ugv_force_n": null,
+    "ugv_moment_nm": 52.9,
+    "pole_mm": 50.0
+   },
+   "file": "65_R_P3_pole50_grip_26.1s_auto_custom.txt",
+   "sha256": "33955ea0bec0f5bb6b59dd84ea751fcf660458b0fc1bcf4a1239c24218d730d4",
+   "bytes": 300831,
+   "lines": 5223,
+   "seconds": 26.11,
+   "listed_name": "65_65_R_P3_pole50_grip_26.1s_au.",
+   "uploadable": true,
+   "fails": [],
+   "fails_read_back": [],
+   "checks": {
+    "L1": {
+     "name": "Joint limits",
+     "passed": true,
+     "value": 0.58,
+     "limit": 0.5,
+     "unit": "deg",
+     "detail": "closest approach 8.1 deg (joint 4); after the predicted overshoot at turns, 0.6 deg"
+    },
+    "L2": {
+     "name": "Joint speed",
+     "passed": true,
+     "value": 0.992,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "fastest: joint 6 at 217 deg/s (limit 218) at line 95"
+    },
+    "L3": {
+     "name": "Joint acceleration",
+     "passed": true,
+     "value": 605.2,
+     "limit": 612.0,
+     "unit": "deg/s^2",
+     "detail": "highest: joint 2 at 605 deg/s^2 (20 Hz band-limited) around line 2440 (hardware limit 600 deg/s^2)"
+    },
+    "L4": {
+     "name": "Step size",
+     "passed": true,
+     "value": 1.083,
+     "limit": 10.0,
+     "unit": "deg",
+     "detail": "largest: joint 6, 1.083 deg between lines 93 and 94"
+    },
+    "L5": {
+     "name": "Path accuracy",
+     "passed": true,
+     "value": 5.91,
+     "limit": 10.0,
+     "unit": "mm",
+     "detail": "the hand stays within 5.9 mm of the taught path (p95 1.9 mm)"
+    },
+    "L6": {
+     "name": "Start and end poses",
+     "passed": true,
+     "value": 0.0,
+     "limit": 0.05,
+     "unit": "deg",
+     "detail": "start differs by 0.0000 deg, end by 0.0000 deg from the recording"
+    },
+    "L7": {
+     "name": "Joint jerk",
+     "passed": true,
+     "value": 0.26,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "highest: joint 6 at 390 rad/s^3 (20 Hz band-limited) around line 3 (limit 1500 rad/s^3)"
+    },
+    "L8": {
+     "name": "Load on the UGV",
+     "passed": true,
+     "value": 0.358,
+     "limit": 1.0,
+     "unit": "x limit",
+     "detail": "the arm's motion puts up to 23.5 N and 18.9 N m (limit 52.9 N m) on the UGV (from the model's link masses, line 2440)"
+    }
+   },
+   "read_back": {
+    "L1": {
+     "passed": true,
+     "value": 0.58,
+     "limit": 0.5,
+     "unit": "deg"
+    },
+    "L2": {
+     "passed": true,
+     "value": 0.992,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L3": {
+     "passed": true,
+     "value": 605.2,
+     "limit": 612.0,
+     "unit": "deg/s^2"
+    },
+    "L4": {
+     "passed": true,
+     "value": 1.083,
+     "limit": 10.0,
+     "unit": "deg"
+    },
+    "L7": {
+     "passed": true,
+     "value": 0.26,
+     "limit": 1.0,
+     "unit": "x limit"
+    },
+    "L8": {
+     "passed": true,
+     "value": 0.358,
+     "limit": 1.0,
+     "unit": "x limit"
+    }
+   },
+   "start_off_deg": 0.0,
+   "end_off_deg": 0.0,
+   "compute_s": 29.8
+  }
+ ],
+ "sequences": [
+  {
+   "optimiser": "toppra",
+   "version": "original",
+   "plan": "13 stages, 4 INSPECT; Open the lid: all its camera checks; Open the seat: all its camera checks; Close the lid: all its camera checks",
+   "files": {
+    "left": {
+     "file": "toppra/sequence/original/left_workflow_sequence.json",
+     "sha256": "3e55e81346ee9bdc6b9dacc686e995d426b41aada8b9ef1908b0da3ca53196a0"
+    },
+    "right": {
+     "file": "toppra/sequence/original/right_workflow_sequence.json",
+     "sha256": "eab77ada80c3bb37f2f48589258262c9302bc0f6edcca7c9dd4d3186e9ca6e3d"
+    }
+   }
+  },
+  {
+   "optimiser": "toppra",
+   "version": "lid_open_checks_only",
+   "plan": "8 stages, 0 INSPECT; Open the lid: verify_lid_lifted, verify_lid_open; Open the seat: no camera check; Close the lid: no camera check",
+   "files": {
+    "left": {
+     "file": "toppra/sequence/lid_open_checks_only/left_workflow_sequence.json",
+     "sha256": "ddae2f921c7c7123ca071fe9be66e4e3e7847030cfad28c9e46a1791a37b72ae"
+    },
+    "right": {
+     "file": "toppra/sequence/lid_open_checks_only/right_workflow_sequence.json",
+     "sha256": "46c49977016dccd88846c755e140a14246dcecc3735f4c96e664168fb04f745b"
+    }
+   }
+  },
+  {
+   "optimiser": "toppra",
+   "version": "no_inspection",
+   "plan": "8 stages, 0 INSPECT; Open the lid: no camera check; Open the seat: no camera check; Close the lid: no camera check",
+   "files": {
+    "left": {
+     "file": "toppra/sequence/no_inspection/left_workflow_sequence.json",
+     "sha256": "5cbc23ea0cc4a641bf9753573c39683967b82545fd71559d94820919d0db132e"
+    },
+    "right": {
+     "file": "toppra/sequence/no_inspection/right_workflow_sequence.json",
+     "sha256": "c5455b9d7565acdeb1d5a31095903efde156db395be77a6ce90d2cacb47f8320"
+    }
+   }
+  },
+  {
+   "optimiser": "toppra",
+   "version": "without_camera",
+   "plan": "2 stages, 0 INSPECT; no lid or seat task",
+   "files": {
+    "left": {
+     "file": "toppra/sequence/without_camera/left_workflow_sequence.json",
+     "sha256": "4a823db75716afabeb0796d4dd9420c9fed16009cd336331b36e04d40be07dcb"
+    },
+    "right": {
+     "file": "toppra/sequence/without_camera/right_workflow_sequence.json",
+     "sha256": "62c1883a43be9419cfd52e3ec5bd09a93b72fe7acdfe723c8ee726890c16d8f4"
+    }
+   }
+  },
+  {
+   "optimiser": "ruckig_s",
+   "version": "original",
+   "plan": "13 stages, 4 INSPECT; Open the lid: all its camera checks; Open the seat: all its camera checks; Close the lid: all its camera checks",
+   "files": {
+    "left": {
+     "file": "ruckig_s/sequence/original/left_workflow_sequence.json",
+     "sha256": "a007470ffffa7abeb6f27d5191708d39708a493c180ab2163244fd3d643d1d86"
+    },
+    "right": {
+     "file": "ruckig_s/sequence/original/right_workflow_sequence.json",
+     "sha256": "90575836931acb8ed9d3ed2f11ce272440afd51f816b843c265d370c57e2ec61"
+    }
+   }
+  },
+  {
+   "optimiser": "ruckig_s",
+   "version": "lid_open_checks_only",
+   "plan": "8 stages, 0 INSPECT; Open the lid: verify_lid_lifted, verify_lid_open; Open the seat: no camera check; Close the lid: no camera check",
+   "files": {
+    "left": {
+     "file": "ruckig_s/sequence/lid_open_checks_only/left_workflow_sequence.json",
+     "sha256": "404b15ef528cbc446c6005504d8b40ba6ff4056534cc9e62e06431f29cc23026"
+    },
+    "right": {
+     "file": "ruckig_s/sequence/lid_open_checks_only/right_workflow_sequence.json",
+     "sha256": "b55cc82202ed05f77298e5f575f19cf2940febcd772dacf9f4e1b050910873da"
+    }
+   }
+  },
+  {
+   "optimiser": "ruckig_s",
+   "version": "no_inspection",
+   "plan": "8 stages, 0 INSPECT; Open the lid: no camera check; Open the seat: no camera check; Close the lid: no camera check",
+   "files": {
+    "left": {
+     "file": "ruckig_s/sequence/no_inspection/left_workflow_sequence.json",
+     "sha256": "0a43896e87d72a6758d26115eb738aaec0455e16a6bc125ae77c4c89e291ba5b"
+    },
+    "right": {
+     "file": "ruckig_s/sequence/no_inspection/right_workflow_sequence.json",
+     "sha256": "e3369cfae205d5dd27b132e67e2ceb533021b5467d44aa6cb85cdff0c7437b2a"
+    }
+   }
+  },
+  {
+   "optimiser": "ruckig_s",
+   "version": "without_camera",
+   "plan": "2 stages, 0 INSPECT; no lid or seat task",
+   "files": {
+    "left": {
+     "file": "ruckig_s/sequence/without_camera/left_workflow_sequence.json",
+     "sha256": "aca5d6a6b681be6f4ca3b4381f9f87a531ac01c19a76063d6cb5b1d459d7efb2"
+    },
+    "right": {
+     "file": "ruckig_s/sequence/without_camera/right_workflow_sequence.json",
+     "sha256": "f9a19b957b5afdf6d4d6313244a4ada24048f4d6747358e3062635db203824cb"
+    }
+   }
+  },
+  {
+   "optimiser": "custom",
+   "version": "original",
+   "plan": "13 stages, 4 INSPECT; Open the lid: all its camera checks; Open the seat: all its camera checks; Close the lid: all its camera checks",
+   "files": {
+    "left": {
+     "file": "custom/sequence/original/left_workflow_sequence.json",
+     "sha256": "8c10b4af4195fa4f8b010a59ec7cb1dbd746e377d5bb52931758ee6be2ee2f83"
+    },
+    "right": {
+     "file": "custom/sequence/original/right_workflow_sequence.json",
+     "sha256": "677e2ea1c3fbb5b76b2498a62734c0c59b5a1dd9b065daf9326fb40bfed536a6"
+    }
+   }
+  },
+  {
+   "optimiser": "custom",
+   "version": "lid_open_checks_only",
+   "plan": "8 stages, 0 INSPECT; Open the lid: verify_lid_lifted, verify_lid_open; Open the seat: no camera check; Close the lid: no camera check",
+   "files": {
+    "left": {
+     "file": "custom/sequence/lid_open_checks_only/left_workflow_sequence.json",
+     "sha256": "d6c80955eb93351b863d499a17419b04af32cb36fced4875c58f6bd72304d43d"
+    },
+    "right": {
+     "file": "custom/sequence/lid_open_checks_only/right_workflow_sequence.json",
+     "sha256": "2884ea8d145d28fe984e9172fa1aadf327f8a32d65d388a27402f4fc5ab213f6"
+    }
+   }
+  },
+  {
+   "optimiser": "custom",
+   "version": "no_inspection",
+   "plan": "8 stages, 0 INSPECT; Open the lid: no camera check; Open the seat: no camera check; Close the lid: no camera check",
+   "files": {
+    "left": {
+     "file": "custom/sequence/no_inspection/left_workflow_sequence.json",
+     "sha256": "6158cfc19f6536ae1ac2d508ca87a028772c61adff5f7b3dcb584f8e500dc468"
+    },
+    "right": {
+     "file": "custom/sequence/no_inspection/right_workflow_sequence.json",
+     "sha256": "9869cc16c738b0570c5d2ef0ac628cb3f1914a1a3c9076f260a75083da7356b9"
+    }
+   }
+  },
+  {
+   "optimiser": "custom",
+   "version": "without_camera",
+   "plan": "2 stages, 0 INSPECT; no lid or seat task",
+   "files": {
+    "left": {
+     "file": "custom/sequence/without_camera/left_workflow_sequence.json",
+     "sha256": "56b67f6af06fc22ac355be58d99296aa7b05fb1bf005de4e12f23c9c5216fc94"
+    },
+    "right": {
+     "file": "custom/sequence/without_camera/right_workflow_sequence.json",
+     "sha256": "b3574156ec298079a0d14b26430a58013aaa0310da2bb860f3353f292ac5a5a5"
+    }
+   }
+  }
+ ],
+ "tree": {
+  "README.md": "b8a40fb2d4cea106d8e1b64fe5390a0a9beca0cf5d8a84094f310deaf37f4cf6",
+  "RUNBOOK.md": "da96f0b6277e776c0aaf60334c241aa52f425c216d298b6f910c927668885fe6",
+  "custom/FILES.md": "8c6b68c5004c3fed6477a205c9b94749633a05b017313c044f5d9d07855c8ad7",
+  "custom/left/61_L_P1_pole50_cleaningpose_40.0s_auto_custom.txt": "8d858e743d5402825c0db0c0d3ce6f899e194f703bcd9754b49f96bce9029091",
+  "custom/left/62_L_P2_pole200_cleaningpose_16.4s_auto_custom.txt": "7d48c4114c5cbab5a000923224103e15d366980f848f2f2c1591ea44007cd34f",
+  "custom/left/63_L_P2_pole200_grip_7.3s_auto_custom.txt": "6f27218959a75730331f2276fdf87d005fc25a80e3635072ab59aa029cbffc9b",
+  "custom/left/64_L_P3_pole200_cleaningpose_17.2s_auto_custom.txt": "671b4f5555c45cfe6edba91b171f06a0749da39bd2badf22e84b2bda07e700fb",
+  "custom/left/65_L_P3_pole200_grip_48.5s_auto_custom.txt": "3c32eb9e64f42857d8ed64f5abaae2e063fbc46cf82c32cd05f582e8a6e44c87",
+  "custom/right/61_R_P1_pole210_cleaningpose_39.5s_auto_custom.txt": "b63ce9a172b514b1a1d1bd7da7cb561c70a945fdc4d883c4f35257b761cb6e35",
+  "custom/right/62_R_P2_pole200_grip_7.5s_auto_custom.txt": "4b7c7b75d91cbdc74236ac56268c9bcbb5442cb4d326f4ffa2fcdbc0dc698dbd",
+  "custom/right/63_R_P2_pole200_cleaningpose_6.8s_auto_custom.txt": "92ee2b7ce2c80bd047a45e163624952d7bf13cdcb94d47e9e79ed2155f597375",
+  "custom/right/64_1_R_P2_pole50_cleaningpose_7.1s_auto_custom.txt": "03124805edb7e31693ed8bb587aafdb35ebdac8a700dc76bba3e968e621a5849",
+  "custom/right/65_R_P3_pole50_grip_26.1s_auto_custom.txt": "33955ea0bec0f5bb6b59dd84ea751fcf660458b0fc1bcf4a1239c24218d730d4",
+  "custom/sequence/lid_open_checks_only/left_workflow_sequence.json": "d6c80955eb93351b863d499a17419b04af32cb36fced4875c58f6bd72304d43d",
+  "custom/sequence/lid_open_checks_only/right_workflow_sequence.json": "2884ea8d145d28fe984e9172fa1aadf327f8a32d65d388a27402f4fc5ab213f6",
+  "custom/sequence/no_inspection/left_workflow_sequence.json": "6158cfc19f6536ae1ac2d508ca87a028772c61adff5f7b3dcb584f8e500dc468",
+  "custom/sequence/no_inspection/right_workflow_sequence.json": "9869cc16c738b0570c5d2ef0ac628cb3f1914a1a3c9076f260a75083da7356b9",
+  "custom/sequence/original/left_workflow_sequence.json": "8c10b4af4195fa4f8b010a59ec7cb1dbd746e377d5bb52931758ee6be2ee2f83",
+  "custom/sequence/original/right_workflow_sequence.json": "677e2ea1c3fbb5b76b2498a62734c0c59b5a1dd9b065daf9326fb40bfed536a6",
+  "custom/sequence/without_camera/left_workflow_sequence.json": "56b67f6af06fc22ac355be58d99296aa7b05fb1bf005de4e12f23c9c5216fc94",
+  "custom/sequence/without_camera/right_workflow_sequence.json": "b3574156ec298079a0d14b26430a58013aaa0310da2bb860f3353f292ac5a5a5",
+  "ruckig_s/FILES.md": "fc5eca3d1d8cd5bfb3a171a23362db1e8032fb7307515d132e716fe793021286",
+  "ruckig_s/left/61_L_P1_pole50_cleaningpose_45.8s_auto_ruckig.txt": "027c2224d798fcd6558097f3660de0e82461fb1b91336cc3b8a64fcd58fe5c2e",
+  "ruckig_s/left/62_L_P2_pole200_cleaningpose_20.2s_auto_ruckig.txt": "935a221b72eba27452aa8d3b8689d50998934381594692b74ef3e87589b0bf8e",
+  "ruckig_s/left/63_L_P2_pole200_grip_8.5s_auto_ruckig.txt": "3d00df5b3507e5104783a26f2ff1a57841b642e1298509ca715c2c2d6281fd9e",
+  "ruckig_s/left/64_L_P3_pole200_cleaningpose_21.2s_auto_ruckig.txt": "feb2a0acf575b30d645d9e0352a0358b51922e154031e910954a819eb5e57927",
+  "ruckig_s/left/65_L_P3_pole200_grip_51.1s_auto_ruckig.txt": "5bde4b6e5922d7722449e1c445bcb83a66165adafe62aefd231a110222077b67",
+  "ruckig_s/right/61_R_P1_pole210_cleaningpose_46.0s_auto_ruckig.txt": "1596ff30adec89ed405c00248e7002cb7768778913e36b421743a7301c39acd0",
+  "ruckig_s/right/62_R_P2_pole200_grip_8.4s_auto_ruckig.txt": "519e1292aeaabb9ee9660c28e82847db15b56d86f7ad61c018cc8a8449932acd",
+  "ruckig_s/right/63_R_P2_pole200_cleaningpose_8.4s_auto_ruckig.txt": "4f03656997b0782a1a5532cfbb51dd4497754da4adabc2ffdc270a86767c8f65",
+  "ruckig_s/right/64_1_R_P2_pole50_cleaningpose_8.9s_auto_ruckig.txt": "07cf67494f657d8243afa0e7395b4ac54e21e00571d0c723920c8f210fdaf844",
+  "ruckig_s/right/65_R_P3_pole50_grip_30.6s_auto_ruckig.txt": "83de3a9162041b64e21a01eaeead727f008105663ee0b652d17f19c3b771b2be",
+  "ruckig_s/sequence/lid_open_checks_only/left_workflow_sequence.json": "404b15ef528cbc446c6005504d8b40ba6ff4056534cc9e62e06431f29cc23026",
+  "ruckig_s/sequence/lid_open_checks_only/right_workflow_sequence.json": "b55cc82202ed05f77298e5f575f19cf2940febcd772dacf9f4e1b050910873da",
+  "ruckig_s/sequence/no_inspection/left_workflow_sequence.json": "0a43896e87d72a6758d26115eb738aaec0455e16a6bc125ae77c4c89e291ba5b",
+  "ruckig_s/sequence/no_inspection/right_workflow_sequence.json": "e3369cfae205d5dd27b132e67e2ceb533021b5467d44aa6cb85cdff0c7437b2a",
+  "ruckig_s/sequence/original/left_workflow_sequence.json": "a007470ffffa7abeb6f27d5191708d39708a493c180ab2163244fd3d643d1d86",
+  "ruckig_s/sequence/original/right_workflow_sequence.json": "90575836931acb8ed9d3ed2f11ce272440afd51f816b843c265d370c57e2ec61",
+  "ruckig_s/sequence/without_camera/left_workflow_sequence.json": "aca5d6a6b681be6f4ca3b4381f9f87a531ac01c19a76063d6cb5b1d459d7efb2",
+  "ruckig_s/sequence/without_camera/right_workflow_sequence.json": "f9a19b957b5afdf6d4d6313244a4ada24048f4d6747358e3062635db203824cb",
+  "toppra/FILES.md": "25a0da450026b2ae12530bb3f9d30402d0f44b34d5c78f85cce8b60380cbee77",
+  "toppra/left/61_L_P1_pole50_cleaningpose_39.5s_auto_toppra.txt": "1f7a0cbd21acccfdc29f528b7056eb43627f825b17dcf6952f474c2eba2687a2",
+  "toppra/left/62_L_P2_pole200_cleaningpose_16.6s_auto_toppra.txt": "250c5bbea5d9f2f8084d9d775cbd95e7cdfae60d172072997669546d1073598c",
+  "toppra/left/63_L_P2_pole200_grip_7.5s_auto_toppra.txt": "404845319b52406b0de7c8d66d470bc7a9196d174bb20a317b10ed63269a69ab",
+  "toppra/left/64_L_P3_pole200_cleaningpose_17.6s_auto_toppra.txt": "2c74f2cf025242691193c4b539567be6d2ca534d51ad87e3de3e54b7c8b78c35",
+  "toppra/left/65_L_P3_pole200_grip_45.8s_auto_toppra.txt": "013d31c2339f69e261ec7b3bbc21fe3078105d640e753c40b10ff839b0e7653b",
+  "toppra/right/61_R_P1_pole210_cleaningpose_39.8s_auto_toppra.txt": "9aff3c08f1586f4448c8fd2915defa5a045b904d83670ad2b5d913becf646153",
+  "toppra/right/62_R_P2_pole200_grip_7.6s_auto_toppra.txt": "32e738638586c465a1e165fe18893ba68849a5d1c46309f53de469d58ec64c43",
+  "toppra/right/63_R_P2_pole200_cleaningpose_6.9s_auto_toppra.txt": "661c0c8665ff6f9a51fd18c191cfc664e7691a372e53d3dd0ed742a477b74d49",
+  "toppra/right/64_1_R_P2_pole50_cleaningpose_7.2s_auto_toppra.txt": "055ff857afdfd9dfcbccb1824f99e98a866edffbfb339bfa7cf927a2c2aa498e",
+  "toppra/right/65_R_P3_pole50_grip_26.7s_auto_toppra.txt": "9f96c5a7f1fbc8a783592935b378f8ed6ae4f84e0ccf0bcf60c00e8d46948bba",
+  "toppra/sequence/lid_open_checks_only/left_workflow_sequence.json": "ddae2f921c7c7123ca071fe9be66e4e3e7847030cfad28c9e46a1791a37b72ae",
+  "toppra/sequence/lid_open_checks_only/right_workflow_sequence.json": "46c49977016dccd88846c755e140a14246dcecc3735f4c96e664168fb04f745b",
+  "toppra/sequence/no_inspection/left_workflow_sequence.json": "5cbc23ea0cc4a641bf9753573c39683967b82545fd71559d94820919d0db132e",
+  "toppra/sequence/no_inspection/right_workflow_sequence.json": "c5455b9d7565acdeb1d5a31095903efde156db395be77a6ce90d2cacb47f8320",
+  "toppra/sequence/original/left_workflow_sequence.json": "3e55e81346ee9bdc6b9dacc686e995d426b41aada8b9ef1908b0da3ca53196a0",
+  "toppra/sequence/original/right_workflow_sequence.json": "eab77ada80c3bb37f2f48589258262c9302bc0f6edcca7c9dd4d3186e9ca6e3d",
+  "toppra/sequence/without_camera/left_workflow_sequence.json": "4a823db75716afabeb0796d4dd9420c9fed16009cd336331b36e04d40be07dcb",
+  "toppra/sequence/without_camera/right_workflow_sequence.json": "62c1883a43be9419cfd52e3ec5bd09a93b72fe7acdfe723c8ee726890c16d8f4"
+ }
+}
