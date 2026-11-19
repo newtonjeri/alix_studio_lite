@@ -858,6 +858,7 @@ def post_optimise(app, q, body, m):
     max_dev = u.get("max_dev_mm") or (units.library_file(key) or {}).get("max_dev_mm")   # else the taught set's
     if max_dev and not settings.get("max_dev_mm"):
         settings["max_dev_mm"] = max_dev
+    settings["pole_mm"] = info["stage"].pole_mm      # the UGV load is worked out at the pole height the region runs at
     cand, rec, extra_path = _candidate_files(units, key)
     cand.parent.mkdir(parents=True, exist_ok=True)
     src = _read(raw.with_suffix(".source.json")) or {}

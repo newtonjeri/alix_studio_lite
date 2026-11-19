@@ -430,6 +430,8 @@ def post_optimise(app, q, body, m):
         raise UserError("This region has no recording yet.", "Teach it first.")
     settings = p.settings(key)
     side = p.units[key]["arm"]
+    if p.units[key].get("pole_mm") is not None:   # the UGV load is worked out at the region's pole height (its catalogue's)
+        settings = dict(settings, pole_mm=p.units[key]["pole_mm"])
     out = p.candidate_path(key)
     out.parent.mkdir(parents=True, exist_ok=True)
     name = workers.optimiser_name(settings)

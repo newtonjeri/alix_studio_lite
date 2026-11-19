@@ -163,3 +163,55 @@ def test_a_regions_settings_choose_the_optimiser_and_carry_the_two_settings():
     for bad in ({"optimiser": "fastest"}, {"jerk_rad_s3": 2000}, {"jerk_rad_s3": 1}, {"ugv_force_n": 0}):
         with pytest.raises(UserError):
             _check_settings(bad)
+
+
+def test_the_page_works_out_the_ugv_load_at_the_regions_own_pole_height(tmp_path, commode_c_recordings):
+    """Confirm & Generate on the page: the UGV load is worked out at the pole height the region's recording was taught
+    with, not at one height for every region (found 19 Nov on the lab's Programs: read at 50 and at 200 mm, the UGV
+    moment is 7 % lower and 5 % higher than at 150 mm)."""
+    import json
+    import threading
+    import time
+    import urllib.request
+
+    from alix_studio_lite import vendor_paths
+
+    vendor_paths.activate()
+    from alix_studio_lite.server.app import LiteApp, make_server       # app first: it loads the route modules in their order
+    from alix_studio_lite.server.api_units import _candidate_files, units_for
+    from alix_studio_lite.server.project import open_project
+
+    app = LiteApp(open_project(tmp_path, "commode_c"), tmp_path)
+    srv = make_server(app, 0)
+    threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True).start()
+    ctx = {"tok": ""}
+
+    def call(method, path, body=None):
+        r = urllib.request.Request(f"http://127.0.0.1:{srv.server_address[1]}{path}", method=method,
+                                   headers={"Content-Type": "application/json", "X-Lite-Token": ctx["tok"]},
+                                   data=None if body is None else json.dumps(body).encode())
+        with urllib.request.urlopen(r, timeout=120) as resp:
+            return json.loads(resp.read())
+
+    try:
+        ctx["tok"] = call("POST", "/api/auth/login", {"pin": "1234"})["token"]
+        call("PUT", "/api/projects/alix_pole", {"id": "alix_pole", "name": "Pole", "createdAt": "2026-11-19T10:00:00.000Z",
+                                                "updatedAt": "2026-11-19T10:00:00.000Z", "archived": False, "state": {"currentTask": 0}})
+        unit = "/api/projects/alix_pole/units/L-R01"
+        txt = (commode_c_recordings / "FILE_10.1.txt").read_text()
+        got = call("POST", unit + "/recordings", {"source": "upload", "name": "L_base.txt", "content": txt, "arm": "left",
+                                                  "pole_mm": 50, "hand": "GRIP"})
+        assert got["unit"]["recordings"][-1]["stage"]["pole_mm"] == 50, got
+        call("POST", unit + "/settings", {"changes": {"optimiser": "toppra"}, "label": "automatic"})
+        job = call("POST", unit + "/optimise", {})
+        t0 = time.time()
+        while job["state"] == "running":
+            assert time.time() - t0 < 120, job
+            time.sleep(0.2)
+            job = call("GET", f"/api/jobs/{job['id']}")
+        assert job["state"] == "done", job
+        record = json.loads(_candidate_files(units_for(app, "alix_pole"), "L-R01")[1].read_text(encoding="utf-8"))
+        assert record["recipe"]["limits"]["pole_m"] == 0.05
+        assert "pole_mm" not in call("GET", unit)["settings_view"]["settings"]     # the region's saved settings stay as they were
+    finally:
+        srv.shutdown()

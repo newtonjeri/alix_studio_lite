@@ -136,8 +136,9 @@ def request_kwargs(settings: dict) -> dict:
     """The automatic request for a region's settings: the recording as taught, the optimiser chosen,
     the target time when one is set (else the fastest the limits allow), the jerk limit (the joint
     limits file's when the region sets none), the UGV moment limit (half of what the UGV's own weight
-    holds when the region sets none) and the UGV force limit when the region sets one. Nothing of the
-    manual tuning goes in."""
+    holds when the region sets none), the UGV force limit when the region sets one, and the pole height
+    the UGV load is worked out at (``pole_mm``: the route puts the region's own in, from its recording's
+    pole and hand; 150 mm without it). Nothing of the manual tuning goes in."""
     mode = settings.get("time_mode") or ("target" if settings.get("target_s") else "fastest")
     return dict(optimiser=settings["optimiser"], max_dev_mm=settings.get("max_dev_mm"),
                 target_s=settings.get("target_s") if mode == "target" else None,
