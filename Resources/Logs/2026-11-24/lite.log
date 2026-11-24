@@ -2245,3 +2245,69 @@
 21:08:53.392 [activity] operator:836170 page: NAVIGATION · Scrolled view
 21:09:01.901 [LEFT] restore global speed {"pct": 50} ret=0
 21:09:01.927 [RIGHT] restore global speed {"pct": 50} ret=0
+21:20:08.737 [RIGHT] camera · fixture calibration: {'seat': {'seat_ring': 0.0086}, 'lid': {'toplid': 0.0092}} (/home/alai-labs-dell/alix_studio_lite/vendor/alix/core/python/alix_perception_core/src/alix_perception_core/config/fixtures/commode_c_calibration.yaml)
+21:20:08.840 [RIGHT] camera · regions routed by the fixture meshes: 16 regions from /home/alai-labs-dell/alix_studio_lite/vendor/alix/ros/orchestration/alix_tasks/config/commode_cleaning/commode_c/models, fixture at [1.005, 0.0, 0.42] in base_link
+21:20:08.845 [RIGHT] camera · perception core: local backend, models_synthetic_real_v10.yaml, 21 regions, fixture at [1.005, 0.0, 0.42] in base_link
+21:20:09.009 [activity] - page: NAVIGATION · Open screen
+21:20:09.013 [activity] - page: SYSTEM · ASL frontend initialized
+21:20:12.758 [activity] - POST /api/auth/login
+21:20:12.824 [activity] operator:2118a0 page: UI · Button action
+21:20:13.884 [activity] operator:2118a0 page: AUTH · Operator login
+21:20:13.890 [activity] operator:2118a0 page: NAVIGATION · Open screen
+21:20:16.882 [RIGHT] camera · perception warmed up in 18.2 s: its core built, the colour model loaded
+21:20:20.379 [activity] operator:2118a0 page: PROJECT · Button action
+21:20:24.765 [activity] operator:2118a0 page: NAVIGATION · Task loaded
+21:20:24.778 [activity] operator:2118a0 page: SETUP · Arm selected
+21:20:24.841 [activity] operator:2118a0 page: NAVIGATION · Teaching stage changed
+21:20:24.852 [activity] operator:2118a0 page: SETUP · Arm selected
+21:20:24.882 [activity] operator:2118a0 page: NAVIGATION · Open screen
+21:20:30.523 [activity] operator:2118a0 page: UI · Button action
+21:20:30.910 [activity] operator:2118a0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:20:35.607 [activity] operator:2118a0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:20:37.742 [activity] operator:2118a0 page: UI · Button action
+21:20:38.168 [activity] operator:2118a0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:20:38.527 [LEFT] read global speed ret=0 · not reported
+21:20:38.533 [activity] - LEFT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+21:20:38.578 [LEFT] read drag sensitivity ret=0 · 100 %
+21:20:38.964 [LEFT] device check · controller: answers at 192.168.1.10:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 200 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 0, 0, 0, 0, 153, 972; feed: recorded on UDP port 8089 of this computer (192.168.1.135)
+21:20:38.981 [activity] operator:2118a0 POST /api/robots/left/connect
+21:20:39.802 [LEFT] program list · 7 programs
+21:20:39.894 [LEFT] global points · 2 point(s)
+21:20:40.462 [RIGHT] read global speed ret=0 · not reported
+21:20:40.463 [activity] - RIGHT global speed not reported by the controller: taken as 50 %; the speed slider is at 60 %
+21:20:40.471 [RIGHT] read drag sensitivity ret=0 · 100 %
+21:20:40.848 [activity] operator:2118a0 page: SYSTEM · 3D device
+21:20:40.853 [RIGHT] device check · controller: answers at 192.168.1.103:8080 (model RM_75, 7 joints, controller generation 3, run mode REAL); estop: IO3 in the E-stop mode (5), level 1: released; pole: answers: 150 mm; hand: answers on the end's RS485 (Modbus ID 1, 115200 baud): 5, 0, 0, 0, 143, 971; feed: recorded on UDP port 8090 of this computer (192.168.1.135)
+21:20:40.854 [activity] operator:2118a0 POST /api/robots/right/connect
+21:20:40.956 [RIGHT] program list · 6 programs
+21:20:40.985 [RIGHT] global points · 2 point(s)
+21:20:42.818 [activity] operator:2118a0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+21:20:43.461 [activity] operator:2118a0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+21:20:43.682 [activity] operator:2118a0 page: SYSTEM · Session active
+21:20:44.901 [activity] operator:2118a0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:20:45.291 [activity] operator:2118a0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+21:20:45.400 [activity] operator:2118a0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+21:20:46.061 [activity] operator:2118a0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+21:20:47.942 [activity] operator:2118a0 POST /api/projects/alix_mvbvk1fk_zti6s/workflow/frames
+21:20:49.148 [activity] operator:2118a0 page: NAVIGATION · Button action
+21:20:49.574 [activity] operator:2118a0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:20:50.975 [LEFT] controller data · 7 programs; IO default 0; tracks not available
+21:20:51.008 [LEFT] global points · 2 point(s)
+21:20:53.412 [LEFT] program list · 7 programs
+21:21:09.008 [activity] operator:2118a0 page: SYSTEM · Page slow
+21:21:09.563 [LEFT] program list · 7 programs
+21:21:09.588 [activity] operator:2118a0 POST /api/robots/left/stored/keep
+21:21:09.862 [activity] operator:2118a0 page: PROJECT · Button action
+21:21:10.096 [activity] operator:2118a0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:21:13.639 [activity] operator:2118a0 page: SYSTEM · Session active
+21:21:14.841 [RIGHT] controller data · 6 programs; IO default 0; tracks not available
+21:21:14.859 [RIGHT] global points · 2 point(s)
+21:21:15.263 [activity] operator:2118a0 page: UI · Button action
+21:21:15.392 [RIGHT] program list · 6 programs
+21:21:15.653 [activity] operator:2118a0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:21:21.594 [RIGHT] program list · 6 programs
+21:21:21.596 [activity] operator:2118a0 POST /api/robots/right/stored/keep
+21:21:21.915 [activity] operator:2118a0 page: PROJECT · Button action
+21:21:22.139 [activity] operator:2118a0 PUT /api/projects/alix_mvbvk1fk_zti6s
+21:21:38.652 [LEFT] restore global speed {"pct": 50} ret=0
+21:21:38.679 [RIGHT] restore global speed {"pct": 50} ret=0
