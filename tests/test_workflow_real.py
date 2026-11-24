@@ -409,3 +409,56 @@ def test_a_stop_while_one_arm_is_held_for_the_other_starts_neither_program(serve
     assert not [r for r in hw if r["t"] >= t0 and r["verb"] == "runner v14" and r["text"].startswith("WORKFLOW PROGRAM RUNNING")]
     for side in ("left", "right"):
         assert call(server, "POST", f"/api/robots/{side}/recover", {})["estop"] == "CLEAR"
+
+
+def test_a_move_after_a_program_this_computer_has_no_file_of_is_timed_from_the_arm(server):
+    """The lab, 24 Nov 2026: the controllers' Programs had been sent from another computer, so this one drew none of
+    them and did not know where they left the arms; the MoveJ back to the point an arm had stood on before them was
+    timed as already there (0.15 s at most) and stopped both arms at the sequence's last rows, twice. Lite now reads
+    the arm's joints at its clear step before such a move and times the MoveJ from them."""
+    from alix_studio_lite.motion import track
+
+    left = call(server, "GET", f"{P}/workflow")["left"]
+    home = {"type": "global", "name": "STP_HOME", "move": "movej", "speed": 30, "wait_s": 0}
+    name = "L_away.txt"
+    try:
+        wait(server, call(server, "POST", "/api/robots/left/points/move", {"name": "STP_HOME", "move": "movej", "confirmed": True}))
+        q0 = np.asarray(call(server, "GET", "/api/robots/status")["arms"]["left"]["link"]["feedback"]["joints_deg"][:7], dtype=float)
+        ramp = np.linspace(0.0, 1.0, 240)[:, None] ** 2 * (3 - 2 * np.linspace(0.0, 1.0, 240)[:, None])      # eases in and out
+        md = np.round((q0 + np.array([[9.0, 0, 0, 0, 0, 0, 0]]) * ramp) * 1000).astype(np.int64)              # ends 9 deg from home
+        out = call(server, "POST", f"{P}/units/L-R01/recordings", {"source": "upload", "name": name, "pole_mm": 150, "hand": "GRIP",
+                                                                 "content": track.track_bytes(md).decode()})
+        assert "error" not in out, out
+        item = next(i for i in call(server, "POST", f"{P}/merge-sources/left", {})["items"] if i["name"] == name)
+        m = call(server, "POST", f"{P}/merges/left/from-project", {"name": "L_away_m", "files": [item["ref"]]})
+        j = wait(server, call(server, "POST", f"{P}/merges/left/{m['file']}/upload", {"program_id": 72, "confirmed": True,
+                                                                                   "limits_seen": True}))
+        assert j["state"] == "done", j
+        sent = track.track_bytes(md)
+        gone = [p for p in server["data"].rglob("*") if p.is_file() and ("L_away" in p.name or (              # this computer: no
+                p.suffix == ".txt" and p.stat().st_size == len(sent) and p.read_bytes() == sent))]            # file of it
+        assert len(gone) >= 2                                                 # the recording as the project keeps it, and the merge
+        for p in gone:
+            p.unlink()
+        rows = [{"type": "pole", "mm": 150}, {"type": "hand", "values": GRIP}, home,
+                {"type": "program", "id": 72, "transit_speed": 30}, home]
+        call(server, "PUT", f"{P}/workflow/left", {"steps": rows})
+        sim = wait(server, call(server, "POST", f"{P}/workflow/simulate", {"mode": "left"}))
+        assert sim["state"] == "done", sim
+        assert any("program 72 is not drawn" in f["text"] and "pose is not known" in f["text"] for f in sim["result"]["findings"]), (
+            [f["text"] for f in sim["result"]["findings"]], [(a["kind"], a.get("file"), a.get("drawn")) for a in sim["result"]["acts"]["left"]])
+        call(server, "POST", f"{P}/workflow/played", {"hash": sim["result"]["hash"]})
+        t0 = time.time()
+        j = wait(server, call(server, "POST", f"{P}/workflow/run", {"mode": "left", "confirmed": True,
+                                                                   "warnings_seen": sim["result"]["hash"]}))
+        assert j["state"] == "done", j
+        said = events(j)
+        assert "ran past the most it takes" not in said and "not timed" not in said
+        assert "LEFT row 5 (MOVEJ STP_HOME): where the arm stood before it was not known" in said
+        hw = [json.loads(x) for x in next((server["data"] / "logs").iterdir()).joinpath("hardware.jsonl").read_text().splitlines()]
+        timed = [r for r in hw if r["verb"] == "move timed from the arm" and r["side"] == "left" and r["t"] >= t0]
+        assert len(timed) == 1 and timed[0]["args"]["row"] == 5 and timed[0]["args"]["point"] == "STP_HOME"
+        assert timed[0]["args"]["gap_deg"] == pytest.approx(9.0, abs=0.3)            # read from the arm, where Program 72 left it
+        assert timed[0]["args"]["times_s"][2] > 0.5                                  # the MoveJ's own time, not "already there"
+    finally:
+        call(server, "PUT", f"{P}/workflow/left", {"steps": left})

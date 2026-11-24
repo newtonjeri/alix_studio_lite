@@ -40,9 +40,16 @@ def get_workflow(app, q, body, m):
 
 @route("PUT", W + r"/(left|right)")
 def put_workflow_side(app, q, body, m):
-    """An arm's steps as edited (each checked as runner v14 checks it, with its uid)."""
-    units = units_of(app, m.group(1))
-    workflow.save_side(units, m.group(2), body.get("steps"))
+    """An arm's steps as edited (each checked as runner v14 checks it, with its uid). A Pole row added, taken out or
+    set to another height: the pole it sets is kept with the project for its Program at once, where the controller's
+    list can be read (workflow.keep_row_poles; the user, 24 Nov: the row and the program hold one value)."""
+    units, side = units_of(app, m.group(1)), m.group(2)
+    poles = lambda: {x.get("uid"): x.get("mm") for x in workflow.load(units)[side]         # noqa: E731
+                     if isinstance(x, dict) and x.get("type") == "pole"}
+    before = poles()
+    workflow.save_side(units, side, body.get("steps"))
+    if poles() != before:
+        workflow.keep_row_poles(app, units, side)
     return workflow.summary(units)
 
 

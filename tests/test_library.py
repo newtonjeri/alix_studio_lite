@@ -59,8 +59,10 @@ def test_builtin_sets(lite):
     assert len(sets["commode_c_taught"]["files"]) == 11 and len(sets["v6_legacy"]["files"]) == 15
     v6 = sets["v6_legacy"]["files"]
     assert {f["arm"] for f in v6} == {"left", "right"} and all("path" not in f for f in v6)
-    every = [f for s in d["sets"] for f in s["files"]]
+    every = [f for s in d["sets"] if s["id"] in ("commode_c_taught", "v6_legacy") for f in s["files"]]
     assert all(f["ready"] and f["stage"]["pole_mm"] > 0 for f in every)               # each with its stage
+    lab = sets["lab_25_pct_19_nov"]["files"]         # the lab's Programs of 24 Nov: kept so that any computer draws them;
+    assert len(lab) == 13 and not any(f["ready"] or f["stage"] for f in lab)          # their pole and hand are the project's
     assert {f["stage"]["text"] for f in v6} == {"pole 50 mm, hand grip", "pole 150 mm, hand grip"}
     again = call(lite, "GET", "/api/library")
     assert [f["id"] for f in again["sets"][1]["files"]] == [f["id"] for f in v6]       # stable ids

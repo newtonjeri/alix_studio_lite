@@ -21,3 +21,15 @@ sets:
     workflows:
       left: tests/data/legacy_v6/JSON/LEFT_V6_70SERIES.json
       right: tests/data/legacy_v6/JSON/RIGHT_V6_70SERIES.json
+  # The Programs the lab's two controllers held on 24 Nov 2026 (slots 61-67 LEFT, 61-66 RIGHT). A controller gives no
+  # program's points back, so a computer that did not send them draws them from these files, found by the name its
+  # controller lists and checked by the stored size (workflow.found_by_name). Their pole and hand are the project's
+  # (controller_exports/<arm>/pole_and_hand.json), so no workflow is named here.
+  - id: lab_25_pct_19_nov
+    name: Lab Programs 61 to 67, 25 % (19 Nov 2026)
+    note: >-
+      The 25 % files of the lab's cleaning sequence as loaded on the controllers on 24 Nov 2026, each the size its
+      slot holds. Kept so that every computer that runs Lite can simulate and time them.
+    folders:
+      left: Resources/Programs/lab_25_pct_19_nov/left
+      right: Resources/Programs/lab_25_pct_19_nov/right

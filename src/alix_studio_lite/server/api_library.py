@@ -315,7 +315,9 @@ def _program_row(app, side: str, p: dict, files: dict | None, *, verify: bool = 
     st = got["stage"] if got else None
     own = bool(got and got["how"] == "record")       # Lite's record: the only one it shows a program with
     f = _program_file(app, rec, files, verify=verify) if ours else None
-    stated = bool(got and got["how"] == "link" and got["link"].get("by") == "stated")
+    from . import program_links
+
+    stated = bool(got and got["how"] == "link" and program_links.by_hand(got["link"]))   # stated, or stated then set by its row
     can = (not got or stated) and _real_list(app, side) and units is not None
     runs = f"It runs with {staging.describe(st)} ({_stage_words(got)})." if got and not own else None
     if ours and own and f:
@@ -388,7 +390,8 @@ def set_program_stage(app, q, body, m):
     trajectory view"): kept with the open project for the program as its controller lists it (program_links.state), so
     S2 and Run set them before it, here and on every computer that runs the project. Refused for a program whose pole
     and hand are known already (Lite's record, its file, the project's entry from one of them): a program runs with
-    its own."""
+    its own. The Program's Pole row in the project's sequence takes the pole stated (``rows``: workflow.follow_pole; the
+    user, 24 Nov: both places hold one value)."""
     from . import content, program_links
 
     session(app)
@@ -407,13 +410,17 @@ def set_program_stage(app, q, body, m):
     if p is None or not p.get("name"):
         raise UserError(f"The {S} controller holds no program {n}" + (f": {c['note']}" if c.get("note") else "."), "Refresh the list.")
     got = program_stage(app, side, p, units)
-    if got and not (got["how"] == "link" and got["link"].get("by") == "stated"):
+    if got and not (got["how"] == "link" and program_links.by_hand(got["link"])):
         raise UserError(f"Program {n} ({p['name']}) runs with its own pole and hand: {staging.describe(got['stage'])} "
                         f"({_stage_words(got)}). They are not replaced by hand.",
-                        "To change the ones of a file, set them on the file's row.", code="own")
+                        "To change its pole, change its Pole row in the sequence. To change the ones of a file, set them on "
+                        "the file's row.", code="own")
     kept = program_links.state(units, side, n, dict(name=p["name"], bytes=p.get("bytes")), body.get("pole_mm"), body.get("hand"))
+    from . import workflow
+
+    rows = workflow.follow_pole(units, side, n, kept["pole_mm"])     # one value: its Pole row in the sequence follows
     content.forget(side)                             # the list is read again: the row shows what was stated
-    return {"stated": kept} | get_controller_programs(app, {"pid": [str(body.get("pid"))]}, {}, None)
+    return {"stated": kept, "rows": rows} | get_controller_programs(app, {"pid": [str(body.get("pid"))]}, {}, None)
 
 
 @route("GET", P + "/timeline")

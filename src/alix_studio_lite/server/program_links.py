@@ -13,15 +13,19 @@ controller lists it (name, stored bytes), its pole and hand, and where they are 
 
 - ``record``: Lite's record of sending it: the ones it was taught or sent with;
 - ``file``: its file found by its name (the pole and hand stated for it, as at its upload in the Trajectory Viewer);
-- ``stated``: stated by hand in the Trajectory Viewer, for a program nothing else is known of.
+- ``stated``: stated by hand in the Trajectory Viewer, for a program nothing else is known of;
+- ``set``: its pole set by its Pole row in the sequence (the user, 24 Nov: "editing the pole value in either the
+  sequence or the file using alix studio lite, should make the change take effect"; "both places hold one value"), in
+  place of the one it was known with before (``was``, ``was_mm``; ``row``); its hand is the one it had.
 
 A computer that knows a program's pole and hand writes them here whenever it reads the controller for a run (S2's
 simulation, Real Machine Mode); one that does not uses what is here, for as long as the slot holds that very program
 (the same name, the same stored bytes): another program in the slot is not it, and its entry goes. What applies to a
 program, in this order (``workflow.own_of``, ``api_library``, Advanced's Run Stored): this computer's record of sending
 it, the project's entry by another computer's record, its file found by name on this computer, the project's entry by
-a file or stated by hand. Only ever written with a real controller's list read (program_mirror.real_controller): the
-simulation's arm and an arm not connected change nothing."""
+a file or stated by hand. Before all of these: the project's entry with the pole its Pole row set (``set``), on every
+computer, so the row and the program hold one value everywhere. Only ever written with a real controller's list read
+(program_mirror.real_controller): the simulation's arm and an arm not connected change nothing."""
 from __future__ import annotations
 
 import json
@@ -34,7 +38,7 @@ from . import staging
 from .jobs import UserError
 
 FILE = "pole_and_hand.json"
-RANK = {"stated": 0, "file": 1, "record": 2}        # what an entry is from: a later one never replaces a higher one
+RANK = {"stated": 0, "file": 1, "record": 2, "set": 3}   # what an entry is from: a later one never replaces a higher one
 _LOCK = threading.Lock()
 
 
@@ -69,7 +73,18 @@ def where_from(entry: dict) -> str:
         return f"Lite's record of sending it{when}"
     if by == "file":
         return f"its file found by its name{' (' + str(entry['file']) + ')' if entry.get('file') else ''}{when}"
+    if by == "set":
+        return f"its pole as its Pole row in the sequence sets it{' (row ' + str(entry['row']) + ')' if entry.get('row') else ''}{when}"
     return f"stated in the Trajectory Viewer{when}"
+
+
+def by_hand(entry: dict | None) -> bool:
+    """Whether an entry's pole and hand are the operator's to state again in the Trajectory Viewer: stated there, or
+    stated there and its pole set by its Pole row since. One from a record or a file is not: a program keeps the hand it
+    was taught or sent with, and its pole is changed through its Pole row."""
+    if not entry:
+        return False
+    return entry.get("by") == "stated" or (entry.get("by") == "set" and entry.get("was") in (None, "stated"))
 
 
 def _path(units, side: str) -> Path:
@@ -113,7 +128,7 @@ def _entry(slot: int, held: dict, stage: "staging.Stage", by: str, file: str | N
 
 
 def _same_entry(a: dict, b: dict) -> bool:
-    keys = ("slot", "name", "bytes", "pole_mm", "hand", "by", "file")
+    keys = ("slot", "name", "bytes", "pole_mm", "hand", "by", "file", "row", "was", "was_mm")
     return all(a.get(k) == b.get(k) for k in keys)
 
 
@@ -137,7 +152,9 @@ def keep(units, side: str, known: dict, own: dict | None = None) -> dict | None:
     -> the entries, or None when the controller's list was not read (nothing is changed then). A program this computer
     knows by its record, or by its file, gets its entry; one it does not know keeps the entry it has while the slot
     holds that very program; an entry of a slot that holds another program, or none, goes. An entry by a record is
-    never replaced by a file's, nor a file's by a stated one."""
+    never replaced by a file's, nor a file's by a stated one. A program whose Pole row sets another pole than it was
+    known with (``own``'s ``pole_row``, workflow.own_of) gets an entry with the row's (``set``), which none of these
+    replaces."""
     read = {int(pid): h for pid, k in (known or {}).items() if (h := held_as(k))}
     if not read:
         return None
@@ -148,10 +165,16 @@ def keep(units, side: str, known: dict, own: dict | None = None) -> dict | None:
             k, prev = known[pid], old.get(pid)
             if prev is not None and not same_program(prev, held):
                 prev = None                                    # another program in the slot since
+            o = (own or {}).get(pid) or {}
+            row = o.get("pole_row") or {}
+            st = staging.stage_from(o.get("stage")) if row.get("fresh") else None
+            if st is not None:                                 # its Pole row sets another pole than it was known with:
+                e = dict(_entry(pid, held, st, "set"), row=row.get("row"), was=row.get("was"), was_mm=row.get("was_mm"))
+                new[pid] = prev if prev is not None and _same_entry(prev, e) else dict(e, kept=time.strftime("%Y-%m-%d %H:%M:%S"))
+                continue                                       # the row's, over a record, a file or a statement
             st = staging.stage_from(k.get("stage")) if k.get("sent") else None
             e = _entry(pid, held, st, "record") if st is not None else None
             if e is None:
-                o = (own or {}).get(pid) or {}
                 st = staging.stage_from(o.get("stage")) if o.get("how") == "file" else None
                 if st is not None:
                     e = _entry(pid, held, st, "file", o.get("file_name"))
@@ -185,7 +208,8 @@ def state(units, side: str, pid: int, held: dict | None, pole_mm, hand) -> dict:
     """The operator states the pole and hand of the program slot ``pid`` holds (``held``: {name, bytes} as its
     controller lists it), in the Trajectory Viewer: kept with the project. Refused when the controller's list was not
     read, and when the project already holds them from a record or a file (they are not the operator's to replace: a
-    program runs with its own)."""
+    program runs with its own; its pole is changed through its Pole row in the sequence). One whose pole its Pole row
+    set since it was stated is stated again here (by_hand): the caller moves that row with it (workflow.follow_pole)."""
     pid, S = int(pid), side.upper()
     if not 1 <= pid <= 100:
         raise UserError("Program numbers are 1 to 100.")
@@ -196,10 +220,10 @@ def state(units, side: str, pid: int, held: dict | None, pole_mm, hand) -> dict:
     with _LOCK:
         entries = load(units, side)
         prev = entries.get(pid)
-        if prev is not None and same_program(prev, held) and prev["by"] != "stated":
+        if prev is not None and same_program(prev, held) and not by_hand(prev):
             raise UserError(f"Program {pid} ({held['name']}) already has its pole and hand in this project: {prev['text']} "
                             f"({where_from(prev)}). A program runs with its own; they are not replaced by hand.",
-                            code="own")
+                            "To change its pole, change its Pole row in the sequence.", code="own")
         entries[pid] = dict(_entry(pid, held, st, "stated"), kept=time.strftime("%Y-%m-%d %H:%M:%S"))
         _write(units, side, entries)
         return entries[pid]

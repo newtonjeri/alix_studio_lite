@@ -1646,7 +1646,8 @@ class StandInRobot:
         rec = next((p for p in self.programs(side) if int(p["id"]) == int(program_id)), None)
         return staging.stage_from((rec or {}).get("stage"))
 
-    def run_stored(self, side: str, program_id: int, title: str, mode: str | None = None, stage=None, how: str | None = None):
+    def run_stored(self, side: str, program_id: int, title: str, mode: str | None = None, stage=None, how: str | None = None,
+                   row_set: bool = False):
         """A program the arm's controller holds, run from its slot (Advanced Robot Controls, the Trajectory Viewer; the
         owner, 17 Oct: "running a saved program ... a project in a certain slot"): its own pole and hand staged first
         (the owner, 21 Oct: "the project's own pole and hand values must be applied ... not replaced by the default"):
@@ -1664,6 +1665,8 @@ class StandInRobot:
             raise UserError(f"Lite does not know the pole height and hand pose program {pid} runs with: Lite did not send "
                             "it, or the slot holds another program since.",
                             "State the pole and hand it was taught with, or send it again from its region.", code="stage")
+        if row_set and stage is not None:           # its pole as its Pole row in the sequence set it (24 Nov: one value):
+            own = None                              # kept with the project, before Lite's record of sending it
         st = own or stage
         how = "its own, as Lite sent it" if own is not None else (how or "as stated")
 

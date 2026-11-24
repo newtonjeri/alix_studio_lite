@@ -624,13 +624,17 @@ def test_simulation_times_both_arms_and_gates_real(lite):
     src = call(lite, "GET", f"{P}/workflow/left/sources")
     assert next(p for p in src["programs"] if p["id"] == 71)["seconds"] == pytest.approx(1.495)
     assert not la[2]["drawn"]                                    # program 72: Lite never sent it
-    assert ra[0]["kind"] == "pole_hand" and ra[0]["pole1"] == 50.0                       # its 71's own, not its row's 200 mm
+    # its Pole row's 200 mm, not the 50 mm it was sent with: since 24 Nov a Program's Pole row is its pole (the user:
+    # "editing the pole value in either the sequence or the file ... should make the change take effect"; "both places
+    # hold one value"); until then (the owner, 24 Oct) its own 50 mm stood against the row. Its hand is still its own.
+    assert ra[0]["kind"] == "pole_hand" and ra[0]["pole1"] == 200.0 and ra[0]["hand1"] == [0, 0, 0, 0, 150, 1000]
     assert ra[1]["t0"] == ra[0]["t1"] and ra[2]["kind"] == "wait" and ra[2]["stage"] == 0   # its own, straight after its 71
     texts = " | ".join(f["text"] for f in sim["findings"])
     assert "LEFT row 5: program 72 is not drawn (Lite has not sent this program; no file of its name in the project" in texts
     assert "From here the arm's pose is not known" in texts             # the check leaves that arm out after it
-    assert ("RIGHT row 2, program 71: it runs with its own pole and hand (pole 50 mm, hand grip), which Lite sets before it "
-            "in place of row 1.") in texts
+    assert ("RIGHT row 2, program 71: it was trained at pole 50 mm (Lite's record of sending it), and its Pole row (row 1) sets "
+            "200 mm. It runs at the set height, 200 mm.") in texts       # said every time, as a warning the run asks about
+    assert "RIGHT row 2, program 71: it runs with its own pole and hand" not in texts   # no row gives way on the RIGHT now
     assert not [f for f in sim["findings"] if f["level"] == "stop"]                     # no Program off its own any more
     col = sim["collisions"]
     assert col["samples"] > 100 and col["checked"]["two_arms"] and set(col["checked"]["arms"]) == {"left", "right"}
@@ -1114,3 +1118,101 @@ def test_an_inspect_row_and_the_first_task_of_a_run_checking_its_start():
     sims = {s: workflow._ArmSim(s, start, [180] * 2 + [225] * 5, 15, progs, None, md.get, []) for s in ("left", "right")}
     workflow.schedule(blind, sims, 15)
     assert any("with the commode not seen: put an INSPECT before them" in f["text"] for f in sims["right"].findings)
+
+
+# The lab, 24 Nov 2026 (19:09:00 and 21:06:22): "RIGHT row 14 (MOVEJ R_HME_POS) ran past the most it takes (0.1 s) by
+# 15%", both arms stopped at the sequence's last rows. The controllers' Programs 61-65 were sent from another computer,
+# so this one had no file of them: not drawn, the arm's pose not known after them, and the MoveJ back to the point the
+# arm had stood on at row 2 was timed as "already there". The arm stood 11.6 deg from it and moved for about 1 s.
+_HOME_24_NOV = [-2.52, -94.79, 1.42, 94.20, 0.04, 84.54, 6.18]              # R_HME_POS, as the feed gave it
+_END_65_24_NOV = [3.35, -106.37, -1.85, 94.98, -1.59, 86.67, 10.29]         # where Program 65 left the right arm
+_RATING = [180, 180, 225, 225, 225, 225, 225]
+
+
+def _home_after_a_program_not_drawn():
+    """The right arm at R_HME_POS, a Program Lite has no file of, then the MoveJ back to R_HME_POS: that last step,
+    timed by the simulation as the run's steps are (_times_now)."""
+    from alix_studio_lite.server import workflow
+
+    pts = {"points": {"R_HME_POS": list(_HOME_24_NOV)}}
+    sim = workflow._ArmSim("right", dict(pole_mm=150.0, hand=[1000] * 6, q_deg=list(_HOME_24_NOV)), _RATING, 60, {}, pts,
+                           lambda _p: None, [])
+    steps = [{"type": "program", "id": 65, "transit_speed": 30, "_row": 12},
+             {"type": "pole", "mm": 150.0, "_row": 13},
+             {"type": "global", "name": "R_HME_POS", "move": "movej", "speed": 20, "wait_s": 0.0, "_row": 14}]
+    sim.run(steps, 0.0, 0)
+    return steps, pts
+
+
+def test_a_move_from_a_pose_not_known_is_not_held_to_an_already_there_time():
+    """After a Program that is not drawn the timing does not know where the arm is: a MoveJ from there has no time the
+    run can hold it to, however near the point the arm was last known. It is said, not stopped."""
+    from alix_studio_lite.server import workflow
+
+    steps, _ = _home_after_a_program_not_drawn()
+    move = steps[-1]
+    assert move["_t"]["known"] is False                       # where the arm is before it: not known
+    assert steps[1]["_t"]["known"] is False and steps[0]["_t"]["known"] is True
+    stopped, said = [], []
+    on_line, close = workflow._watch(None, "right", steps, stopped.append, said.append)
+    try:
+        on_line("WORKFLOW STEP START 3/3: GLOBAL")
+        time.sleep(0.6)                                       # the lab's move took about 1 s; the old limit was 0.32 s
+        on_line("WORKFLOW STEP COMPLETE 3/3: GLOBAL")
+    finally:
+        close()
+    assert not stopped
+    assert len(said) == 1 and "RIGHT row 14 (MOVEJ R_HME_POS)" in said[0] and "not timed" in said[0]
+    assert "where the arm stood before it was not known" in said[0]
+
+
+def test_a_move_from_a_pose_not_known_is_timed_from_the_arm_as_it_stands():
+    """On the robot Lite reads the arm's joints before such a move (its clear step, the arm at rest) and times the MoveJ
+    from them, by the same law as every MoveJ: the lab's move, 0.97 to 1.27 s."""
+    from alix_studio_lite.server import workflow
+
+    steps, pts = _home_after_a_program_not_drawn()
+    got = workflow.time_from_the_arm(steps[2:], list(_END_65_24_NOV), pts, 60, _RATING)
+    t = steps[2]["_t"]
+    assert got["row"] == 14 and got["name"] == "R_HME_POS" and got["gap_deg"] == pytest.approx(11.58, abs=0.01)
+    assert t["known"] is True
+    assert tuple(t["move_times"]) == pytest.approx((0.97, 1.14, 1.27), abs=0.01) and tuple(got["times"]) == tuple(t["move_times"])
+    assert tuple(t["times"]) == tuple(t["move_times"])        # no wait at the point
+
+
+def test_a_move_timed_from_the_arm_is_held_to_that_time():
+    """Read at the point itself, the arm is already there: the move is held to that again (a stop past it)."""
+    from alix_studio_lite.server import workflow
+
+    steps, pts = _home_after_a_program_not_drawn()
+    got = workflow.time_from_the_arm(steps[2:], list(_HOME_24_NOV), pts, 60, _RATING)
+    assert got["gap_deg"] < 0.2 and tuple(steps[2]["_t"]["move_times"]) == workflow.ROBOT_TIMES["global_there_s"]
+    stopped, said = [], []
+    on_line, close = workflow._watch(None, "right", steps, stopped.append, said.append)
+    try:
+        on_line("WORKFLOW STEP START 3/3: GLOBAL")
+        time.sleep(0.6)
+        on_line("WORKFLOW STEP COMPLETE 3/3: GLOBAL")
+    finally:
+        close()
+    assert stopped and "RIGHT row 14 (MOVEJ R_HME_POS) ran past the most it takes" in stopped[0]
+
+
+def test_only_a_move_from_a_pose_not_known_is_timed_from_the_arm():
+    """Nothing else is touched: a move whose start the timing knows keeps its time; joints that could not be read
+    leave the move not timed; a wait at the point stays in the step's time; a Program first in the call is left alone."""
+    from alix_studio_lite.server import workflow
+
+    steps, pts = _home_after_a_program_not_drawn()
+    assert workflow.time_from_the_arm(steps[2:], None, pts, 60, _RATING) is None and steps[2]["_t"]["known"] is False
+    assert workflow.time_from_the_arm(steps[2:], [0.0] * 3, pts, 60, _RATING) is None            # not an arm's seven joints
+    assert workflow.time_from_the_arm(steps[2:], list(_END_65_24_NOV), None, 60, _RATING) is None   # its points not read
+    assert workflow.time_from_the_arm(steps[:1], list(_END_65_24_NOV), pts, 60, _RATING) is None    # a Program first
+    known = {"type": "global", "name": "R_HME_POS", "move": "movej", "speed": 20, "wait_s": 0.0, "_row": 2,
+             "_t": dict(kind="global", known=True, drawn=True, times=(0.4, 0.5, 0.6), move_times=(0.4, 0.5, 0.6))}
+    assert workflow.time_from_the_arm([known], list(_END_65_24_NOV), pts, 60, _RATING) is None
+    assert known["_t"]["move_times"] == (0.4, 0.5, 0.6)
+    held = dict(steps[2], wait_s=2.0, _t=dict(steps[2]["_t"]))
+    got = workflow.time_from_the_arm([{"type": "pole", "mm": 150.0, "_row": 13}, held], list(_END_65_24_NOV), pts, 60, _RATING)
+    assert got["row"] == 14 and tuple(held["_t"]["times"]) == pytest.approx((2.97, 3.14, 3.27), abs=0.01)
+    assert tuple(held["_t"]["move_times"]) == pytest.approx((0.97, 1.14, 1.27), abs=0.01)

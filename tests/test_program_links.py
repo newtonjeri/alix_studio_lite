@@ -285,3 +285,291 @@ def test_the_simulations_arm_keeps_nothing_with_the_project(lite):
     known = {47: dict(sent=True, name="x", stage={"pole_mm": 10, "hand": OPEN}, held=dict(name="47_x.", bytes=10))}
     before = pl.load(units, "right")
     assert pl.keep_quietly(lite["app"], units, "right", known) is None and pl.load(units, "right") == before
+
+
+#: 24 Nov, the lab PC: the Programs as the two controllers listed them that evening, each with the bytes its slot held
+#: (the project's pole_and_hand.json). The name is the file's own first 32 characters: no slot number put before it, as
+#: there is before a name Lite's own upload sends (HELD above, "61_61_L_...").
+HELD_24_NOV = {"left": {61: ("61_L_P1_pole50_cleaningpose_48.2", 555156), 62: ("62_L_P2_pole200_cleaningpose_22.", 260205),
+                        63: ("63_L_P2_pole200_grip_10.5s_25pct", 121219), 64: ("64_L_P3_pole200_cleaningpose_19.", 231884),
+                        65: ("65_L_P3_pole200_grip_45.3s_smoot", 514605), 66: ("66_L_P3_pole20_grip_15.6s_25pct.", 176105),
+                        67: ("67_L_P3_pole200_allopen_12.5s_25", 144328)},
+               "right": {61: ("61_R_P1_pole200_cleaningpose_53.", 616050), 62: ("62_R_P2_pole200_grip_13.0s_new_R", 140045),
+                         63: ("63_R_P2_pole200_cleaningpose_9.2", 104017), 64: ("64_1_R_P2_pole50_cleaningpose_10", 118251),
+                         65: ("65_R_P3_pole50_grip_39.8s_new_R0", 458059), 66: ("66_R_P3_pole200_allopen_wait_73.", 854278)}}
+
+
+def test_a_program_listed_under_its_files_own_name_is_found_by_that_name():
+    """The lab, 24 Nov: the controllers listed each Program under its file's own first 32 characters
+    ("61_L_P1_pole50_cleaningpose_48.2"). Lite took the leading "61_" for the slot number a controller puts before a
+    name, looked for a file starting "L_P1_...", and found none of the ten the sequence runs, with or without the files
+    on the computer. The name as listed is tried too."""
+    vendor_paths.activate()
+    from alix_studio_lite.server import workflow
+
+    for side in ("left", "right"):
+        named = _named(side)
+        for pid, (name, _pole, _hand) in UPLOADED[side].items():
+            held = HELD_24_NOV[side][pid][0]
+            info = dict(id=pid, name=held, size=None, sent=False, stage=None, file=None)
+            stale = {"id": pid, "name": f"{pid}_{pid}_{name}"[:32]}              # the row's label, of an older upload
+            for step in ({"id": pid}, stale):
+                got = workflow.found_by_name(named, pid, step, info)
+                assert got is not None and got["name"] == name, (side, pid, step)
+    old = dict(id=61, name=HELD["left"][61], size=None, sent=False, stage=None, file=None)      # 15 Nov's names: as before
+    assert workflow.found_by_name(_named("left"), 61, {"id": 61}, old)["name"] == UPLOADED["left"][61][0]
+
+
+def test_the_labs_programs_of_24_nov_are_drawn_on_any_computer_from_the_kept_set():
+    """The user, 24 Nov: a file loaded on a controller from one computer "should be able to work throughout, in any new
+    PC". A controller gives no program's points back, so the points travel with Lite: the 13 files the lab's controllers
+    held on 24 Nov are a set of the Trajectory Viewer's (assets/recordings/sets.yaml), on every computer that has Lite.
+    Each is found from its controller's listed name and is the very program by its stored size; the sequence that
+    stopped that evening is then drawn to its end, and the MoveJ home after the right arm's Program 65 has its own time
+    (0.97 to 1.27 s: the lab's two took about 1.0 s) from where that Program ends."""
+    vendor_paths.activate()
+    from alix_studio_lite.motion.limits import load_limits
+    from alix_studio_lite.server import library, workflow
+
+    kept = next(s for s in library.builtin_sets() if s["id"] == "lab_25_pct_19_nov")
+    assert len(kept["files"]) == 13 and {f["arm"] for f in kept["files"]} == {"left", "right"}
+    named = {side: workflow.files_by_name(SimpleNamespace(library=None), None, side) for side in ("left", "right")}
+    programs = {side: {pid: dict(id=pid, name=n, size=b, sent=False, stage=None, file=None) for pid, (n, b) in HELD_24_NOV[side].items()}
+                for side in ("left", "right")}
+    for side in ("left", "right"):
+        for pid, info in programs[side].items():
+            got = workflow.found_by_name(named[side], pid, {"id": pid}, info)
+            assert got is not None and got["how"] == "its bytes make the size the controller holds", (side, pid, got)
+            assert got["name"].startswith(info["name"]) and "Lab Programs" in got["source"]
+
+    home = [-2.52, -94.79, 1.42, 94.20, 0.04, 84.54, 6.18]                       # R_HME_POS, as the feed gave it
+    rows = [{"type": "global", "name": "R_HME_POS", "move": "movej", "speed": 50, "wait_s": 0.0, "_row": 2},
+            *[{"type": "program", "id": pid, "transit_speed": 30, "_row": row} for pid, row in ((61, 6), (62, 8), (63, 9), (64, 10), (65, 12))],
+            {"type": "pole", "mm": 150.0, "_row": 13},
+            {"type": "global", "name": "R_HME_POS", "move": "movej", "speed": 20, "wait_s": 0.0, "_row": 14}]
+    sim = workflow._ArmSim("right", dict(pole_mm=150.0, hand=[1000] * 6, q_deg=home), load_limits("right").rating_deg_s, 60,
+                           programs["right"], {"points": {"R_HME_POS": home}}, workflow._md_reader(None), [], named["right"])
+    sim.run(rows, 0.0, 0)
+    assert [a["drawn"] for a in sim.acts if a["kind"] == "program"] == [True] * 5
+    assert not [f for f in sim.findings if "not drawn" in f["text"] or "not known" in f["text"]]
+    last = rows[-1]["_t"]
+    assert last["known"] is True and tuple(last["move_times"]) == pytest.approx((0.97, 1.14, 1.27), abs=0.01)
+
+    # the set states no pole and hand: the ones kept with the project for the programs on its controllers still rule
+    # (here the ones the lab stated in the Trajectory Viewer that evening), and a Program with none kept has none
+    assert all(f["stage"] is None for f in kept["files"])
+    links = {"right": {65: dict(slot=65, name=HELD_24_NOV["right"][65][0], bytes=HELD_24_NOV["right"][65][1], pole_mm=50.0,
+                                 hand=GRIP, by="stated")}, "left": {}}
+    steps = _steps("right", [{"type": "pole", "mm": 210}, {"type": "hand", "values": CLEANING}, _prog(64), _prog(65)])
+    own = workflow.own_of(programs, named, workflow._md_reader(None), steps, links=links)
+    assert own["right"][65]["how"] == "link" and own["right"][65]["stage"]["hand"] == GRIP and own["right"][65]["stage"]["pole_mm"] == 50.0
+    assert own["right"][64] == {"stage": None, "first_deg": None}
+
+
+# One value (the user, 24 Nov 2026). The lab's RIGHT row 3 set the pole to 210 mm; Program 61's own, stated in the
+# Trajectory Viewer that evening, was 200 mm, and Lite lowered the pole to it before the Program. "For program 61, use
+# 210mm, because that is where the command of the pole comes from, so editing the pole value in either the sequence or the
+# file using alix studio lite, should make the change take effect"; "build it so both places hold one value".
+
+def _lab_right(*pids):
+    held = HELD_24_NOV["right"]
+    programs = {"right": {pid: dict(id=pid, name=held[pid][0], size=held[pid][1], sent=False, stage=None, file=None) for pid in pids},
+                "left": {}}
+    stated = {61: (200.0, CLEANING), 62: (200.0, GRIP), 63: (200.0, CLEANING), 64: (50.0, CLEANING), 65: (50.0, GRIP)}
+    links = {"right": {pid: dict(slot=pid, name=held[pid][0], bytes=held[pid][1], pole_mm=stated[pid][0], hand=stated[pid][1],
+                                 by="stated", kept="2026-11-24 18:40:05") for pid in pids}, "left": {}}
+    return programs, links
+
+
+def test_a_programs_pole_is_the_one_its_pole_row_sets():
+    """A Program's Pole row (its last Pole step since the Program, lid or seat task or INSPECT before it) is that
+    Program's own pole: the plan takes the row's height in place of the one known before, and says which it replaced.
+    The hand stays the Program's own, and a row is the pole of the first Program after it only."""
+    vendor_paths.activate()
+    from alix_studio_lite.server import workflow
+
+    row = lambda *types: [{"type": t} for t in types]                                  # noqa: E731
+    assert workflow.pole_row(row("pole", "hand", "meet", "wait", "global", "wait_for", "program"), 6) == 0
+    assert workflow.pole_row(row("pole", "pole", "hand", "program"), 3) == 1          # the last one
+    for between in ("program", "mechanism", "inspect"):
+        assert workflow.pole_row(row("pole", between, "program"), 2) is None
+    assert workflow.pole_row(row("hand", "program"), 1) is None
+
+    programs, links = _lab_right(61, 62)
+    steps = _steps("right", [{"type": "pole", "mm": 210}, {"type": "hand", "values": OPEN}, _prog(61), _prog(62)])
+    own = workflow.own_of(programs, {"right": {}, "left": {}}, lambda _p: None, steps, links=links)
+    o = own["right"][61]
+    assert o["stage"]["pole_mm"] == 210.0 and o["stage"]["text"] == "pole 210 mm, hand cleaning pose"    # the hand: its own
+    assert o["pole_row"] == dict(row=1, mm=210.0, was_mm=200.0, was="stated", fresh=True)
+    assert own["right"][62]["stage"]["pole_mm"] == 200.0 and "pole_row" not in own["right"][62]           # row 1 is 61's
+    run = workflow.plan_for(workflow._numbered(steps), "right", own=own)
+    assert _own_steps(run["plan"], "right") == [("pole_hand", 61, 210.0, CLEANING), ("pole_hand", 62, 200.0, GRIP)]
+    same = _steps("right", [{"type": "pole", "mm": 200}, {"type": "hand", "values": CLEANING}, _prog(61)])
+    assert "pole_row" not in workflow.own_of(programs, {"right": {}, "left": {}}, lambda _p: None, same, links=links)["right"][61]
+
+
+def test_the_project_keeps_the_pole_a_row_sets_for_every_computer(tmp_path):
+    """Where a controller's list is read, the row's pole is kept with the project for the program in the slot ("set"),
+    with what it replaced. It then comes before any computer's own record or file of the program, so the Trajectory
+    Viewer and every computer that runs the project hold the row's value; a later height of the row replaces it; another
+    program in the slot ends it."""
+    vendor_paths.activate()
+    from alix_studio_lite.server import program_links as pl
+    from alix_studio_lite.server import workflow
+
+    units = SimpleNamespace(root=tmp_path / "project")
+    name, size = HELD_24_NOV["right"][61]
+    lab = {61: dict(id=61, name=name, size=size, sent=False, stage=None, file=None)}
+    pl.state(units, "right", 61, dict(name=name, bytes=size), 200, CLEANING)          # as on 24 Nov, 18:40
+    steps = _steps("right", [{"type": "pole", "mm": 210}, {"type": "hand", "values": CLEANING}, _prog(61)])
+
+    def own_here(known, rows=steps):
+        return workflow.own_of({"right": known, "left": {}}, {"right": {}, "left": {}}, lambda _p: None, rows,
+                               links={"right": pl.load(units, "right"), "left": {}})["right"]
+
+    kept = pl.keep(units, "right", lab, own_here(lab))
+    e = kept[61]
+    assert (e["by"], e["pole_mm"], e["hand"], e["was"], e["was_mm"], e["row"]) == ("set", 210.0, CLEANING, "stated", 200.0, 1)
+    assert e["text"] == "pole 210 mm, hand cleaning pose" and "Pole row" in pl.where_from(e)
+    again = own_here(lab)[61]                                    # as kept: the row and the program hold one value
+    assert again["stage"]["pole_mm"] == 210.0 and again["pole_row"] == dict(row=1, mm=210.0, was_mm=200.0, was="stated", fresh=False)
+    stamp = (tmp_path / "project/controller_exports/right/pole_and_hand.json").read_bytes()
+
+    sender = {61: dict(id=61, name="61_R_P1", sent=True, sha256="aa", stage={"pole_mm": 200.0, "hand": CLEANING},
+                       held=dict(name=name, bytes=size))}        # the computer that sent it: its record says 200 mm
+    there = own_here(sender)[61]
+    assert there["how"] == "link" and there["stage"]["pole_mm"] == 210.0 and there["link"]["by"] == "set"
+    assert pl.keep(units, "right", sender, own_here(sender)) == kept                  # its record does not take it back
+    assert (tmp_path / "project/controller_exports/right/pole_and_hand.json").read_bytes() == stamp
+
+    higher = _steps("right", [{"type": "pole", "mm": 215}, {"type": "hand", "values": CLEANING}, _prog(61)])
+    e = pl.keep(units, "right", sender, own_here(sender, higher))[61]
+    assert (e["by"], e["pole_mm"], e["was"], e["was_mm"]) == ("set", 215.0, "stated", 200.0)   # what it was first known as
+
+    other = {61: dict(id=61, name="61_another_program", size=1234, sent=False, stage=None, file=None)}
+    assert pl.keep(units, "right", other, own_here(other, higher)) == {}              # another program in the slot
+
+
+def test_a_pole_changed_in_the_viewer_moves_the_programs_pole_row(tmp_path):
+    """The other place. A program's pole stated again in the Trajectory Viewer takes the place of the one its row set
+    (when nothing but a statement was known of it), and the sequence's Pole row of that Program follows, so the row
+    never puts the old height back. A program Lite sent, or has a file of, is still not set by hand there."""
+    import threading
+
+    vendor_paths.activate()
+    from alix_studio_lite.server import program_links as pl
+    from alix_studio_lite.server import workflow
+    from alix_studio_lite.server.jobs import UserError
+
+    units = SimpleNamespace(root=tmp_path / "project", lock=threading.RLock())
+    name, size = HELD_24_NOV["right"][61]
+    held = dict(name=name, bytes=size)
+    rows = [{"type": "pole", "mm": 210}, {"type": "hand", "values": CLEANING}, _prog(61), {"type": "pole", "mm": 50}, _prog(64),
+            {"type": "pole", "mm": 150}]
+    workflow.save_side(units, "right", rows)
+    known = {61: dict(id=61, name=name, size=size, sent=False, stage=None, file=None)}
+    pl.state(units, "right", 61, held, 200, CLEANING)
+    steps = {"right": workflow.load(units)["right"], "left": []}
+    own = workflow.own_of({"right": known, "left": {}}, {"right": {}, "left": {}}, lambda _p: None, steps,
+                          links={"right": pl.load(units, "right"), "left": {}})["right"]
+    assert pl.keep(units, "right", known, own)[61]["by"] == "set"
+
+    e = pl.state(units, "right", 61, held, 205, CLEANING)                             # Change pole and hand, in the Viewer
+    assert (e["by"], e["pole_mm"]) == ("stated", 205.0)
+    assert workflow.follow_pole(units, "right", 61, 205) == [1]
+    now = workflow.load(units)["right"]
+    assert [x.get("mm") for x in now if x["type"] == "pole"] == [205.0, 50.0, 150.0]  # its row alone
+    assert [x["uid"] for x in now] == [x["uid"] for x in steps["right"]]              # the rows are the same rows
+    assert workflow.follow_pole(units, "right", 61, 205) == [] and workflow.follow_pole(units, "right", 65, 80) == []
+
+    sent = dict(pl.load(units, "right")[61], by="set", was="record", was_mm=200.0)    # one Lite sent, its pole set by its row
+    pl._write(units, "right", {61: sent})
+    with pytest.raises(UserError) as refused:
+        pl.state(units, "right", 61, held, 190, GRIP)
+    assert refused.value.code == "own" and "Pole row" in str(refused.value.hint)
+
+
+def test_the_simulation_says_a_program_its_row_takes_off_the_pole_it_was_sent_with():
+    """The owner's rule of 24 Oct stood against this: a Program ran at the pole it was taught or sent with, whatever
+    the row before it said. A row now sets the pole (24 Nov), so the simulation and the run's question say it every
+    time a Program runs off the pole Lite's record or its file gives it; it is not a stop any more."""
+    vendor_paths.activate()
+    from alix_studio_lite.server import workflow
+
+    progs = {"right": {71: dict(id=71, stage={"pole_mm": 50.0, "hand": GRIP}, file="/p.txt", sent=True, lines=41)}, "left": {}}
+    steps = _steps("right", [{"type": "pole", "mm": 200}, _prog(71)])
+    own = workflow.own_of(progs, {"right": {}, "left": {}}, {"/p.txt": np.zeros((41, 7))}.get, steps)
+    assert own["right"][71]["pole_row"] == dict(row=1, mm=200.0, was_mm=50.0, was="record", fresh=True)
+    run = workflow.plan_for(workflow._numbered(steps), "right", own=own)
+    said = []
+    sim = workflow._ArmSim("right", dict(pole_mm=300.0, hand=OPEN, q_deg=[0.0] * 7), [180, 180, 225, 225, 225, 225, 225], 100,
+                           progs["right"], None, {"/p.txt": np.zeros((41, 7))}.get, said)
+    sim.run(run["plan"][0]["right"]["steps"], 0.0, 0)
+    assert sim.pole == 200.0 and not [f for f in said if f["level"] == "stop"]
+    warns = [f["text"] for f in said if f["level"] == "warn"]
+    assert warns == ["RIGHT row 2, program 71: it was trained at pole 50 mm (Lite's record of sending it), and its Pole row "
+                     "(row 1) sets 200 mm. It runs at the set height, 200 mm."]
+
+
+def test_the_sequence_and_the_viewer_hold_one_pole_for_a_program(lite, monkeypatch):
+    """Through Lite's own routes (the stand-in's arm, a real controller's list stood in for where a route asks for
+    one). Program 47's pole was stated in the Trajectory Viewer, Program 48 was sent by Lite with its own.
+    - A pole changed in the Viewer moves the Program's Pole row in the sequence.
+    - A Pole row changed in the Sequence tab is kept with the project at once (keep_row_poles), and the plan runs the
+      Program at the row's height, with a warning that it was trained at another.
+    - A run from the slot (Run, Run Stored) stages the pole its row set, as the Viewer shows it."""
+    from alix_studio_lite.server import api_library, workflow
+
+    for body in ({"program_id": 47, "name": "L_bare.txt", "content": content()},                       # as the test above
+                 {"program_id": 48, "name": "L_own.txt", "content": content(1.0), "pole_mm": 120, "hand": "GRIP"}):
+        up = call(lite, "POST", "/api/robots/left/programs/upload", dict(body, replace=True, confirmed=True))
+        assert up.get("unchanged") or wait(lite, up)["state"] == "done", up
+    monkeypatch.setattr(api_library, "_real_list", lambda app, side: True)
+    assert call(lite, "POST", "/api/library/programs/left/47", {"pid": PID, "pole_mm": 90, "hand": "CLEANING"})["stated"]["by"] == "stated"
+    rows = [{"type": "pole", "mm": 90}, {"type": "hand", "values": CLEANING}, _prog(47),
+            {"type": "pole", "mm": 150}, {"type": "hand", "values": GRIP}, _prog(48)]
+    kept = call(lite, "PUT", f"{P}/workflow/left", {"steps": rows})["left"]
+    assert [x.get("mm") for x in kept if x["type"] == "pole"] == [90.0, 150.0]
+
+    done = call(lite, "POST", "/api/library/programs/left/47", {"pid": PID, "pole_mm": 100, "hand": "CLEANING"})
+    assert done["stated"]["pole_mm"] == 100.0 and done["rows"] == [1]                # its Pole row follows
+    now = call(lite, "GET", f"{P}/workflow")["left"]
+    assert [x.get("mm") for x in now if x["type"] == "pole"] == [100.0, 150.0] and [x["uid"] for x in now] == [x["uid"] for x in kept]
+
+    asked = []
+    monkeypatch.setattr(workflow, "keep_row_poles", lambda app, units, side: asked.append(side))
+    now[1] = dict(now[1], values=OPEN)                                               # a Hand row: no pole changed
+    now = call(lite, "PUT", f"{P}/workflow/left", {"steps": now})["left"]
+    assert asked == []
+    now[0] = dict(now[0], mm=110)                                                    # Program 47's Pole row
+    now = call(lite, "PUT", f"{P}/workflow/left", {"steps": now})["left"]
+    assert asked == ["left"] and now[0]["mm"] == 110.0
+
+    j = wait(lite, call(lite, "POST", f"{P}/workflow/simulate", {"mode": "left"}))
+    assert j["state"] == "done", j
+    sim = j["result"]
+    poles = [(a["row"], a["pole1"]) for a in sim["acts"]["left"] if a["kind"] == "program"]
+    assert poles == [(3, 110.0), (6, 150.0)]                                         # each at its row's height
+    texts = [(f["level"], f["text"]) for f in sim["findings"] if "It runs at the set height" in f["text"]]
+    assert texts == [("warn", "LEFT row 3, program 47: it was trained at pole 100 mm (as stated in the Trajectory Viewer), and its "
+                              "Pole row (row 1) sets 110 mm. It runs at the set height, 110 mm."),
+                     ("warn", "LEFT row 6, program 48: it was trained at pole 120 mm (Lite's record of sending it), and its Pole "
+                              "row (row 4) sets 150 mm. It runs at the set height, 150 mm.")]
+    assert not [f for f in sim["findings"] if f["level"] == "stop"]                  # a Program at its row's pole is not off its own
+
+    # as a real controller's list keeps it (program_links.keep): Program 48's pole, set by its row, in the project
+    row48 = next(p for p in call(lite, "GET", f"/api/library/programs?pid={PID}")["arms"]["left"]["programs"] if p["id"] == 48)
+    (file,) = (lite["data"] / "Projects").rglob("controller_exports/left/pole_and_hand.json")
+    doc = json.loads(file.read_text())
+    doc["programs"].append(dict(slot=48, name=row48["name"], bytes=row48["bytes"], pole_mm=150.0, hand=GRIP, text="pole 150 mm, hand grip",
+                                by="set", row=4, was="record", was_mm=120.0, kept="2026-11-24 22:00:00"))
+    file.write_text(json.dumps(doc))
+    shown = next(p for p in call(lite, "GET", f"/api/library/programs?pid={PID}")["arms"]["left"]["programs"] if p["id"] == 48)
+    assert shown["stage"]["text"] == "pole 150 mm, hand grip" and shown["stage_by"] == "set" and not shown["can_state"]
+    assert "its pole as its Pole row in the sequence sets it (row 4)" in shown["stage_from"]
+    refused = call(lite, "POST", "/api/library/programs/left/48", {"pid": PID, "pole_mm": 80, "hand": "OPEN"})
+    assert refused["code"] == "own" and "change its Pole row in the sequence" in refused["hint"]
+    run = wait(lite, call(lite, "POST", "/api/robots/left/programs/run", {"program": 48, "pid": PID, "confirmed": True}))
+    assert run["state"] == "done", run
+    assert "Program 48: pole and hand pole 150 mm, hand grip (kept with the project: its pole as its Pole row" in " | ".join(
+        e["text"] for e in run.get("events") or [])

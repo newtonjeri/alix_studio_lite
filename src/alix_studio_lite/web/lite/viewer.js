@@ -197,7 +197,9 @@ async function stateProgram(side, p) {
   try {
     progs = await post(`/api/library/programs/${side}/${p.id}`, { pid: ctx.pid || null, pole_mm: v.pole_mm, hand: v.hand });
     renderPrograms();
-    status(`${S} program ${p.id}: ${progs.stated.text}, kept with the project.`, 'ok');
+    const rows = (progs.rows || []).length                    // one value (24 Nov): its Pole row in the sequence follows
+      ? ` Its Pole row in the sequence (row ${progs.rows.join(', ')}) now sets the same height.` : '';
+    status(`${S} program ${p.id}: ${progs.stated.text}, kept with the project.${rows}`, 'ok');
   } catch (err) { tell(err); }
 }
 

@@ -19,6 +19,13 @@ together (``own_stages``: in place of the Pole and Hand rows right before it); a
 them, each arm to its next task's start, its pole and hand and then its arm (``next_after_tasks``: in place of 22 Oct's
 pole and hand put back as before the tasks).
 
+One value for a Program's pole (the user, 24 Nov): a Program's Pole row in the sequence (``pole_row``) is its own pole.
+The plan runs it at the row's height (``own_of``), the project keeps that height for the program on its controller
+(program_links, ``set``), so the Trajectory Viewer and every computer show it, and a pole changed in the Viewer moves
+the row (``follow_pole``). Until then a Program's own pole stood against its row (24 Oct); its hand still does. A
+Program its row takes off the pole Lite sent it with, or its file states, is said every time (a warning the run asks
+about), no longer stopped.
+
 What Lite adds, none of it motion:
 - Simulation Mode: both arms in 3D through the same plan, with the collision check (walls, commode, the two arms
   against each other), and what would not be right on the robot: a Program whose pole or hand is not the one it was
@@ -28,7 +35,9 @@ What Lite adds, none of it motion:
   between their meeting points, with CLEARANCE_MM between them;
 - Real Machine Mode only after the same run (its steps, its plan, programs, points, speed) completed in Simulation, or
   with the operator's word that it runs without; a step that runs outside its range is said, and stops both arms when
-  far outside it (STOP_PROGRAM_OVER / STOP_PROGRAM_UNDER, STOP_STEP_MARGIN);
+  far outside it (STOP_PROGRAM_OVER / STOP_PROGRAM_UNDER, STOP_STEP_MARGIN); a Global Point's move from a pose the timing
+  does not know (a Program before it not drawn: this computer has no file of it) is timed from the arm's joints, read at
+  Lite's clear step before it (``time_from_the_arm``; the lab, 24 Nov), and is said, never stopped, when they are not read;
 - before the first move, every Program slot and global point checked on its controller; a loaded file of the other arm
   refused; the overall speed is the top bar's slider, and each controller's own speed, found when it was connected, is
   put back after; STOP latches, as everywhere in Lite.
@@ -315,7 +324,8 @@ def own_stages(plan: list[dict], own: dict | None) -> list[dict]:
     seat task's end (its ``then``; without one, not known). Where not known (the run's start), both are set. A Program
     Lite knows no pole and hand of runs with its rows' (the operator's), as before. Since 15 Nov ``own`` also holds the
     ones the project keeps for the programs on the controllers (program_links), so a computer that did not send a
-    Program, and has no file of it, sets them too."""
+    Program, and has no file of it, sets them too. Since 24 Nov a Program's Pole row is its own pole (own_of gives it
+    the row's height), so a Pole row no longer gives way: only a Hand row does."""
     if not own:
         return plan
     plan = copy.deepcopy(plan)
@@ -348,6 +358,8 @@ def own_stages(plan: list[dict], own: dict | None) -> list[dict]:
                     mine.extend(_own_steps(x, stg, now[side], rows))
                     if o.get("link"):                  # the project's, not this computer's own knowledge: said (_program)
                         x["_own_stage"]["link"] = o["link"]
+                    if o.get("pole_row"):              # its pole is its Pole row's (own_of): said, and checked against
+                        x["_own_stage"]["pole_row"] = o["pole_row"]
                     rows.clear()
                 else:
                     flush()
@@ -396,14 +408,17 @@ def own_stage(info: dict | None, found: dict | None, link: dict | None) -> dict 
     """A Program's own pole and hand and where they are from, in program_links' order: this computer's record of
     sending it (``info``: the ones it was taught or sent with), the project's entry by another computer's record
     (``link``), its file found by name on this computer (``found``: the ones stated for it, as at its upload in the
-    Trajectory Viewer), the project's entry by a file or stated by hand. {stage, how: record | file | link, file_name,
-    link}, or None when nothing is known of them."""
+    Trajectory Viewer), the project's entry by a file or stated by hand; before all of them, the project's entry with
+    the pole its Pole row set (``set``). {stage, how: record | file | link, file_name, link}, or None when nothing is
+    known of them."""
     from . import program_links, staging
 
     def linked():
         st = staging.stage_from(dict(link, source=f"kept with the project: {program_links.where_from(link)}"))
         return dict(stage=st, how="link", link=link) if st is not None else None
 
+    if link is not None and link.get("by") == "set" and linked():      # its pole as its Pole row set it: one value,
+        return linked()                                                # on every computer (the user, 24 Nov)
     st = staging.stage_from((info or {}).get("stage"))
     if st is not None:
         return dict(stage=st, how="record")
@@ -420,13 +435,15 @@ def own_of(programs: dict, named: dict, md_of, steps: dict, links: dict | None =
     them (own_stage: what it recorded when it sent the program; for one it did not send, its file's, found by name, or
     the ones the project keeps for the program its controller holds, ``links``: {side: program_links.load's}) and its
     first point (deg) when Lite knows its very bytes (its record's first line, or a file of those bytes). With them,
-    where they are from (``how``; ``file_name``, ``link``)."""
+    where they are from (``how``; ``file_name``, ``link``). A Program with a Pole row has that row's height as its pole
+    (``pole_row``, _row_pole: one value in the sequence and for the program)."""
     from . import program_links
 
     out = {}
     for side in ARMS:
         mine = {}
-        for x in steps.get(side) or []:
+        rows = steps.get(side) or []
+        for k, x in enumerate(rows):
             if x["type"] != "program" or int(x["id"]) in mine:
                 continue
             pid = int(x["id"])
@@ -444,9 +461,103 @@ def own_of(programs: dict, named: dict, md_of, steps: dict, links: dict | None =
                     first = [float(v) / 1000.0 for v in md[0]]
             mine[pid] = dict(stage=got["stage"].as_dict() if got else None, first_deg=first)
             if got:
-                mine[pid].update({k: got[k] for k in ("how", "file_name", "link") if got.get(k) is not None})
+                mine[pid].update({key: got[key] for key in ("how", "file_name", "link") if got.get(key) is not None})
+                _row_pole(mine[pid], got, rows, k)
         out[side] = mine
     return out
+
+
+def pole_row(rows: list, k: int) -> int | None:
+    """Where Program row ``k``'s Pole row is in ``rows``: its last Pole step since the Program, lid or seat task or
+    INSPECT before it (each of those leaves the pole its own way; sequence_stage's rule), or None when it has none. A
+    Hand, a Meet, a Wait, a Wait-for or a Global Point between them leaves the pole where the row put it."""
+    for i in range(k - 1, -1, -1):
+        kind = rows[i].get("type")
+        if kind in ("program", "mechanism", "inspect"):
+            return None
+        if kind == "pole":
+            return i
+    return None
+
+
+def _row_pole(o: dict, got: dict, rows: list, k: int) -> None:
+    """One value (the user, 24 Nov: "editing the pole value in either the sequence or the file using alix studio lite,
+    should make the change take effect"; "build it so both places hold one value"): a Program's Pole row (pole_row) is
+    its own pole. ``o`` (own_of's entry of the Program at row ``k``, from ``got``) takes the row's height where it is
+    another than the one known, and ``pole_row``: {row, mm, was_mm, was, fresh}: the row, its height, the pole and the
+    source it had before any row set it (record | file | stated), and whether the project does not hold it yet
+    (program_links.keep writes it where a controller's list is read). The hand stays the Program's own.
+
+    The lab, 24 Nov: RIGHT row 3 set 210 mm, Program 61's own (stated in the Trajectory Viewer) was 200 mm, and Lite
+    lowered the pole to it before the Program. Until then (the owner, 24 Oct) a Program's own pole stood against its
+    row; it still does for its hand."""
+    from . import staging
+
+    st = got["stage"]
+    link = got.get("link") or {}
+    kept = link.get("by") == "set"                         # the project holds a pole a row set for it already
+    was = link.get("was") if kept else (link.get("by") if got["how"] == "link" else got["how"])
+    was_mm = link.get("was_mm") if kept else float(st.pole_mm)
+    i = pole_row(rows, k)
+    if i is None:
+        if kept:                                           # its row is gone: the pole it set is still the Program's own
+            o["pole_row"] = dict(row=None, mm=float(st.pole_mm), was_mm=was_mm, was=was, fresh=False)
+        return
+    try:
+        mm = float(rows[i]["mm"])
+        if abs(mm - float(st.pole_mm)) > 0.05:
+            o["stage"] = staging.make_stage(mm, list(st.hand), st.source).as_dict()
+            fresh = True
+        elif kept:
+            fresh = False
+        else:
+            return
+    except (KeyError, TypeError, ValueError, UserError):
+        return                                             # a row the pole cannot take: its own stands (check_steps says)
+    o["pole_row"] = dict(row=rows[i].get("_row") or i + 1, mm=mm if fresh else float(st.pole_mm), was_mm=was_mm, was=was,
+                         fresh=fresh)
+
+
+def follow_pole(units, side: str, pid: int, mm) -> list[int]:
+    """The other place: Program ``pid``'s pole was stated in the Trajectory Viewer, so its Pole row in the project's
+    sequence takes that height (each of its rows' Pole row, pole_row), and the row never puts the old one back. The
+    rows changed (their numbers); the rows stay the same rows (their uid)."""
+    from .project import _atomic_write
+
+    changed = []
+    with units.lock:
+        d = load(units)
+        rows = d[side]
+        for k, x in enumerate(rows):
+            if not isinstance(x, dict) or x.get("type") != "program" or int(x.get("id") or 0) != int(pid):
+                continue
+            i = pole_row(rows, k)
+            if i is not None and abs(float(rows[i].get("mm") or 0.0) - float(mm)) > 0.05 and i + 1 not in changed:
+                rows[i] = dict(rows[i], mm=float(mm))
+                changed.append(i + 1)
+        if changed:
+            d["updated"] = time.strftime("%Y-%m-%d %H:%M:%S")
+            _file(units).parent.mkdir(parents=True, exist_ok=True)
+            _atomic_write(_file(units), json.dumps(d, indent=1))
+    return changed
+
+
+def keep_row_poles(app, units, side: str) -> None:
+    """After the sequence was saved with a Pole row changed: the pole it sets kept with the project for its Program at
+    once (program_links.keep), where the arm's controller is a real one and its list can be read, so the Trajectory
+    Viewer shows the row's height without waiting for the next simulation or run. Never raises: the plan takes the
+    row's height in any case (own_of)."""
+    from . import program_links, program_mirror
+
+    try:
+        if not program_mirror.real_controller(app, side):
+            return
+        rows = _numbered(load(units))
+        programs = {side: programs_known(app, units, side)}
+        own = own_for(app, units, programs, {side: rows[side]})
+        program_links.keep_quietly(app, units, side, programs[side], own.get(side))
+    except Exception:                                                               # noqa: BLE001 - a record, never a stop
+        return
 
 
 def pole_with_hand(plan: list[dict]) -> list[dict]:
@@ -1230,6 +1341,9 @@ def found_by_name(named: dict, pid: int, step: dict, info: dict) -> dict | None:
     else the controller's ("<slot>_<file>", cut to 31 characters by RealMan's API). With the controller's
     stored size known, the file whose project file has that size; else the first found, said so.
 
+    The controller's name is tried without the slot number put before it, then as listed (24 Nov: the lab's
+    controllers listed each program under its file's own first 32 characters, no slot number before them).
+
     A cut name is matched by its start, without what the cut left of its ".txt": Lite names a program it sends by the
     first 28 characters of its file's name and ".txt", so its name on the controller ends "." or ".t" ("62_62_R_P2_
     pole200_grip_13.0s_n."), which no file's name starts with. On a computer that did not send it (the Jetson, 15 Nov:
@@ -1245,16 +1359,22 @@ def found_by_name(named: dict, pid: int, step: dict, info: dict) -> dict | None:
     names = [str(step["name"])] if step.get("name") else []
     held = str(info.get("name") or "")
     cut = len(held) >= 31                        # cut to 31 characters: matched by its start
-    if held:
-        names.append(re.sub(rf"^{pid}_", "", held))
-        stem = re.sub(r"\.(?:t(?:xt?)?)?$", "", names[-1], flags=re.IGNORECASE) if cut else names[-1]
-        if stem and stem != names[-1]:
+    starts = set()                               # the names matched by their start (a cut name's last form)
+    # the name without the slot number its controller put before it ("61_61_L_P1_..."), then the name as listed: a
+    # controller also lists a program under its file's own first characters ("61_L_P1_pole50_cleaningpose_48.2", the
+    # lab, 24 Nov), where that leading "61_" is the file's own and no file starts with what follows it
+    for form in dict.fromkeys([re.sub(rf"^{pid}_", "", held), held] if held else []):
+        names.append(form)
+        stem = re.sub(r"\.(?:t(?:xt?)?)?$", "", form, flags=re.IGNORECASE) if cut else form
+        if stem and stem != form:
             names.append(stem)                   # without what the cut left of ".txt"
+        if cut:
+            starts.add(len(names) - 1)
     cands = []
     for i, n in enumerate(names):
         low = n.lower()
         hit = named.get(low) or named.get(low + ".txt") or []
-        if not hit and cut and i == len(names) - 1:
+        if not hit and i in starts:
             hit = [f for k, fs in named.items() if k.startswith(low) for f in fs]
         cands += [f for f in hit if f not in cands]
     if not cands:
@@ -1397,8 +1517,9 @@ class _ArmSim:
             else:
                 a = self._program(step, t, stage)
             a.update(pole1=self.pole, hand1=list(self.hand), q1=list(self.q))
-            if self.lam is None:                     # as a rule: the step keeps its range (Real Machine Mode times it)
-                step["_t"] = {k: a.get(k) for k in ("kind", "times", "own_times", "move_times", "play_s", "transit", "lines", "drawn")}
+            if self.lam is None:                     # as a rule: the step keeps its range (Real Machine Mode times it), and
+                step["_t"] = {k: a.get(k) for k in ("kind", "times", "own_times", "move_times", "play_s", "transit", "lines",
+                                                    "drawn", "known")}     # whether the arm's pose before it was known
             t = a["t1"]
             if done is not None:
                 done(step, t)
@@ -1450,12 +1571,21 @@ class _ArmSim:
                           f"found by its name; {found['how']}.")
         st = staging.stage_from(info.get("stage"))
         mine = step.get("_own_stage") or {}
+        row = mine.get("pole_row") or {}
+        if row and st is not None:                   # its Pole row's height is its pole (own_of): what it is held to
+            st = staging.make_stage(row["mm"], list(st.hand), st.source)
+        off = row.get("was_mm") is not None and abs(float(row["mm"]) - float(row["was_mm"])) > staging.POLE_TOL_MM
+        if off and self.lam is None:                 # said every time; the set height is accepted (the user, 24 Nov)
+            known = {"record": "Lite's record of sending it", "file": "its file"}.get(row.get("was"), "as stated in the Trajectory Viewer")
+            where = f"its Pole row (row {row['row']}) sets" if row.get("row") else "the height set for it in the sequence is"
+            self._say("warn", step, f"{S} row {step.get('_row')}, program {pid}: it was trained at pole {row['was_mm']:g} mm "
+                      f"({known}), and {where} {row['mm']:g} mm. It runs at the set height, {row['mm']:g} mm.")
         if mine.get("differ") and self.lam is None:  # its own in place of the rows before it (own_stages)
             self._say("note", step, f"{S} row {step.get('_row')}, program {pid}: it runs with its own pole and hand "
                       f"({staging.describe(staging.make_stage(mine['pole_mm'], mine['hand']))}), which Lite sets before it "
                       f"in place of row{'s' if len(mine['differ']) > 1 else ''} {', '.join(str(r) for r in mine['differ'])}.")
-        if mine.get("link") and self.lam is None:    # the project's (program_links): this computer has no record or file of it
-            from . import program_links
+        if mine.get("link") and self.lam is None and not (mine["link"].get("by") == "set" and st is not None):
+            from . import program_links              # the project's (program_links): this computer has no record or file of it
 
             ln = mine["link"]
             self._say("note", step, f"{S} row {step.get('_row')}, program {pid}: its pole and hand "
@@ -2881,18 +3011,63 @@ def _times_now(app, units, run: dict, programs: dict, points: dict, overall: int
     schedule(run, sims, overall)
 
 
+def _blind(step: dict) -> bool:
+    """A Global Point's move whose start the timing does not know (_ArmSim: a step before it not drawn): the time it was
+    given comes from where the arm was last known, which the arm may be far from."""
+    return step["type"] == "global" and (step.get("_t") or {}).get("known") is False
+
+
+def time_from_the_arm(steps: list, joints_deg, points: dict | None, overall: int, rating) -> dict | None:
+    """A runner call's first move, when it is a Global Point's move from a pose the timing does not know (_blind), timed
+    from the arm's joints as read now, the arm at rest before the call (Lite's clear step): the MoveJ's own law
+    (movej_s, MOVEJ_BAND), or already there within 0.2 deg, as the simulation times a move from a known pose. The step
+    keeps that time and is held to it (_watch). None, and nothing changed, for any other call, joints that are not an
+    arm's seven, or a point not read. {row, name, gap_deg, times}.
+
+    The lab, 24 Nov 2026: the controllers' Programs had been sent from another computer, so none was drawn here; the
+    MoveJ back to the point the arm had stood on before them was timed as already there (0.15 s at most) and stopped
+    both arms, the arm 11.6 deg from the point and about 1 s on its way."""
+    import numpy as np
+
+    step = next((x for x in steps if x["type"] not in ("pole", "hand", "wait")), None)     # those leave the arm's joints
+    pts = (points or {}).get("points") or {}
+    if step is None or not _blind(step) or step.get("name") not in pts:
+        return None
+    try:
+        q0 = [float(v) for v in joints_deg]
+    except (TypeError, ValueError):
+        return None
+    q1 = [float(v) for v in pts[step["name"]]]
+    if len(q0) < len(q1) or len(q1) < 7:
+        return None
+    q0 = q0[:len(q1)]
+    gap = float(np.max(np.abs(np.asarray(q1) - np.asarray(q0))))
+    if gap < 0.2:
+        r = tuple(ROBOT_TIMES["global_there_s"])
+    else:
+        r = tuple(movej_s(q0, q1, float(step["speed"]) * float(overall) / 100.0, rating) * f for f in MOVEJ_BAND)
+    hold = float(step.get("wait_s") or 0.0)
+    step["_t"] = dict(step.get("_t") or {}, known=True, drawn=True, move_times=r, times=_plus(r, (hold, hold, hold)))
+    return dict(row=step.get("_row"), name=step["name"], gap_deg=round(gap, 2), times=r)
+
+
 def _watch(job, side: str, steps: list, say_stop, warn) -> tuple:
     """Each step of a runner call timed against its range (``_t``, the owner, 22 Oct): ``on_line`` sees the runner's
     lines; a step outside its range is said (``warn``); a Program whose lines run past STOP_PROGRAM_OVER of their time,
     or any other step more than STOP_STEP_MARGIN past the most it takes, is stopped at that moment (``say_stop`` with
     why: it stops both arms); a step other than a Program that ends more than STOP_STEP_MARGIN sooner than the least it
     takes is stopped as it ends. (A Program ending before STOP_PROGRAM_UNDER of its lines' time is the early-end check.)
-    Returns (on_line, close); ``on_line.held(seconds)`` takes a hold before the step's start out of its time."""
+    Returns (on_line, close); ``on_line.held(seconds)`` takes a hold before the step's start out of its time.
+
+    A Global Point's move from a pose the timing does not know (``_blind``: a Program before it not drawn, and the arm's
+    joints not read before it, time_from_the_arm) has no time to be held to: said once, never stopped (the lab, 24 Nov)."""
     import threading
 
     cur, lock, dead = {}, threading.Lock(), threading.Event()
 
     def limit(st) -> float | None:
+        if _blind(st):
+            return None
         t = st.get("_t") or {}
         r = t.get("move_times") if st["type"] == "global" else t.get("times")
         if st["type"] == "wait" and not t:          # a global point's wait split from it: its own seconds
@@ -2944,6 +3119,10 @@ def _watch(job, side: str, steps: list, say_stop, warn) -> tuple:
             if not c:
                 return
             st, dur = c["step"], time.monotonic() - c["t0"]
+            if _blind(st):
+                warn(f"{side.upper()} row {st.get('_row')} ({_step_words(st)}) took {dur:.2f} s, not timed: where the arm "
+                     "stood before it was not known (a Program before it is not drawn) and its joints were not read.")
+                return
             t = st.get("_t") or {}
             r = t.get("move_times") if st["type"] == "global" else t.get("times")
             if st["type"] == "wait" and not t:
@@ -3345,6 +3524,33 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
                 job.log(f"{side.upper()} row {row}: the arm's errors could not be read before the move.", "warn")
             return dict(ok=True, rc=0, why=None)
 
+        def from_the_arm(side, steps) -> None:
+            """After Lite's clear step, the arm at rest: a move that starts the next runner call from a pose the timing
+            does not know (a Program before it not drawn: this computer has no file of it) is timed from the arm's
+            joints, read now (time_from_the_arm), and held to that time; joints that cannot be read leave it not timed,
+            which the watch says (_watch). Nothing is sent to the arm but that reading."""
+            first = next((x for x in steps if x["type"] not in ("pole", "hand", "wait")), None)
+            if first is None or not _blind(first):
+                return
+            try:
+                now = reals[side].joints_now() or {}
+            except Exception:                           # noqa: BLE001 - a reading that failed: the move is not timed
+                now = {}
+            from ..motion.limits import load_limits
+
+            got = time_from_the_arm(steps, now.get("joints_deg"), points.get(side), overall, load_limits(side).rating_deg_s)
+            if got is None:
+                return
+            lo, hi = got["times"][0], got["times"][2]
+            text = (f"{side.upper()} row {got['row']} ({_step_words(first)}): where the arm stood before it was not known "
+                    f"(a Program before it is not drawn), so it is timed from the arm as read now, {got['gap_deg']:.1f} deg "
+                    f"from the point: {lo:.2f}-{hi:.2f} s.")
+            job.log(text)
+            hw = getattr(robot, "log", None)
+            if hw is not None:
+                hw.hardware(side, "move timed from the arm", args=dict(row=got["row"], point=got["name"], gap_deg=got["gap_deg"],
+                            times_s=[round(float(v), 3) for v in got["times"]], by=now.get("by")), ok=True, text=text)
+
         def pair(side, x, label) -> dict:
             """Lite's Pole with the Hand after it (pole_with_hand): the hand moving while the pole travels, timed against
             its range as runner v14's steps are (_watch); both its rows finished after it."""
@@ -3394,7 +3600,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
             """An arm's part of a stage: its runner calls, and between them its Wait-for rows and Lite's own steps."""
             out = dict(ok=True, rc=0, why=None)
             try:
-                for what, x in _segments(split_waits(item["steps"])):
+                segs = _segments(split_waits(item["steps"]))
+                for i, (what, x) in enumerate(segs):
                     if what == "steps":
                         out = call(side, x, label)
                         if not out["ok"]:
@@ -3404,6 +3611,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
                         out = clear(side, x.get("_row"))
                         if not out["ok"]:
                             break
+                        if i + 1 < len(segs) and segs[i + 1][0] == "steps":     # the runner call it comes before
+                            from_the_arm(side, segs[i + 1][1])
                         continue
                     if what == "pair":
                         out = pair(side, x, label)
