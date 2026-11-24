@@ -1,370 +1,62 @@
 {
  "arm": "left",
- "kept": "2026-11-15 07:15:29",
+ "kept": "2026-11-24 20:32:52",
  "programs": [],
  "not_kept": [
   {
-   "slot": 1,
-   "name": "1_L_P1_R01+R02+R03+R04_pole50_.t",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 2,
-   "name": "2_L_P2_R05_PART1+R05_PART2_pol.t",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 3,
-   "name": "3_L_P2_R06_pole200_grip_7.2s_v.t",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 4,
-   "name": "4_L_P3_R07_PART1+R07_PART2_pol.t",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 5,
-   "name": "5_5_L_P3_R08+R09_PART1+R09_PAR.t",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 6,
-   "name": "6_6_L_P3_R11_PART1+R11_PART2_p.t",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 7,
-   "name": "7_7_L_P3_T04+T05_pole200_allop.t",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 51,
-   "name": "51_51_L_P1_pole50_cleaningpose_3",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 52,
-   "name": "52_52_L_P2_pole200_cleaningpose_",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 53,
-   "name": "53_53_L_P2_pole200_grip_8.3s_15p",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 54,
-   "name": "54_54_L_P3_pole200_cleaningpose_",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 55,
-   "name": "55_55_L_P3_pole200_grip_44.5s_15",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 56,
-   "name": "56_56_L_P3_pole20_grip_14.4s_15p",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 57,
-   "name": "57_57_L_P3_pole200_allopen_11.5s",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
    "slot": 61,
-   "name": "61_61_L_P1_pole50_cleaningpose_.",
+   "name": "61_L_P1_pole50_cleaningpose_48.2",
    "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 62,
-   "name": "62_62_L_P2_pole200_cleaningpose_",
+   "name": "62_L_P2_pole200_cleaningpose_22.",
    "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 63,
-   "name": "63_63_L_P2_pole200_grip_10.5s_25",
+   "name": "63_L_P2_pole200_grip_10.5s_25pct",
    "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 64,
-   "name": "64_64_L_P3_pole200_cleaningpose.",
+   "name": "64_L_P3_pole200_cleaningpose_19.",
    "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 65,
-   "name": "65_65_L_P3_pole200_grip_45.3s_s.",
+   "name": "65_L_P3_pole200_grip_45.3s_smoot",
    "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 66,
-   "name": "66_66_L_P3_pole20_grip_15.6s_25p",
+   "name": "66_L_P3_pole20_grip_15.6s_25pct.",
    "why": "not sent by Lite: the controller gives no program's points back"
   },
   {
    "slot": 67,
-   "name": "67_67_L_P3_pole200_allopen_12.5s",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 71,
-   "name": "71_71_L_P1_pl50_cp_40.5s_25p_sft",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 72,
-   "name": "72_72_L_P2_pl200_cp_24.8s_30p_sf",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 73,
-   "name": "73_73_L_P2_pl200_gp_11.5s_25p_nw",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 74,
-   "name": "74_74_L_P3_pl200_cp_19.3s_25p_sf",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 75,
-   "name": "75_75_L_P3_pl200_gp_49.8s_sm_ni_",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 76,
-   "name": "76_76_L_P3_pl20_gp_17.1s_25p_sft",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 77,
-   "name": "77_77_L_P3_pl200_op_13.7s_25p_sf",
-   "why": "not sent by Lite: the controller gives no program's points back"
-  },
-  {
-   "slot": 95,
-   "name": "95_65_L_P3_pole200_grip_45.3s_sm",
+   "name": "67_L_P3_pole200_allopen_12.5s_25",
    "why": "not sent by Lite: the controller gives no program's points back"
   }
  ],
  "points": {
-  "REST_POSE": [
-   0.751,
-   -119.266,
-   -0.924,
-   86.896,
-   -1.415,
-   -123.039,
-   179.979
-  ],
-  "L_R11_STP": [
-   -4.759,
-   -91.638,
-   2.014,
-   74.945,
-   10.46,
-   97.396,
-   166.98
-  ],
   "L_HME_POS": [
-   0.769,
-   -98.641,
-   -1.858,
-   92.323,
-   3.573,
-   94.449,
-   167.035
+   -1.932,
+   -94.648,
+   -0.782,
+   85.785,
+   2.286,
+   98.105,
+   182.537
   ],
-  "L_R01_STP": [
-   -92.694,
-   -25.021,
-   96.966,
-   31.121,
-   -40.154,
-   41.006,
-   125.797
-  ],
-  "L_R02_STP": [
-   -92.115,
-   -25.167,
-   92.846,
-   36.948,
-   -10.298,
-   81.58,
-   95.529
-  ],
-  "L_R03_STP": [
-   -14.562,
-   -31.099,
-   55.272,
-   48.912,
-   -45.409,
-   62.604,
-   115.845
-  ],
-  "L_R04_STP": [
-   1.046,
-   -95.745,
-   1.771,
-   50.229,
-   7.144,
-   113.12,
-   98.305
-  ],
-  "L_R05_P1_STP": [
-   28.545,
-   110.666,
-   3.782,
-   -53.049,
-   41.548,
-   -89.448,
-   139.048
-  ],
-  "L_R05_P2_STP": [
-   -25.576,
-   -57.042,
-   27.739,
-   125.527,
-   34.144,
-   -63.921,
-   171.867
-  ],
-  "L_R06_STP": [
-   4.637,
-   -71.908,
-   39.818,
-   104.397,
-   -36.286,
-   51.395,
-   156.906
-  ],
-  "L_R07_P1_STP": [
-   32.68,
-   111.754,
-   29.575,
-   -62.324,
-   19.701,
-   -71.322,
-   148.895
-  ],
-  "L_R07_P2_STP": [
-   -9.572,
-   -55.967,
-   13.555,
-   123.902,
-   19.389,
-   -65.473,
-   166.955
-  ],
-  "L_R08_STP": [
-   -7.988,
-   -30.922,
-   -24.892,
-   95.742,
-   85.199,
-   21.138,
-   165.712
-  ],
-  "L_R09_P1_STP": [
-   -7.815,
-   -15.661,
-   -10.819,
-   85.351,
-   31.035,
-   13.727,
-   144.863
-  ],
-  "L_R09_P2_STP": [
-   -8.197,
-   -2.124,
-   -10.819,
-   54.729,
-   20.927,
-   29.371,
-   255.354
-  ],
-  "L_R10_P1_STP": [
-   -23.273,
-   17.78,
-   2.025,
-   83.306,
-   -13.142,
-   -70.29,
-   200.005
-  ],
-  "L_R10_P2_STP": [
-   -27.007,
-   -25.886,
-   -11.309,
-   36.497,
-   -119.277,
-   -94.482,
-   258.403
-  ],
-  "L_R11_P1_STP": [
-   22.483,
-   83.733,
-   4.131,
-   3.608,
-   61.979,
-   -88.113,
-   160.725
-  ],
-  "L_R11_P2_STP": [
-   -4.757,
-   -91.638,
-   2.016,
-   74.943,
-   10.461,
-   97.398,
-   166.977
-  ],
-  "ST_BTM_RGT_SRT": [
-   -9.572,
-   -55.967,
-   13.557,
-   123.901,
-   19.389,
-   -65.475,
-   166.955
-  ],
-  "LID_UN_SRT": [
-   -25.576,
-   -57.041,
-   27.732,
-   125.528,
-   34.141,
-   -63.921,
-   171.871
-  ],
-  "RIM_SRT_POS": [
-   -9.449,
-   -24.496,
-   -1.281,
-   95.428,
-   76.296,
-   -3.509,
-   199.141
-  ],
-  "BWL_IN_STRT": [
-   -8.194,
-   -2.125,
-   -10.814,
-   54.722,
-   20.94,
-   29.298,
-   255.376
-  ],
-  "BWL_IN_P2_STRT": [
-   -19.166,
-   31.51,
-   6.48,
-   73.336,
-   -2.48,
-   -86.73,
-   192.923
+  "REST_POSE": [
+   -1.929,
+   -111.003,
+   -1.021,
+   83.794,
+   2.263,
+   111.203,
+   182.529
   ]
  }
 }
