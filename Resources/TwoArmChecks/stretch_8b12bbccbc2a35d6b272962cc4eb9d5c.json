@@ -1,0 +1,13 @@
+{
+ "fingerprint": "8b12bbccbc2a35d6b272962cc4eb9d5c",
+ "made": "2026-11-24 16:07:16",
+ "plan": "seat_open",
+ "plan_file": "seat_open_toppra.json",
+ "stretch": "LEFT move_to_half_pole_length + hand_grasp + execute_path || RIGHT move_to_inspect_pole_length + hand_grasp",
+ "verdict": {
+  "ok": true,
+  "closest_mm": null,
+  "seconds": 1.69,
+  "why": "never within 50 mm over 2.1 s, one arm up to 0.6 s late or 0.3 s early"
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "fingerprint": "186c38fea1639760096664c63b46fac8",
+ "made": "2026-11-24 16:07:12",
+ "plan": "lid_open",
+ "plan_file": "lid_open_toppra.json",
+ "stretch": "LEFT move_to_half_pole_length + hand_grasp + execute_path || RIGHT move_to_inspect_pole_length + hand_grasp",
+ "verdict": {
+  "ok": true,
+  "closest_mm": null,
+  "seconds": 6.7,
+  "why": "never within 50 mm over 2.2 s, one arm up to 0.6 s late or 0.3 s early"
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "fingerprint": "e7e08ae6771ba491a2d80ece7b493975",
+ "made": "2026-11-24 16:07:18",
+ "plan": "lid_close",
+ "plan_file": "lid_close_toppra.json",
+ "stretch": "LEFT move_to_half_length + hand_tenth_grasp + move_to_start || RIGHT move_to_half_length + hand_tenth_grasp + move_to_start",
+ "verdict": {
+  "ok": true,
+  "closest_mm": null,
+  "seconds": 1.29,
+  "why": "never within 50 mm over 2.3 s, one arm up to 0.6 s late or 0.3 s early"
+ }
+}

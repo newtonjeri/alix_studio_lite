@@ -1,11 +1,11 @@
 {
  "arm": "left",
- "updated": "2026-11-15 07:57:16",
+ "updated": "2026-11-24 18:39:55",
  "programs": [
   {
    "slot": 61,
-   "name": "61_61_L_P1_pole50_cleaningpose_.",
-   "bytes": 591933,
+   "name": "61_L_P1_pole50_cleaningpose_48.2",
+   "bytes": 555156,
    "pole_mm": 50.0,
    "hand": [
     1000,
@@ -16,13 +16,12 @@
     1000
    ],
    "text": "pole 50 mm, hand cleaning pose",
-   "by": "file",
-   "file": "61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt",
-   "kept": "2026-11-15 07:57:16"
+   "by": "stated",
+   "kept": "2026-11-24 18:38:45"
   },
   {
    "slot": 62,
-   "name": "62_62_L_P2_pole200_cleaningpose_",
+   "name": "62_L_P2_pole200_cleaningpose_22.",
    "bytes": 260205,
    "pole_mm": 200.0,
    "hand": [
@@ -34,13 +33,12 @@
     1000
    ],
    "text": "pole 200 mm, hand cleaning pose",
-   "by": "file",
-   "file": "62_L_P2_pole200_cleaningpose_22.6s_30pct.txt",
-   "kept": "2026-11-15 07:57:16"
+   "by": "stated",
+   "kept": "2026-11-24 18:39:07"
   },
   {
    "slot": 63,
-   "name": "63_63_L_P2_pole200_grip_10.5s_25",
+   "name": "63_L_P2_pole200_grip_10.5s_25pct",
    "bytes": 121219,
    "pole_mm": 200.0,
    "hand": [
@@ -52,13 +50,12 @@
     1000
    ],
    "text": "pole 200 mm, hand grip",
-   "by": "file",
-   "file": "63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt",
-   "kept": "2026-11-15 07:57:16"
+   "by": "stated",
+   "kept": "2026-11-24 18:39:17"
   },
   {
    "slot": 64,
-   "name": "64_64_L_P3_pole200_cleaningpose.",
+   "name": "64_L_P3_pole200_cleaningpose_19.",
    "bytes": 231884,
    "pole_mm": 200.0,
    "hand": [
@@ -70,13 +67,12 @@
     1000
    ],
    "text": "pole 200 mm, hand cleaning pose",
-   "by": "file",
-   "file": "64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt",
-   "kept": "2026-11-15 07:57:16"
+   "by": "stated",
+   "kept": "2026-11-24 18:39:28"
   },
   {
    "slot": 65,
-   "name": "65_65_L_P3_pole200_grip_45.3s_s.",
+   "name": "65_L_P3_pole200_grip_45.3s_smoot",
    "bytes": 514605,
    "pole_mm": 200.0,
    "hand": [
@@ -88,9 +84,42 @@
     1000
    ],
    "text": "pole 200 mm, hand grip",
-   "by": "file",
-   "file": "65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt",
-   "kept": "2026-11-15 07:57:16"
+   "by": "stated",
+   "kept": "2026-11-24 18:39:38"
+  },
+  {
+   "slot": 66,
+   "name": "66_L_P3_pole20_grip_15.6s_25pct.",
+   "bytes": 176105,
+   "pole_mm": 20.0,
+   "hand": [
+    0,
+    0,
+    0,
+    0,
+    150,
+    1000
+   ],
+   "text": "pole 20 mm, hand grip",
+   "by": "stated",
+   "kept": "2026-11-24 18:39:47"
+  },
+  {
+   "slot": 67,
+   "name": "67_L_P3_pole200_allopen_12.5s_25",
+   "bytes": 144328,
+   "pole_mm": 200.0,
+   "hand": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+   ],
+   "text": "pole 200 mm, hand open",
+   "by": "stated",
+   "kept": "2026-11-24 18:39:55"
   }
  ]
 }
