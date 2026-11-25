@@ -65,7 +65,7 @@ svg text { fill: var(--muted); font-size: 11px; }
 <body>
 <header>
   <h1>Program Offset Test</h1>
-  <p>Move a recorded Program for the UGV's offset: every 5 ms line by FK, the offset, then IK nearest the taught arm. Nothing is sent to a robot.</p>
+  <p>Move a recorded Program for the UGV's offset: every 5 ms line by FK, the offset, then IK of the vendor's Arm_Tip nearest the taught arm. Nothing is sent to a robot.</p>
 </header>
 <main>
   <section class="card">
@@ -181,7 +181,7 @@ function render(out) {
     <div class="two">
       <div class="card">
         <h2>Hand path, seen from above</h2>
-        <p class="desc">Grey: the taught hand tip. Blue: the moved one. Dots: where the hand pauses. Up is the robot's front, left its left; base_link, mm.</p>
+        <p class="desc">Grey: the taught hand tip (tip frame, for the picture). Blue: the moved one. Dots: where the hand pauses. Up is the robot's front; base_link, mm.</p>
         <div id="top"></div>
         <div class="legend"><span><i style="background:var(--taught)"></i>taught</span><span><i style="background:var(--moved)"></i>moved</span></div>
       </div>
@@ -195,7 +195,8 @@ function render(out) {
     <div class="two">
       <div class="card"><h2>Checks</h2>
         <table><tr><th></th><th>taught</th><th>moved</th></tr>
-        ${row("Hand from the moved path", "", `${rep.hand_error_mm} mm, ${rep.hand_error_deg} deg`)}
+        ${row("IK frame", "", esc(rep.ik_frame))}
+        ${row("Arm_Tip from the moved path", "", `${rep.hand_error_mm} mm, ${rep.hand_error_deg} deg`)}
         ${row("Lines without an arm pose", "", `${rep.lines_unsolved} of ${rep.lines}${rep.first_unsolved ? ` (from ${rep.first_unsolved.t_s} s: ${esc(rep.first_unsolved.why)})` : ""}`)}
         ${row("Speed, share of the rating", sh(t.speed), sh(m.speed))}
         ${row("Acceleration, share of 612 deg/s<sup>2</sup>", sh(t.acceleration), sh(m.acceleration))}

@@ -8,9 +8,18 @@ forward, y left, yaw counter-clockwise seen from above, about base_link's origin
 The commode (or the test box) stays, so the hand's path moves the other way: every hand pose T in base_link becomes
 inv(Trans(dx, dy) Rz(yaw)) T. The UGV 20 mm back and 20 mm left -> the path 20 mm forward and 20 mm right.
 
-THE SOLVE, every 5 ms line (study 23 Nov, ALIX Resource/reports/2026-11-23_program_offset_study): the arm's Link7 moved
-by that move, written in the arm's base frame at the Program's pole; then the configuration NEAREST THE TAUGHT LINE (in
-the joints) that puts Link7 there: constrained least squares on ALIX's URDF Jacobian, run until the hand is within
+THE FRAME (the user, 25 Nov: the frame the RealMan applications use): the IK is solved for the vendor's Arm_Tip in the
+arm's own base frame (<X>_base_link, the vendor's "Base"). The URDF has no Arm_Tip link: its nearest frame is <X>_Link7,
+2.8 mm long along the tool axis (ALIX's d7 NOTE: joint 6 -> flange 0.164 m in the URDF, 0.1612 m on the RM75-6FB), so
+Arm_Tip = <X>_Link7 moved 2.8 mm back along its z axis (ARM_TIP_FROM_LINK7). Checked 25 Nov against the vendor's own FK
+(rm_algo_forward_kinematics) on both arms at poles 0, 50, 150, 200 and 300 mm, 200 poses each: within 0.0002 mm and
+0.0 deg (Link7 itself 2.8 mm off; tests/data/vendor_arm_tip_fk.json pins it). The pole only lifts the arm's base
+(right (45, -124, 648.5 + pole) mm, left (45, +124, ...)): the Arm_Tip and the joints relative to the base do not
+depend on it.
+
+THE SOLVE, every 5 ms line (study 23 Nov, ALIX Resource/reports/2026-11-23_program_offset_study): the Arm_Tip moved by
+that move, written in the arm's base frame at the Program's pole; then the configuration NEAREST THE TAUGHT LINE (in the
+joints) that puts the Arm_Tip there: constrained least squares on ALIX's URDF Jacobian, run until the tip is within
 0.01 mm / 0.0006 deg AND the arm's shape has settled; seeded with the taught line plus the change the line before took.
 Tried and dropped in the study: the vendor's IK at the line's own arm angle (flips the shoulder where the arm angle
 passes 0) and the plain IK (the elbow drifts). The timing stays the file's: the same lines, 5 ms apart.
@@ -45,6 +54,9 @@ STEP_MAX_DEG = 10.0           #: Lite's L4
 JERK_REF_RAD_S3 = 1500.0      #: ALIX joint_limits.yaml (Lite's C2 reference)
 TOUCH_MM_S, TOUCH_MIN_S = 8.0, 0.2   #: a pause of the hand tip: under 8 mm/s (over 100 ms) for at least 0.2 s
 TOUCH_SAME_MM = 15.0         #: two pauses this near each other are one touch
+#: The vendor's Arm_Tip in the URDF's <X>_Link7 frame: 2.8 mm back along the tool axis, the same orientation (module doc).
+ARM_TIP_FROM_LINK7 = np.array([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, -0.0028], [0.0, 0.0, 0.0, 1.0]])
+LINK7_FROM_ARM_TIP = np.linalg.inv(ARM_TIP_FROM_LINK7)
 SINGULAR_GATE_DEG = 20.0     #: ALIX's generation gate (alix_taskgen.singularity): a margin under it is worth a note
 
 
@@ -118,7 +130,8 @@ def write_program(rows: list[dict], md: np.ndarray) -> str:
 # ─────────────────────────────────────────────────────────────── the arm
 
 class Arm:
-    """One arm at one pole height: its base in base_link, Link7's Jacobian, and its hand tip for the pictures."""
+    """One arm at one pole height: its base in base_link, the IK for its Arm_Tip (through Link7's Jacobian), and its
+    hand tip (<X>_tip_frame) for the pictures only."""
 
     def __init__(self, side: str, pole_m: float):
         if side not in ("left", "right"):
@@ -141,13 +154,17 @@ class Arm:
         lo, hi = self.solver.lower, self.solver.upper
         self.lower_deg, self.upper_deg = np.degrees(lo), np.degrees(hi)
         # the reach, from the URDF at the straight arm: the shoulder (Link2's origin, fixed in the arm's base) and the
-        # wrist centre (Link6's origin, fixed in Link7's frame); a target wrist farther than the straight arm is past reach
+        # wrist centre (Link6's origin, fixed in the Arm_Tip's frame: 161.2 mm behind it, the RM75's d7); a target wrist
+        # farther than the straight arm is past reach
         z = np.zeros(7)
         self.shoulder = m.fk(m.chain(f"{pfx}_base_link", f"{pfx}_Link2"), z[:2])[:3, 3]
         T6 = m.fk(m.chain(f"{pfx}_base_link", f"{pfx}_Link6"), z[:6])
-        T7 = m.fk(self.ch_link7, z)
-        self.wrist_in_7 = np.linalg.inv(T7) @ T6[:, 3]
+        self.wrist_in_tip = np.linalg.inv(self.arm_tip(z)[0]) @ T6[:, 3]
         self.reach_m = float(np.linalg.norm(T6[:3, 3] - self.shoulder))
+
+    def arm_tip(self, q_deg: np.ndarray) -> np.ndarray:
+        """(N, 4, 4): the vendor's Arm_Tip in the arm's base frame (the vendor's Base), as rm_algo_forward_kinematics."""
+        return self.m.fk_batch(self.ch_link7, np.radians(np.atleast_2d(q_deg))) @ ARM_TIP_FROM_LINK7
 
     def fk(self, chain, q_deg: np.ndarray) -> np.ndarray:
         """(N, 4, 4) in base_link."""
@@ -155,13 +172,15 @@ class Arm:
         T = self.m.fk_batch(chain, np.radians(np.atleast_2d(q_deg)[:, :n]))
         return self.T_base @ T
 
-    def past_reach(self, T7_target: np.ndarray) -> bool:
-        """Whether Link7 at ``T7_target`` (arm base frame) puts the wrist centre beyond the straight arm."""
-        w = (T7_target @ self.wrist_in_7)[:3]
+    def past_reach(self, T_tip: np.ndarray) -> bool:
+        """Whether the Arm_Tip at ``T_tip`` (arm base frame) puts the wrist centre beyond the straight arm."""
+        w = (T_tip @ self.wrist_in_tip)[:3]
         return float(np.linalg.norm(w - self.shoulder)) > self.reach_m - 0.0005
 
-    def nearest(self, q_taught: np.ndarray, T_target: np.ndarray, q_start: np.ndarray) -> tuple[np.ndarray, bool]:
-        """The configuration nearest ``q_taught`` (rad) with Link7 at ``T_target`` (arm base frame)."""
+    def nearest(self, q_taught: np.ndarray, T_tip: np.ndarray, q_start: np.ndarray) -> tuple[np.ndarray, bool]:
+        """The configuration nearest ``q_taught`` (rad) with the Arm_Tip at ``T_tip`` (arm base frame). ALIX's IKSolver
+        works on Link7, so the Arm_Tip target is handed to it as the Link7 pose it implies (a fixed 2.8 mm)."""
+        T_target = T_tip @ LINK7_FROM_ARM_TIP
         sv, q, I7 = self.solver, q_start.copy(), np.eye(7)
         for _ in range(MAX_IT):
             J, T = sv._jacobian(q)
@@ -249,16 +268,16 @@ def shift_program(md: np.ndarray, side: str, pole_m: float, offset: UgvOffset, p
     n = len(q0)
     D = offset.path_move()
     D_ab = np.linalg.inv(arm.T_base) @ D @ arm.T_base                 # the move seen from the arm's base
-    T7 = arm.m.fk_batch(arm.ch_link7, np.radians(q0))                 # Link7 in the arm's base frame
+    Ttip = arm.arm_tip(q0)                                            # the vendor's Arm_Tip in the arm's base frame
     qr = np.radians(q0)
     new = np.empty_like(q0)
     failed, why = [], {}
     delta = np.zeros(7)
     for i in range(n):
-        q, ok = arm.nearest(qr[i], D_ab @ T7[i], qr[i] + delta)
+        q, ok = arm.nearest(qr[i], D_ab @ Ttip[i], qr[i] + delta)
         if not ok:
             failed.append(i)
-            if arm.past_reach(D_ab @ T7[i]):
+            if arm.past_reach(D_ab @ Ttip[i]):
                 why.setdefault("past reach (the arm straight: J4 at 0)", i)
             elif np.any(np.isclose(q, arm.solver.lower) | np.isclose(q, arm.solver.upper)):
                 why.setdefault("a joint at its limit", i)
@@ -273,9 +292,9 @@ def shift_program(md: np.ndarray, side: str, pole_m: float, offset: UgvOffset, p
     md_new = np.round(new * 1000.0).astype(np.int64)
     q1 = md_new / 1000.0
 
-    # the hand where the moved path puts it, judged on the lines as written
-    want = D_ab @ T7
-    got = arm.m.fk_batch(arm.ch_link7, np.radians(q1))
+    # the Arm_Tip where the moved path puts it, judged on the lines as written
+    want = D_ab @ Ttip
+    got = arm.arm_tip(q1)
     err_mm = np.linalg.norm(got[:, :3, 3] - want[:, :3, 3], axis=1) * 1000.0
     cosang = np.clip((np.einsum("nij,nij->n", got[:, :3, :3], want[:, :3, :3]) - 1.0) / 2.0, -1.0, 1.0)
     err_deg = np.degrees(np.arccos(cosang))
@@ -296,6 +315,8 @@ def shift_program(md: np.ndarray, side: str, pole_m: float, offset: UgvOffset, p
     step = max(1, n // 1500)
     report = dict(
         side=side, pole_mm=round(pole_m * 1000.0, 1), lines=n, seconds=round(n * CLOCK_S, 3),
+        ik_frame=f"Arm_Tip (the vendor's) in {arm.side[0].upper()}_base_link: the URDF's {arm.side[0].upper()}_Link7 moved 2.8 mm "
+                 "back along its tool axis",
         offset=dict(dx_mm=offset.dx_mm, dy_mm=offset.dy_mm, yaw_deg=offset.yaw_deg), words=offset.words(),
         path_move=dict(dx_mm=round(float(D[0, 3]) * 1000.0, 3), dy_mm=round(float(D[1, 3]) * 1000.0, 3),
                        turn_deg=round(-offset.yaw_deg, 3)),

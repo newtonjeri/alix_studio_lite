@@ -68,7 +68,8 @@ def summary(rep: dict) -> str:
     t, m = rep["taught"], rep["moved"]
     out = [f"{rep['verdict']}: {rep['words']}"]
     out += [f"  - {r}" for r in rep["reasons"]]
-    out.append(f"  hand from the moved path: {rep['hand_error_mm']} mm, {rep['hand_error_deg']} deg; lines unsolved: "
+    out.append(f"  IK frame: {rep['ik_frame']}")
+    out.append(f"  Arm_Tip from the moved path: {rep['hand_error_mm']} mm, {rep['hand_error_deg']} deg; lines unsolved: "
                f"{rep['lines_unsolved']} of {rep['lines']}")
     for k, label in (("speed", "speed share"), ("acceleration", "acceleration share"), ("jerk", "jerk share")):
         out.append(f"  {label}: {t[k]['share']} (J{t[k]['joint']}) -> {m[k]['share']} (J{m[k]['joint']})")
