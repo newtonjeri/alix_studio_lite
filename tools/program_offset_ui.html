@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Program Offset Test</title>
+<style>
+:root {
+  --bg: #f4f5f7; --card: #ffffff; --ink: #1d2430; --muted: #5c6675; --line: #d9dde3; --accent: #2b6cb0;
+  --taught: #9aa1ab; --moved: #2b6cb0; --ok: #1f7a3d; --ok-bg: #e5f4ea; --warn: #8a5a00; --warn-bg: #fdf1d8;
+  --bad: #a32020; --bad-bg: #fbe4e4; --field: #f9fafb; --grid: #e7eaee;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171c; --card: #1d2128; --ink: #e6e9ee; --muted: #9aa3af; --line: #30363f; --accent: #63a4ff;
+    --taught: #7d8592; --moved: #63a4ff; --ok: #6fd28f; --ok-bg: #173323; --warn: #f0c060; --warn-bg: #3a2f14;
+    --bad: #ff8a8a; --bad-bg: #3c1c1c; --field: #23282f; --grid: #2a2f37;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --card: #1d2128; --ink: #e6e9ee; --muted: #9aa3af; --line: #30363f; --accent: #63a4ff;
+  --taught: #7d8592; --moved: #63a4ff; --ok: #6fd28f; --ok-bg: #173323; --warn: #f0c060; --warn-bg: #3a2f14;
+  --bad: #ff8a8a; --bad-bg: #3c1c1c; --field: #23282f; --grid: #2a2f37;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { padding: 14px 20px; border-bottom: 1px solid var(--line); background: var(--card); }
+header h1 { margin: 0; font-size: 17px; font-weight: 650; }
+header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+main { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 16px 20px; max-width: 1400px; margin: 0 auto; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 12px 16px; } }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.card h2 { margin: 0 0 10px; font-size: 14px; font-weight: 650; }
+label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+input[type=number], select { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); color: var(--ink); font: inherit; }
+input[type=file] { width: 100%; font: inherit; color: var(--muted); }
+.row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.hint { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+.sentence { margin: 12px 0 0; padding: 8px 10px; background: var(--field); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
+button { margin-top: 14px; width: 100%; padding: 9px 12px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+button:disabled { opacity: .45; cursor: default; }
+button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); width: auto; margin: 0; }
+#status { margin-top: 8px; font-size: 12px; color: var(--muted); min-height: 16px; }
+.verdict { border-radius: 8px; padding: 10px 14px; font-weight: 650; }
+.verdict.FOLLOWS { background: var(--ok-bg); color: var(--ok); }
+.verdict.RETIME { background: var(--warn-bg); color: var(--warn); }
+.verdict.CANNOT { background: var(--bad-bg); color: var(--bad); }
+.verdict ul { margin: 6px 0 0 18px; padding: 0; font-weight: 400; }
+.dl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0 0; font-size: 12px; color: var(--muted); }
+.results { display: grid; gap: 16px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 1100px) { .two { grid-template-columns: 1fr; } }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 12px; }
+td.num { font-variant-numeric: tabular-nums; }
+.desc { color: var(--muted); font-size: 12px; margin: -4px 0 8px; }
+svg.plot { width: 100%; height: auto; display: block; }
+svg text { fill: var(--muted); font-size: 11px; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.legend i { display: inline-block; width: 14px; height: 3px; margin-right: 5px; vertical-align: middle; border-radius: 2px; }
+.empty { color: var(--muted); padding: 40px 0; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Program Offset Test</h1>
+  <p>Move a recorded Program for the UGV's offset: every 5 ms line by FK, the offset, then IK nearest the taught arm. Nothing is sent to a robot.</p>
+</header>
+<main>
+  <section class="card">
+    <h2>Program and offset</h2>
+    <label for="file">Program file (.txt)</label>
+    <input id="file" type="file" accept=".txt,text/plain">
+    <p class="hint" id="fileinfo">No file chosen.</p>
+
+    <div class="row3" style="grid-template-columns: 1fr 1fr;">
+      <div><label for="side">Arm</label>
+        <select id="side"><option value="right" selected>Right</option><option value="left">Left</option></select></div>
+      <div><label for="pole">Pole height (mm)</label><input id="pole" type="number" value="150" step="1" min="0" max="300"></div>
+    </div>
+
+    <label style="margin-top:14px">UGV offset: where it stands now against where it stood when the Program was recorded</label>
+    <svg viewBox="0 0 300 120" class="plot" aria-label="The offset's directions" style="max-width:300px">
+      <rect x="120" y="38" width="60" height="60" rx="6" fill="none" stroke="currentColor" opacity=".5"></rect>
+      <text x="150" y="72" text-anchor="middle">UGV</text>
+      <line x1="150" y1="36" x2="150" y2="10" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah)"></line>
+      <text x="158" y="16">+X forward (front)</text>
+      <line x1="118" y1="68" x2="62" y2="68" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah)"></line>
+      <text x="8" y="62">+Y left</text>
+      <path d="M 200 88 A 22 22 0 0 0 200 50" fill="none" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah)"></path>
+      <text x="226" y="66">+Yaw counter-</text><text x="226" y="79">clockwise</text>
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"></path></marker></defs>
+    </svg>
+    <div class="row3">
+      <div><label for="x">X (mm)</label><input id="x" type="number" value="-20" step="1"></div>
+      <div><label for="y">Y (mm)</label><input id="y" type="number" value="20" step="1"></div>
+      <div><label for="yaw">Yaw (deg)</label><input id="yaw" type="number" value="0" step="0.1"></div>
+    </div>
+    <p class="hint">Back is negative X, right is negative Y, clockwise is negative yaw. The commode stays, so the hand path moves the other way.</p>
+    <div class="sentence" id="sentence"></div>
+    <button id="go" disabled>Move the Program</button>
+    <div id="status"></div>
+  </section>
+
+  <section class="results" id="results">
+    <div class="card empty" id="empty">Choose a Program file and an offset, then Move the Program.</div>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let fileText = null, fileName = null;
+const JOINT_COLOURS = ["#4C78A8", "#F58518", "#54A24B", "#E45756", "#72B7B2", "#B279A2", "#9D755D"];
+
+function fmt(v, unit) { const r = Math.round(v * 100) / 100; return `${Math.abs(r)} ${unit}`; }
+function words(dx, dy, yaw) {
+  const parts = [];
+  if (dx) parts.push(`${fmt(dx, "mm")} ${dx > 0 ? "forward" : "back"}`);
+  if (dy) parts.push(`${fmt(dy, "mm")} ${dy > 0 ? "left" : "right"}`);
+  if (yaw) parts.push(`${fmt(yaw, "deg")} ${yaw > 0 ? "counter-clockwise" : "clockwise"}`);
+  if (!parts.length) return "No offset: the Program stays as it is.";
+  const t = yaw * Math.PI / 180, c = Math.cos(t), s = Math.sin(t);
+  const tx = -(c * dx + s * dy), ty = -(-s * dx + c * dy);
+  const path = [];
+  if (Math.abs(tx) > 0.005) path.push(`${fmt(tx, "mm")} ${tx > 0 ? "forward" : "back"}`);
+  if (Math.abs(ty) > 0.005) path.push(`${fmt(ty, "mm")} ${ty > 0 ? "left" : "right"}`);
+  const turn = yaw ? ` and turns ${fmt(yaw, "deg")} ${yaw > 0 ? "clockwise" : "counter-clockwise"} about the robot's centre` : "";
+  return `UGV ${parts.join(", ")}: the hand path moves ${path.join(", ") || "0 mm"}${turn}.`;
+}
+function num(id) { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
+function refresh() {
+  $("sentence").textContent = words(num("x"), num("y"), num("yaw"));
+  $("go").disabled = !fileText;
+}
+["x", "y", "yaw"].forEach(id => $(id).addEventListener("input", refresh));
+$("file").addEventListener("change", async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  fileText = await f.text(); fileName = f.name;
+  const n = fileText.split("\n").filter(l => l.trim()).length;
+  $("fileinfo").textContent = `${f.name}: ${n.toLocaleString()} lines, ${(n * 0.005).toFixed(1)} s at 5 ms a line.`;
+  refresh();
+});
+refresh();
+
+$("go").addEventListener("click", async () => {
+  $("go").disabled = true;
+  $("status").textContent = "Working: FK, the offset and IK on every line (a few seconds)...";
+  const t0 = performance.now();
+  try {
+    const r = await fetch("/api/move", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: fileName, text: fileText, side: $("side").value, pole_mm: num("pole"),
+                             x_mm: num("x"), y_mm: num("y"), yaw_deg: num("yaw") }) });
+    const out = await r.json();
+    if (!r.ok) throw new Error(out.error || `The tool answered ${r.status}.`);
+    render(out);
+    $("status").textContent = `Done in ${((performance.now() - t0) / 1000).toFixed(1)} s.`;
+  } catch (err) {
+    $("status").textContent = "";
+    $("results").innerHTML = `<div class="card verdict CANNOT">The Program could not be moved: ${esc(err.message)}</div>`;
+  } finally { refresh(); }
+});
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
+
+function render(out) {
+  const rep = out.report, t = rep.taught, m = rep.moved;
+  const reasons = rep.reasons.length ? `<ul>${rep.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>` : "";
+  const label = { FOLLOWS: "FOLLOWS: the moved Program keeps the path and its timing", RETIME: "RETIME: the path follows, the timing must be redone", CANNOT: "CANNOT: the Program cannot follow this offset" }[rep.verdict];
+  const row = (name, a, b) => `<tr><td>${name}</td><td class="num">${a}</td><td class="num">${b}</td></tr>`;
+  const sh = r => `${r.share.toFixed(2)} (J${r.joint})`;
+  const touches = rep.touches.map((p, i) => `<tr><td>${i + 1}</td><td class="num">${p.from_s}-${p.to_s} s</td>
+      <td class="num">${p.taught_mm.join(", ")}</td><td class="num">${p.moved_mm.join(", ")}</td><td class="num">${p.change_mm.join(", ")}</td></tr>`).join("");
+  $("results").innerHTML = `
+    <div class="card">
+      <div class="verdict ${rep.verdict}">${label}${reasons}</div>
+      <p style="margin:10px 0 0">${esc(rep.words)}. ${rep.side === "right" ? "Right" : "Left"} arm, pole ${rep.pole_mm} mm, ${rep.lines.toLocaleString()} lines (${rep.seconds} s).</p>
+      <div class="dl"><button class="secondary" id="dl">Download ${esc(out.output_name)}</button><span>Kept in ${esc(rep.folder)}</span></div>
+    </div>
+    <div class="two">
+      <div class="card">
+        <h2>Hand path, seen from above</h2>
+        <p class="desc">Grey: the taught hand tip. Blue: the moved one. Dots: where the hand pauses. Up is the robot's front, left its left; base_link, mm.</p>
+        <div id="top"></div>
+        <div class="legend"><span><i style="background:var(--taught)"></i>taught</span><span><i style="background:var(--moved)"></i>moved</span></div>
+      </div>
+      <div class="card">
+        <h2>Joint change, moved minus taught</h2>
+        <p class="desc">One line per joint, J1 to J7 in the legend's colours: how many degrees each joint differs from the taught file over the Program.</p>
+        <div id="joints"></div>
+        <div class="legend">${JOINT_COLOURS.map((c, j) => `<span><i style="background:${c}"></i>J${j + 1}</span>`).join("")}</div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="card"><h2>Checks</h2>
+        <table><tr><th></th><th>taught</th><th>moved</th></tr>
+        ${row("Hand from the moved path", "", `${rep.hand_error_mm} mm, ${rep.hand_error_deg} deg`)}
+        ${row("Lines without an arm pose", "", `${rep.lines_unsolved} of ${rep.lines}${rep.first_unsolved ? ` (from ${rep.first_unsolved.t_s} s: ${esc(rep.first_unsolved.why)})` : ""}`)}
+        ${row("Speed, share of the rating", sh(t.speed), sh(m.speed))}
+        ${row("Acceleration, share of 612 deg/s<sup>2</sup>", sh(t.acceleration), sh(m.acceleration))}
+        ${row("Jerk, share of 1500 rad/s<sup>3</sup>", sh(t.jerk), sh(m.jerk))}
+        ${row("Nearest joint limit", `${t.joint_margin_deg.min} deg (J${t.joint_margin_deg.joint})`, `${m.joint_margin_deg.min} deg (J${m.joint_margin_deg.joint})`)}
+        ${row("Nearest singularity", `${t.singular_margin_deg.min} deg`, `${m.singular_margin_deg.min} deg, ${esc(m.singular_margin_deg.type)} at ${m.singular_margin_deg.at_s} s`)}
+        ${row("Largest step between lines", `${t.step_deg} deg`, `${m.step_deg} deg`)}
+        ${row("Largest joint change", "", rep.joint_change_deg.map((v, j) => `J${j + 1} ${v}`).join(", "))}
+        ${row("Elbow moves up to", "", `${rep.elbow_move_mm} mm`)}
+        ${row("First and last line change", "", `${rep.first_line_change_deg} and ${rep.last_line_change_deg} deg`)}
+        </table></div>
+      <div class="card"><h2>Touch points (hand tip pauses)</h2>
+        <table><tr><th>#</th><th>when</th><th>taught x, y, z mm</th><th>moved</th><th>change</th></tr>${touches || '<tr><td colspan="5">No pause found.</td></tr>'}</table>
+        <p class="hint">The change at each touch should equal the path's move (for a turn, it differs by place: points farther from the robot's centre move more).</p></div>
+    </div>`;
+  $("dl").addEventListener("click", () => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([out.output_text], { type: "text/plain" }));
+    a.download = out.output_name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  const css = getComputedStyle(document.documentElement);
+  const taughtC = css.getPropertyValue("--taught").trim(), movedC = css.getPropertyValue("--moved").trim();
+  const pic = out.picture;
+  const top = p => [-p[1], p[0]];                        // screen right = robot's right (-y), screen up = forward (+x)
+  const touchDots = rep.touches.flatMap(tp => [{ p: top(tp.taught_mm), c: taughtC }, { p: top(tp.moved_mm), c: movedC }]);
+  plot($("top"), [{ pts: pic.tip_taught.map(top), color: taughtC, width: 1.6 }, { pts: pic.tip_moved.map(top), color: movedC, width: 1.6 }],
+       { equal: true, xlabel: "y, mm (the robot's left is +)", ylabel: "x, mm (forward)", xtick: v => -v, dots: touchDots });
+  const series = JOINT_COLOURS.map((c, j) => ({ color: c, width: 1.3,
+    pts: pic.t_s.map((tt, i) => [tt, pic.joints_moved[i][j] - pic.joints_taught[i][j]]) }));
+  plot($("joints"), series, { xlabel: "time (s)", ylabel: "deg", zero: true });
+}
+
+function plot(el, series, o) {
+  const W = 560, H = 380, L = 54, R = 14, T = 12, B = 40;
+  let xs = [], ys = [];
+  series.forEach(s => s.pts.forEach(p => { xs.push(p[0]); ys.push(p[1]); }));
+  (o.dots || []).forEach(d => { xs.push(d.p[0]); ys.push(d.p[1]); });
+  let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  if (o.zero) { y0 = Math.min(y0, 0); y1 = Math.max(y1, 0); }
+  if (x1 - x0 < 1e-9) { x0 -= 1; x1 += 1; }
+  if (y1 - y0 < 1e-9) { y0 -= 1; y1 += 1; }
+  const padX = (x1 - x0) * 0.06, padY = (y1 - y0) * 0.08;
+  x0 -= padX; x1 += padX; y0 -= padY; y1 += padY;
+  let sx = (W - L - R) / (x1 - x0), sy = (H - T - B) / (y1 - y0);
+  if (o.equal) {
+    const s = Math.min(sx, sy);
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    x0 = cx - (W - L - R) / s / 2; x1 = cx + (W - L - R) / s / 2;
+    y0 = cy - (H - T - B) / s / 2; y1 = cy + (H - T - B) / s / 2; sx = sy = s;
+  }
+  const X = v => L + (v - x0) * sx, Y = v => H - B - (v - y0) * sy;
+  const ticks = (a, b, n) => { const step = nice((b - a) / n); const out = []; for (let v = Math.ceil(a / step) * step; v <= b + 1e-9; v += step) out.push(+v.toFixed(6)); return out; };
+  const xt = o.xtick || (v => v);
+  let g = "";
+  ticks(x0, x1, 6).forEach(v => { g += `<line x1="${X(v)}" x2="${X(v)}" y1="${T}" y2="${H - B}" stroke="var(--grid)"/><text x="${X(v)}" y="${H - B + 14}" text-anchor="middle">${+xt(v).toFixed(2)}</text>`; });
+  ticks(y0, y1, 6).forEach(v => { g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${+v.toFixed(2)}</text>`; });
+  if (o.zero) g += `<line x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)" stroke-width="1" opacity=".6"/>`;
+  const lines = series.map(s => `<polyline fill="none" stroke="${s.color}" stroke-width="${s.width}" stroke-linejoin="round" points="${s.pts.map(p => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(" ")}"/>`).join("");
+  const dots = (o.dots || []).map(d => `<circle cx="${X(d.p[0])}" cy="${Y(d.p[1])}" r="4" fill="${d.c}" stroke="var(--card)" stroke-width="1.5"/>`).join("");
+  el.innerHTML = `<svg class="plot" viewBox="0 0 ${W} ${H}">${g}
+    <rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="none" stroke="var(--line)"/>${lines}${dots}
+    <text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle">${o.xlabel}</text>
+    <text transform="translate(13 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">${o.ylabel}</text></svg>`;
+}
+function nice(x) { const e = Math.pow(10, Math.floor(Math.log10(x))); const f = x / e; return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * e; }
+</script>
+</body>
+</html>
