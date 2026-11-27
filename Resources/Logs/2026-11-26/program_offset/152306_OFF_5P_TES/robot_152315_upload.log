@@ -1,0 +1,7 @@
+15:23:15  $ rm_upload.py /home/alai-labs-dell/alix_studio_lite/Resources/Logs/2026-11-26/program_offset/152306_OFF_5P_TES/OFF_5P_TES_x-20_y+20_yaw+0.txt 1 --side right --ip 192.168.1.103
+15:23:15  current c api version:  1.1.6
+15:23:15  upload OFF_5P_TES_x-20_y+20_yaw+0.txt: 8099 points, 448.2 KB -> slot 1 on 192.168.1.103
+15:23:15    slot 1 now: empty
+15:23:26    sent: ret=0 err_line=-1
+15:23:26    VERIFIED: slot 1 holds '1_OFF_5P_TES_x-20_y+20_yaw+0.txt', 458999 bytes (sent 458999)
+15:23:26  DONE

@@ -1,0 +1,117 @@
+{
+ "side": "right",
+ "pole_mm": 150.0,
+ "lines": 1001,
+ "seconds": 5.005,
+ "ik_frame": "Arm_Tip (the vendor's) in R_base_link: the URDF's R_Link7 moved 2.8 mm back along its tool axis",
+ "offset": {
+  "dx_mm": 0.0,
+  "dy_mm": 0.0,
+  "yaw_deg": 10.0
+ },
+ "words": "UGV 10 deg counter-clockwise -> the hand path moves 0 mm and turns 10 deg clockwise about the robot's centre",
+ "path_move": {
+  "dx_mm": 0.0,
+  "dy_mm": 0.0,
+  "turn_deg": -10.0
+ },
+ "verdict": "FOLLOWS",
+ "reasons": [],
+ "lines_unsolved": 0,
+ "first_unsolved": null,
+ "hand_error_mm": 0.0052,
+ "hand_error_deg": 0.0017,
+ "joint_change_deg": [
+  8.87,
+  3.85,
+  13.62,
+  2.81,
+  10.54,
+  2.01,
+  3.92
+ ],
+ "elbow_move_mm": 43.1,
+ "first_line_change_deg": 13.62,
+ "last_line_change_deg": 10.54,
+ "taught": {
+  "speed": {
+   "share": 0.157,
+   "joint": 6
+  },
+  "acceleration": {
+   "share": 0.12,
+   "joint": 6
+  },
+  "joint_limit": {
+   "share": 0.0,
+   "joint": 7
+  },
+  "jerk": {
+   "share": 0.047,
+   "joint": 6
+  },
+  "joint_margin_deg": {
+   "min": 17.37,
+   "joint": 2
+  },
+  "step_deg": 0.172,
+  "singular_margin_deg": {
+   "min": 85.98,
+   "at_s": 4.27,
+   "type": "type 4 (J6 at 0, J5 at 90)"
+  }
+ },
+ "moved": {
+  "speed": {
+   "share": 0.162,
+   "joint": 6
+  },
+  "acceleration": {
+   "share": 0.126,
+   "joint": 6
+  },
+  "joint_limit": {
+   "share": 0.0,
+   "joint": 7
+  },
+  "jerk": {
+   "share": 0.049,
+   "joint": 6
+  },
+  "joint_margin_deg": {
+   "min": 13.94,
+   "joint": 2
+  },
+  "step_deg": 0.178,
+  "singular_margin_deg": {
+   "min": 84.44,
+   "at_s": 4.995,
+   "type": "type 2 (J4 at 0: the arm straight)"
+  }
+ },
+ "touches": [
+  {
+   "from_s": 0.0,
+   "to_s": 3.08,
+   "taught_mm": [
+    656.8,
+    -293.5,
+    681.6
+   ],
+   "moved_mm": [
+    595.8,
+    -403.1,
+    681.6
+   ],
+   "change_mm": [
+    -60.9,
+    -109.6,
+    -0.0
+   ]
+  }
+ ],
+ "input": "CLAUDE_SYNTH_TEST.txt",
+ "output": "CLAUDE_SYNTH_TEST_x+0_y+0_yaw+10.txt",
+ "folder": "/home/alai-labs-dell/alix_studio_lite/Resources/Logs/2026-11-26/program_offset/150625_CLAUDE_SYNTH_TEST",
+ "made": "2026-11-26 15:06:25"
+}

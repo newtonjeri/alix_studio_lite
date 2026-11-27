@@ -1,0 +1,12 @@
+17:02:17  $ rm_upload.py /home/alai-labs-dell/alix_studio_lite/Resources/Logs/2026-11-26/program_offset/170211_OFF_5P_TES/OFF_5P_TES_x-30_y-30_yaw-5.txt 1 --side right --ip 192.168.1.103 --run --run-speed 20 --restore-speed 50 --timeout 121
+17:02:17  current c api version:  1.1.6
+17:02:17  upload OFF_5P_TES_x-30_y-30_yaw-5.txt: 8099 points, 448.3 KB -> slot 1 on 192.168.1.103
+17:02:17    slot 1 now: 1_OFF_5P_TES_x-30_y-30_yaw+0.txt (445.4 KB) — it will be REPLACED
+17:02:27    sent: ret=0 err_line=-1
+17:02:27    VERIFIED: slot 1 holds '1_OFF_5P_TES_x-30_y-30_yaw-5.txt', 459027 bytes (sent 459027)
+17:02:27  run slot 1 (1_OFF_5P_TES_x-30_y-30_yaw-5.txt) on 192.168.1.103; transit speed 20 %
+17:02:27    the controller first moves the arm to the program's first point: up to 30.0 deg on J2 — keep that path clear
+17:02:29    running (2.3 s)
+17:03:14    global speed restored to 50 % (ret=0)
+17:03:14    RUN COMPLETE: 47.0 s, no error
+17:03:14  DONE

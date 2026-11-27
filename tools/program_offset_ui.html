@@ -35,6 +35,12 @@ label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px
 input[type=number], select { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); color: var(--ink); font: inherit; }
 input[type=file] { width: 100%; font: inherit; color: var(--muted); }
 .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+main > *, .row3 > div, .left > * { min-width: 0; }
+input, select { min-width: 0; }
+.offrow { display: grid; grid-template-columns: 82px 1fr 60px 24px; gap: 6px; align-items: center; margin-top: 6px; }
+.offlabel { font-size: 12px; color: var(--muted); }
+.unit { font-size: 12px; color: var(--muted); }
+.sentence b { font-weight: 650; }
 .hint { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
 .sentence { margin: 12px 0 0; padding: 8px 10px; background: var(--field); border: 1px solid var(--line); border-radius: 6px; font-size: 13px; }
 button { margin-top: 14px; width: 100%; padding: 9px 12px; border: 0; border-radius: 6px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
@@ -60,14 +66,33 @@ svg text { fill: var(--muted); font-size: 11px; }
 .legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); margin-top: 6px; }
 .legend i { display: inline-block; width: 14px; height: 3px; margin-right: 5px; vertical-align: middle; border-radius: 2px; }
 .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+.left { display: grid; gap: 16px; align-content: start; }
+input[type=password], input.text { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--field); color: var(--ink); font: inherit; }
+.btnrow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.btnrow button { margin-top: 0; }
+button.stop { background: #c62828; font-size: 15px; letter-spacing: .04em; padding: 11px 12px; margin-top: 12px; }
+button.stop:disabled { opacity: 1; }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; background: var(--field); border: 1px solid var(--line); }
+.pill.real { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
+.pill.hwsim { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); border-color: transparent; }
+.facts { font-size: 12px; color: var(--muted); margin: 8px 0 0; line-height: 1.6; }
+.facts b { color: var(--ink); font-weight: 600; }
+#sendLog { margin: 8px 0 0; max-height: 160px; overflow: auto; font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace; color: var(--muted); white-space: pre-wrap; }
+#sendLog .error { color: var(--bad); } #sendLog .ok { color: var(--ok); }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 10; }
+.modal .card { max-width: 440px; width: calc(100% - 32px); }
+.modal ul { margin: 8px 0 0 18px; padding: 0; font-size: 13px; }
+.modal .btnrow button.danger { background: #c62828; }
 </style>
 </head>
 <body>
 <header>
   <h1>Program Offset Test</h1>
-  <p>Move a recorded Program for the UGV's offset: every 5 ms line by FK, the offset, then IK of the vendor's Arm_Tip nearest the taught arm. Nothing is sent to a robot.</p>
+  <p>Move a recorded Program for the UGV's offset: every 5 ms line by FK, the offset, then IK of the vendor's Arm_Tip nearest the taught arm. Moving sends nothing to a robot; Upload and Run send the moved file to the arm's controller.</p>
 </header>
 <main>
+  <div class="left">
   <section class="card">
     <h2>Program and offset</h2>
     <label for="file">Program file (.txt)</label>
@@ -80,29 +105,50 @@ svg text { fill: var(--muted); font-size: 11px; }
       <div><label for="pole">Pole height (mm)</label><input id="pole" type="number" value="150" step="1" min="0" max="300"></div>
     </div>
 
-    <label style="margin-top:14px">UGV offset: where it stands now against where it stood when the Program was recorded</label>
-    <svg viewBox="0 0 300 120" class="plot" aria-label="The offset's directions" style="max-width:300px">
-      <rect x="120" y="38" width="60" height="60" rx="6" fill="none" stroke="currentColor" opacity=".5"></rect>
-      <text x="150" y="72" text-anchor="middle">UGV</text>
-      <line x1="150" y1="36" x2="150" y2="10" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah)"></line>
-      <text x="158" y="16">+X forward (front)</text>
-      <line x1="118" y1="68" x2="62" y2="68" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah)"></line>
-      <text x="8" y="62">+Y left</text>
-      <path d="M 200 88 A 22 22 0 0 0 200 50" fill="none" stroke="var(--accent)" stroke-width="2" marker-end="url(#ah)"></path>
-      <text x="226" y="66">+Yaw counter-</text><text x="226" y="79">clockwise</text>
-      <defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"></path></marker></defs>
-    </svg>
-    <div class="row3">
-      <div><label for="x">X (mm)</label><input id="x" type="number" value="-20" step="1"></div>
-      <div><label for="y">Y (mm)</label><input id="y" type="number" value="20" step="1"></div>
-      <div><label for="yaw">Yaw (deg)</label><input id="yaw" type="number" value="0" step="0.1"></div>
+    <h2 style="margin:16px 0 2px">Where did the UGV stop?</h2>
+    <p class="hint" style="margin:0 0 8px">Compared with the target position, where the Program was recorded.</p>
+    <div class="offrow">
+      <span class="offlabel">Forward / back</span>
+      <select id="dirX" aria-label="Forward or back"><option value="-1" selected>Back</option><option value="1">Forward</option></select>
+      <input id="magX" type="number" min="0" step="1" value="20" aria-label="Forward or back, mm"><span class="unit">mm</span>
     </div>
-    <p class="hint">Back is negative X, right is negative Y, clockwise is negative yaw. The commode stays, so the hand path moves the other way.</p>
+    <div class="offrow">
+      <span class="offlabel">Left / right</span>
+      <select id="dirY" aria-label="Left or right"><option value="-1" selected>Right</option><option value="1">Left</option></select>
+      <input id="magY" type="number" min="0" step="1" value="20" aria-label="Left or right, mm"><span class="unit">mm</span>
+    </div>
+    <div class="offrow">
+      <span class="offlabel">Turned</span>
+      <select id="dirYaw" aria-label="Clockwise or anticlockwise"><option value="-1" selected>Clockwise</option><option value="1">Anticlockwise</option></select>
+      <input id="magYaw" type="number" min="0" step="0.1" value="0" aria-label="Turn, degrees"><span class="unit">deg</span>
+    </div>
+    <p class="hint" style="margin:4px 0 0">Seen from above, with the robot's front at the top. Enter 0 for none.</p>
+    <svg id="offpic" viewBox="0 0 300 190" class="plot" aria-label="The target and where the UGV stopped, seen from above" style="max-width:300px;margin-top:6px"></svg>
+    <input type="hidden" id="x" value="-20"><input type="hidden" id="y" value="-20"><input type="hidden" id="yaw" value="0">
     <div class="sentence" id="sentence"></div>
     <button id="go" disabled>Move the Program</button>
     <div id="status"></div>
   </section>
+
+  <section class="card" id="robot">
+    <h2>Upload and run (testing)</h2>
+    <button id="stop" class="stop" style="margin:0 0 10px" title="Ctrl+C to the run: the arm slow-stops. The red E-stop is the real stop.">STOP</button>
+    <p class="facts" id="sendWhat">Move a Program first: the moved file is what is sent.</p>
+    <div class="row3" style="grid-template-columns: 0.8fr 0.8fr 1.4fr;">
+      <div><label for="slot">Program ID</label><input id="slot" type="number" min="1" max="100" step="1" placeholder="1-100"></div>
+      <div><label for="speed">To start, %</label><input id="speed" type="number" min="1" max="100" step="1" value="20" title="The controller's move from where the arm is to the program's first point"></div>
+      <div><label for="ip">Controller IP</label><input id="ip" class="text" type="text" spellcheck="false"></div>
+    </div>
+    <div class="btnrow">
+      <button id="upload" disabled>Upload</button>
+      <button id="uprun" disabled>Upload + Run</button>
+    </div>
+    <button id="runonly" class="secondary" style="width:100%;margin-top:8px">Run the program in this slot</button>
+    <p class="hint">Straight to the controller with the control program's rm_upload.py, no Lite. Set the pole and the hand yourself first: they are not staged here. Close Lite and the pendant's program first.</p>
+    <div id="sendStatus" class="facts"></div>
+    <div id="sendLog"></div>
+  </section>
+  </div>
 
   <section class="results" id="results">
     <div class="card empty" id="empty">Choose a Program file and an offset, then Move the Program.</div>
@@ -114,26 +160,54 @@ let fileText = null, fileName = null;
 const JOINT_COLOURS = ["#4C78A8", "#F58518", "#54A24B", "#E45756", "#72B7B2", "#B279A2", "#9D755D"];
 
 function fmt(v, unit) { const r = Math.round(v * 100) / 100; return `${Math.abs(r)} ${unit}`; }
+// The UGV's stop against the target (dx forward, dy left, mm; yaw anticlockwise, deg) and what the arm's path does about it
 function words(dx, dy, yaw) {
-  const parts = [];
-  if (dx) parts.push(`${fmt(dx, "mm")} ${dx > 0 ? "forward" : "back"}`);
-  if (dy) parts.push(`${fmt(dy, "mm")} ${dy > 0 ? "left" : "right"}`);
-  if (yaw) parts.push(`${fmt(yaw, "deg")} ${yaw > 0 ? "counter-clockwise" : "clockwise"}`);
-  if (!parts.length) return "No offset: the Program stays as it is.";
+  const stop = [];
+  if (dx) stop.push(`<b>${fmt(dx, "mm")} ${dx > 0 ? "forward" : "back"}</b>`);
+  if (dy) stop.push(`<b>${fmt(dy, "mm")} ${dy > 0 ? "left" : "right"}</b>`);
+  if (!stop.length && !yaw) return "The UGV stopped exactly on the target: the Program stays as it is.";
+  const turned = yaw ? `turned <b>${fmt(yaw, "deg")} ${yaw > 0 ? "anticlockwise" : "clockwise"}</b>` : "";
   const t = yaw * Math.PI / 180, c = Math.cos(t), s = Math.sin(t);
   const tx = -(c * dx + s * dy), ty = -(-s * dx + c * dy);
   const path = [];
   if (Math.abs(tx) > 0.005) path.push(`${fmt(tx, "mm")} ${tx > 0 ? "forward" : "back"}`);
   if (Math.abs(ty) > 0.005) path.push(`${fmt(ty, "mm")} ${ty > 0 ? "left" : "right"}`);
-  const turn = yaw ? ` and turns ${fmt(yaw, "deg")} ${yaw > 0 ? "clockwise" : "counter-clockwise"} about the robot's centre` : "";
-  return `UGV ${parts.join(", ")}: the hand path moves ${path.join(", ") || "0 mm"}${turn}.`;
+  const first = `The UGV stopped ${stop.length ? stop.join(" and ") + " of the target" : "on the target"}${turned ? (stop.length ? ", and " : " but ") + turned : ""}.`;
+  const turn = yaw ? `turned <b>${fmt(yaw, "deg")} ${yaw > 0 ? "clockwise" : "anticlockwise"}</b> about the robot's centre` : "";
+  const fix = "So the arm's path is " + [path.length ? `moved <b>${path.join(" and ")}</b>` : "", turn].filter(Boolean).join(" and ") +
+    " to reach the same spots.";
+  return `${first}<br>${fix}`;
 }
 function num(id) { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
+function offsetFromInputs() {                          // the plain choices -> the signed X, Y and yaw the tool uses
+  const pick = (dir, mag) => +$(dir).value * Math.abs(num(mag));
+  $("x").value = pick("dirX", "magX"); $("y").value = pick("dirY", "magY"); $("yaw").value = pick("dirYaw", "magYaw");
+}
+// The target (dashed) and where the UGV stopped (solid), seen from above, front at the top. Small offsets are enlarged
+// so they can be seen: the drawing shows the directions, not the sizes.
+function drawOffset(dx, dy, yaw) {
+  const big = Math.max(Math.abs(dx), Math.abs(dy));
+  const k = big ? Math.min(1.5, 28 / big) : 0;
+  const ox = -dy * k, oy = -dx * k;                    // screen right = the robot's right; screen up = forward
+  const ang = yaw ? -Math.sign(yaw) * Math.min(25, Math.max(8, Math.abs(yaw) * 3)) : 0;   // svg: + is clockwise
+  const body = (cls) => `<rect x="-32" y="-38" width="64" height="76" rx="7" class="${cls}"/>
+    <path d="M -9 -30 L 0 -44 L 9 -30 Z" class="${cls}-nose"/>`;
+  $("offpic").innerHTML = `
+    <style>.tg{fill:none;stroke:var(--muted);stroke-dasharray:5 4;stroke-width:1.5}.tg-nose{fill:var(--muted);opacity:.6}
+      .ug{fill:var(--accent);fill-opacity:.12;stroke:var(--accent);stroke-width:2}.ug-nose{fill:var(--accent)}</style>
+    <g transform="translate(150 98)">${body("tg")}</g>
+    <g transform="translate(${150 + ox} ${98 + oy}) rotate(${ang})">${body("ug")}</g>
+    <text x="150" y="182" text-anchor="middle">front ↑ &nbsp; dashed: target &nbsp; blue: where the UGV stopped</text>
+    ${big || yaw ? '<text x="296" y="12" text-anchor="end" style="font-size:10px">enlarged to show the direction</text>' : ""}`;
+}
 function refresh() {
-  $("sentence").textContent = words(num("x"), num("y"), num("yaw"));
+  offsetFromInputs();
+  const dx = num("x"), dy = num("y"), yaw = num("yaw");
+  $("sentence").innerHTML = words(dx, dy, yaw);
+  drawOffset(dx, dy, yaw);
   $("go").disabled = !fileText;
 }
-["x", "y", "yaw"].forEach(id => $(id).addEventListener("input", refresh));
+["dirX", "magX", "dirY", "magY", "dirYaw", "magYaw"].forEach(id => { $(id).addEventListener("input", refresh); $(id).addEventListener("change", refresh); });
 $("file").addEventListener("change", async e => {
   const f = e.target.files[0];
   if (!f) return;
@@ -146,6 +220,7 @@ refresh();
 
 $("go").addEventListener("click", async () => {
   $("go").disabled = true;
+  setLast(null);                                       // the old result is not the one to send any more
   $("status").textContent = "Working: FK, the offset and IK on every line (a few seconds)...";
   const t0 = performance.now();
   try {
@@ -166,6 +241,8 @@ function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<":
 
 function render(out) {
   const rep = out.report, t = rep.taught, m = rep.moved;
+  setLast({ name: out.output_name, text: out.output_text, verdict: rep.verdict, side: rep.side, pole_mm: rep.pole_mm,
+            lines: rep.lines, seconds: rep.seconds, words: rep.words });
   const reasons = rep.reasons.length ? `<ul>${rep.reasons.map(r => `<li>${esc(r)}</li>`).join("")}</ul>` : "";
   const label = { FOLLOWS: "FOLLOWS: the moved Program keeps the path and its timing", RETIME: "RETIME: the path follows, the timing must be redone", CANNOT: "CANNOT: the Program cannot follow this offset" }[rep.verdict];
   const row = (name, a, b) => `<tr><td>${name}</td><td class="num">${a}</td><td class="num">${b}</td></tr>`;
@@ -181,9 +258,12 @@ function render(out) {
     <div class="two">
       <div class="card">
         <h2>Hand path, seen from above</h2>
-        <p class="desc">Grey: the taught hand tip (tip frame, for the picture). Blue: the moved one. Dots: where the hand pauses. Up is the robot's front; base_link, mm.</p>
+        <p class="desc">Where the hand goes during the Program, looking down from above. The robot is below the chart, facing up.
+          <b style="color:var(--taught)">Grey</b>: the path as it was recorded. <b style="color:var(--moved)">Blue</b>: the path the arm will follow after the offset.
+          The numbers are the touch points (where the hand stops), the same numbers as the Touch points table.
+          The blue should be the grey shifted by the amount in the sentence on the left.</p>
         <div id="top"></div>
-        <div class="legend"><span><i style="background:var(--taught)"></i>taught</span><span><i style="background:var(--moved)"></i>moved</span></div>
+        <div class="legend"><span><i style="background:var(--taught)"></i>recorded path</span><span><i style="background:var(--moved)"></i>path after the offset (what runs)</span><span>● touch point &nbsp; ▲ start &nbsp; ■ end</span></div>
       </div>
       <div class="card">
         <h2>Joint change, moved minus taught</h2>
@@ -221,13 +301,157 @@ function render(out) {
   const taughtC = css.getPropertyValue("--taught").trim(), movedC = css.getPropertyValue("--moved").trim();
   const pic = out.picture;
   const top = p => [-p[1], p[0]];                        // screen right = robot's right (-y), screen up = forward (+x)
-  const touchDots = rep.touches.flatMap(tp => [{ p: top(tp.taught_mm), c: taughtC }, { p: top(tp.moved_mm), c: movedC }]);
-  plot($("top"), [{ pts: pic.tip_taught.map(top), color: taughtC, width: 1.6 }, { pts: pic.tip_moved.map(top), color: movedC, width: 1.6 }],
-       { equal: true, xlabel: "y, mm (the robot's left is +)", ylabel: "x, mm (forward)", xtick: v => -v, dots: touchDots });
+  const touchDots = rep.touches.map(tp => ({ p: top(tp.taught_mm), c: taughtC }));
+  for (const [i, tp] of rep.touches.entries()) {          // touches at the same place (the centre, twice) share one label: "1, 6"
+    const p = top(tp.moved_mm);
+    const near = touchDots.find(d => d.label && Math.hypot(d.p[0] - p[0], d.p[1] - p[1]) < 15);
+    if (near) near.label += `, ${i + 1}`; else touchDots.push({ p, c: movedC, label: String(i + 1) });
+  }
+  const tm = pic.tip_moved.map(top), tt = pic.tip_taught.map(top);
+  const ends = [[tt, taughtC], [tm, movedC]].flatMap(([pts, c]) => pts.length ? [{ p: pts[0], c, shape: "start" }, { p: pts[pts.length - 1], c, shape: "end" }] : []);
+  plot($("top"), [{ pts: tt, color: taughtC, width: 1.6 }, { pts: tm, color: movedC, width: 2 }],
+       { equal: true, xlabel: "← robot's left        sideways from the robot's centre line, mm        robot's right →",
+         ylabel: "forward from the robot's centre, mm", xtick: v => Math.abs(v), dots: touchDots, marks: ends,
+         note: "▼ the robot is this way" });
   const series = JOINT_COLOURS.map((c, j) => ({ color: c, width: 1.3,
     pts: pic.t_s.map((tt, i) => [tt, pic.joints_moved[i][j] - pic.joints_taught[i][j]]) }));
   plot($("joints"), series, { xlabel: "time (s)", ylabel: "deg", zero: true });
 }
+
+// ── Upload and run: this page's server runs rm_upload.py on the moved file, straight to the controller
+const ARM_IPS = { left: "192.168.1.10", right: "192.168.1.103" };
+let last = null, job = null, seen = 0, ipTouched = false;
+
+function setLast(r) { last = r; updateSend(); }
+
+async function api(method, path, body) {
+  let r;
+  try { r = await fetch(path, { method, headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) }); }
+  catch (_) { throw new Error("This page's server does not answer: is program_offset.py --ui still running?"); }
+  const d = await r.json().catch(() => ({ error: `The server answered ${r.status}.` }));
+  if (!r.ok || d.error) throw new Error(d.error || `The server answered ${r.status}.`);
+  return d;
+}
+
+// A confirmation in a modal of its own (never the browser's): Cancel has the focus, so Enter never moves the arm.
+function ask({ title, body, list = [], ok = "Continue" }) {
+  return new Promise(resolve => {
+    const box = document.createElement("div");
+    box.className = "modal";
+    box.innerHTML = `<div class="card" role="alertdialog" aria-modal="true"><h2>${esc(title)}</h2>
+      ${body ? `<p style="margin:0">${esc(body)}</p>` : ""}${list.length ? `<ul>${list.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+      <div class="btnrow"><button class="secondary" style="width:100%">Cancel</button><button class="danger">${esc(ok)}</button></div></div>`;
+    const [no, yes] = box.querySelectorAll("button");
+    const done = v => { box.remove(); document.removeEventListener("keydown", key, true); resolve(v); };
+    const key = e => { if (e.key === "Escape") { e.preventDefault(); done(false); } };
+    no.onclick = () => done(false); yes.onclick = () => done(true);
+    document.addEventListener("keydown", key, true);
+    document.body.appendChild(box); no.focus();
+  });
+}
+
+function logLine(text) {
+  const d = document.createElement("div");
+  d.className = /^\s*(\*\*|!!)/.test(text) ? "error" : /VERIFIED|RUN COMPLETE|^DONE/.test(text) ? "ok" : "";
+  d.textContent = text;
+  $("sendLog").appendChild(d); $("sendLog").scrollTop = $("sendLog").scrollHeight;
+}
+
+const side = () => last ? last.side : $("side").value;
+const running = () => !!(job && job.running);
+
+function updateSend() {
+  if (!ipTouched) $("ip").value = ARM_IPS[side()];
+  const canSend = !!last && last.verdict !== "CANNOT" && !running();
+  $("upload").disabled = $("uprun").disabled = !canSend;
+  $("runonly").disabled = running();
+  if (!last) {
+    $("sendWhat").textContent = "Move a Program first: the moved file is what is sent.";
+  } else {
+    const v = { FOLLOWS: '<span class="pill ok">FOLLOWS</span>', RETIME: '<span class="pill hwsim">RETIME</span>',
+                CANNOT: '<span class="pill real">CANNOT</span>' }[last.verdict];
+    $("sendWhat").innerHTML = `Sends <b>${esc(last.name)}</b> ${v}<br>${last.side === "right" ? "RIGHT" : "LEFT"} arm, pole <b>${last.pole_mm} mm</b>, ${last.lines.toLocaleString()} lines (${last.seconds} s)` +
+      (last.verdict === "CANNOT" ? '<br><span style="color:var(--bad)">This result cannot be sent: the arm cannot follow it.</span>' : "");
+  }
+}
+$("ip").addEventListener("input", () => { ipTouched = true; });
+$("side").addEventListener("change", () => { if (!last) updateSend(); });
+
+function settings() {
+  const slot = $("slot").value.trim(), speed = $("speed").value.trim(), ip = $("ip").value.trim();
+  if (!/^\d+$/.test(slot) || +slot < 1 || +slot > 100) throw new Error("Enter a Program ID from 1 to 100.");
+  if (!/^\d+$/.test(speed) || +speed < 1 || +speed > 100) throw new Error("The speed to the start is 1 to 100 %.");
+  return { side: side(), slot: +slot, run_speed: +speed, ip };
+}
+
+const RUN_CHECKS = s => [
+  `The ${s.side.toUpperCase()} arm moves: first from where it stands to the program's first point at ${s.run_speed} %, then the program at its own timing.`,
+  last ? `The pole is at ${last.pole_mm} mm and the hand is set: neither is moved here.` : "The pole and the hand are where this program needs them: neither is moved here.",
+  "The work area around the arm is clear of people.",
+  "The red E-stop is within reach.",
+];
+
+async function follow() {                              // the job's printed lines, to its end
+  while (true) {
+    const d = await api("GET", `/api/robot/job?since=${seen}`);
+    job = d.job;
+    if (job) {
+      job.lines.forEach(logLine); seen = job.next;
+      $("sendStatus").textContent = job.running ? `${job.title}: running (${job.elapsed_s} s)` :
+        `${job.title}: ${job.rc === 0 ? "done" : job.stopped ? "stopped" : "failed (see the lines below)"}`;
+    }
+    updateSend();
+    if (!job || !job.running) return job;
+    await new Promise(r => setTimeout(r, 400));
+  }
+}
+
+async function start(path, body) {
+  $("sendLog").innerHTML = ""; seen = 0;
+  $("sendStatus").textContent = "Starting...";
+  const d = await api("POST", path, body);
+  job = d.job; seen = 0;
+  updateSend();
+  await follow();
+}
+
+async function guarded(fn) {
+  try { await fn(); }
+  catch (err) { $("sendStatus").textContent = err.message; logLine("** " + err.message); updateSend(); }
+}
+
+async function send(go) {
+  const s = settings();
+  if (!last) throw new Error("Move a Program first.");
+  if (last.verdict === "CANNOT") throw new Error("This result cannot be sent: the arm cannot follow it.");
+  const list = [`Program ${s.slot} on the ${s.side.toUpperCase()} controller (${s.ip}) is written; whatever it holds now is replaced.`];
+  if (last.verdict === "RETIME") list.push("RETIME: the path follows, but this file's timing breaks the arm's limits as it is.");
+  if (go) list.push(...RUN_CHECKS(s));
+  if (!await ask({ title: go ? "Upload and run: the arm will move" : `Upload to program ${s.slot}`, list,
+                   ok: go ? "Upload and run" : "Upload" })) {
+    $("sendStatus").textContent = "Cancelled: nothing was sent."; return;
+  }
+  await start("/api/robot/send", { ...s, name: last.name, run: go });
+}
+
+$("upload").addEventListener("click", () => guarded(() => send(false)));
+$("uprun").addEventListener("click", () => guarded(() => send(true)));
+$("runonly").addEventListener("click", () => guarded(async () => {
+  const s = settings();
+  if (!await ask({ title: `Run program ${s.slot}: the arm will move`, list: [
+      `What program ${s.slot} on the ${s.side.toUpperCase()} controller (${s.ip}) holds runs, whatever it is.`,
+      ...RUN_CHECKS(s).slice(0, 1), "The pole and the hand are where that program needs them: neither is moved here.", ...RUN_CHECKS(s).slice(2)],
+      ok: "Run it" })) { $("sendStatus").textContent = "Cancelled: nothing was sent."; return; }
+  await start("/api/robot/run", s);
+}));
+
+$("stop").addEventListener("click", async () => {
+  try { const d = await api("POST", "/api/robot/stop"); $("sendStatus").textContent = d.message; logLine((d.stopped ? "** " : "") + d.message); }
+  catch (err) { $("sendStatus").textContent = "STOP: " + err.message; }
+});
+
+updateSend();
+follow().catch(() => {});                              // a run started before a reload is followed again
 
 function plot(el, series, o) {
   const W = 560, H = 380, L = 54, R = 14, T = 12, B = 40;
@@ -255,9 +479,14 @@ function plot(el, series, o) {
   ticks(y0, y1, 6).forEach(v => { g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${+v.toFixed(2)}</text>`; });
   if (o.zero) g += `<line x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--muted)" stroke-width="1" opacity=".6"/>`;
   const lines = series.map(s => `<polyline fill="none" stroke="${s.color}" stroke-width="${s.width}" stroke-linejoin="round" points="${s.pts.map(p => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(" ")}"/>`).join("");
-  const dots = (o.dots || []).map(d => `<circle cx="${X(d.p[0])}" cy="${Y(d.p[1])}" r="4" fill="${d.c}" stroke="var(--card)" stroke-width="1.5"/>`).join("");
+  const dots = (o.dots || []).map(d => `<circle cx="${X(d.p[0])}" cy="${Y(d.p[1])}" r="4" fill="${d.c}" stroke="var(--card)" stroke-width="1.5"/>` +
+    (d.label ? `<text x="${X(d.p[0]) + 7}" y="${Y(d.p[1]) - 7}" style="fill:${d.c};font-size:13px;font-weight:700;paint-order:stroke;stroke:var(--card);stroke-width:3px">${d.label}</text>` : "")).join("");
+  const marks = (o.marks || []).map(d => { const x = X(d.p[0]), y = Y(d.p[1]);
+    return d.shape === "start" ? `<path d="M ${x} ${y - 6} L ${x + 5.5} ${y + 4} L ${x - 5.5} ${y + 4} Z" fill="${d.c}" stroke="var(--card)" stroke-width="1"/>`
+                               : `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" fill="${d.c}" stroke="var(--card)" stroke-width="1"/>`; }).join("");
+  const note = o.note ? `<text x="${L + 6}" y="${H - B - 6}" style="font-size:11px">${o.note}</text>` : "";
   el.innerHTML = `<svg class="plot" viewBox="0 0 ${W} ${H}">${g}
-    <rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="none" stroke="var(--line)"/>${lines}${dots}
+    <rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="none" stroke="var(--line)"/>${lines}${marks}${dots}${note}
     <text x="${(L + W - R) / 2}" y="${H - 6}" text-anchor="middle">${o.xlabel}</text>
     <text transform="translate(13 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">${o.ylabel}</text></svg>`;
 }

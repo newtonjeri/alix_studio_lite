@@ -1,0 +1,123 @@
+{
+ "side": "right",
+ "pole_mm": 150.0,
+ "lines": 1001,
+ "seconds": 5.005,
+ "ik_frame": "Arm_Tip (the vendor's) in R_base_link: the URDF's R_Link7 moved 2.8 mm back along its tool axis",
+ "offset": {
+  "dx_mm": -150.0,
+  "dy_mm": 150.0,
+  "yaw_deg": 0.0
+ },
+ "words": "UGV 150 mm back, 150 mm left -> the hand path moves 150 mm forward, 150 mm right",
+ "path_move": {
+  "dx_mm": 150.0,
+  "dy_mm": -150.0,
+  "turn_deg": -0.0
+ },
+ "verdict": "CANNOT",
+ "reasons": [
+  "923 lines have no arm pose near the taught one: past reach (the arm straight: J4 at 0) from 0.00 s, a joint at its limit from 4.33 s"
+ ],
+ "lines_unsolved": 923,
+ "first_unsolved": {
+  "line": 1,
+  "t_s": 0.0,
+  "why": "past reach (the arm straight: J4 at 0)"
+ },
+ "hand_error_mm": 0.0469,
+ "hand_error_deg": 0.0035,
+ "joint_change_deg": [
+  44.89,
+  61.34,
+  11.64,
+  113.38,
+  12.94,
+  40.23,
+  12.52
+ ],
+ "elbow_move_mm": 309.4,
+ "first_line_change_deg": 0.0,
+ "last_line_change_deg": 113.38,
+ "taught": {
+  "speed": {
+   "share": 0.157,
+   "joint": 6
+  },
+  "acceleration": {
+   "share": 0.12,
+   "joint": 6
+  },
+  "joint_limit": {
+   "share": 0.0,
+   "joint": 7
+  },
+  "jerk": {
+   "share": 0.047,
+   "joint": 6
+  },
+  "joint_margin_deg": {
+   "min": 17.37,
+   "joint": 2
+  },
+  "step_deg": 0.172,
+  "singular_margin_deg": {
+   "min": 85.98,
+   "at_s": 4.27,
+   "type": "type 4 (J6 at 0, J5 at 90)"
+  }
+ },
+ "moved": {
+  "speed": {
+   "share": 17.65,
+   "joint": 4
+  },
+  "acceleration": {
+   "share": 336.898,
+   "joint": 4
+  },
+  "joint_limit": {
+   "share": 9.198,
+   "joint": 6
+  },
+  "jerk": {
+   "share": 265.946,
+   "joint": 4
+  },
+  "joint_margin_deg": {
+   "min": -11.96,
+   "joint": 6
+  },
+  "step_deg": 91.398,
+  "singular_margin_deg": {
+   "min": 0.32,
+   "at_s": 3.94,
+   "type": "type 2 (J4 at 0: the arm straight)"
+  }
+ },
+ "touches": [
+  {
+   "from_s": 0.0,
+   "to_s": 3.08,
+   "taught_mm": [
+    656.8,
+    -293.5,
+    681.6
+   ],
+   "moved_mm": [
+    656.8,
+    -293.5,
+    681.6
+   ],
+   "change_mm": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ ],
+ "input": "CLAUDE_SYNTH_TEST.txt",
+ "output": "CLAUDE_SYNTH_TEST_x-150_y+150_yaw+0.txt",
+ "folder": "/home/alai-labs-dell/alix_studio_lite/Resources/Logs/2026-11-26/program_offset/150640_CLAUDE_SYNTH_TEST",
+ "made": "2026-11-26 15:06:40"
+}

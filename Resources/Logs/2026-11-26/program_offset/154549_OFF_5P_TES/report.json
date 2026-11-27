@@ -1,0 +1,212 @@
+{
+ "side": "right",
+ "pole_mm": 150.0,
+ "lines": 8099,
+ "seconds": 40.495,
+ "ik_frame": "Arm_Tip (the vendor's) in R_base_link: the URDF's R_Link7 moved 2.8 mm back along its tool axis",
+ "offset": {
+  "dx_mm": -20.0,
+  "dy_mm": -20.0,
+  "yaw_deg": 0.0
+ },
+ "words": "UGV 20 mm back, 20 mm right -> the hand path moves 20 mm forward, 20 mm left",
+ "path_move": {
+  "dx_mm": 20.0,
+  "dy_mm": 20.0,
+  "turn_deg": -0.0
+ },
+ "verdict": "FOLLOWS",
+ "reasons": [],
+ "lines_unsolved": 0,
+ "first_unsolved": null,
+ "hand_error_mm": 0.0131,
+ "hand_error_deg": 0.0019,
+ "joint_change_deg": [
+  4.88,
+  4.19,
+  4.05,
+  6.06,
+  3.46,
+  2.05,
+  3.58
+ ],
+ "elbow_move_mm": 26.6,
+ "first_line_change_deg": 3.54,
+ "last_line_change_deg": 3.53,
+ "taught": {
+  "speed": {
+   "share": 0.308,
+   "joint": 6
+  },
+  "acceleration": {
+   "share": 0.923,
+   "joint": 6
+  },
+  "joint_limit": {
+   "share": 0.059,
+   "joint": 2
+  },
+  "jerk": {
+   "share": 0.549,
+   "joint": 6
+  },
+  "joint_margin_deg": {
+   "min": 17.34,
+   "joint": 2
+  },
+  "step_deg": 0.508,
+  "singular_margin_deg": {
+   "min": 67.98,
+   "at_s": 24.655,
+   "type": "type 1 (J2 and J6 at 0)"
+  }
+ },
+ "moved": {
+  "speed": {
+   "share": 0.306,
+   "joint": 6
+  },
+  "acceleration": {
+   "share": 0.921,
+   "joint": 6
+  },
+  "joint_limit": {
+   "share": 0.049,
+   "joint": 4
+  },
+  "jerk": {
+   "share": 0.546,
+   "joint": 6
+  },
+  "joint_margin_deg": {
+   "min": 20.86,
+   "joint": 2
+  },
+  "step_deg": 0.499,
+  "singular_margin_deg": {
+   "min": 64.04,
+   "at_s": 24.99,
+   "type": "type 1 (J2 and J6 at 0)"
+  }
+ },
+ "touches": [
+  {
+   "from_s": 1.35,
+   "to_s": 4.79,
+   "taught_mm": [
+    678.6,
+    -254.2,
+    606.7
+   ],
+   "moved_mm": [
+    698.6,
+    -234.2,
+    606.7
+   ],
+   "change_mm": [
+    20.0,
+    20.0,
+    0.0
+   ]
+  },
+  {
+   "from_s": 6.35,
+   "to_s": 8.8,
+   "taught_mm": [
+    772.0,
+    -131.3,
+    610.7
+   ],
+   "moved_mm": [
+    792.0,
+    -111.3,
+    610.6
+   ],
+   "change_mm": [
+    20.0,
+    20.0,
+    -0.0
+   ]
+  },
+  {
+   "from_s": 11.96,
+   "to_s": 14.02,
+   "taught_mm": [
+    607.2,
+    -129.1,
+    601.8
+   ],
+   "moved_mm": [
+    627.2,
+    -109.1,
+    601.8
+   ],
+   "change_mm": [
+    20.0,
+    20.0,
+    0.0
+   ]
+  },
+  {
+   "from_s": 17.76,
+   "to_s": 20.47,
+   "taught_mm": [
+    594.7,
+    -377.7,
+    600.3
+   ],
+   "moved_mm": [
+    614.7,
+    -357.7,
+    600.3
+   ],
+   "change_mm": [
+    20.0,
+    20.0,
+    0.0
+   ]
+  },
+  {
+   "from_s": 22.89,
+   "to_s": 27.62,
+   "taught_mm": [
+    767.6,
+    -374.4,
+    604.9
+   ],
+   "moved_mm": [
+    787.6,
+    -354.4,
+    604.9
+   ],
+   "change_mm": [
+    20.0,
+    20.0,
+    -0.0
+   ]
+  },
+  {
+   "from_s": 30.75,
+   "to_s": 38.37,
+   "taught_mm": [
+    681.8,
+    -253.4,
+    604.7
+   ],
+   "moved_mm": [
+    701.8,
+    -233.4,
+    604.7
+   ],
+   "change_mm": [
+    20.0,
+    20.0,
+    0.0
+   ]
+  }
+ ],
+ "input": "OFF_5P_TES.txt",
+ "output": "OFF_5P_TES_x-20_y-20_yaw+0.txt",
+ "folder": "/home/alai-labs-dell/alix_studio_lite/Resources/Logs/2026-11-26/program_offset/154549_OFF_5P_TES",
+ "made": "2026-11-26 15:45:49"
+}

@@ -1,0 +1,117 @@
+{
+ "side": "right",
+ "pole_mm": 150.0,
+ "lines": 1001,
+ "seconds": 5.005,
+ "ik_frame": "Arm_Tip (the vendor's) in R_base_link: the URDF's R_Link7 moved 2.8 mm back along its tool axis",
+ "offset": {
+  "dx_mm": -20.0,
+  "dy_mm": 20.0,
+  "yaw_deg": 0.0
+ },
+ "words": "UGV 20 mm back, 20 mm left -> the hand path moves 20 mm forward, 20 mm right",
+ "path_move": {
+  "dx_mm": 20.0,
+  "dy_mm": -20.0,
+  "turn_deg": -0.0
+ },
+ "verdict": "FOLLOWS",
+ "reasons": [],
+ "lines_unsolved": 0,
+ "first_unsolved": null,
+ "hand_error_mm": 0.0064,
+ "hand_error_deg": 0.0016,
+ "joint_change_deg": [
+  3.92,
+  4.83,
+  1.06,
+  6.36,
+  1.52,
+  2.08,
+  1.94
+ ],
+ "elbow_move_mm": 27.5,
+ "first_line_change_deg": 6.36,
+ "last_line_change_deg": 4.46,
+ "taught": {
+  "speed": {
+   "share": 0.157,
+   "joint": 6
+  },
+  "acceleration": {
+   "share": 0.12,
+   "joint": 6
+  },
+  "joint_limit": {
+   "share": 0.0,
+   "joint": 7
+  },
+  "jerk": {
+   "share": 0.047,
+   "joint": 6
+  },
+  "joint_margin_deg": {
+   "min": 17.37,
+   "joint": 2
+  },
+  "step_deg": 0.172,
+  "singular_margin_deg": {
+   "min": 85.98,
+   "at_s": 4.27,
+   "type": "type 4 (J6 at 0, J5 at 90)"
+  }
+ },
+ "moved": {
+  "speed": {
+   "share": 0.149,
+   "joint": 6
+  },
+  "acceleration": {
+   "share": 0.111,
+   "joint": 6
+  },
+  "joint_limit": {
+   "share": 0.0,
+   "joint": 7
+  },
+  "jerk": {
+   "share": 0.043,
+   "joint": 6
+  },
+  "joint_margin_deg": {
+   "min": 21.83,
+   "joint": 2
+  },
+  "step_deg": 0.163,
+  "singular_margin_deg": {
+   "min": 83.82,
+   "at_s": 4.995,
+   "type": "type 2 (J4 at 0: the arm straight)"
+  }
+ },
+ "touches": [
+  {
+   "from_s": 0.0,
+   "to_s": 3.08,
+   "taught_mm": [
+    656.8,
+    -293.5,
+    681.6
+   ],
+   "moved_mm": [
+    676.8,
+    -313.5,
+    681.6
+   ],
+   "change_mm": [
+    20.0,
+    -20.0,
+    -0.0
+   ]
+  }
+ ],
+ "input": "CLAUDE_SYNTH_TEST.txt",
+ "output": "CLAUDE_SYNTH_TEST_x-20_y+20_yaw+0.txt",
+ "folder": "/home/alai-labs-dell/alix_studio_lite/Resources/Logs/2026-11-26/program_offset/150613_CLAUDE_SYNTH_TEST",
+ "made": "2026-11-26 15:06:13"
+}

@@ -1,0 +1,8 @@
+15:24:27  $ rm_upload.py --run 1 --side right --ip 192.168.1.103 --run-speed 20 --restore-speed 50 --timeout 900
+15:24:27  current c api version:  1.1.6
+15:24:27  run slot 1 (1_OFF_5P_TES_x-20_y+20_yaw+0.txt) on 192.168.1.103; transit speed 20 %
+15:24:27    the controller first moves the arm, in its own joint move, to the program's first point — keep that path clear
+15:24:29    running (2.3 s)
+15:25:15    global speed restored to 50 % (ret=0)
+15:25:15    RUN COMPLETE: 47.9 s, no error
+15:25:15  DONE

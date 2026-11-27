@@ -1,0 +1,218 @@
+{
+ "side": "right",
+ "pole_mm": 150.0,
+ "lines": 8099,
+ "seconds": 40.495,
+ "ik_frame": "Arm_Tip (the vendor's) in R_base_link: the URDF's R_Link7 moved 2.8 mm back along its tool axis",
+ "offset": {
+  "dx_mm": 100.0,
+  "dy_mm": -100.0,
+  "yaw_deg": 0.0
+ },
+ "words": "UGV 100 mm forward, 100 mm right -> the hand path moves 100 mm back, 100 mm left",
+ "path_move": {
+  "dx_mm": -100.0,
+  "dy_mm": 100.0,
+  "turn_deg": -0.0
+ },
+ "verdict": "CANNOT",
+ "reasons": [
+  "1704 lines have no arm pose near the taught one: a joint at its limit from 20.87 s"
+ ],
+ "lines_unsolved": 1704,
+ "first_unsolved": {
+  "line": 4174,
+  "t_s": 20.865,
+  "why": "a joint at its limit"
+ },
+ "hand_error_mm": 0.0114,
+ "hand_error_deg": 0.0019,
+ "joint_change_deg": [
+  25.09,
+  27.79,
+  14.85,
+  30.5,
+  13.02,
+  15.49,
+  14.12
+ ],
+ "elbow_move_mm": 158.0,
+ "first_line_change_deg": 25.36,
+ "last_line_change_deg": 25.21,
+ "taught": {
+  "speed": {
+   "share": 0.308,
+   "joint": 6
+  },
+  "acceleration": {
+   "share": 0.923,
+   "joint": 6
+  },
+  "joint_limit": {
+   "share": 0.059,
+   "joint": 2
+  },
+  "jerk": {
+   "share": 0.549,
+   "joint": 6
+  },
+  "joint_margin_deg": {
+   "min": 17.34,
+   "joint": 2
+  },
+  "step_deg": 0.508,
+  "singular_margin_deg": {
+   "min": 67.98,
+   "at_s": 24.655,
+   "type": "type 1 (J2 and J6 at 0)"
+  }
+ },
+ "moved": {
+  "speed": {
+   "share": 1.779,
+   "joint": 3
+  },
+  "acceleration": {
+   "share": 34.869,
+   "joint": 3
+  },
+  "joint_limit": {
+   "share": 0.37,
+   "joint": 4
+  },
+  "jerk": {
+   "share": 27.776,
+   "joint": 3
+  },
+  "joint_margin_deg": {
+   "min": -7.87,
+   "joint": 2
+  },
+  "step_deg": 9.594,
+  "singular_margin_deg": {
+   "min": 69.05,
+   "at_s": 11.51,
+   "type": "type 4 (J6 at 0, J5 at 90)"
+  }
+ },
+ "touches": [
+  {
+   "from_s": 1.35,
+   "to_s": 4.79,
+   "taught_mm": [
+    678.6,
+    -254.2,
+    606.7
+   ],
+   "moved_mm": [
+    578.6,
+    -154.2,
+    606.6
+   ],
+   "change_mm": [
+    -100.0,
+    100.0,
+    -0.0
+   ]
+  },
+  {
+   "from_s": 6.35,
+   "to_s": 8.8,
+   "taught_mm": [
+    772.0,
+    -131.3,
+    610.7
+   ],
+   "moved_mm": [
+    672.0,
+    -31.3,
+    610.7
+   ],
+   "change_mm": [
+    -100.0,
+    100.0,
+    0.0
+   ]
+  },
+  {
+   "from_s": 11.96,
+   "to_s": 14.02,
+   "taught_mm": [
+    607.2,
+    -129.1,
+    601.8
+   ],
+   "moved_mm": [
+    507.2,
+    -29.1,
+    601.8
+   ],
+   "change_mm": [
+    -100.0,
+    100.0,
+    0.0
+   ]
+  },
+  {
+   "from_s": 17.76,
+   "to_s": 20.47,
+   "taught_mm": [
+    594.7,
+    -377.7,
+    600.3
+   ],
+   "moved_mm": [
+    494.7,
+    -277.7,
+    600.3
+   ],
+   "change_mm": [
+    -100.0,
+    100.0,
+    -0.0
+   ]
+  },
+  {
+   "from_s": 22.89,
+   "to_s": 27.62,
+   "taught_mm": [
+    767.6,
+    -374.4,
+    604.9
+   ],
+   "moved_mm": [
+    630.0,
+    -340.8,
+    643.8
+   ],
+   "change_mm": [
+    -137.6,
+    33.6,
+    38.8
+   ]
+  },
+  {
+   "from_s": 30.75,
+   "to_s": 38.37,
+   "taught_mm": [
+    681.8,
+    -253.4,
+    604.7
+   ],
+   "moved_mm": [
+    581.8,
+    -153.4,
+    604.7
+   ],
+   "change_mm": [
+    -100.0,
+    100.0,
+    0.0
+   ]
+  }
+ ],
+ "input": "OFF_5P_TES.txt",
+ "output": "OFF_5P_TES_x+100_y-100_yaw+0.txt",
+ "folder": "/home/alai-labs-dell/alix_studio_lite/Resources/Logs/2026-11-26/program_offset/152825_OFF_5P_TES",
+ "made": "2026-11-26 15:28:25"
+}
