@@ -22,7 +22,7 @@ is 0xFC, type, length, serial number, CRC8 (over those four bytes), CRC16 high, 
 0xFD; little-endian. 0x40 IMU (56 bytes): gyro x, y, z rad/s, accel x, y, z m/s^2 with gravity, mag x, y, z mG,
 temperature C, pressure Pa, pressure temperature C, timestamp int64 us since power-on. 0x41 AHRS (48 bytes). 0xF0 a 1 Hz
 heartbeat. Two CRC8 tables are in use by the drivers found (Maxim and SMBus): every header is checked against both and
-the report says which the unit uses. Sources and the plan: ALIX Resource/reports/2026-11-25_imu_n100_plan/PLAN.md.
+the report says which the unit uses. Sources and the plan: docs/imu/PLAN.md; the lab's steps: docs/imu/RUNBOOK_step_A.md.
 """
 from __future__ import annotations
 

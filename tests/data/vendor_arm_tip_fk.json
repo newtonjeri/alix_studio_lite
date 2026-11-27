@@ -1,5 +1,5 @@
 {
- "source": "rm_algo_forward_kinematics via ALIX alix_taskgen.stroke_gate.VendorAlgo (RM_75, ISF, ArmTip tool and Base work frames zeroed), made 2026-11-25 by ALIX Resource/reports/2026-11-23_program_offset_study/scripts/vendor_arm_tip_samples.py",
+ "source": "rm_algo_forward_kinematics via ALIX alix_taskgen.stroke_gate.VendorAlgo (RM_75, ISF, ArmTip tool and Base work frames zeroed), made by tools/vendor_arm_tip_samples.py (seed 20261125)",
  "units": "q deg; position m and rotation matrix of Arm_Tip in the arm's Base frame",
  "arms": {
   "right": [
