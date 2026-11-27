@@ -1,0 +1,7 @@
+PASS  frames: 150,297 good; CRC16 failed 0, end byte wrong 0 (0.000 %); 0 bytes between frames
+PASS  CRC8: the unit uses the maxim table (149,120 headers fit it alone, 1,177 fit both by chance; other table or neither: 0)
+FAIL  frame counter: 43,661 lost of 193,958 frames (22.511 %)
+      types: IMU (0x40) 119,998 = 400.0/s, AHRS (0x41) 30,000 = 100.0/s, heartbeat (0xF0) 299 = 1.0/s
+CHECK IMU timestamps: step 2500 us median = 400.0 frames/s by its own clock; 23618 missing, 0 going backwards; span 359.0 s
+      clocks: the sensor's clock runs -10 ppm against the laptop's; frames arrive 2.9 ms (median), 4.5 ms (99 %), 59048.1 ms (worst) after the earliest; up to 3 frames in one read
+      temperature 39.3 -> 39.5 C

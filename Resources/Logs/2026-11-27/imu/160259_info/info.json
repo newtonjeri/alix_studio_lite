@@ -1,0 +1,14 @@
+{
+ "VERSION": {
+  "serial": "002B0048-3430500C-20373647-00000413",
+  "hardware_version": 16842752,
+  "hardware_name": "DETA-10_V2",
+  "firmware_version": 36717105,
+  "firmware_name": "DETA-10_V2",
+  "raw": "48 00 2b 00 0c 50 30 34 47 36 37 20 13 04 00 00 00 00 01 01 44 45 54 41 2d 31 30 5f 56 32 00 31 42 30 02 44 45 54 41 2d 31 30 5f 56 32 00"
+ },
+ "SENSOR_RANGES": {
+  "raw": "01 00 00 00"
+ },
+ "crc8_table": "maxim"
+}

@@ -1,0 +1,12 @@
+{
+ "port": "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
+ "baud": 921600,
+ "test": "frames",
+ "label": "rate_5min",
+ "seconds": 300.0,
+ "started": 1795766963.8353941,
+ "started_local": "2026-11-27 16:09:23",
+ "tool": "tools/imu_n100.py",
+ "note": "mounted, robot still",
+ "bytes": 9367347
+}

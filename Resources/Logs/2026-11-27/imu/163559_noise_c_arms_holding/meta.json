@@ -1,0 +1,12 @@
+{
+ "port": "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
+ "baud": 921600,
+ "test": "still",
+ "label": "noise_c_arms_holding",
+ "seconds": 120.001,
+ "started": 1795768559.4576192,
+ "started_local": "2026-11-27 16:35:59",
+ "tool": "tools/imu_n100.py",
+ "note": "arms powered, holding, no motion; UGV casing only (no motors); IMU on 3M tape (temporary)",
+ "bytes": 3746872
+}

@@ -1,0 +1,80 @@
+{
+ "test": "tap",
+ "frames": 15029,
+ "crc16_bad": 0,
+ "end_bad": 0,
+ "skipped": 0,
+ "crc8_table": "maxim",
+ "crc8_other": 0,
+ "lost": 3072,
+ "types": {
+  "0x40": 11999,
+  "0x41": 3000,
+  "0xF0": 30
+ },
+ "imu_rate_hz": 400.0,
+ "imu_step_us": 2500.0,
+ "imu_ts_gaps": 0,
+ "imu_ts_back": 0,
+ "drift_ppm": -103.0,
+ "arrival_p50_ms": 0.22,
+ "arrival_p99_ms": 0.64,
+ "arrival_max_ms": 5.55,
+ "frames_per_read_max": 3,
+ "temp_c": [
+  39.48,
+  39.3
+ ],
+ "tap_noise_deg_s": 0.033,
+ "tap_events": [
+  {
+   "t_s": 5.713,
+   "peak_deg_s": 7.53,
+   "acc_peak": 1.72,
+   "settle_ms": 592.5,
+   "ring_hz": 170.3,
+   "axis": "X"
+  },
+  {
+   "t_s": 8.235,
+   "peak_deg_s": 5.74,
+   "acc_peak": 2.47,
+   "settle_ms": 945.0,
+   "ring_hz": 91.8,
+   "axis": "X"
+  },
+  {
+   "t_s": 10.575,
+   "peak_deg_s": 10.13,
+   "acc_peak": 4.818,
+   "settle_ms": 977.5,
+   "ring_hz": 91.8,
+   "axis": "X"
+  },
+  {
+   "t_s": 12.72,
+   "peak_deg_s": 424.68,
+   "acc_peak": 32.735,
+   "settle_ms": 947.5,
+   "ring_hz": 80.5,
+   "axis": "X"
+  },
+  {
+   "t_s": 14.627,
+   "peak_deg_s": 337.82,
+   "acc_peak": 26.632,
+   "settle_ms": 710.0,
+   "ring_hz": 50.4,
+   "axis": "X"
+  },
+  {
+   "t_s": 16.575,
+   "peak_deg_s": 436.31,
+   "acc_peak": 32.833,
+   "settle_ms": 720.0,
+   "ring_hz": 189.8,
+   "axis": "Y"
+  }
+ ],
+ "ok": false
+}

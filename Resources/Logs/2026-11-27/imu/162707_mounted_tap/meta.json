@@ -1,0 +1,12 @@
+{
+ "port": "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
+ "baud": 921600,
+ "test": "tap",
+ "label": "mounted_tap",
+ "seconds": 30.001,
+ "started": 1795768027.1598413,
+ "started_local": "2026-11-27 16:27:07",
+ "tool": "tools/imu_n100.py",
+ "note": "plate x3, then board x3",
+ "bytes": 936686
+}

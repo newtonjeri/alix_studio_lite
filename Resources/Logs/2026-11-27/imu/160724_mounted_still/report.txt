@@ -1,0 +1,11 @@
+PASS  frames: 30,060 good; CRC16 failed 0, end byte wrong 0 (0.000 %); 0 bytes between frames
+PASS  CRC8: the unit uses the maxim table (29,824 headers fit it alone, 236 fit both by chance; other table or neither: 0)
+FAIL  frame counter: 7,168 lost of 37,228 frames (19.254 %)
+      types: IMU (0x40) 24,000 = 400.0/s, AHRS (0x41) 6,000 = 100.0/s, heartbeat (0xF0) 60 = 1.0/s
+PASS  IMU timestamps: step 2500 us median = 400.0 frames/s by its own clock; 0 missing, 0 going backwards; span 60.0 s
+      clocks: the sensor's clock runs -38 ppm against the laptop's; frames arrive 0.2 ms (median), 0.7 ms (99 %), 1.2 ms (worst) after the earliest; up to 3 frames in one read
+      temperature 39.3 -> 39.3 C
+PASS  gravity: |a| = 9.841 m/s^2 (expected 9.807, within 2 %); mean a = (-0.091, -0.464, -9.830)
+      lying flat, face up, as the vendor describes it (Z reads about -9.8); tilt from that axis 2.75 deg
+      gyro bias (+0.024, -0.004, +0.012) deg/s; noise RMS (0.051, 0.044, 0.051) deg/s; accel noise RMS (0.0071, 0.0077, 0.0074) m/s^2
+      the unit's own tilt (AHRS): roll +2.70 deg, pitch -0.53 deg

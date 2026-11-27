@@ -1,0 +1,56 @@
+{
+ "test": "tap",
+ "frames": 15031,
+ "crc16_bad": 0,
+ "end_bad": 0,
+ "skipped": 0,
+ "crc8_table": "maxim",
+ "crc8_other": 0,
+ "lost": 3584,
+ "types": {
+  "0x40": 12001,
+  "0x41": 3000,
+  "0xF0": 30
+ },
+ "imu_rate_hz": 400.0,
+ "imu_step_us": 2500.0,
+ "imu_ts_gaps": 0,
+ "imu_ts_back": 0,
+ "drift_ppm": -4.3,
+ "arrival_p50_ms": 0.18,
+ "arrival_p99_ms": 0.55,
+ "arrival_max_ms": 1.05,
+ "frames_per_read_max": 3,
+ "temp_c": [
+  39.45,
+  39.45
+ ],
+ "tap_noise_deg_s": 0.0329,
+ "tap_events": [
+  {
+   "t_s": 10.217,
+   "peak_deg_s": 10.91,
+   "acc_peak": 3.072,
+   "settle_ms": 642.5,
+   "ring_hz": 170.7,
+   "axis": "X"
+  },
+  {
+   "t_s": 15.482,
+   "peak_deg_s": 4.19,
+   "acc_peak": 0.754,
+   "settle_ms": 715.0,
+   "ring_hz": 169.9,
+   "axis": "X"
+  },
+  {
+   "t_s": 21.113,
+   "peak_deg_s": 10.33,
+   "acc_peak": 2.554,
+   "settle_ms": 432.5,
+   "ring_hz": 170.7,
+   "axis": "X"
+  }
+ ],
+ "ok": false
+}

@@ -1,0 +1,54 @@
+{
+ "test": "still",
+ "frames": 30059,
+ "crc16_bad": 0,
+ "end_bad": 0,
+ "skipped": 0,
+ "crc8_table": "maxim",
+ "crc8_other": 0,
+ "lost": 9216,
+ "types": {
+  "0x41": 6000,
+  "0x40": 23999,
+  "0xF0": 60
+ },
+ "imu_rate_hz": 400.0,
+ "imu_step_us": 2500.0,
+ "imu_ts_gaps": 0,
+ "imu_ts_back": 0,
+ "drift_ppm": -58.9,
+ "arrival_p50_ms": 0.24,
+ "arrival_p99_ms": 0.69,
+ "arrival_max_ms": 3.06,
+ "frames_per_read_max": 3,
+ "temp_c": [
+  39.04,
+  39.1
+ ],
+ "acc_mean": [
+  -0.0912,
+  -0.4635,
+  -9.8296
+ ],
+ "acc_norm": 9.8409,
+ "gravity_axis": "-Z",
+ "gyro_bias_deg_s": [
+  0.0273,
+  -0.0083,
+  0.0082
+ ],
+ "gyro_noise_deg_s": [
+  0.0507,
+  0.0444,
+  0.0514
+ ],
+ "acc_noise": [
+  0.00712,
+  0.00763,
+  0.00741
+ ],
+ "still_max_dev_deg_s": 0.2,
+ "ahrs_roll_deg": 2.693,
+ "ahrs_pitch_deg": -0.528,
+ "ok": false
+}

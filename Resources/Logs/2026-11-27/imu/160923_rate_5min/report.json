@@ -1,0 +1,29 @@
+{
+ "test": "frames",
+ "frames": 150297,
+ "crc16_bad": 0,
+ "end_bad": 0,
+ "skipped": 0,
+ "crc8_table": "maxim",
+ "crc8_other": 0,
+ "lost": 43661,
+ "types": {
+  "0x40": 119998,
+  "0x41": 30000,
+  "0xF0": 299
+ },
+ "imu_rate_hz": 400.0,
+ "imu_step_us": 2500.0,
+ "imu_ts_gaps": 23618,
+ "imu_ts_back": 0,
+ "drift_ppm": -9.6,
+ "arrival_p50_ms": 2.86,
+ "arrival_p99_ms": 4.52,
+ "arrival_max_ms": 59048.15,
+ "frames_per_read_max": 3,
+ "temp_c": [
+  39.29,
+  39.49
+ ],
+ "ok": false
+}
