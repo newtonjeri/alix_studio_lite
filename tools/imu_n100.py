@@ -228,15 +228,35 @@ def usb_serial_devices() -> list[dict]:
     return out
 
 
+NO_TTY = ("The IMU's USB chip is plugged in (lsusb: 10c4:ea60 Silicon Labs CP210x UART Bridge), but Linux gave it no "
+          "serial port (/dev/ttyUSB*). `sudo dmesg | grep -i -E 'cp210x|brltty'` says why. On older Ubuntu the braille "
+          "service brltty takes this chip: `sudo apt remove brltty`, then unplug and plug the IMU in again.")
+
+
+def cp210x_on_usb() -> bool:
+    """A CP210x on the USB bus, as lsusb lists it (10c4:ea60), whether or not it has a serial port."""
+    for f in glob.glob("/sys/bus/usb/devices/*/idVendor"):
+        try:
+            ids = (open(f).read().strip(), open(os.path.join(os.path.dirname(f), "idProduct")).read().strip())
+        except OSError:
+            continue
+        if ids == CP210X:
+            return True
+    return False
+
+
 def find_port(arg: str | None) -> str:
+    """The IMU's port: the one serial device whose USB chip is a CP210x (10c4:ea60), by its stable name."""
     if arg and arg != "auto":
         return arg
     devs = [d for d in usb_serial_devices() if d["cp210x"]]
     if len(devs) == 1:
         return devs[0]["by_id"] or devs[0]["dev"]
     if not devs:
-        raise SystemExit("No CP210x USB serial device is plugged in (the N100's USB chip). Check the cable, then "
-                         "`python3 tools/imu_n100.py ports`.")
+        if cp210x_on_usb():
+            raise SystemExit(NO_TTY)
+        raise SystemExit("No CP210x USB serial device is plugged in (the N100's USB chip, 10c4:ea60 in lsusb). Check "
+                         "the cable, then `python3 tools/imu_n100.py ports`.")
     raise SystemExit(f"{len(devs)} CP210x devices are plugged in; name the IMU with --port (`python3 tools/imu_n100.py "
                      "ports` lists them).")
 
@@ -655,7 +675,7 @@ def request(port, pid: int, table: str, sn: int = 0, wait: float = 1.5) -> Frame
 def cmd_ports(a):
     devs = usb_serial_devices()
     if not devs:
-        print("No USB serial device (/dev/ttyUSB*, /dev/ttyACM*) is plugged in.")
+        print(NO_TTY if cp210x_on_usb() else "No USB serial device (/dev/ttyUSB*, /dev/ttyACM*) is plugged in.")
         return 1
     for d in devs:
         tag = "  <- CP210x: the N100's chip" if d["cp210x"] else ""

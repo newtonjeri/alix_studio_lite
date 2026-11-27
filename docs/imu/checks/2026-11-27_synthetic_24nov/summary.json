@@ -1,0 +1,2964 @@
+{
+ "capture": "/tmp/claude-1000/-home-newtonjeri-alix-studio-lite-ws/83e8203a-91a0-4065-8a39-6f71620b5051/scratchpad/synth_2103",
+ "synthetic": true,
+ "rate_hz": 400.0000000003638,
+ "lost": 47,
+ "drift_ppm": 30.05968464186992,
+ "bias_start": [
+  0.20281484673089167,
+  -0.10185384776897911,
+  0.04842370037092537
+ ],
+ "bias_end": [
+  0.23775806902440927,
+  -0.11897681824224374,
+  0.04981416520352716
+ ],
+ "floor_deg_s": 0.02494203573246522,
+ "floor_from": "the run's quietest seconds (no --floor given: a step C capture is better)",
+ "bar_deg_s": 0.12471017866232612,
+ "fits": [
+  {
+   "prediction": "model",
+   "axis": "roll",
+   "lag_ms": 60.0,
+   "gain": 0.021983712559818742,
+   "r2": 0.9441157700604004,
+   "n": 16942
+  },
+  {
+   "prediction": "model",
+   "axis": "pitch",
+   "lag_ms": 60.0,
+   "gain": -0.030967812488818205,
+   "r2": 0.9583509637474791,
+   "n": 16942
+  },
+  {
+   "prediction": "model + weight",
+   "axis": "roll",
+   "lag_ms": 60.0,
+   "gain": 0.019826276184286788,
+   "r2": 0.9979780440968304,
+   "n": 16942
+  },
+  {
+   "prediction": "model + weight",
+   "axis": "pitch",
+   "lag_ms": 60.0,
+   "gain": -0.029654959584286943,
+   "r2": 0.9977364344082587,
+   "n": 16942
+  }
+ ],
+ "model_note": null,
+ "runs": [
+  {
+   "side": "left",
+   "label": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "file": "61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt",
+   "match_deg": 0.3002415694070433,
+   "note": ""
+  },
+  {
+   "side": "right",
+   "label": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "file": "61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt",
+   "match_deg": 0.28011693791977904,
+   "note": ""
+  },
+  {
+   "side": "left",
+   "label": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "file": "62_L_P2_pole200_cleaningpose_22.6s_30pct.txt",
+   "match_deg": 0.2935988168491455,
+   "note": ""
+  },
+  {
+   "side": "right",
+   "label": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "file": "62_R_P2_pole200_grip_13.0s_new_R04.txt",
+   "match_deg": 0.2003035182857404,
+   "note": ""
+  },
+  {
+   "side": "right",
+   "label": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "file": "63_R_P2_pole200_cleaningpose_9.2s_30pct.txt",
+   "match_deg": 0.3861029444711611,
+   "note": ""
+  },
+  {
+   "side": "left",
+   "label": "Program 63 63_L_P2_pole200_grip_10.5s_25pct",
+   "file": "63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt",
+   "match_deg": 0.2618911987830079,
+   "note": ""
+  },
+  {
+   "side": "right",
+   "label": "Program 64 64_1_R_P2_pole50_cleaningpose_10",
+   "file": "64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt",
+   "match_deg": 0.22317033853092072,
+   "note": ""
+  },
+  {
+   "side": "right",
+   "label": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "file": "65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt",
+   "match_deg": 0.2874282519168942,
+   "note": ""
+  },
+  {
+   "side": "left",
+   "label": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "file": "64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt",
+   "match_deg": 0.44147027079974327,
+   "note": ""
+  },
+  {
+   "side": "left",
+   "label": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "file": "65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt",
+   "match_deg": 0.2943382408046925,
+   "note": ""
+  }
+ ],
+ "sections": [
+  {
+   "from_s": 35.34393756606005,
+   "for_s": 5.08734707504118
+  },
+  {
+   "from_s": 40.861271715748444,
+   "for_s": 0.01749947396820062
+  },
+  {
+   "from_s": 41.39375570935226,
+   "for_s": 0.052498421904601855
+  },
+  {
+   "from_s": 48.69353627894452,
+   "for_s": 55.81332225914957
+  },
+  {
+   "from_s": 104.95934493641471,
+   "for_s": 0.0024999248526000883
+  },
+  {
+   "from_s": 105.26933561813712,
+   "for_s": 0.012499624263000442
+  },
+  {
+   "from_s": 105.55682697618613,
+   "for_s": 0.04999849705200177
+  },
+  {
+   "from_s": 106.28430510829276,
+   "for_s": 0.09499714439880336
+  },
+  {
+   "from_s": 106.77929022910757,
+   "for_s": 0.0649980461676023
+  },
+  {
+   "from_s": 107.74676114706381,
+   "for_s": 0.039998797641601413
+  },
+  {
+   "from_s": 108.17924814656362,
+   "for_s": 0.0649980461676023
+  },
+  {
+   "from_s": 109.08422094320485,
+   "for_s": 0.01499954911560053
+  },
+  {
+   "from_s": 109.75920065340688,
+   "for_s": 0.007499774557800265
+  },
+  {
+   "from_s": 111.89163655267475,
+   "for_s": 41.448754056109465
+  },
+  {
+   "from_s": 154.06036896633304,
+   "for_s": 0.1299960923352046
+  },
+  {
+   "from_s": 154.68035032977787,
+   "for_s": 0.009999699410400353
+  },
+  {
+   "from_s": 155.7903169643323,
+   "for_s": 0.009999699410400353
+  },
+  {
+   "from_s": 156.07530839752872,
+   "for_s": 0.007499774557800265
+  },
+  {
+   "from_s": 156.69528976097354,
+   "for_s": 0.0024999248526000883
+  },
+  {
+   "from_s": 161.2326533684427,
+   "for_s": 3.6373906605331285
+  },
+  {
+   "from_s": 165.14003591305664,
+   "for_s": 44.19617146911696
+  },
+  {
+   "from_s": 209.596199566844,
+   "for_s": 0.26999188408080954
+  }
+ ],
+ "peaks": [
+  {
+   "t_peak": 35.86142201054827,
+   "peak_deg_s": 4.4969341872722435,
+   "roll_deg_s": 0.08542218137005728,
+   "pitch_deg_s": -4.4961227892026985,
+   "acc_h": 0.010252832472877367,
+   "jerk_h": 0.9815785517994771,
+   "section_t0": 35.34393756606005,
+   "section_t1": 40.43128464110123,
+   "left": "MoveJ REST_POSE",
+   "right": "MoveJ REST_POSE",
+   "lines": [],
+   "file_notes": [],
+   "meas model band": 1.6930780163033696,
+   "pred model": 1.5503162258394918,
+   "pred model + weight": 1.6496658455990687
+  },
+  {
+   "t_peak": 37.08638518832231,
+   "peak_deg_s": 6.239656027212013,
+   "roll_deg_s": -0.11526021915769115,
+   "pitch_deg_s": -6.23859138105734,
+   "acc_h": 0.011495967844755805,
+   "jerk_h": 1.0457911019167199,
+   "section_t0": 35.34393756606005,
+   "section_t1": 40.43128464110123,
+   "left": "MoveJ REST_POSE",
+   "right": "MoveJ R_HME_POS",
+   "lines": [],
+   "file_notes": [],
+   "meas model band": 2.029948681606773,
+   "pred model": 2.021835062141992,
+   "pred model + weight": 2.050812784501063
+  },
+  {
+   "t_peak": 38.661337845460366,
+   "peak_deg_s": 4.48273202169458,
+   "roll_deg_s": 0.24183604117004584,
+   "pitch_deg_s": 4.476203939446591,
+   "acc_h": 0.011136872899923544,
+   "jerk_h": 1.0143217380201004,
+   "section_t0": 35.34393756606005,
+   "section_t1": 40.43128464110123,
+   "left": "MoveJ REST_POSE",
+   "right": "pole 150 -> 208 mm and hand",
+   "lines": [],
+   "file_notes": [],
+   "meas model band": 1.5747684791342305,
+   "pred model": 1.6299357588198444,
+   "pred model + weight": 1.59637025957654
+  },
+  {
+   "t_peak": 39.86630162441361,
+   "peak_deg_s": 4.405821226421142,
+   "roll_deg_s": -0.1299017796981374,
+   "pitch_deg_s": -4.403905789956723,
+   "acc_h": 0.010984610419602301,
+   "jerk_h": 1.258184735707969,
+   "section_t0": 35.34393756606005,
+   "section_t1": 40.43128464110123,
+   "left": "MoveJ L_HME_POS",
+   "right": "-",
+   "lines": [],
+   "file_notes": [],
+   "meas model band": 2.801067095558308,
+   "pred model": null,
+   "pred model + weight": null
+  },
+  {
+   "t_peak": 40.868771490306244,
+   "peak_deg_s": 0.17569814050841268,
+   "roll_deg_s": -0.11471468576261072,
+   "pitch_deg_s": 0.13308034208138855,
+   "acc_h": 0.012223205699172653,
+   "jerk_h": 1.129484499918376,
+   "section_t0": 40.861271715748444,
+   "section_t1": 40.878771189716645,
+   "left": "pole 200 -> 51 mm and hand",
+   "right": "-",
+   "lines": [],
+   "file_notes": [],
+   "meas model band": 0.044431953365046316,
+   "pred model": null,
+   "pred model + weight": null
+  },
+  {
+   "t_peak": 49.23851989681134,
+   "peak_deg_s": 1.2141356570084942,
+   "roll_deg_s": 0.32799373153664396,
+   "pitch_deg_s": -1.168993372817877,
+   "acc_h": 0.012187260028341642,
+   "jerk_h": 1.006905141916553,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 9-9",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 61-61"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 399 deg/s^2, most jerk J3 13093 deg/s^3",
+    "RIGHT: most acceleration J6 353 deg/s^2, most jerk J6 2625 deg/s^3"
+   ],
+   "meas model band": 0.7499316324068066,
+   "pred model": 0.7182568637650053,
+   "pred model + weight": 0.7408538763227429
+  },
+  {
+   "t_peak": 50.37348577989178,
+   "peak_deg_s": 2.005180286743838,
+   "roll_deg_s": 0.03362946401070992,
+   "pitch_deg_s": -2.004898262131137,
+   "acc_h": 0.012357005774472674,
+   "jerk_h": 1.3012523031708876,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 9-9",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 61-141"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 399 deg/s^2, most jerk J3 13093 deg/s^3",
+    "RIGHT: most acceleration J6 353 deg/s^2, most jerk J6 2625 deg/s^3"
+   ],
+   "meas model band": 0.7963028357271249,
+   "pred model": 0.7440009498284138,
+   "pred model + weight": 0.8070355845973027
+  },
+  {
+   "t_peak": 51.85344129263103,
+   "peak_deg_s": 12.185953373723445,
+   "roll_deg_s": -6.90533428841917,
+   "pitch_deg_s": -10.04060844728766,
+   "acc_h": 0.01104546979760695,
+   "jerk_h": 1.2150658958328777,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 134-233",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 332-429"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J7 139 deg/s^2, most jerk J5 1544 deg/s^3",
+    "RIGHT: most acceleration J6 360 deg/s^2, most jerk J6 3465 deg/s^3, turns back: J6"
+   ],
+   "meas model band": 4.658008073524047,
+   "pred model": 4.473404181563805,
+   "pred model + weight": 4.657497816196478
+  },
+  {
+   "t_peak": 53.45839304800029,
+   "peak_deg_s": 7.68821715170762,
+   "roll_deg_s": -2.095181692386777,
+   "pitch_deg_s": 7.397222225112512,
+   "acc_h": 0.011193032142262267,
+   "jerk_h": 1.1207002581343142,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 452-549",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 649-749"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 331 deg/s^2, most jerk J3 11273 deg/s^3, turns back: J7",
+    "RIGHT: most acceleration J6 205 deg/s^2, most jerk J2 3056 deg/s^3, turns back: J6"
+   ],
+   "meas model band": 3.364700620338428,
+   "pred model": 3.5698547704920474,
+   "pred model + weight": 3.431155400894865
+  },
+  {
+   "t_peak": 54.98584713293894,
+   "peak_deg_s": 2.5721272886610547,
+   "roll_deg_s": 1.3240699576631438,
+   "pitch_deg_s": -2.205147962448051,
+   "acc_h": 0.009976150876584617,
+   "jerk_h": 1.0123133004305243,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 750-849",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 950-1048"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 594 deg/s^2, most jerk J6 14758 deg/s^3, turns back: J3 J4 J5 J6 J7",
+    "RIGHT: most acceleration J6 256 deg/s^2, most jerk J5 1659 deg/s^3, turns back: J6 J7"
+   ],
+   "meas model band": 2.1668078175987926,
+   "pred model": 2.087775368953203,
+   "pred model + weight": 2.1638262335969016
+  },
+  {
+   "t_peak": 56.25330903320719,
+   "peak_deg_s": 4.385265870635299,
+   "roll_deg_s": 4.356990500689104,
+   "pitch_deg_s": 0.4971825952944022,
+   "acc_h": 0.012595425901449213,
+   "jerk_h": 1.0581740001525042,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 1000-1097",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 1201-1300"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J5 552 deg/s^2, most jerk J5 4467 deg/s^3, turns back: J1 J3 J4 J5 J6 J7",
+    "RIGHT: most acceleration J4 575 deg/s^2, most jerk J4 7567 deg/s^3, turns back: J1 J2 J3 J4 J5 J6"
+   ],
+   "meas model band": 2.049879988460832,
+   "pred model": 1.960986504125552,
+   "pred model + weight": 2.083789290595021
+  },
+  {
+   "t_peak": 58.123252822952054,
+   "peak_deg_s": 3.1944094817002626,
+   "roll_deg_s": -3.0369592801867804,
+   "pitch_deg_s": -0.990520200331085,
+   "acc_h": 0.009282513424672727,
+   "jerk_h": 0.9731819020176391,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 1368-1467",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 1568-1666"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J5 666 deg/s^2, most jerk J6 4501 deg/s^3, turns back: J1 J3 J4 J5 J6",
+    "RIGHT: most acceleration J6 465 deg/s^2, most jerk J6 4873 deg/s^3, turns back: J1 J2 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 1.6048718669001147,
+   "pred model": 1.2518555792894401,
+   "pred model + weight": 1.5740141737000695
+  },
+  {
+   "t_peak": 59.295717578821495,
+   "peak_deg_s": 2.8195297979232232,
+   "roll_deg_s": 2.5033378310902648,
+   "pitch_deg_s": 1.2973233925314305,
+   "acc_h": 0.010046730181140037,
+   "jerk_h": 1.1236593899392522,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 1600-1691",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 1797-1897"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J5 561 deg/s^2, most jerk J5 5161 deg/s^3, turns back: J3 J4 J5 J6",
+    "RIGHT: most acceleration J5 582 deg/s^2, most jerk J5 5372 deg/s^3, turns back: J1 J2 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 1.532534441107922,
+   "pred model": 1.1072664109890435,
+   "pred model + weight": 1.5297570063442696
+  },
+  {
+   "t_peak": 60.34068616720833,
+   "peak_deg_s": 4.311069639298533,
+   "roll_deg_s": 4.31009047329665,
+   "pitch_deg_s": -0.09187789113300318,
+   "acc_h": 0.008594052408351314,
+   "jerk_h": 1.0306976989668373,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 1802-1901",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 2004-2101"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 682 deg/s^2, most jerk J6 13579 deg/s^3, turns back: J3 J4 J5 J6",
+    "RIGHT: most acceleration J1 441 deg/s^2, most jerk J4 4567 deg/s^3, turns back: J1 J2 J3 J5 J6 J7"
+   ],
+   "meas model band": 2.7806578030713687,
+   "pred model": 2.7530552747341117,
+   "pred model + weight": 2.796391810677864
+  },
+  {
+   "t_peak": 61.60564814262398,
+   "peak_deg_s": 3.157881460437669,
+   "roll_deg_s": -0.7336727248181041,
+   "pitch_deg_s": -3.071471903018799,
+   "acc_h": 0.01138021661471508,
+   "jerk_h": 1.053392997638968,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 2053-2152",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 2250-2350"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J5 587 deg/s^2, most jerk J6 9708 deg/s^3, turns back: J3 J4 J5 J6",
+    "RIGHT: most acceleration J5 342 deg/s^2, most jerk J6 3550 deg/s^3, turns back: J1 J4 J5 J6"
+   ],
+   "meas model band": 2.809795277077582,
+   "pred model": 2.435508692096061,
+   "pred model + weight": 2.8003292062748293
+  },
+  {
+   "t_peak": 62.73811410085182,
+   "peak_deg_s": 6.248460773922323,
+   "roll_deg_s": 5.9140679463162815,
+   "pitch_deg_s": 2.0166959040966694,
+   "acc_h": 0.011345883235705938,
+   "jerk_h": 1.0874204744535225,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 2280-2376",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 2473-2572"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J2 1016 deg/s^2, most jerk J2 34946 deg/s^3, turns back: J2 J3 J6 J7",
+    "RIGHT: most acceleration J4 355 deg/s^2, most jerk J4 5116 deg/s^3, turns back: J2 J6 J7"
+   ],
+   "meas model band": 5.526481540338825,
+   "pred model": 5.948395403137462,
+   "pred model + weight": 5.555687976348638
+  },
+  {
+   "t_peak": 64.56805909295508,
+   "peak_deg_s": 2.7180022559933508,
+   "roll_deg_s": 1.3425200316831751,
+   "pitch_deg_s": 2.3632977442790297,
+   "acc_h": 0.013603583187279394,
+   "jerk_h": 1.6944145036593592,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 2633-2732",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 2831-2927"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 556 deg/s^2, most jerk J6 3224 deg/s^3, turns back: J4",
+    "RIGHT: most acceleration J5 338 deg/s^2, most jerk J5 2737 deg/s^3, turns back: J2 J5 J6"
+   ],
+   "meas model band": 1.3682170453689124,
+   "pred model": 1.4195978849176065,
+   "pred model + weight": 1.3697065222250162
+  },
+  {
+   "t_peak": 65.75552339794012,
+   "peak_deg_s": 1.8448824928238423,
+   "roll_deg_s": 0.7394252288653282,
+   "pitch_deg_s": 1.6902194364180563,
+   "acc_h": 0.009201348940042403,
+   "jerk_h": 1.0933659203493664,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 2857-2952",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 3066-3164"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 354 deg/s^2, most jerk J6 3061 deg/s^3, turns back: J4 J5",
+    "RIGHT: most acceleration J6 407 deg/s^2, most jerk J5 2528 deg/s^3, turns back: J1 J2 J5 J6 J7"
+   ],
+   "meas model band": 1.1115638307386562,
+   "pred model": 0.955223520341943,
+   "pred model + weight": 1.1164952104376877
+  },
+  {
+   "t_peak": 67.06548402070257,
+   "peak_deg_s": 3.582914581671874,
+   "roll_deg_s": 0.9133255240102794,
+   "pitch_deg_s": -3.464550964663139,
+   "acc_h": 0.010457737357908437,
+   "jerk_h": 0.9408527385619235,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 3109-3210",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 3322-3420"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 503 deg/s^2, most jerk J4 7462 deg/s^3, turns back: J2 J3 J4 J6",
+    "RIGHT: most acceleration J6 305 deg/s^2, most jerk J3 2451 deg/s^3, turns back: J1 J2 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 1.1543911454504618,
+   "pred model": 0.9280942690523853,
+   "pred model + weight": 1.1456071698311274
+  },
+  {
+   "t_peak": 68.32294622156041,
+   "peak_deg_s": 1.6885257826057045,
+   "roll_deg_s": -0.07341508693242768,
+   "pitch_deg_s": -1.6869290274148794,
+   "acc_h": 0.009900962020355206,
+   "jerk_h": 1.3152682555001347,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 3356-3456",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 3568-3666"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 584 deg/s^2, most jerk J6 14346 deg/s^3, turns back: J3 J4 J5",
+    "RIGHT: most acceleration J5 415 deg/s^2, most jerk J5 3012 deg/s^3, turns back: J2 J4 J5 J6"
+   ],
+   "meas model band": 1.2366114672143615,
+   "pred model": 0.950661194134802,
+   "pred model + weight": 1.2479087158898121
+  },
+  {
+   "t_peak": 69.38541428391545,
+   "peak_deg_s": 4.165397924512892,
+   "roll_deg_s": 1.695477521495934,
+   "pitch_deg_s": 3.8047202056969067,
+   "acc_h": 0.011950776534712148,
+   "jerk_h": 1.28126514872467,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 3568-3667",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 3775-3872"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 912 deg/s^2, most jerk J4 15760 deg/s^3, turns back: J3 J4 J5 J6",
+    "RIGHT: most acceleration J6 465 deg/s^2, most jerk J3 3479 deg/s^3, turns back: J2 J5 J6"
+   ],
+   "meas model band": 2.1676272382302892,
+   "pred model": 1.8334633402835692,
+   "pred model + weight": 2.165128793296558
+  },
+  {
+   "t_peak": 70.51788024214329,
+   "peak_deg_s": 2.8180437932162055,
+   "roll_deg_s": -2.6635414335328793,
+   "pitch_deg_s": 0.9202813984526658,
+   "acc_h": 0.008398510517127492,
+   "jerk_h": 0.8859850701577021,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 3792-3891",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 3995-4094"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 741 deg/s^2, most jerk J6 10185 deg/s^3, turns back: J2 J3 J4 J5 J6 J7",
+    "RIGHT: most acceleration J5 422 deg/s^2, most jerk J5 2846 deg/s^3, turns back: J5 J6 J7"
+   ],
+   "meas model band": 1.15178500936933,
+   "pred model": 1.0956986472357302,
+   "pred model + weight": 1.158263067467339
+  },
+  {
+   "t_peak": 71.90783846018894,
+   "peak_deg_s": 2.5841798693032945,
+   "roll_deg_s": 2.57765699940337,
+   "pitch_deg_s": -0.18349384278282077,
+   "acc_h": 0.013035623993270719,
+   "jerk_h": 1.130111603379659,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 4057-4156",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 4269-4367"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 549 deg/s^2, most jerk J4 9201 deg/s^3, turns back: J2 J4 J5",
+    "RIGHT: most acceleration J5 383 deg/s^2, most jerk J5 2659 deg/s^3, turns back: J3 J5 J6 J7"
+   ],
+   "meas model band": 1.7160714672070174,
+   "pred model": 1.7120551108286324,
+   "pred model + weight": 1.7124131337990405
+  },
+  {
+   "t_peak": 73.83528052154361,
+   "peak_deg_s": 2.6791538700538036,
+   "roll_deg_s": -1.364082554868191,
+   "pitch_deg_s": -2.3058933719772345,
+   "acc_h": 0.010375794967213404,
+   "jerk_h": 1.0614406792399793,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 4440-4537",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 4648-4749"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 739 deg/s^2, most jerk J6 6273 deg/s^3, turns back: J1 J3 J4 J5 J6",
+    "RIGHT: most acceleration J5 324 deg/s^2, most jerk J5 2782 deg/s^3, turns back: J5"
+   ],
+   "meas model band": 1.6942590823420784,
+   "pred model": 1.300039025389939,
+   "pred model + weight": 1.6708726213338734
+  },
+  {
+   "t_peak": 75.16774046797946,
+   "peak_deg_s": 3.909332668220193,
+   "roll_deg_s": -0.41259395612201455,
+   "pitch_deg_s": 3.8874989566796283,
+   "acc_h": 0.011130346788407332,
+   "jerk_h": 0.9533875701600905,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 4699-4800",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 4914-5012"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 721 deg/s^2, most jerk J4 7719 deg/s^3, turns back: J1",
+    "RIGHT: most acceleration J6 112 deg/s^2, most jerk J4 1380 deg/s^3, turns back: J5 J7"
+   ],
+   "meas model band": 2.1541347462803855,
+   "pred model": 2.1941162367373948,
+   "pred model + weight": 2.176507692742302
+  },
+  {
+   "t_peak": 76.4052032700165,
+   "peak_deg_s": 6.798966752662907,
+   "roll_deg_s": 3.100652793875445,
+   "pitch_deg_s": 6.050776905129456,
+   "acc_h": 0.01750267579892283,
+   "jerk_h": 1.500496690957668,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 4946-5044",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 5159-5257"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 744 deg/s^2, most jerk J6 7297 deg/s^3, turns back: J1 J3 J6",
+    "RIGHT: most acceleration J3 99 deg/s^2, most jerk J7 1422 deg/s^3"
+   ],
+   "meas model band": 1.8007378476677718,
+   "pred model": 1.7341293960242186,
+   "pred model + weight": 1.751235965094409
+  },
+  {
+   "t_peak": 78.20014931418336,
+   "peak_deg_s": 2.4703485801946994,
+   "roll_deg_s": 0.3618764330101664,
+   "pitch_deg_s": -2.443699563142287,
+   "acc_h": 0.011920057406026053,
+   "jerk_h": 1.0641640062765605,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 5299-5397",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 5512-5603"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 720 deg/s^2, most jerk J6 6245 deg/s^3, turns back: J1 J4 J5 J6",
+    "RIGHT: most acceleration J6 618 deg/s^2, most jerk J6 7898 deg/s^3, turns back: J6"
+   ],
+   "meas model band": 1.431752762566724,
+   "pred model": 1.4578963477981453,
+   "pred model + weight": 1.4226247354969346
+  },
+  {
+   "t_peak": 79.63760610442841,
+   "peak_deg_s": 3.9642677547902307,
+   "roll_deg_s": 1.0757500787382872,
+   "pitch_deg_s": -3.8155183920096816,
+   "acc_h": 0.01437990777191712,
+   "jerk_h": 1.286130539544268,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 5582-5681",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 5788-5888"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 748 deg/s^2, most jerk J6 7320 deg/s^3, turns back: J3 J5 J6",
+    "RIGHT: most acceleration J7 263 deg/s^2, most jerk J7 2854 deg/s^3, turns back: J5"
+   ],
+   "meas model band": 1.6713879160555751,
+   "pred model": 1.6974762477902041,
+   "pred model + weight": 1.660198494928749
+  },
+  {
+   "t_peak": 81.18005973848267,
+   "peak_deg_s": 6.1329752611164245,
+   "roll_deg_s": -0.17341850679374204,
+   "pitch_deg_s": -6.130522944657128,
+   "acc_h": 0.010825285519721388,
+   "jerk_h": 1.0695891802315938,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 5879-5971",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 6093-6190"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 565 deg/s^2, most jerk J4 5169 deg/s^3, turns back: J1 J2 J3 J6",
+    "RIGHT: most acceleration J7 173 deg/s^2, most jerk J7 1281 deg/s^3"
+   ],
+   "meas model band": 2.1570158114876556,
+   "pred model": 1.9150098623328697,
+   "pred model + weight": 2.139933713687878
+  },
+  {
+   "t_peak": 82.2400278759851,
+   "peak_deg_s": 2.5029483993373036,
+   "roll_deg_s": 0.43912692739355763,
+   "pitch_deg_s": 2.4641262612502355,
+   "acc_h": 0.011689620831568364,
+   "jerk_h": 0.9328423499884482,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 6075-6174",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 6300-6396"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 1139 deg/s^2, most jerk J3 15632 deg/s^3, turns back: J1 J2 J3 J6",
+    "RIGHT: most acceleration J5 278 deg/s^2, most jerk J5 3346 deg/s^3, turns back: J2"
+   ],
+   "meas model band": 1.0592845818549343,
+   "pred model": 1.1742600236822103,
+   "pred model + weight": 1.06366607668483
+  },
+  {
+   "t_peak": 83.51998940051635,
+   "peak_deg_s": 1.7499654317715174,
+   "roll_deg_s": 0.2690895893515926,
+   "pitch_deg_s": -1.72915291553346,
+   "acc_h": 0.011624844497613536,
+   "jerk_h": 1.2152323771443991,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 6331-6430",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 6550-6649"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 1013 deg/s^2, most jerk J6 17519 deg/s^3",
+    "RIGHT: most acceleration J7 533 deg/s^2, most jerk J5 5642 deg/s^3, turns back: J5 J6 J7"
+   ],
+   "meas model band": 1.2712768632254048,
+   "pred model": 1.2331940290436705,
+   "pred model + weight": 1.2540673188271974
+  },
+  {
+   "t_peak": 84.53995874037719,
+   "peak_deg_s": 2.6696790844828184,
+   "roll_deg_s": -0.5810986056078912,
+   "pitch_deg_s": -2.6056689783404154,
+   "acc_h": 0.007691048277420493,
+   "jerk_h": 0.7862355823855286,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 6527-6625",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 6747-6846"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 1133 deg/s^2, most jerk J6 15104 deg/s^3, turns back: J1 J5 J6",
+    "RIGHT: most acceleration J5 366 deg/s^2, most jerk J5 3782 deg/s^3, turns back: J2 J5 J6 J7"
+   ],
+   "meas model band": 1.086446350671283,
+   "pred model": 1.151017208752882,
+   "pred model + weight": 1.0735292256284326
+  },
+  {
+   "t_peak": 85.83241988917143,
+   "peak_deg_s": 10.37661266088346,
+   "roll_deg_s": 2.03691806212489,
+   "pitch_deg_s": 10.17472629224965,
+   "acc_h": 0.013260630605936428,
+   "jerk_h": 1.6532094013774603,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 6777-6875",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 7003-7102"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J1 1108 deg/s^2, most jerk J6 34496 deg/s^3, turns back: J3 J4 J6",
+    "RIGHT: most acceleration J6 502 deg/s^2, most jerk J6 7831 deg/s^3, turns back: J2 J3 J5 J6 J7"
+   ],
+   "meas model band": 9.443353613338077,
+   "pred model": 9.734270154342108,
+   "pred model + weight": 9.406562640468053
+  },
+  {
+   "t_peak": 86.85738907873747,
+   "peak_deg_s": 1.6364082828669377,
+   "roll_deg_s": 1.1769280799142563,
+   "pitch_deg_s": 1.1369575026995782,
+   "acc_h": 0.012616904742958665,
+   "jerk_h": 1.1389819248735806,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 6976-7076",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 7208-7307"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J7 470 deg/s^2, most jerk J6 5692 deg/s^3",
+    "RIGHT: most acceleration J6 551 deg/s^2, most jerk J6 7731 deg/s^3, turns back: J2 J3 J5 J6 J7"
+   ],
+   "meas model band": 2.929531047294866,
+   "pred model": 3.0493543184581395,
+   "pred model + weight": 2.9072382348015577
+  },
+  {
+   "t_peak": 87.8698586440405,
+   "peak_deg_s": 4.717993669899408,
+   "roll_deg_s": 0.4384421766445641,
+   "pitch_deg_s": -4.697577325276303,
+   "acc_h": 0.009156716050566855,
+   "jerk_h": 1.0436397510094135,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 7172-7270",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 7405-7505"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 598 deg/s^2, most jerk J4 4241 deg/s^3, turns back: J7",
+    "RIGHT: most acceleration J6 521 deg/s^2, most jerk J6 7939 deg/s^3, turns back: J2 J3 J5 J6 J7"
+   ],
+   "meas model band": 2.7825661370413806,
+   "pred model": 2.749932685182293,
+   "pred model + weight": 2.785148371087382
+  },
+  {
+   "t_peak": 89.69730371129117,
+   "peak_deg_s": 2.7640836392865586,
+   "roll_deg_s": -0.17452038401761785,
+   "pitch_deg_s": 2.758568650683533,
+   "acc_h": 0.01241236332643656,
+   "jerk_h": 1.4333523392551442,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 7531-7631",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 7766-7863"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J5 730 deg/s^2, most jerk J5 9248 deg/s^3, turns back: J2 J3 J5 J6",
+    "RIGHT: most acceleration J6 502 deg/s^2, most jerk J6 4575 deg/s^3, turns back: J2 J3 J6"
+   ],
+   "meas model band": 1.6000396417451108,
+   "pred model": 1.6418049160057282,
+   "pred model + weight": 1.600333814153604
+  },
+  {
+   "t_peak": 91.49724960516323,
+   "peak_deg_s": 3.8835450582617757,
+   "roll_deg_s": 0.6782476092902169,
+   "pitch_deg_s": 3.823859620859736,
+   "acc_h": 0.013141033836359008,
+   "jerk_h": 1.1239444655727457,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 7885-7984",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 8117-8215"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 715 deg/s^2, most jerk J6 8772 deg/s^3, turns back: J2 J3 J5 J6",
+    "RIGHT: most acceleration J7 760 deg/s^2, most jerk J7 4604 deg/s^3, turns back: J3 J5 J6 J7"
+   ],
+   "meas model band": 2.45520034173303,
+   "pred model": 2.4649303528461917,
+   "pred model + weight": 2.4452364697478703
+  },
+  {
+   "t_peak": 93.00470429128109,
+   "peak_deg_s": 4.278728380333888,
+   "roll_deg_s": -1.0622056008001968,
+   "pitch_deg_s": -4.1447841698094905,
+   "acc_h": 0.009701719706940894,
+   "jerk_h": 1.2428290748899513,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 8182-8283",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 8416-8515"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 744 deg/s^2, most jerk J6 9229 deg/s^3, turns back: J2 J3 J6",
+    "RIGHT: most acceleration J7 777 deg/s^2, most jerk J7 4919 deg/s^3, turns back: J2 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 2.8025358801087754,
+   "pred model": 2.9532500730419806,
+   "pred model + weight": 2.813593909729272
+  },
+  {
+   "t_peak": 94.00717415717372,
+   "peak_deg_s": 0.9392114875295049,
+   "roll_deg_s": -0.34012990901375145,
+   "pitch_deg_s": -0.8754598010769441,
+   "acc_h": 0.01188347350374671,
+   "jerk_h": 1.2204377143759926,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 8378-8479",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 8614-8707"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 726 deg/s^2, most jerk J6 8842 deg/s^3, turns back: J2 J6",
+    "RIGHT: most acceleration J7 627 deg/s^2, most jerk J7 5061 deg/s^3, turns back: J3 J4 J6 J7"
+   ],
+   "meas model band": 1.3456468136352684,
+   "pred model": 1.4220578496475131,
+   "pred model + weight": 1.3352079549771614
+  },
+  {
+   "t_peak": 95.56712726519618,
+   "peak_deg_s": 5.206604568995261,
+   "roll_deg_s": -0.12586260488108006,
+   "pitch_deg_s": 5.205083067788148,
+   "acc_h": 0.011581953075305037,
+   "jerk_h": 1.2660489143828477,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 8686-8787",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 8923-9022"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 526 deg/s^2, most jerk J6 5353 deg/s^3",
+    "RIGHT: most acceleration J4 582 deg/s^2, most jerk J6 6220 deg/s^3, turns back: J4 J6 J7"
+   ],
+   "meas model band": 2.3168563579160812,
+   "pred model": 2.1037781579051162,
+   "pred model + weight": 2.3290200847940628
+  },
+  {
+   "t_peak": 96.57459698079401,
+   "peak_deg_s": 2.4072199899449793,
+   "roll_deg_s": 1.8813872157921363,
+   "pitch_deg_s": 1.5016957828550426,
+   "acc_h": 0.011217365559276883,
+   "jerk_h": 1.1815725680219469,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 8887-8983",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 9126-9215"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 496 deg/s^2, most jerk J4 3915 deg/s^3, turns back: J6",
+    "RIGHT: most acceleration J4 591 deg/s^2, most jerk J6 7594 deg/s^3, turns back: J3 J4 J5"
+   ],
+   "meas model band": 2.22270409722911,
+   "pred model": 1.84667013765062,
+   "pred model + weight": 2.2047819190763978
+  },
+  {
+   "t_peak": 97.64456481770685,
+   "peak_deg_s": 5.605225364731705,
+   "roll_deg_s": 1.2477564619260089,
+   "pitch_deg_s": -5.464581887130393,
+   "acc_h": 0.010265425292016208,
+   "jerk_h": 1.2542975172207997,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 9090-9189",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 9322-9422"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 456 deg/s^2, most jerk J6 5441 deg/s^3, turns back: J2 J6",
+    "RIGHT: most acceleration J4 727 deg/s^2, most jerk J4 5142 deg/s^3, turns back: J3"
+   ],
+   "meas model band": 2.6057650243295023,
+   "pred model": 2.395090146247859,
+   "pred model + weight": 2.652769974077621
+  },
+  {
+   "t_peak": 98.8470286718075,
+   "peak_deg_s": 15.755164111144254,
+   "roll_deg_s": -1.5984394850082122,
+   "pitch_deg_s": -15.673869572695013,
+   "acc_h": 0.01079102416406265,
+   "jerk_h": 1.195701706527276,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 9330-9429",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 9561-9660"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 448 deg/s^2, most jerk J4 5041 deg/s^3, turns back: J4 J6",
+    "RIGHT: most acceleration J7 608 deg/s^2, most jerk J7 7622 deg/s^3, turns back: J3 J4 J6 J7"
+   ],
+   "meas model band": 8.506481638161468,
+   "pred model": 8.279683671134782,
+   "pred model + weight": 8.62254760285427
+  },
+  {
+   "t_peak": 100.19948801706414,
+   "peak_deg_s": 2.54140517255739,
+   "roll_deg_s": -0.8639717787971279,
+   "pitch_deg_s": 2.3900403796889256,
+   "acc_h": 0.012064683922128647,
+   "jerk_h": 1.1196585683700941,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "Program 61 61_L_P1_pole50_cleaningpose_48.2; WAIT",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "LEFT 61_L_P1_pole50_cleaningpose_48.2s_20pct_steady30s_plus20.txt lines 9595-9595",
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 9825-9922"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 127 deg/s^2, most jerk J4 1985 deg/s^3",
+    "RIGHT: most acceleration J6 759 deg/s^2, most jerk J6 7912 deg/s^3, turns back: J3 J4 J6 J7"
+   ],
+   "meas model band": 1.6388487838148096,
+   "pred model": 1.338016338824261,
+   "pred model + weight": 1.6278960884260272
+  },
+  {
+   "t_peak": 101.27945555338738,
+   "peak_deg_s": 0.6146497101991533,
+   "roll_deg_s": 0.5478985622316109,
+   "pitch_deg_s": -0.2785703353776863,
+   "acc_h": 0.011277571262329386,
+   "jerk_h": 1.08077899504084,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "WAIT",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 10038-10133"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J4 623 deg/s^2, most jerk J6 7271 deg/s^3, turns back: J3 J4 J5 J6"
+   ],
+   "meas model band": 0.5605122501414662,
+   "pred model": 0.671825531158219,
+   "pred model + weight": 0.5632355163412416
+  },
+  {
+   "t_peak": 102.32192421692162,
+   "peak_deg_s": 5.334889079729213,
+   "roll_deg_s": 1.8810815639642502,
+   "pitch_deg_s": -4.992251360130799,
+   "acc_h": 0.011551176401855984,
+   "jerk_h": 1.4379471291312746,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "WAIT",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 10242-10340"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J2 522 deg/s^2, most jerk J5 8151 deg/s^3"
+   ],
+   "meas model band": 3.2409035208918353,
+   "pred model": 3.267152417702794,
+   "pred model + weight": 3.225204353656832
+  },
+  {
+   "t_peak": 103.32939393251945,
+   "peak_deg_s": 8.505959622005635,
+   "roll_deg_s": 1.96587175096553,
+   "pitch_deg_s": -8.27566899712319,
+   "acc_h": 0.014829134547966524,
+   "jerk_h": 1.5993529224229226,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "WAIT",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.",
+   "lines": [
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 10440-10533"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J5 513 deg/s^2, most jerk J7 5463 deg/s^3, turns back: J6 J7"
+   ],
+   "meas model band": 4.196905843906546,
+   "pred model": 4.101340234172622,
+   "pred model + weight": 4.180867841804816
+  },
+  {
+   "t_peak": 104.33436372326469,
+   "peak_deg_s": 0.21306065313253403,
+   "roll_deg_s": -0.06301637407799952,
+   "pitch_deg_s": -0.20352832360957432,
+   "acc_h": 0.013287457426556525,
+   "jerk_h": 1.056557873918218,
+   "section_t0": 48.69353627894452,
+   "section_t1": 104.5068585380941,
+   "left": "WAIT",
+   "right": "Program 61 61_R_P1_pole200_cleaningpose_53.; WAIT",
+   "lines": [
+    "RIGHT 61_R_P1_pole200_cleaningpose_53.5s_20pct_steady40s.txt lines 10656-10656"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 40 deg/s^2, most jerk J6 1612 deg/s^3"
+   ],
+   "meas model band": 0.3545953060856359,
+   "pred model": 0.3712825663539993,
+   "pred model + weight": 0.34505737518867907
+  },
+  {
+   "t_peak": 105.60182562353293,
+   "peak_deg_s": 0.13052568504290737,
+   "roll_deg_s": 0.03626659029075,
+   "pitch_deg_s": -0.1253861590631244,
+   "acc_h": 0.011480334761165877,
+   "jerk_h": 1.2972973291151229,
+   "section_t0": 105.55682697618613,
+   "section_t1": 105.60682547323813,
+   "left": "POLE",
+   "right": "WAIT",
+   "lines": [],
+   "file_notes": [],
+   "meas model band": 0.04603035854726465,
+   "pred model": 0.04995358067135564,
+   "pred model + weight": 0.048482741311951974
+  },
+  {
+   "t_peak": 106.83428857586478,
+   "peak_deg_s": 0.24201942962740028,
+   "roll_deg_s": 0.017071275261118384,
+   "pitch_deg_s": 0.24141660232496703,
+   "acc_h": 0.012464208632873165,
+   "jerk_h": 1.2862233550003788,
+   "section_t0": 106.77929022910757,
+   "section_t1": 106.84428827527518,
+   "left": "POLE",
+   "right": "WAIT",
+   "lines": [],
+   "file_notes": [],
+   "meas model band": 0.06589320802443546,
+   "pred model": 0.06490501476725397,
+   "pred model + weight": 0.061898590080593854
+  },
+  {
+   "t_peak": 109.09172071776266,
+   "peak_deg_s": 0.1728018636573655,
+   "roll_deg_s": 0.03150321031604804,
+   "pitch_deg_s": 0.16990594993478475,
+   "acc_h": 0.010098807825450374,
+   "jerk_h": 1.1228908022898543,
+   "section_t0": 109.08422094320485,
+   "section_t1": 109.09922049232046,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "WAIT",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 46-46"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 219 deg/s^2, most jerk J6 3095 deg/s^3"
+   ],
+   "meas model band": 0.045276732222922805,
+   "pred model": 0.04213946462796006,
+   "pred model + weight": 0.04051057089242073
+  },
+  {
+   "t_peak": 112.15912851190296,
+   "peak_deg_s": 0.8489275139087499,
+   "roll_deg_s": -0.13101052211483624,
+   "pitch_deg_s": 0.838757513806278,
+   "acc_h": 0.009540118863457951,
+   "jerk_h": 1.1077031626825833,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 46-80",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 70-169"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 464 deg/s^2, most jerk J6 3740 deg/s^3",
+    "RIGHT: most acceleration J6 342 deg/s^2, most jerk J4 1633 deg/s^3, turns back: J4 J5"
+   ],
+   "meas model band": 0.4559753228164504,
+   "pred model": 0.5532510364912647,
+   "pred model + weight": 0.45428947766756683
+  },
+  {
+   "t_peak": 113.2140967997002,
+   "peak_deg_s": 9.115828403218051,
+   "roll_deg_s": -1.434437227349615,
+   "pitch_deg_s": -9.00226178900117,
+   "acc_h": 0.00863490454589193,
+   "jerk_h": 0.836676939546124,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 190-289",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 278-378"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 44 deg/s^2, most jerk J4 849 deg/s^3",
+    "RIGHT: most acceleration J6 282 deg/s^2, most jerk J3 1672 deg/s^3, turns back: J4 J5 J7"
+   ],
+   "meas model band": 2.501143406959751,
+   "pred model": 2.294168590945592,
+   "pred model + weight": 2.5016309469891977
+  },
+  {
+   "t_peak": 114.56905606980945,
+   "peak_deg_s": 10.07205028291494,
+   "roll_deg_s": -0.5127484569824793,
+   "pitch_deg_s": -10.058990303277414,
+   "acc_h": 0.011285926325037521,
+   "jerk_h": 1.4063484762735172,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 454-549",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 549-647"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 466 deg/s^2, most jerk J6 6001 deg/s^3, turns back: J6",
+    "RIGHT: most acceleration J6 210 deg/s^2, most jerk J6 2684 deg/s^3, turns back: J7"
+   ],
+   "meas model band": 5.1715910145302715,
+   "pred model": 5.2054402686235335,
+   "pred model + weight": 5.148937728568748
+  },
+  {
+   "t_peak": 115.72652127656329,
+   "peak_deg_s": 9.026168986380885,
+   "roll_deg_s": 0.608191936839245,
+   "pitch_deg_s": -9.00565539750816,
+   "acc_h": 0.011921905262894234,
+   "jerk_h": 1.4956550725175584,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 681-780",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 775-875"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 508 deg/s^2, most jerk J6 4156 deg/s^3, turns back: J1 J3 J5 J6",
+    "RIGHT: most acceleration J2 244 deg/s^2, most jerk J4 2360 deg/s^3, turns back: J3 J4 J5 J6"
+   ],
+   "meas model band": 4.217842851348835,
+   "pred model": 4.081403594756293,
+   "pred model + weight": 4.164493540758613
+  },
+  {
+   "t_peak": 116.99648310168413,
+   "peak_deg_s": 4.606162814707103,
+   "roll_deg_s": 0.5000878762409076,
+   "pitch_deg_s": -4.578935246498614,
+   "acc_h": 0.007801570546787985,
+   "jerk_h": 1.1250819613731418,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 932-1033",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 1029-1130"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 426 deg/s^2, most jerk J5 5287 deg/s^3, turns back: J2 J3 J6",
+    "RIGHT: most acceleration J4 179 deg/s^2, most jerk J6 1582 deg/s^3, turns back: J6"
+   ],
+   "meas model band": 2.9010678591641783,
+   "pred model": 2.5630949436605746,
+   "pred model + weight": 2.9224956171303713
+  },
+  {
+   "t_peak": 118.33394289782518,
+   "peak_deg_s": 10.91772425075748,
+   "roll_deg_s": -2.0422259795829114,
+   "pitch_deg_s": 10.725018222077509,
+   "acc_h": 0.009743270290835335,
+   "jerk_h": 1.2448412667145676,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 1195-1292",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 1290-1388"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 654 deg/s^2, most jerk J6 5693 deg/s^3, turns back: J2 J3 J4 J6",
+    "RIGHT: most acceleration J4 368 deg/s^2, most jerk J4 3852 deg/s^3, turns back: J4 J6"
+   ],
+   "meas model band": 5.197152393053123,
+   "pred model": 4.835343339492821,
+   "pred model + weight": 5.1604721598626355
+  },
+  {
+   "t_peak": 119.35391223768602,
+   "peak_deg_s": 5.370030516077663,
+   "roll_deg_s": 0.6005542997519713,
+   "pitch_deg_s": -5.336343530607334,
+   "acc_h": 0.010210476174686437,
+   "jerk_h": 1.1150126234351696,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 1395-1495",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 1491-1590"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 574 deg/s^2, most jerk J6 6491 deg/s^3, turns back: J3 J5 J6",
+    "RIGHT: most acceleration J4 296 deg/s^2, most jerk J4 3172 deg/s^3, turns back: J4 J5 J6"
+   ],
+   "meas model band": 1.8207405286977645,
+   "pred model": 1.8619694917657836,
+   "pred model + weight": 1.8387982644773482
+  },
+  {
+   "t_peak": 120.37388157754685,
+   "peak_deg_s": 5.023909206846607,
+   "roll_deg_s": 2.2212131499728933,
+   "pitch_deg_s": -4.506204152169052,
+   "acc_h": 0.010693811565063662,
+   "jerk_h": 1.172916460657823,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 1592-1691",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 1691-1790"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 511 deg/s^2, most jerk J3 5170 deg/s^3, turns back: J2 J3 J4 J5 J6",
+    "RIGHT: most acceleration J2 285 deg/s^2, most jerk J6 2515 deg/s^3, turns back: J4 J6"
+   ],
+   "meas model band": 2.981441701262922,
+   "pred model": 2.8649178425199944,
+   "pred model + weight": 2.9860875667090996
+  },
+  {
+   "t_peak": 121.47134858783829,
+   "peak_deg_s": 5.805084780145622,
+   "roll_deg_s": -1.2097864424123528,
+   "pitch_deg_s": 5.677625037674961,
+   "acc_h": 0.008874521265450797,
+   "jerk_h": 1.0219133092945285,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 1802-1906",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 1907-2004"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 489 deg/s^2, most jerk J3 5525 deg/s^3, turns back: J3 J4 J5 J6",
+    "RIGHT: most acceleration J4 290 deg/s^2, most jerk J4 2881 deg/s^3, turns back: J2 J4 J6"
+   ],
+   "meas model band": 3.8584532425097433,
+   "pred model": 3.4250507518430506,
+   "pred model + weight": 3.8486354301904733
+  },
+  {
+   "t_peak": 122.47881830343613,
+   "peak_deg_s": 7.649454382257846,
+   "roll_deg_s": 0.023695747675784147,
+   "pitch_deg_s": -7.649417680960156,
+   "acc_h": 0.011395070108692392,
+   "jerk_h": 1.0189859310547362,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 2005-2106",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 2106-2205"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 626 deg/s^2, most jerk J6 6106 deg/s^3, turns back: J2 J3 J4 J5 J6",
+    "RIGHT: most acceleration J6 344 deg/s^2, most jerk J4 3767 deg/s^3"
+   ],
+   "meas model band": 2.8988156193235697,
+   "pred model": 3.000440149670727,
+   "pred model + weight": 2.886311859735088
+  },
+  {
+   "t_peak": 123.55378599005417,
+   "peak_deg_s": 7.371407202386919,
+   "roll_deg_s": 1.6369534389428508,
+   "pitch_deg_s": -7.187351917231751,
+   "acc_h": 0.01265788205150074,
+   "jerk_h": 0.9887819644387361,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 2219-2314",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 2318-2417"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 445 deg/s^2, most jerk J6 3462 deg/s^3",
+    "RIGHT: most acceleration J2 219 deg/s^2, most jerk J4 1744 deg/s^3, turns back: J3 J6"
+   ],
+   "meas model band": 3.293131317836369,
+   "pred model": 3.082551479691046,
+   "pred model + weight": 3.291785354548305
+  },
+  {
+   "t_peak": 124.82124789032241,
+   "peak_deg_s": 4.441830702882094,
+   "roll_deg_s": -1.7142170650025985,
+   "pitch_deg_s": 4.097721299346738,
+   "acc_h": 0.00999410711385589,
+   "jerk_h": 1.0894862221597417,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 62 62_R_P2_pole200_grip_13.0s_new_R; HAND",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 2461-2561",
+    "RIGHT 62_R_P2_pole200_grip_13.0s_new_R04.txt lines 2595-2596"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 534 deg/s^2, most jerk J5 5255 deg/s^3, turns back: J1 J2 J3 J4 J5 J6",
+    "RIGHT: most acceleration J4 8 deg/s^2, most jerk J7 222 deg/s^3"
+   ],
+   "meas model band": 2.138867301951712,
+   "pred model": 1.7795552054656751,
+   "pred model + weight": 2.1545298805067175
+  },
+  {
+   "t_peak": 125.82371775621505,
+   "peak_deg_s": 5.092064210055703,
+   "roll_deg_s": 2.9882212605436957,
+   "pitch_deg_s": -4.123063377801129,
+   "acc_h": 0.012831908985018688,
+   "jerk_h": 1.1105483784197185,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "HAND; Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 2658-2756",
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 45-45"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 646 deg/s^2, most jerk J6 3812 deg/s^3, turns back: J2 J4 J5 J6",
+    "RIGHT: most acceleration J5 162 deg/s^2, most jerk J5 2562 deg/s^3"
+   ],
+   "meas model band": 2.059221848802575,
+   "pred model": 1.7913992634944733,
+   "pred model + weight": 2.057279525102949
+  },
+  {
+   "t_peak": 126.96118356414809,
+   "peak_deg_s": 2.597345273642187,
+   "roll_deg_s": -1.4832210797281526,
+   "pitch_deg_s": 2.1321955114767173,
+   "acc_h": 0.011315777623467485,
+   "jerk_h": 1.426888881060577,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 2878-2970",
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 45-45"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 496 deg/s^2, most jerk J4 4105 deg/s^3, turns back: J1 J2 J4 J5 J6",
+    "RIGHT: most acceleration J5 162 deg/s^2, most jerk J5 2562 deg/s^3"
+   ],
+   "meas model band": 1.2904974361053854,
+   "pred model": 0.9599174646377957,
+   "pred model + weight": 1.2668044087967516
+  },
+  {
+   "t_peak": 128.34364200763594,
+   "peak_deg_s": 4.6561085029058615,
+   "roll_deg_s": -4.621717815546464,
+   "pitch_deg_s": 0.5648635448430729,
+   "acc_h": 0.009192065238783097,
+   "jerk_h": 1.1256520522229654,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 3142-3243",
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 45-45"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 591 deg/s^2, most jerk J6 5914 deg/s^3, turns back: J1 J2 J5 J6",
+    "RIGHT: most acceleration J5 162 deg/s^2, most jerk J5 2562 deg/s^3"
+   ],
+   "meas model band": 2.953095774784195,
+   "pred model": 2.7692577090747386,
+   "pred model + weight": 2.9449012351444126
+  },
+  {
+   "t_peak": 129.57610495996778,
+   "peak_deg_s": 5.484160849649376,
+   "roll_deg_s": 1.5780054799832293,
+   "pitch_deg_s": -5.252229900715491,
+   "acc_h": 0.011023618863788727,
+   "jerk_h": 1.0970219189176162,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 3388-3487",
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 98-196"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 543 deg/s^2, most jerk J6 5999 deg/s^3, turns back: J1 J2 J3 J6",
+    "RIGHT: most acceleration J5 437 deg/s^2, most jerk J6 5321 deg/s^3"
+   ],
+   "meas model band": 2.7824468087904126,
+   "pred model": 2.775207644718271,
+   "pred model + weight": 2.760195427513412
+  },
+  {
+   "t_peak": 131.03356114903363,
+   "peak_deg_s": 2.4788312836792796,
+   "roll_deg_s": 0.542563626483663,
+   "pitch_deg_s": -2.41872471442369,
+   "acc_h": 0.010110905922719925,
+   "jerk_h": 1.0552556459421265,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 3672-3771",
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 383-481"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 441 deg/s^2, most jerk J5 2775 deg/s^3, turns back: J5 J6",
+    "RIGHT: most acceleration J3 660 deg/s^2, most jerk J3 3826 deg/s^3, turns back: J2 J3 J5 J6"
+   ],
+   "meas model band": 1.7224478392149236,
+   "pred model": 1.4767416443171533,
+   "pred model + weight": 1.7211785600722909
+  },
+  {
+   "t_peak": 132.04103086463147,
+   "peak_deg_s": 12.153457879420019,
+   "roll_deg_s": 3.8359262338832094,
+   "pitch_deg_s": 11.532224779072038,
+   "acc_h": 0.012884457277312678,
+   "jerk_h": 1.1203768519134742,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 3872-3971",
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 584-683"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J1 298 deg/s^2, most jerk J1 2565 deg/s^3, turns back: J1 J3",
+    "RIGHT: most acceleration J5 441 deg/s^2, most jerk J5 4931 deg/s^3, turns back: J4 J5 J6 J7"
+   ],
+   "meas model band": 4.6121152257064075,
+   "pred model": 4.20793014651055,
+   "pred model + weight": 4.615873195463588
+  },
+  {
+   "t_peak": 133.0884993778709,
+   "peak_deg_s": 4.844816399449946,
+   "roll_deg_s": -0.7228481465278104,
+   "pitch_deg_s": -4.790588325189344,
+   "acc_h": 0.010797357269441504,
+   "jerk_h": 0.973644383958473,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 4080-4177",
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 790-889"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 503 deg/s^2, most jerk J6 3866 deg/s^3, turns back: J2 J5 J6 J7",
+    "RIGHT: most acceleration J6 497 deg/s^2, most jerk J6 6488 deg/s^3, turns back: J2 J5 J6 J7"
+   ],
+   "meas model band": 3.765581430238517,
+   "pred model": 3.4276749832727123,
+   "pred model + weight": 3.7495665287970312
+  },
+  {
+   "t_peak": 134.67845158412456,
+   "peak_deg_s": 3.243142796399951,
+   "roll_deg_s": 2.9434005077640992,
+   "pitch_deg_s": -1.361752051121986,
+   "acc_h": 0.015372175993253578,
+   "jerk_h": 1.1577031392852724,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 62 62_L_P2_pole200_cleaningpose_22.",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "LEFT 62_L_P2_pole200_cleaningpose_22.6s_30pct.txt lines 4389-4469",
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 1100-1199"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 301 deg/s^2, most jerk J5 3672 deg/s^3",
+    "RIGHT: most acceleration J5 478 deg/s^2, most jerk J7 3722 deg/s^3, turns back: J1 J2 J3 J5 J6 J7"
+   ],
+   "meas model band": 1.7136013581452396,
+   "pred model": 1.5592834734815622,
+   "pred model + weight": 1.7222113775793073
+  },
+  {
+   "t_peak": 136.0159113802656,
+   "peak_deg_s": 1.8012985362470697,
+   "roll_deg_s": 0.7481884781642757,
+   "pitch_deg_s": 1.6385635226710196,
+   "acc_h": 0.012313491890197363,
+   "jerk_h": 0.9293583721632371,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "HAND",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 1359-1459"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 524 deg/s^2, most jerk J3 3313 deg/s^3, turns back: J1 J2 J3 J5 J6"
+   ],
+   "meas model band": 1.0596215784404255,
+   "pred model": 0.9344910433314256,
+   "pred model + weight": 1.0663310974717248
+  },
+  {
+   "t_peak": 137.35087125155405,
+   "peak_deg_s": 2.7003602086216962,
+   "roll_deg_s": 2.6119300119652897,
+   "pitch_deg_s": -0.6853954106225191,
+   "acc_h": 0.010464907467067873,
+   "jerk_h": 0.9911008611479216,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 63 63_L_P2_pole200_grip_10.5s_25pct",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2",
+   "lines": [
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 1624-1724",
+    "LEFT 63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt lines 109-109"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 425 deg/s^2, most jerk J6 3702 deg/s^3, turns back: J1 J6",
+    "LEFT: most acceleration J6 8 deg/s^2, most jerk J6 591 deg/s^3"
+   ],
+   "meas model band": 1.915609145850332,
+   "pred model": 1.7340004947106906,
+   "pred model + weight": 1.93456839522231
+  },
+  {
+   "t_peak": 138.4083394642039,
+   "peak_deg_s": 0.2362940672577253,
+   "roll_deg_s": -0.21031265676503705,
+   "pitch_deg_s": -0.10771941619610703,
+   "acc_h": 0.012107975498663038,
+   "jerk_h": 1.2030335381721105,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 63 63_L_P2_pole200_grip_10.5s_25pct",
+   "right": "Program 63 63_R_P2_pole200_cleaningpose_9.2; POLE",
+   "lines": [
+    "RIGHT 63_R_P2_pole200_cleaningpose_9.2s_30pct.txt lines 1797-1802",
+    "LEFT 63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt lines 159-261"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J2 228 deg/s^2, most jerk J2 2842 deg/s^3",
+    "LEFT: most acceleration J6 165 deg/s^2, most jerk J6 889 deg/s^3, turns back: J6"
+   ],
+   "meas model band": 0.19472105023220115,
+   "pred model": 0.18323228403107727,
+   "pred model + weight": 0.18190221266956313
+  },
+  {
+   "t_peak": 139.42830880406473,
+   "peak_deg_s": 2.7698568178905005,
+   "roll_deg_s": -0.5023595121910359,
+   "pitch_deg_s": 2.7239202837318266,
+   "acc_h": 0.009372801442156065,
+   "jerk_h": 1.0522728992276194,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 63 63_L_P2_pole200_grip_10.5s_25pct",
+   "right": "POLE",
+   "lines": [
+    "LEFT 63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt lines 365-464"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 220 deg/s^2, most jerk J6 1392 deg/s^3, turns back: J6"
+   ],
+   "meas model band": 1.0279882548463437,
+   "pred model": 1.1205842656309164,
+   "pred model + weight": 1.0222840577506975
+  },
+  {
+   "t_peak": 140.90576439195138,
+   "peak_deg_s": 3.8422533154418628,
+   "roll_deg_s": 2.7619506670196445,
+   "pitch_deg_s": 2.6710557936841615,
+   "acc_h": 0.011577036963433023,
+   "jerk_h": 1.1261646915286707,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 63 63_L_P2_pole200_grip_10.5s_25pct",
+   "right": "POLE",
+   "lines": [
+    "LEFT 63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt lines 654-753"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 391 deg/s^2, most jerk J3 4762 deg/s^3, turns back: J3 J4 J5 J6"
+   ],
+   "meas model band": 2.486243795523432,
+   "pred model": 2.5070900214069622,
+   "pred model + weight": 2.4640197309721095
+  },
+  {
+   "t_peak": 142.59571359230904,
+   "peak_deg_s": 6.735525695034739,
+   "roll_deg_s": -0.9929357257615808,
+   "pitch_deg_s": 6.66193553203418,
+   "acc_h": 0.009766329753159256,
+   "jerk_h": 1.1200048132418345,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 63 63_L_P2_pole200_grip_10.5s_25pct",
+   "right": "Program 64 64_1_R_P2_pole50_cleaningpose_10",
+   "lines": [
+    "LEFT 63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt lines 986-1084",
+    "RIGHT 64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt lines 3-39"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 788 deg/s^2, most jerk J6 11118 deg/s^3, turns back: J2 J3 J4 J7",
+    "RIGHT: most acceleration J6 90 deg/s^2, most jerk J3 1668 deg/s^3"
+   ],
+   "meas model band": 2.8832904810406017,
+   "pred model": 3.125444637147158,
+   "pred model + weight": 2.891858172819563
+  },
+  {
+   "t_peak": 143.81567692037788,
+   "peak_deg_s": 6.119098010021046,
+   "roll_deg_s": 0.6583963728190784,
+   "pitch_deg_s": -6.083574169228334,
+   "acc_h": 0.012340878707155641,
+   "jerk_h": 1.222880806267788,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 63 63_L_P2_pole200_grip_10.5s_25pct",
+   "right": "Program 64 64_1_R_P2_pole50_cleaningpose_10",
+   "lines": [
+    "LEFT 63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt lines 1228-1320",
+    "RIGHT 64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt lines 179-279"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 738 deg/s^2, most jerk J6 7676 deg/s^3, turns back: J2 J3 J4 J5 J6",
+    "RIGHT: most acceleration J3 161 deg/s^2, most jerk J5 1038 deg/s^3, turns back: J2 J3"
+   ],
+   "meas model band": 2.8205949420693375,
+   "pred model": 3.0680242345300215,
+   "pred model + weight": 2.8011503304474914
+  },
+  {
+   "t_peak": 145.09063859520393,
+   "peak_deg_s": 7.208812514354079,
+   "roll_deg_s": 0.8471217035325662,
+   "pitch_deg_s": -7.158866019595007,
+   "acc_h": 0.011828248564324887,
+   "jerk_h": 1.1919805816705242,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 63 63_L_P2_pole200_grip_10.5s_25pct",
+   "right": "Program 64 64_1_R_P2_pole50_cleaningpose_10",
+   "lines": [
+    "LEFT 63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt lines 1469-1568",
+    "RIGHT 64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt lines 432-529"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J3 707 deg/s^2, most jerk J3 11341 deg/s^3, turns back: J2 J3 J4 J5 J6",
+    "RIGHT: most acceleration J6 448 deg/s^2, most jerk J6 4449 deg/s^3, turns back: J2 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 4.154926668860235,
+   "pred model": 4.244131848701903,
+   "pred model + weight": 4.151293826970704
+  },
+  {
+   "t_peak": 146.70309012513098,
+   "peak_deg_s": 6.809428751999943,
+   "roll_deg_s": -0.2694308094526877,
+   "pitch_deg_s": -6.804096337316306,
+   "acc_h": 0.013404220674623307,
+   "jerk_h": 1.2880750274212718,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 63 63_L_P2_pole200_grip_10.5s_25pct",
+   "right": "Program 64 64_1_R_P2_pole50_cleaningpose_10",
+   "lines": [
+    "LEFT 63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt lines 1786-1881",
+    "RIGHT 64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt lines 751-851"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 221 deg/s^2, most jerk J6 913 deg/s^3, turns back: J4",
+    "RIGHT: most acceleration J7 468 deg/s^2, most jerk J7 4210 deg/s^3, turns back: J2 J3 J4 J5"
+   ],
+   "meas model band": 2.6312489045205525,
+   "pred model": 2.742894751400039,
+   "pred model + weight": 2.6447220493205097
+  },
+  {
+   "t_peak": 148.17304593845984,
+   "peak_deg_s": 1.949478264901728,
+   "roll_deg_s": 0.9462469747643575,
+   "pitch_deg_s": -1.7044301593416942,
+   "acc_h": 0.009918830218258063,
+   "jerk_h": 0.9316131013161605,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "Program 63 63_L_P2_pole200_grip_10.5s_25pct; WAIT",
+   "right": "Program 64 64_1_R_P2_pole50_cleaningpose_10",
+   "lines": [
+    "LEFT 63_L_P2_pole200_grip_10.5s_25pct_new_slowstart.txt lines 2027-2027",
+    "RIGHT 64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt lines 1041-1136"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J7 144 deg/s^2, most jerk J7 4092 deg/s^3",
+    "RIGHT: most acceleration J7 569 deg/s^2, most jerk J7 3196 deg/s^3, turns back: J3 J4 J6 J7"
+   ],
+   "meas model band": 1.0068207499475539,
+   "pred model": 0.82521223530496,
+   "pred model + weight": 1.0146895656133041
+  },
+  {
+   "t_peak": 149.29801212212988,
+   "peak_deg_s": 0.8879158111645425,
+   "roll_deg_s": -0.2644243841362709,
+   "pitch_deg_s": 0.847628593660066,
+   "acc_h": 0.011273387200987268,
+   "jerk_h": 0.873237394996426,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "WAIT",
+   "right": "Program 64 64_1_R_P2_pole50_cleaningpose_10",
+   "lines": [
+    "RIGHT 64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt lines 1247-1349"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J7 668 deg/s^2, most jerk J7 3392 deg/s^3, turns back: J2 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 0.4257000178787492,
+   "pred model": 0.3140323443393217,
+   "pred model + weight": 0.4272719145696404
+  },
+  {
+   "t_peak": 150.88796432838353,
+   "peak_deg_s": 6.693748798221771,
+   "roll_deg_s": 2.0333129411223547,
+   "pitch_deg_s": -6.377453367697781,
+   "acc_h": 0.008486348967971295,
+   "jerk_h": 0.9905577766009653,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "WAIT",
+   "right": "Program 64 64_1_R_P2_pole50_cleaningpose_10",
+   "lines": [
+    "RIGHT 64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt lines 1566-1666"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J2 396 deg/s^2, most jerk J2 2983 deg/s^3, turns back: J1 J3 J4 J7"
+   ],
+   "meas model band": 3.2374746103357928,
+   "pred model": 3.035531138970482,
+   "pred model + weight": 3.2387903797755397
+  },
+  {
+   "t_peak": 152.5704137541834,
+   "peak_deg_s": 3.92937558668541,
+   "roll_deg_s": -1.2541368073703827,
+   "pitch_deg_s": 3.7238600094039698,
+   "acc_h": 0.010500734948339547,
+   "jerk_h": 0.922051978214173,
+   "section_t0": 111.89163655267475,
+   "section_t1": 153.34039060878422,
+   "left": "WAIT",
+   "right": "Program 64 64_1_R_P2_pole50_cleaningpose_10",
+   "lines": [
+    "RIGHT 64_1_R_P2_pole50_cleaningpose_10.4s_new_R06.txt lines 1893-1993"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J7 657 deg/s^2, most jerk J7 5259 deg/s^3, turns back: J3 J7"
+   ],
+   "meas model band": 2.058772239183978,
+   "pred model": 2.018259600576734,
+   "pred model + weight": 2.0736841332134976
+  },
+  {
+   "t_peak": 154.10036776397465,
+   "peak_deg_s": 0.17394038627784217,
+   "roll_deg_s": 0.03151196735427983,
+   "pitch_deg_s": 0.17106213459426883,
+   "acc_h": 0.009920194186627805,
+   "jerk_h": 1.3368730301581844,
+   "section_t0": 154.06036896633304,
+   "section_t1": 154.19036505866825,
+   "left": "-",
+   "right": "WAIT",
+   "lines": [],
+   "file_notes": [],
+   "meas model band": 0.04990643311045647,
+   "pred model": 0.032442138806992836,
+   "pred model + weight": 0.03114326340384979
+  },
+  {
+   "t_peak": 155.7953168140375,
+   "peak_deg_s": 0.14828982359887066,
+   "roll_deg_s": 0.03805098660546995,
+   "pitch_deg_s": 0.14332478571878113,
+   "acc_h": 0.012281558920184137,
+   "jerk_h": 1.14198317434525,
+   "section_t0": 155.7903169643323,
+   "section_t1": 155.8003166637427,
+   "left": "-",
+   "right": "WAIT",
+   "lines": [],
+   "file_notes": [],
+   "meas model band": 0.0336496226916441,
+   "pred model": 0.025560070896315543,
+   "pred model + weight": 0.0247367186023136
+  },
+  {
+   "t_peak": 161.76263743719392,
+   "peak_deg_s": 0.6428520290138335,
+   "roll_deg_s": -0.0617029338745761,
+   "pitch_deg_s": 0.6398839575723652,
+   "acc_h": 0.010184315430169146,
+   "jerk_h": 1.2530452663313205,
+   "section_t0": 161.2326533684427,
+   "section_t1": 164.87004402897583,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 214-214",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 32-32"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 200 deg/s^2, most jerk J6 1508 deg/s^3",
+    "LEFT: most acceleration J5 373 deg/s^2, most jerk J5 7053 deg/s^3"
+   ],
+   "meas model band": 0.24371754526542416,
+   "pred model": 0.21752787436479717,
+   "pred model + weight": 0.22383246196206513
+  },
+  {
+   "t_peak": 163.57008310562378,
+   "peak_deg_s": 1.4270859366809943,
+   "roll_deg_s": 0.08634250460834199,
+   "pitch_deg_s": -1.4244715660800777,
+   "acc_h": 0.010437611839052039,
+   "jerk_h": 1.2157899628369238,
+   "section_t0": 161.2326533684427,
+   "section_t1": 164.87004402897583,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 214-214",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 32-32"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 200 deg/s^2, most jerk J6 1508 deg/s^3",
+    "LEFT: most acceleration J5 373 deg/s^2, most jerk J5 7053 deg/s^3"
+   ],
+   "meas model band": 0.9801105856912,
+   "pred model": 0.9902524513921165,
+   "pred model + weight": 0.9996999788463666
+  },
+  {
+   "t_peak": 164.64505079224182,
+   "peak_deg_s": 0.30925618352144085,
+   "roll_deg_s": -0.09454480864376384,
+   "pitch_deg_s": -0.2944497685595307,
+   "acc_h": 0.01300626882272356,
+   "jerk_h": 1.3130298576187658,
+   "section_t0": 161.2326533684427,
+   "section_t1": 164.87004402897583,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 214-214",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 32-32"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 200 deg/s^2, most jerk J6 1508 deg/s^3",
+    "LEFT: most acceleration J5 373 deg/s^2, most jerk J5 7053 deg/s^3"
+   ],
+   "meas model band": 0.18250355692429565,
+   "pred model": 0.17485494200475563,
+   "pred model + weight": 0.17540627151864252
+  },
+  {
+   "t_peak": 165.64752065813445,
+   "peak_deg_s": 2.095201731100664,
+   "roll_deg_s": -2.002103150942986,
+   "pitch_deg_s": 0.6176190306259887,
+   "acc_h": 0.010166640731502004,
+   "jerk_h": 1.1555638450782626,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 214-249",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 56-155"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 200 deg/s^2, most jerk J6 1753 deg/s^3",
+    "LEFT: most acceleration J5 685 deg/s^2, most jerk J5 13914 deg/s^3, turns back: J5"
+   ],
+   "meas model band": 1.4373853505296899,
+   "pred model": 1.3286667319715764,
+   "pred model + weight": 1.403917781958133
+  },
+  {
+   "t_peak": 166.6599902234375,
+   "peak_deg_s": 13.477773490979187,
+   "roll_deg_s": -1.3024469131508118,
+   "pitch_deg_s": -13.414693821051795,
+   "acc_h": 0.009331970305345924,
+   "jerk_h": 0.9527332700284543,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 349-446",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 254-353"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J5 40 deg/s^2, most jerk J6 579 deg/s^3",
+    "LEFT: most acceleration J6 904 deg/s^2, most jerk J6 7696 deg/s^3, turns back: J5 J6 J7"
+   ],
+   "meas model band": 4.874137648160406,
+   "pred model": 4.6217673968891875,
+   "pred model + weight": 4.811231167708027
+  },
+  {
+   "t_peak": 167.82995505445433,
+   "peak_deg_s": 17.810259047006124,
+   "roll_deg_s": 1.7627419318907378,
+   "pitch_deg_s": -17.722812085078868,
+   "acc_h": 0.012590806878100927,
+   "jerk_h": 1.286583590502351,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 579-674",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 482-583"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J4 231 deg/s^2, most jerk J4 1492 deg/s^3, turns back: J3 J4 J6",
+    "LEFT: most acceleration J6 856 deg/s^2, most jerk J6 13596 deg/s^3, turns back: J1 J7"
+   ],
+   "meas model band": 10.369614207260575,
+   "pred model": 11.037344747430543,
+   "pred model + weight": 10.322379803796991
+  },
+  {
+   "t_peak": 169.19991387367918,
+   "peak_deg_s": 6.452688288813777,
+   "roll_deg_s": -1.0317502452021572,
+   "pitch_deg_s": 6.369668561559522,
+   "acc_h": 0.01450301661367597,
+   "jerk_h": 1.3362956434254027,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 848-945",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 752-851"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 301 deg/s^2, most jerk J6 2641 deg/s^3, turns back: J1 J2 J3 J4 J5 J6 J7",
+    "LEFT: most acceleration J4 938 deg/s^2, most jerk J4 10428 deg/s^3, turns back: J1 J2 J4 J6 J7"
+   ],
+   "meas model band": 4.172353881725634,
+   "pred model": 3.8794505080534036,
+   "pred model + weight": 4.165547129312833
+  },
+  {
+   "t_peak": 171.00985946696164,
+   "peak_deg_s": 6.656860762018867,
+   "roll_deg_s": 2.6468876291332584,
+   "pitch_deg_s": -6.108009584443014,
+   "acc_h": 0.012544046676810553,
+   "jerk_h": 1.2204015231975427,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 1205-1305",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 1111-1207"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J5 64 deg/s^2, most jerk J3 550 deg/s^3, turns back: J7",
+    "LEFT: most acceleration J6 1052 deg/s^2, most jerk J6 8233 deg/s^3, turns back: J1 J2 J4 J5 J6"
+   ],
+   "meas model band": 4.171331583128096,
+   "pred model": 3.933044905176971,
+   "pred model + weight": 4.133604719689093
+  },
+  {
+   "t_peak": 172.07232752931668,
+   "peak_deg_s": 1.9611764780163563,
+   "roll_deg_s": -1.3394705994948921,
+   "pitch_deg_s": 1.4324914279022525,
+   "acc_h": 0.008936797492620146,
+   "jerk_h": 1.0824799690598357,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 1417-1515",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 1319-1413"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J4 186 deg/s^2, most jerk J3 892 deg/s^3, turns back: J4 J6",
+    "LEFT: most acceleration J6 1099 deg/s^2, most jerk J6 8264 deg/s^3, turns back: J1 J2 J3 J4 J5 J6"
+   ],
+   "meas model band": 2.1895933968496983,
+   "pred model": 2.070053192973209,
+   "pred model + weight": 2.1804590165452655
+  },
+  {
+   "t_peak": 173.13729551652432,
+   "peak_deg_s": 4.8857460130321995,
+   "roll_deg_s": 0.9250316598000464,
+   "pitch_deg_s": -4.797377464013813,
+   "acc_h": 0.009990285725405938,
+   "jerk_h": 1.0593057109199466,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 1621-1714",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 1529-1624"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J4 226 deg/s^2, most jerk J4 2176 deg/s^3, turns back: J2 J4 J6",
+    "LEFT: most acceleration J6 989 deg/s^2, most jerk J6 8298 deg/s^3, turns back: J1 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 2.8887026635879316,
+   "pred model": 2.6986957519962393,
+   "pred model + weight": 2.896988782934229
+  },
+  {
+   "t_peak": 174.82224486717678,
+   "peak_deg_s": 15.762062245592054,
+   "roll_deg_s": -0.5065926152429714,
+   "pitch_deg_s": 15.75391919987213,
+   "acc_h": 0.011977190692668657,
+   "jerk_h": 0.9720254027475962,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 1952-2050",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 1857-1956"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J4 409 deg/s^2, most jerk J4 3995 deg/s^3, turns back: J2 J3 J4 J5 J6 J7",
+    "LEFT: most acceleration J6 769 deg/s^2, most jerk J1 8503 deg/s^3, turns back: J1 J2 J3 J5 J6"
+   ],
+   "meas model band": 3.906692314313413,
+   "pred model": 4.202778716053335,
+   "pred model + weight": 3.9102619194784873
+  },
+  {
+   "t_peak": 176.72218775515285,
+   "peak_deg_s": 8.416535134024365,
+   "roll_deg_s": -1.1582866833193388,
+   "pitch_deg_s": 8.336452220310004,
+   "acc_h": 0.0121632406389582,
+   "jerk_h": 1.106683406844458,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 2325-2425",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 2232-2331"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 550 deg/s^2, most jerk J4 6227 deg/s^3, turns back: J2 J5 J6",
+    "LEFT: most acceleration J6 389 deg/s^2, most jerk J5 2718 deg/s^3, turns back: J3 J4 J5 J6"
+   ],
+   "meas model band": 3.036918076521784,
+   "pred model": 3.249538212208993,
+   "pred model + weight": 3.0310449374004333
+  },
+  {
+   "t_peak": 178.1246455974615,
+   "peak_deg_s": 5.19872459996052,
+   "roll_deg_s": -3.728652692732098,
+   "pitch_deg_s": 3.622690514412781,
+   "acc_h": 0.009796712120441654,
+   "jerk_h": 0.89710466186418,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 2605-2702",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 2508-2604"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 665 deg/s^2, most jerk J6 4839 deg/s^3, turns back: J4 J6",
+    "LEFT: most acceleration J1 351 deg/s^2, most jerk J1 2611 deg/s^3, turns back: J1 J3 J4"
+   ],
+   "meas model band": 3.4772482094980046,
+   "pred model": 3.2715215564764493,
+   "pred model + weight": 3.4845850717718907
+  },
+  {
+   "t_peak": 179.44460591963434,
+   "peak_deg_s": 3.985732088077204,
+   "roll_deg_s": -0.16349681290345497,
+   "pitch_deg_s": 3.9823773138790703,
+   "acc_h": 0.009195419542682248,
+   "jerk_h": 0.9183468661566445,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 2861-2964",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 2764-2865"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J5 424 deg/s^2, most jerk J6 7218 deg/s^3, turns back: J5 J7",
+    "LEFT: most acceleration J6 493 deg/s^2, most jerk J5 4087 deg/s^3, turns back: J1 J2 J3 J4 J5 J6"
+   ],
+   "meas model band": 1.7457871588688407,
+   "pred model": 1.4533055938442185,
+   "pred model + weight": 1.7542045431886053
+  },
+  {
+   "t_peak": 180.8270643631222,
+   "peak_deg_s": 2.1778889347482533,
+   "roll_deg_s": -0.8690186927483866,
+   "pitch_deg_s": 1.9969994300832354,
+   "acc_h": 0.013990299551467068,
+   "jerk_h": 1.2676593674675227,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 3135-3234",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 3041-3139"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 279 deg/s^2, most jerk J6 1740 deg/s^3, turns back: J5 J6 J7",
+    "LEFT: most acceleration J5 327 deg/s^2, most jerk J6 2368 deg/s^3, turns back: J1 J4 J5 J6"
+   ],
+   "meas model band": 1.320169260813575,
+   "pred model": 1.0836128440947397,
+   "pred model + weight": 1.3304507800418315
+  },
+  {
+   "t_peak": 181.94703069708703,
+   "peak_deg_s": 7.6342290810833955,
+   "roll_deg_s": 3.945270100429368,
+   "pitch_deg_s": 6.535770612339257,
+   "acc_h": 0.011727303387728222,
+   "jerk_h": 1.1129576730635282,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 3350-3433",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 3260-3359"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 438 deg/s^2, most jerk J6 5609 deg/s^3, turns back: J5 J6",
+    "LEFT: most acceleration J5 173 deg/s^2, most jerk J6 1330 deg/s^3"
+   ],
+   "meas model band": 1.0557362577979894,
+   "pred model": 1.2459185028085558,
+   "pred model + weight": 1.0483944213596645
+  },
+  {
+   "t_peak": 183.42948613467888,
+   "peak_deg_s": 17.008663937937964,
+   "roll_deg_s": -2.8416940971944626,
+   "pitch_deg_s": -16.76959819469988,
+   "acc_h": 0.010524274190462797,
+   "jerk_h": 1.0577979834257452,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 3623-3719",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 3555-3654"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 406 deg/s^2, most jerk J6 3702 deg/s^3, turns back: J2 J4 J5 J6",
+    "LEFT: most acceleration J6 724 deg/s^2, most jerk J5 6479 deg/s^3, turns back: J5 J6"
+   ],
+   "meas model band": 6.348231917363871,
+   "pred model": 6.001650516950177,
+   "pred model + weight": 6.274256634131134
+  },
+  {
+   "t_peak": 184.52445322011772,
+   "peak_deg_s": 9.579477696348349,
+   "roll_deg_s": 0.36644229206009576,
+   "pitch_deg_s": -9.57246640011994,
+   "acc_h": 0.01077530411360762,
+   "jerk_h": 0.977118957131443,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 3839-3937",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 3769-3865"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 524 deg/s^2, most jerk J6 3903 deg/s^3, turns back: J1 J2 J4 J5 J6 J7",
+    "LEFT: most acceleration J6 749 deg/s^2, most jerk J6 9985 deg/s^3, turns back: J2 J4"
+   ],
+   "meas model band": 3.612035490612999,
+   "pred model": 3.0955832263347034,
+   "pred model + weight": 3.577992944542696
+  },
+  {
+   "t_peak": 185.54942240968376,
+   "peak_deg_s": 2.293637023183099,
+   "roll_deg_s": 0.7804271410334838,
+   "pitch_deg_s": 2.1567809976106824,
+   "acc_h": 0.01294877515423038,
+   "jerk_h": 1.1864885565356853,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 64 64_L_P3_pole200_cleaningpose_19.; HAND",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 4041-4139",
+    "LEFT 64_L_P3_pole200_cleaningpose_19.8s_25pct_slow10-15s.txt lines 3929-3929"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 656 deg/s^2, most jerk J6 4343 deg/s^3, turns back: J1 J2 J4 J5 J6",
+    "LEFT: most acceleration J1 281 deg/s^2, most jerk J1 3882 deg/s^3"
+   ],
+   "meas model band": 1.7740863042216668,
+   "pred model": 1.364879306803904,
+   "pred model + weight": 1.7749471342127554
+  },
+  {
+   "t_peak": 186.64188957027,
+   "peak_deg_s": 3.4136458164434886,
+   "roll_deg_s": 0.7890189766956286,
+   "pitch_deg_s": 3.321208637610157,
+   "acc_h": 0.01075108258279375,
+   "jerk_h": 0.8971575057970439,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "HAND; Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 4260-4358",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 6-8"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 574 deg/s^2, most jerk J6 4173 deg/s^3",
+    "LEFT: most acceleration J4 32 deg/s^2, most jerk J4 836 deg/s^3"
+   ],
+   "meas model band": 1.3953703591854132,
+   "pred model": 1.0108692598419098,
+   "pred model + weight": 1.4069327887282137
+  },
+  {
+   "t_peak": 187.71185740718283,
+   "peak_deg_s": 1.175813504316118,
+   "roll_deg_s": -0.25033996893465355,
+   "pitch_deg_s": -1.1488547762384707,
+   "acc_h": 0.01033479897842329,
+   "jerk_h": 1.1144274043668614,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 4471-4568",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 8-8"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 348 deg/s^2, most jerk J6 2256 deg/s^3, turns back: J7",
+    "LEFT: most acceleration J4 32 deg/s^2, most jerk J4 836 deg/s^3"
+   ],
+   "meas model band": 1.141124849286591,
+   "pred model": 0.6818926174603285,
+   "pred model + weight": 1.1199828897050623
+  },
+  {
+   "t_peak": 189.3643077347515,
+   "peak_deg_s": 5.746271522065516,
+   "roll_deg_s": -0.6803001488316535,
+   "pitch_deg_s": -5.705859103833601,
+   "acc_h": 0.011816639956273698,
+   "jerk_h": 1.1040792984508232,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 4779-4877",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 8-8"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 578 deg/s^2, most jerk J6 7411 deg/s^3, turns back: J1 J2 J4 J5 J6",
+    "LEFT: most acceleration J4 32 deg/s^2, most jerk J4 836 deg/s^3"
+   ],
+   "meas model band": 2.670171122766773,
+   "pred model": 2.180846090423258,
+   "pred model + weight": 2.6776890394328676
+  },
+  {
+   "t_peak": 191.29424972095876,
+   "peak_deg_s": 4.070503316731574,
+   "roll_deg_s": -0.176185502468274,
+   "pitch_deg_s": -4.06668856936977,
+   "acc_h": 0.010098453471040552,
+   "jerk_h": 0.9578713295548511,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 5161-5258",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 281-378"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 578 deg/s^2, most jerk J6 4791 deg/s^3, turns back: J1 J6 J7",
+    "LEFT: most acceleration J3 175 deg/s^2, most jerk J5 1323 deg/s^3, turns back: J3 J6"
+   ],
+   "meas model band": 2.018634997320552,
+   "pred model": 1.9249040248948965,
+   "pred model + weight": 2.0029280526542586
+  },
+  {
+   "t_peak": 192.686707863857,
+   "peak_deg_s": 5.140528333541219,
+   "roll_deg_s": -4.385766080754939,
+   "pitch_deg_s": -2.6814338389823322,
+   "acc_h": 0.014066757247151755,
+   "jerk_h": 1.1851699043296826,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 5433-5531",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 554-651"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 481 deg/s^2, most jerk J6 3861 deg/s^3, turns back: J3 J4 J5 J6",
+    "LEFT: most acceleration J6 502 deg/s^2, most jerk J3 3065 deg/s^3, turns back: J1 J3 J4 J5 J6"
+   ],
+   "meas model band": 2.439252116923165,
+   "pred model": 2.053739339433987,
+   "pred model + weight": 2.4124846315488706
+  },
+  {
+   "t_peak": 193.83417337120045,
+   "peak_deg_s": 3.9012860888423977,
+   "roll_deg_s": 0.07905853602942793,
+   "pitch_deg_s": -3.9004849563709505,
+   "acc_h": 0.012518375753865232,
+   "jerk_h": 1.1637315808749862,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 5660-5756",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 785-879"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 448 deg/s^2, most jerk J6 4329 deg/s^3, turns back: J1 J2 J3 J4 J5 J6",
+    "LEFT: most acceleration J4 651 deg/s^2, most jerk J4 4589 deg/s^3, turns back: J4 J5"
+   ],
+   "meas model band": 2.0125509639385,
+   "pred model": 1.718263680850554,
+   "pred model + weight": 2.008291471500517
+  },
+  {
+   "t_peak": 195.72661648461872,
+   "peak_deg_s": 3.5962535461333585,
+   "roll_deg_s": 3.038105694085716,
+   "pitch_deg_s": 1.9243059423180888,
+   "acc_h": 0.011168690811916218,
+   "jerk_h": 1.3413913608105328,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 6028-6128",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 1149-1250"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 674 deg/s^2, most jerk J6 5384 deg/s^3, turns back: J1 J2 J4 J6",
+    "LEFT: most acceleration J4 583 deg/s^2, most jerk J4 4653 deg/s^3, turns back: J3 J4 J6"
+   ],
+   "meas model band": 1.8536708171095644,
+   "pred model": 1.395184008263672,
+   "pred model + weight": 1.8661522684070049
+  },
+  {
+   "t_peak": 197.00407808429736,
+   "peak_deg_s": 4.850750227667641,
+   "roll_deg_s": 1.7819538007223825,
+   "pitch_deg_s": -4.511587129083148,
+   "acc_h": 0.010076275237069707,
+   "jerk_h": 0.7920866205339828,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 6281-6378",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 1400-1492"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 664 deg/s^2, most jerk J6 5828 deg/s^3, turns back: J1 J2 J4 J5 J6 J7",
+    "LEFT: most acceleration J3 544 deg/s^2, most jerk J3 3883 deg/s^3, turns back: J1 J3 J4 J5 J6"
+   ],
+   "meas model band": 2.3388974233984534,
+   "pred model": 2.076016671502219,
+   "pred model + weight": 2.3274288369930143
+  },
+  {
+   "t_peak": 198.1490436667882,
+   "peak_deg_s": 2.725495398596545,
+   "roll_deg_s": -0.4221455908662701,
+   "pitch_deg_s": -2.692604365272237,
+   "acc_h": 0.0126790612921289,
+   "jerk_h": 1.1281516970313243,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 6505-6604",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 1622-1720"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 439 deg/s^2, most jerk J6 7916 deg/s^3, turns back: J4 J6",
+    "LEFT: most acceleration J3 605 deg/s^2, most jerk J3 4574 deg/s^3, turns back: J1 J3 J4 J5 J6"
+   ],
+   "meas model band": 2.3565892176825107,
+   "pred model": 1.8138758659593093,
+   "pred model + weight": 2.348635045623395
+  },
+  {
+   "t_peak": 199.46650406410845,
+   "peak_deg_s": 4.737705535395804,
+   "roll_deg_s": 1.2575896826699429,
+   "pitch_deg_s": -4.567748015177956,
+   "acc_h": 0.01580326997394254,
+   "jerk_h": 1.2893007028284058,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 6765-6865",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 1884-1984"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 387 deg/s^2, most jerk J6 4478 deg/s^3, turns back: J2 J4",
+    "LEFT: most acceleration J4 342 deg/s^2, most jerk J6 2299 deg/s^3, turns back: J4"
+   ],
+   "meas model band": 1.547131505737216,
+   "pred model": 1.5305044895859048,
+   "pred model + weight": 1.5310700387605842
+  },
+  {
+   "t_peak": 200.6364688951253,
+   "peak_deg_s": 8.445982289000622,
+   "roll_deg_s": -1.6983803147485388,
+   "pitch_deg_s": -8.2734588373054,
+   "acc_h": 0.012546430904434604,
+   "jerk_h": 1.0237572363942273,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 6996-7094",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 2112-2210"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J4 119 deg/s^2, most jerk J4 909 deg/s^3, turns back: J3 J7",
+    "LEFT: most acceleration J7 1347 deg/s^2, most jerk J7 33268 deg/s^3, turns back: J2 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 5.599596855762262,
+   "pred model": 5.66083136064097,
+   "pred model + weight": 5.615243371974351
+  },
+  {
+   "t_peak": 202.50391276001756,
+   "peak_deg_s": 7.090907478956658,
+   "roll_deg_s": -0.4154177200606648,
+   "pitch_deg_s": -7.0787284870224445,
+   "acc_h": 0.011093504597936121,
+   "jerk_h": 1.2079416512714647,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 7363-7460",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 2477-2571"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 360 deg/s^2, most jerk J4 2665 deg/s^3, turns back: J2 J3 J5 J6",
+    "LEFT: most acceleration J5 932 deg/s^2, most jerk J4 13977 deg/s^3, turns back: J2 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 4.944702310581053,
+   "pred model": 5.016507382215897,
+   "pred model + weight": 4.98380956920612
+  },
+  {
+   "t_peak": 203.6088795448668,
+   "peak_deg_s": 11.212140859684057,
+   "roll_deg_s": -0.03692411849748505,
+   "pitch_deg_s": 11.212080059777932,
+   "acc_h": 0.01263861234769925,
+   "jerk_h": 1.1079852467704883,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 7577-7676",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 2690-2793"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J2 350 deg/s^2, most jerk J2 2180 deg/s^3, turns back: J3 J6",
+    "LEFT: most acceleration J6 626 deg/s^2, most jerk J5 12471 deg/s^3, turns back: J3 J4"
+   ],
+   "meas model band": 4.6726270266214875,
+   "pred model": 4.298315796597924,
+   "pred model + weight": 4.710558716131699
+  },
+  {
+   "t_peak": 204.93633964159744,
+   "peak_deg_s": 4.230820237791847,
+   "roll_deg_s": -0.20992091256020154,
+   "pitch_deg_s": 4.225609198089543,
+   "acc_h": 0.007897680167733177,
+   "jerk_h": 0.9524644503986895,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "Program 65 65_R_P3_pole50_grip_39.8s_new_R0",
+   "lines": [
+    "RIGHT 65_R_P3_pole50_grip_39.8s_new_R07_R08P2_30pct_slowstart.txt lines 7838-7885",
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 2949-3049"
+   ],
+   "file_notes": [
+    "RIGHT: most acceleration J6 83 deg/s^2, most jerk J6 2325 deg/s^3",
+    "LEFT: most acceleration J7 882 deg/s^2, most jerk J7 18552 deg/s^3, turns back: J3 J4 J5 J6"
+   ],
+   "meas model band": 1.972837868532707,
+   "pred model": 1.856336148699328,
+   "pred model + weight": 1.9807979003951355
+  },
+  {
+   "t_peak": 206.2712995128859,
+   "peak_deg_s": 4.659122924193696,
+   "roll_deg_s": -0.8016215460682755,
+   "pitch_deg_s": 4.5896437029061765,
+   "acc_h": 0.00923547617278605,
+   "jerk_h": 1.076878960030354,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "POLE",
+   "lines": [
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 3201-3302"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J4 1109 deg/s^2, most jerk J4 17687 deg/s^3, turns back: J2 J3 J4 J5 J6 J7"
+   ],
+   "meas model band": 3.4654939493137547,
+   "pred model": 3.509876122217485,
+   "pred model + weight": 3.4532022440933567
+  },
+  {
+   "t_peak": 207.33626750009353,
+   "peak_deg_s": 2.301938875383495,
+   "roll_deg_s": 2.098802000643693,
+   "pitch_deg_s": 0.9454907445849801,
+   "acc_h": 0.009359802594250406,
+   "jerk_h": 1.1748571933123113,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "POLE",
+   "lines": [
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 3414-3513"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J5 663 deg/s^2, most jerk J5 8337 deg/s^3, turns back: J2 J3 J4"
+   ],
+   "meas model band": 1.272714409681679,
+   "pred model": 1.2271615008585113,
+   "pred model + weight": 1.2749065654127996
+  },
+  {
+   "t_peak": 208.42873466067977,
+   "peak_deg_s": 4.174149337971132,
+   "roll_deg_s": -1.0501108568829438,
+   "pitch_deg_s": -4.039899736867415,
+   "acc_h": 0.012014560029134012,
+   "jerk_h": 1.1109560584170017,
+   "section_t0": 165.14003591305664,
+   "section_t1": 209.3362073821736,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "MoveJ R_HME_POS (ended early)",
+   "lines": [
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 3630-3727"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J5 1245 deg/s^2, most jerk J3 42572 deg/s^3, turns back: J3 J4 J5 J6"
+   ],
+   "meas model band": 2.662504635529336,
+   "pred model": 2.793766071201418,
+   "pred model + weight": 2.651798556690841
+  },
+  {
+   "t_peak": 209.7536948325578,
+   "peak_deg_s": 2.9053027017727744,
+   "roll_deg_s": -0.806013352303152,
+   "pitch_deg_s": 2.7912589032257857,
+   "acc_h": 0.00934501316300314,
+   "jerk_h": 0.9281729292984917,
+   "section_t0": 209.596199566844,
+   "section_t1": 209.86619145092482,
+   "left": "Program 65 65_L_P3_pole200_grip_45.3s_smoot (ended early)",
+   "right": "-",
+   "lines": [
+    "LEFT 65_L_P3_pole200_grip_45.3s_smooth_noidle_faster.txt lines 3910-3938"
+   ],
+   "file_notes": [
+    "LEFT: most acceleration J6 1314 deg/s^2, most jerk J6 30645 deg/s^3, turns back: J6"
+   ],
+   "meas model band": 2.2471969447093603,
+   "pred model": null,
+   "pred model + weight": null
+  }
+ ]
+}

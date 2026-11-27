@@ -52,7 +52,9 @@ git pull
 ### A. On the table (board loose, flat, face up)
 
 1. Which device is the IMU. Expect one line marked "CP210x: the N100's chip". If it says NO PERMISSION, run the
-   command it prints, then log out and in.
+   command it prints, then log out and in. On the lab laptop `lsusb` lists the IMU as
+   `10c4:ea60 Silicon Labs CP210x UART Bridge` (27 Nov); every command finds it by that ID, so `--port` is never
+   needed while it is the only CP210x plugged in.
 ```
 .venv/bin/python tools/imu_n100.py ports
 ```

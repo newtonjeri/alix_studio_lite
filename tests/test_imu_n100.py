@@ -162,7 +162,11 @@ def test_port_is_found_only_when_one_cp210x_is_plugged_in(imu, monkeypatch):
     assert imu.find_port("auto") == one["by_id"]
     assert imu.find_port("/dev/ttyUSB3") == "/dev/ttyUSB3"
     monkeypatch.setattr(imu, "usb_serial_devices", lambda: [other])
+    monkeypatch.setattr(imu, "cp210x_on_usb", lambda: False)
     with pytest.raises(SystemExit, match="No CP210x"):
+        imu.find_port("auto")
+    monkeypatch.setattr(imu, "cp210x_on_usb", lambda: True)          # on the USB bus, but no /dev/ttyUSB*
+    with pytest.raises(SystemExit, match="no serial port"):
         imu.find_port("auto")
     monkeypatch.setattr(imu, "usb_serial_devices", lambda: [one, dict(one, dev="/dev/ttyUSB1")])
     with pytest.raises(SystemExit, match="2 CP210x"):

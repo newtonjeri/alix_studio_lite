@@ -175,9 +175,23 @@ shows one short spike that dies within a few tens of milliseconds. A loose one r
   - It writes `Resources/Logs/<day>/imu/<HHMMSS>_<label>/`.
   - Tests: `tests/test_imu_n100.py`, 15, including a capture through a real serial device (a pseudo-terminal).
   - The lab's steps are in `RUNBOOK_step_A.md` next to this file.
-- **Still to build when the data passes:** the long-run logger alongside the arm runs (the same frames, plus the 20 ms
-  feed alignment). It runs as its own process, outside Lite's 5 ms work.
-- Analysis scripts in this folder, run here on the lab's logs.
+- **No separate logger is needed.** S2 already records each arm's 20 ms feed (`Resources/Logs/<day>/canfd/`), stamped
+  with the laptop's monotonic clock, the clock `imu_n100.py capture` stamps its reads with. A capture started before an
+  S2 run (`capture --seconds 900`, robot still for the first and last 30 s) and the run's logs line up afterwards.
+- **BUILT 27 Nov, step F (user: "Run analysis (step F)", tested on made-up data until the lab has data):**
+  `tools/imu_runs.py`, offline, run here on the lab's logs.
+  - `analyse <capture>`: the sensor clock fitted to the laptop's; bias from the still start and end; rates in base
+    axes (`--mount`); the peaks above 5 x the noise floor (`--floor` = a step C capture); for each peak, the arms'
+    steps (hardware.jsonl), the Program file and its lines (found by the listed name, confirmed by matching the feed's
+    joints to the file's lines in order) and the joints with the most acceleration and jerk there; one gain and one
+    lag per axis against Lite's model, alone and with the arms' weight moving (the model leaves that out). Writes
+    `<capture>/analysis/`: report.md, sections.csv, summary.json, graphs.
+  - `synth`: a made-up capture from a day's feeds with a known gain, lag, drift and bias, to test the analysis only.
+  - The model (`motion/base_load.py`) is on the lite_auto_optimization branch; until it is merged, `--model-src` names
+    a checkout of it. Without it the peaks, steps and lines are still reported.
+  - Pole moves are not modelled (the model holds the pole still).
+  - Tests: `tests/test_imu_runs.py` (4, a stand-in for the model). Check on the 24 Nov logs:
+    `checks/2026-11-27_synthetic_24nov/` (everything put in came back: lag exact, gains within 1.2 %).
 - Nothing inside Lite's run until the data has proved itself.
 - The ROS drivers found (sbgisen `fdilink_ahrs`, NDHANA94 `ros2_wheeltec_n100_imu`) are references only: Lite stays
   ROS-free.
