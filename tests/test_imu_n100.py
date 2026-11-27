@@ -219,6 +219,24 @@ def test_config_read_only_changes_nothing_and_always_leaves_configuration_mode(i
     assert [s.decode().strip() for s in unit.sent] == ["#fconfig", "#fmsg", "#fdeconfig"]
 
 
+def test_a_unit_that_keeps_streaming_does_not_hold_the_tool(imu, monkeypatch):
+    """Found by the 27 Nov dry run: had #fconfig not stopped the output, each reply wait grew with every read."""
+    import time
+
+    monkeypatch.setattr(imu, "WAIT", 0.01)
+    frame = imu.build_frame(0x40, imu_payload((0, 0, 0), (0, 0, -9.8), 0))
+
+    class Streaming(StandInUnit):
+        def read(self, timeout=0.05):
+            time.sleep(0.0005)
+            return frame * 4
+
+    t = time.monotonic()
+    out = imu.configure(Streaming(imu), [], lambda _t: None)
+    assert time.monotonic() - t < 3 * (1 + 2 + 1 + 3 * imu.REPLY_CAP_S) * imu.WAIT + 0.5
+    assert not imu.has_text(out["before"])                      # -> "No text reply to #fmsg"
+
+
 def test_request_uses_the_unit_s_crc8_and_decodes_its_version(imu, monkeypatch):
     monkeypatch.setattr(imu, "WAIT", 0.002)
     name = b"DETA10-A\x00\x00\x00"                                     # 11 bytes, as the vendor says for DETA10

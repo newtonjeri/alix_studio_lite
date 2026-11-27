@@ -50,6 +50,7 @@ G = 9.80665
 RAD = 57.29577951308232
 STILL_S = 2.0                 #: the first seconds of a turn or tap capture: held still, for the bias and the noise
 WAIT = 1.0                    #: scales every wait on the unit's replies (the tests shrink it)
+REPLY_CAP_S = 3.0             #: a reply is read at most this much longer than its wait
 
 
 # ─────────────────────────────────────────────────────────────────────────── CRCs
@@ -571,7 +572,15 @@ def write_report(folder: Path, lines: list, rep: dict) -> None:
 # ─────────────────────────────────────────────────────────────────────────── text commands, requests
 
 def text_of(b: bytes) -> str:
-    """The readable part of a reply: printable text kept, binary runs (frames still in flight) shown as their size."""
+    """The readable part of a reply: whole frames still in flight left out, other binary runs shown as their size,
+    printable text kept."""
+    frames, _, _ = scan(b)
+    if frames:
+        keep, at = [], 0
+        for f in frames:
+            keep.append(b[at:f.start])
+            at = f.end
+        b = b"".join(keep) + b[at:]
     out, run = [], 0
     for c in b:
         if 32 <= c < 127 or c in (9, 10, 13):
@@ -587,21 +596,23 @@ def text_of(b: bytes) -> str:
 
 
 def has_text(text: str) -> bool:
-    """Whether a reply carries any words, not only frames in flight."""
+    """Whether a reply carries words (#OK, a packet's name, its rate), not only bytes of frames cut at its ends."""
     import re
-    return bool(re.sub(r"\[\d+ binary bytes\]", "", text).strip())
+    return bool(re.search(r"#\w+|[A-Za-z0-9]{3,}", re.sub(r"\[\d+ binary bytes\]", " ", text)))
 
 
 def text_command(port, cmd: str, wait: float = 1.0) -> bytes:
-    """Send ``cmd`` + CR LF; read the reply until ``wait`` s pass, longer while it keeps coming."""
+    """Send ``cmd`` + CR LF; read the reply until ``wait`` s pass, longer while it keeps coming, but never more than
+    ``wait`` + REPLY_CAP_S: a unit that keeps streaming frames (a command it did not take) must not hold the tool."""
     port.write((cmd + "\r\n").encode("ascii"))
-    out, t_end = b"", time.monotonic() + wait * WAIT
+    start = time.monotonic()
+    out, t_end, cap = b"", start + wait * WAIT, start + (wait + REPLY_CAP_S) * WAIT
     while True:                                        # reads at least once
         b = port.read(0.05 * WAIT)
         if b:
             out += b
             t_end = max(t_end, time.monotonic() + 0.2 * WAIT)
-        if time.monotonic() >= t_end:
+        if time.monotonic() >= min(t_end, cap):
             return out
 
 

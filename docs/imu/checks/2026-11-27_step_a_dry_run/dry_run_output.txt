@@ -1,0 +1,82 @@
+== 1. ports
+No USB serial device (/dev/ttyUSB*, /dev/ttyACM*) is plugged in.
+exit 1
+== 2. watch
+/dev/pts/4: 3 s, one line every 0.5 s (Ctrl-C stops)
+IMU  102/s  gyro    +0.07    -0.00    +0.08 deg/s   accel  +0.023  -0.016  -9.791 m/s^2 |a|  9.791   31.0 C
+IMU  100/s  gyro    +0.12    -0.08    +0.13 deg/s   accel  +0.018  -0.010  -9.792 m/s^2 |a|  9.792   31.0 C
+IMU  100/s  gyro    +0.09    -0.13    +0.12 deg/s   accel  +0.009  -0.014  -9.793 m/s^2 |a|  9.793   31.0 C
+IMU  100/s  gyro    +0.13    -0.12    +0.02 deg/s   accel  +0.018  -0.007  -9.782 m/s^2 |a|  9.782   31.0 C
+IMU  100/s  gyro    +0.09    -0.09    -0.06 deg/s   accel  +0.022  -0.003  -9.792 m/s^2 |a|  9.792   31.0 C
+IMU  100/s  gyro    +0.15    -0.11    -0.01 deg/s   accel  +0.032  -0.018  -9.795 m/s^2 |a|  9.795   31.0 C
+605 frames, CRC16 failed 0, CRC8 table: maxim
+exit 0
+== 3. config (read)
+2026-11-27 07:50:51  /dev/pts/4  sets: none (read only)
+>>> #fconfig
+#OK
+>>> #fmsg
+MSG_IMU [40] 100Hz
+MSG_AHRS [41] 100Hz
+>>> #fdeconfig
+#OK
+kept: /tmp/claude-1000/-home-newtonjeri-alix-studio-lite-ws/83e8203a-91a0-4065-8a39-6f71620b5051/scratchpad/stepA_logs/2026-11-27/imu/075051_config/config.txt
+exit 0
+== 4. config set
+2026-11-27 07:50:58  /dev/pts/4  sets: [(64, 400), (65, 100)]
+>>> #fconfig
+#OK
+>>> #fmsg
+MSG_IMU [40] 100Hz
+MSG_AHRS [41] 100Hz
+>>> #fmsg 40 400
+#OK
+>>> #fmsg 41 100
+#OK
+>>> #fsave
+#OK
+>>> y
+Are you sure? (y/n)
+#OK rebooting
+restarting: keep the IMU still (it works out its gyro bias as it starts)
+>>> #fconfig
+#OK
+>>> #fmsg
+MSG_IMU [40] 400Hz
+MSG_AHRS [41] 100Hz
+>>> #fdeconfig
+#OK
+kept: /tmp/claude-1000/-home-newtonjeri-alix-studio-lite-ws/83e8203a-91a0-4065-8a39-6f71620b5051/scratchpad/stepA_logs/2026-11-27/imu/075058_config/config.txt
+exit 0
+== 5. info
+the unit's CRC8 table: maxim
+VERSION (0x39): serial 00000001-00000000-00000000-00000000, hardware_version 256, hardware_name DETA10-SIM, firmware_version 256, firmware_name STANDIN, raw 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 44 45 54 41 31 30 2d 53 49 4d 00 00 01 00 00 53 54 41 4e 44 49 4e 00 00 00 00
+SENSOR_RANGES (0xA1): raw 10 00 d0 07 08 00, accel_g 16, gyro_deg_s 2000, mag_gauss 8
+kept: /tmp/claude-1000/-home-newtonjeri-alix-studio-lite-ws/83e8203a-91a0-4065-8a39-6f71620b5051/scratchpad/stepA_logs/2026-11-27/imu/075118_info/info.json
+exit 0
+== 6. still
+recording 15 s from /dev/pts/4 into /tmp/claude-1000/-home-newtonjeri-alix-studio-lite-ws/83e8203a-91a0-4065-8a39-6f71620b5051/scratchpad/stepA_logs/2026-11-27/imu/075119_mounted_still
+PASS  frames: 7,516 good; CRC16 failed 0, end byte wrong 0 (0.000 %); 0 bytes between frames
+PASS  CRC8: the unit uses the maxim table (7,459 headers fit it alone, 57 fit both by chance; other table or neither: 0)
+PASS  frame counter: 0 lost of 7,516 frames (0.000 %)
+      types: IMU (0x40) 6,001 = 400.1/s, AHRS (0x41) 1,500 = 100.0/s, heartbeat (0xF0) 15 = 1.0/s
+PASS  IMU timestamps: step 2500 us median = 400.0 frames/s by its own clock; 0 missing, 0 going backwards; span 15.0 s
+      clocks: the sensor's clock runs +0 ppm against the laptop's; frames arrive 1.2 ms (median), 2.3 ms (99 %), 2.6 ms (worst) after the earliest; up to 3 frames in one read
+      temperature 31.0 -> 31.0 C
+PASS  gravity: |a| = 9.790 m/s^2 (expected 9.807, within 2 %); mean a = (+0.020, -0.010, -9.790)
+      lying flat, face up, as the vendor describes it (Z reads about -9.8); tilt from that axis 0.13 deg
+      gyro bias (+0.114, -0.058, +0.029) deg/s; noise RMS (0.046, 0.046, 0.046) deg/s; accel noise RMS (0.0079, 0.0081, 0.0080) m/s^2
+      the unit's own tilt (AHRS): roll +5.73 deg, pitch -11.46 deg
+kept: /tmp/claude-1000/-home-newtonjeri-alix-studio-lite-ws/83e8203a-91a0-4065-8a39-6f71620b5051/scratchpad/stepA_logs/2026-11-27/imu/075119_mounted_still
+exit 0
+== 7. frames (rate)
+recording 30 s from /dev/pts/4 into /tmp/claude-1000/-home-newtonjeri-alix-studio-lite-ws/83e8203a-91a0-4065-8a39-6f71620b5051/scratchpad/stepA_logs/2026-11-27/imu/075134_rate_5min
+PASS  frames: 15,032 good; CRC16 failed 0, end byte wrong 0 (0.000 %); 0 bytes between frames
+PASS  CRC8: the unit uses the maxim table (14,913 headers fit it alone, 119 fit both by chance; other table or neither: 0)
+PASS  frame counter: 0 lost of 15,032 frames (0.000 %)
+      types: IMU (0x40) 12,002 = 400.0/s, AHRS (0x41) 3,000 = 100.0/s, heartbeat (0xF0) 30 = 1.0/s
+PASS  IMU timestamps: step 2500 us median = 400.0 frames/s by its own clock; 0 missing, 0 going backwards; span 30.0 s
+      clocks: the sensor's clock runs -0 ppm against the laptop's; frames arrive 1.2 ms (median), 2.3 ms (99 %), 2.6 ms (worst) after the earliest; up to 3 frames in one read
+      temperature 31.0 -> 31.0 C
+kept: /tmp/claude-1000/-home-newtonjeri-alix-studio-lite-ws/83e8203a-91a0-4065-8a39-6f71620b5051/scratchpad/stepA_logs/2026-11-27/imu/075134_rate_5min
+exit 0

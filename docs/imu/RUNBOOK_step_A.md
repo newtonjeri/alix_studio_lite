@@ -29,6 +29,10 @@ command is sent.
   - the board's axis markings;
   - the mount.
 
+- **Dry run, 27 Nov:** every step A command run in order against a stand-in N100 on a pseudo-terminal, with
+  Lite's `.venv` and the tool's own serial code: all passed after two fixes to the tool (a reply wait now has an upper
+  limit; frames are no longer read as a text reply). `checks/2026-11-27_step_a_dry_run/`.
+
 ## Setup
 
 - **Machine:** the lab laptop that runs Lite, in `/home/alai-labs-dell/alix_studio_lite`.
@@ -43,22 +47,24 @@ git pull
 ```
 
 - **Lite need not be running.** The tool and Lite never share anything but the logs folder.
-- **For part A**, take the board off the plate: on a table, flat, face up (the printed side up), USB cable into the
-  lab laptop.
 - **Keep it still whenever it powers up or restarts.** It measures its gyro bias then.
 
 ## Commands
 
-### A. On the table (board loose, flat, face up)
+### A. As mounted (27 Nov: the mount is taken as done)
 
-1. Which device is the IMU. Expect one line marked "CP210x: the N100's chip". If it says NO PERMISSION, run the
-   command it prints, then log out and in. On the lab laptop `lsusb` lists the IMU as
-   `10c4:ea60 Silicon Labs CP210x UART Bridge` (27 Nov); every command finds it by that ID, so `--port` is never
-   needed while it is the only CP210x plugged in.
+The IMU stays where it is, in its case on the plate between the poles. The robot may be powered (the IMU's USB hub is
+on it), but nothing moves and nobody touches the robot during a capture.
+
+1. Which device is the IMU. Expect one line `/dev/ttyUSB0  10c4:ea60 ... <- CP210x: the N100's chip` (on the lab
+   laptop `lsusb` lists it as `Silicon Labs CP210x UART Bridge`). Every command finds it by that ID, so `--port` is
+   never needed while it is the only CP210x plugged in. If the line says NO PERMISSION, run the command it prints,
+   then log out and in.
 ```
 .venv/bin/python tools/imu_n100.py ports
 ```
-2. Is it alive? 20 s of live values. Lift a corner and watch the numbers move, then put it back flat.
+2. Is it alive? 20 s of live lines, about 100 a second before step 4. Tap the plate once near the IMU and watch the
+   numbers jump.
 ```
 .venv/bin/python tools/imu_n100.py watch --seconds 20
 ```
@@ -66,8 +72,8 @@ git pull
 ```
 .venv/bin/python tools/imu_n100.py config
 ```
-4. Set the IMU packet to 400 Hz and the AHRS to 100 Hz, save, restart and read back. Do not touch it while it
-   restarts.
+4. Set the IMU packet to 400 Hz and the AHRS to 100 Hz, save, restart and read back. Nobody touches the robot for
+   10 s: it works out its gyro bias as it restarts.
 ```
 .venv/bin/python tools/imu_n100.py config --set 40=400 --set 41=100
 ```
@@ -75,24 +81,19 @@ git pull
 ```
 .venv/bin/python tools/imu_n100.py info
 ```
-6. Wait until 15 minutes have passed since it was plugged in (warm-up). Then 60 s lying still, nobody touching the
-   table:
+6. Wait until 15 minutes have passed since it was powered (warm-up). Then 60 s still:
 ```
-.venv/bin/python tools/imu_n100.py capture --seconds 60 --test still --label desk_still --note "table, flat, face up, 15 min warm"
+.venv/bin/python tools/imu_n100.py capture --seconds 60 --test still --label mounted_still --note "mounted, robot still, 15 min warm"
 ```
-7. Three turn tests, one per marked axis. For each: hold still 2 s, turn 90 deg about that axis (counter-clockwise
-   as seen from the tip of the marked arrow), hold 2 s, turn back, hold still to the end.
+7. The real rate and losses over 5 minutes, still:
 ```
-.venv/bin/python tools/imu_n100.py capture --seconds 20 --test turn --label turn_x --note "about marked X"
-```
-```
-.venv/bin/python tools/imu_n100.py capture --seconds 20 --test turn --label turn_y --note "about marked Y"
-```
-```
-.venv/bin/python tools/imu_n100.py capture --seconds 20 --test turn --label turn_z --note "about marked Z"
+.venv/bin/python tools/imu_n100.py capture --seconds 300 --label rate_5min --note "mounted, robot still"
 ```
 
-### B. Mount it (robot off)
+The turn tests by hand (one per marked axis) need the board loose, so they are left out. The still capture gives the
+gravity axis; X and Y are taken from the markings as mounted, and the run analysis fits each axis' sign itself.
+
+### B. Mount it (robot off): taken as done on 27 Nov
 
 Follow section 2 of PLAN.md:
 - screws or a clamp, no tape or foam under it;
