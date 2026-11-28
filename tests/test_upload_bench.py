@@ -49,6 +49,27 @@ def test_the_logs_give_the_send_apart_from_the_list_reads_and_find_overlaps(tmp_
     assert "on the other arm: 1" in ub.logs_markdown(s)
 
 
+def test_the_controller_check_sees_any_change_but_the_bench_s_own():
+    ub = _bench()
+    lab = [["61_L_P1_pole50_cleaningpose_48.2", 555156, 0]]
+    before = dict(programs={61: lab[0], 70: ["70_UPBENCH_hold.txt", 690000, 0]}, io_default=0, points=[["home", [0] * 7]])
+
+    def after(**kw):
+        return dict(before, **kw)
+
+    mine = {70, 71}
+    assert ub.changes(before, after(programs={61: lab[0], 71: ["71_UPBENCH_4000.txt", 1, 0]}), mine) == []   # its own
+    assert ub.changes(before, after(programs={61: lab[0], 70: ["70_lab_new.txt", 5, 0]}), mine)        # not its own now
+    assert ub.changes(before, after(programs={61: ["61_L_P1_pole50_cleaningpose_48.2", 555157, 0],
+                                              70: before["programs"][70]}), mine)                         # size
+    assert ub.changes(before, after(programs={70: before["programs"][70]}), mine)                         # gone
+    sped = after(programs={61: ["61_L_P1_pole50_cleaningpose_48.2", 555156, 60], 70: before["programs"][70]})
+    assert ub.changes(before, sped, mine)                                                                # not seen running
+    notes = []
+    assert ub.changes(before, sped, mine, ran={61}, notes=notes) == [] and "slot 61" in notes[0]
+    assert ub.changes(before, after(io_default=71), mine) and ub.changes(before, after(points=[]), mine)
+
+
 DRIVER = textwrap.dedent("""
     import os, sys, time
     sys.path.insert(0, {tools!r})
@@ -63,6 +84,8 @@ DRIVER = textwrap.dedent("""
         return send(self, sp)
 
     ep.ProgramSurface.rm_send_project = slow
+    IO = dict(ret=0)                     # the emulator has no IO default program: here none (0), as the lab's arms say
+    ep.ProgramSurface.rm_get_default_run_program = lambda self: (IO["ret"], 0)
     sys.exit(ub.main(sys.argv[1:]))
 """)
 
@@ -86,6 +109,10 @@ def test_the_live_tests_run_through_on_the_emulator(tmp_path):
     assert all(r["complete"] for r in s["runs"].values()) and set(s["runs"]) == {"baseline", "during", "batch"}
     assert s["library_lock"]["longest_write_s"] is not None and s["watcher"]["longest_during_sends_s"] is not None
     assert s["deletes"]["n"] == 6 and s["deletes"]["deleted"] == 0                # the emulator has no delete
+    for side in ("left", "right"):                       # read before the first write and after every step: unchanged
+        d = s["controller_data"][side]
+        assert d["changes"] == [] and d["checks"] >= 2 and d["last_check"] == "after deleting the bench's files"
+    assert s["controller_data"]["left"]["checks"] == 7   # the still Program, five tests, the deletes
     text = (out / "summary.md").read_text()
     assert "EMULATED" in text and "One upload while a Program runs:** yes" in text
     records = [json.loads(ln) for ln in (out / "results.jsonl").read_text().splitlines()]
@@ -138,6 +165,80 @@ def test_external_runs_are_waited_for_and_uploaded_during(tmp_path):
     assert not [r for r in records if r.get("test") == "hold"]                   # no still Program of its own
 
 
+CHANGE_A_LAB_PROGRAM = textwrap.dedent("""
+    import threading, time
+    from pathlib import Path
+    from alix_dispatch import connect
+    other = connect.open_arm("left")                         # someone else's program in slot 80, changed mid-bench
+    lab = Path({tmp!r}) / "lab.txt"
+    lab.write_text('{{"point":[0,0,0,0,0,0,0]}}\\n' * 50)
+    ub.upload_one(other.robot, ub._rmu(), dict(test="x", side="left", slot=80, file=str(lab), name="lab_program"))
+
+    def change():
+        res = Path({out!r}) / "results.jsonl"
+        while not (res.exists() and '"setup"' in res.read_text()):
+            time.sleep(0.02)
+        lab.write_text('{{"point":[0,0,0,0,0,0,0]}}\\n' * 60)     # a raw send: upload_one would refuse the slot
+        rmu = ub._rmu()
+        proj = Path({tmp!r}) / "lab_program.proj"
+        rmu.write_project(rmu.read_track(lab), proj)
+        other.robot.rm_send_project(rmu.rm_send_project_t(str(proj), 0, 1, 80, 0, 0, 0))
+
+    threading.Thread(target=change, daemon=True).start()
+""")
+
+
+def test_a_change_to_a_lab_program_stops_the_bench_before_its_next_write(tmp_path):
+    out = tmp_path / "bench"
+    body = DRIVER.format(tools=str(ROOT / "tools")).replace(
+        "sys.exit(ub.main", CHANGE_A_LAB_PROGRAM.format(tmp=str(tmp_path), out=str(out)) + "\nsys.exit(ub.main")
+    driver = tmp_path / "driver.py"
+    driver.write_text(body)
+    proc = subprocess.run([sys.executable, str(driver), "live", "--emulated", "--side", "left", "--slots", "90-92",
+                           "--lines", "400", "--hold-s", "30", "--time-scale", "10", "--yes", "--out", str(out)],
+                          capture_output=True, text=True, timeout=240, cwd=ROOT)
+    assert proc.returncode == 1, proc.stdout[-3000:] + proc.stderr[-3000:]
+    assert "the bench writes and deletes nothing more" in proc.stdout
+    records = [json.loads(ln) for ln in (out / "results.jsonl").read_text().splitlines()]
+    change = [r for r in records if r.get("kind") == "snapshot" and r.get("changes")]
+    assert change and change[0]["when"] == "after storing the still Program" and "slot 80" in change[0]["changes"][0]
+    assert not [r for r in records if r.get("kind") in ("upload", "run", "delete") and r.get("test") != "hold"]
+    assert {r["test"] for r in records if r.get("kind") == "skipped"} == {"idle", "baseline", "during", "batch", "parallel"}
+    assert "CHANGED" in (out / "summary.md").read_text()
+
+
+IO_STOPS_ANSWERING = textwrap.dedent("""
+    import threading, time
+    from pathlib import Path
+
+    def unreadable():
+        res = Path({out!r}) / "results.jsonl"
+        while not (res.exists() and '"setup"' in res.read_text()):
+            time.sleep(0.02)
+        IO["ret"] = -2
+
+    threading.Thread(target=unreadable, daemon=True).start()
+""")
+
+
+def test_a_controller_part_it_cannot_read_again_stops_the_sends_but_not_its_own_deletes(tmp_path):
+    out = tmp_path / "bench"
+    body = DRIVER.format(tools=str(ROOT / "tools")).replace(
+        "sys.exit(ub.main", IO_STOPS_ANSWERING.format(out=str(out)) + "\nsys.exit(ub.main")
+    driver = tmp_path / "driver.py"
+    driver.write_text(body)
+    proc = subprocess.run([sys.executable, str(driver), "live", "--emulated", "--side", "left", "--slots", "90-92",
+                           "--lines", "400", "--hold-s", "30", "--time-scale", "10", "--yes", "--out", str(out)],
+                          capture_output=True, text=True, timeout=240, cwd=ROOT)
+    assert proc.returncode == 1, proc.stdout[-3000:] + proc.stderr[-3000:]
+    assert "could not be read after storing the still Program" in proc.stdout
+    records = [json.loads(ln) for ln in (out / "results.jsonl").read_text().splitlines()]
+    assert not [r for r in records if r.get("kind") in ("upload", "run") and r.get("test") != "hold"]
+    assert [r["slot"] for r in records if r.get("kind") == "delete"] == [90]       # its own still Program, read first
+    s = json.loads((out / "summary.json").read_text())["controller_data"]["left"]
+    assert s["changes"] == [] and s["unread_later"] == ["the IO default program"] and s["io_default"] == 0
+
+
 def test_the_bench_writes_only_empty_slots_or_its_own(tmp_path):
     driver = tmp_path / "driver.py"
     driver.write_text(textwrap.dedent(f"""
@@ -150,6 +251,19 @@ def test_the_bench_writes_only_empty_slots_or_its_own(tmp_path):
         f = {str(tmp_path / 'lab.txt')!r}
         open(f, "w").write('{{"point":[0,0,0,0,0,0,0]}}\\n' * 3)
         ub.upload_one(h.robot, ub._rmu(), dict(test="x", side="left", slot=91, file=f, name="lab_program"))
+        # a slot taken after the bench's start check: its own send reads the slot again and sends nothing
+        r = ub.upload_one(h.robot, ub._rmu(), dict(test="x", side="left", slot=91, file=f, name="UPBENCH_3"))
+        assert r["not_sent"] and not r["ok"] and ub._rmu().slots(h.robot)[91][0] == "91_lab_program.txt", r
+        # the repository's files that could restore a program: the name as listed and the stored size
+        from pathlib import Path
+        root = Path({str(tmp_path)!r}) / "repo"
+        root.mkdir()
+        (root / "lab_program_v2_slow.txt").write_text(open(f).read())
+        (root / "lab_program_v1.txt").write_text(open(f).read() * 2)
+        held = ub._rmu().slots(h.robot)
+        back = ub.restorable({{91: list(held[91])}}, [root])
+        assert back[91].endswith("lab_program_v2_slow.txt"), back
+        assert ub.restorable({{91: [held[91][0], held[91][1] + 1, 0]}}, [root])[91] is None
         sys.exit(ub.main(sys.argv[1:]))
     """))
     proc = subprocess.run([sys.executable, str(driver), "live", "--emulated", "--side", "left", "--slots", "90-92",

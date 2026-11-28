@@ -11,11 +11,11 @@ Program (one, then a batch), whether it takes two at once, and what an upload do
 
 live runs these tests in this order (--tests picks some):
   idle      each test file sent --repeat times with the arm idle: the send, and the program-list reads around it
-  parallel  --parallel files at once, each on a connection of its own, to the same controller; with --other-slots,
-            one more file to the other arm's controller at the same moment
   baseline  the run alone: how long the Program plays (the reference for the next two)
   during    one upload to another slot, started --delay-s into a run
   batch     uploads back to back during one run, as many as the run and the free slots allow
+  parallel  --parallel files at once, each on a connection of its own, to the same controller; with --other-slots,
+            one more file to the other arm's controller at the same moment (last: the least known to the controller)
 
 The run: --external-run sends no run at all: you start each run in Lite (its own pole and hand staging, gates and
 STOP), the bench sees it start on the controller and uploads during it. --run-slot N runs a Program the controller
@@ -24,9 +24,16 @@ controller runs a Program and the arm does not move. rm_upload.py's own run() st
 refuses an arm error or a running program, asks you to type the side, slow-stops the arm on Ctrl+C and puts the
 global speed back.
 
-What it writes: only the slots in --slots (and --other-slots), and only a slot that is empty or holds a file of this
-tool (its name holds UPBENCH). Everything it stored is deleted at the end (--keep keeps it). The test files are still
-Programs at the arm's joints, or --file FILE sent under an UPBENCH name.
+The controller's data (the user, 28 Nov: nothing on the controller may be corrupted): the bench writes and deletes
+only the slots in --slots (and --other-slots), and only a slot that is empty or holds a file of this tool (listed as
+<slot>_UPBENCH...), checked at the start and again in the program-list read just before each send and each delete. It
+sends store-only, as Lite does (rm_send_project only_save 1, auto_start 0: nothing runs, the IO default program is not
+touched), and refuses to start when the IO default program is one of its slots. Before its first write it reads what
+each controller it touches holds (every program's name, size and stored speed, the IO default program, the global
+points) and which of those programs a file in the repository could restore (RealMan's API gives no program's points
+back); after every test it reads them again, and any change to anything not its own stops it: no further write, and
+no delete either. The two-at-once test runs last. Its own files are deleted at the end (--keep keeps them). The test
+files are still Programs at the arm's joints, or --file FILE sent under an UPBENCH name.
 
 How it measures: each upload makes the calls Lite makes (rm_upload.py: the program list, rm_send_project store only,
 the program list again, the stored size compared), each timed, on a connection of its own in a process of its own
@@ -198,6 +205,118 @@ def logs_markdown(s: dict) -> str:
     return "\n".join(out) + "\n"
 
 
+# ── the controller's data: whose a slot is, what it holds, what changed, what the repository could restore ──────────
+
+TESTS = ("idle", "baseline", "during", "batch", "parallel")
+
+
+def _ours(name, slot) -> bool:
+    """A program of this bench: listed as <slot>_UPBENCH..., or UPBENCH... (the controllers' second form, 24 Nov)."""
+    n = name or ""
+    return n.startswith(f"{slot}_{TAG}") or n.startswith(TAG)
+
+
+def snapshot(rmu, arm) -> dict:
+    """What a controller holds that the bench must leave as it is, each read only: every program (name, size in bytes,
+    stored speed), the program its IO starts (rm_get_default_run_program; 0: none) and its global points (runner v14's
+    global_waypoints: name and joints). A part that cannot be read is said so, and compared as such."""
+    try:
+        programs = {int(k): [v[0], int(v[1]), v[2]] for k, v in rmu.slots(arm).items()}
+    except SystemExit as exc:
+        raise BenchError(f"the program list could not be read ({exc})") from None
+    try:
+        ret, d = arm.rm_get_default_run_program()
+        io_default = int(d) if ret == 0 else f"not read (ret {ret})"
+    except Exception as exc:                                                        # noqa: BLE001
+        io_default = f"not read ({type(exc).__name__})"
+    try:
+        points = sorted([p["point_name"], [round(float(v), 3) for v in p["joint"][:7]]]
+                        for p in _runner().global_waypoints(arm))
+    except Exception as exc:                                                        # noqa: BLE001
+        points = f"not read ({type(exc).__name__})"
+    return dict(programs=programs, io_default=io_default, points=points)
+
+
+def changes(before: dict, after: dict, mine: set, ran=(), notes=None) -> list[str]:
+    """What differs between two snapshots, leaving out the bench's own slots while they hold the bench's files. For a
+    program seen running (``ran``) only its name and size are compared: a run may set its stored speed (rm_set_program_id
+    _run takes one); such a change goes to ``notes``."""
+    out = []
+    for slot in sorted(set(before["programs"]) | set(after["programs"])):
+        b, a = before["programs"].get(slot), after["programs"].get(slot)
+        if slot in mine and (b is None or _ours(b[0], slot)) and (a is None or _ours(a[0], slot)):
+            continue
+        if slot in ran and b and a and list(b[:2]) == list(a[:2]) and b[2] != a[2]:
+            if notes is not None:
+                notes.append(f"slot {slot}'s stored speed went from {b[2]} to {a[2]} after it ran (its name and size are "
+                             f"unchanged)")
+            continue
+        if b != a:
+            out.append(f"slot {slot}: was {b and tuple(b)}, now {a and tuple(a)}")
+    if before["io_default"] != after["io_default"]:
+        out.append(f"IO default program: was {before['io_default']}, now {after['io_default']}")
+    if before["points"] != after["points"]:
+        out.append("global points: " + (f"{len(before['points'])} before, {len(after['points'])} after"
+                                        if isinstance(before["points"], list) and isinstance(after["points"], list)
+                                        else f"{before['points']!r} before, {after['points']!r} after"
+                                        if isinstance(before["points"], str) or isinstance(after["points"], str)
+                                        else "changed"))
+    return out
+
+
+def _stored_size(path: Path) -> int | None:
+    """The bytes rm_upload.write_project would send for this file (what the controller lists as its size)."""
+    try:
+        lines = _rmu().read_track(path)
+    except SystemExit:
+        return None
+    folder = b'{"name":"Folder","num":1,"type":%d,"enabled":true,"parent_number":0}' % len(lines)
+    return len(b'{"file":7}') + 2 + len(folder) + 2 + sum(len(ln) for ln in lines) + 2 * len(lines)
+
+
+def restorable(programs: dict, roots) -> dict:
+    """For each program (slot: [listed name, size, speed]): a file under ``roots`` that Lite could send again to give
+    the same program (its name starts as the listed name does, without the slot, and it stores the same size), else
+    None. The controller gives no program's points back, so these files are the only way back."""
+    files = {}
+    for root in roots:
+        for f in Path(root).rglob("*.txt") if Path(root).is_dir() else []:
+            files.setdefault(f.stem, f)
+    sizes = {}
+    out = {}
+    for slot, (name, size, _) in programs.items():
+        base = re.sub(r"\.(t|tx|txt)?$", "", name or "")
+        heads = {base, base[len(f"{slot}_"):] if base.startswith(f"{slot}_") else base}
+        found = None
+        for stem, f in files.items():
+            if any(len(h) >= 8 and stem.startswith(h) for h in heads):
+                if f not in sizes:
+                    sizes[f] = _stored_size(f)
+                if sizes[f] == size:
+                    found = str(f.relative_to(ROOT)) if f.is_relative_to(ROOT) else str(f)
+                    break
+        out[slot] = found
+    return out
+
+
+_RUNNER = None
+
+
+def _runner():
+    """vendor/control_app/rm_upload_fast_v14_safe_transit.py (runner v14) as a module, loaded once: its
+    global_waypoints, as robot_real.global_points reads them."""
+    global _RUNNER
+    if _RUNNER is None:
+        import importlib.util
+
+        from alix_studio_lite import vendor_paths
+        spec = importlib.util.spec_from_file_location("bench_runner_v14", vendor_paths.RUNNER_V14)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _RUNNER = mod
+    return _RUNNER
+
+
 # ── live: the SDK, connections, and one timed upload ──────────────────────────────────────────────────────────────
 
 def _setup(emulated: bool, scale: float = 1.0) -> None:
@@ -288,8 +407,9 @@ class Probe:
 
 
 def upload_one(robot, rmu, job: dict, probe: Probe | None = None) -> dict:
-    """One file into one slot with rm_upload.upload's calls, each timed: the program list, rm_send_project (store only,
-    stored speed 0, as Lite sends), the program list again and the stored size compared (within max(64 B, 0.1 %))."""
+    """One file into one slot with rm_upload.upload's calls, each timed: the program list (a slot that holds anything
+    but the bench's file is not written), rm_send_project (store only, stored speed 0, not the IO default: as Lite
+    sends), the program list again and the stored size compared (within max(64 B, 0.1 %))."""
     rec = dict(kind="upload", **job, t_wall=time.time())
     try:
         lines = rmu.read_track(Path(job["file"]))
@@ -302,9 +422,12 @@ def upload_one(robot, rmu, job: dict, probe: Probe | None = None) -> dict:
         rec.update(lines=len(lines), bytes=sent)
         t0 = time.monotonic()
         try:
-            rmu.slots(robot)
+            held = rmu.slots(robot).get(slot)
         except SystemExit as exc:
             return dict(rec, ok=False, why=f"program list before the send: {exc}")
+        if held is not None and not _ours(held[0], slot):
+            return dict(rec, ok=False, not_sent=True,
+                        why=f"slot {slot} now holds {held[0]!r}, not the bench's: nothing was sent")
         t1 = time.monotonic()
         ret, err_line = robot.rm_send_project(rmu.rm_send_project_t(str(proj), 0, 1, slot, 0, 0, 0))
         t2 = time.monotonic()
@@ -516,6 +639,7 @@ class Bench:
         self.records, self.written, self.halt = [], set(), None
         self._f = (self.out / "results.jsonl").open("a", encoding="utf-8")
         self.handles, self.arm, self.other_arm, self.watch, self.rmu = [], None, None, None, None
+        self.snap, self.changed, self.unread, self.active, self.noted = {}, None, None, None, []
 
     def log(self, rec: dict) -> None:
         self.records.append(rec)
@@ -566,6 +690,23 @@ class Bench:
         if len(self.free) < need:
             raise BenchError(f"--slots gives {len(self.free)} slot(s) for uploads; the tests need {need}"
                              + (" (the first holds the still Program)" if self.hold_slot else ""))
+        roots = [ROOT / "Resources" / "Programs", ROOT / "Resources" / "Sequences",
+                 *sorted((ROOT / "Resources" / "Projects").glob("*/controller_exports"))]
+        for side, arm, slots in ((self.side, self.arm, a.slots), (self.other, self.other_arm, a.other_slots)):
+            if arm is None:
+                continue
+            snap = self.snap[side] = snapshot(rmu, arm)
+            if snap["io_default"] in slots:
+                raise BenchError(f"slot {snap['io_default']} is the {side} controller's IO default program; leave it out "
+                                 f"of the bench's slots")
+            lab = {k: v for k, v in snap["programs"].items() if not (k in slots and _ours(v[0], k))}
+            back = restorable(lab, roots)
+            self.log(dict(kind="snapshot", side=side, when="before", **snap, restorable=back))
+            gone = [f"{k} {lab[k][0]}" for k, f in sorted(back.items()) if f is None]
+            print(f"{side} controller: {len(lab)} programs not the bench's; IO default {snap['io_default']}; global points "
+                  f"{len(snap['points']) if isinstance(snap['points'], list) else snap['points']}. A file in the repository "
+                  f"could restore {len(lab) - len(gone)} of the {len(lab)} programs"
+                  + (f"; not these: {'; '.join(gone)}" if gone else ""))
         self.log(dict(kind="setup", t_wall=time.time(), emulated=self.emulated, side=self.side,
                       address=self.addr[self.side], slots=a.slots, other_slots=a.other_slots, run_slot=a.run_slot,
                       programs_held=len(held), joints_mdeg=self.point, tests=a.tests,
@@ -583,8 +724,53 @@ class Bench:
         except SystemExit as exc:
             raise BenchError(str(exc)) from None
 
+    def check_controllers(self, after: str) -> bool:
+        """Each controller the bench touches read again and compared with what it held before the first write. A change
+        to anything not the bench's stops the bench: no further write, no delete. True when nothing changed."""
+        for side, arm, slots in ((self.side, self.arm, self.a.slots), (self.other, self.other_arm, self.a.other_slots)):
+            if arm is None or side not in self.snap:
+                continue
+            before, now = self.snap[side], None
+            for attempt in (1, 2):                   # a read that fails is tried once more, a second later
+                try:
+                    now = snapshot(self.rmu, arm)
+                except BenchError as exc:
+                    now = dict(programs=None, why=str(exc))
+                unread = (["the program list"] if now["programs"] is None else []) + [
+                    what for key, what in (("io_default", "the IO default program"), ("points", "the global points"))
+                    if now.get(key) is not None and isinstance(now[key], str) and not isinstance(before[key], str)]
+                if not unread or attempt == 2:
+                    break
+                time.sleep(1.0)
+            notes = []
+            ran = {sid for _, rs, sid in self.watch.changes if rs in (1, 2) and sid} if side == self.side else set()
+            if now["programs"] is None:
+                diff = []
+            else:                                    # a part not read is not compared (it is reported below)
+                diff = changes(before, {k: (before[k] if isinstance(now[k], str) and not isinstance(before[k], str)
+                                            else now[k]) for k in ("programs", "io_default", "points")}, set(slots),
+                               ran, notes)
+            self.log(dict(kind="snapshot", side=side, when=f"after {after}", **now, changes=diff, unread=unread,
+                          notes=notes))
+            for n in notes:
+                if n not in self.noted:
+                    self.noted.append(n)
+                    print(f"  note: the {side} controller: {n}")
+            if diff:
+                self.changed = f"the {side} controller's data changed after {after}: " + "; ".join(diff)
+                self.halt = self.changed
+                print(f"\n** {self.changed}\n** the bench writes and deletes nothing more")
+                return False
+            if unread:
+                self.halt = self.unread = (f"the {side} controller's {' and '.join(unread)} could not be read after {after}, so it "
+                             f"is not known to be unchanged")
+                print(f"\n** {self.halt}\n** the bench sends nothing more (its own files are still deleted, each slot "
+                      f"read again first)")
+                return False
+        return True
+
     def _check_slots(self, side, held, slots) -> None:
-        bad = [f"slot {s} holds {held[s][0]!r}" for s in slots if s in held and TAG not in (held[s][0] or "")]
+        bad = [f"slot {s} holds {held[s][0]!r}" for s in slots if s in held and not _ours(held[s][0], s)]
         if bad:
             raise BenchError(f"the bench writes only empty slots or its own; on the {side} controller "
                              + "; ".join(bad) + ". Pick others (python3 tools/upload_bench.py slots --side "
@@ -623,7 +809,18 @@ class Bench:
             elif m["kind"] == "worker":
                 abort.set(), go.set()
                 raise BenchError(f"upload connection {m['worker']}: {m['why']}")
-        return Crew(workers, go, abort, q)
+        self.active = Crew(workers, go, abort, q)
+        return self.active
+
+    def drain(self) -> None:
+        """Uploads still under way (Ctrl+C) stopped before their next file and waited for, so that nothing is deleted
+        while a send to that slot goes on."""
+        if self.active is not None:
+            self.active.abort.set()
+            self.active.go.set()
+            print("waiting for any upload still sending to end")
+            self.take(self.active.collect(120.0))
+            self.active = None
 
     def take(self, got: list) -> list:
         """Worker results logged, each upload with what the watcher saw while it was sending."""
@@ -686,7 +883,7 @@ class Bench:
             if crew is not None:
                 crew.abort.set()
                 crew.go.set()
-                got = crew.collect()
+                got, self.active = crew.collect(), None
         w = self.watch.run_after(t_call)
         play = (w["t_end"] - w["t_start"]) if w and w["t_end"] else None
         rec = dict(kind="run", test=test, slot=w["slot"] if w and self.a.external_run else self.run_slot, rc=rc,
@@ -741,7 +938,8 @@ class Bench:
                 k += 1
         crew = self.crew([(self.side, jobs)])
         crew.go.set()
-        self.take(crew.collect())
+        got, self.active = crew.collect(), None
+        self.take(got)
 
     def t_parallel(self):
         n = self.a.parallel
@@ -752,7 +950,8 @@ class Bench:
             plans.append((self.other, [self.job("parallel", self.other, self.a.other_slots[0], self.big)]))
         crew = self.crew(plans)
         crew.go.set()
-        self.take(crew.collect())
+        got, self.active = crew.collect(), None
+        self.take(got)
 
     def t_baseline(self):
         self.baseline = self.run_program("baseline")
@@ -803,12 +1002,13 @@ class Bench:
                 self._say(self.records[-1])
                 if not self.records[-1]["ok"]:
                     raise BenchError(f"the still Program was not stored in slot {self.hold_slot}")
+                self.check_controllers("storing the still Program")         # a change: every test is skipped
                 self.run_slot, self.run_lines, self.first_point = self.hold_slot, n, self.point
                 self.run_timeout = (n - 1) * TICK_S * 1.5 + 60.0
             else:
                 self.run_slot, self.run_lines, self.first_point = a.run_slot, None, None
                 self.run_timeout = a.run_timeout
-        for name in ("idle", "parallel", "baseline", "during", "batch"):
+        for name in TESTS:
             if name not in a.tests:
                 continue
             if self.halt:
@@ -816,19 +1016,23 @@ class Bench:
                 self.log(dict(kind="skipped", test=name, why=self.halt))
                 continue
             getattr(self, f"t_{name}")()
+            self.check_controllers(name)
 
     def cleanup(self) -> None:
-        """Every slot the bench wrote deleted again, if it still holds a file of this tool."""
+        """Every slot of --slots and --other-slots that holds a file of this bench deleted (one left by an earlier bench
+        too), each slot read again just before its delete. Nothing is deleted once the controller's data changed."""
         if self.a.keep:
             print(f"\nkept: {sorted(self.written)}")
             return
-        for side, arm in ((self.side, self.arm), (self.other, self.other_arm)):
-            mine = sorted(s for sd, s in self.written if sd == side)
-            if arm is None or not mine:
+        if self.changed:
+            print(f"\nnot deleted (the controller's data changed; nothing more is written): {sorted(self.written)}")
+            return
+        for side, arm, slots in ((self.side, self.arm, self.a.slots), (self.other, self.other_arm, self.a.other_slots)):
+            if arm is None:
                 continue
-            held = self._slots(arm)
-            for slot in mine:
-                if slot not in held or TAG not in (held[slot][0] or ""):
+            for slot in slots:
+                now = self._slots(arm).get(slot)
+                if now is None or not _ours(now[0], slot):
                     continue
                 t = time.monotonic()
                 fn = getattr(arm, "rm_delete_program_trajectory", None)
@@ -839,6 +1043,7 @@ class Bench:
         left = [f"{r['side']} {r['slot']}" for r in dels if r.get("ret") != 0]
         print(f"\ndeleted {len(dels) - len(left)} of the bench's {len(dels)} programs"
               + (f"; still held: {', '.join(left)} ({dels[0].get('why') or 'see results.jsonl'})" if left else ""))
+        self.check_controllers("deleting the bench's files")
 
     def close(self) -> None:
         if self.watch is not None:
@@ -906,8 +1111,26 @@ def summarise(records: list) -> dict:
     probes = [dict(test=u["test"], send_s=u["send_s"], **u["probe"]) for u in ups if "probe" in u and u.get("send_s")]
     deletes = [r for r in records if r.get("kind") == "delete"]
     base = runs.get("baseline") or {}
+    snaps = [r for r in records if r.get("kind") == "snapshot"]
+    data = {}
+    for side in sorted({r["side"] for r in snaps}):
+        first = next(r for r in snaps if r["side"] == side and r["when"] == "before")
+        later = [r for r in snaps if r["side"] == side and r["when"] != "before"]
+        back = first.get("restorable") or {}
+        data[side] = dict(programs=len(back), restorable=sum(1 for f in back.values() if f),
+                          not_read=[what for key, what in (("io_default", "its IO default program"),
+                                                           ("points", "its global points"))
+                                    if isinstance(first[key], str)],
+                          unread_later=sorted({u for r in later for u in r.get("unread") or []}),
+                          notes=sorted({n for r in later for n in r.get("notes") or []}),
+                          not_restorable=[f"{k} {first['programs'][k][0]}" for k, f in sorted(back.items(), key=lambda x: int(x[0]))
+                                          if not f],
+                          io_default=first["io_default"],
+                          points=len(first["points"]) if isinstance(first["points"], list) else first["points"],
+                          checks=len(later), last_check=later[-1]["when"] if later else None,
+                          changes=next((r["changes"] for r in later if r.get("changes")), []))
     out = dict(
-        emulated=setup.get("emulated"), side=setup.get("side"),
+        emulated=setup.get("emulated"), side=setup.get("side"), controller_data=data,
         idle_fit=f, idle_sizes=sizes, parallel=par_side, both_controllers=cross,
         during=in_run("during"), batch=in_run("batch"),
         runs={k: dict(play_s=v["play_s"], complete=v["complete"], paused=v["paused"], ms_per_line=v["ms_per_line"],
@@ -928,6 +1151,25 @@ def summarise(records: list) -> dict:
 
 def summary_markdown(s: dict) -> str:
     L = ["# Upload bench" + (" (EMULATED: the emulator's timings, not a controller's)" if s["emulated"] else ""), ""]
+    for side, d in s.get("controller_data", {}).items():
+        if not d["checks"]:
+            L.append(f"- **The {side} controller's data:** read at the start; the bench wrote nothing to it.")
+        elif d["changes"]:
+            L.append(f"- **The {side} controller's data CHANGED** (the bench stopped there and wrote nothing more): "
+                     + "; ".join(d["changes"]) + ".")
+        else:
+            same = [f"its {d['programs']} programs that are not the bench's (name, size, stored speed)"]
+            same += [] if "its IO default program" in d["not_read"] else [f"its IO default program ({d['io_default']})"]
+            same += [] if "its global points" in d["not_read"] else [f"its {d['points']} global points"]
+            L.append(f"- **The {side} controller's data:** no change found. Read before the first write and after each "
+                     f"of {d['checks']} steps (the last: {d['last_check']}): " + "; ".join(same) + "."
+                     + (f" Not compared, as this controller did not give them: {' and '.join(d['not_read'])}."
+                        if d["not_read"] else "")
+                     + (f" Not read at some check, so the bench stopped sending: {', '.join(d['unread_later'])}."
+                        if d["unread_later"] else "")
+                     + (f" Note: {'; '.join(d['notes'])}." if d["notes"] else ""))
+        L.append(f"  - A file in the repository could restore {d['restorable']} of those {d['programs']} programs"
+                 + (f"; not these: {'; '.join(d['not_restorable'])}." if d["not_restorable"] else "."))
     f = s["idle_fit"]
     if f:
         L.append(f"- **Upload rate, arm idle:** {f['kb_s']} KB/s, plus {f['fixed_s']} s fixed per file "
@@ -1011,7 +1253,7 @@ def main(argv=None) -> int:
     lv = sub.choices["live"]
     lv.add_argument("--slots", type=_slots_arg, required=True, help="slots the bench may write, e.g. 90-95")
     lv.add_argument("--other-slots", type=_slots_arg, default=[], help="the other arm's slots for the parallel test")
-    lv.add_argument("--tests", default="idle,parallel,baseline,during,batch")
+    lv.add_argument("--tests", default=",".join(TESTS))
     lv.add_argument("--lines", default="1000,4000,11000", help="the still test files' lengths")
     lv.add_argument("--file", action="append", help="send this Program file instead (repeatable)")
     lv.add_argument("--repeat", type=int, default=3, help="idle: sends of each file")
@@ -1063,7 +1305,7 @@ def main(argv=None) -> int:
         return 0
 
     a.tests = [t.strip() for t in a.tests.split(",") if t.strip()]
-    unknown = set(a.tests) - {"idle", "parallel", "baseline", "during", "batch"}
+    unknown = set(a.tests) - set(TESTS)
     if unknown:
         ap.error(f"unknown test(s): {', '.join(sorted(unknown))}")
     a.lines = [int(x) for x in a.lines.split(",") if x.strip()]
@@ -1085,10 +1327,13 @@ def main(argv=None) -> int:
         rc = 1
     finally:
         try:
-            if bench.arm is not None and bench.written:
+            bench.drain()
+            if bench.arm is not None and bench.snap and bench.written:
                 bench.cleanup()
         except (Exception, KeyboardInterrupt, SystemExit) as exc:                   # noqa: BLE001
             print(f"** the bench's files were not all deleted ({exc}); slots: {sorted(bench.written)}")
+        if bench.changed or bench.unread:
+            rc = 1
         bench.close()
         if not bench.records:                            # nothing was done: no empty results folder left behind
             (bench.out / "results.jsonl").unlink(missing_ok=True)
