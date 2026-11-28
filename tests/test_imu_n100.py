@@ -103,6 +103,25 @@ def test_still_capture_rates_lost_frames_gravity_and_bias(imu):
     assert rep["ok"], lines
 
 
+def test_frames_out_of_order_are_not_lost_and_a_leftover_first_frame_is_left_out(imu):
+    """The lab's 27 Nov captures: the counter went back by one about 36 times a minute (read as 254 lost each, so
+    '20 % lost' with every IMU frame present), and the 5-min capture began with an IMU frame 59 s old."""
+    buf, chunks = synth(imu, seconds=2.0)
+    frames, _, _ = imu.scan(buf)
+    order = list(range(len(frames)))
+    pairs = [k for k in range(len(frames) - 1) if frames[k].type == 0x40 and frames[k + 1].type == 0x41]
+    for k in pairs[10:13]:                                       # three IMU and AHRS pairs sent the wrong way round
+        order[k], order[k + 1] = order[k + 1], order[k]
+    old = imu.build_frame(0x40, imu_payload((0, 0, 0), (0, 0, -9.8), -59_000_000), 77)   # from before the capture
+    raw = old + b"".join(buf[frames[i].start:frames[i].end] for i in order)
+    chunks = [dict(o=o, n=min(512, len(raw) - o), t=1.8e9 + 2.0 * o / len(raw), m=100.0 + 2.0 * o / len(raw))
+              for o in range(0, len(raw), 512)]                  # reads spread over the 2 s
+    lines, rep = imu.analyse(raw, chunks)
+    assert rep["stale"] == 1 and rep["lost"] == 0 and rep["out_of_order"] == 3
+    assert rep["imu_ts_gaps"] == 0 and rep["imu_ts_back"] == 0        # the IMU frames themselves stay in order
+    assert any(line.startswith("PASS  frame counter: 0 lost") for line in lines)
+
+
 def test_too_many_lost_frames_fail(imu):
     buf, chunks = synth(imu, seconds=2.0, drop=tuple(range(100, 110)))
     lines, rep = imu.analyse(buf, chunks)

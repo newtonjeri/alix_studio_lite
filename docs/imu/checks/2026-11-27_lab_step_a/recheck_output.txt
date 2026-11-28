@@ -1,0 +1,28 @@
+== 160343_mounted_still (mounted, robot still, 15 min warm): ok=True, powered 101 s, max gyro 0.2 deg/s, max accel 9.87 m/s^2
+   PASS  frame counter: 0 lost of 30,059 frames (0.000 %); 36 sent out of order (not lost)
+== 160724_mounted_still (mounted, robot still, 15 min warm): ok=True, powered 322 s, max gyro 0.2 deg/s, max accel 9.86 m/s^2
+   PASS  frame counter: 0 lost of 30,060 frames (0.000 %); 28 sent out of order (not lost)
+== 160923_rate_5min (mounted, robot still): ok=True, powered 441 s, max gyro 0.3 deg/s, max accel 9.87 m/s^2
+         1 frame(s) at the start were left over from before the port was opened (time stamp over 1 s older than the next): left out
+   PASS  frame counter: 0 lost of 150,296 frames (0.000 %); 170 sent out of order (not lost)
+== 162111_mounted_still (mounted, robot off): ok=True, powered 1149 s, max gyro 0.2 deg/s, max accel 9.86 m/s^2
+   PASS  frame counter: 0 lost of 30,059 frames (0.000 %); 29 sent out of order (not lost)
+== 162455_mounted_tap (plate x3, then board x3): ok=True, powered 1373 s, max gyro 10.9 deg/s, max accel 12.72 m/s^2
+   PASS  frame counter: 0 lost of 15,031 frames (0.000 %); 14 sent out of order (not lost)
+   CHECK tap: an event took over 150 ms to settle: a loose mount rings on; a rigid one dies in a few tens of ms
+== 162707_mounted_tap (plate x3, then board x3): ok=True, powered 1504 s, max gyro 416.9 deg/s, max accel 61.67 m/s^2
+   PASS  frame counter: 0 lost of 15,029 frames (0.000 %); 12 sent out of order (not lost)
+   CHECK tap: an event took over 150 ms to settle: a loose mount rings on; a rigid one dies in a few tens of ms
+== 163559_noise_c_arms_holding (arms powered, holding, no motion; UGV casing only (no motors); IMU on 3M tape (temporary)): ok=True, powered 2036 s, max gyro 0.3 deg/s, max accel 9.87 m/s^2
+   PASS  frame counter: 0 lost of 60,118 frames (0.000 %); 61 sent out of order (not lost)
+noise floor (c) at 30 Hz: 0.0295 deg/s RMS
+noise floor (c) at 8 Hz: 0.0179 deg/s RMS
+162455_mounted_tap 10.22 s peak    9.7 deg/s:  5.6 % of the 30-530 ms after it below 30 Hz; above, strongest 170 Hz
+162455_mounted_tap 15.48 s peak    4.2 deg/s: 16.8 % of the 30-530 ms after it below 30 Hz; above, strongest 170 Hz
+162455_mounted_tap 21.11 s peak    9.4 deg/s: 12.6 % of the 30-530 ms after it below 30 Hz; above, strongest 148 Hz
+162707_mounted_tap  5.71 s peak    6.6 deg/s: 16.4 % of the 30-530 ms after it below 30 Hz; above, strongest 170 Hz
+162707_mounted_tap  8.24 s peak    5.5 deg/s: 46.8 % of the 30-530 ms after it below 30 Hz; above, strongest 68 Hz
+162707_mounted_tap 10.58 s peak    9.6 deg/s: 52.8 % of the 30-530 ms after it below 30 Hz; above, strongest 56 Hz
+162707_mounted_tap 12.72 s peak  411.7 deg/s: 98.2 % of the 30-530 ms after it below 30 Hz; above, strongest 40 Hz
+162707_mounted_tap 14.63 s peak  323.3 deg/s: 96.0 % of the 30-530 ms after it below 30 Hz; above, strongest 190 Hz
+162707_mounted_tap 16.58 s peak  418.6 deg/s:  7.7 % of the 30-530 ms after it below 30 Hz; above, strongest 190 Hz

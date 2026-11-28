@@ -11,8 +11,8 @@ serial port.
         # a MADE-UP capture from a day's arm feeds, with a known gain and lag: it tests this analysis, it measures nothing
 
 What it reads, all written on the same laptop:
-- the capture (tools/imu_n100.py capture --seconds ...; started before the run with the robot still, stopped after it
-  with the robot still): the sensor's own microsecond clock, fitted to the laptop's monotonic clock through the reads'
+- the IMU recording: the one Lite makes with every Real Machine S2 run that records the feed (<day>/imu/<HHMMSS>_s2_*),
+  or a hand-made `tools/imu_n100.py capture`: the sensor's own microsecond clock, fitted to the laptop's monotonic clock through the reads'
   arrival times (offset and drift; the earliest arrivals set the offset);
 - the Lite logs of the same day (the folder above imu/): hardware.jsonl (each arm's workflow steps: Program, MoveJ,
   pole, hand, wait), status.jsonl (each arm's pole height), canfd/*.frames.jsonl (each arm's feed during S2, stamped
@@ -20,8 +20,9 @@ What it reads, all written on the same laptop:
 - the Program files: Resources/Programs/<set>/<arm>/ and any --programs folder, found by the name the controller lists
   (cut at 32 characters) and confirmed by matching the feed's joints to the file's lines in order (not by time).
 
-The signals: the gyro, its bias taken from the still seconds at the start and at the end (linear between them) and
-rotated to the UGV's base frame by --mount (roll, pitch, yaw in degrees, sensor to base; the default 180,0,0 is the
+The signals: the gyro, its bias taken from the moments the feed shows every arm still (a recording Lite made during
+an S2 run starts with the run), else from the still seconds at the start and at the end, and rotated to the UGV's
+base frame by --mount (roll, pitch, yaw in degrees, sensor to base; the default 180,0,0 is the
 board flat with its marked X to the robot's front: the N100's axes are north-east-down). Rotation rates are the same
 anywhere on a rigid body, so the board's place does not enter them. The rocking rate is the size of the roll and pitch
 rates; a section is a stretch where it is above the bar: 5 x the noise floor's RMS (from --floor, else from the run's
@@ -61,6 +62,11 @@ AROUND_S = 0.25              #: a peak's lines, acceleration and jerk are read t
 REPORT_PEAKS = 20            #: the report lists the strongest; sections.csv has them all
 VARIANTS = (("model", "model"), ("both", "model + weight"))
 FEED_DT = 0.02               #: the S2 feed's period (Lite asks the controller for 20 ms)
+STILL_DEG_S = 0.2            #: an arm is still when no joint of its feed moves faster than this
+STILL_MIN_S = 1.5            #: ... for at least this long
+SETTLE_S = 1.0               #: and the first second after it stops is left out (the base may still rock)
+FEED_BIAS_MIN_S = 3.0        #: still time enough to take the gyro bias from
+BIAS_LINE_S = 20.0           #: still moments spread over this much or more: the bias's drift is fitted too
 MODEL_DT = 0.01              #: the grid the model check runs on
 LAGS_S = (-0.2, 0.5)         #: the lags tried: the IMU up to 0.2 s before, 0.5 s after the prediction
 MATCH_OK_DEG = 1.0           #: a file matches the feed when the matched lines are this close (median, all joints)
@@ -126,6 +132,7 @@ def load_imu(folder: Path) -> dict:
     n = _n100()
     buf, chunks = n.load(folder)
     frames, st, _ = n.scan(buf)
+    frames, stale = n.drop_stale_head(frames)
     imu = [f for f in frames if f.type == n.T_IMU and len(f.payload) >= 56]
     if len(imu) < 100:
         raise SystemExit(f"{folder}: {len(imu)} IMU frames (0x40), too few to analyse. Check it with "
@@ -158,7 +165,7 @@ def load_imu(folder: Path) -> dict:
         gyro=np.array([r["gyro"] for r in rec], dtype=float) * RAD,          # deg/s, sensor axes
         acc=np.array([r["acc"] for r in rec], dtype=float),                  # m/s^2 with gravity, sensor axes
         temp=np.array([r["temp"] for r in rec], dtype=float),
-        rate_hz=1.0 / step, lost=lost, frames=len(imu), crc_bad=st.crc16_bad + st.end_bad,
+        rate_hz=1.0 / step, lost=lost, stale=stale, frames=len(imu), crc_bad=st.crc16_bad + st.end_bad,
         drift_ppm=(1.0 / slope - 1.0) * 1e6, lat_p50_ms=float(np.percentile(lat_ms, 50)),
         lat_p99_ms=float(np.percentile(lat_ms, 99)), wall_minus_mono=float(np.median(wall)))
 
@@ -172,8 +179,10 @@ def rot_rpy(deg: tuple) -> np.ndarray:
     return rz @ ry @ rx
 
 
-def signals(cap: dict, mount: tuple, still_s: float, lowpass: float) -> dict:
-    """Rates and accelerations in the base frame on a uniform grid: bias out, low-passed."""
+def signals(cap: dict, mount: tuple, still_s: float, lowpass: float, still_spans: list | None = None) -> dict:
+    """Rates and accelerations in the base frame on a uniform grid: bias out, low-passed. The bias (and the resting
+    gravity) come from ``still_spans`` when they hold FEED_BIAS_MIN_S or more (when the feed shows every arm still: a
+    recording made by Lite during an S2 run has no still lead-in), else from the first and last ``still_s``."""
     t = cap["t"]
     dt = float(np.median(np.diff(t)))
     grid = np.arange(t[0], t[-1], dt)
@@ -181,24 +190,71 @@ def signals(cap: dict, mount: tuple, still_s: float, lowpass: float) -> dict:
     g = np.column_stack([np.interp(grid, t, cap["gyro"][:, i]) for i in range(3)]) @ r.T
     a = np.column_stack([np.interp(grid, t, cap["acc"][:, i]) for i in range(3)]) @ r.T
     span = grid[-1] - grid[0]
-    still_s = min(still_s, span / 2)
-    start, end = grid < grid[0] + still_s, grid > grid[-1] - still_s
-    b0, b1 = np.median(g[start], axis=0), np.median(g[end], axis=0)
-    q0 = float(np.sqrt(np.mean((g[start] - b0) ** 2)))
-    q1 = float(np.sqrt(np.mean((g[end] - b1) ** 2)))
-    end_still = q1 <= 3.0 * q0 + 0.05
-    if end_still:
-        w = (grid - grid[0]) / max(span, 1e-9)
-        bias = b0 + np.outer(w, b1 - b0)
+    still = np.zeros(len(grid), dtype=bool)
+    for lo, hi in still_spans or []:
+        still |= (grid >= lo) & (grid <= hi)
+    end_still = True
+    if still.sum() * dt >= FEED_BIAS_MIN_S:
+        x = grid[still] - grid[0]
+        if x[-1] - x[0] >= BIAS_LINE_S:                    # still moments spread over the run: bias and its drift
+            slope, icpt = np.polyfit(x, g[still], 1)
+            bias = icpt + np.outer(grid - grid[0], slope)
+        else:
+            bias = np.broadcast_to(np.median(g[still], axis=0), g.shape)
+        b0, b1 = bias[0].copy(), bias[-1].copy()
+        rest = np.median(a[still], axis=0)
+        bias_from = (f"{still.sum() * dt:.0f} s when the feed shows every arm still "
+                     f"({len(still_spans)} stretch(es), from {SETTLE_S:g} s after a stop)")
     else:
-        bias = np.broadcast_to(b0, g.shape)
+        still_s = min(still_s, span / 2)
+        start, end = grid < grid[0] + still_s, grid > grid[-1] - still_s
+        b0, b1 = np.median(g[start], axis=0), np.median(g[end], axis=0)
+        q0 = float(np.sqrt(np.mean((g[start] - b0) ** 2)))
+        q1 = float(np.sqrt(np.mean((g[end] - b1) ** 2)))
+        end_still = q1 <= 3.0 * q0 + 0.05
+        if end_still:
+            w = (grid - grid[0]) / max(span, 1e-9)
+            bias = b0 + np.outer(w, b1 - b0)
+        else:
+            bias = np.broadcast_to(b0, g.shape)
+        rest = np.median(a[start], axis=0)
+        bias_from = f"the first and last {still_s:.0f} s"
     rates = _bandlimit(g - bias, dt, lowpass)
-    acc = _bandlimit(a - np.median(a[start], axis=0), dt, lowpass)
+    acc = _bandlimit(a - rest, dt, lowpass)
     jerk = np.gradient(acc, dt, axis=0)
     return dict(t=grid, dt=dt, rates=rates, acc=acc, rock=np.hypot(rates[:, 0], rates[:, 1]),
                 acc_h=np.hypot(acc[:, 0], acc[:, 1]), jerk_h=np.hypot(jerk[:, 0], jerk[:, 1]),
-                bias_start=b0, bias_end=b1, end_still=end_still, still_s=still_s,
-                gravity_base=np.median(a[start], axis=0))
+                bias_start=b0, bias_end=b1, end_still=end_still, bias_from=bias_from, gravity_base=rest)
+
+
+def feed_still_spans(feeds: dict, steps: list, t_lo: float, t_hi: float) -> list[tuple[float, float]]:
+    """Where every arm with a feed holds still (no joint faster than STILL_DEG_S for STILL_MIN_S or more, the first
+    SETTLE_S after a stop left out: the base may still rock) and no pole or hand step runs."""
+    grid = np.arange(t_lo, t_hi, FEED_DT)
+    still = np.ones(len(grid), dtype=bool)
+    sides = 0
+    for files in feeds.values():
+        if not files:
+            continue
+        sides += 1
+        ok = np.zeros(len(grid), dtype=bool)
+        for fd in files:
+            tg = np.arange(fd["t"][0], fd["t"][-1], FEED_DT)
+            if len(tg) < 10:
+                continue
+            q = np.column_stack([np.interp(tg, fd["t"], fd["q"][:, k]) for k in range(7)])
+            v = np.abs(np.gradient(_bandlimit(q, FEED_DT, 5.0), FEED_DT, axis=0)).max(axis=1)
+            inside = (grid >= tg[0]) & (grid <= tg[-1])
+            ok[inside] = np.interp(grid[inside], tg, v) < STILL_DEG_S
+        still &= ok
+    if not sides:
+        return []
+    for w in steps:                                    # the pole and the hand move without the joints
+        if w["kind"] in ("POLE", "POLE+HAND", "HAND"):
+            still &= ~((grid >= w["t0"] - 0.5) & (grid <= w["t1"] + 0.5))
+    edges = np.flatnonzero(np.diff(np.concatenate([[0], still.astype(int), [0]])))
+    return [(float(grid[i] + SETTLE_S), float(grid[j - 1])) for i, j in zip(edges[::2], edges[1::2])
+            if grid[j - 1] - grid[i] >= STILL_MIN_S]
 
 
 def noise_floor(sig: dict, floor_sig: dict | None) -> tuple[float, str]:
@@ -618,21 +674,23 @@ def cmd_analyse(a) -> int:
     folder = Path(a.capture).resolve()
     cap = load_imu(folder)
     mount = tuple(float(v) for v in a.mount.split(","))
-    sig = signals(cap, mount, a.still_s, a.lowpass)
+    t_lo, t_hi = float(cap["t"][0]), float(cap["t"][-1])
+
+    day = Path(a.logs).resolve() if a.logs else folder.parents[1]
+    off = cap["wall_minus_mono"]
+    steps = read_steps(day / "hardware.jsonl", off)
+    steps = [w for w in steps if w["t1"] >= t_lo and w["t0"] <= t_hi]
+    poles = read_poles(day / "status.jsonl", off)
+    feeds = read_feeds(day, t_lo, t_hi)
+    runs = map_programs(steps, feeds, [Path(p) for p in a.programs])
+
+    sig = signals(cap, mount, a.still_s, a.lowpass, feed_still_spans(feeds, steps, t_lo, t_hi))
     floor_sig = signals(load_imu(Path(a.floor).resolve()), mount, 1e9, a.lowpass) if a.floor else None
     floor, floor_src = noise_floor(sig, floor_sig)
     bar = BAR_X * floor
     sections = find_sections(sig, bar)
     peaks = find_peaks_above(sig, bar, sections)
     t0 = float(sig["t"][0])
-
-    day = Path(a.logs).resolve() if a.logs else folder.parents[1]
-    off = cap["wall_minus_mono"]
-    steps = read_steps(day / "hardware.jsonl", off)
-    steps = [w for w in steps if w["t1"] >= sig["t"][0] and w["t0"] <= sig["t"][-1]]
-    poles = read_poles(day / "status.jsonl", off)
-    feeds = read_feeds(day, float(sig["t"][0]), float(sig["t"][-1]))
-    runs = map_programs(steps, feeds, [Path(p) for p in a.programs])
 
     # the model check
     why_no_model = model_available()
@@ -694,13 +752,14 @@ def cmd_analyse(a) -> int:
     if cap["meta"].get("synthetic"):
         say("**MADE-UP CAPTURE** (`tools/imu_runs.py synth`): this tests the analysis; it measures nothing.\n")
     say(f"- Capture: {cap['frames']:,} IMU frames at {cap['rate_hz']:.1f} per second, {cap['lost']} lost, "
-        f"{cap['crc_bad']} damaged; {sig['t'][-1] - sig['t'][0]:.1f} s.")
+        f"{cap['crc_bad']} damaged; {sig['t'][-1] - sig['t'][0]:.1f} s"
+        + (f"; {cap['stale']} frame(s) left over from before the capture, left out." if cap["stale"] else "."))
     say(f"- Clocks: the sensor's runs {cap['drift_ppm']:+.1f} ppm against the laptop's; frames reach the laptop "
         f"{cap['lat_p50_ms']:.1f} ms (median) and {cap['lat_p99_ms']:.1f} ms (99 %) after the earliest.")
     b0, b1 = sig["bias_start"], sig["bias_end"]
     say(f"- Gyro bias (base axes, deg/s): start {b0[0]:+.3f} {b0[1]:+.3f} {b0[2]:+.3f}; end {b1[0]:+.3f} {b1[1]:+.3f} "
         f"{b1[2]:+.3f}" + ("" if sig["end_still"] else " (the end was not still: the start's bias is used throughout)")
-        + f"; from the first and last {sig['still_s']:.0f} s.")
+        + f"; from {sig['bias_from']}.")
     gb = sig["gravity_base"]
     say(f"- Gravity at rest in base axes (m/s^2): {gb[0]:+.2f} {gb[1]:+.2f} {gb[2]:+.2f}. With the mount right it is "
         f"about 0 0 +9.81; anything else means --mount ({a.mount}) is wrong.")
@@ -776,6 +835,7 @@ def cmd_analyse(a) -> int:
                          q["left"], q["right"], "; ".join(q["lines"]), "; ".join(q["file_notes"])])
     summary = dict(capture=str(folder), synthetic=bool(cap["meta"].get("synthetic")), rate_hz=cap["rate_hz"],
                    lost=cap["lost"], drift_ppm=cap["drift_ppm"], bias_start=list(b0), bias_end=list(b1),
+                   bias_from=sig["bias_from"],
                    floor_deg_s=floor, floor_from=floor_src, bar_deg_s=bar, fits=fits, model_note=why_no_model,
                    runs=[dict(side=r["step"]["side"], label=r["step"]["label"], file=r["file"].name if r["file"] else None,
                               match_deg=r["err_deg"], note=r["why"]) for r in runs],

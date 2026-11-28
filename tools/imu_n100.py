@@ -28,6 +28,8 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import errno
+import fcntl
 import glob
 import json
 import os
@@ -173,6 +175,35 @@ def scan(buf: bytes, stats: ScanStats | None = None, base: int = 0) -> tuple[lis
         i = j + 1
 
 
+def drop_stale_head(frames: list) -> tuple[list, int]:
+    """Frames left over from before the port was opened (the USB chip can hold one; the lab's 27 Nov 5-min capture
+    began with an IMU frame 59 s old): every frame before an IMU timestamp jump of over 1 s within the first 50
+    frames. Returns (the frames without them, how many were left out)."""
+    imu = [i for i, f in enumerate(frames[:50]) if f.type == T_IMU and len(f.payload) >= 56]
+    ts = [struct.unpack_from("<q", frames[i].payload, 48)[0] for i in imu]
+    cut = 0
+    for k in range(len(ts) - 1):
+        if ts[k + 1] - ts[k] > 1_000_000:
+            cut = imu[k + 1]
+    return frames[cut:], cut
+
+
+def counter_gaps(frames: list) -> tuple[int, int]:
+    """(lost, out of order) by the frame counter, all types in order. The unit sends a frame one number early now and
+    then (27 Nov: about 36 a minute, the counter going back by one): that is a frame out of order, not 254 lost. The
+    counter is unwrapped by its signed steps; lost = numbers in its span never seen."""
+    if len(frames) < 2:
+        return 0, 0
+    steps = [((f.sn - p.sn + 128) % 256) - 128 for p, f in zip(frames, frames[1:])]
+    pos, at = {0}, 0
+    lo = hi = 0
+    for d in steps:
+        at += d
+        pos.add(at)
+        lo, hi = min(lo, at), max(hi, at)
+    return hi - lo + 1 - len(pos), sum(1 for d in steps if d <= 0)
+
+
 def decode_imu(p: bytes) -> dict:
     v = struct.unpack_from("<12fq", p, 0)
     return dict(gyro=v[0:3], acc=v[3:6], mag=v[6:9], temp=v[9], pressure=v[10], ptemp=v[11], ts_us=v[12])
@@ -276,6 +307,15 @@ class Port:
         except FileNotFoundError:
             raise SystemExit(f"{path} is not there: the IMU is unplugged or has another name (`python3 "
                              "tools/imu_n100.py ports`).") from None
+        except OSError as exc:
+            if exc.errno == errno.EBUSY:
+                raise SystemExit(f"{path} is in use by another program (Lite records the IMU during S2 runs that "
+                                 "record the feed): wait until it has finished.") from None
+            raise
+        try:                                               # one reader at a time: two would each get half the bytes
+            fcntl.ioctl(self.fd, termios.TIOCEXCL)
+        except OSError:
+            pass
         a = termios.tcgetattr(self.fd)
         speed = getattr(termios, f"B{baud}")
         a[0] = 0                                           # iflag: no translation, no flow control
@@ -307,6 +347,11 @@ class Port:
                 select.select([], [self.fd], [], 0.1)
 
     def close(self) -> None:
+        import termios
+        try:                                               # free for the next reader, whoever else holds the device
+            fcntl.ioctl(self.fd, termios.TIOCNXCL)
+        except OSError:
+            pass
         os.close(self.fd)
 
     def __enter__(self):
@@ -325,14 +370,14 @@ def session_dir(out: str | None, what: str) -> Path:
     return d
 
 
-def record(port, seconds: float, folder: Path, say=print) -> dict:
-    """``seconds`` of bytes as they come: raw.bin and chunks.jsonl (offset, size, time.time() and time.monotonic() of
-    each read), the same clock Lite stamps its logs with."""
+def record(port, seconds: float, folder: Path, say=print, stop=None) -> dict:
+    """``seconds`` of bytes as they come (or until ``stop``, a threading.Event, is set): raw.bin and chunks.jsonl
+    (offset, size, time.time() and time.monotonic() of each read), the same clock Lite stamps its logs with."""
     folder.mkdir(parents=True, exist_ok=True)
     off, t0 = 0, time.monotonic()
     warned, next_say = False, t0 + 10.0
     with open(folder / "raw.bin", "wb") as raw, open(folder / "chunks.jsonl", "w") as ch:
-        while (now := time.monotonic()) < t0 + seconds:
+        while (now := time.monotonic()) < t0 + seconds and not (stop is not None and stop.is_set()):
             b = port.read(0.05)
             if b:
                 t, m = time.time(), time.monotonic()
@@ -390,11 +435,18 @@ def analyse(buf: bytes, chunks: list, test: str = "frames") -> tuple[list, dict]
     rep.update(frames=st.frames, crc16_bad=st.crc16_bad, end_bad=st.end_bad, skipped=st.skipped, crc8_table=table,
                crc8_other=sum(v for k, v in st.crc8_match.items() if k not in (table, "both")) + st.crc8_none)
 
+    frames, stale = drop_stale_head(frames)
+    if stale:
+        say(f"      {stale} frame(s) at the start were left over from before the port was opened (time stamp over 1 s "
+            "older than the next): left out")
+    rep["stale"] = stale
+
     # the frame counter, all types in order (the drivers count it across types)
-    lost = sum((f.sn - p.sn - 1) % 256 for p, f in zip(frames, frames[1:]))
+    lost, back = counter_gaps(frames)
     mark = "PASS" if _pct(lost, len(frames) + lost) < 0.1 else "FAIL"
-    say(f"{mark:5} frame counter: {lost:,} lost of {len(frames) + lost:,} frames ({_pct(lost, len(frames) + lost):.3f} %)")
-    rep["lost"] = lost
+    say(f"{mark:5} frame counter: {lost:,} lost of {len(frames) + lost:,} frames ({_pct(lost, len(frames) + lost):.3f} %)"
+        + (f"; {back:,} sent out of order (not lost)" if back else ""))
+    rep.update(lost=lost, out_of_order=back)
 
     # arrival time of each frame: the read that brought its last byte
     ends = [c["o"] + c["n"] for c in chunks]

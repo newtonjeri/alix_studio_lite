@@ -175,9 +175,17 @@ shows one short spike that dies within a few tens of milliseconds. A loose one r
   - It writes `Resources/Logs/<day>/imu/<HHMMSS>_<label>/`.
   - Tests: `tests/test_imu_n100.py`, 15, including a capture through a real serial device (a pseudo-terminal).
   - The lab's steps are in `RUNBOOK_step_A.md` next to this file.
-- **No separate logger is needed.** S2 already records each arm's 20 ms feed (`Resources/Logs/<day>/canfd/`), stamped
-  with the laptop's monotonic clock, the clock `imu_n100.py capture` stamps its reads with. A capture started before an
-  S2 run (`capture --seconds 900`, robot still for the first and last 30 s) and the run's logs line up afterwards.
+- **BUILT 28 Nov: Lite records the IMU with every Real Machine S2 run that records the feed** (the user: the IMU
+  "logged at the same time frame as the arms feedback"; the feed stays at 20 ms, 50 Hz, as settled on 23 Oct: 5 ms
+  would slow every Program some 13 %). `server/imu_record.py`: from the run's start to its end, on its own thread, into
+  `<day>/imu/<HHMMSS>_s2_<mode>/` (the same files as a capture, then its report). Both are stamped on the laptop's
+  monotonic clock as they arrive; the arms' feed frames carry the hands (`hand`) and the poles (`lift_state`) too. No
+  IMU, no permission, or the port in use: said in the run's log, and the run goes on. Real controllers only.
+  - Not detected when Run or Release is pressed: the page asks first, "Not now" (connect it and run again) or "Run
+    without the IMU" (the user, 28 Nov: "the user should be notified ... and should be asked to proceed or make sure
+    it is connected"); `workflow.ask_imu`, code "imu". A run the UGV starts has nobody to ask: said in its log only.
+  - The port is opened exclusively: a hand-made capture during such a run is told the port is in use.
+  - The analysis takes the gyro bias from the moments the feed shows every arm still (no still lead-in needed).
 - **BUILT 27 Nov, step F (user: "Run analysis (step F)", tested on made-up data until the lab has data):**
   `tools/imu_runs.py`, offline, run here on the lab's logs.
   - `analyse <capture>`: the sensor clock fitted to the laptop's; bias from the still start and end; rates in base

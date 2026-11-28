@@ -50,14 +50,15 @@ def make_day(root: Path) -> tuple[Path, Path]:
     # the feed: still at line 1 for 2 s, then the file at 5.6 ms a line, then still at its last line
     feed = day / "canfd" / "20261201_120000_RIGHT_s2_01_TEST.frames.jsonl"
     rows, start = [], T0 + 2.0
-    for t in np.arange(T0, T0 + 16.0, 0.02):
+    for t in np.arange(T0 - 10.0, T0 + 26.0, 0.02):             # still 12 s before the Program, 15 s after it
         line = int(np.clip((t - start) / PLAY, 0, len(q) - 1))
         jp = [int(round(v * 1000)) for v in q[line]]
         rows.append(json.dumps({"t_mono": round(float(t), 6), "frame": {"joint_status": {"joint_position": jp},
                                                                        "arm_current_status": "x"}}))
     feed.write_text("\n".join(rows) + "\n")
     end = start + len(q) * PLAY
-    hw = [dict(t=T0 + OFF, side="right", verb="s2 feed", args={"cycle_ms": 20, "file": feed.name}, text="recording"),
+    hw = [dict(t=T0 - 10.0 + OFF, side="right", verb="s2 feed", args={"cycle_ms": 20, "file": feed.name},
+               text="recording"),
           dict(t=T0 + 0.5 + OFF, side="right", verb="runner v14", text="WORKFLOW START: 1 step(s) on 10.0.0.1"),
           dict(t=T0 + 1.0 + OFF, side="right", verb="runner v14", text="WORKFLOW STEP START 1/1: PROGRAM"),
           dict(t=T0 + 1.1 + OFF, side="right", verb="runner v14",
@@ -127,6 +128,7 @@ def test_a_made_up_capture_gives_back_its_clock_bias_lag_gain_and_the_program_li
     out = cap / "analysis"
     s = json.loads((out / "summary.json").read_text())
     assert s["synthetic"] and s["drift_ppm"] == pytest.approx(30.0, abs=2.0)
+    assert "when the feed shows every arm still" in s["bias_from"]   # before, inside (the Program's holds) and after it
     assert s["bias_start"][0] == pytest.approx(0.20, abs=0.01) and s["bias_end"][0] == pytest.approx(0.24, abs=0.01)
     fit = {f["axis"]: f for f in s["fits"] if f["prediction"] == "model + weight"}
     assert fit["roll"]["lag_ms"] == pytest.approx(40.0, abs=10.0)

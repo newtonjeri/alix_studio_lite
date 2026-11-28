@@ -3160,6 +3160,29 @@ def feed_wanted(app, body: dict) -> bool:
     return bool(body.get("record_feed", False)) and bool(getattr(app, "feed_ms", None))   # off unless ticked (26 Oct)
 
 
+def real_controllers(robot, sides) -> bool:
+    """Whether every arm of a run is a real controller (not ALIX's emulated arms): the IMU is recorded only then."""
+    try:
+        return not any(getattr(getattr(robot._real(s), "link", None), "emulated", True) for s in sides)
+    except Exception:                                                  # noqa: BLE001 - no link: not real
+        return False
+
+
+def ask_imu(app, robot, sides, body: dict) -> None:
+    """The IMU is recorded with the feed (the user, 28 Nov): when it is not detected, the operator is asked first
+    (code "imu"), to connect it and run again or to run without it (``imu_absent_ok``). Only when the feed is recorded,
+    on real controllers, as the recording itself."""
+    if not feed_wanted(app, body) or body.get("imu_absent_ok") or not real_controllers(robot, sides):
+        return
+    from . import imu_record
+
+    why = imu_record.missing()
+    if why:
+        raise UserError(f"The IMU would not be recorded with the arms' feed: {why}.",
+                        "Connect the IMU's USB cable to this computer and run again, or run without recording it.",
+                        code="imu")
+
+
 def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only: bool = False, expect: str | None = None):
     """Real Machine Mode (RUN BOTH / RUN LEFT / RUN RIGHT, a single task, a dual-arm task): only in Real robot mode, on
     linked controllers; a run not completed in Simulation as it is now asks first (``unsimulated_ok``; the owner, 17 Oct:
@@ -3275,6 +3298,7 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
         first = col["first"]
         warns.insert(0, f"The simulation found {len(col['events']) + col['more']} collision event(s), the first at "
                      f"{first['first_t']:.2f} s: " + "; ".join(f"{p['link']} with {p['object']}" for p in first["pairs"][:3]) + ".")
+    ask_imu(app, robot, sides, body)
     if warns and body.get("warnings_seen") != sim["hash"]:          # seen for this simulation, not another
         raise UserError("Before it runs on the robot: " + " ".join(warns), "Run it anyway, or correct the sequence.",
                         code="warnings")
@@ -3935,6 +3959,11 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
                 job.log(f"The lid and seat tasks moved with the UGV's placement (the commode {corr.ugv.words()} from where "
                         f"their plans were made): {queued} plan(s) being made from now on, in the run's order, the next "
                         "while one runs.")
+        imu = None          # the IMU recorded with the feed, real controllers only (the user, 28 Nov); stopped in the finally
+        if feeds is not None and real_controllers(robot, sides):
+            from . import imu_record
+
+            imu = imu_record.start(feeds.parent, f"s2_{mode}", job.log)
         try:
             for s in sides:
                 originals[s] = reals[s].set_run_mode("REAL")
@@ -4004,6 +4033,8 @@ def run_real(app, units, mode: str, pick: dict | None, body: dict, *, check_only
                 reals[s].restore_run_mode(orig)
             for s in sides:                         # the runner gives the speed back in its finally; again here,
                 reals[s].restore_speed(restore[s])  # in case a stop landed before its try (never raises)
+            if imu is not None:
+                imu.stop()
 
     title = "S2 Real Machine: " + ("both arms" if mode == "both" else f"{mode.upper()} sequence")
     return robot._start("run", title, work, "both" if mode == "both" else mode, "real")

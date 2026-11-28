@@ -93,6 +93,15 @@ on it), but nothing moves and nobody touches the robot during a capture.
 The turn tests by hand (one per marked axis) need the board loose, so they are left out. The still capture gives the
 gravity axis; X and Y are taken from the markings as mounted, and the run analysis fits each axis' sign itself.
 
+### During S2 runs (from 28 Nov)
+
+Nothing to type. With the IMU plugged in and **Record feed** ticked on the S2 page, Lite records the IMU from the
+run's start to its end. The run's log says "Recording the IMU (...) with the feed, to <folder>" at the start and "IMU
+recording ended" at the end. If the IMU is not detected when Run (or Release) is pressed, the page asks first: "Not
+now" (connect it, then press Run again) or "Run without the IMU". A run the UGV starts has nobody to ask: its log says
+"The IMU is not recorded: ..." and it goes on. Restart Lite once after pulling this change.
+Commit and push `Resources/Logs/<day>/` as usual; the IMU folder is `imu/<HHMMSS>_s2_<mode>/`.
+
 ### B. Mount it (robot off): taken as done on 27 Nov
 
 Follow section 2 of PLAN.md:

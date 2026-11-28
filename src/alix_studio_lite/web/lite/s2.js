@@ -1053,6 +1053,18 @@ function paintAuto(v) {
   }));
 }
 
+// Record feed ticked and no IMU found (the user, 28 Nov: "the user should be notified if the imu is not detected, and
+// should be asked to proceed or make sure it is connected"): 'retry' with imu_absent_ok set, 'stop', or false (not this)
+async function imuMissing(err, body, verb) {
+  if (err.code !== 'imu' || body.imu_absent_ok) return false;
+  const go = await confirmDialog({ title: 'The IMU is not detected', ok: `${verb} without the IMU`, danger: false,
+    cancelText: 'Not now', body: `${err.message} Connect the IMU's USB cable to this computer and press ${verb} again, `
+      + `or ${verb.toLowerCase()} now without recording it.` });
+  if (!go) { window.toast(`Not ${verb === 'Run' ? 'run' : 'released'}: connect the IMU, then ${verb.toLowerCase()} again.`, 'warn'); return 'stop'; }
+  body.imu_absent_ok = true;
+  return 'retry';
+}
+
 async function releaseAuto() {
   if (!ctx.pid) { window.toast('Open a project first.', 'warn'); return; }
   if (S.job) { window.toast('Wait for the running sequence to end first.', 'warn'); return; }
@@ -1064,13 +1076,21 @@ async function releaseAuto() {
     try {
       out = await post(`${base()}/release`, body);
     } catch (err) {
-      if (err.code !== 'unsimulated') throw err;             // as a run from this page: it may go, once the operator says so
-      const go = await confirmDialog({ title: 'Release it without simulating it first?', ok: 'Yes, release it as it is',
-        body: `${err.message} It has not been played in Simulation Mode, so its collision check has not been made. `
-          + 'Do you want the UGV to start it on the real hardware without that?' });
-      if (!go) { window.toast('Not released. Simulation Mode plays it in 3D first.', 'warn'); return; }
-      body.unsimulated_ok = true;
-      out = await post(`${base()}/release`, body);
+      let e = err;
+      if (e.code === 'unsimulated') {                        // as a run from this page: it may go, once the operator says so
+        const go = await confirmDialog({ title: 'Release it without simulating it first?', ok: 'Yes, release it as it is',
+          body: `${e.message} It has not been played in Simulation Mode, so its collision check has not been made. `
+            + 'Do you want the UGV to start it on the real hardware without that?' });
+        if (!go) { window.toast('Not released. Simulation Mode plays it in 3D first.', 'warn'); return; }
+        body.unsimulated_ok = true;
+        try { out = await post(`${base()}/release`, body); e = null; } catch (e2) { e = e2; }
+      }
+      if (e) {
+        const imu = await imuMissing(e, body, 'Release');
+        if (imu === 'stop') return;
+        if (!imu) throw e;
+        out = await post(`${base()}/release`, body);
+      }
     }
   } catch (err) {
     if (err.code !== 'warnings' && err.code !== 'confirm') { tell(err); return; }
@@ -1129,13 +1149,21 @@ async function runReal(w) {
     } catch (err) {
       // not run in Simulation Mode as it is now (the owner, 17 Oct): it may run, once the operator says so,
       // and the real-robot confirmation follows
-      if (err.code !== 'unsimulated') throw err;
-      const go = await confirmDialog({ title: 'Run it without simulating it first?', ok: 'Yes, run it on the real robot',
-        body: `${err.message} It has not been played in Simulation Mode, so its collision check has not been made. `
-          + 'Do you want to run it on the real hardware without simulating it first?' });
-      if (!go) { window.toast('Not run: nothing was sent to the robot. Simulation Mode plays it in 3D first.', 'warn'); return; }
-      body.unsimulated_ok = true;
-      job = await post(`${base()}/run`, body);
+      let e = err;
+      if (e.code === 'unsimulated') {
+        const go = await confirmDialog({ title: 'Run it without simulating it first?', ok: 'Yes, run it on the real robot',
+          body: `${e.message} It has not been played in Simulation Mode, so its collision check has not been made. `
+            + 'Do you want to run it on the real hardware without simulating it first?' });
+        if (!go) { window.toast('Not run: nothing was sent to the robot. Simulation Mode plays it in 3D first.', 'warn'); return; }
+        body.unsimulated_ok = true;
+        try { job = await post(`${base()}/run`, body); e = null; } catch (e2) { e = e2; }
+      }
+      if (e) {                                               // then the IMU, when Record feed is ticked and none is found
+        const imu = await imuMissing(e, body, 'Run');
+        if (imu === 'stop') return;
+        if (!imu) throw e;
+        job = await post(`${base()}/run`, body);
+      }
     }
   } catch (err) {
     if (err.code !== 'warnings' && err.code !== 'confirm') { tell(err); return; }

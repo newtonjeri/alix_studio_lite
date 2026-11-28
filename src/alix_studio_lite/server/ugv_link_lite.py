@@ -228,8 +228,9 @@ class LiteBackend:
             raise ugv_link.Refused("MANUAL_MODE", "No sequence is released for automatic running.")
         with self._lock:                 # held until the run's goal is noted: a run that ends at once finds it (job_ended)
             try:
+                # the IMU question was asked at the release: a goal has nobody to ask, so a missing IMU is only said
                 job = workflow.run_real(self.app, units_for(self.app, rel["pid"]), "both", None,
-                                        dict(rel["body"], confirmed=True), expect=rel["hash"])
+                                        dict(rel["body"], confirmed=True, imu_absent_ok=True), expect=rel["hash"])
             except UserError as exc:
                 if exc.code in RELEASE_ENDS:
                     self.end_release(str(exc))
